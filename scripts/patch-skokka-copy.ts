@@ -14,7 +14,7 @@ async function main() {
   const mongo = uri();
   if (!mongo) throw new Error("MONGODB_URI missing");
   await mongoose.connect(mongo);
-  const homeCities = ["hyderabad", "delhi", "bangalore"];
+  const homeCities = ["bangalore", "hyderabad", "delhi"];
   for (const cat of CATEGORIES) {
     await Category.updateOne(
       { slug: cat.slug },
@@ -32,7 +32,13 @@ async function main() {
           "Welcome to Tharkoo, #1 Adult Classifieds in India. Browse Call Girls, massages, escorts, transsexual ads and Adult Meetings. POST YOUR AD absolutely FREE!",
         searchPlaceholder: "Search by City, Category...",
         postCta: "Post your ad",
-        cookieBody: "This website uses cookies. By continuing you accept our cookie policy.",
+        cookieBody:
+          "We use cookies to optimize the performance of this website and provide you with a better user experience in a personalized way. In the options you can choose your preferences for the use of cookies:",
+        ageGateTitle: "Please read the following warning before continuing",
+        ageGateBody:
+          " <b>I am over 18 years old</b>  and I accept the viewing of explicit texts and images intended for an <b>adult audience</b>.",
+        ageYes: "Accept",
+        ageNo: "Decline",
         "homepage.blocks": [
           { id: "hero", type: "hero", enabled: true, title: "Hot meetings in your city", subtitle: "Find your favourite Escort in Tharkoo" },
           { id: "categories", type: "categories", enabled: true, cityCount: 3, moreLabel: "More cities" },

@@ -1,7 +1,7 @@
 import type { ComponentProps } from "react";
 import { HomeBlocks } from "@/components/HomeBlocks";
 import { JsonLd } from "@/lib/jsonld";
-import { getCategories, getSeo, getSite, getTopCities } from "@/lib/queries";
+import { getCategories, getCities, getSeo, getSite } from "@/lib/queries";
 import { canonical } from "@/lib/seo";
 
 export const dynamic = "force-dynamic";
@@ -11,7 +11,7 @@ export default async function Home() {
     getSite(),
     getSeo("home"),
     getCategories(),
-    getTopCities(),
+    getCities(),
   ]);
   const stored = (site as { homepage?: { blocks?: object[] } }).homepage?.blocks;
   const blocks = (stored && stored.length
@@ -45,6 +45,9 @@ export default async function Home() {
         blocks={blocks}
         categories={categories}
         cities={cities.map((c) => ({ slug: c.slug, name: c.name }))}
+        siteName={(site as { logoText?: string }).logoText || site.name || "tharkoo"}
+        searchPlaceholder={(site as { searchPlaceholder?: string }).searchPlaceholder || "Search by City, Category..."}
+        postCta={(site as { postCta?: string }).postCta || "Post your ad"}
       />
     </>
   );

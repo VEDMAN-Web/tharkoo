@@ -10,11 +10,13 @@ type City = { slug: string; name: string; stateSlug?: string };
 
 export function SearchModal({
   brand = "tharkoo",
+  placeholder = "Search by City, Category...",
   categories,
   cities,
   onClose,
 }: {
   brand?: string;
+  placeholder?: string;
   categories: Cat[];
   cities: City[];
   onClose: () => void;
@@ -54,21 +56,21 @@ export function SearchModal({
   return (
     <div className="fixed inset-0 z-50 overflow-auto bg-[#ececec]">
       <div className="site-header">
-        <div className="container-site site-header-inner">
+        <div className="sk-container sk-nav">
           <Logo name={brand} />
           <button type="button" className="ml-auto text-[13px] text-[#555]" onClick={onClose}>
             Close
           </button>
         </div>
       </div>
-      <form onSubmit={submit} className="container-site max-w-[520px] py-8">
+      <form onSubmit={submit} className="sk-container max-w-[520px] py-8">
         <h1 className="text-[26px] font-normal text-[#222]">Search</h1>
         <div className="mt-5 grid gap-3 bg-white p-5">
           <input
             autoFocus
             value={q}
             onChange={(e) => setQ(e.target.value)}
-            placeholder="Search by City, Category..."
+            placeholder={placeholder}
             className="border border-[#ccc] px-3 py-2.5"
           />
           <select value={category} onChange={(e) => setCategory(e.target.value)} className="border border-[#ccc] px-3 py-2.5">

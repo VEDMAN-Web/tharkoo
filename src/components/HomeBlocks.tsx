@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { CategoryIcon } from "./CategoryIcon";
+import { HeroBand } from "./HeroBand";
 import { safeHref, safeHtml } from "@/lib/sanitize";
 
 type Block = {
@@ -29,102 +29,90 @@ type Cat = {
 
 type City = { slug?: string; name?: string };
 
+const CARD_PHOTO: Record<string, string> = {
+  "call-girls": "/skokka/call-girls.jpg",
+  massages: "/skokka/massages.jpg",
+  "male-escorts": "/skokka/male-escorts.jpg",
+  transsexual: "/skokka/trans.jpg",
+  "adult-meetings": "/skokka/meetings.jpg",
+};
+
 export function HomeBlocks({
   blocks,
   categories,
   cities,
+  postCta = "Post your ad",
+  searchPlaceholder = "Search by City, Category...",
+  siteName = "tharkoo",
 }: {
   blocks: Block[];
   categories: Cat[];
   cities: City[];
+  postCta?: string;
+  searchPlaceholder?: string;
+  siteName?: string;
 }) {
   const visible = (blocks || []).filter((b) => b.enabled !== false);
+  const hero = visible.find((b) => b.type === "hero");
+  const catsBlock = visible.find((b) => b.type === "categories");
+  const boost = visible.find((b) => b.type === "boost" || b.type === "banner");
+  const html = visible.find((b) => b.type === "html");
+  const onHome = categories.filter((c) => c.showOnHome !== false);
+  const count = catsBlock?.cityCount || 3;
+  const cityOrder = ["bangalore", "hyderabad", "delhi"];
+
   return (
     <div>
-      {visible.map((block) => {
-        if (block.type === "hero") {
-          return (
-            <header key={block.id} className="home-hero mb-2">
-              <h1>{block.title}</h1>
-              {block.subtitle ? <h2>{block.subtitle}</h2> : null}
-            </header>
-          );
-        }
-        if (block.type === "categories") {
-          const count = block.cityCount || 3;
-          const onHome = categories.filter((c) => c.showOnHome !== false);
-          return (
-            <div key={block.id}>
-              {onHome.map((cat) => {
-                const featured = (cat.homeCities?.length
-                  ? cities.filter((c) => cat.homeCities!.includes(c.slug || ""))
-                  : cities
-                ).slice(0, count);
-                return (
-                  <section key={cat.slug} className="home-cat">
-                    <CategoryIcon slug={cat.slug!} color={cat.color} name={cat.name!} />
-                    <div className="min-w-0 flex-1">
-                      <h2>
-                        <Link href={`/${cat.slug}/`}>{cat.name}</Link>
-                      </h2>
-                      <p>{cat.homeBlurb || cat.description}</p>
-                      <ul>
-                        {featured.map((city) => (
-                          <li key={city.slug}>
-                            <Link href={`/${cat.slug}/${city.slug}/`}>
-                              {cat.name} {city.name}
-                            </Link>
-                          </li>
-                        ))}
-                        <li>
-                          <Link href={`/${cat.slug}/`}>{cat.moreLabel || block.moreLabel || "More cities"}</Link>
-                        </li>
-                      </ul>
-                    </div>
-                  </section>
-                );
-              })}
-            </div>
-          );
-        }
-        if (block.type === "boost" || block.type === "banner") {
-          return (
-            <section key={block.id} className="panel mt-8">
-              <h2 className="text-[18px] font-bold text-[#222]">{block.title}</h2>
-              <p className="mt-2 text-[13px] leading-5 text-[#555]">{block.body || block.subtitle}</p>
-              {block.cta ? (
-                <Link href={safeHref(block.href) || "/u/post-insert/"} className="btn-post mt-4 inline-block">
-                  {block.cta}
+      <HeroBand
+        brand={siteName}
+        placeholder={searchPlaceholder}
+        categories={onHome.map((c) => ({ slug: c.slug || "", name: c.name || "" }))}
+        cities={cities.map((c) => ({ slug: c.slug || "", name: c.name || "" }))}
+      />
+
+      <div className="sk-container home-stack">
+        <div className="home-post-wrap">
+          <Link href={safeHref(boost?.href) || "/u/post-insert/"} className="btn-post btn-block home-post">
+            {boost?.cta || postCta}
+          </Link>
+        </div>
+        <div className="home-titles">
+          <h1 className="main-title home">{hero?.title || "Hot meetings in your city"}</h1>
+          <h2 className="h2 home">{hero?.subtitle || "Find your favourite Escort in Tharkoo"}</h2>
+        </div>
+        <div className="home-grid">
+          {onHome.map((cat) => {
+            const featured = cityOrder
+              .map((slug) => cities.find((c) => c.slug === slug))
+              .filter(Boolean)
+              .slice(0, count) as City[];
+            const photo = CARD_PHOTO[cat.slug || ""] || "/placeholders/p1.jpg";
+            return (
+              <article key={cat.slug} className="cat-card">
+                <Link href={`/${cat.slug}/`} className="cat-card-photo" style={{ backgroundImage: `url(${photo})` }}>
+                  <span className="profile-name">{cat.name}</span>
                 </Link>
-              ) : null}
-            </section>
-          );
-        }
-        if (block.type === "html") {
-          return (
-            <div
-              key={block.id}
-              className="mt-8 text-[13px] leading-6 text-[#555]"
-              dangerouslySetInnerHTML={{ __html: safeHtml(block.html || "") }}
-            />
-          );
-        }
-        if (block.type === "cities") {
-          return (
-            <section key={block.id} className="mt-8">
-              <h2 className="text-[18px] font-bold">{block.title || "Cities"}</h2>
-              <div className="mt-2 flex flex-wrap gap-x-3 gap-y-1 text-[13px]">
-                {cities.map((c) => (
-                  <Link key={c.slug} href={`/call-girls/${c.slug}/`}>
-                    {c.name}
-                  </Link>
-                ))}
-              </div>
-            </section>
-          );
-        }
-        return null;
-      })}
+                <div className="cat-card-body">
+                  <p>{cat.homeBlurb || cat.description}</p>
+                  <ul>
+                    {featured.map((city) => (
+                      <li key={city.slug}>
+                        <Link href={`/${cat.slug}/${city.slug}/`}>
+                          <span className="homecategory">{cat.name}</span>
+                          {city.name}
+                        </Link>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              </article>
+            );
+          })}
+        </div>
+        {html?.html ? (
+          <div className="txt_seo" dangerouslySetInnerHTML={{ __html: safeHtml(html.html) }} />
+        ) : null}
+      </div>
     </div>
   );
 }

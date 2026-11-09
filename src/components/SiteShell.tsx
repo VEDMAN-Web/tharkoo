@@ -2,6 +2,7 @@ import { AgeGate } from "./AgeGate";
 import { CookieBanner } from "./CookieBanner";
 import { Footer } from "./Footer";
 import { Header } from "./Header";
+import { MainInner } from "./MainInner";
 import { getCategories, getCities, getSite, getTopCities } from "@/lib/queries";
 import { plain } from "@/lib/plain";
 import { safeCssColor, safeHref } from "@/lib/sanitize";
@@ -54,7 +55,7 @@ export async function SiteShell({ children }: { children: React.ReactNode }) {
         categories={catProps}
         cities={plain(cities.map((c) => ({ slug: c.slug!, name: c.name!, stateSlug: c.stateSlug })))}
       />
-      <main className="container-site flex-1 py-5">{children}</main>
+      <MainInner>{children}</MainInner>
       <Footer
         siteName={site.name || "Tharkoo"}
         legalName={site.legalName || "SparkBeta Tech"}
@@ -68,10 +69,13 @@ export async function SiteShell({ children }: { children: React.ReactNode }) {
       {site.ageGateEnabled !== false ? (
         <AgeGate
           brand={(site as { logoText?: string }).logoText || site.name || "tharkoo"}
-          title={(site as { ageGateTitle?: string }).ageGateTitle || "Are you over 18?"}
-          body={(site as { ageGateBody?: string }).ageGateBody || "This website contains adult material. You must be 18 years or older to enter."}
-          yes={(site as { ageYes?: string }).ageYes || "I'm over 18"}
-          no={(site as { ageNo?: string }).ageNo || "I'm under 18"}
+          title={(site as { ageGateTitle?: string }).ageGateTitle || "Please read the following warning before continuing"}
+          body={
+            (site as { ageGateBody?: string }).ageGateBody ||
+            " <b>I am over 18 years old</b>  and I accept the viewing of explicit texts and images intended for an <b>adult audience</b>."
+          }
+          yes={(site as { ageYes?: string }).ageYes || "Accept"}
+          no={(site as { ageNo?: string }).ageNo || "Decline"}
         />
       ) : null}
       <CookieBanner

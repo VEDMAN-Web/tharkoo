@@ -27,14 +27,14 @@ export function CityPicker({
   return (
     <div className="fixed inset-0 z-50 overflow-auto bg-[#ececec]">
       <div className="site-header">
-        <div className="container-site site-header-inner">
+        <div className="sk-container sk-nav">
           <Logo name={brand} />
           <button type="button" className="ml-auto text-[13px] text-[#555]" onClick={onClose}>
             Close
           </button>
         </div>
       </div>
-      <div className="container-site py-8">
+      <div className="sk-container py-8">
         <h1 className="text-[26px] font-normal text-[#222]">Choose a city</h1>
         <input
           autoFocus

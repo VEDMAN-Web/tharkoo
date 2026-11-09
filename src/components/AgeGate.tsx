@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { Logo } from "./Logo";
+import { safeHtml } from "@/lib/sanitize";
 
 export function AgeGate({
   brand,
@@ -27,26 +28,37 @@ export function AgeGate({
   return (
     <div className="age-gate" data-testid="age-gate">
       <div className="age-card">
-        <Logo name={brand} href={null} size="lg" />
-        <h1>{title}</h1>
-        <p className="body">{body}</p>
-        <div className="age-actions">
-          <button
-            className="age-yes"
-            onClick={() => {
-              localStorage.setItem("nl-age", "ok");
-              setOpen(false);
-            }}
-          >
-            {yes}
-          </button>
-          <a className="age-no" href="https://www.google.com">
-            {no}
-          </a>
+        <div className="age-18">
+          <Logo name={brand} href={null} size="lg" />
+          <span className="age-18-badge">18+</span>
         </div>
-        <p className="mt-5 text-[11px] text-[#888]">
-          By entering you accept the <a href="/terms/">Terms of use</a>.
+        <h2>{title || "Please read the following warning before continuing"}</h2>
+        <p
+          className="body"
+          dangerouslySetInnerHTML={{
+            __html: safeHtml(
+              body.includes("<")
+                ? body
+                : " <b>I am over 18 years old</b>  and I accept the viewing of explicit texts and images intended for an <b>adult audience</b>.",
+            ),
+          }}
+        />
+        <p className="age-terms">
+          I have read and accept the <a href="/terms/">Terms and Conditions</a>
         </p>
+        <button
+          className="age-yes"
+          type="button"
+          onClick={() => {
+            localStorage.setItem("nl-age", "ok");
+            setOpen(false);
+          }}
+        >
+          {yes || "Accept"}
+        </button>
+        <a className="age-no" href="https://www.google.com">
+          {no || "Decline"}
+        </a>
       </div>
     </div>
   );

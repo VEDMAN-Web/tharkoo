@@ -22,7 +22,7 @@ export function fillTemplate(template: string, vars: SeoVars) {
 export const DEFAULT_SEO = {
   home: {
     pageType: "home",
-    title: "Escort service and Adult meetings in India - Tharkoo",
+    title: "Free classified ads and Adult meetings in India - Tharkoo",
     description: "Tharkoo #1 Adult Classifieds in India. Browse Call Girls, Massages, Male Escorts, Transsexual and Adult Meetings. Post your ad absolutely FREE.",
     h1: "Hot meetings in your city",
     h2: "Find your favourite Escort in Tharkoo",
