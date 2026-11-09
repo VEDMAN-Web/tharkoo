@@ -24,6 +24,9 @@
 .DS_Store
 *.pem
 
+# local knowledge graph (each agent builds its own)
+graphify-out/
+
 # debug
 npm-debug.log*
 yarn-debug.log*

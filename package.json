@@ -8,7 +8,8 @@
     "seed": "tsx scripts/seed.ts",
     "build": "NODE_OPTIONS=--max-old-space-size=4096 next build",
     "start": "next start -p 4317",
-    "lint": "eslint"
+    "lint": "eslint",
+    "typecheck": "tsc --noEmit"
   },
   "dependencies": {
     "class-variance-authority": "^0.7.1",

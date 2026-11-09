@@ -1,0 +1,12 @@
+# Case-insensitive regexes, one per line. Used by .github/scripts/forbidden-terms.mjs.
+# Lines starting with # are ignored. This file is not scanned.
+escort
+call girl
+erotic
+sexual service
+gigolo
+shemale
+skokka
+adult classif
+paid meeting
+companionship

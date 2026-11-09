@@ -1,0 +1,296 @@
+{
+  "tasks": {
+    "T0.1": {
+      "branchPrefix": "cursor/t0.1",
+      "globs": [
+        ".github/**",
+        "docs/ownership.json",
+        "docs/WORKFLOW.md",
+        "docs/MASTER_PLAN.md",
+        "docs/CODE_MAP.md",
+        "PROGRESS.md",
+        "progress/**",
+        "AGENTS.md",
+        ".agents/**",
+        ".env.example",
+        "CODEOWNERS",
+        "docs/HANDOFF.md",
+        ".gitignore",
+        "package.json"
+      ]
+    },
+    "T0.2": {
+      "branchPrefix": "codex/t0.2",
+      "globs": [
+        "src/components/**",
+        "src/app/**",
+        "src/lib/models.ts",
+        "tsconfig.json",
+        "eslint.config.mjs"
+      ]
+    },
+    "T0.3": {
+      "branchPrefix": "cursor/t0.3",
+      "globs": [
+        "package.json",
+        "package-lock.json",
+        "next.config.ts",
+        "vitest.config.ts",
+        "playwright.config.ts",
+        "src/lib/db.ts",
+        "src/app/sitemap.ts",
+        "src/app/robots.ts",
+        "tests/setup/**",
+        "src/app/layout.tsx"
+      ]
+    },
+    "T0.4": {
+      "branchPrefix": "codex/t0.4",
+      "globs": [
+        "src/data/**",
+        "scripts/**",
+        "public/**",
+        "src/lib/seo.ts",
+        "src/components/HomeBlocks.tsx",
+        "src/lib/media.ts",
+        "src/app/[category]/tag/[tag]/page.tsx",
+        "docs/ASSETS.md",
+        "docs/PLAN.md",
+        "docs/seo/PROJECT.md"
+      ],
+      "exclude": ["public/brand/**"]
+    },
+    "T1.1": {
+      "branchPrefix": "cursor/t1.1",
+      "globs": [
+        "src/server/models/**",
+        "src/server/shared/**",
+        "src/server/audit/**",
+        "src/server/http/**",
+        "docs/contracts/**",
+        "tests/server/shared/**",
+        "tests/server/models/**"
+      ]
+    },
+    "T1.2": {
+      "branchPrefix": "cursor/t1.2",
+      "globs": [
+        "src/server/seed/**",
+        "scripts/seed*.ts",
+        "tests/server/seed/**"
+      ]
+    },
+    "T2.1": {
+      "branchPrefix": "cursor/t2.1",
+      "globs": [
+        "src/server/auth/**",
+        "src/server/mailer/**",
+        "src/app/api/auth/**",
+        "src/lib/admin-auth.ts",
+        "src/proxy.ts",
+        "cursor/**",
+        "tests/server/auth/**"
+      ]
+    },
+    "T2.2": {
+      "branchPrefix": "cursor/t2.2",
+      "globs": [
+        "src/server/media/**",
+        "src/app/api/media/**",
+        "scripts/media-orphan-sweep.ts",
+        "tests/server/media/**"
+      ]
+    },
+    "T2.3": {
+      "branchPrefix": "cursor/t2.3",
+      "globs": [
+        "src/server/verification/**",
+        "src/app/api/verification/**",
+        "src/app/api/admin/verifications/**",
+        "tests/server/verification/**"
+      ]
+    },
+    "T2.4": {
+      "branchPrefix": "codex/t2.4",
+      "globs": [
+        "src/app/u/login/**",
+        "src/app/u/register/**",
+        "src/app/u/forgot/**",
+        "src/app/u/reset/**",
+        "src/app/u/verify-email/**",
+        "src/app/u/age-verification/**",
+        "src/app/u/logout/**",
+        "src/app/u/password-expired/**",
+        "src/app/u/account/kyc/**",
+        "src/components/AuthForm.tsx",
+        "src/components/AgeGate.tsx",
+        "src/components/session/**"
+      ]
+    },
+    "T3.1": {
+      "branchPrefix": "cursor/t3.1",
+      "globs": [
+        "src/server/listings/**",
+        "src/app/api/listings/**",
+        "src/app/api/cron/expire/**",
+        "tests/server/listings/**"
+      ]
+    },
+    "T3.2": {
+      "branchPrefix": "codex/t3.2",
+      "globs": [
+        "src/components/PostWizard.tsx",
+        "src/components/post/**",
+        "src/app/u/post-insert/**",
+        "src/app/u/account/ads/**",
+        "src/app/u/account/media/**"
+      ]
+    },
+    "T4.1": {
+      "branchPrefix": "cursor/t4.1",
+      "globs": [
+        "src/server/billing/**",
+        "src/server/ranking/**",
+        "src/app/api/wallet/**",
+        "src/app/api/promotions/**",
+        "src/app/api/payments/**",
+        "src/app/api/coupons/**",
+        "src/app/api/cron/boost/**",
+        "tests/server/billing/**"
+      ]
+    },
+    "T4.2": {
+      "branchPrefix": "codex/t4.2",
+      "globs": [
+        "src/app/u/account/credits/**",
+        "src/app/u/account/packs/**",
+        "src/app/u/account/coupons/**",
+        "src/app/u/account/subscription/**",
+        "src/app/u/account/dashboard/**",
+        "src/app/u/account/analytics/**",
+        "src/components/vendor/**"
+      ]
+    },
+    "T5.1": {
+      "branchPrefix": "cursor/t5.1",
+      "globs": [
+        "src/server/search/**",
+        "src/server/locations/**",
+        "src/server/models/names.ts",
+        "src/lib/models.ts",
+        "src/lib/queries.ts",
+        "src/lib/cache.ts",
+        "src/app/api/search/**",
+        "src/app/api/locations/**",
+        "src/app/api/categories/**",
+        "src/app/api/catalog/**"
+      ]
+    },
+    "T5.2": {
+      "branchPrefix": "codex/t5.2",
+      "globs": [
+        "src/app/page.tsx",
+        "src/app/[category]/**",
+        "src/app/ad/**",
+        "src/app/search/**",
+        "src/app/cities/**",
+        "src/app/blog/**",
+        "src/app/help/**",
+        "src/app/cms/**",
+        "src/components/AdCard.tsx",
+        "src/components/AdDetail.tsx",
+        "src/components/ListingPage.tsx",
+        "src/components/HomeBlocks.tsx",
+        "src/components/Header.tsx",
+        "src/components/Footer.tsx",
+        "src/components/SiteShell.tsx",
+        "src/components/Breadcrumbs.tsx",
+        "src/components/CityPicker.tsx",
+        "src/components/SearchModal.tsx",
+        "src/components/ContactButtons.tsx",
+        "src/components/HeroBand.tsx",
+        "src/components/MainInner.tsx",
+        "src/components/Logo.tsx"
+      ]
+    },
+    "T6.1": {
+      "branchPrefix": "cursor/t6.1",
+      "globs": [
+        "src/server/seo/**",
+        "src/app/sitemap*",
+        "src/app/robots.ts",
+        "src/app/llms.txt/**",
+        "scripts/seo-audit.ts",
+        "scripts/indexnow.ts",
+        "tests/server/seo/**"
+      ]
+    },
+    "T6.2": {
+      "branchPrefix": "cursor/t6.2",
+      "globs": [
+        "src/server/seed/seo-content/**",
+        "tests/server/seed/seo-content/**"
+      ]
+    },
+    "T7.1": {
+      "branchPrefix": "cursor/t7.1",
+      "globs": [
+        "src/server/moderation/**",
+        "src/server/reports/**",
+        "src/server/admin/**",
+        "src/app/api/admin/**",
+        "src/app/api/reports/**",
+        "tests/server/admin/**"
+      ],
+      "exclude": ["src/app/api/admin/verifications/**"]
+    },
+    "T7.2": {
+      "branchPrefix": "codex/t7.2",
+      "globs": [
+        "src/app/admin/**",
+        "src/components/admin/**",
+        "src/app/scam-report/**",
+        "src/app/submit-report/**",
+        "src/app/grievance/**",
+        "src/app/contact/**"
+      ]
+    },
+    "T8.1": {
+      "branchPrefix": "codex/t8.1",
+      "globs": [
+        "src/styles/**",
+        "src/app/globals.css",
+        "src/app/styleguide/**",
+        "src/components/ui/**",
+        "public/brand/**",
+        "docs/DESIGN.md",
+        "docs/design/**"
+      ]
+    },
+    "T9.1": {
+      "branchPrefix": "cursor/t9.1",
+      "globs": [
+        "tests/e2e/**",
+        "tests/security/**",
+        "scripts/load/**",
+        "docs/QA.md"
+      ]
+    },
+    "T9.2": {
+      "branchPrefix": "",
+      "globs": []
+    },
+    "T10.1": {
+      "branchPrefix": "cursor/t10.1",
+      "globs": ["deploy/**"]
+    },
+    "T10.2": {
+      "branchPrefix": "cursor/t10.2",
+      "globs": [".github/workflows/deploy.yml", "deploy/**"]
+    },
+    "T10.3": {
+      "branchPrefix": "",
+      "globs": []
+    }
+  }
+}

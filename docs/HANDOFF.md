@@ -1,6 +1,16 @@
-# Handoff — continue from another Cursor account
+# Handoff
 
 Tharkoo lives entirely in this repo. Nothing required lives only in a chat.
+
+Read in this order before coding:
+
+1. `PROGRESS.md` — task index (status, branch, PR, dependencies, blockers).
+2. `progress/<task-id>.md` — what the last coder finished and the exact next step.
+3. `docs/WORKFLOW.md` — branches, rebase, CI, relay mode (one coder at a time).
+4. `docs/MASTER_PLAN.md` — phases, ownership, env names, deploy.
+5. `docs/CODE_MAP.md` — what the code does today.
+6. `docs/contracts/` — API and data-model contract. T1.1 adds it; until that PR merges, the directory is absent.
+7. `AGENTS.md` — Karpathy, graphify, content policy, where skills live.
 
 ## Run on a local PC
 
@@ -13,7 +23,7 @@ cp .env.example .env.local
 
 **Mongo (pick one):**
 
-A. Docker (closest to DigitalOcean):
+A. Docker:
 
 ```bash
 docker compose up -d
@@ -35,22 +45,20 @@ Open http://127.0.0.1:4317
 - Mongo models + seed (categories, locations, listings, SEO templates, site settings).
 - Technical SEO: titles/H1 from templates, canonicals, JSON-LD, sitemap, robots, `?page=` pagination.
 
-## What is not built (next agent)
+## What to build next
 
-Follow `docs/PLAN.md` slices 2–5. Next P0 after browse: vendor register + 3-step post wizard writing into the `listings` collection.
+Follow `PROGRESS.md`. Do not start a task whose dependencies are not merged. Phase 0 order is T0.1, then T0.2, then T0.3 and T0.4.
 
 ## Rules for the next agent
 
-1. Read `docs/PLAN.md`, `docs/seo/PROJECT.md`, `.cursor/rules/karpathy-guidelines.mdc`.
-2. Keep URLs exactly as PRD §4.
-3. Rename categories in Mongo (or re-seed `src/data/catalog.ts`) — do not hard-code IndiaSkokka category names.
-4. Do not add a second backend. Next.js Route Handlers + Mongoose only.
-5. `MONGODB_URI` is the only production secret. Never commit `.env.local`.
-6. Quote PRD IDs in commits (`PUB-HOME-001`, …).
+1. Own only the paths in `docs/ownership.json` for your task. If you need another path, stop and write `NEED:` in `progress/<task-id>.md`.
+2. Keep URLs exactly as PRD §4 (`docs/prd/PRD.txt`).
+3. Categories are Mongo documents. Do not hard-code category names in components.
+4. No second backend. Next.js Route Handlers + Mongoose only.
+5. Never commit secrets or real `.env` values. Names are in `.env.example`.
+6. No sexual-service or competitor-brand categories, copy, products, or assets.
+7. New npm dependencies only in T0.3, unless your brief lists a package.
 
-## Deploy (owner)
+## Deploy
 
-1. Create a DigitalOcean Managed MongoDB cluster. Put the URI in Vercel env `MONGODB_URI`.
-2. Import this git repo to Vercel → it assigns the preview/production URL.
-3. Run `npm run seed` once against production Mongo (from your PC with the URI), or wait for an admin seed screen in slice 4.
-4. Point a custom domain in Vercel when ready. DigitalOcean is the database, not the public hostname.
+App on the existing DigitalOcean droplet. Database is MongoDB Atlas M0 (Mumbai), not a database on the droplet. Build in GitHub Actions and ship the Next.js standalone bundle. Full decision: `docs/MASTER_PLAN.md` section 8.
