@@ -15,16 +15,16 @@ export function AgeGate({
   yes: string;
   no: string;
 }) {
-  const [open, setOpen] = useState(false);
+  const [open, setOpen] = useState(true);
 
   useEffect(() => {
-    setOpen(localStorage.getItem("nl-age") !== "ok");
+    if (localStorage.getItem("nl-age") === "ok") setOpen(false);
   }, []);
 
   if (!open) return null;
 
   return (
-    <div className="fixed inset-0 z-50 grid place-items-center bg-[#111]">
+    <div className="fixed inset-0 z-[80] grid place-items-center bg-[#111]" data-testid="age-gate">
       <div className="w-[min(420px,calc(100%-32px))] bg-white p-8 text-center">
         <p className="logo-mark justify-center text-[28px]">
           <span className="dot" />

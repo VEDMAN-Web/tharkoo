@@ -54,8 +54,8 @@ export async function SiteShell({ children }: { children: React.ReactNode }) {
         links={footerLinks}
         social={socialLinks}
       />
-      {site.ageGateEnabled ? (
-        <AgeGate
+      {site.ageGateEnabled !== false ? (
+        <AgeGate>
           brand={(site as { logoText?: string }).logoText || site.name || "tharkoo"}
           title={(site as { ageGateTitle?: string }).ageGateTitle || "Are you over 18?"}
           body={(site as { ageGateBody?: string }).ageGateBody || "This website contains adult material. You must be 18 years or older to enter."}
