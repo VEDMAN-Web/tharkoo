@@ -7,6 +7,10 @@
 
 The Node.js code is this Next.js app (Route Handlers + Server Components). There is no second server to deploy.
 
+## MongoDB (Atlas or DigitalOcean)
+
+Staging can use a MongoDB Atlas `mongodb+srv://` URI. Put it in `.env.local` (gitignored) and in the app’s Cursor secrets form as `MONGODB_URI`. Allow this machine’s IP (or `0.0.0.0/0` for open staging) under Atlas **Network Access**, and use database name `tharkoo`.
+
 ## DigitalOcean MongoDB
 
 1. Create a Managed MongoDB cluster (same region as most Indian users if offered; otherwise closest).
