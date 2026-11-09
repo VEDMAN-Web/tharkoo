@@ -27,6 +27,6 @@ Index only. Ana updates this file when a PR merges. The coder updates `progress/
 | T8.1 | Cdx | S | todo | codex/t8.1-design-system | | T0.4 | | 2026-11-09 |
 | T9.1 | Cur | M | todo | cursor/t9.1-qa | | all feature tasks | | 2026-11-09 |
 | T9.2 | Ana | S | todo | - | | T9.1 | | 2026-11-09 |
-| T10.1 | Cur | C | todo | cursor/t10.1-bootstrap | | T0.3 | | 2026-11-09 |
+| T10.1 | Cur | C | todo | cursor/t10.1-bootstrap | | T9.1 | | 2026-11-09 |
 | T10.2 | Cur | M | todo | cursor/t10.2-deploy | | T10.1 | | 2026-11-09 |
 | T10.3 | Ana | - | todo | - | | T10.2 | | 2026-11-09 |
