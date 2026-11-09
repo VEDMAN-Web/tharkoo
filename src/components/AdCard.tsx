@@ -1,21 +1,28 @@
 import Link from "next/link";
 import type { ListingDoc } from "@/lib/models";
 
-function Thumb({ letter, size }: { letter: string; size: "sm" | "md" | "xl" }) {
-  const cls = size === "xl" ? "h-[180px] w-full text-4xl" : size === "md" ? "h-[72px] w-[72px] text-xl" : "h-14 w-14 text-lg";
+function Photo({ src, size, count }: { src?: string; size: "sm" | "md" | "xl"; count?: number }) {
+  const box =
+    size === "xl" ? "h-[180px] w-full" : size === "md" ? "h-[88px] w-[88px]" : "h-16 w-16";
   return (
-    <div className={`grid flex-none place-items-center bg-[#ddd] font-bold text-[#888] ${cls}`}>{letter}</div>
+    <div className={`relative flex-none overflow-hidden bg-[#ddd] ${box}`}>
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img src={src || "/placeholders/empty.svg"} alt="" className="h-full w-full object-cover" />
+      {count && count > 1 ? (
+        <span className="absolute bottom-1 right-1 bg-black/70 px-1 text-[10px] font-bold text-white">{count}</span>
+      ) : null}
+    </div>
   );
 }
 
 export function AdCard({ ad, featured }: { ad: ListingDoc; featured?: boolean }) {
   const href = `/ad/${ad.slug}/`;
-  const letter = (ad.displayName || "?").slice(0, 1);
   const variant = ad.variant || "free";
   const isStar = variant === "star" || featured;
   const highlight = variant === "highlight" || variant === "flash";
   const superTop = variant === "supertop" || variant === "flash";
   const showPhoto = variant !== "free";
+  const photo = ad.photos?.[0];
 
   return (
     <article
@@ -28,17 +35,17 @@ export function AdCard({ ad, featured }: { ad: ListingDoc; featured?: boolean })
     >
       {variant !== "free" ? (
         <span
-          className="absolute right-2 top-2 rounded-sm px-1.5 py-0.5 text-[10px] font-bold uppercase text-white"
+          className="badge absolute right-2 top-2"
           style={{
             background:
-              variant === "flash" ? "var(--sk-flash)" : variant === "star" ? "#c9a227" : "var(--sk-top)",
+              variant === "flash" ? "var(--sk-flash)" : variant === "star" ? "#c9a227" : variant === "supertop" ? "var(--sk-supertop)" : "var(--sk-top)",
           }}
         >
           {variant === "supertop" ? "Super Top" : variant === "flash" ? "Available now" : variant === "star" ? "Star" : "TOP"}
         </span>
       ) : null}
       <div className={`flex gap-3 ${isStar ? "flex-col" : ""}`}>
-        {showPhoto ? <Thumb letter={letter} size={isStar ? "xl" : superTop ? "md" : "sm"} /> : null}
+        {showPhoto ? <Photo src={photo} size={isStar ? "xl" : superTop ? "md" : "sm"} count={ad.photos?.length} /> : null}
         <div className="min-w-0 flex-1">
           <Link
             href={href}
@@ -50,10 +57,11 @@ export function AdCard({ ad, featured }: { ad: ListingDoc; featured?: boolean })
           <p className="mt-1 line-clamp-3 text-[13px] leading-5" style={{ color: isStar ? "#ccc" : "#666" }}>
             {ad.description}
           </p>
-          <p className="mt-2 text-[12px]" style={{ color: isStar ? "#bbb" : "#888" }}>
-            {ad.age} years {ad.citySlug}
-            {ad.place ? ` / ${ad.place}` : ""}
-            {ad.verified ? " · Verified" : ""}
+          <p className="mt-2 flex flex-wrap gap-2 text-[12px]" style={{ color: isStar ? "#bbb" : "#888" }}>
+            <span>{ad.age} years</span>
+            <span>· {ad.citySlug}</span>
+            {ad.place ? <span>· {ad.place}</span> : null}
+            {ad.verified ? <span className="text-[var(--sk-verified)]">· Verified</span> : null}
           </p>
           {superTop && !isStar ? (
             <div className="mt-2 flex flex-wrap gap-2">
@@ -83,8 +91,8 @@ export function AdCard({ ad, featured }: { ad: ListingDoc; featured?: boolean })
 export function StarStrip({ ads }: { ads: ListingDoc[] }) {
   if (!ads.length) return null;
   return (
-    <section className="mb-4">
-      <h2 className="mb-2 text-[16px] font-bold">Discover our Star listings</h2>
+    <section className="mb-4 border-b border-[#333] bg-[#111] p-3">
+      <h2 className="mb-2 text-[16px] font-bold text-white">Discover our Star listings</h2>
       <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
         {ads.map((ad) => (
           <AdCard key={ad.publicId} ad={ad} featured />

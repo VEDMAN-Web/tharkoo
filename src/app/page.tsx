@@ -1,9 +1,10 @@
-import Link from "next/link";
-import { getCategories, getSeo, getSite, getTopCities } from "@/lib/queries";
-import { fillTemplate } from "@/lib/seo";
+import type { ComponentProps } from "react";
+import { HomeBlocks } from "@/components/HomeBlocks";
 import { JsonLd } from "@/lib/jsonld";
+import { getCategories, getSeo, getSite, getTopCities } from "@/lib/queries";
 import { canonical } from "@/lib/seo";
-import { CategoryIcon } from "@/components/CategoryIcon";
+
+export const dynamic = "force-dynamic";
 
 export default async function Home() {
   const [site, seo, categories, cities] = await Promise.all([
@@ -12,11 +13,23 @@ export default async function Home() {
     getCategories(),
     getTopCities(),
   ]);
-  const vars = { site: site.name || "Tharkoo", year: new Date().getFullYear() };
-  const h1 = fillTemplate(seo?.h1 || "Hot meetings in your city", vars);
-  const h2 = fillTemplate(seo?.h2 || "", vars);
-  const intro = fillTemplate(seo?.intro || "", vars);
-  const featured = cities.slice(0, 3);
+  const stored = (site as { homepage?: { blocks?: object[] } }).homepage?.blocks;
+  const blocks = (stored && stored.length
+    ? stored
+    : [
+        { id: "hero", type: "hero", enabled: true, title: seo?.h1 || "Hot meetings in your city", subtitle: seo?.h2 || "" },
+        { id: "categories", type: "categories", enabled: true, cityCount: 3, moreLabel: "More cities" },
+        {
+          id: "boost",
+          type: "boost",
+          enabled: true,
+          title: "Boost your visibility",
+          body: "Post your ad free. Promote with Top, Flash or Star.",
+          cta: "Post your ad",
+          href: "/u/post-insert/",
+        },
+        { id: "intro", type: "html", enabled: true, html: `<p>${seo?.intro || ""}</p>` },
+      ]) as ComponentProps<typeof HomeBlocks>["blocks"];
 
   return (
     <>
@@ -28,36 +41,11 @@ export default async function Home() {
           url: canonical("/"),
         }}
       />
-      <h1 className="text-[28px] font-normal leading-tight text-[#222] md:text-[34px]">{h1}</h1>
-      {h2 ? <h2 className="mt-1 text-[18px] font-normal text-[#555]">{h2}</h2> : null}
-
-      <div className="mt-8 grid gap-8">
-        {categories.map((cat) => (
-          <section key={cat.slug} className="flex gap-4 border-b border-[#ddd] pb-6">
-            <CategoryIcon slug={cat.slug!} color={cat.color} name={cat.name!} />
-            <div className="min-w-0 flex-1">
-              <h2 className="text-[20px] font-bold">
-                <Link href={`/${cat.slug}/`} className="text-[#222] no-underline hover:underline">
-                  {cat.name}
-                </Link>
-              </h2>
-              <p className="mt-1 text-[13px] leading-5 text-[#666]">{cat.description}</p>
-              <ul className="mt-2 text-[13px]">
-                {featured.map((city) => (
-                  <li key={city.slug}>
-                    <Link href={`/${cat.slug}/${city.slug}/`}>
-                      {cat.name} {city.name}
-                    </Link>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          </section>
-        ))}
-      </div>
-
-      <p className="mt-8 text-[13px] leading-6 text-[#555]">{intro}</p>
-      {seo?.footer ? <p className="mt-3 text-[13px] leading-6 text-[#555]">{fillTemplate(seo.footer, vars)}</p> : null}
+      <HomeBlocks
+        blocks={blocks}
+        categories={categories}
+        cities={cities.map((c) => ({ slug: c.slug, name: c.name }))}
+      />
     </>
   );
 }

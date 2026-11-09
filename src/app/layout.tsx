@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import { SiteShell } from "@/components/SiteShell";
 import "./globals.css";
 
+export const dynamic = "force-dynamic";
+
 export const metadata: Metadata = {
   title: { default: "Escort service and Adult meetings in India - Tharkoo", template: "%s" },
   description: "Tharkoo adult classifieds in India. Call Girls, Massages, Male Escorts, Transsexual and Adult Meetings. Post your ad free.",

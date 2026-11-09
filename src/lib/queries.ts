@@ -1,5 +1,19 @@
 import { connectDb } from "./db";
-import { Category, Listing, Location, SeoTemplate, Site, type ListingDoc } from "./models";
+import {
+  AttributeGroup,
+  Banner,
+  BlogPost,
+  Category,
+  CreditPack,
+  FeatureFlag,
+  HelpArticle,
+  Listing,
+  Location,
+  Page,
+  SeoTemplate,
+  Site,
+  type ListingDoc,
+} from "./models";
 
 const PAGE_SIZE = 25;
 const THIN = 3;
@@ -157,6 +171,52 @@ export async function listingCountsByCategoryCity() {
 
 export function isThin(count: number) {
   return count < THIN;
+}
+
+export async function getPage(slug: string) {
+  await connectDb();
+  return Page.findOne({ slug, status: "published" }).lean();
+}
+
+export async function getHelpArticles() {
+  await connectDb();
+  return HelpArticle.find({ status: "published" }).sort({ order: 1 }).lean();
+}
+
+export async function getHelp(slug: string) {
+  await connectDb();
+  return HelpArticle.findOne({ slug, status: "published" }).lean();
+}
+
+export async function getBlogPosts() {
+  await connectDb();
+  return BlogPost.find({ status: "published" }).lean();
+}
+
+export async function getBlog(slug: string) {
+  await connectDb();
+  return BlogPost.findOne({ slug, status: "published" }).lean();
+}
+
+export async function getCreditPacks() {
+  await connectDb();
+  return CreditPack.find({ status: "active" }).sort({ order: 1 }).lean();
+}
+
+export async function getBanners(slot?: string) {
+  await connectDb();
+  const q = slot ? { slot, enabled: true } : { enabled: true };
+  return Banner.find(q).sort({ order: 1 }).lean();
+}
+
+export async function getFlags() {
+  await connectDb();
+  return FeatureFlag.find().lean();
+}
+
+export async function getAttributeGroups() {
+  await connectDb();
+  return AttributeGroup.find().sort({ order: 1 }).lean();
 }
 
 export { PAGE_SIZE };

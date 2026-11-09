@@ -27,6 +27,15 @@ npm run dev
 
 App: http://127.0.0.1:4317
 
+## Admin CMS
+
+Everything on the public site is stored in Mongo and edited at `/admin/` (login `admin@tharkoo.demo` / `admin` / 2FA `000000`).
+
+- **CMS & banners** — entire homepage (block order, hero, category row, boost panel, custom HTML), theme colours, header/age-gate/cookie copy, banners, legal pages
+- **Categories / Locations / Ads / SEO / Help / Blog / Credit packs / Flags** — the lists the live site reads
+
+Photos are clothed SVG placeholders under `/public/placeholders/` (no nudes).
+
 ## Continue in another Cursor account
 
 Read `docs/HANDOFF.md` and `docs/PLAN.md`. The whole plan is in git.

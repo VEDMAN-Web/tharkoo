@@ -56,18 +56,23 @@ export const CATEGORIES = [
 export const TAG_GROUPS = [
   {
     key: "tag1",
-    label: "Service type",
+    label: "Profile type",
     type: "select" as const,
-    options: [
-      "Cleaning", "Plumbing", "Electrical", "Carpentry", "Painting", "AC repair",
-      "Appliance", "Packers", "Driver", "Cook", "Tutor", "Beauty", "Fitness",
-      "Photography", "Event help", "IT support", "Legal", "Accounting", "Delivery",
-      "Other",
-    ],
+    options: ["Independent", "Agency", "Student", "Housewife", "Mature", "Couple"],
   },
-  { key: "tag2", label: "Availability", type: "multi" as const, options: ["Today", "This week"] },
-  { key: "tag3", label: "Hours", type: "multi" as const, options: ["Morning", "Afternoon", "Evening", "Night"] },
-  { key: "tag4", label: "Visit type", type: "multi" as const, options: ["At your place", "At their place"] },
+  { key: "tag2", label: "Meeting", type: "multi" as const, options: ["Incall", "Outcall"] },
+  {
+    key: "tag3",
+    label: "Hours",
+    type: "multi" as const,
+    options: ["Morning", "Afternoon", "Evening", "Night", "24 hours"],
+  },
+  {
+    key: "tag4",
+    label: "Services",
+    type: "multi" as const,
+    options: ["Girlfriend experience", "Massage", "Overnight", "Video call", "Travel"],
+  },
   {
     key: "tag5",
     label: "Languages",
@@ -77,9 +82,24 @@ export const TAG_GROUPS = [
       "Malayalam", "Bengali", "Punjabi", "Urdu", "Odia", "Assamese",
     ],
   },
-  { key: "tag6", label: "Payment", type: "multi" as const, options: ["Cash", "UPI", "Card", "Invoice"] },
-  { key: "tag7", label: "Audience", type: "multi" as const, options: ["Home", "Office", "Shop", "Event", "Online"] },
+  { key: "tag6", label: "Payment", type: "multi" as const, options: ["Cash", "UPI"] },
+  { key: "tag7", label: "Body", type: "multi" as const, options: ["Slim", "Athletic", "Curvy", "Average"] },
 ];
+
+export const TAG_PAGES = [
+  { slug: "independent", label: "Independent" },
+  { slug: "incall", label: "Incall" },
+  { slug: "outcall", label: "Outcall" },
+  { slug: "video-call", label: "Video call" },
+  { slug: "massage", label: "Massage" },
+];
+
+/** Skokka-style region slugs for states that share a city name. */
+export const STATE_SLUGS: Record<string, string> = {
+  Delhi: "delhi-region",
+  Kerala: "kerala-region",
+  Chandigarh: "chandigarh-region",
+};
 
 export const TOP_CITIES = [
   "Hyderabad", "Delhi", "Bangalore", "Mumbai", "Pune",

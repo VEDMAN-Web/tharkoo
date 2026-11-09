@@ -1,7 +1,10 @@
+"use client";
+
 import Link from "next/link";
 
 type Cat = { slug: string; name: string };
 type City = { slug: string; name: string };
+type LinkItem = { label: string; href: string };
 
 export function Footer({
   siteName,
@@ -10,6 +13,8 @@ export function Footer({
   about,
   categories,
   cities,
+  links,
+  social,
 }: {
   siteName: string;
   legalName: string;
@@ -17,17 +22,28 @@ export function Footer({
   about: string;
   categories: Cat[];
   cities: City[];
+  links: LinkItem[];
+  social: LinkItem[];
 }) {
-  const links = [
-    ["About", "/about"],
-    ["Help centre", "/help"],
-    ["Submit a report", "/submit-report"],
-    ["How to report a scam", "/help#scams"],
-    ["Terms", "/terms"],
-    ["Privacy", "/privacy"],
-    ["Cookies", "/cookies"],
-    ["Grievance officer", "/grievance"],
-  ] as const;
+  const nav = links.length
+    ? links
+    : [
+        { label: "About", href: "/about/" },
+        { label: "Help centre", href: "/help/" },
+        { label: "Blog", href: "/blog/" },
+        { label: "Submit a report", href: "/submit-report/" },
+        { label: "How to report a scam", href: "/help/scams/" },
+        { label: "Terms", href: "/terms/" },
+        { label: "Privacy", href: "/privacy/" },
+        { label: "Cookies", href: "/cookies/" },
+        { label: "Grievance officer", href: "/grievance/" },
+      ];
+  const nets = social.length
+    ? social
+    : ["Instagram", "X", "TikTok", "Bluesky", "YouTube", "Facebook"].map((label) => ({
+        label,
+        href: `https://www.google.com/search?q=${siteName}+${label}`,
+      }));
   const top = cities.slice(0, 5);
 
   return (
@@ -55,15 +71,27 @@ export function Footer({
             </div>
           ))}
         </div>
-        <div className="mt-8 flex flex-wrap gap-x-4 gap-y-2 border-t pt-4 text-xs text-[#777]">
-          {links.map(([label, href]) => (
-            <Link key={href} href={href}>
-              {label}
+        <div className="mt-6 flex flex-wrap gap-3 text-xs text-[#777]">
+          {nets.map((s) => (
+            <a key={s.label} href={s.href} rel="nofollow">
+              {s.label}
+            </a>
+          ))}
+        </div>
+        <div className="mt-6 flex flex-wrap gap-x-4 gap-y-2 border-t pt-4 text-xs text-[#777]">
+          {nav.map((l) => (
+            <Link key={l.href} href={l.href}>
+              {l.label}
             </Link>
           ))}
+          <Link href="/cities/">{cityCount} cities</Link>
+          <Link href="/admin/">Admin</Link>
           <span>
-            {cityCount} cities · © {new Date().getFullYear()} {legalName} · {siteName}
+            © {new Date().getFullYear()} {legalName} · {siteName}
           </span>
+          <button type="button" className="ml-auto underline" onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}>
+            Back to top
+          </button>
         </div>
       </div>
     </footer>

@@ -18,6 +18,8 @@ export function ListingPageView({
   total,
   siblingLinks,
   emptyNearby,
+  photos,
+  verified,
 }: {
   h1: string;
   h2?: string;
@@ -33,14 +35,17 @@ export function ListingPageView({
   noindex?: boolean;
   siblingLinks: { href: string; label: string }[];
   emptyNearby: { href: string; label: string }[];
+  photos?: boolean;
+  verified?: boolean;
 }) {
+  const action = path.split("?")[0];
   return (
     <>
       <JsonLd data={[breadcrumbJsonLd(crumbs), {
         "@context": "https://schema.org",
         "@type": "ItemList",
         numberOfItems: total,
-        url: canonical(path),
+        url: canonical(path.split("?")[0]),
         itemListElement: items.map((ad, i) => ({
           "@type": "ListItem",
           position: (page - 1) * 25 + i + 1,
@@ -68,15 +73,16 @@ export function ListingPageView({
           ))}
         </div>
       ) : null}
-      <form className="mt-4 flex flex-wrap gap-5 text-[13px]" action={path}>
+      <form className="mt-4 flex flex-wrap gap-5 text-[13px]" action={action}>
         <label className="flex items-center gap-2">
-          <input type="checkbox" name="photos" value="1" /> With photos only
+          <input type="checkbox" name="photos" value="1" defaultChecked={photos} /> With photos only
         </label>
         <label className="flex items-center gap-2">
-          <input type="checkbox" name="verified" value="1" /> Verified only
+          <input type="checkbox" name="verified" value="1" defaultChecked={verified} /> Verified only
         </label>
-        <button className="text-[var(--sk-link)]">Apply</button>
+        <button className="text-[var(--sk-link)]" type="submit">Apply</button>
       </form>
+      <p className="mt-2 text-[12px] text-[#888]">{total} ads</p>
       <div className="mt-4 overflow-hidden border border-[#e0e0e0] bg-white">
         <StarStrip ads={stars} />
         {items.length ? (
@@ -102,7 +108,7 @@ export function ListingPageView({
           {Array.from({ length: pages }, (_, i) => i + 1).slice(0, 12).map((n) => (
             <Link
               key={n}
-              href={`${path}${n === 1 ? "" : `?page=${n}`}`}
+              href={`${action}${n === 1 ? "" : `?page=${n}`}`}
               className={`min-w-8 px-2 py-1 text-center ${n === page ? "bg-[var(--sk-blue)] text-white" : "bg-white"}`}
             >
               {n}

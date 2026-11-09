@@ -111,6 +111,8 @@ export default async function LocationPage({ params, searchParams }: Props) {
       noindex={isThin(feed.total)}
       siblingLinks={siblingLinks}
       emptyNearby={siblings.slice(0, 6).map((c) => ({ href: `/${category}/${c.slug}/`, label: c.name! }))}
+      photos={sp.photos === "1"}
+      verified={sp.verified === "1"}
     />
   );
 }

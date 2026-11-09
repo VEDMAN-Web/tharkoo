@@ -10,13 +10,12 @@ function envLocalHasUri() {
 }
 
 async function ensureUri() {
-  if (process.env.MONGODB_URI) return process.env.MONGODB_URI;
-  if (envLocalHasUri()) {
-    const match = readFileSync(".env.local", "utf8").match(/MONGODB_URI=(.+)/);
-    return match?.[1]?.trim();
+  const existing = process.env.MONGODB_URI || (envLocalHasUri() ? readFileSync(".env.local", "utf8").match(/MONGODB_URI=(.+)/)?.[1]?.trim() : "");
+  if (existing && !existing.includes("127.0.0.1") && !existing.includes("localhost")) {
+    return existing;
   }
 
-  console.log("No MONGODB_URI — starting in-memory MongoDB (use docker compose for a real local DB).");
+  console.log("Starting in-memory MongoDB (use docker compose + npm run seed for a persistent local DB).");
   const mongod = await MongoMemoryServer.create({ instance: { dbName: "tharkoo" } });
   const uri = mongod.getUri("tharkoo");
   writeFileSync(

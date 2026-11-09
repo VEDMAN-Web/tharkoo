@@ -1,19 +1,17 @@
 import { StaticPage } from "@/components/StaticPage";
-
 export const metadata = { title: "Submit a report" };
-
-export default function ReportPage() {
+export default async function ReportPage({ searchParams }: { searchParams: Promise<{ ad?: string }> }) {
+  const { ad } = await searchParams;
   return (
     <StaticPage title="Report an ad">
-      <p>This form is a slice-1 shell. Slice 4 stores reports in Mongo for moderators.</p>
-      <form className="mt-4 grid max-w-md gap-3 text-sm text-[var(--text-primary)]">
+      <form className="mt-4 grid max-w-md gap-3 text-sm text-[#333]">
         <label className="grid gap-1">
           Ad ID
-          <input name="adId" className="rounded border px-3 py-2" placeholder="inXXXXXXX" />
+          <input name="adId" className="border px-3 py-2" defaultValue={ad} placeholder="inXXXXXXX" />
         </label>
         <label className="grid gap-1">
           Reason
-          <select name="reason" className="rounded border px-3 py-2">
+          <select name="reason" className="border px-3 py-2">
             <option>Spam</option>
             <option>Scam / payment fraud</option>
             <option>Stolen photos</option>
@@ -23,9 +21,9 @@ export default function ReportPage() {
         </label>
         <label className="grid gap-1">
           Details
-          <textarea name="details" rows={4} className="rounded border px-3 py-2" />
+          <textarea name="details" rows={4} className="border px-3 py-2" />
         </label>
-        <button className="rounded bg-[var(--brand-primary)] px-4 py-2 font-semibold text-white">Send (demo)</button>
+        <button className="btn-post">Send</button>
       </form>
     </StaticPage>
   );
