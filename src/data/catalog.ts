@@ -5,7 +5,7 @@ export const CATEGORIES = [
     name: "Call Girls",
     slug: "call-girls",
     description:
-      "Call girls and escort ads. Independent girls and escorts. Women seeking men. Browse erotic services in your city.",
+      "Call girls and escort ads. Independent girls and escorts waiting to satisfy your sexual fantasies. Escort and women seeking men W4M. Enjoy their erotic services",
     icon: "call-girls",
     color: "#e20044",
     order: 1,
@@ -15,7 +15,7 @@ export const CATEGORIES = [
     name: "Massages",
     slug: "massages",
     description:
-      "Erotic massage ads. Body massage and full-body sessions listed by city.",
+      "Enjoy the best erotic massages ads. All sexual services. The hottest girls offer you a relaxing and hot massage. Full body massages",
     icon: "massages",
     color: "#9b4dca",
     order: 2,
@@ -25,7 +25,7 @@ export const CATEGORIES = [
     name: "Male Escorts",
     slug: "male-escorts",
     description:
-      "Male escort services, gigolos, gay escorts and call boys. Male adult services by city.",
+      "Male escort services, gigolos, gay escorts and call boys. Models and male adult services. Dating with male escorts",
     icon: "male-escorts",
     color: "#0077c8",
     order: 3,
@@ -35,7 +35,7 @@ export const CATEGORIES = [
     name: "Transsexual",
     slug: "transsexual",
     description:
-      "Transsexual dating and TS escort ads. Shemale, ladyboy and TS listings.",
+      "Transsexual dating. Discover the new sexual services with the sexiest transsexual in India. Shemale, ladyboy and TS escorts",
     icon: "transsexual",
     color: "#00a88f",
     order: 4,
@@ -45,7 +45,7 @@ export const CATEGORIES = [
     name: "Adult Meetings",
     slug: "adult-meetings",
     description:
-      "Casual dating, NSA and local adult meetings. Chat with singles for a meeting.",
+      "Casual dating, find your true love or NSA. Chat with local singles, girls or boys for a meeting. Meet with them and find a dating partner",
     icon: "adult-meetings",
     color: "#f5a623",
     order: 5,

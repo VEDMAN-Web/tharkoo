@@ -168,7 +168,7 @@ export function PostWizard() {
                 <strong>Star</strong>
                 <p className="text-[12px]">Homepage-city strip. 6 slots per window.</p>
               </button>
-              <button type="button" className="btn-ghost" onClick={() => setScreen("basic")}>Publish as Basic Ad (2 free left this week)</button>
+              <button type="button" className="btn-ghost" onClick={() => setScreen("basic")}>Advertise for free (2 free ads left this week)</button>
               <button type="button" className="btn-ghost">Save as draft</button>
             </div>
           </div>

@@ -23,10 +23,10 @@ export const DEFAULT_SEO = {
   home: {
     pageType: "home",
     title: "Escort service and Adult meetings in India - Tharkoo",
-    description: "Tharkoo #1 adult classified site in India. Browse Call Girls, Massages, Male Escorts, Transsexual and Adult Meetings. Post your ad free.",
+    description: "Tharkoo #1 Adult Classifieds in India. Browse Call Girls, Massages, Male Escorts, Transsexual and Adult Meetings. Post your ad absolutely FREE.",
     h1: "Hot meetings in your city",
     h2: "Find your favourite Escort in Tharkoo",
-    intro: "Welcome to Tharkoo, adult classifieds in India. Browse Call Girls, massages, male escorts, transsexual ads and Adult Meetings. Cannot find what you are looking for? Post your ad absolutely FREE.",
+    intro: "Welcome to Tharkoo, #1 Adult Classifieds in India. Are you looking for escort service? Browse massages, sexual meetings, escorts, independent escorts, call boys, transsexual ads and Adult Meetings. Cannot find what you're looking for? POST YOUR AD absolutely FREE!",
     footer: "New cities open over time. Posting is free within weekly limits; paid bumps move an ad to the top of the feed.",
   },
   category: {
@@ -42,7 +42,7 @@ export const DEFAULT_SEO = {
     pageType: "location",
     title: "{category} in {city}{districtPref} | {site}",
     description: "{count} {category} listings in {city}. Call, WhatsApp or Telegram the vendor directly.",
-    h1: "{category} in {city}{districtPref}",
+    h1: "{category} {city}{districtPref}",
     h2: "Latest ads in {city}",
     intro: "Live {category} ads in {city}. Promoted ads sit at the top during their time slot.",
     footer: "See nearby cities if this page is still filling up.",

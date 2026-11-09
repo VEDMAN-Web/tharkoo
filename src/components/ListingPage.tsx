@@ -73,7 +73,7 @@ export function ListingPageView({
           ))}
         </div>
       ) : null}
-      <form className="mt-4 flex flex-wrap gap-5 text-[13px]" action={action}>
+      <form className="mt-4 flex flex-wrap items-center gap-x-5 gap-y-2 text-[13px]" action={action}>
         <label className="flex items-center gap-2">
           <input type="checkbox" name="photos" value="1" defaultChecked={photos} /> With photos only
         </label>

@@ -89,9 +89,9 @@ export function Footer({
             </Link>
           ))}
           <Link href="/cities/">{cityCount} cities</Link>
-          <Link href="/admin/">Admin</Link>
+          <Link href="/u/post-insert/">Do you want to advertise?</Link>
           <span>
-            © {new Date().getFullYear()} {legalName} · {siteName}
+            © {new Date().getFullYear()} {legalName}
           </span>
           <button type="button" className="ml-auto underline" onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}>
             Back to top
