@@ -9,7 +9,7 @@ export default async function AdminLogin() {
     return (
       <div className="mx-auto max-w-sm bg-white p-6">
         <h1 className="text-[22px]">Staff access</h1>
-        <p className="mt-3 text-[14px] leading-6">Sign in with Cursor to open this staging admin.</p>
+        <p className="mt-3 text-[14px] leading-6">Sign in as the app owner or a Cursor team admin.</p>
       </div>
     );
   }

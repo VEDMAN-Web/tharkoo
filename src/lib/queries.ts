@@ -1,3 +1,4 @@
+import { cached } from "./cache";
 import { connectDb } from "./db";
 import { safeSearch } from "./sanitize";
 import {
@@ -20,23 +21,27 @@ const PAGE_SIZE = 25;
 const THIN = 3;
 
 export async function getSite() {
-  await connectDb();
-  return (
-    (await Site.findOne({ key: "default" }).lean()) ?? {
-      name: "Tharkoo",
-      tagline:
-        "Welcome to Tharkoo. Browse Call Girls, Massages, Male Escorts, Transsexual and Adult Meetings across Indian cities. Post your ad absolutely FREE.",
-      legalName: "SparkBeta Tech",
-      countryName: "India",
-      supportHours: "Mon–Fri 14:00–20:00 IST",
-      ageGateEnabled: true,
-    }
-  );
+  return cached("site", 15_000, async () => {
+    await connectDb();
+    return (
+      (await Site.findOne({ key: "default" }).lean()) ?? {
+        name: "Tharkoo",
+        tagline:
+          "Welcome to Tharkoo. Browse Call Girls, Massages, Male Escorts, Transsexual and Adult Meetings across Indian cities. Post your ad absolutely FREE.",
+        legalName: "SparkBeta Tech",
+        countryName: "India",
+        supportHours: "Mon–Fri 14:00–20:00 IST",
+        ageGateEnabled: true,
+      }
+    );
+  });
 }
 
 export async function getCategories() {
-  await connectDb();
-  return Category.find({ status: "active" }).sort({ order: 1 }).lean();
+  return cached("categories", 30_000, async () => {
+    await connectDb();
+    return Category.find({ status: "active" }).sort({ order: 1 }).lean();
+  });
 }
 
 export async function getCategory(slug: string) {
@@ -50,15 +55,19 @@ export async function getLocationBySlug(slug: string) {
 }
 
 export async function getCities(limit?: number) {
-  await connectDb();
-  const q = Location.find({ kind: "city", status: "active" }).sort({ isTop: -1, name: 1 });
-  if (limit) q.limit(limit);
-  return q.lean();
+  return cached(`cities:${limit || "all"}`, 30_000, async () => {
+    await connectDb();
+    const q = Location.find({ kind: "city", status: "active" }).sort({ isTop: -1, name: 1 });
+    if (limit) q.limit(limit);
+    return q.lean();
+  });
 }
 
 export async function getTopCities() {
-  await connectDb();
-  return Location.find({ kind: "city", isTop: true, status: "active" }).sort({ sortOrder: 1, name: 1 }).lean();
+  return cached("top-cities", 30_000, async () => {
+    await connectDb();
+    return Location.find({ kind: "city", isTop: true, status: "active" }).sort({ sortOrder: 1, name: 1 }).lean();
+  });
 }
 
 export async function getSiblingCities(stateSlug: string) {
@@ -99,17 +108,21 @@ export async function getStarListings(filter: Record<string, unknown>, limit = 6
 }
 
 export async function getFeed(filter: Record<string, unknown>, page = 1) {
-  await connectDb();
-  const skip = (page - 1) * PAGE_SIZE;
-  const query = { status: "live", variant: { $ne: "star" }, ...filter };
-  const [items, total] = await Promise.all([
-    Listing.find(query).sort(rankSort()).skip(skip).limit(PAGE_SIZE).lean(),
-    Listing.countDocuments(query),
-  ]);
-  return { items, total, page, pageSize: PAGE_SIZE, pages: Math.max(1, Math.ceil(total / PAGE_SIZE)) };
+  const safePage = Math.min(Math.max(1, Number(page) || 1), 40);
+  return cached(`feed:${JSON.stringify(filter)}:${safePage}`, 10_000, async () => {
+    await connectDb();
+    const skip = (safePage - 1) * PAGE_SIZE;
+    const query = { status: "live", variant: { $ne: "star" }, ...filter };
+    const [items, total] = await Promise.all([
+      Listing.find(query).sort(rankSort()).skip(skip).limit(PAGE_SIZE).lean(),
+      Listing.countDocuments(query),
+    ]);
+    return { items, total, page: safePage, pageSize: PAGE_SIZE, pages: Math.max(1, Math.ceil(total / PAGE_SIZE)) };
+  });
 }
 
 export async function getListingBySlug(slug: string) {
+  if (!slug || slug.length > 160) return null;
   await connectDb();
   const publicId = slug.split("-").pop() || "";
   return Listing.findOne({
@@ -166,11 +179,13 @@ export async function searchListings(opts: {
 }
 
 export async function listingCountsByCategoryCity() {
-  await connectDb();
-  return Listing.aggregate<{ _id: { categorySlug: string; citySlug: string }; n: number }>([
-    { $match: { status: "live" } },
-    { $group: { _id: { categorySlug: "$categorySlug", citySlug: "$citySlug" }, n: { $sum: 1 } } },
-  ]);
+  return cached("listing-counts", 30_000, async () => {
+    await connectDb();
+    return Listing.aggregate<{ _id: { categorySlug: string; citySlug: string }; n: number }>([
+      { $match: { status: "live" } },
+      { $group: { _id: { categorySlug: "$categorySlug", citySlug: "$citySlug" }, n: { $sum: 1 } } },
+    ]);
+  });
 }
 
 export function isThin(count: number) {

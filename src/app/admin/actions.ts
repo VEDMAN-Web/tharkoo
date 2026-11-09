@@ -4,10 +4,11 @@ import { revalidatePath } from "next/cache";
 import { getStaffFromHeaders, isStaff } from "@/lib/admin-auth";
 import { connectDb } from "@/lib/db";
 import { MODEL_MAP, type ModelName } from "@/lib/models";
+import { sanitizeRecord } from "@/lib/sanitize";
 
 async function staffOrThrow() {
   const identity = await getStaffFromHeaders();
-  if (!isStaff(identity)) throw new Error("Sign in required");
+  if (!isStaff(identity)) throw new Error("Forbidden");
 }
 
 export async function adminList(model: string, limit = 200) {
@@ -30,12 +31,13 @@ export async function adminMutate(input: {
   if (!MODEL_MAP[modelName]) throw new Error("Unknown model");
   await connectDb();
   const Model = MODEL_MAP[modelName];
+  const data = input.data ? sanitizeRecord(input.data) : {};
   let doc = null;
   if (input.op === "create") {
-    doc = await Model.create(input.data || {});
+    doc = await Model.create(data);
   } else if (input.op === "update") {
     if (!input.id) throw new Error("id required");
-    doc = await Model.findByIdAndUpdate(input.id, input.data, { new: true });
+    doc = await Model.findByIdAndUpdate(input.id, data, { new: true });
   } else if (input.op === "delete") {
     if (!input.id) throw new Error("id required");
     await Model.findByIdAndDelete(input.id);

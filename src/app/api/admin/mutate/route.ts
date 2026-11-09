@@ -3,6 +3,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { adminUnauthorized, requireStaffRequest } from "@/lib/admin-auth";
 import { connectDb } from "@/lib/db";
 import { MODEL_MAP, type ModelName } from "@/lib/models";
+import { sanitizeRecord } from "@/lib/sanitize";
 
 export const dynamic = "force-dynamic";
 
@@ -16,12 +17,13 @@ export async function POST(req: NextRequest) {
   }
   await connectDb();
   const Model = MODEL_MAP[modelName];
+  const data = body.data ? sanitizeRecord(body.data) : {};
   let doc = null;
   if (op === "create") {
-    doc = await Model.create(body.data || {});
+    doc = await Model.create(data);
   } else if (op === "update") {
     if (!body.id) return NextResponse.json({ error: "id required" }, { status: 400 });
-    doc = await Model.findByIdAndUpdate(body.id, body.data, { new: true });
+    doc = await Model.findByIdAndUpdate(body.id, data, { new: true });
   } else if (op === "delete") {
     if (!body.id) return NextResponse.json({ error: "id required" }, { status: 400 });
     await Model.findByIdAndDelete(body.id);

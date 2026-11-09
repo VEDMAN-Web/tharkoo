@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { CategoryIcon } from "./CategoryIcon";
-import { safeHtml } from "@/lib/sanitize";
+import { safeHref, safeHtml } from "@/lib/sanitize";
 
 type Block = {
   id: string;
@@ -95,7 +95,7 @@ export function HomeBlocks({
               <h2 className="text-[18px] font-bold">{block.title}</h2>
               <p className="mt-2 text-[13px] text-[#555]">{block.body || block.subtitle}</p>
               {block.cta ? (
-                <Link href={block.href || "/u/post-insert/"} className="btn-post mt-4 inline-block">
+                <Link href={safeHref(block.href) || "/u/post-insert/"} className="btn-post mt-4 inline-block">
                   {block.cta}
                 </Link>
               ) : null}

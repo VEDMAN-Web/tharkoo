@@ -4,7 +4,7 @@ import { Footer } from "./Footer";
 import { Header } from "./Header";
 import { getCategories, getCities, getSite, getTopCities } from "@/lib/queries";
 import { plain } from "@/lib/plain";
-import { safeCssColor } from "@/lib/sanitize";
+import { safeCssColor, safeHref } from "@/lib/sanitize";
 
 export const dynamic = "force-dynamic";
 
@@ -30,8 +30,18 @@ export async function SiteShell({ children }: { children: React.ReactNode }) {
     .map(([k, v]) => `${k}:${v}`)
     .join(";");
 
-  const footerLinks = plain(((site as { footerLinks?: { label: string; href: string }[] }).footerLinks || []).filter(Boolean));
-  const socialLinks = plain(((site as { socialLinks?: { label: string; href: string }[] }).socialLinks || []).filter(Boolean));
+  const footerLinks = plain(
+    ((site as { footerLinks?: { label: string; href: string }[] }).footerLinks || [])
+      .filter(Boolean)
+      .map((l) => ({ ...l, href: safeHref(l.href) }))
+      .filter((l) => l.href),
+  );
+  const socialLinks = plain(
+    ((site as { socialLinks?: { label: string; href: string }[] }).socialLinks || [])
+      .filter(Boolean)
+      .map((l) => ({ ...l, href: safeHref(l.href) }))
+      .filter((l) => l.href),
+  );
 
   return (
     <>

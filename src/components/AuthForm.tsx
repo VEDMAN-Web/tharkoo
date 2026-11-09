@@ -78,9 +78,9 @@ export function AuthForm({ mode }: { mode: "login" | "register" | "forgot" | "re
   return (
     <Card title="Log in">
       <form className="grid gap-3" onSubmit={goDash}>
-        <input className="border px-3 py-2" type="email" required placeholder="Email" defaultValue="vendor@tharkoo.demo" />
+        <input className="border px-3 py-2" type="email" required placeholder="Email" autoComplete="username" />
         <div className="relative">
-          <input className="w-full border px-3 py-2" type={show ? "text" : "password"} required placeholder="Password" defaultValue="demo" />
+          <input className="w-full border px-3 py-2" type={show ? "text" : "password"} required placeholder="Password" autoComplete="current-password" />
           <button type="button" className="absolute right-2 top-2 text-[12px]" onClick={() => setShow((v) => !v)}>{show ? "Hide" : "Show"}</button>
         </div>
         <label className="flex gap-2 text-[13px]"><input type="checkbox" /> Remember me</label>

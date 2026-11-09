@@ -1,13 +1,19 @@
 import { headers } from "next/headers";
 import { NextRequest, NextResponse } from "next/server";
-import { getIdentity, type Identity } from "../../cursor/identity";
+import { getIdentity, requireTeamRole, type Identity, type VerifiedIdentity } from "../../cursor/identity";
 
 export function adminUnauthorized() {
-  return NextResponse.json({ error: "Sign in required" }, { status: 401 });
+  return NextResponse.json({ error: "Forbidden" }, { status: 403 });
 }
 
-export function isStaff(identity: Identity) {
-  return identity.verified === true && identity.kind === "person";
+export function isStaff(identity: Identity): identity is VerifiedIdentity {
+  if (!identity.verified) return false;
+  if (identity.kind !== "person") return false;
+  if (identity.appVisibility === "team") {
+    const allowed = requireTeamRole(identity, ["admin"]);
+    return !(allowed instanceof Response);
+  }
+  return identity.appVisibility === "private";
 }
 
 export async function getStaffFromHeaders() {

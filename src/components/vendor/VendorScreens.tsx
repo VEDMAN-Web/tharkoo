@@ -20,7 +20,7 @@ export function Dashboard({ locked = false }: { locked?: boolean }) {
           </Link>
         </div>
       ) : null}
-      <p className="mb-4 text-[13px]">Welcome vendor@tharkoo.demo</p>
+      <p className="mb-4 text-[13px]">Welcome back</p>
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
         <Tile title="Ads" href="/u/account/ads/">
           Active 12 · Not published 2

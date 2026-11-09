@@ -9,7 +9,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
       <div className="mx-auto max-w-sm bg-white p-6">
         <h1 className="text-[22px]">Staff access</h1>
         <p className="mt-3 text-[14px] leading-6">
-          This staging admin is only for people signed in to this Cursor app. Open it as a private or team app, or run it locally where a simulated staff viewer is used.
+          Staff CMS is limited to the private-app owner or a Cursor team admin. Team members and public visitors cannot change listings or site content.
         </p>
       </div>
     );

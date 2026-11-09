@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { safeHref } from "@/lib/sanitize";
 
 type Cat = { slug: string; name: string };
 type City = { slug: string; name: string };
@@ -72,15 +73,18 @@ export function Footer({
           ))}
         </div>
         <div className="mt-6 flex flex-wrap gap-3 text-xs text-[#777]">
-          {nets.map((s) => (
-            <a key={s.label} href={s.href} rel="nofollow">
+          {nets
+            .map((s) => ({ ...s, href: safeHref(s.href) }))
+            .filter((s) => s.href)
+            .map((s) => (
+            <a key={s.label} href={s.href} rel="nofollow noopener noreferrer">
               {s.label}
             </a>
           ))}
         </div>
         <div className="mt-6 flex flex-wrap gap-x-4 gap-y-2 border-t pt-4 text-xs text-[#777]">
           {nav.map((l) => (
-            <Link key={l.href} href={l.href}>
+            <Link key={l.href} href={safeHref(l.href) || "/"}>
               {l.label}
             </Link>
           ))}
