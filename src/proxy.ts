@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { allowRequest, clientKey } from "@/lib/rate-limit";
 
-export function middleware(req: NextRequest) {
+export function proxy(req: NextRequest) {
   const ip = clientKey(req.headers);
   const search = req.nextUrl.pathname.startsWith("/search");
   const ok = allowRequest(ip, search ? 30 : 90, 60_000);

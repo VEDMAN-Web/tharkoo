@@ -6,7 +6,7 @@
     "dev": "node scripts/dev.mjs",
     "dev:next": "next dev -p 4317 -H 0.0.0.0",
     "seed": "tsx scripts/seed.ts",
-    "build": "next build",
+    "build": "NODE_OPTIONS=--max-old-space-size=4096 next build",
     "start": "next start -p 4317",
     "lint": "eslint"
   },
