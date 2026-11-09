@@ -1,0 +1,1950 @@
+
+Classifieds Platform
+Product Requirements Document (PRD) — v1.0 neutral, full functional parity with the researched reference platform
+
+Owner: Vedant Paliwal, CEO & MD, SparkBeta Tech, Surat
+Version / date: v1.0 — 9 November 2026 (draft for owner review)
+Audience: owner review first, then the development team
+Status: Draft. Every value marked "default" is editable by an admin at run time.
+How this PRD was made: every feature, flow, rule, limit, product name and panel of the researched reference classifieds platform (9 Nov 2026) is specified here at full functional parity. Category names and tag-group labels are left as numbered empty slots (Appendix B) for the owner to fill in before development; their field types and option counts match the reference. All values are dynamic (admin-managed). All wording in this PRD is original.
+Document control
+Version
+Date
+Author
+Change
+v1.0
+9 Nov 2026
+Claude for SparkBeta Tech
+First full draft for owner review
+
+How to read requirement IDs: every requirement has an ID such as VP-POST-012 (Vendor Panel, Posting, item 12). Developers should quote these IDs in tasks, commits and test cases. Priority labels: P0 = must have at launch, P1 = needed soon after launch, P2 = later.
+Contents
+Product overview, goals and scope
+Users, roles and permissions
+Dynamic configuration: what admins control
+Information architecture and URL structure
+Public site (User Panel — buyers and visitors)
+Vendor Panel — accounts, verification and dashboard
+Vendor Panel — the 3-step posting wizard
+Vendor Panel — media albums and photo grading
+Vendor Panel — ad management
+Monetisation engine — paid products, slots and bumps
+Monetisation engine — wallet, credits, coupons, packs, subscription
+Payments
+Seller analytics
+Moderation, trust and safety
+Admin Panel
+Support and Help Centre
+SEO
+Notifications and messaging
+Tracking and analytics
+Data model
+Non-functional requirements
+Legal and compliance (India)
+Release phases and acceptance
+Open decisions for the owner
+Appendix A — Default configuration values
+Appendix B — Seed data (categories, attributes, cities)
+Appendix C — Screen inventory (every screen, every panel)
+Appendix D — Visual design slots
+1. Product overview, goals and scope
+1.1 What we are building
+A city-by-category classifieds platform for India. Anyone can browse listings for free. Registered, verified advertisers ("vendors") post listings. Posting is free but limited. Vendors pay to push listings to the top of the list during the hours buyers browse, using a prepaid credits wallet. Buyers contact vendors directly by phone, WhatsApp, Telegram or email; the platform takes no commission on deals.
+1.2 Business goals
+Win Google traffic for every "category + city" and "category + district" search through an automatically generated page grid.
+Fill the site with listings through free posting, then convert active vendors to paid visibility products.
+Earn revenue from: paid promotions (Top, Auto Boost, Flash, Star), upgrades (Super Top, Highlight, New label), Publishing Packs, a vendor subscription plan, and paid add-ons (Verified badge, contact-limit unlock).
+Keep buyers returning through a feed that changes all day (driven by paid bumps), plus saved contacts.
+1.3 In scope (v1)
+Public site (User Panel): home, category, state, city, district listing pages, search, filters, ad detail page, contact, save contact, report ad, buyer account.
+Vendor Panel: registration, email + phone + KYC verification, dashboard, 3-step posting wizard, media albums, ad management, promotions, wallet, coupons, Publishing Packs, subscription, auto-renewal, analytics, settings.
+Admin Panel: full control of users, vendors, ads, media, moderation, KYC, catalogue (categories, attributes, locations), products and prices, slots, coupons, packs, subscriptions, finance, SEO, CMS, help centre, blog, templates, roles, audit logs, feature flags.
+Support: help centre, ticketing, WhatsApp/Telegram support desk, scam reporting site, customer code verification.
+SEO engine, payments, notifications (email, SMS, WhatsApp), tracking.
+Fully responsive on mobile, tablet and desktop for all three panels.
+1.4 Out of scope (v1)
+Native iOS/Android apps (the reference platform has none; mobile web covers it). An installable web app (PWA) is listed as P1 in section 5.
+In-site buyer-vendor chat (contact happens off-platform, as on the reference). Listed as an open decision.
+Taking payment for vendors&apos; services, escrow or commissions.
+Cryptocurrency payments (present on the reference; kept as a feature flag, default off — see section 12).
+1.5 Glossary
+Term
+Meaning
+Visitor
+Anyone browsing without logging in
+Buyer / User
+A registered person who browses and contacts vendors (User Panel)
+Vendor / Advertiser
+A registered, verified person who posts listings (Vendor Panel)
+Ad / Listing
+One post
+Basic Ad
+A free (or Publishing-Pack) listing with limited visibility
+Promotion
+A paid product that bumps an ad to the top at set times
+Bump
+Moving an ad to position 1 by setting its "last bumped at" time to now
+Slot
+A fixed block of hours in a day in which a promotion runs
+Upgrade
+A paid visual add-on that runs for the length of a Top promotion
+Credits
+Prepaid platform currency; default 1 credit = Rs 10
+Customer Code
+A unique public ID per account, e.g. IN + 6 characters, used in support and official messages
+Star
+The premium limited-capacity product
+
+2. Users, roles and permissions
+2.1 Front-end roles
+Role
+Can do
+Cannot do
+Visitor
+Browse all pages, search, filter, view ads, see contact buttons, report an ad, read help centre and blog
+Save contacts; post ads
+Buyer (registered)
+Everything a visitor can + save contacts list, manage newsletter, delete account
+Post ads until vendor verification is completed
+Vendor (unverified)
+Log in, see a locked dashboard with verification banner, start KYC, browse
+Open Wallet, Ads or Post Ad (all redirect to the dashboard)
+Vendor (verified)
+Everything: post, promote, buy credits, manage ads, analytics, subscription
+—
+
+VP-ROLE-001 (P0): one account can act as both buyer and vendor. Vendor features unlock after verification (section 6).
+2.2 Admin roles (RBAC)
+AP-RBAC-001 (P0): roles and their permissions are fully configurable by the Super Admin. Defaults:
+Admin role
+Default access
+Super Admin
+Everything, including roles, settings, feature flags and finance
+Moderator
+Ad queue, media review, reports, banned words, account warnings and blocks
+KYC Reviewer
+KYC verification queue and verification history
+Finance
+Transactions, wallet ledger, refunds, bank-transfer proofs, invoices, coupons
+Support Agent
+Tickets, user lookup by Customer Code, read-only ads and wallet, macros
+SEO / Content
+SEO templates, CMS pages, help centre, blog, sitemaps, redirects
+Catalogue Manager
+Categories, attributes, locations, products, prices, slots
+Read-only Analyst
+Dashboards and reports only
+
+AP-RBAC-002 (P0): every admin action is written to the audit log (who, what, before/after, when, IP).
+3. Dynamic configuration: what admins control
+Owner requirement: everything must be dynamic. Nothing below may be hard-coded. Every item is editable in the Admin Panel without a code release, with change history.
+Area
+Admin can create / edit / disable
+Where used
+Countries, states, cities, districts
+Name, slug, parent, status, display order, SEO texts, lat/long
+URLs, posting form, filters, pages
+Categories & sub-categories
+Name, slug, icon, parent, order, status, allowed vendor types, required attributes
+URLs, posting, filters, SEO
+Attribute groups & attributes
+Type (text, number, range, single select, multi select tick-boxes, yes/no, date), options, units, required flag, filterable flag, shown-on-card flag, per category
+Posting step 1, filters, ad card chips, ad page
+Products (Top, Auto Boost, Flash, Star)
+Name, label text, durations, bumps per day, slot rules, capacity, price in credits, payment rules (credits-only or any), countries/cities/categories where sold, status
+Promote step, scheduler
+Upgrades & bundles
+Name, visual settings (border colour, background colour, label, photo count, quick buttons), price, bundle discount %
+Promote step, ad card
+Time slots
+Slot name, start, end, timezone
+Top, Auto Boost, Star
+Credit packs
+Credits, price, bonus credits, tag ("Most popular", "Best deal"), order, status
+Wallet
+Credit value
+Rupees per credit; unit conversion tool (see 11.1)
+Wallet, prices
+Coupons
+Type, value, product, expiry, usage limits, target users
+Wallet, checkout
+Publishing Packs
+Number of Basic Ads, price, validity, go-live date
+Posting step 3
+Subscription plans
+Name, price, period, launch price, every benefit value
+Vendor Panel
+Limits
+Free ads per week, photos on free/paid ads, ad lifetime, contact caps, duplicates per month, AI regenerations, OTP validity, password expiry days
+Everywhere
+Banned words
+Word/phrase, match type, scope (title/description/all), action (block/flag)
+Posting, live re-scan
+Photo grading tiers
+Tier names, visibility rules, cover eligibility
+Media pipeline, ad display
+Texts & translations
+Every UI label, button, message, email/SMS/WhatsApp template, per language
+All panels
+SEO templates
+Title, H1, H2, meta description, intro/footer text with variables, per page type
+SEO engine
+CMS, help centre, blog
+Pages, sections, articles, banners
+Public site
+Banners & promos
+Dashboard banners (e.g. Star upsell), site notices, launch offers
+Vendor dashboard, site
+Payment methods
+Enable/disable per method, display order
+Checkout
+Feature flags
+Turn modules on/off (e.g. Publishing Packs, subscription, crypto, entry gate, videos)
+All
+Support settings
+Support hours, WhatsApp/Telegram numbers, ticket categories, macros
+Help, Wallet page
+
+4. Information architecture and URL structure
+4.1 URL patterns (P0)
+Page
+URL pattern
+Notes
+Home
+/
+Country entry page
+Category hub
+/{category}/
+All cities for the category
+Category + state
+/{category}/{state}/
+Rolls up all cities in the state
+Category + city
+/{category}/{city}/
+Main listing page and main SEO page
+Category + district
+/{category}/{city}/{district}/
+For cities that have districts (P0 for top cities)
+All locations directory
+/cities/
+Every state and city, grouped by state, per category
+Ad detail
+/ad/{title-slug}-{public-id}/
+Flat path; public ID = country prefix + short code, e.g. in51x0nzk
+Search results
+/search/?q=…&category=…&location=…
+noindex
+Post an ad
+/u/post-insert/
+Login + verification required
+Vendor account
+/u/account/dashboard/, /u/account/ads/, /u/account/credits/, /u/account/coupons/, /u/account/edit-account/, /u/account/analytics/, /u/account/media/, /u/account/subscription/
+Private, noindex
+Logout
+/u/logout/
+
+Report
+/submit-report/
+Public report form
+Help centre
+/help/ (or support subdomain)
+Sections + articles
+Blog
+/blog/{lang}/{yyyy}/{mm}/{slug}/
+
+Static pages
+/terms/, /privacy/, /cookies/, /grievance/, /about/
+
+PUB-URL-001 (P0): states and cities share the same URL slot (/{category}/{location}/); one template serves both, and the system knows whether the slug is a state or a city.
+PUB-URL-002 (P0): all slugs are lower-case, hyphenated, generated from names and editable by admins. Changing a slug automatically creates a 301 redirect from the old URL.
+4.2 Location hierarchy
+Country → State/Region → City → District (district). Default seed: all Indian states and the city list in Appendix B, with districts for the largest cities. Each location has its own status, so admins can open new cities at any time. A "newly opened cities" list is shown in the help centre.
+5. Public site (User Panel — buyers and visitors)
+5.1 Global header and footer
+PUB-HDR-001 (P0): logo, current country and city name, search icon (opens search modal), account icon (login/register or account menu), Post your ad button (always visible, sticky on mobile).
+PUB-FTR-001 (P0): about text; quick links; help centre; blog; submit a report; how to report a scam; terms; privacy; cookie policy; grievance officer; social icons (Instagram, X, TikTok, Bluesky, YouTube, Facebook — each admin-configurable); number of countries/cities link; copyright; back-to-top button.
+PUB-FTR-002 (P0): footer and utility links render as JavaScript-driven links (data-href) rather than normal crawlable links, so search-engine link value stays inside the listing grid. Admin can switch each link between normal and data-href.
+5.2 Entry gates and consent
+PUB-GATE-001 (P0, feature flag, default ON): a full-screen 18+ confirmation pop-up on the first visit with Accept / Decline and a terms link. Decline leaves the site. Choice remembered per browser. Text and rules admin-configurable.
+PUB-GATE-003 (P0): media graded Restricted (section 8.2) are shown only to viewers who have verified they are 18+; everyone else sees them blurred with a prompt to verify.
+PUB-GATE-002 (P0): cookie consent banner with Accept all / Manage cookies. The manager shows Strictly necessary (always on), Analytical/Performance and Advertising toggles, each with a description; choices are stored and respected by tag loading.
+5.3 Home page
+PUB-HOME-001 (P0): H1 + intro (from SEO template); a block per category with its icon, a short description and its top 3 cities (admin picks or auto by traffic), plus links to more cities.
+PUB-HOME-002 (P1): "Star" strip of current Star ads across top cities.
+PUB-HOME-003 (P0): "Boost your visibility" panel with a Post your ad button.
+5.4 Category, state, city and district listing pages
+PUB-LIST-001 (P0): SEO header block: H1, H2 and intro text from the SEO template for that page type and location.
+PUB-LIST-002 (P0): breadcrumb: Country › Category › State › City › District.
+PUB-LIST-003 (P0): sibling links: links to the parent state and every other city in the same state (on city pages), and to every district (on city pages that have districts).
+PUB-LIST-004 (P0): Star strip at the top ("Discover our Star listings") showing the Star ads active in this city and slot.
+PUB-LIST-005 (P0): the main feed (ranking rules below), loaded by infinite scroll with a crawlable fallback (see SEO 17.6). Default page size 25.
+PUB-LIST-006 (P0): two quick filter switches above the feed (admin-configurable; default: "With photos only", "Verified only").
+PUB-LIST-007 (P0): an empty state with nearby cities when a page has no ads.
+5.4.1 Feed ranking rules (P0)
+Star ads for the current city and slot are shown in their own strip, never more than the slot capacity (default 6).
+All other live ads are sorted by last_bumped_at, newest first. A free ad&apos;s last_bumped_at = its publish time. Every paid bump sets last_bumped_at = bump time, which moves the ad to position 1.
+Ties are broken by promotion level (Super Top > Top > free), then by ad ID.
+Expired, suspended, deleted, blocked or pending-moderation ads never appear.
+5.4.2 Ad card variants (P0)
+Card variant
+What it shows
+Free / Basic
+Title (cut to 3 lines) linking to the ad; description (cut to 6 lines); 2 attribute chips with icons (default: age and city); no photo
+Top
+Free card + a preview photo next to the title + "TOP" label
++ Super Top
+3 sliding photos, "Super Top" label, coloured border (default blue), quick contact buttons on the card (call, WhatsApp, Telegram)
++ Highlight
+Coloured card background (admin picks colour)
++ New label
+"New" badge; optional animated version
+Flash
+Super Top + Highlight look for the Flash period + live badge (default text "Available now")
+Star
+Premium design with XL cover photo and its own colour, shown in the Star strip
+Verified badge (add-on)
+"Verified" tick on the card and ad page
+Subscriber outline
+Custom outline and glow chosen by a subscribed vendor
+
+5.5 Search
+PUB-SRCH-001 (P0): search opens as a full-screen modal: keyword box, category selector (with "All categories"), location selector (state → city → district), then Advanced filters built from the category&apos;s filterable attributes.
+PUB-SRCH-002 (P0): keyword search over title, description and attribute values, with Indian spelling variants (admin synonym list).
+PUB-SRCH-003 (P1): log every search (keyword, category, location, result count) for the "most-searched" blog content (see 17.8) and analytics.
+5.6 Ad detail page
+PUB-AD-001 (P0): title, photo/video gallery (count limited by ad type: free 1, promoted up to 10), description, attribute table, location (city + district, optional address and map), display name, vendor type, posting date, Customer-Code-free public ad ID.
+PUB-AD-002 (P0): contact buttons for only the channels the vendor switched on: Call, WhatsApp, Telegram, Email. Email opens a relay form; the vendor&apos;s address is never shown. If the vendor&apos;s email bounces, the email button hides automatically.
+PUB-AD-003 (P0): Save contact button. Visitors get a "create a free account or log in" pop-up; logged-in buyers save the contact to their list.
+PUB-AD-004 (P0): Report this ad button → report form (reason list, details, optional screenshot upload, reporter email).
+PUB-AD-005 (P0): share buttons and copy-link.
+PUB-AD-006 (P0): related ads from the same city and category.
+PUB-AD-007 (P0): contact-cap handling: when a free ad reaches its contact cap, contact buttons are replaced with a message for the buyer; the vendor is notified with an unlock offer (section 13.3).
+PUB-AD-008 (P0): safety tip box linking to the scam-education articles.
+5.7 Buyer account (User Panel)
+USR-ACC-001 (P0): register/login with email + password (phone OTP optional), shown at value moments (save contact).
+USR-ACC-002 (P0): Saved contacts list: each entry shows ad title, display name, channels, link to ad, date saved, delete. If a channel becomes unavailable (e.g. email), it is shown as unavailable.
+USR-ACC-003 (P0): settings: email, password, newsletter toggle, delete account.
+USR-ACC-004 (P1): saved searches and new-listing alerts (email/WhatsApp), price-drop alerts, recently viewed (these exceed the reference platform and are recommended).
+USR-ACC-005 (P1): installable web app (PWA) with push notifications.
+6. Vendor Panel — accounts, verification and dashboard
+6.1 Registration (P0)
+Email, confirm email, password (strength rules), accept Terms and Privacy tick-boxes, marketing opt-in tick-box (default ON, admin-configurable), bot check (Cloudflare Turnstile or similar). Button: Register.
+Email verification link (expiry configurable).
+Mobile number verification by SMS OTP (code valid 5 minutes, default). Resend after a cool-down; "Didn&apos;t receive the SMS?" help link.
+Identity verification through a KYC provider (see 6.2).
+Account active → vendor features unlocked.
+VP-REG-001 (P0): email domains on a disposable-email block list are rejected with a clear message (admin-managed list).
+VP-REG-002 (P0): posting from VPNs, private relays and flagged IP ranges can be blocked or flagged (admin setting).
+6.2 Identity / KYC verification (P0)
+Provider-based (reference uses Incode; alternatives allowed — owner decision). Steps shown to the vendor: Document verification → Face scan → Final check.
+Done on mobile. On desktop, show a QR code that continues the flow on the phone.
+Result within 48 hours (default). States: Not started, In progress, In review, Verified, Failed (with reason and Try again).
+Help links: "How it works?" and "Have any questions?". Tips to avoid failure (ID on a flat surface, good light).
+Admin KYC queue for manual review and overrides (section 15).
+6.3 Account rules (P0)
+One account per person. Duplicate detection by phone number, KYC identity and device signals.
+Free-ad limits are counted per account and per phone number; several accounts with the same phone share one limit.
+Customer Code: generated at sign-up; format country prefix + 6 alphanumeric characters (e.g. IN46SXA6). Shown on the dashboard; used in support and printed in every official WhatsApp message.
+Password expiry (default 180 days, configurable) with expiry alerts before the date and forced reset after; reset session expiry handled.
+Change email (with verification), add a second verified email, change verified phone (OTP to old and new).
+Account deletion (self-service, with confirmation and data handling per privacy policy).
+Account statuses: Active, Locked (unverified), Warned, Suspended, Blocked/Banned, Deleted.
+6.4 Vendor dashboard (P0)
+Block
+Content
+Verification banner
+Shown until verified: "verify your identity to unlock your account", steps, status, Try again
+Welcome
+Email, Customer Code, "ID verified" tag after verification
+Promo banner
+Admin-managed upsell banner (e.g. a Star launch announcement) with Learn more
+Ads tile
+Active count, Not published count, link to Ads
+Wallet tile
+Current credits, Used credits, Buy credits button
+Coupons tile
+Manage your coupons
+Settings tile
+Manage your personal info
+Newsletter tile
+Marketing communications status + toggle (default ON)
+Security tips tile
+Rotating tips (e.g. official staff never ask for money outside the platform) + Help centre link
+Analytics tile (P1)
+Health Score and badges summary
+Subscription tile (P1)
+Plan status or upsell
+
+VP-DASH-001 (P0): account menu: Dashboard, Ads, Wallet, Coupons, Media, Analytics, Subscription, Settings, Log out.
+VP-DASH-002 (P0): while unverified, Wallet, Ads and Post Ad redirect to the dashboard; the promo banner and Buy credits remain visible.
+7. Vendor Panel — the 3-step posting wizard
+Progress indicator "Step 1 of 3 / 2 of 3 / 3 of 3". Step 3 is always the Promote step, so every vendor sees paid options before publishing.
+7.1 Step 1 — Information (P0)
+Field
+Rules (defaults, all configurable)
+Phone number
+First field; max 25 chars; country code default +91. Verification pop-up: "Receive code now" (SMS OTP, valid 5 min) or "Continue without phone number" (then phone is not shown; some products may require it)
+Category
+Required; dropdown from active categories
+City
+Required; dropdown of active cities (defaults to the vendor&apos;s profile city)
+District / district
+Shown when the city has districts; required/optional per admin
+Address
+Optional
+Postal code
+Optional (PIN code validation)
+Place / landmark
+Optional
+Age
+Required number field (minimum value configurable, default 18)
+Category attributes
+Any extra fields defined for the category (dynamic; none by default)
+Nickname
+Required; max 20 chars; public display name
+Title
+Required; min 5 chars; max configurable; must not copy another ad
+Description
+Required; min/max configurable; guidance text
+AI-generated tick-box
+Vendor declares if text is AI-written
+Search tags
+Tag group 1 (dropdown) and tag groups 2–7 (tick-boxes), exactly as listed in Appendix B.2; labels filled by the owner
+Contact method
+Radio: Phone only / Email only / Email and phone; plus WhatsApp and Telegram toggles; email address field
+Price / price per hour
+Optional (P1)
+Terms tick-box
+Required
+
+Button: Go on / Save and continue.
+7.1.1 Step 1 checks (P0)
+Banned-word filter: on submit, scan title and description against the banned-word list; block with a message naming the exact word. Admin can also set words to "flag for review" instead of block.
+Duplicate detection: if title/description is identical or very similar to a recent ad (similarity threshold configurable), block with "this text matches an existing listing; please change it before publishing".
+AI rewrite: on a duplicate block, offer "Generate with AI". It asks for/uses the vendor&apos;s phone number to read their previous ads and generates new text; Regenerate up to 3 times (counter "0/3"); vendor can edit; "Use the AI text" fills the fields.
+Weekly limit check: if the free weekly limit is reached, show a weekly-limit message with options: promote the ad, buy a Publishing Pack (when enabled), or save as draft.
+7.2 Step 2 — Photos and media (P0)
+Upload by drag-and-drop or file picker; multiple files at once; upload in groups recommended; progress bar.
+Pick from the vendor&apos;s media albums (section 8) or upload new files into an album.
+Drag to reorder; choose a cover photo (if none chosen, the first photo becomes the cover).
+Shows how many photos will be visible: free/Basic ads show 1 (with a prompt explaining that promoting unlocks more photos); promoted ads show up to 10.
+Grading result shown per photo (section 8.2). A rejected photo cannot be used. Restricted photos cannot be the cover.
+Buttons: Save and continue, Continue without photo (warning that the listing will have no cover image), Save as draft.
+Video (P1): add videos from the media library; choose photo or video as preview.
+Photo guidelines link and tips on how photos improve contacts.
+7.3 Step 3 — Promote or publish (P0)
+Shows an ad preview (desktop and mobile), then two paths:
+Path A — Promote (instant go-live)
+Choose a product: Top, Flash or Star (cards showing benefits; "Learn how it works" links).
+For Top: choose duration (1, 3 or 7 days), bumps per day (3 or 6), time slot (Morning, Afternoon, Evening, Night — 6 hours each), and optional Auto Boost (10 bumps inside one 6-hour slot).
+For Star: see the availability calendar for the next 7 days (today + 6) for slots 10:00–22:00 and 22:00–10:00; pick one or more slots (running count of selected slots); sold-out slots greyed out with a sold-out message. Needs at least 1 Safe photo and a display name. Credits only.
+For Flash: starts now, runs 4 hours.
+Add upgrades: Super Top, Highlight, New label, or All Extras (bundle discount shown). Upgrades last as long as the Top.
+Show the price for slot purchase vs hourly purchase, with the % saving.
+Subscriber benefits applied automatically (+1 free bump per day, discounted Super Top).
+Optional Auto-renewal toggle (section 11.6).
+Basket: items, credits or rupee total, remove item (with a confirmation prompt), apply coupon.
+Mandatory consent tick-box: the vendor agrees to immediate activation and accepts that the cancellation/withdrawal right ends once the service starts.
+Pay: with credits (instant checkout, no payment details needed) or direct payment (card/UPI etc., section 12). A billing address is required before the first purchase.
+On success: ad goes live instantly; bump schedule created and shown in a calendar; confirmation screen with "Manage ad".
+Path B — Publish as Basic Ad (free or Publishing Pack)
+Uses the weekly free allowance (default 2 per week, Monday–Sunday) or, when Publishing Packs are enabled, one Basic Ad from the pack balance.
+Goes to the moderation queue; with a message that free listings are reviewed before going live. Vendor sees status "Pending review".
+Only 1 photo visible; contact cap applies.
+Reminder text: number of free ads left this week for this phone number.
+If Basic publishing is unavailable (limit reached, pack needed), show a message offering to promote now or try later, with a link to buy a Publishing Pack.
+Path C — Save as draft
+Drafts are listed in Ads › Drafts and can be published later .
+7.4 Errors and edge cases (P0)
+Payment failed / interrupted → basket kept, ad stays unpublished, clear reason (see 12.6).
+Top bought inside or too close to the chosen slot → first bump moves to the next day; tell the vendor before payment.
+Session timeout → autosave the draft every step.
+Generic publish-failure message with retry and support link.
+8. Vendor Panel — media albums and photo grading
+8.1 Media library and albums (P0)
+Media section in the Vendor Panel: create albums, rename, delete; upload photos (and videos, P1) into albums.
+Every file is checked once on upload (automatic grading + optional human review) and can then be reused across many ads.
+Approved media do not appear in ads automatically; the vendor selects them when creating or editing an ad.
+Album limits (count of albums, files per album) configurable; a limit increase can be granted when previously rejected files are later approved.
+Accepted formats: JPG, PNG, WEBP, HEIC (photos); MP4, MOV, AVI, MKV, WEBM (videos, max length and size configurable; first N seconds auto-trimmed option).
+Automatic compression, resizing and WebP versions for speed; EXIF location stripped for privacy.
+8.2 Three-tier photo grading (P0)
+Every uploaded photo is graded into one of three tiers by the automatic check (tier names and rules editable):
+Tier (default name)
+Meaning
+Visibility
+Cover allowed
+Safe
+Passes the check for general audiences
+Everyone
+Yes
+Restricted
+Allowed, but only for age-verified viewers
+Shown only to viewers verified 18+; blurred for others
+Being phased out (configurable date)
+Rejected
+Breaks the rules (prohibited content, contact details in image, stolen/duplicate photo)
+Never published
+No
+
+Grading by an image-moderation service plus duplicate-image detection (perceptual hash) to catch stolen photos; low-confidence results go to the human media queue.
+Clear messages when some photos could not be checked (continue or replace) and when a photo is rejected.
+8.3 Photo and listing verification (P1)
+Optional "Verify photos" flow: photos are matched against the vendor&apos;s KYC data ("digitally matched"); flagged as optional now with a configurable date when it becomes mandatory.
+360° video verification: the vendor records a short 360° selfie video in the app (portrait mode, steady, minimum length; option to trim the start) so staff can confirm the vendor matches their photos. Approval grants Verified status.
+Paid Verified badge add-on (section 10.6) highlights verification on cards and in search.
+9. Vendor Panel — ad management
+Tab
+Contents and actions
+Published
+Live ads: preview, edit, promote, suspend, delete, share link, expiry date shown above each ad, active promotion and bump calendar, auto-renewal status
+Not published
+Suspended, expired and rejected ads (with reason): publish again, edit, delete
+Pending
+Basic ads waiting for moderation; "Check pending" refresh
+Drafts
+Saved drafts: continue, delete
+Duplicated
+Ads copied to other cities; must be promoted before going live
+
+VP-ADS-001 (P0): edit any field; edits to a live Basic ad may re-enter moderation (rule configurable).
+VP-ADS-002 (P0): change city and change category of a published ad (with rules on active promotions).
+VP-ADS-003 (P0): suspend (moves to Not published, stays saved) and reactivate. Warning before suspending an ad with an active promotion: paid credits are not refunded.
+VP-ADS-004 (P0): permanent delete with confirmation; ad page returns 410 and is removed from sitemaps (search engines may take days to drop it — explain in help).
+VP-ADS-005 (P0): expiry: free ads expire after 30 days; reminder before expiry; renew or promote to extend.
+VP-ADS-006 (P0): change phone number on an ad (needs OTP verification).
+VP-ADS-007 (P1): Duplicate to other cities: copy an ad, change the city, publish instantly (subscription benefit, monthly quota) or promote first (non-subscribers).
+VP-ADS-008 (P1): per-ad stats: views, contact clicks by channel, saves, bump history.
+VP-ADS-009 (P0): ad statuses: Draft, Pending review, Live, Live-promoted, Suspended, Expired, Rejected, Removed by moderation, Deleted.
+10. Monetisation engine — paid products, slots and bumps
+Visibility is sold by time slot and number of bumps, not only by days. All names, prices, durations, slot times and capacities are admin-configurable. Defaults below match the researched platform.
+10.1 Product catalogue (defaults)
+Product
+What the vendor gets
+Timing
+Rules
+Top
+Bumps the ad to position 1 at scheduled times; preview photo on the card; up to 10 photos; "TOP" label; no weekly posting limit for that ad
+Duration 1, 3 or 7 days; 3 or 6 bumps per day; inside one chosen slot
+Base product; upgrades attach to it
+Auto Boost (Top option)
+10 automatic bumps spread across one 6-hour slot
+Morning, Afternoon or Night slot
+India-only on the reference; available for all here (flag)
+Flash
+5 bumps in the first hour (every 15 min), Super Top + Highlight look, live badge ("Visit today" / "Available now")
+4 hours from purchase
+For vendors available right now
+Star
+Premium design, XL cover photo, own strip at top of the city page
+Slots 10:00–22:00 and 22:00–10:00; book up to 7 days ahead
+Max 6 per city per slot; credits only; at least 1 Safe photo; select categories/cities only (configurable)
+Upgrade: Super Top
+3 sliding photos, label, coloured border, quick contact buttons on card
+Same as its Top
+Needs Top
+Upgrade: Highlight
+Coloured card background
+Same as its Top
+Needs Top
+Upgrade: New label
+"New" badge (optional animated version)
+Same as its Top
+Needs Top; aimed at new listings
+All Extras bundle
+All upgrades
+Same as its Top
+Bundle discount % (configurable)
+Add-on: Verified badge
+Verified tick on card and ad
+Per period
+Requires verification passed
+Add-on: Contact unlock
+Keep receiving contacts after the free cap
+Per ad
+Shown when cap is reached
+
+10.2 Time slots (P0)
+Default slots (Asia/Kolkata): Night 00:00–06:00, Morning 06:00–12:00, Afternoon 12:00–18:00, Evening 18:00–24:00. Star uses its own two 12-hour slots. Admin can add, rename or change slots per product.
+10.3 Scheduler and bump engine (P0)
+When a promotion is paid, the system generates the full bump schedule (date-times) for its duration, bumps per day and slot, spreading bumps evenly in the slot (Auto Boost: 10 bumps in the slot; Flash: 5 bumps in 60 minutes). Schedule is shown to the vendor in a calendar.
+A job runner executes bumps on time (to the minute), sets last_bumped_at, and logs every bump. Missed bumps (outage) are re-run or compensated (admin setting).
+Cut-off rule: if a purchase is made inside the chosen slot, or less than X hours before it (default 2 hours, configurable), the first bump day moves to the next day. Nothing is back-dated. The vendor is warned before payment.
+Star capacity is held for 10 minutes during checkout (inventory lock) to prevent overselling; released if payment fails.
+Subscriber benefit: +1 free bump per day on every Top/Flash promotion.
+No limit on the number of ads a vendor can promote, or upgrades per ad.
+Promotions cannot be paused; suspending an ad with an active promotion forfeits it (no refund) — shown as a warning.
+10.4 Pricing rules (P0)
+Each product variant (product × duration × bumps/day × slot) has a price in credits (and rupees for direct payment). Prices can differ by city tier and category (price matrix in Admin).
+Slot purchase vs hourly purchase: show the % saving of buying a full slot.
+Bundle discount for multiple upgrades; subscriber discounts; coupon discounts; launch-offer prices with end dates.
+Price changes take effect at a scheduled time; a "price update" notice can be shown to vendors in advance.
+Rupee prices for the reference platform&apos;s Top, Flash, Star and upgrades were not captured (they appear only on its Promote step after an ad is created). Price defaults are an open decision for the owner — see section 24.
+11. Monetisation engine — wallet, credits, coupons, packs, subscription
+11.1 Wallet and credits (P0)
+Wallet page: Available credits, Used credits, Buy Credits pack grid, coupon box (Apply), Transaction history, basket Total + Pay button, support block (WhatsApp/Telegram, support hours).
+Default value: 1 credit = Rs 10. Credits never expire.
+Every change is a ledger entry (purchase, bonus, spend, refund, coupon, admin adjustment, conversion) with balance after; the ledger is append-only.
+Bonus credits on bigger packs are recorded as separate bonus entries.
+Unit conversion tool: admin can change the credit unit (e.g. show smaller units) and convert every balance proportionally with no change in value; vendors see an explanatory notice.
+Price adjustment tool: when prices change platform-wide, balances can be re-valued so purchasing power is kept; applies to all vendors equally; logged.
+Default credit packs (from the researched platform)
+Credits
+Price (Rs)
+Face value (Rs)
+Bonus credits
+Discount
+Tag
+100
+1,000
+1,000
+0
+0%
+
+150
+1,500
+1,500
+0
+0%
+
+300
+2,900
+3,000
+10
+3%
+Most popular
+620
+5,800
+6,200
+40
+6%
+
+1,040
+9,400
+10,400
+100
+9%
+
+1,720
+15,000
+17,200
+220
+12%
+
+2,970
+25,000
+29,700
+470
+15%
+
+4,930
+40,000
+49,300
+930
+18%
+
+8,950
+70,000
+89,500
+1,950
+21%
+
+13,300
+1,00,000
+1,33,000
+3,300
+24%
+Best deal
+
+11.2 Coupons (P0)
+Coupon types: free product (e.g. free Top 1 day), % or fixed discount on a product, free/discounted credit pack, free Basic Ads.
+Each coupon: code (or auto-assigned to user), value, product scope, expiry date, usage limit per user and total, target segment.
+Coupons tab: active, used, expired. Auto-assigned coupons appear in the vendor&apos;s Coupons section and on checkout.
+Coupons expire; credits do not.
+Reward coupon: after every N auto-renewals, the vendor gets a free coupon for the same product type.
+11.3 Publishing Packs (P1, feature flag)
+Replace free posting with "Basic Ads" bought in packs (the reference is rolling this out). When enabled from a set date, each Basic Ad uses 1 unit from the pack balance.
+Pack: number of Basic Ads, price, validity; purchase confirmation.
+Announcement banner before the switch date explaining when packs become required.
+Owner decision: launch with free posting first, switch on packs later.
+11.4 Vendor subscription plan (P1)
+Benefit
+Default
+Extra free (Basic) ads per week
++N per week (configurable)
+Extra bump
++1 free bump per day on every Top and Flash
+Credit pack discount
+Higher discount on all credit packs (up to x%)
+Super Top discount
+Reduced Super Top price
+Social media links on ads
+Allowed for subscribers only
+Custom outline and glow on ad card
+Subscribers only
+Higher contact limit
+Highest contact cap
+Ad duplication tool
+Copy an ad to other cities and publish instantly, N per month
+Free add-ons
+e.g. reduced-price Verified badge
+
+Plan model: pre-paid for a fixed period, no automatic renewal (as on the reference); "Renew" or "Extend" before expiry; benefits last until the end of the paid period.
+Launch price with an end date; leaving during the offer loses the launch price for the future.
+Plan page with FAQ: is it recurring, can I cancel, can I extend, can I go back to the basic plan, can I come back later.
+Manage subscription page: plan, period, benefits used, renew/extend, cancel (one last confirmation step).
+11.5 Contact limits (P1)
+Free/Basic ads can receive a limited number of contacts per period (default value: owner decision).
+When reached, buyers see a message and the vendor is told the free contact limit is reached and offered the Contact unlock add-on or a promotion.
+Promoted ads and subscribers have higher or no caps.
+11.6 Auto-renewal (P1)
+A toggle on a promotion: after it ends, buy the same promotion again automatically for the chosen days, paid from the wallet, until credits run out or the vendor switches it off.
+Statuses: Active, Disabled, Blocked (e.g. insufficient credits). Cancel anytime.
+Reward: a free coupon of the same type every N renewals.
+12. Payments
+12.1 Payment methods
+Method
+Priority
+Notes
+Credits (wallet)
+P0
+Instant checkout for products; Star is credits-only
+Cards (Visa, Mastercard, RuPay)
+P0
+Via an Indian gateway (e.g. Razorpay/Cashfree); 3-D Secure
+UPI (collect, intent, QR)
+P0
+Main Indian method
+Net banking, wallets
+P1
+Via gateway
+Bank transfer with proof upload
+P1
+Vendor uploads proof + name + email; Finance verifies in 24–48 hours (not on weekends/holidays); credits added after approval
+Open Banking
+P2
+If gateway supports
+Cryptocurrency
+P2, flag OFF
+On the reference only for credit packs; not recommended in India
+
+12.2 Purchase flows (P0)
+Buy credits: select pack → billing address (required once) → choose method → gateway → webhook confirms → credits + bonus added → receipt/invoice.
+Direct pay at checkout: basket total in rupees → method → gateway → on success, promotion activated immediately.
+Bank transfer: show bank details → vendor sends proof → Finance approves/rejects → credits added → notification.
+12.3 Billing and invoices (P0)
+Billing address form (name, address, state, PIN, optional GSTIN) required before the first purchase.
+GST-compliant tax invoice for every payment (sequential numbering), downloadable from transaction history and emailed.
+Credits bought are prepaid for services; tax treatment is an open decision for the accountant.
+12.4 Refunds and consent (P0)
+Consent tick-box at checkout: immediate activation, no withdrawal once the service starts.
+Refunds only by Finance in the Admin Panel (to wallet as credits, or to source); full log; "credits have been refunded to your account" notification.
+No refunds for suspending an ad with an active promotion (warned in advance).
+12.5 Payment reliability (P0)
+Idempotent payment handling (no double credit on retries); webhook signature verification; daily reconciliation report against the gateway.
+Duplicate charge detection and refund flow.
+Pending payments: status shown; automatic re-check; clear messages.
+12.6 Payment error messages (P0)
+Separate help articles and in-app messages for each failure type: declined by bank, insufficient balance, card limit reached, card details wrong, 3-D Secure failure, communication problem with bank, interrupted transaction, pending payment, temporary card block, duplicate charge.
+13. Seller analytics
+13.1 Health Score and badges (P1)
+Health Score 0–100 summarising how a vendor&apos;s portfolio performs, based on quality badges; shows the change vs the previous period.
+Badges: each ad is compared with similar ads in the same market (category + city). The best earn "Top performer"; those above the typical level earn "Above average" (names configurable).
+Results grouped by phone number (all ads with the same number count together; each number has its own badges and rank).
+Lists: "Most improved" (gained 2+ badges) and "Declining" phone numbers.
+Data refresh: once a day, with a 2-day lag; selectable periods (last 7/30/90 days); a "Live snapshot" not affected by the lag.
+When there is not enough data, show an explanation; when performance is low, suggest promoting.
+Uses badges and scores rather than raw contact counts, so numbers are easy to compare.
+13.2 Per-ad statistics (P1)
+Views, impressions, contact clicks by channel, saves, position history, bump history.
+14. Moderation, trust and safety
+14.1 Moderation model (P0)
+Basic (free) ads: pre-moderation — they wait in a queue before going live.
+Promoted ads: post-moderation — they go live instantly and are reviewed afterwards. Speed is part of what vendors pay for.
+Edits to live ads: re-checked automatically; risky edits go to the queue.
+Rule-breaking ads found later are removed with a reason; vendor notified; repeat offences lead to account warnings, suspension or ban.
+14.2 Automatic checks (P0)
+Banned-word list (block or flag), applied on post and on every list update (live ads re-scanned).
+Duplicate text detection with AI rewrite offer.
+Image grading and duplicate/stolen image detection.
+Phone/email/URL detection inside descriptions and images (configurable rule).
+KYC-verified vendors only; phone verification; email verification.
+Bot protection, rate limits, VPN/IP rules, disposable email block.
+Screening for adult/escort or other prohibited content disguised as listings (keywords + image moderation) — protects the payment gateway and hosting accounts.
+14.3 Reports (P0)
+Report an ad (public form on every ad): reason list (fraud/scam, wrong category, fake photos, already sold/rented, offensive, prohibited, other), details, screenshot upload, reporter email.
+Submit a report page (general).
+Scam report flow (separate page/site): asks for at least one screenshot as proof and a description; fast-track queue.
+A report never removes an ad automatically; moderators decide. Reporter gets an acknowledgement and outcome email.
+14.4 Scam education and official-message verification (P0)
+Safety section in the help centre (section 16.2 lists the articles).
+Rule: official WhatsApp/SMS/email messages always include the user&apos;s Customer Code; help article explains how to check.
+Rule: staff never ask for money outside the platform; the platform never takes payment for vendors&apos; services.
+Security tip tile on the vendor dashboard and safety box on every ad page.
+14.5 Legal takedowns and grievances (P0, India)
+Grievance Officer page with name, contact and process.
+Complaint intake: acknowledge within 24 hours, resolve within the legally required time (currently reported as 7 days).
+Government/court orders: takedown within the legally required time (currently reported as 3 hours); nudity/sexual-content complaints within 2 hours. On-call admin alerting.
+Takedown log: what, when, by whom, legal basis, evidence kept as required.
+15. Admin Panel
+Web-based, fully responsive, role-based (section 2.2). Every list has search, filters, sorting, bulk actions, CSV export and saved views. Every change is logged.
+Module
+Functions
+Dashboard
+KPIs: new users, verified vendors, new ads, live ads, pending queue, reports, revenue today/week/month by product, credits sold vs spent, top cities/categories, slot fill rate (Star), payment failures, KYC backlog; charts with date filters
+Users & vendors
+Search by email, phone, Customer Code, name; profile; KYC status; account status (warn, suspend, block, ban, unblock); linked phones and accounts (duplicate detection); wallet; ads; promotions; tickets; notes; impersonate (view-as, read-only, logged); reset password; GDPR/DPDP data export and deletion
+Ads
+All ads with status filters; view/edit; approve/reject with reason templates; remove; restore; change category/city; feature/unfeature; view bump schedule and history; force expiry; bulk actions
+Moderation queues
+Basic ads queue, post-moderation sample queue for promoted ads, edited-ads queue, flagged-words queue; SLA timers; assignment to moderators; keyboard shortcuts
+Media review
+Low-confidence image queue; set tier (Safe/Restricted/Rejected); duplicate-image matches; video verification queue
+KYC review
+Provider results, documents (masked), manual approve/reject with reason, retry limits
+Reports
+Ad reports, scam reports, general reports; link to ad and accounts; outcomes; reporter replies
+Catalogue
+Categories, sub-categories, attribute groups, attributes, options, units, per-category forms (drag-and-drop form builder), icons
+Locations
+Countries, states, cities, districts; status; order; slugs; SEO texts; bulk import CSV
+Products & pricing
+Products, variants, price matrix (city tier × category), upgrades, bundles, discounts, launch offers, scheduled price changes
+Slots & inventory
+Slot definitions; Star capacity per city per slot; live availability calendar; manual holds
+Wallet & finance
+Credit packs; ledger per user; manual credit adjustment (with reason, two-person approval above a threshold); transactions; refunds; bank-transfer proof approvals; invoices; reconciliation reports; unit conversion and price adjustment tools
+Coupons
+Create, assign (user/segment/all), track usage, expire
+Publishing Packs & subscriptions
+Pack definitions, go-live date; plan definitions, benefits, subscribers list, extend/cancel
+Banned words
+List with match type, scope, action; import/export; test tool
+SEO manager
+Page-type templates (title, H1, H2, meta, intro, footer text) with variables; per-page overrides; redirects (301/410); robots.txt editor; sitemap status; canonical rules; noindex rules; schema settings
+CMS
+Static pages, home blocks, banners (dashboard promo, site notices), footer links (normal or data-href)
+Help centre
+Sections, articles (rich text, images, video), languages, related articles, search, ordering, "last updated"
+Blog
+Posts, categories, authors, languages, schedule, SEO fields; "most-searched" report helper using search logs
+Templates
+Email, SMS, WhatsApp templates per event and language; variables; test send
+Notifications
+Broadcasts to segments (respecting opt-in); history
+Support
+Ticket inbox (or helpdesk integration), macros, Customer Code lookup, SLA reports
+Analytics & reports
+Revenue, product mix, cohort/retention, vendor conversion (free → paid), search log, feed health, moderation stats, exportable
+Settings
+All limits (Appendix A), payment methods, support hours and numbers, social links, consent banner, entry gate flag, languages, time zone, currency
+Feature flags
+Turn modules on/off per country
+Admin users & roles
+Create admins, assign roles, 2FA required, IP allow-list option, session control
+Audit log
+Every admin action with before/after values, filterable, non-editable
+Translations
+All UI strings, per language, import/export
+
+16. Support and Help Centre
+16.1 Support channels (P0)
+Help centre (self-service), contact form (ticket), email.
+WhatsApp and Telegram support during set hours (default Monday–Friday, 14:00–20:00, excluding holidays; configurable). Shown on the Wallet page and help centre.
+Every ticket is tied to the Customer Code; agents look users up by code.
+Ticket categories: account, verification, posting, payment, promotion, refund, report/scam, legal/grievance, other. SLA targets per category.
+Satisfaction rating after closure.
+16.2 Help centre structure (P0)
+Sections and articles match the researched platform&apos;s help centre (all text to be written fresh):
+Section
+Articles
+About us and our policies
+What the platform is; is it free; using it on mobile; display names; posting as a team/agency; external links rules; messaging-app rules; terms; privacy; good behaviour; where we operate; how non-compliant ads are moderated
+Register and manage your account
+How to register; identity verification; why verification failed; avoiding verification errors; password expiry; forgot/change password; recover email; change/add email; change verified phone; one account per person; Customer Code; delete account; newsletter opt-out
+Post and manage your ad
+How to post; mandatory fields; choosing category and city; new cities available; how many photos; changing photos; how buyers contact you; weekly posting limit; ad expiry; suspend/reactivate; edit; change category; change city; change phone; delete; share; why ads appear on Google; AI help for ad text; searching listings
+Promote your ad
+How to promote; Top; Auto Boost; Flash; Star; upgrades; Super Top; free vs promoted ads; no limit on promoted ads; scheduling a promotion; why Top started next day; auto-renewal
+Payments and credits
+What credits are; buying credits; using credits; checking balance; credits validity; transaction history; payment methods; paying by card/UPI; bank transfer; coupons; credit unit changes; price adjustments; invoices
+Common issues
+Can&apos;t publish (banned words, duplicate text, VPN/IP, private relay); listing removed; account blocked; why accounts are banned; SMS not received; email not valid; contact button missing; every payment error type; clearing cache; captcha errors
+Safe experience
+Recognising official messages; verifying a message is from us; reporting scams/extortion; data misused; fake fee requests; fake staff; fake video interviews; fake payment requests; video-call blackmail; threats from fake "enforcers"; safety tips
+
+17. SEO
+17.1 Page grid generation (P0)
+Automatically generate pages for every active category × location (state, city, district) combination.
+Admin rule to noindex thin pages (fewer than N live ads, default 3) until they fill up; they stay reachable.
+17.2 Templates (P0)
+Per page type, admins write templates with variables {category}, {category_plural}, {city}, {state}, {district}, {count}, {min_price}, {year}, {month}. Template fields: title tag, meta description, H1, H2, intro text, footer SEO text, image alt pattern. Per-page overrides allowed.
+17.3 Technical SEO (P0)
+Self-referencing canonical on every listing and ad page; filter/sort parameters canonicalised to the clean page.
+Breadcrumbs with BreadcrumbList schema; Organization schema site-wide; ItemList on listing pages; Offer schema on ad pages (optional).
+Sibling links (state ↔ cities ↔ districts) on listing pages.
+Footer/utility links as data-href (configurable) to keep link value in the listing grid.
+XML sitemaps split by type (locations, categories, ads by month, blog, help) with sitemap index; updated hourly for ads.
+Deleted ads return 410 and leave sitemaps; expired ads 410 or 301 to their city page (setting).
+robots.txt managed in Admin; private and search pages noindex.
+hreflang tags when more languages are added (Gujarati, Hindi, English).
+Clean, lower-case, hyphenated URLs; automatic 301 on slug change.
+17.4 Ad pages indexed on purpose (P0)
+Live ads are indexable to bring Google traffic directly to ads. A help article explains that removal from Google can take several days after deletion.
+17.5 Performance for SEO (P0)
+Server-side rendering of listing and ad pages; Core Web Vitals targets in section 21; lazy-loaded images with WebP; CDN.
+17.6 Infinite scroll with crawlable pagination (P0)
+The feed loads by infinite scroll for users, but each page also exists at ?page=n with normal links so search engines can reach older ads.
+17.7 Domain and migration plan (P0)
+One main domain; register common misspellings and point them (301) to the main domain.
+Registrar with strong security and a CDN/WAF in front.
+If a domain move is ever needed: page-by-page 301 redirects, the same URL paths, Search Console change-of-address.
+17.8 Content SEO (P1)
+Blog per language, 2–4 posts a month: guides plus "most-searched cities this quarter" posts built from the site&apos;s own search logs, each linked to the matching listing pages (the reference does not link; we should).
+Help centre articles indexable.
+18. Notifications and messaging
+All templates are editable per language (section 15). Marketing messages respect opt-in; transactional messages always send.
+Event
+Email
+SMS
+WhatsApp
+In-app
+Registration / email verification
+Yes
+
+Phone OTP
+
+Yes
+
+KYC result (verified / failed)
+Yes
+
+Yes
+Yes
+Ad submitted / pending review
+Yes
+
+Yes
+Ad approved / live
+Yes
+
+Yes
+Yes
+Ad rejected / removed (with reason)
+Yes
+
+Yes
+Yes
+Ad expiring soon / expired
+Yes
+
+Yes
+Yes
+Promotion purchased (with bump calendar)
+Yes
+
+Yes
+Yes
+Promotion starting next day (cut-off rule)
+Yes
+
+Yes
+Promotion ended / auto-renewed / auto-renew blocked
+Yes
+
+Yes
+Yes
+Credits purchased / refunded / low balance
+Yes
+
+Yes
+Yes
+Bank transfer approved / rejected
+Yes
+
+Yes
+Yes
+Coupon received / expiring
+Yes
+
+Yes
+Yes
+Contact cap reached
+Yes
+
+Yes
+Yes
+Email relay message from a buyer
+Yes
+
+Weekly limit reached
+
+Yes
+Password expiring / expired
+Yes
+
+Yes
+Subscription expiring / renewed
+Yes
+
+Yes
+Yes
+Report outcome (to reporter)
+Yes
+
+Marketing campaigns, newsletter
+Yes
+
+Yes
+
+NOTIF-001 (P0): every official WhatsApp/SMS includes the Customer Code.
+19. Tracking and analytics
+Google Tag Manager + GA4 (loaded only after cookie consent for analytics).
+Product analytics (PostHog or similar): funnels, dead-click tracking, web vitals, in-app surveys, feature flags.
+Key events: page_view (with page type, category, city), search, filter_apply, ad_view, contact_click (channel), save_contact, report_ad, signup_start/complete, kyc_start/complete/fail, post_step_1/2/3, publish_basic, promote_view, add_to_basket, checkout_start, payment_success/fail, credits_purchase, coupon_apply, subscription_start, ad_suspend, ad_delete.
+Revenue reporting by product, city tier and category; conversion free → paid vendors.
+20. Data model
+Main entities and key fields (developers may refine). IDs are UUIDs internally; ads also have a short public ID with a country prefix.
+Entity
+Key fields
+User
+id, email, password_hash, status, roles (buyer/vendor), vendor_type, customer_code, marketing_opt_in, password_changed_at, created_at
+PhoneNumber
+id, user_id, number, verified_at, is_primary
+KycVerification
+id, user_id, provider, provider_ref, status, reason, submitted_at, decided_at, reviewer_id
+Location
+id, type (country/state/city/district), parent_id, name, slug, status, order, lat, lng, seo_fields
+Category
+id, parent_id, name, slug, icon, status, order, attribute_set_id, seo_fields
+Attribute / AttributeOption
+id, group, name, type, unit, required, filterable, on_card, options[]
+Ad
+id, public_id, user_id, phone_id, category_id, location ids, title, description, age, nickname, price, contact_settings, status, cover_media_id, published_at, last_bumped_at, expires_at, moderation_state, ai_text_flag
+AdAttributeValue
+ad_id, attribute_id, value
+Album / Media
+album: id, user_id, name; media: id, album_id, type, url, tier, moderation_status, hash, verified
+AdMedia
+ad_id, media_id, order
+Product / ProductVariant
+product: id, code, name, rules; variant: duration_days, bumps_per_day, slot_id, price_credits, price_inr, city_tier, category_id
+Slot / SlotInventory
+slot: id, name, start, end; inventory: product_id, city_id, slot_id, date, capacity, used
+Promotion
+id, ad_id, variant_id, upgrades[], start_at, end_at, status, auto_renew, order_id
+BumpSchedule
+id, promotion_id, scheduled_at, executed_at, status
+Order / OrderItem / Basket
+order: id, user_id, total_credits, total_inr, status, coupon_id; items: product variant, ad_id, price
+Payment
+id, order_id or pack_id, method, gateway_ref, amount, status, raw_webhook, invoice_id
+Wallet / LedgerEntry
+wallet: user_id, balance; ledger: id, user_id, type, credits, balance_after, ref, created_at
+CreditPack
+id, credits, price_inr, bonus, tag, order, status
+Coupon / CouponAssignment
+code, type, value, scope, expires_at, limits; assignment: user_id, used_at
+PublishingPack / PackBalance
+definition and per-user balance
+SubscriptionPlan / Subscription
+plan benefits; user subscription period, status
+SavedContact
+buyer_id, ad_id, created_at
+ContactEvent
+ad_id, channel, buyer_id (optional), created_at
+Report
+id, ad_id, type, reason, details, files, reporter_email, status, outcome
+ModerationCase
+id, object_type, object_id, queue, status, assignee, decision, reason
+BannedWord
+id, text, match_type, scope, action
+SeoTemplate / Redirect
+page_type, fields; redirect: from, to, code
+CmsPage / HelpSection / HelpArticle / BlogPost
+content entities with language and status
+Ticket
+id, user_id, customer_code, category, status, sla, messages
+NotificationTemplate / NotificationLog
+event, channel, language, body; log of sends
+SearchLog
+query, category, location, results, created_at
+AnalyticsDaily / Badge / HealthScore
+per ad and per phone number per day
+AdminUser / Role / Permission / AuditLog
+RBAC and full audit trail
+Setting / FeatureFlag / Translation
+key-value configuration, flags, strings
+
+21. Non-functional requirements
+21.1 Mobile-first and responsive (P0)
+Every page of the public site, Vendor Panel and Admin Panel must work and look correct on mobile (360 px and up), tablet and desktop. Test on Android Chrome, iOS Safari and desktop Chrome/Edge/Firefox. No horizontal scrolling; tap targets at least 44 px; sticky Post your ad and contact buttons on mobile.
+21.2 Performance (P0)
+Listing and ad pages: Largest Contentful Paint under 2.5 s on 4G; CLS under 0.1; INP under 200 ms.
+Server response (TTFB) under 500 ms for cached pages; CDN caching for public pages with instant purge on ad changes.
+Bump execution accuracy within 1 minute.
+Scale target year 1: 500k live ads, 5M page views/month, 200 concurrent checkouts.
+21.3 Security (P0)
+OWASP Top 10 protection; CSRF tokens on all forms; parameterised queries; output escaping.
+WAF + bot protection (e.g. Cloudflare); rate limits on login, OTP, posting, contact reveals and reports.
+2FA for all admin users; strong password policy; password expiry for vendors.
+Encryption in transit (TLS) and at rest for personal data and KYC files; KYC documents in restricted storage with masked display.
+Payment card data never touches our servers (gateway-hosted fields).
+Secrets in a secret manager; never in code or repos.
+Regular backups (daily, 30-day retention) and tested restore.
+21.4 Privacy (P0)
+Comply with India&apos;s Digital Personal Data Protection Act 2023: consent records, purpose limits, data access and deletion on request, breach notification process, data retention rules, privacy policy and cookie policy pages.
+21.5 Availability and monitoring (P0)
+99.9% monthly uptime target for public pages and checkout; uptime, error and job monitoring; alerting to on-call staff; status page (P1).
+21.6 Accessibility (P1)
+WCAG 2.1 AA for public pages: contrast, keyboard navigation, alt texts, form labels.
+21.7 Languages (P1)
+English at launch; Gujarati and Hindi next. All strings from the translation module; per-language SEO templates and help/blog content.
+21.8 Reference technology (for information only)
+The researched platform appears to use: Django (Python) back-end, MongoDB, server-rendered Bootstrap front-end, Cloudflare (CDN, WAF, bot check), Zendesk (help centre), PostHog + Google Tag Manager/GA (tracking), and Incode (KYC). The development team chooses the final stack; any modern stack that meets this PRD is acceptable.
+22. Legal and compliance (India)
+Summary of research, not legal advice. Confirm with an Indian lawyer and CA before launch.
+Intermediary duties (IT Act s.79 + IT Rules 2021 and amendments): terms that prohibit unlawful, obscene and misleading content; a named Grievance Officer resident in India; complaint acknowledgement in 24 hours and resolution within the required time (reported as 7 days); takedown of government/court-ordered content within the required time (reported as 3 hours); nudity complaints within 2 hours; records of takedowns.
+Consumer Protection (E-Commerce) Rules 2020: clear seller details, grievance mechanism, no misleading listings, price transparency.
+DPDP Act 2023: consent, privacy notice, data rights, KYC data handling.
+GST: tax invoices for credits, products and subscriptions; GST registration.
+Payment gateway policies: prohibited content screening, refund and cancellation policy pages, terms, privacy, contact page — needed for gateway approval.
+Prohibited content: an admin-managed prohibited-content list in the terms, actively screened (sections 8 and 14). Any content involving minors is absolutely prohibited and reported to authorities.
+Applicable content laws: see the R&D report, section 13 (IT Act s.67/67A, BNS s.294, ITPA). Get legal advice before launch.
+23. Release phases and acceptance
+Phase
+Scope
+Exit criteria
+Phase 1 — Core marketplace
+Locations, categories, attributes (dynamic), SEO page grid, listing pages with ranking, ad page, search & filters, buyer accounts & saved contacts, vendor registration + phone OTP + KYC, 3-step posting with Basic Ads, banned words, duplicate block, media albums with grading, ad management, moderation queue, reports, Admin Panel core (users, ads, moderation, catalogue, locations, SEO, CMS, help centre), legal pages, Grievance Officer flow
+A verified vendor can post a Basic Ad that is moderated and appears on the right city page; SEO pages render with templates; admins can change categories/attributes without code
+Phase 2 — Money
+Wallet, credit packs with bonuses, payment gateway (cards + UPI), invoices, Top with slots and bumps, Auto Boost, upgrades, bundles, Flash, Star with inventory, coupons, refunds, scheduler, notifications, finance admin
+A vendor buys credits, promotes an ad with Top + Super Top, sees the bump calendar, and the ad bumps on schedule; Star never oversells; reconciliation matches the gateway
+Phase 3 — Growth
+Seller analytics (Health Score, badges), contact limits + unlock, auto-renewal, subscription plan, ad duplication tool, Verified badge, listing video verification, Publishing Packs (flag), blog, most-searched content, saved searches + alerts, PWA
+Each module can be switched on by flag; metrics visible in Admin
+
+Definition of done for every requirement: built to this PRD, works on mobile/tablet/desktop, all texts come from the translation module, all values come from settings (none hard-coded), admin can manage it, events tracked, tests written, reviewed by the owner on staging before production.
+24. Open decisions for the owner
+#
+Decision
+Options / note
+1
+Rupee prices for Top (1/3/7 days × 3/6 bumps), Auto Boost, Flash, Star, each upgrade, All Extras
+Reference prices not captured; set your own price matrix by city tier
+2
+Free ads per week at launch
+Reference: 2 per week per account and phone
+3
+Contact cap on free ads
+Number per period
+4
+Publishing Packs at launch or later
+Recommend later, after the site has listings
+5
+KYC provider
+Incode (as reference) or an alternative
+6
+Category names and tag-group labels
+Fill the numbered slots in Appendix B
+7
+Domain and brand name
+One main domain + misspellings
+8
+Payment gateway
+Razorpay / Cashfree / PayU
+9
+In-site chat
+Reference has none (off-platform contact)
+10
+Bank transfer and crypto
+Recommend bank transfer P1; crypto off
+11
+Subscription plan price and benefit values
+See 11.4
+12
+Support hours and channels
+Reference: Mon–Fri 14:00–20:00 WhatsApp/Telegram
+13
+Cities and districts at launch
+All Appendix B cities vs a Gujarat-first launch
+14
+Grievance Officer and legal entity details
+Needed for terms and gateway approval
+
+Appendix A — Default configuration values
+Setting
+Default
+Source
+Credit value
+1 credit = Rs 10
+Reference
+Credits expiry
+Never
+Reference
+Coupons expiry
+Per coupon
+Reference
+Free ads per week
+2 per account and phone (week = Monday–Sunday)
+Reference
+Deleting an ad resets weekly count
+No
+Reference
+Photos visible on free ad
+1
+Reference
+Photos on promoted ad
+Up to 10
+Reference
+Free ad lifetime
+30 days
+Reference
+Top durations
+1, 3, 7 days
+Reference
+Top bumps per day
+3 or 6
+Reference (India)
+Auto Boost
+10 bumps per 6-hour slot
+Reference
+Flash
+4 hours; 5 bumps in first hour, every 15 min
+Reference
+Star slots
+10:00–22:00 and 22:00–10:00
+Reference
+Star capacity
+6 per city per slot
+Reference
+Star booking window
+Today + 6 days
+Reference
+Star payment
+Credits only; needs ≥ 1 Safe photo
+Reference
+Top purchase cut-off
+Inside slot or < 2 h before → next day
+Reference rule; 2 h is our default
+Subscriber extra bump
++1 per day per Top/Flash
+Reference
+OTP validity
+5 minutes
+Reference
+Title minimum length
+5 characters
+Reference
+Display name maximum
+20 characters
+Reference
+Phone field maximum
+25 characters
+Reference
+AI text regenerations
+3
+Reference
+KYC decision time
+Within 48 hours
+Reference
+Bank transfer verification
+24–48 hours, working days
+Reference
+Analytics refresh
+Daily, 2-day lag + live snapshot
+Reference
+Customer Code format
+Country prefix + 6 characters
+Reference
+Support hours
+Mon–Fri 14:00–20:00
+Reference
+Marketing opt-in default
+ON
+Reference
+Feed page size
+25
+Reference (observed)
+Password expiry
+180 days
+Our default
+Thin page noindex threshold
+< 3 live ads
+Our default
+Star checkout hold
+10 minutes
+Our default
+
+Appendix B — Seed data
+B.1 Categories (5 slots, as on the reference)
+Slot
+Category name
+Slug
+Notes
+Category 1
+[owner to fill]
+[owner to fill]
+Star product sold in this category only (as on the reference)
+Category 2
+[owner to fill]
+[owner to fill]
+
+Category 3
+[owner to fill]
+[owner to fill]
+
+Category 4
+[owner to fill]
+[owner to fill]
+
+Category 5
+[owner to fill]
+[owner to fill]
+
+B.2 Ad fields and tag groups (structure as on the reference)
+Field / group
+Type
+Options
+Label
+Age
+Number, required
+Minimum 18
+Age
+Nickname
+Text, required
+Max 20 characters
+Nickname
+Tag group 1
+Dropdown (single select)
+Long list (about 60+ options)
+[owner to fill]
+Tag group 2
+Tick-boxes (multi select)
+2 options
+[owner to fill]
+Tag group 3
+Tick-boxes (multi select)
+4 options
+[owner to fill]
+Tag group 4
+Tick-boxes (multi select)
+2 options
+[owner to fill]
+Tag group 5
+Tick-boxes (multi select)
+13 options
+[owner to fill]
+Tag group 6
+Tick-boxes (multi select)
+4 options
+[owner to fill]
+Tag group 7
+Tick-boxes (multi select)
+5 options
+[owner to fill]
+Contact method
+Radio
+Phone only / Email only / Email and phone
+Contact method
+WhatsApp, Telegram
+Toggles
+On / off
+WhatsApp, Telegram
+
+Every tag group is a filter on listing pages and in the search modal. Option labels are entered in the Admin Panel (Catalogue).
+B.3 Cities (from the researched posting form, about 100)
+Agra, Ahmedabad, Ajmer, Alappuzha, Ambala, Amli, Amritsar, Aurangabad, Bahadurgarh, Bangalore, Bawana, Belgaum, Berhampur, Bharuch, Bhilai, Bhopal, Bhubaneswar, Bhuj, Chandigarh, Chennai, Coimbatore, Daman, Dehradun, Delhi, Dibrugarh, Dimapur, Erode, Faridabad, Ghaziabad, Gorakhpur, Guntur, Gurgaon, Guwahati, Gwalior, Haridwar, Hyderabad, Indore, Jabalpur, Jaipur, Jalandhar, Jammu, Jamnagar, Jamshedpur, Jodhpur, Jorhat, Kadapa, Kanpur, Kerala, Kochi, Kolkata, Kota, Kumhari, Lucknow, Ludhiana, Madurai, Manali, Mangalore, Mathura, Meerut, Mohali, Mumbai, Muzaffarpur, Mysore, Nagapattinam, Nagpur, Nashik, Navi Mumbai, Navsari, Noida, Palanpur, Panvel, Patna, Pollachi, Pune, Puri, Raipur, Rajkot, Ranchi, Rangia, Ratanpur, Rishikesh, Salem, Shimla, Siliguri, Surat, Thane, Thiruvananthapuram, Tiruchirappalli, Tirupati, Tiruppur, Udaipur, Vadodara, Vapi, Varanasi, Vasai-Virar, Vellore, Vijayawada, Visakhapatnam.
+Districts example (Mumbai, from the reference): Airoli, Andheri, Bandra, Belapur, Borivali, Chembur, Colaba, Ghatkopar, Goregaon, Juhu, Kandivali and more.
+Seed data is a starting point only. Every category, attribute, option, state, city and district is managed in the Admin Panel and can be changed at any time.
+Appendix C — Screen inventory (every screen, every panel)
+Every screen the team must build, panel by panel. Each row gives the screen ID, what it contains, what each action does and where it leads, and the states to design: E = empty, L = loading, X = error, M = mobile notes. Requirement IDs in brackets point to the main PRD. All screens are fully responsive (section 21.1); all texts come from the translation module; all colours come from the design slots in Appendix D.
+Visual design is original. The reference platform&apos;s brand colours, logo, illustrations and wording are not copied. Layout and behaviour follow this PRD; the look is set by the design team through the slots in Appendix D.
+C.1 Global elements (shared by all public and user screens)
+Screen (ID)
+What is on it
+Actions → goes to
+States
+G-01 Header (desktop)
+Logo; country name; current city name; search icon; account icon; Post your ad button (primary)
+Logo → Home; city → city picker; search → PUB-S09; account → login (USR-S02) or account menu; Post your ad → VP-S05 (or login / verification first)
+M: collapses to logo + search + menu; Post your ad becomes a sticky bottom button
+G-02 Account menu
+Customer Code; links: Dashboard, Ads, Wallet (with credit balance), Coupons, Media, Analytics, Subscription, Settings, Log out
+Each link → its screen; Log out → Home with toast
+Locked vendor: Wallet/Ads greyed with lock icon
+G-03 Footer
+About text; quick links; help centre; blog; submit a report; how to report a scam; terms; privacy; cookies; grievance officer; social icons; countries/cities count; copyright; back-to-top
+Links → pages (data-href or normal per admin setting)
+M: accordion groups
+G-04 Toasts
+Success, info, warning, error messages
+Auto-hide after 5 s; close icon
+—
+G-05 Modal frame
+Title, body, primary and secondary buttons, close (×)
+Esc / × closes (except blocking modals)
+M: full-screen sheet
+G-06 City picker
+Search box; states with their cities; recently used cities
+Pick city → same category on that city page
+E: "no city found"
+
+C.2 Public site (visitors and buyers)
+Screen (ID)
+What is on it
+Actions → goes to
+States
+PUB-S01 18+ entry gate (modal, blocking)
+Logo; short warning text; "I am over 18" confirm; Accept / Decline buttons; terms link (PUB-GATE-001)
+Accept → stays, choice saved; Decline → leaves site (admin-set URL)
+Shown once per browser; flag can turn it off
+PUB-S02 Cookie banner + manager
+Banner: text, Accept all, Manage cookies. Manager: Strictly necessary (always on), Analytics, Advertising toggles with descriptions; Accept all; Save my preferences; Reject non-necessary link (PUB-GATE-002)
+Saves consent; loads/blocks tags
+M: bottom sheet
+PUB-S03 Home
+H1 + intro; one block per category (icon, name, short description, top 3 cities, "more cities" link); Star strip (P1); "Boost your visibility" panel with Post your ad (PUB-HOME-*)
+City link → PUB-S06; category → PUB-S04; Post your ad → VP-S05
+L: skeleton blocks
+PUB-S04 Category hub
+H1/intro (SEO template); states with their cities for this category; ad count per city (optional)
+City → PUB-S06; state → PUB-S05
+E: "no cities open yet"
+PUB-S05 State listing page
+Breadcrumb; H1/H2/intro; links to all cities in the state; Star strip; feed of all ads in the state
+Card → PUB-S11; city link → PUB-S06
+E: nearby states; L: skeleton cards
+PUB-S06 City listing page
+Breadcrumb; H1/H2/intro; sibling city links; district links; 2 filter switches; Star strip; feed with all card variants (5.4.2); infinite scroll + crawlable page links (PUB-LIST-*)
+Card title → PUB-S11; quick contact buttons (Super Top cards) → call/WhatsApp/Telegram; filters → refresh feed; search → PUB-S09
+E: nearby cities + Post your ad; L: skeleton; X: retry
+PUB-S07 District listing page
+Same as PUB-S06 for a district; link back to city
+Same as PUB-S06
+Same
+PUB-S08 All cities directory
+Per category: states with all their cities in columns
+City → PUB-S06
+—
+PUB-S09 Search modal (full screen)
+Keyword box; category select (All categories + 5); state → city → district selects; Advanced filters = tag groups of the chosen category; Search button; close (PUB-SRCH-001)
+Search → PUB-S10 (or clean city page if no keyword)
+M: full screen; filters collapsible
+PUB-S10 Search results
+Query summary; active filter chips (removable); feed; sort (newest bump default)
+Card → PUB-S11; chip × → updates
+E: "no results" + suggestions; noindex
+PUB-S11 Ad detail
+Gallery (1 photo free / up to 10 promoted; Restricted media blurred for unverified viewers); title; nickname; age; city/district; description; tag chips; posting/bump date; labels (TOP, Super Top, New, Available now, Star, Verified); contact buttons (only enabled channels); Save contact; Share; Report; safety tip box; related ads (PUB-AD-*)
+Call → tel:; WhatsApp → wa.me; Telegram → t.me; Email → PUB-S12; Save → PUB-S13 or saved toast; Report → PUB-S14; blurred media → PUB-S17
+Contact cap reached: buttons replaced by notice; ad gone: 410 page (PUB-S21)
+PUB-S12 Email relay form (modal)
+Name, email, message, consent tick-box, bot check, Send
+Send → success toast; vendor receives relay email
+X: invalid email, rate limit
+PUB-S13 Save contact prompt (modal)
+Short benefit text; Create a free account; Log in
+→ USR-S01 / USR-S02, then back to the ad and save
+—
+PUB-S14 Report ad form
+Reason list; details text; screenshot upload (max N files); reporter email; bot check; Submit (MOD reports)
+Submit → thank-you screen with reference number
+X: missing reason/file too large
+PUB-S15 Submit a report page
+General report form: type, link, details, files, email
+Submit → thank-you
+—
+PUB-S16 Scam report page
+Explanation; required screenshot(s); what happened; contact used; email; Submit (fast-track queue)
+Submit → thank-you + safety articles
+X: no screenshot
+PUB-S17 Restricted media prompt
+Blurred media; text: verify you are 18+ to view; Verify age button
+→ login → USR-S05
+—
+PUB-S18 Static pages
+Terms, Privacy, Cookies, Grievance Officer (name, contact, process, complaint form), About
+Grievance form → ticket + acknowledgement
+—
+PUB-S19 Help centre
+Home: search + 7 section cards + popular articles. Section page: article list. Article page: title, body, last updated, related articles, "Was this helpful?", Contact us. Search results
+Contact us → ticket form (SUP-S01)
+E: no results → contact us
+PUB-S20 Blog
+List (categories, language switch, pagination); post page (title, date, body, share, related posts, links to city pages)
+—
+—
+PUB-S21 System pages
+404 not found; 410 ad removed (with links to its city page); 500 error; maintenance page
+Links → Home / city
+—
+
+C.3 Buyer panel (registered users)
+Screen (ID)
+What is on it
+Actions → goes to
+States
+USR-S01 Register
+Email; confirm email; password + strength meter; terms tick-box; privacy tick-box; marketing opt-in (default on); bot check; Register; link to Log in
+Register → USR-S04
+X: email in use, disposable email, weak password
+USR-S02 Log in
+Email; password; show/hide; Remember me; Forgot password; Register link
+Success → previous page or dashboard; password expired → VP-S36
+X: wrong details; locked after N tries (timer)
+USR-S03 Forgot / reset password
+Step 1: email → "check your inbox". Step 2 (link): new password + confirm. Link-expired screen with "send again"
+Reset → login with toast
+X: link expired / session expired
+USR-S04 Email verification
+"We sent you a link" screen with resend (cool-down); "Email verified" screen
+Continue → account home
+X: link invalid
+USR-S05 Viewer age verification
+Explanation; start verification (KYC provider light flow or provider age check); status
+Verified → back to restricted media
+Pending / failed with try again
+USR-S06 Account home (buyer)
+Customer Code; tiles: Saved contacts, Settings, Become a vendor (start verification)
+Tiles → screens
+—
+USR-S07 Saved contacts
+List: ad title, nickname, city, channels (call/WhatsApp/Telegram/email; unavailable ones greyed), saved date, open ad, delete
+Delete → confirm modal
+E: "no saved contacts yet" + browse button
+USR-S08 Settings
+Email (change with verification); add second email; password change; newsletter toggle; delete account
+→ modals
+—
+USR-S09 Delete account
+Consequences text; type DELETE to confirm; final button
+→ logged out, confirmation email
+—
+USR-S10 Saved searches & alerts (P1)
+List of saved searches with alert channel and frequency
+Edit / delete
+E: how to save a search
+
+C.4 Vendor panel
+C.4.1 Verification and dashboard
+Screen (ID)
+What is on it
+Actions → goes to
+States
+VP-S01 Dashboard — locked
+Red verification banner (steps: document, face scan, final check; status; Try again; How it works; Have questions?); welcome block with email + Customer Code; promo banner; tiles: Ads, Wallet, Coupons, Settings, Newsletter, Security tips (VP-DASH-002)
+Start/Try again → VP-S02; Wallet/Ads/Post → stay here with toast
+Failed state shows reason
+VP-S02 KYC flow
+a) Intro and tips; b) Desktop: QR code + "continue on phone"; c) Document photo capture (front/back); d) Face scan with on-screen guide; e) Final check / processing; f) Result: Verified or Failed with reason (6.2)
+Done → VP-S03 (verified) or VP-S01 (failed)
+L: processing; X: camera blocked, poor light, timeout
+VP-S03 Dashboard — verified
+Welcome with email, Customer Code, "ID verified" tag; promo banner; tiles: Ads (Active / Not published counts), Wallet (Current / Used + Buy credits), Coupons, Settings, Newsletter (status + toggle), Security tips, Analytics summary (P1), Subscription (P1)
+Tiles → screens; Buy credits → VP-S26
+—
+VP-S04 Phone verification (modal)
+Phone with country code; Receive code now; Continue without phone number; then 6-digit code entry, timer (5 min), resend, "didn&apos;t receive the SMS?"
+Verified → back to form
+X: wrong code, expired, too many tries
+
+C.4.2 Posting wizard
+Screen (ID)
+What is on it
+Actions → goes to
+States
+VP-S05 Post step 1 — Information
+Progress "1/3"; phone (VP-S04); category; city; district; address; postal code; place; age; nickname (max 20); title (min 5); description; AI-written tick-box; tag group 1 dropdown; tag groups 2–7 tick-boxes; contact method radio + WhatsApp/Telegram toggles + email; price (P1); terms tick-box; Go on (7.1)
+Go on → checks → VP-S09
+X: field errors inline; L: saving
+VP-S06 Duplicate text + AI rewrite (modal)
+Message that text matches an existing ad; Edit myself; Generate with AI (uses phone number); generated text preview; Regenerate (counter 0/3); Use this text
+Use → fills fields → back to step 1
+X: AI unavailable → edit manually
+VP-S07 Banned word error
+Inline error under the field naming the exact blocked word; highlight in the text
+Edit and resubmit
+—
+VP-S08 Weekly limit reached (modal)
+Message with free ads used this week for this phone; options: Promote this ad, Buy a Publishing Pack (if on), Save as draft
+→ VP-S11 / VP-S30 / Drafts
+—
+VP-S09 Post step 2 — Photos
+Progress "2/3"; drop zone + file picker; Choose from media library; thumbnails with tier badge (Safe/Restricted/Rejected), drag to reorder, set cover, remove; note on how many photos show for free vs promoted; tips; Save and continue; Continue without photo; Save as draft (7.2)
+→ VP-S11; library → VP-S10
+L: upload progress + "checking"; X: format/size, could not be checked
+VP-S10 Media picker (modal)
+Albums list; album grid with tier badges; select multiple; Add
+Add → step 2 grid
+E: no media yet → upload
+VP-S11 Post step 3 — Promote or publish
+Progress "3/3"; ad preview (desktop/mobile toggle); product cards: Top, Flash, Star (benefits, Learn how it works); Publish as Basic Ad option with free ads left this week; Save as draft (7.3)
+Top → VP-S12; Flash → VP-S14; Star → VP-S13; Basic → VP-S19
+—
+VP-S12 Top configuration
+Duration (1/3/7 days); bumps per day (3/6); slot (Morning/Afternoon/Evening/Night); Auto Boost toggle + slot; cut-off warning if next-day start; price; slot vs hourly saving; subscriber extra bump note; auto-renewal toggle
+Add to basket → VP-S15 (upgrades) / VP-S16
+X: slot unavailable
+VP-S13 Star calendar
+7-day grid (today + 6) × 2 slots (10:00–22:00, 22:00–10:00); free spots per slot (of 6); sold-out cells; multi-select; selected count; price in credits; needs 1 Safe photo + nickname
+Add to basket → VP-S16
+Sold out; X: no Safe photo; not sold in this category/city
+VP-S14 Flash configuration
+Starts now; 4 hours; what is included (5 bumps in first hour, Super Top + Highlight look, Available now badge); price
+Add to basket → VP-S16
+—
+VP-S15 Upgrades panel
+Super Top, Highlight, New label (animated option), All Extras with bundle saving; preview of the card with each upgrade
+Toggle each → updates basket
+—
+VP-S16 Basket and checkout
+Items with price; remove (confirm); coupon box; subscriber discounts; total in credits and rupees; wallet balance; consent tick-box (immediate start, no withdrawal); Pay with credits / Pay now (card, UPI…)
+Credits → instant result VP-S18; Pay now → gateway → VP-S18; no billing address → VP-S17; low credits → VP-S26
+X: coupon invalid/expired; insufficient credits
+VP-S17 Billing address (modal)
+Name, address, city, state, postal code, country, GSTIN (optional); Save
+→ back to checkout
+X: required fields
+VP-S18 Payment / promotion result
+Success: ad live, bump calendar, Manage ad. Pending: status + auto re-check. Failed: reason by error type + retry + help link (12.6)
+→ VP-S21 / retry
+—
+VP-S19 Basic Ad submitted
+Pending review message; free ads left this week; suggestion to promote for instant go-live
+→ Ads (Pending) / promote
+Basic unavailable → options
+
+C.4.3 Ads management
+Screen (ID)
+What is on it
+Actions → goes to
+States
+VP-S20 Ads list
+Tabs: Published, Not published, Pending, Drafts, Duplicated; each card: thumbnail, title, city, category, status, expiry date, active promotion badge, auto-renew status; actions: Edit, Promote, Suspend/Publish, Delete, Share, Duplicate (P1)
+Card → VP-S21; actions → modals/screens
+E per tab (e.g. "no drafts"); L: skeleton
+VP-S21 Ad management detail
+Preview; status; expiry; promotion summary; bump calendar (past/next bumps); auto-renewal toggle; stats (views, contacts by channel, saves, P1); actions
+Edit → VP-S22; Promote → VP-S11; Suspend/Delete → VP-S23
+—
+VP-S22 Edit ad
+Same fields as steps 1–2 pre-filled; change category; change city; change phone (OTP); Save
+Save → may go to Pending (rule)
+X: validations
+VP-S23 Suspend / delete / change-city confirmations
+Warnings: active promotion not refunded; delete is permanent and Google removal can take days
+Confirm → list with toast
+—
+VP-S24 Duplicate to other cities (P1)
+Pick cities (multi); monthly quota used; publish now (subscribers) or promote first
+→ Duplicated tab
+X: quota reached
+
+C.4.4 Media library and verification
+Screen (ID)
+What is on it
+Actions → goes to
+States
+VP-S25a Media — albums
+Albums grid (name, count, cover); Create album; storage/album limits
+Album → VP-S25b
+E: create your first album
+VP-S25b Album detail
+Grid with tier badges and check status; upload (drag & drop, groups); select, delete, move; Verify photos (optional); add videos (P1)
+→ upload progress; verify → VP-S25c
+L: checking; X: rejected with reason
+VP-S25c Photo / 360° video verification
+Instructions (3 steps, portrait mode, steady, one person only); record 360° video in browser; preview; retake; submit; status (in review / verified / failed)
+Submit → status
+X: camera blocked, too short, not 360°
+
+C.4.5 Money screens
+Screen (ID)
+What is on it
+Actions → goes to
+States
+VP-S26 Wallet — Buy credits
+Available and Used credits; Transaction history link; coupon box + Apply; 10 credit packs (credits, price, struck face value, bonus, discount %, tags Most popular/Best deal); Total; Pay; support block (hours, WhatsApp, Telegram, Contact us)
+Select pack + Pay → billing (VP-S17) → gateway → result
+X: payment errors (12.6)
+VP-S27 Transaction history
+Table: date, type (purchase, bonus, spend, refund, coupon, adjustment, conversion), item, credits ±, balance after, invoice download; date filter
+Invoice → PDF
+E: no transactions
+VP-S28 Bank transfer
+Bank details; amount; upload proof; name; email; ID (if required); Send proof; status list
+Send → pending (24–48 h)
+X: file type/size
+VP-S29 Coupons
+Tabs Active / Used / Expired; each: what it gives, expiry, Use now
+Use → checkout with coupon
+E: no coupons
+VP-S30 Publishing Packs (flag)
+Explanation and switch date; pack options; balance
+Buy → payment
+—
+VP-S31 Subscription
+Plan page: benefits list, price, launch price + end date, FAQ, Subscribe. Manage page: period, benefits used, Renew/Extend, Cancel. Cancel flow: one last confirmation step
+→ payment / confirmation
+—
+VP-S32 Auto-renewal (modal)
+Days to renew; paid from wallet; reward coupon every N renewals; status Active/Disabled/Blocked; cancel
+Save
+X: low credits → blocked notice
+VP-S33 Contact limit reached (modal)
+Notice that free contact limit is reached; options: Contact unlock (price), Promote ad
+→ checkout
+—
+
+C.4.6 Analytics, settings, notifications
+Screen (ID)
+What is on it
+Actions → goes to
+States
+VP-S34 Analytics
+Period selector (7/30/90 days); Health Score 0–100 with change; badges this period; ranking per phone number; Most improved / Declining tabs; Live snapshot; help panel "how badges are earned"; promote suggestion when low
+—
+E: not enough data message; data delay note (2 days)
+VP-S35 Settings
+Personal info; email(s) — change, add, delete verified email; phone — change verified phone (OTP old + new); password change; newsletter toggle; delete account
+→ modals
+X: OTP errors
+VP-S36 Password expired / expiring
+Expiring banner with days left; forced reset screen when expired
+Reset → continue
+—
+VP-S37 Notifications centre
+List of in-app notifications (section 18) with read/unread, links
+→ related screen
+E: no notifications
+
+C.5 Admin panel
+Screen (ID)
+What is on it
+Actions → goes to
+States
+AP-S01 Admin login + 2FA
+Email, password, 2FA code; IP allow-list check
+→ AP-S02
+X: wrong code, locked
+AP-S02 Dashboard
+KPI cards (users, verified vendors, ads, live, queue size, reports, revenue by product, credits sold/spent, Star fill rate, payment failures, KYC backlog); charts; date filter
+Cards → filtered lists
+L: skeleton
+AP-S03 Users list
+Search (email, phone, Customer Code, name); filters (status, KYC, vendor/buyer, city, date); bulk actions; export
+Row → AP-S04
+E: no match
+AP-S04 User detail
+Tabs: Profile, Phones & linked accounts, KYC, Ads, Wallet & ledger, Promotions, Orders, Coupons, Subscription, Tickets, Reports, Notes, Audit; actions: warn, suspend, block, ban, unblock, reset password, credit adjustment (approval), view-as (read-only), export/delete data
+Actions → confirm modal with reason
+—
+AP-S05 Ads list
+Filters (status, category, city, promotion, date, reported); bulk approve/reject/remove; export
+Row → AP-S06
+—
+AP-S06 Ad detail / edit
+Full ad, media with tiers, history of edits, promotions and bump log, reports; edit fields; approve/reject with reason template; remove; restore; change category/city; force expire
+Save → audit log
+—
+AP-S07 Moderation queue
+Split view: queue list (SLA timer, priority) + review pane (ad, media, vendor info, similar ads, flagged words highlighted); Approve / Reject (reason) / Escalate; keyboard shortcuts; assign
+Next item auto-loads
+E: queue empty
+AP-S08 Media review queue
+Grid of low-confidence media; set tier Safe/Restricted/Rejected; duplicate-image matches side by side; 360° video review player
+Decision → next
+—
+AP-S09 KYC queue + detail
+Queue with status; detail: provider result, masked document, face match score, history; approve / reject with reason; retry limit
+→ user notified
+—
+AP-S10 Reports
+Tabs: ad reports, scam reports, general, grievances; detail with evidence; outcome; reply to reporter
+→ action on ad/user
+—
+AP-S11 Categories
+Tree of categories; edit: name, slug, icon, order, status, SEO fields, attribute set
+Save
+—
+AP-S12 Attributes & form builder
+Attribute groups and options; drag-and-drop form per category (field order, required, filterable, on-card); preview of posting form
+Save → live form
+—
+AP-S13 Locations
+Tree: country › state › city › district; edit (name, slug, status, order, SEO texts, lat/long); CSV import; "new cities" flag
+Slug change → auto 301
+—
+AP-S14 Products & price matrix
+Products (Top, Auto Boost, Flash, Star) with variants; matrix (variant × city tier × category); upgrades & bundles; launch offers; scheduled price changes
+Save / schedule
+—
+AP-S15 Slots & Star inventory
+Slot definitions; Star capacity per city per slot; live calendar (sold/free/held); manual hold/release
+—
+—
+AP-S16 Credit packs
+Pack rows (credits, price, bonus, tag, order, status); credit value; unit conversion tool; price adjustment tool (preview + confirm)
+Apply → ledger entries
+—
+AP-S17 Finance
+Payments list + detail (gateway data); refunds; bank-transfer approvals (proof viewer, approve/reject); invoices; reconciliation report; manual adjustments awaiting second approval
+Actions logged
+—
+AP-S18 Coupons
+List; create (type, value, scope, expiry, limits, target segment or users); usage stats
+—
+—
+AP-S19 Publishing Packs & Subscriptions
+Pack definitions + go-live date; plan definitions + every benefit value; subscribers list; extend/cancel
+—
+—
+AP-S20 Banned words
+List (text, match type, scope, action); import/export; test box ("would this text pass?")
+Save → re-scan live ads (job)
+—
+AP-S21 SEO manager
+Templates per page type with variable picker and live preview; per-page overrides; redirects (301/410); robots.txt; sitemap status; thin-page threshold; schema settings
+—
+—
+AP-S22 CMS & banners
+Static pages editor; home blocks; dashboard promo banner; site notices; footer links (normal or data-href); social links
+—
+—
+AP-S23 Help centre editor
+Sections; articles (rich text, images, video), language, order, related, publish
+—
+—
+AP-S24 Blog editor
+Posts, categories, authors, language, schedule, SEO fields; most-searched report from search logs
+—
+—
+AP-S25 Message templates
+Email/SMS/WhatsApp templates per event and language; variables; test send
+—
+—
+AP-S26 Broadcasts
+Segment builder (respecting opt-in); channel; schedule; history and stats
+—
+—
+AP-S27 Support desk
+Ticket inbox (filters by category, SLA, agent); ticket view (conversation, user panel with Customer Code, ads, wallet); macros; internal notes; close + satisfaction
+—
+—
+AP-S28 Reports & analytics
+Revenue by product/city/category; vendor conversion; retention; moderation stats; search log; export
+—
+—
+AP-S29 Settings
+All limits (Appendix A); payment methods on/off and order; support hours and numbers; 18+ gate; cookie banner; languages; time zone
+Save → logged
+—
+AP-S30 Feature flags
+Flags per country: Publishing Packs, subscription, crypto, bank transfer, videos, auto-renewal, contact limits, 18+ gate
+—
+—
+AP-S31 Admin users & roles
+Admins list; invite; role editor (permission matrix); 2FA status; sessions
+—
+—
+AP-S32 Audit log
+Filter by admin, action, object, date; before/after values; read-only
+—
+—
+AP-S33 Translations
+String keys per language; search; import/export
+—
+—
+AP-S34 Grievance & takedown log
+Legal orders and complaints with deadlines (timers), actions, evidence
+—
+Overdue items highlighted
+
+C.6 Support
+Screen (ID)
+What is on it
+Actions → goes to
+States
+SUP-S01 Contact us / new ticket
+Category; subject; message; Customer Code (auto if logged in); attachments; Send
+→ confirmation with ticket number
+X: required fields
+SUP-S02 My tickets (logged-in)
+List with status; ticket thread; reply; close
+—
+E: no tickets
+SUP-S03 Official message checker (P1)
+Enter the code from a message → shows whether it matches your account
+—
+—
+SUP-S04 WhatsApp / Telegram support
+External channels during support hours; shown on Wallet and help centre
+Opens app chat
+Outside hours: show hours
+
+Appendix D — Visual design slots
+The design team creates an original look (logo, palette, type, icons). Every visual element below is a named slot whose value is set in the Admin Panel (or theme file), so colours can be changed without code.
+Design slot
+Used for
+Value
+brand.primary
+Header, links, primary buttons
+[designer to set]
+brand.accent
+Post your ad button, key calls to action
+[designer to set]
+surface.page / surface.card
+Page and card backgrounds
+[designer to set]
+text.primary / text.secondary
+Body and secondary text
+[designer to set]
+label.top
+TOP label
+[designer to set]
+border.supertop
+Super Top card border
+[designer to set]
+label.supertop
+Super Top label
+[designer to set]
+bg.highlight
+Highlight card background (choice of several)
+[designer to set]
+label.new
+New label (static and animated)
+[designer to set]
+badge.flash
+Available now badge
+[designer to set]
+card.star / strip.star
+Star card design and Star strip
+[designer to set]
+badge.verified
+Verified tick
+[designer to set]
+outline.subscriber
+Subscriber outline and glow options
+[designer to set]
+tier.safe / tier.restricted / tier.rejected
+Photo tier badges in the media library
+[designer to set]
+state.success / warning / error / info
+Toasts, form errors, status chips
+[designer to set]
+button.contact.call / whatsapp / telegram / email
+Contact buttons
+[designer to set]
+banner.verification
+Locked-account verification banner
+[designer to set]
+font.family / font.sizes
+Typography scale
+[designer to set]
+radius / spacing / shadow
+Corners, spacing scale, elevation
+[designer to set]
+
+Mobile-first: every screen in Appendix C must be designed for mobile (360 px) first, then tablet and desktop.

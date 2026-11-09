@@ -1,0 +1,6 @@
+---
+description: Tharkoo classifieds project conventions
+alwaysApply: true
+---
+
+Product name is Tharkoo. Read docs/PLAN.md and docs/HANDOFF.md before coding. Keep URLs as PRD §4. Use Mongo via src/lib/db.ts. Do not copy competitor brand or listings. Categories are data, not hardcoded labels. Dev server is port 4317.
