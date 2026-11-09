@@ -4,13 +4,18 @@ import { MongoMemoryServer } from "mongodb-memory-server";
 
 const PORT = "4317";
 
+function readLocalUri() {
+  if (!existsSync(".env.local")) return "";
+  const match = readFileSync(".env.local", "utf8").match(/MONGODB_URI\s*=\s*['"]?([^'"\n]+)['"]?/);
+  return match?.[1]?.trim() || "";
+}
+
 function envLocalHasUri() {
-  if (!existsSync(".env.local")) return false;
-  return /MONGODB_URI=.+/.test(readFileSync(".env.local", "utf8"));
+  return Boolean(readLocalUri());
 }
 
 async function ensureUri() {
-  const existing = process.env.MONGODB_URI || (envLocalHasUri() ? readFileSync(".env.local", "utf8").match(/MONGODB_URI=(.+)/)?.[1]?.trim() : "");
+  const existing = process.env.MONGODB_URI || readLocalUri();
   if (existing && !existing.includes("127.0.0.1") && !existing.includes("localhost")) {
     return existing;
   }
