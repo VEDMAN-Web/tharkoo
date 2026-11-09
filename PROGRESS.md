@@ -4,7 +4,7 @@ Index only. Ana updates this file when a PR merges. The coder updates `progress/
 
 | Task | Platform | Owner model | Status | Branch | PR | Depends | Blocker | Last update |
 |---|---|---|---|---|---|---|---|---|
-| T0.1 | Cur | C | PR | cursor/t0.1-ci-workflow | https://github.com/VEDMAN-Web/tharkoo/pull/1 | - | Actions has not started a run (see progress/t0.1.md) | 2026-11-09 |
+| T0.1 | Cur | C | PR | cursor/t0.1-ci-workflow | https://github.com/VEDMAN-Web/tharkoo/pull/1 | - | Actions still has 0 runs after empty commit 5b38546 (see progress/t0.1.md) | 2026-11-09 |
 | T0.2 | Cdx | M | todo | codex/t0.2-lint-types | | - | | 2026-11-09 |
 | T0.3 | Cur | M | todo | cursor/t0.3-build-harness | | T0.2 | | 2026-11-09 |
 | T0.4 | Cdx | C | todo | codex/t0.4-purge-neutral | | T0.2 | | 2026-11-09 |
