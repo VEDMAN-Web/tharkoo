@@ -1,29 +1,32 @@
 import Link from "next/link";
 import type { Metadata } from "next";
-import { getCategories, getCities, getStates } from "@/lib/queries";
+import { getCategories, getCities, getStates, getSite } from "@/lib/queries";
 
-export const metadata: Metadata = { title: "All cities" };
+export const metadata: Metadata = { title: "Cities of India" };
 
 export default async function CitiesPage() {
-  const [states, cities, categories] = await Promise.all([getStates(), getCities(), getCategories()]);
+  const [states, cities, categories, site] = await Promise.all([getStates(), getCities(), getCategories(), getSite()]);
   const first = categories[0]?.slug || "call-girls";
   return (
     <>
-      <h1 className="text-3xl font-semibold">All cities</h1>
-      <p className="mt-2 text-sm text-[var(--text-secondary)]">Grouped by state. Opens the first category on each city page.</p>
+      <nav className="mb-2 text-[12px] text-[#888]">
+        <Link href="/">{site.name}</Link> › India
+      </nav>
+      <h1 className="text-[28px] font-normal text-[#222]">Cities of India</h1>
+      <h2 className="mt-1 text-[16px] font-normal text-[#555]">India</h2>
       {states.map((state) => {
         const inState = cities.filter((c) => c.stateSlug === state.slug);
         if (!inState.length) return null;
         return (
           <section key={state.slug} className="mt-6">
-            <h2 className="text-lg font-semibold">{state.name}</h2>
-            <div className="mt-2 flex flex-wrap gap-2">
+            <h3 className="text-[16px] font-bold text-[#222]">{state.name}</h3>
+            <ul className="mt-1 columns-2 text-[14px] leading-7 md:columns-3">
               {inState.map((city) => (
-                <Link key={city.slug} href={`/${first}/${city.slug}/`} className="rounded-full bg-white px-3 py-1 text-sm ring-1 ring-gray-200">
-                  {city.name}
-                </Link>
+                <li key={city.slug} className="break-inside-avoid">
+                  <Link href={`/${first}/${city.slug}/`}>{city.name}</Link>
+                </li>
               ))}
-            </div>
+            </ul>
           </section>
         );
       })}

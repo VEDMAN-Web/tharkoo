@@ -38,9 +38,9 @@
 html, body {
   background: var(--sk-page);
   color: var(--sk-text);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: Arial, Helvetica, sans-serif !important;
   font-size: 14px;
-  line-height: 1.4;
+  line-height: 1.45;
   margin: 0;
 }
 
@@ -50,7 +50,7 @@ a:hover { text-decoration: underline; }
 button { font-family: inherit; cursor: pointer; }
 
 .container-site {
-  width: min(1000px, calc(100% - 24px));
+  width: min(1024px, calc(100% - 20px));
   margin-inline: auto;
 }
 
@@ -67,12 +67,18 @@ button { font-family: inherit; cursor: pointer; }
 }
 .logo-mark-lg { font-size: 34px; }
 .logo-mark span.dot {
-  width: 15px;
-  height: 15px;
-  border-radius: 3px;
+  width: 18px;
+  height: 18px;
+  border-radius: 4px;
   background: var(--sk-pink);
   display: inline-block;
   flex: none;
+}
+
+.cat-icon img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 }
 
 .btn-post {
@@ -141,14 +147,12 @@ button { font-family: inherit; cursor: pointer; }
 }
 
 .cat-icon {
-  width: 68px;
-  height: 68px;
+  width: 76px;
+  height: 76px;
   border-radius: 50%;
   flex: none;
-  display: grid;
-  place-items: center;
-  color: #fff;
   overflow: hidden;
+  background: #ddd;
 }
 
 .sticky-post {

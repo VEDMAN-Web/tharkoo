@@ -134,7 +134,7 @@ export function PostWizard() {
             ))}
             <label className="grid h-24 w-32 place-items-center border border-dashed text-[12px]">
               Drop zone / file picker
-              <input type="file" className="hidden" multiple onChange={() => setPhotos(["/placeholders/p1.svg", "/placeholders/p2.svg"])} />
+              <input type="file" className="hidden" multiple onChange={() => setPhotos(["/placeholders/p1.jpg", "/placeholders/p2.jpg"])} />
             </label>
           </div>
           <div className="mt-4 flex flex-wrap gap-2">
@@ -153,7 +153,7 @@ export function PostWizard() {
             <div className="border p-3">
               <p className="font-bold">Desktop / mobile preview</p>
               <p className="mt-2 text-[13px] font-bold">{previewTitle}</p>
-              <img src={photos[0] || "/placeholders/p1.svg"} alt="" className="mt-2 h-28 w-full object-cover" />
+              <img src={photos[0] || "/placeholders/p1.jpg"} alt="" className="mt-2 h-28 w-full object-cover" />
             </div>
             <div className="grid gap-2">
               <button type="button" className="border p-3 text-left" onClick={() => setScreen("top")}>
@@ -296,7 +296,7 @@ export function PostWizard() {
             <div className="mt-3 grid grid-cols-4 gap-2">
               {["p1", "p2", "p3", "p4"].map((p) => (
                 <button key={p} type="button" onClick={() => { setPhotos([`/placeholders/${p}.svg`]); setPicker(false); }}>
-                  <img src={`/placeholders/${p}.svg`} alt="" />
+                  <img src={`/placeholders/${p}.jpg`} alt="" />
                 </button>
               ))}
             </div>

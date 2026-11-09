@@ -92,8 +92,8 @@ export function Header({
       <Link href="/u/post-insert/" className="sticky-post btn-post">
         {postCta}
       </Link>
-      {search ? <SearchModal categories={categories} cities={cities} onClose={() => setSearch(false)} /> : null}
-      {cityOpen ? <CityPicker cities={cities} onClose={() => setCityOpen(false)} /> : null}
+      {search ? <SearchModal brand={siteName} categories={categories} cities={cities} onClose={() => setSearch(false)} /> : null}
+      {cityOpen ? <CityPicker brand={siteName} cities={cities} onClose={() => setCityOpen(false)} /> : null}
     </>
   );
 }

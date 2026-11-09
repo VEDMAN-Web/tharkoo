@@ -208,7 +208,7 @@ async function main() {
           place: district || "City-wide",
           chips: [`${22 + ((i + n) % 16)} years`, city],
           photos: hasPhotos
-            ? Array.from({ length: variant === "supertop" || variant === "flash" ? 3 : 1 }, (_, p) => `/placeholders/p${((i + n + p) % 8) + 1}.svg`)
+            ? Array.from({ length: variant === "supertop" || variant === "flash" ? 3 : 1 }, (_, p) => `/placeholders/p${((i + n + p) % 8) + 1}.jpg`)
             : [],
           tags: {
             tag1: n % 2 === 0 ? "Independent" : "Agency",

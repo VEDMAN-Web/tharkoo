@@ -7,10 +7,12 @@ import { Logo } from "./Logo";
 type City = { slug: string; name: string; stateSlug?: string };
 
 export function CityPicker({
+  brand = "tharkoo",
   cities,
   category = "call-girls",
   onClose,
 }: {
+  brand?: string;
   cities: City[];
   category?: string;
   onClose: () => void;
@@ -26,7 +28,7 @@ export function CityPicker({
     <div className="fixed inset-0 z-50 overflow-auto bg-[#ececec]">
       <div className="site-header">
         <div className="container-site site-header-inner">
-          <Logo name="tharkoo" />
+          <Logo name={brand} />
           <button type="button" className="ml-auto text-[13px] text-[#555]" onClick={onClose}>
             Close
           </button>

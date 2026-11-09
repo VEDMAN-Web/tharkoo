@@ -14,8 +14,12 @@ async function main() {
   const mongo = uri();
   if (!mongo) throw new Error("MONGODB_URI missing");
   await mongoose.connect(mongo);
+  const homeCities = ["hyderabad", "delhi", "bangalore"];
   for (const cat of CATEGORIES) {
-    await Category.updateOne({ slug: cat.slug }, { $set: { description: cat.description } });
+    await Category.updateOne(
+      { slug: cat.slug },
+      { $set: { description: cat.description, homeBlurb: cat.description, homeCities, showOnHome: true, color: cat.color } },
+    );
   }
   for (const seo of Object.values(DEFAULT_SEO)) {
     await SeoTemplate.updateOne({ pageType: seo.pageType }, { $set: seo }, { upsert: true });

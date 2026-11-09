@@ -69,7 +69,7 @@ export function AdsList() {
       <div className="bg-white">
         {[1, 2, 3].map((n) => (
           <article key={n} className="flex gap-3 border-b p-3 text-[13px]">
-            <img src={`/placeholders/p${n}.svg`} alt="" className="h-16 w-12 object-cover" />
+            <img src={`/placeholders/p${n}.jpg`} alt="" className="h-16 w-12 object-cover" />
             <div>
               <Link href="/u/account/ads/in00001/" className="font-bold">
                 Demo ad {n} · Hyderabad · {tab}

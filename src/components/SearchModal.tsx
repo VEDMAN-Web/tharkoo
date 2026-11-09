@@ -9,10 +9,12 @@ type Cat = { slug: string; name: string };
 type City = { slug: string; name: string; stateSlug?: string };
 
 export function SearchModal({
+  brand = "tharkoo",
   categories,
   cities,
   onClose,
 }: {
+  brand?: string;
   categories: Cat[];
   cities: City[];
   onClose: () => void;
@@ -53,7 +55,7 @@ export function SearchModal({
     <div className="fixed inset-0 z-50 overflow-auto bg-[#ececec]">
       <div className="site-header">
         <div className="container-site site-header-inner">
-          <Logo name="tharkoo" />
+          <Logo name={brand} />
           <button type="button" className="ml-auto text-[13px] text-[#555]" onClick={onClose}>
             Close
           </button>
