@@ -53,22 +53,25 @@ export default async function AdPage({ params }: Props) {
           },
         ]}
       />
-      <p className="text-sm text-[var(--text-secondary)]">
-        {ad.publishedAt ? new Date(ad.publishedAt).toLocaleDateString("en-IN", { dateStyle: "long" }) : ""}{" "}
-        · Ad ID: {ad.publicId}
+      <p className="text-[12px] uppercase tracking-wide text-[#888]">
+        {ad.publishedAt ? new Date(ad.publishedAt).toLocaleDateString("en-GB", { day: "numeric", month: "long" }) : ""}{" "}
+        - Ad ID: {ad.publicId}
       </p>
-      <h1 className="mt-2 text-2xl font-semibold md:text-3xl">{ad.title}</h1>
-      <p className="mt-1 text-sm">
-        {ad.displayName} · {ad.age} years · {ad.citySlug}
+      <h1 className="mt-2 text-[22px] font-bold leading-snug text-[#222]">{ad.title}</h1>
+      <p className="mt-2 text-[14px]">
+        <strong>{ad.displayName}</strong>
+      </p>
+      <p className="text-[13px] text-[#666]">
+        {ad.age} years {ad.citySlug}
         {ad.place ? ` / ${ad.place}` : ""}
       </p>
       {ad.photos?.length ? (
-        <div className="mt-4 grid h-56 place-items-center rounded bg-[var(--brand-primary)] text-6xl font-semibold text-white">
+        <div className="mt-4 grid h-56 place-items-center bg-[#ddd] text-6xl font-bold text-[#888]">
           {letter}
         </div>
       ) : null}
-      <h2 className="mt-6 text-lg font-semibold">About</h2>
-      <p className="mt-2 max-w-3xl whitespace-pre-wrap text-sm leading-6">{ad.description}</p>
+      <h2 className="mt-6 text-[16px] font-bold">About me</h2>
+      <p className="mt-2 max-w-3xl whitespace-pre-wrap text-[14px] leading-6">{ad.description}</p>
       <dl className="mt-4 grid max-w-md grid-cols-2 gap-2 text-sm">
         <dt className="text-[var(--text-secondary)]">Category</dt>
         <dd>{cat?.name}</dd>
@@ -81,46 +84,38 @@ export default async function AdPage({ params }: Props) {
           </>
         ) : null}
       </dl>
-      <h2 className="mt-6 text-lg font-semibold">Contact</h2>
-      <div className="mt-3 flex flex-wrap gap-2">
+      <h2 className="mt-6 text-[16px] font-bold">Contact me</h2>
+      <div className="mt-3 flex max-w-md flex-col gap-2">
         {ad.phone ? (
-          <a className="rounded bg-[var(--contact-call)] px-4 py-2 text-sm font-semibold text-white hover:text-white" href={`tel:${ad.phone}`}>
+          <a className="block rounded-sm bg-[var(--sk-call)] px-4 py-3 text-center text-sm font-bold text-white no-underline" href={`tel:${ad.phone}`}>
             Call
           </a>
         ) : null}
         {ad.whatsapp ? (
-          <a className="rounded bg-[var(--contact-wa)] px-4 py-2 text-sm font-semibold text-white hover:text-white" href={`https://wa.me/91${ad.whatsapp}`}>
+          <a className="block rounded-sm bg-[var(--sk-wa)] px-4 py-3 text-center text-sm font-bold text-white no-underline" href={`https://wa.me/91${ad.whatsapp}`}>
             WhatsApp
           </a>
         ) : null}
         {ad.telegram ? (
-          <a className="rounded bg-[var(--contact-tg)] px-4 py-2 text-sm font-semibold text-white hover:text-white" href={`https://t.me/${ad.telegram}`}>
+          <a className="block rounded-sm bg-[var(--sk-tg)] px-4 py-3 text-center text-sm font-bold text-white no-underline" href={`https://t.me/${ad.telegram}`}>
             Telegram
           </a>
         ) : null}
-        {ad.emailOn ? (
-          <span className="rounded bg-[var(--contact-email)] px-4 py-2 text-sm font-semibold text-white">
-            Email (relay in a later slice)
-          </span>
-        ) : null}
       </div>
-      <div className="mt-4 flex gap-4 text-sm">
+      <div className="mt-4 flex gap-4 text-[13px]">
         <button className="underline" type="button">
-          Save contact (login in slice 2)
+          Save contact
         </button>
         <Link href="/submit-report">Report this ad</Link>
       </div>
-      <aside className="mt-6 rounded border bg-amber-50 p-4 text-sm">
-        Safety: Tharkoo staff will never ask you to pay outside the wallet.{" "}
-        <Link href="/help#scams" className="underline">
-          How to report a scam
-        </Link>
-        . {site.name} is operated by {site.legalName}.
-      </aside>
+      <p className="mt-6 text-[12px] text-[#777]">
+        If you detect inappropriate, illegal content or misuse of data, report it through Submit a report.
+        {site.legalName ? ` Operated by ${site.legalName}.` : ""}
+      </p>
       {related.length ? (
         <section className="mt-8">
-          <h2 className="mb-3 text-lg font-semibold">Related ads</h2>
-          <div className="grid gap-3">
+          <h2 className="mb-3 text-[16px] font-bold">Related ads</h2>
+          <div className="overflow-hidden border border-[#e0e0e0] bg-white">
             {related.map((item) => (
               <AdCard key={item.publicId} ad={item} />
             ))}

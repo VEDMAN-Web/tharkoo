@@ -9,7 +9,8 @@ export async function getSite() {
   return (
     (await Site.findOne({ key: "default" }).lean()) ?? {
       name: "Tharkoo",
-      tagline: "Classifieds in your city",
+      tagline:
+        "Welcome to Tharkoo. Browse Call Girls, Massages, Male Escorts, Transsexual and Adult Meetings across Indian cities. Post your ad absolutely FREE.",
       legalName: "SparkBeta Tech",
       countryName: "India",
       supportHours: "Mon–Fri 14:00–20:00 IST",
@@ -42,7 +43,7 @@ export async function getCities(limit?: number) {
 
 export async function getTopCities() {
   await connectDb();
-  return Location.find({ kind: "city", isTop: true, status: "active" }).sort({ name: 1 }).lean();
+  return Location.find({ kind: "city", isTop: true, status: "active" }).sort({ sortOrder: 1, name: 1 }).lean();
 }
 
 export async function getSiblingCities(stateSlug: string) {

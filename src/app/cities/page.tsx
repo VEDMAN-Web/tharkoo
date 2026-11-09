@@ -6,7 +6,7 @@ export const metadata: Metadata = { title: "All cities" };
 
 export default async function CitiesPage() {
   const [states, cities, categories] = await Promise.all([getStates(), getCities(), getCategories()]);
-  const first = categories[0]?.slug || "local-services";
+  const first = categories[0]?.slug || "call-girls";
   return (
     <>
       <h1 className="text-3xl font-semibold">All cities</h1>

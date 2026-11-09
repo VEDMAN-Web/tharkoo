@@ -20,39 +20,48 @@ export function Header({
   cities: City[];
 }) {
   const [search, setSearch] = useState(false);
+  const [q, setQ] = useState("");
 
   return (
     <>
-      <header className="sticky top-0 z-30 bg-[var(--brand-primary)] text-white">
-        <div className="container-site flex h-14 items-center gap-3">
-          <Link href="/" className="text-lg font-bold tracking-tight text-white hover:text-white">
-            {siteName}
+      <header className="sticky top-0 z-30 border-b border-black/10 bg-white">
+        <div className="container-site flex h-16 items-center gap-3">
+          <Link href="/" className="logo-mark">
+            <span className="dot" />
+            {siteName.toLowerCase()}
           </Link>
-          <span className="hidden text-sm text-white/70 sm:inline">{countryName}</span>
-          <div className="ml-auto flex items-center gap-1">
-            <button
-              aria-label="Search"
-              className="rounded p-2 hover:bg-white/10"
-              onClick={() => setSearch(true)}
-            >
+          <span className="hidden text-xs text-[#888] sm:inline">{countryName}</span>
+          <form
+            className="header-search mx-2 hidden md:flex"
+            onSubmit={(e) => {
+              e.preventDefault();
+              setSearch(true);
+            }}
+          >
+            <input
+              value={q}
+              onChange={(e) => setQ(e.target.value)}
+              placeholder="Search by City, Category..."
+              onFocus={() => setSearch(true)}
+            />
+            <button type="button" aria-label="Search" onClick={() => setSearch(true)}>
+              <Search size={16} />
+            </button>
+          </form>
+          <div className="ml-auto flex items-center gap-2">
+            <button className="rounded p-2 md:hidden" aria-label="Search" onClick={() => setSearch(true)}>
               <Search size={20} />
             </button>
-            <Link href="/u/login" aria-label="Account" className="rounded p-2 text-white hover:bg-white/10">
+            <Link href="/u/login" aria-label="Account" className="rounded p-2 text-[#444] hover:text-black">
               <User size={20} />
             </Link>
-            <Link
-              href="/u/post-insert"
-              className="ml-1 hidden rounded bg-[var(--brand-accent)] px-3 py-2 text-sm font-semibold text-white hover:text-white sm:inline"
-            >
+            <Link href="/u/post-insert" className="btn-post hidden sm:inline">
               Post your ad
             </Link>
           </div>
         </div>
       </header>
-      <Link
-        href="/u/post-insert"
-        className="sticky-post rounded-full bg-[var(--brand-accent)] px-4 py-3 text-sm font-semibold text-white shadow-lg"
-      >
+      <Link href="/u/post-insert" className="sticky-post btn-post shadow-lg">
         Post your ad
       </Link>
       {search ? (

@@ -2,42 +2,52 @@
 
 export const CATEGORIES = [
   {
-    name: "Local Services",
-    slug: "local-services",
-    description: "Find trusted local services in your city. Independent providers and small teams.",
-    icon: "wrench",
+    name: "Call Girls",
+    slug: "call-girls",
+    description:
+      "Call girls and escort ads. Independent girls and escorts. Women seeking men. Browse erotic services in your city.",
+    icon: "call-girls",
+    color: "#e20044",
     order: 1,
     starEnabled: true,
   },
   {
-    name: "Wellness",
-    slug: "wellness",
-    description: "Wellness, therapy and body-care listings near you.",
-    icon: "leaf",
+    name: "Massages",
+    slug: "massages",
+    description:
+      "Erotic massage ads. Body massage and full-body sessions listed by city.",
+    icon: "massages",
+    color: "#9b4dca",
     order: 2,
     starEnabled: false,
   },
   {
-    name: "Professionals",
-    slug: "professionals",
-    description: "Hire professionals for short assignments and on-site work.",
-    icon: "briefcase",
+    name: "Male Escorts",
+    slug: "male-escorts",
+    description:
+      "Male escort services, gigolos, gay escorts and call boys. Male adult services by city.",
+    icon: "male-escorts",
+    color: "#0077c8",
     order: 3,
     starEnabled: false,
   },
   {
-    name: "Community",
-    slug: "community",
-    description: "Community notices, groups and local help.",
-    icon: "users",
+    name: "Transsexual",
+    slug: "transsexual",
+    description:
+      "Transsexual dating and TS escort ads. Shemale, ladyboy and TS listings.",
+    icon: "transsexual",
+    color: "#00a88f",
     order: 4,
     starEnabled: false,
   },
   {
-    name: "Meetups",
-    slug: "meetups",
-    description: "City meetups and casual local get-togethers.",
-    icon: "calendar",
+    name: "Adult Meetings",
+    slug: "adult-meetings",
+    description:
+      "Casual dating, NSA and local adult meetings. Chat with singles for a meeting.",
+    icon: "adult-meetings",
+    color: "#f5a623",
     order: 5,
     starEnabled: false,
   },
@@ -72,7 +82,7 @@ export const TAG_GROUPS = [
 ];
 
 export const TOP_CITIES = [
-  "Mumbai", "Delhi", "Bangalore", "Hyderabad", "Pune",
+  "Hyderabad", "Delhi", "Bangalore", "Mumbai", "Pune",
   "Chennai", "Kolkata", "Ahmedabad", "Surat", "Jaipur",
 ] as const;
 

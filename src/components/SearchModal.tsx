@@ -38,7 +38,7 @@ export function SearchModal({
     <div className="fixed inset-0 z-50 bg-white">
       <form onSubmit={submit} className="container-site flex max-w-xl flex-col gap-3 py-6">
         <div className="flex items-center justify-between">
-          <h2 className="text-lg font-semibold">Search</h2>
+          <h2 className="text-lg font-bold">Search</h2>
           <button type="button" onClick={onClose} className="text-sm underline">
             Close
           </button>
@@ -47,10 +47,10 @@ export function SearchModal({
           autoFocus
           value={q}
           onChange={(e) => setQ(e.target.value)}
-          placeholder="Keyword"
-          className="rounded border px-3 py-2"
+          placeholder="Search by City, Category..."
+          className="rounded-sm border px-3 py-2"
         />
-        <select value={category} onChange={(e) => setCategory(e.target.value)} className="rounded border px-3 py-2">
+        <select value={category} onChange={(e) => setCategory(e.target.value)} className="rounded-sm border px-3 py-2">
           <option value="">All categories</option>
           {categories.map((c) => (
             <option key={c.slug} value={c.slug}>
@@ -58,7 +58,7 @@ export function SearchModal({
             </option>
           ))}
         </select>
-        <select value={location} onChange={(e) => setLocation(e.target.value)} className="rounded border px-3 py-2">
+        <select value={location} onChange={(e) => setLocation(e.target.value)} className="rounded-sm border px-3 py-2">
           <option value="">All cities</option>
           {cities.map((c) => (
             <option key={c.slug} value={c.slug}>
@@ -74,9 +74,7 @@ export function SearchModal({
           <input type="checkbox" checked={verified} onChange={(e) => setVerified(e.target.checked)} />
           Verified only
         </label>
-        <button className="rounded bg-[var(--brand-accent)] px-4 py-2.5 text-sm font-semibold text-white">
-          Show results
-        </button>
+        <button className="btn-post self-start">Show results</button>
       </form>
     </div>
   );

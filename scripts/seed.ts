@@ -37,7 +37,8 @@ async function main() {
   await Site.create({
     key: "default",
     name: "Tharkoo",
-    tagline: "Classifieds in your city",
+    tagline:
+      "Welcome to Tharkoo. Browse Call Girls, Massages, Male Escorts, Transsexual and Adult Meetings across Indian cities. Post your ad absolutely FREE.",
     legalName: "SparkBeta Tech",
     countryName: "India",
     supportHours: "Mon–Fri 14:00–20:00 IST",
@@ -69,6 +70,7 @@ async function main() {
       stateSlug: slugify(CITY_STATE[name]),
       status: "active",
       isTop: (TOP_CITIES as readonly string[]).includes(name),
+      sortOrder: (TOP_CITIES as readonly string[]).indexOf(name) >= 0 ? (TOP_CITIES as readonly string[]).indexOf(name) : 99,
     })),
   );
 
@@ -96,13 +98,14 @@ async function main() {
         const name = NAMES[(i + n) % NAMES.length];
         const district = districts[n % districts.length] || undefined;
         const publicId = idFor(i);
-        const title = `${name} — ${category.name.toLowerCase()} in ${city}${district ? ` / ${district}` : ""}`;
+        const phone = `9${String(8000000000 + i).slice(-9)}`;
+        const title = `${phone} - ${city} ${category.name}: ${name}`;
         const hasPhotos = variant !== "free";
         listings.push({
           publicId,
           slug: `${slugify(title)}-${publicId}`,
           title,
-          description: `${name} offers ${category.name.toLowerCase()} in ${city}. Original demo listing for Tharkoo. Cash or UPI. Independent provider. Call or WhatsApp to confirm timing.`,
+          description: `${name}. Independent. Direct meeting. Cash only, no advance. Available in ${city}${district ? `, ${district}` : ""}. Original demo listing for Tharkoo — not copied from another site.`,
           displayName: name,
           age: 22 + ((i + n) % 16),
           categorySlug: category.slug,
@@ -119,8 +122,8 @@ async function main() {
           lastBumpedAt: new Date(Date.now() - n * 36e5 - i * 1e5),
           publishedAt: new Date(Date.now() - (n + 1) * 864e5),
           status: "live",
-          phone: `99999${String(10000 + i).slice(-5)}`,
-          whatsapp: n % 2 === 0 ? `99999${String(10000 + i).slice(-5)}` : undefined,
+          phone,
+          whatsapp: n % 2 === 0 ? phone : undefined,
           telegram: n % 3 === 0 ? "tharkoo_demo" : undefined,
           emailOn: n % 4 === 1,
           tags: { tag1: "Other", tag2: ["This week"] },

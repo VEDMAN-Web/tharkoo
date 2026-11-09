@@ -1,50 +1,118 @@
 @import "tailwindcss";
 
 :root {
-  --brand-primary: #0d1b2a;
-  --brand-accent: #1e7ae8;
-  --surface-page: #f3f4f6;
-  --surface-card: #ffffff;
-  --text-primary: #12202e;
-  --text-secondary: #5b6773;
-  --label-top: #e85d04;
-  --border-supertop: #1e7ae8;
-  --label-supertop: #0b4f9c;
-  --bg-highlight: #fff6d9;
-  --label-new: #c1121f;
-  --badge-flash: #16a34a;
-  --card-star: #111827;
-  --badge-verified: #0f766e;
-  --contact-call: #15803d;
-  --contact-wa: #16a34a;
-  --contact-tg: #0284c7;
-  --contact-email: #334155;
-  --radius: 6px;
+  --sk-pink: #e20044;
+  --sk-blue: #00a0e8;
+  --sk-blue-dark: #0088c7;
+  --sk-header: #ffffff;
+  --sk-page: #ececec;
+  --sk-card: #ffffff;
+  --sk-text: #333333;
+  --sk-muted: #777777;
+  --sk-link: #0077b3;
+  --sk-top: #ff6a00;
+  --sk-supertop: #00a0e8;
+  --sk-highlight: #fff4cc;
+  --sk-flash: #2ecc71;
+  --sk-star: #1a1a1a;
+  --sk-verified: #1abc9c;
+  --sk-call: #27ae60;
+  --sk-wa: #25d366;
+  --sk-tg: #229ed9;
+  --radius: 3px;
 }
 
 @theme inline {
-  --color-background: var(--surface-page);
-  --color-foreground: var(--text-primary);
-  --font-sans: var(--font-source-sans);
+  --color-background: var(--sk-page);
+  --color-foreground: var(--sk-text);
+  --font-sans: Arial, Helvetica, sans-serif;
 }
 
 * { box-sizing: border-box; }
 
 html, body {
-  background: var(--surface-page);
-  color: var(--text-primary);
-  font-family: var(--font-source-sans), Arial, Helvetica, sans-serif;
+  background: var(--sk-page);
+  color: var(--sk-text);
+  font-family: Arial, Helvetica, sans-serif;
+  font-size: 14px;
   margin: 0;
 }
 
-a { color: inherit; text-decoration: none; }
-a:hover { color: var(--brand-accent); }
+a { color: var(--sk-link); text-decoration: none; }
+a:hover { text-decoration: underline; }
 
 button { font-family: inherit; }
 
 .container-site {
-  width: min(1100px, calc(100% - 24px));
+  width: min(980px, calc(100% - 16px));
   margin-inline: auto;
+}
+
+.logo-mark {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: #222;
+  text-decoration: none !important;
+  font-weight: 700;
+  font-size: 26px;
+  letter-spacing: -0.04em;
+  line-height: 1;
+}
+.logo-mark span.dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--sk-pink);
+  display: inline-block;
+}
+.btn-post {
+  background: var(--sk-blue);
+  color: #fff !important;
+  text-decoration: none !important;
+  font-weight: 700;
+  font-size: 13px;
+  padding: 8px 14px;
+  border-radius: 3px;
+  white-space: nowrap;
+}
+.btn-post:hover { background: var(--sk-blue-dark); }
+
+.header-search {
+  flex: 1;
+  max-width: 420px;
+  display: flex;
+  border: 1px solid #ddd;
+  border-radius: 20px;
+  overflow: hidden;
+  background: #f7f7f7;
+}
+.header-search input {
+  flex: 1;
+  border: 0;
+  background: transparent;
+  padding: 8px 12px;
+  outline: none;
+  font-size: 13px;
+}
+.header-search button {
+  border: 0;
+  background: transparent;
+  padding: 0 12px;
+  color: #555;
+  cursor: pointer;
+}
+
+.cat-icon {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  flex: none;
+  display: grid;
+  place-items: center;
+  color: #fff;
+  font-size: 22px;
+  font-weight: 700;
 }
 
 .sticky-post {
