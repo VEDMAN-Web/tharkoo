@@ -3,8 +3,9 @@ import { allowRequest, clientKey } from "@/lib/rate-limit";
 
 export function proxy(req: NextRequest) {
   const ip = clientKey(req.headers);
-  const search = req.nextUrl.pathname.startsWith("/search");
-  const ok = allowRequest(ip, search ? 30 : 90, 60_000);
+  const path = req.nextUrl.pathname;
+  const search = path.startsWith("/search") || path.startsWith("/api/catalog");
+  const ok = allowRequest(`${ip}:${search ? "search" : "site"}`, search ? 30 : 90, 60_000);
   if (!ok) {
     return NextResponse.json({ error: "Too many requests" }, { status: 429 });
   }
@@ -12,5 +13,5 @@ export function proxy(req: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/((?!api|_next/static|_next/image|_next/webpack-hmr|favicon.ico|admin|u|placeholders|cursor).*)"],
+  matcher: ["/((?!_next/static|_next/image|_next/webpack-hmr|favicon.ico|placeholders).*)"],
 };
