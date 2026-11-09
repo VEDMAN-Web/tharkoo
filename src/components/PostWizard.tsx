@@ -279,7 +279,7 @@ export function PostWizard() {
           <div className="w-full max-w-sm bg-white p-6">
             <h3 className="font-bold">Phone verification</h3>
             <p className="mt-2 text-[13px]">6-digit code · 5 min timer · resend · didn&apos;t receive the SMS?</p>
-            <input className="mt-3 w-full border px-3 py-2 tracking-[0.4em]" maxLength={6} placeholder="000000" />
+            <input className="mt-3 w-full border px-3 py-2 tracking-[0.4em]" maxLength={6} placeholder="SMS code" />
             <div className="mt-3 flex gap-2">
               <button type="button" className="btn-post" onClick={() => setPhoneOpen(false)}>Verify</button>
               <button type="button" className="btn-ghost" onClick={() => setPhoneOpen(false)}>Close</button>

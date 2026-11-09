@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { adminList, adminMutate } from "@/app/admin/actions";
 
 type Block = {
   id: string;
@@ -27,12 +28,11 @@ export function HomepageEditor() {
   const [err, setErr] = useState("");
 
   useEffect(() => {
-    fetch("/api/admin/list?model=Site")
-      .then((r) => r.json())
-      .then((d) => {
-        const row = d.items?.[0];
+    adminList("Site")
+      .then((items) => {
+        const row = items[0] as Record<string, string> & { homepage?: { blocks?: Block[] }; theme?: Theme; _id?: string };
         if (!row) return;
-        setId(row._id);
+        setId(row._id || "");
         setBlocks(row.homepage?.blocks || []);
         setTheme(
           row.theme && Object.keys(row.theme).length
@@ -88,23 +88,15 @@ export function HomepageEditor() {
 
   async function save() {
     setErr("");
-    const res = await fetch("/api/admin/mutate", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
+    try {
+      await adminMutate({
         model: "Site",
         op: "update",
         id,
-        data: {
-          ...site,
-          theme,
-          homepage: { blocks },
-        },
-      }),
-    });
-    const out = await res.json();
-    if (!res.ok) {
-      setErr(out.error || "Save failed");
+        data: { ...site, theme, homepage: { blocks } },
+      });
+    } catch (e) {
+      setErr(e instanceof Error ? e.message : "Save failed");
       return;
     }
     setMsg("Homepage, chrome and theme saved. Open the home page to see it.");

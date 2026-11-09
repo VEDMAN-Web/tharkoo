@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { CategoryIcon } from "./CategoryIcon";
+import { safeHtml } from "@/lib/sanitize";
 
 type Block = {
   id: string;
@@ -106,7 +107,7 @@ export function HomeBlocks({
             <div
               key={block.id}
               className="mt-8 text-[13px] leading-6 text-[#555]"
-              dangerouslySetInnerHTML={{ __html: block.html || "" }}
+              dangerouslySetInnerHTML={{ __html: safeHtml(block.html || "") }}
             />
           );
         }

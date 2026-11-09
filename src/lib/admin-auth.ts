@@ -1,15 +1,25 @@
-import { cookies } from "next/headers";
+import { headers } from "next/headers";
 import { NextRequest, NextResponse } from "next/server";
+import { getIdentity, type Identity } from "../../cursor/identity";
 
 export function adminUnauthorized() {
-  return NextResponse.json({ error: "Admin login required" }, { status: 401 });
+  return NextResponse.json({ error: "Sign in required" }, { status: 401 });
 }
 
-export function isAdminRequest(req: NextRequest) {
-  return req.cookies.get("tharkoo_admin")?.value === "1";
+export function isStaff(identity: Identity) {
+  return identity.verified === true && identity.kind === "person";
 }
 
-export async function isAdminCookie() {
-  const jar = await cookies();
-  return jar.get("tharkoo_admin")?.value === "1";
+export async function getStaffFromHeaders() {
+  return getIdentity(await headers());
+}
+
+export async function getStaffFromRequest(req: NextRequest) {
+  return getIdentity(req);
+}
+
+export async function requireStaffRequest(req: NextRequest) {
+  const identity = await getStaffFromRequest(req);
+  if (!isStaff(identity)) return null;
+  return identity;
 }

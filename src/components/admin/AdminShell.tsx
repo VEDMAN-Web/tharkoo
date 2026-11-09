@@ -51,7 +51,7 @@ export function AdminShell({ title, children }: { title: string; children: React
       </aside>
       <div className="min-w-0 flex-1 bg-[#f3f3f3] p-4 text-[#333]">
         <div className="mb-3 flex items-center justify-between text-[12px]">
-          <span>2FA on · staff demo</span>
+          <span>Signed-in staff</span>
           <Link href="/admin/login/">Log out</Link>
         </div>
         <nav className="mb-3 flex flex-wrap gap-1 text-[11px] md:hidden">

@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { adminList, adminMutate } from "@/app/admin/actions";
 
 export function CollectionEditor({
   model,
@@ -21,10 +22,11 @@ export function CollectionEditor({
 
   async function load() {
     setErr("");
-    const res = await fetch(`/api/admin/list?model=${model}`);
-    const data = await res.json();
-    if (!res.ok) setErr(data.error || "Load failed");
-    setRows(data.items || []);
+    try {
+      setRows(await adminList(model));
+    } catch (e) {
+      setErr(e instanceof Error ? e.message : "Load failed");
+    }
   }
 
   useEffect(() => {
@@ -45,13 +47,7 @@ export function CollectionEditor({
       const data = JSON.parse(json);
       const id = String(data._id || edit._id);
       delete data._id;
-      const res = await fetch("/api/admin/mutate", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ model, op: "update", id, data }),
-      });
-      const out = await res.json();
-      if (!res.ok) throw new Error(out.error);
+      await adminMutate({ model, op: "update", id, data });
       setMsg("Saved. Public pages pick this up immediately.");
       setEdit(null);
       await load();
@@ -61,23 +57,14 @@ export function CollectionEditor({
   }
 
   async function create() {
-    const res = await fetch("/api/admin/mutate", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ model, op: "create", data: createTemplate || { status: "active" } }),
-    });
-    const out = await res.json();
+    const out = await adminMutate({ model, op: "create", data: createTemplate || { status: "active" } });
     if (out.item) open(out.item);
     await load();
   }
 
   async function remove(id: string) {
     if (!confirm("Delete this record?")) return;
-    await fetch("/api/admin/mutate", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ model, op: "delete", id }),
-    });
+    await adminMutate({ model, op: "delete", id });
     setEdit(null);
     await load();
   }

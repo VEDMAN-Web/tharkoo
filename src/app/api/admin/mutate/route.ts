@@ -1,13 +1,13 @@
 import { revalidatePath } from "next/cache";
 import { NextRequest, NextResponse } from "next/server";
-import { adminUnauthorized, isAdminRequest } from "@/lib/admin-auth";
+import { adminUnauthorized, requireStaffRequest } from "@/lib/admin-auth";
 import { connectDb } from "@/lib/db";
 import { MODEL_MAP, type ModelName } from "@/lib/models";
 
 export const dynamic = "force-dynamic";
 
 export async function POST(req: NextRequest) {
-  if (!isAdminRequest(req)) return adminUnauthorized();
+  if (!(await requireStaffRequest(req))) return adminUnauthorized();
   const body = await req.json();
   const modelName = body.model as ModelName;
   const op = body.op as "create" | "update" | "delete";

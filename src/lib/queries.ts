@@ -1,4 +1,5 @@
 import { connectDb } from "./db";
+import { safeSearch } from "./sanitize";
 import {
   AttributeGroup,
   Banner,
@@ -147,16 +148,19 @@ export async function searchListings(opts: {
   if (opts.photos) filter.photos = { $exists: true, $ne: [] };
   if (opts.verified) filter.verified = true;
   if (opts.q) {
-    filter.$and = [
-      {
-        $or: [
-          { title: new RegExp(opts.q, "i") },
-          { description: new RegExp(opts.q, "i") },
-          { displayName: new RegExp(opts.q, "i") },
-          { place: new RegExp(opts.q, "i") },
-        ],
-      },
-    ];
+    const q = safeSearch(opts.q);
+    if (q) {
+      filter.$and = [
+        {
+          $or: [
+            { title: new RegExp(q, "i") },
+            { description: new RegExp(q, "i") },
+            { displayName: new RegExp(q, "i") },
+            { place: new RegExp(q, "i") },
+          ],
+        },
+      ];
+    }
   }
   return getFeed(filter, opts.page ?? 1);
 }

@@ -4,6 +4,7 @@ import { Footer } from "./Footer";
 import { Header } from "./Header";
 import { getCategories, getCities, getSite, getTopCities } from "@/lib/queries";
 import { plain } from "@/lib/plain";
+import { safeCssColor } from "@/lib/sanitize";
 
 export const dynamic = "force-dynamic";
 
@@ -17,13 +18,13 @@ export async function SiteShell({ children }: { children: React.ReactNode }) {
   const catProps = plain(categories.map((c) => ({ slug: c.slug!, name: c.name! })));
   const theme = plain((site as { theme?: Record<string, string> }).theme || {});
   const css = Object.entries({
-    "--sk-pink": theme.accent,
-    "--sk-blue": theme.primary,
-    "--sk-page": theme.page,
-    "--sk-top": theme.top,
-    "--sk-link": theme.link,
-    "--brand-primary": theme.primary,
-    "--brand-accent": theme.accent,
+    "--sk-pink": safeCssColor(theme.accent),
+    "--sk-blue": safeCssColor(theme.primary),
+    "--sk-page": safeCssColor(theme.page),
+    "--sk-top": safeCssColor(theme.top),
+    "--sk-link": safeCssColor(theme.link),
+    "--brand-primary": safeCssColor(theme.primary),
+    "--brand-accent": safeCssColor(theme.accent),
   })
     .filter(([, v]) => v)
     .map(([k, v]) => `${k}:${v}`)

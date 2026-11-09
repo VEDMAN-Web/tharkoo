@@ -29,7 +29,7 @@ App: http://127.0.0.1:4317
 
 ## Admin CMS
 
-Everything on the public site is stored in Mongo and edited at `/admin/` (login `admin@tharkoo.demo` / `admin` / 2FA `000000`).
+Everything on the public site is stored in Mongo and edited at `/admin/`. Staff access uses the signed-in Cursor viewer (locally a simulated staff viewer). There is no password in the source.
 
 - **CMS & banners** — entire homepage (block order, hero, category row, boost panel, custom HTML), theme colours, header/age-gate/cookie copy, banners, legal pages
 - **Categories / Locations / Ads / SEO / Help / Blog / Credit packs / Flags** — the lists the live site reads
