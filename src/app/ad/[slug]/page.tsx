@@ -1,11 +1,10 @@
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
-import Link from "next/link";
-import { AdCard } from "@/components/AdCard";
 import { AdDetail } from "@/components/AdDetail";
+import { Breadcrumbs } from "@/components/Breadcrumbs";
 import { prettyPlace } from "@/lib/format";
 import { JsonLd, breadcrumbJsonLd } from "@/lib/jsonld";
-import { getCategory, getListingBySlug, getRelated, getSite } from "@/lib/queries";
+import { getCategory, getListingBySlug, getSite } from "@/lib/queries";
 import { canonical, fillTemplate } from "@/lib/seo";
 import { plain } from "@/lib/plain";
 
@@ -30,21 +29,20 @@ export default async function AdPage({ params }: Props) {
   const { slug } = await params;
   const ad = await getListingBySlug(slug);
   if (!ad) notFound();
-  const [cat, related, site] = await Promise.all([
-    getCategory(ad.categorySlug || ""),
-    getRelated(ad),
-    getSite(),
-  ]);
+  const cat = await getCategory(ad.categorySlug || "");
+  const city = prettyPlace(ad.citySlug);
+  const catName = cat?.name || ad.categorySlug || "";
+  const crumbs = [
+    { name: "India", path: "/" },
+    { name: catName, path: `/${ad.categorySlug}/` },
+    { name: city, path: `/${ad.categorySlug}/${ad.citySlug}/` },
+    { name: ad.title || "", path: `/ad/${ad.slug}/` },
+  ];
   return (
     <>
       <JsonLd
         data={[
-          breadcrumbJsonLd([
-            { name: "India", path: "/" },
-            { name: cat?.name || ad.categorySlug || "", path: `/${ad.categorySlug}/` },
-            { name: prettyPlace(ad.citySlug) || "", path: `/${ad.categorySlug}/${ad.citySlug}/` },
-            { name: ad.title || "", path: `/ad/${ad.slug}/` },
-          ]),
+          breadcrumbJsonLd(crumbs),
           {
             "@context": "https://schema.org",
             "@type": "Offer",
@@ -54,28 +52,10 @@ export default async function AdPage({ params }: Props) {
           },
         ]}
       />
-      <nav className="mb-2 text-[12px] text-[#888]">
-        <Link href="/">India</Link>
-        {" › "}
-        <Link href={`/${ad.categorySlug}/`}>{cat?.name || ad.categorySlug}</Link>
-        {" › "}
-        <Link href={`/${ad.categorySlug}/${ad.citySlug}/`}>{prettyPlace(ad.citySlug)}</Link>
-      </nav>
-      <AdDetail ad={plain(ad)} categoryName={cat?.name || ad.categorySlug || ""} />
-      <p className="mt-6 text-[12px] text-[#777]">
-        If you detect inappropriate, illegal content or misuse of data, report it through Submit a report.
-        {site.legalName ? ` Operated by ${site.legalName}.` : ""}
-      </p>
-      {related.length ? (
-        <section className="mt-8">
-          <h2 className="mb-3 text-[16px] font-bold">Related ads</h2>
-          <div className="ad-list overflow-hidden">
-            {related.map((item) => (
-              <AdCard key={item.publicId} ad={item} />
-            ))}
-          </div>
-        </section>
-      ) : null}
+      <div className="sk-container">
+        <Breadcrumbs crumbs={crumbs.slice(0, 3)} backHref={`/${ad.categorySlug}/${ad.citySlug}/`} />
+      </div>
+      <AdDetail ad={plain(ad)} categoryName={catName} />
     </>
   );
 }

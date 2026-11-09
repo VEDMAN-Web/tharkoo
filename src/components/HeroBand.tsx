@@ -29,7 +29,7 @@ export function HeroBand({
           <br />
           Tharkoo is for everyone
         </p>
-        <div className="sk-container hero-search-wrap">
+        <div className="hero-search-wrap">
           <button type="button" className="hero-search" onClick={() => setSearch(true)}>
             <span>{placeholder}</span>
             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" stroke="currentColor" strokeWidth="1.5" aria-hidden>

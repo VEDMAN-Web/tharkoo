@@ -3,13 +3,11 @@
 import { useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
 import { TAG_GROUPS } from "@/data/catalog";
-import { Logo } from "./Logo";
 
 type Cat = { slug: string; name: string };
 type City = { slug: string; name: string; stateSlug?: string };
 
 export function SearchModal({
-  brand = "tharkoo",
   placeholder = "Search by City, Category...",
   categories,
   cities,
@@ -54,26 +52,22 @@ export function SearchModal({
   }
 
   return (
-    <div className="fixed inset-0 z-50 overflow-auto bg-[#ececec]">
-      <div className="site-header">
-        <div className="sk-container sk-nav">
-          <Logo name={brand} />
-          <button type="button" className="ml-auto text-[13px] text-[#555]" onClick={onClose}>
-            Close
+    <div className="search-modal" onClick={onClose}>
+      <div className="search-modal-dialog" onClick={(e) => e.stopPropagation()}>
+        <div className="search-modal-head">
+          <h5>
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" stroke="currentColor" strokeWidth="1.5" aria-hidden>
+              <path strokeLinecap="round" strokeLinejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607z" />
+            </svg>
+            Search
+          </h5>
+          <button type="button" className="search-modal-close" aria-label="Close" onClick={onClose}>
+            ×
           </button>
         </div>
-      </div>
-      <form onSubmit={submit} className="sk-container max-w-[520px] py-8">
-        <h1 className="text-[26px] font-normal text-[#222]">Search</h1>
-        <div className="mt-5 grid gap-3 bg-white p-5">
-          <input
-            autoFocus
-            value={q}
-            onChange={(e) => setQ(e.target.value)}
-            placeholder={placeholder}
-            className="border border-[#ccc] px-3 py-2.5"
-          />
-          <select value={category} onChange={(e) => setCategory(e.target.value)} className="border border-[#ccc] px-3 py-2.5">
+        <form onSubmit={submit} className="search-modal-body">
+          <input autoFocus value={q} onChange={(e) => setQ(e.target.value)} placeholder={placeholder} />
+          <select value={category} onChange={(e) => setCategory(e.target.value)}>
             <option value="">All categories</option>
             {categories.map((c) => (
               <option key={c.slug} value={c.slug}>
@@ -81,13 +75,21 @@ export function SearchModal({
               </option>
             ))}
           </select>
-          <select value={state} onChange={(e) => { setState(e.target.value); setLocation(""); }} className="border border-[#ccc] px-3 py-2.5">
+          <select
+            value={state}
+            onChange={(e) => {
+              setState(e.target.value);
+              setLocation("");
+            }}
+          >
             <option value="">All states</option>
             {states.map((s) => (
-              <option key={s} value={s}>{s}</option>
+              <option key={s} value={s}>
+                {s}
+              </option>
             ))}
           </select>
-          <select value={location} onChange={(e) => setLocation(e.target.value)} className="border border-[#ccc] px-3 py-2.5">
+          <select value={location} onChange={(e) => setLocation(e.target.value)}>
             <option value="">All cities</option>
             {cityOpts.map((c) => (
               <option key={c.slug} value={c.slug}>
@@ -95,16 +97,16 @@ export function SearchModal({
               </option>
             ))}
           </select>
-          <input value={district} onChange={(e) => setDistrict(e.target.value)} placeholder="District (optional)" className="border border-[#ccc] px-3 py-2.5" />
-          <label className="flex items-center gap-2 text-[13px]">
+          <input value={district} onChange={(e) => setDistrict(e.target.value)} placeholder="District (optional)" />
+          <label className="search-check">
             <input type="checkbox" checked={photos} onChange={(e) => setPhotos(e.target.checked)} />
             With photos only
           </label>
-          <label className="flex items-center gap-2 text-[13px]">
+          <label className="search-check">
             <input type="checkbox" checked={verified} onChange={(e) => setVerified(e.target.checked)} />
             Verified only
           </label>
-          <button type="button" className="self-start text-[13px]" onClick={() => setAdvanced((v) => !v)}>
+          <button type="button" className="search-advanced" onClick={() => setAdvanced((v) => !v)}>
             {advanced ? "Hide advanced filters" : "Advanced filters"}
           </button>
           {advanced
@@ -114,15 +116,19 @@ export function SearchModal({
                   <select value={tags[g.key] || ""} onChange={(e) => setTags({ ...tags, [g.key]: e.target.value })}>
                     <option value="">Any</option>
                     {g.options.map((o) => (
-                      <option key={o} value={o}>{o}</option>
+                      <option key={o} value={o}>
+                        {o}
+                      </option>
                     ))}
                   </select>
                 </label>
               ))
             : null}
-          <button className="btn-post self-start">Show results</button>
-        </div>
-      </form>
+          <button className="btn-post btn-block" type="submit">
+            Show results
+          </button>
+        </form>
+      </div>
     </div>
   );
 }

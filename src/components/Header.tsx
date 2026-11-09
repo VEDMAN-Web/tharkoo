@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useState } from "react";
 import { SearchModal } from "./SearchModal";
 import { Logo } from "./Logo";
+import { useCity } from "./CityContext";
 
 type Cat = { slug: string; name: string };
 type City = { slug: string; name: string; stateSlug?: string };
@@ -52,13 +53,14 @@ export function Header({
   const [search, setSearch] = useState(false);
   const [menu, setMenu] = useState(false);
   const [drawer, setDrawer] = useState(false);
+  const { city } = useCity();
 
   return (
     <>
       <header id="main-header">
         <div className="sk-container">
           <div className="sk-nav">
-            <Logo name={siteName} country={countryName} />
+            <Logo name={siteName} country={city || countryName} />
             <div className="sk-nav-actions">
               <button type="button" className="sk-icon-btn" aria-label="Search" onClick={() => setSearch(true)}>
                 <SearchIcon />

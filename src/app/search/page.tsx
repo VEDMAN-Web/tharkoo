@@ -43,6 +43,8 @@ export default async function SearchPage({
       noindex
       siblingLinks={[]}
       emptyNearby={[]}
+      photos={sp.photos === "1"}
+      verified={sp.verified === "1"}
     />
   );
 }

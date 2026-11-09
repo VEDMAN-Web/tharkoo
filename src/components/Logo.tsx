@@ -45,7 +45,7 @@ export function Logo({
         <Mark height={size === "lg" ? 32 : 25} />
         <span className="logo-word">{name.toLowerCase()}</span>
       </span>
-      {country ? <span className="logo-country">{country}</span> : null}
+      {country ? <span className="country logo-country">{country}</span> : null}
     </span>
   );
   if (!href) return mark;

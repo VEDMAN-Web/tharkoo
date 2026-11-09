@@ -15,7 +15,7 @@ import { canonical, fillTemplate } from "@/lib/seo";
 
 type Props = {
   params: Promise<{ category: string; location: string; district: string }>;
-  searchParams: Promise<{ page?: string }>;
+  searchParams: Promise<{ page?: string; photos?: string; verified?: string }>;
 };
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
@@ -51,7 +51,9 @@ export default async function DistrictPage({ params, searchParams }: Props) {
     getLocationBySlug(district),
   ]);
   if (!cat || city?.kind !== "city" || dist?.kind !== "district") notFound();
-  const filter = { categorySlug: category, citySlug: location, districtSlug: district };
+  const filter: Record<string, unknown> = { categorySlug: category, citySlug: location, districtSlug: district };
+  if (sp.photos) Object.assign(filter, { photos: { $exists: true, $ne: [] } });
+  if (sp.verified) Object.assign(filter, { verified: true });
   const [seo, site, stars, feed, districts] = await Promise.all([
     getSeo("location"),
     getSite(),
@@ -91,6 +93,8 @@ export default async function DistrictPage({ params, searchParams }: Props) {
         label: d.name!,
       }))}
       emptyNearby={[{ href: `/${category}/${location}/`, label: city.name! }]}
+      photos={sp.photos === "1"}
+      verified={sp.verified === "1"}
     />
   );
 }

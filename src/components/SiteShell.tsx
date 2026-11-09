@@ -1,4 +1,5 @@
 import { AgeGate } from "./AgeGate";
+import { CityProvider } from "./CityContext";
 import { CookieBanner } from "./CookieBanner";
 import { Footer } from "./Footer";
 import { Header } from "./Header";
@@ -44,16 +45,19 @@ export async function SiteShell({ children }: { children: React.ReactNode }) {
       .filter((l) => l.href),
   );
 
+  const cityProps = plain(cities.map((c) => ({ slug: c.slug!, name: c.name!, stateSlug: c.stateSlug })));
+
   return (
     <>
       {css ? <style dangerouslySetInnerHTML={{ __html: `:root{${css}}` }} /> : null}
+      <CityProvider cities={cityProps}>
       <Header
         siteName={(site as { logoText?: string }).logoText || site.name || "Tharkoo"}
         countryName={site.countryName || "India"}
         searchPlaceholder={(site as { searchPlaceholder?: string }).searchPlaceholder || "Search by City, Category..."}
         postCta={(site as { postCta?: string }).postCta || "Post your ad"}
         categories={catProps}
-        cities={plain(cities.map((c) => ({ slug: c.slug!, name: c.name!, stateSlug: c.stateSlug })))}
+        cities={cityProps}
       />
       <MainInner>{children}</MainInner>
       <Footer
@@ -83,6 +87,7 @@ export async function SiteShell({ children }: { children: React.ReactNode }) {
         accept={(site as { cookieAccept?: string }).cookieAccept}
         necessary={(site as { cookieNecessary?: string }).cookieNecessary}
       />
+      </CityProvider>
     </>
   );
 }
