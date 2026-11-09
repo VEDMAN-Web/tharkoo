@@ -9,7 +9,7 @@ export function CategoryIcon({
 }) {
   return (
     <div className="cat-icon" style={{ background: color || "#e20044" }} aria-label={name}>
-      <svg viewBox="0 0 64 64" width="36" height="36" aria-hidden>
+      <svg viewBox="0 0 64 64" width="40" height="40" aria-hidden>
         {slug === "call-girls" ? (
           <>
             <circle cx="32" cy="20" r="10" fill="#fff" />

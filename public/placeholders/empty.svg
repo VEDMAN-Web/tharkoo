@@ -1,4 +1,1 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 500">
-  <rect width="400" height="500" fill="#e6e6e6"/>
-  <text x="200" y="250" text-anchor="middle" font-family="Arial" font-size="14" fill="#999">No photo</text>
-</svg>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 500"><rect width="400" height="500" fill="#e6e6e6"/><circle cx="200" cy="170" r="54" fill="#cfcfcf"/><path d="M90 500 C90 310 140 270 200 270 C260 270 310 310 310 500" fill="#cfcfcf"/></svg>

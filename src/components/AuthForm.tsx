@@ -94,7 +94,7 @@ export function AuthForm({ mode }: { mode: "login" | "register" | "forgot" | "re
 
 function Card({ title, children }: { title: string; children: React.ReactNode }) {
   return (
-    <div className="mx-auto max-w-sm bg-white p-6">
+    <div className="mx-auto max-w-[380px] bg-white p-7">
       <h1 className="text-[22px] font-normal">{title}</h1>
       <div className="mt-4">{children}</div>
     </div>

@@ -5,6 +5,7 @@ import { ChevronDown, Search, User } from "lucide-react";
 import { useState } from "react";
 import { SearchModal } from "./SearchModal";
 import { CityPicker } from "./CityPicker";
+import { Logo } from "./Logo";
 
 type Cat = { slug: string; name: string };
 type City = { slug: string; name: string; stateSlug?: string };
@@ -31,17 +32,14 @@ export function Header({
 
   return (
     <>
-      <header className="sticky top-0 z-30 border-b border-black/10 bg-white">
-        <div className="container-site flex h-16 items-center gap-3">
-          <Link href="/" className="logo-mark">
-            <span className="dot" />
-            {siteName.toLowerCase()}
-          </Link>
-          <button type="button" className="hidden items-center gap-1 text-xs text-[#888] sm:flex" onClick={() => setCityOpen(true)}>
-            {countryName} <ChevronDown size={12} />
+      <header className="site-header">
+        <div className="container-site site-header-inner">
+          <Logo name={siteName} />
+          <button type="button" className="hidden items-center gap-0.5 text-[13px] text-[#888] sm:flex" onClick={() => setCityOpen(true)}>
+            {countryName} <ChevronDown size={14} />
           </button>
           <form
-            className="header-search mx-2 hidden md:flex"
+            className="header-search mx-1 hidden md:flex"
             onSubmit={(e) => {
               e.preventDefault();
               setSearch(true);
@@ -57,57 +55,41 @@ export function Header({
               <Search size={16} />
             </button>
           </form>
-          <div className="relative ml-auto flex items-center gap-2">
-            <button className="rounded p-2 md:hidden" aria-label="Search" onClick={() => setSearch(true)}>
+          <div className="relative ml-auto flex items-center gap-1">
+            <button className="p-2 md:hidden" aria-label="Search" onClick={() => setSearch(true)}>
               <Search size={20} />
             </button>
-            <button type="button" aria-label="Account" className="rounded p-2 text-[#444]" onClick={() => setMenu((v) => !v)}>
-              <User size={20} />
+            <button type="button" aria-label="Account" className="p-2 text-[#555]" onClick={() => setMenu((v) => !v)}>
+              <User size={22} />
             </button>
             {menu ? (
-              <div className="absolute right-0 top-10 z-40 w-56 border bg-white text-[13px] shadow-lg">
-                <Link href="/u/login/" className="block px-3 py-2 hover:bg-[#f5f5f5]" onClick={() => setMenu(false)}>
-                  Log in
-                </Link>
-                <Link href="/u/register/" className="block px-3 py-2 hover:bg-[#f5f5f5]" onClick={() => setMenu(false)}>
-                  Register
-                </Link>
-                <Link href="/u/account/dashboard/" className="block px-3 py-2 hover:bg-[#f5f5f5]" onClick={() => setMenu(false)}>
-                  Dashboard
-                </Link>
-                <Link href="/u/account/ads/" className="block px-3 py-2 hover:bg-[#f5f5f5]" onClick={() => setMenu(false)}>
-                  Ads
-                </Link>
-                <Link href="/u/account/credits/" className="block px-3 py-2 hover:bg-[#f5f5f5]" onClick={() => setMenu(false)}>
-                  Wallet
-                </Link>
-                <Link href="/u/account/coupons/" className="block px-3 py-2 hover:bg-[#f5f5f5]" onClick={() => setMenu(false)}>
-                  Coupons
-                </Link>
-                <Link href="/u/account/media/" className="block px-3 py-2 hover:bg-[#f5f5f5]" onClick={() => setMenu(false)}>
-                  Media
-                </Link>
-                <Link href="/u/account/analytics/" className="block px-3 py-2 hover:bg-[#f5f5f5]" onClick={() => setMenu(false)}>
-                  Analytics
-                </Link>
-                <Link href="/u/account/subscription/" className="block px-3 py-2 hover:bg-[#f5f5f5]" onClick={() => setMenu(false)}>
-                  Subscription
-                </Link>
-                <Link href="/u/account/edit-account/" className="block px-3 py-2 hover:bg-[#f5f5f5]" onClick={() => setMenu(false)}>
-                  Settings
-                </Link>
-                <Link href="/u/logout/" className="block px-3 py-2 hover:bg-[#f5f5f5]" onClick={() => setMenu(false)}>
-                  Log out
-                </Link>
+              <div className="absolute right-0 top-11 z-40 w-52 border border-[#e5e5e5] bg-white py-1 text-[13px] shadow-[0_8px_24px_rgba(0,0,0,.12)]">
+                {[
+                  ["/u/login/", "Log in"],
+                  ["/u/register/", "Register"],
+                  ["/u/account/dashboard/", "Dashboard"],
+                  ["/u/account/ads/", "Ads"],
+                  ["/u/account/credits/", "Wallet"],
+                  ["/u/account/coupons/", "Coupons"],
+                  ["/u/account/media/", "Media"],
+                  ["/u/account/analytics/", "Analytics"],
+                  ["/u/account/subscription/", "Subscription"],
+                  ["/u/account/edit-account/", "Settings"],
+                  ["/u/logout/", "Log out"],
+                ].map(([href, label]) => (
+                  <Link key={href} href={href} className="block px-4 py-2 text-[#333] no-underline hover:bg-[#f5f5f5]" onClick={() => setMenu(false)}>
+                    {label}
+                  </Link>
+                ))}
               </div>
             ) : null}
-            <Link href="/u/post-insert/" className="btn-post hidden sm:inline">
+            <Link href="/u/post-insert/" className="btn-post ml-1 hidden sm:inline">
               {postCta}
             </Link>
           </div>
         </div>
       </header>
-      <Link href="/u/post-insert/" className="sticky-post btn-post shadow-lg">
+      <Link href="/u/post-insert/" className="sticky-post btn-post">
         {postCta}
       </Link>
       {search ? <SearchModal categories={categories} cities={cities} onClose={() => setSearch(false)} /> : null}

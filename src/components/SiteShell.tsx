@@ -54,7 +54,7 @@ export async function SiteShell({ children }: { children: React.ReactNode }) {
         categories={catProps}
         cities={plain(cities.map((c) => ({ slug: c.slug!, name: c.name!, stateSlug: c.stateSlug })))}
       />
-      <main className="container-site flex-1 py-6">{children}</main>
+      <main className="container-site flex-1 py-5">{children}</main>
       <Footer
         siteName={site.name || "Tharkoo"}
         legalName={site.legalName || "SparkBeta Tech"}

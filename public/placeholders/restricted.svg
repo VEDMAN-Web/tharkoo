@@ -1,11 +1,1 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 500">
-  <defs><filter id="b"><feGaussianBlur stdDeviation="18"/></filter></defs>
-  <rect width="400" height="500" fill="#333"/>
-  <g filter="url(#b)">
-    <circle cx="200" cy="160" r="70" fill="#777"/>
-    <path d="M80 500 Q80 290 200 290 Q320 290 320 500" fill="#555"/>
-  </g>
-  <rect width="400" height="500" fill="#000" opacity="0.45"/>
-  <text x="200" y="250" text-anchor="middle" font-family="Arial" font-size="16" fill="#fff">Restricted photo</text>
-  <text x="200" y="275" text-anchor="middle" font-family="Arial" font-size="12" fill="#ddd">Verify age to view</text>
-</svg>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 500"><rect width="400" height="500" fill="#1a1a1a"/><rect x="140" y="190" width="120" height="90" rx="8" fill="#333"/><circle cx="200" cy="235" r="18" fill="#111" stroke="#666" stroke-width="6"/></svg>

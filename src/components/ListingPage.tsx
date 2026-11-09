@@ -61,7 +61,7 @@ export function ListingPageView({
           </span>
         ))}
       </nav>
-      <h1 className="text-[26px] font-normal text-[#222]">{h1}</h1>
+      <h1 className="text-[28px] font-normal leading-tight text-[#222]">{h1}</h1>
       {h2 ? <h2 className="mt-1 text-[16px] font-normal text-[#555]">{h2}</h2> : null}
       {intro ? <p className="mt-3 max-w-3xl text-[13px] leading-6 text-[#555]">{intro}</p> : null}
       {siblingLinks.length ? (
@@ -83,7 +83,7 @@ export function ListingPageView({
         <button className="text-[var(--sk-link)]" type="submit">Apply</button>
       </form>
       <p className="mt-2 text-[12px] text-[#888]">{total} ads</p>
-      <div className="mt-4 overflow-hidden border border-[#e0e0e0] bg-white">
+      <div className="ad-list mt-4 overflow-hidden">
         <StarStrip ads={stars} />
         {items.length ? (
           items.map((ad) => <AdCard key={ad.publicId} ad={ad} />)

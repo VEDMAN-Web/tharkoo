@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import type { ListingDoc } from "@/lib/models";
+import { prettyPlace } from "@/lib/format";
 
 export function AdDetail({
   ad,
@@ -26,12 +27,12 @@ export function AdDetail({
         - Ad ID: {ad.publicId}
       </p>
       <h1 className="mt-2 text-[22px] font-bold leading-snug text-[#222]">{ad.title}</h1>
-      <p className="mt-2 text-[14px]">
+      <p className="mt-2 text-[15px]">
         <strong>{ad.displayName}</strong>
-        {ad.verified ? <span className="ml-2 text-[12px] text-[var(--sk-verified)]">ID verified</span> : null}
+        {ad.verified ? <span className="ml-2 text-[12px] font-bold text-[var(--sk-verified)]">ID verified</span> : null}
       </p>
       <p className="text-[13px] text-[#666]">
-        {ad.age} years {ad.citySlug}
+        {ad.age} years {prettyPlace(ad.citySlug)}
         {ad.place ? ` / ${ad.place}` : ""}
       </p>
 
@@ -59,7 +60,7 @@ export function AdDetail({
         <dt className="text-[#777]">Category</dt>
         <dd>{categoryName}</dd>
         <dt className="text-[#777]">City</dt>
-        <dd>{ad.citySlug}</dd>
+        <dd>{prettyPlace(ad.citySlug)}</dd>
         <dt className="text-[#777]">Age</dt>
         <dd>{ad.age}</dd>
       </dl>

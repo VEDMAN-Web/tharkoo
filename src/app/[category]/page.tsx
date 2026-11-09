@@ -40,7 +40,7 @@ export default async function CategoryHub({ params }: Props) {
       <div className="flex items-center gap-3">
         <CategoryIcon slug={cat.slug!} color={cat.color} name={cat.name!} />
         <div>
-          <h1 className="text-[26px] font-normal">{fillTemplate(seo?.h1 || "{category} in India", vars)}</h1>
+          <h1 className="text-[28px] font-normal">{fillTemplate(seo?.h1 || "{category} in India", vars)}</h1>
           <h2 className="text-[16px] text-[#555]">{fillTemplate(seo?.h2 || "All cities", vars)}</h2>
         </div>
       </div>

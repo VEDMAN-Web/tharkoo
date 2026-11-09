@@ -44,9 +44,9 @@ export function HomeBlocks({
       {visible.map((block) => {
         if (block.type === "hero") {
           return (
-            <header key={block.id} className="mb-6">
-              <h1 className="text-[28px] font-normal leading-tight text-[#222] md:text-[34px]">{block.title}</h1>
-              {block.subtitle ? <h2 className="mt-1 text-[18px] font-normal text-[#555]">{block.subtitle}</h2> : null}
+            <header key={block.id} className="home-hero mb-2">
+              <h1>{block.title}</h1>
+              {block.subtitle ? <h2>{block.subtitle}</h2> : null}
             </header>
           );
         }
@@ -54,23 +54,21 @@ export function HomeBlocks({
           const count = block.cityCount || 3;
           const onHome = categories.filter((c) => c.showOnHome !== false);
           return (
-            <div key={block.id} className="grid gap-8">
+            <div key={block.id}>
               {onHome.map((cat) => {
                 const featured = (cat.homeCities?.length
                   ? cities.filter((c) => cat.homeCities!.includes(c.slug || ""))
                   : cities
                 ).slice(0, count);
                 return (
-                  <section key={cat.slug} className="flex gap-4 border-b border-[#ddd] pb-6">
+                  <section key={cat.slug} className="home-cat">
                     <CategoryIcon slug={cat.slug!} color={cat.color} name={cat.name!} />
                     <div className="min-w-0 flex-1">
-                      <h2 className="text-[20px] font-bold">
-                        <Link href={`/${cat.slug}/`} className="text-[#222] no-underline hover:underline">
-                          {cat.name}
-                        </Link>
+                      <h2>
+                        <Link href={`/${cat.slug}/`}>{cat.name}</Link>
                       </h2>
-                      <p className="mt-1 text-[13px] leading-5 text-[#666]">{cat.homeBlurb || cat.description}</p>
-                      <ul className="mt-2 text-[13px]">
+                      <p>{cat.homeBlurb || cat.description}</p>
+                      <ul>
                         {featured.map((city) => (
                           <li key={city.slug}>
                             <Link href={`/${cat.slug}/${city.slug}/`}>
@@ -92,8 +90,8 @@ export function HomeBlocks({
         if (block.type === "boost" || block.type === "banner") {
           return (
             <section key={block.id} className="panel mt-8">
-              <h2 className="text-[18px] font-bold">{block.title}</h2>
-              <p className="mt-2 text-[13px] text-[#555]">{block.body || block.subtitle}</p>
+              <h2 className="text-[18px] font-bold text-[#222]">{block.title}</h2>
+              <p className="mt-2 text-[13px] leading-5 text-[#555]">{block.body || block.subtitle}</p>
               {block.cta ? (
                 <Link href={safeHref(block.href) || "/u/post-insert/"} className="btn-post mt-4 inline-block">
                   {block.cta}

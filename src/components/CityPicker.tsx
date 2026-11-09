@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
+import { Logo } from "./Logo";
 
 type City = { slug: string; name: string; stateSlug?: string };
 
@@ -22,27 +23,30 @@ export function CityPicker({
   );
 
   return (
-    <div className="fixed inset-0 z-50 bg-white">
-      <div className="container-site py-6">
-        <div className="flex items-center justify-between">
-          <h2 className="text-lg font-bold">Choose a city</h2>
-          <button type="button" onClick={onClose} className="text-sm underline">
+    <div className="fixed inset-0 z-50 overflow-auto bg-[#ececec]">
+      <div className="site-header">
+        <div className="container-site site-header-inner">
+          <Logo name="tharkoo" />
+          <button type="button" className="ml-auto text-[13px] text-[#555]" onClick={onClose}>
             Close
           </button>
         </div>
+      </div>
+      <div className="container-site py-8">
+        <h1 className="text-[26px] font-normal text-[#222]">Choose a city</h1>
         <input
           autoFocus
           value={q}
           onChange={(e) => setQ(e.target.value)}
           placeholder="Search city"
-          className="mt-4 w-full border px-3 py-2"
+          className="mt-4 w-full max-w-md border border-[#ccc] bg-white px-3 py-2.5"
         />
-        <ul className="mt-4 columns-2 gap-4 text-sm md:columns-3">
+        <ul className="mt-5 columns-2 gap-6 text-[14px] md:columns-3">
           {filtered.map((c) => (
             <li key={c.slug} className="break-inside-avoid py-1">
               <button
                 type="button"
-                className="text-left text-[var(--sk-link)]"
+                className="text-left"
                 onClick={() => {
                   router.push(`/${category}/${c.slug}/`);
                   onClose();

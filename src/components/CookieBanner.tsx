@@ -20,18 +20,15 @@ export function CookieBanner({
   if (!open) return null;
 
   return (
-    <div className="fixed inset-x-0 bottom-0 z-[70] border-t bg-white p-4 shadow-[0_-4px_20px_rgba(0,0,0,.08)]" data-testid="cookie-banner">
+    <div className="cookie-bar" data-testid="cookie-banner">
       <div className="container-site flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <p className="text-sm text-[var(--text-secondary)]">
-          {body || "We use necessary cookies to run the site. Optional analytics stay off until you accept."}{" "}
-          <a className="underline" href="/cookies/">
-            cookie policy
-          </a>
-          .
+        <p className="text-[13px] leading-5 text-[#555]">
+          {body || "We use cookies to run the site."}{" "}
+          <a href="/cookies/">cookie policy</a>.
         </p>
         <div className="flex gap-2">
           <button
-            className="bg-[var(--sk-blue)] px-3 py-2 text-sm font-semibold text-white"
+            className="btn-post"
             onClick={() => {
               localStorage.setItem("nl-cookies", "all");
               setOpen(false);
@@ -40,7 +37,7 @@ export function CookieBanner({
             {accept || "Accept all"}
           </button>
           <button
-            className="border px-3 py-2 text-sm"
+            className="btn-ghost"
             onClick={() => {
               localStorage.setItem("nl-cookies", "necessary");
               setOpen(false);
