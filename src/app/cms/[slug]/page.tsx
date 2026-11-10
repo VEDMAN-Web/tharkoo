@@ -4,7 +4,7 @@ import { EmptyState } from "@/components/ui/EmptyState";
 import { getPage } from "@/lib/queries";
 import { pageMetadata } from "@/lib/ui/meta";
 
-export const dynamic = "force-dynamic";
+export const revalidate = 300;
 
 function labelOf(slug: string) {
   return slug.replace(/-/g, " ").replace(/\b\w/g, (char) => char.toUpperCase());

@@ -3,7 +3,7 @@ import { getBlogPosts } from "@/lib/queries";
 import { Container } from "@/components/ui/Container";
 import { pageMetadata } from "@/lib/ui/meta";
 
-export const dynamic = "force-dynamic";
+export const revalidate = 300;
 export const metadata = pageMetadata({
   title: "Tharkoo Blog | Tharkoo",
   description: "Notes from Tharkoo on using classifieds, staying safe when you meet someone, and posting a clear ad.",

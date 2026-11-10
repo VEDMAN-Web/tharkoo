@@ -94,6 +94,7 @@ function pageQuery(filter: Record<string, unknown>): ListingQuery {
     districtSlug: typeof filter.districtSlug === "string" ? filter.districtSlug : undefined,
     verified: filter.verified === true ? true : undefined,
     photos: photosOn,
+    tag: typeof filter.tag === "string" ? filter.tag : undefined,
   };
 }
 

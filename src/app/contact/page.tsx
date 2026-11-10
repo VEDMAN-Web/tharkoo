@@ -3,7 +3,7 @@ import { getSite } from "@/lib/queries";
 import { Container } from "@/components/ui/Container";
 import { pageMetadata } from "@/lib/ui/meta";
 
-export const dynamic = "force-dynamic";
+export const revalidate = 300;
 export const metadata = pageMetadata({
   title: "Contact | Tharkoo",
   description: "How to reach Tharkoo support about an account, a listing, or a payment question.",

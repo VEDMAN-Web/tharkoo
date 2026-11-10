@@ -6,7 +6,7 @@ import { HomeBlocks, SkeletonGrid } from "@/components/HomeBlocks";
 import { getHomepageContent } from "@/lib/queries";
 import { pageMetadata } from "@/lib/ui/meta";
 
-export const dynamic = "force-dynamic";
+export const revalidate = 300;
 
 export async function generateMetadata() {
   const content = await getHomepageContent();

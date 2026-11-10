@@ -222,6 +222,12 @@ async function walkLocations(dryRun: boolean): Promise<Bucket> {
       if (!city) continue;
       const [citySlug, cityName] = city;
       let cityId: Types.ObjectId | null = null;
+      if (!dryRun && stateId && citySlug === "gurgaon") {
+        await Location.updateOne(
+          { parentId: stateId, type: "city", slug: "gurugram" },
+          { $set: { slug: "gurgaon", name: "Gurgaon", oldSlugs: ["gurugram"] } },
+        );
+      }
       if (stateId == null) bucket.inserted.push(`city:${citySlug}`);
       else {
         cityId = await place(
@@ -236,6 +242,7 @@ async function walkLocations(dryRun: boolean): Promise<Bucket> {
                   order: cityOrder,
                   countryCode: "IN",
                   seedBatch: SEED_BATCH,
+                  ...(citySlug === "gurgaon" ? { oldSlugs: ["gurugram"] } : {}),
                 },
               },
               { upsert: true },

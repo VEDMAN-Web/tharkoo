@@ -78,9 +78,9 @@ describe("v2 seed", () => {
     const expected = expectedSeedCounts();
     expect(expected.states).toBe(36);
     expect(expected.cities).toBeGreaterThanOrEqual(50);
-    expect(expected.citiesWithDistricts).toBe(TOP_CITY_SLUGS.length);
+    expect(expected.citiesWithDistricts).toBe(TOP_CITY_SLUGS.length + 1);
     expect(expected.categories).toBe(11);
-    expect(expected.promotion_products).toBe(8);
+    expect(expected.promotion_products).toBe(9);
     expect(expected.credit_packs).toBe(DEFAULT_CREDIT_PACKS.length);
     expect(expected.feature_flags).toBe(FEATURE_FLAGS.length);
 
@@ -179,6 +179,7 @@ describe("v2 seed", () => {
       "new",
       "flash",
       "star",
+      "bump",
     ]);
     for (const product of PRODUCTS) expect(productCodeDenied(product.code).denied).toBe(false);
     expect((await PromotionProduct.findOne({ code: "star" }).lean())?.name).toBe("Star");

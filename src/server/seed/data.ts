@@ -1,4 +1,5 @@
 import type { CategoryFieldDoc } from "@/server/models";
+import { TAG_PAGES } from "@/data/catalog";
 import { textDenied } from "@/server/shared/policy";
 
 export const LOCATION_LEVELS = ["country", "state", "city", "district", "locality"] as const;
@@ -223,7 +224,7 @@ export const CITIES: ReadonlyArray<readonly [string, string, string]> = [
   ["panaji", "Panaji", "goa"],
   ["vadodara", "Vadodara", "gujarat"],
   ["rajkot", "Rajkot", "gujarat"],
-  ["gurugram", "Gurugram", "haryana"],
+  ["gurgaon", "Gurgaon", "haryana"],
   ["faridabad", "Faridabad", "haryana"],
   ["shimla", "Shimla", "himachal-pradesh"],
   ["ranchi", "Ranchi", "jharkhand"],
@@ -278,7 +279,7 @@ export const TOP_CITY_SLUGS = [
   "jaipur",
 ] as const;
 
-/** Districts for the ten largest cities only. */
+/** Districts for the ten largest cities, plus Gurgaon. */
 export const DISTRICTS: Record<string, ReadonlyArray<readonly [string, string]>> = {
   mumbai: [
     ["mumbai-city", "Mumbai City"],
@@ -312,6 +313,14 @@ export const DISTRICTS: Record<string, ReadonlyArray<readonly [string, string]>>
     ["haveli", "Haveli"],
   ],
   jaipur: [["jaipur-city", "Jaipur City"]],
+  gurgaon: [
+    ["gurgaon-dlf", "DLF"],
+    ["sohna-road", "Sohna Road"],
+    ["golf-course-road", "Golf Course Road"],
+    ["mg-road-gurgaon", "MG Road"],
+    ["cyber-city", "Cyber City"],
+    ["sector-29-gurgaon", "Sector 29"],
+  ],
 };
 
 /** Amounts are INR rupees. Codes stay inside ALLOWED_PRODUCT_CODES. */
@@ -324,20 +333,21 @@ export const PRODUCTS = [
   { code: "new", name: "New", description: "A new-listing label for seven days.", amount: 99, currency: "INR", durationDays: 7 },
   { code: "flash", name: "Flash", description: "A short flash label for four hours.", amount: 149, currency: "INR", durationDays: 1 },
   { code: "star", name: "Star", description: "A premium slot on a city page.", amount: 799, currency: "INR", durationDays: 7 },
+  { code: "bump", name: "Bump", description: "Refresh this ad so it sorts with the newest posts.", amount: 49, currency: "INR", durationDays: 1 },
 ] as const;
 
 /** Default INR table. Override with SEED_CREDIT_PACKS, a JSON array of the same shape. Prices are rupees. */
 export const DEFAULT_CREDIT_PACKS: readonly SeedCreditPack[] = [
   { credits: 100, price: 1000, bonus: 0, tag: "", order: 0 },
-  { credits: 200, price: 1900, bonus: 10, tag: "", order: 1 },
-  { credits: 300, price: 2700, bonus: 30, tag: "", order: 2 },
+  { credits: 200, price: 1900, bonus: 10, tag: "Extra credits", order: 1 },
+  { credits: 300, price: 2700, bonus: 30, tag: "Extra credits", order: 2 },
   { credits: 500, price: 4250, bonus: 75, tag: "Most popular", order: 3 },
-  { credits: 800, price: 6400, bonus: 160, tag: "", order: 4 },
+  { credits: 800, price: 6400, bonus: 160, tag: "Extra credits", order: 4 },
   { credits: 1000, price: 7500, bonus: 250, tag: "Best deal", order: 5 },
-  { credits: 1500, price: 10500, bonus: 450, tag: "", order: 6 },
-  { credits: 2000, price: 13000, bonus: 700, tag: "", order: 7 },
-  { credits: 3000, price: 18000, bonus: 1200, tag: "", order: 8 },
-  { credits: 5000, price: 27500, bonus: 2250, tag: "", order: 9 },
+  { credits: 1500, price: 10500, bonus: 450, tag: "Extra credits", order: 6 },
+  { credits: 2000, price: 13000, bonus: 700, tag: "Extra credits", order: 7 },
+  { credits: 3000, price: 18000, bonus: 1200, tag: "Extra credits", order: 8 },
+  { credits: 5000, price: 27500, bonus: 2250, tag: "Extra credits", order: 9 },
 ];
 
 export const FEATURE_FLAGS = [
@@ -472,7 +482,7 @@ export function demoListings(): DemoListing[] {
       categorySlug: category.slug,
       citySlug: city[0],
       districtSlug,
-      attributes,
+      attributes: { ...attributes, tag: TAG_PAGES[n % TAG_PAGES.length]?.slug || "individual" },
       verified: n % 5 === 0,
       promotionCode,
       bumped: n % 17 === 0,
@@ -551,9 +561,7 @@ function assertCatalogue(): void {
   if (TOP_CITY_SLUGS.length !== 10) throw new Error("Top city list must have 10 entries");
   const districtSlugs: string[] = [];
   for (const slug of Object.keys(DISTRICTS)) {
-    if (!TOP_CITY_SLUGS.includes(slug as (typeof TOP_CITY_SLUGS)[number])) {
-      throw new Error(`Districts are only seeded for the top 10 cities (${slug})`);
-    }
+    if (!citySlugs.includes(slug)) throw new Error(`Districts refer to unknown city ${slug}`);
     for (const [districtSlug] of DISTRICTS[slug] ?? []) districtSlugs.push(districtSlug);
   }
   for (const slug of TOP_CITY_SLUGS) {

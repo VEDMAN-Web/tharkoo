@@ -341,7 +341,7 @@ if (adPath) {
       if ((await page.locator("[data-tk=show-all]").count()) < 1) notes.push("show all");
     } else if (visible.length < 4) notes.push(`gallery ${visible.length}`);
     if (new Set(visible.map((item) => item.src)).size < Math.min(4, visible.length)) notes.push("portraits repeat");
-    if (visible.some((item) => item.broken || !item.src.includes("/placeholders/profiles/"))) notes.push("gallery photo");
+    if (visible.some((item) => item.broken || !decodeURIComponent(item.src).includes("/placeholders/profiles/"))) notes.push("gallery photo");
     const share = await page.locator('a[href*="twitter.com"]').getAttribute("href");
     if (!share || !decodeURIComponent(share).startsWith("https://twitter.com/intent/tweet?url=http")) notes.push("share");
     if (width === 1440) {
@@ -383,7 +383,7 @@ const cardPhotos = await cityPage.locator("[data-tk=card] img").evaluateAll((els
     box: el.getBoundingClientRect(),
   })),
 );
-if (!cardPhotos.length || cardPhotos.some((item) => item.broken || !item.src.includes("/placeholders/profiles/"))) notes.push("card photo");
+if (!cardPhotos.length || cardPhotos.some((item) => item.broken || !decodeURIComponent(item.src).includes("/placeholders/profiles/"))) notes.push("card photo");
 if (cardPhotos.some((item) => item.box.height > 0 && Math.abs(item.box.width / item.box.height - 0.8) > 0.12)) notes.push("card ratio");
 record("/dating/bengaluru/ structure", 1440, notes.length === 0, notes.join("; "));
 await cityPage.close();
@@ -396,17 +396,41 @@ for (const district of ["/dating/delhi/central-delhi/", "/dating/delhi/new-delhi
 }
 const mapRes = await context.request.get(base + "/sitemap.xml");
 const mapText = await mapRes.text();
+const shardRes = await context.request.get(base + "/sitemap/cities.xml");
+const shardText = await shardRes.text();
+const districtRes = await context.request.get(base + "/sitemap/districts.xml");
+const districtText = await districtRes.text();
+const contentRes = await context.request.get(base + "/sitemap/content.xml");
+const contentText = await contentRes.text();
+const adsRes = await context.request.get(base + "/sitemap/ads.xml");
+const adsText = await adsRes.text();
 const mapOk =
   mapRes.ok() &&
-  mapText.includes("<lastmod>") &&
-  mapText.includes("/cities/") &&
-  mapText.includes("/dating/delhi/central-delhi/") &&
-  mapText.includes("/ad/") &&
-  mapText.includes("/blog/") &&
-  mapText.includes("/help/") &&
-  mapText.includes("/cms/about/") &&
-  mapText.includes("/scam-report/");
-record("/sitemap.xml", 1440, mapOk, mapOk ? `urls ${mapText.split("<loc>").length - 1}` : mapText.slice(0, 80));
+  mapText.includes("<sitemapindex") &&
+  mapText.includes("/sitemap/cities.xml") &&
+  mapText.includes("/sitemap/districts.xml") &&
+  mapText.includes("/sitemap/tags.xml") &&
+  mapText.includes("/sitemap/ads.xml") &&
+  shardRes.ok() &&
+  shardText.includes("<lastmod>") &&
+  shardText.includes("/dating/gurgaon/") &&
+  districtRes.ok() &&
+  districtText.includes("/dating/gurgaon/gurgaon-dlf/") &&
+  contentRes.ok() &&
+  contentText.includes("/cities/") &&
+  contentText.includes("/blog/") &&
+  contentText.includes("/help/") &&
+  contentText.includes("/cms/about/") &&
+  contentText.includes("/scam-report/") &&
+  adsRes.ok() &&
+  adsText.includes("/ad/");
+record("/sitemap.xml", 1440, mapOk, mapOk ? "index and shards" : mapText.slice(0, 80));
+const gurgaon = await context.request.get(base + "/dating/gurgaon/");
+const gurgaonText = await gurgaon.text();
+record("/dating/gurgaon/", 1440, gurgaon.ok() && gurgaonText.includes("Dating in Gurgaon"), gurgaon.status());
+const manifest = await context.request.get(base + "/manifest.webmanifest");
+const manifestText = await manifest.text();
+record("/manifest.webmanifest", 1440, manifest.ok() && manifestText.includes("Tharkoo"), manifest.status());
 
 const loggedOut = await context.newPage();
 await loggedOut.setViewportSize({ width: 1440, height: 900 });

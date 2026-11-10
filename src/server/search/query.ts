@@ -7,6 +7,7 @@ import {
   Category,
   Listing,
   MediaAsset,
+  User,
   PromotionOrder,
   PromotionProduct,
   type CategoryDoc,
@@ -34,7 +35,7 @@ const VARIANT: Record<string, string> = {
   flash: "flash",
   top: "top",
   highlight: "highlight",
-  new: "free",
+  new: "new",
   "auto-boost": "free",
   free: "free",
 };
@@ -50,6 +51,7 @@ export interface ListingQuery {
   verified?: boolean;
   badge?: string;
   photos?: boolean;
+  tag?: string;
   attributes?: Record<string, string | number | boolean | string[]>;
   sort?: "ranked" | "fresh";
   page?: number;
@@ -372,6 +374,7 @@ export async function buildFilter(input: ListingQuery): Promise<QueryFilter<List
   if (badges.length === 1) filter.badges = badges[0];
   if (badges.length > 1) filter.badges = { $all: badges };
   if (input.photos) filter["mediaIds.0"] = { $exists: true };
+  if (input.tag && /^[a-z0-9-]{1,40}$/.test(input.tag)) filter["attributes.tag"] = input.tag;
   if (input.slug) filter.slug = input.slug;
   else if (input.excludeSlug) filter.slug = { $ne: input.excludeSlug };
   if (input.attributes && Object.keys(input.attributes).length > 0) {
@@ -423,8 +426,25 @@ function facetsFrom(hits: PublicHit[]): SearchFacets {
   return { categories: pack(categories), cities: pack(cities) };
 }
 
+function trustMarks(status: string | undefined, adult: Date | undefined, verified: boolean, photos: number) {
+  const marks: string[] = [];
+  if (status === "approved" || verified) marks.push("ID verified");
+  if (adult || status === "approved" || verified) marks.push("Age verified");
+  if (photos > 0 && marks.includes("ID verified")) marks.push("Photo verified");
+  return marks;
+}
+
 export async function presentRows(docs: Row[], promotions: Map<string, RankPromotion[]>, now: Date) {
-  const [categories, locations, photos] = await Promise.all([loadCategories(), loadLocations(), photoMap(docs)]);
+  const ownerIds = [...new Set(docs.map((doc) => (doc.ownerId ? String(doc.ownerId) : "")).filter(Boolean))];
+  const [categories, locations, photos, people] = await Promise.all([
+    loadCategories(),
+    loadLocations(),
+    photoMap(docs),
+    ownerIds.length
+      ? User.find({ _id: { $in: ownerIds } }).select("verificationStatus attestedAdultAt").lean<{ _id: Types.ObjectId; verificationStatus?: string; attestedAdultAt?: Date }[]>()
+      : Promise.resolve([]),
+  ]);
+  const peopleById = new Map(people.map((person) => [String(person._id), person]));
   const hits: PublicHit[] = [];
   const legacy: LegacyListing[] = [];
   for (const doc of docs) {
@@ -438,9 +458,11 @@ export async function presentRows(docs: Row[], promotions: Map<string, RankPromo
     const code = bestCode(promotions.get(id) ?? [], now);
     const variant = VARIANT[code.trim().toLowerCase()] ?? "free";
     const verified = doc.badges?.includes("verified") === true;
+    const person = doc.ownerId ? peopleById.get(String(doc.ownerId)) : undefined;
     const bumped = doc.bumpedAt ? new Date(doc.bumpedAt) : doc.publishedAt;
     const publicId = publicIdOf(doc.slug, id);
     const photoList = listingPhotos(categorySlug, publicId, photos.get(id) ?? []);
+    const trust = trustMarks(person?.verificationStatus, person?.attestedAdultAt, verified, photoList.length);
     const age = ageOf(doc.attributes);
     hits.push({
       ...view,
@@ -473,6 +495,7 @@ export async function presentRows(docs: Row[], promotions: Map<string, RankPromo
       details: detailRows(doc.attributes),
       variant,
       verified,
+      trust,
       lastBumpedAt: bumped ? new Date(bumped) : undefined,
       publishedAt: doc.publishedAt,
       status: "live",

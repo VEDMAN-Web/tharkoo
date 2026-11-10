@@ -20,6 +20,7 @@ import {
   ListingVersion,
   Location,
   MediaAsset,
+  Site,
   PromotionOrder,
   User,
   type CategoryDoc,
@@ -524,7 +525,8 @@ export async function submitListing(
     status: { $in: COUNTED },
     "attestations.submittedAt": { $gte: start },
   });
-  const limit = intEnv("FREE_ADS_PER_WEEK", 3);
+  const site = await Site.findOne({ key: "default" }).select("freeAdsPerWeek").lean<{ freeAdsPerWeek?: number }>();
+  const limit = typeof site?.freeAdsPerWeek === "number" ? site.freeAdsPerWeek : intEnv("FREE_ADS_PER_WEEK", 3);
   if (!already && used >= limit) {
     const retryAfter = Math.max(1, Math.ceil((weekStart().getTime() + 7 * 24 * 60 * 60 * 1000 - Date.now()) / 1000));
     throw new FreeLimitError(retryAfter);
@@ -539,6 +541,14 @@ export async function submitListing(
   await listing.save();
   await writeVersion(listing, userId);
   await record(userId, "user", "listing.submit", listing._id.toString(), requestId, { status: "active" });
+  try {
+    const { revalidatePath } = await import("next/cache");
+    revalidatePath("/", "layout");
+    if (listing.slug) revalidatePath(`/ad/${listing.slug}/`);
+    if (category.slug) revalidatePath(`/${category.slug}/`);
+  } catch {
+    /* unit tests run outside a Next request */
+  }
   return { status: "active" as const };
 }
 

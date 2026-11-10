@@ -10,6 +10,7 @@ import { api, hasSessionHint } from "@/lib/ui/api";
 import { EmptyState } from "../ui/EmptyState";
 import { displayTitle } from "@/lib/format";
 import { readSaved, type SavedItem } from "../ui/SaveButton";
+import { RecentlyViewedRail } from "../ui/RecentlyViewed";
 import { AdCard } from "../ui/AdCard";
 import { HelpCard } from "../ui/HelpCard";
 import type { ListingDoc } from "@/lib/models";
@@ -223,6 +224,7 @@ export function AdsList() {
 
 export function SavedList() {
   const [items, setItems] = useState<SavedItem[] | null>(null);
+  const [note, setNote] = useState("");
   useEffect(() => {
     const id = window.setTimeout(() => setItems(readSaved()), 0);
     return () => window.clearTimeout(id);
@@ -240,6 +242,30 @@ export function SavedList() {
           ))}
         </div>
       )}
+      <form
+        className="mt-6 grid max-w-md gap-2"
+        onSubmit={async (event) => {
+          event.preventDefault();
+          const form = new FormData(event.currentTarget);
+          const res = await api("/api/alerts/", {
+            method: "POST",
+            body: JSON.stringify({
+              email: String(form.get("email") || ""),
+              q: String(form.get("q") || ""),
+              city: String(form.get("city") || ""),
+            }),
+          });
+          setNote(res.ok ? "Search saved. Email alerts use the mailer when a key is set." : "Could not save that search.");
+        }}
+      >
+        <h2 className="t-h3">Saved search</h2>
+        <input name="email" type="email" required placeholder="Email" className="rounded border px-3 py-2" />
+        <input name="q" placeholder="Words" className="rounded border px-3 py-2" />
+        <input name="city" placeholder="City" className="rounded border px-3 py-2" />
+        <button type="submit" className="tk-btn tk-btn-primary w-fit">Email me new matches</button>
+        {note ? <p>{note}</p> : null}
+      </form>
+      <RecentlyViewedRail />
       <HelpCard />
     </VendorShell>
   );

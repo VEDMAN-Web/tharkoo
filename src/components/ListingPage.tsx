@@ -6,6 +6,7 @@ import { MapPin, Search } from "lucide-react";
 import { AdCard } from "./AdCard";
 import { EmptyState } from "./ui/EmptyState";
 import { JsonLd, breadcrumbJsonLd } from "@/lib/jsonld";
+import { faqPage } from "@/lib/seo/schema";
 import { canonical } from "@/lib/seo";
 import { displayTitle } from "@/lib/format";
 import type { ListingDoc } from "@/lib/models";
@@ -50,6 +51,8 @@ export function ListingPageView({
   cityName,
   categoryName,
   districts = [],
+  faqs = [],
+  popular = [],
 }: {
   h1: string;
   h2?: string;
@@ -73,6 +76,8 @@ export function ListingPageView({
   cityName?: string;
   categoryName?: string;
   districts?: { href: string; label: string }[];
+  faqs?: { q: string; a: string }[];
+  popular?: { href: string; label: string }[];
 }) {
   const [open, setOpen] = useState(false);
   const clear = path.split("?")[0];
@@ -98,6 +103,9 @@ export function ListingPageView({
               name: displayTitle(ad.title),
             })),
           },
+          ...(faqs.length
+            ? [faqPage(faqs)]
+            : []),
         ]}
       />
       <button type="button" className="tk-loc" data-tk="location-field" onClick={() => window.dispatchEvent(new Event("tk-open-search"))}>
@@ -207,16 +215,36 @@ export function ListingPageView({
           </Link>
         </div>
       ) : null}
+      {popular.length ? (
+        <nav className="tk-seo-foot" aria-label="Popular searches">
+          <strong>Popular searches </strong>
+          {popular.map((link) => (
+            <Link key={link.href} href={link.href} prefetch={false}>
+              {link.label}
+            </Link>
+          ))}
+        </nav>
+      ) : null}
+      {faqs.length ? (
+        <section className="tk-seo-foot">
+          {faqs.map((item) => (
+            <p key={item.q}>
+              <strong>{item.q}</strong> {item.a}
+            </p>
+          ))}
+        </section>
+      ) : null}
       {intro ? <p className="tk-seo-foot">{intro}</p> : null}
       {footer ? <div className="tk-seo-foot">{footer}</div> : null}
       {related.length ? (
-        <p className="tk-seo-foot">
+        <nav className="tk-seo-foot" aria-label="Nearby">
+          <strong>Nearby </strong>
           {related.map((link) => (
             <Link key={link.href} href={link.href} prefetch={false}>
               {link.label}
             </Link>
           ))}
-        </p>
+        </nav>
       ) : null}
     </div>
   );

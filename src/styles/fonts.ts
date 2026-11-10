@@ -5,6 +5,7 @@ export const display = Cormorant_Garamond({
   weight: ["500", "600", "700"],
   variable: "--font-display",
   display: "swap",
+  preload: true,
 });
 
 export const sans = Manrope({
@@ -12,4 +13,5 @@ export const sans = Manrope({
   weight: ["400", "500", "600", "700", "800"],
   variable: "--font-sans",
   display: "swap",
+  preload: true,
 });

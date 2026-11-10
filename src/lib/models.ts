@@ -79,6 +79,7 @@ export interface ListingDoc extends BaseDoc {
   photoCountVisible?: number;
   variant?: string;
   verified?: boolean;
+  trust?: string[];
   subscriber?: boolean;
   lastBumpedAt?: Date;
   publishedAt?: Date;
@@ -124,6 +125,9 @@ export interface SiteDoc extends BaseDoc {
   footerLinks: unknown;
   socialLinks: unknown;
   homepage: unknown;
+  landings?: unknown;
+  tags?: { slug?: string; label?: string }[];
+  freeAdsPerWeek?: number;
 }
 
 export interface PageDoc extends BaseDoc {

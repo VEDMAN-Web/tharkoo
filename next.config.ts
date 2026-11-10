@@ -25,7 +25,15 @@ const nextConfig: NextConfig = {
   allowedDevOrigins: ["127.0.0.1"],
   trailingSlash: true,
   output: "standalone",
-  images: { unoptimized: true },
+  images: {
+    formats: ["image/avif", "image/webp"],
+    remotePatterns: [{ protocol: "https", hostname: "res.cloudinary.com" }],
+  },
+  async rewrites() {
+    return {
+      beforeFiles: [{ source: "/sitemap/:shard.xml", destination: "/sitemap/:shard/" }],
+    };
+  },
   turbopack: {
     rules: {
       "*.css": {

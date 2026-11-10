@@ -2,12 +2,18 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import { MapPin } from "lucide-react";
-import { getCategory, getCities, getSeo, getSite, getStates, listingCountsByCategoryCity } from "@/lib/queries";
+import { getCategory, getCities, getFeed, getSeo, getSite, getStates, listingCountsByCategoryCity } from "@/lib/queries";
 import { fillTemplate } from "@/lib/seo";
 import { pageMetadata } from "@/lib/ui/meta";
 import { Breadcrumbs } from "@/components/Breadcrumbs";
+import { JsonLd, breadcrumbJsonLd } from "@/lib/jsonld";
+import { faqPage, itemListNode } from "@/lib/seo/schema";
+import { canonical } from "@/lib/seo";
+import { fallbackLanding, mergeLanding, type LandingCopy } from "@/lib/seo/landing";
 
 type Props = { params: Promise<{ category: string }> };
+
+export const revalidate = 300;
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { category } = await params;
@@ -23,18 +29,41 @@ export default async function CategoryHub({ params }: Props) {
   const { category } = await params;
   const cat = await getCategory(category);
   if (!cat) notFound();
-  const [seo, site, cities, states, counts] = await Promise.all([
+  const [seo, site, cities, states, counts, feed] = await Promise.all([
     getSeo("category"),
     getSite(),
     getCities(),
     getStates(),
     listingCountsByCategoryCity().catch(() => []),
+    getFeed({ categorySlug: category }, 1),
   ]);
   const vars = { category: cat.name, site: site.name, year: new Date().getFullYear() };
+  const copy = mergeLanding(
+    fallbackLanding({ category: cat.name || category, count: feed.total, site: site.name }),
+    (site as { landings?: Record<string, Partial<LandingCopy>> }).landings?.[`${category}|india`],
+  );
   const allowed = new Set(counts.filter((row) => row._id.categorySlug === category && row.n > 0).map((row) => row._id.citySlug));
   const listed = allowed.size ? cities.filter((city) => allowed.has(city.slug || "")) : cities;
   return (
     <>
+      <JsonLd
+        data={[
+          breadcrumbJsonLd([
+            { name: "Tharkoo India", path: "/" },
+            { name: cat.name || category, path: `/${category}/` },
+          ]),
+          itemListNode({
+            url: canonical(`/${category}/`),
+            total: feed.total,
+            items: feed.items.slice(0, 12).map((ad, index) => ({
+              url: canonical(`/ad/${ad.slug}/`),
+              name: ad.title || "Ad",
+              position: index + 1,
+            })),
+          }),
+          faqPage(copy.faqs),
+        ]}
+      />
       <div className="tk-banner">
         <div className="tk-container">
           <h1>{cat.name} in India</h1>
@@ -62,7 +91,12 @@ export default async function CategoryHub({ params }: Props) {
             );
           })}
         </div>
-        <p className="tk-seo-foot">{fillTemplate(seo?.intro || "", vars)}</p>
+        <p className="tk-seo-foot">{copy.intro || fillTemplate(seo?.intro || "", vars)}</p>
+        {copy.faqs.map((item) => (
+          <p key={item.q} className="tk-seo-foot">
+            <strong>{item.q}</strong> {item.a}
+          </p>
+        ))}
       </div>
     </>
   );

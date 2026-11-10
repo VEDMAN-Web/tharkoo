@@ -15,11 +15,15 @@ import {
 import { prettyPlace } from "@/lib/format";
 import { fillTemplate } from "@/lib/seo";
 import { pageMetadata } from "@/lib/ui/meta";
+import { fallbackLanding } from "@/lib/seo/landing";
+import { TAG_PAGES } from "@/data/catalog";
 
 type Props = {
   params: Promise<{ category: string; location: string; district: string }>;
   searchParams: Promise<{ page?: string; photos?: string; verified?: string }>;
 };
+
+export const revalidate = 300;
 
 async function cityFor(slug: string) {
   const loc = await getLocationBySlug(slug);
@@ -28,8 +32,9 @@ async function cityFor(slug: string) {
   return rows.find((row) => row.slug === slug) ?? null;
 }
 
-export async function generateMetadata({ params }: Props): Promise<Metadata> {
+export async function generateMetadata({ params, searchParams }: Props): Promise<Metadata> {
   const { category, location, district } = await params;
+  const sp = await searchParams;
   const [cat, city, districtRows, seo, site] = await Promise.all([
     getCategory(category),
     cityFor(location),
@@ -46,9 +51,27 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     districtPref: ` / ${dist.name}`,
     site: site.name,
   };
-  const title = fillTemplate(seo?.title || "{category} in {city}{districtPref} | Tharkoo", vars);
-  const description = `${cat.name} listings in ${dist.name}, ${city.name}.`;
-  return pageMetadata({ title, description, path: `/${category}/${location}/${district}/` });
+  const copy = fallbackLanding({ category: cat.name || category, city: city.name || location, district: dist.name || district, site: site.name });
+  const title = fillTemplate(seo?.title || copy.title, vars);
+  const description = fillTemplate(seo?.description || copy.description, vars);
+  const pageNo = Math.max(1, Number(sp.page) || 1);
+  const filtered = Boolean(sp.photos || sp.verified);
+  const feed = await getFeed(
+    { categorySlug: category, citySlug: location, districtSlug: district, ...(sp.photos ? { photos: true } : {}), ...(sp.verified ? { verified: true } : {}) },
+    pageNo,
+  );
+  const query = new URLSearchParams();
+  if (sp.photos) query.set("photos", "1");
+  if (sp.verified) query.set("verified", "1");
+  if (pageNo > 1) query.set("page", String(pageNo));
+  const suffix = query.toString();
+  return pageMetadata({
+    title,
+    description,
+    path: `/${category}/${location}/${district}/${suffix ? `?${suffix}` : ""}`,
+    index: pageNo === 1 && !(filtered && feed.total === 0) && !isThin(feed.total),
+    follow: true,
+  });
 }
 
 export default async function DistrictPage({ params, searchParams }: Props) {
@@ -83,9 +106,11 @@ export default async function DistrictPage({ params, searchParams }: Props) {
   };
   return (
     <ListingPageView
-      h1={fillTemplate(seo?.h1 || "{category} in {city}{districtPref}", vars)}
+      h1={fillTemplate(seo?.h1 || "{category} in {district}", vars)}
+      faqs={fallbackLanding({ category: cat.name || category, city: city.name || location, district: dist.name || district, count: feed.total, site: site.name }).faqs}
+      popular={TAG_PAGES.slice(0, 4).map((tag) => ({ href: `/${category}/tag/${tag.slug}/`, label: `${dist.name} ${tag.label}` }))}
       h2={fillTemplate(seo?.h2 || "", vars)}
-      intro={fillTemplate(seo?.intro || "", vars)}
+      intro={fallbackLanding({ category: cat.name || category, city: city.name || location, district: dist.name || district, count: feed.total, site: site.name }).intro || fillTemplate(seo?.intro || "", vars)}
       crumbs={[
         { name: "Tharkoo India", path: "/" },
         { name: cat.name!, path: `/${category}/` },
@@ -103,7 +128,7 @@ export default async function DistrictPage({ params, searchParams }: Props) {
       page={feed.page}
       pages={feed.pages}
       total={feed.total}
-      noindex={isThin(feed.total)}
+      noindex={isThin(feed.total) || page > 1 || (Boolean(sp.photos || sp.verified) && feed.total === 0)}
       siblingLinks={districts.map((d) => ({
         href: `/${category}/${location}/${d.slug}/`,
         label: d.name!,

@@ -8,11 +8,12 @@ function siteNoindex() {
 }
 
 export default function robots(): MetadataRoute.Robots {
+  const sitemap = `${siteUrl()}/sitemap.xml`;
   if (siteNoindex()) {
-    return { rules: [{ userAgent: "*", disallow: "/" }] };
+    return { rules: [{ userAgent: "*", disallow: "/" }], sitemap };
   }
   return {
     rules: [{ userAgent: "*", allow: "/", disallow: ["/u/", "/search", "/admin/", "/api/", "/*?*page="] }],
-    sitemap: `${siteUrl()}/sitemap.xml`,
+    sitemap,
   };
 }

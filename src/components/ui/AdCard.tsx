@@ -12,7 +12,7 @@ function variantOf(ad: ListingDoc, featured?: boolean) {
   if (featured) return "star";
   const raw = ad.variant || "free";
   if (raw === "flash") return "supertop";
-  if (raw === "top" || raw === "supertop" || raw === "highlight" || raw === "star" || raw === "free") return raw;
+  if (raw === "top" || raw === "supertop" || raw === "highlight" || raw === "star" || raw === "new" || raw === "free") return raw;
   return "free";
 }
 
@@ -59,6 +59,8 @@ export function AdCard({
       {variant === "top" ? <span className="tk-badge-promo">Top</span> : null}
       {variant === "supertop" ? <span className="tk-badge-promo">SUPER Top</span> : null}
       {variant === "star" ? <span className="tk-badge-promo">Star</span> : null}
+      {variant === "highlight" ? <span className="tk-badge-promo">Highlight</span> : null}
+      {variant === "new" ? <span className="tk-badge-promo">New</span> : null}
       <a className="tk-card-link" href={href}>
         {withPhoto ? (
           <span className="tk-card-photo">
@@ -79,6 +81,9 @@ export function AdCard({
         <span className="tk-card-body">
           <span className="tk-card-title">{title}</span>
           {ad.description ? <span className="tk-card-desc">{ad.description}</span> : null}
+          {ad.trust?.length ? (
+            <span className="tk-card-desc">{ad.trust.join(" · ")}</span>
+          ) : null}
           <span className="tk-card-meta">
             <p>
               <Calendar size={12} aria-hidden />

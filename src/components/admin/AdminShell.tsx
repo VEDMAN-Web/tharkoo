@@ -11,6 +11,8 @@ const LINKS = [
   ["Promotions", "/admin/promotions/"],
   ["Homepage", "/admin/homepage/"],
   ["Menus", "/admin/menus/"],
+  ["Landings", "/admin/landings/"],
+  ["Tags", "/admin/tags/"],
   ["SEO", "/admin/seo/"],
   ["Pages", "/admin/pages/"],
   ["Audit log", "/admin/audit/"],

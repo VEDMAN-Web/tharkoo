@@ -3,7 +3,7 @@ import { MapPin } from "lucide-react";
 import { getCategories, getCities, getDistricts, getStates } from "@/lib/queries";
 import { pageMetadata } from "@/lib/ui/meta";
 
-export const dynamic = "force-dynamic";
+export const revalidate = 300;
 
 export const metadata = pageMetadata({
   title: "Cities across India | Tharkoo",

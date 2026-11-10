@@ -91,6 +91,17 @@ export interface FavouriteDoc {
   createdAt?: Date;
 }
 
+export interface SavedSearchDoc {
+  _id?: Types.ObjectId;
+  userId?: Types.ObjectId;
+  email: string;
+  q?: string;
+  categorySlug?: string;
+  citySlug?: string;
+  lastSentAt?: Date;
+  createdAt?: Date;
+}
+
 export interface ThreadDoc {
   _id?: Types.ObjectId;
   listingId: Types.ObjectId;
@@ -221,6 +232,22 @@ const favouriteSchema = new Schema<FavouriteDoc>(
 );
 favouriteSchema.index({ userId: 1, listingId: 1 }, { unique: true });
 
+const savedSearchSchema = new Schema<SavedSearchDoc>(
+  {
+    userId: { type: Schema.Types.ObjectId },
+    email: { type: String, required: true },
+    q: { type: String, default: "" },
+    categorySlug: { type: String, default: "" },
+    citySlug: { type: String, default: "" },
+    lastSentAt: { type: Date },
+  },
+  {
+    timestamps: { createdAt: true, updatedAt: false },
+    collection: collectionName("saved_searches", "SavedSearch"),
+  },
+);
+savedSearchSchema.index({ email: 1, q: 1, categorySlug: 1, citySlug: 1 }, { unique: true });
+
 const threadSchema = new Schema<ThreadDoc>(
   {
     listingId: { type: Schema.Types.ObjectId, required: true },
@@ -255,6 +282,7 @@ export const ListingVersion = registerModel<ListingVersionDoc>(
 );
 export const MediaAsset = registerModel<MediaAssetDoc>(modelName("MediaAsset"), mediaAssetSchema);
 export const Favourite = registerModel<FavouriteDoc>(modelName("Favourite"), favouriteSchema);
+export const SavedSearch = registerModel<SavedSearchDoc>(modelName("SavedSearch"), savedSearchSchema);
 export const Thread = registerModel<ThreadDoc>(modelName("Thread"), threadSchema);
 export const Message = registerModel<MessageDoc>(modelName("Message"), messageSchema);
 

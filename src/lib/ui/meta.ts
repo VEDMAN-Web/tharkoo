@@ -1,7 +1,13 @@
 import type { Metadata } from "next";
 import { canonical } from "@/lib/seo";
+import { publicPath } from "@/lib/seo/schema";
 
 const OG = "/brand/og-default.png";
+
+function absolute(image: string) {
+  if (image.startsWith("http://") || image.startsWith("https://")) return image;
+  return canonical(image.startsWith("/") ? image : `/${image}`);
+}
 
 export function pageMetadata(opts: {
   title: string;
@@ -11,23 +17,27 @@ export function pageMetadata(opts: {
   follow?: boolean;
   image?: string;
 }): Metadata {
-  const image = opts.image || OG;
-  const url = canonical(opts.path);
+  const image = absolute(opts.image || OG);
+  const url = canonical(publicPath(opts.path));
   const staging = process.env.SITE_NOINDEX === "true";
   const index = !staging && opts.index !== false;
   const follow = staging ? false : opts.follow !== false;
   return {
     title: opts.title,
     description: opts.description,
-    alternates: { canonical: url },
+    alternates: {
+      canonical: url,
+      languages: { "en-IN": url, "x-default": url },
+    },
     robots: { index, follow },
     openGraph: {
       title: opts.title,
       description: opts.description,
       url,
       siteName: "Tharkoo",
-      images: [image],
+      images: [{ url: image, width: 1200, height: 630, alt: opts.title }],
       locale: "en_IN",
+      type: "website",
     },
     twitter: {
       card: "summary_large_image",

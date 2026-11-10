@@ -10,6 +10,7 @@ import { CitySync } from "./CityContext";
 import { ContactButtons, ContactProvider } from "./ContactButtons";
 import { listingPhotos } from "@/lib/media";
 import { Gallery } from "./ui/Gallery";
+import { SaveButton } from "./ui/SaveButton";
 import { AdCard } from "./ui/AdCard";
 import { TrackView } from "./ui/RecentlyViewed";
 
@@ -83,10 +84,21 @@ export function AdDetail({
           <section className="tk-summary" data-tk="ad-summary">
             <div className="tk-summary-top">
               <p className="tk-nick">{ad.displayName || title}</p>
+              <SaveButton
+                item={{ id: ad.slug || title, slug: ad.slug || "", title, place: city, at: Date.now() }}
+                className="bg-transparent text-accent"
+              />
               <span className="tk-badge-promo" style={{ position: "static" }}>
                 {ad.variant === "supertop" || ad.variant === "star" ? "SUPER Top" : ad.variant === "top" ? "Top" : ad.verified ? "Verified" : categoryName}
               </span>
             </div>
+            {ad.trust?.length ? (
+              <div className="tk-attr">
+                {ad.trust.map((mark) => (
+                  <span key={mark}><Shield size={14} /> {mark}</span>
+                ))}
+              </div>
+            ) : null}
             <div className="tk-attr">
               {ad.age ? (
                 <span><User size={14} /> {ad.age} years</span>

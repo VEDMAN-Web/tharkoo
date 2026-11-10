@@ -49,6 +49,7 @@ export function Header({
   const [menu, setMenu] = useState(false);
   const [account, setAccount] = useState(false);
   const [who, setWho] = useState("");
+  const [session, setSession] = useState(user);
   const homeLike = path === "/" || path.startsWith("/cities");
   const vendor = path.startsWith("/u/");
   const showCity = Boolean(city) && (path.startsWith("/ad/") || categories.some((cat) => path.startsWith(`/${cat.slug}`)));
@@ -63,14 +64,16 @@ export function Header({
   }, []);
 
   useEffect(() => {
-    if (!vendor || path.startsWith("/u/logout") || !hasSessionHint()) return;
+    if (path.startsWith("/u/logout") || !hasSessionHint()) return;
     const id = window.setTimeout(() => {
-      api<{ user: { displayName?: string; email?: string } }>("/api/auth/me").then((res) => {
-        if (res.ok) setWho(res.data.user.displayName || res.data.user.email || "");
+      api<{ user: { displayName?: string; email?: string; roles?: string[] } }>("/api/auth/me").then((res) => {
+        if (!res.ok) return;
+        setWho(res.data.user.displayName || res.data.user.email || "");
+        setSession({ email: res.data.user.email || "", roles: res.data.user.roles || [] });
       });
     }, 0);
     return () => window.clearTimeout(id);
-  }, [path, vendor]);
+  }, [path]);
 
   const socials = social.filter((item) => item.visible !== false && item.href && safeHref(item.href) && !/google\.com\/search/i.test(item.href));
   const short = who.length > 10 ? `${who.slice(0, 10)}…` : who;
@@ -102,13 +105,13 @@ export function Header({
               {vendor && short ? <span className="tk-account-name">{short}</span> : null}
               {account ? (
                 <div className="tk-menu" role="menu">
-                  {user ? (
+                  {session ? (
                     <>
                       <Link href="/u/account/dashboard/" onClick={() => setAccount(false)}>Dashboard</Link>
                       <Link href="/u/account/ads/" onClick={() => setAccount(false)}>Your ads</Link>
                       <Link href="/u/account/credits/" onClick={() => setAccount(false)}>Wallet</Link>
                       <Link href="/u/account/edit-account/" onClick={() => setAccount(false)}>Settings</Link>
-                      {isStaffRole(user.roles) ? <Link href="/admin/" onClick={() => setAccount(false)}>Admin</Link> : null}
+                      {isStaffRole(session.roles) ? <Link href="/admin/" onClick={() => setAccount(false)}>Admin</Link> : null}
                       <Link href="/u/logout/" onClick={() => setAccount(false)}>Log out</Link>
                     </>
                   ) : (

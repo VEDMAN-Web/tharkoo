@@ -42,6 +42,9 @@ export interface SiteDoc extends BaseDoc {
   footerLinks?: unknown;
   socialLinks?: unknown;
   homepage?: unknown;
+  landings?: unknown;
+  tags?: { slug?: string; label?: string }[];
+  freeAdsPerWeek?: number;
 }
 
 export interface PageDoc extends BaseDoc {
@@ -170,6 +173,9 @@ const siteSchema = new Schema<SiteDoc>(
     footerLinks: Schema.Types.Mixed,
     socialLinks: Schema.Types.Mixed,
     homepage: Schema.Types.Mixed,
+    landings: Schema.Types.Mixed,
+    tags: { type: [{ slug: String, label: String }], default: [] },
+    freeAdsPerWeek: { type: Number },
   },
   { timestamps: true, collection: collectionName("sites", "Site") },
 );
