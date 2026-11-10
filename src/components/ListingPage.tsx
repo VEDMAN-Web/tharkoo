@@ -101,7 +101,7 @@ export function ListingPageView({
         ]}
       />
       <button type="button" className="tk-loc" data-tk="location-field" onClick={() => window.dispatchEvent(new Event("tk-open-search"))}>
-        <MapPin size={16} aria-hidden />
+        <MapPin size={18} aria-hidden />
         <span>{locationLabel || query || "Select a city"}</span>
         <span className="tk-loc-go" aria-hidden>
           <Search size={16} color="#fff" />

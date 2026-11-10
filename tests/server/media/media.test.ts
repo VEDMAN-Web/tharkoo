@@ -298,14 +298,18 @@ describe("media routes", () => {
     expect(JSON.stringify(stranger.data)).not.toContain("res.cloudinary.com");
   });
 
-  it("fails closed when Cloudinary env is missing", async () => {
+  it("uses the local upload when Cloudinary env is missing", async () => {
     const owner = await account("ada@example.com");
     delete process.env.CLOUDINARY_API_SECRET;
     const response = await call("POST", "sign", { contentType: "image/jpeg", byteSize: 10, kind: "image" }, owner.cookie);
     const body = await dataOf(response);
-    expect(response.status).toBe(500);
-    expect(body.error?.message).toContain("CLOUDINARY_API_SECRET");
-    expect(body.error?.message).not.toContain(secret);
+    expect(response.status).toBe(200);
+    expect(body.data?.uploadUrl).toBe("/api/media/local");
+    expect(body.data?.signature).toBe("local");
+    const text = JSON.stringify(body);
+    expect(text).not.toContain(secret);
+    expect(text).not.toContain("test-key");
+    expect(text).not.toContain("res.cloudinary.com");
   });
 });
 

@@ -39,7 +39,7 @@ export default async function CategoryHub({ params }: Props) {
         <div className="tk-container">
           <h1>{cat.name} in India</h1>
         </div>
-        <MapPin className="tk-banner-pins" size={180} color="#fff" aria-hidden />
+        <MapPin className="tk-banner-pins tk-icon-lg" size={180} color="#fff" aria-hidden />
       </div>
       <div className="tk-container" style={{ paddingBottom: 32 }}>
         <Breadcrumbs crumbs={[{ name: "Tharkoo India", path: "/" }, { name: cat.name!, path: `/${category}/` }]} />

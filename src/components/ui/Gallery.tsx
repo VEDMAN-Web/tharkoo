@@ -36,17 +36,18 @@ export function Gallery({
 
   return (
     <div data-tk="gallery">
-      <div className="tk-gallery tk-mosaic">
-        {mosaic.map((photo, index) => (
-          <button key={photo + index} type="button" className="tk-tile" onClick={() => setOpen(true)} aria-label={`Open photo ${index + 1}`}>
-            <SmartImage src={photo} alt={`${title}, photo ${index + 1} of ${items.length}`} seed={`${seed}-${index}`} category={category} width={320} height={400} sizes="320px" fit="contain" priority={index === 0} />
-          </button>
-        ))}
+      <div className="tk-gallery">
+        <div className="tk-mosaic">
+          {mosaic.map((photo, index) => (
+            <button key={photo + index} type="button" className="tk-tile" onClick={() => setOpen(true)} aria-label={`Open photo ${index + 1}`}>
+              <SmartImage src={photo} alt={`${title}, photo ${index + 1} of ${items.length}`} seed={`${seed}-${index}`} category={category} width={320} height={400} sizes="(max-width: 767px) 100vw, 50vw" fit="cover" priority={index === 0} />
+            </button>
+          ))}
+        </div>
+        <button type="button" className="tk-btn tk-btn-outline-rose tk-show-all" data-tk="show-all" onClick={() => setOpen(true)}>
+          SHOW ALL
+        </button>
       </div>
-      <div className="tk-gallery" style={{ display: "none" }} />
-      <button type="button" className="tk-btn tk-btn-outline-rose tk-show-all" data-tk="show-all" onClick={() => setOpen(true)} style={{ marginTop: 8 }}>
-        ⤢ SHOW ALL
-      </button>
       {open ? (
         <div className="tk-sheet" role="dialog" aria-modal="true" aria-label="Photos" ref={ref}>
           <button type="button" className="tk-sheet-back" onClick={() => setOpen(false)}>
@@ -59,7 +60,6 @@ export function Gallery({
           </div>
         </div>
       ) : null}
-      <style>{`@media (min-width: 768px) { .tk-show-all { display: none; } }`}</style>
     </div>
   );
 }

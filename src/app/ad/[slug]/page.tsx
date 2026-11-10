@@ -8,6 +8,7 @@ import { Listing } from "@/lib/models";
 import { safePhoto } from "@/lib/media";
 import { getCategory, getListingBySlug, getRelated, getSite } from "@/lib/queries";
 import { canonical, fillTemplate } from "@/lib/seo";
+import { siteUrl } from "@/lib/utils";
 import { pageMetadata } from "@/lib/ui/meta";
 import { plain } from "@/lib/plain";
 
@@ -37,6 +38,8 @@ export default async function AdPage({ params }: Props) {
   const listingId = row?._id ? String(row._id) : undefined;
   const [cat, related] = await Promise.all([getCategory(ad.categorySlug || ""), getRelated(ad, 6)]);
   const cover = safePhoto(ad.photos?.[0]);
+  const shareUrl = canonical(`/ad/${ad.slug}/`);
+  const image = cover ? (cover.startsWith("http") ? cover : `${siteUrl().replace(/\/$/, "")}${cover}`) : undefined;
   const city = prettyPlace(ad.citySlug);
   const catName = cat?.name || ad.categorySlug || "";
   const state = prettyPlace(ad.stateSlug);
@@ -56,14 +59,23 @@ export default async function AdPage({ params }: Props) {
           breadcrumbJsonLd(crumbs),
           {
             "@context": "https://schema.org",
-            "@type": "Offer",
+            "@type": "Product",
             name: displayTitle(ad.title),
-            url: canonical(`/ad/${ad.slug}/`),
-            availability: "https://schema.org/InStock",
+            description: (ad.description || displayTitle(ad.title)).slice(0, 300),
+            url: shareUrl,
+            ...(image ? { image: [image] } : {}),
+            offers: {
+              "@type": "Offer",
+              price: "0",
+              priceCurrency: "INR",
+              availability: "https://schema.org/InStock",
+              url: shareUrl,
+              seller: { "@type": "Person", name: ad.displayName || "Tharkoo member" },
+            },
           },
         ]}
       />
-      <AdDetail ad={plain(ad)} categoryName={catName} related={plain(related)} listingId={listingId} crumbs={crumbs} />
+      <AdDetail ad={plain(ad)} categoryName={catName} related={plain(related)} listingId={listingId} crumbs={crumbs} shareUrl={shareUrl} />
     </>
   );
 }

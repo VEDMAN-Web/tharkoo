@@ -5,6 +5,11 @@ import { consumeRateLimit } from "@/server/auth/rate-limit";
 
 const STATIC_EXT = /\.(?:svg|png|jpg|jpeg|webp|avif|ico|woff2|css|js|map|txt|xml)$/i;
 
+function requestLimit(name: string, fallback: number) {
+  const value = Number(process.env[name]);
+  return Number.isFinite(value) && value >= fallback ? value : fallback;
+}
+
 function skipLimiter(req: NextRequest) {
   if (req.nextUrl.searchParams.has("_rsc")) return true;
   if (req.headers.get("next-router-prefetch")) return true;
@@ -31,7 +36,7 @@ export async function proxy(req: NextRequest) {
   const ip = clientKey(req.headers);
   const search = path.startsWith("/search") || path.startsWith("/api/catalog");
   const key = `${ip}:${search ? "search" : "site"}`;
-  const max = search ? 30 : 240;
+  const max = requestLimit(search ? "SEARCH_RATE_MAX" : "SITE_RATE_MAX", search ? 30 : 240);
   let ok = true;
   if (process.env.MONGODB_URI) {
     try {

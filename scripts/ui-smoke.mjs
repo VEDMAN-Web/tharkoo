@@ -3,6 +3,7 @@ import { chromium } from "@playwright/test";
 const base = process.env.BASE_URL || "http://127.0.0.1:4317";
 const widths = [
   [1440, 900],
+  [768, 1024],
   [390, 844],
 ];
 const publicPaths = [
@@ -109,6 +110,16 @@ async function inspect(page) {
       bodyLum: lum(getComputedStyle(document.body).backgroundColor),
       dark: dark.slice(0, 3),
       phone: /\b[6-9]\d{9}\b/.test(document.body.innerText),
+      icons: [...document.querySelectorAll("svg.lucide")].flatMap((el) => {
+        if (el.closest(".tk-icon-lg, .tk-banner-pins")) return [];
+        const style = getComputedStyle(el);
+        if (style.display === "none" || style.visibility === "hidden" || Number(style.opacity) === 0) return [];
+        const box = el.getBoundingClientRect();
+        if (box.width < 1 || box.height < 1) return [];
+        const ratio = box.width / box.height;
+        if (Math.abs(ratio - 1) > 0.1 || box.width > 32) return [`${Math.round(box.width)}x${Math.round(box.height)}`];
+        return [];
+      }).slice(0, 3),
     };
   });
 }
@@ -128,7 +139,10 @@ const badStatus = [];
 context.on("response", (res) => {
   const url = res.url();
   if (url.includes("_rsc") || url.includes("favicon")) return;
-  if (res.status() >= 400 && !url.includes("this-page-does-not-exist")) badStatus.push(`${res.status()} ${url}`);
+  if (res.status() >= 400 && !url.includes("this-page-does-not-exist") && !(res.status() === 403 && url.includes("/submit"))) {
+    const where = res.frame()?.url() || "";
+    badStatus.push(`${res.status()} ${url} @ ${where}`);
+  }
 });
 
 let districtPath = "";
@@ -154,7 +168,8 @@ async function visit(path, width, height, expectStatus = 200) {
   if (status !== expectStatus) notes.push(`status ${status}`);
   if (errors.length) notes.push(`console ${errors[0]}`);
   if (facts.broken.length) notes.push(`broken ${facts.broken[0]}`);
-  if (width === 390 && facts.overflow) notes.push("overflow");
+  if (width <= 768 && facts.overflow) notes.push("overflow");
+  if (path === "/" && !/noindex/i.test(facts.robots)) notes.push("robots");
   if (facts.h1 !== 1) notes.push(`h1 ${facts.h1}`);
   if (!/Manrope/i.test(facts.family)) notes.push(`font ${facts.family}`);
   if (facts.tiny) notes.push(`tiny ${facts.tiny}`);
@@ -162,6 +177,7 @@ async function visit(path, width, height, expectStatus = 200) {
   if (facts.scheme !== "light") notes.push(`scheme ${facts.scheme}`);
   if (facts.bodyLum < 0.9) notes.push(`body ${facts.bodyLum.toFixed(2)}`);
   if (facts.dark.length) notes.push(`dark ${facts.dark[0]}`);
+  if (facts.icons?.length) notes.push(`icons ${facts.icons[0]}`);
   if ((path.includes("/bengaluru/") || path.startsWith("/ad/")) && facts.phone) notes.push("phone in html");
   const seen = titles.get(facts.title);
   if (!path.includes("does-not-exist")) {
@@ -305,6 +321,29 @@ if (adPath) {
       const pos = await bar.evaluate((el) => getComputedStyle(el).position).catch(() => "");
       if (pos !== "fixed") notes.push("bottom");
     }
+    await page.locator("[data-tk=gallery] img").first().waitFor({ state: "visible", timeout: 8000 }).catch(() => {});
+    await page.waitForFunction(() => [...document.querySelectorAll("[data-tk=gallery] img")].every((img) => img.complete && img.naturalWidth > 0), { timeout: 8000 }).catch(() => {});
+    const gallery = await page.locator("[data-tk=gallery] img").evaluateAll((els) =>
+      els.map((el) => {
+        const box = el.getBoundingClientRect();
+        return {
+          src: el.currentSrc || el.getAttribute("src") || "",
+          broken: el.complete && el.naturalWidth === 0,
+          visible: box.width > 20 && box.height > 20,
+          height: box.height,
+        };
+      }),
+    );
+    const visible = gallery.filter((item) => item.visible);
+    if (width < 768) {
+      if (visible.length !== 1) notes.push(`mobile gallery ${visible.length}`);
+      if ((visible[0]?.height || 0) < 200) notes.push(`mobile photo ${visible[0]?.height}`);
+      if ((await page.locator("[data-tk=show-all]").count()) < 1) notes.push("show all");
+    } else if (visible.length < 4) notes.push(`gallery ${visible.length}`);
+    if (new Set(visible.map((item) => item.src)).size < Math.min(4, visible.length)) notes.push("portraits repeat");
+    if (visible.some((item) => item.broken || !item.src.includes("/placeholders/profiles/"))) notes.push("gallery photo");
+    const share = await page.locator('a[href*="twitter.com"]').getAttribute("href");
+    if (!share || !decodeURIComponent(share).startsWith("https://twitter.com/intent/tweet?url=http")) notes.push("share");
     if (width === 1440) {
       const waitReveal = page.waitForResponse((res) => res.url().includes("contact-reveal"), { timeout: 8000 }).catch(() => null);
       await page.locator("[data-tk=ad-summary] [data-tk=call]").click();
@@ -328,38 +367,157 @@ await cityPage.setViewportSize({ width: 1440, height: 900 });
 await cityPage.goto(base + "/dating/bengaluru/", { waitUntil: "load" });
 const cards = await cityPage.locator("[data-tk=card]").count();
 const notes = [];
-if (cards < 3) notes.push(`cards ${cards}`);
+if (cards < 12) notes.push(`cards ${cards}`);
 const variants = await cityPage.locator("[data-tk=card]").evaluateAll((els) => els.every((el) => el.getAttribute("data-variant")));
 if (!variants) notes.push("variant");
 if ((await cityPage.locator("[data-tk=location-field]").count()) < 1) notes.push("location");
 if (cards >= 7 && (await cityPage.locator("[data-tk=promo-band]").count()) < 1) notes.push("promo");
+const loc = await cityPage.locator(".tk-loc-go").boundingBox();
+if (!loc || Math.abs(loc.width - 34) > 2 || Math.abs(loc.height - 34) > 2) notes.push(`search ${loc?.width}x${loc?.height}`);
+await cityPage.locator("[data-tk=card] img").first().waitFor({ state: "visible", timeout: 8000 }).catch(() => {});
+await cityPage.waitForFunction(() => [...document.querySelectorAll("[data-tk=card] img")].every((img) => img.complete && img.naturalWidth > 0), { timeout: 8000 }).catch(() => {});
+const cardPhotos = await cityPage.locator("[data-tk=card] img").evaluateAll((els) =>
+  els.map((el) => ({
+    src: el.currentSrc || el.getAttribute("src") || "",
+    broken: el.complete && el.naturalWidth === 0,
+    box: el.getBoundingClientRect(),
+  })),
+);
+if (!cardPhotos.length || cardPhotos.some((item) => item.broken || !item.src.includes("/placeholders/profiles/"))) notes.push("card photo");
+if (cardPhotos.some((item) => item.box.height > 0 && Math.abs(item.box.width / item.box.height - 0.8) > 0.12)) notes.push("card ratio");
 record("/dating/bengaluru/ structure", 1440, notes.length === 0, notes.join("; "));
 await cityPage.close();
 
+for (const district of ["/dating/delhi/central-delhi/", "/dating/delhi/new-delhi/", "/dating/delhi/south-delhi/"]) {
+  for (const [width, height] of widths) {
+    const { page } = await visit(district, width, height);
+    await page.close();
+  }
+}
+const mapRes = await context.request.get(base + "/sitemap.xml");
+const mapText = await mapRes.text();
+const mapOk =
+  mapRes.ok() &&
+  mapText.includes("<lastmod>") &&
+  mapText.includes("/cities/") &&
+  mapText.includes("/dating/delhi/central-delhi/") &&
+  mapText.includes("/ad/") &&
+  mapText.includes("/blog/") &&
+  mapText.includes("/help/") &&
+  mapText.includes("/cms/about/") &&
+  mapText.includes("/scam-report/");
+record("/sitemap.xml", 1440, mapOk, mapOk ? `urls ${mapText.split("<loc>").length - 1}` : mapText.slice(0, 80));
+
+const loggedOut = await context.newPage();
+await loggedOut.setViewportSize({ width: 1440, height: 900 });
+await loggedOut.goto(base + "/", { waitUntil: "load" });
+await loggedOut.locator("[data-tk=header] [data-tk=post-ad]").click();
+await loggedOut.waitForURL(/\/u\/login\//, { timeout: 15000 }).catch(() => {});
+const landed = new URL(loggedOut.url());
+const nextOk = landed.pathname.startsWith("/u/login") && landed.searchParams.get("next") === "/u/post-insert/";
+const wizardFlash = await loggedOut.locator("[data-tk=step-title]").count();
+record("post-ad logged-out", 1440, nextOk && wizardFlash === 0, loggedOut.url());
+const createHref = await loggedOut.getByRole("link", { name: "Create account" }).getAttribute("href");
+record("post-ad register link", 1440, Boolean(createHref && createHref.includes("next=") && createHref.includes("post-insert")), createHref || "");
+await loggedOut.goto(base + (createHref || "/u/register/?next=%2Fu%2Fpost-insert%2F"), { waitUntil: "load" });
+const postEmail = `post+${Date.now()}@example.test`;
+const postPassword = "SmokePass1!";
+await loggedOut.locator("#email").fill(postEmail);
+await loggedOut.locator("#displayName").fill("Poster");
+await loggedOut.locator("#password").fill(postPassword);
+await loggedOut.locator("#dateOfBirth").fill("1990-01-01");
+await loggedOut.locator("input[name=acceptedTerms]").check();
+await loggedOut.locator("input[name=attestedAdult]").check();
+await loggedOut.getByRole("button", { name: "CREATE ACCOUNT" }).click();
+await loggedOut.waitForURL(/\/u\/post-insert\//, { timeout: 20000 }).catch(() => {});
+const afterRegister = await loggedOut.locator("[data-tk=step-title]").innerText().catch(() => "");
+record("post-ad register", 1440, /Information/i.test(afterRegister), loggedOut.url() + " " + afterRegister);
+await loggedOut.goto(base + "/u/logout/", { waitUntil: "load" });
+await loggedOut.waitForURL(/\/$/, { timeout: 15000 }).catch(() => {});
+await loggedOut.goto(base + "/u/login/?next=%2Fu%2Fpost-insert%2F", { waitUntil: "load" });
+await loggedOut.locator("#email").fill(postEmail);
+await loggedOut.locator("#password").fill(postPassword);
+await loggedOut.getByRole("button", { name: "LOG IN" }).click();
+await loggedOut.waitForURL(/\/u\/post-insert\//, { timeout: 20000 }).catch(() => {});
+const afterLogin = await loggedOut.locator("[data-tk=step-title]").innerText().catch(() => "");
+record("post-ad login", 1440, /Information/i.test(afterLogin), loggedOut.url() + " " + afterLogin);
+const adTitle = `Smoke listing ${Date.now()}`;
+await loggedOut.locator("#category").selectOption({ label: "Jobs" });
+await loggedOut.locator("#city").selectOption({ label: "Mumbai" });
+await loggedOut.locator("#nickname").fill("Poster");
+await loggedOut.locator("#role").fill("Office assistant");
+await loggedOut.locator("#title").fill(adTitle);
+await loggedOut.locator("#text").fill("A weekday office role with a clear description of the work.");
+await loggedOut.locator("#phone").fill("9876543210");
+await loggedOut.locator("p").filter({ hasText: "Terms, Conditions" }).locator("button").click();
+await loggedOut.locator("p").filter({ hasText: "I confirm that I am 18" }).locator("button").click();
+await loggedOut.locator("[data-tk=go-on]").click();
+await loggedOut.locator("[data-tk=photo-input]").waitFor({ state: "attached", timeout: 15000 }).catch(() => {});
+const png = Buffer.from("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==", "base64");
+await loggedOut.locator("[data-tk=photo-input]").setInputFiles({ name: "photo.png", mimeType: "image/png", buffer: png });
+await loggedOut.locator("[data-tk=photo-note]").waitFor({ timeout: 15000 }).catch(() => {});
+const photoNote = await loggedOut.locator("[data-tk=photo-note]").innerText().catch(() => "");
+await loggedOut.locator("[data-tk=go-on]").click();
+await loggedOut.locator("button", { hasText: "PUBLISH" }).click();
+await loggedOut.locator("[data-tk=verify-id]").waitFor({ timeout: 15000 }).catch(() => {});
+const verifyText = await loggedOut.locator("[aria-live=polite]").innerText().catch(() => "");
+const blocked = /quick check/i.test(verifyText) && !/403/.test(verifyText);
+record("post-ad kyc message", 1440, blocked && /Photo saved/i.test(photoNote), `${photoNote} | ${verifyText}`);
+const draftUrl = loggedOut.url();
+await loggedOut.locator("[data-tk=verify-id]").click();
+await loggedOut.locator("#front-id").setInputFiles({ name: "front.png", mimeType: "image/png", buffer: png });
+await loggedOut.locator("#selfie-id").setInputFiles({ name: "selfie.png", mimeType: "image/png", buffer: png });
+await loggedOut.locator("[data-tk=kyc-submit]").click();
+await loggedOut.locator("[data-tk=kyc-note]").waitFor({ timeout: 15000 }).catch(() => {});
+const kycNote = await loggedOut.locator("[data-tk=kyc-note]").innerText().catch(() => "");
+const adminApi = await browser.newContext();
+const adminLogin = await adminApi.request.post(base + "/api/auth/login/", {
+  headers: { origin: base, referer: base + "/admin/login/" },
+  data: { email: process.env.ADMIN_BOOTSTRAP_EMAIL || "homepage-admin@example.test", password: process.env.ADMIN_BOOTSTRAP_PASSWORD || "HomepageAdmin1!" },
+});
+const queue = await adminApi.request.get(base + "/api/admin/verifications/?page=1&pageSize=20");
+const queueBody = await queue.json().catch(() => ({}));
+const pending = queueBody?.data?.items || [];
+const verificationId = pending[pending.length - 1]?.id;
+const decision = verificationId
+  ? await adminApi.request.post(base + `/api/admin/verifications/${verificationId}/decision/`, {
+      headers: { origin: base, referer: base + "/admin/" },
+      data: { decision: "approved", reason: "Documents match the account" },
+    })
+  : null;
+await adminApi.close();
+record("post-ad kyc approve", 1440, adminLogin.ok() && decision?.ok() === true && /review/i.test(kycNote), `login ${adminLogin.status()} decide ${decision?.status()} ${kycNote}`);
+await loggedOut.goto(draftUrl.includes("step=") ? draftUrl.replace(/step=\d+/, "step=3") : draftUrl, { waitUntil: "load" });
+await loggedOut.locator("button", { hasText: "PUBLISH" }).click();
+await loggedOut.locator("[data-tk=step-title]").filter({ hasText: "live" }).waitFor({ timeout: 15000 }).catch(() => {});
+const live = await loggedOut.locator("[data-tk=step-title]").innerText().catch(() => "");
+await loggedOut.goto(base + "/u/account/ads/", { waitUntil: "load" });
+await loggedOut.locator("[data-tk=card]").filter({ hasText: adTitle }).waitFor({ timeout: 15000 }).catch(() => {});
+const mine = await loggedOut.locator("body").innerText();
+const adLink = await loggedOut.locator("[data-tk=card]").filter({ hasText: adTitle }).locator('a[href*="/ad/"]').first().getAttribute("href").catch(() => "");
+let publicOk = false;
+if (adLink) {
+  await loggedOut.goto(base + adLink, { waitUntil: "load" });
+  publicOk = (await loggedOut.locator("h1").innerText().catch(() => "")).includes(adTitle.slice(0, 12));
+}
+record("post-ad published", 1440, /live/i.test(live) && mine.includes(adTitle) && publicOk, `${live} ${adLink}`);
+await loggedOut.close();
+
 const email = `smoke+${Date.now()}@example.test`;
 const password = "SmokePass1!";
-const reg = await context.request.post(base + "/api/auth/register", {
+const apiContext = await browser.newContext();
+const reg = await apiContext.request.post(base + "/api/auth/register", {
   headers: { origin: base, referer: base + "/" },
   data: { email, password, displayName: "Smoke", dateOfBirth: "1990-01-01", acceptedTerms: true, attestedAdult: true },
 });
 if (!reg.ok()) record("/api/auth/register", 1440, false, `status ${reg.status()} ${await reg.text()}`);
-const loginRes = await context.request.post(base + "/api/auth/login", {
+const loginRes = await apiContext.request.post(base + "/api/auth/login", {
   headers: { origin: base, referer: base + "/u/login/" },
   data: { email, password },
 });
-const setCookies = loginRes.headersArray().filter((h) => h.name.toLowerCase() === "set-cookie");
-for (const header of setCookies) {
-  const [pair, ...attrs] = header.value.split(";");
-  const eq = pair.indexOf("=");
-  await context.addCookies([
-    {
-      name: pair.slice(0, eq).trim(),
-      value: decodeURIComponent(pair.slice(eq + 1).trim()),
-      url: base,
-      httpOnly: attrs.some((attr) => /httponly/i.test(attr)),
-    },
-  ]);
-}
+if (!loginRes.ok()) record("/api/auth/login", 1440, false, `status ${loginRes.status()} ${await loginRes.text()}`);
+await apiContext.close();
+await context.clearCookies();
 const loginPage = await context.newPage();
 await loginPage.setViewportSize({ width: 1440, height: 900 });
 await loginPage.goto(base + "/u/login/", { waitUntil: "load" });
@@ -461,6 +619,43 @@ for (const href of cardLinks) {
 }
 record("/ click-through", 1440, clickErrors.length === 0, clickErrors[0] || "");
 await click.close();
+
+const adminContext = await browser.newContext();
+await adminContext.addInitScript(() => {
+  localStorage.setItem("nl-age", "ok");
+  localStorage.setItem("nl-cookies", "all");
+});
+const adminPage = await adminContext.newPage();
+await adminPage.setViewportSize({ width: 1440, height: 900 });
+await adminPage.goto(base + "/admin/login/", { waitUntil: "load" });
+await adminPage.locator("#email").fill(process.env.ADMIN_BOOTSTRAP_EMAIL || "homepage-admin@example.test");
+await adminPage.locator("#password").fill(process.env.ADMIN_BOOTSTRAP_PASSWORD || "HomepageAdmin1!");
+await adminPage.getByRole("button", { name: "Sign in" }).click();
+await adminPage.waitForURL((url) => /\/admin\/?$/.test(url.pathname), { timeout: 15000 }).catch(() => {});
+const signedIn = /\/admin\/?$/.test(new URL(adminPage.url()).pathname);
+if (!signedIn) {
+  const msg = await adminPage.locator("[aria-live=polite]").innerText().catch(() => "");
+  record("homepage edit", 1440, false, `${adminPage.url()} ${msg}`.trim());
+} else await adminPage.goto(base + "/admin/homepage/", { waitUntil: "load" });
+const heroInput = adminPage.locator("#hero-desktop");
+const editorReady = signedIn && (await heroInput.count()) > 0;
+if (editorReady) {
+  await heroInput.fill("Hello from the homepage editor");
+  await adminPage.getByRole("button", { name: "Save" }).click();
+  await adminPage.getByText("Saved.").waitFor({ timeout: 10000 }).catch(() => {});
+  await adminPage.goto(base + "/", { waitUntil: "load" });
+  const edited = await adminPage.locator("[data-tk=hero] h1").innerText().catch(() => "");
+  record("homepage edit", 1440, edited.includes("Hello from the homepage editor"), edited.slice(0, 80));
+  await adminPage.goto(base + "/admin/homepage/", { waitUntil: "load" });
+  adminPage.once("dialog", (dialog) => dialog.accept());
+  await adminPage.getByRole("button", { name: "Reset to default" }).click();
+  await adminPage.getByText("Reset to the original").waitFor({ timeout: 10000 }).catch(() => {});
+  await adminPage.goto(base + "/", { waitUntil: "load" });
+  const restored = await adminPage.locator("[data-tk=hero] h1").innerText().catch(() => "");
+  record("homepage reset", 1440, restored.includes("Single?"), restored.slice(0, 80));
+} else if (signedIn) record("homepage edit", 1440, false, await adminPage.locator("body").innerText().then((text) => text.slice(0, 120)).catch(() => adminPage.url()));
+await adminPage.close();
+await adminContext.close();
 
 if (badStatus.length) record("/ responses", 0, false, badStatus.slice(0, 3).join(" | "));
 

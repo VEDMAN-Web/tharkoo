@@ -11,6 +11,7 @@ import { MainInner } from "./MainInner";
 import { getCategories, getCities, getSite, getTopCities } from "@/lib/queries";
 import { plain } from "@/lib/plain";
 import { safeHref } from "@/lib/sanitize";
+import { readContent } from "@/lib/ui/site-content";
 
 export const dynamic = "force-dynamic";
 
@@ -47,6 +48,7 @@ function Chrome({
   pathname: string;
 }) {
   const { site, categories, topCities, cities, user } = shell;
+  const content = readContent((site as { homepage?: unknown }).homepage);
   const catProps = plain(categories.map((c) => ({ slug: c.slug!, name: c.name! })));
   const cityProps = plain(cities.map((c) => ({ slug: c.slug!, name: c.name!, stateSlug: c.stateSlug })));
   const footerLinks = plain(
@@ -76,20 +78,21 @@ function Chrome({
       <Header
         siteName={(site as { logoText?: string }).logoText || site.name || "Tharkoo"}
         countryName={site.countryName || "India"}
-        searchPlaceholder={(site as { searchPlaceholder?: string }).searchPlaceholder || "Search By City, Category..."}
-        postCta="POST YOUR AD"
+        searchPlaceholder={content.hero.searchPlaceholder}
+        postCta={content.header.postLabel}
         categories={catProps}
         cities={cityProps}
         user={user}
-        social={socialLinks}
+        social={content.socials.length ? content.socials : socialLinks}
+        chrome={content.header}
       />
       <MainInner>{children}</MainInner>
       <div
         id="tk-facts"
         hidden
-        data-hours={site.supportHours || "Monday through Friday"}
-        data-wa={"supportWhatsapp" in site ? site.supportWhatsapp || "" : ""}
-        data-tg={"supportTelegram" in site ? site.supportTelegram || "" : ""}
+        data-hours={content.support.hours || site.supportHours || "Monday through Friday"}
+        data-wa={content.support.whatsapp || ("supportWhatsapp" in site ? site.supportWhatsapp || "" : "")}
+        data-tg={content.support.telegram || ("supportTelegram" in site ? site.supportTelegram || "" : "")}
       />
       <Footer
         siteName={site.name || "Tharkoo"}
@@ -99,10 +102,26 @@ function Chrome({
         categories={catProps}
         cities={plain(topCities.map((c) => ({ slug: c.slug!, name: c.name! })))}
         links={footerLinks}
-        social={socialLinks}
+        social={content.socials.length ? content.socials : socialLinks}
+        content={content.footer}
       />
-      <AgeGate brand="Tharkoo" title="Please confirm your age before continuing" body="I am over 18 years old and I accept the terms of use of this site." yes="ACCEPT" no="Decline" />
-      <CookieBanner body={(site as { cookieBody?: string }).cookieBody} />
+      <AgeGate
+        brand="Tharkoo"
+        title={content.age.title}
+        lead={content.age.lead}
+        rest={content.age.rest}
+        terms={content.age.terms}
+        yes={content.age.yes}
+        no={content.age.no}
+        noHref={safeHref(content.age.noHref) || "https://www.google.com"}
+      />
+      <CookieBanner
+        body={content.cookies.body}
+        accept={content.cookies.accept}
+        necessary={content.cookies.necessary}
+        notice={content.cookies.notice}
+        noticeHref={safeHref(content.cookies.noticeHref) || "/cookies/"}
+      />
     </CityProvider>
   );
 }

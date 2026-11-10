@@ -2,6 +2,7 @@ import { Types, type QueryFilter } from "mongoose";
 import { cached } from "@/lib/cache";
 import { connectDb } from "@/lib/db";
 import type { ListingDoc as LegacyListing } from "@/lib/models";
+import { listingPhotos } from "@/lib/media";
 import {
   Category,
   Listing,
@@ -303,6 +304,14 @@ function ageOf(attributes?: Record<string, unknown>) {
   return typeof age === "number" ? age : undefined;
 }
 
+function detailRows(attributes?: Record<string, unknown>) {
+  if (!attributes) return [];
+  return Object.entries(attributes)
+    .filter(([key, value]) => key !== "age" && key !== "nickname" && (typeof value === "string" || typeof value === "number") && String(value).trim())
+    .slice(0, 8)
+    .map(([key, value]) => ({ label: key.replace(/[-_]/g, " "), value: String(value) }));
+}
+
 export async function buildFilter(input: ListingQuery): Promise<QueryFilter<ListingDoc> | null> {
   const [categories, locations] = await Promise.all([loadCategories(), loadLocations()]);
   const filter: Record<string, unknown> = { status: "active" };
@@ -431,7 +440,7 @@ export async function presentRows(docs: Row[], promotions: Map<string, RankPromo
     const verified = doc.badges?.includes("verified") === true;
     const bumped = doc.bumpedAt ? new Date(doc.bumpedAt) : doc.publishedAt;
     const publicId = publicIdOf(doc.slug, id);
-    const photoList = photos.get(id) ?? [];
+    const photoList = listingPhotos(categorySlug, publicId, photos.get(id) ?? []);
     const age = ageOf(doc.attributes);
     hits.push({
       ...view,
@@ -461,6 +470,7 @@ export async function presentRows(docs: Row[], promotions: Map<string, RankPromo
       districtSlug,
       place,
       photos: photoList,
+      details: detailRows(doc.attributes),
       variant,
       verified,
       lastBumpedAt: bumped ? new Date(bumped) : undefined,

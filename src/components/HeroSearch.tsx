@@ -2,7 +2,7 @@
 
 import { Search } from "lucide-react";
 
-export function HeroSearch() {
+export function HeroSearch({ label = "Search By City, Category..." }: { label?: string }) {
   return (
     <button
       type="button"
@@ -10,7 +10,7 @@ export function HeroSearch() {
       data-tk="hero-search"
       onClick={() => window.dispatchEvent(new Event("tk-open-search"))}
     >
-      <span>Search By City, Category...</span>
+      <span>{label}</span>
       <Search size={20} />
     </button>
   );

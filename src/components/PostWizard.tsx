@@ -16,6 +16,13 @@ function tidy(value: string) {
   return value.replace(/[\s-]/g, "");
 }
 
+function normalPhone(raw: string) {
+  const digits = raw.replace(/\D/g, "");
+  if (/^[6-9]\d{9}$/.test(digits)) return `+91${digits}`;
+  if (/^91[6-9]\d{9}$/.test(digits)) return `+${digits}`;
+  return tidy(raw);
+}
+
 export function PostWizard() {
   const [step, setStep] = useState(1);
   const [categories, setCategories] = useState<Cat[]>([]);
@@ -45,6 +52,7 @@ export function PostWizard() {
   const [busy, setBusy] = useState(false);
   const [done, setDone] = useState(false);
   const [photoNote, setPhotoNote] = useState("");
+  const [photos, setPhotos] = useState<string[]>([]);
   const [plans, setPlans] = useState<{ id: string; name: string; amount?: number }[]>([]);
 
   const category = categories.find((item) => item._id === categoryId);
@@ -92,7 +100,7 @@ export function PostWizard() {
     if (title.trim().length < 5 || alnum < 5) next.title = TITLE_MSG;
     if (text.trim().length < 20) next.text = "You must enter at least 20 characters";
     if (contactMode !== "email" && !tidy(phone)) next.phone = "If you want to be contacted by phone, please fill in this field";
-    else if (phone && !/^\+91[6-9]\d{9}$/.test(tidy(phone))) next.phone = "If you want to be contacted by phone, please fill in this field";
+    else if (phone && !/^\+91[6-9]\d{9}$/.test(normalPhone(phone))) next.phone = "Use +91 and 10 digits";
     if (ageField && age && (Number(age) < 18 || Number(age) > 120)) next.age = "Invalid field";
     if (!terms) next.terms = "Please, fill in this field";
     if (!adult) next.adult = "Please, fill in this field";
@@ -136,13 +144,13 @@ export function PostWizard() {
     const id = draftId || String((created.data as { id?: string })?.id || "");
     setDraftId(id);
     const contact = {
-      ...(phone ? { phone: tidy(phone) } : {}),
-      ...(whatsapp && phone ? { whatsapp: tidy(phone) } : {}),
+      ...(phone ? { phone: normalPhone(phone) } : {}),
+      ...(whatsapp && phone ? { whatsapp: normalPhone(phone) } : {}),
       ...(telegramOn && telegram ? { telegram } : {}),
     };
     const details = await api(`/api/listings/${id}`, {
       method: "PATCH",
-      body: JSON.stringify({ stage: "details", attributes: { nickname, ...attrs, ...(age ? { age } : {}) }, contact }),
+      body: JSON.stringify({ stage: "details", attributes: { ...attrs, ...(age ? { age: Number(age) } : {}) }, contact }),
     });
     setBusy(false);
     if (!details.ok) {
@@ -151,6 +159,69 @@ export function PostWizard() {
       return;
     }
     remember(id, 2);
+  }
+
+  async function uploadPhoto(file: File) {
+    if (!draftId) {
+      setPhotoNote("Save the ad details before adding a photo.");
+      return;
+    }
+    if (!["image/jpeg", "image/png", "image/webp"].includes(file.type) || file.size > 8 * 1024 * 1024) {
+      setPhotoNote("Use a JPG, PNG, or WebP photo up to 8 MB.");
+      return;
+    }
+    const signed = await api<{
+      uploadUrl: string;
+      mediaId: string;
+      mode?: string;
+      apiKey?: string;
+      timestamp?: number;
+      signature?: string;
+      folder?: string;
+      params?: Record<string, string | number>;
+    }>("/api/media/sign", {
+      method: "POST",
+      body: JSON.stringify({ listingId: draftId, contentType: file.type, byteSize: file.size, kind: "image" }),
+    });
+    if (!signed.ok) {
+      setPhotoNote(friendlyError(signed.error));
+      return;
+    }
+    if (signed.data.uploadUrl.startsWith("/")) {
+      const body = new FormData();
+      body.set("file", file);
+      body.set("mediaId", signed.data.mediaId);
+      const saved = await fetch(signed.data.uploadUrl, { method: "POST", body, credentials: "same-origin" });
+      if (!saved.ok) {
+        setPhotoNote("That photo could not be saved. Try a smaller JPG, PNG, or WebP.");
+        return;
+      }
+    } else {
+      const body = new FormData();
+      body.set("file", file);
+      body.set("api_key", signed.data.apiKey || "");
+      body.set("timestamp", String(signed.data.timestamp || ""));
+      body.set("signature", signed.data.signature || "");
+      body.set("folder", signed.data.folder || "");
+      for (const [key, value] of Object.entries(signed.data.params || {})) body.set(key, String(value));
+      const saved = await fetch(signed.data.uploadUrl, { method: "POST", body });
+      if (!saved.ok) {
+        setPhotoNote("That photo could not be saved. Try a smaller JPG, PNG, or WebP.");
+        return;
+      }
+      const done = await api("/api/media/complete", { method: "POST", body: JSON.stringify({ mediaId: signed.data.mediaId }) });
+      if (!done.ok) {
+        setPhotoNote(friendlyError(done.error));
+        return;
+      }
+    }
+    const ids = [...photos, signed.data.mediaId];
+    setPhotos(ids);
+    const attached = await api(`/api/listings/${draftId}`, {
+      method: "PATCH",
+      body: JSON.stringify({ stage: "photos", mediaIds: ids, coverMediaId: ids[0] }),
+    });
+    setPhotoNote(attached.ok ? "Photo saved." : friendlyError(attached.error));
   }
 
   async function publish() {
@@ -164,7 +235,7 @@ export function PostWizard() {
     setBusy(false);
     if (!res.ok) {
       if (res.error.code === "VERIFICATION_REQUIRED") {
-        setBanner("Verify your ID to publish");
+        setBanner("Your ID needs a quick check before this ad can go live.");
         return;
       }
       setBanner(friendlyError(res.error));
@@ -181,7 +252,7 @@ export function PostWizard() {
   if (done) {
     return (
       <div className="tk-container" style={{ padding: "24px 0 40px" }}>
-        <h1 className="tk-page-h1" data-tk="step-title">Your ad has been sent for review</h1>
+        <h1 className="tk-page-h1" data-tk="step-title">Your ad is live</h1>
         <p style={{ textAlign: "center" }}>
           <Link href="/u/account/ads/" style={{ color: "var(--accent)" }}>Your ads</Link>
           {" · "}
@@ -207,7 +278,7 @@ export function PostWizard() {
       <div aria-live="polite" className="t-small" style={{ color: "var(--danger)", margin: "12px 0" }}>
         {banner}{" "}
         {banner.startsWith("Sign in") ? <Link href="/u/login/?next=/u/post-insert/">Log in</Link> : null}
-        {banner.startsWith("Verify your ID") ? <Link href="/u/account/kyc/">Verify your ID</Link> : null}
+        {/ID needs a quick check/i.test(banner) ? <Link href="/u/account/kyc/" data-tk="verify-id">Verify ID</Link> : null}
       </div>
       {step === 1 ? (
         <>
@@ -312,25 +383,19 @@ export function PostWizard() {
                 <input
                   type="file"
                   accept="image/jpeg,image/png,image/webp"
+                  data-tk="photo-input"
                   hidden
-                  onChange={async (event) => {
+                  onChange={(event) => {
                     const file = event.target.files?.[0];
-                    if (!file || !draftId) {
-                      setPhotoNote("Photo upload is coming soon. You can add photos after publishing.");
-                      return;
-                    }
-                    const signed = await api("/api/media/sign", {
-                      method: "POST",
-                      body: JSON.stringify({ listingId: draftId, contentType: file.type, byteSize: file.size, kind: "image" }),
-                    });
-                    if (!signed.ok) setPhotoNote("Photo upload is coming soon. You can add photos after publishing.");
-                    else setPhotoNote("Photo received. You can continue.");
+                    event.target.value = "";
+                    if (file) void uploadPhoto(file);
                   }}
                 />
               </label>
-              <p className="t-small">Up to 6 photos, JPG, PNG or WebP, 8 MB each.</p>
+              <p className="t-small">JPG, PNG or WebP, 8 MB each.</p>
             </div>
-            {photoNote ? <p>{photoNote}</p> : <p className="t-small">Photo upload is coming soon. You can add photos after publishing.</p>}
+            {photos.length ? <p className="t-small" data-tk="photo-count">{photos.length} photo{photos.length === 1 ? "" : "s"} saved</p> : null}
+            {photoNote ? <p data-tk="photo-note">{photoNote}</p> : <p className="t-small">Add a photo of the item or place. People ads can use a portrait.</p>}
           </div>
           <div style={{ display: "flex", justifyContent: "space-between", marginTop: 16 }}>
             <button type="button" className="tk-btn tk-btn-outline-rose" onClick={() => remember(draftId, 1)}>BACK</button>

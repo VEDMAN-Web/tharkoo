@@ -75,6 +75,7 @@ export interface ListingDoc extends BaseDoc {
   place?: string;
   chips?: string[];
   photos?: string[];
+  details?: { label: string; value: string }[];
   photoCountVisible?: number;
   variant?: string;
   verified?: boolean;

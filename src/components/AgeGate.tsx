@@ -5,7 +5,25 @@ import Link from "next/link";
 import { Users } from "lucide-react";
 import { useFocusTrap } from "./ui/useFocusTrap";
 
-export function AgeGate({ no = "Decline" }: { brand?: string; title?: string; body?: string; yes?: string; no?: string }) {
+export function AgeGate({
+  title = "Please confirm your age before continuing",
+  lead = "I am over 18 years old",
+  rest = "and I accept the terms of use of this site.",
+  terms = "Terms and Conditions",
+  yes = "ACCEPT",
+  no = "Decline",
+  noHref = "https://www.google.com",
+}: {
+  brand?: string;
+  title?: string;
+  body?: string;
+  lead?: string;
+  rest?: string;
+  terms?: string;
+  yes?: string;
+  no?: string;
+  noHref?: string;
+}) {
   const [open, setOpen] = useState(false);
   const ref = useFocusTrap(open, () => {});
 
@@ -28,12 +46,12 @@ export function AgeGate({ no = "Decline" }: { brand?: string; title?: string; bo
           <Users size={22} color="#6A2150" />
           <span className="tk-age-pill">18+</span>
         </div>
-        <h2 id="age-title">Please confirm your age before continuing</h2>
+        <h2 id="age-title">{title}</h2>
         <p>
-          <strong>I am over 18 years old</strong> and I accept the terms of use of this site.
+          <strong>{lead}</strong> {rest}
         </p>
         <p>
-          I have read and accept the <Link href="/terms/">Terms and Conditions</Link>
+          I have read and accept the <Link href="/terms/">{terms}</Link>
         </p>
         <button
           type="button"
@@ -46,10 +64,10 @@ export function AgeGate({ no = "Decline" }: { brand?: string; title?: string; bo
             setOpen(false);
           }}
         >
-          ACCEPT
+          {yes}
         </button>
         <p>
-          <a href="https://www.google.com" style={{ color: "var(--accent)", display: "inline-block", minHeight: 24, padding: "4px 8px" }}>
+          <a href={noHref} style={{ color: "var(--accent)", display: "inline-block", minHeight: 24, padding: "4px 8px" }}>
             {no || "Decline"}
           </a>
         </p>

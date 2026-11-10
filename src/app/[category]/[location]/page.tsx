@@ -47,9 +47,11 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   };
   const title = fillTemplate(seo?.title || "{category} in {city} | Tharkoo", vars);
   const description = fillTemplate(seo?.description || `${feed.total} ${cat.name} listings in ${loc.name}.`, vars);
+  const staging = process.env.SITE_NOINDEX === "true";
+  const thin = isThin(feed.total);
   return {
-    ...pageMetadata({ title, description, path: `/${category}/${location}/`, index: !isThin(feed.total) }),
-    robots: isThin(feed.total) ? { index: false, follow: true } : { index: true, follow: true },
+    ...pageMetadata({ title, description, path: `/${category}/${location}/`, index: !thin }),
+    robots: staging ? { index: false, follow: false } : thin ? { index: false, follow: true } : { index: true, follow: true },
   };
 }
 

@@ -8,16 +8,19 @@ export function pageMetadata(opts: {
   description: string;
   path: string;
   index?: boolean;
+  follow?: boolean;
   image?: string;
 }): Metadata {
   const image = opts.image || OG;
   const url = canonical(opts.path);
-  const index = opts.index !== false;
+  const staging = process.env.SITE_NOINDEX === "true";
+  const index = !staging && opts.index !== false;
+  const follow = staging ? false : opts.follow !== false;
   return {
     title: opts.title,
     description: opts.description,
     alternates: { canonical: url },
-    robots: index ? { index: true, follow: true } : { index: false, follow: false },
+    robots: { index, follow },
     openGraph: {
       title: opts.title,
       description: opts.description,

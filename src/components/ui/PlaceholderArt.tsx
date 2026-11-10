@@ -89,7 +89,7 @@ export function PlaceholderArt({
         ))}
         <rect width="800" height="1000" fill={`url(#grain-${n})`} />
       </svg>
-      <Icon className="absolute left-1/2 top-1/2 size-10 -translate-x-1/2 -translate-y-1/2 text-[var(--primary)] opacity-70" strokeWidth={1.5} aria-hidden />
+      <Icon className="tk-icon-lg absolute left-1/2 top-1/2 size-10 -translate-x-1/2 -translate-y-1/2 text-[var(--primary)] opacity-70" strokeWidth={1.5} aria-hidden />
     </div>
   );
 }

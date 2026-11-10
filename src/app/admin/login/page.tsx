@@ -6,6 +6,7 @@ export const metadata = pageMetadata({
   description: "Sign in to the Tharkoo staff area.",
   path: "/admin/login/",
   index: false,
+  follow: false,
 });
 
 export default function AdminLogin() {

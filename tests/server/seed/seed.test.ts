@@ -19,10 +19,29 @@ import {
   LOCATION_LEVELS,
   PRODUCTS,
   DEMO_LISTING_COUNT,
+  DISTRICTS,
   TOP_CITY_SLUGS,
+  CITIES,
+  demoListings,
 } from "@/server/seed/data";
 import { dryRunSeed, formatDryRun, rollbackSeed, runSeed, SEED_BATCH } from "@/server/seed/run";
 import { clearMemoryMongo, connectMemoryMongo, disconnectMemoryMongo } from "../../setup/mongo";
+
+it("gives every city and category 12 to 20 ads and covers the Delhi districts", () => {
+  const rows = demoListings();
+  for (const city of CITIES) {
+    for (const category of CATEGORIES) {
+      const count = rows.filter((row) => row.citySlug === city[0] && row.categorySlug === category.slug).length;
+      expect(count, `${category.slug} in ${city[0]}`).toBeGreaterThanOrEqual(12);
+      expect(count, `${category.slug} in ${city[0]}`).toBeLessThanOrEqual(20);
+    }
+  }
+  for (const slug of ["central-delhi", "new-delhi", "south-delhi"]) {
+    expect(DISTRICTS.delhi?.some((district) => district[0] === slug)).toBe(true);
+    expect(rows.some((row) => row.citySlug === "delhi" && row.districtSlug === slug && row.categorySlug === "dating")).toBe(true);
+  }
+  expect(TOP_CITY_SLUGS.length).toBeGreaterThan(0);
+});
 
 beforeAll(async () => {
   if (mongoose.connection.readyState !== 0) await mongoose.disconnect();

@@ -13,7 +13,16 @@ import { safeHref } from "@/lib/sanitize";
 
 type Cat = { slug: string; name: string };
 type City = { slug: string; name: string; stateSlug?: string };
-type Social = { label: string; href: string };
+type Social = { label: string; href: string; visible?: boolean };
+type Chrome = {
+  postLabel?: string;
+  publishLabel?: string;
+  servicesLabel?: string;
+  followLabel?: string;
+  searchModalPlaceholder?: string;
+  searchSubmit?: string;
+  drawer?: Social[];
+};
 
 export function Header({
   siteName,
@@ -22,6 +31,7 @@ export function Header({
   cities,
   user = null,
   social = [],
+  chrome,
 }: {
   siteName: string;
   countryName: string;
@@ -31,6 +41,7 @@ export function Header({
   postCta?: string;
   user?: { email: string; roles: string[] } | null;
   social?: Social[];
+  chrome?: Chrome;
 }) {
   const path = usePathname() || "/";
   const { city } = useCity();
@@ -52,17 +63,22 @@ export function Header({
   }, []);
 
   useEffect(() => {
-    if (!vendor || !hasSessionHint()) return;
+    if (!vendor || path.startsWith("/u/logout") || !hasSessionHint()) return;
     const id = window.setTimeout(() => {
       api<{ user: { displayName?: string; email?: string } }>("/api/auth/me").then((res) => {
         if (res.ok) setWho(res.data.user.displayName || res.data.user.email || "");
       });
     }, 0);
     return () => window.clearTimeout(id);
-  }, [vendor]);
+  }, [path, vendor]);
 
-  const socials = social.filter((item) => item.href && safeHref(item.href) && !/google\.com\/search/i.test(item.href));
+  const socials = social.filter((item) => item.visible !== false && item.href && safeHref(item.href) && !/google\.com\/search/i.test(item.href));
   const short = who.length > 10 ? `${who.slice(0, 10)}…` : who;
+  const postLabel = chrome?.postLabel || "POST YOUR AD";
+  const drawer = (chrome?.drawer || [
+    { label: "Tharkoo Blog", href: "/blog/" },
+    { label: "Help Center", href: "/help/" },
+  ]).filter((item) => item.visible !== false && safeHref(item.href));
 
   return (
     <>
@@ -105,7 +121,7 @@ export function Header({
               ) : null}
             </div>
             <Link href="/u/post-insert/" data-tk="post-ad" className="tk-btn tk-btn-primary tk-post-desktop" prefetch={false}>
-              POST YOUR AD
+              {postLabel}
             </Link>
             <button type="button" className="tk-icon-btn tk-post-mobile" data-tk="menu-button" aria-label="Menu" onClick={() => setMenu(true)}>
               <Menu size={24} />
@@ -127,20 +143,20 @@ export function Header({
             <button type="button" className="tk-drawer-x" aria-label="Close" onClick={() => setMenu(false)}>
               <X size={26} />
             </button>
-            <p className="tk-drawer-label">Publish ad</p>
+            <p className="tk-drawer-label">{chrome?.publishLabel || "Publish ad"}</p>
             <Link href="/u/post-insert/" data-tk="post-ad" className="tk-btn tk-btn-primary" prefetch={false} onClick={() => setMenu(false)}>
-              POST YOUR AD
+              {postLabel}
             </Link>
-            <p className="tk-drawer-label">Services for you!</p>
-            <Link href="/blog/" className="tk-drawer-row" prefetch={false} onClick={() => setMenu(false)}>
-              <MessageCircle size={24} /> Tharkoo Blog
-            </Link>
-            <Link href="/help/" className="tk-drawer-row" prefetch={false} onClick={() => setMenu(false)}>
-              <CircleHelp size={24} /> Help Center
-            </Link>
+            <p className="tk-drawer-label">{chrome?.servicesLabel || "Services for you!"}</p>
+            {drawer.map((item) => (
+              <Link key={item.href + item.label} href={safeHref(item.href)} className="tk-drawer-row" prefetch={false} onClick={() => setMenu(false)}>
+                {item.href.startsWith("/blog") ? <MessageCircle size={24} /> : item.href.startsWith("/help") ? <CircleHelp size={24} /> : null}
+                {item.label}
+              </Link>
+            ))}
             {socials.length ? (
               <>
-                <p className="tk-drawer-label">Follow us</p>
+                <p className="tk-drawer-label">{chrome?.followLabel || "Follow us"}</p>
                 {socials.map((item) => (
                   <a key={item.label} className="tk-drawer-row" href={item.href} target="_blank" rel="noopener noreferrer">
                     {item.label}
@@ -151,7 +167,15 @@ export function Header({
           </div>
         </div>
       ) : null}
-      {search ? <SearchModal categories={categories} cities={cities} onClose={() => setSearch(false)} /> : null}
+      {search ? (
+        <SearchModal
+          categories={categories}
+          cities={cities}
+          placeholder={chrome?.searchModalPlaceholder}
+          submitLabel={chrome?.searchSubmit}
+          onClose={() => setSearch(false)}
+        />
+      ) : null}
     </>
   );
 }

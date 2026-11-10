@@ -4,7 +4,19 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
-export function CookieBanner({ body }: { body?: string; accept?: string; necessary?: string }) {
+export function CookieBanner({
+  body,
+  accept = "Accept all",
+  necessary = "Only necessary",
+  notice = "Cookie notice",
+  noticeHref = "/cookies/",
+}: {
+  body?: string;
+  accept?: string;
+  necessary?: string;
+  notice?: string;
+  noticeHref?: string;
+}) {
   const path = usePathname() || "/";
   const [open, setOpen] = useState(false);
   useEffect(() => {
@@ -25,7 +37,7 @@ export function CookieBanner({ body }: { body?: string; accept?: string; necessa
     <div className={`tk-cookie ${onAd ? "on-ad" : ""}`}>
       <p>
         {body || "We use cookies to keep the site reliable and remember your choices."}{" "}
-        <Link href="/cookies/">Cookie notice</Link>
+        <Link href={noticeHref}>{notice}</Link>
       </p>
       <div style={{ display: "flex", gap: 8, marginTop: 12 }}>
         <button
@@ -36,7 +48,7 @@ export function CookieBanner({ body }: { body?: string; accept?: string; necessa
             setOpen(false);
           }}
         >
-          Accept all
+          {accept}
         </button>
         <button
           type="button"
@@ -46,7 +58,7 @@ export function CookieBanner({ body }: { body?: string; accept?: string; necessa
             setOpen(false);
           }}
         >
-          Only necessary
+          {necessary}
         </button>
       </div>
     </div>

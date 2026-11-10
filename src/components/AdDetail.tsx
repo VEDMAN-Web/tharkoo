@@ -8,6 +8,7 @@ import { displayTitle, prettyPlace } from "@/lib/format";
 import { listingTagSections } from "@/lib/media";
 import { CitySync } from "./CityContext";
 import { ContactButtons, ContactProvider } from "./ContactButtons";
+import { listingPhotos } from "@/lib/media";
 import { Gallery } from "./ui/Gallery";
 import { AdCard } from "./ui/AdCard";
 import { TrackView } from "./ui/RecentlyViewed";
@@ -28,12 +29,14 @@ export function AdDetail({
   related = [],
   listingId,
   crumbs = [],
+  shareUrl,
 }: {
   ad: ListingDoc;
   categoryName: string;
   related?: ListingDoc[];
   listingId?: string;
   crumbs?: { name: string; path: string }[];
+  shareUrl: string;
 }) {
   const title = displayTitle(ad.title) || "Listing";
   const city = prettyPlace(ad.citySlug);
@@ -53,8 +56,6 @@ export function AdDetail({
       window.history.back();
     }
   }
-
-  const shareUrl = typeof window === "undefined" ? "" : `${window.location.origin}/ad/${ad.slug}/`;
 
   return (
     <ContactProvider listingSlug={ad.slug} listingId={listingId}>
@@ -98,7 +99,7 @@ export function AdDetail({
             <h1>{title}</h1>
             <ContactButtons />
           </section>
-          <Gallery photos={ad.photos || []} title={title} seed={ad.slug || title} category={ad.categorySlug} />
+          <Gallery photos={listingPhotos(ad.categorySlug, ad.publicId || ad.slug || "", ad.photos || [])} title={title} seed={ad.slug || title} category={ad.categorySlug} />
           <section className="tk-section">
             <h2><Smile size={16} /> {personal ? "About me" : "About this ad"}</h2>
             <p style={{ whiteSpace: "pre-wrap", fontSize: 14, lineHeight: 1.6 }}>{ad.description}</p>
@@ -127,6 +128,20 @@ export function AdDetail({
               </section>
             );
           })}
+          <section className="tk-section tk-hair">
+            <h2><MapPin size={16} /> Where</h2>
+            <p style={{ fontSize: 14 }}>{city}{district ? ` / ${district}` : ""}</p>
+          </section>
+          {ad.details?.length ? (
+            <section className="tk-section tk-hair">
+              <h2><Heart size={16} /> {serviceLabel(ad.categorySlug)}</h2>
+              <div className="tk-attr">
+                {ad.details.map((item) => (
+                  <span className="tk-chip" key={item.label}>{item.label}: {item.value}</span>
+                ))}
+              </div>
+            </section>
+          ) : null}
           <div className="tk-hair" />
           <h3 className="tk-contact-h">Contact me</h3>
           <div style={{ display: "flex", justifyContent: "center" }}>
@@ -135,9 +150,9 @@ export function AdDetail({
           <div className="tk-hair tk-share">
             <div>
               <p style={{ fontWeight: 700 }}>Share ad</p>
-              <a href={`https://twitter.com/intent/tweet?url=${encodeURIComponent(shareUrl || `/ad/${ad.slug}/`)}`} target="_blank" rel="noopener noreferrer">X</a>
+              <a href={`https://twitter.com/intent/tweet?url=${encodeURIComponent(shareUrl)}`} target="_blank" rel="noopener noreferrer">X</a>
               {" "}
-              <a href={`https://wa.me/?text=${encodeURIComponent(shareUrl || `/ad/${ad.slug}/`)}`} target="_blank" rel="noopener noreferrer">WhatsApp</a>
+              <a href={`https://wa.me/?text=${encodeURIComponent(shareUrl)}`} target="_blank" rel="noopener noreferrer">WhatsApp</a>
               <button type="button" onClick={async () => {
                 try {
                   await navigator.clipboard.writeText(window.location.href);

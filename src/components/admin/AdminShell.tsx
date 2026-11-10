@@ -10,6 +10,7 @@ const LINKS = [
   ["Locations", "/admin/locations/"],
   ["Promotions", "/admin/promotions/"],
   ["Homepage", "/admin/homepage/"],
+  ["Menus", "/admin/menus/"],
   ["SEO", "/admin/seo/"],
   ["Pages", "/admin/pages/"],
   ["Audit log", "/admin/audit/"],

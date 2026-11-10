@@ -26,7 +26,13 @@ const child = spawn(process.execPath, ["server.js"], {
     PORT: "4317",
     HOSTNAME: "0.0.0.0",
     SITE_NOINDEX: process.env.SITE_NOINDEX || "true",
+    STAGING_AUTO_VERIFY_EMAIL: process.env.STAGING_AUTO_VERIFY_EMAIL || "true",
     NEXT_PUBLIC_SITE_URL: "http://127.0.0.1:4317",
+    COOKIE_SECURE: process.env.COOKIE_SECURE || "false",
+    SITE_RATE_MAX: process.env.SITE_RATE_MAX || "4000",
+    SEARCH_RATE_MAX: process.env.SEARCH_RATE_MAX || "400",
+    ADMIN_BOOTSTRAP_EMAIL: process.env.ADMIN_BOOTSTRAP_EMAIL || "homepage-admin@example.test",
+    ADMIN_BOOTSTRAP_PASSWORD: process.env.ADMIN_BOOTSTRAP_PASSWORD || "HomepageAdmin1!",
   },
 });
 

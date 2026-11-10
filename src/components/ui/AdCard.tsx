@@ -4,6 +4,7 @@ import { useState } from "react";
 import { Calendar, ChevronLeft, ChevronRight, MapPin, Phone } from "lucide-react";
 import type { ListingDoc } from "@/lib/models";
 import { displayTitle, prettyPlace } from "@/lib/format";
+import { listingPhotos, peoplePortraits } from "@/lib/media";
 import { SmartImage } from "./SmartImage";
 import { api, friendlyError } from "@/lib/ui/api";
 
@@ -28,8 +29,9 @@ export function AdCard({
   const variant = variantOf(ad, featured);
   const title = displayTitle(ad.title) || "Listing";
   const href = `/ad/${ad.slug}/`;
-  const photos = (ad.photos || []).filter(Boolean);
-  const withPhoto = variant === "top" || variant === "highlight" || variant === "supertop" || variant === "star";
+  const photos = listingPhotos(ad.categorySlug, ad.publicId || ad.slug || "", ad.photos || []);
+  const people = Boolean(peoplePortraits(ad.categorySlug, ad.publicId || ad.slug || ""));
+  const withPhoto = people || variant === "top" || variant === "highlight" || variant === "supertop" || variant === "star";
   const superTop = variant === "supertop" || variant === "star";
   const [photo, setPhoto] = useState(0);
   const [shown, setShown] = useState("");
@@ -62,11 +64,11 @@ export function AdCard({
           <span className="tk-card-photo">
             <SmartImage
               src={current}
-              alt=""
+              alt={title}
               seed={ad.slug || title}
               category={ad.categorySlug}
               width={160}
-              height={234}
+              height={200}
               priority={priority}
               sizes="160px"
               className="h-full"

@@ -3,48 +3,50 @@ import Image from "next/image";
 import Link from "next/link";
 import { HeroSearch } from "@/components/HeroSearch";
 import { HomeBlocks, SkeletonGrid } from "@/components/HomeBlocks";
+import { getHomepageContent } from "@/lib/queries";
 import { pageMetadata } from "@/lib/ui/meta";
 
 export const dynamic = "force-dynamic";
 
-export const metadata = pageMetadata({
-  title: "Classifieds across India | Tharkoo",
-  description: "Browse listings for dating, friendship, meetups, wellness, and more in your city.",
-  path: "/",
-});
+export async function generateMetadata() {
+  const content = await getHomepageContent();
+  return pageMetadata({
+    title: content.seoTitle,
+    description: content.seoDescription,
+    path: "/",
+  });
+}
 
-export default function Home() {
+export default async function Home() {
+  const content = await getHomepageContent();
+  const photo = content.hero.photo;
+  const localPhoto = photo.startsWith("/");
   return (
     <>
-      <link rel="preload" as="image" href="/placeholders/hero.webp" fetchPriority="high" />
+      {localPhoto ? <link rel="preload" as="image" href={photo} fetchPriority="high" /> : null}
       <section className="tk-hero" data-tk="hero">
-        <Image
-          className="tk-hero-photo"
-          src="/placeholders/hero.webp"
-          alt=""
-          width={960}
-          height={880}
-          priority
-          sizes="42vw"
-        />
+        {localPhoto ? (
+          <Image className="tk-hero-photo" src={photo} alt="" width={960} height={880} priority sizes="42vw" />
+        ) : (
+          <img className="tk-hero-photo" src={photo} alt="" width={960} height={880} />
+        )}
         <div className="tk-hero-copy">
           <h1>
-            <span className="tk-hero-desk">Single? Taken? Doesn&apos;t matter, Tharkoo is for everyone</span>
+            <span className="tk-hero-desk">{content.hero.desktop}</span>
             <span className="tk-hero-mob">
-              Single? Taken?
-              <br />
-              Doesn&apos;t matter,
-              <br />
-              Tharkoo is
-              <br />
-              for everyone
+              {content.hero.mobileLines.map((line, index) => (
+                <span key={line}>
+                  {index ? <br /> : null}
+                  {line}
+                </span>
+              ))}
             </span>
           </h1>
         </div>
-        <HeroSearch />
+        <HeroSearch label={content.hero.searchPlaceholder} />
       </section>
       <Link href="/u/post-insert/" data-tk="post-ad" className="tk-btn tk-btn-primary tk-home-post" prefetch={false}>
-        POST YOUR AD
+        {content.hero.postLabel}
       </Link>
       <Suspense fallback={<SkeletonGrid />}>
         <HomeBlocks />

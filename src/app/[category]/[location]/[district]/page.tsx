@@ -3,6 +3,7 @@ import type { Metadata } from "next";
 import { ListingPageView } from "@/components/ListingPage";
 import {
   getCategory,
+  getCities,
   getDistricts,
   getFeed,
   getLocationBySlug,
@@ -20,15 +21,23 @@ type Props = {
   searchParams: Promise<{ page?: string; photos?: string; verified?: string }>;
 };
 
+async function cityFor(slug: string) {
+  const loc = await getLocationBySlug(slug);
+  if (loc?.kind === "city") return loc;
+  const rows = await getCities();
+  return rows.find((row) => row.slug === slug) ?? null;
+}
+
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { category, location, district } = await params;
-  const [cat, city, dist, seo, site] = await Promise.all([
+  const [cat, city, districtRows, seo, site] = await Promise.all([
     getCategory(category),
-    getLocationBySlug(location),
-    getLocationBySlug(district),
+    cityFor(location),
+    getDistricts(location),
     getSeo("location"),
     getSite(),
   ]);
+  const dist = districtRows.find((row) => row.slug === district);
   if (!cat || !city || !dist) return {};
   const vars = {
     category: cat.name,
@@ -46,12 +55,13 @@ export default async function DistrictPage({ params, searchParams }: Props) {
   const { category, location, district } = await params;
   const sp = await searchParams;
   const page = Math.max(1, Number(sp.page) || 1);
-  const [cat, city, dist] = await Promise.all([
+  const [cat, city, districtRows] = await Promise.all([
     getCategory(category),
-    getLocationBySlug(location),
-    getLocationBySlug(district),
+    cityFor(location),
+    getDistricts(location),
   ]);
-  if (!cat || city?.kind !== "city" || dist?.kind !== "district") notFound();
+  const dist = districtRows.find((row) => row.slug === district);
+  if (!cat || !city || !dist) notFound();
   const filter: Record<string, unknown> = { categorySlug: category, citySlug: location, districtSlug: district };
   if (sp.photos) Object.assign(filter, { photos: { $exists: true, $ne: [] } });
   if (sp.verified) Object.assign(filter, { verified: true });

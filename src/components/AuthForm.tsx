@@ -36,9 +36,13 @@ function AuthFormInner({ mode }: { mode: Mode }) {
 
   async function onLogin(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    setBusy(true);
     setMessage("");
     const data = new FormData(event.currentTarget);
+    if (!String(data.get("email") || "").trim() || !String(data.get("password") || "")) {
+      setMessage("Please fill in your email and password.");
+      return;
+    }
+    setBusy(true);
     const res = await api<{ user: { roles?: string[] } }>("/api/auth/login", {
       method: "POST",
       body: JSON.stringify({ email: data.get("email"), password: data.get("password") }),
@@ -51,9 +55,13 @@ function AuthFormInner({ mode }: { mode: Mode }) {
 
   async function onRegister(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    setBusy(true);
     setMessage("");
     const data = new FormData(event.currentTarget);
+    if (!String(data.get("email") || "").trim() || !String(data.get("displayName") || "").trim() || String(data.get("password") || "").length < 8 || !data.get("dateOfBirth") || data.get("acceptedTerms") !== "on" || data.get("attestedAdult") !== "on") {
+      setMessage("Please fill in every required field before creating an account.");
+      return;
+    }
+    setBusy(true);
     const res = await api("/api/auth/register", {
       method: "POST",
       body: JSON.stringify({
@@ -67,7 +75,16 @@ function AuthFormInner({ mode }: { mode: Mode }) {
     });
     setBusy(false);
     if (!res.ok) return fail(res.error);
-    setMessage("Account created. Check your inbox to confirm your email.");
+    const login = await api<{ user: { roles?: string[] } }>("/api/auth/login", {
+      method: "POST",
+      body: JSON.stringify({ email: data.get("email"), password: data.get("password") }),
+    });
+    if (!login.ok) {
+      setMessage("Account created. Check your inbox to confirm your email.");
+      return;
+    }
+    router.push(next || "/u/account/dashboard/");
+    router.refresh();
   }
 
   async function onForgot(event: React.FormEvent<HTMLFormElement>) {
@@ -106,6 +123,7 @@ function AuthFormInner({ mode }: { mode: Mode }) {
     setMessage("Email confirmed. You can log in.");
   }
 
+  const withNext = (path: string) => (next ? `${path}?next=${encodeURIComponent(next)}` : path);
   const title =
     mode === "login" ? "Log in" : mode === "register" ? "Create your account" : mode === "forgot" ? "Reset your password" : mode === "reset" ? "Choose a new password" : mode === "verify" ? "Confirm your email" : "Password expired";
 
@@ -193,14 +211,14 @@ function AuthFormInner({ mode }: { mode: Mode }) {
       </form>
       {mode === "login" ? (
         <p className="t-small" style={{ textAlign: "center", marginTop: 12 }}>
-          <Link href="/u/forgot/" style={{ color: "var(--accent)" }}>Forgot password?</Link>
+          <Link href={withNext("/u/forgot/")} style={{ color: "var(--accent)" }}>Forgot password?</Link>
           {" · "}
-          <Link href="/u/register/" style={{ color: "var(--accent)" }}>Create an account</Link>
+          <Link href={withNext("/u/register/")} style={{ color: "var(--accent)" }}>Create account</Link>
         </p>
       ) : null}
       {mode === "register" ? (
         <p className="t-small" style={{ textAlign: "center" }}>
-          Already registered? <Link href="/u/login/" style={{ color: "var(--accent)" }}>Log in</Link>
+          Already registered? <Link href={withNext("/u/login/")} style={{ color: "var(--accent)" }}>Log in</Link>
         </p>
       ) : null}
     </div>

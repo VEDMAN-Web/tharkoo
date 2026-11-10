@@ -12,9 +12,12 @@ type Region = { slug: string; name: string; id?: string };
 
 export function SearchModal({
   categories,
+  placeholder = "Search here...",
+  submitLabel = "SEARCH",
   onClose,
 }: {
   placeholder?: string;
+  submitLabel?: string;
   categories: Cat[];
   cities?: City[];
   onClose: () => void;
@@ -144,7 +147,7 @@ export function SearchModal({
                 </option>
               ))}
             </select>
-            <input data-tk="search-text" aria-label="Search here" placeholder="Search here..." value={q} onChange={(event) => setQ(event.target.value)} />
+            <input data-tk="search-text" aria-label="Search here" placeholder={placeholder} value={q} onChange={(event) => setQ(event.target.value)} />
           </div>
           {recent.length ? (
             <div className="tk-filters" aria-label="Recent searches">
@@ -208,7 +211,7 @@ export function SearchModal({
             DELETE ALL
           </button>
           <button type="submit" className="tk-btn tk-btn-rose" data-tk="search-submit">
-            <Search size={14} /> SEARCH
+            <Search size={14} /> {submitLabel}
           </button>
         </div>
       </form>

@@ -11,10 +11,18 @@ export async function generateMetadata({ params }: { params: Promise<{ category:
   const { category, tag } = await params;
   const meta = TAG_PAGES.find((item) => item.slug === tag);
   const cat = await getCategory(category);
-  if (!cat || !meta) return {};
+  if (!cat || !meta) {
+    return pageMetadata({
+      title: "Page not found | Tharkoo",
+      description: "That tag page is not on Tharkoo. Browse a category from the home page instead.",
+      path: `/${category}/tag/${tag}/`,
+      index: false,
+      follow: false,
+    });
+  }
   return pageMetadata({
     title: `${cat.name} — ${meta.label} | Tharkoo`,
-    description: `Browse ${cat.name} ads tagged ${meta.label}.`,
+    description: `Browse ${cat.name} ads tagged ${meta.label} on Tharkoo. Open a listing to see the details, photos, and how to get in touch.`,
     path: `/${category}/tag/${tag}/`,
   });
 }

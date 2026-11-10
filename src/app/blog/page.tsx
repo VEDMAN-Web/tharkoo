@@ -6,7 +6,7 @@ import { pageMetadata } from "@/lib/ui/meta";
 export const dynamic = "force-dynamic";
 export const metadata = pageMetadata({
   title: "Tharkoo Blog | Tharkoo",
-  description: "Notes from Tharkoo.",
+  description: "Notes from Tharkoo on using classifieds, staying safe when you meet someone, and posting a clear ad.",
   path: "/blog/",
 });
 

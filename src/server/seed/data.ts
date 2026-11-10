@@ -374,7 +374,8 @@ export function creditPackTable(): SeedCreditPack[] {
   return parsed;
 }
 
-export const DEMO_LISTING_COUNT = 1500;
+const ADS_PER_TOP_CATEGORY = 16;
+const ADS_PER_OTHER_CITY = 12;
 export const SEED_USER_EMAIL = "seed@tharkoo.local";
 
 const DEMO_LINES: Record<string, ReadonlyArray<readonly [string, string, Record<string, string | number>]>> = {
@@ -452,32 +453,56 @@ export interface DemoListing {
 
 export function demoListings(): DemoListing[] {
   const out: DemoListing[] = [];
-  for (let i = 0; i < DEMO_LISTING_COUNT; i += 1) {
-    const city = CITIES[i % CITIES.length];
-    const category = CATEGORIES[Math.floor(i / CITIES.length) % CATEGORIES.length];
-    if (!city || !category) throw new Error("Demo listing catalogue is short");
+  const top = new Set<string>(TOP_CITY_SLUGS);
+  let n = 0;
+  const push = (
+    city: (typeof CITIES)[number],
+    category: (typeof CATEGORIES)[number],
+    districtSlug: string | undefined,
+    promotionCode?: DemoListing["promotionCode"],
+  ) => {
     const lines = DEMO_LINES[category.slug];
-    const line = lines?.[i % (lines?.length ?? 1)];
+    const line = lines?.[n % (lines?.length ?? 1)];
     if (!line) throw new Error(`No demo copy for ${category.slug}`);
     const [titleTemplate, descriptionTemplate, attributes] = line;
-    const districts = DISTRICTS[city[0]];
-    const district = districts?.[i % (districts?.length ?? 1)];
     out.push({
-      slug: `demo-${String(i).padStart(4, "0")}`,
+      slug: `demo-${String(n).padStart(4, "0")}`,
       title: titleTemplate.split("{city}").join(city[1]),
       description: descriptionTemplate.split("{city}").join(city[1]),
       categorySlug: category.slug,
       citySlug: city[0],
-      districtSlug: district?.[0],
+      districtSlug,
       attributes,
-      verified: i % 5 === 0,
-      promotionCode: i % 100 === 0 ? DEMO_PROMOTIONS[(i / 100) % DEMO_PROMOTIONS.length] : undefined,
-      bumped: i % 17 === 0,
+      verified: n % 5 === 0,
+      promotionCode,
+      bumped: n % 17 === 0,
     });
+    n += 1;
+  };
+  for (const city of CITIES) {
+    const districts = DISTRICTS[city[0]] ?? [];
+    if (top.has(city[0])) {
+      for (const category of CATEGORIES) {
+        for (let k = 0; k < ADS_PER_TOP_CATEGORY; k += 1) {
+          const district = districts[k % Math.max(1, districts.length)];
+          const promotionCode =
+            category.slug === "dating" && k < DEMO_PROMOTIONS.length ? DEMO_PROMOTIONS[k] : undefined;
+          push(city, category, district?.[0], promotionCode);
+        }
+      }
+    } else {
+      for (const category of CATEGORIES) {
+        for (let k = 0; k < ADS_PER_OTHER_CITY; k += 1) {
+          const district = districts[k % Math.max(1, districts.length)];
+          push(city, category, district?.[0], category.slug === "dating" && k === 0 ? "top" : undefined);
+        }
+      }
+    }
   }
-  if (out.length !== DEMO_LISTING_COUNT) throw new Error("Demo listing count drifted");
   return out;
 }
+
+export const DEMO_LISTING_COUNT = demoListings().length;
 
 export interface SeedCounts {
   states: number;

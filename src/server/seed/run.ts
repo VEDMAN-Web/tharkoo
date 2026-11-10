@@ -449,7 +449,9 @@ export async function runSeed(): Promise<SeedResult> {
     walkFlags(false),
   ]);
   const listings = await seedDemoListings(false);
-  invalidateTags(["categories", "locations", "listings", "feed", "counts"]);
+  const { ensureHomepageDocument } = await import("@/lib/ui/site-store");
+  await ensureHomepageDocument();
+  invalidateTags(["categories", "locations", "listings", "feed", "counts", "site"]);
   return {
     batch: SEED_BATCH,
     backupId: backup.backupId,

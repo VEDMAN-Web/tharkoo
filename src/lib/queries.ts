@@ -15,6 +15,7 @@ import {
 import { loadCategories, categoryBySlug, countMatching, publicCategories, queryListings, type ListingQuery } from "@/server/search";
 import { cities, districts, loadLocations, locationBySlug, siblingCities, states, topCities } from "@/server/locations";
 import type { ListingDoc } from "@/lib/models";
+import { readContent } from "@/lib/ui/site-content";
 
 const PAGE_SIZE = 25;
 const THIN = 3;
@@ -38,6 +39,11 @@ export async function getSite() {
     },
     ["site"],
   );
+}
+
+export async function getHomepageContent() {
+  const site = await getSite();
+  return readContent((site as { homepage?: unknown }).homepage);
 }
 
 export async function getCategories() {

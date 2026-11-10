@@ -155,7 +155,7 @@ export function ownerView(listing: ListingDoc) {
 
 function assertTransition(from: ListingStatus, to: ListingStatus) {
   const allowed: Record<ListingStatus, ListingStatus[]> = {
-    draft: ["pending", "removed"],
+    draft: ["pending", "active", "removed"],
     pending: ["active", "rejected", "removed"],
     rejected: ["pending", "removed"],
     active: ["paused", "pending", "expired", "removed"],
@@ -471,7 +471,7 @@ export async function submitListing(
   requestId: string,
 ) {
   const listing = await owned(id, userId);
-  assertTransition(listing.status, "pending");
+  assertTransition(listing.status, "active");
   if (!listing.title.trim() || !listing.description.trim() || !listing.cityId) {
     throw new ValidationError("Invalid request", { listing: ["Title, description, and city are required"] });
   }
@@ -529,16 +529,17 @@ export async function submitListing(
     const retryAfter = Math.max(1, Math.ceil((weekStart().getTime() + 7 * 24 * 60 * 60 * 1000 - Date.now()) / 1000));
     throw new FreeLimitError(retryAfter);
   }
-  listing.status = "pending";
-  listing.seoNoindex = true;
+  listing.status = "active";
+  listing.seoNoindex = false;
+  if (!listing.publishedAt) listing.publishedAt = new Date();
   listing.expiresAt = new Date(Date.now() + LIFETIME_MS);
   listing.attestations = { ...attestations, submittedAt: new Date().toISOString() };
   listing.markModified("attestations");
   await assignSlug(listing);
   await listing.save();
   await writeVersion(listing, userId);
-  await record(userId, "user", "listing.submit", listing._id.toString(), requestId, { status: "pending" });
-  return { status: "pending" as const };
+  await record(userId, "user", "listing.submit", listing._id.toString(), requestId, { status: "active" });
+  return { status: "active" as const };
 }
 
 async function move(id: string, userId: string, to: ListingStatus, action: string, requestId: string) {
