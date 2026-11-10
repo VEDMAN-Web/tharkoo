@@ -81,15 +81,38 @@ async function dataOf(response: Response) {
   };
 }
 
-async function submit(cookie: string) {
+async function upload(cookie: string) {
   const signed = await dataOf(
     await call("user", "POST", "id/upload-url", { contentType: "image/jpeg", byteSize: 1000 }, cookie),
   );
   const assetId = String(signed.data?.assetId);
   const asset = await MediaAsset.findById(assetId);
   cloud.remote.set(asset!.objectKey, { bytes: 1000, format: "jpg" });
-  const done = await call("user", "POST", "id/complete", { assetId }, cookie);
-  return { assetId, done };
+  return assetId;
+}
+
+async function submit(cookie: string) {
+  const frontAssetId = await upload(cookie);
+  const backAssetId = await upload(cookie);
+  const selfieAssetId = await upload(cookie);
+  const done = await call(
+    "user",
+    "POST",
+    "id/complete",
+    { frontAssetId, backAssetId, selfieAssetId },
+    cookie,
+  );
+  return { frontAssetId, backAssetId, selfieAssetId, done };
+}
+
+function expectPrivate(file: { url: string; expiresAt: string }) {
+  const expiresAt = Date.parse(file.expiresAt);
+  expect(file.url).toContain("expires_at=");
+  expect(file.url).toContain("type=authenticated");
+  expect(file.url.includes("res.cloudinary.com")).toBe(false);
+  expect(file.url.includes("/image/upload/")).toBe(false);
+  expect(expiresAt).toBeGreaterThan(Date.now());
+  expect(expiresAt).toBeLessThanOrEqual(Date.now() + 120_000 + 2_000);
 }
 
 beforeAll(async () => {
@@ -195,28 +218,39 @@ describe("manual identity verification", () => {
     const owner = await account("ada@example.com");
     const other = await account("bea@example.com");
     const staff = await account("staff@example.com", ["admin"]);
-    const { assetId, done } = await submit(owner.cookie);
+    const { frontAssetId, backAssetId, selfieAssetId, done } = await submit(owner.cookie);
     const verificationId = (await IdentityVerification.findOne({ userId: owner.id }))!._id.toString();
 
-    const stolen = await call("user", "POST", "id/complete", { assetId }, other.cookie);
-    expect(stolen.status).toBe(404);
+    const stolen = await call(
+      "user",
+      "POST",
+      "id/complete",
+      { frontAssetId, backAssetId, selfieAssetId },
+      other.cookie,
+    );
+    expect(stolen.status).toBe(403);
+    expect((await dataOf(stolen)).error?.code).toBe("FORBIDDEN");
+    const missingSelfie = await call("user", "POST", "id/complete", { frontAssetId, backAssetId }, other.cookie);
+    expect(missingSelfie.status).toBe(400);
+    expect((await dataOf(missingSelfie)).error?.code).toBe("VALIDATION_ERROR");
     expect((await dataOf(await call("user", "GET", "status", undefined, other.cookie))).data).toEqual({
       status: "unsubmitted",
     });
-    expect(JSON.stringify((await dataOf(await call("user", "GET", "status", undefined, other.cookie))).data)).not.toContain(assetId);
+    expect(JSON.stringify((await dataOf(await call("user", "GET", "status", undefined, other.cookie))).data)).not.toContain(frontAssetId);
     expect((await dataOf(done)).data).toEqual({ status: "pending_review" });
 
     const first = await dataOf(await call("admin", "GET", `${verificationId}/file`, undefined, staff.cookie));
     const second = await dataOf(await call("admin", "GET", `${verificationId}/file`, undefined, staff.cookie));
-    const url = String(first.data?.url);
-    const expiresAt = Date.parse(String(first.data?.expiresAt));
-    expect(url).toContain("expires_at=");
-    expect(url).toContain("type=authenticated");
-    expect(url.includes("res.cloudinary.com")).toBe(false);
-    expect(url.includes("/image/upload/")).toBe(false);
-    expect(expiresAt).toBeGreaterThan(Date.now());
-    expect(expiresAt).toBeLessThanOrEqual(Date.now() + 120_000 + 2_000);
-    expect(String(second.data?.url)).toContain("expires_at=");
+    const files = first.data as {
+      front: { url: string; expiresAt: string };
+      back: { url: string; expiresAt: string };
+      selfie: { url: string; expiresAt: string };
+    };
+    expectPrivate(files.front);
+    expectPrivate(files.back);
+    expectPrivate(files.selfie);
+    expect(JSON.stringify(first.data).includes("res.cloudinary.com")).toBe(false);
+    expect(String((second.data as { front: { url: string } }).front.url)).toContain("expires_at=");
     expect(await AuditEvent.countDocuments({ action: "verification.view", targetId: verificationId, actorId: staff.id })).toBe(2);
 
     const denied = await call("admin", "GET", `${verificationId}/file`, undefined, other.cookie);
