@@ -6,8 +6,8 @@ This file is the source of truth for any Cursor account that continues the work.
 
 ## Assumptions (do not silently change)
 
-1. **Layout replica, original brand.** Match the reference classifieds IA, URL grid, card variants, and screen flow from `docs/prd/`. Do not copy IndiaSkokka logos, colours, photos, listing text, or trademarks. Appendix D says the look is original via design slots.
-2. **Purpose is still TBD.** Categories stay as 5 renameable slots (PRD Appendix B). Seed uses generic names so the owner can swap copy without a code change.
+1. **Layout replica, original brand.** Match the classifieds IA, URL grid, card variants, and screen flow from `docs/prd/`. Do not copy another brand's logos, colours, photos, listing text, or trademarks. Appendix D says the look is original via design slots.
+2. **Neutral catalogue.** Seed categories are the allow-list in `src/data/catalog.ts` (dating, friendship, meetups, personal ads, jobs, wellness, property, vehicles, buy and sell, pets, education). Rename there and re-seed. Do not add disallowed commercial categories.
 3. **Stack (confirmed 9 Nov 2026):** Next.js (App Router) + Node.js + MongoDB. **Vercel** hosts the Next.js app (public URL). **DigitalOcean** hosts MongoDB (Managed Database). No separate Express server — Route Handlers in this repo talk to Mongo.
 4. **No secrets required to run locally.** Docker Mongo or in-memory Mongo. Seed data is committed.
 5. **P0 public browse is slice 1.** Vendor wallet, KYC, payments, Admin, bump scheduler come after the SEO page grid works.
@@ -33,7 +33,7 @@ Footer legal links may use `data-href` later (PUB-FTR-002). Slice 1 uses normal 
 ## Slice 1 — done when
 
 1. `docker compose up -d` **or** `npm run dev` (memory Mongo) starts the site.
-2. Home shows 5 category blocks, each with top cities + “all cities”.
+2. Home shows one block per seeded category, each linking its top cities.
 3. City listing pages render ranked cards (Free / Top / Super Top / Highlight / Flash / Star).
 4. Ad pages render gallery, attributes, contact buttons, related ads, report link.
 5. 18+ gate + cookie banner.

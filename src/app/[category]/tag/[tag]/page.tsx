@@ -14,7 +14,7 @@ export default async function TagPage({ params }: { params: Promise<{ category: 
   return (
     <ListingPageView
       h1={`${cat.name} — ${meta.label}`}
-      intro={`Tag pages follow the IndiaSkokka /{category}/tag/{tag}/ pattern. Copy is editable in SEO and Categories. ${site.name}.`}
+      intro={`Browse ${cat.name} ads tagged ${meta.label}. ${site.name} is a classifieds board. Tag labels can be edited in the catalogue.`}
       crumbs={[
         { name: "India", path: "/" },
         { name: cat.name!, path: `/${category}/` },

@@ -1,4 +1,4 @@
-const ALLOWED = /^\/(placeholders|skokka)\//;
+const ALLOWED = /^\/placeholders\//;
 
 export function safePhoto(src?: string | null) {
   if (src && ALLOWED.test(src)) return src;
@@ -11,11 +11,10 @@ export function listingTagSections(tags: unknown) {
     if (!v) return [];
     return (Array.isArray(v) ? v : [v]).filter(Boolean);
   };
-  const place = asArr(t.tag2).map((x) => (x === "Incall" ? "At home" : x));
   return [
     { title: "", icon: "about" as const, items: [...asArr(t.tag1), ...asArr(t.tag7), ...asArr(t.tag5)] },
-    { title: "Services", icon: "heart" as const, items: asArr(t.tag4) },
+    { title: "Offer", icon: "heart" as const, items: asArr(t.tag4) },
     { title: "Hours", icon: "user" as const, items: asArr(t.tag3) },
-    { title: "Place of service", icon: "map" as const, items: place },
+    { title: "Where", icon: "map" as const, items: asArr(t.tag2) },
   ].filter((s) => s.items.length);
 }

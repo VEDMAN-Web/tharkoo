@@ -22,11 +22,11 @@ export function fillTemplate(template: string, vars: SeoVars) {
 export const DEFAULT_SEO = {
   home: {
     pageType: "home",
-    title: "Free classified ads and Adult meetings in India - Tharkoo",
-    description: "Tharkoo #1 Adult Classifieds in India. Browse Call Girls, Massages, Male Escorts, Transsexual and Adult Meetings. Post your ad absolutely FREE.",
-    h1: "Hot meetings in your city",
-    h2: "Find your favourite Escort in Tharkoo",
-    intro: "Welcome to Tharkoo, #1 Adult Classifieds in India. Are you looking for escort service? Browse massages, sexual meetings, escorts, independent escorts, call boys, transsexual ads and Adult Meetings. Cannot find what you're looking for? POST YOUR AD absolutely FREE!",
+    title: "Free classified ads in India | Tharkoo",
+    description: "Tharkoo is a classifieds board for Indian cities: dating, friendship, meetups, jobs, homes, vehicles, pets, and local services. Post a basic ad for free.",
+    h1: "Classifieds in your city",
+    h2: "People, work, homes, and local services",
+    intro: "Tharkoo lists classifieds across Indian cities. Choose a category, open a city, and contact the person who posted. A basic ad is free within the weekly limit.",
     footer: "New cities open over time. Posting is free within weekly limits; paid bumps move an ad to the top of the feed.",
   },
   category: {

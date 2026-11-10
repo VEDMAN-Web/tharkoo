@@ -14,12 +14,11 @@ Index a full **category × city / district** page grid and rank for `{category} 
 
 ## Positioning
 
-Same *shape* as large Indian classifieds (home category blocks, bumped feed, paid card chrome). Different purpose TBD — keep copy generic. Do not target adult/escort queries until the owner says so.
+City-by-category classifieds: home category blocks, a bumped feed, and paid card chrome. Copy stays on the neutral allow-list (dating, friendship, meetups, personal ads, jobs, wellness and spa, property, vehicles, buy and sell, pets, education). Do not write pages for disallowed commercial categories.
 
-## Competitors (layout/IA only)
+## Reference
 
-- indiaskokka.com — visual/IA reference (Cloudflare-blocked here; PRD is the spec)
-- locanto / skokka-family — category+city SEO grid pattern
+URL grid is category × city, specified in `docs/prd/`. Do not copy another site's listings, photos, or brand.
 
 ## Key pages (roles)
 
@@ -41,4 +40,4 @@ Not connected. When a Vercel domain exists, add the property and export CSVs to 
 
 ## Next SEO workflow after launch
 
-`keyword-research` on the five category names + top 20 cities — only after the owner fills Appendix B names.
+`keyword-research` on the seeded category names + top 20 cities. Stay inside the allow-list.

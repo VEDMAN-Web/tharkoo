@@ -71,15 +71,15 @@ async function main() {
     name: "Tharkoo",
     logoText: "tharkoo",
     tagline:
-      "Welcome to Tharkoo. Browse Call Girls, Massages, Male Escorts, Transsexual and Adult Meetings across Indian cities. Post your ad absolutely FREE.",
+      "Tharkoo is a classifieds board for Indian cities. Browse dating, jobs, homes, vehicles, and local services, or post a basic ad for free.",
     legalName: "SparkBeta Tech",
     countryName: "India",
     supportHours: "Mon–Fri 14:00–20:00 IST",
     supportWhatsapp: "919000000000",
     supportTelegram: "tharkoo_support",
     ageGateEnabled: true,
-    ageGateTitle: "Are you over 18?",
-    ageGateBody: "This website contains adult material. You must be 18 years or older to enter.",
+    ageGateTitle: "Are you 18 or older?",
+    ageGateBody: "<b>Tharkoo is for people 18 and older.</b> Confirm your age to browse and post classifieds.",
     ageYes: "I'm over 18",
     ageNo: "I'm under 18",
     cookieBody: "We use necessary cookies to run the site. Optional analytics stay off until you accept.",
@@ -115,8 +115,8 @@ async function main() {
           id: "hero",
           type: "hero",
           enabled: true,
-          title: "Hot meetings in your city",
-          subtitle: "Find your favourite Escort in Tharkoo",
+          title: "Classifieds in your city",
+          subtitle: "People, work, homes, and local services",
         },
         { id: "categories", type: "categories", enabled: true, cityCount: 3, moreLabel: "More cities" },
         {
@@ -132,7 +132,7 @@ async function main() {
           id: "intro",
           type: "html",
           enabled: true,
-          html: "<p>Welcome to Tharkoo, adult classifieds in India. Browse Call Girls, massages, male escorts, transsexual ads and Adult Meetings. Cannot find what you are looking for? Post your ad absolutely FREE.</p>",
+          html: "<p>Tharkoo lists dating, friendship, meetups, jobs, homes, vehicles, pets, and local services across Indian cities. Open a city page to contact the person who posted. A basic ad is free within the weekly limit.</p>",
         },
       ],
     },
@@ -198,7 +198,7 @@ async function main() {
           publicId,
           slug: `${slugify(title)}-${publicId}`,
           title,
-          description: `${name}. Independent. Direct meeting. Cash only, no advance. Available in ${city}${district ? `, ${district}` : ""}. Original demo listing for Tharkoo — not copied from another site.`,
+          description: `${name} posted a ${category.name} demo in ${city}${district ? `, ${district}` : ""}. Contact the poster directly. Do not send a deposit to a stranger. Original Tharkoo demo listing.`,
           displayName: name,
           age: 22 + ((i + n) % 16),
           categorySlug: category.slug,
@@ -211,13 +211,13 @@ async function main() {
             ? Array.from({ length: variant === "supertop" || variant === "flash" ? 3 : 1 }, (_, p) => `/placeholders/p${((i + n + p) % 8) + 1}.jpg`)
             : [],
           tags: {
-            tag1: n % 2 === 0 ? "Independent" : "Agency",
-            tag2: n % 2 === 0 ? ["Incall"] : ["Outcall"],
-            tag3: ["Evening", "Night"],
-            tag4: n % 3 === 0 ? ["Video call"] : ["Girlfriend experience"],
+            tag1: n % 2 === 0 ? "Individual" : "Business",
+            tag2: n % 2 === 0 ? ["In person"] : ["Online"],
+            tag3: ["Evening"],
+            tag4: n % 3 === 0 ? ["Video call"] : ["Chat"],
             tag5: ["Hindi", "English"],
-            tag6: ["Cash"],
-            tag7: ["Slim"],
+            tag6: ["UPI"],
+            tag7: ["Casual"],
           },
           photoCountVisible: variant === "free" ? 1 : variant === "supertop" || variant === "flash" ? 3 : variant === "star" ? 1 : 1,
           variant,
@@ -247,7 +247,7 @@ async function main() {
   await Coupon.insertMany([
     { code: "WELCOME50", label: "50 extra credits", value: "50", expiry: "31 Dec 2026", status: "active" },
   ]);
-  await BannedWord.insertMany([{ text: "escortt", matchType: "contains", scope: "title", action: "block" }]);
+  await BannedWord.insertMany([{ text: "advancefee", matchType: "contains", scope: "title", action: "block" }]);
   await FeatureFlag.insertMany([
     { key: "publishing_packs", label: "Publishing Packs", enabled: true },
     { key: "subscription", label: "Subscription", enabled: true },
@@ -260,7 +260,7 @@ async function main() {
     { name: "Star", slug: "star", benefits: "City star strip slot", credits: 400, status: "active" },
   ]);
   await Page.insertMany([
-    { slug: "about", title: "About Tharkoo", body: "Tharkoo is an adult classifieds board for India. Anyone can browse. Verified vendors post. Buyers contact vendors directly. The platform does not take a commission on deals.", status: "published" },
+    { slug: "about", title: "About Tharkoo", body: "Tharkoo is a classifieds board for Indian cities. Anyone can browse. People who post contact buyers directly. The platform does not take a commission on deals.", status: "published" },
     { slug: "terms", title: "Terms of use", body: "You must be 18+. You may not post illegal content, stolen photos, or demand deposits. Tharkoo is a classifieds board, not a party to meetings.", status: "published" },
     { slug: "privacy", title: "Privacy policy", body: "We store account, ad, and payment records to run the board. Contact data you save stays in your account until you delete it.", status: "published" },
     { slug: "cookies", title: "Cookie policy", body: "Necessary cookies keep the age gate, session and cookie choice. Analytics stay off unless you Accept all.", status: "published" },
