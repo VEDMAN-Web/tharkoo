@@ -7,7 +7,8 @@ Index only. Ana updates this file when a PR merges. The coder updates `progress/
 | T0.1 | Cur | C | merged | cursor/t0.1-ci-workflow | https://github.com/VEDMAN-Web/tharkoo/pull/1 | - | | 2026-11-10 |
 | T0.2 | Cdx | M | merged | codex/t0.2-lint-types | https://github.com/VEDMAN-Web/tharkoo/pull/2 | - | | 2026-11-10 |
 | T0.3 | Cur | M | merged | cursor/t0.3-build-harness | https://github.com/VEDMAN-Web/tharkoo/pull/3 | T0.2 | | 2026-11-10 |
-| T0.4 | Cur | C | in progress | codex/t0.4-purge-neutral | | T0.2 | | 2026-11-10 |
+| T0.4 | Cur | C | merged | codex/t0.4-purge-neutral | https://github.com/VEDMAN-Web/tharkoo/pull/5 | T0.2 | | 2026-11-10 |
+| T0.5 | Cur | C | in progress | cursor/t0.5-clear-leftovers | | T0.4 | | 2026-11-10 |
 | T1.1 | Cur | S | todo | cursor/t1.1-data-model | | T0.3 | | 2026-11-09 |
 | T1.2 | Cur | C | todo | cursor/t1.2-seed | | T1.1 | | 2026-11-09 |
 | T2.1 | Cur | S | todo | cursor/t2.1-auth | | T1.1 | | 2026-11-09 |
