@@ -1,5 +1,6 @@
 import { revalidatePath } from "next/cache";
 import { NextRequest, NextResponse } from "next/server";
+import type { Model as MongooseModel } from "mongoose";
 import { adminUnauthorized, requireStaffRequest } from "@/lib/admin-auth";
 import { connectDb } from "@/lib/db";
 import { MODEL_MAP, type ModelName } from "@/lib/models";
@@ -16,7 +17,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Unknown model" }, { status: 400 });
   }
   await connectDb();
-  const Model = MODEL_MAP[modelName];
+  const Model = MODEL_MAP[modelName] as unknown as MongooseModel<Record<string, unknown>>;
   const data = body.data ? sanitizeRecord(body.data) : {};
   let doc = null;
   if (op === "create") {

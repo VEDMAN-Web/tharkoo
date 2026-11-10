@@ -1,6 +1,6 @@
 import mongoose, { Schema } from "mongoose";
 
-const CategorySchema = new Schema(
+const CategorySchema = new Schema<CategoryDoc>(
   {
     name: String,
     slug: { type: String, unique: true },
@@ -18,7 +18,7 @@ const CategorySchema = new Schema(
   { timestamps: true },
 );
 
-const LocationSchema = new Schema(
+const LocationSchema = new Schema<LocationDoc>(
   {
     kind: { type: String, enum: ["country", "state", "city", "district"] },
     name: String,
@@ -38,7 +38,7 @@ const LocationSchema = new Schema(
 );
 LocationSchema.index({ kind: 1, slug: 1 }, { unique: true });
 
-const ListingSchema = new Schema(
+const ListingSchema = new Schema<ListingDoc>(
   {
     publicId: { type: String, unique: true },
     slug: String,
@@ -74,7 +74,7 @@ const ListingSchema = new Schema(
 );
 ListingSchema.index({ categorySlug: 1, citySlug: 1, lastBumpedAt: -1 });
 
-const SeoTemplateSchema = new Schema({
+const SeoTemplateSchema = new Schema<SeoTemplateDoc>({
   pageType: { type: String, unique: true },
   title: String,
   description: String,
@@ -84,7 +84,7 @@ const SeoTemplateSchema = new Schema({
   footer: String,
 });
 
-const SiteSchema = new Schema(
+const SiteSchema = new Schema<SiteDoc>(
   {
     key: { type: String, unique: true },
     name: String,
@@ -113,7 +113,7 @@ const SiteSchema = new Schema(
   { timestamps: true },
 );
 
-const PageSchema = new Schema(
+const PageSchema = new Schema<PageDoc>(
   {
     slug: { type: String, unique: true },
     title: String,
@@ -123,7 +123,7 @@ const PageSchema = new Schema(
   { timestamps: true },
 );
 
-const HelpArticleSchema = new Schema(
+const HelpArticleSchema = new Schema<HelpArticleDoc>(
   {
     slug: { type: String, unique: true },
     title: String,
@@ -135,7 +135,7 @@ const HelpArticleSchema = new Schema(
   { timestamps: true },
 );
 
-const BlogPostSchema = new Schema(
+const BlogPostSchema = new Schema<BlogPostDoc>(
   {
     slug: { type: String, unique: true },
     title: String,
@@ -147,7 +147,7 @@ const BlogPostSchema = new Schema(
   { timestamps: true },
 );
 
-const CreditPackSchema = new Schema({
+const CreditPackSchema = new Schema<CreditPackDoc>({
   credits: Number,
   price: Number,
   bonus: Number,
@@ -156,7 +156,7 @@ const CreditPackSchema = new Schema({
   status: { type: String, default: "active" },
 });
 
-const BannerSchema = new Schema({
+const BannerSchema = new Schema<BannerDoc>({
   slot: String,
   title: String,
   body: String,
@@ -166,7 +166,7 @@ const BannerSchema = new Schema({
   order: Number,
 });
 
-const CouponSchema = new Schema({
+const CouponSchema = new Schema<CouponDoc>({
   code: String,
   label: String,
   value: String,
@@ -174,20 +174,20 @@ const CouponSchema = new Schema({
   status: { type: String, default: "active" },
 });
 
-const BannedWordSchema = new Schema({
+const BannedWordSchema = new Schema<BannedWordDoc>({
   text: String,
   matchType: String,
   scope: String,
   action: String,
 });
 
-const FeatureFlagSchema = new Schema({
+const FeatureFlagSchema = new Schema<FeatureFlagDoc>({
   key: { type: String, unique: true },
   label: String,
   enabled: { type: Boolean, default: true },
 });
 
-const AttributeGroupSchema = new Schema({
+const AttributeGroupSchema = new Schema<AttributeGroupDoc>({
   key: String,
   label: String,
   type: String,
@@ -195,7 +195,7 @@ const AttributeGroupSchema = new Schema({
   order: Number,
 });
 
-const ProductSchema = new Schema({
+const ProductSchema = new Schema<ProductDoc>({
   name: String,
   slug: String,
   benefits: String,
@@ -203,19 +203,191 @@ const ProductSchema = new Schema({
   status: { type: String, default: "active" },
 });
 
-function model<T>(name: string, schema: Schema) {
+function model<T>(name: string, schema: Schema<T>) {
   return (mongoose.models[name] as mongoose.Model<T>) || mongoose.model<T>(name, schema);
 }
 
-export type CategoryDoc = mongoose.InferSchemaType<typeof CategorySchema> & { _id: mongoose.Types.ObjectId };
-export type LocationDoc = mongoose.InferSchemaType<typeof LocationSchema> & { _id: mongoose.Types.ObjectId };
-export type ListingDoc = mongoose.InferSchemaType<typeof ListingSchema> & { _id: mongoose.Types.ObjectId };
-export type SeoTemplateDoc = mongoose.InferSchemaType<typeof SeoTemplateSchema> & { _id: mongoose.Types.ObjectId };
-export type SiteDoc = mongoose.InferSchemaType<typeof SiteSchema> & { _id: mongoose.Types.ObjectId };
-export type PageDoc = mongoose.InferSchemaType<typeof PageSchema> & { _id: mongoose.Types.ObjectId };
-export type HelpArticleDoc = mongoose.InferSchemaType<typeof HelpArticleSchema> & { _id: mongoose.Types.ObjectId };
-export type BlogPostDoc = mongoose.InferSchemaType<typeof BlogPostSchema> & { _id: mongoose.Types.ObjectId };
-export type CreditPackDoc = mongoose.InferSchemaType<typeof CreditPackSchema> & { _id: mongoose.Types.ObjectId };
+interface BaseDoc {
+  _id?: mongoose.Types.ObjectId;
+  createdAt?: Date;
+  updatedAt?: Date;
+}
+
+export interface CategoryDoc extends BaseDoc {
+  name: string;
+  slug: string;
+  description: string;
+  icon: string;
+  color: string;
+  order: number;
+  starEnabled: boolean;
+  status: string;
+  showOnHome: boolean;
+  homeBlurb: string;
+  homeCities: string[];
+  moreLabel: string;
+}
+
+export interface LocationDoc extends BaseDoc {
+  kind: "country" | "state" | "city" | "district";
+  name: string;
+  slug: string;
+  parentSlug: string;
+  stateSlug: string;
+  citySlug: string;
+  status: string;
+  isTop: boolean;
+  sortOrder: number;
+  lat: number;
+  lng: number;
+  seoH1: string;
+  seoIntro: string;
+}
+
+export interface ListingDoc extends BaseDoc {
+  publicId?: string;
+  slug?: string;
+  title?: string;
+  description?: string;
+  displayName?: string;
+  age?: number;
+  categorySlug?: string;
+  stateSlug?: string;
+  citySlug?: string;
+  districtSlug?: string;
+  place?: string;
+  chips?: string[];
+  photos?: string[];
+  photoCountVisible?: number;
+  variant?: string;
+  verified?: boolean;
+  subscriber?: boolean;
+  lastBumpedAt?: Date;
+  publishedAt?: Date;
+  status?: string;
+  phone?: string;
+  whatsapp?: string;
+  telegram?: string;
+  emailOn?: boolean;
+  tags?: unknown;
+}
+
+export interface SeoTemplateDoc extends BaseDoc {
+  pageType: string;
+  title: string;
+  description: string;
+  h1: string;
+  h2: string;
+  intro: string;
+  footer: string;
+}
+
+export interface SiteDoc extends BaseDoc {
+  key: string;
+  name: string;
+  tagline: string;
+  legalName: string;
+  countryName: string;
+  supportHours: string;
+  supportWhatsapp: string;
+  supportTelegram: string;
+  ageGateEnabled: boolean;
+  ageGateTitle: string;
+  ageGateBody: string;
+  ageYes: string;
+  ageNo: string;
+  cookieBody: string;
+  cookieAccept: string;
+  cookieNecessary: string;
+  searchPlaceholder: string;
+  postCta: string;
+  logoText: string;
+  theme: unknown;
+  footerLinks: unknown;
+  socialLinks: unknown;
+  homepage: unknown;
+}
+
+export interface PageDoc extends BaseDoc {
+  slug: string;
+  title: string;
+  body: string;
+  status: string;
+}
+
+export interface HelpArticleDoc extends BaseDoc {
+  slug: string;
+  title: string;
+  body: string;
+  section: string;
+  order: number;
+  status: string;
+}
+
+export interface BlogPostDoc extends BaseDoc {
+  slug: string;
+  title: string;
+  body: string;
+  date: string;
+  author: string;
+  status: string;
+}
+
+export interface CreditPackDoc extends BaseDoc {
+  credits: number;
+  price: number;
+  bonus: number;
+  tag: string;
+  order: number;
+  status: string;
+}
+
+interface BannerDoc extends BaseDoc {
+  slot: string;
+  title: string;
+  body: string;
+  href: string;
+  cta: string;
+  enabled: boolean;
+  order: number;
+}
+
+interface CouponDoc extends BaseDoc {
+  code: string;
+  label: string;
+  value: string;
+  expiry: string;
+  status: string;
+}
+
+interface BannedWordDoc extends BaseDoc {
+  text: string;
+  matchType: string;
+  scope: string;
+  action: string;
+}
+
+interface FeatureFlagDoc extends BaseDoc {
+  key: string;
+  label: string;
+  enabled: boolean;
+}
+
+interface AttributeGroupDoc extends BaseDoc {
+  key: string;
+  label: string;
+  type: string;
+  options: string[];
+  order: number;
+}
+
+interface ProductDoc extends BaseDoc {
+  name: string;
+  slug: string;
+  benefits: string;
+  credits: number;
+  status: string;
+}
 
 export const Category = model<CategoryDoc>("Category", CategorySchema);
 export const Location = model<LocationDoc>("Location", LocationSchema);
@@ -226,12 +398,12 @@ export const Page = model<PageDoc>("Page", PageSchema);
 export const HelpArticle = model<HelpArticleDoc>("HelpArticle", HelpArticleSchema);
 export const BlogPost = model<BlogPostDoc>("BlogPost", BlogPostSchema);
 export const CreditPack = model<CreditPackDoc>("CreditPack", CreditPackSchema);
-export const Banner = model("Banner", BannerSchema);
-export const Coupon = model("Coupon", CouponSchema);
-export const BannedWord = model("BannedWord", BannedWordSchema);
-export const FeatureFlag = model("FeatureFlag", FeatureFlagSchema);
-export const AttributeGroup = model("AttributeGroup", AttributeGroupSchema);
-export const Product = model("Product", ProductSchema);
+export const Banner = model<BannerDoc>("Banner", BannerSchema);
+export const Coupon = model<CouponDoc>("Coupon", CouponSchema);
+export const BannedWord = model<BannedWordDoc>("BannedWord", BannedWordSchema);
+export const FeatureFlag = model<FeatureFlagDoc>("FeatureFlag", FeatureFlagSchema);
+export const AttributeGroup = model<AttributeGroupDoc>("AttributeGroup", AttributeGroupSchema);
+export const Product = model<ProductDoc>("Product", ProductSchema);
 
 export const MODEL_MAP = {
   Site,

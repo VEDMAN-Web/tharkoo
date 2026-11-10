@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import { Logo } from "./Logo";
 import { safeHtml } from "@/lib/sanitize";
 
@@ -20,6 +21,8 @@ export function AgeGate({
   const [open, setOpen] = useState(true);
 
   useEffect(() => {
+    // Browser storage is an external source and must be read after hydration.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     if (localStorage.getItem("nl-age") === "ok") setOpen(false);
   }, []);
 
@@ -44,7 +47,7 @@ export function AgeGate({
           }}
         />
         <p className="age-terms">
-          I have read and accept the <a href="/terms/">Terms and Conditions</a>
+          I have read and accept the <Link href="/terms/">Terms and Conditions</Link>
         </p>
         <button
           className="age-yes"

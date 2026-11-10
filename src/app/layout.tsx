@@ -13,7 +13,7 @@ export const metadata: Metadata = {
     "Tharkoo #1 Adult Classified site in India. Browse our categories for getting a sex meeting. Independent Girls, Massages, Male Escorts, Transsexual and Gay Dating. Can not find what you're looking for? POST YOUR AD absolutely FREE!",
 };
 
-export default function RootLayout({ children }: LayoutProps<"/">) {
+export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
     <html lang="en-IN" className="h-full">
       <body className={`${inter.className} flex min-h-full flex-col`}>

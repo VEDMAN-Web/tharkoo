@@ -30,6 +30,8 @@ export function CollectionEditor({
   }
 
   useEffect(() => {
+    // Loading intentionally synchronizes the editor with the selected model.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     load();
   }, [model]);
 

@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 
 export function CookieBanner({
   body,
@@ -15,6 +16,8 @@ export function CookieBanner({
   const [manage, setManage] = useState(false);
 
   useEffect(() => {
+    // Browser storage is an external source and must be read after hydration.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     if (localStorage.getItem("nl-cookies")) setOpen(false);
   }, []);
 
@@ -84,8 +87,8 @@ export function CookieBanner({
               Manage cookies
             </button>
             <p className="cookie-more">
-              For more information, please visit our <a href="/cookies/">Cookie Notice</a> and our{" "}
-              <a href="/privacy/">Privacy Notice</a>
+              For more information, please visit our <Link href="/cookies/">Cookie Notice</Link> and our{" "}
+              <Link href="/privacy/">Privacy Notice</Link>
             </p>
           </>
         )}
