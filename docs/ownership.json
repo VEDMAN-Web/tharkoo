@@ -58,7 +58,9 @@
         "docs/PLAN.md",
         "docs/seo/PROJECT.md"
       ],
-      "exclude": ["public/brand/**"]
+      "exclude": [
+        "public/brand/**"
+      ]
     },
     "T0.5": {
       "branchPrefix": "cursor/t0.5",
@@ -284,7 +286,9 @@
         "src/app/api/reports/**",
         "tests/server/admin/**"
       ],
-      "exclude": ["src/app/api/admin/verifications/**"]
+      "exclude": [
+        "src/app/api/admin/verifications/**"
+      ]
     },
     "T7.2": {
       "branchPrefix": "codex/t7.2",
@@ -375,6 +379,77 @@
     "T9.1": {
       "branchPrefix": "cursor/t9.1",
       "globs": [
+        "docs/ownership.json",
+        "progress/**",
+        "src/styles/**",
+        "src/app/globals.css",
+        "src/app/layout.tsx",
+        "src/app/page.tsx",
+        "src/app/loading.tsx",
+        "src/app/error.tsx",
+        "src/app/not-found.tsx",
+        "src/app/global-error.tsx",
+        "src/app/429/**",
+        "src/app/[category]/**",
+        "src/app/ad/**",
+        "src/app/search/**",
+        "src/app/cities/**",
+        "src/app/blog/**",
+        "src/app/help/**",
+        "src/app/cms/**",
+        "src/app/about/**",
+        "src/app/contact/**",
+        "src/app/cookies/**",
+        "src/app/privacy/**",
+        "src/app/terms/**",
+        "src/app/gone/**",
+        "src/app/maintenance/**",
+        "src/app/grievance/**",
+        "src/app/scam-report/**",
+        "src/app/submit-report/**",
+        "src/app/styleguide/**",
+        "src/app/u/**",
+        "src/app/admin/**",
+        "src/components/**",
+        "src/lib/media.ts",
+        "src/lib/format.ts",
+        "src/lib/ui/**",
+        "src/proxy.ts",
+        "public/brand/**",
+        "public/placeholders/**",
+        "public/logo.svg",
+        "public/favicon*",
+        "scripts/ui-smoke.mjs",
+        "scripts/make-og.mjs",
+        "docs/DESIGN.md",
+        "docs/design/**",
+        "tests/server/ui/**",
+        ".env.example",
+        "src/server/auth/**",
+        "src/server/mailer/**",
+        "src/app/api/auth/**",
+        "src/server/search/**",
+        "src/server/locations/**",
+        "src/server/models/names.ts",
+        "src/lib/models.ts",
+        "src/lib/queries.ts",
+        "src/lib/cache.ts",
+        "src/app/api/search/**",
+        "src/app/api/locations/**",
+        "src/app/api/categories/**",
+        "src/app/api/catalog/**",
+        "tests/server/search/**",
+        "tests/server/locations/**",
+        "src/server/seed/**",
+        "scripts/seed.ts",
+        "scripts/seed-v2.ts",
+        "scripts/patch-photos.ts",
+        "scripts/search-p95.ts",
+        "tests/server/seed/**",
+        "tests/server/models/models.test.ts",
+        "tests/setup/db.test.ts",
+        "docs/ownership.json",
+        "scripts/ui-shots.mjs",
         "tests/e2e/**",
         "tests/security/**",
         "scripts/load/**",
@@ -387,11 +462,16 @@
     },
     "T10.1": {
       "branchPrefix": "cursor/t10.1",
-      "globs": ["deploy/**"]
+      "globs": [
+        "deploy/**"
+      ]
     },
     "T10.2": {
       "branchPrefix": "cursor/t10.2",
-      "globs": [".github/workflows/deploy.yml", "deploy/**"]
+      "globs": [
+        ".github/workflows/deploy.yml",
+        "deploy/**"
+      ]
     },
     "T10.3": {
       "branchPrefix": "",
