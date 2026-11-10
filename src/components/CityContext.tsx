@@ -48,6 +48,8 @@ export function CityProvider({
   }, [path, cities]);
 
   useEffect(() => {
+    // Route changes intentionally reset the user-selected city override.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     if (!path.startsWith("/ad")) setCity(undefined);
   }, [path]);
 

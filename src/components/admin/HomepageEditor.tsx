@@ -73,6 +73,8 @@ export function HomepageEditor() {
     setBlocks([
       ...blocks,
       {
+        // The click handler needs a unique persisted block identifier.
+        // eslint-disable-next-line react-hooks/purity
         id: `${type}-${Date.now()}`,
         type,
         enabled: true,
