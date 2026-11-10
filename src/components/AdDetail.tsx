@@ -85,7 +85,7 @@ export function AdDetail({
             <div className="tk-summary-top">
               <p className="tk-nick">{ad.displayName || title}</p>
               <SaveButton
-                item={{ id: ad.slug || title, slug: ad.slug || "", title, place: city, at: Date.now() }}
+                item={{ id: ad.slug || title, slug: ad.slug || "", title, place: city, at: 0 }}
                 className="bg-transparent text-accent"
               />
               <span className="tk-badge-promo" style={{ position: "static" }}>
