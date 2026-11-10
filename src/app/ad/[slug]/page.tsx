@@ -38,6 +38,7 @@ export default async function AdPage({ params }: Props) {
   const row = await Listing.findOne({ slug: ad.slug }).select("_id").lean();
   const listingId = row?._id ? String(row._id) : undefined;
   const [cat, related] = await Promise.all([getCategory(ad.categorySlug || ""), getRelated(ad, 6)]);
+  const cover = safePhoto(ad.photos?.[0]);
   const city = prettyPlace(ad.citySlug);
   const catName = cat?.name || ad.categorySlug || "";
   const crumbs = [
@@ -48,6 +49,7 @@ export default async function AdPage({ params }: Props) {
   ];
   return (
     <>
+      {cover ? <link rel="preload" as="image" href={cover} fetchPriority="high" /> : null}
       <JsonLd
         data={[
           breadcrumbJsonLd(crumbs),

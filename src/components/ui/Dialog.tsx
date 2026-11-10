@@ -10,6 +10,7 @@ export function Dialog({
   children,
   sheet = false,
   scrim = true,
+  align = "end",
 }: {
   open: boolean;
   title: string;
@@ -17,6 +18,7 @@ export function Dialog({
   children: React.ReactNode;
   sheet?: boolean;
   scrim?: boolean;
+  align?: "center" | "end";
 }) {
   const ref = useRef<HTMLDivElement>(null);
   const previous = useRef<HTMLElement | null>(null);
@@ -67,10 +69,16 @@ export function Dialog({
     <div
       className={
         scrim
-          ? "fixed inset-0 z-50 flex items-end justify-center bg-black/60 sm:items-center"
+          ? `fixed inset-0 z-50 flex justify-center bg-black/60 p-4 ${align === "center" ? "items-center" : "items-end sm:items-center"}`
           : "fixed inset-x-0 bottom-0 z-50 p-3 sm:inset-0 sm:flex sm:items-end sm:justify-center sm:bg-transparent"
       }
-      onMouseDown={scrim ? onClose : undefined}
+      onMouseDown={
+        scrim
+          ? (event) => {
+              if (event.target === event.currentTarget) onClose();
+            }
+          : undefined
+      }
     >
       <div
         ref={ref}

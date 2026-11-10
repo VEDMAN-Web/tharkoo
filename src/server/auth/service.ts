@@ -136,6 +136,16 @@ async function ready() {
   await connectDb();
 }
 
+/**
+ * Staging has no mail provider. Auto-verify is allowed only when the site is
+ * also marked noindex, so a production deploy cannot turn the flag on by mistake.
+ */
+export function stagingAutoVerifyDecision(): "on" | "off" {
+  if (process.env.STAGING_AUTO_VERIFY_EMAIL !== "true") return "off";
+  if (process.env.SITE_NOINDEX === "true") return "on";
+  throw new ForbiddenError("Automatic email verification is only allowed when SITE_NOINDEX=true");
+}
+
 export async function registerUser(input: RegisterInput) {
   await ready();
   const dateOfBirth = parseDateOnly(input.dateOfBirth);
@@ -143,6 +153,7 @@ export async function registerUser(input: RegisterInput) {
   if (!isAtLeast18(dateOfBirth)) throw new VerificationRequiredError("You must be 18 or older");
   const email = input.email.toLowerCase();
   const passwordHash = await bcrypt.hash(input.password, rounds());
+  const autoVerify = stagingAutoVerifyDecision();
   try {
     const user = await User.create({
       email,
@@ -153,18 +164,21 @@ export async function registerUser(input: RegisterInput) {
       roles: ["user"],
       verificationStatus: "unsubmitted",
       status: "active",
+      ...(autoVerify === "on" ? { emailVerifiedAt: new Date() } : {}),
     });
-    const token = randomToken();
-    await EmailVerificationToken.create({
-      userId: user._id,
-      tokenHash: sha256(token),
-      expiresAt: new Date(Date.now() + VERIFY_MS),
-    });
-    await mailerFromEnv().send({
-      to: email,
-      subject: "Verify your email",
-      text: `Open ${siteOrigin()}/u/verify-email?token=${token} to verify your email.`,
-    });
+    if (autoVerify === "off") {
+      const token = randomToken();
+      await EmailVerificationToken.create({
+        userId: user._id,
+        tokenHash: sha256(token),
+        expiresAt: new Date(Date.now() + VERIFY_MS),
+      });
+      await mailerFromEnv().send({
+        to: email,
+        subject: "Verify your email",
+        text: `Open ${siteOrigin()}/u/verify-email?token=${token} to verify your email.`,
+      });
+    }
     return { userId: user._id.toString() };
   } catch (error) {
     if (isDuplicateKey(error)) throw new ConflictError("An account with that email already exists");
@@ -327,7 +341,10 @@ export async function startPhone(userId: string, phone: string) {
     codeHash: sha256(code),
     expiresAt: new Date(Date.now() + PHONE_MS),
   });
-  console.info(`[phone-otp] challenge=${doc._id.toString()} code=${code}`);
+  const smsReady = Boolean(process.env.SMS_PROVIDER?.trim() && process.env.SMS_API_KEY?.trim());
+  if (!smsReady) {
+    console.info(`[phone-otp] challenge=${doc._id.toString()} code=${code}`);
+  }
   return {
     challengeId: doc._id.toString(),
     ...(process.env.NODE_ENV === "production" ? {} : { dev: true as const }),

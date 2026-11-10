@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { headers } from "next/headers";
 import { SiteShell, loadShell } from "@/components/SiteShell";
 import { display, sans } from "@/styles/fonts";
 import { siteUrl } from "@/lib/utils";
@@ -22,13 +23,17 @@ export const metadata: Metadata = {
 
 export default async function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   const shell = await loadShell();
+  const path = (await headers()).get("x-pathname") || "/";
+  const admin = path === "/admin" || path.startsWith("/admin/");
   return (
     <html lang="en-IN" className={`${display.variable} ${sans.variable}`}>
       <body className="bg-bg text-text font-sans antialiased">
         <a href="#main" className="skip-link">
           Skip to content
         </a>
-        <SiteShell shell={shell}>{children}</SiteShell>
+        <SiteShell shell={shell} pathname={path} admin={admin}>
+          {children}
+        </SiteShell>
       </body>
     </html>
   );

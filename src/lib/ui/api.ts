@@ -65,3 +65,9 @@ const STAFF = new Set(["admin", "superadmin", "moderator", "trust_safety", "supp
 export function isStaffRole(roles: string[] | undefined) {
   return Boolean(roles?.some((role) => STAFF.has(role)));
 }
+
+/** Set on login. Public pages skip account requests when it is absent, so logged-out views stay quiet. */
+export function hasSessionHint() {
+  if (typeof document === "undefined") return false;
+  return document.cookie.split(";").some((part) => part.trim().startsWith("tk-in="));
+}

@@ -40,8 +40,12 @@ export function AdDetail({
         /* fall through to copy */
       }
     }
-    await navigator.clipboard.writeText(url);
-    setCopied("Link copied");
+    try {
+      await navigator.clipboard.writeText(url);
+      setCopied("Link copied");
+    } catch {
+      setCopied("Copy the link from the address bar.");
+    }
   }
 
   return (
@@ -111,11 +115,9 @@ export function AdDetail({
         {related.length ? (
           <section className="mt-12">
             <h2 className="t-h2">Related ads</h2>
-            <div className="mt-4 flex gap-3 overflow-x-auto">
+            <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
               {related.slice(0, 6).map((item) => (
-                <div key={item.slug} className="w-80 shrink-0">
-                  <AdCard ad={item} />
-                </div>
+                <AdCard key={item.slug} ad={item} layout="tile" />
               ))}
             </div>
           </section>

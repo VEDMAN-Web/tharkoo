@@ -1,7 +1,32 @@
+import { existsSync, readdirSync } from "node:fs";
+import path from "node:path";
 import { Types } from "mongoose";
-import { Category, Listing, Location, PromotionOrder, PromotionProduct, User } from "@/server/models";
+import { Category, Listing, Location, MediaAsset, PromotionOrder, PromotionProduct, User } from "@/server/models";
 import { textDenied } from "@/server/shared/policy";
 import { demoListings, SEED_USER_EMAIL, type DemoListing } from "@/server/seed/data";
+
+function demoWhen(index: number) {
+  const daysAgo = 1 + (index % 30);
+  return new Date(Date.now() - daysAgo * 24 * 60 * 60 * 1000);
+}
+
+function demoContact(index: number) {
+  const phone = `+9198000${String(index).padStart(5, "0")}`;
+  return {
+    phone,
+    whatsapp: phone,
+    telegram: `tharkoo${String(index).padStart(4, "0")}`,
+    acceptForm: false,
+  };
+}
+
+function photoFiles(category: string) {
+  const dir = path.join(process.cwd(), "public", "placeholders", category);
+  if (!existsSync(dir)) return [];
+  return readdirSync(dir)
+    .filter((name) => /^\d+\.webp$/.test(name))
+    .sort();
+}
 
 export async function seedDemoListings(dryRun: boolean): Promise<{ inserted: string[]; skipped: string[] }> {
   const specs = demoListings();
@@ -16,42 +41,45 @@ export async function seedDemoListings(dryRun: boolean): Promise<{ inserted: str
   const have = new Set(existing.map((row) => row.slug).filter((slug): slug is string => Boolean(slug)));
   const inserted = specs.filter((spec) => !have.has(spec.slug)).map((spec) => spec.slug);
   const skipped = specs.filter((spec) => have.has(spec.slug)).map((spec) => spec.slug);
-  if (dryRun || inserted.length === 0) return { inserted, skipped };
+  if (dryRun) return { inserted, skipped };
 
   const ownerId = await seedOwnerId();
   const pending = specs.filter((spec) => !have.has(spec.slug));
-  const categories = await Category.find().select("slug").lean();
-  const categoryId = new Map(categories.map((row) => [row.slug, row._id]));
-  const cities = await Location.find({ type: "city" }).select("slug parentId").lean();
-  const cityBySlug = new Map(cities.map((row) => [row.slug, row]));
-  const districts = await Location.find({ type: "district" }).select("slug parentId").lean();
-  const districtId = new Map(districts.map((row) => [`${String(row.parentId)}:${row.slug}`, row._id]));
+  if (pending.length > 0) {
+    const categories = await Category.find().select("slug").lean();
+    const categoryId = new Map(categories.map((row) => [row.slug, row._id]));
+    const cities = await Location.find({ type: "city" }).select("slug parentId").lean();
+    const cityBySlug = new Map(cities.map((row) => [row.slug, row]));
+    const districts = await Location.find({ type: "district" }).select("slug parentId").lean();
+    const districtId = new Map(districts.map((row) => [`${String(row.parentId)}:${row.slug}`, row._id]));
 
-  const docs = pending.map((spec) => {
-    const city = cityBySlug.get(spec.citySlug);
-    const category = categoryId.get(spec.categorySlug);
-    if (!city?._id || !category) throw new Error(`Seed listing missing place or category: ${spec.slug}`);
-    const district = spec.districtSlug ? districtId.get(`${String(city._id)}:${spec.districtSlug}`) : undefined;
-    const index = Number(spec.slug.slice(-4));
-    return {
-      ownerId,
-      status: "active" as const,
-      categoryId: category,
-      stateId: city.parentId ?? undefined,
-      cityId: city._id,
-      districtId: district,
-      title: spec.title,
-      slug: spec.slug,
-      description: spec.description,
-      attributes: spec.attributes,
-      badges: spec.verified ? ["verified"] : [],
-      publishedAt: new Date(Date.UTC(2026, 0, 1) + index * 60_000),
-      seoNoindex: true,
-    };
-  });
-  await Listing.insertMany(docs);
-  await markBumps(pending);
-  await seedPromotions(ownerId, pending);
+    const docs = pending.map((spec) => {
+      const city = cityBySlug.get(spec.citySlug);
+      const category = categoryId.get(spec.categorySlug);
+      if (!city?._id || !category) throw new Error(`Seed listing missing place or category: ${spec.slug}`);
+      const district = spec.districtSlug ? districtId.get(`${String(city._id)}:${spec.districtSlug}`) : undefined;
+      const index = Number(spec.slug.slice(-4));
+      return {
+        ownerId,
+        status: "active" as const,
+        categoryId: category,
+        stateId: city.parentId ?? undefined,
+        cityId: city._id,
+        districtId: district,
+        title: spec.title,
+        slug: spec.slug,
+        description: spec.description,
+        attributes: spec.attributes,
+        badges: spec.verified ? ["verified"] : [],
+        publishedAt: demoWhen(index),
+        contact: demoContact(index),
+        seoNoindex: true,
+      };
+    });
+    await Listing.insertMany(docs);
+    await seedPromotions(ownerId, pending);
+  }
+  await refreshDemoRows(specs, ownerId);
   return { inserted, skipped };
 }
 
@@ -78,18 +106,55 @@ async function seedOwnerId() {
   return user._id;
 }
 
-async function markBumps(specs: DemoListing[]) {
-  const bumped = specs.filter((spec) => spec.bumped);
-  if (bumped.length === 0) return;
-  await Listing.collection.bulkWrite(
-    bumped.map((spec) => {
-      const index = Number(spec.slug.slice(-4));
-      return {
-        updateOne: {
-          filter: { slug: spec.slug },
-          update: { $set: { bumpedAt: new Date(Date.UTC(2026, 0, 2) + index * 60_000) } },
+async function ensurePlaceholderAssets(ownerId: Types.ObjectId) {
+  const categories = [...new Set(demoListings().map((spec) => spec.categorySlug))];
+  const byCategory = new Map<string, Types.ObjectId[]>();
+  for (const category of categories) {
+    const ids: Types.ObjectId[] = [];
+    for (const file of photoFiles(category)) {
+      const objectKey = `/placeholders/${category}/${file}`;
+      const thumbKey = objectKey.replace(/\.webp$/, "-blur.webp");
+      await MediaAsset.updateOne(
+        { objectKey },
+        {
+          $setOnInsert: {
+            ownerId,
+            kind: "image",
+            objectKey,
+            thumbKey,
+            status: "cleared",
+            contentType: "image/webp",
+            clearedAt: new Date(),
+          },
         },
+        { upsert: true },
+      );
+      const asset = await MediaAsset.findOne({ objectKey }).select("_id");
+      if (asset) ids.push(asset._id);
+    }
+    byCategory.set(category, ids);
+  }
+  return byCategory;
+}
+
+async function refreshDemoRows(specs: DemoListing[], ownerId: Types.ObjectId) {
+  const photos = await ensurePlaceholderAssets(ownerId);
+  await Listing.collection.bulkWrite(
+    specs.map((spec) => {
+      const index = Number(spec.slug.slice(-4));
+      const pool = photos.get(spec.categorySlug) ?? [];
+      const count = pool.length ? 1 + (index % Math.min(4, pool.length)) : 0;
+      const mediaIds = pool.length ? Array.from({ length: count }, (_, offset) => pool[(index + offset) % pool.length]) : [];
+      const $set: Record<string, unknown> = {
+        publishedAt: demoWhen(index),
+        contact: demoContact(index),
       };
+      if (spec.bumped) $set.bumpedAt = $set.publishedAt;
+      if (mediaIds.length) {
+        $set.mediaIds = mediaIds;
+        $set.coverMediaId = mediaIds[0];
+      }
+      return { updateOne: { filter: { slug: spec.slug }, update: { $set } } };
     }),
   );
 }

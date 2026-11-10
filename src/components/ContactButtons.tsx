@@ -8,17 +8,20 @@ type Channel = "phone" | "whatsapp" | "telegram";
 async function reveal(slug: string | undefined, id: string | undefined, channel: Channel) {
   let listingId = id;
   if (!listingId && slug) {
-    const pub = await api<{ id: string }>(`/api/listings/${encodeURIComponent(slug)}`);
+    const pub = await api<{ id: string }>(`/api/listings/${encodeURIComponent(slug)}/`);
     if (!pub.ok) return { error: friendlyError(pub.error) };
     listingId = pub.data.id;
   }
   if (!listingId) return { error: "Contact is unavailable right now." };
-  const res = await api<{ value?: string | null; deepLink?: string | null }>(`/api/listings/${listingId}/contact-reveal`, {
+  const res = await api<{ value?: string | null; deepLink?: string | null }>(`/api/listings/${listingId}/contact-reveal/`, {
     method: "POST",
     body: JSON.stringify({ channel }),
   });
-  if (!res.ok) return { error: friendlyError(res.error) };
-  if (!res.data.value && !res.data.deepLink) return { error: "This poster has not shared that channel." };
+  if (!res.ok) {
+    const missing = res.status === 404 || res.error.code === "NOT_FOUND";
+    return { error: missing ? "This poster has not shared a contact method yet." : friendlyError(res.error) };
+  }
+  if (!res.data.value && !res.data.deepLink) return { error: "This poster has not shared a contact method yet." };
   return { value: res.data.value || "", href: res.data.deepLink || undefined };
 }
 
@@ -66,7 +69,7 @@ export function ContactButtons({
   if (revealOnly || compact) {
     return (
       <div className="min-w-0">
-        <button type="button" className="gold-btn w-full" onClick={() => open("phone")} disabled={busy === "phone"}>
+        <button type="button" className="quiet-btn w-full whitespace-nowrap" onClick={() => open("phone")} disabled={busy === "phone"}>
           {busy === "phone" ? "Please wait" : "Reveal contact"}
         </button>
         {shown.phone ? <p className="t-small mt-1 break-all">{shown.phone}</p> : null}
@@ -86,13 +89,13 @@ export function ContactButtons({
       shown[channel.id] ? (
         <a
           key={channel.id}
-          className="gold-btn min-w-0"
+          className="quiet-btn w-full whitespace-nowrap"
           href={hrefs[channel.id] || (channel.id === "phone" ? `tel:${shown[channel.id]}` : undefined)}
         >
-          <span className="truncate">{channel.id === "phone" ? "Call" : channel.label}</span>
+          <span className="whitespace-nowrap">{shown[channel.id] || channel.label}</span>
         </a>
       ) : (
-        <button key={channel.id} type="button" className="gold-btn min-w-0" onClick={() => open(channel.id)} disabled={busy === channel.id}>
+        <button key={channel.id} type="button" className="quiet-btn w-full whitespace-nowrap" onClick={() => open(channel.id)} disabled={busy === channel.id}>
           {busy === channel.id ? "…" : channel.label}
         </button>
       ),
@@ -108,7 +111,7 @@ export function ContactButtons({
   }
 
   return (
-    <div className="grid min-w-0 gap-2 sm:grid-cols-3">
+    <div className="grid min-w-0 gap-2">
       {buttons}
       {message ? <p className="t-caption text-muted">{message}</p> : null}
     </div>

@@ -1,5 +1,7 @@
 import { cookies } from "next/headers";
 import { userFromToken } from "@/server/auth/service";
+import { JsonLd } from "@/lib/jsonld";
+import { canonical } from "@/lib/seo";
 import { AgeGate } from "./AgeGate";
 import { CityProvider } from "./CityContext";
 import { CookieBanner } from "./CookieBanner";
@@ -38,9 +40,11 @@ export async function loadShell() {
 function Chrome({
   children,
   shell,
+  pathname,
 }: {
   children: React.ReactNode;
   shell: Awaited<ReturnType<typeof loadShell>>;
+  pathname: string;
 }) {
   const { site, categories, topCities, cities, user } = shell;
   const catProps = plain(categories.map((c) => ({ slug: c.slug!, name: c.name! })));
@@ -57,8 +61,18 @@ function Chrome({
       .map((l) => ({ ...l, href: safeHref(l.href) }))
       .filter((l) => l.href),
   );
+  const pageName = pathname === "/" ? site.name || "Tharkoo" : pathname;
   return (
     <CityProvider cities={cityProps}>
+      <JsonLd
+        data={{
+          "@context": "https://schema.org",
+          "@type": "WebPage",
+          name: String(pageName),
+          url: canonical(pathname),
+          isPartOf: { "@type": "WebSite", name: site.name || "Tharkoo", url: canonical("/") },
+        }}
+      />
       <Header
         siteName={(site as { logoText?: string }).logoText || site.name || "Tharkoo"}
         countryName={site.countryName || "India"}
@@ -88,9 +102,24 @@ function Chrome({
 export function SiteShell({
   children,
   shell,
+  pathname = "/",
+  admin = false,
 }: {
   children: React.ReactNode;
   shell: Awaited<ReturnType<typeof loadShell>>;
+  pathname?: string;
+  admin?: boolean;
 }) {
-  return <Chrome shell={shell}>{children}</Chrome>;
+  if (admin) {
+    return (
+      <div className="min-h-screen bg-bg text-text">
+        <main id="main">{children}</main>
+      </div>
+    );
+  }
+  return (
+    <Chrome shell={shell} pathname={pathname}>
+      {children}
+    </Chrome>
+  );
 }

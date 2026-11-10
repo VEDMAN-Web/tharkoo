@@ -1,10 +1,9 @@
 import Link from "next/link";
-import { HeroBand } from "./HeroBand";
 import { AdCard, StarStrip } from "./AdCard";
+import { SmartImage } from "./ui/SmartImage";
 import { AdCardSkeleton } from "./ui/Skeleton";
 import { Container } from "./ui/Container";
 import { Section } from "./ui/Section";
-import { PlaceholderArt } from "./ui/PlaceholderArt";
 import { RecentlyViewedRail } from "./ui/RecentlyViewed";
 import { Button } from "./ui/Button";
 import { JsonLd } from "@/lib/jsonld";
@@ -56,16 +55,20 @@ export async function HomeAbove() {
           },
         ]}
       />
-      <HeroBand
-        categories={visible.map((cat) => ({ slug: cat.slug || "", name: cat.name || "" }))}
-        cities={cities.map((city) => ({ slug: city.slug || "", name: city.name || "" }))}
-      />
-      <Section eyebrow="Catalogue" title="Browse by category" action={{ href: "/cities/", label: "View all" }}>
+      <Section eyebrow="Catalogue" title="Browse by category" action={{ href: "/cities/", label: "View all" }} className="py-8 lg:py-10">
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
           {visible.map((cat) => (
             <Link key={cat.slug} href={`/${cat.slug}/`} prefetch={false} className="flex gap-3 rounded-lg border border-line bg-surface p-3">
               <span className="size-16 shrink-0 overflow-hidden rounded-md">
-                <PlaceholderArt seed={cat.slug || cat.name || "cat"} category={cat.slug} decorative />
+                <SmartImage
+                  src={cat.slug ? `/placeholders/${cat.slug}/01.webp` : null}
+                  alt=""
+                  seed={cat.slug || cat.name || "cat"}
+                  category={cat.slug}
+                  width={128}
+                  height={128}
+                  sizes="64px"
+                />
               </span>
               <span>
                 <span className="t-h3 block">{cat.name}</span>
@@ -75,7 +78,7 @@ export async function HomeAbove() {
           ))}
         </div>
       </Section>
-      <Section eyebrow="Places" title="Popular cities">
+      <Section eyebrow="Places" title="Popular cities" className="py-8 lg:py-10">
         <div className="flex flex-wrap gap-2">
           {cityLinks.map((city) => (
             <Link key={city.slug} href={city.href} prefetch={false} className="inline-flex h-9 items-center rounded-pill border border-line px-3 t-small">
@@ -99,17 +102,17 @@ export async function HomeBelow() {
       <Container>
         <StarStrip ads={stars} />
       </Container>
-      <Section eyebrow="Latest" title="Fresh near you">
-        <div className="grid gap-4">
-          {cards.map((ad, index) => (
-            <AdCard key={ad.slug || ad.publicId} ad={ad} priority={index === 0} />
+      <Section eyebrow="Latest" title="Fresh near you" className="py-8 lg:py-10">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+          {cards.map((ad) => (
+            <AdCard key={ad.slug || ad.publicId} ad={ad} layout="tile" />
           ))}
         </div>
       </Section>
       <Container>
         <RecentlyViewedRail />
       </Container>
-      <Section title="Why Tharkoo">
+      <Section title="Why Tharkoo" className="py-8 lg:py-10">
         <div className="grid gap-4 md:grid-cols-3">
           {[
             ["Verified profiles", "A verified tick appears only after a profile check is recorded."],
@@ -148,6 +151,29 @@ export async function HomeBlocks() {
       <HomeAbove />
       <HomeBelow />
     </>
+  );
+}
+
+export async function HeroStats() {
+  const [categories, cities, counts] = await Promise.all([
+    getCategories(),
+    getCities(),
+    listingCountsByCategoryCity().catch(() => []),
+  ]);
+  const listings = counts.reduce((sum, row) => sum + row.n, 0);
+  const stats = [
+    [`${categories.length}`, categories.length === 1 ? "category" : "categories"],
+    [`${cities.length}`, cities.length === 1 ? "city" : "cities"],
+    [listings ? listings.toLocaleString("en-IN") : "0", "listings"],
+  ];
+  return (
+    <ul className="flex flex-wrap gap-x-4 gap-y-1">
+      {stats.map(([value, label]) => (
+        <li key={label} className="t-small text-muted">
+          <span className="text-gold">{value}</span> {label}
+        </li>
+      ))}
+    </ul>
   );
 }
 

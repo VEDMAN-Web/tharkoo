@@ -42,6 +42,8 @@ export function ListingPageView({
   total,
   siblingLinks,
   emptyNearby,
+  query,
+  suggestions = [],
   photos,
   verified,
 }: {
@@ -59,6 +61,8 @@ export function ListingPageView({
   noindex?: boolean;
   siblingLinks: { href: string; label: string }[];
   emptyNearby: { href: string; label: string }[];
+  query?: string;
+  suggestions?: { href: string; label: string }[];
   photos?: boolean;
   verified?: boolean;
 }) {
@@ -108,17 +112,36 @@ export function ListingPageView({
       <StarStrip ads={stars} />
       {items.length ? (
         <div className="mt-4 grid gap-4 xl:grid-cols-2">
-          {items.map((ad) => (
-            <AdCard key={ad.publicId || ad.slug} ad={ad} />
+          {items.map((ad, index) => (
+            <AdCard key={ad.publicId || ad.slug} ad={ad} priority={index === 0 && stars.length === 0} />
           ))}
         </div>
       ) : (
+        query ? (
+          <div className="mt-8">
+            {suggestions.length ? (
+              <div className="flex flex-wrap justify-center gap-2">
+                {suggestions.map((item) => (
+                  <Link key={item.href} href={item.href} prefetch={false} className="quiet-btn whitespace-nowrap">
+                    {item.label}
+                  </Link>
+                ))}
+              </div>
+            ) : null}
+            <p className="mt-4 text-center">
+              <Link href="/search/" prefetch={false} className="quiet-btn whitespace-nowrap">
+                Clear search
+              </Link>
+            </p>
+          </div>
+        ) : (
         <EmptyState
           icon="generic"
           title="No listings yet"
           body={emptyNearby.length ? "Try a nearby city, or be the first to post." : "Be the first to post in this place."}
           action={{ href: "/u/post-insert/", label: "Post the first ad" }}
         />
+        )
       )}
       {pages > 1 ? (
         <nav className="mt-6 flex flex-wrap gap-2" aria-label="Pagination">
@@ -141,7 +164,7 @@ export function ListingPageView({
           ) : null}
         </nav>
       ) : null}
-      {related.length ? (
+      {related.length >= 3 ? (
         <div className="mt-10">
           <h2 className="t-h2">Nearby</h2>
           <div className="mt-3 flex flex-wrap gap-2">

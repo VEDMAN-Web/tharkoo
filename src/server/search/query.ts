@@ -1,7 +1,6 @@
 import { Types, type QueryFilter } from "mongoose";
 import { cached } from "@/lib/cache";
 import { connectDb } from "@/lib/db";
-import { safeSearch } from "@/lib/sanitize";
 import type { ListingDoc as LegacyListing } from "@/lib/models";
 import {
   Category,
@@ -139,6 +138,77 @@ export function cleanQuery(q: string) {
     .replace(/[^a-zA-Z0-9\s-]+/g, " ")
     .replace(/\s+/g, " ")
     .trim();
+}
+
+const SYNONYMS: Record<string, string[]> = {
+  flat: ["apartment", "rent", "rental", "house"],
+  apartment: ["flat", "rent", "rental"],
+  rent: ["rental", "flat", "apartment"],
+  rental: ["rent", "flat", "apartment"],
+  house: ["flat", "apartment"],
+  job: ["jobs", "hiring", "vacancy", "vacancies"],
+  jobs: ["job", "hiring", "vacancy", "vacancies"],
+  hiring: ["job", "jobs", "vacancy", "vacancies"],
+  vacancy: ["job", "jobs", "hiring", "vacancies"],
+  vacancies: ["job", "jobs", "hiring", "vacancy"],
+};
+
+function stemToken(token: string) {
+  const out = new Set<string>([token]);
+  if (token.length > 3 && token.endsWith("s")) out.add(token.slice(0, -1));
+  else if (token.length > 2) out.add(`${token}s`);
+  return out;
+}
+
+/** One group per query token. Each group is the token plus a light stem and synonyms. */
+export function expandSearchTerms(q: string) {
+  const cleaned = cleanQuery(q).toLowerCase();
+  if (!cleaned) return [] as string[][];
+  return cleaned
+    .split(" ")
+    .filter(Boolean)
+    .map((token) => {
+      const alts = stemToken(token);
+      for (const word of [...alts]) {
+        for (const extra of SYNONYMS[word] || []) alts.add(extra);
+      }
+      return [...alts];
+    });
+}
+
+function escapeRegExp(value: string) {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
+export function searchTextMatch(
+  q: string,
+  categories: { _id?: Types.ObjectId; slug: string; name?: string }[],
+  locations: { _id?: Types.ObjectId; slug: string; name?: string; type?: string }[],
+) {
+  const groups = expandSearchTerms(q);
+  if (!groups.length) return null;
+  const words = new Set(groups.flat());
+  const categoryIds = categories
+    .filter((row) => words.has(row.slug.toLowerCase()) || words.has((row.name || "").toLowerCase()))
+    .map((row) => row._id)
+    .filter((id): id is Types.ObjectId => Boolean(id));
+  const cityIds = locations
+    .filter(
+      (row) =>
+        row.type === "city" &&
+        (words.has(row.slug.toLowerCase()) || words.has((row.name || "").toLowerCase())),
+    )
+    .map((row) => row._id)
+    .filter((id): id is Types.ObjectId => Boolean(id));
+  const clauses = groups.map((alts) => {
+    const pattern = new RegExp(alts.map(escapeRegExp).join("|"), "i");
+    return { $or: [{ title: pattern }, { description: pattern }] };
+  });
+  const text = clauses.length === 1 ? clauses[0] : { $and: clauses };
+  const or: Record<string, unknown>[] = [text];
+  if (categoryIds.length) or.push({ categoryId: { $in: categoryIds } });
+  if (cityIds.length) or.push({ cityId: { $in: cityIds } });
+  return or.length === 1 ? or[0] : { $or: or };
 }
 
 export async function loadCategories() {
@@ -320,17 +390,14 @@ export async function buildFilter(input: ListingQuery): Promise<QueryFilter<List
 async function findRows(filter: QueryFilter<ListingDoc>, q?: string): Promise<Row[]> {
   const text = q ? cleanQuery(q) : "";
   if (!text) return Listing.find(filter).lean() as Promise<Row[]>;
-  try {
-    return (await Listing.find({ ...filter, $text: { $search: text } }).lean()) as Row[];
-  } catch {
-    const pattern = new RegExp(safeSearch(text), "i");
-    const textMatch = { $or: [{ title: pattern }, { description: pattern }] };
-    if (filter.$or) {
-      const { $or, ...rest } = filter;
-      return (await Listing.find({ ...rest, $and: [{ $or }, textMatch] }).lean()) as Row[];
-    }
-    return (await Listing.find({ ...filter, ...textMatch }).lean()) as Row[];
+  const [categories, locations] = await Promise.all([loadCategories(), loadLocations()]);
+  const textMatch = searchTextMatch(text, categories, locations);
+  if (!textMatch) return Listing.find(filter).lean() as Promise<Row[]>;
+  if (filter.$or) {
+    const { $or, ...rest } = filter;
+    return (await Listing.find({ ...rest, $and: [{ $or }, textMatch] }).lean()) as Row[];
   }
+  return (await Listing.find({ ...filter, ...textMatch }).lean()) as Row[];
 }
 
 function facetsFrom(hits: PublicHit[]): SearchFacets {

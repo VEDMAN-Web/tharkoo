@@ -15,7 +15,17 @@ function fresh(ad: ListingDoc) {
   return Date.now() - new Date(raw).getTime() < 48 * 60 * 60 * 1000;
 }
 
-export function AdCard({ ad, featured, priority }: { ad: ListingDoc; featured?: boolean; priority?: boolean }) {
+export function AdCard({
+  ad,
+  featured,
+  priority,
+  layout = "row",
+}: {
+  ad: ListingDoc;
+  featured?: boolean;
+  priority?: boolean;
+  layout?: "row" | "tile";
+}) {
   const variant = featured ? "star" : ad.variant || "free";
   const title = displayTitle(ad.title) || "Listing";
   const href = `/ad/${ad.slug}/`;
@@ -24,26 +34,28 @@ export function AdCard({ ad, featured, priority }: { ad: ListingDoc; featured?: 
   const when = timeAgo(ad.publishedAt || ad.createdAt || ad.lastBumpedAt);
   const photo = ad.photos?.[0];
   const wide = superTop ? "w-36 md:w-60" : "w-36 md:w-[200px]";
+  const tile = layout === "tile";
 
   const inner = (
     <article
       className={cn(
         "relative flex min-w-0 overflow-hidden rounded-lg border border-line bg-surface shadow-sm",
+        tile && "flex-col",
         variant === "highlight" && "border-[color:var(--gold-line)] bg-[linear-gradient(180deg,var(--gold-soft),transparent_60%)]",
         variant === "top" && "border-[color:var(--gold-line)]",
         variant === "star" && "border-[color:var(--gold-line)] bg-[linear-gradient(135deg,#1c1710,#16161C)]",
       )}
     >
-      <div className={cn("relative shrink-0", wide)}>
+      <div className={cn("relative shrink-0", tile ? "w-full" : wide)}>
         <SmartImage
           src={photo}
           alt={`${title}, photo 1 of ${Math.max(ad.photos?.length || 1, 1)}`}
           seed={ad.slug || title}
           category={ad.categorySlug}
-          width={superTop ? 240 : 200}
-          height={superTop ? 300 : 250}
+          width={tile ? 800 : superTop ? 240 : 200}
+          height={tile ? 600 : superTop ? 300 : 250}
           priority={priority}
-          sizes="(min-width: 768px) 240px, 144px"
+          sizes={tile ? "(min-width: 1280px) 25vw, (min-width: 1024px) 33vw, (min-width: 640px) 50vw, 100vw" : "(min-width: 768px) 240px, 144px"}
           className="h-full"
         />
         <div className="absolute left-2 top-2 z-10 flex flex-col items-start gap-1">
@@ -88,8 +100,10 @@ export function AdCard({ ad, featured, priority }: { ad: ListingDoc; featured?: 
           {when ? ` · ${when}` : ""}
           {ad.verified ? " · Verified" : ""}
         </p>
-        {ad.description ? <p className="t-small hidden text-muted md:line-clamp-2">{ad.description}</p> : null}
-        {superTop ? (
+        {ad.description && !tile ? <p className="t-small hidden text-muted md:line-clamp-2">{ad.description}</p> : null}
+        {tile ? (
+          <span className="quiet-btn pointer-events-none mt-auto w-fit whitespace-nowrap">View</span>
+        ) : superTop ? (
           <div className="relative z-10 mt-auto">
             <ContactButtons listingSlug={ad.slug} revealOnly />
           </div>
@@ -111,11 +125,9 @@ export function StarStrip({ ads }: { ads: ListingDoc[] }) {
   return (
     <section className="py-6" aria-label="Star picks">
       <h2 className="t-h2 mb-4">Star picks</h2>
-      <div className="flex gap-3 overflow-x-auto lg:grid lg:grid-cols-3 lg:overflow-visible">
-        {ads.map((ad) => (
-          <div key={ad.slug || ad.publicId} className="w-[280px] shrink-0 lg:w-auto">
-            <AdCard ad={ad} featured />
-          </div>
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        {ads.map((ad, index) => (
+          <AdCard key={ad.slug || ad.publicId} ad={ad} featured layout="tile" priority={index === 0} />
         ))}
       </div>
     </section>

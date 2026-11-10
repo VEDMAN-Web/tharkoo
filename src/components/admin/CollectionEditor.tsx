@@ -73,30 +73,30 @@ export function CollectionEditor({
 
   return (
     <div className="grid gap-4 lg:grid-cols-2">
-      <div className="bg-white p-3">
+      <div className="rounded-lg border border-line bg-surface p-3 text-text">
         <div className="mb-2 flex items-center justify-between">
           <h2 className="font-bold">{title || model}</h2>
           <button type="button" className="gold-btn" onClick={create}>
             New
           </button>
         </div>
-        {err ? <p className="text-[13px] text-[#e20044]">{err}</p> : null}
-        {!rows.length ? <p className="text-[13px] text-[#777]">No records yet.</p> : null}
-        <ul className="max-h-[70vh] overflow-auto text-[13px]">
+        {err ? <p className="t-small text-danger">{err}</p> : null}
+        {!rows.length ? <p className="t-small text-muted">No records yet.</p> : null}
+        <ul className="max-h-[70vh] overflow-auto t-small">
           {rows.map((row) => (
             <li key={String(row._id)}>
-              <button type="button" className="w-full border-b px-1 py-2 text-left hover:bg-[#f5f5f5]" onClick={() => open(row)}>
+              <button type="button" className="w-full border-b border-line px-1 py-2 text-left hover:bg-surface-2" onClick={() => open(row)}>
                 {summary ? summary(row) : String(row.name || row.title || row.slug || row.key || row.code || row._id)}
               </button>
             </li>
           ))}
         </ul>
       </div>
-      <div className="bg-white p-3">
+      <div className="rounded-lg border border-line bg-surface p-3 text-text">
         {edit ? (
           <>
-            <p className="mb-2 text-[12px] text-[#777]">JSON editor — every field is live on the site after Save.</p>
-            <textarea value={json} onChange={(e) => setJson(e.target.value)} rows={22} className="w-full border font-mono text-[12px]" />
+            <p className="mb-2 t-caption text-muted">JSON editor — every field is live on the site after Save.</p>
+            <textarea value={json} onChange={(e) => setJson(e.target.value)} rows={22} className="w-full rounded-md border border-line bg-bg p-2 font-mono text-[12px] text-text" />
             <div className="mt-2 flex gap-2">
               <button type="button" className="gold-btn" onClick={save}>
                 Save
@@ -104,14 +104,14 @@ export function CollectionEditor({
               <button type="button" className="quiet-btn" onClick={() => setEdit(null)}>
                 Cancel
               </button>
-              <button type="button" className="text-[13px] text-[#e20044]" onClick={() => remove(String(edit._id))}>
+              <button type="button" className="t-small text-danger" onClick={() => remove(String(edit._id))}>
                 Delete
               </button>
             </div>
-            {msg ? <p className="mt-2 text-[13px] text-[var(--success)]">{msg}</p> : null}
+            {msg ? <p className="mt-2 t-small text-[var(--success)]">{msg}</p> : null}
           </>
         ) : (
-          <p className="text-[13px] text-[#777]">Select a record or create one. Saving writes Mongo and refreshes the public site.</p>
+          <p className="t-small text-muted">Select a record or create one. Saving writes Mongo and refreshes the public site.</p>
         )}
       </div>
     </div>

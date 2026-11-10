@@ -108,7 +108,7 @@ export function HomepageEditor() {
 
   return (
     <div className="grid gap-4">
-      <section className="bg-white p-4">
+      <section className="rounded-lg border border-line bg-surface p-4 text-text">
         <h2 className="font-bold">Site chrome (header, age gate, cookies, footer)</h2>
         <div className="mt-3 grid gap-2 md:grid-cols-2">
           {Object.entries(site).map(([k, v]) => (
@@ -120,7 +120,7 @@ export function HomepageEditor() {
         </div>
       </section>
 
-      <section className="bg-white p-4">
+      <section className="rounded-lg border border-line bg-surface p-4 text-text">
         <h2 className="font-bold">Theme colours</h2>
         <div className="mt-3 grid grid-cols-2 gap-2 md:grid-cols-4">
           {Object.entries(theme).map(([k, v]) => (
@@ -135,7 +135,7 @@ export function HomepageEditor() {
         </div>
       </section>
 
-      <section className="bg-white p-4">
+      <section className="rounded-lg border border-line bg-surface p-4 text-text">
         <div className="flex flex-wrap items-center justify-between gap-2">
           <h2 className="font-bold">Homepage blocks (order = live homepage)</h2>
           <div className="flex flex-wrap gap-1 text-[12px]">
@@ -161,7 +161,7 @@ export function HomepageEditor() {
                 </label>
                 <button type="button" className="quiet-btn" onClick={() => move(i, -1)}>Up</button>
                 <button type="button" className="quiet-btn" onClick={() => move(i, 1)}>Down</button>
-                <button type="button" className="text-[12px] text-[#e20044]" onClick={() => setBlocks(blocks.filter((x) => x.id !== b.id))}>
+                <button type="button" className="t-caption text-danger" onClick={() => setBlocks(blocks.filter((x) => x.id !== b.id))}>
                   Remove
                 </button>
               </div>
@@ -189,7 +189,7 @@ export function HomepageEditor() {
                   <label className="field">More cities label <input value={b.moreLabel || ""} onChange={(e) => {
                     const next = [...blocks]; next[i] = { ...b, moreLabel: e.target.value }; setBlocks(next);
                   }} /></label>
-                  <p className="text-[12px] text-[#777] md:col-span-2">Category names, colours, blurbs and featured cities are edited under Categories. Turn a category off the home with showOnHome.</p>
+                  <p className="t-caption text-muted md:col-span-2">Category names, colours, blurbs and featured cities are edited under Categories. Turn a category off the home with showOnHome.</p>
                 </div>
               ) : null}
               {b.type === "html" ? (
@@ -210,7 +210,7 @@ export function HomepageEditor() {
           Save homepage &amp; chrome
         </button>
         {msg ? <span className="text-[13px] text-[var(--success)]">{msg}</span> : null}
-        {err ? <span className="text-[13px] text-[#e20044]">{err}</span> : null}
+        {err ? <span className="t-small text-danger">{err}</span> : null}
       </div>
     </div>
   );

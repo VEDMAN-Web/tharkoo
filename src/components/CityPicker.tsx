@@ -36,7 +36,7 @@ export function CityPicker({
   }
 
   return (
-    <Dialog open title="Choose a city" onClose={onClose} sheet>
+    <Dialog open title="Choose a city" onClose={onClose} align="center">
       <h2 className="t-h2">Choose a city</h2>
       <input
         autoFocus

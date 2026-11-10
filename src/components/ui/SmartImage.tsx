@@ -36,16 +36,21 @@ export function SmartImage({
   return (
     <div
       className={cn("relative overflow-hidden bg-[var(--surface-2)]", className)}
-      style={{ aspectRatio: `${width} / ${height}`, borderRadius: rounded }}
+      style={{
+        aspectRatio: `${width} / ${height}`,
+        borderRadius: rounded,
+      }}
     >
       {show ? (
         <Image
           src={safe as string}
           alt={alt}
-          fill
+          width={width}
+          height={height}
           sizes={sizes || `${width}px`}
           priority={priority}
-          className="object-cover"
+          decoding={priority ? "sync" : "async"}
+          className="h-full w-full object-cover"
           onLoad={() => setLoaded(true)}
           onError={() => setFailed(true)}
         />

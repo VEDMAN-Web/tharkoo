@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { VendorShell, Tile } from "./VendorShell";
-import { api } from "@/lib/ui/api";
+import { api, hasSessionHint } from "@/lib/ui/api";
 import { EmptyState } from "../ui/EmptyState";
 import { displayTitle } from "@/lib/format";
 import { readSaved, type SavedItem } from "../ui/SaveButton";
@@ -19,16 +19,23 @@ export function Dashboard({ locked = false }: { locked?: boolean }) {
   const [signedOut, setSignedOut] = useState(false);
 
   useEffect(() => {
-    api<Me>("/api/auth/me").then((res) => {
-      if (!res.ok) setSignedOut(true);
-      else setName(res.data.user.displayName || res.data.user.email || "");
-    });
-    api<Own>("/api/listings").then((res) => {
-      if (res.ok) setAds(res.data.total);
-    });
-    api<{ balance: number }>("/api/wallet").then((res) => {
-      if (res.ok) setBalance(res.data.balance);
-    });
+    const id = window.setTimeout(() => {
+      if (!hasSessionHint()) {
+        setSignedOut(true);
+        return;
+      }
+      api<Me>("/api/auth/me").then((res) => {
+        if (!res.ok) setSignedOut(true);
+        else setName(res.data.user.displayName || res.data.user.email || "");
+      });
+      api<Own>("/api/listings").then((res) => {
+        if (res.ok) setAds(res.data.total);
+      });
+      api<{ balance: number }>("/api/wallet").then((res) => {
+        if (res.ok) setBalance(res.data.balance);
+      });
+    }, 0);
+    return () => window.clearTimeout(id);
   }, []);
 
   return (
@@ -67,10 +74,17 @@ export function AdsList() {
   const [rows, setRows] = useState<Own["items"] | null>(null);
   const [signedOut, setSignedOut] = useState(false);
   useEffect(() => {
-    api<Own>("/api/listings").then((res) => {
-      if (!res.ok) setSignedOut(true);
-      else setRows(res.data.items || []);
-    });
+    const id = window.setTimeout(() => {
+      if (!hasSessionHint()) {
+        setSignedOut(true);
+        return;
+      }
+      api<Own>("/api/listings").then((res) => {
+        if (!res.ok) setSignedOut(true);
+        else setRows(res.data.items || []);
+      });
+    }, 0);
+    return () => window.clearTimeout(id);
   }, []);
   return (
     <VendorShell title="Your ads">

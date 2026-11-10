@@ -8,10 +8,16 @@ export function CookieBanner({ body }: { body?: string; accept?: string; necessa
   const path = usePathname() || "/";
   const [open, setOpen] = useState(false);
   useEffect(() => {
-    const id = window.setTimeout(() => {
+    function maybe() {
+      if (localStorage.getItem("nl-age") !== "ok") return;
       if (!localStorage.getItem("nl-cookies")) setOpen(true);
-    }, 0);
-    return () => window.clearTimeout(id);
+    }
+    const id = window.setTimeout(maybe, 0);
+    window.addEventListener("tk-age-ok", maybe);
+    return () => {
+      window.clearTimeout(id);
+      window.removeEventListener("tk-age-ok", maybe);
+    };
   }, []);
   if (!open) return null;
   const onAd = path.startsWith("/ad/");

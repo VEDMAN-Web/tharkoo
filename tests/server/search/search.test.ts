@@ -239,6 +239,17 @@ describe("public search", () => {
     const text = await queryListings({ q: "bicycle", pageSize: 20 });
     expect(text.hits.map((hit) => hit.slug).sort()).toEqual(["bike-mumbai", "bike-role"]);
 
+    await listing({
+      ...ids(geo),
+      title: "Apartment for rent",
+      slug: "flat-rent",
+    });
+    const flats = await queryListings({ q: "FLAT", pageSize: 20 });
+    expect(flats.hits.map((hit) => hit.slug)).toContain("flat-rent");
+    const hiring = await queryListings({ q: "hiring", pageSize: 20 });
+    expect(hiring.hits.map((hit) => hit.slug)).toContain("flat-rent");
+    expect(hiring.hits.map((hit) => hit.slug)).not.toContain("bike-mumbai");
+
     const category = await queryListings({ categorySlug: "jobs", citySlug: "pune", pageSize: 20 });
     expect(category.hits.every((hit) => hit.categorySlug === "jobs" && hit.citySlug === "pune")).toBe(true);
     expect(category.hits.map((hit) => hit.slug)).not.toContain("bike-mumbai");

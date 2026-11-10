@@ -36,8 +36,14 @@ export default async function SearchPage({
   const categories = await getCategories();
   return (
     <ListingPageView
-      h1={sp.q ? `Results for “${sp.q}”` : "Search results"}
-      intro="Try a category if nothing matches yet."
+      h1={sp.q && feed.total === 0 ? `No results for “${sp.q}”` : sp.q ? `Results for “${sp.q}”` : "Search results"}
+      intro={
+        sp.q && feed.total === 0
+          ? "Try another word, or open a popular category."
+          : sp.q
+            ? `Matches for “${sp.q}” across titles, descriptions, categories, and cities.`
+            : "Try a category if nothing matches yet."
+      }
       crumbs={[
         { name: "India", path: "/" },
         { name: "Search", path: "/search/" },
@@ -49,8 +55,10 @@ export default async function SearchPage({
       pages={feed.pages}
       total={feed.total}
       noindex
-      siblingLinks={categories.slice(0, 8).map((cat) => ({ href: `/${cat.slug}/`, label: cat.name || cat.slug || "Category" }))}
-      emptyNearby={categories.slice(0, 6).map((cat) => ({ href: `/${cat.slug}/`, label: cat.name || "" }))}
+      siblingLinks={[]}
+      emptyNearby={[]}
+      query={sp.q || ""}
+      suggestions={categories.slice(0, 6).map((cat) => ({ href: `/${cat.slug}/`, label: cat.name || cat.slug || "Category" }))}
       photos={sp.photos === "1"}
       verified={sp.verified === "1"}
     />

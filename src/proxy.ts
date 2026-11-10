@@ -12,6 +12,12 @@ function skipLimiter(req: NextRequest) {
   return false;
 }
 
+function nextWithPath(req: NextRequest) {
+  const headers = new Headers(req.headers);
+  headers.set("x-pathname", req.nextUrl.pathname);
+  return NextResponse.next({ request: { headers } });
+}
+
 export async function proxy(req: NextRequest) {
   const path = req.nextUrl.pathname;
   const cronPost = req.method === "POST" && path.startsWith("/api/cron/");
@@ -21,7 +27,7 @@ export async function proxy(req: NextRequest) {
       { status: 403 },
     );
   }
-  if (skipLimiter(req)) return NextResponse.next();
+  if (skipLimiter(req)) return nextWithPath(req);
   const ip = clientKey(req.headers);
   const search = path.startsWith("/search") || path.startsWith("/api/catalog");
   const key = `${ip}:${search ? "search" : "site"}`;
@@ -37,7 +43,7 @@ export async function proxy(req: NextRequest) {
     ok = allowRequest(key, max, 60_000);
   }
   if (!ok) return NextResponse.json({ error: "Too many requests" }, { status: 429 });
-  return NextResponse.next();
+  return nextWithPath(req);
 }
 
 export const config = {

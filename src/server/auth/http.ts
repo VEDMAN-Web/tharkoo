@@ -17,6 +17,8 @@ export function cookieSecure() {
   return process.env.NODE_ENV === "production";
 }
 
+export const SESSION_HINT = "tk-in";
+
 export function sessionCookieHeader(token: string, secure = cookieSecure()) {
   const parts = [
     `${SESSION_COOKIE}=${encodeURIComponent(token)}`,
@@ -29,8 +31,21 @@ export function sessionCookieHeader(token: string, secure = cookieSecure()) {
   return parts.join("; ");
 }
 
+/** Readable flag so public pages can skip account fetches when nobody is signed in. */
+export function sessionHintCookie(secure = cookieSecure()) {
+  const parts = [`${SESSION_HINT}=1`, "Path=/", "SameSite=Lax", `Max-Age=${SESSION_MAX_AGE}`];
+  if (secure) parts.push("Secure");
+  return parts.join("; ");
+}
+
 export function clearSessionCookieHeader(secure = cookieSecure()) {
   const parts = [`${SESSION_COOKIE}=`, "Path=/", "HttpOnly", "SameSite=Lax", "Max-Age=0"];
+  if (secure) parts.push("Secure");
+  return parts.join("; ");
+}
+
+export function clearSessionHintCookie(secure = cookieSecure()) {
+  const parts = [`${SESSION_HINT}=`, "Path=/", "SameSite=Lax", "Max-Age=0"];
   if (secure) parts.push("Secure");
   return parts.join("; ");
 }

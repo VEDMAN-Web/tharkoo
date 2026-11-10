@@ -11,6 +11,20 @@ type City = { id: string; name: string };
 
 const STEPS = ["Basics", "Details", "Photos"];
 
+function tidyPhone(value: string) {
+  return value.replace(/[\s-]/g, "");
+}
+
+function phoneOk(value: string) {
+  if (!value.trim()) return true;
+  return /^\+91[6-9]\d{9}$/.test(tidyPhone(value));
+}
+
+function telegramOk(value: string) {
+  if (!value.trim()) return true;
+  return /^@?[A-Za-z][A-Za-z0-9_]{4,31}$/.test(value.trim());
+}
+
 export function PostWizard() {
   const [step, setStep] = useState(1);
   const [categories, setCategories] = useState<Cat[]>([]);
@@ -29,6 +43,9 @@ export function PostWizard() {
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState("");
   const [done, setDone] = useState("");
+  const [phoneError, setPhoneError] = useState("");
+  const [whatsappError, setWhatsappError] = useState("");
+  const [telegramError, setTelegramError] = useState("");
 
   useEffect(() => {
     api<{ categories: Cat[] }>("/api/categories").then((res) => {
@@ -70,7 +87,14 @@ export function PostWizard() {
 
   async function saveDetails() {
     if (!draftId) return setMessage("Save the basics first.");
-    if (!phone && !whatsapp && !telegram) return setMessage("Add at least one contact method.");
+    const nextPhone = phoneOk(phone) ? "" : "Use +91 and 10 digits, for example +91 98765 43210.";
+    const nextWhatsapp = phoneOk(whatsapp) ? "" : "WhatsApp uses the same +91 format.";
+    const nextTelegram = telegramOk(telegram) ? "" : "Use a Telegram username, such as @yourname.";
+    setPhoneError(nextPhone);
+    setWhatsappError(nextWhatsapp);
+    setTelegramError(nextTelegram);
+    if (nextPhone || nextWhatsapp || nextTelegram) return setMessage("Check the contact format.");
+    if (!phone.trim() && !whatsapp.trim() && !telegram.trim()) return setMessage("Add at least one contact method.");
     setBusy(true);
     setMessage("");
     const res = await api(`/api/listings/${draftId}`, {
@@ -181,14 +205,14 @@ export function PostWizard() {
         <div className="grid gap-4">
           <h1 className="t-h1">Contact</h1>
           <p className="t-small text-muted">These details stay hidden until someone chooses to reveal them.</p>
-          <Field id="phone" label="Phone">
-            <Input id="phone" value={phone} onChange={(event) => setPhone(event.target.value)} autoComplete="tel" />
+          <Field id="phone" label="Phone" hint="Indian mobile, +91 and 10 digits. Example: +91 98765 43210." error={phoneError}>
+            <Input id="phone" value={phone} onChange={(event) => setPhone(event.target.value)} autoComplete="tel" inputMode="tel" placeholder="+91 98765 43210" />
           </Field>
-          <Field id="whatsapp" label="WhatsApp">
-            <Input id="whatsapp" value={whatsapp} onChange={(event) => setWhatsapp(event.target.value)} />
+          <Field id="whatsapp" label="WhatsApp" hint="Same +91 format, if it differs from the phone." error={whatsappError}>
+            <Input id="whatsapp" value={whatsapp} onChange={(event) => setWhatsapp(event.target.value)} inputMode="tel" placeholder="+91 98765 43210" />
           </Field>
-          <Field id="telegram" label="Telegram">
-            <Input id="telegram" value={telegram} onChange={(event) => setTelegram(event.target.value)} />
+          <Field id="telegram" label="Telegram" hint="Username, with or without @." error={telegramError}>
+            <Input id="telegram" value={telegram} onChange={(event) => setTelegram(event.target.value)} placeholder="@yourname" />
           </Field>
           <div className="flex flex-wrap gap-2">
             <Button type="button" variant="secondary" onClick={() => setStep(1)}>

@@ -33,6 +33,7 @@ const RESERVED = new Set([
 export function CityProvider({ children, cities }: { children: React.ReactNode; cities: City[] }) {
   const path = usePathname() || "/";
   const [override, setOverride] = useState<City | undefined>();
+  const [picked, setPicked] = useState<City | null | undefined>(undefined);
   const fromPath = useMemo(() => {
     const parts = path.split("/").filter(Boolean);
     for (const part of parts) {
@@ -45,7 +46,6 @@ export function CityProvider({ children, cities }: { children: React.ReactNode; 
 
   useEffect(() => {
     const id = window.setTimeout(() => {
-      if (fromPath) return;
       const raw = localStorage.getItem("tk-city");
       if (!raw) return;
       try {
@@ -56,20 +56,24 @@ export function CityProvider({ children, cities }: { children: React.ReactNode; 
       }
     }, 0);
     return () => window.clearTimeout(id);
-  }, [fromPath]);
+  }, []);
 
   const setCity = useCallback((name?: string, slug?: string) => {
     if (!name) {
+      setPicked(null);
       setOverride(undefined);
       localStorage.removeItem("tk-city");
+      window.dispatchEvent(new CustomEvent("tk-city", { detail: null }));
       return;
     }
     const next = { name, slug: slug || "" };
+    setPicked(next);
     setOverride(next);
     localStorage.setItem("tk-city", JSON.stringify(next));
+    window.dispatchEvent(new CustomEvent("tk-city", { detail: next }));
   }, []);
 
-  const active = fromPath || override;
+  const active = picked === undefined ? override || fromPath : picked || undefined;
   return <Ctx.Provider value={{ city: active?.name, citySlug: active?.slug, setCity }}>{children}</Ctx.Provider>;
 }
 

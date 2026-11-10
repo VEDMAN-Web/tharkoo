@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { api, friendlyError, idempotencyKey } from "@/lib/ui/api";
+import { api, friendlyError, hasSessionHint, idempotencyKey } from "@/lib/ui/api";
 import { Button } from "../ui/Button";
 import { Field, Input } from "../ui/Input";
 import { VendorShell } from "../vendor/VendorShell";
@@ -13,10 +13,17 @@ export function WalletPanel({ packs }: { packs: { id: string; credits: number; p
   const [signedOut, setSignedOut] = useState(false);
 
   useEffect(() => {
-    api<{ balance: number }>("/api/wallet").then((res) => {
-      if (!res.ok) setSignedOut(true);
-      else setBalance(res.data.balance);
-    });
+    const id = window.setTimeout(() => {
+      if (!hasSessionHint()) {
+        setSignedOut(true);
+        return;
+      }
+      api<{ balance: number }>("/api/wallet").then((res) => {
+        if (!res.ok) setSignedOut(true);
+        else setBalance(res.data.balance);
+      });
+    }, 0);
+    return () => window.clearTimeout(id);
   }, []);
 
   async function buy(packId: string) {
@@ -61,10 +68,17 @@ export function WalletHistory() {
   const [items, setItems] = useState<{ id: string; delta: number; reason: string; createdAt: string | null }[] | null>(null);
   const [signedOut, setSignedOut] = useState(false);
   useEffect(() => {
-    api<{ items: { id: string; delta: number; reason: string; createdAt: string | null }[] }>("/api/wallet/entries").then((res) => {
-      if (!res.ok) setSignedOut(true);
-      else setItems(res.data.items || []);
-    });
+    const id = window.setTimeout(() => {
+      if (!hasSessionHint()) {
+        setSignedOut(true);
+        return;
+      }
+      api<{ items: { id: string; delta: number; reason: string; createdAt: string | null }[] }>("/api/wallet/entries").then((res) => {
+        if (!res.ok) setSignedOut(true);
+        else setItems(res.data.items || []);
+      });
+    }, 0);
+    return () => window.clearTimeout(id);
   }, []);
   return (
     <VendorShell title="Credit history">
@@ -124,10 +138,17 @@ export function KycStatus() {
   const [status, setStatus] = useState("");
   const [signedOut, setSignedOut] = useState(false);
   useEffect(() => {
-    api<{ status?: string }>("/api/verification/status").then((res) => {
-      if (!res.ok) setSignedOut(true);
-      else setStatus(res.data.status || "On file");
-    });
+    const id = window.setTimeout(() => {
+      if (!hasSessionHint()) {
+        setSignedOut(true);
+        return;
+      }
+      api<{ status?: string }>("/api/verification/status").then((res) => {
+        if (!res.ok) setSignedOut(true);
+        else setStatus(res.data.status || "On file");
+      });
+    }, 0);
+    return () => window.clearTimeout(id);
   }, []);
   return (
     <VendorShell title="Identity check">
@@ -136,8 +157,57 @@ export function KycStatus() {
       ) : (
         <>
           <p className="t-body text-muted">Current status: {status || "Loading…"}</p>
-          <p className="mt-3 t-small text-muted">Uploading an identity document from this page is coming soon.</p>
+          <p className="mt-3 t-small text-muted">
+            A trust reviewer records the result. Write to the help desk if you need to send a document.
+          </p>
         </>
+      )}
+    </VendorShell>
+  );
+}
+
+export function AccountSettings() {
+  const [profile, setProfile] = useState<{ name: string; email: string; status: string } | null>(null);
+  const [signedOut, setSignedOut] = useState(false);
+  useEffect(() => {
+    const id = window.setTimeout(() => {
+      if (!hasSessionHint()) {
+        setSignedOut(true);
+        return;
+      }
+      api<{ user: { displayName?: string; email?: string; verificationStatus?: string } }>("/api/auth/me").then((res) => {
+        if (!res.ok) setSignedOut(true);
+        else {
+          setProfile({
+            name: res.data.user.displayName || "—",
+            email: res.data.user.email || "—",
+            status: res.data.user.verificationStatus || "unsubmitted",
+          });
+        }
+      });
+    }, 0);
+    return () => window.clearTimeout(id);
+  }, []);
+  return (
+    <VendorShell title="Settings">
+      {signedOut ? (
+        <EmptyState title="Sign in to see your settings" body="Your name and email appear here after you log in." action={{ href: "/u/login/?next=/u/account/edit-account/", label: "Log in" }} />
+      ) : (
+        <dl className="grid max-w-lg gap-3">
+          <div>
+            <dt className="t-caption text-muted">Name</dt>
+            <dd className="t-body">{profile?.name || "Loading…"}</dd>
+          </div>
+          <div>
+            <dt className="t-caption text-muted">Email</dt>
+            <dd className="t-body">{profile?.email || "Loading…"}</dd>
+          </div>
+          <div>
+            <dt className="t-caption text-muted">Identity check</dt>
+            <dd className="t-body">{profile?.status || "Loading…"}</dd>
+          </div>
+          <p className="t-small text-muted">Password changes use the reset link from the login page. Identity status lives on the verification page.</p>
+        </dl>
       )}
     </VendorShell>
   );

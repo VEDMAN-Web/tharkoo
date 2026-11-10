@@ -137,6 +137,7 @@ button { cursor: pointer; }
   padding: 0 16px;
   border-radius: var(--r-md);
   font-weight: 700;
+  white-space: nowrap;
 }
 .gold-btn { background: var(--grad-gold); color: var(--ink); border: 0; }
 .quiet-btn { background: transparent; color: var(--text-muted); border: 1px solid var(--border-strong); }

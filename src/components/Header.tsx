@@ -46,8 +46,13 @@ export function Header({
   useEffect(() => {
     const sync = () => setSaved(readSaved().length);
     sync();
+    const openCity = () => setPicker(true);
     window.addEventListener("tk-saved", sync);
-    return () => window.removeEventListener("tk-saved", sync);
+    window.addEventListener("tk-open-city", openCity);
+    return () => {
+      window.removeEventListener("tk-saved", sync);
+      window.removeEventListener("tk-open-city", openCity);
+    };
   }, []);
 
   useEffect(() => {
@@ -84,12 +89,14 @@ export function Header({
             <IconButton label="Search" className="lg:hidden" onClick={() => setSearch(true)}>
               <Search />
             </IconButton>
-            <button type="button" className="hidden h-11 items-center rounded-pill border border-line px-3 t-small sm:inline-flex" onClick={() => setPicker(true)}>
-              {cityLabel}
+            <button
+              type="button"
+              className="inline-flex h-11 max-w-[7.5rem] items-center rounded-pill border border-line px-3 t-small sm:max-w-[14rem]"
+              title={cityLabel}
+              onClick={() => setPicker(true)}
+            >
+              <span className="truncate">{cityLabel}</span>
             </button>
-            <IconButton label={cityLabel} className="sm:hidden" onClick={() => setPicker(true)}>
-              <span className="t-caption">{cityLabel.slice(0, 1)}</span>
-            </IconButton>
             <Link href="/u/account/saved/" className="relative inline-grid size-11 place-items-center" aria-label="Saved ads">
               <Heart size={18} />
               {saved ? <span className="absolute right-1 top-1 grid min-w-4 place-items-center rounded-pill bg-gold px-1 t-caption text-ink">{saved}</span> : null}
