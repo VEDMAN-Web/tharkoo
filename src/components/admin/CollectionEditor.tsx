@@ -76,7 +76,7 @@ export function CollectionEditor({
       <div className="rounded-lg border border-line bg-surface p-3 text-text">
         <div className="mb-2 flex items-center justify-between">
           <h2 className="font-bold">{title || model}</h2>
-          <button type="button" className="gold-btn" onClick={create}>
+          <button type="button" className="tk-btn tk-btn-rose" onClick={create}>
             New
           </button>
         </div>
@@ -98,10 +98,10 @@ export function CollectionEditor({
             <p className="mb-2 t-caption text-muted">JSON editor — every field is live on the site after Save.</p>
             <textarea value={json} onChange={(e) => setJson(e.target.value)} rows={22} className="w-full rounded-md border border-line bg-bg p-2 font-mono text-[12px] text-text" />
             <div className="mt-2 flex gap-2">
-              <button type="button" className="gold-btn" onClick={save}>
+              <button type="button" className="tk-btn tk-btn-rose" onClick={save}>
                 Save
               </button>
-              <button type="button" className="quiet-btn" onClick={() => setEdit(null)}>
+              <button type="button" className="tk-btn tk-btn-outline-rose" onClick={() => setEdit(null)}>
                 Cancel
               </button>
               <button type="button" className="t-small text-danger" onClick={() => remove(String(edit._id))}>

@@ -19,9 +19,9 @@ export default async function Contact() {
         Support hours: {site.supportHours || "We reply on business days."} For a listing problem, use the report link on the ad. For a legal request, open the grievance page.
       </p>
       <p className="mt-4">
-        <Link href="/cms/grievance/" className="text-gold">Grievance</Link>
+        <Link href="/cms/grievance/" className="text-accent">Grievance</Link>
         {" · "}
-        <Link href="/help/" className="text-gold">Help centre</Link>
+        <Link href="/help/" className="text-accent">Help Center</Link>
       </p>
     </Container>
   );

@@ -2,13 +2,9 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { ArrowUp } from "lucide-react";
-import { safeHref } from "@/lib/sanitize";
 import { Logo } from "./Logo";
-import { IconButton } from "./ui/IconButton";
+import { safeHref } from "@/lib/sanitize";
 
-type Cat = { slug: string; name: string };
-type City = { slug: string; name: string };
 type LinkItem = { label: string; href: string };
 
 function realSocial(items: LinkItem[]) {
@@ -20,106 +16,95 @@ function realSocial(items: LinkItem[]) {
 export function Footer({
   siteName,
   legalName,
-  categories,
-  cities,
-  links,
+  cityCount,
   social,
 }: {
   siteName: string;
   legalName: string;
   cityCount: number;
-  about: string;
-  categories: Cat[];
-  cities: City[];
-  links: LinkItem[];
+  about?: string;
+  categories?: { slug: string; name: string }[];
+  cities?: { slug: string; name: string }[];
+  links?: LinkItem[];
   social: LinkItem[];
 }) {
   const [top, setTop] = useState(false);
   useEffect(() => {
-    const onScroll = () => setTop(window.scrollY > 800);
+    const onScroll = () => setTop(window.scrollY > 300);
     onScroll();
     window.addEventListener("scroll", onScroll, { passive: true });
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
   const socials = realSocial(social);
-  const extra = links
-    .map((item) => ({ ...item, href: safeHref(item.href) }))
-    .filter((item) => item.href);
-
   return (
-    <footer className="mt-12 border-t border-[color:var(--gold-line)]">
-      <div className="mx-auto grid w-full max-w-[1200px] gap-8 px-4 py-12 md:px-6 lg:grid-cols-4 lg:px-8">
-        <div>
-          <h2 className="t-overline mb-3">Explore</h2>
-          <div className="grid gap-2">
-            {categories.map((cat) => (
-              <Link key={cat.slug} href={`/${cat.slug}/`} prefetch={false} className="t-small text-muted">
-                {cat.name}
-              </Link>
-            ))}
+    <footer className="tk-footer" data-tk="footer">
+      <div className="tk-container">
+        <div className="tk-footer-brand">
+          <div>
+            <Logo name={siteName} href={null} country="India" />
+            <span className="tk-badge-18">18+ ONLY</span>
+          </div>
+          <p className="tk-about">
+            Tharkoo is a classifieds platform for people in India. Browse new listings every day in <strong>{cityCount}</strong> cities.
+          </p>
+        </div>
+        <div className="tk-foot-cols">
+          <div>
+            <h2>Legal</h2>
+            <Link href="/terms/" prefetch={false}>Terms and Conditions</Link>
+            <Link href="/privacy/" prefetch={false}>Privacy Policy</Link>
+            <Link href="/cookies/" prefetch={false}>Cookie Policy</Link>
+          </div>
+          <div>
+            <h2>Support</h2>
+            <Link href="/help/" prefetch={false}>Help Center</Link>
+            <Link href="/submit-report/" prefetch={false}>Submit a Report</Link>
+            <Link href="/blog/" prefetch={false}>Blog</Link>
+          </div>
+          <div>
+            <h2>Security</h2>
+            <Link href="/scam-report/" prefetch={false}>How to report a scam</Link>
+          </div>
+          <div>
+            <h2>Company</h2>
+            <Link href="/cms/about/" prefetch={false}>About Tharkoo</Link>
+            <Link href="/contact/" prefetch={false}>Contact us</Link>
           </div>
         </div>
-        <div>
-          <h2 className="t-overline mb-3">Top cities</h2>
-          <div className="grid gap-2">
-            {cities.map((city) => (
-              <Link key={city.slug} href="/cities/" prefetch={false} className="t-small text-muted">
-                {city.name}
-              </Link>
-            ))}
+        <div className="tk-foot-boost">
+          <div>
+            <h2>Boost your visibility</h2>
+            <Link href="/u/post-insert/" data-tk="post-ad" className="tk-btn tk-btn-primary" prefetch={false}>
+              POST YOUR AD
+            </Link>
+          </div>
+          <div>
+            <h2>Countries</h2>
+            <label className="sr-only" htmlFor="tk-country">Countries</label>
+            <select id="tk-country" className="tk-country" defaultValue="IN" aria-label="Countries">
+              <option value="IN">🇮🇳 India</option>
+            </select>
           </div>
         </div>
-        <div>
-          <h2 className="t-overline mb-3">Company</h2>
-          <div className="grid gap-2">
-            <Link href="/cms/about/" prefetch={false} className="t-small text-muted">About</Link>
-            <Link href="/help/" prefetch={false} className="t-small text-muted">Help</Link>
-            <Link href="/blog/" prefetch={false} className="t-small text-muted">Blog</Link>
-            <Link href="/contact/" prefetch={false} className="t-small text-muted">Contact</Link>
-          </div>
-        </div>
-        <div>
-          <h2 className="t-overline mb-3">Trust and legal</h2>
-          <div className="grid gap-2">
-            <Link href="/cms/terms/" prefetch={false} className="t-small text-muted">Terms</Link>
-            <Link href="/cms/privacy/" prefetch={false} className="t-small text-muted">Privacy</Link>
-            <Link href="/cms/cookies/" prefetch={false} className="t-small text-muted">Cookies</Link>
-            <Link href="/cms/grievance/" prefetch={false} className="t-small text-muted">Grievance</Link>
-            <Link href="/scam-report/" prefetch={false} className="t-small text-muted">Scam report</Link>
-          </div>
-        </div>
+        <p className="tk-legal-line">{legalName}</p>
       </div>
-      <div className="mx-auto flex w-full max-w-[1200px] flex-col gap-3 px-4 pb-8 md:px-6 lg:px-8">
-        <Logo name={siteName} href={null} />
+      <div className="tk-bar">
         {socials.length ? (
-          <div className="flex flex-wrap gap-3">
+          <div className="tk-socials">
             {socials.map((item) => (
-              <a key={item.label} href={item.href} target="_blank" rel="noopener noreferrer" className="t-caption text-muted">
+              <a key={item.label} href={item.href} target="_blank" rel="noopener noreferrer" aria-label={item.label}>
                 {item.label}
               </a>
             ))}
           </div>
         ) : null}
-        {extra.length ? (
-          <div className="flex flex-wrap gap-3">
-            {extra.map((item) => (
-              <Link key={item.href} href={item.href || "/"} prefetch={false} className="t-caption text-muted">
-                {item.label}
-              </Link>
-            ))}
-          </div>
+        <p className="tk-copy">Copyright 2026 © Tharkoo</p>
+        {top ? (
+          <button type="button" className="tk-top" data-tk="back-to-top" onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}>
+            Back to top ↑
+          </button>
         ) : null}
-        <p className="t-caption text-muted">
-          Copyright {new Date().getFullYear()} {legalName || siteName}
-        </p>
       </div>
-      {top ? (
-        <div className="fixed bottom-6 right-4 z-30">
-          <IconButton label="Back to top" onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}>
-            <ArrowUp />
-          </IconButton>
-        </div>
-      ) : null}
     </footer>
   );
 }

@@ -1,42 +1,46 @@
 import Link from "next/link";
-import { AdCard, StarStrip } from "./AdCard";
+import { CalendarDays, Heart, Leaf, MessageSquareHeart, Users, type LucideIcon } from "lucide-react";
 import { SmartImage } from "./ui/SmartImage";
 import { AdCardSkeleton } from "./ui/Skeleton";
-import { Container } from "./ui/Container";
-import { Section } from "./ui/Section";
-import { RecentlyViewedRail } from "./ui/RecentlyViewed";
-import { Button } from "./ui/Button";
 import { JsonLd } from "@/lib/jsonld";
 import { safeHtml } from "@/lib/sanitize";
 import { canonical } from "@/lib/seo";
-import { getCategories, getCities, getFeed, getSeo, getSite, getStarListings, getTopCities, listingCountsByCategoryCity } from "@/lib/queries";
+import { getCategories, getCities, getSeo, getSite } from "@/lib/queries";
+
+const SLOTS: { slug: string; icon: LucideIcon; fallback: string }[] = [
+  { slug: "dating", icon: Heart, fallback: "Meet people near you. Clear profiles, honest details, and manual ID checks." },
+  { slug: "wellness", icon: Leaf, fallback: "Spa, yoga, fitness and therapeutic massage bookings from verified providers." },
+  { slug: "friendship", icon: Users, fallback: "Make friends and find company for coffee, trips and hobbies." },
+  { slug: "meetups", icon: CalendarDays, fallback: "Join local meetups, classes and group activities in your city." },
+  { slug: "personal-ads", icon: MessageSquareHeart, fallback: "Short personal notices for dating, friendship and activities." },
+];
+
+type Cat = {
+  slug?: string;
+  name?: string;
+  homeBlurb?: string;
+  description?: string;
+  homeCities?: string[];
+};
 
 export function SkeletonGrid() {
   return (
-    <Container className="grid gap-4 py-8">
-      {Array.from({ length: 6 }, (_, i) => (
+    <div className="tk-container grid gap-4 py-8">
+      {Array.from({ length: 3 }, (_, i) => (
         <AdCardSkeleton key={i} />
       ))}
-    </Container>
+    </div>
   );
 }
 
-export async function HomeAbove() {
-  const [site, categories, cities] = await Promise.all([getSite(), getCategories(), getCities()]);
-  const counts = await listingCountsByCategoryCity().catch(() => []);
-  const byCat = new Map<string, number>();
-  counts.forEach((row) => {
-    const slug = row._id.categorySlug;
-    byCat.set(slug, (byCat.get(slug) || 0) + row.n);
-  });
-  const visible = categories.filter((cat) => cat.showOnHome !== false);
-  const first = visible[0]?.slug;
-  const top = cities.filter((city) => city.isTop).slice(0, 12);
-  const cityLinks = (top.length ? top : cities.slice(0, 8)).map((city) => ({
-    href: first ? `/${first}/${city.slug}/` : "/cities/",
-    name: city.name,
-    slug: city.slug,
-  }));
+export async function HomeBlocks() {
+  const [site, categories, cities, seo] = await Promise.all([getSite(), getCategories(), getCities(), getSeo("home")]);
+  const bySlug = new Map(categories.map((cat) => [cat.slug, cat as Cat]));
+  const cityBySlug = new Map(cities.map((city) => [city.slug, city]));
+  const top = cities.filter((city) => city.isTop).slice(0, 5);
+  const featured = SLOTS.map((slot) => bySlug.get(slot.slug)).filter((cat): cat is Cat => Boolean(cat?.slug));
+  const rest = categories.filter((cat) => !SLOTS.some((slot) => slot.slug === cat.slug)).slice(0, 6);
+
   return (
     <>
       <JsonLd
@@ -55,128 +59,104 @@ export async function HomeAbove() {
           },
         ]}
       />
-      <Section eyebrow="Catalogue" title="Browse by category" action={{ href: "/cities/", label: "View all" }} className="py-8 lg:py-10">
-        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-          {visible.map((cat) => (
-            <Link key={cat.slug} href={`/${cat.slug}/`} prefetch={false} className="flex gap-3 rounded-lg border border-line bg-surface p-3">
-              <span className="size-16 shrink-0 overflow-hidden rounded-md">
+      <div className="tk-home-head tk-container">
+        <h2>Hot meetings in your city</h2>
+        <p>Find your favourite listings on Tharkoo</p>
+      </div>
+      <div className="tk-container tk-home-grid">
+        {featured.map((cat) => {
+          const slot = SLOTS.find((item) => item.slug === cat.slug)!;
+          const Icon = slot.icon;
+          const homes = (cat.homeCities || []).map((slug) => cityBySlug.get(slug)).filter(Boolean).slice(0, 3);
+          const picks = homes.length ? homes : top.slice(0, 3);
+          return (
+            <article key={cat.slug} className="tk-home-card" data-tk="home-card">
+              <Link href={`/${cat.slug}/`} className="tk-home-photo" prefetch={false}>
                 <SmartImage
-                  src={cat.slug ? `/placeholders/${cat.slug}/01.webp` : null}
+                  src={`/placeholders/${cat.slug}/01.webp`}
                   alt=""
-                  seed={cat.slug || cat.name || "cat"}
+                  seed={cat.slug || "cat"}
                   category={cat.slug}
-                  width={128}
-                  height={128}
-                  sizes="64px"
+                  width={600}
+                  height={402}
+                  sizes="300px"
                 />
-              </span>
-              <span>
-                <span className="t-h3 block">{cat.name}</span>
-                <span className="t-caption text-muted">{byCat.get(cat.slug || "") || 0} listings</span>
-              </span>
-            </Link>
-          ))}
-        </div>
-      </Section>
-      <Section eyebrow="Places" title="Popular cities" className="py-8 lg:py-10">
-        <div className="flex flex-wrap gap-2">
-          {cityLinks.map((city) => (
-            <Link key={city.slug} href={city.href} prefetch={false} className="inline-flex h-9 items-center rounded-pill border border-line px-3 t-small">
-              {city.name}
-            </Link>
-          ))}
-          <Link href="/cities/" prefetch={false} className="inline-flex h-9 items-center rounded-pill border border-[color:var(--gold-line)] px-3 t-small text-gold">
-            All cities
-          </Link>
-        </div>
-      </Section>
+                <span className="tk-home-shade" />
+                <span className="tk-home-title">
+                  <Icon size={20} /> {cat.name}
+                </span>
+              </Link>
+              <div className="tk-home-body">
+                <p>{cat.homeBlurb || cat.description || slot.fallback}</p>
+                {picks.map((city) => (
+                  <Link key={city!.slug} href={`/${cat.slug}/${city!.slug}/`} className="tk-city-row" prefetch={false}>
+                    <span>{cat.name}</span>
+                    <strong>{city!.name}</strong>
+                  </Link>
+                ))}
+              </div>
+            </article>
+          );
+        })}
+      </div>
+      {seo?.intro ? (
+        <div className="tk-seo" dangerouslySetInnerHTML={{ __html: safeHtml(seo.intro) }} />
+      ) : null}
+      <div className="tk-container tk-groups">
+        {featured.map((cat, index) => {
+          const slot = SLOTS.find((item) => item.slug === cat.slug)!;
+          const Icon = slot.icon;
+          const pills = top.slice(0, index === 0 ? 5 : 5);
+          return (
+            <section key={cat.slug} className="tk-group" data-tk="city-group">
+              <h3>
+                <Link href={`/${cat.slug}/`} prefetch={false}>
+                  <Icon size={16} /> {cat.name}
+                </Link>
+              </h3>
+              <div className="tk-pills">
+                {pills.map((city) => (
+                  <Link key={city.slug} href={`/${cat.slug}/${city.slug}/`} className="tk-pill" prefetch={false}>
+                    {city.name}
+                  </Link>
+                ))}
+                {index === 0 ? (
+                  <Link href="/cities/" className="tk-pill" prefetch={false}>
+                    All cities
+                  </Link>
+                ) : null}
+              </div>
+            </section>
+          );
+        })}
+        <section className="tk-group" data-tk="city-group">
+          <h3>More categories</h3>
+          <div className="tk-pills">
+            {rest.map((cat) => (
+              <Link key={cat.slug} href={`/${cat.slug}/`} className="tk-pill" prefetch={false}>
+                {cat.name}
+              </Link>
+            ))}
+          </div>
+        </section>
+      </div>
     </>
   );
+}
+
+export async function HomeAbove() {
+  return null;
 }
 
 export async function HomeBelow() {
-  const [seo, stars, feed] = await Promise.all([getSeo("home"), getStarListings({}), getFeed({}, 1)]);
-  const cards = feed.items.slice(0, 12);
-  return (
-    <div className="below-fold">
-      <Container>
-        <StarStrip ads={stars} />
-      </Container>
-      <Section eyebrow="Latest" title="Fresh near you" className="py-8 lg:py-10">
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-          {cards.map((ad) => (
-            <AdCard key={ad.slug || ad.publicId} ad={ad} layout="tile" />
-          ))}
-        </div>
-      </Section>
-      <Container>
-        <RecentlyViewedRail />
-      </Container>
-      <Section title="Why Tharkoo" className="py-8 lg:py-10">
-        <div className="grid gap-4 md:grid-cols-3">
-          {[
-            ["Verified profiles", "A verified tick appears only after a profile check is recorded."],
-            ["Manual ID checks", "Publishing some categories asks for an identity check first."],
-            ["Safe by design", "Contact details stay hidden until you choose to reveal them."],
-          ].map(([title, body]) => (
-            <div key={title} className="rounded-lg border border-line bg-surface p-4">
-              <h3 className="t-h3">{title}</h3>
-              <p className="t-small mt-2 text-muted">{body}</p>
-            </div>
-          ))}
-        </div>
-      </Section>
-      <Container>
-        <div className="flex flex-wrap items-center justify-between gap-4 rounded-xl border border-[color:var(--gold-line)] p-6">
-          <div>
-            <h2 className="t-h2">Post an ad</h2>
-            <p className="t-small mt-2 text-muted">A basic ad can be saved as a draft, then sent for review.</p>
-          </div>
-          <Button href="/u/post-insert/">Post an ad</Button>
-        </div>
-        {seo?.intro ? (
-          <div className="prose-block mt-12">
-            <h2 className="t-h2">About these classifieds</h2>
-            <div className="t-body mt-3 text-muted" dangerouslySetInnerHTML={{ __html: safeHtml(`<p>${seo.intro}</p>`) }} />
-          </div>
-        ) : null}
-      </Container>
-    </div>
-  );
-}
-
-export async function HomeBlocks() {
-  return (
-    <>
-      <HomeAbove />
-      <HomeBelow />
-    </>
-  );
+  return null;
 }
 
 export async function HeroStats() {
-  const [categories, cities, counts] = await Promise.all([
-    getCategories(),
-    getCities(),
-    listingCountsByCategoryCity().catch(() => []),
-  ]);
-  const listings = counts.reduce((sum, row) => sum + row.n, 0);
-  const stats = [
-    [`${categories.length}`, categories.length === 1 ? "category" : "categories"],
-    [`${cities.length}`, cities.length === 1 ? "city" : "cities"],
-    [listings ? listings.toLocaleString("en-IN") : "0", "listings"],
-  ];
-  return (
-    <ul className="flex flex-wrap gap-x-4 gap-y-1">
-      {stats.map(([value, label]) => (
-        <li key={label} className="t-small text-muted">
-          <span className="text-gold">{value}</span> {label}
-        </li>
-      ))}
-    </ul>
-  );
+  return null;
 }
 
 export async function loadTopCities() {
+  const { getTopCities } = await import("@/lib/queries");
   return getTopCities();
 }

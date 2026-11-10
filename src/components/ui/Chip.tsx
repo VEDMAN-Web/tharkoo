@@ -14,11 +14,7 @@ export function Chip({
   onClick?: () => void;
   className?: string;
 }) {
-  const classes = cn(
-    "inline-flex h-9 shrink-0 snap-start items-center rounded-pill border px-3 t-small",
-    selected ? "border-[color:var(--gold-line)] bg-[var(--gold-soft)] text-gold" : "border-line bg-surface text-muted",
-    className,
-  );
+  const classes = cn("tk-filter", selected && "is-on", className);
   if (href) {
     return (
       <Link href={href} className={classes} prefetch={false} aria-current={selected ? "true" : undefined}>
@@ -34,9 +30,5 @@ export function Chip({
 }
 
 export function ChipRow({ children }: { children: React.ReactNode }) {
-  return (
-    <div className="flex gap-2 overflow-x-auto scroll-smooth snap-x snap-proximity [-webkit-overflow-scrolling:touch] pb-1">
-      {children}
-    </div>
-  );
+  return <div className="tk-filters">{children}</div>;
 }

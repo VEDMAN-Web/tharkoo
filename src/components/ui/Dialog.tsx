@@ -69,7 +69,7 @@ export function Dialog({
     <div
       className={
         scrim
-          ? `fixed inset-0 z-50 flex justify-center bg-black/60 p-4 ${align === "center" ? "items-center" : "items-end sm:items-center"}`
+          ? `fixed inset-0 z-50 flex justify-center bg-[rgba(31,36,51,0.45)] p-4 ${align === "center" ? "items-center" : "items-end sm:items-center"}`
           : "fixed inset-x-0 bottom-0 z-50 p-3 sm:inset-0 sm:flex sm:items-end sm:justify-center sm:bg-transparent"
       }
       onMouseDown={
@@ -87,8 +87,8 @@ export function Dialog({
         aria-label={title}
         className={
           sheet
-            ? "max-h-[92vh] w-full overflow-auto rounded-t-xl border border-line bg-raised p-4 shadow-lg sm:max-w-lg sm:rounded-xl"
-            : "max-h-[92vh] w-full overflow-auto rounded-xl border border-line bg-raised p-4 shadow-lg sm:max-w-xl"
+            ? "max-h-[92vh] w-full overflow-auto rounded-t-xl border border-line bg-card p-4 shadow-lg sm:max-w-lg sm:rounded-xl"
+            : "max-h-[92vh] w-full overflow-auto rounded-xl border border-line bg-card p-4 shadow-lg sm:max-w-xl"
         }
         onMouseDown={(event) => event.stopPropagation()}
       >

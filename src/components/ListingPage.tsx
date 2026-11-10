@@ -1,10 +1,10 @@
+"use client";
+
 import Link from "next/link";
-import { AdCard, StarStrip } from "./AdCard";
-import { Breadcrumbs } from "./Breadcrumbs";
-import { Chip, ChipRow } from "./ui/Chip";
-import { Container } from "./ui/Container";
+import { useState } from "react";
+import { MapPin, Search } from "lucide-react";
+import { AdCard } from "./AdCard";
 import { EmptyState } from "./ui/EmptyState";
-import { RecentlyViewedRail } from "./ui/RecentlyViewed";
 import { JsonLd, breadcrumbJsonLd } from "@/lib/jsonld";
 import { canonical } from "@/lib/seo";
 import { displayTitle } from "@/lib/format";
@@ -46,6 +46,10 @@ export function ListingPageView({
   suggestions = [],
   photos,
   verified,
+  locationLabel,
+  cityName,
+  categoryName,
+  districts = [],
 }: {
   h1: string;
   h2?: string;
@@ -65,11 +69,20 @@ export function ListingPageView({
   suggestions?: { href: string; label: string }[];
   photos?: boolean;
   verified?: boolean;
+  locationLabel?: string;
+  cityName?: string;
+  categoryName?: string;
+  districts?: { href: string; label: string }[];
 }) {
+  const [open, setOpen] = useState(false);
   const clear = path.split("?")[0];
+  const chips = districts.slice(0, 2);
+  const feed = [...stars, ...items.filter((ad) => !stars.some((star) => star.slug && star.slug === ad.slug))];
   const related = siblingLinks.slice(0, 8);
+  const short = cityName && categoryName ? `${cityName} ${categoryName}` : crumbs[crumbs.length - 1]?.name;
+
   return (
-    <Container className="py-6">
+    <div className="tk-container" style={{ paddingTop: 16, paddingBottom: 24 }}>
       <JsonLd
         data={[
           breadcrumbJsonLd(crumbs),
@@ -87,97 +100,124 @@ export function ListingPageView({
           },
         ]}
       />
-      <Breadcrumbs crumbs={crumbs} />
-      <h1 className="t-h1">{h1}</h1>
-      {intro ? <p className="t-lead mt-3 max-w-[68ch] text-muted">{intro}</p> : null}
-      <div className="sticky top-16 z-20 mt-4 bg-bg/90 py-2 backdrop-blur">
-        <ChipRow>
-          <Chip href={toggleHref(path, "verified", !!verified)} selected={!!verified}>
-            Verified
-          </Chip>
-          <Chip href={toggleHref(path, "photos", !!photos)} selected={!!photos}>
-            With photos
-          </Chip>
-          {related.map((link) => (
-            <Chip key={link.href} href={link.href}>
-              {link.label}
-            </Chip>
-          ))}
-          {photos || verified ? (
-            <Chip href={clear}>Clear all</Chip>
-          ) : null}
-        </ChipRow>
+      <button type="button" className="tk-loc" data-tk="location-field" onClick={() => window.dispatchEvent(new Event("tk-open-search"))}>
+        <MapPin size={16} aria-hidden />
+        <span>{locationLabel || query || "Select a city"}</span>
+        <span className="tk-loc-go" aria-hidden>
+          <Search size={16} color="#fff" />
+        </span>
+      </button>
+      <div className="tk-filters">
+        <Link className={`tk-filter ${verified ? "is-on" : ""}`} data-tk="filter-chip" href={toggleHref(path, "verified", !!verified)} prefetch={false}>
+          Verified
+        </Link>
+        <Link className={`tk-filter ${photos ? "is-on" : ""}`} data-tk="filter-chip" href={toggleHref(path, "photos", !!photos)} prefetch={false}>
+          With photos
+        </Link>
+        {chips.map((link) => (
+          <Link key={link.href} className="tk-filter" data-tk="filter-chip" href={link.href} prefetch={false}>
+            {link.label}
+          </Link>
+        ))}
       </div>
-      <p className="t-small mt-3 text-muted">{total} ads</p>
-      <StarStrip ads={stars} />
-      {items.length ? (
-        <div className="mt-4 grid gap-4 xl:grid-cols-2">
-          {items.map((ad, index) => (
-            <AdCard key={ad.publicId || ad.slug} ad={ad} priority={index === 0 && stars.length === 0} />
-          ))}
-        </div>
-      ) : (
-        query ? (
-          <div className="mt-8">
-            {suggestions.length ? (
-              <div className="flex flex-wrap justify-center gap-2">
-                {suggestions.map((item) => (
-                  <Link key={item.href} href={item.href} prefetch={false} className="quiet-btn whitespace-nowrap">
-                    {item.label}
-                  </Link>
-                ))}
-              </div>
-            ) : null}
-            <p className="mt-4 text-center">
-              <Link href="/search/" prefetch={false} className="quiet-btn whitespace-nowrap">
-                Clear search
-              </Link>
-            </p>
-          </div>
-        ) : (
-        <EmptyState
-          icon="generic"
-          title="No listings yet"
-          body={emptyNearby.length ? "Try a nearby city, or be the first to post." : "Be the first to post in this place."}
-          action={{ href: "/u/post-insert/", label: "Post the first ad" }}
-        />
-        )
-      )}
-      {pages > 1 ? (
-        <nav className="mt-6 flex flex-wrap gap-2" aria-label="Pagination">
-          {page > 1 ? (
-            <Link href={pageHref(path, page - 1)} rel="prev" className="quiet-btn" prefetch={false}>
-              Previous
-            </Link>
-          ) : null}
-          {Array.from({ length: pages }, (_, i) => i + 1)
-            .slice(0, 12)
-            .map((n) => (
-              <Link key={n} href={pageHref(path, n)} className={`quiet-btn ${n === page ? "text-gold" : ""}`} aria-current={n === page ? "page" : undefined} prefetch={false}>
-                {n}
-              </Link>
-            ))}
-          {page < pages ? (
-            <Link href={pageHref(path, page + 1)} rel="next" className="quiet-btn" prefetch={false}>
-              Next
-            </Link>
+      <div className="tk-hair" />
+      <nav className="tk-crumbs tk-crumbs-full" aria-label="Breadcrumb">
+        {crumbs.map((crumb, index) => {
+          const last = index === crumbs.length - 1;
+          return (
+            <span key={crumb.path} style={{ position: "relative" }}>
+              {index > 0 ? <span style={{ color: "var(--muted)" }}> / </span> : null}
+              {last && districts.length ? (
+                <button type="button" aria-expanded={open} onClick={() => setOpen((v) => !v)}>
+                  {crumb.name} ▾
+                </button>
+              ) : (
+                <Link href={crumb.path} prefetch={false}>
+                  {crumb.name}
+                </Link>
+              )}
+              {last && open ? (
+                <span className="tk-crumb-menu">
+                  {districts.map((item) => (
+                    <Link key={item.href} href={item.href} prefetch={false}>
+                      {item.label}
+                    </Link>
+                  ))}
+                </span>
+              ) : null}
+            </span>
+          );
+        })}
+      </nav>
+      {short ? (
+        <nav className="tk-crumbs tk-crumbs-short" aria-label="Breadcrumb">
+          <button type="button" onClick={() => setOpen((v) => !v)}>
+            {short} ▾
+          </button>
+          {open ? (
+            <span className="tk-crumb-menu">
+              {districts.map((item) => (
+                <Link key={item.href} href={item.href} prefetch={false}>
+                  {item.label}
+                </Link>
+              ))}
+            </span>
           ) : null}
         </nav>
       ) : null}
-      {related.length >= 3 ? (
-        <div className="mt-10">
-          <h2 className="t-h2">Nearby</h2>
-          <div className="mt-3 flex flex-wrap gap-2">
-            {related.map((link) => (
-              <Link key={link.href} href={link.href} prefetch={false} className="t-small text-gold">
-                {link.label}
+      <h1 className="tk-listing-h1">{h1}</h1>
+      <div className="tk-feed">
+        {feed.map((ad, index) => (
+          <span key={ad.publicId || ad.slug || index} style={{ display: "contents" }}>
+            <AdCard ad={ad} featured={index < stars.length} priority={index === 0} />
+            {(index + 1) % 6 === 0 ? (
+              <Link href="/u/post-insert/" className="tk-promo" data-tk="promo-band" prefetch={false}>
+                <span>
+                  <h2>Reach more people</h2>
+                  <p>Promote your ad and stay at the top.</p>
+                </span>
+                <span className="tk-btn" data-tk="post-ad">POST YOUR AD</span>
+              </Link>
+            ) : null}
+          </span>
+        ))}
+      </div>
+      {!feed.length ? (
+        query ? (
+          <div className="tk-empty">
+            {suggestions.map((item) => (
+              <Link key={item.href} href={item.href} className="tk-pill" prefetch={false}>
+                {item.label}
               </Link>
             ))}
+            <EmptyState title="No listings yet" body="Try another word, or post the first ad." action={{ href: "/u/post-insert/", label: "Post the first ad" }} />
           </div>
+        ) : (
+          <EmptyState
+            title="No listings yet"
+            body={emptyNearby.length ? "Try a nearby city, or be the first to post." : "Be the first to post in this place."}
+            action={{ href: "/u/post-insert/", label: "Post the first ad" }}
+          />
+        )
+      ) : null}
+      {page < pages ? (
+        <div className="tk-more">
+          <Link href={pageHref(path, page + 1)} rel="next" className="tk-btn tk-btn-outline-rose" data-tk="show-more" prefetch={false}>
+            Show more
+          </Link>
         </div>
       ) : null}
-      <RecentlyViewedRail />
-      {footer ? <p className="t-small mt-8 max-w-[68ch] text-muted">{footer}</p> : null}
-    </Container>
+      {intro ? <p className="tk-seo-foot">{intro}</p> : null}
+      {footer ? <div className="tk-seo-foot">{footer}</div> : null}
+      {related.length ? (
+        <p className="tk-seo-foot">
+          {related.map((link) => (
+            <Link key={link.href} href={link.href} prefetch={false}>
+              {link.label}
+            </Link>
+          ))}
+        </p>
+      ) : null}
+    </div>
   );
 }

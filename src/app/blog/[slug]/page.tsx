@@ -26,7 +26,7 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
   return (
     <Container className="py-8">
       <p className="t-small">
-        <Link href="/blog/" className="text-gold">Journal</Link> · {post.date} · {post.author}
+        <Link href="/blog/" className="text-accent">Tharkoo Blog</Link> · {post.date} · {post.author}
       </p>
       <h1 className="t-h1 mt-2">{post.title}</h1>
       <Prose className="mt-4 whitespace-pre-wrap">{post.body}</Prose>

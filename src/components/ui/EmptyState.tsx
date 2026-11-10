@@ -16,12 +16,12 @@ export function EmptyState({
 }) {
   const Title = heading;
   return (
-    <div className="mx-auto grid max-w-md justify-items-center gap-4 py-10 text-center">
-      <div className="h-40 w-32 overflow-hidden rounded-lg">
+    <div className="tk-empty">
+      <div className="mx-auto h-40 w-32 overflow-hidden rounded-lg">
         <PlaceholderArt seed={title} category={icon} decorative />
       </div>
-      <Title className={heading === "h1" ? "t-h1" : "t-h2"}>{title}</Title>
-      <p className="t-body text-muted">{body}</p>
+      <Title className={heading === "h1" ? "tk-page-h1" : "t-h2"}>{title}</Title>
+      <p className="t-body" style={{ color: "var(--muted)" }}>{body}</p>
       {action ? (
         <Button href={action.href} prefetch={false}>
           {action.label}

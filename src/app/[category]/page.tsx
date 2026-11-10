@@ -1,12 +1,11 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
-import { getCategory, getCities, getSeo, getSite, getStates } from "@/lib/queries";
+import { MapPin } from "lucide-react";
+import { getCategory, getCities, getSeo, getSite, getStates, listingCountsByCategoryCity } from "@/lib/queries";
 import { fillTemplate } from "@/lib/seo";
 import { pageMetadata } from "@/lib/ui/meta";
-import { TAG_PAGES } from "@/data/catalog";
 import { Breadcrumbs } from "@/components/Breadcrumbs";
-import { Container } from "@/components/ui/Container";
 
 type Props = { params: Promise<{ category: string }> };
 
@@ -24,42 +23,47 @@ export default async function CategoryHub({ params }: Props) {
   const { category } = await params;
   const cat = await getCategory(category);
   if (!cat) notFound();
-  const [seo, site, cities, states] = await Promise.all([getSeo("category"), getSite(), getCities(), getStates()]);
+  const [seo, site, cities, states, counts] = await Promise.all([
+    getSeo("category"),
+    getSite(),
+    getCities(),
+    getStates(),
+    listingCountsByCategoryCity().catch(() => []),
+  ]);
   const vars = { category: cat.name, site: site.name, year: new Date().getFullYear() };
-
+  const allowed = new Set(counts.filter((row) => row._id.categorySlug === category && row.n > 0).map((row) => row._id.citySlug));
+  const listed = allowed.size ? cities.filter((city) => allowed.has(city.slug || "")) : cities;
   return (
-    <Container className="py-6">
-      <Breadcrumbs crumbs={[{ name: "India", path: "/" }, { name: cat.name!, path: `/${category}/` }]} />
-      <h1 className="t-h1">{fillTemplate(seo?.h1 || "{category} in India", vars)}</h1>
-      <p className="t-lead mt-3 max-w-[68ch] text-muted">{fillTemplate(seo?.intro || "", vars)}</p>
-      <div className="mt-4 flex gap-2 overflow-x-auto">
-        {TAG_PAGES.map((t) => (
-          <Link key={t.slug} href={`/${category}/tag/${t.slug}/`} prefetch={false} className="inline-flex h-9 shrink-0 items-center rounded-pill border border-line px-3 t-small">
-            {t.label}
-          </Link>
-        ))}
+    <>
+      <div className="tk-banner">
+        <div className="tk-container">
+          <h1>{cat.name} in India</h1>
+        </div>
+        <MapPin className="tk-banner-pins" size={180} color="#fff" aria-hidden />
       </div>
-      {states.map((state) => {
-        const inState = cities.filter((c) => c.stateSlug === state.slug);
-        if (!inState.length) return null;
-        return (
-          <section key={state.slug} className="mt-8">
-            <h2 className="t-h2">
-              <Link href={`/${category}/${state.slug}/`} prefetch={false}>
-                {state.name}
-              </Link>
-            </h2>
-            <div className="mt-3 flex flex-wrap gap-2">
-              {inState.map((city) => (
-                <Link key={city.slug} href={`/${category}/${city.slug}/`} prefetch={false} className="inline-flex h-9 items-center rounded-pill border border-line px-3 t-small">
-                  {city.name}
+      <div className="tk-container" style={{ paddingBottom: 32 }}>
+        <Breadcrumbs crumbs={[{ name: "Tharkoo India", path: "/" }, { name: cat.name!, path: `/${category}/` }]} />
+        <div className="tk-panel">
+          <div className="tk-panel-head">🇮🇳 INDIA</div>
+          {states.map((state) => {
+            const inState = listed.filter((city) => city.stateSlug === state.slug);
+            if (!inState.length) return null;
+            return (
+              <div key={state.slug}>
+                <Link href={`/${category}/${state.slug}/`} className="tk-dir-state" prefetch={false}>
+                  {state.name}
                 </Link>
-              ))}
-            </div>
-          </section>
-        );
-      })}
-      {seo?.footer ? <p className="t-small mt-8 max-w-[68ch] text-muted">{fillTemplate(seo.footer, vars)}</p> : null}
-    </Container>
+                {inState.map((city) => (
+                  <Link key={city.slug} href={`/${category}/${city.slug}/`} className="tk-dir-city" prefetch={false}>
+                    {city.name}
+                  </Link>
+                ))}
+              </div>
+            );
+          })}
+        </div>
+        <p className="tk-seo-foot">{fillTemplate(seo?.intro || "", vars)}</p>
+      </div>
+    </>
   );
 }

@@ -1,9 +1,19 @@
 "use client";
 
-import { useState } from "react";
+import { createContext, useContext, useState } from "react";
+import { Phone } from "lucide-react";
 import { api, friendlyError } from "@/lib/ui/api";
 
 type Channel = "phone" | "whatsapp" | "telegram";
+type Reveal = { value: string; href?: string };
+type Ctx = {
+  shown: Partial<Record<Channel, Reveal>>;
+  message: string;
+  busy: Channel | null;
+  open: (channel: Channel) => void;
+};
+
+const ContactCtx = createContext<Ctx | null>(null);
 
 async function reveal(slug: string | undefined, id: string | undefined, channel: Channel) {
   let listingId = id;
@@ -17,23 +27,49 @@ async function reveal(slug: string | undefined, id: string | undefined, channel:
     method: "POST",
     body: JSON.stringify({ channel }),
   });
-  if (!res.ok) {
-    const missing = res.status === 404 || res.error.code === "NOT_FOUND";
-    return { error: missing ? "This poster has not shared a contact method yet." : friendlyError(res.error) };
-  }
+  if (!res.ok) return { error: friendlyError(res.error) };
   if (!res.data.value && !res.data.deepLink) return { error: "This poster has not shared a contact method yet." };
   return { value: res.data.value || "", href: res.data.deepLink || undefined };
 }
 
-export function ContactButtons({
-  phone,
-  whatsapp,
-  telegram,
-  compact,
-  sticky,
+export function ContactProvider({
   listingSlug,
   listingId,
-  revealOnly,
+  children,
+}: {
+  listingSlug?: string;
+  listingId?: string;
+  children: React.ReactNode;
+}) {
+  const [shown, setShown] = useState<Partial<Record<Channel, Reveal>>>({});
+  const [message, setMessage] = useState("");
+  const [busy, setBusy] = useState<Channel | null>(null);
+
+  async function open(channel: Channel) {
+    if (shown[channel]) return;
+    setBusy(channel);
+    setMessage("");
+    const result = await reveal(listingSlug, listingId, channel);
+    setBusy(null);
+    if ("error" in result && result.error) {
+      setMessage(result.error);
+      return;
+    }
+    if ("value" in result) setShown((prev) => ({ ...prev, [channel]: { value: result.value || "", href: result.href } }));
+  }
+
+  return <ContactCtx.Provider value={{ shown, message, busy, open }}>{children}</ContactCtx.Provider>;
+}
+
+function useContact() {
+  const ctx = useContext(ContactCtx);
+  if (!ctx) throw new Error("Contact buttons need a provider");
+  return ctx;
+}
+
+export function ContactButtons({
+  sticky,
+  channels = ["phone", "whatsapp"],
 }: {
   phone?: string | null;
   whatsapp?: string | null;
@@ -43,77 +79,48 @@ export function ContactButtons({
   listingSlug?: string;
   listingId?: string;
   revealOnly?: boolean;
+  channels?: Channel[];
 }) {
-  const [busy, setBusy] = useState<Channel | null>(null);
-  const [shown, setShown] = useState<Partial<Record<Channel, string>>>({});
-  const [hrefs, setHrefs] = useState<Partial<Record<Channel, string>>>({});
-  const [message, setMessage] = useState("");
-
-  async function open(channel: Channel) {
-    setBusy(channel);
-    setMessage("");
-    const result = await reveal(listingSlug, listingId, channel);
-    setBusy(null);
-    if ("error" in result && result.error) {
-      const legacy = channel === "phone" ? phone : channel === "whatsapp" ? whatsapp : telegram;
-      if (legacy) setShown((prev) => ({ ...prev, [channel]: legacy }));
-      else setMessage(result.error);
-      return;
-    }
-    if ("value" in result) {
-      setShown((prev) => ({ ...prev, [channel]: result.value }));
-      if (result.href) setHrefs((prev) => ({ ...prev, [channel]: result.href }));
-    }
-  }
-
-  if (revealOnly || compact) {
-    return (
-      <div className="min-w-0">
-        <button type="button" className="quiet-btn w-full whitespace-nowrap" onClick={() => open("phone")} disabled={busy === "phone"}>
-          {busy === "phone" ? "Please wait" : "Reveal contact"}
-        </button>
-        {shown.phone ? <p className="t-small mt-1 break-all">{shown.phone}</p> : null}
-        {message ? <p className="t-caption mt-1 text-muted">{message}</p> : null}
-      </div>
-    );
-  }
-
-  const channels: { id: Channel; label: string; on: boolean }[] = [
-    { id: "phone", label: "Call", on: true },
-    { id: "whatsapp", label: "WhatsApp", on: true },
-    { id: "telegram", label: "Telegram", on: !sticky },
-  ];
-  const buttons = channels
-    .filter((channel) => channel.on)
-    .map((channel) =>
-      shown[channel.id] ? (
-        <a
-          key={channel.id}
-          className="quiet-btn w-full whitespace-nowrap"
-          href={hrefs[channel.id] || (channel.id === "phone" ? `tel:${shown[channel.id]}` : undefined)}
-        >
-          <span className="whitespace-nowrap">{shown[channel.id] || channel.label}</span>
+  const { shown, message, busy, open } = useContact();
+  const buttons = channels.map((channel) => {
+    const hit = shown[channel];
+    const label = channel === "phone" ? "Call" : channel === "whatsapp" ? "WhatsApp" : "Telegram";
+    const tk = channel === "phone" ? "call" : channel === "whatsapp" ? "whatsapp" : undefined;
+    if (hit?.value) {
+      const href = hit.href || (channel === "phone" ? `tel:${hit.value}` : channel === "whatsapp" ? `https://wa.me/${hit.value.replace(/\D/g, "")}` : undefined);
+      return (
+        <a key={channel} className={channel === "whatsapp" ? "tk-btn tk-btn-whatsapp" : "tk-btn tk-btn-rose"} data-tk={tk} href={href}>
+          {hit.value}
         </a>
-      ) : (
-        <button key={channel.id} type="button" className="quiet-btn w-full whitespace-nowrap" onClick={() => open(channel.id)} disabled={busy === channel.id}>
-          {busy === channel.id ? "…" : channel.label}
-        </button>
-      ),
+      );
+    }
+    return (
+      <button key={channel} type="button" className={channel === "whatsapp" ? "tk-btn tk-btn-whatsapp" : "tk-btn tk-btn-rose"} data-tk={tk} onClick={() => open(channel)} disabled={busy === channel}>
+        {channel === "phone" ? <Phone size={16} /> : channel === "whatsapp" ? <Wa /> : null}
+        {busy === channel ? "…" : label}
+      </button>
     );
-
+  });
   if (sticky) {
     return (
       <>
         {buttons}
-        {message ? <p className="t-caption col-span-full text-muted">{message}</p> : null}
+        {message ? <p className="t-caption" style={{ gridColumn: "1 / -1" }}>{message}</p> : null}
       </>
     );
   }
-
   return (
-    <div className="grid min-w-0 gap-2">
+    <div className="tk-actions">
       {buttons}
-      {message ? <p className="t-caption text-muted">{message}</p> : null}
+      {message ? <p className="t-caption">{message}</p> : null}
     </div>
+  );
+}
+
+function Wa() {
+  return (
+    <svg width="16" height="16" viewBox="0 0 24 24" aria-hidden>
+      <path fill="#fff" d="M12 3a9 9 0 0 0-7.7 13.6L3 21l4.5-1.2A9 9 0 1 0 12 3z" />
+    </svg>
   );
 }

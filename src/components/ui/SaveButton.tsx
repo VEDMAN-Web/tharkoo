@@ -55,7 +55,7 @@ export function SaveButton({
         setOn(!on);
       }}
     >
-      <Heart className={on ? "fill-current text-gold" : ""} size={18} />
+      <Heart className={on ? "fill-current text-accent" : ""} size={18} />
       {label === "Save" ? null : <span className="t-small">{on ? "Saved" : label}</span>}
     </button>
   );

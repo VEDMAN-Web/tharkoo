@@ -26,7 +26,7 @@ export default async function HelpArticlePage({ params }: { params: Promise<{ sl
   return (
     <Container className="py-8">
       <p className="t-small">
-        <Link href="/help/" className="text-gold">Help centre</Link>
+        <Link href="/help/" className="text-accent">Help Center</Link>
       </p>
       <h1 className="t-h1 mt-2">{article.title}</h1>
       <Prose className="mt-4 whitespace-pre-wrap">{article.body}</Prose>

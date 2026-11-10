@@ -17,6 +17,7 @@ export function SmartImage({
   sizes,
   className,
   rounded,
+  fit = "cover",
 }: {
   src?: string | null;
   alt: string;
@@ -28,6 +29,7 @@ export function SmartImage({
   sizes?: string;
   className?: string;
   rounded?: string;
+  fit?: "cover" | "contain";
 }) {
   const safe = safePhoto(src);
   const [failed, setFailed] = useState(false);
@@ -35,7 +37,7 @@ export function SmartImage({
   const show = Boolean(safe) && !failed;
   return (
     <div
-      className={cn("relative overflow-hidden bg-[var(--surface-2)]", className)}
+      className={cn("relative overflow-hidden bg-[var(--letterbox)]", className)}
       style={{
         aspectRatio: `${width} / ${height}`,
         borderRadius: rounded,
@@ -50,7 +52,7 @@ export function SmartImage({
           sizes={sizes || `${width}px`}
           priority={priority}
           decoding={priority ? "sync" : "async"}
-          className="h-full w-full object-cover"
+          className={fit === "contain" ? "h-full w-full object-contain" : "h-full w-full object-cover"}
           onLoad={() => setLoaded(true)}
           onError={() => setFailed(true)}
         />

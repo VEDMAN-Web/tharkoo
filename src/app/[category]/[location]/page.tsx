@@ -12,6 +12,7 @@ import {
   getStarListings,
   isThin,
 } from "@/lib/queries";
+import { prettyPlace } from "@/lib/format";
 import { fillTemplate } from "@/lib/seo";
 import { pageMetadata } from "@/lib/ui/meta";
 
@@ -75,10 +76,11 @@ export default async function LocationPage({ params, searchParams }: Props) {
     loc.kind === "city" ? getDistricts(location) : Promise.resolve([]),
   ]);
 
+  const stateName = prettyPlace(loc.stateSlug) || loc.name;
   const vars = {
     category: cat.name,
     city: loc.name,
-    state: loc.name,
+    state: stateName,
     count: feed.total,
     site: site.name,
     year: new Date().getFullYear(),
@@ -99,10 +101,15 @@ export default async function LocationPage({ params, searchParams }: Props) {
       intro={fillTemplate(seo?.intro || "", vars)}
       footer={fillTemplate(seo?.footer || "", vars)}
       crumbs={[
-        { name: "India", path: "/" },
+        { name: "Tharkoo India", path: "/" },
         { name: cat.name!, path: `/${category}/` },
-        { name: loc.name!, path: `/${category}/${location}/` },
+        ...(loc.stateSlug ? [{ name: `${stateName} ${cat.name}`, path: `/${category}/${loc.stateSlug}/` }] : []),
+        { name: `${loc.name} ${cat.name}`, path: `/${category}/${location}/` },
       ]}
+      locationLabel={`${stateName} - ${loc.name}`}
+      cityName={loc.name}
+      categoryName={cat.name}
+      districts={districts.map((d) => ({ href: `/${category}/${location}/${d.slug}/`, label: d.name! }))}
       path={`/${category}/${location}/${sp.photos || sp.verified ? `?${new URLSearchParams({ ...(sp.photos ? { photos: "1" } : {}), ...(sp.verified ? { verified: "1" } : {}) }).toString()}` : ""}`}
       stars={stars}
       items={feed.items}

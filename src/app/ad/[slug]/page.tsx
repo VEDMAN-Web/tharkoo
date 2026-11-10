@@ -1,7 +1,6 @@
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import { AdDetail } from "@/components/AdDetail";
-import { Breadcrumbs } from "@/components/Breadcrumbs";
 import { prettyPlace, displayTitle } from "@/lib/format";
 import { JsonLd, breadcrumbJsonLd } from "@/lib/jsonld";
 import { connectDb } from "@/lib/db";
@@ -9,7 +8,6 @@ import { Listing } from "@/lib/models";
 import { safePhoto } from "@/lib/media";
 import { getCategory, getListingBySlug, getRelated, getSite } from "@/lib/queries";
 import { canonical, fillTemplate } from "@/lib/seo";
-import { Container } from "@/components/ui/Container";
 import { pageMetadata } from "@/lib/ui/meta";
 import { plain } from "@/lib/plain";
 
@@ -41,11 +39,14 @@ export default async function AdPage({ params }: Props) {
   const cover = safePhoto(ad.photos?.[0]);
   const city = prettyPlace(ad.citySlug);
   const catName = cat?.name || ad.categorySlug || "";
+  const state = prettyPlace(ad.stateSlug);
+  const district = prettyPlace(ad.districtSlug);
   const crumbs = [
-    { name: "India", path: "/" },
+    { name: "Tharkoo India", path: "/" },
     { name: catName, path: `/${ad.categorySlug}/` },
-    { name: city, path: `/${ad.categorySlug}/${ad.citySlug}/` },
-    { name: displayTitle(ad.title) || "Ad", path: `/ad/${ad.slug}/` },
+    ...(state ? [{ name: `${state} ${catName}`, path: `/${ad.categorySlug}/${ad.stateSlug}/` }] : []),
+    { name: `${city} ${catName}`, path: `/${ad.categorySlug}/${ad.citySlug}/` },
+    ...(district ? [{ name: `${district} ${catName}`, path: `/${ad.categorySlug}/${ad.citySlug}/${ad.districtSlug}/` }] : []),
   ];
   return (
     <>
@@ -62,10 +63,7 @@ export default async function AdPage({ params }: Props) {
           },
         ]}
       />
-      <Container className="pt-6">
-        <Breadcrumbs crumbs={crumbs} />
-      </Container>
-      <AdDetail ad={plain(ad)} categoryName={catName} related={plain(related)} listingId={listingId} />
+      <AdDetail ad={plain(ad)} categoryName={catName} related={plain(related)} listingId={listingId} crumbs={crumbs} />
     </>
   );
 }

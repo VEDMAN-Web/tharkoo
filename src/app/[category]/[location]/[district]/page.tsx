@@ -11,6 +11,7 @@ import {
   getStarListings,
   isThin,
 } from "@/lib/queries";
+import { prettyPlace } from "@/lib/format";
 import { fillTemplate } from "@/lib/seo";
 import { pageMetadata } from "@/lib/ui/meta";
 
@@ -76,11 +77,16 @@ export default async function DistrictPage({ params, searchParams }: Props) {
       h2={fillTemplate(seo?.h2 || "", vars)}
       intro={fillTemplate(seo?.intro || "", vars)}
       crumbs={[
-        { name: "India", path: "/" },
+        { name: "Tharkoo India", path: "/" },
         { name: cat.name!, path: `/${category}/` },
-        { name: city.name!, path: `/${category}/${location}/` },
-        { name: dist.name!, path: `/${category}/${location}/${district}/` },
+        { name: `${prettyPlace(city.stateSlug)} ${cat.name}`, path: `/${category}/${city.stateSlug}/` },
+        { name: `${city.name} ${cat.name}`, path: `/${category}/${location}/` },
+        { name: `${dist.name} ${cat.name}`, path: `/${category}/${location}/${district}/` },
       ]}
+      locationLabel={`${prettyPlace(city.stateSlug)} - ${city.name}`}
+      cityName={city.name}
+      categoryName={cat.name}
+      districts={districts.map((d) => ({ href: `/${category}/${location}/${d.slug}/`, label: d.name! }))}
       path={`/${category}/${location}/${district}/${sp.photos || sp.verified ? `?${new URLSearchParams({ ...(sp.photos ? { photos: "1" } : {}), ...(sp.verified ? { verified: "1" } : {}) }).toString()}` : ""}`}
       stars={stars}
       items={feed.items}

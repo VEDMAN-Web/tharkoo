@@ -1,16 +1,26 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import Link from "next/link";
+import { Ticket } from "lucide-react";
 import { api, friendlyError, hasSessionHint, idempotencyKey } from "@/lib/ui/api";
-import { Button } from "../ui/Button";
-import { Field, Input } from "../ui/Input";
 import { VendorShell } from "../vendor/VendorShell";
 import { EmptyState } from "../ui/EmptyState";
+import { HelpCard } from "../ui/HelpCard";
 
-export function WalletPanel({ packs }: { packs: { id: string; credits: number; price: number; bonus?: number }[] }) {
+type Pack = { id: string; credits: number; price: number; bonus?: number; tag?: string };
+
+function inr(value: number) {
+  return `Rs ${value.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+}
+
+export function WalletPanel({ packs }: { packs: Pack[] }) {
   const [balance, setBalance] = useState<number | null>(null);
+  const [used, setUsed] = useState<number | null>(null);
   const [message, setMessage] = useState("");
   const [signedOut, setSignedOut] = useState(false);
+  const [code, setCode] = useState("");
+  const [selected, setSelected] = useState("");
 
   useEffect(() => {
     const id = window.setTimeout(() => {
@@ -22,42 +32,90 @@ export function WalletPanel({ packs }: { packs: { id: string; credits: number; p
         if (!res.ok) setSignedOut(true);
         else setBalance(res.data.balance);
       });
+      api<{ items: { delta: number }[] }>("/api/wallet/entries").then((res) => {
+        if (!res.ok) return;
+        setUsed((res.data.items || []).filter((row) => row.delta < 0).reduce((sum, row) => sum + Math.abs(row.delta), 0));
+      });
     }, 0);
     return () => window.clearTimeout(id);
   }, []);
 
-  async function buy(packId: string) {
+  const base = packs.find((pack) => !pack.bonus) || packs[0];
+  const rate = base && base.credits ? base.price / base.credits : 0;
+  const chosen = packs.find((pack) => pack.id === selected);
+
+  async function redeem(event?: React.FormEvent) {
+    event?.preventDefault();
+    const res = await api("/api/coupons/redeem", { method: "POST", body: JSON.stringify({ code }) });
+    setMessage(res.ok ? "Coupon applied." : friendlyError(res.error));
+  }
+
+  async function pay() {
+    if (!chosen) return;
     setMessage("");
-    const res = await api<{ balance: number }>("/api/wallet/packs", {
+    const res = await api<{ balance: number; providerRef?: string; provider?: string }>("/api/wallet/packs", {
       method: "POST",
-      body: JSON.stringify({ packId, idempotencyKey: idempotencyKey(packId) }),
+      body: JSON.stringify({ packId: chosen.id, idempotencyKey: idempotencyKey(chosen.id), ...(code ? { couponCode: code } : {}) }),
     });
-    if (!res.ok) return setMessage(friendlyError(res.error));
+    if (!res.ok) {
+      if (res.error.code === "PAYMENT_REQUIRED") return setMessage("Payment is required before credits can be added.");
+      if (res.error.code === "CONFLICT") return setMessage("That payment was already used.");
+      return setMessage(friendlyError(res.error));
+    }
     setBalance(res.data.balance);
-    setMessage("Credits added.");
+    const test = res.data.provider === "mock" || String(res.data.providerRef || "").startsWith("pay_test");
+    setMessage(test ? "Test mode: no real payment" : "Payment started.");
   }
 
   return (
-    <VendorShell title="Wallet">
+    <VendorShell>
+      <h1 className="tk-page-h1">Buy Credits</h1>
       {signedOut ? (
         <EmptyState title="Sign in to see your wallet" body="Your credit balance loads after you log in." action={{ href: "/u/login/?next=/u/account/credits/", label: "Log in" }} />
       ) : (
         <>
-          <p className="t-body">Balance: {balance === null ? "…" : balance} credits</p>
-          <p aria-live="polite" className="t-small text-gold">{message}</p>
-          <div className="mt-4 grid gap-3">
-            {packs.map((pack) => (
-              <div key={pack.id} className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-line p-4">
-                <p className="t-small">
-                  {pack.credits} credits{pack.bonus ? ` + ${pack.bonus} extra` : ""} · {pack.price}
-                </p>
-                <Button type="button" onClick={() => buy(pack.id)}>
-                  Buy
-                </Button>
-              </div>
-            ))}
-            {!packs.length ? <p className="t-small text-muted">No credit packs are on sale right now.</p> : null}
+          <div className="tk-profile" style={{ display: "flex", justifyContent: "space-between", alignItems: "center", border: "1px solid var(--border)" }}>
+            <p className="t-small">
+              <strong>{balance ?? 0}</strong> Available <strong>{used ?? 0}</strong> Used
+            </p>
+            <Link href="/u/account/credits/history/" style={{ color: "var(--accent)" }}>Transaction History</Link>
           </div>
+          <form onSubmit={redeem} style={{ marginTop: 26 }}>
+            <p className="t-small"><Ticket size={14} /> Do you have a Coupon?</p>
+            <div style={{ display: "flex", gap: 8 }}>
+              <input aria-label="Insert coupon code" placeholder="Insert coupon code" value={code} onChange={(event) => setCode(event.target.value)} style={{ flex: 1, height: 32, border: "1px solid var(--border)", borderRadius: 4, padding: "0 8px" }} />
+              <button type="submit" className="tk-btn tk-btn-outline-primary" data-tk="apply-coupon">APPLY</button>
+            </div>
+          </form>
+          <div style={{ marginTop: 20 }}>
+            {packs.map((pack) => {
+              const shown = pack.credits + (pack.bonus || 0);
+              const list = pack.bonus ? shown * rate : 0;
+              const discount = list > 0 ? Math.round(100 * (1 - pack.price / list)) : 0;
+              const tag = (pack.tag || "").toLowerCase();
+              return (
+                <button key={pack.id} type="button" className={`tk-pack ${selected === pack.id ? "is-on" : ""}`} data-tk="pack" onClick={() => setSelected(pack.id)}>
+                  {tag.includes("popular") ? <span className="tk-pack-tag">MOST POPULAR</span> : null}
+                  {tag.includes("deal") ? <span className="tk-pack-tag deal">BEST DEAL</span> : null}
+                  <strong style={{ fontSize: 22 }}>{shown}</strong>
+                  <span style={{ fontSize: 12 }}>/Credits</span>
+                  {pack.bonus ? <p style={{ fontSize: 12, margin: "4px 0" }}>({pack.credits} + {pack.bonus} FREE)</p> : null}
+                  <span style={{ float: "right", fontWeight: 700 }}>{inr(pack.price)}</span>
+                  {pack.bonus && list > pack.price ? <span style={{ float: "right", clear: "right", fontSize: 12, color: "var(--muted)", textDecoration: "line-through" }}>{inr(list)}</span> : null}
+                  {discount > 0 ? <span className="tk-off">{discount}% DISCOUNT</span> : null}
+                </button>
+              );
+            })}
+            {!packs.length ? <p className="t-small">No credit packs are on sale right now.</p> : null}
+          </div>
+          <p style={{ textAlign: "right" }}>
+            TOTAL: <strong style={{ color: "var(--primary)" }}>{chosen ? inr(chosen.price) : "Rs 0"}</strong>
+          </p>
+          <p style={{ textAlign: "right" }}>
+            <button type="button" className="tk-btn tk-btn-rose tk-btn-sm" style={{ width: 230, opacity: chosen ? 1 : 0.5 }} disabled={!chosen} onClick={pay}>PAY</button>
+          </p>
+          <p aria-live="polite" className="t-small">{message}</p>
+          <HelpCard />
         </>
       )}
     </VendorShell>
@@ -81,20 +139,17 @@ export function WalletHistory() {
     return () => window.clearTimeout(id);
   }, []);
   return (
-    <VendorShell title="Credit history">
+    <VendorShell>
+      <h1 className="tk-page-h1">Transaction History</h1>
       {signedOut ? (
         <EmptyState title="Sign in to see history" body="Transactions appear after you log in." action={{ href: "/u/login/?next=/u/account/credits/history/", label: "Log in" }} />
       ) : items && items.length === 0 ? (
         <EmptyState title="No transactions yet" body="Purchases and spends will show up here." action={{ href: "/u/account/credits/", label: "Open wallet" }} />
       ) : (
-        <div className="overflow-x-auto">
-          <table className="w-full min-w-[320px] text-left t-small">
+        <div style={{ overflowX: "auto" }}>
+          <table className="w-full text-left t-small">
             <thead>
-              <tr>
-                <th>When</th>
-                <th>Reason</th>
-                <th>Credits</th>
-              </tr>
+              <tr><th>When</th><th>Reason</th><th>Credits</th></tr>
             </thead>
             <tbody>
               {(items || []).map((row) => (
@@ -106,9 +161,9 @@ export function WalletHistory() {
               ))}
             </tbody>
           </table>
-          {items === null ? <p className="t-small text-muted">Loading…</p> : null}
         </div>
       )}
+      <HelpCard />
     </VendorShell>
   );
 }
@@ -116,20 +171,40 @@ export function WalletHistory() {
 export function CouponRedeem() {
   const [code, setCode] = useState("");
   const [message, setMessage] = useState("");
+  const [open, setOpen] = useState("");
   async function redeem(event: React.FormEvent) {
     event.preventDefault();
     const res = await api("/api/coupons/redeem", { method: "POST", body: JSON.stringify({ code }) });
     setMessage(res.ok ? "Coupon applied." : friendlyError(res.error));
   }
+  const faqs = useMemo(
+    () => [
+      ["How to use a coupon?", "Use the coupon box on this page or on the Buy Credits page."],
+      ["Where do I see my coupons?", "Coupon credit appears in the wallet history."],
+    ],
+    [],
+  );
   return (
-    <VendorShell title="Coupons">
-      <form onSubmit={redeem} className="grid max-w-md gap-3">
-        <Field id="code" label="Coupon code">
-          <Input id="code" value={code} onChange={(event) => setCode(event.target.value)} />
-        </Field>
-        <Button type="submit">Apply</Button>
-        <p aria-live="polite" className="t-small text-gold">{message}</p>
+    <VendorShell>
+      <h1 className="tk-page-h1">Coupons</h1>
+      <form onSubmit={redeem}>
+        <p className="t-small"><Ticket size={14} /> Do you have a Coupon?</p>
+        <div style={{ display: "flex", gap: 8 }}>
+          <input aria-label="Insert coupon code" placeholder="Insert coupon code" value={code} onChange={(event) => setCode(event.target.value)} style={{ flex: 1, height: 32, border: "1px solid var(--border)", borderRadius: 4, padding: "0 8px" }} />
+          <button type="submit" className="tk-btn tk-btn-outline-primary" data-tk="apply-coupon">APPLY</button>
+        </div>
+        <p aria-live="polite" className="t-small">{message}</p>
       </form>
+      <p style={{ textAlign: "center", marginTop: 50, color: "var(--muted)" }}>Frequently asked questions</p>
+      {faqs.map(([q, a]) => (
+        <div key={q}>
+          <button type="button" className="tk-acc" aria-expanded={open === q} onClick={() => setOpen(open === q ? "" : q)}>
+            {q} <span>{open === q ? "▴" : "▾"}</span>
+          </button>
+          {open === q ? <p className="t-small">{a}</p> : null}
+        </div>
+      ))}
+      <HelpCard />
     </VendorShell>
   );
 }
@@ -151,72 +226,82 @@ export function KycStatus() {
     return () => window.clearTimeout(id);
   }, []);
   return (
-    <VendorShell title="Identity check">
+    <VendorShell>
+      <h1 className="tk-page-h1">Identity check</h1>
       {signedOut ? (
         <EmptyState title="Sign in to check your status" body="Verification status is available after you log in." action={{ href: "/u/login/?next=/u/account/kyc/", label: "Log in" }} />
       ) : (
-        <>
-          <p className="t-body text-muted">Current status: {status || "Loading…"}</p>
-          <p className="mt-3 t-small text-muted">
-            A trust reviewer records the result. Write to the help desk if you need to send a document.
-          </p>
-        </>
+        <p className="t-body">Current status: {status || "Loading…"}</p>
       )}
+      <HelpCard />
     </VendorShell>
   );
 }
 
 export function AccountSettings() {
-  const [profile, setProfile] = useState<{ name: string; email: string; status: string } | null>(null);
+  const [profile, setProfile] = useState<{ email: string } | null>(null);
   const [signedOut, setSignedOut] = useState(false);
+  const [sent, setSent] = useState(false);
+  const [message, setMessage] = useState("");
   useEffect(() => {
     const id = window.setTimeout(() => {
       if (!hasSessionHint()) {
         setSignedOut(true);
         return;
       }
-      api<{ user: { displayName?: string; email?: string; verificationStatus?: string } }>("/api/auth/me").then((res) => {
+      api<{ user: { email?: string } }>("/api/auth/me").then((res) => {
         if (!res.ok) setSignedOut(true);
-        else {
-          setProfile({
-            name: res.data.user.displayName || "—",
-            email: res.data.user.email || "—",
-            status: res.data.user.verificationStatus || "unsubmitted",
-          });
-        }
+        else setProfile({ email: res.data.user.email || "" });
       });
     }, 0);
     return () => window.clearTimeout(id);
   }, []);
+
+  async function changePassword() {
+    if (!profile?.email) return;
+    const res = await api("/api/auth/forgot-password", { method: "POST", body: JSON.stringify({ email: profile.email }) });
+    if (!res.ok) return setMessage(friendlyError(res.error));
+    setSent(true);
+  }
+
   return (
-    <VendorShell title="Settings">
+    <VendorShell>
+      <h1 className="tk-page-h1">Account Settings</h1>
       {signedOut ? (
         <EmptyState title="Sign in to see your settings" body="Your name and email appear here after you log in." action={{ href: "/u/login/?next=/u/account/edit-account/", label: "Log in" }} />
       ) : (
-        <dl className="grid max-w-lg gap-3">
-          <div>
-            <dt className="t-caption text-muted">Name</dt>
-            <dd className="t-body">{profile?.name || "Loading…"}</dd>
+        <>
+          <p style={{ textAlign: "center", fontSize: 12, fontWeight: 700, letterSpacing: "0.06em" }}>MY ACCOUNT</p>
+          <p style={{ textAlign: "center" }}>{profile?.email || "Loading…"}</p>
+          <div className="tk-profile" style={{ textAlign: "center", marginTop: 16 }}>
+            <p style={{ fontSize: 18 }}>CHANGE PASSWORD</p>
+            <button type="button" className="tk-btn tk-btn-outline-rose" onClick={changePassword}>
+              {sent ? "We have sent you an email" : "CHANGE PASSWORD"}
+            </button>
+            <p className="t-small">We will send you an email to change your password</p>
+            <p aria-live="polite">{message}</p>
           </div>
-          <div>
-            <dt className="t-caption text-muted">Email</dt>
-            <dd className="t-body">{profile?.email || "Loading…"}</dd>
+          <div className="tk-hair" style={{ margin: "16px 0" }} />
+          <div className="tk-news">
+            <p style={{ color: "var(--accent)" }}>Tharkoo News</p>
+            <Link href="/u/account/notifications/" style={{ color: "var(--accent)" }}>Manage preferences</Link>
           </div>
-          <div>
-            <dt className="t-caption text-muted">Identity check</dt>
-            <dd className="t-body">{profile?.status || "Loading…"}</dd>
-          </div>
-          <p className="t-small text-muted">Password changes use the reset link from the login page. Identity status lives on the verification page.</p>
-        </dl>
+          <p style={{ marginTop: 16 }}>
+            <Link href="/u/account/delete/" style={{ color: "var(--accent)", fontSize: 13 }}>Delete my account</Link>
+          </p>
+        </>
       )}
+      <HelpCard />
     </VendorShell>
   );
 }
 
 export function ComingSoon({ title, body, href, label }: { title: string; body: string; href: string; label: string }) {
   return (
-    <VendorShell title={title}>
+    <VendorShell>
+      <h1 className="tk-page-h1">{title}</h1>
       <EmptyState title="Coming soon" body={body} action={{ href, label }} />
+      <HelpCard />
     </VendorShell>
   );
 }

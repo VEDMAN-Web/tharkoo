@@ -2,28 +2,30 @@ import Link from "next/link";
 import Image from "next/image";
 
 export function Logo({
-  name,
+  name = "tharkoo",
   href = "/",
-  size = "md",
+  country = "India",
+  city,
 }: {
-  name: string;
+  name?: string;
   href?: string | null;
   size?: "md" | "lg";
   country?: string;
+  city?: string;
 }) {
-  const box = size === "lg" ? 32 : 32;
   const mark = (
-    <span className="inline-flex shrink-0 items-center gap-2">
-      <Image src="/brand/logo-mark.svg" alt="" width={box} height={box} priority />
-      <span className="whitespace-nowrap font-display text-[22px] font-semibold leading-none text-text sm:text-[28px]">
-        {name.toLowerCase()}
-        <span className="text-gold">.</span>
+    <span className="tk-logo" data-tk="logo">
+      <Image className="tk-logo-mark" src="/brand/logo-mark.svg" alt="" width={28} height={28} priority />
+      <span>
+        <span className="tk-wordmark">{name.toLowerCase()}</span>
+        <span className="tk-logo-sub">{country}</span>
+        {city ? <span className="tk-logo-city">{city}</span> : null}
       </span>
     </span>
   );
   if (!href) return mark;
   return (
-    <Link href={href} className="inline-flex shrink-0" title={name} aria-label={name}>
+    <Link href={href}>
       {mark}
     </Link>
   );

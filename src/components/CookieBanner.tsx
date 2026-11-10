@@ -22,36 +22,32 @@ export function CookieBanner({ body }: { body?: string; accept?: string; necessa
   if (!open) return null;
   const onAd = path.startsWith("/ad/");
   return (
-    <div className={`fixed z-40 w-full max-w-[420px] p-3 ${onAd ? "bottom-20" : "bottom-0"} left-0 lg:bottom-4 lg:left-4`}>
-      <div className="rounded-xl border border-line bg-surface p-4 shadow-md">
-        <p className="t-small text-muted">
-          {body || "We use cookies to keep the site reliable and remember your choices."}{" "}
-          <Link href="/cms/cookies/" className="text-gold">
-            Cookie notice
-          </Link>
-        </p>
-        <div className="mt-3 flex flex-wrap gap-2">
-          <button
-            type="button"
-            className="gold-btn"
-            onClick={() => {
-              localStorage.setItem("nl-cookies", "all");
-              setOpen(false);
-            }}
-          >
-            Accept all
-          </button>
-          <button
-            type="button"
-            className="quiet-btn"
-            onClick={() => {
-              localStorage.setItem("nl-cookies", "necessary");
-              setOpen(false);
-            }}
-          >
-            Only necessary
-          </button>
-        </div>
+    <div className={`tk-cookie ${onAd ? "on-ad" : ""}`}>
+      <p>
+        {body || "We use cookies to keep the site reliable and remember your choices."}{" "}
+        <Link href="/cookies/">Cookie notice</Link>
+      </p>
+      <div style={{ display: "flex", gap: 8, marginTop: 12 }}>
+        <button
+          type="button"
+          className="tk-btn tk-btn-rose tk-btn-sm"
+          onClick={() => {
+            localStorage.setItem("nl-cookies", "all");
+            setOpen(false);
+          }}
+        >
+          Accept all
+        </button>
+        <button
+          type="button"
+          className="tk-btn tk-btn-outline-rose"
+          onClick={() => {
+            localStorage.setItem("nl-cookies", "necessary");
+            setOpen(false);
+          }}
+        >
+          Only necessary
+        </button>
       </div>
     </div>
   );

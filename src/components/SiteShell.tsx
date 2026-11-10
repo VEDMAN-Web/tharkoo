@@ -76,13 +76,21 @@ function Chrome({
       <Header
         siteName={(site as { logoText?: string }).logoText || site.name || "Tharkoo"}
         countryName={site.countryName || "India"}
-        searchPlaceholder={(site as { searchPlaceholder?: string }).searchPlaceholder || "Search jobs, homes, cars, pets..."}
-        postCta={(site as { postCta?: string }).postCta || "Post an ad"}
+        searchPlaceholder={(site as { searchPlaceholder?: string }).searchPlaceholder || "Search By City, Category..."}
+        postCta="POST YOUR AD"
         categories={catProps}
         cities={cityProps}
         user={user}
+        social={socialLinks}
       />
       <MainInner>{children}</MainInner>
+      <div
+        id="tk-facts"
+        hidden
+        data-hours={site.supportHours || "Monday through Friday"}
+        data-wa={"supportWhatsapp" in site ? site.supportWhatsapp || "" : ""}
+        data-tg={"supportTelegram" in site ? site.supportTelegram || "" : ""}
+      />
       <Footer
         siteName={site.name || "Tharkoo"}
         legalName={site.legalName || "Tharkoo"}
@@ -93,7 +101,7 @@ function Chrome({
         links={footerLinks}
         social={socialLinks}
       />
-      <AgeGate brand="Tharkoo" title="Please confirm your age" body="Tharkoo is for people aged 18 and over. Confirm to continue." yes="I am 18 or over" no="Leave" />
+      <AgeGate brand="Tharkoo" title="Please confirm your age before continuing" body="I am over 18 years old and I accept the terms of use of this site." yes="ACCEPT" no="Decline" />
       <CookieBanner body={(site as { cookieBody?: string }).cookieBody} />
     </CityProvider>
   );

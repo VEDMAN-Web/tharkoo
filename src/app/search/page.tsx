@@ -36,7 +36,8 @@ export default async function SearchPage({
   const categories = await getCategories();
   return (
     <ListingPageView
-      h1={sp.q && feed.total === 0 ? `No results for “${sp.q}”` : sp.q ? `Results for “${sp.q}”` : "Search results"}
+      h1={sp.q ? `Results for “${sp.q}”` : "Search results"}
+      locationLabel={sp.q || "Search"}
       intro={
         sp.q && feed.total === 0
           ? "Try another word, or open a popular category."

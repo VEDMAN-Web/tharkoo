@@ -1,44 +1,43 @@
 # Tharkoo design system
 
-Midnight and champagne. Near-black surfaces, ivory text, one champagne-gold accent. Dark is the only theme.
+Plum and rose on ivory. Light is the only theme. `color-scheme: light`.
 
 ## Tokens
 
-Defined in `src/styles/tokens.css` and mapped in `src/app/globals.css` for Tailwind (`bg-surface`, `text-gold`, `text-muted`, `border-line`, `font-display`).
+Defined in `src/styles/tokens.css` and mapped in `src/app/globals.css`.
 
 | Token | Value | Use |
 |---|---|---|
-| `--bg` | `#0B0B0E` | Page |
-| `--surface` | `#16161C` | Cards |
-| `--text` | `#F4F1EA` | Primary text |
-| `--text-muted` | `#A8A399` | Secondary text |
-| `--gold` | `#C9A96E` | Accent, links, primary buttons |
-| `--ink` | `#0B0B0E` | Text on gold |
-| `--focus` | `#E8D3A6` | 2px focus ring, 2px offset |
+| `--bg` | `#FFFDFB` | Page |
+| `--card` | `#FFFFFF` | Cards and dialogs |
+| `--text` | `#1F2433` | Primary text |
+| `--muted` | `#6E7180` | Secondary text |
+| `--primary` | `#6A2150` | Plum actions and wordmark |
+| `--accent` | `#A63A5E` | Rose links and filled buttons |
+| `--focus` | `#6A2150` | 2px focus ring, 2px offset |
 
-Radii: 6 / 10 / 16 / 24 / pill. Cards use 16. Buttons use 10. Dialogs use 24.
+The only mid-dark colour is the hero gradient start `#5A2158`. Page surfaces stay light.
 
-Type: Cormorant Garamond for display, H1, H2, prices, and the wordmark (never under 24px). Manrope for everything else. Minimum text size is 12px. One H1 per page.
+Type: Cormorant Garamond for display headings and the wordmark. Manrope for body, UI, and listing titles. Minimum text size is 12px. One H1 per page. Content width is 960px.
 
 ## Components
 
-Live samples: `/styleguide/`.
+Live samples: `/styleguide/`. New layout classes use the `tk-` prefix.
 
 | Component | Notes |
 |---|---|
-| `Button` | `primary` `secondary` `ghost` `outline` `danger`; sizes `sm` `md` `lg`; `loading`; renders a link when `href` is set |
-| `Input` / `Field` | Label above, 16px text, 48px height |
+| `Button` | `primary` `secondary` `ghost` `outline` `danger`; renders a link when `href` is set |
+| `Input` / `Field` | Label above, error text under the control |
 | `Chip` | Real link when `href` is set |
-| `Badge` | `new` `highlight` `top` `supertop` `star` `verified` `live` |
-| `AdCard` | One stretched link. Variants follow `ad.variant` |
-| `Gallery` | Placeholder when there are no photos |
+| `AdCard` | Variants `free` `top` `supertop` `highlight` `star` |
+| `Gallery` | Light letterbox, show-all sheet |
 | `EmptyState` | Always include a next action |
-| `Dialog` | Focus trap, Esc, scroll lock |
+| `Dialog` | Focus trap, Esc, scroll lock, white panel |
 | `SmartImage` | Falls back to `PlaceholderArt` when the source is empty or fails |
 
 ## Do
 
-- Use tokens and the type classes (`.t-display` through `.t-overline`).
+- Use tokens and the type classes.
 - Keep contact numbers off the page until a reveal click.
 - Use `displayTitle()` so a numeric prefix is never shown.
 - Give every empty state a real next step.
@@ -46,8 +45,7 @@ Live samples: `/styleguide/`.
 
 ## Do not
 
-- Do not introduce a light theme, a third font, or text under 12px.
+- Do not introduce a dark theme, a third font, or text under 12px.
 - Do not invent balances, counts, coupons, or success states.
 - Do not print phone, WhatsApp, or Telegram values in the initial HTML.
-- Do not copy another classifieds site’s colours, layout, or wording.
 - Do not add sexual or companionship-for-pay copy.
