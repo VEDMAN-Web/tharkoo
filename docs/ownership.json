@@ -60,6 +60,21 @@
       ],
       "exclude": ["public/brand/**"]
     },
+    "T0.5": {
+      "branchPrefix": "cursor/t0.5",
+      "globs": [
+        "src/lib/queries.ts",
+        "src/app/layout.tsx",
+        "src/components/PostWizard.tsx",
+        "src/components/Footer.tsx",
+        "src/components/CategoryIcon.tsx",
+        "src/components/CityPicker.tsx",
+        "src/components/HeroBand.tsx",
+        "src/components/Logo.tsx",
+        "src/app/cities/page.tsx",
+        ".github/workflows/ci.yml"
+      ]
+    },
     "T1.1": {
       "branchPrefix": "cursor/t1.1",
       "globs": [
