@@ -1,9 +1,15 @@
 const PHOTOS: Record<string, string> = {
-  "call-girls": "/placeholders/p1.jpg",
-  massages: "/placeholders/p2.jpg",
-  "male-escorts": "/placeholders/p3.jpg",
-  transsexual: "/placeholders/p4.jpg",
-  "adult-meetings": "/placeholders/p5.jpg",
+  dating: "/placeholders/p1.jpg",
+  friendship: "/placeholders/p2.jpg",
+  meetups: "/placeholders/p3.jpg",
+  personal: "/placeholders/p4.jpg",
+  jobs: "/placeholders/p5.jpg",
+  wellness: "/placeholders/p6.jpg",
+  property: "/placeholders/p7.jpg",
+  vehicles: "/placeholders/p8.jpg",
+  "buy-and-sell": "/placeholders/p1.jpg",
+  pets: "/placeholders/p2.jpg",
+  education: "/placeholders/p3.jpg",
 };
 
 export function CategoryIcon({
