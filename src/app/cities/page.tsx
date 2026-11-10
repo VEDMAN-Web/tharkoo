@@ -7,7 +7,7 @@ export const metadata: Metadata = { title: "Cities of India" };
 
 export default async function CitiesPage() {
   const [states, cities, categories, site] = await Promise.all([getStates(), getCities(), getCategories(), getSite()]);
-  const first = categories[0]?.slug || "call-girls";
+  const first = categories[0]?.slug || "dating";
   return (
     <>
       <Breadcrumbs

@@ -9,7 +9,7 @@ type City = { slug: string; name: string; stateSlug?: string };
 export function CityPicker({
   brand = "tharkoo",
   cities,
-  category = "call-girls",
+  category = "dating",
   onClose,
 }: {
   brand?: string;

@@ -24,11 +24,7 @@ export function HeroBand({
         <div className="hero-grade" />
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img className="hero-photo" src="/placeholders/p1.jpg" alt="" />
-        <p className="hero-claim">
-          Single? Taken? Doesn&apos;t matter,
-          <br />
-          Tharkoo is for everyone
-        </p>
+        <p className="hero-claim">Tharkoo is for everyone</p>
         <div className="hero-search-wrap">
           <button type="button" className="hero-search" onClick={() => setSearch(true)}>
             <span>{placeholder}</span>

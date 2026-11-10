@@ -74,14 +74,9 @@ export function Footer({
           <div className="footer-top">
             <div>
               <Logo name={siteName} />
-              <div className="rta-badge">
-                <strong>RTA</strong>
-                <span>RESTRICTED TO ADULTS</span>
-              </div>
             </div>
             <p className="footer-about">
-              {about ||
-                `${siteName} is the largest advertising platform for independent escorts worldwide. Browse through thousands of new ads from hot escorts around the world.`}
+              {about || `${siteName}, premium classifieds in India.`}
             </p>
           </div>
           <div className="footer-cols">

@@ -26,8 +26,7 @@ export async function getSite() {
     return (
       (await Site.findOne({ key: "default" }).lean()) ?? {
         name: "Tharkoo",
-        tagline:
-          "Welcome to Tharkoo. Browse Call Girls, Massages, Male Escorts, Transsexual and Adult Meetings across Indian cities. Post your ad absolutely FREE.",
+        tagline: "Tharkoo, premium classifieds in India.",
         legalName: "SparkBeta Tech",
         countryName: "India",
         supportHours: "Mon–Fri 14:00–20:00 IST",

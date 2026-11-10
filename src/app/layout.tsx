@@ -8,9 +8,8 @@ const inter = Inter({ subsets: ["latin"], weight: ["300", "400", "500", "600", "
 export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
-  title: { default: "Free classified ads and Adult meetings in India - Tharkoo", template: "%s" },
-  description:
-    "Tharkoo #1 Adult Classified site in India. Browse our categories for getting a sex meeting. Independent Girls, Massages, Male Escorts, Transsexual and Gay Dating. Can not find what you're looking for? POST YOUR AD absolutely FREE!",
+  title: { default: "Tharkoo, premium classifieds in India", template: "%s" },
+  description: "Tharkoo, premium classifieds in India.",
 };
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {

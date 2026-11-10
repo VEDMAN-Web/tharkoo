@@ -19,7 +19,7 @@ export function PostWizard() {
   const [pack, setPack] = useState(CREDIT_PACKS[3]);
 
   const previewTitle = useMemo(
-    () => title || "9876500000 - Hyderabad Call Girls: Your nickname",
+    () => title || "9876500000 - Hyderabad Dating: Your nickname",
     [title],
   );
 
@@ -67,7 +67,7 @@ export function PostWizard() {
           </label>
           <label className="field">
             Category
-            <select defaultValue="call-girls">
+            <select defaultValue="dating">
               {CATEGORIES.map((c) => <option key={c.slug} value={c.slug}>{c.name}</option>)}
             </select>
           </label>
@@ -83,7 +83,7 @@ export function PostWizard() {
           <label className="field">Nickname (max 20) <input maxLength={20} /></label>
           <label className="field">
             Title (min 5)
-            <input value={title} onChange={(e) => { setTitle(e.target.value); setBanned(e.target.value.toLowerCase().includes("escortt") ? "escortt" : ""); }} />
+            <input value={title} onChange={(e) => { setTitle(e.target.value); setBanned(e.target.value.toLowerCase().includes("advancefee") ? "advancefee" : ""); }} />
             {banned ? <span className="text-[12px] text-[#e20044]">Banned word: {banned}</span> : null}
           </label>
           <label className="field">
