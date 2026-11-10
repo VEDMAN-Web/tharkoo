@@ -29,14 +29,6 @@ type Cat = {
 
 type City = { slug?: string; name?: string };
 
-const CARD_PHOTO: Record<string, string> = {
-  "call-girls": "/skokka/call-girls.jpg",
-  massages: "/skokka/massages.jpg",
-  "male-escorts": "/skokka/male-escorts.jpg",
-  transsexual: "/skokka/trans.jpg",
-  "adult-meetings": "/skokka/meetings.jpg",
-};
-
 export function HomeBlocks({
   blocks,
   categories,
@@ -77,16 +69,16 @@ export function HomeBlocks({
           </Link>
         </div>
         <div className="home-titles">
-          <h1 className="main-title home">{hero?.title || "Hot meetings in your city"}</h1>
-          <h2 className="h2 home">{hero?.subtitle || "Find your favourite Escort in Tharkoo"}</h2>
+          <h1 className="main-title home">{hero?.title || "Classifieds in your city"}</h1>
+          <h2 className="h2 home">{hero?.subtitle || "People, work, homes, and local services"}</h2>
         </div>
         <div className="home-grid">
-          {onHome.map((cat) => {
+          {onHome.map((cat, index) => {
             const featured = cityOrder
               .map((slug) => cities.find((c) => c.slug === slug))
               .filter(Boolean)
               .slice(0, count) as City[];
-            const photo = CARD_PHOTO[cat.slug || ""] || "/placeholders/p1.jpg";
+            const photo = `/placeholders/p${(index % 8) + 1}.jpg`;
             return (
               <article key={cat.slug} className="cat-card">
                 <Link href={`/${cat.slug}/`} className="cat-card-photo" style={{ backgroundImage: `url(${photo})` }}>
