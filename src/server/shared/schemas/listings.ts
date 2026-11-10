@@ -83,9 +83,21 @@ export const verificationUploadBodySchema = z.object({
   byteSize: z.number().int().positive().max(8 * 1024 * 1024),
 });
 
-export const verificationCompleteBodySchema = z.object({
-  assetId: idSchema,
+const verificationDocumentsBodySchema = z.object({
+  frontAssetId: idSchema,
+  backAssetId: idSchema.optional(),
+  selfieAssetId: idSchema,
 });
+
+/** New rows send front, optional back, and selfie. `{ assetId }` still parses so the current complete handler keeps typechecking until it reads the new fields. */
+export const verificationCompleteBodySchema = z
+  .union([verificationDocumentsBodySchema, z.object({ assetId: idSchema })])
+  .transform((body) => {
+    if ("frontAssetId" in body) {
+      return { ...body, assetId: body.frontAssetId };
+    }
+    return { assetId: body.assetId, frontAssetId: body.assetId, selfieAssetId: body.assetId };
+  });
 
 export const verificationDecisionBodySchema = z.object({
   decision: z.enum(["approved", "rejected"]),

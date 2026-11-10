@@ -36,7 +36,7 @@ New names use plain model names and collections: `User`, `Session`, `EmailVerifi
 
 `AuditEvent` (`audit_events`), `ListingVersion` (`listing_versions`), and `WalletEntry` (`wallet_entries`) use `appendOnlyPlugin` and `lockBulkWrites`. Update, delete, replace, and any bulk write other than `insertOne` throw `AppendOnlyError`. Insert and find are allowed. No TTL on `audit_events`.
 
-`AuditRepository` exposes `append` and `list` only. `redact` replaces `passwordHash`, `tokenHash`, `contact`, `documentRef`, `password`, `token`, and `hashes` with `[redacted]` before a snapshot is stored.
+`AuditRepository` exposes `append` and `list` only. `redact` replaces `passwordHash`, `tokenHash`, `contact`, `documentRef`, `front`, `back`, `selfie`, `password`, `token`, and `hashes` with `[redacted]` before a snapshot is stored.
 
 ## Users and sessions
 
@@ -46,7 +46,7 @@ New names use plain model names and collections: `User`, `Session`, `EmailVerifi
 
 `email_verification_tokens` and `password_reset_tokens`: `userId`, `tokenHash` unique, `expiresAt` TTL, `usedAt?`.
 
-`identity_verifications`: `userId`, `provider` (`manual` or `vendor`), `documentRef`, `status` (`pending_review`, `approved`, `rejected`), `dateOfBirthAsserted`, `reviewerId?`, `decisionReason?`, `decidedAt?`.
+`identity_verifications`: `userId`, `provider` (`manual` or `vendor`), `documentRef?` (legacy; new rows set it to the front asset id), `documents?` (`front` required when `documents` is set, `back?`, `selfie` required when `documents` is set), `status` (`pending_review`, `approved`, `rejected`), `dateOfBirthAsserted`, `reviewerId?`, `decisionReason?`, `decidedAt?`.
 
 ## Catalogue
 
