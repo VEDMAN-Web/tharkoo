@@ -22,8 +22,6 @@ jobs:
       - run: npm run lint
 
   typecheck:
-    # tsc OOMs on Mongoose InferSchemaType until T0.2. Ana removes continue-on-error after T0.2/T0.3.
-    continue-on-error: true
     timeout-minutes: 15
     runs-on: ubuntu-latest
     steps:
@@ -47,8 +45,6 @@ jobs:
       - run: npm test --if-present
 
   build:
-    # Build prerenders against Mongo until T0.3. Ana removes continue-on-error after that merge.
-    continue-on-error: true
     timeout-minutes: 20
     runs-on: ubuntu-latest
     steps:
