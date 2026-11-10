@@ -1,54 +1,28 @@
-import type { ComponentProps } from "react";
-import { HomeBlocks } from "@/components/HomeBlocks";
-import { JsonLd } from "@/lib/jsonld";
-import { getCategories, getCities, getSeo, getSite } from "@/lib/queries";
-import { canonical } from "@/lib/seo";
+import { Suspense } from "react";
+import { HomeAbove, HomeBelow, SkeletonGrid } from "@/components/HomeBlocks";
+import { pageMetadata } from "@/lib/ui/meta";
 
 export const dynamic = "force-dynamic";
 
-export default async function Home() {
-  const [site, seo, categories, cities] = await Promise.all([
-    getSite(),
-    getSeo("home"),
-    getCategories(),
-    getCities(),
-  ]);
-  const stored = (site as { homepage?: { blocks?: object[] } }).homepage?.blocks;
-  const blocks = (stored && stored.length
-    ? stored
-    : [
-        { id: "hero", type: "hero", enabled: true, title: seo?.h1 || "Hot meetings in your city", subtitle: seo?.h2 || "" },
-        { id: "categories", type: "categories", enabled: true, cityCount: 3, moreLabel: "More cities" },
-        {
-          id: "boost",
-          type: "boost",
-          enabled: true,
-          title: "Boost your visibility",
-          body: "Post your ad free. Promote with Top, Flash or Star.",
-          cta: "Post your ad",
-          href: "/u/post-insert/",
-        },
-        { id: "intro", type: "html", enabled: true, html: `<p>${seo?.intro || ""}</p>` },
-      ]) as ComponentProps<typeof HomeBlocks>["blocks"];
+export const metadata = pageMetadata({
+  title: "Premium classifieds across India | Tharkoo",
+  description: "Verified people. Trusted listings. Browse jobs, homes, vehicles, pets, and local services in your city.",
+  path: "/",
+});
 
+export default function Home() {
   return (
     <>
-      <JsonLd
-        data={{
-          "@context": "https://schema.org",
-          "@type": "Organization",
-          name: site.name,
-          url: canonical("/"),
-        }}
-      />
-      <HomeBlocks
-        blocks={blocks}
-        categories={categories}
-        cities={cities.map((c) => ({ slug: c.slug, name: c.name }))}
-        siteName={(site as { logoText?: string }).logoText || site.name || "tharkoo"}
-        searchPlaceholder={(site as { searchPlaceholder?: string }).searchPlaceholder || "Search by City, Category..."}
-        postCta={(site as { postCta?: string }).postCta || "Post your ad"}
-      />
+      <section className="relative overflow-hidden" style={{ background: "var(--grad-hero)" }}>
+        <div className="mx-auto w-full max-w-[1200px] px-4 pt-12 md:px-6 lg:px-8 lg:pt-20">
+          <h1 className="t-display max-w-[68ch]">Premium classifieds, across India.</h1>
+          <p className="t-lead mt-4 max-w-[68ch] text-muted">Verified people. Trusted listings. In your city.</p>
+        </div>
+        <HomeAbove />
+      </section>
+      <Suspense fallback={<SkeletonGrid />}>
+        <HomeBelow />
+      </Suspense>
     </>
   );
 }

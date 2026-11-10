@@ -11,7 +11,8 @@ import {
   getStarListings,
   isThin,
 } from "@/lib/queries";
-import { canonical, fillTemplate } from "@/lib/seo";
+import { fillTemplate } from "@/lib/seo";
+import { pageMetadata } from "@/lib/ui/meta";
 
 type Props = {
   params: Promise<{ category: string; location: string; district: string }>;
@@ -35,10 +36,9 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     districtPref: ` / ${dist.name}`,
     site: site.name,
   };
-  return {
-    title: fillTemplate(seo?.title || "{category} in {city}{districtPref} | Tharkoo", vars),
-    alternates: { canonical: canonical(`/${category}/${location}/${district}/`) },
-  };
+  const title = fillTemplate(seo?.title || "{category} in {city}{districtPref} | Tharkoo", vars);
+  const description = `${cat.name} listings in ${dist.name}, ${city.name}.`;
+  return pageMetadata({ title, description, path: `/${category}/${location}/${district}/` });
 }
 
 export default async function DistrictPage({ params, searchParams }: Props) {
@@ -81,7 +81,7 @@ export default async function DistrictPage({ params, searchParams }: Props) {
         { name: city.name!, path: `/${category}/${location}/` },
         { name: dist.name!, path: `/${category}/${location}/${district}/` },
       ]}
-      path={`/${category}/${location}/${district}/`}
+      path={`/${category}/${location}/${district}/${sp.photos || sp.verified ? `?${new URLSearchParams({ ...(sp.photos ? { photos: "1" } : {}), ...(sp.verified ? { verified: "1" } : {}) }).toString()}` : ""}`}
       stars={stars}
       items={feed.items}
       page={feed.page}

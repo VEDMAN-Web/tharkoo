@@ -1,20 +1,25 @@
 "use client";
 
 import Link from "next/link";
-import { Logo } from "./Logo";
+import { useEffect, useState } from "react";
+import { ArrowUp } from "lucide-react";
 import { safeHref } from "@/lib/sanitize";
+import { Logo } from "./Logo";
+import { IconButton } from "./ui/IconButton";
 
 type Cat = { slug: string; name: string };
 type City = { slug: string; name: string };
 type LinkItem = { label: string; href: string };
 
-const PILL_CITIES = ["bangalore", "hyderabad", "delhi", "pune", "mumbai"];
+function realSocial(items: LinkItem[]) {
+  return items
+    .map((item) => ({ ...item, href: safeHref(item.href) }))
+    .filter((item) => item.href && !/google\.com\/search/i.test(item.href));
+}
 
 export function Footer({
   siteName,
   legalName,
-  cityCount,
-  about,
   categories,
   cities,
   links,
@@ -29,127 +34,92 @@ export function Footer({
   links: LinkItem[];
   social: LinkItem[];
 }) {
-  const bySlug = Object.fromEntries(cities.map((c) => [c.slug, c]));
-  const pills = PILL_CITIES.map((slug) => bySlug[slug]).filter(Boolean);
-  const socialItems = social.length
-    ? social
-    : [
-        { label: "Instagram", href: "https://www.instagram.com/" },
-        { label: "X", href: "https://x.com/" },
-        { label: "TikTok", href: "https://www.tiktok.com/" },
-        { label: "Bluesky", href: "https://bsky.app/" },
-      ];
+  const [top, setTop] = useState(false);
+  useEffect(() => {
+    const onScroll = () => setTop(window.scrollY > 800);
+    onScroll();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
+  const socials = realSocial(social);
+  const extra = links
+    .map((item) => ({ ...item, href: safeHref(item.href) }))
+    .filter((item) => item.href);
 
   return (
-    <>
-      <div className="sk-container footer-city-wrap">
-        <hr className="sk-hr" />
-        <div className="footer-city">
-          {categories.map((cat, i) => (
-            <div key={cat.slug} className="footer-city-card">
-              <div className="footer-city-head">
-                <Link href={`/${cat.slug}/`} className="h4 no-underline">
-                  {cat.name}
-                </Link>
-              </div>
-              <div className="footer-city-pills">
-                {pills.map((city) => (
-                  <Link key={city.slug} href={`/${cat.slug}/${city.slug}/`} className="no-underline">
-                    <span className="button-pill">{city.name}</span>
-                  </Link>
-                ))}
-                {i === 0 ? (
-                  <Link href="/cities/" className="no-underline">
-                    <span className="button-pill">All cities</span>
-                  </Link>
-                ) : null}
-              </div>
-            </div>
-          ))}
+    <footer className="mt-12 border-t border-[color:var(--gold-line)]">
+      <div className="mx-auto grid w-full max-w-[1200px] gap-8 px-4 py-12 md:px-6 lg:grid-cols-4 lg:px-8">
+        <div>
+          <h2 className="t-overline mb-3">Explore</h2>
+          <div className="grid gap-2">
+            {categories.map((cat) => (
+              <Link key={cat.slug} href={`/${cat.slug}/`} prefetch={false} className="t-small text-muted">
+                {cat.name}
+              </Link>
+            ))}
+          </div>
+        </div>
+        <div>
+          <h2 className="t-overline mb-3">Top cities</h2>
+          <div className="grid gap-2">
+            {cities.map((city) => (
+              <Link key={city.slug} href="/cities/" prefetch={false} className="t-small text-muted">
+                {city.name}
+              </Link>
+            ))}
+          </div>
+        </div>
+        <div>
+          <h2 className="t-overline mb-3">Company</h2>
+          <div className="grid gap-2">
+            <Link href="/cms/about/" prefetch={false} className="t-small text-muted">About</Link>
+            <Link href="/help/" prefetch={false} className="t-small text-muted">Help</Link>
+            <Link href="/blog/" prefetch={false} className="t-small text-muted">Blog</Link>
+            <Link href="/contact/" prefetch={false} className="t-small text-muted">Contact</Link>
+          </div>
+        </div>
+        <div>
+          <h2 className="t-overline mb-3">Trust and legal</h2>
+          <div className="grid gap-2">
+            <Link href="/cms/terms/" prefetch={false} className="t-small text-muted">Terms</Link>
+            <Link href="/cms/privacy/" prefetch={false} className="t-small text-muted">Privacy</Link>
+            <Link href="/cms/cookies/" prefetch={false} className="t-small text-muted">Cookies</Link>
+            <Link href="/cms/grievance/" prefetch={false} className="t-small text-muted">Grievance</Link>
+            <Link href="/scam-report/" prefetch={false} className="t-small text-muted">Scam report</Link>
+          </div>
         </div>
       </div>
-      <footer className="sk-footer">
-        <div className="sk-container">
-          <hr className="sk-hr" />
-          <div className="footer-top">
-            <div>
-              <Logo name={siteName} />
-            </div>
-            <p className="footer-about">
-              {about || `${siteName}, premium classifieds in India.`}
-            </p>
+      <div className="mx-auto flex w-full max-w-[1200px] flex-col gap-3 px-4 pb-8 md:px-6 lg:px-8">
+        <Logo name={siteName} href={null} />
+        {socials.length ? (
+          <div className="flex flex-wrap gap-3">
+            {socials.map((item) => (
+              <a key={item.label} href={item.href} target="_blank" rel="noopener noreferrer" className="t-caption text-muted">
+                {item.label}
+              </a>
+            ))}
           </div>
-          <div className="footer-cols">
-            <div>
-              <h5>Legal</h5>
-              <Link href="/terms/">Terms and Conditions</Link>
-              <Link href="/privacy/">Privacy Policy</Link>
-              <Link href="/cookies/">Cookie Policy</Link>
-            </div>
-            <div>
-              <h5>Support</h5>
-              <Link href="/help/">Help Center</Link>
-              <Link href="/submit-report/">Submit a Report</Link>
-              <Link href="/blog/">Blog</Link>
-            </div>
-            <div>
-              <h5>Security</h5>
-              <Link href="/help/scams/">How to report a scam</Link>
-            </div>
-            <div>
-              <h5>Company</h5>
-              <Link href="/about/">About</Link>
-              <Link href="/grievance/">Grievance officer</Link>
-              <Link href="/cities/">{cityCount} cities</Link>
-            </div>
-          </div>
-          <div className="footer-boost">
-            <div>
-              <h6>Boost your visibility</h6>
-              <Link href="/u/post-insert/" className="btn-post btn-block">
-                Post your ad
+        ) : null}
+        {extra.length ? (
+          <div className="flex flex-wrap gap-3">
+            {extra.map((item) => (
+              <Link key={item.href} href={item.href || "/"} prefetch={false} className="t-caption text-muted">
+                {item.label}
               </Link>
-            </div>
-            <div>
-              <h6>Countries</h6>
-              <select className="country-select" defaultValue="IN" aria-label="Country">
-                <option value="IN">🇮🇳 India</option>
-              </select>
-            </div>
+            ))}
           </div>
-          {links.length ? (
-            <p className="footer-extra">
-              {links.map((l) => (
-                <Link key={l.href} href={safeHref(l.href) || "/"}>
-                  {l.label}
-                </Link>
-              ))}
-            </p>
-          ) : null}
+        ) : null}
+        <p className="t-caption text-muted">
+          Copyright {new Date().getFullYear()} {legalName || siteName}
+        </p>
+      </div>
+      {top ? (
+        <div className="fixed bottom-6 right-4 z-30">
+          <IconButton label="Back to top" onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}>
+            <ArrowUp />
+          </IconButton>
         </div>
-        <div className="social-section">
-          <div className="sk-container social-inner">
-            <div className="social-links">
-              {socialItems
-                .map((s) => ({ ...s, href: safeHref(s.href) }))
-                .filter((s) => s.href)
-                .map((s) => (
-                  <a key={s.label} href={s.href} rel="nofollow noopener noreferrer" className="text-white">
-                    {s.label}
-                  </a>
-                ))}
-            </div>
-            <div className="copyright">
-              <small>
-                Copyright {new Date().getFullYear()} © {legalName || siteName}
-              </small>
-            </div>
-            <button type="button" className="back-to-top" onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}>
-              Back to top
-            </button>
-          </div>
-        </div>
-      </footer>
-    </>
+      ) : null}
+    </footer>
   );
 }

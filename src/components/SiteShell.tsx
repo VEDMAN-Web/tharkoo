@@ -1,3 +1,5 @@
+import { cookies } from "next/headers";
+import { userFromToken } from "@/server/auth/service";
 import { AgeGate } from "./AgeGate";
 import { CityProvider } from "./CityContext";
 import { CookieBanner } from "./CookieBanner";
@@ -6,32 +8,43 @@ import { Header } from "./Header";
 import { MainInner } from "./MainInner";
 import { getCategories, getCities, getSite, getTopCities } from "@/lib/queries";
 import { plain } from "@/lib/plain";
-import { safeCssColor, safeHref } from "@/lib/sanitize";
+import { safeHref } from "@/lib/sanitize";
 
 export const dynamic = "force-dynamic";
 
-export async function SiteShell({ children }: { children: React.ReactNode }) {
-  const [site, categories, topCities, cities] = await Promise.all([
+async function viewer() {
+  const token = (await cookies()).get("sid")?.value;
+  if (!token) return null;
+  try {
+    const found = await userFromToken(token);
+    if (!found) return null;
+    return { email: found.user.email, roles: found.user.roles };
+  } catch {
+    return null;
+  }
+}
+
+export async function loadShell() {
+  const [site, categories, topCities, cities, user] = await Promise.all([
     getSite(),
     getCategories(),
     getTopCities(),
     getCities(),
+    viewer(),
   ]);
-  const catProps = plain(categories.map((c) => ({ slug: c.slug!, name: c.name! })));
-  const theme = plain((site as { theme?: Record<string, string> }).theme || {});
-  const css = Object.entries({
-    "--sk-pink": safeCssColor(theme.accent),
-    "--sk-blue": safeCssColor(theme.primary),
-    "--sk-page": safeCssColor(theme.page),
-    "--sk-top": safeCssColor(theme.top),
-    "--sk-link": safeCssColor(theme.link),
-    "--brand-primary": safeCssColor(theme.primary),
-    "--brand-accent": safeCssColor(theme.accent),
-  })
-    .filter(([, v]) => v)
-    .map(([k, v]) => `${k}:${v}`)
-    .join(";");
+  return { site, categories, topCities, cities, user };
+}
 
+function Chrome({
+  children,
+  shell,
+}: {
+  children: React.ReactNode;
+  shell: Awaited<ReturnType<typeof loadShell>>;
+}) {
+  const { site, categories, topCities, cities, user } = shell;
+  const catProps = plain(categories.map((c) => ({ slug: c.slug!, name: c.name! })));
+  const cityProps = plain(cities.map((c) => ({ slug: c.slug!, name: c.name!, stateSlug: c.stateSlug })));
   const footerLinks = plain(
     ((site as { footerLinks?: { label: string; href: string }[] }).footerLinks || [])
       .filter(Boolean)
@@ -44,25 +57,21 @@ export async function SiteShell({ children }: { children: React.ReactNode }) {
       .map((l) => ({ ...l, href: safeHref(l.href) }))
       .filter((l) => l.href),
   );
-
-  const cityProps = plain(cities.map((c) => ({ slug: c.slug!, name: c.name!, stateSlug: c.stateSlug })));
-
   return (
-    <>
-      {css ? <style dangerouslySetInnerHTML={{ __html: `:root{${css}}` }} /> : null}
-      <CityProvider cities={cityProps}>
+    <CityProvider cities={cityProps}>
       <Header
         siteName={(site as { logoText?: string }).logoText || site.name || "Tharkoo"}
         countryName={site.countryName || "India"}
-        searchPlaceholder={(site as { searchPlaceholder?: string }).searchPlaceholder || "Search by City, Category..."}
-        postCta={(site as { postCta?: string }).postCta || "Post your ad"}
+        searchPlaceholder={(site as { searchPlaceholder?: string }).searchPlaceholder || "Search jobs, homes, cars, pets..."}
+        postCta={(site as { postCta?: string }).postCta || "Post an ad"}
         categories={catProps}
         cities={cityProps}
+        user={user}
       />
       <MainInner>{children}</MainInner>
       <Footer
         siteName={site.name || "Tharkoo"}
-        legalName={site.legalName || "SparkBeta Tech"}
+        legalName={site.legalName || "Tharkoo"}
         cityCount={cities.length}
         about={site.tagline || ""}
         categories={catProps}
@@ -70,24 +79,18 @@ export async function SiteShell({ children }: { children: React.ReactNode }) {
         links={footerLinks}
         social={socialLinks}
       />
-      {site.ageGateEnabled !== false ? (
-        <AgeGate
-          brand={(site as { logoText?: string }).logoText || site.name || "tharkoo"}
-          title={(site as { ageGateTitle?: string }).ageGateTitle || "Please read the following warning before continuing"}
-          body={
-            (site as { ageGateBody?: string }).ageGateBody ||
-            " <b>I am over 18 years old</b>  and I accept the viewing of explicit texts and images intended for an <b>adult audience</b>."
-          }
-          yes={(site as { ageYes?: string }).ageYes || "Accept"}
-          no={(site as { ageNo?: string }).ageNo || "Decline"}
-        />
-      ) : null}
-      <CookieBanner
-        body={(site as { cookieBody?: string }).cookieBody}
-        accept={(site as { cookieAccept?: string }).cookieAccept}
-        necessary={(site as { cookieNecessary?: string }).cookieNecessary}
-      />
-      </CityProvider>
-    </>
+      <AgeGate brand="Tharkoo" title="Please confirm your age" body="Tharkoo is for people aged 18 and over. Confirm to continue." yes="I am 18 or over" no="Leave" />
+      <CookieBanner body={(site as { cookieBody?: string }).cookieBody} />
+    </CityProvider>
   );
+}
+
+export function SiteShell({
+  children,
+  shell,
+}: {
+  children: React.ReactNode;
+  shell: Awaited<ReturnType<typeof loadShell>>;
+}) {
+  return <Chrome shell={shell}>{children}</Chrome>;
 }

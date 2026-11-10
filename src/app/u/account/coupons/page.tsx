@@ -1,10 +1,13 @@
-import Link from "next/link";
-import { Simple } from "@/components/vendor/VendorScreens";
-export const metadata = { title: "Coupons", robots: { index: false } };
+import { CouponRedeem } from "@/components/account/AccountTools";
+import { pageMetadata } from "@/lib/ui/meta";
+
+export const metadata = pageMetadata({
+  title: "Coupons | Tharkoo",
+  description: "Apply a Tharkoo coupon.",
+  path: "/u/account/coupons/",
+  index: false,
+});
+
 export default function Page() {
-  return (
-    <Simple title="Coupons">
-      <p>Tabs Active / Used / Expired. WELCOME50 — 50 extra credits — Use now.</p><Link href='/u/account/credits/'>Use now</Link>
-    </Simple>
-  );
+  return <CouponRedeem />;
 }

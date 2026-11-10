@@ -76,7 +76,7 @@ export function CollectionEditor({
       <div className="bg-white p-3">
         <div className="mb-2 flex items-center justify-between">
           <h2 className="font-bold">{title || model}</h2>
-          <button type="button" className="btn-post" onClick={create}>
+          <button type="button" className="gold-btn" onClick={create}>
             New
           </button>
         </div>
@@ -98,17 +98,17 @@ export function CollectionEditor({
             <p className="mb-2 text-[12px] text-[#777]">JSON editor — every field is live on the site after Save.</p>
             <textarea value={json} onChange={(e) => setJson(e.target.value)} rows={22} className="w-full border font-mono text-[12px]" />
             <div className="mt-2 flex gap-2">
-              <button type="button" className="btn-post" onClick={save}>
+              <button type="button" className="gold-btn" onClick={save}>
                 Save
               </button>
-              <button type="button" className="btn-ghost" onClick={() => setEdit(null)}>
+              <button type="button" className="quiet-btn" onClick={() => setEdit(null)}>
                 Cancel
               </button>
               <button type="button" className="text-[13px] text-[#e20044]" onClick={() => remove(String(edit._id))}>
                 Delete
               </button>
             </div>
-            {msg ? <p className="mt-2 text-[13px] text-[var(--sk-verified)]">{msg}</p> : null}
+            {msg ? <p className="mt-2 text-[13px] text-[var(--success)]">{msg}</p> : null}
           </>
         ) : (
           <p className="text-[13px] text-[#777]">Select a record or create one. Saving writes Mongo and refreshes the public site.</p>

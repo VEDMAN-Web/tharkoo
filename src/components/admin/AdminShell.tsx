@@ -40,28 +40,28 @@ export const ADMIN_NAV: [string, string][] = [
 export function AdminShell({ title, children }: { title: string; children: React.ReactNode }) {
   const path = usePathname();
   return (
-    <div className="-mx-2 flex min-h-[70vh] bg-[#1b1b1b] text-[#eee] md:mx-0">
-      <aside className="admin-nav hidden w-52 shrink-0 border-r border-[#333] md:block">
-        <p className="px-3 py-3 text-[11px] uppercase tracking-wide text-[#888]">Tharkoo admin</p>
+    <div className="flex min-h-[70vh] min-w-0 bg-bg text-text">
+      <aside className="admin-nav hidden w-52 shrink-0 border-r border-line md:block">
+        <p className="px-3 py-3 t-caption uppercase text-muted">Tharkoo admin</p>
         {ADMIN_NAV.map(([href, label]) => (
           <Link key={href} href={href} className={path === href ? "on" : ""}>
             {label}
           </Link>
         ))}
       </aside>
-      <div className="min-w-0 flex-1 bg-[#f3f3f3] p-4 text-[#333]">
-        <div className="mb-3 flex items-center justify-between text-[12px]">
+      <div className="min-w-0 flex-1 overflow-x-auto p-4">
+        <div className="mb-3 flex items-center justify-between t-caption text-muted">
           <span>Signed-in staff</span>
-          <Link href="/admin/login/">Log out</Link>
+          <Link href="/u/logout/">Log out</Link>
         </div>
-        <nav className="mb-3 flex flex-wrap gap-1 text-[11px] md:hidden">
+        <nav className="mb-3 flex gap-1 overflow-x-auto md:hidden" aria-label="Admin">
           {ADMIN_NAV.map(([href, label]) => (
-            <Link key={href} href={href} className="bg-white px-2 py-1">
+            <Link key={href} href={href} className="shrink-0 rounded-pill border border-line px-2 py-1 t-caption">
               {label}
             </Link>
           ))}
         </nav>
-        <h1 className="mb-4 text-[22px] font-normal">{title}</h1>
+        <h1 className="t-h2 mb-4">{title}</h1>
         {children}
       </div>
     </div>

@@ -1,22 +1,29 @@
 import Link from "next/link";
 import { getHelpArticles } from "@/lib/queries";
+import { Container } from "@/components/ui/Container";
+import { pageMetadata } from "@/lib/ui/meta";
 
 export const dynamic = "force-dynamic";
-export const metadata = { title: "Help centre" };
+export const metadata = pageMetadata({
+  title: "Help centre | Tharkoo",
+  description: "Guides for using Tharkoo.",
+  path: "/help/",
+});
 
 export default async function Help() {
   const articles = await getHelpArticles();
   return (
-    <>
-      <h1 className="text-[26px] font-normal">Help centre</h1>
-      <p className="mt-2 text-[13px] text-[#555]">Articles are edited in Admin → Help editor.</p>
-      <ul className="mt-4 grid gap-2">
-        {articles.map((a) => (
-          <li key={a.slug}>
-            <Link href={`/help/${a.slug}/`}>{a.title}</Link>
+    <Container className="py-8">
+      <h1 className="t-h1">Help centre</h1>
+      <ul className="mt-6 grid gap-3">
+        {articles.map((article) => (
+          <li key={article.slug}>
+            <Link href={`/help/${article.slug}/`} prefetch={false} className="t-body text-gold">
+              {article.title}
+            </Link>
           </li>
         ))}
       </ul>
-    </>
+    </Container>
   );
 }

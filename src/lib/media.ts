@@ -1,8 +1,11 @@
-const ALLOWED = /^\/placeholders\//;
+const LOCAL = /^\/(placeholders|brand|uploads)\//i;
+const CLOUDINARY = /^https:\/\/res\.cloudinary\.com\//i;
 
-export function safePhoto(src?: string | null) {
-  if (src && ALLOWED.test(src)) return src;
-  return "/placeholders/p1.jpg";
+export function safePhoto(src?: string | null): string | null {
+  if (!src) return null;
+  const value = src.trim();
+  if (LOCAL.test(value) || CLOUDINARY.test(value)) return value;
+  return null;
 }
 
 export function listingTagSections(tags: unknown) {

@@ -8,48 +8,28 @@ const NAV = [
   ["/u/account/ads/", "Ads"],
   ["/u/account/credits/", "Wallet"],
   ["/u/account/coupons/", "Coupons"],
-  ["/u/account/media/", "Media"],
-  ["/u/account/analytics/", "Analytics"],
-  ["/u/account/subscription/", "Subscription"],
+  ["/u/account/saved/", "Saved"],
+  ["/u/account/kyc/", "Verification"],
   ["/u/account/edit-account/", "Settings"],
 ];
 
-export function VendorShell({
-  title,
-  children,
-  verified = true,
-}: {
-  title: string;
-  children: React.ReactNode;
-  verified?: boolean;
-}) {
+export function VendorShell({ title, children }: { title: string; children: React.ReactNode; verified?: boolean }) {
   const path = usePathname();
   return (
-    <div className="-mx-2 md:mx-0">
-      <div className="mb-4 flex flex-wrap items-center justify-between gap-2 border-b border-[#ddd] bg-white px-2 py-2">
-        <p className="text-[13px]">
-          Customer Code <strong>IN46SXA6</strong>
-          {verified ? <span className="ml-2 text-[#1abc9c]">ID verified</span> : <span className="ml-2 text-[#e20044]">Locked</span>}
-        </p>
-        <Link href="/u/logout/" className="text-[13px]">
+    <div className="mx-auto w-full min-w-0 max-w-[1200px] px-4 py-6">
+      <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
+        <nav className="flex gap-2 overflow-x-auto" aria-label="Account">
+          {NAV.map(([href, label]) => (
+            <Link key={href} href={href} className={`inline-flex h-11 items-center rounded-pill px-3 t-small ${path === href ? "bg-[var(--gold-soft)] text-gold" : "text-muted"}`}>
+              {label}
+            </Link>
+          ))}
+        </nav>
+        <Link href="/u/logout/" className="t-small text-muted">
           Log out
         </Link>
       </div>
-      <nav className="mb-4 flex flex-wrap gap-1 text-[13px]">
-        {NAV.map(([href, label]) => (
-          <Link
-            key={href}
-            href={href}
-            className={`px-3 py-2 no-underline ${path === href ? "bg-[var(--sk-blue)] text-white" : "bg-white text-[#333]"}`}
-          >
-            {label}
-          </Link>
-        ))}
-        <Link href="/u/post-insert/" className="btn-post">
-          Post your ad
-        </Link>
-      </nav>
-      <h1 className="mb-4 text-[22px] font-normal">{title}</h1>
+      <h1 className="t-h1 mb-4">{title}</h1>
       {children}
     </div>
   );
@@ -57,9 +37,9 @@ export function VendorShell({
 
 export function Tile({ title, children, href }: { title: string; children: React.ReactNode; href: string }) {
   return (
-    <Link href={href} className="block bg-white p-4 text-[#333] no-underline shadow-sm hover:shadow">
-      <h2 className="text-[15px] font-bold">{title}</h2>
-      <div className="mt-2 text-[13px] text-[#666]">{children}</div>
+    <Link href={href} className="block min-w-0 rounded-lg border border-line bg-surface p-4">
+      <h2 className="t-h3">{title}</h2>
+      <div className="mt-2 t-small text-muted">{children}</div>
     </Link>
   );
 }

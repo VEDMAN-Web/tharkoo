@@ -1,13 +1,12 @@
 "use client";
 
+import { EmptyState } from "@/components/ui/EmptyState";
+
 export default function ErrorView({ reset }: { error: Error; reset: () => void }) {
   return (
-    <div className="py-16 text-center">
-      <h1 className="text-2xl font-semibold">Tharkoo could not load</h1>
-      <p className="mx-auto mt-2 max-w-md text-sm text-[var(--text-secondary)]">
-        Something went wrong. Try again in a moment.
-      </p>
-      <button className="mt-4 underline" onClick={reset}>
+    <div className="py-10 text-center">
+      <EmptyState heading="h1" title="Something went wrong" body="Tharkoo could not load this page. Try again in a moment." action={{ href: "/", label: "Back to home" }} />
+      <button type="button" className="quiet-btn" onClick={reset}>
         Retry
       </button>
     </div>

@@ -140,7 +140,7 @@ export function HomepageEditor() {
           <h2 className="font-bold">Homepage blocks (order = live homepage)</h2>
           <div className="flex flex-wrap gap-1 text-[12px]">
             {(["hero", "categories", "boost", "html", "banner", "cities"] as const).map((t) => (
-              <button key={t} type="button" className="btn-ghost" onClick={() => add(t)}>
+              <button key={t} type="button" className="quiet-btn" onClick={() => add(t)}>
                 + {t}
               </button>
             ))}
@@ -159,8 +159,8 @@ export function HomepageEditor() {
                   }} />
                   visible
                 </label>
-                <button type="button" className="btn-ghost" onClick={() => move(i, -1)}>Up</button>
-                <button type="button" className="btn-ghost" onClick={() => move(i, 1)}>Down</button>
+                <button type="button" className="quiet-btn" onClick={() => move(i, -1)}>Up</button>
+                <button type="button" className="quiet-btn" onClick={() => move(i, 1)}>Down</button>
                 <button type="button" className="text-[12px] text-[#e20044]" onClick={() => setBlocks(blocks.filter((x) => x.id !== b.id))}>
                   Remove
                 </button>
@@ -206,10 +206,10 @@ export function HomepageEditor() {
       </section>
 
       <div className="flex items-center gap-3">
-        <button type="button" className="btn-post" onClick={save}>
+        <button type="button" className="gold-btn" onClick={save}>
           Save homepage &amp; chrome
         </button>
-        {msg ? <span className="text-[13px] text-[var(--sk-verified)]">{msg}</span> : null}
+        {msg ? <span className="text-[13px] text-[var(--success)]">{msg}</span> : null}
         {err ? <span className="text-[13px] text-[#e20044]">{err}</span> : null}
       </div>
     </div>

@@ -2,96 +2,50 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 
-export function CookieBanner({
-  body,
-  accept,
-  necessary,
-}: {
-  body?: string;
-  accept?: string;
-  necessary?: string;
-}) {
-  const [open, setOpen] = useState(true);
-  const [manage, setManage] = useState(false);
-
+export function CookieBanner({ body }: { body?: string; accept?: string; necessary?: string }) {
+  const path = usePathname() || "/";
+  const [open, setOpen] = useState(false);
   useEffect(() => {
-    // Browser storage is an external source and must be read after hydration.
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    if (localStorage.getItem("nl-cookies")) setOpen(false);
+    const id = window.setTimeout(() => {
+      if (!localStorage.getItem("nl-cookies")) setOpen(true);
+    }, 0);
+    return () => window.clearTimeout(id);
   }, []);
-
   if (!open) return null;
-
+  const onAd = path.startsWith("/ad/");
   return (
-    <div className="cookie-modal" data-testid="cookie-banner">
-      <div className="cookie-card">
-        {manage ? (
-          <>
-            <p className="text-sm">
-              You can personalise the cookies we use by providing your consent using the buttons below.
-            </p>
-            <ul className="cookie-list">
-              <li>
-                <span>Strictly Necessary cookies</span>
-                <b>Always active</b>
-              </li>
-              <li>
-                <span>Analytical/Performance Cookies</span>
-              </li>
-              <li>
-                <span>Advertising Cookies</span>
-              </li>
-            </ul>
-            <button
-              type="button"
-              className="age-yes"
-              onClick={() => {
-                localStorage.setItem("nl-cookies", "all");
-                setOpen(false);
-              }}
-            >
-              {accept || "Accept all"}
-            </button>
-            <button
-              type="button"
-              className="cookie-link"
-              onClick={() => {
-                localStorage.setItem("nl-cookies", "necessary");
-                setOpen(false);
-              }}
-            >
-              {necessary || "Accept my Preferences"}
-            </button>
-          </>
-        ) : (
-          <>
-            <p>
-              <b>About cookies on this website</b>
-            </p>
-            <p className="text-sm">
-              {body ||
-                "We use cookies to optimize the performance of this website and provide you with a better user experience in a personalized way. In the options you can choose your preferences for the use of cookies:"}
-            </p>
-            <button
-              type="button"
-              className="age-yes"
-              onClick={() => {
-                localStorage.setItem("nl-cookies", "all");
-                setOpen(false);
-              }}
-            >
-              {accept || "Accept all"}
-            </button>
-            <button type="button" className="cookie-link" onClick={() => setManage(true)}>
-              Manage cookies
-            </button>
-            <p className="cookie-more">
-              For more information, please visit our <Link href="/cookies/">Cookie Notice</Link> and our{" "}
-              <Link href="/privacy/">Privacy Notice</Link>
-            </p>
-          </>
-        )}
+    <div className={`fixed z-40 w-full max-w-[420px] p-3 ${onAd ? "bottom-20" : "bottom-0"} left-0 lg:bottom-4 lg:left-4`}>
+      <div className="rounded-xl border border-line bg-surface p-4 shadow-md">
+        <p className="t-small text-muted">
+          {body || "We use cookies to keep the site reliable and remember your choices."}{" "}
+          <Link href="/cms/cookies/" className="text-gold">
+            Cookie notice
+          </Link>
+        </p>
+        <div className="mt-3 flex flex-wrap gap-2">
+          <button
+            type="button"
+            className="gold-btn"
+            onClick={() => {
+              localStorage.setItem("nl-cookies", "all");
+              setOpen(false);
+            }}
+          >
+            Accept all
+          </button>
+          <button
+            type="button"
+            className="quiet-btn"
+            onClick={() => {
+              localStorage.setItem("nl-cookies", "necessary");
+              setOpen(false);
+            }}
+          >
+            Only necessary
+          </button>
+        </div>
       </div>
     </div>
   );

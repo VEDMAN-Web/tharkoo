@@ -1,25 +1,30 @@
 import Link from "next/link";
 import { getBlogPosts } from "@/lib/queries";
+import { Container } from "@/components/ui/Container";
+import { pageMetadata } from "@/lib/ui/meta";
 
 export const dynamic = "force-dynamic";
-export const metadata = { title: "Blog" };
+export const metadata = pageMetadata({
+  title: "Journal | Tharkoo",
+  description: "Notes from Tharkoo.",
+  path: "/blog/",
+});
 
 export default async function Blog() {
   const posts = await getBlogPosts();
   return (
-    <>
-      <h1 className="text-[26px] font-normal">Blog</h1>
-      <p className="mt-2 text-[13px] text-[#555]">Posts are edited in Admin → Blog editor.</p>
-      <ul className="mt-4 grid gap-4">
-        {posts.map((p) => (
-          <li key={p.slug} className="bg-white p-4">
-            <p className="text-[12px] text-[#888]">{p.date}</p>
-            <Link href={`/blog/${p.slug}/`} className="text-[18px] font-bold text-[#222]">
-              {p.title}
+    <Container className="py-8">
+      <h1 className="t-h1">Journal</h1>
+      <ul className="mt-6 grid gap-4">
+        {posts.map((post) => (
+          <li key={post.slug} className="rounded-lg border border-line p-4">
+            <p className="t-caption text-muted">{post.date}</p>
+            <Link href={`/blog/${post.slug}/`} prefetch={false} className="t-h3 text-gold">
+              {post.title}
             </Link>
           </li>
         ))}
       </ul>
-    </>
+    </Container>
   );
 }

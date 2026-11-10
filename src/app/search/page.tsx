@@ -1,38 +1,46 @@
-import type { Metadata } from "next";
 import { ListingPageView } from "@/components/ListingPage";
-import { searchListings } from "@/lib/queries";
+import { searchListings, getCategories } from "@/lib/queries";
+import { pageMetadata } from "@/lib/ui/meta";
 
-export const metadata: Metadata = {
-  title: "Search",
-  robots: { index: false, follow: true },
-};
+export const dynamic = "force-dynamic";
+
+export const metadata = pageMetadata({
+  title: "Search classifieds | Tharkoo",
+  description: "Search Tharkoo listings by keyword, category, and city.",
+  path: "/search/",
+  index: false,
+});
 
 export default async function SearchPage({
   searchParams,
 }: {
-  searchParams: Promise<{ q?: string; category?: string; location?: string; photos?: string; verified?: string; page?: string }>;
+  searchParams: Promise<{ q?: string; category?: string; location?: string; city?: string; photos?: string; verified?: string; page?: string }>;
 }) {
   const sp = await searchParams;
+  const city = sp.city || sp.location;
   const feed = await searchListings({
     q: sp.q,
     category: sp.category,
-    location: sp.location,
+    location: city,
     photos: sp.photos === "1",
     verified: sp.verified === "1",
     page: Number(sp.page) || 1,
   });
-  const qs = new URLSearchParams(
-    Object.fromEntries(Object.entries(sp).filter(([, v]) => v)) as Record<string, string>,
-  );
-  qs.delete("page");
-  const path = `/search?${qs.toString()}`;
+  const qs = new URLSearchParams();
+  if (sp.q) qs.set("q", sp.q);
+  if (sp.category) qs.set("category", sp.category);
+  if (city) qs.set("city", city);
+  if (sp.photos) qs.set("photos", sp.photos);
+  if (sp.verified) qs.set("verified", sp.verified);
+  const path = `/search/?${qs.toString()}`;
+  const categories = await getCategories();
   return (
     <ListingPageView
       h1={sp.q ? `Results for “${sp.q}”` : "Search results"}
-      intro="Search pages are noindex. Use a category + city URL when you want Google to find the page."
+      intro="Try a category if nothing matches yet."
       crumbs={[
         { name: "India", path: "/" },
-        { name: "Search", path: "/search" },
+        { name: "Search", path: "/search/" },
       ]}
       path={path}
       stars={[]}
@@ -41,8 +49,8 @@ export default async function SearchPage({
       pages={feed.pages}
       total={feed.total}
       noindex
-      siblingLinks={[]}
-      emptyNearby={[]}
+      siblingLinks={categories.slice(0, 8).map((cat) => ({ href: `/${cat.slug}/`, label: cat.name || cat.slug || "Category" }))}
+      emptyNearby={categories.slice(0, 6).map((cat) => ({ href: `/${cat.slug}/`, label: cat.name || "" }))}
       photos={sp.photos === "1"}
       verified={sp.verified === "1"}
     />

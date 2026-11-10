@@ -1,20 +1,34 @@
 import { notFound } from "next/navigation";
+import type { Metadata } from "next";
 import { ListingPageView } from "@/components/ListingPage";
 import { TAG_PAGES } from "@/data/catalog";
 import { getCategory, getFeed, getSite } from "@/lib/queries";
+import { pageMetadata } from "@/lib/ui/meta";
 
 export const dynamic = "force-dynamic";
 
+export async function generateMetadata({ params }: { params: Promise<{ category: string; tag: string }> }): Promise<Metadata> {
+  const { category, tag } = await params;
+  const meta = TAG_PAGES.find((item) => item.slug === tag);
+  const cat = await getCategory(category);
+  if (!cat || !meta) return {};
+  return pageMetadata({
+    title: `${cat.name} — ${meta.label} | Tharkoo`,
+    description: `Browse ${cat.name} ads tagged ${meta.label}.`,
+    path: `/${category}/tag/${tag}/`,
+  });
+}
+
 export default async function TagPage({ params }: { params: Promise<{ category: string; tag: string }> }) {
   const { category, tag } = await params;
-  const meta = TAG_PAGES.find((t) => t.slug === tag);
+  const meta = TAG_PAGES.find((item) => item.slug === tag);
   const cat = await getCategory(category);
   if (!cat || !meta) notFound();
   const [site, feed] = await Promise.all([getSite(), getFeed({ categorySlug: category }, 1)]);
   return (
     <ListingPageView
       h1={`${cat.name} — ${meta.label}`}
-      intro={`Browse ${cat.name} ads tagged ${meta.label}. ${site.name} is a classifieds board. Tag labels can be edited in the catalogue.`}
+      intro={`Browse ${cat.name} ads tagged ${meta.label}. ${site.name} lists them alongside the rest of the city feed.`}
       crumbs={[
         { name: "India", path: "/" },
         { name: cat.name!, path: `/${category}/` },
@@ -24,9 +38,9 @@ export default async function TagPage({ params }: { params: Promise<{ category: 
       stars={[]}
       items={feed.items}
       page={1}
-      pages={feed.pages}
+      pages={1}
       total={feed.total}
-      siblingLinks={TAG_PAGES.map((t) => ({ href: `/${category}/tag/${t.slug}/`, label: t.label }))}
+      siblingLinks={TAG_PAGES.filter((item) => item.slug !== tag).slice(0, 8).map((item) => ({ href: `/${category}/tag/${item.slug}/`, label: item.label }))}
       emptyNearby={[]}
     />
   );

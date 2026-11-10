@@ -1,22 +1,34 @@
 import type { Metadata } from "next";
-import { Inter } from "next/font/google";
-import { SiteShell } from "@/components/SiteShell";
+import { SiteShell, loadShell } from "@/components/SiteShell";
+import { display, sans } from "@/styles/fonts";
+import { siteUrl } from "@/lib/utils";
 import "./globals.css";
-
-const inter = Inter({ subsets: ["latin"], weight: ["300", "400", "500", "600", "700", "800"] });
 
 export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
+  metadataBase: new URL(siteUrl()),
   title: { default: "Tharkoo, premium classifieds in India", template: "%s" },
-  description: "Tharkoo, premium classifieds in India.",
+  description: "Premium classifieds across India. Verified people and trusted listings in your city.",
+  icons: { icon: "/brand/logo-mark.svg" },
+  openGraph: {
+    siteName: "Tharkoo",
+    locale: "en_IN",
+    images: ["/brand/og-default.png"],
+    type: "website",
+  },
+  twitter: { card: "summary_large_image", images: ["/brand/og-default.png"] },
 };
 
-export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
+export default async function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
+  const shell = await loadShell();
   return (
-    <html lang="en-IN" className="h-full">
-      <body className={`${inter.className} flex min-h-full flex-col`}>
-        <SiteShell>{children}</SiteShell>
+    <html lang="en-IN" className={`${display.variable} ${sans.variable}`}>
+      <body className="bg-bg text-text font-sans antialiased">
+        <a href="#main" className="skip-link">
+          Skip to content
+        </a>
+        <SiteShell shell={shell}>{children}</SiteShell>
       </body>
     </html>
   );

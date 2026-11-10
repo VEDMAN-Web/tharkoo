@@ -1,19 +1,28 @@
+import Link from "next/link";
 import { getSite } from "@/lib/queries";
+import { Container } from "@/components/ui/Container";
+import { pageMetadata } from "@/lib/ui/meta";
+
 export const dynamic = "force-dynamic";
-export const metadata = { title: "Contact us" };
+export const metadata = pageMetadata({
+  title: "Contact | Tharkoo",
+  description: "How to reach Tharkoo.",
+  path: "/contact/",
+});
+
 export default async function Contact() {
   const site = await getSite();
   return (
-    <div className="panel max-w-lg">
-      <h1 className="text-[22px]">Contact us</h1>
-      <p className="mt-2 text-[13px]">Hours {site.supportHours}</p>
-      <form className="mt-4 grid gap-2">
-        <input className="border px-3 py-2" placeholder="Category" />
-        <input className="border px-3 py-2" placeholder="Subject" />
-        <textarea className="border px-3 py-2" rows={4} placeholder="Message" />
-        <input className="border px-3 py-2" placeholder="Customer Code" />
-        <button className="btn-post">Send</button>
-      </form>
-    </div>
+    <Container className="py-8">
+      <h1 className="t-h1">Contact</h1>
+      <p className="t-body mt-3 max-w-[68ch] text-muted">
+        Support hours: {site.supportHours || "We reply on business days."} For a listing problem, use the report link on the ad. For a legal request, open the grievance page.
+      </p>
+      <p className="mt-4">
+        <Link href="/cms/grievance/" className="text-gold">Grievance</Link>
+        {" · "}
+        <Link href="/help/" className="text-gold">Help centre</Link>
+      </p>
+    </Container>
   );
 }

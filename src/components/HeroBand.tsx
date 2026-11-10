@@ -1,42 +1,55 @@
-"use client";
-
-import { useState } from "react";
-import { SearchModal } from "./SearchModal";
+import Link from "next/link";
+import { PlaceholderArt } from "./ui/PlaceholderArt";
 
 type Cat = { slug: string; name: string };
-type City = { slug: string; name: string; stateSlug?: string };
+type City = { slug: string; name: string };
 
 export function HeroBand({
-  brand,
-  placeholder,
   categories,
   cities,
 }: {
-  brand: string;
-  placeholder: string;
+  brand?: string;
+  placeholder?: string;
   categories: Cat[];
   cities: City[];
 }) {
-  const [search, setSearch] = useState(false);
   return (
-    <>
-      <section className="hero-home">
-        <div className="hero-grade" />
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img className="hero-photo" src="/placeholders/p1.jpg" alt="" />
-        <p className="hero-claim">Tharkoo is for everyone</p>
-        <div className="hero-search-wrap">
-          <button type="button" className="hero-search" onClick={() => setSearch(true)}>
-            <span>{placeholder}</span>
-            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" stroke="currentColor" strokeWidth="1.5" aria-hidden>
-              <path strokeLinecap="round" strokeLinejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607z" />
-            </svg>
-          </button>
+    <div>
+      <div className="mx-auto grid w-full max-w-[1200px] items-center gap-8 px-4 py-8 md:px-6 lg:grid-cols-[1.2fr_0.8fr] lg:px-8 lg:pb-20">
+        <div className="max-w-[68ch]">
+          <form action="/search/" method="get" className="grid gap-2 rounded-xl border border-line bg-surface p-2 sm:grid-cols-[1fr_1fr_auto]">
+            <select name="category" aria-label="Category" className="h-14 rounded-md bg-bg px-3 text-base">
+              <option value="">All categories</option>
+              {categories.map((cat) => (
+                <option key={cat.slug} value={cat.slug}>
+                  {cat.name}
+                </option>
+              ))}
+            </select>
+            <select name="city" aria-label="City" className="h-14 rounded-md bg-bg px-3 text-base">
+              <option value="">All India</option>
+              {cities.map((city) => (
+                <option key={city.slug} value={city.slug}>
+                  {city.name}
+                </option>
+              ))}
+            </select>
+            <button className="gold-btn h-14" type="submit">
+              Search
+            </button>
+          </form>
+          <div className="mt-4 flex gap-2 overflow-x-auto">
+            {categories.slice(0, 6).map((cat) => (
+              <Link key={cat.slug} href={`/${cat.slug}/`} prefetch={false} className="inline-flex h-9 shrink-0 items-center rounded-pill border border-line px-3 t-small">
+                {cat.name}
+              </Link>
+            ))}
+          </div>
         </div>
-      </section>
-      {search ? (
-        <SearchModal brand={brand} placeholder={placeholder} categories={categories} cities={cities} onClose={() => setSearch(false)} />
-      ) : null}
-    </>
+        <div className="hidden h-[420px] lg:block" aria-hidden>
+          <PlaceholderArt seed="home-hero" category="generic" decorative />
+        </div>
+      </div>
+    </div>
   );
 }

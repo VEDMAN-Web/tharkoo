@@ -12,7 +12,8 @@ import {
   getStarListings,
   isThin,
 } from "@/lib/queries";
-import { canonical, fillTemplate } from "@/lib/seo";
+import { fillTemplate } from "@/lib/seo";
+import { pageMetadata } from "@/lib/ui/meta";
 
 type Props = {
   params: Promise<{ category: string; location: string }>;
@@ -43,11 +44,11 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     year: new Date().getFullYear(),
     districtPref: "",
   };
+  const title = fillTemplate(seo?.title || "{category} in {city} | Tharkoo", vars);
+  const description = fillTemplate(seo?.description || `${feed.total} ${cat.name} listings in ${loc.name}.`, vars);
   return {
-    title: fillTemplate(seo?.title || "{category} in {city} | Tharkoo", vars),
-    description: fillTemplate(seo?.description || "", vars),
-    alternates: { canonical: canonical(`/${category}/${location}/`) },
-    robots: isThin(feed.total) ? { index: false, follow: true } : undefined,
+    ...pageMetadata({ title, description, path: `/${category}/${location}/`, index: !isThin(feed.total) }),
+    robots: isThin(feed.total) ? { index: false, follow: true } : { index: true, follow: true },
   };
 }
 
@@ -102,7 +103,7 @@ export default async function LocationPage({ params, searchParams }: Props) {
         { name: cat.name!, path: `/${category}/` },
         { name: loc.name!, path: `/${category}/${location}/` },
       ]}
-      path={`/${category}/${location}/`}
+      path={`/${category}/${location}/${sp.photos || sp.verified ? `?${new URLSearchParams({ ...(sp.photos ? { photos: "1" } : {}), ...(sp.verified ? { verified: "1" } : {}) }).toString()}` : ""}`}
       stars={stars}
       items={feed.items}
       page={feed.page}

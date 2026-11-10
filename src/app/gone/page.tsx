@@ -1,11 +1,20 @@
-import Link from "next/link";
-export const metadata = { title: "Ad removed" };
+import { EmptyState } from "@/components/ui/EmptyState";
+import { pageMetadata } from "@/lib/ui/meta";
+
+export const metadata = pageMetadata({
+  title: "Listing removed | Tharkoo",
+  description: "This listing is no longer available.",
+  path: "/gone/",
+  index: false,
+});
+
 export default function Gone() {
   return (
-    <div className="py-16 text-center">
-      <h1 className="text-2xl">This ad was removed</h1>
-      <p className="mt-2 text-sm text-[#555]">410 — the listing is gone. Open its city page instead.</p>
-      <Link href="/" className="mt-4 inline-block underline">Home</Link>
-    </div>
+    <EmptyState
+      heading="h1"
+      title="This listing was removed"
+      body="The ad is no longer available. Browse a category instead."
+      action={{ href: "/", label: "Back to home" }}
+    />
   );
 }

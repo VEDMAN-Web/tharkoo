@@ -1,9 +1,10 @@
 "use client";
 
-import { createContext, useContext, useEffect, useMemo, useState } from "react";
+import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
 import { usePathname } from "next/navigation";
 
-type CityCtx = { city?: string; setCity: (name?: string) => void };
+type City = { slug: string; name: string };
+type CityCtx = { city?: string; citySlug?: string; setCity: (name?: string, slug?: string) => void };
 
 const Ctx = createContext<CityCtx>({ setCity: () => {} });
 
@@ -26,46 +27,61 @@ const RESERVED = new Set([
   "maintenance",
   "submit-report",
   "scam-report",
+  "styleguide",
 ]);
 
-export function CityProvider({
-  children,
-  cities,
-}: {
-  children: React.ReactNode;
-  cities: { slug: string; name: string }[];
-}) {
+export function CityProvider({ children, cities }: { children: React.ReactNode; cities: City[] }) {
   const path = usePathname() || "/";
-  const [override, setCity] = useState<string | undefined>();
+  const [override, setOverride] = useState<City | undefined>();
   const fromPath = useMemo(() => {
     const parts = path.split("/").filter(Boolean);
     for (const part of parts) {
       if (RESERVED.has(part)) continue;
       const hit = cities.find((c) => c.slug === part);
-      if (hit) return hit.name;
+      if (hit) return hit;
     }
     return undefined;
   }, [path, cities]);
 
   useEffect(() => {
-    // Route changes intentionally reset the user-selected city override.
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    if (!path.startsWith("/ad")) setCity(undefined);
-  }, [path]);
+    const id = window.setTimeout(() => {
+      if (fromPath) return;
+      const raw = localStorage.getItem("tk-city");
+      if (!raw) return;
+      try {
+        const saved = JSON.parse(raw) as City;
+        if (saved?.name) setOverride(saved);
+      } catch {
+        /* ignore stored city */
+      }
+    }, 0);
+    return () => window.clearTimeout(id);
+  }, [fromPath]);
 
-  return <Ctx.Provider value={{ city: override || fromPath, setCity }}>{children}</Ctx.Provider>;
+  const setCity = useCallback((name?: string, slug?: string) => {
+    if (!name) {
+      setOverride(undefined);
+      localStorage.removeItem("tk-city");
+      return;
+    }
+    const next = { name, slug: slug || "" };
+    setOverride(next);
+    localStorage.setItem("tk-city", JSON.stringify(next));
+  }, []);
+
+  const active = fromPath || override;
+  return <Ctx.Provider value={{ city: active?.name, citySlug: active?.slug, setCity }}>{children}</Ctx.Provider>;
 }
 
 export function useCity() {
   return useContext(Ctx);
 }
 
-export function CitySync({ name }: { name?: string }) {
+export function CitySync({ name, slug }: { name?: string; slug?: string }) {
   const { setCity } = useCity();
   useEffect(() => {
     if (!name) return;
-    setCity(name);
-    return () => setCity(undefined);
-  }, [name, setCity]);
+    setCity(name, slug);
+  }, [name, slug, setCity]);
   return null;
 }
