@@ -4,6 +4,7 @@ import {
   AuditEvent,
   Category,
   Coupon,
+  IdentityVerification,
   Listing,
   User,
   WalletEntry,
@@ -73,6 +74,33 @@ describe("model validation", () => {
 
     await Coupon.create({ code: "WELCOME", kind: "percent", percent: 10, credits: null });
     await expect(Coupon.create({ code: "WELCOME", kind: "credits", credits: 5 })).rejects.toThrow();
+  });
+
+  it("stores front, optional back, and selfie, and copies front into documentRef", async () => {
+    const userId = new mongoose.Types.ObjectId();
+    const front = new mongoose.Types.ObjectId().toString();
+    const selfie = new mongoose.Types.ObjectId().toString();
+    const created = await IdentityVerification.create({
+      userId,
+      provider: "manual",
+      documentRef: front,
+      documents: { front, selfie },
+      status: "pending_review",
+      dateOfBirthAsserted: new Date("1995-04-02"),
+    });
+    expect(created.documents?.front).toBe(front);
+    expect(created.documents?.back).toBeUndefined();
+    expect(created.documents?.selfie).toBe(selfie);
+    expect(created.documentRef).toBe(front);
+    await expect(
+      IdentityVerification.create({
+        userId,
+        documentRef: front,
+        documents: { front },
+        status: "pending_review",
+        dateOfBirthAsserted: new Date("1995-04-02"),
+      }),
+    ).rejects.toThrow();
   });
 
   it("rejects a repeated wallet idempotency key", async () => {

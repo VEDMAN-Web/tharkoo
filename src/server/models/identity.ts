@@ -38,11 +38,19 @@ export interface TokenDoc {
   createdAt?: Date;
 }
 
+export interface IdentityDocuments {
+  front: string;
+  back?: string;
+  selfie: string;
+}
+
 export interface IdentityVerificationDoc {
   _id?: Types.ObjectId;
   userId: Types.ObjectId;
   provider: "manual" | "vendor";
+  /** Legacy single id. New rows set this to `documents.front`. Mongoose does not require it. */
   documentRef: string;
+  documents?: IdentityDocuments;
   status: "pending_review" | "approved" | "rejected";
   dateOfBirthAsserted: Date;
   reviewerId?: Types.ObjectId;
@@ -98,11 +106,21 @@ function expiringTokenSchema(collection: string) {
   return schema;
 }
 
+const identityDocumentsSchema = new Schema<IdentityDocuments>(
+  {
+    front: { type: String, required: true },
+    back: { type: String },
+    selfie: { type: String, required: true },
+  },
+  { _id: false },
+);
+
 const identityVerificationSchema = new Schema<IdentityVerificationDoc>(
   {
     userId: { type: Schema.Types.ObjectId, required: true, index: true },
     provider: { type: String, enum: ["manual", "vendor"], default: "manual" },
-    documentRef: { type: String, required: true },
+    documentRef: { type: String, required: false },
+    documents: { type: identityDocumentsSchema, required: false },
     status: { type: String, enum: ["pending_review", "approved", "rejected"], required: true },
     dateOfBirthAsserted: { type: Date, required: true },
     reviewerId: { type: Schema.Types.ObjectId },
