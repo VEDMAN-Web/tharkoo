@@ -153,6 +153,7 @@ export async function renameCategory(id: string, next: string) {
   row.slug = parsed.slug;
   await row.save();
   await saveRedirect(`/${previous}/*`, `/${parsed.slug}/*`);
+  notifyIndexNow([`/${parsed.slug}/`]);
   return parsed.slug;
 }
 
@@ -184,6 +185,7 @@ export async function renameLocation(id: string, next: string) {
       }
     }
   }
+  notifyIndexNow(cats.map((cat) => `/${cat.slug}/${parsed.slug}/`));
   return parsed.slug;
 }
 
@@ -263,7 +265,14 @@ export async function renameAd(id: string, titlePart: string) {
   const previous = row.slug;
   await Listing.updateOne({ _id: row._id }, { $set: { slug } });
   await saveRedirect(`/${paths.ad}/${previous}/*`, `/${paths.ad}/${slug}/*`);
+  notifyIndexNow([`/${paths.ad}/${slug}/`]);
   return slug;
+}
+
+function notifyIndexNow(paths: string[]) {
+  void import("@/server/indexnow/ping")
+    .then((mod) => mod.queueIndexNow(paths))
+    .catch(() => undefined);
 }
 
 export async function setPrefixes(input: Partial<Record<PathKey, string>>) {

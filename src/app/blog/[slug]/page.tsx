@@ -1,7 +1,10 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
+import { JsonLd } from "@/lib/jsonld";
 import { getBlog } from "@/lib/queries";
+import { canonical } from "@/lib/seo";
+import { blogPostingNode } from "@/lib/seo/schema";
 import { Container } from "@/components/ui/Container";
 import { Prose } from "@/components/ui/Prose";
 import { blogPath } from "@/lib/urls";
@@ -31,6 +34,15 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
   const heading = await urlHeading(path, post.title || "Blog");
   return (
     <Container className="py-8">
+      <JsonLd
+        data={blogPostingNode({
+          headline: heading,
+          datePublished: post.date,
+          dateModified: post.date,
+          author: post.author,
+          url: canonical(path),
+        })}
+      />
       <p className="t-small">
         <Link href={blogPath(paths)} className="text-accent">Tharkoo Blog</Link> · {post.date} · {post.author}
       </p>

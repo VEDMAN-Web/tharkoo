@@ -52,7 +52,12 @@ async function fixture() {
     slug: "office-assistant-0001",
     description: "A weekday office role.",
     status: "active",
+    seoNoindex: false,
   });
+  await Listing.create([
+    { ownerId: ad.ownerId, categoryId: category._id, stateId: state._id, cityId: city._id, title: "Second role", slug: "second-role-0002", description: "Another weekday role.", status: "active", seoNoindex: false },
+    { ownerId: ad.ownerId, categoryId: category._id, stateId: state._id, cityId: city._id, title: "Third role", slug: "third-role-0003", description: "A third weekday role.", status: "active", seoNoindex: false },
+  ]);
   return { category, city, ad };
 }
 

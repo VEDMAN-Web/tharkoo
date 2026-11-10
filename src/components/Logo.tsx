@@ -15,7 +15,7 @@ export function Logo({
 }) {
   const mark = (
     <span className="tk-logo" data-tk="logo">
-      <Image className="tk-logo-mark" src="/brand/logo-mark.svg" alt="" width={28} height={28} priority />
+      <Image className="tk-logo-mark" src="/brand/logo-mark.svg" alt="" width={28} height={28} priority aria-hidden />
       <span>
         <span className="tk-wordmark">{name.toLowerCase()}</span>
         <span className="tk-logo-sub">{country}</span>

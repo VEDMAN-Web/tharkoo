@@ -11,6 +11,7 @@ import {
   getSite,
   getStarListings,
   isThin,
+  pageOutOfRange,
 } from "@/lib/queries";
 import { prettyPlace } from "@/lib/format";
 import { fillTemplate } from "@/lib/seo";
@@ -71,7 +72,7 @@ export async function generateMetadata({ params, searchParams }: Props): Promise
     title,
     description,
     path: `${path}${suffix ? `?${suffix}` : ""}`,
-    index: pageNo === 1 && !(filtered && feed.total === 0) && !isThin(feed.total),
+    index: pageNo === 1 && !(filtered && feed.total === 0) && !isThin(feed.total, cat.minListingsLocality ?? 10),
     follow: true,
   });
 }
@@ -79,6 +80,7 @@ export async function generateMetadata({ params, searchParams }: Props): Promise
 export default async function DistrictPage({ params, searchParams }: Props) {
   const { category, location, district } = await params;
   const sp = await searchParams;
+  if (sp.page !== undefined && !/^[1-9]\d*$/.test(sp.page)) notFound();
   const page = Math.max(1, Number(sp.page) || 1);
   const [cat, city, districtRows] = await Promise.all([
     getCategory(category),
@@ -104,6 +106,19 @@ export default async function DistrictPage({ params, searchParams }: Props) {
     publicTags(),
     urlHeading(canonicalPath, ""),
   ]);
+  if (pageOutOfRange(sp.page, feed.pages)) notFound();
+  const thin = isThin(feed.total, cat.minListingsLocality ?? 10);
+  const districtCopy = fallbackLanding({
+    category: cat.name || category,
+    city: city.name || location,
+    district: dist.name || district,
+    count: feed.total,
+    site: site.name,
+    indexable: !thin,
+    updated: feed.items[0]?.publishedAt
+      ? new Date(feed.items[0].publishedAt).toLocaleDateString("en-IN", { day: "numeric", month: "long", year: "numeric" })
+      : undefined,
+  });
   const vars = {
     category: cat.name,
     city: city.name,
@@ -116,10 +131,10 @@ export default async function DistrictPage({ params, searchParams }: Props) {
   return (
     <ListingPageView
       h1={heading || fillTemplate(seo?.h1 || "{category} in {district}", vars)}
-      faqs={fallbackLanding({ category: cat.name || category, city: city.name || location, district: dist.name || district, count: feed.total, site: site.name }).faqs}
+      faqs={districtCopy.faqs}
       popular={tags.slice(0, 4).map((tag) => ({ href: tagPath(paths, cat.slug || category, tag.slug), label: `${dist.name} ${tag.label}` }))}
       h2={fillTemplate(seo?.h2 || "", vars)}
-      intro={fallbackLanding({ category: cat.name || category, city: city.name || location, district: dist.name || district, count: feed.total, site: site.name }).intro || fillTemplate(seo?.intro || "", vars)}
+      intro={districtCopy.intro || fillTemplate(seo?.intro || "", vars)}
       crumbs={[
         { name: "Tharkoo India", path: "/" },
         { name: cat.name!, path: `/${cat.slug}/` },
@@ -137,11 +152,21 @@ export default async function DistrictPage({ params, searchParams }: Props) {
       page={feed.page}
       pages={feed.pages}
       total={feed.total}
-      noindex={isThin(feed.total) || page > 1 || (Boolean(sp.photos || sp.verified) && feed.total === 0)}
-      siblingLinks={districts.map((d) => ({
-        href: placePath(cat.slug || category, city.slug || location, d.slug || ""),
-        label: d.name!,
-      }))}
+      noindex={thin || page > 1 || (Boolean(sp.photos || sp.verified) && feed.total === 0)}
+      updated={
+        !thin && feed.items[0]?.publishedAt
+          ? new Date(feed.items[0].publishedAt).toLocaleDateString("en-IN", { day: "numeric", month: "long", year: "numeric" })
+          : undefined
+      }
+      siblingLinks={districts
+        .filter((row) => row.slug !== dist.slug)
+        .slice(0, 4)
+        .map((row) => ({
+          href: placePath(cat.slug || category, city.slug || location, row.slug || ""),
+          label: `${cat.name} in ${row.name}, ${city.name}`,
+        }))
+        .concat([{ href: placePath(cat.slug || category, city.slug || location), label: `${cat.name} in ${city.name}` }])
+        .slice(0, 5)}
       emptyNearby={[{ href: placePath(cat.slug || category, city.slug || location), label: city.name! }]}
       photos={sp.photos === "1"}
       verified={sp.verified === "1"}

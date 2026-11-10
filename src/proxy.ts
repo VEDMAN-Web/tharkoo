@@ -24,6 +24,19 @@ function nextWithPath(req: NextRequest) {
   return NextResponse.next({ request: { headers } });
 }
 
+async function adIsGone(pathname: string) {
+  const { getPaths } = await import("@/server/urls/service");
+  const { Listing } = await import("@/server/models");
+  const { listingVisibility } = await import("@/server/listings/visibility");
+  const paths = await getPaths();
+  const prefix = `/${paths.ad.replace(/^\/|\/$/g, "")}/`;
+  if (!pathname.startsWith(prefix)) return false;
+  const slug = pathname.slice(prefix.length).replace(/\/$/, "");
+  if (!slug || slug.includes("/")) return false;
+  const doc = await Listing.findOne({ slug }).select("status expiresAt").lean<{ status?: string; expiresAt?: Date | null }>();
+  return listingVisibility(doc) === "gone";
+}
+
 function skipRedirect(path: string) {
   return (
     path.startsWith("/api/") ||
@@ -54,6 +67,15 @@ export async function proxy(req: NextRequest) {
       if (decision.action === "rewrite") rewriteTo = decision.to;
     } catch {
       /* a missing database should not block the page */
+    }
+    if (process.env.MONGODB_URI) {
+      try {
+        if (await adIsGone(rewriteTo || path)) {
+          return new NextResponse("This listing has been removed.", { status: 410, headers: { "content-type": "text/plain; charset=utf-8" } });
+        }
+      } catch {
+        /* a lookup failure should fall through to the page */
+      }
     }
   }
   const cronPost = req.method === "POST" && path.startsWith("/api/cron/");

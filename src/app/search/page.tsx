@@ -1,5 +1,6 @@
+import { notFound } from "next/navigation";
 import { ListingPageView } from "@/components/ListingPage";
-import { searchListings, getCategories } from "@/lib/queries";
+import { searchListings, getCategories, pageOutOfRange } from "@/lib/queries";
 import { searchPath } from "@/lib/urls";
 import { withUrlSeo } from "@/lib/seo/override";
 import { getPaths } from "@/server/urls/service";
@@ -22,6 +23,7 @@ export default async function SearchPage({
   searchParams: Promise<{ q?: string; category?: string; location?: string; city?: string; photos?: string; verified?: string; page?: string }>;
 }) {
   const sp = await searchParams;
+  if (sp.page !== undefined && !/^[1-9]\d*$/.test(sp.page)) notFound();
   const city = sp.city || sp.location;
   const feed = await searchListings({
     q: sp.q,
@@ -39,6 +41,7 @@ export default async function SearchPage({
   if (sp.verified) qs.set("verified", sp.verified);
   const paths = await getPaths();
   const path = `${searchPath(paths)}?${qs.toString()}`;
+  if (pageOutOfRange(sp.page, feed.pages)) notFound();
   const categories = await getCategories();
   return (
     <ListingPageView

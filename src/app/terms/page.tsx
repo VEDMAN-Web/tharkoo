@@ -1,17 +1,21 @@
 import { StaticPage } from "@/components/StaticPage";
+import { TRUST } from "@/content/trust";
 import { pageMetadata } from "@/lib/ui/meta";
 
+const copy = TRUST.terms;
+
 export const metadata = pageMetadata({
-  title: "Terms of use | Tharkoo",
-  description: "The terms for using Tharkoo classifieds.",
+  title: `${copy.title} | Tharkoo`,
+  description: copy.description,
   path: "/terms/",
 });
 
 export default function Page() {
   return (
-    <StaticPage title="Terms of use">
-      <p>Tharkoo is for people aged 18 and over. You are responsible for the accuracy of anything you post and for keeping your account to yourself.</p>
-      <p>Listings that break the content rules can be removed. Contact details are shown only after a reader chooses to reveal them.</p>
+    <StaticPage title={copy.title}>
+      {copy.paragraphs.map((paragraph) => (
+        <p key={paragraph.slice(0, 40)}>{paragraph}</p>
+      ))}
     </StaticPage>
   );
 }

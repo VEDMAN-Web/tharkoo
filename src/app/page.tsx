@@ -28,9 +28,9 @@ export default async function Home() {
       {localPhoto ? <link rel="preload" as="image" href={photo} fetchPriority="high" /> : null}
       <section className="tk-hero" data-tk="hero">
         {localPhoto ? (
-          <Image className="tk-hero-photo" src={photo} alt="" width={960} height={880} priority sizes="42vw" />
+          <Image className="tk-hero-photo" src={photo} alt={content.hero.photoAlt} width={960} height={880} priority sizes="42vw" />
         ) : (
-          <img className="tk-hero-photo" src={photo} alt="" width={960} height={880} />
+          <img className="tk-hero-photo" src={photo} alt={content.hero.photoAlt} width={960} height={880} />
         )}
         <div className="tk-hero-copy">
           <h1>

@@ -549,6 +549,7 @@ export async function submitListing(
   } catch {
     /* unit tests run outside a Next request */
   }
+  if (listing.slug) notifyIndexNow([`/ad/${listing.slug}/`]);
   return { status: "active" as const };
 }
 
@@ -557,6 +558,7 @@ async function move(id: string, userId: string, to: ListingStatus, action: strin
   assertTransition(listing.status, to);
   listing.status = to;
   await listing.save();
+  if (listing.slug && (to === "removed" || to === "expired" || to === "deleted")) notifyIndexNow([`/ad/${listing.slug}/`]);
   await record(userId, "user", action, listing._id.toString(), requestId, { status: to });
   return listing;
 }
@@ -679,11 +681,20 @@ export async function revealContact(
 
 export async function expireDue(requestId: string) {
   await connectDb();
+  const due = await Listing.find({ status: "active", expiresAt: { $lte: new Date() } }).select("slug").limit(200).lean<{ slug?: string }[]>();
   const result = await Listing.updateMany(
     { status: "active", expiresAt: { $lte: new Date() } },
     { $set: { status: "expired" } },
   );
   const expired = result.modifiedCount;
+  notifyIndexNow(due.flatMap((row) => (row.slug ? [`/ad/${row.slug}/`] : [])));
   await record(null, "system", "listing.expire", "cron", requestId, { expired });
   return { expired };
+}
+
+function notifyIndexNow(paths: string[]) {
+  if (!paths.length) return;
+  void import("@/server/indexnow/ping")
+    .then((mod) => mod.queueIndexNow(paths))
+    .catch(() => undefined);
 }

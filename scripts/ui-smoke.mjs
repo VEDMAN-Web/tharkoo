@@ -235,7 +235,7 @@ for (const [width, height] of widths) {
       const box = await page.locator(".tk-container").first().boundingBox();
       if (!box || Math.abs(box.width - 960) > 2) extra.push(`container ${box?.width}`);
       const h2 = await page.locator("h2").first().innerText();
-      if (!/Hot meetings in your city/i.test(h2)) extra.push("h2");
+      if (!/Latest listings in your city/i.test(h2)) extra.push("h2");
       const foot = await page.locator("[data-tk=footer]").innerText();
       for (const word of ["Legal", "Support", "Security", "Company", "Boost your visibility", "Countries"]) {
         if (!foot.includes(word)) extra.push(`footer ${word}`);
@@ -415,16 +415,31 @@ const mapOk =
   shardText.includes("<lastmod>") &&
   shardText.includes("/dating/gurgaon/") &&
   districtRes.ok() &&
-  districtText.includes("/dating/gurgaon/gurgaon-dlf/") &&
+  districtText.includes("<urlset") &&
   contentRes.ok() &&
   contentText.includes("/cities/") &&
   contentText.includes("/blog/") &&
   contentText.includes("/help/") &&
   contentText.includes("/cms/about/") &&
   contentText.includes("/scam-report/") &&
+  contentText.includes("/safety/") &&
+  contentText.includes("/categories/") &&
   adsRes.ok() &&
-  adsText.includes("/ad/");
+  adsText.includes("<urlset");
 record("/sitemap.xml", 1440, mapOk, mapOk ? "index and shards" : mapText.slice(0, 80));
+const deep = await context.request.get(base + "/dating/gurgaon/?page=99");
+record("/dating/gurgaon/?page=99", 1440, deep.status() === 404, String(deep.status()));
+for (const [asset, type] of [
+  ["/favicon.ico", "icon"],
+  ["/apple-touch-icon.png", "png"],
+  ["/brand/icon-192.png", "png"],
+  ["/brand/icon-512.png", "png"],
+  ["/brand/og-default.png", "png"],
+]) {
+  const assetRes = await context.request.get(base + asset);
+  const assetType = assetRes.headers()["content-type"] || "";
+  record(asset, 1440, assetRes.ok() && (type === "icon" || assetType.includes("png")), assetType || String(assetRes.status()));
+}
 const gurgaon = await context.request.get(base + "/dating/gurgaon/");
 const gurgaonText = await gurgaon.text();
 record("/dating/gurgaon/", 1440, gurgaon.ok() && gurgaonText.includes("Dating in Gurgaon"), gurgaon.status());

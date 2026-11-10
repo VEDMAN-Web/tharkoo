@@ -32,6 +32,7 @@ const nextConfig: NextConfig = {
   async rewrites() {
     return {
       beforeFiles: [{ source: "/sitemap/:shard.xml", destination: "/sitemap/:shard/" }],
+      afterFiles: [{ source: "/:key.txt", destination: "/api/indexnow/:key" }],
     };
   },
   turbopack: {

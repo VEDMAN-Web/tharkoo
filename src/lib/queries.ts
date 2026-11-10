@@ -108,7 +108,7 @@ export async function getStarListings(filter: Record<string, unknown>, limit = 6
 }
 
 export async function getFeed(filter: Record<string, unknown>, page = 1) {
-  const safePage = Math.min(Math.max(1, Number(page) || 1), 40);
+  const safePage = Math.max(1, Number(page) || 1);
   return cached(
     `feed:${JSON.stringify(filter)}:${safePage}`,
     10_000,
@@ -171,7 +171,7 @@ export async function searchListings(opts: {
   verified?: boolean;
   page?: number;
 }) {
-  const safePage = Math.min(Math.max(1, Number(opts.page) || 1), 40);
+  const safePage = Math.max(1, Number(opts.page) || 1);
   return cached(
     `search:${JSON.stringify(opts)}:${safePage}`,
     10_000,
@@ -228,8 +228,14 @@ export async function listingCountsByCategoryCity() {
   );
 }
 
-export function isThin(count: number) {
-  return count < THIN;
+export function isThin(count: number, minimum = THIN) {
+  return count < (minimum > 0 ? minimum : THIN);
+}
+
+export function pageOutOfRange(raw: string | undefined, pages: number) {
+  if (raw === undefined || raw === "") return false;
+  if (!/^[1-9]\d*$/.test(raw)) return true;
+  return Number(raw) > Math.max(1, pages);
 }
 
 export async function getPage(slug: string) {

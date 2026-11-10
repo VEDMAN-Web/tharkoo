@@ -4,10 +4,11 @@ import { SmartImage } from "./ui/SmartImage";
 import { AdCardSkeleton } from "./ui/Skeleton";
 import { JsonLd } from "@/lib/jsonld";
 import { safeHtml } from "@/lib/sanitize";
+import { displayTitle } from "@/lib/format";
 import { canonical } from "@/lib/seo";
-import { websiteNode } from "@/lib/seo/schema";
-import { categoryPath, placePath, searchPath } from "@/lib/urls";
-import { getCategories, getCities, getHomepageContent, getSeo, getSite } from "@/lib/queries";
+import { organizationNode, websiteNode } from "@/lib/seo/schema";
+import { adPath, categoryPath, placePath, searchPath } from "@/lib/urls";
+import { getCategories, getCities, getFeed, getHomepageContent, getSeo, getSite, listingCountsByCategoryCity } from "@/lib/queries";
 import { getPaths } from "@/server/urls/service";
 import { cardFallback, type HomeCard } from "@/lib/ui/site-content";
 
@@ -42,14 +43,18 @@ function iconFor(slug: string) {
 }
 
 export async function HomeBlocks() {
-  const [site, categories, cities, seo, content, paths] = await Promise.all([
+  const [site, categories, cities, seo, content, paths, counts, latestFeed] = await Promise.all([
     getSite(),
     getCategories(),
     getCities(),
     getSeo("home"),
     getHomepageContent(),
     getPaths(),
+    listingCountsByCategoryCity().catch(() => []),
+    getFeed({}, 1).catch(() => ({ items: [] as { slug?: string; title?: string }[] })),
   ]);
+  const liveKeys = new Set(counts.filter((row) => row.n > 0).map((row) => `${row._id.categorySlug}|${row._id.citySlug}`));
+  const latest = latestFeed.items.slice(0, 12);
   const bySlug = new Map(categories.map((cat) => [cat.slug, cat as Cat]));
   const cityBySlug = new Map(cities.map((city) => [city.slug, city]));
   const top = cities.filter((city) => city.isTop).slice(0, 5);
@@ -61,14 +66,20 @@ export async function HomeBlocks() {
     const chosen = card.cities.map((slug) => cityBySlug.get(slug)).filter(Boolean);
     if (chosen.length) return chosen;
     const homes = (cat.homeCities || []).map((slug) => cityBySlug.get(slug)).filter(Boolean).slice(0, 3);
-    return homes.length ? homes : top.slice(0, 3);
+    const list = homes.length ? homes : top.slice(0, 3);
+    if (!liveKeys.size) return list;
+    const filtered = list.filter((city) => liveKeys.has(`${card.slug}|${city!.slug}`));
+    return filtered.length ? filtered : list;
   }
 
   return (
     <>
       <JsonLd
         data={[
-          { "@context": "https://schema.org", "@type": "Organization", name: site.name, url: canonical("/") },
+          organizationNode(site.name || "Tharkoo", {
+            logo: canonical("/brand/logo-mark.svg"),
+            sameAs: content.socials.map((item) => item.href),
+          }),
           websiteNode(site.name || "Tharkoo", searchPath(paths)),
         ]}
       />
@@ -87,7 +98,7 @@ export async function HomeBlocks() {
               <Link href={categoryPath(cat.slug || "")} className="tk-home-photo" prefetch={false}>
                 <SmartImage
                   src={card.photo || `/placeholders/${cat.slug}/01.webp`}
-                  alt=""
+                  alt={`${title || "Category"} classifieds`}
                   seed={cat.slug || "cat"}
                   category={cat.slug}
                   width={600}
@@ -112,6 +123,20 @@ export async function HomeBlocks() {
           );
         })}
       </div>
+      {latest.length ? (
+        <section className="tk-container" data-tk="latest-ads">
+          <h2>Latest ads</h2>
+          <ul>
+            {latest.map((ad) => (
+              <li key={ad.slug}>
+                <Link href={adPath(paths, ad.slug || "")} prefetch={false}>
+                  {displayTitle(ad.title)}
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </section>
+      ) : null}
       {content.seoIntro || seo?.intro ? (
         <div className="tk-seo" dangerouslySetInnerHTML={{ __html: safeHtml(content.seoIntro || seo?.intro || "") }} />
       ) : null}

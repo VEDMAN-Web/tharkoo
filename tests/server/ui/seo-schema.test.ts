@@ -1,31 +1,37 @@
 import { describe, expect, it } from "vitest";
 import { fallbackLanding, mergeLanding } from "@/lib/seo/landing";
-import { breadcrumbList, faqPage, itemListNode, organizationNode, productOffer, publicPath, websiteNode } from "@/lib/seo/schema";
+import { breadcrumbList, faqPage, itemListNode, listingJsonLd, organizationNode, publicPath, websiteNode } from "@/lib/seo/schema";
 import { sitemapIndexXml } from "@/lib/seo/sitemaps";
 
 describe("structured data", () => {
   it("builds Product, Offer, breadcrumbs, website search, and FAQ shapes", () => {
-    const product = productOffer({
+    const personal = listingJsonLd({
+      category: "dating",
       name: "Coffee in Gurgaon",
       description: "A dating notice.",
       url: "https://tharkoo.example/ad/demo/",
-      image: "https://tharkoo.example/brand/og-default.png",
-      seller: "A. Sharma",
     });
-    expect(product["@type"]).toBe("Product");
-    expect(product.offers["@type"]).toBe("Offer");
-    expect(product.offers.priceCurrency).toBe("INR");
-    expect(product.offers.availability).toBe("https://schema.org/InStock");
-    expect(product.offers.seller).toEqual({ "@type": "Person", name: "A. Sharma" });
-
-    const org = productOffer({
+    expect(personal).toBeNull();
+    const product = listingJsonLd({
+      category: "buy-and-sell",
       name: "Desk",
       description: "For sale",
       url: "https://tharkoo.example/ad/desk/",
-      seller: "North Shop",
-      sellerType: "Organization",
+      price: 1500,
     });
-    expect(org.offers.seller["@type"]).toBe("Organization");
+    const offer = product as { "@type": string; offers?: { price?: string; priceCurrency?: string; seller?: unknown } };
+    expect(offer["@type"]).toBe("Product");
+    expect(offer.offers?.price).toBe("1500");
+    expect(offer.offers?.priceCurrency).toBe("INR");
+    expect(offer.offers?.seller).toBeUndefined();
+    const free = listingJsonLd({
+      category: "vehicles",
+      name: "Cycle",
+      description: "Listed without a price",
+      url: "https://tharkoo.example/ad/cycle/",
+      price: 0,
+    });
+    expect((free as { offers?: unknown } | null)?.offers).toBeUndefined();
 
     const crumbs = breadcrumbList([
       { name: "India", path: "/" },

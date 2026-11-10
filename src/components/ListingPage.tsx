@@ -55,6 +55,7 @@ export function ListingPageView({
   districts = [],
   faqs = [],
   popular = [],
+  updated,
 }: {
   h1: string;
   h2?: string;
@@ -80,13 +81,14 @@ export function ListingPageView({
   districts?: { href: string; label: string }[];
   faqs?: { q: string; a: string }[];
   popular?: { href: string; label: string }[];
+  updated?: string;
 }) {
   const [open, setOpen] = useState(false);
   const paths = useUrlPaths();
   const clear = path.split("?")[0];
   const chips = districts.slice(0, 2);
   const feed = [...stars, ...items.filter((ad) => !stars.some((star) => star.slug && star.slug === ad.slug))];
-  const related = siblingLinks.slice(0, 8);
+  const related = siblingLinks.slice(0, 5);
   const short = cityName && categoryName ? `${cityName} ${categoryName}` : crumbs[crumbs.length - 1]?.name;
 
   return (
@@ -177,6 +179,7 @@ export function ListingPageView({
         </nav>
       ) : null}
       <h1 className="tk-listing-h1">{h1}</h1>
+      {updated ? <p className="tk-seo-foot">Updated {updated}</p> : null}
       <div className="tk-feed">
         {feed.map((ad, index) => (
           <span key={ad.publicId || ad.slug || index} style={{ display: "contents" }}>
@@ -237,7 +240,13 @@ export function ListingPageView({
           ))}
         </section>
       ) : null}
-      {intro ? <p className="tk-seo-foot">{intro}</p> : null}
+      {intro
+        ? intro.split(/\n+/).map((part) => (
+            <p key={part.slice(0, 24)} className="tk-seo-foot">
+              {part}
+            </p>
+          ))
+        : null}
       {footer ? <div className="tk-seo-foot">{footer}</div> : null}
       {related.length ? (
         <nav className="tk-seo-foot" aria-label="Nearby">
