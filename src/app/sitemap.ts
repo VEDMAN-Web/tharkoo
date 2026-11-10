@@ -2,6 +2,8 @@ import type { MetadataRoute } from "next";
 import { getCategories, getCities, getFeed } from "@/lib/queries";
 import { siteUrl } from "@/lib/utils";
 
+export const dynamic = "force-dynamic";
+
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const origin = siteUrl();
   const [categories, cities] = await Promise.all([getCategories(), getCities()]);
