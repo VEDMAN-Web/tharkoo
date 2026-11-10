@@ -1,25 +1,6 @@
-import mongoose from "mongoose";
-import { existsSync, readFileSync } from "node:fs";
-import { Listing } from "../src/lib/models";
-
-function uri() {
-  if (process.env.MONGODB_URI) return process.env.MONGODB_URI;
-  if (!existsSync(".env.local")) return "";
-  return readFileSync(".env.local", "utf8").match(/MONGODB_URI\s*=\s*['"]?([^'"\n]+)['"]?/)?.[1]?.trim() || "";
-}
-
+/** Legacy photo rewrite. Listings no longer store a photos array; this entry is a no-op. */
 async function main() {
-  const mongo = uri();
-  if (!mongo) throw new Error("MONGODB_URI missing");
-  await mongoose.connect(mongo);
-  const listings = await Listing.find({ photos: { $exists: true, $ne: [] } });
-  for (const listing of listings) {
-    const photos = (listing.photos || []).map((p: string) => p.replace(/\.svg$/i, ".jpg"));
-    listing.photos = photos;
-    await listing.save();
-  }
-  await mongoose.disconnect();
-  console.log(`photos_patched ${listings.length}`);
+  console.log("photos_patched 0");
 }
 
 main().catch((err) => {

@@ -1,4 +1,5 @@
 import type { CategoryFieldDoc } from "@/server/models";
+import { textDenied } from "@/server/shared/policy";
 
 export const LOCATION_LEVELS = ["country", "state", "city", "district", "locality"] as const;
 
@@ -373,6 +374,111 @@ export function creditPackTable(): SeedCreditPack[] {
   return parsed;
 }
 
+export const DEMO_LISTING_COUNT = 1500;
+export const SEED_USER_EMAIL = "seed@tharkoo.local";
+
+const DEMO_LINES: Record<string, ReadonlyArray<readonly [string, string, Record<string, string | number>]>> = {
+  dating: [
+    ["Coffee in {city}", "Looking to meet for coffee and a walk around {city}.", { age: 29, "looking-for": "Coffee" }],
+    ["Weekend events in {city}", "Interested in local events and a steady chat in {city}.", { age: 34, "looking-for": "Events" }],
+    ["Long term dating in {city}", "Hoping to meet someone for a long term relationship in {city}.", { age: 31, "looking-for": "Long term" }],
+  ],
+  friendship: [
+    ["Weekend hiking friend in {city}", "Looking for a hiking friend on weekend mornings in {city}.", { interest: "Hiking" }],
+    ["Board games in {city}", "Friendly board game group looking for new people in {city}.", { interest: "Board games" }],
+    ["Language exchange in {city}", "Want a language exchange partner in {city}.", { interest: "Languages" }],
+  ],
+  meetups: [
+    ["Morning walk meetup in {city}", "A small morning walk group meets in {city}.", { topic: "Morning walk" }],
+    ["Book club meetup in {city}", "Monthly book club for general fiction in {city}.", { topic: "Books" }],
+    ["Photography meetup in {city}", "Casual photography walk for beginners in {city}.", { topic: "Photography" }],
+  ],
+  "personal-ads": [
+    ["New in {city}", "Recently moved to {city} and would like local friends.", { topic: "New in town" }],
+    ["Music fan in {city}", "Looking to share live music plans in {city}.", { topic: "Music" }],
+    ["Cooking club in {city}", "Home cooking notes and recipe swaps in {city}.", { topic: "Cooking" }],
+  ],
+  jobs: [
+    ["Office assistant in {city}", "Weekday office assistant role for a local team in {city}.", { role: "Office assistant", "work-mode": "Office" }],
+    ["Shop helper in {city}", "Daytime shop helper role in {city}.", { role: "Shop helper", "work-mode": "Office" }],
+    ["Data entry from {city}", "Remote data entry for a small firm based in {city}.", { role: "Data entry", "work-mode": "Remote" }],
+  ],
+  wellness: [
+    ["Yoga class in {city}", "Morning yoga class for beginners in {city}.", { kind: "Yoga" }],
+    ["Fitness coaching in {city}", "Fitness coaching slots at a local gym in {city}.", { kind: "Fitness" }],
+    ["Spa booking in {city}", "Spa appointment slots available in {city}.", { kind: "Spa" }],
+  ],
+  property: [
+    ["Apartment for rent in {city}", "Two bedroom apartment for rent in {city}.", { kind: "Apartment", purpose: "Rent" }],
+    ["House for sale in {city}", "Independent house for sale in {city}.", { kind: "House", purpose: "Sale" }],
+    ["Plot for sale in {city}", "Residential plot for sale near {city}.", { kind: "Plot", purpose: "Sale" }],
+  ],
+  vehicles: [
+    ["Used hatchback in {city}", "A used hatchback kept in a covered garage in {city}.", { make: "Hatchback", year: 2018, km: 42000 }],
+    ["City bike in {city}", "A commuter bike with workshop records in {city}.", { make: "Commuter", year: 2020, km: 12000 }],
+    ["Family car in {city}", "Family car with a full workshop history in {city}.", { make: "Sedan", year: 2016, km: 61000 }],
+  ],
+  "buy-and-sell": [
+    ["Wooden desk in {city}", "A used wooden desk for sale in {city}.", { condition: "Used" }],
+    ["New water bottle in {city}", "A new steel water bottle for sale in {city}.", { condition: "New" }],
+    ["Bookshelf in {city}", "A used bookshelf for sale, buyer collects in {city}.", { condition: "Used" }],
+  ],
+  pets: [
+    ["Dog supplies in {city}", "Unused dog supplies for sale in {city}.", { kind: "Supplies" }],
+    ["Cat carrier in {city}", "A cat carrier in good condition in {city}.", { kind: "Supplies" }],
+    ["Pet bowls in {city}", "Spare pet bowls from a household in {city}.", { kind: "Supplies" }],
+  ],
+  education: [
+    ["Maths tutoring in {city}", "After school maths tutoring in {city}.", { subject: "Maths", mode: "In person" }],
+    ["English class in {city}", "Spoken English class for learners in {city}.", { subject: "English", mode: "In person" }],
+    ["Online science tutoring", "Online science tutoring from a tutor in {city}.", { subject: "Science", mode: "Online" }],
+  ],
+};
+
+const DEMO_PROMOTIONS = ["star", "top", "super-top", "highlight", "new", "flash"] as const;
+
+export interface DemoListing {
+  slug: string;
+  title: string;
+  description: string;
+  categorySlug: string;
+  citySlug: string;
+  districtSlug?: string;
+  attributes: Record<string, string | number>;
+  verified: boolean;
+  promotionCode?: (typeof DEMO_PROMOTIONS)[number];
+  bumped: boolean;
+}
+
+export function demoListings(): DemoListing[] {
+  const out: DemoListing[] = [];
+  for (let i = 0; i < DEMO_LISTING_COUNT; i += 1) {
+    const city = CITIES[i % CITIES.length];
+    const category = CATEGORIES[Math.floor(i / CITIES.length) % CATEGORIES.length];
+    if (!city || !category) throw new Error("Demo listing catalogue is short");
+    const lines = DEMO_LINES[category.slug];
+    const line = lines?.[i % (lines?.length ?? 1)];
+    if (!line) throw new Error(`No demo copy for ${category.slug}`);
+    const [titleTemplate, descriptionTemplate, attributes] = line;
+    const districts = DISTRICTS[city[0]];
+    const district = districts?.[i % (districts?.length ?? 1)];
+    out.push({
+      slug: `demo-${String(i).padStart(4, "0")}`,
+      title: titleTemplate.split("{city}").join(city[1]),
+      description: descriptionTemplate.split("{city}").join(city[1]),
+      categorySlug: category.slug,
+      citySlug: city[0],
+      districtSlug: district?.[0],
+      attributes,
+      verified: i % 5 === 0,
+      promotionCode: i % 100 === 0 ? DEMO_PROMOTIONS[(i / 100) % DEMO_PROMOTIONS.length] : undefined,
+      bumped: i % 17 === 0,
+    });
+  }
+  if (out.length !== DEMO_LISTING_COUNT) throw new Error("Demo listing count drifted");
+  return out;
+}
+
 export interface SeedCounts {
   states: number;
   cities: number;
@@ -383,6 +489,7 @@ export interface SeedCounts {
   promotion_products: number;
   credit_packs: number;
   feature_flags: number;
+  listings: number;
 }
 
 export function expectedSeedCounts(): SeedCounts {
@@ -403,6 +510,7 @@ export function expectedSeedCounts(): SeedCounts {
     promotion_products: PRODUCTS.length,
     credit_packs: creditPackTable().length,
     feature_flags: FEATURE_FLAGS.length,
+    listings: DEMO_LISTING_COUNT,
   };
 }
 
@@ -431,6 +539,11 @@ function assertCatalogue(): void {
   if (new Set(categorySlugs).size !== categorySlugs.length) throw new Error("Duplicate category slug");
   const productCodes = PRODUCTS.map((product) => product.code);
   if (new Set(productCodes).size !== productCodes.length) throw new Error("Duplicate product code");
+  for (const row of demoListings()) {
+    if (textDenied(`${row.title} ${row.description}`).denied) {
+      throw new Error(`Demo listing text refused: ${row.slug}`);
+    }
+  }
 }
 
 assertCatalogue();

@@ -1,87 +1,75 @@
 import { cached } from "./cache";
 import { connectDb } from "./db";
-import { safeSearch } from "./sanitize";
 import {
   AttributeGroup,
   Banner,
   BlogPost,
-  Category,
   CreditPack,
   FeatureFlag,
   HelpArticle,
   Listing,
-  Location,
   Page,
   SeoTemplate,
   Site,
-  type ListingDoc,
-} from "./models";
+} from "@/server/models";
+import { loadCategories, categoryBySlug, countMatching, publicCategories, queryListings, type ListingQuery } from "@/server/search";
+import { cities, districts, loadLocations, locationBySlug, siblingCities, states, topCities } from "@/server/locations";
+import type { ListingDoc } from "@/lib/models";
 
 const PAGE_SIZE = 25;
 const THIN = 3;
 
 export async function getSite() {
-  return cached("site", 15_000, async () => {
-    await connectDb();
-    return (
-      (await Site.findOne({ key: "default" }).lean()) ?? {
-        name: "Tharkoo",
-        tagline: "Tharkoo, premium classifieds in India.",
-        legalName: "SparkBeta Tech",
-        countryName: "India",
-        supportHours: "Mon–Fri 14:00–20:00 IST",
-        ageGateEnabled: true,
-      }
-    );
-  });
+  return cached(
+    "site",
+    15_000,
+    async () => {
+      await connectDb();
+      return (
+        (await Site.findOne({ key: "default" }).lean()) ?? {
+          name: "Tharkoo",
+          tagline: "Tharkoo, premium classifieds in India.",
+          legalName: "SparkBeta Tech",
+          countryName: "India",
+          supportHours: "Mon–Fri 14:00–20:00 IST",
+          ageGateEnabled: true,
+        }
+      );
+    },
+    ["site"],
+  );
 }
 
 export async function getCategories() {
-  return cached("categories", 30_000, async () => {
-    await connectDb();
-    return Category.find({ status: "active" }).sort({ order: 1 }).lean();
-  });
+  return cached("categories", 30_000, async () => publicCategories(), ["categories"]);
 }
 
 export async function getCategory(slug: string) {
-  await connectDb();
-  return Category.findOne({ slug, status: "active" }).lean();
+  return categoryBySlug(slug);
 }
 
 export async function getLocationBySlug(slug: string) {
-  await connectDb();
-  return Location.findOne({ slug, status: "active" }).lean();
+  return locationBySlug(slug);
 }
 
 export async function getCities(limit?: number) {
-  return cached(`cities:${limit || "all"}`, 30_000, async () => {
-    await connectDb();
-    const q = Location.find({ kind: "city", status: "active" }).sort({ isTop: -1, name: 1 });
-    if (limit) q.limit(limit);
-    return q.lean();
-  });
+  return cached(`cities:${limit || "all"}`, 30_000, async () => cities(limit), ["locations"]);
 }
 
 export async function getTopCities() {
-  return cached("top-cities", 30_000, async () => {
-    await connectDb();
-    return Location.find({ kind: "city", isTop: true, status: "active" }).sort({ sortOrder: 1, name: 1 }).lean();
-  });
+  return cached("top-cities", 30_000, async () => topCities(), ["locations"]);
 }
 
 export async function getSiblingCities(stateSlug: string) {
-  await connectDb();
-  return Location.find({ kind: "city", stateSlug, status: "active" }).sort({ name: 1 }).lean();
+  return siblingCities(stateSlug);
 }
 
 export async function getDistricts(citySlug: string) {
-  await connectDb();
-  return Location.find({ kind: "district", citySlug, status: "active" }).sort({ name: 1 }).lean();
+  return districts(citySlug);
 }
 
 export async function getStates() {
-  await connectDb();
-  return Location.find({ kind: "state", status: "active" }).sort({ name: 1 }).lean();
+  return states();
 }
 
 export async function getSeo(pageType: string) {
@@ -89,58 +77,83 @@ export async function getSeo(pageType: string) {
   return SeoTemplate.findOne({ pageType }).lean();
 }
 
-function rankSort() {
-  return { lastBumpedAt: -1 as const, publicId: 1 as const };
+function pageQuery(filter: Record<string, unknown>): ListingQuery {
+  const photos = filter.photos;
+  const photosOn =
+    photos === true || (typeof photos === "object" && photos !== null && "$exists" in (photos as object));
+  return {
+    categorySlug: typeof filter.categorySlug === "string" ? filter.categorySlug : undefined,
+    citySlug: typeof filter.citySlug === "string" ? filter.citySlug : undefined,
+    stateSlug: typeof filter.stateSlug === "string" ? filter.stateSlug : undefined,
+    districtSlug: typeof filter.districtSlug === "string" ? filter.districtSlug : undefined,
+    verified: filter.verified === true ? true : undefined,
+    photos: photosOn,
+  };
 }
 
 export async function countListings(filter: Record<string, unknown>) {
-  await connectDb();
-  return Listing.countDocuments({ status: "live", ...filter });
+  return countMatching(pageQuery(filter));
 }
 
 export async function getStarListings(filter: Record<string, unknown>, limit = 6) {
-  await connectDb();
-  return Listing.find({ status: "live", variant: "star", ...filter })
-    .sort(rankSort())
-    .limit(limit)
-    .lean();
+  const result = await queryListings({ ...pageQuery(filter), page: 1, pageSize: limit, starOnly: true });
+  return result.legacy;
 }
 
 export async function getFeed(filter: Record<string, unknown>, page = 1) {
   const safePage = Math.min(Math.max(1, Number(page) || 1), 40);
-  return cached(`feed:${JSON.stringify(filter)}:${safePage}`, 10_000, async () => {
-    await connectDb();
-    const skip = (safePage - 1) * PAGE_SIZE;
-    const query = { status: "live", variant: { $ne: "star" }, ...filter };
-    const [items, total] = await Promise.all([
-      Listing.find(query).sort(rankSort()).skip(skip).limit(PAGE_SIZE).lean(),
-      Listing.countDocuments(query),
-    ]);
-    return { items, total, page: safePage, pageSize: PAGE_SIZE, pages: Math.max(1, Math.ceil(total / PAGE_SIZE)) };
-  });
+  return cached(
+    `feed:${JSON.stringify(filter)}:${safePage}`,
+    10_000,
+    async () => {
+      const result = await queryListings({
+        ...pageQuery(filter),
+        page: safePage,
+        pageSize: PAGE_SIZE,
+        excludeStar: true,
+        sort: "ranked",
+      });
+      return {
+        items: result.legacy,
+        total: result.total,
+        page: safePage,
+        pageSize: PAGE_SIZE,
+        pages: Math.max(1, Math.ceil(result.total / PAGE_SIZE)),
+      };
+    },
+    ["feed", "listings"],
+  );
 }
 
 export async function getListingBySlug(slug: string) {
   if (!slug || slug.length > 160) return null;
   await connectDb();
   const publicId = slug.split("-").pop() || "";
-  return Listing.findOne({
-    status: { $in: ["live", "live-promoted"] },
-    $or: [{ slug }, { publicId }],
-  }).lean();
+  const exact = await Listing.findOne({ status: "active", slug }).select("slug").lean();
+  const suffix =
+    exact || !publicId || publicId === slug
+      ? null
+      : await Listing.findOne({
+          status: "active",
+          slug: new RegExp(`-${publicId.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}$`),
+        })
+          .select("slug")
+          .lean();
+  const resolved = exact?.slug ?? suffix?.slug;
+  if (!resolved) return null;
+  const result = await queryListings({ slug: resolved, page: 1, pageSize: 1 });
+  return result.legacy[0] ?? null;
 }
 
 export async function getRelated(listing: ListingDoc, limit = 6) {
-  await connectDb();
-  return Listing.find({
-    status: "live",
+  const result = await queryListings({
     categorySlug: listing.categorySlug,
     citySlug: listing.citySlug,
-    publicId: { $ne: listing.publicId },
-  })
-    .sort(rankSort())
-    .limit(limit)
-    .lean();
+    excludeSlug: listing.slug,
+    page: 1,
+    pageSize: limit,
+  });
+  return result.legacy;
 }
 
 export async function searchListings(opts: {
@@ -151,40 +164,61 @@ export async function searchListings(opts: {
   verified?: boolean;
   page?: number;
 }) {
-  await connectDb();
-  const filter: Record<string, unknown> = { status: "live" };
-  if (opts.category) filter.categorySlug = opts.category;
-  if (opts.location) {
-    filter.$or = [{ citySlug: opts.location }, { stateSlug: opts.location }, { districtSlug: opts.location }];
-  }
-  if (opts.photos) filter.photos = { $exists: true, $ne: [] };
-  if (opts.verified) filter.verified = true;
-  if (opts.q) {
-    const q = safeSearch(opts.q);
-    if (q) {
-      filter.$and = [
-        {
-          $or: [
-            { title: new RegExp(q, "i") },
-            { description: new RegExp(q, "i") },
-            { displayName: new RegExp(q, "i") },
-            { place: new RegExp(q, "i") },
-          ],
-        },
-      ];
-    }
-  }
-  return getFeed(filter, opts.page ?? 1);
+  const safePage = Math.min(Math.max(1, Number(opts.page) || 1), 40);
+  return cached(
+    `search:${JSON.stringify(opts)}:${safePage}`,
+    10_000,
+    async () => {
+      const result = await queryListings({
+        q: opts.q,
+        categorySlug: opts.category,
+        placeSlug: opts.location,
+        photos: opts.photos,
+        verified: opts.verified,
+        page: safePage,
+        pageSize: PAGE_SIZE,
+        sort: "ranked",
+      });
+      return {
+        items: result.legacy,
+        total: result.total,
+        page: safePage,
+        pageSize: PAGE_SIZE,
+        pages: Math.max(1, Math.ceil(result.total / PAGE_SIZE)),
+      };
+    },
+    ["feed", "listings"],
+  );
 }
 
 export async function listingCountsByCategoryCity() {
-  return cached("listing-counts", 30_000, async () => {
-    await connectDb();
-    return Listing.aggregate<{ _id: { categorySlug: string; citySlug: string }; n: number }>([
-      { $match: { status: "live" } },
-      { $group: { _id: { categorySlug: "$categorySlug", citySlug: "$citySlug" }, n: { $sum: 1 } } },
-    ]);
-  });
+  return cached(
+    "listing-counts",
+    30_000,
+    async () => {
+      await connectDb();
+      const grouped = await Listing.aggregate<{
+        _id: { categoryId: unknown; cityId: unknown };
+        n: number;
+      }>([
+        { $match: { status: "active", categoryId: { $exists: true }, cityId: { $exists: true } } },
+        { $group: { _id: { categoryId: "$categoryId", cityId: "$cityId" }, n: { $sum: 1 } } },
+      ]);
+      const [categories, locations] = await Promise.all([loadCategories(), loadLocations()]);
+      const categorySlug = new Map(categories.map((row) => [String(row._id), row.slug]));
+      const citySlug = new Map(locations.map((row) => [String(row._id), row.slug]));
+      return grouped
+        .map((row) => ({
+          _id: {
+            categorySlug: categorySlug.get(String(row._id.categoryId)) ?? "",
+            citySlug: citySlug.get(String(row._id.cityId)) ?? "",
+          },
+          n: row.n,
+        }))
+        .filter((row) => row._id.categorySlug && row._id.citySlug);
+    },
+    ["counts", "listings"],
+  );
 }
 
 export function isThin(count: number) {

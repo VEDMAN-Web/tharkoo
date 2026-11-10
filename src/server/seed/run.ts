@@ -1,6 +1,8 @@
 import type { Types } from "mongoose";
+import { invalidateTags } from "@/lib/cache";
 import { Category, CreditPack, FeatureFlag, Listing, Location, PromotionProduct, SeedBackup } from "@/server/models";
 import { attributeKeyDenied, categoryDenied, productCodeDenied, textDenied } from "@/server/shared/policy";
+import { seedDemoListings } from "@/server/seed/listings";
 import {
   CATEGORIES,
   CITIES,
@@ -27,6 +29,7 @@ export interface SeedResult {
   promotion_products: SeedTally;
   credit_packs: SeedTally;
   feature_flags: SeedTally;
+  listings: SeedTally;
 }
 
 export interface SeedPlan {
@@ -37,6 +40,7 @@ export interface SeedPlan {
   promotion_products: { insert: string[]; skip: string[] };
   credit_packs: { insert: string[]; skip: string[] };
   feature_flags: { insert: string[]; skip: string[] };
+  listings: { insert: string[]; skip: string[] };
 }
 
 export interface RollbackResult {
@@ -409,12 +413,13 @@ async function snapshot(): Promise<{ backupId: string }> {
 /** Read-only plan. Does not write seed rows or seed_backups. */
 export async function dryRunSeed(): Promise<SeedPlan> {
   assertSeedAllowed();
-  const [locations, categories, products, packs, flags] = await Promise.all([
+  const [locations, categories, products, packs, flags, listings] = await Promise.all([
     walkLocations(true),
     walkCategories(true),
     walkProducts(true),
     walkPacks(true),
     walkFlags(true),
+    seedDemoListings(true),
   ]);
   return {
     batch: SEED_BATCH,
@@ -424,6 +429,7 @@ export async function dryRunSeed(): Promise<SeedPlan> {
     promotion_products: planSide(products),
     credit_packs: planSide(packs),
     feature_flags: planSide(flags),
+    listings: planSide(listings),
   };
 }
 
@@ -442,6 +448,8 @@ export async function runSeed(): Promise<SeedResult> {
     walkPacks(false),
     walkFlags(false),
   ]);
+  const listings = await seedDemoListings(false);
+  invalidateTags(["categories", "locations", "listings", "feed", "counts"]);
   return {
     batch: SEED_BATCH,
     backupId: backup.backupId,
@@ -450,6 +458,7 @@ export async function runSeed(): Promise<SeedResult> {
     promotion_products: tally(products),
     credit_packs: tally(packs),
     feature_flags: tally(flags),
+    listings: tally(listings),
   };
 }
 

@@ -1,6 +1,6 @@
-/** Coexistence with src/lib/models.ts until T5.1 flips these two constants. */
-export const V2 = "V2";
-export const COLL_SUFFIX = "_v2";
+/** Flipped in T5.1. Clashing models now use the canonical names and collections. */
+export const V2 = "";
+export const COLL_SUFFIX = "";
 
 /** Model names that already exist on the pre-T1.1 Mongoose connection. */
 export const CLASHING_MODELS = new Set([

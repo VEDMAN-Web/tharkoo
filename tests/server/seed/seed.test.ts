@@ -6,6 +6,7 @@ import {
   FeatureFlag,
   Listing,
   Location,
+  PromotionOrder,
   PromotionProduct,
   SeedBackup,
 } from "@/server/models";
@@ -17,6 +18,7 @@ import {
   FEATURE_FLAGS,
   LOCATION_LEVELS,
   PRODUCTS,
+  DEMO_LISTING_COUNT,
   TOP_CITY_SLUGS,
 } from "@/server/seed/data";
 import { dryRunSeed, formatDryRun, rollbackSeed, runSeed, SEED_BATCH } from "@/server/seed/run";
@@ -70,6 +72,8 @@ describe("v2 seed", () => {
     expect(first.promotion_products).toEqual({ inserted: expected.promotion_products, skipped: 0 });
     expect(first.credit_packs).toEqual({ inserted: expected.credit_packs, skipped: 0 });
     expect(first.feature_flags).toEqual({ inserted: expected.feature_flags, skipped: 0 });
+    expect(first.listings).toEqual({ inserted: expected.listings, skipped: 0 });
+    expect(expected.listings).toBe(DEMO_LISTING_COUNT);
     const afterFirst = await counts();
     expect(afterFirst).toEqual({
       locations: expected.locations,
@@ -81,12 +85,17 @@ describe("v2 seed", () => {
 
     const city = await Location.findOne({ type: "city", slug: "pune" });
     const stamp = city?.updatedAt?.getTime();
+    const promosAfterFirst = await PromotionOrder.countDocuments({ status: "active" });
+    expect(promosAfterFirst).toBeGreaterThan(0);
     const second = await runSeed();
     expect(second.locations).toEqual({ inserted: 0, skipped: expected.locations });
     expect(second.categories.inserted).toBe(0);
     expect(second.promotion_products.inserted).toBe(0);
     expect(second.credit_packs.inserted).toBe(0);
     expect(second.feature_flags.inserted).toBe(0);
+    expect(second.listings).toEqual({ inserted: 0, skipped: expected.listings });
+    expect(await Listing.countDocuments({ status: "active" })).toBe(expected.listings);
+    expect(await PromotionOrder.countDocuments({ status: "active" })).toBe(promosAfterFirst);
     expect(await counts()).toEqual(afterFirst);
     const cityAgain = await Location.findOne({ type: "city", slug: "pune" });
     expect(cityAgain?.name).toBe("Pune");
@@ -161,11 +170,13 @@ describe("v2 seed", () => {
     const flagKeys = (await FeatureFlag.find().distinct("key")) as string[];
     expect([...flagKeys].sort()).toEqual(FEATURE_FLAGS.map((flag) => flag.key).sort());
 
-    expect(Category.collection.collectionName).toBe("categories_v2");
-    expect(Location.collection.collectionName).toBe("locations_v2");
-    expect(CreditPack.collection.collectionName).toBe("credit_packs_v2");
-    expect(await mongoose.connection.collection("categories").countDocuments()).toBe(0);
-    expect(await mongoose.connection.collection("locations").countDocuments()).toBe(0);
+    expect(Category.collection.collectionName).toBe("categories");
+    expect(Location.collection.collectionName).toBe("locations");
+    expect(CreditPack.collection.collectionName).toBe("credit_packs");
+    expect(Listing.collection.collectionName).toBe("listings");
+    expect(await mongoose.connection.collection("categories_v2").countDocuments()).toBe(0);
+    expect(await mongoose.connection.collection("locations_v2").countDocuments()).toBe(0);
+    expect(await mongoose.connection.collection("listings_v2").countDocuments()).toBe(0);
   });
 
   it("does not modify rows that already use the same natural keys", async () => {
@@ -224,7 +235,10 @@ describe("v2 seed", () => {
     expect(plan.locations.skip).toHaveLength(0);
     expect(plan.categories.insert).toEqual(CATEGORIES.map((category) => category.slug));
     expect(plan.promotion_products.insert).toEqual(PRODUCTS.map((product) => product.code));
+    expect(plan.listings.insert).toHaveLength(expected.listings);
+    expect(plan.listings.skip).toHaveLength(0);
     expect(plan.creditPacksSource).toBe("table");
+    expect(await Listing.countDocuments()).toBe(0);
     expect(formatDryRun(plan).startsWith("SEED_DRY_RUN ")).toBe(true);
     expect(await counts()).toEqual({ locations: 0, categories: 0, products: 0, packs: 0, flags: 0 });
     expect(await SeedBackup.countDocuments()).toBe(0);
@@ -259,7 +273,7 @@ describe("v2 seed", () => {
     });
 
     const refused = await rollbackSeed(SEED_BATCH);
-    expect(refused).toEqual({ refused: true, listingCount: 1 });
+    expect(refused).toEqual({ refused: true, listingCount: DEMO_LISTING_COUNT + 1 });
     expect(await Location.countDocuments({ slug: "kept-lane" })).toBe(1);
     expect(await Category.countDocuments({ slug: "dating" })).toBe(1);
 
