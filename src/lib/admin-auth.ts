@@ -1,32 +1,54 @@
-import { headers } from "next/headers";
+import { cookies } from "next/headers";
 import { NextRequest, NextResponse } from "next/server";
-import { getIdentity, requireTeamRole, type Identity, type VerifiedIdentity } from "../../cursor/identity";
+import { SESSION_COOKIE } from "@/server/auth/http";
+import { isStaffRole, userFromToken, type PublicUser } from "@/server/auth/service";
 
-function hostedIdentityGate() {
-  return Boolean(process.env.CURSOR_APP_ID || process.env.VERCEL || process.env.NODE_ENV === "production");
+export interface Viewer {
+  verified: boolean;
+  kind: "person";
+  email: string;
+  name: string;
+  roles: string[];
+}
+
+const anonymous: Viewer = { verified: false, kind: "person", email: "", name: "", roles: [] };
+
+function viewerFrom(user: PublicUser | null): Viewer {
+  if (!user) return anonymous;
+  return {
+    verified: true,
+    kind: "person",
+    email: user.email,
+    name: user.displayName,
+    roles: user.roles,
+  };
+}
+
+export function isStaff(identity: Viewer): identity is Viewer & { verified: true } {
+  return identity.verified && isStaffRole(identity.roles);
 }
 
 export function adminUnauthorized() {
   return NextResponse.json({ error: "Forbidden" }, { status: 403 });
 }
 
-export function isStaff(identity: Identity): identity is VerifiedIdentity {
-  if (!identity.verified) return false;
-  if (identity.kind !== "person") return false;
-  if (identity.simulated && hostedIdentityGate()) return false;
-  if (identity.appVisibility === "team") {
-    const allowed = requireTeamRole(identity, ["admin"]);
-    return !(allowed instanceof Response);
+async function tokenFromCookies() {
+  try {
+    const jar = await cookies();
+    return jar.get(SESSION_COOKIE)?.value;
+  } catch {
+    return undefined;
   }
-  return identity.appVisibility === "private";
 }
 
 export async function getStaffFromHeaders() {
-  return getIdentity(await headers());
+  const found = await userFromToken(await tokenFromCookies());
+  return viewerFrom(found?.user ?? null);
 }
 
 export async function getStaffFromRequest(req: NextRequest) {
-  return getIdentity(req);
+  const found = await userFromToken(req.cookies.get(SESSION_COOKIE)?.value);
+  return viewerFrom(found?.user ?? null);
 }
 
 export async function requireStaffRequest(req: NextRequest) {
