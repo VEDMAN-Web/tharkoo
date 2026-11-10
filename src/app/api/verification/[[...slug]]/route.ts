@@ -22,7 +22,7 @@ async function dispatch(request: Request) {
     data = await uploadUrl(user.id, parseInput(verificationUploadBodySchema, await request.json().catch(() => undefined)), requestId);
   } else if (request.method === "POST" && path === "id/complete") {
     const body = parseInput(verificationCompleteBodySchema, await request.json().catch(() => undefined));
-    data = await submitVerification(user.id, body.assetId, requestId);
+    data = await submitVerification(user.id, body, requestId);
   } else throw new NotFoundError("Not found");
   return Response.json(success(data, requestId), { headers: { "x-request-id": requestId } });
 }

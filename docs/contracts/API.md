@@ -94,13 +94,13 @@ Register requires `dateOfBirth`, `acceptedTerms: true`, and `attestedAdult: true
 | Method | Path | Auth | Schema | Response `data` | Errors |
 |---|---|---|---|---|---|
 | POST | `/api/verification/id/upload-url` | Session | `verificationUploadBodySchema` | `{ uploadUrl, assetId }` | `VALIDATION_ERROR`, `UNAUTHORIZED` |
-| POST | `/api/verification/id/complete` | Session | `verificationCompleteBodySchema` | `{ status: "pending_review" }` | `VALIDATION_ERROR`, `UNAUTHORIZED`, `NOT_FOUND` |
+| POST | `/api/verification/id/complete` | Session | `verificationCompleteBodySchema` (`frontAssetId`, `backAssetId?`, `selfieAssetId`) | `{ status: "pending_review" }` | `VALIDATION_ERROR`, `UNAUTHORIZED`, `NOT_FOUND`, `FORBIDDEN` |
 | GET | `/api/verification/status` | Session | — | `{ status, reason? }` | `UNAUTHORIZED` |
 | GET | `/api/admin/verifications` | Admin `trust_safety` | `pageQuerySchema` | `{ items, total }` | `UNAUTHORIZED`, `FORBIDDEN` |
 | POST | `/api/admin/verifications/{id}/decision` | Admin `trust_safety` | `verificationDecisionBodySchema` | `{ status }` | `VALIDATION_ERROR`, `FORBIDDEN`, `NOT_FOUND`, `CONFLICT` |
-| GET | `/api/admin/verifications/{id}/file` | Admin `trust_safety` | — | `{ url, expiresAt }` | `FORBIDDEN`, `NOT_FOUND` |
+| GET | `/api/admin/verifications/{id}/file` | Admin `trust_safety` | — | `{ front, back?, selfie }` each `{ url, expiresAt }` (120s) | `FORBIDDEN`, `NOT_FOUND` |
 
-`status` is `unsubmitted`, `pending_review`, `approved`, or `rejected`. Approve and reject write an audit event. The file URL is short-lived and the download is audited.
+`status` is `unsubmitted`, `pending_review`, `approved`, or `rejected`. Approve and reject write an audit event. Complete stores the caller's own `id_document` assets. The file route returns one signed URL per stored image (front, back when present, selfie). Each view writes one `verification.view` audit event.
 
 ## T3.1 Listings
 

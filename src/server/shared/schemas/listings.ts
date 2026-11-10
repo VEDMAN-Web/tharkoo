@@ -83,9 +83,16 @@ export const verificationUploadBodySchema = z.object({
   byteSize: z.number().int().positive().max(8 * 1024 * 1024),
 });
 
-export const verificationCompleteBodySchema = z.object({
-  assetId: idSchema,
-});
+export const verificationCompleteBodySchema = z
+  .object({
+    frontAssetId: idSchema,
+    backAssetId: idSchema.optional(),
+    selfieAssetId: idSchema,
+  })
+  .refine((body) => body.frontAssetId !== body.selfieAssetId, {
+    path: ["selfieAssetId"],
+    message: "Selfie must be a different upload from the front of the ID",
+  });
 
 export const verificationDecisionBodySchema = z.object({
   decision: z.enum(["approved", "rejected"]),
