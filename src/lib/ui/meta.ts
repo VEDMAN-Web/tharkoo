@@ -9,16 +9,19 @@ function absolute(image: string) {
   return canonical(image.startsWith("/") ? image : `/${image}`);
 }
 
-export function pageMetadata(opts: {
+export type PageMeta = {
   title: string;
   description: string;
   path: string;
   index?: boolean;
   follow?: boolean;
   image?: string;
-}): Metadata {
+  canonicalUrl?: string;
+};
+
+export function pageMetadata(opts: PageMeta): Metadata {
   const image = absolute(opts.image || OG);
-  const url = canonical(publicPath(opts.path));
+  const url = opts.canonicalUrl || canonical(publicPath(opts.path));
   const staging = process.env.SITE_NOINDEX === "true";
   const index = !staging && opts.index !== false;
   const follow = staging ? false : opts.follow !== false;

@@ -1,15 +1,20 @@
 import Link from "next/link";
 import { MapPin } from "lucide-react";
 import { getCategories, getCities, getDistricts, getStates } from "@/lib/queries";
-import { pageMetadata } from "@/lib/ui/meta";
+import { citiesPath, placePath } from "@/lib/urls";
+import { withUrlSeo } from "@/lib/seo/override";
+import { getPaths } from "@/server/urls/service";
 
 export const revalidate = 300;
 
-export const metadata = pageMetadata({
-  title: "Cities across India | Tharkoo",
-  description: "Browse Tharkoo classifieds by city.",
-  path: "/cities/",
-});
+export async function generateMetadata() {
+  const paths = await getPaths();
+  return withUrlSeo(citiesPath(paths), {
+    title: "Cities across India | Tharkoo",
+    description: "Browse Tharkoo classifieds by city.",
+    path: citiesPath(paths),
+  });
+}
 
 export default async function CitiesPage() {
   const [states, cities, categories] = await Promise.all([getStates(), getCities(), getCategories()]);
@@ -32,16 +37,16 @@ export default async function CitiesPage() {
             const inState = cities.filter((city) => city.stateSlug === state.slug);
             return (
               <div key={state.slug}>
-                <Link href={`/${first}/${state.slug}/`} className="tk-dir-state" prefetch={false}>
+                <Link href={placePath(first, state.slug || "")} className="tk-dir-state" prefetch={false}>
                   {state.name}
                 </Link>
                 {inState.map((city) => (
                   <div key={city.slug}>
-                    <Link href={`/${first}/${city.slug}/`} className="tk-dir-city" prefetch={false}>
+                    <Link href={placePath(first, city.slug || "")} className="tk-dir-city" prefetch={false}>
                       {city.name}
                     </Link>
                     {(districts.get(city.slug!) || []).map((district) => (
-                      <Link key={district.slug} href={`/${first}/${city.slug}/${district.slug}/`} className="tk-dir-dist" prefetch={false}>
+                      <Link key={district.slug} href={placePath(first, city.slug || "", district.slug || "")} className="tk-dir-dist" prefetch={false}>
                         {district.name}
                       </Link>
                     ))}

@@ -13,6 +13,7 @@ const LINKS = [
   ["Menus", "/admin/menus/"],
   ["Landings", "/admin/landings/"],
   ["Tags", "/admin/tags/"],
+  ["URLs", "/admin/urls/"],
   ["SEO", "/admin/seo/"],
   ["Pages", "/admin/pages/"],
   ["Audit log", "/admin/audit/"],
@@ -32,7 +33,7 @@ export function AdminShell({ title, children }: { title: string; children: React
           ))}
         </nav>
       </aside>
-      <div className="p-4 sm:p-6">
+      <div className="min-w-0 p-4 sm:p-6">
         <h1 className="t-h1 mb-6">{title}</h1>
         {children}
       </div>

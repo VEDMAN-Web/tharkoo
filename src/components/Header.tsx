@@ -10,6 +10,8 @@ import { useCity } from "./CityContext";
 import { useFocusTrap } from "./ui/useFocusTrap";
 import { api, hasSessionHint, isStaffRole } from "@/lib/ui/api";
 import { safeHref } from "@/lib/sanitize";
+import { applyPrefixes, blogPath, helpPath, loginPath, postAdPath, registerPath } from "@/lib/urls";
+import { useUrlPaths } from "./UrlPaths";
 
 type Cat = { slug: string; name: string };
 type City = { slug: string; name: string; stateSlug?: string };
@@ -44,15 +46,16 @@ export function Header({
   chrome?: Chrome;
 }) {
   const path = usePathname() || "/";
+  const paths = useUrlPaths();
   const { city } = useCity();
   const [search, setSearch] = useState(false);
   const [menu, setMenu] = useState(false);
   const [account, setAccount] = useState(false);
   const [who, setWho] = useState("");
   const [session, setSession] = useState(user);
-  const homeLike = path === "/" || path.startsWith("/cities");
-  const vendor = path.startsWith("/u/");
-  const showCity = Boolean(city) && (path.startsWith("/ad/") || categories.some((cat) => path.startsWith(`/${cat.slug}`)));
+  const homeLike = path === "/" || path.startsWith(`/${paths.cities}`);
+  const vendor = path.startsWith("/u/") || path.startsWith(`/${paths.login}`) || path.startsWith(`/${paths.register}`) || path.startsWith(`/${paths.postAd}`);
+  const showCity = Boolean(city) && (path.startsWith(`/${paths.ad}/`) || categories.some((cat) => path.startsWith(`/${cat.slug}`)));
   const drawerRef = useFocusTrap(menu, () => setMenu(false));
 
   useEffect(() => {
@@ -79,8 +82,8 @@ export function Header({
   const short = who.length > 10 ? `${who.slice(0, 10)}…` : who;
   const postLabel = chrome?.postLabel || "POST YOUR AD";
   const drawer = (chrome?.drawer || [
-    { label: "Tharkoo Blog", href: "/blog/" },
-    { label: "Help Center", href: "/help/" },
+    { label: "Tharkoo Blog", href: blogPath(paths) },
+    { label: "Help Center", href: helpPath(paths) },
   ]).filter((item) => item.visible !== false && safeHref(item.href));
 
   return (
@@ -116,14 +119,14 @@ export function Header({
                     </>
                   ) : (
                     <>
-                      <Link href="/u/login/" onClick={() => setAccount(false)}>Log in</Link>
-                      <Link href="/u/register/" onClick={() => setAccount(false)}>Register</Link>
+                      <Link href={loginPath(paths)} onClick={() => setAccount(false)}>Log in</Link>
+                      <Link href={registerPath(paths)} onClick={() => setAccount(false)}>Register</Link>
                     </>
                   )}
                 </div>
               ) : null}
             </div>
-            <Link href="/u/post-insert/" data-tk="post-ad" className="tk-btn tk-btn-primary tk-post-desktop" prefetch={false}>
+            <Link href={postAdPath(paths)} data-tk="post-ad" className="tk-btn tk-btn-primary tk-post-desktop" prefetch={false}>
               {postLabel}
             </Link>
             <button type="button" className="tk-icon-btn tk-post-mobile" data-tk="menu-button" aria-label="Menu" onClick={() => setMenu(true)}>
@@ -147,12 +150,12 @@ export function Header({
               <X size={26} />
             </button>
             <p className="tk-drawer-label">{chrome?.publishLabel || "Publish ad"}</p>
-            <Link href="/u/post-insert/" data-tk="post-ad" className="tk-btn tk-btn-primary" prefetch={false} onClick={() => setMenu(false)}>
+            <Link href={postAdPath(paths)} data-tk="post-ad" className="tk-btn tk-btn-primary" prefetch={false} onClick={() => setMenu(false)}>
               {postLabel}
             </Link>
             <p className="tk-drawer-label">{chrome?.servicesLabel || "Services for you!"}</p>
             {drawer.map((item) => (
-              <Link key={item.href + item.label} href={safeHref(item.href)} className="tk-drawer-row" prefetch={false} onClick={() => setMenu(false)}>
+              <Link key={item.href + item.label} href={applyPrefixes(safeHref(item.href), paths)} className="tk-drawer-row" prefetch={false} onClick={() => setMenu(false)}>
                 {item.href.startsWith("/blog") ? <MessageCircle size={24} /> : item.href.startsWith("/help") ? <CircleHelp size={24} /> : null}
                 {item.label}
               </Link>

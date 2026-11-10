@@ -5,6 +5,8 @@ import { useRouter } from "next/navigation";
 import { ChevronRight, Search, SlidersHorizontal, X } from "lucide-react";
 import { useFocusTrap } from "./ui/useFocusTrap";
 import { api } from "@/lib/ui/api";
+import { searchPath } from "@/lib/urls";
+import { useUrlPaths } from "./UrlPaths";
 
 type Cat = { slug: string; name: string; fields?: { key: string; label: string; type: string; options?: string[] }[] };
 type City = { slug: string; name: string; stateSlug?: string; id?: string };
@@ -23,6 +25,7 @@ export function SearchModal({
   onClose: () => void;
 }) {
   const router = useRouter();
+  const paths = useUrlPaths();
   const ref = useFocusTrap<HTMLFormElement>(true, onClose);
   const [cats, setCats] = useState<Cat[]>(categories);
   const [regions, setRegions] = useState<Region[]>([]);
@@ -114,7 +117,7 @@ export function SearchModal({
     if (city) params.set("city", city);
     if (verified) params.set("verified", "1");
     if (photos) params.set("photos", "1");
-    router.push(`/search/?${params.toString()}`);
+    router.push(`${searchPath(paths)}?${params.toString()}`);
     onClose();
   }
 

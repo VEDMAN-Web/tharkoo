@@ -4,6 +4,8 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { Logo } from "./Logo";
 import { safeHref } from "@/lib/sanitize";
+import { applyPrefixes, blogPath, cmsPath, contactPath, helpPath, postAdPath, reportPath } from "@/lib/urls";
+import { useUrlPaths } from "./UrlPaths";
 
 type LinkItem = { label: string; href: string };
 
@@ -40,6 +42,7 @@ export function Footer({
     backToTop?: string;
   };
 }) {
+  const paths = useUrlPaths();
   const [top, setTop] = useState(false);
   useEffect(() => {
     const onScroll = () => setTop(window.scrollY > 300);
@@ -51,9 +54,9 @@ export function Footer({
   const about = (content?.about || "Tharkoo is a classifieds platform for people in India. Browse new listings every day in {count} cities.").split("{count}");
   const columns = content?.columns || [
     { title: "Legal", links: [{ label: "Terms and Conditions", href: "/terms/" }, { label: "Privacy Policy", href: "/privacy/" }, { label: "Cookie Policy", href: "/cookies/" }] },
-    { title: "Support", links: [{ label: "Help Center", href: "/help/" }, { label: "Submit a Report", href: "/submit-report/" }, { label: "Blog", href: "/blog/" }] },
+    { title: "Support", links: [{ label: "Help Center", href: helpPath(paths) }, { label: "Submit a Report", href: reportPath(paths) }, { label: "Blog", href: blogPath(paths) }] },
     { title: "Security", links: [{ label: "How to report a scam", href: "/scam-report/" }] },
-    { title: "Company", links: [{ label: "About Tharkoo", href: "/cms/about/" }, { label: "Contact us", href: "/contact/" }] },
+    { title: "Company", links: [{ label: "About Tharkoo", href: cmsPath(paths, "about") }, { label: "Contact us", href: contactPath(paths) }] },
   ];
   return (
     <footer className="tk-footer" data-tk="footer">
@@ -80,7 +83,7 @@ export function Footer({
             <div key={column.title}>
               <h2>{column.title}</h2>
               {column.links.filter((item) => safeHref(item.href)).map((item) => (
-                <Link key={item.href + item.label} href={safeHref(item.href)} prefetch={false}>{item.label}</Link>
+                <Link key={item.href + item.label} href={applyPrefixes(safeHref(item.href), paths)} prefetch={false}>{item.label}</Link>
               ))}
             </div>
           ))}
@@ -88,7 +91,7 @@ export function Footer({
         <div className="tk-foot-boost">
           <div>
             <h2>{content?.boostTitle || "Boost your visibility"}</h2>
-            <Link href="/u/post-insert/" data-tk="post-ad" className="tk-btn tk-btn-primary" prefetch={false}>
+            <Link href={postAdPath(paths)} data-tk="post-ad" className="tk-btn tk-btn-primary" prefetch={false}>
               {content?.postLabel || "POST YOUR AD"}
             </Link>
           </div>

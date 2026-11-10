@@ -7,6 +7,8 @@ import { displayTitle, prettyPlace } from "@/lib/format";
 import { listingPhotos, peoplePortraits } from "@/lib/media";
 import { SmartImage } from "./SmartImage";
 import { api, friendlyError } from "@/lib/ui/api";
+import { adPath } from "@/lib/urls";
+import { useUrlPaths } from "../UrlPaths";
 
 function variantOf(ad: ListingDoc, featured?: boolean) {
   if (featured) return "star";
@@ -28,7 +30,7 @@ export function AdCard({
 }) {
   const variant = variantOf(ad, featured);
   const title = displayTitle(ad.title) || "Listing";
-  const href = `/ad/${ad.slug}/`;
+  const href = adPath(useUrlPaths(), ad.slug || "");
   const photos = listingPhotos(ad.categorySlug, ad.publicId || ad.slug || "", ad.photos || []);
   const people = Boolean(peoplePortraits(ad.categorySlug, ad.publicId || ad.slug || ""));
   const withPhoto = people || variant === "top" || variant === "highlight" || variant === "supertop" || variant === "star";

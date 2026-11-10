@@ -1,10 +1,12 @@
 import Link from "next/link";
-import { notFound } from "next/navigation";
+import { notFound, permanentRedirect } from "next/navigation";
 import type { Metadata } from "next";
 import { MapPin } from "lucide-react";
 import { getCategory, getCities, getFeed, getSeo, getSite, getStates, listingCountsByCategoryCity } from "@/lib/queries";
+import { getPaths } from "@/server/urls/service";
+import { adPath, categoryPath, placePath } from "@/lib/urls";
 import { fillTemplate } from "@/lib/seo";
-import { pageMetadata } from "@/lib/ui/meta";
+import { withUrlSeo, urlHeading } from "@/lib/seo/override";
 import { Breadcrumbs } from "@/components/Breadcrumbs";
 import { JsonLd, breadcrumbJsonLd } from "@/lib/jsonld";
 import { faqPage, itemListNode } from "@/lib/seo/schema";
@@ -22,20 +24,24 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const vars = { category: cat.name, site: site.name, year: new Date().getFullYear() };
   const title = fillTemplate(seo?.title || "{category} ads in India | Tharkoo", vars);
   const description = fillTemplate(seo?.description || `Browse ${cat.name} listings across Indian cities.`, vars);
-  return pageMetadata({ title, description, path: `/${category}/` });
+  const path = categoryPath(cat.slug || category);
+  return withUrlSeo(path, { title, description, path });
 }
 
 export default async function CategoryHub({ params }: Props) {
   const { category } = await params;
   const cat = await getCategory(category);
   if (!cat) notFound();
-  const [seo, site, cities, states, counts, feed] = await Promise.all([
+  if (cat.slug && cat.slug !== category) permanentRedirect(categoryPath(cat.slug));
+  const [seo, site, cities, states, counts, feed, paths, heading] = await Promise.all([
     getSeo("category"),
     getSite(),
     getCities(),
     getStates(),
     listingCountsByCategoryCity().catch(() => []),
     getFeed({ categorySlug: category }, 1),
+    getPaths(),
+    urlHeading(categoryPath(cat.slug || category), `${cat.name} in India`),
   ]);
   const vars = { category: cat.name, site: site.name, year: new Date().getFullYear() };
   const copy = mergeLanding(
@@ -50,13 +56,13 @@ export default async function CategoryHub({ params }: Props) {
         data={[
           breadcrumbJsonLd([
             { name: "Tharkoo India", path: "/" },
-            { name: cat.name || category, path: `/${category}/` },
+            { name: cat.name || category, path: categoryPath(cat.slug || category) },
           ]),
           itemListNode({
-            url: canonical(`/${category}/`),
+            url: canonical(categoryPath(cat.slug || category)),
             total: feed.total,
             items: feed.items.slice(0, 12).map((ad, index) => ({
-              url: canonical(`/ad/${ad.slug}/`),
+              url: canonical(adPath(paths, ad.slug || "")),
               name: ad.title || "Ad",
               position: index + 1,
             })),
@@ -66,12 +72,12 @@ export default async function CategoryHub({ params }: Props) {
       />
       <div className="tk-banner">
         <div className="tk-container">
-          <h1>{cat.name} in India</h1>
+          <h1>{heading}</h1>
         </div>
         <MapPin className="tk-banner-pins tk-icon-lg" size={180} color="#fff" aria-hidden />
       </div>
       <div className="tk-container" style={{ paddingBottom: 32 }}>
-        <Breadcrumbs crumbs={[{ name: "Tharkoo India", path: "/" }, { name: cat.name!, path: `/${category}/` }]} />
+          <Breadcrumbs crumbs={[{ name: "Tharkoo India", path: "/" }, { name: cat.name!, path: categoryPath(cat.slug || category) }]} />
         <div className="tk-panel">
           <div className="tk-panel-head">🇮🇳 INDIA</div>
           {states.map((state) => {
@@ -79,11 +85,11 @@ export default async function CategoryHub({ params }: Props) {
             if (!inState.length) return null;
             return (
               <div key={state.slug}>
-                <Link href={`/${category}/${state.slug}/`} className="tk-dir-state" prefetch={false}>
+                <Link href={placePath(cat.slug || category, state.slug || "")} className="tk-dir-state" prefetch={false}>
                   {state.name}
                 </Link>
                 {inState.map((city) => (
-                  <Link key={city.slug} href={`/${category}/${city.slug}/`} className="tk-dir-city" prefetch={false}>
+                  <Link key={city.slug} href={placePath(cat.slug || category, city.slug || "")} className="tk-dir-city" prefetch={false}>
                     {city.name}
                   </Link>
                 ))}

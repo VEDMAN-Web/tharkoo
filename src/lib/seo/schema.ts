@@ -27,7 +27,7 @@ export function organizationNode(name: string) {
   };
 }
 
-export function websiteNode(name: string) {
+export function websiteNode(name: string, searchPath = "/search/") {
   return {
     "@context": "https://schema.org",
     "@type": "WebSite",
@@ -35,7 +35,7 @@ export function websiteNode(name: string) {
     url: canonical("/"),
     potentialAction: {
       "@type": "SearchAction",
-      target: `${canonical("/search/")}?q={search_term_string}`,
+      target: `${canonical(searchPath)}?q={search_term_string}`,
       "query-input": "required name=search_term_string",
     },
   };

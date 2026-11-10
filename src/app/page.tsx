@@ -4,7 +4,9 @@ import Link from "next/link";
 import { HeroSearch } from "@/components/HeroSearch";
 import { HomeBlocks, SkeletonGrid } from "@/components/HomeBlocks";
 import { getHomepageContent } from "@/lib/queries";
+import { postAdPath } from "@/lib/urls";
 import { pageMetadata } from "@/lib/ui/meta";
+import { getPaths } from "@/server/urls/service";
 
 export const revalidate = 300;
 
@@ -18,7 +20,7 @@ export async function generateMetadata() {
 }
 
 export default async function Home() {
-  const content = await getHomepageContent();
+  const [content, paths] = await Promise.all([getHomepageContent(), getPaths()]);
   const photo = content.hero.photo;
   const localPhoto = photo.startsWith("/");
   return (
@@ -45,7 +47,7 @@ export default async function Home() {
         </div>
         <HeroSearch label={content.hero.searchPlaceholder} />
       </section>
-      <Link href="/u/post-insert/" data-tk="post-ad" className="tk-btn tk-btn-primary tk-home-post" prefetch={false}>
+      <Link href={postAdPath(paths)} data-tk="post-ad" className="tk-btn tk-btn-primary tk-home-post" prefetch={false}>
         {content.hero.postLabel}
       </Link>
       <Suspense fallback={<SkeletonGrid />}>

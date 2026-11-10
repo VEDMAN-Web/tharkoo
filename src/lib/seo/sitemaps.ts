@@ -1,8 +1,9 @@
 import { connectDb } from "@/lib/db";
 import { getBlogPosts, getCategories, getCities, getDistricts, getHelpArticles } from "@/lib/queries";
 import { siteUrl } from "@/lib/utils";
-import { TAG_PAGES } from "@/data/catalog";
-import { Listing, Page, Site } from "@/server/models";
+import { adPath, blogPath, categoryPath, citiesPath, cmsPath, contactPath, helpPath, placePath, tagPath } from "@/lib/urls";
+import { Listing, Page } from "@/server/models";
+import { getPaths, publicTags } from "@/server/urls/service";
 
 export const SITEMAP_SHARDS = ["categories", "cities", "districts", "tags", "ads", "content"] as const;
 export type SitemapShard = (typeof SITEMAP_SHARDS)[number];
@@ -43,19 +44,9 @@ export function sitemapIndexXml(shards: SitemapShard[]) {
   return `<?xml version="1.0" encoding="UTF-8"?><sitemapindex xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">${body}</sitemapindex>`;
 }
 
-async function extraTags() {
-  const site = (await Site.findOne({ key: "default" }).select("tags").lean()) as { tags?: { slug?: string; label?: string }[] } | null;
-  const rows = Array.isArray(site?.tags) ? site.tags : [];
-  return rows
-    .map((row) => {
-      const item = row as { slug?: string; label?: string };
-      return item.slug ? { slug: item.slug, label: item.label || item.slug } : null;
-    })
-    .filter((row): row is { slug: string; label: string } => Boolean(row));
-}
-
 export async function shardEntries(shard: SitemapShard): Promise<SitemapEntry[]> {
   await connectDb();
+  const paths = await getPaths();
   const now = new Date().toISOString();
   if (shard === "content") {
     const [posts, articles, pages] = await Promise.all([
@@ -65,25 +56,25 @@ export async function shardEntries(shard: SitemapShard): Promise<SitemapEntry[]>
     ]);
     const urls: SitemapEntry[] = [
       ["/", now],
-      ["/cities/", now],
-      ["/blog/", now],
-      ["/help/", now],
-      ["/contact/", now],
-      ["/cms/about/", now],
-      ["/cms/grievance/", now],
+      [citiesPath(paths), now],
+      [blogPath(paths), now],
+      [helpPath(paths), now],
+      [contactPath(paths), now],
+      [cmsPath(paths, "about"), now],
+      [cmsPath(paths, "grievance"), now],
       ["/terms/", now],
       ["/privacy/", now],
       ["/cookies/", now],
       ["/scam-report/", now],
     ].map(([path, lastmod]) => ({ loc: loc(path), lastmod }));
-    for (const post of posts) if (post.slug) urls.push({ loc: loc(`/blog/${post.slug}/`), lastmod: stamp(post.updatedAt) });
-    for (const article of articles) if (article.slug) urls.push({ loc: loc(`/help/${article.slug}/`), lastmod: stamp(article.updatedAt) });
-    for (const page of pages) if (page.slug) urls.push({ loc: loc(`/cms/${page.slug}/`), lastmod: stamp(page.updatedAt) });
+    for (const post of posts) if (post.slug) urls.push({ loc: loc(blogPath(paths, post.slug)), lastmod: stamp(post.updatedAt) });
+    for (const article of articles) if (article.slug) urls.push({ loc: loc(helpPath(paths, article.slug)), lastmod: stamp(article.updatedAt) });
+    for (const page of pages) if (page.slug) urls.push({ loc: loc(cmsPath(paths, page.slug)), lastmod: stamp(page.updatedAt) });
     return urls;
   }
   if (shard === "categories") {
     const categories = await getCategories();
-    return categories.filter((cat) => cat.slug).map((cat) => ({ loc: loc(`/${cat.slug}/`), lastmod: now }));
+    return categories.filter((cat) => cat.slug).map((cat) => ({ loc: loc(categoryPath(cat.slug!)), lastmod: now }));
   }
   if (shard === "cities") {
     const [categories, cities] = await Promise.all([getCategories(), getCities()]);
@@ -91,7 +82,7 @@ export async function shardEntries(shard: SitemapShard): Promise<SitemapEntry[]>
     for (const cat of categories) {
       if (!cat.slug) continue;
       for (const city of cities) {
-        if (city.slug) urls.push({ loc: loc(`/${cat.slug}/${city.slug}/`), lastmod: now });
+        if (city.slug) urls.push({ loc: loc(placePath(cat.slug, city.slug)), lastmod: now });
       }
     }
     return urls;
@@ -106,28 +97,25 @@ export async function shardEntries(shard: SitemapShard): Promise<SitemapEntry[]>
       if (!cat.slug) continue;
       for (const group of groups) {
         for (const district of group.rows) {
-          if (district.slug) urls.push({ loc: loc(`/${cat.slug}/${group.slug}/${district.slug}/`), lastmod: now });
+          if (district.slug) urls.push({ loc: loc(placePath(cat.slug, group.slug, district.slug)), lastmod: now });
         }
       }
     }
     return urls;
   }
   if (shard === "tags") {
-    const [categories, custom, used] = await Promise.all([
+    const [categories, tags, used] = await Promise.all([
       getCategories(),
-      extraTags(),
+      publicTags(),
       Listing.distinct("attributes.tag", { status: "active", "attributes.tag": { $type: "string" } }),
     ]);
-    const tags = new Map<string, string>();
-    for (const tag of TAG_PAGES) tags.set(tag.slug, tag.label);
-    for (const tag of custom) tags.set(tag.slug, tag.label);
     const live = new Set(used.map((tag) => String(tag)));
     const urls: SitemapEntry[] = [];
     for (const cat of categories) {
       if (!cat.slug) continue;
-      for (const [slug] of tags) {
-        if (!live.has(slug)) continue;
-        urls.push({ loc: loc(`/${cat.slug}/tag/${slug}/`), lastmod: now });
+      for (const tag of tags) {
+        if (!live.has(tag.slug)) continue;
+        urls.push({ loc: loc(tagPath(paths, cat.slug, tag.slug)), lastmod: now });
       }
     }
     return urls;
@@ -135,5 +123,5 @@ export async function shardEntries(shard: SitemapShard): Promise<SitemapEntry[]>
   const ads = await Listing.find({ status: "active", slug: { $exists: true } }).select("slug updatedAt publishedAt").lean();
   return ads
     .filter((ad) => ad.slug)
-    .map((ad) => ({ loc: loc(`/ad/${ad.slug}/`), lastmod: stamp(ad.updatedAt || ad.publishedAt) }));
+    .map((ad) => ({ loc: loc(adPath(paths, ad.slug!)), lastmod: stamp(ad.updatedAt || ad.publishedAt) }));
 }

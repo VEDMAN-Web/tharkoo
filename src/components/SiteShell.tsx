@@ -1,3 +1,4 @@
+import { readPaths } from "@/lib/urls";
 import { getCategories, getCities, getSite, getTopCities } from "@/lib/queries";
 import { PathChrome } from "./PathChrome";
 
@@ -15,5 +16,6 @@ export function SiteShell({
   pathname?: string;
   admin?: boolean;
 }) {
-  return <PathChrome shell={shell}>{children}</PathChrome>;
+  const paths = readPaths((shell.site as { paths?: unknown } | null)?.paths);
+  return <PathChrome shell={shell} paths={paths}>{children}</PathChrome>;
 }

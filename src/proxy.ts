@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { allowRequest, clientKey } from "@/lib/rate-limit";
 import { originAllowed } from "@/server/auth/http";
 import { consumeRateLimit } from "@/server/auth/rate-limit";
+import { countRedirectHit, decideRequest } from "@/server/urls/service";
 
 const STATIC_EXT = /\.(?:svg|png|jpg|jpeg|webp|avif|ico|woff2|css|js|map|txt|xml)$/i;
 
@@ -23,8 +24,38 @@ function nextWithPath(req: NextRequest) {
   return NextResponse.next({ request: { headers } });
 }
 
+function skipRedirect(path: string) {
+  return (
+    path.startsWith("/api/") ||
+    path.startsWith("/admin") ||
+    path.startsWith("/_next") ||
+    path.startsWith("/uploads/") ||
+    path.startsWith("/sitemap") ||
+    path.startsWith("/robots") ||
+    path.startsWith("/manifest") ||
+    path.startsWith("/brand/") ||
+    path.startsWith("/placeholders/") ||
+    path.includes(".")
+  );
+}
+
 export async function proxy(req: NextRequest) {
   const path = req.nextUrl.pathname;
+  let rewriteTo = "";
+  if ((req.method === "GET" || req.method === "HEAD") && !skipRedirect(path)) {
+    try {
+      const decision = await decideRequest(path);
+      if (decision.action === "redirect") {
+        await countRedirectHit(decision.id);
+        const url = req.nextUrl.clone();
+        url.pathname = decision.to;
+        return NextResponse.redirect(url, 301);
+      }
+      if (decision.action === "rewrite") rewriteTo = decision.to;
+    } catch {
+      /* a missing database should not block the page */
+    }
+  }
   const cronPost = req.method === "POST" && path.startsWith("/api/cron/");
   if (!cronPost && !originAllowed(req)) {
     return NextResponse.json(
@@ -34,7 +65,7 @@ export async function proxy(req: NextRequest) {
   }
   if (skipLimiter(req)) return nextWithPath(req);
   const ip = clientKey(req.headers);
-  const search = path.startsWith("/search") || path.startsWith("/api/catalog");
+  const search = path.startsWith("/search") || rewriteTo.startsWith("/search") || path.startsWith("/api/catalog");
   const key = `${ip}:${search ? "search" : "site"}`;
   const max = requestLimit(search ? "SEARCH_RATE_MAX" : "SITE_RATE_MAX", search ? 30 : 240);
   let ok = true;
@@ -48,6 +79,13 @@ export async function proxy(req: NextRequest) {
     ok = allowRequest(key, max, 60_000);
   }
   if (!ok) return NextResponse.json({ error: "Too many requests" }, { status: 429 });
+  if (rewriteTo) {
+    const headers = new Headers(req.headers);
+    headers.set("x-pathname", rewriteTo);
+    const url = req.nextUrl.clone();
+    url.pathname = rewriteTo;
+    return NextResponse.rewrite(url, { request: { headers } });
+  }
   return nextWithPath(req);
 }
 

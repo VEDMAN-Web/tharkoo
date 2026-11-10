@@ -14,9 +14,10 @@ import {
 } from "@/lib/queries";
 import { prettyPlace } from "@/lib/format";
 import { fillTemplate } from "@/lib/seo";
-import { pageMetadata } from "@/lib/ui/meta";
+import { placePath, tagPath } from "@/lib/urls";
+import { withUrlSeo, urlHeading } from "@/lib/seo/override";
+import { getPaths, publicTags } from "@/server/urls/service";
 import { fallbackLanding, mergeLanding, type LandingCopy } from "@/lib/seo/landing";
-import { TAG_PAGES } from "@/data/catalog";
 
 type Props = {
   params: Promise<{ category: string; location: string }>;
@@ -66,10 +67,11 @@ export async function generateMetadata({ params, searchParams }: Props): Promise
   if (sp.verified) query.set("verified", "1");
   if (pageNo > 1) query.set("page", String(pageNo));
   const suffix = query.toString();
-  return pageMetadata({
+  const path = `${placePath(cat.slug || category, loc.slug || location)}${suffix ? `?${suffix}` : ""}`;
+  return withUrlSeo(placePath(cat.slug || category, loc.slug || location), {
     title,
     description,
-    path: `/${category}/${loc.slug}/${suffix ? `?${suffix}` : ""}`,
+    path,
     index: !thin && pageNo === 1 && !(filtered && feed.total === 0),
     follow: true,
   });
@@ -81,7 +83,9 @@ export default async function LocationPage({ params, searchParams }: Props) {
   const page = Math.max(1, Number(sp.page) || 1);
   const [cat, loc] = await Promise.all([getCategory(category), getLocationBySlug(location)]);
   if (!cat || !loc || (loc.kind !== "city" && loc.kind !== "state")) notFound();
-  if (loc.slug && loc.slug !== location) permanentRedirect(`/${category}/${loc.slug}/`);
+  if ((cat.slug && cat.slug !== category) || (loc.slug && loc.slug !== location)) {
+    permanentRedirect(placePath(cat.slug || category, loc.slug || location));
+  }
 
   const filter =
     loc.kind === "state"
@@ -90,13 +94,17 @@ export default async function LocationPage({ params, searchParams }: Props) {
   if (sp.photos) Object.assign(filter, { photos: { $exists: true, $ne: [] } });
   if (sp.verified) Object.assign(filter, { verified: true });
 
-  const [seo, site, stars, feed, siblings, districts] = await Promise.all([
+  const canonicalPath = placePath(cat.slug || category, loc.slug || location);
+  const [seo, site, stars, feed, siblings, districts, paths, tags, heading] = await Promise.all([
     getSeo("location"),
     getSite(),
     getStarListings(loc.kind === "city" ? { categorySlug: category, citySlug: location } : filter),
     getFeed(filter, page),
     loc.kind === "city" && loc.stateSlug ? getSiblingCities(loc.stateSlug) : Promise.resolve([]),
-    loc.kind === "city" ? getDistricts(location) : Promise.resolve([]),
+    loc.kind === "city" ? getDistricts(loc.slug || location) : Promise.resolve([]),
+    getPaths(),
+    publicTags(),
+    urlHeading(canonicalPath, ""),
   ]);
 
   const stateName = prettyPlace(loc.stateSlug) || loc.name;
@@ -113,31 +121,31 @@ export default async function LocationPage({ params, searchParams }: Props) {
   const filtered = Boolean(sp.photos || sp.verified);
   const siblingLinks = [
     ...siblings
-      .filter((c) => c.slug !== location)
+      .filter((c) => c.slug !== loc.slug)
       .slice(0, 20)
-      .map((c) => ({ href: `/${category}/${c.slug}/`, label: c.name! })),
-    ...districts.map((d) => ({ href: `/${category}/${location}/${d.slug}/`, label: d.name! })),
+      .map((c) => ({ href: placePath(cat.slug || category, c.slug || ""), label: c.name! })),
+    ...districts.map((d) => ({ href: placePath(cat.slug || category, loc.slug || location, d.slug || ""), label: d.name! })),
   ];
 
   return (
     <ListingPageView
-      h1={fillTemplate(seo?.h1 || copy.h1, vars)}
+      h1={heading || fillTemplate(seo?.h1 || copy.h1, vars)}
       h2={fillTemplate(seo?.h2 || "", vars)}
       intro={copy.intro || fillTemplate(seo?.intro || "", vars)}
       faqs={copy.faqs}
-      popular={TAG_PAGES.slice(0, 6).map((tag) => ({ href: `/${category}/tag/${tag.slug}/`, label: `${cat.name} ${tag.label}` }))}
+      popular={tags.slice(0, 6).map((tag) => ({ href: tagPath(paths, cat.slug || category, tag.slug), label: `${cat.name} ${tag.label}` }))}
       footer={fillTemplate(seo?.footer || "", vars)}
       crumbs={[
         { name: "Tharkoo India", path: "/" },
-        { name: cat.name!, path: `/${category}/` },
-        ...(loc.stateSlug ? [{ name: `${stateName} ${cat.name}`, path: `/${category}/${loc.stateSlug}/` }] : []),
-        { name: `${loc.name} ${cat.name}`, path: `/${category}/${location}/` },
+        { name: cat.name!, path: `/${cat.slug}/` },
+        ...(loc.stateSlug ? [{ name: `${stateName} ${cat.name}`, path: placePath(cat.slug || category, loc.stateSlug) }] : []),
+        { name: `${loc.name} ${cat.name}`, path: canonicalPath },
       ]}
       locationLabel={`${stateName} - ${loc.name}`}
       cityName={loc.name}
       categoryName={cat.name}
-      districts={districts.map((d) => ({ href: `/${category}/${location}/${d.slug}/`, label: d.name! }))}
-      path={`/${category}/${location}/${sp.photos || sp.verified ? `?${new URLSearchParams({ ...(sp.photos ? { photos: "1" } : {}), ...(sp.verified ? { verified: "1" } : {}) }).toString()}` : ""}`}
+      districts={districts.map((d) => ({ href: placePath(cat.slug || category, loc.slug || location, d.slug || ""), label: d.name! }))}
+      path={`${canonicalPath}${sp.photos || sp.verified ? `?${new URLSearchParams({ ...(sp.photos ? { photos: "1" } : {}), ...(sp.verified ? { verified: "1" } : {}) }).toString()}` : ""}`}
       stars={stars}
       items={feed.items}
       page={feed.page}
@@ -145,7 +153,7 @@ export default async function LocationPage({ params, searchParams }: Props) {
       total={feed.total}
       noindex={isThin(feed.total) || page > 1 || (filtered && feed.total === 0)}
       siblingLinks={siblingLinks}
-      emptyNearby={siblings.slice(0, 6).map((c) => ({ href: `/${category}/${c.slug}/`, label: c.name! }))}
+      emptyNearby={siblings.slice(0, 6).map((c) => ({ href: placePath(cat.slug || category, c.slug || ""), label: c.name! }))}
       photos={sp.photos === "1"}
       verified={sp.verified === "1"}
     />

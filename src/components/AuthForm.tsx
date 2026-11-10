@@ -4,6 +4,8 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useMemo, useState } from "react";
 import { api, fieldErrors, friendlyError, isStaffRole, safeNext } from "@/lib/ui/api";
+import { loginPath, registerPath } from "@/lib/urls";
+import { useUrlPaths } from "./UrlPaths";
 
 type Mode = "login" | "register" | "forgot" | "reset" | "verify" | "expired";
 
@@ -19,6 +21,7 @@ function strength(password: string) {
 
 function AuthFormInner({ mode }: { mode: Mode }) {
   const router = useRouter();
+  const paths = useUrlPaths();
   const params = useSearchParams();
   const next = safeNext(params.get("next"));
   const token = params.get("token") || "";
@@ -108,7 +111,7 @@ function AuthFormInner({ mode }: { mode: Mode }) {
     const res = await api("/api/auth/reset-password", { method: "POST", body: JSON.stringify({ token, password: data.get("password") }) });
     setBusy(false);
     if (!res.ok) return fail(res.error);
-    router.push("/u/login/");
+    router.push(loginPath(paths));
   }
 
   async function onVerify() {
@@ -213,12 +216,12 @@ function AuthFormInner({ mode }: { mode: Mode }) {
         <p className="t-small" style={{ textAlign: "center", marginTop: 12 }}>
           <Link href={withNext("/u/forgot/")} style={{ color: "var(--accent)" }}>Forgot password?</Link>
           {" · "}
-          <Link href={withNext("/u/register/")} style={{ color: "var(--accent)" }}>Create account</Link>
+          <Link href={withNext(registerPath(paths))} style={{ color: "var(--accent)" }}>Create account</Link>
         </p>
       ) : null}
       {mode === "register" ? (
         <p className="t-small" style={{ textAlign: "center" }}>
-          Already registered? <Link href={withNext("/u/login/")} style={{ color: "var(--accent)" }}>Log in</Link>
+          Already registered? <Link href={withNext(loginPath(paths))} style={{ color: "var(--accent)" }}>Log in</Link>
         </p>
       ) : null}
     </div>

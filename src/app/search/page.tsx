@@ -1,15 +1,20 @@
 import { ListingPageView } from "@/components/ListingPage";
 import { searchListings, getCategories } from "@/lib/queries";
-import { pageMetadata } from "@/lib/ui/meta";
+import { searchPath } from "@/lib/urls";
+import { withUrlSeo } from "@/lib/seo/override";
+import { getPaths } from "@/server/urls/service";
 
 export const dynamic = "force-dynamic";
 
-export const metadata = pageMetadata({
-  title: "Search classifieds | Tharkoo",
-  description: "Search Tharkoo listings by keyword, category, and city.",
-  path: "/search/",
-  index: false,
-});
+export async function generateMetadata() {
+  const paths = await getPaths();
+  return withUrlSeo(searchPath(paths), {
+    title: "Search classifieds | Tharkoo",
+    description: "Search Tharkoo listings by keyword, category, and city.",
+    path: searchPath(paths),
+    index: false,
+  });
+}
 
 export default async function SearchPage({
   searchParams,
@@ -32,7 +37,8 @@ export default async function SearchPage({
   if (city) qs.set("city", city);
   if (sp.photos) qs.set("photos", sp.photos);
   if (sp.verified) qs.set("verified", sp.verified);
-  const path = `/search/?${qs.toString()}`;
+  const paths = await getPaths();
+  const path = `${searchPath(paths)}?${qs.toString()}`;
   const categories = await getCategories();
   return (
     <ListingPageView
@@ -47,7 +53,7 @@ export default async function SearchPage({
       }
       crumbs={[
         { name: "India", path: "/" },
-        { name: "Search", path: "/search/" },
+        { name: "Search", path: searchPath(paths) },
       ]}
       path={path}
       stars={[]}

@@ -10,6 +10,8 @@ import { faqPage } from "@/lib/seo/schema";
 import { canonical } from "@/lib/seo";
 import { displayTitle } from "@/lib/format";
 import type { ListingDoc } from "@/lib/models";
+import { adPath, postAdPath } from "@/lib/urls";
+import { useUrlPaths } from "./UrlPaths";
 
 function toggleHref(path: string, key: string, on: boolean) {
   const [base, qs] = path.split("?");
@@ -80,6 +82,7 @@ export function ListingPageView({
   popular?: { href: string; label: string }[];
 }) {
   const [open, setOpen] = useState(false);
+  const paths = useUrlPaths();
   const clear = path.split("?")[0];
   const chips = districts.slice(0, 2);
   const feed = [...stars, ...items.filter((ad) => !stars.some((star) => star.slug && star.slug === ad.slug))];
@@ -99,7 +102,7 @@ export function ListingPageView({
             itemListElement: items.map((ad, i) => ({
               "@type": "ListItem",
               position: (page - 1) * 25 + i + 1,
-              url: canonical(`/ad/${ad.slug}/`),
+              url: canonical(adPath(paths, ad.slug || "")),
               name: displayTitle(ad.title),
             })),
           },
@@ -179,7 +182,7 @@ export function ListingPageView({
           <span key={ad.publicId || ad.slug || index} style={{ display: "contents" }}>
             <AdCard ad={ad} featured={index < stars.length} priority={index === 0} />
             {(index + 1) % 6 === 0 ? (
-              <Link href="/u/post-insert/" className="tk-promo" data-tk="promo-band" prefetch={false}>
+              <Link href={postAdPath(paths)} className="tk-promo" data-tk="promo-band" prefetch={false}>
                 <span>
                   <h2>Reach more people</h2>
                   <p>Promote your ad and stay at the top.</p>
@@ -198,13 +201,13 @@ export function ListingPageView({
                 {item.label}
               </Link>
             ))}
-            <EmptyState title="No listings yet" body="Try another word, or post the first ad." action={{ href: "/u/post-insert/", label: "Post the first ad" }} />
+            <EmptyState title="No listings yet" body="Try another word, or post the first ad." action={{ href: postAdPath(paths), label: "Post the first ad" }} />
           </div>
         ) : (
           <EmptyState
             title="No listings yet"
             body={emptyNearby.length ? "Try a nearby city, or be the first to post." : "Be the first to post in this place."}
-            action={{ href: "/u/post-insert/", label: "Post the first ad" }}
+            action={{ href: postAdPath(paths), label: "Post the first ad" }}
           />
         )
       ) : null}

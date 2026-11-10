@@ -6,12 +6,14 @@ import { canonical } from "@/lib/seo";
 import { plain } from "@/lib/plain";
 import { safeHref } from "@/lib/sanitize";
 import { readContent } from "@/lib/ui/site-content";
+import type { UrlPaths } from "@/lib/urls";
 import { AgeGate } from "./AgeGate";
 import { CityProvider } from "./CityContext";
 import { CookieBanner } from "./CookieBanner";
 import { Footer } from "./Footer";
 import { Header } from "./Header";
 import { MainInner } from "./MainInner";
+import { UrlPathProvider } from "./UrlPaths";
 
 type City = { slug?: string; name?: string; stateSlug?: string; isTop?: boolean };
 type Cat = { slug?: string; name?: string };
@@ -35,13 +37,15 @@ type Shell = {
   user: { email: string; roles: string[] } | null;
 };
 
-export function PathChrome({ shell, children }: { shell: Shell; children: React.ReactNode }) {
+export function PathChrome({ shell, paths, children }: { shell: Shell; paths: UrlPaths; children: React.ReactNode }) {
   const path = usePathname() || "/";
   if (path.startsWith("/admin")) {
     return (
-      <div className="min-h-screen bg-bg text-text">
-        <main id="main">{children}</main>
-      </div>
+      <UrlPathProvider paths={paths}>
+        <div className="min-h-screen bg-bg text-text">
+          <main id="main">{children}</main>
+        </div>
+      </UrlPathProvider>
     );
   }
   const { site, categories, topCities, cities, user } = shell;
@@ -56,6 +60,7 @@ export function PathChrome({ shell, children }: { shell: Shell; children: React.
   const footerLinks = plain(asLinks(site.footerLinks));
   const socialLinks = plain(asLinks(site.socialLinks));
   return (
+    <UrlPathProvider paths={paths}>
     <CityProvider cities={cityProps}>
       <JsonLd
         data={{
@@ -114,5 +119,6 @@ export function PathChrome({ shell, children }: { shell: Shell; children: React.
         noticeHref={safeHref(content.cookies.noticeHref) || "/cookies/"}
       />
     </CityProvider>
+    </UrlPathProvider>
   );
 }

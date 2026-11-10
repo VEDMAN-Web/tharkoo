@@ -16,8 +16,10 @@ import {
   HelpArticle,
   Page,
   Product,
+  Redirect,
   SeoTemplate,
   Site,
+  UrlOverride,
 } from "@/server/models/cms";
 
 export { V2, COLL_SUFFIX, CLASHING_MODELS, modelName, collectionName } from "@/server/models/names";
@@ -91,6 +93,8 @@ export {
   FeatureFlag,
   AttributeGroup,
   Product,
+  Redirect,
+  UrlOverride,
 } from "@/server/models/cms";
 export type {
   AttributeGroupDoc,
@@ -143,4 +147,6 @@ export const allModels = [
   FeatureFlag,
   AttributeGroup,
   Product,
+  Redirect,
+  UrlOverride,
 ];

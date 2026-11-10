@@ -31,6 +31,7 @@ export function AdDetail({
   listingId,
   crumbs = [],
   shareUrl,
+  heading,
 }: {
   ad: ListingDoc;
   categoryName: string;
@@ -38,8 +39,9 @@ export function AdDetail({
   listingId?: string;
   crumbs?: { name: string; path: string }[];
   shareUrl: string;
+  heading?: string;
 }) {
-  const title = displayTitle(ad.title) || "Listing";
+  const title = heading || displayTitle(ad.title) || "Listing";
   const city = prettyPlace(ad.citySlug);
   const district = ad.place && ad.place !== city ? ad.place : prettyPlace(ad.districtSlug);
   const sections = listingTagSections(ad.tags);

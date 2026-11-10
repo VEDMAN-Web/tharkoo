@@ -3,6 +3,8 @@
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { api, fieldErrors, friendlyError } from "@/lib/ui/api";
+import { loginPath, postAdPath } from "@/lib/urls";
+import { useUrlPaths } from "./UrlPaths";
 import { HelpCard } from "./ui/HelpCard";
 import { AdCard } from "./ui/AdCard";
 import type { ListingDoc } from "@/lib/models";
@@ -24,6 +26,7 @@ function normalPhone(raw: string) {
 }
 
 export function PostWizard() {
+  const paths = useUrlPaths();
   const [step, setStep] = useState(1);
   const [categories, setCategories] = useState<Cat[]>([]);
   const [cities, setCities] = useState<Place[]>([]);
@@ -108,7 +111,7 @@ export function PostWizard() {
   }
 
   function remember(id: string, nextStep: number) {
-    const url = `/u/post-insert/?step=${nextStep}&draft=${id}`;
+    const url = `${postAdPath(paths)}?step=${nextStep}&draft=${id}`;
     window.history.replaceState(null, "", url);
     setStep(nextStep);
   }
@@ -256,7 +259,7 @@ export function PostWizard() {
         <p style={{ textAlign: "center" }}>
           <Link href="/u/account/ads/" style={{ color: "var(--accent)" }}>Your ads</Link>
           {" · "}
-          <Link href="/u/post-insert/" style={{ color: "var(--accent)" }}>Post another ad</Link>
+          <Link href={postAdPath(paths)} style={{ color: "var(--accent)" }}>Post another ad</Link>
         </p>
       </div>
     );
@@ -277,7 +280,7 @@ export function PostWizard() {
       </div>
       <div aria-live="polite" className="t-small" style={{ color: "var(--danger)", margin: "12px 0" }}>
         {banner}{" "}
-        {banner.startsWith("Sign in") ? <Link href="/u/login/?next=/u/post-insert/">Log in</Link> : null}
+        {banner.startsWith("Sign in") ? <Link href={`${loginPath(paths)}?next=${encodeURIComponent(postAdPath(paths))}`}>Log in</Link> : null}
         {/ID needs a quick check/i.test(banner) ? <Link href="/u/account/kyc/" data-tk="verify-id">Verify ID</Link> : null}
       </div>
       {step === 1 ? (

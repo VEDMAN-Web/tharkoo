@@ -1,4 +1,4 @@
-import { notFound } from "next/navigation";
+import { notFound, permanentRedirect } from "next/navigation";
 import type { Metadata } from "next";
 import { ListingPageView } from "@/components/ListingPage";
 import {
@@ -14,9 +14,10 @@ import {
 } from "@/lib/queries";
 import { prettyPlace } from "@/lib/format";
 import { fillTemplate } from "@/lib/seo";
-import { pageMetadata } from "@/lib/ui/meta";
+import { placePath, tagPath } from "@/lib/urls";
+import { withUrlSeo, urlHeading } from "@/lib/seo/override";
 import { fallbackLanding } from "@/lib/seo/landing";
-import { TAG_PAGES } from "@/data/catalog";
+import { getPaths, publicTags } from "@/server/urls/service";
 
 type Props = {
   params: Promise<{ category: string; location: string; district: string }>;
@@ -65,10 +66,11 @@ export async function generateMetadata({ params, searchParams }: Props): Promise
   if (sp.verified) query.set("verified", "1");
   if (pageNo > 1) query.set("page", String(pageNo));
   const suffix = query.toString();
-  return pageMetadata({
+  const path = placePath(cat.slug || category, city.slug || location, dist.slug || district);
+  return withUrlSeo(path, {
     title,
     description,
-    path: `/${category}/${location}/${district}/${suffix ? `?${suffix}` : ""}`,
+    path: `${path}${suffix ? `?${suffix}` : ""}`,
     index: pageNo === 1 && !(filtered && feed.total === 0) && !isThin(feed.total),
     follow: true,
   });
@@ -85,15 +87,22 @@ export default async function DistrictPage({ params, searchParams }: Props) {
   ]);
   const dist = districtRows.find((row) => row.slug === district);
   if (!cat || !city || !dist) notFound();
+  if (cat.slug !== category || city.slug !== location || dist.slug !== district) {
+    permanentRedirect(placePath(cat.slug || category, city.slug || location, dist.slug || district));
+  }
+  const canonicalPath = placePath(cat.slug || category, city.slug || location, dist.slug || district);
   const filter: Record<string, unknown> = { categorySlug: category, citySlug: location, districtSlug: district };
   if (sp.photos) Object.assign(filter, { photos: { $exists: true, $ne: [] } });
   if (sp.verified) Object.assign(filter, { verified: true });
-  const [seo, site, stars, feed, districts] = await Promise.all([
+  const [seo, site, stars, feed, districts, paths, tags, heading] = await Promise.all([
     getSeo("location"),
     getSite(),
     getStarListings(filter),
     getFeed(filter, page),
-    getDistricts(location),
+    getDistricts(city.slug || location),
+    getPaths(),
+    publicTags(),
+    urlHeading(canonicalPath, ""),
   ]);
   const vars = {
     category: cat.name,
@@ -106,23 +115,23 @@ export default async function DistrictPage({ params, searchParams }: Props) {
   };
   return (
     <ListingPageView
-      h1={fillTemplate(seo?.h1 || "{category} in {district}", vars)}
+      h1={heading || fillTemplate(seo?.h1 || "{category} in {district}", vars)}
       faqs={fallbackLanding({ category: cat.name || category, city: city.name || location, district: dist.name || district, count: feed.total, site: site.name }).faqs}
-      popular={TAG_PAGES.slice(0, 4).map((tag) => ({ href: `/${category}/tag/${tag.slug}/`, label: `${dist.name} ${tag.label}` }))}
+      popular={tags.slice(0, 4).map((tag) => ({ href: tagPath(paths, cat.slug || category, tag.slug), label: `${dist.name} ${tag.label}` }))}
       h2={fillTemplate(seo?.h2 || "", vars)}
       intro={fallbackLanding({ category: cat.name || category, city: city.name || location, district: dist.name || district, count: feed.total, site: site.name }).intro || fillTemplate(seo?.intro || "", vars)}
       crumbs={[
         { name: "Tharkoo India", path: "/" },
-        { name: cat.name!, path: `/${category}/` },
-        { name: `${prettyPlace(city.stateSlug)} ${cat.name}`, path: `/${category}/${city.stateSlug}/` },
-        { name: `${city.name} ${cat.name}`, path: `/${category}/${location}/` },
-        { name: `${dist.name} ${cat.name}`, path: `/${category}/${location}/${district}/` },
+        { name: cat.name!, path: `/${cat.slug}/` },
+        { name: `${prettyPlace(city.stateSlug)} ${cat.name}`, path: placePath(cat.slug || category, city.stateSlug || "") },
+        { name: `${city.name} ${cat.name}`, path: placePath(cat.slug || category, city.slug || location) },
+        { name: `${dist.name} ${cat.name}`, path: canonicalPath },
       ]}
       locationLabel={`${prettyPlace(city.stateSlug)} - ${city.name}`}
       cityName={city.name}
       categoryName={cat.name}
-      districts={districts.map((d) => ({ href: `/${category}/${location}/${d.slug}/`, label: d.name! }))}
-      path={`/${category}/${location}/${district}/${sp.photos || sp.verified ? `?${new URLSearchParams({ ...(sp.photos ? { photos: "1" } : {}), ...(sp.verified ? { verified: "1" } : {}) }).toString()}` : ""}`}
+      districts={districts.map((d) => ({ href: placePath(cat.slug || category, city.slug || location, d.slug || ""), label: d.name! }))}
+      path={`${canonicalPath}${sp.photos || sp.verified ? `?${new URLSearchParams({ ...(sp.photos ? { photos: "1" } : {}), ...(sp.verified ? { verified: "1" } : {}) }).toString()}` : ""}`}
       stars={stars}
       items={feed.items}
       page={feed.page}
@@ -130,10 +139,10 @@ export default async function DistrictPage({ params, searchParams }: Props) {
       total={feed.total}
       noindex={isThin(feed.total) || page > 1 || (Boolean(sp.photos || sp.verified) && feed.total === 0)}
       siblingLinks={districts.map((d) => ({
-        href: `/${category}/${location}/${d.slug}/`,
+        href: placePath(cat.slug || category, city.slug || location, d.slug || ""),
         label: d.name!,
       }))}
-      emptyNearby={[{ href: `/${category}/${location}/`, label: city.name! }]}
+      emptyNearby={[{ href: placePath(cat.slug || category, city.slug || location), label: city.name! }]}
       photos={sp.photos === "1"}
       verified={sp.verified === "1"}
     />

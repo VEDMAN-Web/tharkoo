@@ -678,6 +678,18 @@ if (editorReady) {
   const restored = await adminPage.locator("[data-tk=hero] h1").innerText().catch(() => "");
   record("homepage reset", 1440, restored.includes("Single?"), restored.slice(0, 80));
 } else if (signedIn) record("homepage edit", 1440, false, await adminPage.locator("body").innerText().then((text) => text.slice(0, 120)).catch(() => adminPage.url()));
+if (signedIn) {
+  for (const [width, height] of [
+    [1440, 900],
+    [390, 844],
+  ]) {
+    await adminPage.setViewportSize({ width, height });
+    await adminPage.goto(base + "/admin/urls/", { waitUntil: "load" });
+    const text = await adminPage.locator("body").innerText();
+    const scroll = await adminPage.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
+    record("/admin/urls/", width, text.includes("Path prefixes") && text.includes("Redirects") && scroll <= 1, `scroll ${scroll}`);
+  }
+}
 await adminPage.close();
 await adminContext.close();
 

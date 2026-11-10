@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useUrlPaths } from "./UrlPaths";
 
 export function CookieBanner({
   body,
@@ -18,6 +19,7 @@ export function CookieBanner({
   noticeHref?: string;
 }) {
   const path = usePathname() || "/";
+  const paths = useUrlPaths();
   const [open, setOpen] = useState(false);
   useEffect(() => {
     function maybe() {
@@ -32,7 +34,7 @@ export function CookieBanner({
     };
   }, []);
   if (!open) return null;
-  const onAd = path.startsWith("/ad/");
+  const onAd = path.startsWith(`/${paths.ad}/`);
   return (
     <div className={`tk-cookie ${onAd ? "on-ad" : ""}`}>
       <p>

@@ -5,7 +5,10 @@ import { AdCardSkeleton } from "./ui/Skeleton";
 import { JsonLd } from "@/lib/jsonld";
 import { safeHtml } from "@/lib/sanitize";
 import { canonical } from "@/lib/seo";
+import { websiteNode } from "@/lib/seo/schema";
+import { categoryPath, placePath, searchPath } from "@/lib/urls";
 import { getCategories, getCities, getHomepageContent, getSeo, getSite } from "@/lib/queries";
+import { getPaths } from "@/server/urls/service";
 import { cardFallback, type HomeCard } from "@/lib/ui/site-content";
 
 const ICONS: Record<string, LucideIcon> = {
@@ -39,12 +42,13 @@ function iconFor(slug: string) {
 }
 
 export async function HomeBlocks() {
-  const [site, categories, cities, seo, content] = await Promise.all([
+  const [site, categories, cities, seo, content, paths] = await Promise.all([
     getSite(),
     getCategories(),
     getCities(),
     getSeo("home"),
     getHomepageContent(),
+    getPaths(),
   ]);
   const bySlug = new Map(categories.map((cat) => [cat.slug, cat as Cat]));
   const cityBySlug = new Map(cities.map((city) => [city.slug, city]));
@@ -65,17 +69,7 @@ export async function HomeBlocks() {
       <JsonLd
         data={[
           { "@context": "https://schema.org", "@type": "Organization", name: site.name, url: canonical("/") },
-          {
-            "@context": "https://schema.org",
-            "@type": "WebSite",
-            name: site.name,
-            url: canonical("/"),
-            potentialAction: {
-              "@type": "SearchAction",
-              target: `${canonical("/search/")}?q={search_term_string}`,
-              "query-input": "required name=search_term_string",
-            },
-          },
+          websiteNode(site.name || "Tharkoo", searchPath(paths)),
         ]}
       />
       <div className="tk-home-head tk-container">
@@ -90,7 +84,7 @@ export async function HomeBlocks() {
           const picks = picksFor(card, cat);
           return (
             <article key={card.slug} className="tk-home-card" data-tk="home-card">
-              <Link href={`/${cat.slug}/`} className="tk-home-photo" prefetch={false}>
+              <Link href={categoryPath(cat.slug || "")} className="tk-home-photo" prefetch={false}>
                 <SmartImage
                   src={card.photo || `/placeholders/${cat.slug}/01.webp`}
                   alt=""
@@ -108,7 +102,7 @@ export async function HomeBlocks() {
               <div className="tk-home-body">
                 <p>{card.blurb || cat.homeBlurb || cat.description || cardFallback(card.slug)}</p>
                 {picks.map((city) => (
-                  <Link key={city!.slug} href={`/${cat.slug}/${city!.slug}/`} className="tk-city-row" prefetch={false}>
+                  <Link key={city!.slug} href={placePath(cat.slug || "", city!.slug || "")} className="tk-city-row" prefetch={false}>
                     <span>{title}</span>
                     <strong>{city!.name}</strong>
                   </Link>
@@ -132,7 +126,7 @@ export async function HomeBlocks() {
                 <h3>{group.title || "More categories"}</h3>
                 <div className="tk-pills">
                   {extra.map((cat) => (
-                    <Link key={cat.slug} href={`/${cat.slug}/`} className="tk-pill" prefetch={false}>
+                    <Link key={cat.slug} href={categoryPath(cat.slug || "")} className="tk-pill" prefetch={false}>
                       {cat.name}
                     </Link>
                   ))}
@@ -149,13 +143,13 @@ export async function HomeBlocks() {
           return (
             <section key={group.id} className="tk-group" data-tk="city-group">
               <h3>
-                <Link href={`/${cat.slug}/`} prefetch={false}>
+                <Link href={categoryPath(cat.slug || "")} prefetch={false}>
                   <Icon size={16} /> {title}
                 </Link>
               </h3>
               <div className="tk-pills">
                 {pills.map((city) => (
-                  <Link key={city!.slug} href={`/${cat.slug}/${city!.slug}/`} className="tk-pill" prefetch={false}>
+                  <Link key={city!.slug} href={placePath(cat.slug || "", city!.slug || "")} className="tk-pill" prefetch={false}>
                     {city!.name}
                   </Link>
                 ))}
