@@ -33,6 +33,9 @@
 .adm *, .adm *::before, .adm *::after { box-sizing: border-box; }
 .adm h1, .adm h2, .adm h3 { margin: 0; font-family: inherit; color: var(--adm-text); }
 .adm a { color: var(--adm-primary); }
+/* Headings and numbers use Manrope with lining numerals, never the public display serif. */
+.adm .t-h1, .adm .t-h2, .adm .t-h3, .adm .t-overline, .adm .tk-count { font-family: var(--font-sans), "Manrope", system-ui, sans-serif; font-variant-numeric: tabular-nums lining-nums; }
+.adm h1, .adm h2, .adm h3, .adm td, .adm p { font-variant-numeric: lining-nums; }
 .adm-sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
 
 /* ---- shell ---- */
@@ -129,7 +132,7 @@
 .adm-grid { display: grid; gap: var(--adm-s4); grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); }
 .adm-stat, .adm-kpi { background: var(--adm-card); border: 1px solid var(--adm-border); border-radius: var(--adm-r-card); box-shadow: var(--adm-shadow); padding: var(--adm-s4) var(--adm-s5); }
 .adm-stat-label, .adm-kpi-label { margin: 0; color: var(--adm-muted); font-size: 12px; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; }
-.adm-stat-value, .adm-kpi-value { margin: var(--adm-s1) 0 0; font-size: 28px; font-weight: 800; line-height: 1.2; }
+.adm-stat-value, .adm-kpi-value { margin: var(--adm-s1) 0 0; font-family: var(--font-sans), "Manrope", system-ui, sans-serif; font-size: 28px; font-weight: 700; line-height: 1.2; font-variant-numeric: tabular-nums lining-nums; }
 .adm-kpi-hint { margin: var(--adm-s1) 0 0; color: var(--adm-muted); font-size: 13px; }
 .adm-kpi-delta { font-size: 13px; font-weight: 700; }
 .adm-kpi-delta.is-up { color: var(--adm-success); }
@@ -223,3 +226,8 @@ textarea.adm-input { min-height: 96px; resize: vertical; }
 .adm-serp-title { margin: 4px 0; color: #1a0dab; font-size: 20px; font-weight: 400; line-height: 1.3; overflow-wrap: anywhere; }
 .adm-serp-desc { margin: 0; color: #4d5156; font-size: 14px; line-height: 1.58; overflow-wrap: anywhere; }
 .adm-serp-meta { margin: 0; color: var(--adm-muted); font-size: 12px; }
+@media (max-width: 767px) {
+  .adm-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--adm-s3); }
+  .adm-kpi, .adm-stat { padding: var(--adm-s3) var(--adm-s3); }
+  .adm-kpi-value, .adm-stat-value { font-size: 22px; }
+}
