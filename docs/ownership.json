@@ -782,7 +782,11 @@
         "src/server/layout/media.ts",
         "src/app/admin/media/**",
         "src/components/admin/ui/ImagePicker.tsx",
-        "tests/server/layout/media.test.ts"
+        "tests/server/layout/media.test.ts",
+        "docs/ownership.json",
+        "progress/H3.3.md",
+        "src/components/admin/nav.ts",
+        "tests/server/ui/admin-nav.test.ts"
       ]
     },
     "H3.4": {

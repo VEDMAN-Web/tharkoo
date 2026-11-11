@@ -73,7 +73,7 @@ export const NAV_GROUPS: NavGroup[] = [
       item("ui-text", "UI text", "/admin/ui-text/", "text", "admin", "H3.7"),
       item("menus", "Menus & footer", "/admin/menus/", "menu", "admin"),
       item("banners", "Banners & notices", "/admin/banners/", "bell", "admin", "later"),
-      item("media", "Media library", "/admin/media/", "image", "admin", "H3.3"),
+      item("media", "Media library", "/admin/media/", "image", "admin"),
     ],
   },
   {
