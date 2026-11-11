@@ -23,7 +23,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   if (!cat) return {};
   const vars = { category: cat.name, site: site.name, year: new Date().getFullYear() };
   const title = fillTemplate(seo?.title || "{category} classifieds across India | Tharkoo", vars);
-  const description = fillTemplate(seo?.description || "Browse {category} ads from people across Indian cities. Filter by city and district, see photos, and contact posters directly.", vars);
+  const description = fillTemplate(seo?.description || "Browse {category} on Tharkoo: listings from people across Indian cities. Filter by city and district, see photos and contact posters directly.", vars);
   const path = categoryPath(cat.slug || category);
   return withUrlSeo(path, { title, description, path });
 }
