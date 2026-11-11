@@ -1173,6 +1173,14 @@
         "src/app/submit-report/page.tsx",
         "docs/ownership.json"
       ]
+    },
+    "H3.2b": {
+      "branchPrefix": "haiku/h3.2b",
+      "globs": [
+        "src/server/models/layout.ts",
+        "docs/ownership.json",
+        "progress/H3.2b.md"
+      ]
     }
   }
 }
