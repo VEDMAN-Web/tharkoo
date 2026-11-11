@@ -40,9 +40,9 @@ export const DEFAULT_SEO = {
   },
   location: {
     pageType: "location",
-    title: "{category} in {city}{districtPref} | {site}",
-    description: "{count} {category} listings in {city}. Call, WhatsApp or Telegram the vendor directly.",
-    h1: "{category} {city}{districtPref}",
+    title: "{category} in {city}{districtPref} classifieds | {site}",
+    description: "{count} {category} listings in {city}{districtPref}. Contact the person who posted, on the channels they enabled.",
+    h1: "{category} in {city}{districtPref}",
     h2: "Latest ads in {city}",
     intro: "Live {category} ads in {city}. Promoted ads sit at the top during their time slot.",
     footer: "See nearby cities if this page is still filling up.",

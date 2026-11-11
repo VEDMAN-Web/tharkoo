@@ -1,13 +1,19 @@
-import Link from "next/link";
+import type { Metadata } from "next";
+import { EmptyState } from "@/components/ui/EmptyState";
+
+export const metadata: Metadata = {
+  title: "Page not found | Tharkoo",
+  description: "That page is not on Tharkoo. Go back to the home page and choose a category.",
+  robots: { index: false, follow: false },
+};
 
 export default function NotFound() {
   return (
-    <div className="py-16 text-center">
-      <h1 className="text-2xl font-semibold">Page not found</h1>
-      <p className="mt-2 text-sm text-[var(--text-secondary)]">That URL is not in the Tharkoo catalogue.</p>
-      <Link href="/" className="mt-4 inline-block underline">
-        Back home
-      </Link>
-    </div>
+    <EmptyState
+      heading="h1"
+      title="Page not found"
+      body="That page is not on Tharkoo. Head home and pick a category."
+      action={{ href: "/", label: "Back to home" }}
+    />
   );
 }

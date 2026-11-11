@@ -42,6 +42,10 @@ export interface SiteDoc extends BaseDoc {
   footerLinks?: unknown;
   socialLinks?: unknown;
   homepage?: unknown;
+  landings?: unknown;
+  tags?: { slug?: string; label?: string; replaces?: string }[];
+  freeAdsPerWeek?: number;
+  paths?: unknown;
 }
 
 export interface PageDoc extends BaseDoc {
@@ -170,6 +174,10 @@ const siteSchema = new Schema<SiteDoc>(
     footerLinks: Schema.Types.Mixed,
     socialLinks: Schema.Types.Mixed,
     homepage: Schema.Types.Mixed,
+    landings: Schema.Types.Mixed,
+    tags: { type: [{ slug: String, label: String, replaces: String }], default: [] },
+    freeAdsPerWeek: { type: Number },
+    paths: Schema.Types.Mixed,
   },
   { timestamps: true, collection: collectionName("sites", "Site") },
 );
@@ -307,3 +315,46 @@ export const AttributeGroup = registerModel<AttributeGroupDoc>(
   attributeGroupSchema,
 );
 export const Product = registerModel<ProductDoc>(modelName("Product"), productSchema);
+
+export interface RedirectDoc extends BaseDoc {
+  fromPath: string;
+  toPath: string;
+  hits?: number;
+  enabled?: boolean;
+}
+
+export interface UrlOverrideDoc extends BaseDoc {
+  path: string;
+  title?: string;
+  description?: string;
+  h1?: string;
+  canonical?: string;
+  noindex?: boolean;
+  ogImage?: string;
+}
+
+const redirectSchema = new Schema<RedirectDoc>(
+  {
+    fromPath: { type: String, required: true, unique: true },
+    toPath: { type: String, required: true },
+    hits: { type: Number, default: 0 },
+    enabled: { type: Boolean, default: true },
+  },
+  { timestamps: true, collection: collectionName("redirects", "Redirect") },
+);
+
+const urlOverrideSchema = new Schema<UrlOverrideDoc>(
+  {
+    path: { type: String, required: true, unique: true },
+    title: { type: String, default: "" },
+    description: { type: String, default: "" },
+    h1: { type: String, default: "" },
+    canonical: { type: String, default: "" },
+    noindex: { type: Boolean, default: false },
+    ogImage: { type: String, default: "" },
+  },
+  { timestamps: true, collection: collectionName("url_overrides", "UrlOverride") },
+);
+
+export const Redirect = registerModel<RedirectDoc>(modelName("Redirect"), redirectSchema);
+export const UrlOverride = registerModel<UrlOverrideDoc>(modelName("UrlOverride"), urlOverrideSchema);

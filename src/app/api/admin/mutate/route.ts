@@ -1,5 +1,5 @@
-import { revalidatePath } from "next/cache";
 import { NextRequest, NextResponse } from "next/server";
+import { refreshPublicCache } from "@/lib/cache";
 import type { Model as MongooseModel } from "mongoose";
 import { adminUnauthorized, requireStaffRequest } from "@/lib/admin-auth";
 import { connectDb } from "@/lib/db";
@@ -31,6 +31,6 @@ export async function POST(req: NextRequest) {
   } else {
     return NextResponse.json({ error: "Unknown op" }, { status: 400 });
   }
-  revalidatePath("/", "layout");
+  await refreshPublicCache();
   return NextResponse.json({ ok: true, item: doc ? JSON.parse(JSON.stringify(doc)) : null });
 }

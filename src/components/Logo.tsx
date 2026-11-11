@@ -1,35 +1,31 @@
 import Link from "next/link";
-
-function Mark({ height = 25 }: { height?: number }) {
-  return (
-    // eslint-disable-next-line @next/next/no-img-element
-    <img src="/logo.svg" alt="" width={height} height={height} />
-  );
-}
+import Image from "next/image";
 
 export function Logo({
-  name,
+  name = "tharkoo",
   href = "/",
-  size = "md",
-  country,
+  country = "India",
+  city,
 }: {
-  name: string;
+  name?: string;
   href?: string | null;
   size?: "md" | "lg";
   country?: string;
+  city?: string;
 }) {
   const mark = (
-    <span className={`logo-lockup ${size === "lg" ? "logo-lockup-lg" : ""}`}>
-      <span className="logo-row">
-        <Mark height={size === "lg" ? 32 : 25} />
-        <span className="logo-word">{name.toLowerCase()}</span>
+    <span className="tk-logo" data-tk="logo">
+      <Image className="tk-logo-mark" src="/brand/logo-mark.svg" alt="" width={28} height={28} priority aria-hidden />
+      <span>
+        <span className="tk-wordmark">{name.toLowerCase()}</span>
+        <span className="tk-logo-sub">{country}</span>
+        {city ? <span className="tk-logo-city">{city}</span> : null}
       </span>
-      {country ? <span className="country logo-country">{country}</span> : null}
     </span>
   );
   if (!href) return mark;
   return (
-    <Link href={href} className="logo-mark-link" title={name}>
+    <Link href={href}>
       {mark}
     </Link>
   );

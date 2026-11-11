@@ -1,4 +1,5 @@
-import { redirect } from "next/navigation";
+import { permanentRedirect } from "next/navigation";
+
 export default function About() {
-  redirect("/cms/about/");
+  permanentRedirect("/cms/about/");
 }

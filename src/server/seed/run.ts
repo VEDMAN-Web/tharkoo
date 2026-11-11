@@ -1,6 +1,6 @@
 import type { Types } from "mongoose";
 import { invalidateTags } from "@/lib/cache";
-import { Category, CreditPack, FeatureFlag, Listing, Location, PromotionProduct, SeedBackup } from "@/server/models";
+import { BlogPost, Category, CreditPack, FeatureFlag, HelpArticle, Listing, Location, Page, PromotionProduct, SeedBackup } from "@/server/models";
 import { attributeKeyDenied, categoryDenied, productCodeDenied, textDenied } from "@/server/shared/policy";
 import { seedDemoListings } from "@/server/seed/listings";
 import {
@@ -222,6 +222,12 @@ async function walkLocations(dryRun: boolean): Promise<Bucket> {
       if (!city) continue;
       const [citySlug, cityName] = city;
       let cityId: Types.ObjectId | null = null;
+      if (!dryRun && stateId && citySlug === "gurgaon") {
+        await Location.updateOne(
+          { parentId: stateId, type: "city", slug: "gurugram" },
+          { $set: { slug: "gurgaon", name: "Gurgaon", oldSlugs: ["gurugram"] } },
+        );
+      }
       if (stateId == null) bucket.inserted.push(`city:${citySlug}`);
       else {
         cityId = await place(
@@ -236,6 +242,7 @@ async function walkLocations(dryRun: boolean): Promise<Bucket> {
                   order: cityOrder,
                   countryCode: "IN",
                   seedBatch: SEED_BATCH,
+                  ...(citySlug === "gurgaon" ? { oldSlugs: ["gurugram"] } : {}),
                 },
               },
               { upsert: true },
@@ -449,7 +456,10 @@ export async function runSeed(): Promise<SeedResult> {
     walkFlags(false),
   ]);
   const listings = await seedDemoListings(false);
-  invalidateTags(["categories", "locations", "listings", "feed", "counts"]);
+  const { ensureHomepageDocument } = await import("@/lib/ui/site-store");
+  await ensureHomepageDocument();
+  await seedEditorial();
+  invalidateTags(["categories", "locations", "listings", "feed", "counts", "site"]);
   return {
     batch: SEED_BATCH,
     backupId: backup.backupId,
@@ -460,6 +470,22 @@ export async function runSeed(): Promise<SeedResult> {
     feature_flags: tally(flags),
     listings: tally(listings),
   };
+}
+
+async function seedEditorial() {
+  const { ABOUT_BODY, GRIEVANCE_BODY, publishedGuides } = await import("@/content/editorial");
+  const pages = [
+    { slug: "about", title: "About Tharkoo", body: ABOUT_BODY },
+    { slug: "grievance", title: "Grievance", body: GRIEVANCE_BODY },
+  ];
+  for (const page of pages) {
+    await Page.updateOne({ slug: page.slug }, { $setOnInsert: { ...page, status: "published" } }, { upsert: true });
+  }
+  for (const guide of publishedGuides()) {
+    const update = { $setOnInsert: { slug: guide.slug, title: guide.title, body: guide.body, status: guide.status, date: "November 2026", author: "Tharkoo" } };
+    if (guide.kind === "help") await HelpArticle.updateOne({ slug: guide.slug }, update, { upsert: true });
+    else await BlogPost.updateOne({ slug: guide.slug }, update, { upsert: true });
+  }
 }
 
 function rows(value: unknown): PlainDoc[] {

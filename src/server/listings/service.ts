@@ -20,6 +20,7 @@ import {
   ListingVersion,
   Location,
   MediaAsset,
+  Site,
   PromotionOrder,
   User,
   type CategoryDoc,
@@ -155,7 +156,7 @@ export function ownerView(listing: ListingDoc) {
 
 function assertTransition(from: ListingStatus, to: ListingStatus) {
   const allowed: Record<ListingStatus, ListingStatus[]> = {
-    draft: ["pending", "removed"],
+    draft: ["pending", "active", "removed"],
     pending: ["active", "rejected", "removed"],
     rejected: ["pending", "removed"],
     active: ["paused", "pending", "expired", "removed"],
@@ -471,7 +472,7 @@ export async function submitListing(
   requestId: string,
 ) {
   const listing = await owned(id, userId);
-  assertTransition(listing.status, "pending");
+  assertTransition(listing.status, "active");
   if (!listing.title.trim() || !listing.description.trim() || !listing.cityId) {
     throw new ValidationError("Invalid request", { listing: ["Title, description, and city are required"] });
   }
@@ -524,21 +525,33 @@ export async function submitListing(
     status: { $in: COUNTED },
     "attestations.submittedAt": { $gte: start },
   });
-  const limit = intEnv("FREE_ADS_PER_WEEK", 3);
+  const site = await Site.findOne({ key: "default" }).select("freeAdsPerWeek").lean<{ freeAdsPerWeek?: number }>();
+  const limit = typeof site?.freeAdsPerWeek === "number" ? site.freeAdsPerWeek : intEnv("FREE_ADS_PER_WEEK", 3);
   if (!already && used >= limit) {
     const retryAfter = Math.max(1, Math.ceil((weekStart().getTime() + 7 * 24 * 60 * 60 * 1000 - Date.now()) / 1000));
     throw new FreeLimitError(retryAfter);
   }
-  listing.status = "pending";
-  listing.seoNoindex = true;
+  listing.status = "active";
+  listing.seoNoindex = false;
+  if (!listing.publishedAt) listing.publishedAt = new Date();
   listing.expiresAt = new Date(Date.now() + LIFETIME_MS);
   listing.attestations = { ...attestations, submittedAt: new Date().toISOString() };
   listing.markModified("attestations");
   await assignSlug(listing);
   await listing.save();
   await writeVersion(listing, userId);
-  await record(userId, "user", "listing.submit", listing._id.toString(), requestId, { status: "pending" });
-  return { status: "pending" as const };
+  await record(userId, "user", "listing.submit", listing._id.toString(), requestId, { status: "active" });
+  try {
+    const { refreshPublicCache } = await import("@/lib/cache");
+    await refreshPublicCache();
+    const { revalidatePath } = await import("next/cache");
+    if (listing.slug) revalidatePath(`/ad/${listing.slug}/`);
+    if (category.slug) revalidatePath(`/${category.slug}/`);
+  } catch {
+    /* unit tests run outside a Next request */
+  }
+  if (listing.slug) notifyIndexNow([`/ad/${listing.slug}/`]);
+  return { status: "active" as const };
 }
 
 async function move(id: string, userId: string, to: ListingStatus, action: string, requestId: string) {
@@ -546,6 +559,7 @@ async function move(id: string, userId: string, to: ListingStatus, action: strin
   assertTransition(listing.status, to);
   listing.status = to;
   await listing.save();
+  if (listing.slug && (to === "removed" || to === "expired" || to === "deleted")) notifyIndexNow([`/ad/${listing.slug}/`]);
   await record(userId, "user", action, listing._id.toString(), requestId, { status: to });
   return listing;
 }
@@ -668,11 +682,20 @@ export async function revealContact(
 
 export async function expireDue(requestId: string) {
   await connectDb();
+  const due = await Listing.find({ status: "active", expiresAt: { $lte: new Date() } }).select("slug").limit(200).lean<{ slug?: string }[]>();
   const result = await Listing.updateMany(
     { status: "active", expiresAt: { $lte: new Date() } },
     { $set: { status: "expired" } },
   );
   const expired = result.modifiedCount;
+  notifyIndexNow(due.flatMap((row) => (row.slug ? [`/ad/${row.slug}/`] : [])));
   await record(null, "system", "listing.expire", "cron", requestId, { expired });
   return { expired };
+}
+
+function notifyIndexNow(paths: string[]) {
+  if (!paths.length) return;
+  void import("@/server/indexnow/ping")
+    .then((mod) => mod.queueIndexNow(paths))
+    .catch(() => undefined);
 }

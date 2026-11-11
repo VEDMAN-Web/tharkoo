@@ -6,6 +6,8 @@ export const promotionCheckoutBodySchema = z.object({
   listingId: idSchema,
   durationDays: z.number().int().positive().max(365),
   idempotencyKey: z.string().trim().min(8).max(200),
+  startsAt: z.string().datetime().optional(),
+  autoRenew: z.boolean().optional(),
 });
 
 export const paymentWebhookBodySchema = z.object({

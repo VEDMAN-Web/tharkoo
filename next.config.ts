@@ -24,8 +24,25 @@ const nextConfig: NextConfig = {
   agentRules: false,
   allowedDevOrigins: ["127.0.0.1"],
   trailingSlash: true,
+  poweredByHeader: false,
   output: "standalone",
-  images: { unoptimized: true },
+  cacheMaxMemorySize: 16 * 1024 * 1024,
+  experimental: {
+    imgOptConcurrency: 1,
+  },
+  images: {
+    formats: ["image/webp"],
+    minimumCacheTTL: 60 * 60 * 24,
+    deviceSizes: [390, 768, 1200],
+    imageSizes: [64, 96, 160, 256],
+    remotePatterns: [{ protocol: "https", hostname: "res.cloudinary.com" }],
+  },
+  async rewrites() {
+    return {
+      beforeFiles: [{ source: "/sitemap/:shard.xml", destination: "/sitemap/:shard/" }],
+      afterFiles: [{ source: "/:key.txt", destination: "/api/indexnow/:key" }],
+    };
+  },
   turbopack: {
     rules: {
       "*.css": {

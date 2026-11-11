@@ -17,6 +17,8 @@ const promoteBodySchema = z.object({
   durationDays: z.number().int().positive().max(365).optional(),
   idempotencyKey: z.string().trim().min(8).max(200).optional(),
   couponCode: z.string().trim().min(1).max(40).optional(),
+  startsAt: z.string().datetime().optional(),
+  autoRenew: z.boolean().optional(),
 });
 
 async function dispatch(request: Request) {

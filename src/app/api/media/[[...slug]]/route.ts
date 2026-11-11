@@ -1,7 +1,7 @@
 import { SESSION_COOKIE, assertOrigin, readCookie } from "@/server/auth/http";
 import { requireUser } from "@/server/auth/service";
 import { NotFoundError, handle, parseInput, requestIdFrom, success } from "@/server/http";
-import { completeMedia, deleteMedia, getMedia, reorderMedia, signMedia } from "@/server/media/service";
+import { completeMedia, deleteMedia, getMedia, reorderMedia, saveLocalMedia, signMedia } from "@/server/media/service";
 import { mediaCompleteBodySchema, mediaReorderBodySchema, mediaSignBodySchema } from "@/server/shared/schemas/listings";
 
 export const runtime = "nodejs";
@@ -16,6 +16,14 @@ async function dispatch(request: Request) {
   assertOrigin(request);
   const path = pathOf(request);
   const { user } = await requireUser(readCookie(request, SESSION_COOKIE));
+  if (request.method === "POST" && path === "local") {
+    const form = await request.formData();
+    const file = form.get("file");
+    const mediaId = String(form.get("mediaId") || "");
+    if (!(file instanceof File) || !mediaId) throw new NotFoundError("Upload was not found");
+    const saved = await saveLocalMedia(user.id, mediaId, { type: file.type, data: Buffer.from(await file.arrayBuffer()) }, requestId);
+    return Response.json(success(saved, requestId), { headers: { "x-request-id": requestId } });
+  }
   const body = request.method === "GET" ? undefined : await request.json().catch(() => undefined);
   let data: unknown;
   if (request.method === "POST" && path === "sign") data = await signMedia(user.id, parseInput(mediaSignBodySchema, body), requestId);

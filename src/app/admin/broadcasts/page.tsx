@@ -6,7 +6,7 @@ export const dynamic = "force-dynamic";
 export default function Page() {
   return (
     <AdminShell title="Broadcasts">
-      <p className="mb-3 text-[13px] text-[#555]">Banners double as broadcast copy.</p>
+      <p className="mb-3 t-small text-muted">Banners double as broadcast copy.</p>
       <CollectionEditor model="Banner" title="Broadcasts" />
     </AdminShell>
   );

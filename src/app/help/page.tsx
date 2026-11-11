@@ -1,22 +1,35 @@
 import Link from "next/link";
 import { getHelpArticles } from "@/lib/queries";
+import { Container } from "@/components/ui/Container";
+import { helpPath } from "@/lib/urls";
+import { withUrlSeo } from "@/lib/seo/override";
+import { getPaths } from "@/server/urls/service";
 
-export const dynamic = "force-dynamic";
-export const metadata = { title: "Help centre" };
+export const revalidate = 300;
+
+export async function generateMetadata() {
+  const paths = await getPaths();
+  return withUrlSeo(helpPath(paths), {
+    title: "Help Center | Tharkoo",
+    description: "Guides for posting an ad, managing your account, and contacting someone on Tharkoo.",
+    path: helpPath(paths),
+  });
+}
 
 export default async function Help() {
-  const articles = await getHelpArticles();
+  const [articles, paths] = await Promise.all([getHelpArticles(), getPaths()]);
   return (
-    <>
-      <h1 className="text-[26px] font-normal">Help centre</h1>
-      <p className="mt-2 text-[13px] text-[#555]">Articles are edited in Admin → Help editor.</p>
-      <ul className="mt-4 grid gap-2">
-        {articles.map((a) => (
-          <li key={a.slug}>
-            <Link href={`/help/${a.slug}/`}>{a.title}</Link>
+    <Container className="py-8">
+      <h1 className="t-h1">Help Center</h1>
+      <ul className="mt-6 grid gap-3">
+        {articles.map((article) => (
+          <li key={article.slug}>
+            <Link href={helpPath(paths, article.slug)} prefetch={false} className="t-body text-accent">
+              {article.title}
+            </Link>
           </li>
         ))}
       </ul>
-    </>
+    </Container>
   );
 }

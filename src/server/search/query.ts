@@ -1,12 +1,13 @@
 import { Types, type QueryFilter } from "mongoose";
 import { cached } from "@/lib/cache";
 import { connectDb } from "@/lib/db";
-import { safeSearch } from "@/lib/sanitize";
 import type { ListingDoc as LegacyListing } from "@/lib/models";
+import { listingPhotos } from "@/lib/media";
 import {
   Category,
   Listing,
   MediaAsset,
+  User,
   PromotionOrder,
   PromotionProduct,
   type CategoryDoc,
@@ -34,7 +35,7 @@ const VARIANT: Record<string, string> = {
   flash: "flash",
   top: "top",
   highlight: "highlight",
-  new: "free",
+  new: "new",
   "auto-boost": "free",
   free: "free",
 };
@@ -50,6 +51,7 @@ export interface ListingQuery {
   verified?: boolean;
   badge?: string;
   photos?: boolean;
+  tag?: string;
   attributes?: Record<string, string | number | boolean | string[]>;
   sort?: "ranked" | "fresh";
   page?: number;
@@ -139,6 +141,77 @@ export function cleanQuery(q: string) {
     .replace(/[^a-zA-Z0-9\s-]+/g, " ")
     .replace(/\s+/g, " ")
     .trim();
+}
+
+const SYNONYMS: Record<string, string[]> = {
+  flat: ["apartment", "rent", "rental", "house"],
+  apartment: ["flat", "rent", "rental"],
+  rent: ["rental", "flat", "apartment"],
+  rental: ["rent", "flat", "apartment"],
+  house: ["flat", "apartment"],
+  job: ["jobs", "hiring", "vacancy", "vacancies"],
+  jobs: ["job", "hiring", "vacancy", "vacancies"],
+  hiring: ["job", "jobs", "vacancy", "vacancies"],
+  vacancy: ["job", "jobs", "hiring", "vacancies"],
+  vacancies: ["job", "jobs", "hiring", "vacancy"],
+};
+
+function stemToken(token: string) {
+  const out = new Set<string>([token]);
+  if (token.length > 3 && token.endsWith("s")) out.add(token.slice(0, -1));
+  else if (token.length > 2) out.add(`${token}s`);
+  return out;
+}
+
+/** One group per query token. Each group is the token plus a light stem and synonyms. */
+export function expandSearchTerms(q: string) {
+  const cleaned = cleanQuery(q).toLowerCase();
+  if (!cleaned) return [] as string[][];
+  return cleaned
+    .split(" ")
+    .filter(Boolean)
+    .map((token) => {
+      const alts = stemToken(token);
+      for (const word of [...alts]) {
+        for (const extra of SYNONYMS[word] || []) alts.add(extra);
+      }
+      return [...alts];
+    });
+}
+
+function escapeRegExp(value: string) {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
+export function searchTextMatch(
+  q: string,
+  categories: { _id?: Types.ObjectId; slug: string; name?: string }[],
+  locations: { _id?: Types.ObjectId; slug: string; name?: string; type?: string }[],
+) {
+  const groups = expandSearchTerms(q);
+  if (!groups.length) return null;
+  const words = new Set(groups.flat());
+  const categoryIds = categories
+    .filter((row) => words.has(row.slug.toLowerCase()) || words.has((row.name || "").toLowerCase()))
+    .map((row) => row._id)
+    .filter((id): id is Types.ObjectId => Boolean(id));
+  const cityIds = locations
+    .filter(
+      (row) =>
+        row.type === "city" &&
+        (words.has(row.slug.toLowerCase()) || words.has((row.name || "").toLowerCase())),
+    )
+    .map((row) => row._id)
+    .filter((id): id is Types.ObjectId => Boolean(id));
+  const clauses = groups.map((alts) => {
+    const pattern = new RegExp(alts.map(escapeRegExp).join("|"), "i");
+    return { $or: [{ title: pattern }, { description: pattern }] };
+  });
+  const text = clauses.length === 1 ? clauses[0] : { $and: clauses };
+  const or: Record<string, unknown>[] = [text];
+  if (categoryIds.length) or.push({ categoryId: { $in: categoryIds } });
+  if (cityIds.length) or.push({ cityId: { $in: cityIds } });
+  return or.length === 1 ? or[0] : { $or: or };
 }
 
 export async function loadCategories() {
@@ -233,6 +306,14 @@ function ageOf(attributes?: Record<string, unknown>) {
   return typeof age === "number" ? age : undefined;
 }
 
+function detailRows(attributes?: Record<string, unknown>) {
+  if (!attributes) return [];
+  return Object.entries(attributes)
+    .filter(([key, value]) => key !== "age" && key !== "nickname" && (typeof value === "string" || typeof value === "number") && String(value).trim())
+    .slice(0, 8)
+    .map(([key, value]) => ({ label: key.replace(/[-_]/g, " "), value: String(value) }));
+}
+
 export async function buildFilter(input: ListingQuery): Promise<QueryFilter<ListingDoc> | null> {
   const [categories, locations] = await Promise.all([loadCategories(), loadLocations()]);
   const filter: Record<string, unknown> = { status: "active" };
@@ -293,6 +374,7 @@ export async function buildFilter(input: ListingQuery): Promise<QueryFilter<List
   if (badges.length === 1) filter.badges = badges[0];
   if (badges.length > 1) filter.badges = { $all: badges };
   if (input.photos) filter["mediaIds.0"] = { $exists: true };
+  if (input.tag && /^[a-z0-9-]{1,40}$/.test(input.tag)) filter["attributes.tag"] = input.tag;
   if (input.slug) filter.slug = input.slug;
   else if (input.excludeSlug) filter.slug = { $ne: input.excludeSlug };
   if (input.attributes && Object.keys(input.attributes).length > 0) {
@@ -320,17 +402,14 @@ export async function buildFilter(input: ListingQuery): Promise<QueryFilter<List
 async function findRows(filter: QueryFilter<ListingDoc>, q?: string): Promise<Row[]> {
   const text = q ? cleanQuery(q) : "";
   if (!text) return Listing.find(filter).lean() as Promise<Row[]>;
-  try {
-    return (await Listing.find({ ...filter, $text: { $search: text } }).lean()) as Row[];
-  } catch {
-    const pattern = new RegExp(safeSearch(text), "i");
-    const textMatch = { $or: [{ title: pattern }, { description: pattern }] };
-    if (filter.$or) {
-      const { $or, ...rest } = filter;
-      return (await Listing.find({ ...rest, $and: [{ $or }, textMatch] }).lean()) as Row[];
-    }
-    return (await Listing.find({ ...filter, ...textMatch }).lean()) as Row[];
+  const [categories, locations] = await Promise.all([loadCategories(), loadLocations()]);
+  const textMatch = searchTextMatch(text, categories, locations);
+  if (!textMatch) return Listing.find(filter).lean() as Promise<Row[]>;
+  if (filter.$or) {
+    const { $or, ...rest } = filter;
+    return (await Listing.find({ ...rest, $and: [{ $or }, textMatch] }).lean()) as Row[];
   }
+  return (await Listing.find({ ...filter, ...textMatch }).lean()) as Row[];
 }
 
 function facetsFrom(hits: PublicHit[]): SearchFacets {
@@ -347,8 +426,25 @@ function facetsFrom(hits: PublicHit[]): SearchFacets {
   return { categories: pack(categories), cities: pack(cities) };
 }
 
+function trustMarks(status: string | undefined, adult: Date | undefined, verified: boolean, photos: number) {
+  const marks: string[] = [];
+  if (status === "approved" || verified) marks.push("ID verified");
+  if (adult || status === "approved" || verified) marks.push("Age verified");
+  if (photos > 0 && marks.includes("ID verified")) marks.push("Photo verified");
+  return marks;
+}
+
 export async function presentRows(docs: Row[], promotions: Map<string, RankPromotion[]>, now: Date) {
-  const [categories, locations, photos] = await Promise.all([loadCategories(), loadLocations(), photoMap(docs)]);
+  const ownerIds = [...new Set(docs.map((doc) => (doc.ownerId ? String(doc.ownerId) : "")).filter(Boolean))];
+  const [categories, locations, photos, people] = await Promise.all([
+    loadCategories(),
+    loadLocations(),
+    photoMap(docs),
+    ownerIds.length
+      ? User.find({ _id: { $in: ownerIds } }).select("verificationStatus attestedAdultAt").lean<{ _id: Types.ObjectId; verificationStatus?: string; attestedAdultAt?: Date }[]>()
+      : Promise.resolve([]),
+  ]);
+  const peopleById = new Map(people.map((person) => [String(person._id), person]));
   const hits: PublicHit[] = [];
   const legacy: LegacyListing[] = [];
   for (const doc of docs) {
@@ -362,9 +458,11 @@ export async function presentRows(docs: Row[], promotions: Map<string, RankPromo
     const code = bestCode(promotions.get(id) ?? [], now);
     const variant = VARIANT[code.trim().toLowerCase()] ?? "free";
     const verified = doc.badges?.includes("verified") === true;
+    const person = doc.ownerId ? peopleById.get(String(doc.ownerId)) : undefined;
     const bumped = doc.bumpedAt ? new Date(doc.bumpedAt) : doc.publishedAt;
     const publicId = publicIdOf(doc.slug, id);
-    const photoList = photos.get(id) ?? [];
+    const photoList = listingPhotos(categorySlug, publicId, photos.get(id) ?? []);
+    const trust = trustMarks(person?.verificationStatus, person?.attestedAdultAt, verified, photoList.length);
     const age = ageOf(doc.attributes);
     hits.push({
       ...view,
@@ -394,8 +492,10 @@ export async function presentRows(docs: Row[], promotions: Map<string, RankPromo
       districtSlug,
       place,
       photos: photoList,
+      details: detailRows(doc.attributes),
       variant,
       verified,
+      trust,
       lastBumpedAt: bumped ? new Date(bumped) : undefined,
       publishedAt: doc.publishedAt,
       status: "live",

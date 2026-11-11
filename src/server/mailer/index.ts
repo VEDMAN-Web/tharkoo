@@ -10,11 +10,12 @@ export interface Mailer {
   send(mail: OutboundMail): Promise<void>;
 }
 
-/** Dev and CI transport. The message body is printed only outside production. */
+/** Used when no mail provider is configured. The body is logged only off production, or on a noindex staging host. */
 export class ConsoleMailer implements Mailer {
   async send(mail: OutboundMail) {
     console.info(`[mail] to=${mail.to} subject=${mail.subject}`);
-    if (process.env.NODE_ENV !== "production") console.info(`[mail-body] ${mail.text}`);
+    const staging = process.env.SITE_NOINDEX === "true" || process.env.NODE_ENV !== "production";
+    if (staging) console.info(`[mail-body] ${mail.text}`);
   }
 }
 

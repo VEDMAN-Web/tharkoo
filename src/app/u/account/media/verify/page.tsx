@@ -1,9 +1,13 @@
-import { Simple } from "@/components/vendor/VendorScreens";
-export const metadata = { title: "Photo verification", robots: { index: false } };
+import { ComingSoon } from "@/components/account/AccountTools";
+import { pageMetadata } from "@/lib/ui/meta";
+
+export const metadata = pageMetadata({
+  title: "Photo check | Tharkoo",
+  description: "Photo checks are coming soon.",
+  path: "/u/account/media/verify/",
+  index: false,
+});
+
 export default function Page() {
-  return (
-    <Simple title="Photo verification">
-      <p>3 steps: portrait, steady, one person. Record 360° in browser. Preview, retake, submit.</p><button className='btn-post' type='button'>Submit</button>
-    </Simple>
-  );
+  return <ComingSoon title="Photo check" body="Photo checks are coming soon." href="/u/account/kyc/" label="Identity check" />;
 }

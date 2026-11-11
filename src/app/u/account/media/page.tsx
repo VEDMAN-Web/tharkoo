@@ -1,10 +1,13 @@
-import Link from "next/link";
-import { Simple } from "@/components/vendor/VendorScreens";
-export const metadata = { title: "Media — albums", robots: { index: false } };
+import { ComingSoon } from "@/components/account/AccountTools";
+import { pageMetadata } from "@/lib/ui/meta";
+
+export const metadata = pageMetadata({
+  title: "Media | Tharkoo",
+  description: "Your photo library will live here.",
+  path: "/u/account/media/",
+  index: false,
+});
+
 export default function Page() {
-  return (
-    <Simple title="Media — albums">
-      <p>Albums grid. Create album. Storage limits.</p><div className='mt-3 grid grid-cols-3 gap-2'><Link href='/u/account/media/album/'><img src='/placeholders/p1.jpg' alt='' /><span>Safe · 4</span></Link></div>
-    </Simple>
-  );
+  return <ComingSoon title="Media" body="Your photo library will live here." href="/u/post-insert/" label="Post an ad" />;
 }

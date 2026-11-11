@@ -1,8 +1,9 @@
-export function StaticPage({ title, children }: { title: string; children: React.ReactNode }) {
+export function StaticPage({ title, updated, children }: { title: string; updated?: string; children: React.ReactNode }) {
   return (
-    <article className="prose max-w-2xl">
-      <h1 className="text-[28px] font-normal text-[#222]">{title}</h1>
-      <div className="mt-4 space-y-3 text-sm leading-6 text-[var(--text-secondary)]">{children}</div>
+    <article className="tk-container tk-prose" style={{ padding: "28px 0 40px" }}>
+      <h1>{title}</h1>
+      <p>Last Updated – {updated || "November 2026"}</p>
+      {children}
     </article>
   );
 }

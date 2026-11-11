@@ -13,6 +13,7 @@ import {
   Location as LocationModel,
   Page as PageModel,
   Product as ProductModel,
+  PromotionOrder as PromotionOrderModel,
   SeoTemplate as SeoTemplateModel,
   Site as SiteModel,
 } from "@/server/models";
@@ -75,9 +76,11 @@ export interface ListingDoc extends BaseDoc {
   place?: string;
   chips?: string[];
   photos?: string[];
+  details?: { label: string; value: string }[];
   photoCountVisible?: number;
   variant?: string;
   verified?: boolean;
+  trust?: string[];
   subscriber?: boolean;
   lastBumpedAt?: Date;
   publishedAt?: Date;
@@ -123,6 +126,9 @@ export interface SiteDoc extends BaseDoc {
   footerLinks: unknown;
   socialLinks: unknown;
   homepage: unknown;
+  landings?: unknown;
+  tags?: { slug?: string; label?: string }[];
+  freeAdsPerWeek?: number;
 }
 
 export interface PageDoc extends BaseDoc {
@@ -225,6 +231,7 @@ export const BannedWord = asModel<BannedWordDoc>(BannedWordModel);
 export const FeatureFlag = asModel<FeatureFlagDoc>(FeatureFlagModel);
 export const AttributeGroup = asModel<AttributeGroupDoc>(AttributeGroupModel);
 export const Product = asModel<ProductDoc>(ProductModel);
+export const PromotionOrder = asModel<Record<string, unknown>>(PromotionOrderModel);
 
 export const MODEL_MAP = {
   Site,
@@ -242,6 +249,7 @@ export const MODEL_MAP = {
   FeatureFlag,
   AttributeGroup,
   Product,
+  PromotionOrder,
 } as const;
 
 export type ModelName = keyof typeof MODEL_MAP;

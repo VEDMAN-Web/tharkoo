@@ -26,6 +26,7 @@ export interface PromotionOrderDoc {
   durationDays: number;
   startsAt?: Date;
   endsAt?: Date;
+  autoRenew?: boolean;
   createdAt?: Date;
   updatedAt?: Date;
 }
@@ -81,6 +82,7 @@ const promotionOrderSchema = new Schema<PromotionOrderDoc>(
     durationDays: { type: Number, required: true },
     startsAt: { type: Date },
     endsAt: { type: Date },
+    autoRenew: { type: Boolean, default: false },
   },
   { timestamps: true, collection: collectionName("promotion_orders", "PromotionOrder") },
 );

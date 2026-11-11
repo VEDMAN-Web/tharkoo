@@ -1,9 +1,13 @@
-import { Simple } from "@/components/vendor/VendorScreens";
-export const metadata = { title: "Saved searches", robots: { index: false } };
+import { ComingSoon } from "@/components/account/AccountTools";
+import { pageMetadata } from "@/lib/ui/meta";
+
+export const metadata = pageMetadata({
+  title: "Alerts | Tharkoo",
+  description: "Saved searches will live here.",
+  path: "/u/account/alerts/",
+  index: false,
+});
+
 export default function Page() {
-  return (
-    <Simple title="Saved searches">
-      <p>Alert channel and frequency. Empty: how to save a search from the search modal.</p>
-    </Simple>
-  );
+  return <ComingSoon title="Alerts" body="Saved searches will live here." href="/search/" label="Search listings" />;
 }

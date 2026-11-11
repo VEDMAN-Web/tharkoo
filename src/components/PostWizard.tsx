@@ -1,320 +1,573 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import { CATEGORIES, TAG_GROUPS, TOP_CITIES } from "@/data/catalog";
-import { CREDIT_PACKS } from "@/lib/credit-packs";
+import { api, fieldErrors, friendlyError } from "@/lib/ui/api";
+import { draftToForm, needsIdCheck, validatePost, type SavedDraft } from "@/lib/ui/post-form";
+import { loginPath, postAdPath } from "@/lib/urls";
+import { useUrlPaths } from "./UrlPaths";
+import { HelpCard } from "./ui/HelpCard";
+import { AdCard } from "./ui/AdCard";
+import type { ListingDoc } from "@/lib/models";
 
-const STEPS = ["Information", "Photos", "Promote"];
+type Cat = { _id: string; name: string; slug: string; fields?: { key: string; label: string; type: string; options?: string[]; required?: boolean }[] };
+type Place = { id: string; name: string; slug: string; parentId?: string | null };
+
+function tidy(value: string) {
+  return value.replace(/[\s-]/g, "");
+}
+
+function normalPhone(raw: string) {
+  const digits = raw.replace(/\D/g, "");
+  if (/^[6-9]\d{9}$/.test(digits)) return `+91${digits}`;
+  if (/^91[6-9]\d{9}$/.test(digits)) return `+${digits}`;
+  return tidy(raw);
+}
 
 export function PostWizard() {
+  const paths = useUrlPaths();
   const [step, setStep] = useState(1);
-  const [screen, setScreen] = useState<"form" | "top" | "star" | "flash" | "upgrades" | "basket" | "billing" | "result" | "basic" | "limit" | "duplicate">("form");
-  const [phoneOpen, setPhoneOpen] = useState(false);
+  const [categories, setCategories] = useState<Cat[]>([]);
+  const [cities, setCities] = useState<Place[]>([]);
+  const [districts, setDistricts] = useState<Place[]>([]);
+  const [categoryId, setCategoryId] = useState("");
+  const [cityId, setCityId] = useState("");
+  const [districtId, setDistrictId] = useState("");
+  const [address, setAddress] = useState("");
+  const [postal, setPostal] = useState("");
+  const [area, setArea] = useState("");
+  const [age, setAge] = useState("");
+  const [nickname, setNickname] = useState("");
   const [title, setTitle] = useState("");
-  const [desc, setDesc] = useState("");
-  const [banned, setBanned] = useState("");
+  const [text, setText] = useState("");
+  const [contactMode, setContactMode] = useState("both");
+  const [phone, setPhone] = useState("");
+  const [whatsapp, setWhatsapp] = useState(false);
+  const [telegramOn, setTelegramOn] = useState(false);
+  const [telegram, setTelegram] = useState("");
+  const [terms, setTerms] = useState(false);
+  const [adult, setAdult] = useState(false);
+  const [attrs, setAttrs] = useState<Record<string, string>>({});
+  const [draftId, setDraftId] = useState("");
+  const [errors, setErrors] = useState<Record<string, string>>({});
+  const [banner, setBanner] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [done, setDone] = useState(false);
+  const [photoNote, setPhotoNote] = useState("");
   const [photos, setPhotos] = useState<string[]>([]);
-  const [picker, setPicker] = useState(false);
-  const [pack, setPack] = useState(CREDIT_PACKS[3]);
+  const [plans, setPlans] = useState<{ id: string; name: string; amount?: number }[]>([]);
+  const [hydrated, setHydrated] = useState(true);
 
-  const previewTitle = useMemo(
-    () => title || "9876500000 - Hyderabad Dating: Your nickname",
-    [title],
+  const category = categories.find((item) => item._id === categoryId);
+  const ageField = category?.fields?.find((field) => field.key === "age" || field.type === "number" && /age/i.test(field.label));
+  const extra = (category?.fields || []).filter((field) => field.key !== "age" && !/age/i.test(field.label));
+
+  useEffect(() => {
+    const sp = new URLSearchParams(window.location.search);
+    const next = Number(sp.get("step") || "1");
+    const draft = sp.get("draft") || "";
+    const id = window.setTimeout(() => {
+      if (next >= 1 && next <= 3) setStep(next);
+      if (draft) {
+        setDraftId(draft);
+        setHydrated(false);
+        api<SavedDraft>(`/api/listings/by-id/${draft}`).then((res) => {
+          if (res.ok && res.data) {
+            const form = draftToForm(res.data);
+            setCategoryId(form.categoryId);
+            setCityId(form.cityId);
+            setDistrictId(form.districtId);
+            setAddress(form.address);
+            setPostal(form.postal);
+            setArea(form.area);
+            setAge(form.age);
+            setNickname(form.nickname);
+            setTitle(form.title);
+            setText(form.text);
+            setPhone(form.phone);
+            setWhatsapp(form.whatsapp);
+            setTelegram(form.telegram);
+            setTelegramOn(Boolean(form.telegram));
+            setAttrs(form.attrs);
+            setPhotos(form.photos);
+            setTerms(true);
+            setAdult(true);
+          } else setBanner("This draft could not be loaded. Go back and save it again.");
+          setHydrated(true);
+        }).catch(() => {
+          setBanner("This draft could not be loaded. Go back and save it again.");
+          setHydrated(true);
+        });
+      }
+    }, 0);
+    api<{ categories: Cat[] }>("/api/categories").then((res) => {
+      if (res.ok) setCategories(res.data.categories || []);
+    });
+    api<{ locations: Place[] }>("/api/locations?type=city").then((res) => {
+      if (res.ok) setCities(res.data.locations || []);
+    });
+    if (document.cookie.split(";").some((part) => part.trim().startsWith("tk-in="))) {
+      api<{ products: { id: string; name: string; amount?: number }[] }>("/api/promotions/products").then((res) => {
+        if (res.ok) setPlans(res.data.products || []);
+      });
+    }
+    return () => window.clearTimeout(id);
+  }, []);
+
+  useEffect(() => {
+    if (!cityId) {
+      const id = window.setTimeout(() => setDistricts([]), 0);
+      return () => window.clearTimeout(id);
+    }
+    api<{ locations: Place[] }>(`/api/locations/${cityId}/children`).then((res) => {
+      if (res.ok) setDistricts(res.data.locations || []);
+    });
+  }, [cityId]);
+
+  function validate() {
+    const next = validatePost({
+      categoryId,
+      cityId,
+      nickname,
+      title,
+      text,
+      phone,
+      contactMode,
+      age,
+      ageRequired: Boolean(ageField?.required),
+      terms,
+      adult,
+      attrs,
+      fields: extra.map((field) => ({ key: field.key, label: field.label, required: field.required })),
+    });
+    if (phone && contactMode !== "email" && !/^\+91[6-9]\d{9}$/.test(normalPhone(phone))) next.phone = "Use +91 and 10 digits";
+    return next;
+  }
+
+  function remember(id: string, nextStep: number) {
+    const url = `${postAdPath(paths)}?step=${nextStep}&draft=${id}`;
+    window.history.replaceState(null, "", url);
+    setStep(nextStep);
+  }
+
+  async function goOn() {
+    const found = validate();
+    setErrors(found);
+    setBanner("");
+    if (Object.keys(found).length) {
+      document.querySelector("[data-tk=field-error]")?.scrollIntoView({ block: "center" });
+      return;
+    }
+    setBusy(true);
+    const basics = {
+      categoryId,
+      title: title.trim(),
+      description: text.trim(),
+      ...(cityId ? { cityId } : {}),
+      ...(districtId ? { districtId } : {}),
+    };
+    const created = draftId
+      ? await api(`/api/listings/${draftId}`, { method: "PATCH", body: JSON.stringify({ stage: "basics", ...basics }) })
+      : await api<{ id: string }>("/api/listings", { method: "POST", body: JSON.stringify(basics) });
+    if (!created.ok) {
+      setBusy(false);
+      if (created.error.code === "UNAUTHORIZED") {
+        setBanner("Sign in to save this draft.");
+        return;
+      }
+      setBanner(friendlyError(created.error));
+      return;
+    }
+    const id = draftId || String((created.data as { id?: string })?.id || "");
+    setDraftId(id);
+    const contact = {
+      ...(phone ? { phone: normalPhone(phone) } : {}),
+      ...(whatsapp && phone ? { whatsapp: normalPhone(phone) } : {}),
+      ...(telegramOn && telegram ? { telegram } : {}),
+    };
+    const details = await api(`/api/listings/${id}`, {
+      method: "PATCH",
+      body: JSON.stringify({
+        stage: "details",
+        attributes: { ...attrs, ...(age ? { age: Number(age) } : {}) },
+        contact,
+      }),
+    });
+    setBusy(false);
+    if (!details.ok) {
+      const mapped = fieldErrors(details.error);
+      const nextErrors: Record<string, string> = {};
+      for (const [key, messages] of Object.entries(mapped)) {
+        const text = Array.isArray(messages) ? messages[0] : String(messages || "");
+        if (text) nextErrors[key] = text;
+      }
+      if (Object.keys(nextErrors).length) setErrors(nextErrors);
+      setBanner(Object.values(nextErrors)[0] || friendlyError(details.error));
+      return;
+    }
+    remember(id, 2);
+  }
+
+  async function uploadPhoto(file: File) {
+    if (!draftId) {
+      setPhotoNote("Save the ad details before adding a photo.");
+      return;
+    }
+    if (!["image/jpeg", "image/png", "image/webp"].includes(file.type) || file.size > 8 * 1024 * 1024) {
+      setPhotoNote("Use a JPG, PNG, or WebP photo up to 8 MB.");
+      return;
+    }
+    const signed = await api<{
+      uploadUrl: string;
+      mediaId: string;
+      mode?: string;
+      apiKey?: string;
+      timestamp?: number;
+      signature?: string;
+      folder?: string;
+      params?: Record<string, string | number>;
+    }>("/api/media/sign", {
+      method: "POST",
+      body: JSON.stringify({ listingId: draftId, contentType: file.type, byteSize: file.size, kind: "image" }),
+    });
+    if (!signed.ok) {
+      setPhotoNote(friendlyError(signed.error));
+      return;
+    }
+    if (signed.data.uploadUrl.startsWith("/")) {
+      const body = new FormData();
+      body.set("file", file);
+      body.set("mediaId", signed.data.mediaId);
+      const saved = await fetch(signed.data.uploadUrl, { method: "POST", body, credentials: "same-origin" });
+      if (!saved.ok) {
+        setPhotoNote("That photo could not be saved. Try a smaller JPG, PNG, or WebP.");
+        return;
+      }
+    } else {
+      const body = new FormData();
+      body.set("file", file);
+      body.set("api_key", signed.data.apiKey || "");
+      body.set("timestamp", String(signed.data.timestamp || ""));
+      body.set("signature", signed.data.signature || "");
+      body.set("folder", signed.data.folder || "");
+      for (const [key, value] of Object.entries(signed.data.params || {})) body.set(key, String(value));
+      const saved = await fetch(signed.data.uploadUrl, { method: "POST", body });
+      if (!saved.ok) {
+        setPhotoNote("That photo could not be saved. Try a smaller JPG, PNG, or WebP.");
+        return;
+      }
+      const done = await api("/api/media/complete", { method: "POST", body: JSON.stringify({ mediaId: signed.data.mediaId }) });
+      if (!done.ok) {
+        setPhotoNote(friendlyError(done.error));
+        return;
+      }
+    }
+    const ids = [...photos, signed.data.mediaId];
+    setPhotos(ids);
+    const attached = await api(`/api/listings/${draftId}`, {
+      method: "PATCH",
+      body: JSON.stringify({ stage: "photos", mediaIds: ids, coverMediaId: ids[0] }),
+    });
+    setPhotoNote(attached.ok ? "Photo saved." : friendlyError(attached.error));
+  }
+
+  async function publish() {
+    if (!hydrated) return setBanner("The draft is still loading.");
+    if (!draftId || !title.trim()) return setBanner("Save a draft before submitting.");
+    setBusy(true);
+    setBanner("");
+    const me = await api<{ verification?: { status?: string }; user?: { verificationStatus?: string } }>("/api/auth/me");
+    const verification = me.ok ? me.data.verification?.status || me.data.user?.verificationStatus : "";
+    if (needsIdCheck(verification)) {
+      setBusy(false);
+      setBanner("Your ID needs a quick check before this ad can go live.");
+      return;
+    }
+    const res = await api(`/api/listings/${draftId}/submit`, {
+      method: "POST",
+      body: JSON.stringify({ attestations: { adult: true, accurate: true, rights: true } }),
+    });
+    setBusy(false);
+    if (!res.ok) {
+      if (res.error.code === "VERIFICATION_REQUIRED") {
+        setBanner("Your ID needs a quick check before this ad can go live.");
+        return;
+      }
+      setBanner(friendlyError(res.error));
+      return;
+    }
+    setDone(true);
+  }
+
+  const preview = useMemo(
+    () => ({ slug: "preview", title, description: text, variant: "free", publicId: "preview" }),
+    [title, text],
   );
 
-  if (screen === "result") {
+  if (done) {
     return (
-      <Box title="Payment result">
-        <p>Ad is live. Next bump is scheduled. Manage it from Ads.</p>
-        <Link href="/u/account/ads/" className="btn-post mt-4 inline-block">Manage ad</Link>
-      </Box>
-    );
-  }
-  if (screen === "basic") {
-    return (
-      <Box title="Basic ad submitted">
-        <p>Pending review. You have 2 free ads left this week. Promote for instant go-live.</p>
-        <div className="mt-4 flex gap-2">
-          <Link href="/u/account/ads/" className="btn-post">Ads (Pending)</Link>
-          <button className="btn-ghost" type="button" onClick={() => { setScreen("form"); setStep(3); }}>Promote</button>
-        </div>
-      </Box>
+      <div className="tk-container" style={{ padding: "24px 0 40px" }}>
+        <h1 className="tk-page-h1" data-tk="step-title">Your ad is live</h1>
+        <p style={{ textAlign: "center" }}>
+          <Link href="/u/account/ads/" style={{ color: "var(--accent)" }}>Your ads</Link>
+          {" · "}
+          <Link href={postAdPath(paths)} style={{ color: "var(--accent)" }}>Post another ad</Link>
+        </p>
+      </div>
     );
   }
 
   return (
-    <div>
-      <div className="stepper">
-        {STEPS.map((s, i) => (
-          <span key={s} className={step === i + 1 ? "on" : ""}>
-            {i + 1}/3 {s}
-          </span>
-        ))}
+    <div className="tk-container" style={{ padding: "16px 0 40px" }}>
+      <div className="tk-progress" data-tk="progress" aria-hidden>
+        <i className={step >= 1 ? "on" : ""} />
+        <i className={step >= 2 ? "on" : ""} />
+        <i className={step >= 3 ? "on" : ""} />
       </div>
-
-      {step === 1 && screen === "form" ? (
-        <div className="panel grid gap-3">
-          <h1 className="text-[22px]">Post your ad</h1>
-          <label className="field">
-            Phone
-            <div className="flex gap-2">
-              <input defaultValue="+91" className="w-16" />
-              <input placeholder="Mobile number" className="flex-1" />
-              <button type="button" className="btn-ghost" onClick={() => setPhoneOpen(true)}>Receive code now</button>
+      <div className="tk-step-head">
+        <h1 className="tk-page-h1" data-tk="step-title" style={{ margin: 0 }}>
+          {step === 1 ? "Information" : step === 2 ? "Photos" : "Publish"}
+        </h1>
+        <span className="tk-pill-count">{step}/3</span>
+      </div>
+      <div aria-live="polite" className="t-small" style={{ color: "var(--danger)", margin: "12px 0" }}>
+        {banner}{" "}
+        {banner.startsWith("Sign in") ? <Link href={`${loginPath(paths)}?next=${encodeURIComponent(postAdPath(paths))}`}>Log in</Link> : null}
+        {/ID needs a quick check/i.test(banner) ? <Link href="/u/account/kyc/" data-tk="verify-id">Verify ID</Link> : null}
+      </div>
+      {step === 1 ? (
+        <>
+          <Group title="Your Ad">
+            <SelectField id="category" label="Select category" required value={categoryId} error={errors.category} onChange={(value) => setCategoryId(value)}>
+              <option value="">Select category</option>
+              {categories.map((cat) => (
+                <option key={cat._id} value={cat._id}>{cat.name}</option>
+              ))}
+            </SelectField>
+            <SelectField id="city" label="Select city" required value={cityId} error={errors.city} onChange={(value) => { setCityId(value); setDistrictId(""); }}>
+              <option value="">Select city</option>
+              {cities.map((city) => (
+                <option key={city.id} value={city.id}>{city.name}</option>
+              ))}
+            </SelectField>
+            <SelectField id="district" label="Select district" value={districtId} error={errors.district} disabled={!cityId} onChange={setDistrictId}>
+              <option value="">Select district</option>
+              {districts.map((item) => (
+                <option key={item.id} value={item.id}>{item.name}</option>
+              ))}
+            </SelectField>
+            <div className="tk-modal-grid">
+              <TextField id="address" label="Address" value={address} onChange={setAddress} />
+              <TextField id="postal" label="Postal code" value={postal} onChange={setPostal} />
             </div>
-            <button type="button" className="text-left text-[12px] underline" onClick={() => setPhoneOpen(true)}>Continue without phone number</button>
-          </label>
-          <label className="field">
-            Category
-            <select defaultValue="dating">
-              {CATEGORIES.map((c) => <option key={c.slug} value={c.slug}>{c.name}</option>)}
-            </select>
-          </label>
-          <label className="field">
-            City
-            <select defaultValue="Hyderabad">{TOP_CITIES.map((c) => <option key={c}>{c}</option>)}</select>
-          </label>
-          <label className="field">District <input placeholder="Banjara Hills" /></label>
-          <label className="field">Address <input /></label>
-          <label className="field">Postal code <input /></label>
-          <label className="field">Place <input placeholder="Near metro" /></label>
-          <label className="field">Age <input type="number" defaultValue={24} /></label>
-          <label className="field">Nickname (max 20) <input maxLength={20} /></label>
-          <label className="field">
-            Title (min 5)
-            <input value={title} onChange={(e) => { setTitle(e.target.value); setBanned(e.target.value.toLowerCase().includes("advancefee") ? "advancefee" : ""); }} />
-            {banned ? <span className="text-[12px] text-[#e20044]">Banned word: {banned}</span> : null}
-          </label>
-          <label className="field">
-            Description
-            <textarea rows={6} value={desc} onChange={(e) => setDesc(e.target.value)} />
-          </label>
-          <label className="flex gap-2 text-[13px]"><input type="checkbox" /> AI-written text</label>
-          {TAG_GROUPS.map((g) => (
-            <label key={g.key} className="field">
-              {g.label}
-              {g.type === "select" ? (
-                <select>{g.options.map((o) => <option key={o}>{o}</option>)}</select>
-              ) : (
-                <div className="flex flex-wrap gap-2">
-                  {g.options.map((o) => (
-                    <label key={o} className="flex items-center gap-1 font-normal">
-                      <input type="checkbox" /> {o}
-                    </label>
-                  ))}
-                </div>
+            <TextField id="area" label="Area/District/Neighbourhood" value={area} onChange={setArea} />
+          </Group>
+          <Group title="Your data">
+            {ageField ? <TextField id="age" label="Age" required value={age} error={errors.age} onChange={setAge} /> : null}
+            <TextField id="nickname" label="Nickname" required value={nickname} error={errors.nickname} note="max 20 characters" placeholder="Insert your name or nickname" onChange={setNickname} />
+            <TextField id="title" label="Title" required area value={title} error={errors.title} note="5 characters required" placeholder="Give your ad a good title" onChange={setTitle} />
+            <TextField id="text" label="Text" required area rows={5} value={text} error={errors.text} note="20 characters required" placeholder="Use this space to describe your ad, what you offer and what you like ..." onChange={setText} />
+          </Group>
+          {extra.length ? (
+            <Group title="About You">
+              {extra.map((field) =>
+                field.options && field.options.length > 8 ? (
+                  <SelectField key={field.key} id={field.key} label={field.label} required={field.required} error={errors[field.key]} value={attrs[field.key] || ""} onChange={(value) => setAttrs((prev) => ({ ...prev, [field.key]: value }))}>
+                    <option value="">Choose</option>
+                    {field.options.map((option) => (
+                      <option key={option} value={option}>{option}</option>
+                    ))}
+                  </SelectField>
+                ) : field.options?.length ? (
+                  <div key={field.key} className={errors[field.key] ? "is-bad" : ""} data-tk={field.key}>
+                    <p className="t-small">{field.required ? "* " : ""}{field.label}</p>
+                    <div style={{ display: "flex", flexWrap: "wrap", gap: 8, outline: errors[field.key] ? "1px solid var(--danger)" : undefined, borderRadius: 8, padding: errors[field.key] ? 8 : 0 }}>
+                      {field.options.map((option) => (
+                        <button key={option} type="button" className={`tk-choice ${attrs[field.key] === option ? "on" : ""}`} onClick={() => setAttrs((prev) => ({ ...prev, [field.key]: prev[field.key] === option ? "" : option }))}>
+                          {option}
+                        </button>
+                      ))}
+                    </div>
+                    {errors[field.key] ? <span className="tk-error" data-tk="field-error">{errors[field.key]}</span> : null}
+                  </div>
+                ) : (
+                  <TextField key={field.key} id={field.key} label={field.label} required={field.required} error={errors[field.key]} value={attrs[field.key] || ""} onChange={(value) => setAttrs((prev) => ({ ...prev, [field.key]: value }))} />
+                ),
               )}
-            </label>
-          ))}
-          <fieldset className="field">
-            Contact method
-            <label><input type="radio" name="cm" defaultChecked /> Phone</label>
-            <label><input type="checkbox" defaultChecked /> WhatsApp</label>
-            <label><input type="checkbox" /> Telegram</label>
-            <label><input type="checkbox" /> Email</label>
-          </fieldset>
-          <label className="field">Price (optional) <input placeholder="₹" /></label>
-          <label className="flex gap-2 text-[13px]"><input type="checkbox" defaultChecked /> I accept the Terms of use</label>
-          <div className="flex flex-wrap gap-2">
-            <button type="button" className="btn-post" onClick={() => { if (title.length && title.length < 5) return; setStep(2); }}>Go on</button>
-            <button type="button" className="btn-ghost" onClick={() => setScreen("duplicate")}>Duplicate text check</button>
-            <button type="button" className="btn-ghost" onClick={() => setScreen("limit")}>Weekly limit</button>
-          </div>
-        </div>
-      ) : null}
-
-      {step === 2 && screen === "form" ? (
-        <div className="panel">
-          <h1 className="text-[22px]">Photos</h1>
-          <p className="mt-1 text-[13px] text-[#555]">Free ads show 1 photo. Promoted ads show more. Use clothed placeholders only.</p>
-          <div className="mt-4 flex flex-wrap gap-2">
-            {photos.map((p) => (
-              <img key={p} src={p} alt="" className="h-24 w-20 object-cover" />
-            ))}
-            <label className="grid h-24 w-32 place-items-center border border-dashed text-[12px]">
-              Drop zone / file picker
-              <input type="file" className="hidden" multiple onChange={() => setPhotos(["/placeholders/p1.jpg", "/placeholders/p2.jpg"])} />
-            </label>
-          </div>
-          <div className="mt-4 flex flex-wrap gap-2">
-            <button type="button" className="btn-ghost" onClick={() => setPicker(true)}>Choose from media library</button>
-            <button type="button" className="btn-post" onClick={() => setStep(3)}>Save and continue</button>
-            <button type="button" className="btn-ghost" onClick={() => setStep(3)}>Continue without photo</button>
-            <button type="button" className="btn-ghost">Save as draft</button>
-          </div>
-        </div>
-      ) : null}
-
-      {step === 3 && screen === "form" ? (
-        <div className="panel">
-          <h1 className="text-[22px]">Promote or publish</h1>
-          <div className="mt-3 grid gap-3 md:grid-cols-2">
-            <div className="border p-3">
-              <p className="font-bold">Desktop / mobile preview</p>
-              <p className="mt-2 text-[13px] font-bold">{previewTitle}</p>
-              <img src={photos[0] || "/placeholders/p1.jpg"} alt="" className="mt-2 h-28 w-full object-cover" />
-            </div>
-            <div className="grid gap-2">
-              <button type="button" className="border p-3 text-left" onClick={() => setScreen("top")}>
-                <strong>Top</strong>
-                <p className="text-[12px]">Bumps + TOP badge. Learn how it works.</p>
-              </button>
-              <button type="button" className="border p-3 text-left" onClick={() => setScreen("flash")}>
-                <strong>Flash</strong>
-                <p className="text-[12px]">4 hours, Available now, Super Top look.</p>
-              </button>
-              <button type="button" className="border p-3 text-left" onClick={() => setScreen("star")}>
-                <strong>Star</strong>
-                <p className="text-[12px]">Homepage-city strip. 6 slots per window.</p>
-              </button>
-              <button type="button" className="btn-ghost" onClick={() => setScreen("basic")}>Advertise for free (2 free ads left this week)</button>
-              <button type="button" className="btn-ghost">Save as draft</button>
-            </div>
-          </div>
-        </div>
-      ) : null}
-
-      {screen === "top" ? (
-        <div className="panel grid gap-3">
-          <h1 className="text-[22px]">Top configuration</h1>
-          <label className="field">Duration <select><option>1 day</option><option>3 days</option><option>7 days</option></select></label>
-          <label className="field">Bumps per day <select><option>3</option><option>6</option></select></label>
-          <label className="field">Slot <select><option>Morning</option><option>Afternoon</option><option>Evening</option><option>Night</option></select></label>
-          <label className="flex gap-2 text-[13px]"><input type="checkbox" /> Auto Boost</label>
-          <p className="text-[12px] text-[#888]">Cut-off: next slot may start tomorrow. Subscriber extra bump. Slot vs hourly saving shown at checkout.</p>
-          <p className="font-bold">Price: 80 credits</p>
-          <label className="flex gap-2 text-[13px]"><input type="checkbox" /> Auto-renewal</label>
-          <button type="button" className="btn-post self-start" onClick={() => setScreen("upgrades")}>Add to basket</button>
-          <button type="button" className="text-sm underline" onClick={() => setScreen("form")}>Back</button>
-        </div>
-      ) : null}
-
-      {screen === "star" ? (
-        <div className="panel">
-          <h1 className="text-[22px]">Star calendar</h1>
-          <p className="text-[13px]">7-day grid × 2 slots (10:00–22:00, 22:00–10:00). 6 spots each. Needs 1 Safe photo + nickname.</p>
-          <div className="mt-3 grid grid-cols-2 gap-1 text-[12px] md:grid-cols-4">
-            {Array.from({ length: 14 }, (_, i) => (
-              <button key={i} type="button" className={`border p-2 ${i === 3 ? "bg-[#eee] text-[#aaa]" : "bg-white"}`} disabled={i === 3}>
-                Day {Math.floor(i / 2) + 1} {i % 2 ? "Night" : "Day"} {i === 3 ? "Sold out" : `${6 - (i % 5)} free`}
-              </button>
-            ))}
-          </div>
-          <p className="mt-3 font-bold">Selected: 1 · 400 credits</p>
-          <button type="button" className="btn-post mt-2" onClick={() => setScreen("basket")}>Add to basket</button>
-        </div>
-      ) : null}
-
-      {screen === "flash" ? (
-        <div className="panel grid gap-2">
-          <h1 className="text-[22px]">Flash configuration</h1>
-          <p>Starts now · 4 hours · 5 bumps in first hour · Super Top + Highlight look · Available now badge</p>
-          <p className="font-bold">Price: 120 credits</p>
-          <button type="button" className="btn-post self-start" onClick={() => setScreen("basket")}>Add to basket</button>
-        </div>
-      ) : null}
-
-      {screen === "upgrades" ? (
-        <div className="panel grid gap-2">
-          <h1 className="text-[22px]">Upgrades</h1>
-          {["Super Top", "Highlight", "New label (animated)", "All Extras bundle"].map((u) => (
-            <label key={u} className="flex gap-2 border p-2 text-[13px]"><input type="checkbox" /> {u}</label>
-          ))}
-          <button type="button" className="btn-post self-start" onClick={() => setScreen("basket")}>Continue to basket</button>
-        </div>
-      ) : null}
-
-      {screen === "basket" ? (
-        <div className="panel grid gap-3">
-          <h1 className="text-[22px]">Basket and checkout</h1>
-          <p>Top 3 days · 80 credits <button type="button" className="underline" onClick={() => confirm("Remove item?")}>remove</button></p>
-          <label className="field">Coupon <span className="flex gap-2"><input /><button type="button" className="btn-ghost">Apply</button></span></label>
-          <p>Wallet: 1,200 credits · Total 80 credits / ₹800</p>
-          <label className="flex gap-2 text-[13px]"><input type="checkbox" defaultChecked /> I agree: immediate start, no withdrawal</label>
-          <div className="flex flex-wrap gap-2">
-            <button type="button" className="btn-post" onClick={() => setScreen("result")}>Pay with credits</button>
-            <button type="button" className="btn-ghost" onClick={() => setScreen("billing")}>Pay now (card / UPI)</button>
-            <Link href="/u/account/credits/" className="text-sm">Low credits? Buy pack</Link>
-          </div>
-        </div>
-      ) : null}
-
-      {screen === "billing" ? (
-        <div className="panel grid gap-2">
-          <h1 className="text-[22px]">Billing address</h1>
-          {["Name", "Address", "City", "State", "Postal code", "Country", "GSTIN (optional)"].map((f) => (
-            <label key={f} className="field">{f}<input defaultValue={f === "Country" ? "India" : ""} /></label>
-          ))}
-          <button type="button" className="btn-post self-start" onClick={() => setScreen("result")}>Save and pay</button>
-        </div>
-      ) : null}
-
-      {screen === "duplicate" ? (
-        <div className="panel">
-          <h1 className="text-[22px]">Duplicate text</h1>
-          <p className="text-[13px]">This text matches an existing ad. Edit myself or generate with AI (uses phone number).</p>
-          <textarea className="mt-3 w-full border p-2" rows={4} value={desc} onChange={(e) => setDesc(e.target.value)} />
-          <p className="text-[12px]">Regenerate 0/3</p>
-          <div className="mt-3 flex gap-2">
-            <button type="button" className="btn-post" onClick={() => setScreen("form")}>Use this text</button>
-            <button type="button" className="btn-ghost" onClick={() => setScreen("form")}>Edit myself</button>
-          </div>
-        </div>
-      ) : null}
-
-      {screen === "limit" ? (
-        <div className="panel">
-          <h1 className="text-[22px]">Weekly limit reached</h1>
-          <p>Free ads used this week for this phone. Promote this ad, buy a Publishing Pack, or save as draft.</p>
-          <div className="mt-3 flex flex-wrap gap-2">
-            <button type="button" className="btn-post" onClick={() => { setScreen("form"); setStep(3); }}>Promote this ad</button>
-            <Link href="/u/account/packs/" className="btn-ghost">Buy a Publishing Pack</Link>
-          </div>
-        </div>
-      ) : null}
-
-      {phoneOpen ? (
-        <div className="fixed inset-0 z-50 grid place-items-center bg-black/50 p-4">
-          <div className="w-full max-w-sm bg-white p-6">
-            <h3 className="font-bold">Phone verification</h3>
-            <p className="mt-2 text-[13px]">6-digit code · 5 min timer · resend · didn&apos;t receive the SMS?</p>
-            <input className="mt-3 w-full border px-3 py-2 tracking-[0.4em]" maxLength={6} placeholder="SMS code" />
-            <div className="mt-3 flex gap-2">
-              <button type="button" className="btn-post" onClick={() => setPhoneOpen(false)}>Verify</button>
-              <button type="button" className="btn-ghost" onClick={() => setPhoneOpen(false)}>Close</button>
-            </div>
-          </div>
-        </div>
-      ) : null}
-
-      {picker ? (
-        <div className="fixed inset-0 z-50 grid place-items-center bg-black/50 p-4">
-          <div className="w-full max-w-lg bg-white p-6">
-            <h3 className="font-bold">Media picker</h3>
-            <p className="text-[13px]">Albums · Safe / Restricted / Rejected badges</p>
-            <div className="mt-3 grid grid-cols-4 gap-2">
-              {["p1", "p2", "p3", "p4"].map((p) => (
-                <button key={p} type="button" onClick={() => { setPhotos([`/placeholders/${p}.svg`]); setPicker(false); }}>
-                  <img src={`/placeholders/${p}.jpg`} alt="" />
+            </Group>
+          ) : null}
+          <Group title="Your contacts">
+            <p className="t-small">How would you like to be contacted?</p>
+            <div className="tk-radios">
+              {[
+                ["phone", "Only Phone"],
+                ["email", "Only Email"],
+                ["both", "Email and Phone"],
+              ].map(([id, label]) => (
+                <button key={id} type="button" className={`tk-radio ${contactMode === id ? "on" : ""}`} onClick={() => setContactMode(id)}>
+                  {label}
                 </button>
               ))}
             </div>
-            <button type="button" className="mt-3 text-sm underline" onClick={() => setPicker(false)}>Close</button>
-          </div>
-        </div>
+            <TextField id="phone" label="Phone Number" required={contactMode !== "email"} value={phone} error={errors.phone} placeholder="+91 81234 56789" onChange={setPhone} />
+            <p className="t-small">WhatsApp <Switch on={whatsapp} onClick={() => setWhatsapp((v) => !v)} /></p>
+            <p className="t-small">Telegram <Switch on={telegramOn} onClick={() => setTelegramOn((v) => !v)} /></p>
+            {telegramOn ? <TextField id="telegram" label="Telegram" value={telegram} onChange={setTelegram} /> : null}
+          </Group>
+          <p className={`t-small ${errors.terms ? "is-bad" : ""}`} style={errors.terms ? { outline: "1px solid var(--danger)", padding: 8 } : undefined}>
+            <Switch on={terms} onClick={() => setTerms((v) => !v)} bad={Boolean(errors.terms)} />{" "}
+            <strong>Terms, Conditions and Privacy Policy</strong> I have read the <Link href="/terms/">Terms and Conditions</Link> of use and <Link href="/privacy/">Privacy Policy</Link> and I hereby authorise the processing of my personal data for the purpose of providing this web service.
+            {errors.terms ? <span className="tk-error" data-tk="field-error">{errors.terms}</span> : null}
+          </p>
+          <p className="t-small" style={errors.adult ? { outline: "1px solid var(--danger)", padding: 8 } : undefined}>
+            <Switch on={adult} onClick={() => setAdult((v) => !v)} bad={Boolean(errors.adult)} /> I confirm that I am 18 or over, that the details in this ad are accurate, and that I own the rights to any photos I add.
+            {errors.adult ? <span className="tk-error" data-tk="field-error">{errors.adult}</span> : null}
+          </p>
+          <p style={{ textAlign: "right", marginTop: 24 }}>
+            <button type="button" className="tk-btn tk-btn-rose" data-tk="go-on" disabled={busy} onClick={goOn}>GO ON</button>
+          </p>
+        </>
       ) : null}
-
-      <p className="mt-4 hidden text-[11px] text-[#aaa]">{pack.credits} pack default</p>
+      {step === 2 ? (
+        <>
+          <div className="tk-form-panel">
+            <h2 className="t-h3">Your photos</h2>
+            <div className="tk-drop">
+              <p>Drag photos here or</p>
+              <label className="tk-btn tk-btn-outline-rose">
+                ADD PHOTOS
+                <input
+                  type="file"
+                  accept="image/jpeg,image/png,image/webp"
+                  data-tk="photo-input"
+                  hidden
+                  onChange={(event) => {
+                    const file = event.target.files?.[0];
+                    event.target.value = "";
+                    if (file) void uploadPhoto(file);
+                  }}
+                />
+              </label>
+              <p className="t-small">JPG, PNG or WebP, 8 MB each.</p>
+            </div>
+            {photos.length ? <p className="t-small" data-tk="photo-count">{photos.length} photo{photos.length === 1 ? "" : "s"} saved</p> : null}
+            {photoNote ? <p data-tk="photo-note">{photoNote}</p> : <p className="t-small">Add a photo of the item or place. People ads can use a portrait.</p>}
+          </div>
+          <div style={{ display: "flex", justifyContent: "space-between", marginTop: 16 }}>
+            <button type="button" className="tk-btn tk-btn-outline-rose" onClick={() => remember(draftId, 1)}>BACK</button>
+            <button type="button" className="tk-btn tk-btn-rose" data-tk="go-on" onClick={() => remember(draftId, 3)}>GO ON</button>
+          </div>
+        </>
+      ) : null}
+      {step === 3 ? (
+        <>
+          <div className="tk-form-panel">
+            <h2 className="t-h3">Preview</h2>
+            {hydrated && title.trim() ? <AdCard ad={preview as ListingDoc} /> : <p data-tk="draft-loading">{hydrated ? "This draft has no title yet." : "Loading your draft…"}</p>}
+          </div>
+          <div className="tk-form-panel" style={{ marginTop: 16 }}>
+            <h2 className="t-h3">Plan</h2>
+            {plans.length ? plans.map((plan) => (
+              <p key={plan.id} className="t-small">{plan.name}{plan.amount !== undefined ? ` · Rs ${plan.amount}` : ""}</p>
+            )) : (
+              <p className="t-small">Free: your ad is published once it passes our checks. <Link href="/u/account/credits/" style={{ color: "var(--accent)" }}>Boost visibility</Link></p>
+            )}
+          </div>
+          <p style={{ textAlign: "right", marginTop: 16 }}>
+            <button type="button" className="tk-btn tk-btn-outline-rose" onClick={() => setStep(2)}>BACK</button>{" "}
+            <button type="button" className="tk-btn tk-btn-rose" data-tk="go-on" disabled={busy || !hydrated || !title.trim()} onClick={publish}>PUBLISH</button>
+          </p>
+        </>
+      ) : null}
+      <HelpCard />
     </div>
   );
 }
 
-function Box({ title, children }: { title: string; children: React.ReactNode }) {
+function Group({ title, children }: { title: string; children: React.ReactNode }) {
   return (
-    <div className="panel">
-      <h1 className="text-[22px]">{title}</h1>
-      <div className="mt-3 text-[14px] leading-6">{children}</div>
-    </div>
+    <section style={{ marginBottom: 18 }}>
+      <div style={{ display: "flex", justifyContent: "space-between" }}>
+        <h2 className="t-small">{title}</h2>
+        <span className="t-caption" style={{ color: "var(--muted)" }}>* Required fields</span>
+      </div>
+      <div className="tk-form-panel">{children}</div>
+    </section>
+  );
+}
+
+function SelectField({
+  id,
+  label,
+  required,
+  value,
+  error,
+  disabled,
+  onChange,
+  children,
+}: {
+  id: string;
+  label: string;
+  required?: boolean;
+  value: string;
+  error?: string;
+  disabled?: boolean;
+  onChange: (value: string) => void;
+  children: React.ReactNode;
+}) {
+  return (
+    <label className={`tk-field ${error ? "is-bad" : ""}`} htmlFor={id}>
+      <span>{required ? "* " : ""}{label}</span>
+      <select id={id} value={value} disabled={disabled} onChange={(event) => onChange(event.target.value)}>{children}</select>
+      {error ? <span className="tk-error" data-tk="field-error">{error}</span> : null}
+    </label>
+  );
+}
+
+function TextField({
+  id,
+  label,
+  required,
+  value,
+  error,
+  note,
+  placeholder,
+  area,
+  rows,
+  onChange,
+}: {
+  id: string;
+  label: string;
+  required?: boolean;
+  value: string;
+  error?: string;
+  note?: string;
+  placeholder?: string;
+  area?: boolean;
+  rows?: number;
+  onChange: (value: string) => void;
+}) {
+  return (
+    <label className={`tk-field ${error ? "is-bad" : ""}`} htmlFor={id}>
+      <span style={{ display: "flex", justifyContent: "space-between" }}>
+        <span>{required ? "* " : ""}{label}</span>
+        {note ? <span style={{ fontWeight: 500, color: "var(--muted)" }}>{note}</span> : null}
+      </span>
+      {area ? (
+        <textarea id={id} rows={rows || 2} value={value} placeholder={placeholder} onChange={(event) => onChange(event.target.value)} />
+      ) : (
+        <input id={id} value={value} placeholder={placeholder} onChange={(event) => onChange(event.target.value)} />
+      )}
+      {error ? <span className="tk-error" data-tk="field-error">{error}</span> : null}
+    </label>
+  );
+}
+
+function Switch({ on, onClick, bad }: { on: boolean; onClick: () => void; bad?: boolean }) {
+  return (
+    <button type="button" className={`tk-switch ${on ? "on" : ""}`} aria-pressed={on} onClick={onClick} style={bad ? { outline: "1px solid var(--danger)" } : undefined}>
+      <i />
+      {on ? "YES" : "NO"}
+    </button>
   );
 }

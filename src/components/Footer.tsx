@@ -1,155 +1,127 @@
 "use client";
 
 import Link from "next/link";
+import { useEffect, useState } from "react";
 import { Logo } from "./Logo";
 import { safeHref } from "@/lib/sanitize";
+import { applyPrefixes, blogPath, categoriesPath, citiesPath, cmsPath, contactPath, helpPath, howItWorksPath, postAdPath, prohibitedPath, reportPath, safetyPath } from "@/lib/urls";
+import { useUrlPaths } from "./UrlPaths";
 
-type Cat = { slug: string; name: string };
-type City = { slug: string; name: string };
 type LinkItem = { label: string; href: string };
 
-const PILL_CITIES = ["bangalore", "hyderabad", "delhi", "pune", "mumbai"];
+function realSocial(items: LinkItem[]) {
+  return items
+    .map((item) => ({ ...item, href: safeHref(item.href) }))
+    .filter((item) => item.href && !/google\.com\/search/i.test(item.href));
+}
 
 export function Footer({
   siteName,
   legalName,
   cityCount,
-  about,
-  categories,
-  cities,
-  links,
   social,
+  content,
 }: {
   siteName: string;
   legalName: string;
   cityCount: number;
-  about: string;
-  categories: Cat[];
-  cities: City[];
-  links: LinkItem[];
+  about?: string;
+  categories?: { slug: string; name: string }[];
+  cities?: { slug: string; name: string }[];
+  links?: LinkItem[];
   social: LinkItem[];
+  content?: {
+    about?: string;
+    badge?: string;
+    columns?: { title: string; visible?: boolean; links: LinkItem[] }[];
+    boostTitle?: string;
+    postLabel?: string;
+    countriesLabel?: string;
+    countryOption?: string;
+    copyright?: string;
+    backToTop?: string;
+  };
 }) {
-  const bySlug = Object.fromEntries(cities.map((c) => [c.slug, c]));
-  const pills = PILL_CITIES.map((slug) => bySlug[slug]).filter(Boolean);
-  const socialItems = social.length
-    ? social
-    : [
-        { label: "Instagram", href: "https://www.instagram.com/" },
-        { label: "X", href: "https://x.com/" },
-        { label: "TikTok", href: "https://www.tiktok.com/" },
-        { label: "Bluesky", href: "https://bsky.app/" },
-      ];
-
+  const paths = useUrlPaths();
+  const [top, setTop] = useState(false);
+  useEffect(() => {
+    const onScroll = () => setTop(window.scrollY > 300);
+    onScroll();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
+  const socials = realSocial(social);
+  const about = (content?.about || "Tharkoo is a classifieds platform for people in India. Browse new listings every day in {count} cities.").split("{count}");
+  const columns = content?.columns || [
+    { title: "Legal", links: [{ label: "Terms and Conditions", href: "/terms/" }, { label: "Privacy Policy", href: "/privacy/" }, { label: "Cookie Policy", href: "/cookies/" }, { label: "Prohibited items", href: prohibitedPath() }] },
+    { title: "Support", links: [{ label: "Help Center", href: helpPath(paths) }, { label: "How it works", href: howItWorksPath() }, { label: "Submit a Report", href: reportPath(paths) }, { label: "Blog", href: blogPath(paths) }] },
+    { title: "Security", links: [{ label: "Safety", href: safetyPath() }, { label: "How to report a scam", href: "/scam-report/" }] },
+    { title: "Company", links: [{ label: "About Tharkoo", href: cmsPath(paths, "about") }, { label: "Contact us", href: contactPath(paths) }, { label: "Categories", href: categoriesPath() }, { label: "Cities", href: citiesPath(paths) }] },
+  ];
   return (
-    <>
-      <div className="sk-container footer-city-wrap">
-        <hr className="sk-hr" />
-        <div className="footer-city">
-          {categories.map((cat, i) => (
-            <div key={cat.slug} className="footer-city-card">
-              <div className="footer-city-head">
-                <Link href={`/${cat.slug}/`} className="h4 no-underline">
-                  {cat.name}
-                </Link>
-              </div>
-              <div className="footer-city-pills">
-                {pills.map((city) => (
-                  <Link key={city.slug} href={`/${cat.slug}/${city.slug}/`} className="no-underline">
-                    <span className="button-pill">{city.name}</span>
-                  </Link>
-                ))}
-                {i === 0 ? (
-                  <Link href="/cities/" className="no-underline">
-                    <span className="button-pill">All cities</span>
-                  </Link>
-                ) : null}
-              </div>
+    <footer className="tk-footer" data-tk="footer">
+      <div className="tk-container">
+        <div className="tk-footer-brand">
+          <div>
+            <Logo name={siteName} href={null} country="India" />
+            <span className="tk-badge-18">{content?.badge || "18+ ONLY"}</span>
+          </div>
+          <p className="tk-about">
+            {about.length > 1 ? (
+              <>
+                {about[0]}
+                <strong>{cityCount}</strong>
+                {about.slice(1).join("{count}")}
+              </>
+            ) : (
+              about[0]
+            )}
+          </p>
+        </div>
+        <div className="tk-foot-cols">
+          {columns.filter((column) => column.visible !== false).map((column) => (
+            <div key={column.title}>
+              <h2>{column.title}</h2>
+              {column.links.filter((item) => safeHref(item.href)).map((item) => (
+                <Link key={item.href + item.label} href={applyPrefixes(safeHref(item.href), paths)} prefetch={false}>{item.label}</Link>
+              ))}
             </div>
           ))}
         </div>
+        <div className="tk-foot-boost">
+          <div>
+            <h2>{content?.boostTitle || "Boost your visibility"}</h2>
+            <Link href={postAdPath(paths)} data-tk="post-ad" className="tk-btn tk-btn-primary" prefetch={false}>
+              {content?.postLabel || "POST YOUR AD"}
+            </Link>
+          </div>
+          <div>
+            <h2>{content?.countriesLabel || "Countries"}</h2>
+            <label className="sr-only" htmlFor="tk-country">{content?.countriesLabel || "Countries"}</label>
+            <select id="tk-country" className="tk-country" defaultValue="IN" aria-label={content?.countriesLabel || "Countries"}>
+              <option value="IN">{content?.countryOption || "🇮🇳 India"}</option>
+            </select>
+          </div>
+        </div>
+        <p className="tk-legal-line">{legalName}</p>
       </div>
-      <footer className="sk-footer">
-        <div className="sk-container">
-          <hr className="sk-hr" />
-          <div className="footer-top">
-            <div>
-              <Logo name={siteName} />
-            </div>
-            <p className="footer-about">
-              {about || `${siteName}, premium classifieds in India.`}
-            </p>
+      <div className="tk-bar">
+        {socials.length ? (
+          <div className="tk-socials">
+            {socials.map((item) => (
+              <a key={item.label} href={item.href} target="_blank" rel="noopener noreferrer" aria-label={item.label}>
+                {item.label}
+              </a>
+            ))}
           </div>
-          <div className="footer-cols">
-            <div>
-              <h5>Legal</h5>
-              <Link href="/terms/">Terms and Conditions</Link>
-              <Link href="/privacy/">Privacy Policy</Link>
-              <Link href="/cookies/">Cookie Policy</Link>
-            </div>
-            <div>
-              <h5>Support</h5>
-              <Link href="/help/">Help Center</Link>
-              <Link href="/submit-report/">Submit a Report</Link>
-              <Link href="/blog/">Blog</Link>
-            </div>
-            <div>
-              <h5>Security</h5>
-              <Link href="/help/scams/">How to report a scam</Link>
-            </div>
-            <div>
-              <h5>Company</h5>
-              <Link href="/about/">About</Link>
-              <Link href="/grievance/">Grievance officer</Link>
-              <Link href="/cities/">{cityCount} cities</Link>
-            </div>
-          </div>
-          <div className="footer-boost">
-            <div>
-              <h6>Boost your visibility</h6>
-              <Link href="/u/post-insert/" className="btn-post btn-block">
-                Post your ad
-              </Link>
-            </div>
-            <div>
-              <h6>Countries</h6>
-              <select className="country-select" defaultValue="IN" aria-label="Country">
-                <option value="IN">🇮🇳 India</option>
-              </select>
-            </div>
-          </div>
-          {links.length ? (
-            <p className="footer-extra">
-              {links.map((l) => (
-                <Link key={l.href} href={safeHref(l.href) || "/"}>
-                  {l.label}
-                </Link>
-              ))}
-            </p>
-          ) : null}
-        </div>
-        <div className="social-section">
-          <div className="sk-container social-inner">
-            <div className="social-links">
-              {socialItems
-                .map((s) => ({ ...s, href: safeHref(s.href) }))
-                .filter((s) => s.href)
-                .map((s) => (
-                  <a key={s.label} href={s.href} rel="nofollow noopener noreferrer" className="text-white">
-                    {s.label}
-                  </a>
-                ))}
-            </div>
-            <div className="copyright">
-              <small>
-                Copyright {new Date().getFullYear()} © {legalName || siteName}
-              </small>
-            </div>
-            <button type="button" className="back-to-top" onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}>
-              Back to top
-            </button>
-          </div>
-        </div>
-      </footer>
-    </>
+        ) : null}
+        <p className="tk-copy">{content?.copyright || "Copyright 2026 © Tharkoo"}</p>
+        {top ? (
+          <button type="button" className="tk-top" data-tk="back-to-top" onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}>
+            {content?.backToTop || "Back to top ↑"}
+          </button>
+        ) : null}
+      </div>
+    </footer>
   );
 }

@@ -1,9 +1,13 @@
-import { Simple } from "@/components/vendor/VendorScreens";
-export const metadata = { title: "Delete account", robots: { index: false } };
+import { ComingSoon } from "@/components/account/AccountTools";
+import { pageMetadata } from "@/lib/ui/meta";
+
+export const metadata = pageMetadata({
+  title: "Delete account | Tharkoo",
+  description: "Account deletion from this page is coming soon. Write to support if you need it now.",
+  path: "/u/account/delete/",
+  index: false,
+});
+
 export default function Page() {
-  return (
-    <Simple title="Delete account">
-      <p>Type DELETE to confirm. You will be logged out.</p><input placeholder='DELETE' className='border px-2 py-1' /><button className='btn-post mt-2' type='button'>Delete forever</button>
-    </Simple>
-  );
+  return <ComingSoon title="Delete account" body="Account deletion from this page is coming soon. Write to support if you need it now." href="/contact/" label="Contact" />;
 }
