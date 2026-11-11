@@ -56,7 +56,7 @@ const categoryGrid = z.object({
   title: text(120).default(""),
   intro: text(300).optional(),
   items: z
-    .array(z.object({ categorySlug: slug, label: text(60).optional(), image: opt(image), blurb: text(160).optional() }))
+    .array(z.object({ categorySlug: slug, label: text(60).optional(), image: opt(image), blurb: text(160).optional(), citySlugs: z.array(slug).max(8).optional() }))
     .max(24)
     .default([]),
   columnsDesktop: z.number().int().min(2).max(6).default(3),

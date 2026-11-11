@@ -808,7 +808,10 @@
         "src/components/admin/nav.ts",
         "src/app/admin/layout-actions.ts",
         "tests/server/layout/**",
-        "src/lib/layout/**"
+        "src/lib/layout/**",
+        "src/server/layout/service.ts",
+        "src/server/seed/run.ts",
+        "src/server/layout/defaults/**"
       ]
     },
     "H3.5": {

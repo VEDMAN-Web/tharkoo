@@ -19,6 +19,18 @@ export function layoutTag(key: PageKey) {
   return `layout:${key}`;
 }
 
+/** Clears the layout cache and asks Next to rebuild its cached pages, so a publish is live within seconds. */
+async function refreshPages(key: PageKey) {
+  invalidateTags([layoutTag(key)]);
+  try {
+    const { revalidatePath, revalidateTag } = await import("next/cache");
+    revalidateTag(layoutTag(key), { expire: 0 });
+    revalidatePath("/", "layout");
+  } catch {
+    /* scripts and unit tests have no Next request store */
+  }
+}
+
 function requireAdmin(roles: string[]) {
   if (!isAdminRole(roles)) throw new ForbiddenError("Only an admin can edit page layouts");
 }
@@ -177,7 +189,7 @@ export async function publish(input: { key: string; scope: string; email: string
   if (!updated) throw new ConflictError("Someone else published at the same moment. Reload and try again.");
   await PageLayoutRevision.create({ key, scope, version, blocks: current.draft, publishedBy: input.email, publishedAt: now, note });
   await record("layout.publish", input.email, key, scope, { version: current.version, blocks: current.published }, { version, blocks: current.draft }, note || undefined);
-  invalidateTags([layoutTag(key)]);
+  await refreshPages(key);
   return { version };
 }
 
