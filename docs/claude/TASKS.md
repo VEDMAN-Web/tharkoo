@@ -3,7 +3,7 @@
 Rules for every card: CLAUDE.md §2–4. Do only what the card says. "Read first" is the full reading list.
 Branch name = `haiku/<id lowercase>-<slug given in the card>`. Ownership globs below are copied into `docs/ownership.json` by H0.1.
 
-Order: **H0.0 → H0.1 → H1.1 → H1.6 (technical SEO) → H0.2 → H0.3 → H2.1 (keyword data) → H3.1 → H3.9 (admin + dynamic pages) → H4.1 → H4.7 (SEO center) → GATE → H5 (content/IA, SEO v2) → H6 (public redesign) → H7 (launch)**
+Order: **H0.0 → H0.1 → H1.1, H1.2, H1.5, H1.6 → H0.2 → H0.4 (online preview) → H1.3 → H1.4 → H0.3 → H3.1 → H3.10 (admin + dynamic pages) → H4.1 → H4.7 (SEO center) → H2.1 (keyword data, only once Vedant has chosen his categories) → GATE → H5 (content/IA, SEO v2) → H6 (public redesign) → H7 (launch)**
 H5–H7 cards are written by Opus after the GATE (Vedant's decisions D1–D6 + H2.1 data).
 Do one card at a time, each from fresh `github/main` after the previous PR is merged.
 Cards marked **[Opus line review]** are reviewed line by line; expect a second round.
@@ -58,12 +58,13 @@ For H3/H4 always read `docs/claude/ADMIN_PLAN.md` sections named in the card (no
 ## H0.2 — Make scripts and tests work on Windows (slug `windows`)
 
 **Goal:** every command in CLAUDE.md §3 and SETUP.md works on Vedant's Windows PC (Git Bash and PowerShell) and still works on Linux CI.
-**Files you may change:** `package.json` (scripts only), `tests/server/ui/theme.test.ts`, `docs/claude/SETUP.md`, `CLAUDE.md` (§3 commands only), plus any other test file whose only failure on Windows is path separators or line endings (list each in the plan first).
+**Files you may change:** `package.json` (scripts only), `tests/server/ui/theme.test.ts`, `docs/claude/**`, `CLAUDE.md` (§3 commands only), `.github/scripts/ownership-check.mjs` (one line, see step 4), `docs/ownership.json` (add the H0.4 and H3.10 entries only, globs from their cards), plus any other test file whose only failure on Windows is path separators or line endings (list each in the plan first).
 **Read first:** the exact failing commands and errors you saw in H0.0 (paste them into `progress/H0.2.md` first); `package.json` scripts.
 **Known causes:**
 1. `theme.test.ts` compares `path.relative(...)` (backslashes on Windows) with `/`-style paths in `ALLOW`. Normalise: `const rel = path.relative(root, file).split(path.sep).join("/");`. Change nothing else in the test.
 2. npm runs scripts with `cmd.exe` on Windows, so `NODE_OPTIONS=... next build` style prefixes fail there. `cross-env` is already a devDependency: use `cross-env NODE_OPTIONS=--max-old-space-size=4096 next build` (same for `start` and `typecheck`). No new package.
 3. CRLF line endings: if a test reads files and compares text, compare after `.replace(/\r\n/g, "\n")`.
+4. Planner docs: Opus updates `docs/claude/*.md` between tasks (copies wait in `.relay/kit/`). In `ownership-check.mjs` make every file under `docs/claude/` always allowed, like `progress/`: in the loop, `if (progressOk.has(file) || file.startsWith("docs/claude/")) continue;`. Then copy every file in `.relay/kit/docs/claude/` over `docs/claude/` in this PR (cp, no edits).
 **Do not:** add `.gitattributes` or reformat files; change test expectations.
 **Acceptance:** on this Windows PC: `npm run lint`, `npm run typecheck`, `npm test` (176/176), `npm run build` with `MONGODB_URI` unset (PowerShell: `$env:MONGODB_URI=$null; npm run build`) all pass; CI (Linux) green on the PR; SETUP.md has a short "Windows" box with the working command for each step.
 
@@ -73,6 +74,20 @@ For H3/H4 always read `docs/claude/ADMIN_PLAN.md` sections named in the card (no
 **Files you may change:** `docs/design/ref/**` (delete), `docs/design/CLONE_SPEC.md` (delete), `docs/design/README.md` (new, 3 lines: "Reference captures were removed on purpose. Tharkoo uses its own design; see docs/claude/ADMIN_PLAN.md and the H6 design brief."), `docs/CODE_MAP.md`, `docs/MASTER_PLAN.md`, `docs/ASSETS.md`, `progress/t0.1.md`, `progress/t0.4.md`, `progress/t0.5.md`, `progress/t9.1.md` (replace the competitor's name with "the reference site"; change nothing else), `tests/server/ui/theme.test.ts` (remove the `docs/design/CLONE_SPEC.md` line from `ALLOW` only), `.github/scripts/forbidden-terms.mjs` (only if needed so it also scans `docs/` except `docs/prd/**`).
 **Read first:** `ls docs/design docs/design/ref`; `git grep -il "skokka" -- docs` (list only).
 **Acceptance:** `git grep -il "skokka" -- . ':!docs/prd' ':!.github/forbidden-terms.txt'` returns nothing; `docs/design/ref/` gone; tests and forbidden-terms pass. Report: old commit messages and old branch names still contain the name (we do not rewrite history); tell Vedant in one line that he can delete the merged `cursor/*` and `codex/*` branches on GitHub and make the repo private (Opus will guide).
+
+---
+
+## H0.4 — Online preview link from this PC (slug `preview`)
+
+**Goal:** Vedant can open the current site on his phone through a public link, with no accounts.
+**Files you may change:** `scripts/preview.mjs` (new, copy from `.relay/kit/scripts/preview.mjs` as is), `package.json` (add script `"preview:online": "node scripts/preview.mjs"` only), `docs/claude/SETUP.md`.
+**Steps:**
+1. Install Cloudflare's tunnel tool once: `winget install --id Cloudflare.cloudflared -e`. Check it with `cloudflared --version`. No account or login is needed (quick tunnel). If the install is blocked by a permission check, report QUESTION and stop this card.
+2. Copy the script, add the package.json line, and add a 5-line "Online preview" box to SETUP.md: how to start and stop it, where the link is, that it works only while the PC is on, and that the link changes on every start.
+3. Run `node scripts/preview.mjs` from `github/main` (after H0.2 is merged) as a **background** command and leave it running. The link and the admin login are in `.relay/preview.txt`.
+4. Open the link with curl: `/` returns 200; `/robots.txt` says `Disallow: /`; the home page has `noindex` and its canonical is the trycloudflare link; admin login works (POST `/api/auth/login` with the email and password from preview.txt and an Origin header set to the link).
+**Report:** put the preview link (not the password) in the report and in `.relay/preview-link.txt`. Tell Vedant in one line: "Preview is live at <link>. The admin login is in the file .relay/preview.txt in the project folder." From now on, after every merged PR that changes what visitors see, restart the preview so it shows `github/main`, then update both the link file and the report.
+**Never:** print the admin password in chat or a report, or point the preview at a real database.
 
 ---
 
@@ -228,7 +243,7 @@ export function isCityAlias(cityName: string, districtName: string) {
 
 **Goal:** `/` renders only from blocks; admin edits everything on it.
 **Files you may change:** `src/app/page.tsx`, `src/components/HomeBlocks.tsx`, `src/components/blocks/**`, `src/server/layout/defaults/home.ts` (new), `src/app/admin/homepage/**`, `src/components/admin/layout-editor/**` (new), `src/server/seed/layouts.ts` (new), `scripts/seed.ts` (one line to call the layout seed), `tests/server/layout/home.test.ts`.
-**Read first:** ADMIN_PLAN §1, §3 (home rows), §4 (SaveBar); `src/app/page.tsx`; `src/components/HomeBlocks.tsx`; `src/lib/ui/site-content.ts` lines 1–120.
+**Read first:** ADMIN_PLAN §1, §3 (home rows), §4 (SaveBar), §8 (placeholder defaults: the default home blocks are neutral, no portraits or dating slogans); `src/app/page.tsx`; `src/components/HomeBlocks.tsx`; `src/lib/ui/site-content.ts` lines 1–120.
 **Build:**
 1. Block components: `hero`, `categoryGrid`, `cityLinks`, `latestAds`, `featuredAds` (reuse current markup and `tk-` classes so the page looks the same).
 2. `defaults/home.ts`: converts the current `SiteContent` (hero, cards, groups, seoIntro) into a block list that renders the same page. The layout seed publishes it as `home/default` v1 if none exists (idempotent).
@@ -277,6 +292,14 @@ export function isCityAlias(cityName: string, districtName: string) {
 **Read first:** ADMIN_PLAN §4 (honesty), Playzoni reference described there; `src/app/admin/page.tsx`.
 **Build:** KPI cards (live ads, pending moderation, new ads today/7 days, new users 7 days, ID checks waiting, open reports, contact reveals 7 days if logged, promotions active); BarLists (ads by category, by city, top 10); line of new ads per day (30 days, simple SVG, no chart library); "Demo data" bar when demo listings exist. Fix today's wrong counts (`status: "live"`, `kind: "city"` → new model fields).
 **Acceptance:** numbers match direct Mongo counts in a test fixture; screenshots 390/1440.
+
+## H3.10 — Partner CSV bulk import (slug `bulk-import`)
+
+**Goal:** a verified partner (broker, car dealer, job agency) gets 20–50 real listings live in one step (SEO_PLAN §10 A6).
+**Files you may change:** `src/server/listings/import.ts` (new), `src/app/admin/import/**` (new), `tests/server/listings/import.test.ts`.
+**Read first:** SEO_PLAN §10 A6; `graphify explain "createListing"` (or the listings service create/draft function) — reuse it, do not duplicate validation.
+**Build:** admin uploads a CSV for a chosen partner account (account must be ID-verified): columns category, city, district, title, description, price, category fields (by key), photo URLs (only from our own upload storage or the partner's already-uploaded media). Dry run first: a table of rows with OK / errors per row (same validation and forbidden-terms check as the post form). Then import as `pending` (normal moderation queue) or, for superadmin, `active`. Max 200 rows per file. Audited (`listing.import`, row count).
+**Acceptance:** tests for a valid file, a row with a missing required field, a forbidden term, an unverified partner (refused), and the 200-row limit; screenshots of dry run and result at 390/1440.
 
 ---
 
