@@ -20,9 +20,13 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   const title = page?.title || labelOf(slug);
   const paths = await getPaths();
   const path = cmsPath(paths, page?.slug || slug);
+  const brandTitle = /\|\s*Tharkoo$/.test(title) ? title : `${title} | Tharkoo`;
+  const seoTitle = brandTitle.length < 30 ? `${title}: official page | Tharkoo` : brandTitle;
+  const body = page?.body || "";
+  const seoDescription = body.length >= 70 ? body : `${title} on Tharkoo. Read the full page for details about free classifieds across India.`;
   return withUrlSeo(path, {
-    title: `${title} | Tharkoo`,
-    description: (page?.body || page?.title || `${title} on Tharkoo.`).slice(0, 160),
+    title: seoTitle,
+    description: seoDescription.slice(0, 160),
     path,
   });
 }

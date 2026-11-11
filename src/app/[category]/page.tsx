@@ -22,8 +22,8 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const [cat, seo, site] = await Promise.all([getCategory(category), getSeo("category"), getSite()]);
   if (!cat) return {};
   const vars = { category: cat.name, site: site.name, year: new Date().getFullYear() };
-  const title = fillTemplate(seo?.title || "{category} ads in India | Tharkoo", vars);
-  const description = fillTemplate(seo?.description || `Browse ${cat.name} listings across Indian cities.`, vars);
+  const title = fillTemplate(seo?.title || "{category} classifieds across India | Tharkoo", vars);
+  const description = fillTemplate(seo?.description || "Browse {category} ads from people across Indian cities. Filter by city and district, see photos, and contact posters directly.", vars);
   const path = categoryPath(cat.slug || category);
   return withUrlSeo(path, { title, description, path });
 }

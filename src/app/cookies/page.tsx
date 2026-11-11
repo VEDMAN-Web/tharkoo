@@ -5,7 +5,7 @@ import { pageMetadata } from "@/lib/ui/meta";
 const copy = TRUST.cookies;
 
 export const metadata = pageMetadata({
-  title: `${copy.title} | Tharkoo`,
+  title: "Cookie policy: what Tharkoo stores and why | Tharkoo",
   description: copy.description,
   path: "/cookies/",
 });

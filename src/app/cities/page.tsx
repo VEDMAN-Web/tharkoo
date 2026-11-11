@@ -10,8 +10,8 @@ export const revalidate = 300;
 export async function generateMetadata() {
   const paths = await getPaths();
   return withUrlSeo(citiesPath(paths), {
-    title: "Cities across India | Tharkoo",
-    description: "Browse Tharkoo classifieds by city.",
+    title: "Cities across India: browse classifieds by city | Tharkoo",
+    description: "Pick your city to browse free classifieds across India. See ads, photos and how to contact each poster.",
     path: citiesPath(paths),
   });
 }

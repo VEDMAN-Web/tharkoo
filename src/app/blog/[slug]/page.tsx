@@ -19,9 +19,14 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   if (!post) return {};
   const paths = await getPaths();
   const path = blogPath(paths, post.slug || slug);
+  const postTitle = post.title || "Blog";
+  const brandTitle = /\|\s*Tharkoo$/.test(postTitle) ? postTitle : `${postTitle} | Tharkoo`;
+  const seoTitle = brandTitle.length < 30 ? `Blog: ${brandTitle}` : brandTitle;
+  const body = post.body || "";
+  const seoDescription = body.length >= 70 ? body : `${postTitle} on the Tharkoo blog. Read the full article for practical tips on posting and staying safe.`;
   return withUrlSeo(path, {
-    title: `${post.title} | Tharkoo`,
-    description: (post.body || post.title || "").slice(0, 160),
+    title: seoTitle,
+    description: seoDescription.slice(0, 160),
     path,
   });
 }

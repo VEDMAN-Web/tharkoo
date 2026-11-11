@@ -4,7 +4,7 @@ import { pageMetadata } from "@/lib/ui/meta";
 
 export const metadata = pageMetadata({
   title: "How to report a scam | Tharkoo",
-  description: "How to report a suspicious listing on Tharkoo.",
+  description: "How to report a suspicious listing on Tharkoo. Tell us what you saw, and our team will review it.",
   path: "/scam-report/",
 });
 
