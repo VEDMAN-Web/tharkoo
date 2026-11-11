@@ -43,6 +43,8 @@ export interface ListingDoc {
   expiresAt?: Date;
   lastModerationAt?: Date;
   seoNoindex?: boolean;
+  /** Admin only: the ad stays reachable by URL but is skipped in feeds. */
+  feedHidden?: boolean;
   attestations?: Record<string, unknown>;
   createdAt?: Date;
   updatedAt?: Date;
@@ -164,6 +166,7 @@ const listingSchema = new Schema<ListingDoc>(
     expiresAt: { type: Date },
     lastModerationAt: { type: Date },
     seoNoindex: { type: Boolean, default: true },
+    feedHidden: { type: Boolean, default: false },
     attestations: { type: Schema.Types.Mixed },
   },
   { timestamps: true, collection: collectionName("listings", "Listing") },

@@ -91,7 +91,7 @@ export const NAV_GROUPS: NavGroup[] = [
     items: [
       item("moderation", "Moderation queue", "/admin/moderation/", "shield", "moderator"),
       item("all-ads", "All ads", "/admin/listings/", "list", "moderator"),
-      item("listing-order", "Listing order", "/admin/listing-order/", "layers", "admin", "H3.8"),
+      item("listing-order", "Listing order", "/admin/listing-order/", "layers", "admin"),
       item("reports", "Reports", "/admin/reports/", "flag", "trust_safety"),
       item("id-checks", "ID checks", "/admin/kyc/", "id", "trust_safety"),
     ],

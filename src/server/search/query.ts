@@ -14,7 +14,16 @@ import {
   type ListingDoc,
 } from "@/server/models";
 import { loadLocations, type LocationRow } from "@/server/locations/service";
-import { compareRank, rankScore, type RankPromotion } from "@/server/ranking";
+import {
+  applyPins,
+  compareRank,
+  loadActivePins,
+  loadRankSettings,
+  pinScopeOf,
+  rankScore,
+  type RankPromotion,
+  type RankSettings,
+} from "@/server/ranking";
 import { publicView } from "@/server/listings/service";
 import { TOP_CITY_SLUGS } from "@/server/seed/data";
 
@@ -60,6 +69,8 @@ export interface ListingQuery {
   starOnly?: boolean;
   excludeSlug?: string;
   slug?: string;
+  /** Unsaved ordering settings for the admin preview; normal callers leave it out. */
+  rank?: RankSettings;
 }
 
 interface Row {
@@ -376,7 +387,10 @@ export async function buildFilter(input: ListingQuery): Promise<QueryFilter<List
   if (input.photos) filter["mediaIds.0"] = { $exists: true };
   if (input.tag && /^[a-z0-9-]{1,40}$/.test(input.tag)) filter["attributes.tag"] = input.tag;
   if (input.slug) filter.slug = input.slug;
-  else if (input.excludeSlug) filter.slug = { $ne: input.excludeSlug };
+  else {
+    filter.feedHidden = { $ne: true };
+    if (input.excludeSlug) filter.slug = { $ne: input.excludeSlug };
+  }
   if (input.attributes && Object.keys(input.attributes).length > 0) {
     const category = input.categorySlug
       ? categories.find((row) => matchSlug(row, input.categorySlug ?? ""))
@@ -516,6 +530,7 @@ export async function queryListings(input: ListingQuery): Promise<SearchResult> 
     docs.map((doc) => doc._id),
     now,
   );
+  const settings = input.rank ?? (await loadRankSettings());
   const ranked = docs
     .map((doc) => {
       const promos = promotions.get(String(doc._id)) ?? [];
@@ -523,9 +538,15 @@ export async function queryListings(input: ListingQuery): Promise<SearchResult> 
         doc,
         promos,
         score: rankScore(
-          { badges: doc.badges, bumpedAt: doc.bumpedAt, publishedAt: doc.publishedAt },
+          {
+            badges: doc.badges,
+            bumpedAt: doc.bumpedAt,
+            publishedAt: doc.publishedAt,
+            hasPhoto: (doc.mediaIds?.length ?? 0) > 0,
+          },
           promos,
           now,
+          settings,
         ),
         code: bestCode(promos, now).trim().toLowerCase(),
       };
@@ -536,9 +557,11 @@ export async function queryListings(input: ListingQuery): Promise<SearchResult> 
     if ((input.sort ?? "ranked") === "fresh") {
       return b.score.freshness - a.score.freshness || (a.doc.slug ?? "").localeCompare(b.doc.slug ?? "");
     }
-    return compareRank(a.score, b.score) || (a.doc.slug ?? "").localeCompare(b.doc.slug ?? "");
+    return compareRank(a.score, b.score, settings) || (a.doc.slug ?? "").localeCompare(b.doc.slug ?? "");
   });
-  const ordered = ranked.map((row) => row.doc);
+  const scope = (input.sort ?? "ranked") === "ranked" ? pinScopeOf(input) : null;
+  const pins = scope ? await loadActivePins(scope, now) : [];
+  const ordered = applyPins(ranked.map((row) => row.doc), pins, (doc) => String(doc._id), now);
   const promoMap = new Map(ranked.map((row) => [String(row.doc._id), row.promos]));
   const presented = await presentRows(ordered, promoMap, now);
   const start = (page - 1) * pageSize;
