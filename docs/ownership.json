@@ -610,6 +610,7 @@
         "src/server/listings/visibility.ts",
         "scripts/seo-crawl.mjs",
         "src/instrumentation.ts",
+        "src/lib/seo.ts",
         "public/apple-touch-icon.png",
         "public/brand/icon-192.png",
         "public/brand/icon-512.png"
