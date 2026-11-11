@@ -1,10 +1,13 @@
-import Link from "next/link";
-import { Simple } from "@/components/vendor/VendorScreens";
-export const metadata = { title: "Saved contacts", robots: { index: false } };
+import { SavedList } from "@/components/vendor/VendorScreens";
+import { pageMetadata } from "@/lib/ui/meta";
+
+export const metadata = pageMetadata({
+  title: "Saved ads | Tharkoo",
+  description: "Listings you saved on this device.",
+  path: "/u/account/saved/",
+  index: false,
+});
+
 export default function Page() {
-  return (
-    <Simple title="Saved contacts">
-      <p>Ad title, nickname, city, channels, date. Delete confirm. Empty: no saved contacts yet + browse.</p><Link href='/'>Browse</Link>
-    </Simple>
-  );
+  return <SavedList />;
 }

@@ -28,7 +28,12 @@ export async function connectDb() {
   if (cache.conn) return cache.conn;
   if (!cache.promise) {
     const uri = mongoUri();
-    cache.promise = mongoose.connect(uri, { bufferCommands: false }).catch((err: unknown) => {
+    cache.promise = mongoose.connect(uri, {
+      bufferCommands: false,
+      maxPoolSize: 5,
+      minPoolSize: 0,
+      maxIdleTimeMS: 20_000,
+    }).catch((err: unknown) => {
       cache.promise = null;
       throw err;
     });

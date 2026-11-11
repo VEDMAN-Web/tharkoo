@@ -1,4 +1,6 @@
 import type { CategoryFieldDoc } from "@/server/models";
+import { TAG_PAGES } from "@/data/catalog";
+import { textDenied } from "@/server/shared/policy";
 
 export const LOCATION_LEVELS = ["country", "state", "city", "district", "locality"] as const;
 
@@ -222,7 +224,7 @@ export const CITIES: ReadonlyArray<readonly [string, string, string]> = [
   ["panaji", "Panaji", "goa"],
   ["vadodara", "Vadodara", "gujarat"],
   ["rajkot", "Rajkot", "gujarat"],
-  ["gurugram", "Gurugram", "haryana"],
+  ["gurgaon", "Gurgaon", "haryana"],
   ["faridabad", "Faridabad", "haryana"],
   ["shimla", "Shimla", "himachal-pradesh"],
   ["ranchi", "Ranchi", "jharkhand"],
@@ -277,7 +279,7 @@ export const TOP_CITY_SLUGS = [
   "jaipur",
 ] as const;
 
-/** Districts for the ten largest cities only. */
+/** Districts for the ten largest cities, plus Gurgaon. */
 export const DISTRICTS: Record<string, ReadonlyArray<readonly [string, string]>> = {
   mumbai: [
     ["mumbai-city", "Mumbai City"],
@@ -311,6 +313,14 @@ export const DISTRICTS: Record<string, ReadonlyArray<readonly [string, string]>>
     ["haveli", "Haveli"],
   ],
   jaipur: [["jaipur-city", "Jaipur City"]],
+  gurgaon: [
+    ["gurgaon-dlf", "DLF"],
+    ["sohna-road", "Sohna Road"],
+    ["golf-course-road", "Golf Course Road"],
+    ["mg-road-gurgaon", "MG Road"],
+    ["cyber-city", "Cyber City"],
+    ["sector-29-gurgaon", "Sector 29"],
+  ],
 };
 
 /** Amounts are INR rupees. Codes stay inside ALLOWED_PRODUCT_CODES. */
@@ -323,20 +333,21 @@ export const PRODUCTS = [
   { code: "new", name: "New", description: "A new-listing label for seven days.", amount: 99, currency: "INR", durationDays: 7 },
   { code: "flash", name: "Flash", description: "A short flash label for four hours.", amount: 149, currency: "INR", durationDays: 1 },
   { code: "star", name: "Star", description: "A premium slot on a city page.", amount: 799, currency: "INR", durationDays: 7 },
+  { code: "bump", name: "Bump", description: "Refresh this ad so it sorts with the newest posts.", amount: 49, currency: "INR", durationDays: 1 },
 ] as const;
 
 /** Default INR table. Override with SEED_CREDIT_PACKS, a JSON array of the same shape. Prices are rupees. */
 export const DEFAULT_CREDIT_PACKS: readonly SeedCreditPack[] = [
   { credits: 100, price: 1000, bonus: 0, tag: "", order: 0 },
-  { credits: 200, price: 1900, bonus: 10, tag: "", order: 1 },
-  { credits: 300, price: 2700, bonus: 30, tag: "", order: 2 },
+  { credits: 200, price: 1900, bonus: 10, tag: "Extra credits", order: 1 },
+  { credits: 300, price: 2700, bonus: 30, tag: "Extra credits", order: 2 },
   { credits: 500, price: 4250, bonus: 75, tag: "Most popular", order: 3 },
-  { credits: 800, price: 6400, bonus: 160, tag: "", order: 4 },
+  { credits: 800, price: 6400, bonus: 160, tag: "Extra credits", order: 4 },
   { credits: 1000, price: 7500, bonus: 250, tag: "Best deal", order: 5 },
-  { credits: 1500, price: 10500, bonus: 450, tag: "", order: 6 },
-  { credits: 2000, price: 13000, bonus: 700, tag: "", order: 7 },
-  { credits: 3000, price: 18000, bonus: 1200, tag: "", order: 8 },
-  { credits: 5000, price: 27500, bonus: 2250, tag: "", order: 9 },
+  { credits: 1500, price: 10500, bonus: 450, tag: "Extra credits", order: 6 },
+  { credits: 2000, price: 13000, bonus: 700, tag: "Extra credits", order: 7 },
+  { credits: 3000, price: 18000, bonus: 1200, tag: "Extra credits", order: 8 },
+  { credits: 5000, price: 27500, bonus: 2250, tag: "Extra credits", order: 9 },
 ];
 
 export const FEATURE_FLAGS = [
@@ -373,6 +384,136 @@ export function creditPackTable(): SeedCreditPack[] {
   return parsed;
 }
 
+const ADS_PER_TOP_CATEGORY = 16;
+const ADS_PER_OTHER_CITY = 12;
+export const SEED_USER_EMAIL = "seed@tharkoo.local";
+
+const DEMO_LINES: Record<string, ReadonlyArray<readonly [string, string, Record<string, string | number>]>> = {
+  dating: [
+    ["Coffee in {city}", "Looking to meet for coffee and a walk around {city}.", { age: 29, "looking-for": "Coffee" }],
+    ["Weekend events in {city}", "Interested in local events and a steady chat in {city}.", { age: 34, "looking-for": "Events" }],
+    ["Long term dating in {city}", "Hoping to meet someone for a long term relationship in {city}.", { age: 31, "looking-for": "Long term" }],
+  ],
+  friendship: [
+    ["Weekend hiking friend in {city}", "Looking for a hiking friend on weekend mornings in {city}.", { interest: "Hiking" }],
+    ["Board games in {city}", "Friendly board game group looking for new people in {city}.", { interest: "Board games" }],
+    ["Language exchange in {city}", "Want a language exchange partner in {city}.", { interest: "Languages" }],
+  ],
+  meetups: [
+    ["Morning walk meetup in {city}", "A small morning walk group meets in {city}.", { topic: "Morning walk" }],
+    ["Book club meetup in {city}", "Monthly book club for general fiction in {city}.", { topic: "Books" }],
+    ["Photography meetup in {city}", "Casual photography walk for beginners in {city}.", { topic: "Photography" }],
+  ],
+  "personal-ads": [
+    ["New in {city}", "Recently moved to {city} and would like local friends.", { topic: "New in town" }],
+    ["Music fan in {city}", "Looking to share live music plans in {city}.", { topic: "Music" }],
+    ["Cooking club in {city}", "Home cooking notes and recipe swaps in {city}.", { topic: "Cooking" }],
+  ],
+  jobs: [
+    ["Office assistant in {city}", "Weekday office assistant role for a local team in {city}.", { role: "Office assistant", "work-mode": "Office" }],
+    ["Shop helper in {city}", "Daytime shop helper role in {city}.", { role: "Shop helper", "work-mode": "Office" }],
+    ["Data entry from {city}", "Remote data entry for a small firm based in {city}.", { role: "Data entry", "work-mode": "Remote" }],
+  ],
+  wellness: [
+    ["Yoga class in {city}", "Morning yoga class for beginners in {city}.", { kind: "Yoga" }],
+    ["Fitness coaching in {city}", "Fitness coaching slots at a local gym in {city}.", { kind: "Fitness" }],
+    ["Spa booking in {city}", "Spa appointment slots available in {city}.", { kind: "Spa" }],
+  ],
+  property: [
+    ["Apartment for rent in {city}", "Two bedroom apartment for rent in {city}.", { kind: "Apartment", purpose: "Rent" }],
+    ["House for sale in {city}", "Independent house for sale in {city}.", { kind: "House", purpose: "Sale" }],
+    ["Plot for sale in {city}", "Residential plot for sale near {city}.", { kind: "Plot", purpose: "Sale" }],
+  ],
+  vehicles: [
+    ["Used hatchback in {city}", "A used hatchback kept in a covered garage in {city}.", { make: "Hatchback", year: 2018, km: 42000 }],
+    ["City bike in {city}", "A commuter bike with workshop records in {city}.", { make: "Commuter", year: 2020, km: 12000 }],
+    ["Family car in {city}", "Family car with a full workshop history in {city}.", { make: "Sedan", year: 2016, km: 61000 }],
+  ],
+  "buy-and-sell": [
+    ["Wooden desk in {city}", "A used wooden desk for sale in {city}.", { condition: "Used" }],
+    ["New water bottle in {city}", "A new steel water bottle for sale in {city}.", { condition: "New" }],
+    ["Bookshelf in {city}", "A used bookshelf for sale, buyer collects in {city}.", { condition: "Used" }],
+  ],
+  pets: [
+    ["Dog supplies in {city}", "Unused dog supplies for sale in {city}.", { kind: "Supplies" }],
+    ["Cat carrier in {city}", "A cat carrier in good condition in {city}.", { kind: "Supplies" }],
+    ["Pet bowls in {city}", "Spare pet bowls from a household in {city}.", { kind: "Supplies" }],
+  ],
+  education: [
+    ["Maths tutoring in {city}", "After school maths tutoring in {city}.", { subject: "Maths", mode: "In person" }],
+    ["English class in {city}", "Spoken English class for learners in {city}.", { subject: "English", mode: "In person" }],
+    ["Online science tutoring", "Online science tutoring from a tutor in {city}.", { subject: "Science", mode: "Online" }],
+  ],
+};
+
+const DEMO_PROMOTIONS = ["star", "top", "super-top", "highlight", "new", "flash"] as const;
+
+export interface DemoListing {
+  slug: string;
+  title: string;
+  description: string;
+  categorySlug: string;
+  citySlug: string;
+  districtSlug?: string;
+  attributes: Record<string, string | number>;
+  verified: boolean;
+  promotionCode?: (typeof DEMO_PROMOTIONS)[number];
+  bumped: boolean;
+}
+
+export function demoListings(): DemoListing[] {
+  const out: DemoListing[] = [];
+  const top = new Set<string>(TOP_CITY_SLUGS);
+  let n = 0;
+  const push = (
+    city: (typeof CITIES)[number],
+    category: (typeof CATEGORIES)[number],
+    districtSlug: string | undefined,
+    promotionCode?: DemoListing["promotionCode"],
+  ) => {
+    const lines = DEMO_LINES[category.slug];
+    const line = lines?.[n % (lines?.length ?? 1)];
+    if (!line) throw new Error(`No demo copy for ${category.slug}`);
+    const [titleTemplate, descriptionTemplate, attributes] = line;
+    out.push({
+      slug: `demo-${String(n).padStart(4, "0")}`,
+      title: titleTemplate.split("{city}").join(city[1]),
+      description: descriptionTemplate.split("{city}").join(city[1]),
+      categorySlug: category.slug,
+      citySlug: city[0],
+      districtSlug,
+      attributes: { ...attributes, tag: TAG_PAGES[n % TAG_PAGES.length]?.slug || "individual" },
+      verified: n % 5 === 0,
+      promotionCode,
+      bumped: n % 17 === 0,
+    });
+    n += 1;
+  };
+  for (const city of CITIES) {
+    const districts = DISTRICTS[city[0]] ?? [];
+    if (top.has(city[0])) {
+      for (const category of CATEGORIES) {
+        for (let k = 0; k < ADS_PER_TOP_CATEGORY; k += 1) {
+          const district = districts[k % Math.max(1, districts.length)];
+          const promotionCode =
+            category.slug === "dating" && k < DEMO_PROMOTIONS.length ? DEMO_PROMOTIONS[k] : undefined;
+          push(city, category, district?.[0], promotionCode);
+        }
+      }
+    } else {
+      for (const category of CATEGORIES) {
+        for (let k = 0; k < ADS_PER_OTHER_CITY; k += 1) {
+          const district = districts[k % Math.max(1, districts.length)];
+          push(city, category, district?.[0], category.slug === "dating" && k === 0 ? "top" : undefined);
+        }
+      }
+    }
+  }
+  return out;
+}
+
+export const DEMO_LISTING_COUNT = demoListings().length;
+
 export interface SeedCounts {
   states: number;
   cities: number;
@@ -383,6 +524,7 @@ export interface SeedCounts {
   promotion_products: number;
   credit_packs: number;
   feature_flags: number;
+  listings: number;
 }
 
 export function expectedSeedCounts(): SeedCounts {
@@ -403,6 +545,7 @@ export function expectedSeedCounts(): SeedCounts {
     promotion_products: PRODUCTS.length,
     credit_packs: creditPackTable().length,
     feature_flags: FEATURE_FLAGS.length,
+    listings: DEMO_LISTING_COUNT,
   };
 }
 
@@ -418,9 +561,7 @@ function assertCatalogue(): void {
   if (TOP_CITY_SLUGS.length !== 10) throw new Error("Top city list must have 10 entries");
   const districtSlugs: string[] = [];
   for (const slug of Object.keys(DISTRICTS)) {
-    if (!TOP_CITY_SLUGS.includes(slug as (typeof TOP_CITY_SLUGS)[number])) {
-      throw new Error(`Districts are only seeded for the top 10 cities (${slug})`);
-    }
+    if (!citySlugs.includes(slug)) throw new Error(`Districts refer to unknown city ${slug}`);
     for (const [districtSlug] of DISTRICTS[slug] ?? []) districtSlugs.push(districtSlug);
   }
   for (const slug of TOP_CITY_SLUGS) {
@@ -431,6 +572,11 @@ function assertCatalogue(): void {
   if (new Set(categorySlugs).size !== categorySlugs.length) throw new Error("Duplicate category slug");
   const productCodes = PRODUCTS.map((product) => product.code);
   if (new Set(productCodes).size !== productCodes.length) throw new Error("Duplicate product code");
+  for (const row of demoListings()) {
+    if (textDenied(`${row.title} ${row.description}`).denied) {
+      throw new Error(`Demo listing text refused: ${row.slug}`);
+    }
+  }
 }
 
 assertCatalogue();

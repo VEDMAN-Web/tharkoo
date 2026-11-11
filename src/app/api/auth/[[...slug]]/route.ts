@@ -5,8 +5,10 @@ import {
   SESSION_COOKIE,
   assertOrigin,
   clearSessionCookieHeader,
+  clearSessionHintCookie,
   readCookie,
   sessionCookieHeader,
+  sessionHintCookie,
 } from "@/server/auth/http";
 import { consumeRateLimit } from "@/server/auth/rate-limit";
 import {
@@ -98,11 +100,11 @@ async function dispatch(request: Request) {
       ip,
       existingToken: token,
     });
-    return json({ user: result.user }, requestId, 200, [sessionCookieHeader(result.token)]);
+    return json({ user: result.user }, requestId, 200, [sessionCookieHeader(result.token), sessionHintCookie()]);
   }
   if (request.method === "POST" && path === "logout") {
     await logoutSession(token);
-    return json({ ok: true }, requestId, 200, [clearSessionCookieHeader()]);
+    return json({ ok: true }, requestId, 200, [clearSessionCookieHeader(), clearSessionHintCookie()]);
   }
   if (request.method === "GET" && path === "me") {
     const found = await requireUser(token);

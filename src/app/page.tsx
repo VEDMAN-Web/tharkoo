@@ -1,54 +1,57 @@
-import type { ComponentProps } from "react";
-import { HomeBlocks } from "@/components/HomeBlocks";
-import { JsonLd } from "@/lib/jsonld";
-import { getCategories, getCities, getSeo, getSite } from "@/lib/queries";
-import { canonical } from "@/lib/seo";
+import { Suspense } from "react";
+import Image from "next/image";
+import Link from "next/link";
+import { HeroSearch } from "@/components/HeroSearch";
+import { HomeBlocks, SkeletonGrid } from "@/components/HomeBlocks";
+import { getHomepageContent } from "@/lib/queries";
+import { postAdPath } from "@/lib/urls";
+import { pageMetadata } from "@/lib/ui/meta";
+import { getPaths } from "@/server/urls/service";
 
-export const dynamic = "force-dynamic";
+export const revalidate = 60;
+
+export async function generateMetadata() {
+  const content = await getHomepageContent();
+  return pageMetadata({
+    title: content.seoTitle,
+    description: content.seoDescription,
+    path: "/",
+  });
+}
 
 export default async function Home() {
-  const [site, seo, categories, cities] = await Promise.all([
-    getSite(),
-    getSeo("home"),
-    getCategories(),
-    getCities(),
-  ]);
-  const stored = (site as { homepage?: { blocks?: object[] } }).homepage?.blocks;
-  const blocks = (stored && stored.length
-    ? stored
-    : [
-        { id: "hero", type: "hero", enabled: true, title: seo?.h1 || "Hot meetings in your city", subtitle: seo?.h2 || "" },
-        { id: "categories", type: "categories", enabled: true, cityCount: 3, moreLabel: "More cities" },
-        {
-          id: "boost",
-          type: "boost",
-          enabled: true,
-          title: "Boost your visibility",
-          body: "Post your ad free. Promote with Top, Flash or Star.",
-          cta: "Post your ad",
-          href: "/u/post-insert/",
-        },
-        { id: "intro", type: "html", enabled: true, html: `<p>${seo?.intro || ""}</p>` },
-      ]) as ComponentProps<typeof HomeBlocks>["blocks"];
-
+  const [content, paths] = await Promise.all([getHomepageContent(), getPaths()]);
+  const photo = content.hero.photo;
+  const localPhoto = photo.startsWith("/");
   return (
     <>
-      <JsonLd
-        data={{
-          "@context": "https://schema.org",
-          "@type": "Organization",
-          name: site.name,
-          url: canonical("/"),
-        }}
-      />
-      <HomeBlocks
-        blocks={blocks}
-        categories={categories}
-        cities={cities.map((c) => ({ slug: c.slug, name: c.name }))}
-        siteName={(site as { logoText?: string }).logoText || site.name || "tharkoo"}
-        searchPlaceholder={(site as { searchPlaceholder?: string }).searchPlaceholder || "Search by City, Category..."}
-        postCta={(site as { postCta?: string }).postCta || "Post your ad"}
-      />
+      <section className="tk-hero" data-tk="hero">
+        {localPhoto ? (
+          <Image className="tk-hero-photo" src={photo} alt={content.hero.photoAlt} width={960} height={880} priority sizes="42vw" />
+        ) : (
+          <img className="tk-hero-photo" src={photo} alt={content.hero.photoAlt} width={960} height={880} />
+        )}
+        <div className="tk-hero-copy">
+          <h1>
+            <span className="tk-hero-desk">{content.hero.desktop}</span>
+            <span className="tk-hero-mob">
+              {content.hero.mobileLines.map((line, index) => (
+                <span key={line}>
+                  {index ? <br /> : null}
+                  {line}
+                </span>
+              ))}
+            </span>
+          </h1>
+        </div>
+        <HeroSearch label={content.hero.searchPlaceholder} />
+      </section>
+      <Link href={postAdPath(paths)} data-tk="post-ad" className="tk-btn tk-btn-primary tk-home-post" prefetch={false}>
+        {content.hero.postLabel}
+      </Link>
+      <Suspense fallback={<SkeletonGrid />}>
+        <HomeBlocks />
+      </Suspense>
     </>
   );
 }

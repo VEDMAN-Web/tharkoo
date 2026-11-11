@@ -1,5 +1,13 @@
 import { AuthForm } from "@/components/AuthForm";
-export const metadata = { title: "Reset password", robots: { index: false } };
+import { pageMetadata } from "@/lib/ui/meta";
+
+export const metadata = pageMetadata({
+  title: "Reset password | Tharkoo",
+  description: "Choose a new Tharkoo password.",
+  path: "/u/reset/",
+  index: false,
+});
+
 export default function Page() {
   return <AuthForm mode="reset" />;
 }

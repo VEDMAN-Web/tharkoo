@@ -274,6 +274,8 @@ export async function purchasePromotion(input: {
   durationDays?: number;
   idempotencyKey?: string;
   couponCode?: string;
+  startsAt?: string;
+  autoRenew?: boolean;
   requestId: string;
   ip?: string;
 }) {
@@ -314,7 +316,16 @@ export async function purchasePromotion(input: {
   const balance = await walletBalance(input.userId);
   if (cost > balance) throw new PaymentRequiredError("Insufficient credits");
   const rule = promotionRule(product.code, input.durationDays, product.durationDays);
-  const startsAt = new Date();
+  const now = new Date();
+  const requested = input.startsAt ? new Date(input.startsAt) : now;
+  if (Number.isNaN(requested.getTime())) {
+    throw new ValidationError("Invalid request", { startsAt: ["Choose a valid start time"] });
+  }
+  const latest = now.getTime() + 30 * 24 * 60 * 60 * 1000;
+  if (requested.getTime() > latest) {
+    throw new ValidationError("Invalid request", { startsAt: ["Schedule within 30 days"] });
+  }
+  const startsAt = requested.getTime() < now.getTime() ? now : requested;
   const endsAt = new Date(startsAt.getTime() + rule.durationMs);
   const order = await PromotionOrder.create({
     userId,
@@ -324,6 +335,7 @@ export async function purchasePromotion(input: {
     durationDays: rule.durationDays,
     startsAt,
     endsAt,
+    autoRenew: input.autoRenew === true,
   });
   const payment = await Payment.create({
     userId,
@@ -351,6 +363,9 @@ export async function purchasePromotion(input: {
     if (quote) await consumeCoupon(quote, input.userId, input.requestId, input.ip);
     order.status = "active";
     await order.save();
+    if (product.code === "bump" && startsAt.getTime() <= Date.now() + 1000) {
+      await Listing.collection.updateOne({ _id: listingId }, { $set: { bumpedAt: startsAt } });
+    }
     payment.status = "paid";
     await payment.save();
     await audit.append({
@@ -460,6 +475,12 @@ export async function runBoostCron(requestId: string, now = new Date()) {
   for (const order of active) {
     const product = await PromotionProduct.findById(order.productId).lean();
     if (!product || !order.startsAt) continue;
+    if (product.code === "bump" && order.startsAt.getTime() <= now.getTime()) {
+      await Listing.collection.updateOne(
+        { _id: order.listingId, $or: [{ bumpedAt: { $exists: false } }, { bumpedAt: { $lt: order.startsAt } }] },
+        { $set: { bumpedAt: order.startsAt } },
+      );
+    }
     const due = boostsDue(product.code, order.durationDays, order.startsAt, now);
     const applied = await AuditEvent.countDocuments({
       action: "listing.boost",
@@ -486,4 +507,50 @@ export async function runBoostCron(requestId: string, now = new Date()) {
     }
   }
   return { boosted, expired };
+}
+
+export async function renewDuePromotions(requestId: string) {
+  await readyBilling();
+  const due = await PromotionOrder.find({ status: "active", autoRenew: true, endsAt: { $lte: new Date() } }).limit(40);
+  let renewed = 0;
+  for (const order of due) {
+    const product = await PromotionProduct.findById(order.productId);
+    if (!product) {
+      order.autoRenew = false;
+      await order.save();
+      continue;
+    }
+    const cost = Math.max(0, Math.round(product.amount));
+    const balance = await walletBalance(String(order.userId));
+    if (cost > balance) {
+      order.autoRenew = false;
+      await order.save();
+      continue;
+    }
+    try {
+      if (cost > 0) {
+        await debitWallet({
+          userId: String(order.userId),
+          amount: cost,
+          refType: "promotion",
+          refId: `${order._id}:renew:${order.endsAt?.toISOString() ?? renewed}`,
+          requestId,
+          actorId: String(order.userId),
+        });
+      }
+      const rule = promotionRule(product.code, order.durationDays, product.durationDays);
+      const start = new Date();
+      order.startsAt = start;
+      order.endsAt = new Date(start.getTime() + rule.durationMs);
+      await order.save();
+      if (product.code === "bump") {
+        await Listing.collection.updateOne({ _id: order.listingId }, { $set: { bumpedAt: start } });
+      }
+      renewed += 1;
+    } catch {
+      order.autoRenew = false;
+      await order.save();
+    }
+  }
+  return { renewed };
 }

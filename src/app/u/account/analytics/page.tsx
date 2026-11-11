@@ -1,9 +1,13 @@
-import { Simple } from "@/components/vendor/VendorScreens";
-export const metadata = { title: "Analytics", robots: { index: false } };
+import { ComingSoon } from "@/components/account/AccountTools";
+import { pageMetadata } from "@/lib/ui/meta";
+
+export const metadata = pageMetadata({
+  title: "Analytics | Tharkoo",
+  description: "Listing stats will live here.",
+  path: "/u/account/analytics/",
+  index: false,
+});
+
 export default function Page() {
-  return (
-    <Simple title="Analytics">
-      <p>Period 7/30/90. Health Score 72 (+4). Most improved / Declining. Live snapshot. Promote suggestion when low. Data delay 2 days.</p>
-    </Simple>
-  );
+  return <ComingSoon title="Analytics" body="Listing stats will live here." href="/u/account/ads/" label="View your ads" />;
 }

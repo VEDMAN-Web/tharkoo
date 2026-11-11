@@ -2,7 +2,7 @@ import { AuditEvent } from "@/server/models/trust";
 import { ContentPage, SeedBackup, SiteSettings } from "@/server/models/platform";
 import { EmailVerificationToken, IdentityVerification, PasswordResetToken, Session, User } from "@/server/models/identity";
 import { Category, Location } from "@/server/models/catalog";
-import { Favourite, Listing, ListingVersion, MediaAsset, Message, Thread } from "@/server/models/listing";
+import { Favourite, Listing, ListingVersion, MediaAsset, Message, SavedSearch, Thread } from "@/server/models/listing";
 import { ModerationCase, Report } from "@/server/models/trust";
 import { Payment, PromotionOrder, PromotionProduct, WalletEntry } from "@/server/models/billing";
 import {
@@ -16,8 +16,10 @@ import {
   HelpArticle,
   Page,
   Product,
+  Redirect,
   SeoTemplate,
   Site,
+  UrlOverride,
 } from "@/server/models/cms";
 
 export { V2, COLL_SUFFIX, CLASHING_MODELS, modelName, collectionName } from "@/server/models/names";
@@ -40,11 +42,13 @@ export {
   ListingVersion,
   MediaAsset,
   Favourite,
+  SavedSearch,
   Thread,
   Message,
 } from "@/server/models/listing";
 export type {
   FavouriteDoc,
+  SavedSearchDoc,
   ListingContactDoc,
   ListingDoc,
   ListingStatus,
@@ -89,6 +93,8 @@ export {
   FeatureFlag,
   AttributeGroup,
   Product,
+  Redirect,
+  UrlOverride,
 } from "@/server/models/cms";
 export type {
   AttributeGroupDoc,
@@ -141,4 +147,6 @@ export const allModels = [
   FeatureFlag,
   AttributeGroup,
   Product,
+  Redirect,
+  UrlOverride,
 ];

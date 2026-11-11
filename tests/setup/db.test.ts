@@ -1,6 +1,6 @@
 import { afterAll, expect, test } from "vitest";
 import { MongoConfigError, connectDb, mongoUri } from "@/lib/db";
-import { Category } from "@/lib/models";
+import { Category } from "@/server/models";
 import { clearMemoryMongo, connectMemoryMongo, disconnectMemoryMongo } from "./mongo";
 
 test("unset MONGODB_URI throws MongoConfigError", () => {
@@ -20,15 +20,8 @@ test("connect, insert a category, read it", async () => {
     name: "Workshops",
     slug: "workshops",
     description: "Local workshops",
-    icon: "workshop",
-    color: "#2255aa",
+    enabled: true,
     order: 1,
-    starEnabled: false,
-    status: "active",
-    showOnHome: true,
-    homeBlurb: "Find a workshop",
-    homeCities: ["pune"],
-    moreLabel: "More cities",
   });
   const found = await Category.findOne({ slug: "workshops" }).lean();
   expect(found?.name).toBe("Workshops");

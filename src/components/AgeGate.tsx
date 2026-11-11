@@ -2,66 +2,75 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { Logo } from "./Logo";
-import { safeHtml } from "@/lib/sanitize";
+import { Users } from "lucide-react";
+import { useFocusTrap } from "./ui/useFocusTrap";
 
 export function AgeGate({
-  brand,
-  title,
-  body,
-  yes,
-  no,
+  title = "Please confirm your age before continuing",
+  lead = "I am over 18 years old",
+  rest = "and I accept the terms of use of this site.",
+  terms = "Terms and Conditions",
+  yes = "ACCEPT",
+  no = "Decline",
+  noHref = "https://www.google.com",
 }: {
-  brand: string;
-  title: string;
-  body: string;
-  yes: string;
-  no: string;
+  brand?: string;
+  title?: string;
+  body?: string;
+  lead?: string;
+  rest?: string;
+  terms?: string;
+  yes?: string;
+  no?: string;
+  noHref?: string;
 }) {
-  const [open, setOpen] = useState(true);
+  const [open, setOpen] = useState(false);
+  const ref = useFocusTrap(open, () => {});
 
   useEffect(() => {
-    // Browser storage is an external source and must be read after hydration.
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    if (localStorage.getItem("nl-age") === "ok") setOpen(false);
+    const id = window.setTimeout(() => {
+      if (localStorage.getItem("nl-age") === "ok") {
+        window.dispatchEvent(new Event("tk-age-ok"));
+        return;
+      }
+      setOpen(true);
+    }, 0);
+    return () => window.clearTimeout(id);
   }, []);
 
   if (!open) return null;
-
   return (
-    <div className="age-gate" data-testid="age-gate">
-      <div className="age-card">
-        <div className="age-18">
-          <Logo name={brand} href={null} size="lg" />
-          <span className="age-18-badge">18+</span>
+    <div className="tk-age-back" style={{ backdropFilter: "blur(8px)", background: "rgba(74, 33, 58, 0.35)" }}>
+      <div className="tk-age" data-tk="age-gate" role="dialog" aria-modal="true" aria-labelledby="age-title" ref={ref}>
+        <div className="tk-age-icon" aria-hidden>
+          <Users size={22} color="#6A2150" />
+          <span className="tk-age-pill">18+</span>
         </div>
-        <h2>{title || "Please read the following warning before continuing"}</h2>
-        <p
-          className="body"
-          dangerouslySetInnerHTML={{
-            __html: safeHtml(
-              body.includes("<")
-                ? body
-                : " <b>I am over 18 years old</b>  and I accept the viewing of explicit texts and images intended for an <b>adult audience</b>.",
-            ),
-          }}
-        />
-        <p className="age-terms">
-          I have read and accept the <Link href="/terms/">Terms and Conditions</Link>
+        <h2 id="age-title">{title}</h2>
+        <p>
+          <strong>{lead}</strong> {rest}
+        </p>
+        <p>
+          I have read and accept the <Link href="/terms/">{terms}</Link>
         </p>
         <button
-          className="age-yes"
           type="button"
+          className="tk-btn tk-btn-rose"
+          data-tk="age-accept"
+          style={{ width: 100, height: 45, margin: "12px auto 0" }}
           onClick={() => {
             localStorage.setItem("nl-age", "ok");
+            window.dispatchEvent(new Event("tk-age-ok"));
             setOpen(false);
           }}
         >
-          {yes || "Accept"}
+          {yes}
         </button>
-        <a className="age-no" href="https://www.google.com">
-          {no || "Decline"}
-        </a>
+        <p>
+          <a href={noHref} style={{ color: "var(--accent)", display: "inline-block", minHeight: 24, padding: "4px 8px" }}>
+            {no || "Decline"}
+          </a>
+        </p>
       </div>
     </div>
   );

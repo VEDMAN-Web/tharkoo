@@ -34,6 +34,7 @@ export const ALLOWED_PRODUCT_CODES = [
   "new",
   "flash",
   "star",
+  "bump",
 ] as const;
 
 /** Whole tokens and contiguous phrases. */

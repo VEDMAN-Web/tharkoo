@@ -2,19 +2,94 @@ import { NextRequest, NextResponse } from "next/server";
 import { allowRequest, clientKey } from "@/lib/rate-limit";
 import { originAllowed } from "@/server/auth/http";
 import { consumeRateLimit } from "@/server/auth/rate-limit";
+import { countRedirectHit, decideRequest } from "@/server/urls/service";
+
+const STATIC_EXT = /\.(?:svg|png|jpg|jpeg|webp|avif|ico|woff2|css|js|map|txt|xml)$/i;
+
+function requestLimit(name: string, fallback: number) {
+  const value = Number(process.env[name]);
+  return Number.isFinite(value) && value >= fallback ? value : fallback;
+}
+
+function skipLimiter(req: NextRequest) {
+  if (req.nextUrl.searchParams.has("_rsc")) return true;
+  if (req.headers.get("next-router-prefetch")) return true;
+  if (STATIC_EXT.test(req.nextUrl.pathname)) return true;
+  return false;
+}
+
+function nextWithPath(req: NextRequest) {
+  const headers = new Headers(req.headers);
+  headers.set("x-pathname", req.nextUrl.pathname);
+  return NextResponse.next({ request: { headers } });
+}
+
+async function adIsGone(pathname: string) {
+  const { getPaths } = await import("@/server/urls/service");
+  const { Listing } = await import("@/server/models");
+  const { listingVisibility } = await import("@/server/listings/visibility");
+  const paths = await getPaths();
+  const prefix = `/${paths.ad.replace(/^\/|\/$/g, "")}/`;
+  if (!pathname.startsWith(prefix)) return false;
+  const slug = pathname.slice(prefix.length).replace(/\/$/, "");
+  if (!slug || slug.includes("/")) return false;
+  const doc = await Listing.findOne({ slug }).select("status expiresAt").lean<{ status?: string; expiresAt?: Date | null }>();
+  return listingVisibility(doc) === "gone";
+}
+
+function skipRedirect(path: string) {
+  return (
+    path.startsWith("/api/") ||
+    path.startsWith("/admin") ||
+    path.startsWith("/_next") ||
+    path.startsWith("/uploads/") ||
+    path.startsWith("/sitemap") ||
+    path.startsWith("/robots") ||
+    path.startsWith("/manifest") ||
+    path.startsWith("/brand/") ||
+    path.startsWith("/placeholders/") ||
+    path.includes(".")
+  );
+}
 
 export async function proxy(req: NextRequest) {
-  if (!originAllowed(req)) {
+  const path = req.nextUrl.pathname;
+  let rewriteTo = "";
+  if ((req.method === "GET" || req.method === "HEAD") && !skipRedirect(path)) {
+    try {
+      const decision = await decideRequest(path);
+      if (decision.action === "redirect") {
+        await countRedirectHit(decision.id);
+        const url = req.nextUrl.clone();
+        url.pathname = decision.to;
+        return NextResponse.redirect(url, 308);
+      }
+      if (decision.action === "rewrite") rewriteTo = decision.to;
+    } catch {
+      /* a missing database should not block the page */
+    }
+    if (process.env.MONGODB_URI) {
+      try {
+        if (await adIsGone(rewriteTo || path)) {
+          return new NextResponse("This listing has been removed.", { status: 410, headers: { "content-type": "text/plain; charset=utf-8" } });
+        }
+      } catch {
+        /* a lookup failure should fall through to the page */
+      }
+    }
+  }
+  const cronPost = req.method === "POST" && path.startsWith("/api/cron/");
+  if (!cronPost && !originAllowed(req)) {
     return NextResponse.json(
       { ok: false, data: null, error: { code: "FORBIDDEN", message: "Origin is not allowed" } },
       { status: 403 },
     );
   }
+  if (skipLimiter(req)) return nextWithPath(req);
   const ip = clientKey(req.headers);
-  const path = req.nextUrl.pathname;
-  const search = path.startsWith("/search") || path.startsWith("/api/catalog");
+  const search = path.startsWith("/search") || rewriteTo.startsWith("/search") || path.startsWith("/api/catalog");
   const key = `${ip}:${search ? "search" : "site"}`;
-  const max = search ? 30 : 90;
+  const max = requestLimit(search ? "SEARCH_RATE_MAX" : "SITE_RATE_MAX", search ? 30 : 240);
   let ok = true;
   if (process.env.MONGODB_URI) {
     try {
@@ -26,9 +101,16 @@ export async function proxy(req: NextRequest) {
     ok = allowRequest(key, max, 60_000);
   }
   if (!ok) return NextResponse.json({ error: "Too many requests" }, { status: 429 });
-  return NextResponse.next();
+  if (rewriteTo) {
+    const headers = new Headers(req.headers);
+    headers.set("x-pathname", rewriteTo);
+    const url = req.nextUrl.clone();
+    url.pathname = rewriteTo;
+    return NextResponse.rewrite(url, { request: { headers } });
+  }
+  return nextWithPath(req);
 }
 
 export const config = {
-  matcher: ["/((?!_next/static|_next/image|_next/webpack-hmr|favicon.ico|placeholders).*)"],
+  matcher: ["/((?!_next/static|_next/image|_next/webpack-hmr|favicon.ico|placeholders|.*\\.(?:svg|png|jpg|jpeg|webp|avif|ico|woff2|css|js|map|txt|xml)$).*)"],
 };

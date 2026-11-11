@@ -1,17 +1,13 @@
-import Link from "next/link";
-import { VendorShell } from "@/components/vendor/VendorShell";
-export const metadata = { title: "Manage ad", robots: { index: false } };
+import { ComingSoon } from "@/components/account/AccountTools";
+import { pageMetadata } from "@/lib/ui/meta";
+
+export const metadata = pageMetadata({
+  title: "Ad | Tharkoo",
+  description: "Open your ads list to see a real listing.",
+  path: "/u/account/ads/in00001/",
+  index: false,
+});
+
 export default function Page() {
-  return (
-    <VendorShell title="Ad management">
-      <img src="/placeholders/p1.jpg" alt="" className="h-40 w-32 object-cover" />
-      <p className="mt-2 text-[13px]">Status live · expiry 12 Nov · Top 3 days · auto-renew on</p>
-      <p className="text-[13px]">Views 120 · Calls 8 · WhatsApp 11 · Saves 4</p>
-      <div className="mt-3 flex flex-wrap gap-2 text-[13px]">
-        <Link href="/u/account/ads/in00001/edit/">Edit</Link>
-        <Link href="/u/post-insert/">Promote</Link>
-        <button type="button">Suspend</button>
-      </div>
-    </VendorShell>
-  );
+  return <ComingSoon title="Ad" body="Open your ads list to see a real listing." href="/u/account/ads/" label="Your ads" />;
 }

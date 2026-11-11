@@ -1,6 +1,8 @@
 import type { Types } from "mongoose";
-import { Category, CreditPack, FeatureFlag, Listing, Location, PromotionProduct, SeedBackup } from "@/server/models";
+import { invalidateTags } from "@/lib/cache";
+import { BlogPost, Category, CreditPack, FeatureFlag, HelpArticle, Listing, Location, Page, PromotionProduct, SeedBackup } from "@/server/models";
 import { attributeKeyDenied, categoryDenied, productCodeDenied, textDenied } from "@/server/shared/policy";
+import { seedDemoListings } from "@/server/seed/listings";
 import {
   CATEGORIES,
   CITIES,
@@ -27,6 +29,7 @@ export interface SeedResult {
   promotion_products: SeedTally;
   credit_packs: SeedTally;
   feature_flags: SeedTally;
+  listings: SeedTally;
 }
 
 export interface SeedPlan {
@@ -37,6 +40,7 @@ export interface SeedPlan {
   promotion_products: { insert: string[]; skip: string[] };
   credit_packs: { insert: string[]; skip: string[] };
   feature_flags: { insert: string[]; skip: string[] };
+  listings: { insert: string[]; skip: string[] };
 }
 
 export interface RollbackResult {
@@ -218,6 +222,12 @@ async function walkLocations(dryRun: boolean): Promise<Bucket> {
       if (!city) continue;
       const [citySlug, cityName] = city;
       let cityId: Types.ObjectId | null = null;
+      if (!dryRun && stateId && citySlug === "gurgaon") {
+        await Location.updateOne(
+          { parentId: stateId, type: "city", slug: "gurugram" },
+          { $set: { slug: "gurgaon", name: "Gurgaon", oldSlugs: ["gurugram"] } },
+        );
+      }
       if (stateId == null) bucket.inserted.push(`city:${citySlug}`);
       else {
         cityId = await place(
@@ -232,6 +242,7 @@ async function walkLocations(dryRun: boolean): Promise<Bucket> {
                   order: cityOrder,
                   countryCode: "IN",
                   seedBatch: SEED_BATCH,
+                  ...(citySlug === "gurgaon" ? { oldSlugs: ["gurugram"] } : {}),
                 },
               },
               { upsert: true },
@@ -409,12 +420,13 @@ async function snapshot(): Promise<{ backupId: string }> {
 /** Read-only plan. Does not write seed rows or seed_backups. */
 export async function dryRunSeed(): Promise<SeedPlan> {
   assertSeedAllowed();
-  const [locations, categories, products, packs, flags] = await Promise.all([
+  const [locations, categories, products, packs, flags, listings] = await Promise.all([
     walkLocations(true),
     walkCategories(true),
     walkProducts(true),
     walkPacks(true),
     walkFlags(true),
+    seedDemoListings(true),
   ]);
   return {
     batch: SEED_BATCH,
@@ -424,6 +436,7 @@ export async function dryRunSeed(): Promise<SeedPlan> {
     promotion_products: planSide(products),
     credit_packs: planSide(packs),
     feature_flags: planSide(flags),
+    listings: planSide(listings),
   };
 }
 
@@ -442,6 +455,11 @@ export async function runSeed(): Promise<SeedResult> {
     walkPacks(false),
     walkFlags(false),
   ]);
+  const listings = await seedDemoListings(false);
+  const { ensureHomepageDocument } = await import("@/lib/ui/site-store");
+  await ensureHomepageDocument();
+  await seedEditorial();
+  invalidateTags(["categories", "locations", "listings", "feed", "counts", "site"]);
   return {
     batch: SEED_BATCH,
     backupId: backup.backupId,
@@ -450,7 +468,24 @@ export async function runSeed(): Promise<SeedResult> {
     promotion_products: tally(products),
     credit_packs: tally(packs),
     feature_flags: tally(flags),
+    listings: tally(listings),
   };
+}
+
+async function seedEditorial() {
+  const { ABOUT_BODY, GRIEVANCE_BODY, publishedGuides } = await import("@/content/editorial");
+  const pages = [
+    { slug: "about", title: "About Tharkoo", body: ABOUT_BODY },
+    { slug: "grievance", title: "Grievance", body: GRIEVANCE_BODY },
+  ];
+  for (const page of pages) {
+    await Page.updateOne({ slug: page.slug }, { $setOnInsert: { ...page, status: "published" } }, { upsert: true });
+  }
+  for (const guide of publishedGuides()) {
+    const update = { $setOnInsert: { slug: guide.slug, title: guide.title, body: guide.body, status: guide.status, date: "November 2026", author: "Tharkoo" } };
+    if (guide.kind === "help") await HelpArticle.updateOne({ slug: guide.slug }, update, { upsert: true });
+    else await BlogPost.updateOne({ slug: guide.slug }, update, { upsert: true });
+  }
 }
 
 function rows(value: unknown): PlainDoc[] {

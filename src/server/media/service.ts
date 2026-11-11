@@ -1,3 +1,5 @@
+import { mkdir, unlink, writeFile } from "node:fs/promises";
+import path from "node:path";
 import mongoose, { type Types } from "mongoose";
 import { connectDb } from "@/lib/db";
 import { AuditRepository } from "@/server/audit";
@@ -6,7 +8,7 @@ import { ForbiddenError, NotFoundError, PolicyViolationError, ValidationError } 
 import { Listing, MediaAsset, PromotionOrder, type ListingDoc, type MediaAssetDoc } from "@/server/models";
 import { cloudinaryClient, type Delivery } from "@/server/media/client";
 import { csamScannerFromEnv, type CsamScanner } from "@/server/media/csam";
-import { EAGER, ID_URL_TTL_SECONDS, MAX_BYTES, ORPHAN_AGE_MS, STRIP_EXIF, cloudinaryEnv, photoLimit } from "@/server/media/config";
+import { EAGER, ID_URL_TTL_SECONDS, MAX_BYTES, ORPHAN_AGE_MS, STRIP_EXIF, cloudinaryEnv, optionalCloudinary, photoLimit } from "@/server/media/config";
 import { signUploadParams } from "@/server/media/sign";
 
 const ALLOWED = new Set(["image/jpeg", "image/png", "image/webp"]);
@@ -60,12 +62,59 @@ async function loadOwned(mediaId: string, userId?: string) {
   return asset;
 }
 
+function localFile(objectKey: string) {
+  if (objectKey.startsWith("/uploads/")) return path.join(process.cwd(), "public", "uploads", path.basename(objectKey));
+  if (objectKey.startsWith("private:")) return path.join(process.cwd(), "data", "id-docs", path.basename(objectKey.slice("private:".length)));
+  return null;
+}
+
+export async function saveLocalMedia(
+  userId: string,
+  mediaId: string,
+  file: { type: string; data: Buffer },
+  requestId: string,
+) {
+  const asset = await loadOwned(mediaId, userId);
+  if (!ALLOWED.has(file.type) || file.data.length > MAX_BYTES) {
+    asset.status = "rejected_policy";
+    await asset.save();
+    throw new PolicyViolationError("Only jpeg, png, and webp photos up to 8 MB are allowed");
+  }
+  const ext = file.type === "image/png" ? "png" : file.type === "image/webp" ? "webp" : "jpg";
+  const filename = `${asset._id.toString()}.${ext}`;
+  const privateDoc = asset.kind === "id_document";
+  if (privateDoc) {
+    const dir = path.join(process.cwd(), "data", "id-docs");
+    await mkdir(dir, { recursive: true });
+    await writeFile(path.join(dir, filename), file.data);
+  } else {
+    const dir = path.join(process.cwd(), "public", "uploads");
+    await mkdir(dir, { recursive: true });
+    await writeFile(path.join(dir, filename), file.data);
+  }
+  asset.contentType = file.type;
+  asset.bytes = file.data.length;
+  asset.objectKey = privateDoc ? `private:${filename}` : `/uploads/${filename}`;
+  asset.status = "cleared";
+  asset.clearedAt = new Date();
+  await asset.save();
+  if (!privateDoc && asset.listingId) {
+    await Listing.updateOne({ _id: asset.listingId }, { $addToSet: { mediaIds: asset._id } });
+    await Listing.updateOne(
+      { _id: asset.listingId, $or: [{ coverMediaId: { $exists: false } }, { coverMediaId: null }] },
+      { $set: { coverMediaId: asset._id } },
+    );
+  }
+  await record(userId, "media.complete", "media", asset._id.toString(), requestId, { status: "cleared", local: true });
+  return { status: "cleared" as const, url: privateDoc ? null : asset.objectKey };
+}
+
 export async function signMedia(
   userId: string,
   input: { listingId?: string; contentType: string; byteSize: number; kind: "image" | "video" | "id_document" },
   requestId: string,
 ) {
-  const env = cloudinaryEnv();
+  const env = optionalCloudinary();
   await connectDb();
   if (input.kind === "video" || !ALLOWED.has(input.contentType) || input.byteSize > MAX_BYTES) {
     throw new PolicyViolationError("Only jpeg, png, and webp photos up to 8 MB are allowed");
@@ -85,8 +134,24 @@ export async function signMedia(
     contentType: input.contentType,
     bytes: input.byteSize,
   });
-  const folder = `${env.folderPrefix}/${input.kind === "id_document" ? "id" : "listings"}`;
   const publicId = created._id.toString();
+  if (!env) {
+    created.objectKey = `pending-local:${publicId}`;
+    await created.save();
+    await record(userId, "media.sign", "media", publicId, requestId, { kind: input.kind, local: true });
+    return {
+      mode: "local" as const,
+      timestamp: Math.floor(Date.now() / 1000),
+      signature: "local",
+      cloudName: "",
+      apiKey: "",
+      folder: "local",
+      mediaId: publicId,
+      params: {},
+      uploadUrl: "/api/media/local",
+    };
+  }
+  const folder = `${env.folderPrefix}/${input.kind === "id_document" ? "id" : "listings"}`;
   created.objectKey = `${folder}/${publicId}`;
   await created.save();
   const params: Record<string, string | number> = {
@@ -112,6 +177,9 @@ export async function signMedia(
 
 export async function completeMedia(userId: string, mediaId: string, requestId: string) {
   const asset = await loadOwned(mediaId, userId);
+  if (asset.objectKey.startsWith("/uploads/") || asset.objectKey.startsWith("private:")) {
+    return { status: asset.status === "cleared" ? ("cleared" as const) : ("scanning" as const) };
+  }
   const remote = await cloudinaryClient().resource(asset.objectKey, deliveryType(asset.kind));
   if (!remote) throw new NotFoundError("Upload was not found");
   const mime = FORMAT_MIME[remote.format];
@@ -156,6 +224,13 @@ export async function signedIdDocumentUrl(userId: string, roles: string[], media
   const asset = await loadOwned(mediaId);
   if (asset.kind !== "id_document") throw new ForbiddenError("Not an identity document");
   if (asset.ownerId.toString() !== userId && !isStaffRole(roles)) throw new ForbiddenError("Not allowed");
+  if (asset.objectKey.startsWith("private:")) {
+    const expiresAt = Math.floor(Date.now() / 1000) + ID_URL_TTL_SECONDS;
+    return {
+      url: `/api/media/private/${asset._id.toString()}?expires_at=${expiresAt}`,
+      expiresAt: new Date(expiresAt * 1000).toISOString(),
+    };
+  }
   const format = asset.contentType === "image/png" ? "png" : asset.contentType === "image/webp" ? "webp" : "jpg";
   const expiresAt = Math.floor(Date.now() / 1000) + ID_URL_TTL_SECONDS;
   const url = cloudinaryClient().signedDownload(asset.objectKey, format, expiresAt);
@@ -168,7 +243,9 @@ export async function signedIdDocumentUrl(userId: string, roles: string[], media
 export async function deleteMedia(userId: string, mediaId: string, requestId: string) {
   const asset = await loadOwned(mediaId);
   if (asset.ownerId.toString() !== userId) throw new ForbiddenError("Not allowed");
-  await cloudinaryClient().destroy(asset.objectKey, deliveryType(asset.kind));
+  const stored = localFile(asset.objectKey);
+  if (stored) await unlink(stored).catch(() => undefined);
+  else await cloudinaryClient().destroy(asset.objectKey, deliveryType(asset.kind));
   asset.status = "deleted";
   await asset.save();
   if (asset.listingId) {
