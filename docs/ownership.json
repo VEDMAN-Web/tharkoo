@@ -938,7 +938,8 @@
       "globs": [
         "docs/claude/SETUP.md",
         "package.json",
-        "scripts/preview.mjs"
+        "scripts/preview.mjs",
+        "docs/ownership.json"
       ]
     },
     "H3.10": {
