@@ -756,7 +756,10 @@
         "src/components/admin/nav.ts",
         "src/app/admin/layout.tsx",
         "src/app/styleguide/admin/**",
-        "tests/server/ui/admin-nav.test.ts"
+        "tests/server/ui/admin-nav.test.ts",
+        "src/app/admin/coming/**",
+        "docs/ownership.json",
+        "progress/H3.1.md"
       ]
     },
     "H3.2": {
