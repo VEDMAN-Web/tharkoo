@@ -388,6 +388,44 @@ if (cardPhotos.some((item) => item.box.height > 0 && Math.abs(item.box.width / i
 record("/dating/bengaluru/ structure", 1440, notes.length === 0, notes.join("; "));
 await cityPage.close();
 
+const narrowCity = await context.newPage();
+await narrowCity.setViewportSize({ width: 390, height: 844 });
+await narrowCity.goto(base + "/dating/bengaluru/", { waitUntil: "load" });
+const overlap = await narrowCity.evaluate(() => {
+  function hits(a, b) {
+    if (!a || !b) return false;
+    const A = a.getBoundingClientRect();
+    const B = b.getBoundingClientRect();
+    return A.width > 0 && B.width > 0 && A.left < B.right && A.right > B.left && A.top < B.bottom && A.bottom > B.top;
+  }
+  const card = document.querySelector('.tk-card[data-variant="supertop"], .tk-card[data-variant="star"]');
+  if (!card) return "no-promoted-card";
+  if (hits(card.querySelector(".tk-badge-promo"), card.querySelector(".tk-card-title"))) return "badge-title";
+  if (hits(card.querySelector(".tk-circles"), card.querySelector(".tk-card-meta"))) return "circles-location";
+  const photo = card.querySelector("img")?.getBoundingClientRect();
+  if (photo && photo.height > 0 && Math.abs(photo.width / photo.height - 0.8) > 0.12) return "ratio";
+  return "";
+});
+record("/dating/bengaluru/ overlap", 390, overlap === "", overlap);
+const register = await context.newPage();
+await register.setViewportSize({ width: 390, height: 844 });
+await register.goto(base + "/u/register/", { waitUntil: "load" });
+const labelOverlap = await register.evaluate(() => {
+  function hits(a, b) {
+    const A = a.getBoundingClientRect();
+    const B = b.getBoundingClientRect();
+    return A.width > 0 && B.width > 0 && A.left < B.right && A.right > B.left && A.top < B.bottom && A.bottom > B.top;
+  }
+  return [...document.querySelectorAll("form label")].some((label) => {
+    const box = label.querySelector("input[type=checkbox]");
+    const text = label.querySelector("span");
+    return box && text && hits(box, text);
+  });
+});
+record("/u/register/ labels", 390, labelOverlap === false, labelOverlap ? "checkbox overlaps label" : "");
+await narrowCity.close();
+await register.close();
+
 for (const district of ["/dating/delhi/central-delhi/", "/dating/delhi/new-delhi/", "/dating/delhi/south-delhi/"]) {
   for (const [width, height] of widths) {
     const { page } = await visit(district, width, height);
@@ -527,6 +565,7 @@ const decision = verificationId
 await adminApi.close();
 record("post-ad kyc approve", 1440, adminLogin.ok() && decision?.ok() === true && /review/i.test(kycNote), `login ${adminLogin.status()} decide ${decision?.status()} ${kycNote}`);
 await loggedOut.goto(draftUrl.includes("step=") ? draftUrl.replace(/step=\d+/, "step=3") : draftUrl, { waitUntil: "load" });
+await loggedOut.locator("[data-tk=card]").waitFor({ timeout: 15000 }).catch(() => {});
 await loggedOut.locator("button", { hasText: "PUBLISH" }).click();
 await loggedOut.locator("[data-tk=step-title]").filter({ hasText: "live" }).waitFor({ timeout: 15000 }).catch(() => {});
 const live = await loggedOut.locator("[data-tk=step-title]").innerText().catch(() => "");
@@ -616,6 +655,8 @@ for (const [width, height] of widths) {
       await page.locator("#title").fill("Hello friends nearby");
       await page.locator("#text").fill("Looking for coffee and conversation this weekend in the city.");
       await page.locator("#phone").fill("+919876543210");
+      if (await page.locator("#age").count()) await page.locator("#age").fill("28");
+      if (await page.locator(".tk-choice").count()) await page.locator(".tk-choice").first().click();
       const switches = page.locator(".tk-switch");
       await switches.nth(2).click();
       await switches.nth(3).click();

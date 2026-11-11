@@ -74,9 +74,9 @@ export function CollectionEditor({
   return (
     <div className="grid gap-4 lg:grid-cols-2">
       <div className="rounded-lg border border-line bg-surface p-3 text-text">
-        <div className="mb-2 flex items-center justify-between">
+        <div className="mb-2 flex items-center justify-between gap-3">
           <h2 className="font-bold">{title || model}</h2>
-          <button type="button" className="tk-btn tk-btn-rose" onClick={create}>
+          <button type="button" className="tk-btn tk-btn-rose shrink-0" style={{ position: "static" }} onClick={create}>
             New
           </button>
         </div>

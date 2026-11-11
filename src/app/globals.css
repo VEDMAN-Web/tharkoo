@@ -521,8 +521,8 @@ input, select, textarea { font-size: 16px; }
   position: absolute;
   right: 24px;
   top: 0;
-  height: 100%;
-  width: 220px;
+  width: 116px;
+  height: 116px;
   opacity: 0.12;
 }
 .tk-panel { border: 1px solid var(--border-2); border-radius: 4px; margin-top: 26px; background: #fff; }
@@ -1179,6 +1179,18 @@ input, select, textarea { font-size: 16px; }
   .tk-card { min-height: 0; }
   .tk-card-photo { width: 110px; }
   .tk-card-title { -webkit-line-clamp: 4; line-height: 1.25; }
+  .tk-card[data-variant="top"] .tk-card-title,
+  .tk-card[data-variant="supertop"] .tk-card-title,
+  .tk-card[data-variant="star"] .tk-card-title,
+  .tk-card[data-variant="highlight"] .tk-card-title,
+  .tk-card[data-variant="new"] .tk-card-title { display: block; max-width: calc(100% - 108px); }
+  .tk-card[data-variant="supertop"] .tk-card-body,
+  .tk-card[data-variant="star"] .tk-card-body { padding-bottom: 64px; }
+  .tk-card[data-variant="supertop"] .tk-card-meta,
+  .tk-card[data-variant="star"] .tk-card-meta { padding-right: 112px; }
+  .tk-circles { right: 8px; bottom: 8px; }
+  .tk-banner-pins { width: 90px; height: 90px; }
+  .tk-admin-nav { position: sticky; top: 0; z-index: 5; background: var(--bg); }
   .tk-card-desc { font-size: 16px; -webkit-line-clamp: 4; }
   .tk-feed { gap: 24px; }
   .tk-crumbs-full { display: none; }

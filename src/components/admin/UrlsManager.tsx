@@ -76,7 +76,7 @@ export function UrlsManager({
 
   return (
     <div className="grid min-w-0 max-w-3xl gap-4" data-tk="url-manager">
-      <p className="t-small text-muted">Change a public slug or prefix. The previous URL keeps working with a 301, and the sitemap refreshes.</p>
+      <p className="t-small text-muted">Change a public slug or prefix. The previous URL keeps working with a permanent redirect, and the sitemap refreshes.</p>
       {message ? <p className="t-small" aria-live="polite">{message}</p> : null}
 
       <section className="tk-profile grid gap-3">

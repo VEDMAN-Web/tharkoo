@@ -24,9 +24,13 @@ const nextConfig: NextConfig = {
   agentRules: false,
   allowedDevOrigins: ["127.0.0.1"],
   trailingSlash: true,
+  poweredByHeader: false,
   output: "standalone",
   images: {
-    formats: ["image/avif", "image/webp"],
+    formats: ["image/webp"],
+    minimumCacheTTL: 60 * 60 * 24,
+    deviceSizes: [390, 768, 1200],
+    imageSizes: [64, 96, 160, 256],
     remotePatterns: [{ protocol: "https", hostname: "res.cloudinary.com" }],
   },
   async rewrites() {

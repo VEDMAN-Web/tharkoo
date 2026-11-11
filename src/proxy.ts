@@ -62,7 +62,7 @@ export async function proxy(req: NextRequest) {
         await countRedirectHit(decision.id);
         const url = req.nextUrl.clone();
         url.pathname = decision.to;
-        return NextResponse.redirect(url, 301);
+        return NextResponse.redirect(url, 308);
       }
       if (decision.action === "rewrite") rewriteTo = decision.to;
     } catch {

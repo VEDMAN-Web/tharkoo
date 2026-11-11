@@ -4,7 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { Heart, MapPin, Shield, Smile, User } from "lucide-react";
 import type { ListingDoc } from "@/lib/models";
-import { displayTitle, prettyPlace } from "@/lib/format";
+import { displayTitle, listingDateLabel, prettyPlace } from "@/lib/format";
 import { listingTagSections } from "@/lib/media";
 import { CitySync } from "./CityContext";
 import { ContactButtons, ContactProvider } from "./ContactButtons";
@@ -46,10 +46,7 @@ export function AdDetail({
   const district = ad.place && ad.place !== city ? ad.place : prettyPlace(ad.districtSlug);
   const sections = listingTagSections(ad.tags);
   const personal = PERSONAL.has(ad.categorySlug || "");
-  const when = ad.publishedAt || ad.createdAt;
-  const date = when
-    ? new Date(when).toLocaleDateString("en-GB", { day: "2-digit", month: "long" }).toUpperCase()
-    : "";
+  const date = listingDateLabel(ad.publishedAt || ad.createdAt);
   const listHref = `/${ad.categorySlug}/${ad.citySlug}/`;
   const [copied, setCopied] = useState("");
 

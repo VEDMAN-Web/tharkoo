@@ -17,7 +17,7 @@ import { prettyPlace } from "@/lib/format";
 import { fillTemplate } from "@/lib/seo";
 import { placePath, tagPath } from "@/lib/urls";
 import { withUrlSeo, urlHeading } from "@/lib/seo/override";
-import { fallbackLanding } from "@/lib/seo/landing";
+import { fallbackLanding, visibleHeading } from "@/lib/seo/landing";
 import { getPaths, publicTags } from "@/server/urls/service";
 
 type Props = {
@@ -53,9 +53,18 @@ export async function generateMetadata({ params, searchParams }: Props): Promise
     districtPref: ` / ${dist.name}`,
     site: site.name,
   };
-  const copy = fallbackLanding({ category: cat.name || category, city: city.name || location, district: dist.name || district, site: site.name });
-  const title = fillTemplate(seo?.title || copy.title, vars);
-  const description = fillTemplate(seo?.description || copy.description, vars);
+  const feedForCopy = await getFeed({ categorySlug: category, citySlug: location, districtSlug: district }, 1);
+  const copy = fallbackLanding({
+    category: cat.name || category,
+    city: city.name || location,
+    district: dist.name || district,
+    count: feedForCopy.total,
+    site: site.name,
+  });
+  const counted = { ...vars, count: feedForCopy.total };
+  const title = fillTemplate(seo?.title || copy.title, counted);
+  const rawDescription = fillTemplate(seo?.description || copy.description, counted);
+  const description = rawDescription.length <= 160 ? rawDescription : `${rawDescription.slice(0, 157).replace(/\s+\S*$/, "")}`;
   const pageNo = Math.max(1, Number(sp.page) || 1);
   const filtered = Boolean(sp.photos || sp.verified);
   const feed = await getFeed(
@@ -130,7 +139,7 @@ export default async function DistrictPage({ params, searchParams }: Props) {
   };
   return (
     <ListingPageView
-      h1={heading || fillTemplate(seo?.h1 || "{category} in {district}", vars)}
+      h1={heading || visibleHeading(fillTemplate(seo?.h1 || "", vars), districtCopy.h1)}
       faqs={districtCopy.faqs}
       popular={tags.slice(0, 4).map((tag) => ({ href: tagPath(paths, cat.slug || category, tag.slug), label: `${dist.name} ${tag.label}` }))}
       h2={fillTemplate(seo?.h2 || "", vars)}

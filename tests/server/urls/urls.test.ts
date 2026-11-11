@@ -5,7 +5,7 @@ import { shardEntries } from "@/lib/seo/sitemaps";
 import { adPath, categoryPath, placePath, validateSlug } from "@/lib/urls";
 import { getCategory, getLocationBySlug } from "@/lib/queries";
 import { siteUrl } from "@/lib/utils";
-import { Category, Listing, Location, Site } from "@/server/models";
+import { Category, Listing, Location, Redirect, Site } from "@/server/models";
 import { decideRequest, getPaths, getUrlOverride, invalidateUrlCache, renameAd, renameCategory, renameLocation, saveRedirect, saveUrlOverride, setPrefixes } from "@/server/urls/service";
 import { clearMemoryMongo, connectMemoryMongo, disconnectMemoryMongo } from "../../setup/mongo";
 
@@ -112,6 +112,24 @@ describe("url manager", () => {
     const over = await getUrlOverride("/ad/front-desk-0001");
     expect(over?.title).toBe("Front desk");
     expect(over?.noindex).toBe(true);
+  });
+
+  it("does not loop when a city is renamed and renamed back", async () => {
+    await fixture();
+    const city = await Location.findOne({ slug: "delhi", type: "city" });
+    await renameLocation(String(city!._id), "new-delhi");
+    const renamed = await Location.findOne({ slug: "new-delhi", type: "city" });
+    await renameLocation(String(renamed!._id), "delhi");
+    const home = await decideRequest("/dating/delhi/sample/");
+    expect(home.action).not.toBe("redirect");
+    const away = await decideRequest("/dating/new-delhi/sample/");
+    if (away.action !== "redirect") throw new Error("expected a redirect back to delhi");
+    expect(away.to).toContain("/dating/delhi/");
+    const second = await decideRequest(away.to);
+    expect(second.action).not.toBe("redirect");
+    const rules = await Redirect.find({ enabled: true }).lean<{ fromPath: string; toPath: string }[]>();
+    const dating = rules.filter((rule) => rule.fromPath.includes("/dating/"));
+    expect(dating.some((rule) => rule.fromPath.includes("/delhi/") && rule.toPath.includes("/new-delhi/"))).toBe(false);
   });
 
   it("collapses a redirect chain and refuses a loop", async () => {

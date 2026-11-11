@@ -20,7 +20,7 @@ import { fillTemplate } from "@/lib/seo";
 import { placePath, tagPath } from "@/lib/urls";
 import { withUrlSeo, urlHeading } from "@/lib/seo/override";
 import { getPaths, publicTags } from "@/server/urls/service";
-import { fallbackLanding, mergeLanding, type LandingCopy } from "@/lib/seo/landing";
+import { fallbackLanding, mergeLanding, visibleHeading, type LandingCopy } from "@/lib/seo/landing";
 
 type Props = {
   params: Promise<{ category: string; location: string }>;
@@ -162,7 +162,7 @@ export default async function LocationPage({ params, searchParams }: Props) {
 
   return (
     <ListingPageView
-      h1={heading || fillTemplate(seo?.h1 || copy.h1, vars)}
+      h1={heading || visibleHeading(fillTemplate(seo?.h1 || "", vars), copy.h1)}
       h2={fillTemplate(seo?.h2 || "", vars)}
       intro={copy.intro || fillTemplate(seo?.intro || "", vars)}
       faqs={copy.faqs}

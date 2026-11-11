@@ -92,7 +92,7 @@ export function fallbackLanding(input: LandingInput): LandingCopy {
     : `${introLine} ${count} ${input.category.toLowerCase()} ads are live in ${place}.`;
   return {
     h1,
-    title: `${h1} | ${site}`,
+    title: `${h1} classifieds | ${site}`,
     description: description.slice(0, 160),
     intro,
     faqs: [
@@ -101,15 +101,19 @@ export function fallbackLanding(input: LandingInput): LandingCopy {
         a: `Open ${h1} and use the city and district links. Each card shows the title, the place, and a way to get in touch.`,
       },
       {
-        q: "How do I post an ad?",
-        a: `Create an account, add a photo, and submit the ad. An admin reviews your ID before the first ad goes live. A basic ad is free within the weekly limit.`,
+        q: `How do I post a ${input.category.toLowerCase()} ad in ${place}?`,
+        a: `Create an account, add a photo, and submit the ${input.category.toLowerCase()} ad for ${place}. An admin reviews your ID before the first ad goes live. A basic ad is free within the weekly limit.`,
       },
       {
-        q: "Which ads appear first?",
-        a: "Promoted ads stay at the top for the days you buy. Everyone else is ordered by the latest refresh.",
+        q: `Which ${input.category.toLowerCase()} ads in ${place} appear first?`,
+        a: `Promoted ${input.category.toLowerCase()} ads in ${place} stay at the top for the days you buy. The other ${count} live ads follow the latest refresh. A short page stays out of the index until more ads are live.`,
       },
     ],
   };
+}
+
+export function visibleHeading(templated: string, fallback: string) {
+  return templated && /\bin\b/i.test(templated) ? templated : fallback;
 }
 
 export function mergeLanding(fallback: LandingCopy, override?: Partial<LandingCopy> | null): LandingCopy {

@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { api, fieldErrors, friendlyError } from "@/lib/ui/api";
+import { draftToForm, validatePost, type SavedDraft } from "@/lib/ui/post-form";
 import { loginPath, postAdPath } from "@/lib/urls";
 import { useUrlPaths } from "./UrlPaths";
 import { HelpCard } from "./ui/HelpCard";
@@ -11,8 +12,6 @@ import type { ListingDoc } from "@/lib/models";
 
 type Cat = { _id: string; name: string; slug: string; fields?: { key: string; label: string; type: string; options?: string[]; required?: boolean }[] };
 type Place = { id: string; name: string; slug: string; parentId?: string | null };
-
-const TITLE_MSG = "You must enter at least 5 alphanumeric characters (a,b,c...z,0,1,2,3...)";
 
 function tidy(value: string) {
   return value.replace(/[\s-]/g, "");
@@ -57,6 +56,7 @@ export function PostWizard() {
   const [photoNote, setPhotoNote] = useState("");
   const [photos, setPhotos] = useState<string[]>([]);
   const [plans, setPlans] = useState<{ id: string; name: string; amount?: number }[]>([]);
+  const [hydrated, setHydrated] = useState(true);
 
   const category = categories.find((item) => item._id === categoryId);
   const ageField = category?.fields?.find((field) => field.key === "age" || field.type === "number" && /age/i.test(field.label));
@@ -68,7 +68,37 @@ export function PostWizard() {
     const draft = sp.get("draft") || "";
     const id = window.setTimeout(() => {
       if (next >= 1 && next <= 3) setStep(next);
-      if (draft) setDraftId(draft);
+      if (draft) {
+        setDraftId(draft);
+        setHydrated(false);
+        api<SavedDraft>(`/api/listings/by-id/${draft}`).then((res) => {
+          if (res.ok && res.data) {
+            const form = draftToForm(res.data);
+            setCategoryId(form.categoryId);
+            setCityId(form.cityId);
+            setDistrictId(form.districtId);
+            setAddress(form.address);
+            setPostal(form.postal);
+            setArea(form.area);
+            setAge(form.age);
+            setNickname(form.nickname);
+            setTitle(form.title);
+            setText(form.text);
+            setPhone(form.phone);
+            setWhatsapp(form.whatsapp);
+            setTelegram(form.telegram);
+            setTelegramOn(Boolean(form.telegram));
+            setAttrs(form.attrs);
+            setPhotos(form.photos);
+            setTerms(true);
+            setAdult(true);
+          } else setBanner("This draft could not be loaded. Go back and save it again.");
+          setHydrated(true);
+        }).catch(() => {
+          setBanner("This draft could not be loaded. Go back and save it again.");
+          setHydrated(true);
+        });
+      }
     }, 0);
     api<{ categories: Cat[] }>("/api/categories").then((res) => {
       if (res.ok) setCategories(res.data.categories || []);
@@ -95,18 +125,22 @@ export function PostWizard() {
   }, [cityId]);
 
   function validate() {
-    const next: Record<string, string> = {};
-    if (!categoryId) next.category = "Please, fill in this field";
-    if (!cityId) next.city = "Please, fill in this field";
-    if (!nickname.trim()) next.nickname = "Name / Nickname is required";
-    const alnum = (title.match(/[a-z0-9]/gi) || []).length;
-    if (title.trim().length < 5 || alnum < 5) next.title = TITLE_MSG;
-    if (text.trim().length < 20) next.text = "You must enter at least 20 characters";
-    if (contactMode !== "email" && !tidy(phone)) next.phone = "If you want to be contacted by phone, please fill in this field";
-    else if (phone && !/^\+91[6-9]\d{9}$/.test(normalPhone(phone))) next.phone = "Use +91 and 10 digits";
-    if (ageField && age && (Number(age) < 18 || Number(age) > 120)) next.age = "Invalid field";
-    if (!terms) next.terms = "Please, fill in this field";
-    if (!adult) next.adult = "Please, fill in this field";
+    const next = validatePost({
+      categoryId,
+      cityId,
+      nickname,
+      title,
+      text,
+      phone,
+      contactMode,
+      age,
+      ageRequired: Boolean(ageField?.required),
+      terms,
+      adult,
+      attrs,
+      fields: extra.map((field) => ({ key: field.key, label: field.label, required: field.required })),
+    });
+    if (phone && contactMode !== "email" && !/^\+91[6-9]\d{9}$/.test(normalPhone(phone))) next.phone = "Use +91 and 10 digits";
     return next;
   }
 
@@ -153,12 +187,22 @@ export function PostWizard() {
     };
     const details = await api(`/api/listings/${id}`, {
       method: "PATCH",
-      body: JSON.stringify({ stage: "details", attributes: { ...attrs, ...(age ? { age: Number(age) } : {}) }, contact }),
+      body: JSON.stringify({
+        stage: "details",
+        attributes: { ...attrs, ...(age ? { age: Number(age) } : {}) },
+        contact,
+      }),
     });
     setBusy(false);
     if (!details.ok) {
-      const extraMsg = Object.values(fieldErrors(details.error)).flat()[0];
-      setBanner(extraMsg || friendlyError(details.error));
+      const mapped = fieldErrors(details.error);
+      const nextErrors: Record<string, string> = {};
+      for (const [key, messages] of Object.entries(mapped)) {
+        const text = Array.isArray(messages) ? messages[0] : String(messages || "");
+        if (text) nextErrors[key] = text;
+      }
+      if (Object.keys(nextErrors).length) setErrors(nextErrors);
+      setBanner(Object.values(nextErrors)[0] || friendlyError(details.error));
       return;
     }
     remember(id, 2);
@@ -228,7 +272,8 @@ export function PostWizard() {
   }
 
   async function publish() {
-    if (!draftId) return setBanner("Save a draft before submitting.");
+    if (!hydrated) return setBanner("The draft is still loading.");
+    if (!draftId || !title.trim()) return setBanner("Save a draft before submitting.");
     setBusy(true);
     setBanner("");
     const res = await api(`/api/listings/${draftId}/submit`, {
@@ -320,25 +365,26 @@ export function PostWizard() {
             <Group title="About You">
               {extra.map((field) =>
                 field.options && field.options.length > 8 ? (
-                  <SelectField key={field.key} id={field.key} label={field.label} value={attrs[field.key] || ""} onChange={(value) => setAttrs((prev) => ({ ...prev, [field.key]: value }))}>
+                  <SelectField key={field.key} id={field.key} label={field.label} required={field.required} error={errors[field.key]} value={attrs[field.key] || ""} onChange={(value) => setAttrs((prev) => ({ ...prev, [field.key]: value }))}>
                     <option value="">Choose</option>
                     {field.options.map((option) => (
                       <option key={option} value={option}>{option}</option>
                     ))}
                   </SelectField>
                 ) : field.options?.length ? (
-                  <div key={field.key}>
-                    <p className="t-small">{field.label}</p>
-                    <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
+                  <div key={field.key} className={errors[field.key] ? "is-bad" : ""} data-tk={field.key}>
+                    <p className="t-small">{field.required ? "* " : ""}{field.label}</p>
+                    <div style={{ display: "flex", flexWrap: "wrap", gap: 8, outline: errors[field.key] ? "1px solid var(--danger)" : undefined, borderRadius: 8, padding: errors[field.key] ? 8 : 0 }}>
                       {field.options.map((option) => (
                         <button key={option} type="button" className={`tk-choice ${attrs[field.key] === option ? "on" : ""}`} onClick={() => setAttrs((prev) => ({ ...prev, [field.key]: prev[field.key] === option ? "" : option }))}>
                           {option}
                         </button>
                       ))}
                     </div>
+                    {errors[field.key] ? <span className="tk-error" data-tk="field-error">{errors[field.key]}</span> : null}
                   </div>
                 ) : (
-                  <TextField key={field.key} id={field.key} label={field.label} value={attrs[field.key] || ""} onChange={(value) => setAttrs((prev) => ({ ...prev, [field.key]: value }))} />
+                  <TextField key={field.key} id={field.key} label={field.label} required={field.required} error={errors[field.key]} value={attrs[field.key] || ""} onChange={(value) => setAttrs((prev) => ({ ...prev, [field.key]: value }))} />
                 ),
               )}
             </Group>
@@ -410,7 +456,7 @@ export function PostWizard() {
         <>
           <div className="tk-form-panel">
             <h2 className="t-h3">Preview</h2>
-            <AdCard ad={preview as ListingDoc} />
+            {hydrated && title.trim() ? <AdCard ad={preview as ListingDoc} /> : <p data-tk="draft-loading">{hydrated ? "This draft has no title yet." : "Loading your draft…"}</p>}
           </div>
           <div className="tk-form-panel" style={{ marginTop: 16 }}>
             <h2 className="t-h3">Plan</h2>
@@ -422,7 +468,7 @@ export function PostWizard() {
           </div>
           <p style={{ textAlign: "right", marginTop: 16 }}>
             <button type="button" className="tk-btn tk-btn-outline-rose" onClick={() => setStep(2)}>BACK</button>{" "}
-            <button type="button" className="tk-btn tk-btn-rose" data-tk="go-on" disabled={busy} onClick={publish}>PUBLISH</button>
+            <button type="button" className="tk-btn tk-btn-rose" data-tk="go-on" disabled={busy || !hydrated || !title.trim()} onClick={publish}>PUBLISH</button>
           </p>
         </>
       ) : null}
