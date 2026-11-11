@@ -49,6 +49,15 @@ export function AdDetail({
   const date = listingDateLabel(ad.publishedAt || ad.createdAt);
   const listHref = `/${ad.categorySlug}/${ad.citySlug}/`;
   const [copied, setCopied] = useState("");
+  const tier =
+    ad.variant === "supertop" || ad.variant === "star"
+      ? { key: "supertop", label: "SUPER Top" }
+      : ad.variant === "top"
+        ? { key: "top", label: "Top" }
+        : ad.verified
+          ? { key: "verified", label: "Verified" }
+          : { key: "category", label: categoryName };
+  const nick = ad.displayName && ad.displayName !== title ? ad.displayName : "";
 
   function back(event: React.MouseEvent) {
     if (document.referrer && document.referrer.startsWith(window.location.origin)) {
@@ -80,37 +89,46 @@ export function AdDetail({
             <strong>{date}</strong>
             {ad.publicId ? ` - Ad ID: ${ad.publicId}` : ""}
           </p>
-          <section className="tk-summary" data-tk="ad-summary">
-            <div className="tk-summary-top">
-              <p className="tk-nick">{ad.displayName || title}</p>
-              <SaveButton
-                item={{ id: ad.slug || title, slug: ad.slug || "", title, place: city, at: 0 }}
-                className="bg-transparent text-accent"
-              />
-              <span className="tk-badge-promo" style={{ position: "static" }}>
-                {ad.variant === "supertop" || ad.variant === "star" ? "SUPER Top" : ad.variant === "top" ? "Top" : ad.verified ? "Verified" : categoryName}
-              </span>
+          <div className="tk-ad-grid">
+            <div className="tk-ad-top">
+              <section className="tk-summary" data-tk="ad-summary">
+                <div className="tk-summary-top">
+                  <h1>{title}</h1>
+                  <div className="tk-summary-side">
+                    <SaveButton
+                      item={{ id: ad.slug || title, slug: ad.slug || "", title, place: city, at: 0 }}
+                      className="bg-transparent text-accent"
+                    />
+                    <span className="tk-badge-promo" data-tier={tier.key}>{tier.label}</span>
+                  </div>
+                </div>
+                {nick ? <p className="tk-nick">{nick}</p> : null}
+                {ad.trust?.length ? (
+                  <div className="tk-attr">
+                    {ad.trust.map((mark) => (
+                      <span key={mark}><Shield size={14} /> {mark}</span>
+                    ))}
+                  </div>
+                ) : null}
+                <div className="tk-attr">
+                  {ad.age ? (
+                    <span><User size={14} /> {ad.age} years</span>
+                  ) : null}
+                  <span>
+                    <MapPin size={14} /> <strong>{city}</strong>
+                    {district ? ` / ${district}` : ""}
+                  </span>
+                </div>
+              </section>
+              <Gallery photos={listingPhotos(ad.categorySlug, ad.publicId || ad.slug || "", ad.photos || [])} title={title} seed={ad.slug || title} category={ad.categorySlug} />
             </div>
-            {ad.trust?.length ? (
-              <div className="tk-attr">
-                {ad.trust.map((mark) => (
-                  <span key={mark}><Shield size={14} /> {mark}</span>
-                ))}
+            <aside className="tk-ad-side">
+              <div className="tk-contact-card" data-tk="contact-card">
+                <h2>Contact</h2>
+                <ContactButtons />
               </div>
-            ) : null}
-            <div className="tk-attr">
-              {ad.age ? (
-                <span><User size={14} /> {ad.age} years</span>
-              ) : null}
-              <span>
-                <MapPin size={14} /> <strong>{city}</strong>
-                {district ? ` / ${district}` : ""}
-              </span>
-            </div>
-            <h1>{title}</h1>
-            <ContactButtons />
-          </section>
-          <Gallery photos={listingPhotos(ad.categorySlug, ad.publicId || ad.slug || "", ad.photos || [])} title={title} seed={ad.slug || title} category={ad.categorySlug} />
+            </aside>
+            <div className="tk-ad-rest">
           <section className="tk-section">
             <h2><Smile size={16} /> {personal ? "About me" : "About this ad"}</h2>
             <p style={{ whiteSpace: "pre-wrap", fontSize: 14, lineHeight: 1.6 }}>{ad.description}</p>
@@ -148,16 +166,11 @@ export function AdDetail({
               <h2><Heart size={16} /> {serviceLabel(ad.categorySlug)}</h2>
               <div className="tk-attr">
                 {ad.details.map((item) => (
-                  <span className="tk-chip" key={item.label}>{item.label}: {item.value}</span>
+                  <span className="tk-chip" key={item.label}>{item.value}</span>
                 ))}
               </div>
             </section>
           ) : null}
-          <div className="tk-hair" />
-          <h3 className="tk-contact-h">Contact me</h3>
-          <div style={{ display: "flex", justifyContent: "center" }}>
-            <ContactButtons />
-          </div>
           <div className="tk-hair tk-share">
             <div>
               <p style={{ fontWeight: 700 }}>Share ad</p>
@@ -202,6 +215,8 @@ export function AdDetail({
               </div>
             </section>
           ) : null}
+            </div>
+          </div>
         </div>
         <div className="tk-bottom" data-tk="bottom-bar">
           <ContactButtons sticky />

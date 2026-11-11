@@ -351,15 +351,15 @@ if (adPath) {
     if (!share || !decodeURIComponent(share).startsWith("https://twitter.com/intent/tweet?url=http")) notes.push("share");
     if (width === 1440) {
       const waitReveal = page.waitForResponse((res) => res.url().includes("contact-reveal"), { timeout: 8000 }).catch(() => null);
-      await page.locator("[data-tk=ad-summary] [data-tk=call]").click();
+      await page.locator("[data-tk=contact-card] [data-tk=call]").click();
       await waitReveal;
       await page.waitForTimeout(300);
-      const shown = await page.locator("[data-tk=ad-summary]").innerText();
+      const shown = await page.locator("[data-tk=contact-card]").innerText();
       if (!/\d{6,}/.test(shown)) {
-        await page.locator("[data-tk=ad-summary] [data-tk=call]").click().catch(() => {});
+        await page.locator("[data-tk=contact-card] [data-tk=call]").click().catch(() => {});
         await page.waitForTimeout(400);
       }
-      const again = await page.locator("[data-tk=ad-summary]").innerText();
+      const again = await page.locator("[data-tk=contact-card]").innerText();
       if (!/\d{6,}/.test(again)) notes.push("reveal");
     }
     record(adPath + " structure", width, notes.length === 0, notes.join("; "));
