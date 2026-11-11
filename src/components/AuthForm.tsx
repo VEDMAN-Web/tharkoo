@@ -198,14 +198,16 @@ function AuthFormInner({ mode }: { mode: Mode }) {
               <input id="dateOfBirth" name="dateOfBirth" type="date" required />
               {fields.dateOfBirth ? <span className="tk-error" data-tk="field-error">{fields.dateOfBirth[0]}</span> : null}
             </label>
-            <label className="t-small" style={{ display: "flex", gap: 8, alignItems: "flex-start" }}>
-              <input type="checkbox" name="acceptedTerms" required style={{ marginTop: 3, flex: "none" }} />
-              <span>I agree to the <Link href="/terms/">Terms</Link> and <Link href="/privacy/">Privacy Policy</Link></span>
-            </label>
-            <label className="t-small" style={{ display: "flex", gap: 8, alignItems: "flex-start" }}>
-              <input type="checkbox" name="attestedAdult" required style={{ marginTop: 3, flex: "none" }} />
-              <span>I am 18 or over</span>
-            </label>
+            <div className="tk-checks">
+              <label className="tk-checkrow">
+                <input type="checkbox" name="acceptedTerms" required />
+                <span>I agree to the <Link href="/terms/">Terms</Link> and <Link href="/privacy/">Privacy Policy</Link></span>
+              </label>
+              <label className="tk-checkrow">
+                <input type="checkbox" name="attestedAdult" required />
+                <span>I am 18 or over</span>
+              </label>
+            </div>
           </>
         ) : null}
         {mode !== "verify" && mode !== "expired" ? (

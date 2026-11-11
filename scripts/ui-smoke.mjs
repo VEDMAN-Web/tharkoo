@@ -329,13 +329,15 @@ if (adPath) {
     }
     await page.locator("[data-tk=gallery] img").first().waitFor({ state: "visible", timeout: 8000 }).catch(() => {});
     await page.waitForFunction(() => [...document.querySelectorAll("[data-tk=gallery] img")].every((img) => img.complete && img.naturalWidth > 0), { timeout: 8000 }).catch(() => {});
-    const gallery = await page.locator("[data-tk=gallery] img").evaluateAll((els) =>
+    const gallery = await page.locator("[data-tk=gallery] .tk-strip-tile img").evaluateAll((els) =>
       els.map((el) => {
         const box = el.getBoundingClientRect();
+        const view = el.closest(".tk-strip-view")?.getBoundingClientRect();
+        const inside = view ? Math.min(box.right, view.right) - Math.max(box.left, view.left) : 0;
         return {
           src: el.currentSrc || el.getAttribute("src") || "",
           broken: el.complete && el.naturalWidth === 0,
-          visible: box.width > 20 && box.height > 20,
+          visible: box.width > 20 && box.height > 20 && inside >= box.width * 0.9,
           height: box.height,
         };
       }),
@@ -344,8 +346,7 @@ if (adPath) {
     if (width < 768) {
       if (visible.length !== 1) notes.push(`mobile gallery ${visible.length}`);
       if ((visible[0]?.height || 0) < 200) notes.push(`mobile photo ${visible[0]?.height}`);
-      if ((await page.locator("[data-tk=show-all]").count()) < 1) notes.push("show all");
-    } else if (visible.length < 4) notes.push(`gallery ${visible.length}`);
+    } else if (visible.length < 3) notes.push(`gallery ${visible.length}`);
     if (new Set(visible.map((item) => item.src)).size < Math.min(4, visible.length)) notes.push("portraits repeat");
     if (visible.some((item) => item.broken || !decodeURIComponent(item.src).includes("/placeholders/profiles/"))) notes.push("gallery photo");
     const share = await page.locator('a[href*="twitter.com"]').getAttribute("href");

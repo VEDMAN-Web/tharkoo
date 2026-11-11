@@ -414,7 +414,7 @@ export function PostWizard() {
             <div className="tk-switch-row"><span>Telegram</span><Switch on={telegramOn} onClick={() => setTelegramOn((v) => !v)} label="Telegram" /></div>
             {telegramOn ? <TextField id="telegram" label="Telegram" value={telegram} onChange={setTelegram} /> : null}
           </Group>
-          <p className={`t-small tk-consent ${errors.terms ? "is-bad" : ""}`}>
+          <p className={`t-small tk-consent tk-consent-first ${errors.terms ? "is-bad" : ""}`}>
             <input id="consent-terms" type="checkbox" className="tk-check" checked={terms} onChange={() => setTerms((v) => !v)} aria-invalid={Boolean(errors.terms)} />
             <label htmlFor="consent-terms">
             <strong>Terms, Conditions and Privacy Policy</strong> I have read the <Link href="/terms/">Terms and Conditions</Link> of use and <Link href="/privacy/">Privacy Policy</Link> and I hereby authorise the processing of my personal data for the purpose of providing this web service.

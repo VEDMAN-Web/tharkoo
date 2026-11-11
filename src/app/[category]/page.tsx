@@ -2,7 +2,7 @@ import Link from "next/link";
 import { notFound, permanentRedirect } from "next/navigation";
 import type { Metadata } from "next";
 import { MapPin } from "lucide-react";
-import { getCategory, getCities, getFeed, getSeo, getSite, getStates, listingCountsByCategoryCity } from "@/lib/queries";
+import { getCategory, getCities, getFeed, getSeo, getSite, getStarListings, getStates, listingCountsByCategoryCity } from "@/lib/queries";
 import { getPaths } from "@/server/urls/service";
 import { adPath, categoryPath, placePath } from "@/lib/urls";
 import { fillTemplate } from "@/lib/seo";
@@ -11,6 +11,8 @@ import { Breadcrumbs } from "@/components/Breadcrumbs";
 import { JsonLd, breadcrumbJsonLd } from "@/lib/jsonld";
 import { faqPage, itemListNode } from "@/lib/seo/schema";
 import { canonical } from "@/lib/seo";
+import { AdCard } from "@/components/AdCard";
+import { hourSeed, orderFeed } from "@/components/feedOrder";
 import { fallbackLanding, mergeLanding, type LandingCopy } from "@/lib/seo/landing";
 
 type Props = { params: Promise<{ category: string }> };
@@ -33,13 +35,14 @@ export default async function CategoryHub({ params }: Props) {
   const cat = await getCategory(category);
   if (!cat) notFound();
   if (cat.slug && cat.slug !== category) permanentRedirect(categoryPath(cat.slug));
-  const [seo, site, cities, states, counts, feed, paths, heading] = await Promise.all([
+  const [seo, site, cities, states, counts, feed, stars, paths, heading] = await Promise.all([
     getSeo("category"),
     getSite(),
     getCities(),
     getStates(),
     listingCountsByCategoryCity().catch(() => []),
     getFeed({ categorySlug: category }, 1),
+    getStarListings({ categorySlug: category }).catch(() => []),
     getPaths(),
     urlHeading(categoryPath(cat.slug || category), `${cat.name} in India`),
   ]);
@@ -50,6 +53,10 @@ export default async function CategoryHub({ params }: Props) {
   );
   const allowed = new Set(counts.filter((row) => row._id.categorySlug === category && row.n > 0).map((row) => row._id.citySlug));
   const listed = allowed.size ? cities.filter((city) => allowed.has(city.slug || "")) : cities;
+  const ads = [
+    ...stars,
+    ...orderFeed(feed.items.filter((ad) => !stars.some((star) => star.slug && star.slug === ad.slug)), hourSeed()),
+  ];
   return (
     <>
       <JsonLd
@@ -61,7 +68,7 @@ export default async function CategoryHub({ params }: Props) {
           itemListNode({
             url: canonical(categoryPath(cat.slug || category)),
             total: feed.total,
-            items: feed.items.slice(0, 12).map((ad, index) => ({
+            items: ads.slice(0, 12).map((ad, index) => ({
               url: canonical(adPath(paths, ad.slug || "")),
               name: ad.title || "Ad",
               position: index + 1,
@@ -78,25 +85,25 @@ export default async function CategoryHub({ params }: Props) {
       </div>
       <div className="tk-container" style={{ paddingBottom: 32 }}>
           <Breadcrumbs crumbs={[{ name: "Tharkoo India", path: "/" }, { name: cat.name!, path: categoryPath(cat.slug || category) }]} />
-        <div className="tk-panel">
-          <div className="tk-panel-head">🇮🇳 INDIA</div>
-          {states.map((state) => {
-            const inState = listed.filter((city) => city.stateSlug === state.slug);
-            if (!inState.length) return null;
-            return (
-              <div key={state.slug}>
-                <Link href={placePath(cat.slug || category, state.slug || "")} className="tk-dir-state" prefetch={false}>
-                  {state.name}
-                </Link>
-                {inState.map((city) => (
-                  <Link key={city.slug} href={placePath(cat.slug || category, city.slug || "")} className="tk-dir-city" prefetch={false}>
+        <div className="tk-feed" data-tk="category-feed">
+          {ads.map((ad, index) => (
+            <AdCard key={ad.publicId || ad.slug || index} ad={ad} featured={index < stars.length} priority={index === 0} />
+          ))}
+        </div>
+        <section className="tk-browse-city" data-tk="browse-by-city">
+          <h2>Browse by city</h2>
+          <div className="tk-pills tk-pills-left">
+            {states.flatMap((state) =>
+              listed
+                .filter((city) => city.stateSlug === state.slug)
+                .map((city) => (
+                  <Link key={city.slug} href={placePath(cat.slug || category, city.slug || "")} className="tk-pill" prefetch={false}>
                     {city.name}
                   </Link>
-                ))}
-              </div>
-            );
-          })}
-        </div>
+                )),
+            )}
+          </div>
+        </section>
         <p className="tk-seo-foot">{copy.intro || fillTemplate(seo?.intro || "", vars)}</p>
         {copy.faqs.map((item) => (
           <p key={item.q} className="tk-seo-foot">

@@ -337,8 +337,14 @@ input, select, textarea { font-size: 16px; }
   height: 100%;
   object-fit: cover;
   object-position: top;
-  mix-blend-mode: luminosity;
   mask-image: linear-gradient(90deg, transparent, #000 32%);
+}
+.tk-hero::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, rgba(42, 35, 22, 0.85) 0%, rgba(42, 35, 22, 0.35) 55%, rgba(42, 35, 22, 0) 100%);
+  pointer-events: none;
 }
 .tk-hero-copy {
   position: relative;
@@ -411,13 +417,12 @@ input, select, textarea { font-size: 16px; }
 }
 .tk-home-card:hover { transform: translateY(-2px); box-shadow: var(--sh-hover); }
 .tk-home-photo { position: relative; display: block; aspect-ratio: 16 / 9; overflow: hidden; background: var(--letterbox); }
-.tk-home-photo img { width: 100%; height: 100%; object-fit: cover; transition: transform var(--t-slow) ease; }
+.tk-home-photo img { width: 100%; height: 100%; object-fit: cover; filter: saturate(0.9) sepia(0.12); transition: transform var(--t-slow) ease; }
 .tk-home-card:hover .tk-home-photo img { transform: scale(1.04); }
 .tk-home-shade {
   position: absolute;
-  left: 0; right: 0; bottom: 0;
-  height: 90px;
-  background: linear-gradient(transparent, rgba(31, 26, 18, 0.55));
+  inset: 0;
+  background: linear-gradient(180deg, rgba(212, 175, 55, 0) 40%, rgba(42, 35, 22, 0.55) 100%);
 }
 .tk-home-title {
   position: absolute;
@@ -477,6 +482,9 @@ input, select, textarea { font-size: 16px; }
   transition: background var(--t-fast) var(--ease), border-color var(--t-fast) var(--ease);
 }
 .tk-pill:hover { background: var(--tint-strong); border-color: var(--gold); }
+.tk-pills-left { justify-content: flex-start; }
+.tk-browse-city { margin-top: 32px; }
+.tk-browse-city h2 { font-size: 18px; margin: 0 0 12px; }
 
 .tk-footer { margin-top: 48px; background: var(--bg-soft); border-top: 1px solid var(--border); }
 .tk-footer-brand {
@@ -880,10 +888,51 @@ input, select, textarea { font-size: 16px; }
 .tk-chip { border-radius: 5px; font-size: 12px; font-weight: 500; padding: 5px 8px; }
 .tk-actions { display: flex; flex-wrap: wrap; gap: 15px; }
 .tk-actions .tk-btn-gold, .tk-actions .tk-btn-whatsapp { width: 225px; }
-.tk-gal { display: grid; gap: 12px; margin-bottom: 8px; }
-.tk-gal-main { position: relative; height: 520px; background: var(--letterbox); border-radius: var(--r-card); overflow: hidden; }
-.tk-gal-open { display: block; width: 100%; height: 100%; padding: 0; border: 0; background: transparent; cursor: zoom-in; }
-.tk-gal-open > div { width: 100% !important; height: 100% !important; aspect-ratio: auto !important; }
+.tk-strip { position: relative; --gap: 8px; --tw: calc((100% - 2 * var(--gap)) / 3); margin-bottom: 8px; }
+.tk-strip-view { overflow: hidden; touch-action: pan-y; user-select: none; }
+.tk-strip-track {
+  display: flex;
+  gap: var(--gap);
+  transform: translateX(calc(var(--k, 0) * -1 * (var(--tw) + var(--gap))));
+}
+.tk-strip-track.is-sliding { transition: transform 250ms var(--ease); }
+.tk-strip-tile {
+  flex: none;
+  width: var(--tw);
+  aspect-ratio: 4 / 5;
+  padding: 0;
+  border: 0;
+  border-radius: 12px;
+  overflow: hidden;
+  background: var(--letterbox);
+  cursor: zoom-in;
+}
+.tk-strip-tile > div { width: 100% !important; height: 100% !important; aspect-ratio: auto !important; }
+.tk-strip-dots { display: none; justify-content: center; margin-top: 8px; }
+.tk-strip-dots button { width: 24px; height: 24px; padding: 0; border: 0; background: none; display: grid; place-items: center; }
+.tk-strip-dots button::before { content: ""; width: 8px; height: 8px; border-radius: 50%; background: var(--border-2); }
+.tk-strip-dots button[aria-current="true"]::before { background: var(--primary); }
+.tk-light { position: fixed; inset: 0; z-index: 95; background: rgba(15, 12, 8, 0.96); display: grid; place-items: center; }
+.tk-light-stage { position: relative; width: min(92vw, 720px); height: 82vh; touch-action: pan-y; }
+.tk-light-slide { position: absolute; inset: 0; display: grid; place-items: center; visibility: hidden; }
+.tk-light-slide[data-current="true"] { visibility: visible; }
+.tk-light-slide > div { width: 100% !important; height: 100% !important; aspect-ratio: auto !important; background: transparent !important; }
+.tk-light-count { position: absolute; top: 16px; left: 16px; color: #fff; font-size: 14px; font-weight: 700; }
+.tk-light-x, .tk-light-nav {
+  position: absolute;
+  width: 44px;
+  height: 44px;
+  display: grid;
+  place-items: center;
+  border: 0;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.16);
+  color: #fff;
+}
+.tk-light-x { top: 12px; right: 12px; }
+.tk-light-nav { top: 50%; transform: translateY(-50%); }
+.tk-light-nav.prev { left: 12px; }
+.tk-light-nav.next { right: 12px; }
 .tk-gal-nav {
   position: absolute;
   top: 50%;
@@ -900,31 +949,6 @@ input, select, textarea { font-size: 16px; }
 }
 .tk-gal-nav.prev { left: 12px; }
 .tk-gal-nav.next { right: 12px; }
-.tk-gal-count {
-  position: absolute;
-  right: 12px;
-  bottom: 12px;
-  background: rgba(31, 26, 18, 0.72);
-  color: #fff;
-  font-size: 12px;
-  font-weight: 700;
-  border-radius: var(--r-pill);
-  padding: 4px 10px;
-}
-.tk-gal-thumbs { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 4px; }
-.tk-thumb {
-  flex: none;
-  width: 80px;
-  height: 100px;
-  padding: 0;
-  border: 2px solid transparent;
-  border-radius: 10px;
-  overflow: hidden;
-  background: var(--letterbox);
-  cursor: pointer;
-}
-.tk-thumb > div { width: 100% !important; height: 100% !important; aspect-ratio: auto !important; }
-.tk-thumb[aria-current="true"] { border-color: var(--primary); }
 .tk-tile {
   position: relative;
   background: var(--letterbox);
@@ -939,20 +963,11 @@ input, select, textarea { font-size: 16px; }
 }
 .tk-tile > div { position: absolute; inset: 0; width: 100% !important; height: 100% !important; aspect-ratio: auto !important; }
 .tk-tile img { width: 100%; height: 100%; object-fit: cover; object-position: center 15%; }
-.tk-show-all {
-  position: absolute;
-  left: 12px;
-  bottom: 12px;
-  z-index: 2;
-  background: #fff;
-}
 @media (max-width: 767px) {
-  .tk-gal-main { height: auto; aspect-ratio: 4 / 5; max-height: 60vh; }
-  .tk-gal-thumbs { display: none; }
+  .tk-strip { --tw: 88%; }
+  .tk-strip .tk-gal-nav { display: none; }
+  .tk-strip-dots { display: flex; }
   .tk-summary h1 { font-size: 22px; }
-}
-@media (min-width: 768px) {
-  .tk-show-all { display: none; }
 }
 /* ad page layout: summary and gallery, contact card, then the rest */
 .tk-ad-grid { display: grid; grid-template-columns: minmax(0, 1fr); grid-template-areas: "top" "side" "rest"; }
@@ -986,8 +1001,10 @@ input, select, textarea { font-size: 16px; }
 .tk-ad-rest .tk-feed { grid-template-columns: 1fr; }
 .tk-section { margin: 22px 0; }
 .tk-section h2 { display: flex; align-items: center; gap: 8px; font-size: 18px; margin: 0 0 10px; }
-.tk-share { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; text-align: center; padding: 16px 0; }
-.tk-share a, .tk-share button { color: var(--accent); background: none; border: 0; font-size: 14px; }
+.tk-share { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 16px 0; font-size: 14px; }
+.tk-share-icons { display: flex; align-items: center; gap: 8px; }
+.tk-share .tk-share-btn { display: grid; place-items: center; width: 36px; height: 36px; padding: 0; border: 1px solid var(--border-2); border-radius: 50%; background: #fff; color: var(--accent); font-weight: 700; font-size: 14px; line-height: 1; }
+.tk-share .tk-report { display: inline-flex; align-items: center; gap: 6px; color: var(--muted); font-size: 13px; }
 .tk-all { text-align: center; font-size: 18px; margin: 16px 0; }
 .tk-all a { color: var(--accent); font-weight: 700; }
 .tk-security {
@@ -997,10 +1014,10 @@ input, select, textarea { font-size: 16px; }
   padding: 14px 20px;
   margin: 24px 0 0;
 }
+.tk-security h3 { display: flex; align-items: center; gap: 8px; margin: 0 0 6px; font-size: 16px; }
 .tk-security p { margin: 0; color: var(--text); font-size: 14px; line-height: 1.5; }
 .tk-security a { color: var(--primary); font-weight: 600; text-decoration: underline; }
-.tk-fine { font-size: 12px; color: var(--muted); }
-.tk-fine p { margin: 10px 0; }
+.tk-fine { font-size: 13px; line-height: 1.6; color: var(--muted); margin: 12px 0; }
 .tk-fine strong { color: var(--text); }
 .tk-bottom {
   display: none;
@@ -1009,7 +1026,7 @@ input, select, textarea { font-size: 16px; }
   z-index: 20;
   background: #fff;
   border-top: 1px solid var(--border);
-  padding: 10px 8px;
+  padding: 10px 8px calc(10px + env(safe-area-inset-bottom, 0px));
   gap: 15px;
 }
 .tk-bottom .tk-btn { flex: 1; height: 50px; border-radius: 6px; }
@@ -1302,7 +1319,12 @@ input, select, textarea { font-size: 16px; }
 }
 .tk-switch.on i { transform: translateX(20px); }
 .tk-switch-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; font-size: 14px; min-height: 44px; }
-.tk-consent { display: flex; align-items: flex-start; gap: 12px; margin: 12px 0; }
+.tk-consent { display: flex; align-items: flex-start; gap: 12px; margin: 12px 0; font-size: 14px; }
+.tk-consent-first { margin-top: 16px; }
+.tk-consent .tk-check { width: 20px; height: 20px; }
+.tk-checks { display: grid; gap: 12px; padding-top: 16px; }
+.tk-checkrow { display: flex; align-items: flex-start; gap: 12px; min-height: 24px; font-size: 14px; line-height: 1.5; cursor: pointer; }
+.tk-checkrow input { flex: none; width: 20px; height: 20px; margin: 2px 0 0; accent-color: var(--primary); cursor: pointer; }
 .tk-consent label { flex: 1; line-height: 1.5; }
 .tk-consent.is-bad { outline: 1px solid var(--danger); outline-offset: 4px; border-radius: 8px; }
 .tk-check { flex: none; width: 24px; height: 24px; margin: 0; accent-color: var(--primary); }
@@ -1397,10 +1419,9 @@ input, select, textarea { font-size: 16px; }
   .tk-nick { font-size: 22px; }
   .tk-summary h1 { font-size: 24px; line-height: 1.25; }
   .tk-bottom { display: flex; }
-  .tk-ad { padding-bottom: 80px; }
-  .tk-cookie.on-ad { bottom: 84px; }
+  .tk-ad { padding-bottom: calc(70px + env(safe-area-inset-bottom, 0px)); }
+  .tk-cookie.on-ad { bottom: calc(74px + env(safe-area-inset-bottom, 0px)); }
   .tk-page-h1 { font-size: 28px; }
-  .tk-share { grid-template-columns: 1fr; }
 }
 .tk-crumbs-short { display: none; }
 .tk-post-mobile { display: none; }
@@ -1476,6 +1497,7 @@ input, select, textarea { font-size: 16px; }
     mask-image: linear-gradient(180deg, #000 55%, transparent);
   }
   .tk-hero-copy { padding: 8px 0 24px; gap: 16px; }
+  .tk-hero::after { display: none; }
   .tk-hero h1 { font-size: 28px; line-height: 1.2; }
   .tk-hero-search { width: 100%; height: 52px; font-size: 15px; }
 }
