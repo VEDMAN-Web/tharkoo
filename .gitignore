@@ -43,3 +43,9 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# local tooling (never commit)
+.seo-check/
+.shots/
+.relay/
+.claude/
