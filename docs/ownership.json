@@ -709,7 +709,8 @@
         "src/app/[category]/[location]/[district]/page.tsx",
         "src/app/[category]/[location]/page.tsx",
         "src/components/ListingPage.tsx",
-        "tests/server/seo/**"
+        "tests/server/seo/**",
+        "docs/ownership.json"
       ]
     },
     "H1.5": {

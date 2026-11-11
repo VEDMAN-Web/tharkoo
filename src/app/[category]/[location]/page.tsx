@@ -21,6 +21,7 @@ import { placePath, tagPath } from "@/lib/urls";
 import { withUrlSeo, urlHeading } from "@/lib/seo/override";
 import { getPaths, publicTags } from "@/server/urls/service";
 import { fallbackLanding, mergeLanding, visibleHeading, type LandingCopy } from "@/lib/seo/landing";
+import { isCityAlias } from "@/lib/seo/district-alias";
 
 type Props = {
   params: Promise<{ category: string; location: string }>;
@@ -113,7 +114,7 @@ export default async function LocationPage({ params, searchParams }: Props) {
     getStarListings(loc.kind === "city" ? { categorySlug: category, citySlug: location } : filter),
     getFeed(filter, page),
     loc.kind === "city" && loc.stateSlug ? getSiblingCities(loc.stateSlug) : Promise.resolve([]),
-    loc.kind === "city" ? getDistricts(loc.slug || location) : Promise.resolve([]),
+    loc.kind === "city" ? getDistricts(loc.slug || location).then((rows) => rows.filter((row) => !isCityAlias(loc.name, row.name || ""))) : Promise.resolve([]),
     getPaths(),
     publicTags(),
     urlHeading(canonicalPath, ""),

@@ -4,6 +4,7 @@ import { siteUrl } from "@/lib/utils";
 import { adPath, blogPath, categoriesPath, categoryPath, citiesPath, cmsPath, contactPath, helpPath, howItWorksPath, placePath, prohibitedPath, safetyPath, tagPath } from "@/lib/urls";
 import { Listing, Location, Page } from "@/server/models";
 import { getPaths, publicTags } from "@/server/urls/service";
+import { isCityAlias } from "@/lib/seo/district-alias";
 
 export const SITEMAP_SHARDS = ["categories", "cities", "districts", "tags", "ads", "content"] as const;
 export type SitemapShard = (typeof SITEMAP_SHARDS)[number];
@@ -132,7 +133,7 @@ export async function shardEntries(shard: SitemapShard): Promise<SitemapEntry[]>
       if (!cat?.slug || !city) continue;
       if (shard === "districts" && row._id.districtId) {
         const district = districtSlug.get(row._id.districtId);
-        if (district && row.n >= (cat.minListingsLocality ?? 10)) {
+        if (district && !isCityAlias(city, district) && row.n >= (cat.minListingsLocality ?? 10)) {
           urls.push({ loc: loc(placePath(cat.slug, city, district)), lastmod: stamp(row.last) });
         }
       }
