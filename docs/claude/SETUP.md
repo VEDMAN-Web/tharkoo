@@ -80,3 +80,10 @@ Screenshots: ask the `webapp-testing` skill (Playwright) for full-page PNGs at 3
 - seo-check P0: robots issues 15; "title only in <body> (streamed)" ≈ half of all requests; duplicate title rows ≈ 100.
 - Unit tests: 176 passing (29 files). Build passes with `MONGODB_URI` unset.
 Small differences are fine. Large differences: report them before doing anything else.
+
+## 6. Online preview (phone link from this PC)
+- Start: `npm run preview:online` (needs `cloudflared`: `winget install --id Cloudflare.cloudflared -e`). Leave it running.
+- Stop: press Ctrl+C in that window. This also stops the site and the in-memory database.
+- The public link is written to `.relay/preview-link.txt`; the admin login is in `.relay/preview.txt` (both git-ignored). Never paste the password in chat.
+- It works only while this PC is on and the command is running. The link changes on every start.
+- The site is served with `noindex`, so search engines stay out.

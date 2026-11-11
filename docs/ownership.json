@@ -936,9 +936,10 @@
     "H0.4": {
       "branchPrefix": "haiku/h0.4",
       "globs": [
-        "scripts/preview.mjs",
+        "docs/claude/SETUP.md",
         "package.json",
-        "docs/claude/SETUP.md"
+        "scripts/preview.mjs",
+        "docs/ownership.json"
       ]
     },
     "H3.10": {
