@@ -33,8 +33,8 @@ export default async function Home() {
         )}
         <div className="tk-hero-copy">
           <h1>{content.hero.desktop}</h1>
+          <HeroSearch label={content.hero.searchPlaceholder} />
         </div>
-        <HeroSearch label={content.hero.searchPlaceholder} />
       </section>
       <Link href={postAdPath(paths)} data-tk="post-ad" className="tk-btn tk-btn-primary tk-home-post" prefetch={false}>
         {content.hero.postLabel}

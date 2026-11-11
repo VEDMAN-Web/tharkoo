@@ -95,7 +95,7 @@ export function Dashboard({ locked = false }: { locked?: boolean }) {
               </Link>
               <p className="tk-count-row">Available <span className="tk-count">{num(balance)}</span></p>
               <p className="tk-count-row">Used <span className="tk-count">{num(used)}</span></p>
-              <Link href="/u/account/credits/" className="tk-btn tk-btn-rose tk-btn-sm">BUY CREDITS</Link>
+              <Link href="/u/account/credits/" className="tk-btn tk-btn-gold tk-btn-sm">BUY CREDITS</Link>
             </div>
             <Link href="/u/account/coupons/" className="tk-tile-link" data-tk="tile" data-tile="coupons" style={{ gridColumn: 1, gridRow: 2 }}>
               <h2><Ticket size={14} /> Coupons <ChevronRight size={16} /></h2>

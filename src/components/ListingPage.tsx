@@ -216,7 +216,7 @@ export function ListingPageView({
       ) : null}
       {page < pages ? (
         <div className="tk-more">
-          <Link href={pageHref(path, page + 1)} rel="next" className="tk-btn tk-btn-outline-rose" data-tk="show-more" prefetch={false}>
+          <Link href={pageHref(path, page + 1)} rel="next" className="tk-btn tk-btn-outline-gold" data-tk="show-more" prefetch={false}>
             Show more
           </Link>
         </div>

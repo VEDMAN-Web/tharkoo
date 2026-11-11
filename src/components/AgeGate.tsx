@@ -43,7 +43,7 @@ export function AgeGate({
     <div className="tk-age-back" style={{ backdropFilter: "blur(8px)", background: "rgba(74, 33, 58, 0.35)" }}>
       <div className="tk-age" data-tk="age-gate" role="dialog" aria-modal="true" aria-labelledby="age-title" ref={ref}>
         <div className="tk-age-icon" aria-hidden>
-          <Users size={22} color="#6A2150" />
+          <Users size={22} color="#8A6416" />
           <span className="tk-age-pill">18+</span>
         </div>
         <h2 id="age-title">{title}</h2>
@@ -55,7 +55,7 @@ export function AgeGate({
         </p>
         <button
           type="button"
-          className="tk-btn tk-btn-rose"
+          className="tk-btn tk-btn-gold"
           data-tk="age-accept"
           style={{ width: 100, height: 45, margin: "12px auto 0" }}
           onClick={() => {

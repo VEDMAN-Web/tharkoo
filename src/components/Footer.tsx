@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { Logo } from "./Logo";
 import { safeHref } from "@/lib/sanitize";
-import { applyPrefixes, blogPath, categoriesPath, citiesPath, cmsPath, contactPath, helpPath, howItWorksPath, postAdPath, prohibitedPath, reportPath, safetyPath } from "@/lib/urls";
+import { applyPrefixes, blogPath, categoriesPath, citiesPath, cmsPath, contactPath, helpPath, howItWorksPath, prohibitedPath, reportPath, safetyPath } from "@/lib/urls";
 import { useUrlPaths } from "./UrlPaths";
 
 type LinkItem = { label: string; href: string };
@@ -88,34 +88,21 @@ export function Footer({
             </div>
           ))}
         </div>
-        <div className="tk-foot-boost">
-          <div>
-            <h2>{content?.boostTitle || "Boost your visibility"}</h2>
-            <Link href={postAdPath(paths)} data-tk="post-ad" className="tk-btn tk-btn-primary" prefetch={false}>
-              {content?.postLabel || "POST YOUR AD"}
-            </Link>
-          </div>
-          <div>
-            <h2>{content?.countriesLabel || "Countries"}</h2>
-            <label className="sr-only" htmlFor="tk-country">{content?.countriesLabel || "Countries"}</label>
-            <select id="tk-country" className="tk-country" defaultValue="IN" aria-label={content?.countriesLabel || "Countries"}>
-              <option value="IN">{content?.countryOption || "🇮🇳 India"}</option>
-            </select>
-          </div>
-        </div>
-        <p className="tk-legal-line">{legalName}</p>
       </div>
       <div className="tk-bar">
-        {socials.length ? (
-          <div className="tk-socials">
-            {socials.map((item) => (
-              <a key={item.label} href={item.href} target="_blank" rel="noopener noreferrer" aria-label={item.label}>
-                {item.label}
-              </a>
-            ))}
-          </div>
-        ) : null}
-        <p className="tk-copy">{content?.copyright || "Copyright 2026 © Tharkoo"}</p>
+        <div className="tk-container tk-bar-row">
+          <p className="tk-copy">{content?.copyright || "Copyright 2026 © Tharkoo"}</p>
+          {socials.length ? (
+            <div className="tk-socials">
+              {socials.map((item) => (
+                <a key={item.label} href={item.href} target="_blank" rel="noopener noreferrer" aria-label={item.label}>
+                  {item.label}
+                </a>
+              ))}
+            </div>
+          ) : null}
+          <p className="tk-legal-line">{legalName}</p>
+        </div>
         {top ? (
           <button type="button" className="tk-top" data-tk="back-to-top" onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}>
             {content?.backToTop || "Back to top ↑"}

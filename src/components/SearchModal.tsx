@@ -9,7 +9,7 @@ import { searchPath } from "@/lib/urls";
 import { useUrlPaths } from "./UrlPaths";
 
 type Cat = { slug: string; name: string; fields?: { key: string; label: string; type: string; options?: string[] }[] };
-type City = { slug: string; name: string; stateSlug?: string; id?: string };
+type City = { slug: string; name: string; stateSlug?: string; id?: string; isTop?: boolean };
 type Region = { slug: string; name: string; id?: string };
 
 export function SearchModal({
@@ -83,6 +83,7 @@ export function SearchModal({
     });
   }, [city, cities]);
 
+  const quickCities = (cities.some((item) => item.isTop) ? cities.filter((item) => item.isTop) : cities).slice(0, 8);
   const current = cats.find((item) => item.slug === category) || cats[0];
   const fieldRows = (current?.fields || [])
     .filter((field) => field.type === "select" && field.options?.length)
@@ -134,54 +135,70 @@ export function SearchModal({
         onSubmit={submit}
       >
         <div className="tk-modal-head">
-          <span style={{ display: "inline-flex", gap: 8, alignItems: "center" }}>
-            <Search size={14} /> Search
-          </span>
-          <button type="button" aria-label="Close" onClick={onClose} style={{ background: "none", border: 0 }}>
-            <X size={16} />
+          <span>Search</span>
+          <button type="button" className="tk-modal-x" aria-label="Close" onClick={onClose}>
+            <X size={20} />
           </button>
         </div>
         <div className="tk-modal-body">
-          <div className="tk-modal-grid">
-            <select data-tk="search-category" aria-label="Category" value={category} onChange={(event) => setCategory(event.target.value)}>
-              {cats.map((item) => (
-                <option key={item.slug} value={item.slug}>
-                  {item.name}
-                </option>
-              ))}
-            </select>
-            <input data-tk="search-text" aria-label="Search here" placeholder={placeholder} value={q} onChange={(event) => setQ(event.target.value)} />
-          </div>
+          <label className="tk-search-input">
+            <Search size={20} aria-hidden />
+            <input data-tk="search-text" type="text" aria-label="Search here" placeholder={placeholder} value={q} onChange={(event) => setQ(event.target.value)} />
+          </label>
           {recent.length ? (
-            <div className="tk-filters" aria-label="Recent searches">
+            <div className="tk-chips" aria-label="Recent searches">
               {recent.map((item) => (
-                <button key={item} type="button" className="tk-filter" onClick={() => setQ(item)}>
+                <button key={item} type="button" className="tk-chip" onClick={() => setQ(item)}>
                   {item}
                 </button>
               ))}
             </div>
           ) : null}
-          <div className="tk-modal-grid three">
-            <select data-tk="search-region" aria-label="Select Region" value={region} onChange={(event) => { setRegion(event.target.value); setCity(""); }}>
-              <option value="">Select Region</option>
-              {regions.map((item) => (
-                <option key={item.slug} value={item.slug}>{item.name}</option>
+          <div>
+            <p className="tk-modal-label">City</p>
+            <div className="tk-chips" role="group" aria-label="Popular cities">
+              <button type="button" className="tk-chip" aria-pressed={!city} onClick={() => setCity("")}>
+                All cities
+              </button>
+              {quickCities.map((item) => (
+                <button key={item.slug} type="button" className="tk-chip" aria-pressed={city === item.slug} onClick={() => setCity(city === item.slug ? "" : item.slug)}>
+                  {item.name}
+                </button>
               ))}
-            </select>
-            <select data-tk="search-city" aria-label="All the cities" value={city} onChange={(event) => setCity(event.target.value)}>
-              <option value="">All the cities</option>
-              {cityOptions.map((item) => (
-                <option key={item.slug} value={item.slug}>{item.name}</option>
-              ))}
-            </select>
-            <select data-tk="search-district" aria-label="Select District" value={district} disabled={!city} onChange={(event) => setDistrict(event.target.value)}>
-              <option value="">Select District</option>
-              {districts.map((item) => (
-                <option key={item.slug} value={item.slug}>{item.name}</option>
-              ))}
-            </select>
+            </div>
+            <div className="tk-search-places">
+              <select data-tk="search-region" aria-label="Select Region" value={region} onChange={(event) => { setRegion(event.target.value); setCity(""); }}>
+                <option value="">Select Region</option>
+                {regions.map((item) => (
+                  <option key={item.slug} value={item.slug}>{item.name}</option>
+                ))}
+              </select>
+              <select data-tk="search-city" aria-label="All the cities" value={city} onChange={(event) => setCity(event.target.value)}>
+                <option value="">All the cities</option>
+                {cityOptions.map((item) => (
+                  <option key={item.slug} value={item.slug}>{item.name}</option>
+                ))}
+              </select>
+              <select data-tk="search-district" aria-label="Select District" value={district} disabled={!city} onChange={(event) => setDistrict(event.target.value)}>
+                <option value="">Select District</option>
+                {districts.map((item) => (
+                  <option key={item.slug} value={item.slug}>{item.name}</option>
+                ))}
+              </select>
+            </div>
           </div>
-          <p style={{ display: "flex", gap: 8, alignItems: "center", fontSize: 12, fontWeight: 700, marginTop: 16 }}>
+          <div>
+            <p className="tk-modal-label">Category</p>
+            <div className="tk-chips" role="group" aria-label="Category" data-tk="search-category">
+              {cats.map((item) => (
+                <button key={item.slug} type="button" className="tk-chip" aria-pressed={category === item.slug} onClick={() => setCategory(item.slug)}>
+                  {item.name}
+                </button>
+              ))}
+            </div>
+          </div>
+          <div>
+          <p className="tk-modal-label" style={{ display: "flex", gap: 8, alignItems: "center" }}>
             <SlidersHorizontal size={20} /> Filters
           </p>
           <FilterRow label="Verification" open={openRow === "verified"} onToggle={() => setOpenRow(openRow === "verified" ? "" : "verified")}>
@@ -208,12 +225,13 @@ export function SearchModal({
               ))}
             </FilterRow>
           ))}
+          </div>
         </div>
         <div className="tk-modal-foot">
           <button type="button" className="tk-text-btn" data-tk="search-delete-all" onClick={reset}>
             DELETE ALL
           </button>
-          <button type="submit" className="tk-btn tk-btn-rose" data-tk="search-submit">
+          <button type="submit" className="tk-btn tk-btn-gold" data-tk="search-submit">
             <Search size={14} /> {submitLabel}
           </button>
         </div>

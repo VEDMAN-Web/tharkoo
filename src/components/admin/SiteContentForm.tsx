@@ -96,12 +96,12 @@ function LinkRows({
             }} /> show
           </label>
           <span>
-            <button type="button" className="tk-btn tk-btn-outline-rose" onClick={() => onChange(move(links, index, -1))}>Up</button>
-            <button type="button" className="tk-btn tk-btn-outline-rose" onClick={() => onChange(move(links, index, 1))}>Down</button>
+            <button type="button" className="tk-btn tk-btn-outline-gold" onClick={() => onChange(move(links, index, -1))}>Up</button>
+            <button type="button" className="tk-btn tk-btn-outline-gold" onClick={() => onChange(move(links, index, 1))}>Down</button>
           </span>
         </div>
       ))}
-      <button type="button" className="tk-btn tk-btn-outline-rose" onClick={() => onChange([...links, { label: "New link", href: "/", visible: true }])}>
+      <button type="button" className="tk-btn tk-btn-outline-gold" onClick={() => onChange([...links, { label: "New link", href: "/", visible: true }])}>
         Add link
       </button>
     </div>
@@ -207,8 +207,8 @@ export function SiteContentForm({
                       cards[index] = { ...card, visible: event.target.checked };
                       patch({ ...content, cards });
                     }} /> show</label>
-                    <button type="button" className="tk-btn tk-btn-outline-rose" onClick={() => patch({ ...content, cards: move(content.cards, index, -1) })}>Up</button>
-                    <button type="button" className="tk-btn tk-btn-outline-rose" onClick={() => patch({ ...content, cards: move(content.cards, index, 1) })}>Down</button>
+                    <button type="button" className="tk-btn tk-btn-outline-gold" onClick={() => patch({ ...content, cards: move(content.cards, index, -1) })}>Up</button>
+                    <button type="button" className="tk-btn tk-btn-outline-gold" onClick={() => patch({ ...content, cards: move(content.cards, index, 1) })}>Down</button>
                   </div>
                   <div className="mt-2 grid gap-2 md:grid-cols-2">
                     <label className="tk-field">Category
@@ -260,8 +260,8 @@ export function SiteContentForm({
                       groups[index] = { ...group, visible: event.target.checked };
                       patch({ ...content, groups });
                     }} /> show</label>
-                    <button type="button" className="tk-btn tk-btn-outline-rose" onClick={() => patch({ ...content, groups: move(content.groups, index, -1) })}>Up</button>
-                    <button type="button" className="tk-btn tk-btn-outline-rose" onClick={() => patch({ ...content, groups: move(content.groups, index, 1) })}>Down</button>
+                    <button type="button" className="tk-btn tk-btn-outline-gold" onClick={() => patch({ ...content, groups: move(content.groups, index, -1) })}>Up</button>
+                    <button type="button" className="tk-btn tk-btn-outline-gold" onClick={() => patch({ ...content, groups: move(content.groups, index, 1) })}>Down</button>
                     {group.kind === "cities" ? (
                       <label className="t-small"><input type="checkbox" checked={group.showAll} onChange={(event) => {
                         const groups = [...content.groups];
@@ -325,11 +325,11 @@ export function SiteContentForm({
                     columns[index] = { ...column, links };
                     patch({ ...content, footer: { ...content.footer, columns } });
                   }} />
-                  <button type="button" className="tk-btn tk-btn-outline-rose" onClick={() => {
+                  <button type="button" className="tk-btn tk-btn-outline-gold" onClick={() => {
                     const columns = move(content.footer.columns, index, -1);
                     patch({ ...content, footer: { ...content.footer, columns } });
                   }}>Up</button>
-                  <button type="button" className="tk-btn tk-btn-outline-rose" onClick={() => {
+                  <button type="button" className="tk-btn tk-btn-outline-gold" onClick={() => {
                     const columns = move(content.footer.columns, index, 1);
                     patch({ ...content, footer: { ...content.footer, columns } });
                   }}>Down</button>
@@ -362,8 +362,8 @@ export function SiteContentForm({
         </>
       )}
       <div className="flex flex-wrap items-center gap-3">
-        <button type="button" className="tk-btn tk-btn-rose" disabled={busy} onClick={save}>Save</button>
-        <button type="button" className="tk-btn tk-btn-outline-rose" disabled={busy} onClick={reset}>Reset to default</button>
+        <button type="button" className="tk-btn tk-btn-gold" disabled={busy} onClick={save}>Save</button>
+        <button type="button" className="tk-btn tk-btn-outline-gold" disabled={busy} onClick={reset}>Reset to default</button>
         {msg ? <span className="text-[13px] text-[var(--success)]">{msg}</span> : null}
         {err ? <span className="t-small text-danger">{err}</span> : null}
       </div>
