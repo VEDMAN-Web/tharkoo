@@ -1106,7 +1106,8 @@
     "H1.8d": {
       "branchPrefix": "haiku/h1.8d",
       "globs": [
-        "src/app/globals.css"
+        "src/app/globals.css",
+        "docs/ownership.json"
       ]
     }
   }
