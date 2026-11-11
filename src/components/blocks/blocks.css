@@ -1,0 +1,39 @@
+/* Block renderer styles. Device classes: phones are up to 767 px wide. */
+.tk-only-mobile { display: block; }
+.tk-only-desktop { display: none; }
+@media (min-width: 768px) {
+  .tk-only-mobile { display: none; }
+  .tk-only-desktop { display: block; }
+}
+.tk-block { margin: 24px 0; }
+.tk-block h2 { margin: 0 0 12px; font-size: 22px; line-height: 1.25; }
+.tk-block-rich { color: var(--text); line-height: 1.6; }
+.tk-block-rich p { margin: 0 0 12px; }
+.tk-block-rich ul, .tk-block-rich ol { margin: 0 0 12px; padding-left: 22px; }
+.tk-block-banner {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  padding: 24px;
+  border-radius: var(--r-card);
+  border: 1px solid var(--border);
+  background: var(--tint);
+}
+.tk-block-banner[data-theme="brand"] { background: var(--primary); border-color: var(--primary); color: #fff; }
+.tk-block-banner[data-theme="accent"] { background: var(--tint-strong); }
+.tk-block-banner img { width: 160px; max-width: 35%; height: auto; border-radius: 10px; }
+.tk-block-banner h2 { color: inherit; margin: 0 0 4px; }
+.tk-block-banner p { margin: 0; }
+.tk-block-banner a { margin-left: auto; font-weight: 700; color: inherit; text-decoration: underline; }
+.tk-block-faq details { border-bottom: 1px solid var(--border); padding: 12px 0; }
+.tk-block-faq summary { cursor: pointer; font-weight: 600; }
+.tk-block-faq details > div { margin-top: 8px; color: var(--text); line-height: 1.6; }
+.tk-block-steps ol, .tk-block-trust ul { display: grid; gap: 16px; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); margin: 0; padding: 0; list-style: none; }
+.tk-block-steps li, .tk-block-trust li { display: flex; gap: 12px; align-items: flex-start; }
+.tk-block-icon { display: grid; place-items: center; flex: none; width: 40px; height: 40px; border-radius: 50%; background: var(--tint-strong); color: var(--primary); }
+.tk-block-steps strong { display: block; }
+@media (max-width: 767px) {
+  .tk-block-banner { flex-direction: column; align-items: flex-start; }
+  .tk-block-banner img { max-width: 100%; width: 100%; }
+  .tk-block-banner a { margin-left: 0; }
+}
