@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { allowRequest, clientKey } from "@/lib/rate-limit";
+import { allowRequest, clientKey, limitBucket, type LimitBucket } from "@/lib/rate-limit";
 import { originAllowed } from "@/server/auth/http";
 import { consumeRateLimit } from "@/server/auth/rate-limit";
 import { countRedirectHit, decideRequest } from "@/server/urls/service";
@@ -9,6 +9,14 @@ const STATIC_EXT = /\.(?:svg|png|jpg|jpeg|webp|avif|ico|woff2|css|js|map|txt|xml
 function requestLimit(name: string, fallback: number) {
   const value = Number(process.env[name]);
   return Number.isFinite(value) && value >= fallback ? value : fallback;
+}
+
+function tooManyRequests(bucket: LimitBucket) {
+  const retry = { "Retry-After": "60" };
+  if (bucket === "page" || bucket === "bot") {
+    return new NextResponse("Too many requests", { status: 429, headers: { ...retry, "content-type": "text/plain; charset=utf-8" } });
+  }
+  return NextResponse.json({ error: "Too many requests" }, { status: 429, headers: retry });
 }
 
 function skipLimiter(req: NextRequest) {
@@ -87,11 +95,14 @@ export async function proxy(req: NextRequest) {
   }
   if (skipLimiter(req)) return nextWithPath(req);
   const ip = clientKey(req.headers);
-  const search = path.startsWith("/search") || rewriteTo.startsWith("/search") || path.startsWith("/api/catalog");
-  const key = `${ip}:${search ? "search" : "site"}`;
-  const max = requestLimit(search ? "SEARCH_RATE_MAX" : "SITE_RATE_MAX", search ? 30 : 240);
+  const routePath = rewriteTo.startsWith("/search") ? rewriteTo : path;
+  const limit = limitBucket(routePath, req.method, req.headers.get("user-agent") || "");
+  const key = `${ip}:${limit.bucket}`;
+  const max = requestLimit(limit.envName, limit.fallback);
+  // Only api and search are counted in Mongo. Page and bot views stay in memory: no database write per page view.
+  const durable = limit.bucket === "api" || limit.bucket === "search";
   let ok = true;
-  if (process.env.MONGODB_URI) {
+  if (durable && process.env.MONGODB_URI) {
     try {
       ok = (await consumeRateLimit(key, max, 60_000)).ok;
     } catch {
@@ -100,7 +111,7 @@ export async function proxy(req: NextRequest) {
   } else {
     ok = allowRequest(key, max, 60_000);
   }
-  if (!ok) return NextResponse.json({ error: "Too many requests" }, { status: 429 });
+  if (!ok) return tooManyRequests(limit.bucket);
   if (rewriteTo) {
     const headers = new Headers(req.headers);
     headers.set("x-pathname", rewriteTo);
