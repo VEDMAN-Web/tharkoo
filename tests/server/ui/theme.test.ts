@@ -63,7 +63,7 @@ describe("light theme", () => {
       ["--body", "--card"],
       ["--muted", "--card"],
       ["--accent", "--bg"],
-      ["--accent", "--tint-rose"],
+      ["--accent", "--tint-strong"],
       ["--on-primary", "--primary"],
       ["--on-accent", "--accent"],
       ["#ffffff", "--wa"],

@@ -44,7 +44,7 @@ export function Gallery({
             </button>
           ))}
         </div>
-        <button type="button" className="tk-btn tk-btn-outline-rose tk-show-all" data-tk="show-all" onClick={() => setOpen(true)}>
+        <button type="button" className="tk-btn tk-btn-outline-gold tk-show-all" data-tk="show-all" onClick={() => setOpen(true)}>
           SHOW ALL
         </button>
       </div>

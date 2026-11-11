@@ -95,13 +95,6 @@ export function Footer({
               {content?.postLabel || "POST YOUR AD"}
             </Link>
           </div>
-          <div>
-            <h2>{content?.countriesLabel || "Countries"}</h2>
-            <label className="sr-only" htmlFor="tk-country">{content?.countriesLabel || "Countries"}</label>
-            <select id="tk-country" className="tk-country" defaultValue="IN" aria-label={content?.countriesLabel || "Countries"}>
-              <option value="IN">{content?.countryOption || "🇮🇳 India"}</option>
-            </select>
-          </div>
         </div>
         <p className="tk-legal-line">{legalName}</p>
       </div>

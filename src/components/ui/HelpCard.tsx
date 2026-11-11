@@ -27,7 +27,7 @@ export function HelpCard() {
       <p>
         For <strong>information</strong> or <strong>technical support</strong>, click the button below.
       </p>
-      <Link href="/contact/" className="tk-btn tk-btn-outline-rose" style={{ width: "100%" }}>
+      <Link href="/contact/" className="tk-btn tk-btn-outline-gold" style={{ width: "100%" }}>
         <Mail size={14} /> CONTACT US
       </Link>
       <p>

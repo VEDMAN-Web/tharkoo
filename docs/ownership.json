@@ -948,6 +948,70 @@
         "src/app/admin/import/**",
         "tests/server/listings/import.test.ts"
       ]
+    },
+    "H1.7a": {
+      "branchPrefix": "haiku/h1.7a",
+      "globs": [
+        "src/app/globals.css",
+        "src/styles/**",
+        "src/app/page.tsx",
+        "src/components/**",
+        "src/app/[category]/**",
+        "src/app/ad/**",
+        "src/app/u/account/**",
+        "src/app/u/post-insert/**",
+        "src/lib/ui/site-content.ts",
+        "docs/ownership.json",
+        "tests/server/ui/**"
+      ]
+    },
+    "H1.7b": {
+      "branchPrefix": "haiku/h1.7b",
+      "globs": [
+        "src/app/globals.css",
+        "src/styles/**",
+        "src/app/page.tsx",
+        "src/components/**",
+        "src/app/[category]/**",
+        "src/app/ad/**",
+        "src/app/u/account/**",
+        "src/app/u/post-insert/**",
+        "src/lib/ui/site-content.ts",
+        "docs/ownership.json",
+        "tests/server/ui/**"
+      ]
+    },
+    "H1.7c": {
+      "branchPrefix": "haiku/h1.7c",
+      "globs": [
+        "src/app/globals.css",
+        "src/styles/**",
+        "src/app/page.tsx",
+        "src/components/**",
+        "src/app/[category]/**",
+        "src/app/ad/**",
+        "src/app/u/account/**",
+        "src/app/u/post-insert/**",
+        "src/lib/ui/site-content.ts",
+        "docs/ownership.json",
+        "tests/server/ui/**"
+      ]
+    },
+    "H1.7d": {
+      "branchPrefix": "haiku/h1.7d",
+      "globs": [
+        "src/app/globals.css",
+        "src/styles/**",
+        "src/app/page.tsx",
+        "src/components/**",
+        "src/app/[category]/**",
+        "src/app/ad/**",
+        "src/app/u/account/**",
+        "src/app/u/post-insert/**",
+        "src/lib/ui/site-content.ts",
+        "docs/ownership.json",
+        "tests/server/ui/**"
+      ]
     }
   }
 }

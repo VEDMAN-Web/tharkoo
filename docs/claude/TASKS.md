@@ -347,3 +347,82 @@ export function isCityAlias(cityName: string, districtName: string) {
 **Files you may change:** `src/app/robots.ts`, `src/app/llms.txt/**`, `src/app/llms-full.txt/**`, `src/lib/seo/schema.ts`, `src/server/models/cms.ts` (Site `seoSettings` field), `src/app/admin/seo/settings/**`, `tests/server/seo/**`.
 **Build:** extra robots `Disallow` lines (validated per ADMIN_PLAN §5; superadmin only), llms.txt intro and sections, Organization fields, per-category ad schema mapping (JobPosting / Product-with-price / none) with a required-fields checker that lists ads that would be skipped, default OG image.
 **Acceptance:** tests: cannot disallow `/`; JobPosting omitted when a required field is missing; robots still passes seo-check; screenshots.
+
+---
+
+## H1.7 — Visual fix pass + gold theme (Vedant's audit, 11 Nov) — split into 4 PRs: H1.7a, H1.7b, H1.7c, H1.7d
+
+**Goal:** visitors must love the site at first sight. Replace the maroon/plum look with a premium **gold and light-gold** theme, and fix alignment, sizing and consistency on every public page and the user dashboard. This pulls the core of the redesign forward. It changes looks only: no data, URL, SEO or logic changes.
+
+### Theme: "Ivory & Gold" (do in H1.7a, first commit; every later part uses only these tokens)
+Replace the values in `src/styles/tokens.css` (keep the token NAMES the components already use; map old plum and rose tokens to these). Contrast was checked by Opus; `tests/server/ui/theme.test.ts` must still pass. Update its expected pairs only if a token name changes, never lower the 4.5 limit, and never put the word "dark" in tokens.css (the test forbids it).
+| Role | Hex | Use |
+|---|---|---|
+| page bg | `#FFFCF5` | warm ivory page |
+| card | `#FFFFFF` | cards, dialogs |
+| tint | `#FBF5E4` | section bands, chip backgrounds, hover |
+| tint-strong | `#F6EBCB` | selected chips, badges, input focus glow |
+| text | `#1F1A12` | headings and body |
+| muted | `#6B6255` | secondary text |
+| primary (deep gold) | `#8A6416` | links, icons on light, outline buttons, active states (5.2:1 on ivory) |
+| gold | `#D4AF37` | primary button fill (text `#1F1A12`), stars, badges, thin accents |
+| gold-light | `#E2C268` | button hover, highlight borders |
+| hairline | `#EADFC4` | 1 px card borders and dividers |
+| hero gradient | `#2A2316` → `#5C4A22` | home hero and the "post your ad" band only; text on it is `#FFFFFF`, and the H1 accent words use `#F3D98B` |
+| ok / danger | `#1E6B3A` on `#E8F5EC` / `#B42318` | status |
+| WhatsApp | `#177A42` | WhatsApp button (white text) |
+Buttons: primary = gold fill + ink text + 12 px radius + subtle shadow `0 1px 2px rgba(31,26,18,.12)`; hover = `#E2C268`; secondary = white + 1 px `#8A6416` border + `#8A6416` text. No maroon, plum or rose anywhere (`rg -i "#6A2150|#A63A5E|#5A2158|plum|rose" src` returns 0 hits, except in tokens.css comments, which you should remove).
+Card style everywhere: white, 1 px hairline border, 14 px radius, shadow `0 2px 10px rgba(31,26,18,.06)`, on hover lift 2 px with shadow `0 6px 20px rgba(31,26,18,.10)` (150 ms). Badges for promoted tiers: gold pill with ink text (Star/SUPER Top), outline gold pill (Top), tint pill (Highlight/New).
+Fonts stay: Cormorant Garamond for display headings (ink colour), Manrope for everything else.
+
+### Text alignment
+Vedant asked for justified text "where applicable". Apply `text-align: justify; hyphens: auto; text-wrap: pretty` ONLY to long body paragraphs (ad description, hub intro text, About/legal/help/blog article bodies), and only from 768 px up. On phones keep left alignment, because justified text on narrow screens leaves big gaps between words. Headings, buttons, cards, labels, chips and lists are never justified. Centre only section headings on the home page.
+
+### Structure principles (apply in every part)
+- Generous white space: 48 px between sections on desktop, 32 px on phone; one clear H2 per section with a 14 px muted one-line subtitle.
+- One visual rhythm: same card radius, border, shadow and padding (16 px phone / 20 px desktop) everywhere.
+- Every image has a fixed aspect-ratio box (no jumping, no huge images); object-fit cover.
+- Icons from lucide-react only, 18–20 px, in deep gold.
+- Every empty state has an icon, one line and one action button.
+- Hover and focus states on everything clickable (focus ring 2 px `#8A6416`, 2 px offset).
+**Files you may change (all four parts):** `src/app/globals.css`, `src/styles/**`, `src/app/page.tsx`, `src/components/**`, `src/app/[category]/**`, `src/app/ad/**`, `src/app/u/account/**`, `src/app/u/post-insert/**`, `src/lib/ui/site-content.ts` (defaults only), `docs/ownership.json` (add the H1.7a–d entries with these globs, in H1.7a only), `tests/server/ui/**`.
+**Rules for every item:** check at 390, 768 and 1440 px. No horizontal scroll, nothing overlapping, nothing cut off, tap targets ≥ 40 px, text ≥ 12 px. Save before and after screenshots to `.shots/H1.7x/`. Do not change data, URLs, SEO tags or logic. Run `node scripts/ui-smoke.mjs` before the PR; it must still pass.
+**Global (do in H1.7a):** content max-width 1200 px on desktop (today 960 px looks narrow at 1440), with 16 px side padding on phones. One spacing scale: 4/8/12/16/24/32/48.
+
+### H1.7a — Home, header, footer
+1. Hero: the H1 sits directly above the search bar (16 px gap), and both are grouped near the BOTTOM of the banner (search bar bottom edge 40 px above the banner bottom on desktop, 24 px on phone). Left-align them with the content container. The photo stays on the right. The H1 must never overlap the search bar or the photo's face area on phone (on phone, put the text block below the photo or on a dark gradient strip).
+2. Category cards ("Latest listings in your city"): each city box shows ONLY the city name (remove the category word above it). City boxes become pills: height 40, padding 0 16, radius 999, 1 px border, wrap with an 8 px gap, centred text. All category cards are equal height in a row; photo area fixed at 16:9 with object-fit cover; title and blurb padding 16. Grid: 3 columns at 1440, 2 at 768, 1 at 390. The last row is centred when it has fewer cards.
+3. Remove the "Latest ads" section from the home page completely (do not render it; leave the component file).
+4. Header: the small "Admin"/name text under the person icon is misaligned. Show the name only in the dropdown, not under the icon.
+5. Footer: remove the grey empty band at the very bottom (copyright gets the same background as the footer, 16 px padding). Hide the "Countries" selector while only one country exists.
+6. Change nothing in the hero TEXT; Vedant edits it in /admin/homepage/.
+
+### H1.7b — Listing pages (/{category}/, /{category}/{city}/, district)
+1. H1 ("Dating in Mumbai") is tiny and grey. Make it the page title: 32 px desktop / 24 px phone, ink colour, bold display font, with the "Updated …" line under it in muted 13 px.
+2. Ad cards, one consistent design for every tier:
+   - Desktop: horizontal card with a fixed photo 200 × 250 (4:5, cover) and the text column beside it. Phone: same horizontal card with photo 112 × 140.
+   - The card height comes from the photo; the text column clamps the title to 2 lines and the description to 2 lines; the "ID verified · Age verified · Photo verified" line becomes 3 small check badges in one row.
+   - The tier badge (Star / SUPER Top / Top / Highlight / New) is a small pill at the top-right of the photo, not floating in the text.
+   - Remove the < > photo arrows from list cards (photo count chip stays bottom-left on the photo).
+   - Call and WhatsApp icon buttons: 40 × 40, bottom-right of the card, never overlapping text.
+   - Promoted tiers differ only by a 2 px plum border (Star/SUPER Top) or a light tint (Highlight). The size is the same for all.
+   - No empty white gaps inside cards.
+3. "Reach more people / POST YOUR AD" band: the button text is cut off. Button min-width 160, height 44, white background, plum text, never wrapping. The band is 24 px padded and vertically centred.
+4. Filter chips (Verified, With photos, district names): pills height 36, one horizontally scrollable row on phone (no wrapping into 2–3 rows).
+5. Location search box: full width on phone, 480 px on desktop, aligned with the H1.
+
+### H1.7c — Ad page (/ad/...)
+1. Title row: the title on the left; the favourite heart and tier badge on the RIGHT edge of the same row (the heart is in the middle today).
+2. Remove the second copy of the title under the badges.
+3. Gallery: desktop is one main image (max-height 520, contain on a light background) plus a thumbnail strip (80 × 100) below, with click to switch and click to open the show-all sheet. Phone is one image, max-height 60vh, swipe or arrows, "1/4" counter. No 2×2 giant grid.
+4. Call and WhatsApp: on phone show only the sticky bottom bar (remove the duplicate buttons at the top and in "Contact me"). On desktop show one contact card at the top right (sticky on scroll), next to the gallery.
+5. Sections (About, Where, Interests): consistent 24 px spacing. The tag chips show the value only ("Coffee"), not "looking for: Coffee" or "tag: individual".
+
+### H1.7d — Dashboard and post-an-ad
+1. Dashboard: one grid of equal-height cards (3 columns desktop, 2 tablet, 1 phone): Your ads (active / not published counts + "Post an ad" button), Wallet (credits + "Buy credits"), Profile (name, email, ID status), Coupons, Settings. Each card: icon + title on the left in the header row, content below, the action button at the bottom. Remove the "Tharkoo News" marketing card and the "Stand out" promo card from the dashboard. Move the security tips card to the bottom as one full-width slim notice.
+2. Help box: hide the WhatsApp/Telegram buttons while they are not configured (no greyed-out disabled buttons).
+3. Post-an-ad: replace the "NO" pill toggles with proper switches (44 × 24, label on the left, state visible by colour and position). The two consent checkboxes become real checkboxes with the label beside them. The "GO ON" button becomes "Continue". Section headings ("Your ad", "Your data", "Your contacts") at 18 px semibold with 24 px space above.
+4. The progress bar at the top shows "Step 1 of 3 · Information" text, not just "1/3".
+
+**Acceptance (each part):** before/after screenshots at 390/768/1440 listed in the report; ui-smoke passes; lint/typecheck/test/build green; I review the result on the live preview, so restart the preview on main after each merge.
+**Order and speed:** do H1.7a → b → c → d back to back. Each part gets its own PR. After each PR is green, merge it only when I write `MERGE: allowed`. While you wait, start the next part on a new branch from github/main.

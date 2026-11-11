@@ -89,13 +89,13 @@ export function ContactButtons({
     if (hit?.value) {
       const href = hit.href || (channel === "phone" ? `tel:${hit.value}` : channel === "whatsapp" ? `https://wa.me/${hit.value.replace(/\D/g, "")}` : undefined);
       return (
-        <a key={channel} className={channel === "whatsapp" ? "tk-btn tk-btn-whatsapp" : "tk-btn tk-btn-rose"} data-tk={tk} href={href}>
+        <a key={channel} className={channel === "whatsapp" ? "tk-btn tk-btn-whatsapp" : "tk-btn tk-btn-gold"} data-tk={tk} href={href}>
           {hit.value}
         </a>
       );
     }
     return (
-      <button key={channel} type="button" className={channel === "whatsapp" ? "tk-btn tk-btn-whatsapp" : "tk-btn tk-btn-rose"} data-tk={tk} onClick={() => open(channel)} disabled={busy === channel}>
+      <button key={channel} type="button" className={channel === "whatsapp" ? "tk-btn tk-btn-whatsapp" : "tk-btn tk-btn-gold"} data-tk={tk} onClick={() => open(channel)} disabled={busy === channel}>
         {channel === "phone" ? <Phone size={16} /> : channel === "whatsapp" ? <Wa /> : null}
         {busy === channel ? "…" : label}
       </button>

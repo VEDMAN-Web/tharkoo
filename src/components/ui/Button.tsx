@@ -2,11 +2,11 @@ import Link from "next/link";
 import { cn } from "@/lib/utils";
 
 const look: Record<string, string> = {
-  primary: "tk-btn tk-btn-rose",
-  secondary: "tk-btn tk-btn-outline-rose",
+  primary: "tk-btn tk-btn-gold",
+  secondary: "tk-btn tk-btn-outline-gold",
   ghost: "tk-btn tk-btn-grey",
   outline: "tk-btn tk-btn-outline-primary",
-  danger: "tk-btn tk-btn-rose",
+  danger: "tk-btn tk-btn-gold",
 };
 
 export function Button({

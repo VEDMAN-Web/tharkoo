@@ -54,7 +54,6 @@ export function Header({
   const [who, setWho] = useState("");
   const [session, setSession] = useState(user);
   const homeLike = path === "/" || path.startsWith(`/${paths.cities}`);
-  const vendor = path.startsWith("/u/") || path.startsWith(`/${paths.login}`) || path.startsWith(`/${paths.register}`) || path.startsWith(`/${paths.postAd}`);
   const showCity = Boolean(city) && (path.startsWith(`/${paths.ad}/`) || categories.some((cat) => path.startsWith(`/${cat.slug}`)));
   const drawerRef = useFocusTrap(menu, () => setMenu(false));
 
@@ -79,7 +78,6 @@ export function Header({
   }, [path]);
 
   const socials = social.filter((item) => item.visible !== false && item.href && safeHref(item.href) && !/google\.com\/search/i.test(item.href));
-  const short = who.length > 10 ? `${who.slice(0, 10)}…` : who;
   const postLabel = chrome?.postLabel || "POST YOUR AD";
   const drawer = (chrome?.drawer || [
     { label: "Tharkoo Blog", href: blogPath(paths) },
@@ -105,11 +103,11 @@ export function Header({
               <button type="button" className="tk-icon-btn" aria-label="Account" aria-expanded={account} onClick={() => setAccount((v) => !v)}>
                 <User size={20} fill="currentColor" />
               </button>
-              {vendor && short ? <span className="tk-account-name">{short}</span> : null}
               {account ? (
                 <div className="tk-menu" role="menu">
                   {session ? (
                     <>
+                      {who ? <span className="tk-menu-name">{who}</span> : null}
                       <Link href="/u/account/dashboard/" onClick={() => setAccount(false)}>Dashboard</Link>
                       <Link href="/u/account/ads/" onClick={() => setAccount(false)}>Your ads</Link>
                       <Link href="/u/account/credits/" onClick={() => setAccount(false)}>Wallet</Link>

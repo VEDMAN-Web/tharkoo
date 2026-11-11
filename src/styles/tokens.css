@@ -1,56 +1,81 @@
 :root {
   color-scheme: light;
-  --bg: #fffdfb;
-  --bg-soft: #faf6f1;
+  /* Ivory and gold. Page and surfaces. */
+  --bg: #fffcf5;
+  --bg-soft: #fbf5e4;
   --card: #ffffff;
-  --tint: #f7eef3;
-  --tint-rose: #faeff2;
-  --chip: #efe7df;
-  --bar: #f1e4e8;
-  --letterbox: #f3ede6;
-  --bg-pack: #fbf5f7;
-  --bg-form: #fcf9f5;
-  --border: #eae3dc;
-  --border-2: #e2dad2;
-  --border-strong: #d6ccc2;
-  --text: #1f2433;
-  --body: #4a4f5e;
-  --muted: #6e7180;
-  --primary: #6a2150;
-  --primary-hover: #561a41;
-  --primary-press: #451433;
+  --tint: #fbf5e4;
+  --tint-strong: #f6ebcb;
+  --chip: #f6ebcb;
+  --bar: #fbf5e4;
+  --letterbox: #f3ecd8;
+  --bg-pack: #fbf5e4;
+  --bg-form: #fffcf5;
+  --border: #eadfc4;
+  --border-2: #e2d5b3;
+  --border-strong: #cdbb8a;
+  /* Text */
+  --text: #1f1a12;
+  --body: #3d362b;
+  --muted: #6b6255;
+  --ink: #1f1a12;
+  /* Deep gold: links, icons, outline buttons, active states (5.2:1 on the page) */
+  --primary: #8a6416;
+  --primary-hover: #6f4f10;
+  --primary-press: #5a400d;
   --on-primary: #ffffff;
-  --accent: #a63a5e;
-  --accent-hover: #8a2f4f;
-  --accent-press: #732643;
+  --accent: #8a6416;
+  --accent-hover: #6f4f10;
+  --accent-press: #5a400d;
   --on-accent: #ffffff;
-  --metal: #c9967e;
-  --metal-soft: #e9c27a;
-  --wa: #0f8247;
-  --wa-hover: #0b6b3a;
+  /* Gold: primary button fill (ink text), stars, badges, thin accents */
+  --gold: #d4af37;
+  --gold-light: #e2c268;
+  --gold-soft: #f3d98b;
+  --metal: #d4af37;
+  --metal-soft: #e2c268;
+  /* Messaging and status */
+  --wa: #177a42;
+  --wa-hover: #116333;
   --tg: #167cab;
-  --ok: #1c7a45;
-  --ok-bg: #e3f4ea;
+  --ok: #1e6b3a;
+  --ok-bg: #e8f5ec;
   --warn: #9a5b00;
   --warn-bg: #fff1d6;
-  --danger: #c0352f;
+  --danger: #b42318;
   --danger-bg: #fdecea;
-  --focus: #6a2150;
-  --grad-hero: linear-gradient(100deg, #5a2158 0%, #7b2d5e 38%, #b8486b 72%, #e0a08a 100%);
-  --grad-promo: linear-gradient(100deg, #6a2150 0%, #a63a5e 100%);
+  --focus: #8a6416;
+  /* Hero and the post-your-ad band only; text on them is white */
+  --grad-hero: linear-gradient(100deg, #2a2316 0%, #5c4a22 100%);
+  --grad-promo: linear-gradient(100deg, #2a2316 0%, #5c4a22 100%);
+  /* Shape and depth */
   --r-xs: 4px;
   --r-sm: 6px;
   --r-md: 8px;
   --r-lg: 10px;
   --r-xl: 12px;
-  --r-pill: 16px;
+  --r-btn: 12px;
+  --r-card: 14px;
+  --r-pill: 999px;
   --r-search: 31px;
-  --sh-card: 0 2px 20px rgba(106, 33, 80, 0.12);
-  --sh-soft: 0 2px 12px rgba(106, 33, 80, 0.08);
-  --sh-pop: 0 8px 32px rgba(31, 36, 51, 0.18);
+  --sh-btn: 0 1px 2px rgba(31, 26, 18, 0.12);
+  --sh-card: 0 2px 10px rgba(31, 26, 18, 0.06);
+  --sh-soft: 0 2px 10px rgba(31, 26, 18, 0.06);
+  --sh-hover: 0 6px 20px rgba(31, 26, 18, 0.1);
+  --sh-pop: 0 8px 32px rgba(31, 26, 18, 0.18);
+  /* Motion */
   --ease: cubic-bezier(0.2, 0.8, 0.2, 1);
   --t-fast: 150ms;
   --t-base: 250ms;
   --t-slow: 400ms;
+  /* Layout and spacing scale */
   --header-h: 76px;
+  --content-w: 1200px;
+  --gap-1: 4px;
+  --gap-2: 8px;
+  --gap-3: 12px;
+  --gap-4: 16px;
+  --gap-5: 24px;
+  --gap-6: 32px;
+  --gap-7: 48px;
 }

@@ -4,12 +4,10 @@ import { SmartImage } from "./ui/SmartImage";
 import { AdCardSkeleton } from "./ui/Skeleton";
 import { JsonLd } from "@/lib/jsonld";
 import { safeHtml } from "@/lib/sanitize";
-import { displayTitle, prettyPlace, timeAgo } from "@/lib/format";
-import { listingPhotos } from "@/lib/media";
 import { canonical } from "@/lib/seo";
 import { organizationNode, websiteNode } from "@/lib/seo/schema";
-import { adPath, categoryPath, placePath, searchPath } from "@/lib/urls";
-import { getCategories, getCities, getHomepageContent, getLatestListings, getSeo, getSite, listingCountsByCategoryCity } from "@/lib/queries";
+import { categoryPath, placePath, searchPath } from "@/lib/urls";
+import { getCategories, getCities, getHomepageContent, getSeo, getSite, listingCountsByCategoryCity } from "@/lib/queries";
 import { getPaths } from "@/server/urls/service";
 import { cardFallback, type HomeCard } from "@/lib/ui/site-content";
 
@@ -44,7 +42,7 @@ function iconFor(slug: string) {
 }
 
 export async function HomeBlocks() {
-  const [site, categories, cities, seo, content, paths, counts, latest] = await Promise.all([
+  const [site, categories, cities, seo, content, paths, counts] = await Promise.all([
     getSite(),
     getCategories(),
     getCities(),
@@ -52,7 +50,6 @@ export async function HomeBlocks() {
     getHomepageContent(),
     getPaths(),
     listingCountsByCategoryCity().catch(() => []),
-    getLatestListings(12).catch(() => []),
   ]);
   const liveKeys = new Set(counts.filter((row) => row.n > 0).map((row) => `${row._id.categorySlug}|${row._id.citySlug}`));
   const bySlug = new Map(categories.map((cat) => [cat.slug, cat as Cat]));
@@ -112,49 +109,18 @@ export async function HomeBlocks() {
               </Link>
               <div className="tk-home-body">
                 <p>{card.blurb || cat.homeBlurb || cat.description || cardFallback(card.slug)}</p>
-                {picks.map((city) => (
-                  <Link key={city!.slug} href={placePath(cat.slug || "", city!.slug || "")} className="tk-city-row" prefetch={false}>
-                    <span>{title}</span>
-                    <strong>{city!.name}</strong>
-                  </Link>
-                ))}
+                <div className="tk-city-pills">
+                  {picks.map((city) => (
+                    <Link key={city!.slug} href={placePath(cat.slug || "", city!.slug || "")} className="tk-city-row" prefetch={false}>
+                      {city!.name}
+                    </Link>
+                  ))}
+                </div>
               </div>
             </article>
           );
         })}
       </div>
-      {latest.length ? (
-        <section className="tk-container tk-latest" data-tk="latest-ads">
-          <h2>Latest ads</h2>
-          <div className="tk-latest-grid">
-            {latest.map((ad) => {
-              const cat = bySlug.get(ad.categorySlug);
-              const thumb =
-                listingPhotos(ad.categorySlug, ad.publicId || ad.slug, [])[0] ||
-                (ad.categorySlug ? `/placeholders/${ad.categorySlug}/01.webp` : "/placeholders/hero.webp");
-              const title = displayTitle(ad.title) || "Listing";
-              const when = timeAgo(ad.publishedAt);
-              return (
-                <article key={ad.slug} className="tk-card tk-latest-card" data-tk="latest-card" data-variant="free">
-                  <Link className="tk-card-link" href={adPath(paths, ad.slug)} prefetch={false}>
-                    <span className="tk-card-photo">
-                      <SmartImage src={thumb} alt="" seed={ad.slug} category={ad.categorySlug} width={160} height={200} sizes="120px" />
-                    </span>
-                    <span className="tk-card-body">
-                      <span className="tk-card-title">{title}</span>
-                      <span className="tk-card-meta">
-                        <p>{prettyPlace(ad.citySlug)}</p>
-                        {when ? <p>{when}</p> : null}
-                      </span>
-                      {cat?.name ? <span className="tk-latest-chip">{cat.name}</span> : null}
-                    </span>
-                  </Link>
-                </article>
-              );
-            })}
-          </div>
-        </section>
-      ) : null}
       {content.seoIntro || seo?.intro ? (
         <div className="tk-seo" dangerouslySetInnerHTML={{ __html: safeHtml(content.seoIntro || seo?.intro || "") }} />
       ) : null}

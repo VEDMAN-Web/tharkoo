@@ -424,7 +424,7 @@ export function PostWizard() {
             {errors.adult ? <span className="tk-error" data-tk="field-error">{errors.adult}</span> : null}
           </p>
           <p style={{ textAlign: "right", marginTop: 24 }}>
-            <button type="button" className="tk-btn tk-btn-rose" data-tk="go-on" disabled={busy} onClick={goOn}>GO ON</button>
+            <button type="button" className="tk-btn tk-btn-gold" data-tk="go-on" disabled={busy} onClick={goOn}>GO ON</button>
           </p>
         </>
       ) : null}
@@ -434,7 +434,7 @@ export function PostWizard() {
             <h2 className="t-h3">Your photos</h2>
             <div className="tk-drop">
               <p>Drag photos here or</p>
-              <label className="tk-btn tk-btn-outline-rose">
+              <label className="tk-btn tk-btn-outline-gold">
                 ADD PHOTOS
                 <input
                   type="file"
@@ -454,8 +454,8 @@ export function PostWizard() {
             {photoNote ? <p data-tk="photo-note">{photoNote}</p> : <p className="t-small">Add a photo of the item or place. People ads can use a portrait.</p>}
           </div>
           <div style={{ display: "flex", justifyContent: "space-between", marginTop: 16 }}>
-            <button type="button" className="tk-btn tk-btn-outline-rose" onClick={() => remember(draftId, 1)}>BACK</button>
-            <button type="button" className="tk-btn tk-btn-rose" data-tk="go-on" onClick={() => remember(draftId, 3)}>GO ON</button>
+            <button type="button" className="tk-btn tk-btn-outline-gold" onClick={() => remember(draftId, 1)}>BACK</button>
+            <button type="button" className="tk-btn tk-btn-gold" data-tk="go-on" onClick={() => remember(draftId, 3)}>GO ON</button>
           </div>
         </>
       ) : null}
@@ -474,8 +474,8 @@ export function PostWizard() {
             )}
           </div>
           <p style={{ textAlign: "right", marginTop: 16 }}>
-            <button type="button" className="tk-btn tk-btn-outline-rose" onClick={() => setStep(2)}>BACK</button>{" "}
-            <button type="button" className="tk-btn tk-btn-rose" data-tk="go-on" disabled={busy || !hydrated || !title.trim()} onClick={publish}>PUBLISH</button>
+            <button type="button" className="tk-btn tk-btn-outline-gold" onClick={() => setStep(2)}>BACK</button>{" "}
+            <button type="button" className="tk-btn tk-btn-gold" data-tk="go-on" disabled={busy || !hydrated || !title.trim()} onClick={publish}>PUBLISH</button>
           </p>
         </>
       ) : null}

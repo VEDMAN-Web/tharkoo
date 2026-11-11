@@ -112,7 +112,7 @@ export function WalletPanel({ packs }: { packs: Pack[] }) {
             TOTAL: <strong style={{ color: "var(--primary)" }}>{chosen ? inr(chosen.price) : "Rs 0"}</strong>
           </p>
           <p style={{ textAlign: "right" }}>
-            <button type="button" className="tk-btn tk-btn-rose tk-btn-sm" style={{ width: 230, opacity: chosen ? 1 : 0.5 }} disabled={!chosen} onClick={pay}>PAY</button>
+            <button type="button" className="tk-btn tk-btn-gold tk-btn-sm" style={{ width: 230, opacity: chosen ? 1 : 0.5 }} disabled={!chosen} onClick={pay}>PAY</button>
           </p>
           <p aria-live="polite" className="t-small">{message}</p>
           <HelpCard />
@@ -299,7 +299,7 @@ export function KycStatus() {
             <form onSubmit={submit} className="grid gap-3" style={{ maxWidth: 420, marginTop: 16 }}>
               <label className="t-small">ID photo<input id="front-id" name="front" type="file" accept="image/jpeg,image/png,image/webp" required /></label>
               <label className="t-small">Photo of you<input id="selfie-id" name="selfie" type="file" accept="image/jpeg,image/png,image/webp" required /></label>
-              <button type="submit" className="tk-btn tk-btn-rose" data-tk="kyc-submit" disabled={busy}>{busy ? "Sending…" : "Submit for review"}</button>
+              <button type="submit" className="tk-btn tk-btn-gold" data-tk="kyc-submit" disabled={busy}>{busy ? "Sending…" : "Submit for review"}</button>
             </form>
           ) : null}
           {message ? <p data-tk="kyc-note">{message}</p> : null}
@@ -347,7 +347,7 @@ export function AccountSettings() {
           <p style={{ textAlign: "center" }}>{profile?.email || "Loading…"}</p>
           <div className="tk-profile" style={{ textAlign: "center", marginTop: 16 }}>
             <p style={{ fontSize: 18 }}>CHANGE PASSWORD</p>
-            <button type="button" className="tk-btn tk-btn-outline-rose" onClick={changePassword}>
+            <button type="button" className="tk-btn tk-btn-outline-gold" onClick={changePassword}>
               {sent ? "We have sent you an email" : "CHANGE PASSWORD"}
             </button>
             <p className="t-small">We will send you an email to change your password</p>

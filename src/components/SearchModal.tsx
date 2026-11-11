@@ -213,7 +213,7 @@ export function SearchModal({
           <button type="button" className="tk-text-btn" data-tk="search-delete-all" onClick={reset}>
             DELETE ALL
           </button>
-          <button type="submit" className="tk-btn tk-btn-rose" data-tk="search-submit">
+          <button type="submit" className="tk-btn tk-btn-gold" data-tk="search-submit">
             <Search size={14} /> {submitLabel}
           </button>
         </div>

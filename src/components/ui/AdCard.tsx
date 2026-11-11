@@ -115,7 +115,7 @@ export function AdCard({
       {superTop ? (
         <div className="tk-circles">
           <button type="button" className="tk-circle" aria-label="Call" data-tk="call" onClick={() => reveal("phone")}>
-            <Phone size={16} color="#A63A5E" />
+            <Phone size={16} color="#8A6416" />
           </button>
           <button type="button" className="tk-circle" aria-label="WhatsApp" data-tk="whatsapp" onClick={() => reveal("whatsapp")}>
             <WaIcon />
