@@ -150,3 +150,14 @@ export const allModels = [
   Redirect,
   UrlOverride,
 ];
+
+export { PageLayout, PageLayoutRevision, UiText, SiteMedia, ListingPin } from "@/server/models/layout";
+export type {
+  BlockBase,
+  ListingPinDoc,
+  PageKey,
+  PageLayoutDoc,
+  PageLayoutRevisionDoc,
+  SiteMediaDoc,
+  UiTextDoc,
+} from "@/server/models/layout";

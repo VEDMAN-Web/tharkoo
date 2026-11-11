@@ -771,7 +771,9 @@
         "src/lib/layout/**",
         "src/components/blocks/**",
         "src/app/admin/layout-actions.ts",
-        "tests/server/layout/**"
+        "tests/server/layout/**",
+        "docs/ownership.json",
+        "progress/H3.2.md"
       ]
     },
     "H3.3": {
