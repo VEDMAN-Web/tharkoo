@@ -852,7 +852,11 @@
         "src/server/models/cms.ts",
         "src/server/models/listing.ts",
         "src/app/admin/listing-order/**",
-        "tests/server/ranking/**"
+        "tests/server/ranking/**",
+        "src/server/search/query.ts",
+        "docs/ownership.json",
+        "progress/H3.8.md",
+        "src/components/admin/nav.ts"
       ]
     },
     "H3.9": {

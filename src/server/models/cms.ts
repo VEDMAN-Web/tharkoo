@@ -46,6 +46,8 @@ export interface SiteDoc extends BaseDoc {
   tags?: { slug?: string; label?: string; replaces?: string }[];
   freeAdsPerWeek?: number;
   paths?: unknown;
+  /** Listing order settings (H3.8). Missing means the original order. */
+  ranking?: { tierOrder?: string[]; verifiedFirst?: boolean; photoFirst?: boolean };
 }
 
 export interface PageDoc extends BaseDoc {
@@ -178,6 +180,9 @@ const siteSchema = new Schema<SiteDoc>(
     tags: { type: [{ slug: String, label: String, replaces: String }], default: [] },
     freeAdsPerWeek: { type: Number },
     paths: Schema.Types.Mixed,
+    ranking: {
+      type: new Schema({ tierOrder: [String], verifiedFirst: Boolean, photoFirst: Boolean }, { _id: false }),
+    },
   },
   { timestamps: true, collection: collectionName("sites", "Site") },
 );
