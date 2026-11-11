@@ -1109,6 +1109,28 @@
         "src/app/globals.css",
         "docs/ownership.json"
       ]
+    },
+    "H1.8e": {
+      "branchPrefix": "haiku/h1.8e",
+      "globs": [
+        "src/app/globals.css",
+        "src/styles/**",
+        "src/app/page.tsx",
+        "src/components/**",
+        "src/app/[category]/**",
+        "src/app/ad/**",
+        "src/app/u/account/**",
+        "src/app/u/post-insert/**",
+        "src/lib/ui/site-content.ts",
+        "docs/ownership.json",
+        "tests/server/ui/**",
+        "scripts/ui-smoke.mjs",
+        "src/app/error.tsx",
+        "src/app/global-error.tsx",
+        "src/app/styleguide/page.tsx",
+        "src/app/submit-report/page.tsx",
+        "docs/ownership.json"
+      ]
     }
   }
 }
