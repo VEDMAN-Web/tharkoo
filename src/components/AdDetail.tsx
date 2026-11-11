@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { Heart, MapPin, Shield, Smile, User } from "lucide-react";
+import { Flag, Heart, Link2, MapPin, MessageCircle, Shield, Smile, User } from "lucide-react";
 import type { ListingDoc } from "@/lib/models";
 import { displayTitle, listingDateLabel, prettyPlace } from "@/lib/format";
 import { listingTagSections } from "@/lib/media";
@@ -171,40 +171,33 @@ export function AdDetail({
               </div>
             </section>
           ) : null}
-          <div className="tk-hair tk-share">
-            <div>
-              <p style={{ fontWeight: 700 }}>Share ad</p>
-              <a href={`https://twitter.com/intent/tweet?url=${encodeURIComponent(shareUrl)}`} target="_blank" rel="noopener noreferrer">X</a>
-              {" "}
-              <a href={`https://wa.me/?text=${encodeURIComponent(shareUrl)}`} target="_blank" rel="noopener noreferrer">WhatsApp</a>
-              <button type="button" onClick={async () => {
+          <div className="tk-hair tk-share" data-tk="share-row">
+            <div className="tk-share-icons">
+              <span>Share:</span>
+              <a className="tk-share-btn" href={`https://twitter.com/intent/tweet?url=${encodeURIComponent(shareUrl)}`} target="_blank" rel="noopener noreferrer" aria-label="Share on X">X</a>
+              <a className="tk-share-btn" href={`https://wa.me/?text=${encodeURIComponent(shareUrl)}`} target="_blank" rel="noopener noreferrer" aria-label="Share on WhatsApp"><MessageCircle size={18} /></a>
+              <button type="button" className="tk-share-btn" aria-label="Copy link" onClick={async () => {
                 try {
                   await navigator.clipboard.writeText(window.location.href);
                   setCopied("Link copied");
                 } catch {
                   setCopied("Copy the address bar.");
                 }
-              }}>Copy</button>
-              {copied ? <span> {copied}</span> : null}
+              }}><Link2 size={18} /></button>
+              {copied ? <span role="status">{copied}</span> : null}
             </div>
-            <div>
-              <Link href={`/submit-report/?ad=${ad.publicId || ad.slug || ""}`}>🛡 Report abuse or fraud</Link>
-            </div>
+            <Link className="tk-report" href={`/submit-report/?ad=${ad.publicId || ad.slug || ""}`}><Flag size={14} /> Report</Link>
           </div>
           <p className="tk-all">
             All ads in <Link href={listHref}><strong>{categoryName} in {city}</strong></Link> ›
           </p>
           <section className="tk-security" data-tk="security-tips">
-            <span className="tk-security-tab"><Shield size={16} /> SECURITY TIPS</span>
-            <h3>Security tips</h3>
+            <h3><Shield size={18} /> Stay safe</h3>
             <p>Be careful if the advertiser writes in an unusual way or asks for money in advance. Never share OTPs or card details.</p>
           </section>
-          <div className="tk-fine">
-            <p><strong>Tharkoo does not intervene in relationships between users and advertisers.</strong> People arrange meetings on their own.</p>
-            <p>Ads are published on the advertiser&apos;s own responsibility.</p>
-            <p>Tharkoo does not verify content beyond its policy.</p>
-            <p>The site offers publication and navigation services.</p>
-          </div>
+          <p className="tk-fine">
+            <strong>Tharkoo does not intervene in relationships between users and advertisers.</strong> People arrange meetings on their own. Ads are published on the advertiser&apos;s own responsibility. Tharkoo does not verify content beyond its policy. The site offers publication and navigation services.
+          </p>
           {related.length ? (
             <section>
               <h2 className="t-h2">More like this</h2>
