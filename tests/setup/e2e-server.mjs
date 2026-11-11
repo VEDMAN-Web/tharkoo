@@ -23,6 +23,9 @@ const child = spawn(process.execPath, ["server.js"], {
   env: {
     ...process.env,
     MONGODB_URI: uri,
+    NODE_OPTIONS: process.env.NODE_OPTIONS?.includes("max-old-space-size")
+      ? process.env.NODE_OPTIONS
+      : `${process.env.NODE_OPTIONS ? `${process.env.NODE_OPTIONS} ` : ""}--max-old-space-size=256`,
     PORT: "4317",
     HOSTNAME: "0.0.0.0",
     SITE_NOINDEX: process.env.SITE_NOINDEX || "true",

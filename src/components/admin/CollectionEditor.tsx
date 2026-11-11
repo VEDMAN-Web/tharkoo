@@ -7,18 +7,23 @@ export function CollectionEditor({
   model,
   title,
   createTemplate,
-  summary,
+  summaryFields = [],
+  filters = [],
+  allowCreate = true,
 }: {
   model: string;
   title?: string;
   createTemplate?: Record<string, unknown>;
-  summary?: (row: Record<string, unknown>) => string;
+  summaryFields?: string[];
+  filters?: { label: string; field: string; value: string }[];
+  allowCreate?: boolean;
 }) {
   const [rows, setRows] = useState<Record<string, unknown>[]>([]);
   const [edit, setEdit] = useState<Record<string, unknown> | null>(null);
   const [json, setJson] = useState("");
   const [msg, setMsg] = useState("");
   const [err, setErr] = useState("");
+  const [filter, setFilter] = useState("all");
 
   async function load() {
     setErr("");
@@ -71,22 +76,45 @@ export function CollectionEditor({
     await load();
   }
 
+  const shown = rows.filter((row) => {
+    if (filter === "all") return true;
+    const chosen = filters.find((item) => `${item.field}:${item.value}` === filter);
+    return chosen ? String(row[chosen.field] ?? "") === chosen.value : true;
+  });
+
   return (
     <div className="grid gap-4 lg:grid-cols-2">
       <div className="rounded-lg border border-line bg-surface p-3 text-text">
-        <div className="mb-2 flex items-center justify-between">
+        <div className="mb-2 flex items-center justify-between gap-3">
           <h2 className="font-bold">{title || model}</h2>
-          <button type="button" className="tk-btn tk-btn-rose" onClick={create}>
-            New
-          </button>
+          {allowCreate ? (
+            <button type="button" className="tk-btn tk-btn-rose shrink-0" style={{ position: "static" }} onClick={create}>
+              New
+            </button>
+          ) : null}
         </div>
+        {filters.length ? (
+          <div className="mb-3 flex flex-wrap gap-2" data-tk="admin-filters">
+            <button type="button" className="tk-pill" aria-pressed={filter === "all"} onClick={() => setFilter("all")}>All</button>
+            {filters.map((item) => {
+              const id = `${item.field}:${item.value}`;
+              return (
+                <button key={id} type="button" className="tk-pill" aria-pressed={filter === id} onClick={() => setFilter(id)}>
+                  {item.label}
+                </button>
+              );
+            })}
+          </div>
+        ) : null}
         {err ? <p className="t-small text-danger">{err}</p> : null}
-        {!rows.length ? <p className="t-small text-muted">No records yet.</p> : null}
+        {!shown.length ? <p className="t-small text-muted">No records yet.</p> : null}
         <ul className="max-h-[70vh] overflow-auto t-small">
-          {rows.map((row) => (
+          {shown.map((row) => (
             <li key={String(row._id)}>
               <button type="button" className="w-full border-b border-line px-1 py-2 text-left hover:bg-surface-2" onClick={() => open(row)}>
-                {summary ? summary(row) : String(row.name || row.title || row.slug || row.key || row.code || row._id)}
+                {summaryFields.length
+                  ? summaryFields.map((field) => row[field]).filter((value) => value !== undefined && value !== null && value !== "").join(" · ") || String(row._id)
+                  : String(row.name || row.title || row.slug || row.key || row.code || row._id)}
               </button>
             </li>
           ))}

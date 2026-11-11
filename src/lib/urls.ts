@@ -124,6 +124,22 @@ export function joinPath(...parts: Array<string | undefined>) {
   return cleanPath(`/${body}`);
 }
 
+export function categoriesPath() {
+  return "/categories/";
+}
+
+export function safetyPath() {
+  return "/safety/";
+}
+
+export function howItWorksPath() {
+  return "/how-it-works/";
+}
+
+export function prohibitedPath() {
+  return "/prohibited-items/";
+}
+
 export function categoryPath(category: string) {
   return joinPath(category);
 }

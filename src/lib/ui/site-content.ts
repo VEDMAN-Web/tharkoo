@@ -25,6 +25,7 @@ export type SiteContent = {
     desktop: string;
     mobileLines: string[];
     photo: string;
+    photoAlt: string;
     searchPlaceholder: string;
     postLabel: string;
     postHref: string;
@@ -102,11 +103,12 @@ export function defaultSiteContent(): SiteContent {
       desktop: "Single? Taken? Doesn't matter, Tharkoo is for everyone",
       mobileLines: ["Single? Taken?", "Doesn't matter,", "Tharkoo is", "for everyone"],
       photo: "/placeholders/hero.webp",
+      photoAlt: "Friends in an Indian city",
       searchPlaceholder: "Search By City, Category...",
       postLabel: "POST YOUR AD",
       postHref: POST,
     },
-    cardsHeading: "Hot meetings in your city",
+    cardsHeading: "Latest listings in your city",
     cardsIntro: "Find your favourite listings on Tharkoo",
     cards: CARD_FALLBACKS.map((card) => ({
       slug: card.slug,
@@ -128,8 +130,8 @@ export function defaultSiteContent(): SiteContent {
       })),
       { id: "more", kind: "categories", slug: "", title: "More categories", visible: true, cities: [], showAll: false },
     ],
-    seoTitle: "Classifieds across India | Tharkoo",
-    seoDescription: "Browse listings for dating, friendship, meetups, wellness, and more in your city.",
+    seoTitle: "Tharkoo — Free classifieds in India",
+    seoDescription: "Tharkoo is a free classifieds site for India. Browse dating, friendship, jobs, homes, and vehicles, then contact the poster in the app after an ID check.",
     seoIntro: "",
     header: {
       postLabel: "POST YOUR AD",
@@ -145,10 +147,10 @@ export function defaultSiteContent(): SiteContent {
       about: "Tharkoo is a classifieds platform for people in India. Browse new listings every day in {count} cities.",
       badge: "18+ ONLY",
       columns: [
-        column("Legal", [link("Terms and Conditions", "/terms/"), link("Privacy Policy", "/privacy/"), link("Cookie Policy", "/cookies/")]),
-        column("Support", [link("Help Center", "/help/"), link("Submit a Report", "/submit-report/"), link("Blog", "/blog/")]),
-        column("Security", [link("How to report a scam", "/scam-report/")]),
-        column("Company", [link("About Tharkoo", "/cms/about/"), link("Contact us", "/contact/")]),
+        column("Legal", [link("Terms and Conditions", "/terms/"), link("Privacy Policy", "/privacy/"), link("Cookie Policy", "/cookies/"), link("Prohibited items", "/prohibited-items/")]),
+        column("Support", [link("Help Center", "/help/"), link("How it works", "/how-it-works/"), link("Submit a Report", "/submit-report/"), link("Blog", "/blog/")]),
+        column("Security", [link("Safety", "/safety/"), link("How to report a scam", "/scam-report/")]),
+        column("Company", [link("About Tharkoo", "/cms/about/"), link("Contact us", "/contact/"), link("Categories", "/categories/"), link("Cities", "/cities/")]),
       ],
       boostTitle: "Boost your visibility",
       postLabel: "POST YOUR AD",
@@ -374,6 +376,7 @@ export function sanitizeSiteContent(
         desktop: text(heroIn.desktop, 160, base.hero.desktop),
         mobileLines: lines(heroIn.mobileLines, base.hero.mobileLines),
         photo: photo || base.hero.photo,
+        photoAlt: text(heroIn.photoAlt, 80, base.hero.photoAlt),
         searchPlaceholder: text(heroIn.searchPlaceholder, 80, base.hero.searchPlaceholder),
         postLabel: text(heroIn.postLabel, 40, base.hero.postLabel),
         postHref: heroPost || POST,

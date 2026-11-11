@@ -13,6 +13,8 @@ export default function Page() {
     <StaticPage title="How to report a scam">
       <p>Use the report link on the ad, or write to the help centre and include the ad link.</p>
       <p>
+        <Link href="/safety/">Safety</Link>
+        {" · "}
         <Link href="/help/">Help Center</Link>
       </p>
     </StaticPage>

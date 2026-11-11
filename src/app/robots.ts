@@ -13,7 +13,14 @@ export default function robots(): MetadataRoute.Robots {
     return { rules: [{ userAgent: "*", disallow: "/" }], sitemap };
   }
   return {
-    rules: [{ userAgent: "*", allow: "/", disallow: ["/u/", "/search", "/admin/", "/api/", "/*?*page="] }],
+    rules: [
+      { userAgent: "*", allow: "/", disallow: ["/u/", "/search", "/admin/", "/api/"] },
+      { userAgent: "Googlebot", allow: "/" },
+      { userAgent: "Bingbot", allow: "/" },
+      { userAgent: "OAI-SearchBot", allow: "/" },
+      { userAgent: "PerplexityBot", allow: "/" },
+      { userAgent: "Claude-SearchBot", allow: "/" },
+    ],
     sitemap,
   };
 }

@@ -62,15 +62,17 @@ export function PathChrome({ shell, paths, children }: { shell: Shell; paths: Ur
   return (
     <UrlPathProvider paths={paths}>
     <CityProvider cities={cityProps}>
-      <JsonLd
-        data={{
-          "@context": "https://schema.org",
-          "@type": "WebPage",
-          name: path === "/" ? site.name || "Tharkoo" : path,
-          url: canonical(path),
-          isPartOf: { "@type": "WebSite", name: site.name || "Tharkoo", url: canonical("/") },
-        }}
-      />
+      {path.startsWith(`/${paths.ad.replace(/^\/|\/$/g, "")}/`) ? null : (
+        <JsonLd
+          data={{
+            "@context": "https://schema.org",
+            "@type": "WebPage",
+            name: path === "/" ? site.name || "Tharkoo" : path,
+            url: canonical(path),
+            isPartOf: { "@type": "WebSite", name: site.name || "Tharkoo", url: canonical("/") },
+          }}
+        />
+      )}
       <Header
         siteName={site.logoText || site.name || "Tharkoo"}
         countryName={site.countryName || "India"}

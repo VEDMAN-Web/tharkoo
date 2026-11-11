@@ -26,7 +26,7 @@ describe("homepage content", () => {
     expect(content.hero.searchPlaceholder).toBe("Search By City, Category...");
     expect(content.cards.filter((card) => card.visible)).toHaveLength(5);
     expect(content.header.drawer.map((item) => item.label)).toEqual(["Tharkoo Blog", "Help Center"]);
-    expect(readContent({ blocks: [] }).cardsHeading).toBe("Hot meetings in your city");
+    expect(readContent({ blocks: [] }).cardsHeading).toBe("Latest listings in your city");
   });
 
   it("rejects an unsafe link and an unsafe photo", () => {

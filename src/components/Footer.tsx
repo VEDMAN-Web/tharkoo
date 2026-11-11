@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { Logo } from "./Logo";
 import { safeHref } from "@/lib/sanitize";
-import { applyPrefixes, blogPath, cmsPath, contactPath, helpPath, postAdPath, reportPath } from "@/lib/urls";
+import { applyPrefixes, blogPath, categoriesPath, citiesPath, cmsPath, contactPath, helpPath, howItWorksPath, postAdPath, prohibitedPath, reportPath, safetyPath } from "@/lib/urls";
 import { useUrlPaths } from "./UrlPaths";
 
 type LinkItem = { label: string; href: string };
@@ -53,10 +53,10 @@ export function Footer({
   const socials = realSocial(social);
   const about = (content?.about || "Tharkoo is a classifieds platform for people in India. Browse new listings every day in {count} cities.").split("{count}");
   const columns = content?.columns || [
-    { title: "Legal", links: [{ label: "Terms and Conditions", href: "/terms/" }, { label: "Privacy Policy", href: "/privacy/" }, { label: "Cookie Policy", href: "/cookies/" }] },
-    { title: "Support", links: [{ label: "Help Center", href: helpPath(paths) }, { label: "Submit a Report", href: reportPath(paths) }, { label: "Blog", href: blogPath(paths) }] },
-    { title: "Security", links: [{ label: "How to report a scam", href: "/scam-report/" }] },
-    { title: "Company", links: [{ label: "About Tharkoo", href: cmsPath(paths, "about") }, { label: "Contact us", href: contactPath(paths) }] },
+    { title: "Legal", links: [{ label: "Terms and Conditions", href: "/terms/" }, { label: "Privacy Policy", href: "/privacy/" }, { label: "Cookie Policy", href: "/cookies/" }, { label: "Prohibited items", href: prohibitedPath() }] },
+    { title: "Support", links: [{ label: "Help Center", href: helpPath(paths) }, { label: "How it works", href: howItWorksPath() }, { label: "Submit a Report", href: reportPath(paths) }, { label: "Blog", href: blogPath(paths) }] },
+    { title: "Security", links: [{ label: "Safety", href: safetyPath() }, { label: "How to report a scam", href: "/scam-report/" }] },
+    { title: "Company", links: [{ label: "About Tharkoo", href: cmsPath(paths, "about") }, { label: "Contact us", href: contactPath(paths) }, { label: "Categories", href: categoriesPath() }, { label: "Cities", href: citiesPath(paths) }] },
   ];
   return (
     <footer className="tk-footer" data-tk="footer">

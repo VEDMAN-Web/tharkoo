@@ -1,5 +1,5 @@
 import { connectDb } from "@/lib/db";
-import { invalidateTags } from "@/lib/cache";
+import { refreshPublicCache } from "@/lib/cache";
 import { TAG_PAGES } from "@/data/catalog";
 import {
   cleanPath,
@@ -26,10 +26,9 @@ export function invalidateUrlCache() {
 
 async function refreshPublic() {
   invalidateUrlCache();
-  invalidateTags(["site", "categories", "locations", "feed", "listings"]);
+  await refreshPublicCache();
   try {
     const { revalidatePath } = await import("next/cache");
-    revalidatePath("/", "layout");
     revalidatePath("/sitemap.xml");
     for (const shard of ["categories", "cities", "districts", "tags", "ads", "content"]) revalidatePath(`/sitemap/${shard}`);
   } catch {
@@ -85,6 +84,7 @@ export async function saveRedirect(from: string, to: string) {
   const dest = cleanPath(to.includes("*") ? to.replace(/\*$/, "") : to);
   const storedTo = to.includes("*") ? `${dest}*` : dest;
   if (storedFrom === storedTo) throw new Error("The old and new URLs are the same.");
+  await Redirect.deleteMany({ fromPath: storedFrom, toPath: storedFrom });
   const existing = await rulesNow();
   const target = followTarget(storedFrom, storedTo, existing.filter((rule) => rule.from !== storedFrom));
   if (cleanPath(target.replace(/\*$/, "")) === cleanPath(storedFrom.replace(/\*$/, ""))) {
@@ -134,6 +134,12 @@ export async function importRedirectCsv(text: string) {
   return count;
 }
 
+async function clearReverseRedirect(from: string, to: string) {
+  const source = `${cleanPath(from.replace(/\*$/, ""))}${from.includes("*") ? "*" : ""}`;
+  const dest = `${cleanPath(to.replace(/\*$/, ""))}${to.includes("*") ? "*" : ""}`;
+  await Redirect.deleteMany({ $or: [{ fromPath: dest }, { toPath: source }] });
+}
+
 async function categories() {
   return Category.find({ deletedAt: null, enabled: { $ne: false } }).select("slug").lean<{ slug: string }[]>();
 }
@@ -149,10 +155,12 @@ export async function renameCategory(id: string, next: string) {
   const taken = await Category.findOne({ slug: parsed.slug, _id: { $ne: row._id } }).select("_id").lean();
   if (taken) throw new Error("That slug is already used.");
   const previous = row.slug;
-  row.oldSlugs = [...new Set([...(row.oldSlugs || []), previous])];
+  row.oldSlugs = [...new Set([...(row.oldSlugs || []).filter((slug) => slug !== parsed.slug), previous])];
   row.slug = parsed.slug;
   await row.save();
+  await clearReverseRedirect(`/${previous}/*`, `/${parsed.slug}/*`);
   await saveRedirect(`/${previous}/*`, `/${parsed.slug}/*`);
+  notifyIndexNow([`/${parsed.slug}/`]);
   return parsed.slug;
 }
 
@@ -169,21 +177,26 @@ export async function renameLocation(id: string, next: string) {
     .lean();
   if (taken) throw new Error("That slug is already used in this place.");
   const previous = row.slug;
-  row.oldSlugs = [...new Set([...(row.oldSlugs || []), previous])];
+  row.oldSlugs = [...new Set([...(row.oldSlugs || []).filter((slug) => slug !== parsed.slug), previous])];
   row.slug = parsed.slug;
   await row.save();
   const cats = await categories();
   if (row.type === "city" || row.type === "state") {
-    for (const cat of cats) await saveRedirect(`/${cat.slug}/${previous}/*`, `/${cat.slug}/${parsed.slug}/*`);
+    for (const cat of cats) {
+      await clearReverseRedirect(`/${cat.slug}/${previous}/*`, `/${cat.slug}/${parsed.slug}/*`);
+      await saveRedirect(`/${cat.slug}/${previous}/*`, `/${cat.slug}/${parsed.slug}/*`);
+    }
   }
   if (row.type === "district" && row.parentId) {
     const city = await Location.findById(row.parentId).select("slug").lean<{ slug?: string }>();
     if (city?.slug) {
       for (const cat of cats) {
+        await clearReverseRedirect(`/${cat.slug}/${city.slug}/${previous}/*`, `/${cat.slug}/${city.slug}/${parsed.slug}/*`);
         await saveRedirect(`/${cat.slug}/${city.slug}/${previous}/*`, `/${cat.slug}/${city.slug}/${parsed.slug}/*`);
       }
     }
   }
+  notifyIndexNow(cats.map((cat) => `/${cat.slug}/${parsed.slug}/`));
   return parsed.slug;
 }
 
@@ -263,7 +276,14 @@ export async function renameAd(id: string, titlePart: string) {
   const previous = row.slug;
   await Listing.updateOne({ _id: row._id }, { $set: { slug } });
   await saveRedirect(`/${paths.ad}/${previous}/*`, `/${paths.ad}/${slug}/*`);
+  notifyIndexNow([`/${paths.ad}/${slug}/`]);
   return slug;
+}
+
+function notifyIndexNow(paths: string[]) {
+  void import("@/server/indexnow/ping")
+    .then((mod) => mod.queueIndexNow(paths))
+    .catch(() => undefined);
 }
 
 export async function setPrefixes(input: Partial<Record<PathKey, string>>) {

@@ -8,7 +8,7 @@ import { postAdPath } from "@/lib/urls";
 import { pageMetadata } from "@/lib/ui/meta";
 import { getPaths } from "@/server/urls/service";
 
-export const revalidate = 300;
+export const revalidate = 60;
 
 export async function generateMetadata() {
   const content = await getHomepageContent();
@@ -25,12 +25,11 @@ export default async function Home() {
   const localPhoto = photo.startsWith("/");
   return (
     <>
-      {localPhoto ? <link rel="preload" as="image" href={photo} fetchPriority="high" /> : null}
       <section className="tk-hero" data-tk="hero">
         {localPhoto ? (
-          <Image className="tk-hero-photo" src={photo} alt="" width={960} height={880} priority sizes="42vw" />
+          <Image className="tk-hero-photo" src={photo} alt={content.hero.photoAlt} width={960} height={880} priority sizes="42vw" />
         ) : (
-          <img className="tk-hero-photo" src={photo} alt="" width={960} height={880} />
+          <img className="tk-hero-photo" src={photo} alt={content.hero.photoAlt} width={960} height={880} />
         )}
         <div className="tk-hero-copy">
           <h1>

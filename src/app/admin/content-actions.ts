@@ -1,6 +1,6 @@
 "use server";
 
-import { revalidatePath } from "next/cache";
+import { refreshPublicCache } from "@/lib/cache";
 import { getStaffFromHeaders } from "@/lib/admin-auth";
 import { applyHomepageChange, ensureHomepageDocument } from "@/lib/ui/site-store";
 import { readContent, type SiteContent } from "@/lib/ui/site-content";
@@ -26,7 +26,7 @@ export async function saveHomepageForAdmin(content: SiteContent) {
       email: identity.email,
       content,
     });
-    revalidatePath("/", "layout");
+    await refreshPublicCache();
     return { ok: true as const, content: saved };
   } catch (error) {
     return { ok: false as const, message: error instanceof Error ? error.message : "Save failed" };
@@ -42,7 +42,7 @@ export async function resetHomepageForAdmin() {
       content: null,
       reset: true,
     });
-    revalidatePath("/", "layout");
+    await refreshPublicCache();
     return { ok: true as const, content: saved };
   } catch (error) {
     return { ok: false as const, message: error instanceof Error ? error.message : "Reset failed" };

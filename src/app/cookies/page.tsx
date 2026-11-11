@@ -1,17 +1,21 @@
 import { StaticPage } from "@/components/StaticPage";
+import { TRUST } from "@/content/trust";
 import { pageMetadata } from "@/lib/ui/meta";
 
+const copy = TRUST.cookies;
+
 export const metadata = pageMetadata({
-  title: "Cookie notice | Tharkoo",
-  description: "The cookies Tharkoo uses to keep you signed in and remember choices.",
+  title: `${copy.title} | Tharkoo`,
+  description: copy.description,
   path: "/cookies/",
 });
 
 export default function Page() {
   return (
-    <StaticPage title="Cookie notice">
-      <p>A sign-in cookie keeps your session. A second, readable flag lets the site skip account requests when you are logged out. Your browser also remembers the age confirmation, cookie choice, saved ads, and chosen city.</p>
-      <p>You can keep only the necessary cookies from the banner on your first visit.</p>
+    <StaticPage title={copy.title}>
+      {copy.paragraphs.map((paragraph) => (
+        <p key={paragraph.slice(0, 40)}>{paragraph}</p>
+      ))}
     </StaticPage>
   );
 }

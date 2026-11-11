@@ -5,7 +5,7 @@ import { canonical } from "@/lib/seo";
 import { siteUrl } from "@/lib/utils";
 import "./globals.css";
 
-export const revalidate = 300;
+export const revalidate = 60;
 
 export const viewport: Viewport = {
   themeColor: "#FFFDFB",
@@ -16,7 +16,15 @@ export const metadata: Metadata = {
   metadataBase: new URL(siteUrl()),
   title: { default: "Tharkoo, premium classifieds in India", template: "%s" },
   description: "Premium classifieds across India. Verified people and trusted listings in your city.",
-  icons: { icon: "/brand/logo-mark.svg" },
+  icons: {
+    icon: [
+      { url: "/favicon.ico" },
+      { url: "/brand/icon-192.png", sizes: "192x192", type: "image/png" },
+      { url: "/brand/icon-512.png", sizes: "512x512", type: "image/png" },
+      { url: "/brand/logo-mark.svg", type: "image/svg+xml" },
+    ],
+    apple: [{ url: "/apple-touch-icon.png", sizes: "180x180" }],
+  },
   other: { "color-scheme": "light" },
   openGraph: {
     siteName: "Tharkoo",

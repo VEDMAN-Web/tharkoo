@@ -4,10 +4,12 @@ import { SmartImage } from "./ui/SmartImage";
 import { AdCardSkeleton } from "./ui/Skeleton";
 import { JsonLd } from "@/lib/jsonld";
 import { safeHtml } from "@/lib/sanitize";
+import { displayTitle, prettyPlace, timeAgo } from "@/lib/format";
+import { listingPhotos } from "@/lib/media";
 import { canonical } from "@/lib/seo";
-import { websiteNode } from "@/lib/seo/schema";
-import { categoryPath, placePath, searchPath } from "@/lib/urls";
-import { getCategories, getCities, getHomepageContent, getSeo, getSite } from "@/lib/queries";
+import { organizationNode, websiteNode } from "@/lib/seo/schema";
+import { adPath, categoryPath, placePath, searchPath } from "@/lib/urls";
+import { getCategories, getCities, getHomepageContent, getLatestListings, getSeo, getSite, listingCountsByCategoryCity } from "@/lib/queries";
 import { getPaths } from "@/server/urls/service";
 import { cardFallback, type HomeCard } from "@/lib/ui/site-content";
 
@@ -42,14 +44,17 @@ function iconFor(slug: string) {
 }
 
 export async function HomeBlocks() {
-  const [site, categories, cities, seo, content, paths] = await Promise.all([
+  const [site, categories, cities, seo, content, paths, counts, latest] = await Promise.all([
     getSite(),
     getCategories(),
     getCities(),
     getSeo("home"),
     getHomepageContent(),
     getPaths(),
+    listingCountsByCategoryCity().catch(() => []),
+    getLatestListings(12).catch(() => []),
   ]);
+  const liveKeys = new Set(counts.filter((row) => row.n > 0).map((row) => `${row._id.categorySlug}|${row._id.citySlug}`));
   const bySlug = new Map(categories.map((cat) => [cat.slug, cat as Cat]));
   const cityBySlug = new Map(cities.map((city) => [city.slug, city]));
   const top = cities.filter((city) => city.isTop).slice(0, 5);
@@ -61,14 +66,20 @@ export async function HomeBlocks() {
     const chosen = card.cities.map((slug) => cityBySlug.get(slug)).filter(Boolean);
     if (chosen.length) return chosen;
     const homes = (cat.homeCities || []).map((slug) => cityBySlug.get(slug)).filter(Boolean).slice(0, 3);
-    return homes.length ? homes : top.slice(0, 3);
+    const list = homes.length ? homes : top.slice(0, 3);
+    if (!liveKeys.size) return list;
+    const filtered = list.filter((city) => liveKeys.has(`${card.slug}|${city!.slug}`));
+    return filtered.length ? filtered : list;
   }
 
   return (
     <>
       <JsonLd
         data={[
-          { "@context": "https://schema.org", "@type": "Organization", name: site.name, url: canonical("/") },
+          organizationNode(site.name || "Tharkoo", {
+            logo: canonical("/brand/logo-mark.svg"),
+            sameAs: content.socials.map((item) => item.href),
+          }),
           websiteNode(site.name || "Tharkoo", searchPath(paths)),
         ]}
       />
@@ -87,7 +98,7 @@ export async function HomeBlocks() {
               <Link href={categoryPath(cat.slug || "")} className="tk-home-photo" prefetch={false}>
                 <SmartImage
                   src={card.photo || `/placeholders/${cat.slug}/01.webp`}
-                  alt=""
+                  alt={`${title || "Category"} classifieds`}
                   seed={cat.slug || "cat"}
                   category={cat.slug}
                   width={600}
@@ -112,6 +123,38 @@ export async function HomeBlocks() {
           );
         })}
       </div>
+      {latest.length ? (
+        <section className="tk-container tk-latest" data-tk="latest-ads">
+          <h2>Latest ads</h2>
+          <div className="tk-latest-grid">
+            {latest.map((ad) => {
+              const cat = bySlug.get(ad.categorySlug);
+              const thumb =
+                listingPhotos(ad.categorySlug, ad.publicId || ad.slug, [])[0] ||
+                (ad.categorySlug ? `/placeholders/${ad.categorySlug}/01.webp` : "/placeholders/hero.webp");
+              const title = displayTitle(ad.title) || "Listing";
+              const when = timeAgo(ad.publishedAt);
+              return (
+                <article key={ad.slug} className="tk-card tk-latest-card" data-tk="latest-card" data-variant="free">
+                  <Link className="tk-card-link" href={adPath(paths, ad.slug)} prefetch={false}>
+                    <span className="tk-card-photo">
+                      <SmartImage src={thumb} alt="" seed={ad.slug} category={ad.categorySlug} width={160} height={200} sizes="120px" />
+                    </span>
+                    <span className="tk-card-body">
+                      <span className="tk-card-title">{title}</span>
+                      <span className="tk-card-meta">
+                        <p>{prettyPlace(ad.citySlug)}</p>
+                        {when ? <p>{when}</p> : null}
+                      </span>
+                      {cat?.name ? <span className="tk-latest-chip">{cat.name}</span> : null}
+                    </span>
+                  </Link>
+                </article>
+              );
+            })}
+          </div>
+        </section>
+      ) : null}
       {content.seoIntro || seo?.intro ? (
         <div className="tk-seo" dangerouslySetInnerHTML={{ __html: safeHtml(content.seoIntro || seo?.intro || "") }} />
       ) : null}

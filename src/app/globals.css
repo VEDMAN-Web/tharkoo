@@ -521,8 +521,8 @@ input, select, textarea { font-size: 16px; }
   position: absolute;
   right: 24px;
   top: 0;
-  height: 100%;
-  width: 220px;
+  width: 116px;
+  height: 116px;
   opacity: 0.12;
 }
 .tk-panel { border: 1px solid var(--border-2); border-radius: 4px; margin-top: 26px; background: #fff; }
@@ -1179,6 +1179,18 @@ input, select, textarea { font-size: 16px; }
   .tk-card { min-height: 0; }
   .tk-card-photo { width: 110px; }
   .tk-card-title { -webkit-line-clamp: 4; line-height: 1.25; }
+  .tk-card[data-variant="top"] .tk-card-title,
+  .tk-card[data-variant="supertop"] .tk-card-title,
+  .tk-card[data-variant="star"] .tk-card-title,
+  .tk-card[data-variant="highlight"] .tk-card-title,
+  .tk-card[data-variant="new"] .tk-card-title { display: block; max-width: calc(100% - 108px); }
+  .tk-card[data-variant="supertop"] .tk-card-body,
+  .tk-card[data-variant="star"] .tk-card-body { padding-bottom: 64px; }
+  .tk-card[data-variant="supertop"] .tk-card-meta,
+  .tk-card[data-variant="star"] .tk-card-meta { padding-right: 112px; }
+  .tk-circles { right: 8px; bottom: 8px; }
+  .tk-banner-pins { width: 90px; height: 90px; }
+  .tk-admin-nav { position: sticky; top: 0; z-index: 5; background: var(--bg); }
   .tk-card-desc { font-size: 16px; -webkit-line-clamp: 4; }
   .tk-feed { gap: 24px; }
   .tk-crumbs-full { display: none; }
@@ -1210,6 +1222,43 @@ input, select, textarea { font-size: 16px; }
 .tk-city-row:hover strong, .tk-home-card:hover h3, .tk-home-card:hover .t-h3 { color: var(--accent-2, var(--accent)); }
 .tk-icon-btn:hover, .tk-circle:hover, [data-tk=back-to-top]:hover { background: var(--tint); }
 .tk-tile:hover { outline: 2px solid var(--accent); }
+
+.tk-latest { margin: 8px 0 28px; }
+.tk-latest h2 {
+  margin: 0 0 14px;
+  font-family: var(--font-sans), Manrope, sans-serif;
+  font-size: 22px;
+  font-weight: 800;
+  line-height: 1.2;
+}
+.tk-latest-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+.tk-latest-card { min-width: 0; overflow: hidden; }
+.tk-latest-card .tk-card-photo { width: 112px; }
+.tk-latest-card .tk-card-title { overflow-wrap: anywhere; }
+.tk-latest-chip {
+  display: inline-flex;
+  align-self: flex-start;
+  max-width: 100%;
+  margin-top: 8px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: var(--tint-rose);
+  color: var(--accent);
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1.4;
+}
+@media (max-width: 991px) {
+  .tk-latest-card .tk-card-photo { width: 96px; }
+}
+@media (max-width: 767px) {
+  .tk-latest-grid { grid-template-columns: 1fr; }
+  .tk-latest-card .tk-card-photo { width: 110px; }
+}
 
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after {

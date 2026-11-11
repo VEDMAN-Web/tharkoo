@@ -1,7 +1,9 @@
 import type { Metadata } from "next";
 import { StaticPage } from "@/components/StaticPage";
 import { EmptyState } from "@/components/ui/EmptyState";
+import { JsonLd } from "@/lib/jsonld";
 import { getPage } from "@/lib/queries";
+import { aboutPageNode } from "@/lib/seo/schema";
 import { cmsPath, helpPath } from "@/lib/urls";
 import { withUrlSeo, urlHeading } from "@/lib/seo/override";
 import { getPaths } from "@/server/urls/service";
@@ -42,6 +44,7 @@ export default async function CmsPage({ params }: { params: Promise<{ slug: stri
   }
   return (
     <StaticPage title={heading}>
+      {page.slug === "about" ? <JsonLd data={aboutPageNode(page.title || "About", cmsPath(paths, "about"))} /> : null}
       <div className="whitespace-pre-wrap">{page.body}</div>
     </StaticPage>
   );
