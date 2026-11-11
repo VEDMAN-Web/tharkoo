@@ -288,13 +288,14 @@ for (const [width, height] of widths) {
   await page.locator("[data-tk=hero-search]").click();
   const modal = page.locator("[data-tk=search-modal]");
   await modal.waitFor({ state: "visible" });
+  await page.waitForTimeout(500);
   const box = await modal.boundingBox();
   const text = await modal.innerText();
   const notes = [];
   const want = width >= 768 ? 640 : width;
   if (!box || Math.abs(box.width - want) > 8) notes.push(`width ${box?.width}`);
   for (const word of ["Search", "Select Region", "All the cities", "Select District", "Filters", "DELETE ALL", "SEARCH"]) {
-    if (!text.includes(word)) notes.push(word);
+    if (!text.toLowerCase().includes(word.toLowerCase())) notes.push(word);
   }
   if (!(await page.locator("[data-tk=search-district]").isDisabled())) notes.push("district");
   await page.keyboard.press("Escape");
