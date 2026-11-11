@@ -1,14 +1,16 @@
 "use client";
 
 import { useState } from "react";
-import { Calendar, ChevronLeft, ChevronRight, MapPin, Phone } from "lucide-react";
+import { Calendar, Check, MapPin, Phone } from "lucide-react";
 import type { ListingDoc } from "@/lib/models";
 import { displayTitle, prettyPlace } from "@/lib/format";
-import { listingPhotos, peoplePortraits } from "@/lib/media";
+import { listingPhotos } from "@/lib/media";
 import { SmartImage } from "./SmartImage";
 import { api, friendlyError } from "@/lib/ui/api";
 import { adPath } from "@/lib/urls";
 import { useUrlPaths } from "../UrlPaths";
+
+const TIER_LABEL: Record<string, string> = { top: "Top", supertop: "SUPER Top", star: "Star", highlight: "Highlight", new: "New" };
 
 function variantOf(ad: ListingDoc, featured?: boolean) {
   if (featured) return "star";
@@ -32,16 +34,14 @@ export function AdCard({
   const title = displayTitle(ad.title) || "Listing";
   const href = adPath(useUrlPaths(), ad.slug || "");
   const photos = listingPhotos(ad.categorySlug, ad.publicId || ad.slug || "", ad.photos || []);
-  const people = Boolean(peoplePortraits(ad.categorySlug, ad.publicId || ad.slug || ""));
-  const withPhoto = people || variant === "top" || variant === "highlight" || variant === "supertop" || variant === "star";
   const superTop = variant === "supertop" || variant === "star";
-  const [photo, setPhoto] = useState(0);
   const [shown, setShown] = useState("");
   const [note, setNote] = useState("");
   const city = prettyPlace(ad.citySlug);
   const area = ad.place && ad.place !== city ? ad.place : "";
   const place = `${city}${area ? `/ ${area}` : ""}`.slice(0, 22);
-  const current = photos[photo] || photos[0];
+  const current = photos[0];
+  const tier = TIER_LABEL[variant];
 
   async function reveal(channel: "phone" | "whatsapp") {
     setNote("");
@@ -57,34 +57,36 @@ export function AdCard({
   }
 
   return (
-    <article className="tk-card" data-tk="card" data-variant={variant}>
-      {variant === "top" ? <span className="tk-badge-promo">Top</span> : null}
-      {variant === "supertop" ? <span className="tk-badge-promo">SUPER Top</span> : null}
-      {variant === "star" ? <span className="tk-badge-promo">Star</span> : null}
-      {variant === "highlight" ? <span className="tk-badge-promo">Highlight</span> : null}
-      {variant === "new" ? <span className="tk-badge-promo">New</span> : null}
+    <article className="tk-card" data-tk="card" data-variant={variant} data-contact={superTop ? "1" : undefined}>
       <a className="tk-card-link" href={href}>
-        {withPhoto ? (
-          <span className="tk-card-photo">
-            <SmartImage
-              src={current}
-              alt={title}
-              seed={ad.slug || title}
-              category={ad.categorySlug}
-              width={160}
-              height={200}
-              priority={priority}
-              sizes="160px"
-              className="h-full"
-            />
-            {photos.length ? <span className="tk-photo-count">📷 {photos.length}</span> : null}
-          </span>
-        ) : null}
+        <span className="tk-card-photo">
+          <SmartImage
+            src={current}
+            alt={title}
+            seed={ad.slug || title}
+            category={ad.categorySlug}
+            width={200}
+            height={250}
+            priority={priority}
+            sizes="(max-width: 767px) 112px, 200px"
+            className="h-full"
+          />
+          {tier ? <span className="tk-badge-promo" data-tier={variant}>{tier}</span> : null}
+          {photos.length ? <span className="tk-photo-count">📷 {photos.length}</span> : null}
+        </span>
         <span className="tk-card-body">
           <span className="tk-card-title">{title}</span>
           {ad.description ? <span className="tk-card-desc">{ad.description}</span> : null}
           {ad.trust?.length ? (
-            <span className="tk-card-desc">{ad.trust.join(" · ")}</span>
+            <span className="tk-trust">
+              {ad.trust.slice(0, 3).map((item) => (
+                <span key={item} className="tk-chk" title={item}>
+                  <Check size={12} aria-hidden />
+                  <span aria-hidden>{item.replace(/\s*verified$/i, "")}</span>
+                  <span className="sr-only">{item}</span>
+                </span>
+              ))}
+            </span>
           ) : null}
           <span className="tk-card-meta">
             <p>
@@ -102,16 +104,6 @@ export function AdCard({
           </span>
         </span>
       </a>
-      {superTop && photos.length > 1 ? (
-        <>
-          <button type="button" className="tk-card-nav prev" aria-label="Previous photo" onClick={() => setPhoto((n) => (n - 1 + photos.length) % photos.length)}>
-            <ChevronLeft size={16} />
-          </button>
-          <button type="button" className="tk-card-nav next" aria-label="Next photo" onClick={() => setPhoto((n) => (n + 1) % photos.length)}>
-            <ChevronRight size={16} />
-          </button>
-        </>
-      ) : null}
       {superTop ? (
         <div className="tk-circles">
           <button type="button" className="tk-circle" aria-label="Call" data-tk="call" onClick={() => reveal("phone")}>
