@@ -860,7 +860,9 @@
       "globs": [
         "src/app/admin/page.tsx",
         "src/server/admin/dashboard.ts",
-        "tests/server/admin/dashboard.test.ts"
+        "tests/server/admin/dashboard.test.ts",
+        "docs/ownership.json",
+        "progress/H3.9.md"
       ]
     },
     "H4.1": {
