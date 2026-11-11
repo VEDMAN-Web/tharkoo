@@ -18,7 +18,7 @@ export function Section({
   className?: string;
 }) {
   return (
-    <section id={id} className={cn("py-12 lg:py-20", className)}>
+    <section id={id} className={cn(className)}>
       <Container>
         {title || eyebrow || action ? (
           <div className="mb-6 flex items-end justify-between gap-4">
@@ -27,7 +27,7 @@ export function Section({
               {title ? <h2 className="t-h2">{title}</h2> : null}
             </div>
             {action ? (
-              <Link href={action.href} className="t-small text-gold shrink-0" prefetch={false}>
+              <Link href={action.href} className="t-small shrink-0" style={{ color: "var(--accent)" }} prefetch={false}>
                 {action.label}
               </Link>
             ) : null}

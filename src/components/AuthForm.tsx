@@ -4,8 +4,10 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useMemo, useState } from "react";
 import { api, fieldErrors, friendlyError, isStaffRole, safeNext } from "@/lib/ui/api";
-import { Button } from "./ui/Button";
-import { Checkbox, Field, Input } from "./ui/Input";
+import { loginPath, registerPath } from "@/lib/urls";
+import { useUrlPaths } from "./UrlPaths";
+
+type Mode = "login" | "register" | "forgot" | "reset" | "verify" | "expired";
 
 function strength(password: string) {
   let score = 0;
@@ -17,8 +19,9 @@ function strength(password: string) {
   return score;
 }
 
-function AuthFormInner({ mode }: { mode: "login" | "register" | "forgot" | "reset" | "verify" | "expired" }) {
+function AuthFormInner({ mode }: { mode: Mode }) {
   const router = useRouter();
+  const paths = useUrlPaths();
   const params = useSearchParams();
   const next = safeNext(params.get("next"));
   const token = params.get("token") || "";
@@ -36,25 +39,32 @@ function AuthFormInner({ mode }: { mode: "login" | "register" | "forgot" | "rese
 
   async function onLogin(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    setBusy(true);
     setMessage("");
     const data = new FormData(event.currentTarget);
+    if (!String(data.get("email") || "").trim() || !String(data.get("password") || "")) {
+      setMessage("Please fill in your email and password.");
+      return;
+    }
+    setBusy(true);
     const res = await api<{ user: { roles?: string[] } }>("/api/auth/login", {
       method: "POST",
       body: JSON.stringify({ email: data.get("email"), password: data.get("password") }),
     });
     setBusy(false);
     if (!res.ok) return fail(res.error);
-    const staff = isStaffRole(res.data.user?.roles);
-    router.push(next || (staff ? "/admin/" : "/u/account/dashboard/"));
+    router.push(next || (isStaffRole(res.data.user?.roles) ? "/admin/" : "/u/account/dashboard/"));
     router.refresh();
   }
 
   async function onRegister(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    setBusy(true);
     setMessage("");
     const data = new FormData(event.currentTarget);
+    if (!String(data.get("email") || "").trim() || !String(data.get("displayName") || "").trim() || String(data.get("password") || "").length < 8 || !data.get("dateOfBirth") || data.get("acceptedTerms") !== "on" || data.get("attestedAdult") !== "on") {
+      setMessage("Please fill in every required field before creating an account.");
+      return;
+    }
+    setBusy(true);
     const res = await api("/api/auth/register", {
       method: "POST",
       body: JSON.stringify({
@@ -68,17 +78,23 @@ function AuthFormInner({ mode }: { mode: "login" | "register" | "forgot" | "rese
     });
     setBusy(false);
     if (!res.ok) return fail(res.error);
-    setMessage("Account created. Check your inbox to confirm your email.");
+    const login = await api<{ user: { roles?: string[] } }>("/api/auth/login", {
+      method: "POST",
+      body: JSON.stringify({ email: data.get("email"), password: data.get("password") }),
+    });
+    if (!login.ok) {
+      setMessage("Account created. Check your inbox to confirm your email.");
+      return;
+    }
+    router.push(next || "/u/account/dashboard/");
+    router.refresh();
   }
 
   async function onForgot(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setBusy(true);
     const data = new FormData(event.currentTarget);
-    const res = await api("/api/auth/forgot-password", {
-      method: "POST",
-      body: JSON.stringify({ email: data.get("email") }),
-    });
+    const res = await api("/api/auth/forgot-password", { method: "POST", body: JSON.stringify({ email: data.get("email") }) });
     setBusy(false);
     if (!res.ok) return fail(res.error);
     setMessage("If that email is registered, a reset link is on its way.");
@@ -92,13 +108,10 @@ function AuthFormInner({ mode }: { mode: "login" | "register" | "forgot" | "rese
     }
     setBusy(true);
     const data = new FormData(event.currentTarget);
-    const res = await api("/api/auth/reset-password", {
-      method: "POST",
-      body: JSON.stringify({ token, password: data.get("password") }),
-    });
+    const res = await api("/api/auth/reset-password", { method: "POST", body: JSON.stringify({ token, password: data.get("password") }) });
     setBusy(false);
     if (!res.ok) return fail(res.error);
-    router.push("/u/login/");
+    router.push(loginPath(paths));
   }
 
   async function onVerify() {
@@ -113,47 +126,47 @@ function AuthFormInner({ mode }: { mode: "login" | "register" | "forgot" | "rese
     setMessage("Email confirmed. You can log in.");
   }
 
+  const withNext = (path: string) => (next ? `${path}?next=${encodeURIComponent(next)}` : path);
+  const title =
+    mode === "login" ? "Log in" : mode === "register" ? "Create your account" : mode === "forgot" ? "Reset your password" : mode === "reset" ? "Choose a new password" : mode === "verify" ? "Confirm your email" : "Password expired";
+
   return (
-    <div className="mx-auto w-full max-w-md px-4 py-10">
+    <div className="tk-auth">
+      <h1 className="tk-page-h1">{title}</h1>
       <form
-        className="grid gap-4 rounded-xl border border-line bg-surface p-6"
         onSubmit={mode === "login" ? onLogin : mode === "register" ? onRegister : mode === "forgot" ? onForgot : mode === "reset" ? onReset : (event) => event.preventDefault()}
+        noValidate
       >
-        <h1 className="t-h1">
-          {mode === "login" && "Log in"}
-          {mode === "register" && "Create an account"}
-          {mode === "forgot" && "Forgot password"}
-          {mode === "reset" && "Choose a new password"}
-          {mode === "verify" && "Confirm your email"}
-          {mode === "expired" && "Password expired"}
-        </h1>
-        <div aria-live="polite" className="t-small text-gold">
-          {message}
-        </div>
+        <div aria-live="polite" className="t-small" style={{ color: "var(--danger)", minHeight: 20 }}>{message}</div>
         {mode === "verify" ? (
-          <Button type="button" onClick={onVerify} loading={busy}>
+          <button type="button" className="tk-btn tk-btn-rose" disabled={busy} onClick={onVerify} style={{ width: "100%" }}>
             Confirm email
-          </Button>
+          </button>
         ) : null}
         {mode === "expired" ? (
-          <p className="t-body text-muted">
-            Request a fresh link to set a new password. <Link href="/u/forgot/" className="text-gold">Forgot password</Link>
+          <p className="t-small">
+            Request a fresh link to set a new password. <Link href="/u/forgot/" style={{ color: "var(--accent)" }}>Forgot password</Link>
           </p>
         ) : null}
         {mode === "register" ? (
-          <Field id="displayName" label="Name" error={fields.displayName?.[0]}>
-            <Input id="displayName" name="displayName" autoComplete="name" required />
-          </Field>
+          <label className={`tk-field ${fields.displayName ? "is-bad" : ""}`}>
+            <span>Name</span>
+            <input id="displayName" name="displayName" autoComplete="name" required />
+            {fields.displayName ? <span className="tk-error" data-tk="field-error">{fields.displayName[0]}</span> : null}
+          </label>
         ) : null}
         {mode === "login" || mode === "register" || mode === "forgot" ? (
-          <Field id="email" label="Email" error={fields.email?.[0]}>
-            <Input id="email" name="email" type="email" autoComplete="email" required />
-          </Field>
+          <label className={`tk-field ${fields.email ? "is-bad" : ""}`}>
+            <span>Email</span>
+            <input id="email" name="email" type="email" autoComplete="email" required />
+            {fields.email ? <span className="tk-error" data-tk="field-error">{fields.email[0]}</span> : null}
+          </label>
         ) : null}
         {mode === "login" || mode === "register" || mode === "reset" ? (
-          <Field id="password" label="Password" error={fields.password?.[0]} hint={mode === "register" ? "Use 8 or more characters, with mixed case, a number, or a symbol." : undefined}>
-            <div className="relative">
-              <Input
+          <label className={`tk-field ${fields.password ? "is-bad" : ""}`}>
+            <span>Password</span>
+            <span style={{ position: "relative", display: "block" }}>
+              <input
                 id="password"
                 name="password"
                 type={show ? "text" : "password"}
@@ -162,52 +175,64 @@ function AuthFormInner({ mode }: { mode: "login" | "register" | "forgot" | "rese
                 minLength={mode === "login" ? 1 : 8}
                 value={password}
                 onChange={(event) => setPassword(event.target.value)}
+                style={{ paddingRight: 64 }}
               />
-              <button type="button" className="absolute right-2 top-2 min-h-11 px-2 t-small" onClick={() => setShow((v) => !v)}>
+              <button type="button" onClick={() => setShow((value) => !value)} style={{ position: "absolute", right: 8, top: 8, background: "none", border: 0, color: "var(--accent)", fontSize: 12 }}>
                 {show ? "Hide" : "Show"}
               </button>
-            </div>
+            </span>
             {mode === "register" ? (
-              <span className="mt-1 block h-1.5 overflow-hidden rounded-pill bg-surface-2" aria-hidden>
-                <span className="block h-full bg-gold" style={{ width: `${(score / 5) * 100}%` }} />
+              <span className="mt-2 flex gap-1" aria-hidden>
+                {[0, 1, 2, 3, 4].map((i) => (
+                  <span key={i} className="h-1 flex-1 rounded" style={{ background: i < score ? "var(--ok)" : "var(--bg-soft)" }} />
+                ))}
               </span>
             ) : null}
-          </Field>
+            {fields.password ? <span className="tk-error" data-tk="field-error">{fields.password[0]}</span> : null}
+          </label>
         ) : null}
         {mode === "register" ? (
           <>
-            <Field id="dateOfBirth" label="Date of birth" error={fields.dateOfBirth?.[0]}>
-              <Input id="dateOfBirth" name="dateOfBirth" type="date" required />
-            </Field>
-            <Checkbox name="acceptedTerms" label="I agree to the terms and privacy policy" required />
-            <Checkbox name="attestedAdult" label="I am 18 or over" required />
+            <label className={`tk-field ${fields.dateOfBirth ? "is-bad" : ""}`}>
+              <span>Date of birth</span>
+              <input id="dateOfBirth" name="dateOfBirth" type="date" required />
+              {fields.dateOfBirth ? <span className="tk-error" data-tk="field-error">{fields.dateOfBirth[0]}</span> : null}
+            </label>
+            <label className="t-small" style={{ display: "flex", gap: 8, alignItems: "flex-start" }}>
+              <input type="checkbox" name="acceptedTerms" required style={{ marginTop: 3, flex: "none" }} />
+              <span>I agree to the <Link href="/terms/">Terms</Link> and <Link href="/privacy/">Privacy Policy</Link></span>
+            </label>
+            <label className="t-small" style={{ display: "flex", gap: 8, alignItems: "flex-start" }}>
+              <input type="checkbox" name="attestedAdult" required style={{ marginTop: 3, flex: "none" }} />
+              <span>I am 18 or over</span>
+            </label>
           </>
         ) : null}
         {mode !== "verify" && mode !== "expired" ? (
-          <Button type="submit" loading={busy}>
-            {mode === "login" ? "Log in" : mode === "register" ? "Create account" : mode === "forgot" ? "Send reset link" : "Save password"}
-          </Button>
-        ) : null}
-        {mode === "login" ? (
-          <p className="t-small">
-            <Link href="/u/forgot/" className="text-gold">Forgot password</Link>
-            {" · "}
-            <Link href="/u/register/" className="text-gold">Register</Link>
-          </p>
-        ) : null}
-        {mode === "register" ? (
-          <p className="t-small">
-            Already registered? <Link href="/u/login/" className="text-gold">Log in</Link>
-          </p>
+          <button className="tk-btn tk-btn-rose" type="submit" disabled={busy} style={{ width: "100%", marginTop: 8 }}>
+            {busy ? "…" : mode === "login" ? "LOG IN" : mode === "register" ? "CREATE ACCOUNT" : mode === "forgot" ? "SEND LINK" : "SAVE PASSWORD"}
+          </button>
         ) : null}
       </form>
+      {mode === "login" ? (
+        <p className="t-small" style={{ textAlign: "center", marginTop: 12 }}>
+          <Link href={withNext("/u/forgot/")} style={{ color: "var(--accent)" }}>Forgot password?</Link>
+          {" · "}
+          <Link href={withNext(registerPath(paths))} style={{ color: "var(--accent)" }}>Create account</Link>
+        </p>
+      ) : null}
+      {mode === "register" ? (
+        <p className="t-small" style={{ textAlign: "center" }}>
+          Already registered? <Link href={withNext(loginPath(paths))} style={{ color: "var(--accent)" }}>Log in</Link>
+        </p>
+      ) : null}
     </div>
   );
 }
 
-export function AuthForm({ mode }: { mode: "login" | "register" | "forgot" | "reset" | "verify" | "expired" }) {
+export function AuthForm({ mode }: { mode: Mode }) {
   return (
-    <Suspense fallback={<p className="p-8 t-body">Loading…</p>}>
+    <Suspense fallback={<p className="tk-container">Loading…</p>}>
       <AuthFormInner mode={mode} />
     </Suspense>
   );

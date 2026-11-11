@@ -20,8 +20,10 @@ function demoContact(index: number) {
   };
 }
 
+const PEOPLE = new Set(["dating", "friendship", "meetups", "personal-ads", "wellness"]);
+
 function photoFiles(category: string) {
-  const dir = path.join(process.cwd(), "public", "placeholders", category);
+  const dir = path.join(process.cwd(), "public", "placeholders", PEOPLE.has(category) ? "profiles" : category);
   if (!existsSync(dir)) return [];
   return readdirSync(dir)
     .filter((name) => /^\d+\.webp$/.test(name))
@@ -112,7 +114,8 @@ async function ensurePlaceholderAssets(ownerId: Types.ObjectId) {
   for (const category of categories) {
     const ids: Types.ObjectId[] = [];
     for (const file of photoFiles(category)) {
-      const objectKey = `/placeholders/${category}/${file}`;
+      const folder = PEOPLE.has(category) ? "profiles" : category;
+      const objectKey = `/placeholders/${folder}/${file}`;
       const thumbKey = objectKey.replace(/\.webp$/, "-blur.webp");
       await MediaAsset.updateOne(
         { objectKey },
@@ -143,7 +146,7 @@ async function refreshDemoRows(specs: DemoListing[], ownerId: Types.ObjectId) {
     specs.map((spec) => {
       const index = Number(spec.slug.slice(-4));
       const pool = photos.get(spec.categorySlug) ?? [];
-      const count = pool.length ? 1 + (index % Math.min(4, pool.length)) : 0;
+      const count = pool.length ? (PEOPLE.has(spec.categorySlug) ? Math.min(4, pool.length) : 1 + (index % Math.min(4, pool.length))) : 0;
       const mediaIds = pool.length ? Array.from({ length: count }, (_, offset) => pool[(index + offset) % pool.length]) : [];
       const $set: Record<string, unknown> = {
         publishedAt: demoWhen(index),

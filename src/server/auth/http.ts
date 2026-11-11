@@ -14,6 +14,7 @@ export function hashToken(token: string) {
 }
 
 export function cookieSecure() {
+  if (process.env.COOKIE_SECURE === "false") return false;
   return process.env.NODE_ENV === "production";
 }
 

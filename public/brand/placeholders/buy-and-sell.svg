@@ -1,5 +1,5 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="800" height="1000" viewBox="0 0 800 1000" role="img">
-  <rect width="800" height="1000" fill="#16161C"/>
+  <rect width="800" height="1000" fill="#F3EDE6"/>
   <defs>
     <radialGradient id="a" cx="50%" cy="50%" r="50%">
       <stop offset="0%" stop-color="#8A6D3B" stop-opacity="0.85"/>

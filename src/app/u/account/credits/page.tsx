@@ -19,6 +19,7 @@ export default async function Page() {
         credits: pack.credits ?? 0,
         price: pack.price ?? 0,
         bonus: pack.bonus,
+        tag: pack.tag,
       }))}
     />
   );

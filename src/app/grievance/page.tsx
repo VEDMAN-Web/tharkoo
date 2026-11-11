@@ -1,4 +1,5 @@
-import { redirect } from "next/navigation";
+import { permanentRedirect } from "next/navigation";
+
 export default function Page() {
-  redirect("/cms/grievance/");
+  permanentRedirect("/cms/grievance/");
 }

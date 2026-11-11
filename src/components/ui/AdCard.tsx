@@ -1,135 +1,148 @@
-import { Sparkles, Star } from "lucide-react";
-import type { ListingDoc } from "@/lib/models";
-import { displayTitle, prettyPlace, timeAgo } from "@/lib/format";
-import { cn } from "@/lib/utils";
-import { Badge } from "./Badge";
-import { SaveButton } from "./SaveButton";
-import { SmartImage } from "./SmartImage";
-import { ContactButtons } from "../ContactButtons";
+"use client";
 
-function fresh(ad: ListingDoc) {
-  const variant = ad.variant || "free";
-  if (variant !== "free") return false;
-  const raw = ad.publishedAt || ad.createdAt;
-  if (!raw) return false;
-  return Date.now() - new Date(raw).getTime() < 48 * 60 * 60 * 1000;
+import { useState } from "react";
+import { Calendar, ChevronLeft, ChevronRight, MapPin, Phone } from "lucide-react";
+import type { ListingDoc } from "@/lib/models";
+import { displayTitle, prettyPlace } from "@/lib/format";
+import { listingPhotos, peoplePortraits } from "@/lib/media";
+import { SmartImage } from "./SmartImage";
+import { api, friendlyError } from "@/lib/ui/api";
+import { adPath } from "@/lib/urls";
+import { useUrlPaths } from "../UrlPaths";
+
+function variantOf(ad: ListingDoc, featured?: boolean) {
+  if (featured) return "star";
+  const raw = ad.variant || "free";
+  if (raw === "flash") return "supertop";
+  if (raw === "top" || raw === "supertop" || raw === "highlight" || raw === "star" || raw === "new" || raw === "free") return raw;
+  return "free";
 }
 
 export function AdCard({
   ad,
   featured,
   priority,
-  layout = "row",
 }: {
   ad: ListingDoc;
   featured?: boolean;
   priority?: boolean;
   layout?: "row" | "tile";
 }) {
-  const variant = featured ? "star" : ad.variant || "free";
+  const variant = variantOf(ad, featured);
   const title = displayTitle(ad.title) || "Listing";
-  const href = `/ad/${ad.slug}/`;
-  const superTop = variant === "supertop" || variant === "flash";
-  const place = ad.place || prettyPlace(ad.citySlug);
-  const when = timeAgo(ad.publishedAt || ad.createdAt || ad.lastBumpedAt);
-  const photo = ad.photos?.[0];
-  const wide = superTop ? "w-36 md:w-60" : "w-36 md:w-[200px]";
-  const tile = layout === "tile";
+  const href = adPath(useUrlPaths(), ad.slug || "");
+  const photos = listingPhotos(ad.categorySlug, ad.publicId || ad.slug || "", ad.photos || []);
+  const people = Boolean(peoplePortraits(ad.categorySlug, ad.publicId || ad.slug || ""));
+  const withPhoto = people || variant === "top" || variant === "highlight" || variant === "supertop" || variant === "star";
+  const superTop = variant === "supertop" || variant === "star";
+  const [photo, setPhoto] = useState(0);
+  const [shown, setShown] = useState("");
+  const [note, setNote] = useState("");
+  const city = prettyPlace(ad.citySlug);
+  const area = ad.place && ad.place !== city ? ad.place : "";
+  const place = `${city}${area ? `/ ${area}` : ""}`.slice(0, 22);
+  const current = photos[photo] || photos[0];
 
-  const inner = (
-    <article
-      className={cn(
-        "relative flex min-w-0 overflow-hidden rounded-lg border border-line bg-surface shadow-sm",
-        tile && "flex-col",
-        variant === "highlight" && "border-[color:var(--gold-line)] bg-[linear-gradient(180deg,var(--gold-soft),transparent_60%)]",
-        variant === "top" && "border-[color:var(--gold-line)]",
-        variant === "star" && "border-[color:var(--gold-line)] bg-[linear-gradient(135deg,#1c1710,#16161C)]",
-      )}
-    >
-      <div className={cn("relative shrink-0", tile ? "w-full" : wide)}>
-        <SmartImage
-          src={photo}
-          alt={`${title}, photo 1 of ${Math.max(ad.photos?.length || 1, 1)}`}
-          seed={ad.slug || title}
-          category={ad.categorySlug}
-          width={tile ? 800 : superTop ? 240 : 200}
-          height={tile ? 600 : superTop ? 300 : 250}
-          priority={priority}
-          sizes={tile ? "(min-width: 1280px) 25vw, (min-width: 1024px) 33vw, (min-width: 640px) 50vw, 100vw" : "(min-width: 768px) 240px, 144px"}
-          className="h-full"
-        />
-        <div className="absolute left-2 top-2 z-10 flex flex-col items-start gap-1">
-          {fresh(ad) ? <Badge tone="new">New</Badge> : null}
-          {variant === "highlight" ? <Badge tone="highlight">Highlight</Badge> : null}
-          {variant === "top" ? <Badge tone="top">Top</Badge> : null}
-          {superTop ? (
-            <Badge tone="supertop">
-              <Sparkles size={12} aria-hidden /> Super Top
-            </Badge>
-          ) : null}
-          {variant === "flash" ? <Badge tone="live">Available now</Badge> : null}
-          {variant === "star" ? (
-            <Badge tone="star">
-              <Star size={12} aria-hidden /> Star
-            </Badge>
-          ) : null}
-        </div>
-        <div className="absolute right-2 top-2 z-10">
-          <SaveButton
-            item={{
-              id: ad.publicId || ad.slug || title,
-              slug: ad.slug || "",
-              title,
-              photo,
-              place,
-              at: 0,
-            }}
-            label="Save"
-          />
-        </div>
-      </div>
-      <div className="flex min-w-0 flex-1 flex-col gap-2 p-4">
-        <h3 className="t-h3 line-clamp-2">
-          <a href={href} className="card-stretch">
-            {title}
-          </a>
-        </h3>
-        <p className="t-small text-muted">
-          {prettyPlace(ad.categorySlug)}
-          {place ? ` · ${place}` : ""}
-          {when ? ` · ${when}` : ""}
-          {ad.verified ? " · Verified" : ""}
-        </p>
-        {ad.description && !tile ? <p className="t-small hidden text-muted md:line-clamp-2">{ad.description}</p> : null}
-        {tile ? (
-          <span className="quiet-btn pointer-events-none mt-auto w-fit whitespace-nowrap">View</span>
-        ) : superTop ? (
-          <div className="relative z-10 mt-auto">
-            <ContactButtons listingSlug={ad.slug} revealOnly />
-          </div>
+  async function reveal(channel: "phone" | "whatsapp") {
+    setNote("");
+    if (!ad.slug) return;
+    const pub = await api<{ id: string }>(`/api/listings/${encodeURIComponent(ad.slug)}/`);
+    if (!pub.ok) return setNote(friendlyError(pub.error));
+    const res = await api<{ value?: string | null }>(`/api/listings/${pub.data.id}/contact-reveal/`, {
+      method: "POST",
+      body: JSON.stringify({ channel }),
+    });
+    if (!res.ok) return setNote(friendlyError(res.error));
+    setShown(res.data.value || "No number shared");
+  }
+
+  return (
+    <article className="tk-card" data-tk="card" data-variant={variant}>
+      {variant === "top" ? <span className="tk-badge-promo">Top</span> : null}
+      {variant === "supertop" ? <span className="tk-badge-promo">SUPER Top</span> : null}
+      {variant === "star" ? <span className="tk-badge-promo">Star</span> : null}
+      {variant === "highlight" ? <span className="tk-badge-promo">Highlight</span> : null}
+      {variant === "new" ? <span className="tk-badge-promo">New</span> : null}
+      <a className="tk-card-link" href={href}>
+        {withPhoto ? (
+          <span className="tk-card-photo">
+            <SmartImage
+              src={current}
+              alt={title}
+              seed={ad.slug || title}
+              category={ad.categorySlug}
+              width={160}
+              height={200}
+              priority={priority}
+              sizes="160px"
+              className="h-full"
+            />
+            {photos.length ? <span className="tk-photo-count">📷 {photos.length}</span> : null}
+          </span>
         ) : null}
-      </div>
+        <span className="tk-card-body">
+          <span className="tk-card-title">{title}</span>
+          {ad.description ? <span className="tk-card-desc">{ad.description}</span> : null}
+          {ad.trust?.length ? (
+            <span className="tk-card-desc">{ad.trust.join(" · ")}</span>
+          ) : null}
+          <span className="tk-card-meta">
+            <p>
+              <Calendar size={12} aria-hidden />
+              <strong>{ad.age ? `${ad.age} years` : prettyPlace(ad.categorySlug)}</strong>
+            </p>
+            <p>
+              <MapPin size={12} aria-hidden />
+              <span>
+                <strong>{city}</strong>
+                {area ? `/ ${area}` : ""}
+                {place.length >= 22 ? "..." : ""}
+              </span>
+            </p>
+          </span>
+        </span>
+      </a>
+      {superTop && photos.length > 1 ? (
+        <>
+          <button type="button" className="tk-card-nav prev" aria-label="Previous photo" onClick={() => setPhoto((n) => (n - 1 + photos.length) % photos.length)}>
+            <ChevronLeft size={16} />
+          </button>
+          <button type="button" className="tk-card-nav next" aria-label="Next photo" onClick={() => setPhoto((n) => (n + 1) % photos.length)}>
+            <ChevronRight size={16} />
+          </button>
+        </>
+      ) : null}
+      {superTop ? (
+        <div className="tk-circles">
+          <button type="button" className="tk-circle" aria-label="Call" data-tk="call" onClick={() => reveal("phone")}>
+            <Phone size={16} color="#A63A5E" />
+          </button>
+          <button type="button" className="tk-circle" aria-label="WhatsApp" data-tk="whatsapp" onClick={() => reveal("whatsapp")}>
+            <WaIcon />
+          </button>
+        </div>
+      ) : null}
+      {shown ? <p className="t-caption" style={{ position: "absolute", left: 12, bottom: 8 }}>{shown}</p> : null}
+      {note ? <p className="t-caption" style={{ position: "absolute", left: 12, bottom: 8 }}>{note}</p> : null}
     </article>
   );
+}
 
-  if (!superTop) return inner;
+function WaIcon() {
   return (
-    <div className="rounded-[18px] p-[1.5px] shadow-[var(--sh-gold)]" style={{ background: "var(--grad-gold)" }}>
-      {inner}
-    </div>
+    <svg width="16" height="16" viewBox="0 0 24 24" aria-hidden>
+      <path fill="#0F8247" d="M12 3a9 9 0 0 0-7.7 13.6L3 21l4.5-1.2A9 9 0 1 0 12 3zm0 2a7 7 0 0 1 0 14 7 7 0 0 1-3.6-1l-.3-.2-2.7.7.7-2.6-.2-.3A7 7 0 0 1 12 5z" />
+    </svg>
   );
 }
 
 export function StarStrip({ ads }: { ads: ListingDoc[] }) {
   if (!ads.length) return null;
   return (
-    <section className="py-6" aria-label="Star picks">
-      <h2 className="t-h2 mb-4">Star picks</h2>
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        {ads.map((ad, index) => (
-          <AdCard key={ad.slug || ad.publicId} ad={ad} featured layout="tile" priority={index === 0} />
-        ))}
-      </div>
-    </section>
+    <>
+      {ads.map((ad) => (
+        <AdCard key={ad.slug || ad.publicId} ad={ad} featured />
+      ))}
+    </>
   );
 }

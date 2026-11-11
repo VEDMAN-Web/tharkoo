@@ -41,11 +41,11 @@ export function friendlyError(error: ApiError) {
     case "CONFLICT":
       return "That email is already registered.";
     case "RATE_LIMITED":
-      return "Too many tries. Please wait a minute.";
+      return "Too many requests, try again later";
+    case "VERIFICATION_REQUIRED":
+      return "Your ID needs a quick check before this ad can go live.";
     case "FREE_LIMIT":
       return "You have reached the free ad limit for this week.";
-    case "VERIFICATION_REQUIRED":
-      return "Verify your ID to publish.";
     case "POLICY_VIOLATION":
       return error.message || "This listing does not meet the content rules.";
     case "VALIDATION_ERROR":
@@ -55,9 +55,30 @@ export function friendlyError(error: ApiError) {
   }
 }
 
+/** Same-origin relative path only. Rejects scheme, protocol-relative, and encoded bypasses. */
 export function safeNext(raw: string | null | undefined) {
-  if (!raw || !raw.startsWith("/") || raw.startsWith("//") || raw.includes("\\")) return null;
-  return raw;
+  if (!raw) return null;
+  const trimmed = raw.trim();
+  if (!trimmed || trimmed.length > 512) return null;
+  let value = trimmed;
+  try {
+    value = decodeURIComponent(trimmed);
+  } catch {
+    return null;
+  }
+  if (value.includes("%")) {
+    try {
+      const twice = decodeURIComponent(value);
+      if (twice.startsWith("//") || twice.includes("\\") || twice.includes("://")) return null;
+    } catch {
+      return null;
+    }
+  }
+  if (!value.startsWith("/") || value.startsWith("//") || value.startsWith("/\\")) return null;
+  if (value.includes("\\") || value.includes("://") || /[\u0000-\u001F\u007F]/.test(value)) return null;
+  const path = value.split(/[?#]/)[0];
+  if (path.includes(":") || path.includes("//") || !/^\/(?:[A-Za-z0-9._~-]+\/?)*$/.test(path)) return null;
+  return value;
 }
 
 const STAFF = new Set(["admin", "superadmin", "moderator", "trust_safety", "support", "seo_editor", "finance"]);

@@ -18,6 +18,12 @@ export const EAGER = ["c_limit,w_480", "c_limit,w_1280", "c_thumb,w_200,h_200"]
   .map((crop) => `${crop},f_auto,q_auto,${STRIP_EXIF}`)
   .join("|");
 
+export function optionalCloudinary(): CloudinaryEnv | null {
+  const missing = ENV_NAMES.filter((name) => !process.env[name]?.trim());
+  if (missing.length > 0) return null;
+  return cloudinaryEnv();
+}
+
 export function cloudinaryEnv(): CloudinaryEnv {
   const missing = ENV_NAMES.filter((name) => !process.env[name]?.trim());
   if (missing.length > 0) throw new InternalError(`Cloudinary is not configured (${missing.join(", ")})`);

@@ -32,8 +32,12 @@ export default async function AdminHome() {
     <AdminShell title="Dashboard">
       <p className="mb-4 t-small text-muted">
         {site?.name || "Tharkoo"} CMS is live. Edit the homepage under{" "}
-        <Link href="/admin/cms/" className="text-gold">
-          CMS &amp; banners
+        <Link href="/admin/homepage/" className="text-accent">
+          Homepage
+        </Link>{" "}
+        and the header and footer under{" "}
+        <Link href="/admin/menus/" className="text-accent">
+          Menus
         </Link>
         . Counts use active listings and city locations.
       </p>

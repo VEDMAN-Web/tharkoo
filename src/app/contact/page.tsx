@@ -1,28 +1,43 @@
 import Link from "next/link";
+import { JsonLd } from "@/lib/jsonld";
+import { TRUST } from "@/content/trust";
 import { getSite } from "@/lib/queries";
-import { Container } from "@/components/ui/Container";
-import { pageMetadata } from "@/lib/ui/meta";
+import { contactPageNode } from "@/lib/seo/schema";
+import { contactPath, helpPath } from "@/lib/urls";
+import { withUrlSeo, urlHeading } from "@/lib/seo/override";
+import { getPaths } from "@/server/urls/service";
+import { StaticPage } from "@/components/StaticPage";
 
-export const dynamic = "force-dynamic";
-export const metadata = pageMetadata({
-  title: "Contact | Tharkoo",
-  description: "How to reach Tharkoo.",
-  path: "/contact/",
-});
+export const revalidate = 300;
+
+const copy = TRUST.contact;
+
+export async function generateMetadata() {
+  const paths = await getPaths();
+  return withUrlSeo(contactPath(paths), {
+    title: `${copy.title} | Tharkoo`,
+    description: copy.description,
+    path: contactPath(paths),
+  });
+}
 
 export default async function Contact() {
-  const site = await getSite();
+  const [site, paths] = await Promise.all([getSite(), getPaths()]);
+  const heading = await urlHeading(contactPath(paths), copy.title);
   return (
-    <Container className="py-8">
-      <h1 className="t-h1">Contact</h1>
-      <p className="t-body mt-3 max-w-[68ch] text-muted">
-        Support hours: {site.supportHours || "We reply on business days."} For a listing problem, use the report link on the ad. For a legal request, open the grievance page.
-      </p>
-      <p className="mt-4">
-        <Link href="/cms/grievance/" className="text-gold">Grievance</Link>
-        {" · "}
-        <Link href="/help/" className="text-gold">Help centre</Link>
-      </p>
-    </Container>
+    <>
+      <JsonLd data={contactPageNode(site.name || "Tharkoo", contactPath(paths))} />
+      <StaticPage title={heading}>
+        <p>Support hours: {site.supportHours || "We reply on business days."}</p>
+        {copy.paragraphs.map((paragraph) => (
+          <p key={paragraph.slice(0, 40)}>{paragraph}</p>
+        ))}
+        <p>
+          <Link href="/cms/grievance/">Grievance</Link>
+          {" · "}
+          <Link href={helpPath(paths)}>Help Center</Link>
+        </p>
+      </StaticPage>
+    </>
   );
 }

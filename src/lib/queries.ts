@@ -15,6 +15,7 @@ import {
 import { loadCategories, categoryBySlug, countMatching, publicCategories, queryListings, type ListingQuery } from "@/server/search";
 import { cities, districts, loadLocations, locationBySlug, siblingCities, states, topCities } from "@/server/locations";
 import type { ListingDoc } from "@/lib/models";
+import { readContent } from "@/lib/ui/site-content";
 
 const PAGE_SIZE = 25;
 const THIN = 3;
@@ -22,7 +23,7 @@ const THIN = 3;
 export async function getSite() {
   return cached(
     "site",
-    15_000,
+    60_000,
     async () => {
       await connectDb();
       return (
@@ -37,11 +38,17 @@ export async function getSite() {
       );
     },
     ["site"],
+    true,
   );
 }
 
+export async function getHomepageContent() {
+  const site = await getSite();
+  return readContent((site as { homepage?: unknown }).homepage);
+}
+
 export async function getCategories() {
-  return cached("categories", 30_000, async () => publicCategories(), ["categories"]);
+  return cached("categories", 60_000, async () => publicCategories(), ["categories"], true);
 }
 
 export async function getCategory(slug: string) {
@@ -53,11 +60,11 @@ export async function getLocationBySlug(slug: string) {
 }
 
 export async function getCities(limit?: number) {
-  return cached(`cities:${limit || "all"}`, 30_000, async () => cities(limit), ["locations"]);
+  return cached(`cities:${limit || "all"}`, 60_000, async () => cities(limit), ["locations"], true);
 }
 
 export async function getTopCities() {
-  return cached("top-cities", 30_000, async () => topCities(), ["locations"]);
+  return cached("top-cities", 60_000, async () => topCities(), ["locations"], true);
 }
 
 export async function getSiblingCities(stateSlug: string) {
@@ -88,6 +95,7 @@ function pageQuery(filter: Record<string, unknown>): ListingQuery {
     districtSlug: typeof filter.districtSlug === "string" ? filter.districtSlug : undefined,
     verified: filter.verified === true ? true : undefined,
     photos: photosOn,
+    tag: typeof filter.tag === "string" ? filter.tag : undefined,
   };
 }
 
@@ -101,10 +109,10 @@ export async function getStarListings(filter: Record<string, unknown>, limit = 6
 }
 
 export async function getFeed(filter: Record<string, unknown>, page = 1) {
-  const safePage = Math.min(Math.max(1, Number(page) || 1), 40);
+  const safePage = Math.max(1, Number(page) || 1);
   return cached(
     `feed:${JSON.stringify(filter)}:${safePage}`,
-    10_000,
+    60_000,
     async () => {
       const result = await queryListings({
         ...pageQuery(filter),
@@ -122,6 +130,59 @@ export async function getFeed(filter: Record<string, unknown>, page = 1) {
       };
     },
     ["feed", "listings"],
+    true,
+  );
+}
+
+export type LatestListing = {
+  slug: string;
+  title: string;
+  publishedAt: string;
+  categorySlug: string;
+  citySlug: string;
+  publicId: string;
+};
+
+export async function getLatestListings(limit = 12): Promise<LatestListing[]> {
+  const size = Math.min(12, Math.max(1, limit));
+  return cached(
+    `latest:${size}`,
+    60_000,
+    async () => {
+      await connectDb();
+      const now = new Date();
+      const docs = await Listing.find({
+        status: "active",
+        $or: [{ expiresAt: { $exists: false } }, { expiresAt: null }, { expiresAt: { $gt: now } }],
+      })
+        .sort({ publishedAt: -1, _id: -1 })
+        .limit(size)
+        .select("slug title publishedAt categoryId cityId")
+        .lean<
+          {
+            slug?: string;
+            title?: string;
+            publishedAt?: Date;
+            categoryId?: unknown;
+            cityId?: unknown;
+          }[]
+        >();
+      const [categories, locations] = await Promise.all([loadCategories(), loadLocations()]);
+      const categorySlug = new Map(categories.map((row) => [String(row._id), row.slug || ""]));
+      const citySlug = new Map(locations.map((row) => [String(row._id), row.slug || ""]));
+      return docs
+        .filter((doc) => doc.slug)
+        .map((doc) => ({
+          slug: doc.slug || "",
+          title: doc.title || "",
+          publishedAt: doc.publishedAt ? new Date(doc.publishedAt).toISOString() : "",
+          categorySlug: categorySlug.get(String(doc.categoryId)) || "",
+          citySlug: citySlug.get(String(doc.cityId)) || "",
+          publicId: (doc.slug || "").split("-").pop() || "",
+        }));
+    },
+    ["feed", "listings"],
+    true,
   );
 }
 
@@ -164,7 +225,7 @@ export async function searchListings(opts: {
   verified?: boolean;
   page?: number;
 }) {
-  const safePage = Math.min(Math.max(1, Number(opts.page) || 1), 40);
+  const safePage = Math.max(1, Number(opts.page) || 1);
   return cached(
     `search:${JSON.stringify(opts)}:${safePage}`,
     10_000,
@@ -218,11 +279,18 @@ export async function listingCountsByCategoryCity() {
         .filter((row) => row._id.categorySlug && row._id.citySlug);
     },
     ["counts", "listings"],
+    true,
   );
 }
 
-export function isThin(count: number) {
-  return count < THIN;
+export function isThin(count: number, minimum = THIN) {
+  return count < (minimum > 0 ? minimum : THIN);
+}
+
+export function pageOutOfRange(raw: string | undefined, pages: number) {
+  if (raw === undefined || raw === "") return false;
+  if (!/^[1-9]\d*$/.test(raw)) return true;
+  return Number(raw) > Math.max(1, pages);
 }
 
 export async function getPage(slug: string) {

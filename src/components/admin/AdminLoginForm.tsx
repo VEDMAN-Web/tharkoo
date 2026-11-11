@@ -33,7 +33,7 @@ export function AdminLoginForm() {
     <form onSubmit={onSubmit} className="mx-auto grid max-w-md gap-4 p-6">
       <h1 className="t-h1">Staff sign in</h1>
       <p className="t-small text-muted">Use the email and password for your staff account.</p>
-      <div aria-live="polite" className="t-small text-gold">
+      <div aria-live="polite" className="t-small" style={{ color: "var(--accent)" }}>
         {message}
       </div>
       <Field id="email" label="Email">

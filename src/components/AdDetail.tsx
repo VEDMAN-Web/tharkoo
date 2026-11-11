@@ -2,135 +2,211 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { Heart, MapPin, Shield, Smile, User } from "lucide-react";
 import type { ListingDoc } from "@/lib/models";
-import { displayTitle, prettyPlace, timeAgo } from "@/lib/format";
+import { displayTitle, listingDateLabel, prettyPlace } from "@/lib/format";
 import { listingTagSections } from "@/lib/media";
 import { CitySync } from "./CityContext";
-import { ContactButtons } from "./ContactButtons";
+import { ContactButtons, ContactProvider } from "./ContactButtons";
+import { listingPhotos } from "@/lib/media";
 import { Gallery } from "./ui/Gallery";
-import { Badge } from "./ui/Badge";
 import { SaveButton } from "./ui/SaveButton";
 import { AdCard } from "./ui/AdCard";
 import { TrackView } from "./ui/RecentlyViewed";
-import { Container } from "./ui/Container";
+
+const PERSONAL = new Set(["dating", "friendship", "meetups", "personal-ads"]);
+
+function serviceLabel(slug?: string) {
+  if (slug === "wellness") return "Services";
+  if (slug === "jobs") return "Role";
+  if (slug === "education") return "Subjects";
+  if (PERSONAL.has(slug || "")) return "Interests";
+  return "Details";
+}
 
 export function AdDetail({
   ad,
   categoryName,
   related = [],
   listingId,
+  crumbs = [],
+  shareUrl,
+  heading,
 }: {
   ad: ListingDoc;
   categoryName: string;
   related?: ListingDoc[];
   listingId?: string;
+  crumbs?: { name: string; path: string }[];
+  shareUrl: string;
+  heading?: string;
 }) {
-  const title = displayTitle(ad.title) || "Listing";
+  const title = heading || displayTitle(ad.title) || "Listing";
   const city = prettyPlace(ad.citySlug);
+  const district = ad.place && ad.place !== city ? ad.place : prettyPlace(ad.districtSlug);
   const sections = listingTagSections(ad.tags);
+  const personal = PERSONAL.has(ad.categorySlug || "");
+  const date = listingDateLabel(ad.publishedAt || ad.createdAt);
+  const listHref = `/${ad.categorySlug}/${ad.citySlug}/`;
   const [copied, setCopied] = useState("");
 
-  async function share() {
-    const url = `${window.location.origin}/ad/${ad.slug}/`;
-    if (navigator.share) {
-      try {
-        await navigator.share({ title, url });
-        return;
-      } catch {
-        /* fall through to copy */
-      }
-    }
-    try {
-      await navigator.clipboard.writeText(url);
-      setCopied("Link copied");
-    } catch {
-      setCopied("Copy the link from the address bar.");
+  function back(event: React.MouseEvent) {
+    if (document.referrer && document.referrer.startsWith(window.location.origin)) {
+      event.preventDefault();
+      window.history.back();
     }
   }
 
   return (
-    <div className="pb-24 lg:pb-10">
-      <TrackView ad={ad} />
-      <CitySync name={city} slug={ad.citySlug} />
-      <Container className="py-6">
-        <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_320px]">
-          <div className="min-w-0">
-            <Gallery photos={ad.photos || []} title={title} seed={ad.slug || title} category={ad.categorySlug} />
-            <h1 className="t-h1 mt-6">{title}</h1>
-            <div className="mt-3 flex flex-wrap gap-2">
-              <Badge>{categoryName}</Badge>
-              {city ? <Badge>{city}</Badge> : null}
-              <Badge>{timeAgo(ad.publishedAt || ad.createdAt) || "Posted"}</Badge>
-              {ad.verified ? <Badge tone="verified">Verified</Badge> : null}
+    <ContactProvider listingSlug={ad.slug} listingId={listingId}>
+      <div className="tk-ad">
+        <TrackView ad={ad} />
+        <CitySync name={city} slug={ad.citySlug} />
+        <div className="tk-container" style={{ paddingTop: 8 }}>
+          <p className="tk-hair" style={{ paddingTop: 10 }}>
+            <Link href={listHref} className="tk-back" onClick={back}>
+              &lt; Back to search
+            </Link>
+          </p>
+          <nav className="tk-crumbs" aria-label="Breadcrumb">
+            {crumbs.map((crumb, index) => (
+              <span key={crumb.path}>
+                {index > 0 ? <span style={{ color: "var(--muted)" }}> / </span> : null}
+                <Link href={crumb.path} prefetch={false}>{crumb.name}</Link>
+              </span>
+            ))}
+          </nav>
+          <p className="tk-date">
+            <strong>{date}</strong>
+            {ad.publicId ? ` - Ad ID: ${ad.publicId}` : ""}
+          </p>
+          <section className="tk-summary" data-tk="ad-summary">
+            <div className="tk-summary-top">
+              <p className="tk-nick">{ad.displayName || title}</p>
+              <SaveButton
+                item={{ id: ad.slug || title, slug: ad.slug || "", title, place: city, at: 0 }}
+                className="bg-transparent text-accent"
+              />
+              <span className="tk-badge-promo" style={{ position: "static" }}>
+                {ad.variant === "supertop" || ad.variant === "star" ? "SUPER Top" : ad.variant === "top" ? "Top" : ad.verified ? "Verified" : categoryName}
+              </span>
             </div>
-            <section className="mt-8 max-w-[68ch]">
-              <h2 className="t-h2">About</h2>
-              <p className="t-body mt-3 whitespace-pre-wrap">{ad.description}</p>
-            </section>
-            {sections.map((section) => (
-              <section key={section.title || "traits"} className="mt-8">
-                <h2 className="t-h2">{section.title || "Details"}</h2>
-                <div className="mt-3 flex flex-wrap gap-2">
+            {ad.trust?.length ? (
+              <div className="tk-attr">
+                {ad.trust.map((mark) => (
+                  <span key={mark}><Shield size={14} /> {mark}</span>
+                ))}
+              </div>
+            ) : null}
+            <div className="tk-attr">
+              {ad.age ? (
+                <span><User size={14} /> {ad.age} years</span>
+              ) : null}
+              <span>
+                <MapPin size={14} /> <strong>{city}</strong>
+                {district ? ` / ${district}` : ""}
+              </span>
+            </div>
+            <h1>{title}</h1>
+            <ContactButtons />
+          </section>
+          <Gallery photos={listingPhotos(ad.categorySlug, ad.publicId || ad.slug || "", ad.photos || [])} title={title} seed={ad.slug || title} category={ad.categorySlug} />
+          <section className="tk-section">
+            <h2><Smile size={16} /> {personal ? "About me" : "About this ad"}</h2>
+            <p style={{ whiteSpace: "pre-wrap", fontSize: 14, lineHeight: 1.6 }}>{ad.description}</p>
+          </section>
+          {sections[0]?.items.length ? (
+            <div className="tk-attr">
+              {sections[0].items.map((item) => (
+                <span className="tk-chip" key={item}>{item}</span>
+              ))}
+            </div>
+          ) : null}
+          {sections.slice(1).map((section) => {
+            const label = section.title === "Where" ? (personal ? "Where we can meet" : "Where") : section.title === "Hours" ? (personal ? "Attention to" : "") : serviceLabel(ad.categorySlug);
+            if (!label) return null;
+            return (
+              <section key={section.title} className="tk-section tk-hair">
+                <h2>
+                  {section.title === "Where" ? <MapPin size={16} /> : section.title === "Hours" ? <User size={16} /> : <Heart size={16} />}
+                  {label}
+                </h2>
+                <div className="tk-attr">
                   {section.items.map((item) => (
-                    <span key={item} className="rounded-pill border border-line px-3 py-1 t-small">
-                      {item}
-                    </span>
+                    <span className="tk-chip" key={item}>{item}</span>
                   ))}
                 </div>
               </section>
-            ))}
-            <section className="mt-8 rounded-lg border border-line bg-surface p-4">
-              <h2 className="t-h3">Safety tips</h2>
-              <ul className="mt-2 grid gap-2 t-small text-muted">
-                <li>Meet in a public place and keep payments on a method you can trace.</li>
-                <li>Tharkoo staff will not ask you to pay them to view an ad.</li>
-                <li>Report a listing that asks for money up front or looks misleading.</li>
-              </ul>
+            );
+          })}
+          <section className="tk-section tk-hair">
+            <h2><MapPin size={16} /> Where</h2>
+            <p style={{ fontSize: 14 }}>{city}{district ? ` / ${district}` : ""}</p>
+          </section>
+          {ad.details?.length ? (
+            <section className="tk-section tk-hair">
+              <h2><Heart size={16} /> {serviceLabel(ad.categorySlug)}</h2>
+              <div className="tk-attr">
+                {ad.details.map((item) => (
+                  <span className="tk-chip" key={item.label}>{item.label}: {item.value}</span>
+                ))}
+              </div>
             </section>
-            <div className="mt-4 flex flex-wrap gap-4">
-              <Link href={`/submit-report/?ad=${ad.publicId || ad.slug || ""}`} className="t-small text-gold">
-                Report this ad
-              </Link>
-              <button type="button" className="t-small text-gold" onClick={share}>
-                Share
-              </button>
-              {copied ? <span className="t-caption text-muted">{copied}</span> : null}
+          ) : null}
+          <div className="tk-hair" />
+          <h3 className="tk-contact-h">Contact me</h3>
+          <div style={{ display: "flex", justifyContent: "center" }}>
+            <ContactButtons />
+          </div>
+          <div className="tk-hair tk-share">
+            <div>
+              <p style={{ fontWeight: 700 }}>Share ad</p>
+              <a href={`https://twitter.com/intent/tweet?url=${encodeURIComponent(shareUrl)}`} target="_blank" rel="noopener noreferrer">X</a>
+              {" "}
+              <a href={`https://wa.me/?text=${encodeURIComponent(shareUrl)}`} target="_blank" rel="noopener noreferrer">WhatsApp</a>
+              <button type="button" onClick={async () => {
+                try {
+                  await navigator.clipboard.writeText(window.location.href);
+                  setCopied("Link copied");
+                } catch {
+                  setCopied("Copy the address bar.");
+                }
+              }}>Copy</button>
+              {copied ? <span> {copied}</span> : null}
+            </div>
+            <div>
+              <Link href={`/submit-report/?ad=${ad.publicId || ad.slug || ""}`}>🛡 Report abuse or fraud</Link>
             </div>
           </div>
-          <aside className="hidden h-fit rounded-xl border border-line bg-surface p-4 lg:sticky lg:top-24 lg:block" id="contact">
-            <h2 className="t-h3">Contact</h2>
-            <p className="t-small mt-2 text-muted">Details stay hidden until you ask for them.</p>
-            <div className="mt-4">
-              <ContactButtons listingSlug={ad.slug} listingId={listingId} />
-            </div>
-            <div className="mt-3">
-              <SaveButton
-                item={{ id: ad.publicId || ad.slug || title, slug: ad.slug || "", title, photo: ad.photos?.[0], place: city, at: 0 }}
-                label="Save listing"
-                className="bg-surface-2"
-              />
-            </div>
-          </aside>
-        </div>
-        {related.length ? (
-          <section className="mt-12">
-            <h2 className="t-h2">Related ads</h2>
-            <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-              {related.slice(0, 6).map((item) => (
-                <AdCard key={item.slug} ad={item} layout="tile" />
-              ))}
-            </div>
+          <p className="tk-all">
+            All ads in <Link href={listHref}><strong>{categoryName} in {city}</strong></Link> ›
+          </p>
+          <section className="tk-security" data-tk="security-tips">
+            <span className="tk-security-tab"><Shield size={16} /> SECURITY TIPS</span>
+            <h3>Security tips</h3>
+            <p>Be careful if the advertiser writes in an unusual way or asks for money in advance. Never share OTPs or card details.</p>
           </section>
-        ) : null}
-      </Container>
-      <div className="fixed inset-x-0 bottom-0 z-30 grid grid-cols-3 gap-2 border-t border-line bg-bg/95 p-3 pb-[max(12px,env(safe-area-inset-bottom))] lg:hidden">
-        <ContactButtons listingSlug={ad.slug} listingId={listingId} sticky />
-        <SaveButton
-          item={{ id: ad.publicId || ad.slug || title, slug: ad.slug || "", title, photo: ad.photos?.[0], place: city, at: 0 }}
-          label="Save"
-          className="w-full bg-surface-2"
-        />
+          <div className="tk-fine">
+            <p><strong>Tharkoo does not intervene in relationships between users and advertisers.</strong> People arrange meetings on their own.</p>
+            <p>Ads are published on the advertiser&apos;s own responsibility.</p>
+            <p>Tharkoo does not verify content beyond its policy.</p>
+            <p>The site offers publication and navigation services.</p>
+          </div>
+          {related.length ? (
+            <section>
+              <h2 className="t-h2">More like this</h2>
+              <div className="tk-feed">
+                {related.slice(0, 6).map((item) => (
+                  <AdCard key={item.slug} ad={item} />
+                ))}
+              </div>
+            </section>
+          ) : null}
+        </div>
+        <div className="tk-bottom" data-tk="bottom-bar">
+          <ContactButtons sticky />
+        </div>
       </div>
-    </div>
+    </ContactProvider>
   );
 }

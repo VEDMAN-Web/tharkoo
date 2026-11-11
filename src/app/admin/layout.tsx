@@ -9,6 +9,7 @@ export const metadata = pageMetadata({
   description: "Staff tools for Tharkoo.",
   path: "/admin/",
   index: false,
+  follow: false,
 });
 
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {

@@ -1,13 +1,9 @@
-import { Container } from "./ui/Container";
-import { Prose } from "./ui/Prose";
-
-export function StaticPage({ title, children }: { title: string; children: React.ReactNode }) {
+export function StaticPage({ title, updated, children }: { title: string; updated?: string; children: React.ReactNode }) {
   return (
-    <Container className="py-10">
-      <article>
-        <h1 className="t-h1">{title}</h1>
-        <Prose className="mt-6">{children}</Prose>
-      </article>
-    </Container>
+    <article className="tk-container tk-prose" style={{ padding: "28px 0 40px" }}>
+      <h1>{title}</h1>
+      <p>Last Updated – {updated || "November 2026"}</p>
+      {children}
+    </article>
   );
 }

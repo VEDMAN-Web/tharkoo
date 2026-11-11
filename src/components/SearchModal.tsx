@@ -1,158 +1,245 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import Link from "next/link";
-import { Dialog } from "./ui/Dialog";
+import { useRouter } from "next/navigation";
+import { ChevronRight, Search, SlidersHorizontal, X } from "lucide-react";
+import { useFocusTrap } from "./ui/useFocusTrap";
+import { api } from "@/lib/ui/api";
+import { searchPath } from "@/lib/urls";
+import { useUrlPaths } from "./UrlPaths";
 
-type Cat = { slug: string; name: string };
-type City = { slug: string; name: string; stateSlug?: string };
+type Cat = { slug: string; name: string; fields?: { key: string; label: string; type: string; options?: string[] }[] };
+type City = { slug: string; name: string; stateSlug?: string; id?: string };
+type Region = { slug: string; name: string; id?: string };
 
 export function SearchModal({
-  placeholder = "Search jobs, homes, cars, pets...",
   categories,
-  cities,
+  placeholder = "Search here...",
+  submitLabel = "SEARCH",
   onClose,
 }: {
-  brand?: string;
   placeholder?: string;
+  submitLabel?: string;
   categories: Cat[];
-  cities: City[];
+  cities?: City[];
   onClose: () => void;
 }) {
+  const router = useRouter();
+  const paths = useUrlPaths();
+  const ref = useFocusTrap<HTMLFormElement>(true, onClose);
+  const [cats, setCats] = useState<Cat[]>(categories);
+  const [regions, setRegions] = useState<Region[]>([]);
+  const [cities, setCities] = useState<City[]>([]);
+  const [category, setCategory] = useState(categories[0]?.slug || "");
   const [q, setQ] = useState("");
-  const [category, setCategory] = useState("");
+  const [region, setRegion] = useState("");
   const [city, setCity] = useState("");
-  const [cityQ, setCityQ] = useState("");
-  const [hi, setHi] = useState(0);
+  const [district, setDistrict] = useState("");
+  const [districts, setDistricts] = useState<{ slug: string; name: string }[]>([]);
+  const [verified, setVerified] = useState(false);
+  const [photos, setPhotos] = useState(false);
+  const [openRow, setOpenRow] = useState("");
+  const [picked, setPicked] = useState<Record<string, string>>({});
   const [recent, setRecent] = useState<string[]>([]);
 
   useEffect(() => {
+    api<{ categories: Cat[] }>("/api/categories").then((res) => {
+      if (res.ok && res.data.categories?.length) setCats(res.data.categories);
+    });
+    api<{ locations: Region[] }>("/api/locations?type=state").then((res) => {
+      if (res.ok) setRegions(res.data.locations || []);
+    });
+    api<{ locations: City[] }>("/api/locations?type=city").then((res) => {
+      if (res.ok) setCities(res.data.locations || []);
+    });
     const id = window.setTimeout(() => {
       try {
         const stored = JSON.parse(localStorage.getItem("tk-recent-q") || "[]");
         if (Array.isArray(stored)) setRecent(stored.slice(0, 6));
       } catch {
-        /* ignore */
+        /* ignore stored searches */
       }
     }, 0);
     return () => window.clearTimeout(id);
   }, []);
 
-  const matches = useMemo(() => {
-    const needle = cityQ.trim().toLowerCase();
-    return cities.filter((item) => !needle || item.name.toLowerCase().includes(needle)).slice(0, 8);
-  }, [cities, cityQ]);
+  const cityOptions = useMemo(
+    () => cities.filter((item) => !region || item.stateSlug === region),
+    [cities, region],
+  );
 
-  function remember() {
-    if (!q.trim()) return;
-    const next = [q.trim(), ...recent.filter((item) => item !== q.trim())].slice(0, 6);
-    localStorage.setItem("tk-recent-q", JSON.stringify(next));
+  useEffect(() => {
+    if (!city) {
+      const id = window.setTimeout(() => {
+        setDistricts([]);
+        setDistrict("");
+      }, 0);
+      return () => window.clearTimeout(id);
+    }
+    const found = cities.find((item) => item.slug === city);
+    if (!found?.id) return;
+    api<{ locations: { slug: string; name: string }[] }>(`/api/locations/${found.id}/children`).then((res) => {
+      if (res.ok) setDistricts((res.data.locations || []).filter((item) => item.slug));
+    });
+  }, [city, cities]);
+
+  const current = cats.find((item) => item.slug === category) || cats[0];
+  const fieldRows = (current?.fields || [])
+    .filter((field) => field.type === "select" && field.options?.length)
+    .slice(0, 4);
+
+  function reset() {
+    setQ("");
+    setRegion("");
+    setCity("");
+    setDistrict("");
+    setVerified(false);
+    setPhotos(false);
+    setPicked({});
+    setCategory(cats[0]?.slug || "");
+  }
+
+  function submit(event: React.FormEvent) {
+    event.preventDefault();
+    const text = q.trim();
+    if (text) {
+      const next = [text, ...recent.filter((item) => item !== text)].slice(0, 6);
+      localStorage.setItem("tk-recent-q", JSON.stringify(next));
+    }
+    if (category && city && !text) {
+      router.push(`/${category}/${city}/`);
+      onClose();
+      return;
+    }
+    const params = new URLSearchParams();
+    if (text) params.set("q", text);
+    if (category) params.set("category", category);
+    if (city) params.set("city", city);
+    if (verified) params.set("verified", "1");
+    if (photos) params.set("photos", "1");
+    router.push(`${searchPath(paths)}?${params.toString()}`);
+    onClose();
   }
 
   return (
-    <Dialog open title="Search" onClose={onClose}>
-      <form action="/search/" method="get" className="grid gap-3" onSubmit={remember}>
-        <input
-          autoFocus
-          name="q"
-          value={q}
-          onChange={(event) => setQ(event.target.value)}
-          placeholder={placeholder}
-          aria-label="Search"
-          className="h-12 w-full rounded-md border border-line bg-surface px-3 text-base"
-        />
-        <label className="grid gap-1 t-small">
-          Category
-          <select name="category" value={category} onChange={(event) => setCategory(event.target.value)} className="h-12 rounded-md border border-line bg-surface px-3 text-base">
-            <option value="">All categories</option>
-            {categories.map((item) => (
-              <option key={item.slug} value={item.slug}>
-                {item.name}
-              </option>
-            ))}
-          </select>
-        </label>
-        <div>
-          <label className="grid gap-1 t-small" htmlFor="city-type">
-            City
-          </label>
-          <input type="hidden" name="city" value={city} />
-          <input
-            id="city-type"
-            value={cityQ}
-            onChange={(event) => {
-              setCityQ(event.target.value);
-              setCity("");
-              setHi(0);
-            }}
-            onKeyDown={(event) => {
-              if (event.key === "ArrowDown") {
-                event.preventDefault();
-                setHi((n) => Math.min(matches.length - 1, n + 1));
-              }
-              if (event.key === "ArrowUp") {
-                event.preventDefault();
-                setHi((n) => Math.max(0, n - 1));
-              }
-              if (event.key === "Enter" && matches[hi]) {
-                event.preventDefault();
-                setCity(matches[hi].slug);
-                setCityQ(matches[hi].name);
-              }
-            }}
-            placeholder="Type a city"
-            className="mt-1 h-12 w-full rounded-md border border-line bg-surface px-3 text-base"
-            role="combobox"
-            aria-expanded="true"
-            aria-controls="city-list"
-            aria-autocomplete="list"
-          />
-          <ul id="city-list" className="mt-1 max-h-48 overflow-auto rounded-md border border-line" role="listbox">
-            {matches.length ? (
-              matches.map((item, index) => (
-                <li key={item.slug}>
-                  <button
-                    type="button"
-                    role="option"
-                    aria-selected={city === item.slug || index === hi}
-                    className={`block w-full px-3 py-2 text-left t-small ${index === hi ? "bg-surface-2 text-gold" : ""}`}
-                    onClick={() => {
-                      setCity(item.slug);
-                      setCityQ(item.name);
-                    }}
-                  >
-                    {item.name}
-                  </button>
-                </li>
-              ))
-            ) : (
-              <li className="px-3 py-2 t-small text-muted">No match</li>
-            )}
-          </ul>
+    <div className="tk-modal-back" onClick={onClose}>
+      <form
+        className="tk-modal"
+        data-tk="search-modal"
+        role="dialog"
+        aria-modal="true"
+        aria-label="Search"
+        ref={ref}
+        onClick={(event) => event.stopPropagation()}
+        onSubmit={submit}
+      >
+        <div className="tk-modal-head">
+          <span style={{ display: "inline-flex", gap: 8, alignItems: "center" }}>
+            <Search size={14} /> Search
+          </span>
+          <button type="button" aria-label="Close" onClick={onClose} style={{ background: "none", border: 0 }}>
+            <X size={16} />
+          </button>
         </div>
-        <button className="gold-btn" type="submit">
-          Search
-        </button>
-      </form>
-      {recent.length ? (
-        <div className="mt-4">
-          <p className="t-overline mb-2">Recent</p>
-          <div className="flex flex-wrap gap-2">
-            {recent.map((item) => (
-              <Link key={item} href={`/search/?q=${encodeURIComponent(item)}`} className="rounded-pill border border-line px-3 py-1 t-small" prefetch={false}>
-                {item}
-              </Link>
-            ))}
+        <div className="tk-modal-body">
+          <div className="tk-modal-grid">
+            <select data-tk="search-category" aria-label="Category" value={category} onChange={(event) => setCategory(event.target.value)}>
+              {cats.map((item) => (
+                <option key={item.slug} value={item.slug}>
+                  {item.name}
+                </option>
+              ))}
+            </select>
+            <input data-tk="search-text" aria-label="Search here" placeholder={placeholder} value={q} onChange={(event) => setQ(event.target.value)} />
           </div>
+          {recent.length ? (
+            <div className="tk-filters" aria-label="Recent searches">
+              {recent.map((item) => (
+                <button key={item} type="button" className="tk-filter" onClick={() => setQ(item)}>
+                  {item}
+                </button>
+              ))}
+            </div>
+          ) : null}
+          <div className="tk-modal-grid three">
+            <select data-tk="search-region" aria-label="Select Region" value={region} onChange={(event) => { setRegion(event.target.value); setCity(""); }}>
+              <option value="">Select Region</option>
+              {regions.map((item) => (
+                <option key={item.slug} value={item.slug}>{item.name}</option>
+              ))}
+            </select>
+            <select data-tk="search-city" aria-label="All the cities" value={city} onChange={(event) => setCity(event.target.value)}>
+              <option value="">All the cities</option>
+              {cityOptions.map((item) => (
+                <option key={item.slug} value={item.slug}>{item.name}</option>
+              ))}
+            </select>
+            <select data-tk="search-district" aria-label="Select District" value={district} disabled={!city} onChange={(event) => setDistrict(event.target.value)}>
+              <option value="">Select District</option>
+              {districts.map((item) => (
+                <option key={item.slug} value={item.slug}>{item.name}</option>
+              ))}
+            </select>
+          </div>
+          <p style={{ display: "flex", gap: 8, alignItems: "center", fontSize: 12, fontWeight: 700, marginTop: 16 }}>
+            <SlidersHorizontal size={20} /> Filters
+          </p>
+          <FilterRow label="Verification" open={openRow === "verified"} onToggle={() => setOpenRow(openRow === "verified" ? "" : "verified")}>
+            <button type="button" className={`tk-filter ${verified ? "is-on" : ""}`} onClick={() => setVerified((v) => !v)}>
+              Verified profiles only
+            </button>
+          </FilterRow>
+          <FilterRow label="Photos" open={openRow === "photos"} onToggle={() => setOpenRow(openRow === "photos" ? "" : "photos")}>
+            <button type="button" className={`tk-filter ${photos ? "is-on" : ""}`} onClick={() => setPhotos((v) => !v)}>
+              With photos only
+            </button>
+          </FilterRow>
+          {fieldRows.map((field) => (
+            <FilterRow key={field.key} label={field.label} open={openRow === field.key} onToggle={() => setOpenRow(openRow === field.key ? "" : field.key)}>
+              {(field.options || []).map((option) => (
+                <button
+                  key={option}
+                  type="button"
+                  className={`tk-filter ${picked[field.key] === option ? "is-on" : ""}`}
+                  onClick={() => setPicked((prev) => ({ ...prev, [field.key]: prev[field.key] === option ? "" : option }))}
+                >
+                  {option}
+                </button>
+              ))}
+            </FilterRow>
+          ))}
         </div>
-      ) : null}
-      <div className="mt-4 flex flex-wrap gap-2">
-        {categories.slice(0, 6).map((item) => (
-          <Link key={item.slug} href={`/${item.slug}/`} className="rounded-pill border border-line px-3 py-1 t-small" prefetch={false} onClick={onClose}>
-            {item.name}
-          </Link>
-        ))}
-      </div>
-    </Dialog>
+        <div className="tk-modal-foot">
+          <button type="button" className="tk-text-btn" data-tk="search-delete-all" onClick={reset}>
+            DELETE ALL
+          </button>
+          <button type="submit" className="tk-btn tk-btn-rose" data-tk="search-submit">
+            <Search size={14} /> {submitLabel}
+          </button>
+        </div>
+      </form>
+    </div>
+  );
+}
+
+function FilterRow({
+  label,
+  open,
+  onToggle,
+  children,
+}: {
+  label: string;
+  open: boolean;
+  onToggle: () => void;
+  children: React.ReactNode;
+}) {
+  return (
+    <div>
+      <button type="button" className={`tk-filter-row ${open ? "open" : ""}`} aria-expanded={open} onClick={onToggle}>
+        <span>{label}</span>
+        <ChevronRight size={14} />
+      </button>
+      {open ? <div className="tk-filters">{children}</div> : null}
+    </div>
   );
 }

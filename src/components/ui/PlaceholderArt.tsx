@@ -29,12 +29,12 @@ const ICONS: Record<string, LucideIcon> = {
 };
 
 const PALETTES = [
-  ["#C9A96E", "#8C5A4A", "#1F4A4A"],
-  ["#E8D3A6", "#3B3558", "#1F4A4A"],
-  ["#8A6D3B", "#8C5A4A", "#3B3558"],
-  ["#C9A96E", "#1F4A4A", "#3B3558"],
-  ["#D9BE88", "#8C5A4A", "#1F4A4A"],
-  ["#C9A96E", "#3B3558", "#8A6D3B"],
+  ["#A63A5E", "#6A2150", "#E0A08A"],
+  ["#E9C27A", "#A63A5E", "#F7EEF3"],
+  ["#6A2150", "#C9967E", "#FAEFF2"],
+  ["#B8486B", "#6A2150", "#E0A08A"],
+  ["#C9967E", "#A63A5E", "#F3EDE6"],
+  ["#7B2D5E", "#E0A08A", "#F7EEF3"],
 ];
 
 function hash(seed: string) {
@@ -66,7 +66,7 @@ export function PlaceholderArt({
   ];
   return (
     <div
-      className={cn("relative h-full w-full bg-[var(--surface)]", className)}
+      className={cn("relative h-full w-full bg-[var(--letterbox)]", className)}
       role={decorative ? undefined : "img"}
       aria-label={decorative ? undefined : label ?? "Photo coming soon"}
       aria-hidden={decorative || undefined}
@@ -80,16 +80,16 @@ export function PlaceholderArt({
             </radialGradient>
           ))}
           <pattern id={`grain-${n}`} width="6" height="6" patternUnits="userSpaceOnUse">
-            <circle cx="1" cy="1" r="0.6" fill="#F4F1EA" opacity="0.08" />
+            <circle cx="1" cy="1" r="0.6" fill="#6A2150" opacity="0.08" />
           </pattern>
         </defs>
-        <rect width="800" height="1000" fill="#16161C" />
+        <rect width="800" height="1000" fill="#F3EDE6" />
         {spots.map((spot, i) => (
           <ellipse key={i} cx={spot.cx * 8} cy={spot.cy * 10} rx={spot.r * 4} ry={spot.r * 5} fill={`url(#g-${n}-${i})`} />
         ))}
         <rect width="800" height="1000" fill={`url(#grain-${n})`} />
       </svg>
-      <Icon className="absolute left-1/2 top-1/2 size-10 -translate-x-1/2 -translate-y-1/2 text-[var(--text)] opacity-55" strokeWidth={1.5} aria-hidden />
+      <Icon className="tk-icon-lg absolute left-1/2 top-1/2 size-10 -translate-x-1/2 -translate-y-1/2 text-[var(--primary)] opacity-70" strokeWidth={1.5} aria-hidden />
     </div>
   );
 }

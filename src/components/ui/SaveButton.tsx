@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { Heart } from "lucide-react";
+import { api, hasSessionHint } from "@/lib/ui/api";
 import { cn } from "@/lib/utils";
 
 export type SavedItem = { id: string; slug: string; title: string; photo?: string | null; place?: string; at: number };
@@ -48,14 +49,19 @@ export function SaveButton({
       aria-label={on ? "Remove saved ad" : "Save ad"}
       className={cn("inline-flex min-h-11 min-w-11 items-center justify-center gap-1 rounded-full bg-black/50 px-2 text-text", className)}
       onClick={() => {
-        // TODO(T8.x): POST /api/saved/{id} when the route exists
         const next = readSaved().filter((row) => row.id !== item.id);
         if (!on) next.unshift({ ...item, at: Date.now() });
         writeSaved(next);
         setOn(!on);
+        if (hasSessionHint() && item.slug) {
+          void api("/api/saved/", {
+            method: on ? "DELETE" : "POST",
+            body: JSON.stringify({ slug: item.slug }),
+          });
+        }
       }}
     >
-      <Heart className={on ? "fill-current text-gold" : ""} size={18} />
+      <Heart className={on ? "fill-current text-accent" : ""} size={18} />
       {label === "Save" ? null : <span className="t-small">{on ? "Saved" : label}</span>}
     </button>
   );
