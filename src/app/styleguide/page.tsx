@@ -14,7 +14,7 @@ import { StyleDialog } from "@/components/ui/StyleDialog";
 
 export const metadata = pageMetadata({
   title: "Design system | Tharkoo",
-  description: "Plum and rose on ivory tokens and components.",
+  description: "Ivory and gold tokens and components.",
   path: "/styleguide/",
   index: false,
 });
@@ -22,8 +22,8 @@ export const metadata = pageMetadata({
 const swatches = [
   ["bg", "#FFFDFB"],
   ["card", "#FFFFFF"],
-  ["primary", "#6A2150"],
-  ["accent", "#A63A5E"],
+  ["primary", "#8A6416"],
+  ["gold", "#D4AF37"],
   ["text", "#1F2433"],
   ["muted", "#6E7180"],
 ];
@@ -49,7 +49,7 @@ export default function StyleGuide() {
   return (
     <Container className="py-10">
       <h1 className="t-h1">Design system</h1>
-      <p className="t-lead mt-3 max-w-[68ch] text-muted">Plum and rose on ivory. Light surfaces, rose for action.</p>
+      <p className="t-lead mt-3 max-w-[68ch] text-muted">Ivory and gold. Light surfaces, gold for action.</p>
       <h2 className="t-h2 mt-10">Colour</h2>
       <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3">
         {swatches.map(([name, hex]) => (

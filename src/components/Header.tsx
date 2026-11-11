@@ -1,9 +1,9 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { usePathname } from "next/navigation";
-import { Menu, Search, User, X, MessageCircle, CircleHelp } from "lucide-react";
+import { LayoutDashboard, List, LogOut, Menu, Search, Settings, ShieldCheck, User, Wallet, X, MessageCircle, CircleHelp } from "lucide-react";
 import { Logo } from "./Logo";
 import { SearchModal } from "./SearchModal";
 import { useCity } from "./CityContext";
@@ -51,11 +51,28 @@ export function Header({
   const [search, setSearch] = useState(false);
   const [menu, setMenu] = useState(false);
   const [account, setAccount] = useState(false);
+  const accountRef = useRef<HTMLDivElement>(null);
   const [who, setWho] = useState("");
   const [session, setSession] = useState(user);
   const homeLike = path === "/" || path.startsWith(`/${paths.cities}`);
   const showCity = Boolean(city) && (path.startsWith(`/${paths.ad}/`) || categories.some((cat) => path.startsWith(`/${cat.slug}`)));
   const drawerRef = useFocusTrap(menu, () => setMenu(false));
+
+  useEffect(() => {
+    if (!account) return;
+    function onDown(event: MouseEvent) {
+      if (!accountRef.current?.contains(event.target as Node)) setAccount(false);
+    }
+    function onKey(event: KeyboardEvent) {
+      if (event.key === "Escape") setAccount(false);
+    }
+    document.addEventListener("mousedown", onDown);
+    document.addEventListener("keydown", onKey);
+    return () => {
+      document.removeEventListener("mousedown", onDown);
+      document.removeEventListener("keydown", onKey);
+    };
+  }, [account]);
 
   useEffect(() => {
     function open() {
@@ -99,27 +116,35 @@ export function Header({
                 <Search size={24} />
               </button>
             )}
-            <div className="tk-account">
-              <button type="button" className="tk-icon-btn" aria-label="Account" aria-expanded={account} onClick={() => setAccount((v) => !v)}>
+            <div className="tk-account" ref={accountRef}>
+              <button type="button" className="tk-icon-btn" aria-label="Account" aria-haspopup="menu" aria-expanded={account} onClick={() => setAccount((v) => !v)}>
                 <User size={20} fill="currentColor" />
               </button>
               {account ? (
                 <div className="tk-menu" role="menu">
                   {session ? (
                     <>
-                      {who ? <span className="tk-menu-name">{who}</span> : null}
-                      <Link href="/u/account/dashboard/" onClick={() => setAccount(false)}>Dashboard</Link>
-                      <Link href="/u/account/ads/" onClick={() => setAccount(false)}>Your ads</Link>
-                      <Link href="/u/account/credits/" onClick={() => setAccount(false)}>Wallet</Link>
-                      <Link href="/u/account/edit-account/" onClick={() => setAccount(false)}>Settings</Link>
-                      {isStaffRole(session.roles) ? <Link href="/admin/" onClick={() => setAccount(false)}>Admin</Link> : null}
-                      <Link href="/u/logout/" onClick={() => setAccount(false)}>Log out</Link>
+                      <div className="tk-menu-who">
+                        <span className="tk-avatar" aria-hidden>{(who || session.email || "?").trim().charAt(0).toUpperCase()}</span>
+                        <div>
+                          <strong>{who || session.email}</strong>
+                          <span>{session.email}</span>
+                        </div>
+                      </div>
+                      <Link role="menuitem" className="tk-menu-row" href="/u/account/dashboard/" onClick={() => setAccount(false)}><LayoutDashboard size={18} aria-hidden />Dashboard</Link>
+                      <Link role="menuitem" className="tk-menu-row" href="/u/account/ads/" onClick={() => setAccount(false)}><List size={18} aria-hidden />Your ads</Link>
+                      <Link role="menuitem" className="tk-menu-row" href="/u/account/credits/" onClick={() => setAccount(false)}><Wallet size={18} aria-hidden />Wallet</Link>
+                      <Link role="menuitem" className="tk-menu-row" href="/u/account/edit-account/" onClick={() => setAccount(false)}><Settings size={18} aria-hidden />Settings</Link>
+                      {isStaffRole(session.roles) ? <Link role="menuitem" className="tk-menu-row" href="/admin/" onClick={() => setAccount(false)}><ShieldCheck size={18} aria-hidden />Admin</Link> : null}
+                      <hr />
+                      <Link role="menuitem" className="tk-menu-row tk-menu-out" href="/u/logout/" onClick={() => setAccount(false)}><LogOut size={18} aria-hidden />Log out</Link>
                     </>
                   ) : (
-                    <>
-                      <Link href={loginPath(paths)} onClick={() => setAccount(false)}>Log in</Link>
-                      <Link href={registerPath(paths)} onClick={() => setAccount(false)}>Register</Link>
-                    </>
+                    <div className="tk-menu-guest">
+                      <p>Welcome to Tharkoo</p>
+                      <Link role="menuitem" className="tk-btn tk-btn-primary" href={loginPath(paths)} onClick={() => setAccount(false)}>Log in</Link>
+                      <Link role="menuitem" className="tk-btn tk-btn-outline-gold" href={registerPath(paths)} onClick={() => setAccount(false)}>Create account</Link>
+                    </div>
                   )}
                 </div>
               ) : null}

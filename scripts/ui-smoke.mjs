@@ -222,8 +222,12 @@ for (const [width, height] of widths) {
     if (path === "/" && width === 1440) {
       const extra = [];
       const hero = await page.locator("[data-tk=hero]").boundingBox();
-      const expected = Math.min(880, Math.max(425, 0.7 * height));
+      const expected = Math.min(560, Math.max(420, 0.56 * height));
       if (!hero || Math.abs(hero.height - expected) > expected * 0.05) extra.push(`hero ${hero?.height}`);
+      const searchBox = await page.locator("[data-tk=hero-search]").boundingBox();
+      const h1Box = await page.locator("[data-tk=hero] h1").boundingBox();
+      if (hero && searchBox && Math.abs(hero.y + hero.height - (searchBox.y + searchBox.height) - 40) > 4) extra.push("search 40px above banner bottom");
+      if (h1Box && searchBox && Math.abs(searchBox.y - (h1Box.y + h1Box.height) - 16) > 4) extra.push("h1 16px above search");
       const search = await page.locator("[data-tk=hero-search]").innerText();
       if (!search.includes("Search By City, Category...")) extra.push("search label");
       await page.locator("[data-tk=home-card]").first().waitFor({ timeout: 25000 }).catch(() => {});
@@ -233,11 +237,11 @@ for (const [width, height] of widths) {
       const pos = await page.locator("[data-tk=header]").evaluate((el) => getComputedStyle(el).position);
       if (pos === "sticky" || pos === "fixed") extra.push("sticky");
       const box = await page.locator(".tk-container").first().boundingBox();
-      if (!box || Math.abs(box.width - 960) > 2) extra.push(`container ${box?.width}`);
+      if (!box || Math.abs(box.width - 1200) > 2) extra.push(`container ${box?.width}`);
       const h2 = await page.locator("h2").first().innerText();
       if (!/Latest listings in your city/i.test(h2)) extra.push("h2");
       const foot = await page.locator("[data-tk=footer]").innerText();
-      for (const word of ["Legal", "Support", "Security", "Company", "Boost your visibility", "Countries"]) {
+      for (const word of ["Legal", "Support", "Security", "Company"]) {
         if (!foot.includes(word)) extra.push(`footer ${word}`);
       }
       await page.evaluate(() => window.scrollTo(0, 700));
@@ -247,8 +251,9 @@ for (const [width, height] of widths) {
     }
     if (path === "/" && width === 390) {
       const extra = [];
-      const hero = await page.locator("[data-tk=hero]").boundingBox();
-      if (!hero || Math.abs(hero.height - 290) > 5) extra.push(`hero ${hero?.height}`);
+      const photoBox = await page.locator(".tk-hero-photo").boundingBox();
+      const textBox = await page.locator("[data-tk=hero] h1").boundingBox();
+      if (!photoBox || !textBox || textBox.y < photoBox.y + photoBox.height - 1) extra.push("hero text below photo");
       const homePost = page.locator("a.tk-home-post");
       if (!(await homePost.isVisible())) extra.push("home post");
       await page.locator("[data-tk=menu-button]").click();
@@ -286,7 +291,7 @@ for (const [width, height] of widths) {
   const box = await modal.boundingBox();
   const text = await modal.innerText();
   const notes = [];
-  const want = width === 1440 ? 800 : width;
+  const want = width >= 768 ? 640 : width;
   if (!box || Math.abs(box.width - want) > 8) notes.push(`width ${box?.width}`);
   for (const word of ["Search", "Select Region", "All the cities", "Select District", "Filters", "DELETE ALL", "SEARCH"]) {
     if (!text.includes(word)) notes.push(word);
@@ -432,32 +437,11 @@ for (const district of ["/dating/delhi/central-delhi/", "/dating/delhi/new-delhi
     await page.close();
   }
 }
-for (const [width, height] of widths) {
-  const latest = await context.newPage();
-  await latest.setViewportSize({ width, height });
-  await latest.goto(base + "/", { waitUntil: "load" });
-  await latest.locator("[data-tk=latest-card]").first().waitFor({ timeout: 8000 }).catch(() => {});
-  const note = await latest.evaluate(() => {
-    const cards = [...document.querySelectorAll("[data-tk=latest-card]")];
-    if (!cards.length) return "missing";
-    function hits(a, b) {
-      if (!a || !b) return false;
-      const A = a.getBoundingClientRect();
-      const B = b.getBoundingClientRect();
-      return A.width > 0 && B.width > 0 && A.left < B.right - 1 && A.right > B.left + 1 && A.top < B.bottom - 1 && A.bottom > B.top + 1;
-    }
-    for (const card of cards) {
-      const box = card.getBoundingClientRect();
-      if (box.right > window.innerWidth + 1 || box.left < -1) return "overflow";
-      if (hits(card.querySelector(".tk-card-photo"), card.querySelector(".tk-card-title"))) return "photo-title";
-      if (!card.querySelector(".tk-latest-chip")) return "chip";
-      if (!card.querySelector(".tk-card-photo img, .tk-card-photo .tk-ph")) return "thumb";
-    }
-    return "";
-  });
-  record("latest ads", width, note === "", note || "grid");
-  await latest.close();
-}
+const homeNoLatest = await context.newPage();
+await homeNoLatest.setViewportSize({ width: 1440, height: 900 });
+await homeNoLatest.goto(base + "/", { waitUntil: "load" });
+record("latest ads removed", 1440, (await homeNoLatest.locator("[data-tk=latest-ads]").count()) === 0, "");
+await homeNoLatest.close();
 for (const path of ["/admin/listings/", "/admin/promotions/", "/admin/pages/"]) {
   const adminRes = await context.request.get(base + path);
   const adminText = await adminRes.text();
