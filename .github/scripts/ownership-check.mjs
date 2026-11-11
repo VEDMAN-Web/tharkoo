@@ -113,6 +113,7 @@ const excluded = task.exclude ?? [];
 const progressOk = new Set([
   `progress/${taskId}.md`,
   `progress/${taskId.toLowerCase()}.md`,
+  "docs/claude/STATUS.md",
 ]);
 
 const outside = [];

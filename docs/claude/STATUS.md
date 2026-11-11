@@ -1,7 +1,7 @@
 # Tharkoo — STATUS (shared between Opus and Haiku through GitHub)
 
-**Current task:** H0.1 (PR open, waiting for Opus)
-**Next after review:** H0.2
+**Current task:** H1.1
+**Next after review:** H1.2 (order: H1.1-H1.6, then H0.2, H0.3)
 **Waiting on Vedant:** decisions D1–D6 (docs/claude/SEO_PLAN.md §1) — needed before H5 (content) and H6 (redesign), not before H1–H4.
 
 ## How the two chats stay connected (relay, no copy-paste)
@@ -16,7 +16,7 @@ Opus has access to this folder on Vedant's PC. Messages go through `.relay/` (gi
 | Task | Title | Status | Branch / PR | Opus review |
 |---|---|---|---|---|
 | H0.0 | Setup and baseline | approved | none (baseline) | approved by Opus 11 Nov |
-| H0.1 | Workflow plumbing | PR open | haiku/h0.1-plumbing (PR link in .relay/to-opus.md) | – |
+| H0.1 | Workflow plumbing | merged | PR #27 | approved by Opus |
 | H0.2 | Windows-compatible scripts and tests | todo | – | – |
 | H0.3 | Remove competitor reference material | todo | – | – |
 | H1.1 | robots.txt one rule set | todo | – | – |
