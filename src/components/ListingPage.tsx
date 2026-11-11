@@ -179,7 +179,7 @@ export function ListingPageView({
         </nav>
       ) : null}
       <h1 className="tk-listing-h1">{h1}</h1>
-      {updated ? <p className="tk-seo-foot">Updated {updated}</p> : null}
+      {updated ? <p className="tk-listing-updated">Updated {updated}</p> : null}
       <div className="tk-feed">
         {feed.map((ad, index) => (
           <span key={ad.publicId || ad.slug || index} style={{ display: "contents" }}>
