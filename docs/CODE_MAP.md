@@ -13,8 +13,8 @@ Next.js 16.4.5 (App Router, Turbopack, `trailingSlash: true`), React 19.3, TypeS
 | src/lib | db.ts (needs MONGODB_URI), models.ts (14 Mongoose models), queries.ts (feed/category/city reads, cached), seo.ts (title templates), sanitize.ts, rate-limit.ts (in-memory), admin-auth.ts, credit-packs.ts |
 | src/data | catalog.ts (seed taxonomy - **explicit sexual-services copy**), help.ts |
 | cursor/ | Cursor-hosted-app identity helper (generated) - only works on Cursor-published apps |
-| scripts | dev.mjs, seed.ts, patch-photos.ts, patch-skokka-copy.ts (Skokka-derived, delete) |
-| public | skokka/ (5 Skokka-derived jpg), placeholders/ (444 KB), default next svgs |
+| scripts | dev.mjs, seed.ts, patch-photos.ts, patch-reference-site-copy.ts (reference-site-derived, delete) |
+| public | reference-site/ (5 reference-site-derived jpg), placeholders/ (444 KB), default next svgs |
 | docs | PLAN.md, HANDOFF.md, deploy.md (Vercel+DO Mongo - outdated), prd/PRD.txt+docx, seo/PROJECT.md |
 | .cursor/rules | graphify.mdc, karpathy-guidelines.mdc, tharkoo.mdc (already present) |
 
@@ -45,8 +45,8 @@ MONGODB_URI, NEXT_PUBLIC_SITE_URL, CURSOR_APP_ID, CURSOR_APP_IDENTITY_ISSUER, VE
 | Tests | 0 |
 | Graphify | 731 nodes / 1,569 edges; no path from Login/PostWizard to any model (confirms mocks). Hubs: CollectionEditor, AdminShell, connectDb, getSite, canonical |
 
-## 8. Skokka-derived / policy-risk content to purge (T0.4)
-public/skokka/*.jpg; `scripts/patch-skokka-copy.ts`; "skokka" strings in HomeBlocks.tsx, lib/media.ts, [tag] page, catalog.ts comment; docs mention. **catalog.ts + seo.ts DEFAULT_SEO contain explicit sexual-services category names and copy** ("Call Girls", "erotic massages... all sexual services", "Male Escorts", "#1 Adult Classifieds") - see MASTER_PLAN section 0.
+## 8. reference-site-derived / policy-risk content to purge (T0.4)
+public/reference-site/*.jpg; `scripts/patch-reference-site-copy.ts`; "reference-site" strings in HomeBlocks.tsx, lib/media.ts, [tag] page, catalog.ts comment; docs mention. **catalog.ts + seo.ts DEFAULT_SEO contain explicit sexual-services category names and copy** ("Call Girls", "erotic massages... all sexual services", "Male Escorts", "#1 Adult Classifieds") - see MASTER_PLAN section 0.
 
 ## 9. Reuse from VEDMAN-Web/sbt-private-product (read via GitHub connector; private repo, 425 files)
 Different shape: monorepo `apps/api` (Express 4 + Mongoose **8** + zod + pino + sharp + bcryptjs + helmet, 60 src files, **30 test files**, vitest + mongodb-memory-server) + `apps/web` (Next, 46 app files, vitest + Playwright) + `packages/shared` (policy, publish-gate, fields, age, slug). Deployed Vercel web + Render API; docs/ARCHITECTURE, API, DATA_MODEL are a ready contract.

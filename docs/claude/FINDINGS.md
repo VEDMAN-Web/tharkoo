@@ -9,7 +9,7 @@ Severity: **P0** blocks good indexing or is a real bug · **P1** hurts rankings/
 - Next.js 16.4.5 App Router + React 19 + Mongoose 9 + Tailwind 4, single Node process, MongoDB. 60 pages with metadata, ~25 API route groups, 174 unit tests, CI (lint, typecheck, test, build, gitleaks, ownership-check, forbidden-terms).
 - Backend is real: auth with sessions, KYC (manual), media (Cloudinary or local disk), listings with status machine, wallet/credits/promotions (mock payments), search, URL/slug manager with 301s, admin CMS for homepage, menus, landings, tags, SEO overrides.
 - SEO engine exists: per-URL overrides, title/description templates, sitemap index with 6 shards, thin-hub noindex (< 3 ads city, < 10 district), demo ads `seoNoindex`, JSON-LD (WebSite, Organization, BreadcrumbList, ItemList, FAQPage, Product/JobPosting/BlogPosting), `llms.txt`, IndexNow helper, `SITE_NOINDEX` switch.
-- Layout and wording were deliberately copied from a competitor reference (`docs/design/CLONE_SPEC.md`, branch `cursor/t9.1-skokka-replica`). That reference is an adult-services classifieds site. This is the main reason the site looks and reads wrong for property, vehicles and jobs.
+- Layout and wording were deliberately copied from a competitor reference (`docs/design/CLONE_SPEC.md`, branch `cursor/t9.1-reference-site-replica`). That reference is an adult-services classifieds site. This is the main reason the site looks and reads wrong for property, vehicles and jobs.
 - Not deployed. `143.244.141.17` (the droplet named in MASTER_PLAN) currently serves a different app. No domain is live (`tharkoo.com` has no DNS per docs).
 - `PROGRESS.md` is stale (shows T1.1 in progress; everything through T9.7 is merged).
 
