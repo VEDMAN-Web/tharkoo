@@ -15,6 +15,7 @@ import {
 } from "@/lib/queries";
 import { prettyPlace } from "@/lib/format";
 import { fillTemplate } from "@/lib/seo";
+import { isCityAlias } from "@/lib/seo/district-alias";
 import { placePath, tagPath } from "@/lib/urls";
 import { withUrlSeo, urlHeading } from "@/lib/seo/override";
 import { fallbackLanding, visibleHeading } from "@/lib/seo/landing";
@@ -45,7 +46,7 @@ export async function generateMetadata({ params, searchParams }: Props): Promise
     getSite(),
   ]);
   const dist = districtRows.find((row) => row.slug === district);
-  if (!cat || !city || !dist) return {};
+  if (!cat || !city || !dist || isCityAlias(city.name, dist.name)) return {};
   const vars = {
     category: cat.name,
     city: city.name,
@@ -98,6 +99,7 @@ export default async function DistrictPage({ params, searchParams }: Props) {
   ]);
   const dist = districtRows.find((row) => row.slug === district);
   if (!cat || !city || !dist) notFound();
+  if (isCityAlias(city.name, dist.name)) permanentRedirect(placePath(cat.slug || category, city.slug || location));
   if (cat.slug !== category || city.slug !== location || dist.slug !== district) {
     permanentRedirect(placePath(cat.slug || category, city.slug || location, dist.slug || district));
   }
