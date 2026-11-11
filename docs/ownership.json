@@ -656,8 +656,10 @@
       "globs": [
         "package.json",
         "tests/server/ui/theme.test.ts",
-        "docs/claude/SETUP.md",
-        "CLAUDE.md"
+        "docs/claude/**",
+        "CLAUDE.md",
+        ".github/scripts/ownership-check.mjs",
+        "docs/ownership.json"
       ]
     },
     "H0.3": {
