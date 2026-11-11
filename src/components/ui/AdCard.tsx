@@ -57,7 +57,7 @@ export function AdCard({
   }
 
   return (
-    <article className="tk-card" data-tk="card" data-variant={variant} data-contact={superTop ? "1" : undefined}>
+    <article className="tk-card" data-tk="card" data-reveal data-variant={variant} data-contact={superTop ? "1" : undefined}>
       <a className="tk-card-link" href={href}>
         <span className="tk-card-photo">
           <SmartImage

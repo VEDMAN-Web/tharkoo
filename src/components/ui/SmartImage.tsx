@@ -52,7 +52,7 @@ export function SmartImage({
           sizes={sizes || `${width}px`}
           priority={priority}
           decoding={priority ? "sync" : "async"}
-          className={fit === "contain" ? "h-full w-full object-contain" : "h-full w-full object-cover"}
+          className={cn("tk-fade-img", loaded && "is-loaded", fit === "contain" ? "h-full w-full object-contain" : "h-full w-full object-cover")}
           onLoad={() => setLoaded(true)}
           onError={() => setFailed(true)}
         />
