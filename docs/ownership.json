@@ -636,6 +636,300 @@
     "T10.3": {
       "branchPrefix": "",
       "globs": []
+    },
+    "H0.1": {
+      "branchPrefix": "haiku/h0.1",
+      "globs": [
+        "CLAUDE.md",
+        "docs/claude/**",
+        "scripts/seo-check.mjs",
+        "scripts/local-prod.mjs",
+        "scripts/relay-wait.mjs",
+        ".github/scripts/ownership-check.mjs",
+        "docs/ownership.json",
+        ".gitignore",
+        "package.json"
+      ]
+    },
+    "H0.2": {
+      "branchPrefix": "haiku/h0.2",
+      "globs": [
+        "package.json",
+        "tests/server/ui/theme.test.ts",
+        "docs/claude/SETUP.md",
+        "CLAUDE.md"
+      ]
+    },
+    "H0.3": {
+      "branchPrefix": "haiku/h0.3",
+      "globs": [
+        "docs/design/ref/**",
+        "docs/design/CLONE_SPEC.md",
+        "docs/design/README.md",
+        "docs/CODE_MAP.md",
+        "docs/MASTER_PLAN.md",
+        "docs/ASSETS.md",
+        "progress/t0.1.md",
+        "progress/t0.4.md",
+        "progress/t0.5.md",
+        "progress/t9.1.md",
+        "tests/server/ui/theme.test.ts",
+        ".github/scripts/forbidden-terms.mjs"
+      ]
+    },
+    "H1.1": {
+      "branchPrefix": "haiku/h1.1",
+      "globs": [
+        "src/app/robots.ts",
+        "tests/server/seo/**"
+      ]
+    },
+    "H1.2": {
+      "branchPrefix": "haiku/h1.2",
+      "globs": [
+        "next.config.ts"
+      ]
+    },
+    "H1.3": {
+      "branchPrefix": "haiku/h1.3",
+      "globs": [
+        "src/proxy.ts",
+        "src/lib/rate-limit.ts",
+        "tests/server/proxy/**"
+      ]
+    },
+    "H1.4": {
+      "branchPrefix": "haiku/h1.4",
+      "globs": [
+        "src/lib/seo/district-alias.ts",
+        "src/lib/seo/sitemaps.ts",
+        "src/lib/queries.ts",
+        "src/app/[category]/[location]/[district]/page.tsx",
+        "src/app/[category]/[location]/page.tsx",
+        "src/components/ListingPage.tsx",
+        "tests/server/seo/**"
+      ]
+    },
+    "H1.5": {
+      "branchPrefix": "haiku/h1.5",
+      "globs": [
+        "src/app/page.tsx",
+        "src/app/globals.css"
+      ]
+    },
+    "H1.6": {
+      "branchPrefix": "haiku/h1.6",
+      "globs": [
+        "src/app/[category]/page.tsx",
+        "src/app/cities/page.tsx",
+        "src/app/categories/page.tsx",
+        "src/app/blog/page.tsx",
+        "src/app/help/page.tsx",
+        "src/app/contact/page.tsx",
+        "src/app/terms/page.tsx",
+        "src/app/privacy/page.tsx",
+        "src/app/cookies/page.tsx",
+        "src/app/scam-report/page.tsx",
+        "src/app/safety/page.tsx",
+        "src/app/how-it-works/page.tsx",
+        "src/app/prohibited-items/page.tsx",
+        "src/app/cms/[slug]/page.tsx",
+        "src/app/help/[slug]/page.tsx",
+        "src/app/blog/[slug]/page.tsx"
+      ]
+    },
+    "H2.1": {
+      "branchPrefix": "haiku/h2.1",
+      "globs": [
+        "docs/claude/reports/**"
+      ]
+    },
+    "H3.1": {
+      "branchPrefix": "haiku/h3.1",
+      "globs": [
+        "src/styles/admin.css",
+        "src/components/admin/AdminShell.tsx",
+        "src/components/admin/ui/**",
+        "src/components/admin/nav.ts",
+        "src/app/admin/layout.tsx",
+        "src/app/styleguide/admin/**",
+        "tests/server/ui/admin-nav.test.ts"
+      ]
+    },
+    "H3.2": {
+      "branchPrefix": "haiku/h3.2",
+      "globs": [
+        "src/server/models/layout.ts",
+        "src/server/models/index.ts",
+        "src/server/layout/**",
+        "src/lib/layout/**",
+        "src/components/blocks/**",
+        "src/app/admin/layout-actions.ts",
+        "tests/server/layout/**"
+      ]
+    },
+    "H3.3": {
+      "branchPrefix": "haiku/h3.3",
+      "globs": [
+        "src/server/layout/media.ts",
+        "src/app/admin/media/**",
+        "src/components/admin/ui/ImagePicker.tsx",
+        "tests/server/layout/media.test.ts"
+      ]
+    },
+    "H3.4": {
+      "branchPrefix": "haiku/h3.4",
+      "globs": [
+        "src/app/page.tsx",
+        "src/components/HomeBlocks.tsx",
+        "src/components/blocks/**",
+        "src/server/layout/defaults/home.ts",
+        "src/app/admin/homepage/**",
+        "src/components/admin/layout-editor/**",
+        "src/server/seed/layouts.ts",
+        "scripts/seed.ts",
+        "tests/server/layout/home.test.ts"
+      ]
+    },
+    "H3.5": {
+      "branchPrefix": "haiku/h3.5",
+      "globs": [
+        "src/app/[category]/page.tsx",
+        "src/app/[category]/[location]/page.tsx",
+        "src/app/[category]/[location]/[district]/page.tsx",
+        "src/components/ListingPage.tsx",
+        "src/components/blocks/**",
+        "src/server/layout/defaults/listing.ts",
+        "src/server/seed/layouts.ts",
+        "src/app/admin/listing-pages/**",
+        "tests/server/layout/listing.test.ts"
+      ]
+    },
+    "H3.6": {
+      "branchPrefix": "haiku/h3.6",
+      "globs": [
+        "src/app/u/post-insert/**",
+        "src/components/PostWizard.tsx",
+        "src/components/post/**",
+        "src/components/blocks/**",
+        "src/server/layout/defaults/post.ts",
+        "src/server/seed/layouts.ts",
+        "src/app/admin/post-page/**",
+        "src/app/admin/categories/**",
+        "src/components/admin/category-fields/**",
+        "tests/server/layout/post.test.ts"
+      ]
+    },
+    "H3.7": {
+      "branchPrefix": "haiku/h3.7",
+      "globs": [
+        "src/lib/ui/text.ts",
+        "src/app/admin/ui-text/**",
+        "src/components/ui/AdCard.tsx",
+        "tests/server/layout/ui-text.test.ts",
+        "src/app/page.tsx",
+        "src/components/HomeBlocks.tsx",
+        "src/app/[category]/page.tsx",
+        "src/app/[category]/[location]/page.tsx",
+        "src/app/[category]/[location]/[district]/page.tsx",
+        "src/components/ListingPage.tsx",
+        "src/components/PostWizard.tsx",
+        "src/components/post/**",
+        "src/components/blocks/**"
+      ]
+    },
+    "H3.8": {
+      "branchPrefix": "haiku/h3.8",
+      "globs": [
+        "src/server/ranking/**",
+        "src/lib/queries.ts",
+        "src/server/models/cms.ts",
+        "src/server/models/listing.ts",
+        "src/app/admin/listing-order/**",
+        "tests/server/ranking/**"
+      ]
+    },
+    "H3.9": {
+      "branchPrefix": "haiku/h3.9",
+      "globs": [
+        "src/app/admin/page.tsx",
+        "src/server/admin/dashboard.ts",
+        "tests/server/admin/dashboard.test.ts"
+      ]
+    },
+    "H4.1": {
+      "branchPrefix": "haiku/h4.1",
+      "globs": [
+        "src/server/seo/audit-rules.ts",
+        "src/server/seo/audit-run.ts",
+        "src/server/models/seo.ts",
+        "src/server/models/index.ts",
+        "scripts/seo-check.mjs",
+        "scripts/seo-check.ts",
+        "package.json",
+        "src/app/api/cron/seo-audit/**",
+        "tests/server/seo/**"
+      ]
+    },
+    "H4.2": {
+      "branchPrefix": "haiku/h4.2",
+      "globs": [
+        "src/app/admin/seo/**",
+        "src/server/seo/explain.ts",
+        "tests/server/seo/explain.test.ts"
+      ]
+    },
+    "H4.3": {
+      "branchPrefix": "haiku/h4.3",
+      "globs": [
+        "src/app/admin/seo/templates/**",
+        "src/server/seo/templates.ts",
+        "src/lib/seo/landing.ts",
+        "tests/server/seo/templates.test.ts"
+      ]
+    },
+    "H4.4": {
+      "branchPrefix": "haiku/h4.4",
+      "globs": [
+        "src/app/admin/urls/**",
+        "src/components/admin/UrlsManager.tsx",
+        "src/server/urls/service.ts",
+        "src/lib/seo/override.ts",
+        "tests/server/urls/**"
+      ]
+    },
+    "H4.5": {
+      "branchPrefix": "haiku/h4.5",
+      "globs": [
+        "src/app/not-found.tsx",
+        "src/server/seo/notfound-log.ts",
+        "src/server/models/seo.ts",
+        "src/app/admin/urls/**",
+        "tests/server/seo/notfound.test.ts"
+      ]
+    },
+    "H4.6": {
+      "branchPrefix": "haiku/h4.6",
+      "globs": [
+        "src/app/admin/seo/indexing/**",
+        "src/server/seo/indexing.ts",
+        "src/server/models/cms.ts",
+        "src/lib/seo/sitemaps.ts",
+        "src/server/indexnow/**",
+        "tests/server/seo/indexing.test.ts"
+      ]
+    },
+    "H4.7": {
+      "branchPrefix": "haiku/h4.7",
+      "globs": [
+        "src/app/robots.ts",
+        "src/app/llms.txt/**",
+        "src/app/llms-full.txt/**",
+        "src/lib/seo/schema.ts",
+        "src/server/models/cms.ts",
+        "src/app/admin/seo/settings/**",
+        "tests/server/seo/**"
+      ]
     }
   }
 }

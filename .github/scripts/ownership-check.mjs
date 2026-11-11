@@ -71,15 +71,15 @@ if (branch === "main") {
   process.exit(0);
 }
 
-const match = branch.match(/^(cursor|codex)\/t(\d+)\.(\d+)([a-z])?(?:-|$)/);
+const match = branch.match(/^(?:(?:cursor|codex)\/(t)|haiku\/(h))(\d+)\.(\d+)([a-z])?(?:-|$)/);
 if (!match) {
   console.error(
-    `ownership-check: branch '${branch}' does not match cursor/t* or codex/t*`,
+    `ownership-check: branch '${branch}' does not match cursor/t*, codex/t* or haiku/h*`,
   );
   process.exit(1);
 }
 
-const taskId = `T${match[2]}.${match[3]}${match[4] ?? ""}`;
+const taskId = `${(match[1] || match[2]).toUpperCase()}${match[3]}.${match[4]}${match[5] ?? ""}`;
 const task = ownership.tasks[taskId];
 if (!task) {
   console.error(`ownership-check: no docs/ownership.json entry for ${taskId}`);
