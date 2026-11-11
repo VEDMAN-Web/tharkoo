@@ -134,7 +134,6 @@ export default async function AdPage({ params }: Props) {
   });
   return (
     <>
-      {cover ? <link rel="preload" as="image" href={cover} fetchPriority="high" /> : null}
       <JsonLd data={structured ? [breadcrumbJsonLd(crumbs), structured] : [breadcrumbJsonLd(crumbs)]} />
       <AdDetail ad={plain(ad)} categoryName={catName} related={plain(related)} listingId={listingId} crumbs={crumbs} shareUrl={shareUrl} heading={heading} />
     </>

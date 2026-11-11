@@ -1,5 +1,5 @@
 import { connectDb } from "@/lib/db";
-import { invalidateTags } from "@/lib/cache";
+import { refreshPublicCache } from "@/lib/cache";
 import { TAG_PAGES } from "@/data/catalog";
 import {
   cleanPath,
@@ -26,10 +26,9 @@ export function invalidateUrlCache() {
 
 async function refreshPublic() {
   invalidateUrlCache();
-  invalidateTags(["site", "categories", "locations", "feed", "listings"]);
+  await refreshPublicCache();
   try {
     const { revalidatePath } = await import("next/cache");
-    revalidatePath("/", "layout");
     revalidatePath("/sitemap.xml");
     for (const shard of ["categories", "cities", "districts", "tags", "ads", "content"]) revalidatePath(`/sitemap/${shard}`);
   } catch {

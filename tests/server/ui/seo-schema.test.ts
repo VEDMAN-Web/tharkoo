@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
-import { fallbackLanding, mergeLanding } from "@/lib/seo/landing";
+import { fallbackLanding, mergeLanding, storedFaqs } from "@/lib/seo/landing";
 import { breadcrumbList, faqPage, itemListNode, listingJsonLd, organizationNode, publicPath, websiteNode } from "@/lib/seo/schema";
-import { sitemapIndexXml } from "@/lib/seo/sitemaps";
+import { sitemapIndexXml, sitemapXml } from "@/lib/seo/sitemaps";
 
 describe("structured data", () => {
   it("builds Product, Offer, breadcrumbs, website search, and FAQ shapes", () => {
@@ -68,6 +68,16 @@ describe("structured data", () => {
     const edited = mergeLanding(gurgaon, { intro: "Custom intro for Gurgaon.", faqs: [{ q: "Q", a: "A" }] });
     expect(edited.intro).toBe("Custom intro for Gurgaon.");
     expect(edited.faqs).toEqual([{ q: "Q", a: "A" }]);
+    expect(
+      storedFaqs([
+        { q: " First ", a: " One " },
+        { q: "", a: "skip" },
+        { q: "Second", a: "Two" },
+      ]),
+    ).toEqual([
+      { q: "First", a: "One" },
+      { q: "Second", a: "Two" },
+    ]);
   });
 
   it("lists every sitemap shard from the index", () => {
@@ -76,5 +86,17 @@ describe("structured data", () => {
     for (const shard of ["categories", "cities", "districts", "tags", "ads", "content"]) {
       expect(xml).toContain(`/sitemap/${shard}.xml`);
     }
+  });
+
+  it("keeps each sitemap address once", () => {
+    const xml = sitemapXml([
+      { loc: "https://tharkoo.example/cms/about/", lastmod: "2026-01-01T00:00:00.000Z" },
+      { loc: "https://tharkoo.example/cms/about/", lastmod: "2026-02-01T00:00:00.000Z" },
+      { loc: "https://tharkoo.example/cms/grievance/", lastmod: "2026-01-01T00:00:00.000Z" },
+      { loc: "https://tharkoo.example/", lastmod: "2026-01-01T00:00:00.000Z" },
+    ]);
+    expect(xml.match(/<loc>/g)).toHaveLength(3);
+    expect(xml.match(/cms\/about/g)).toHaveLength(1);
+    expect(xml).toContain("2026-02-01T00:00:00.000Z");
   });
 });

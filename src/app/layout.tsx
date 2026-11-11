@@ -5,7 +5,7 @@ import { canonical } from "@/lib/seo";
 import { siteUrl } from "@/lib/utils";
 import "./globals.css";
 
-export const revalidate = 300;
+export const revalidate = 60;
 
 export const viewport: Viewport = {
   themeColor: "#FFFDFB",

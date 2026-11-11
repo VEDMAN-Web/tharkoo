@@ -116,6 +116,18 @@ export function visibleHeading(templated: string, fallback: string) {
   return templated && /\bin\b/i.test(templated) ? templated : fallback;
 }
 
+export function storedFaqs(items?: { q?: string; a?: string }[] | null, limit = 8): FaqItem[] {
+  const out: FaqItem[] = [];
+  for (const item of items || []) {
+    const q = item?.q?.trim() || "";
+    const a = item?.a?.trim() || "";
+    if (!q || !a) continue;
+    out.push({ q: q.slice(0, 180), a: a.slice(0, 600) });
+    if (out.length >= limit) break;
+  }
+  return out;
+}
+
 export function mergeLanding(fallback: LandingCopy, override?: Partial<LandingCopy> | null): LandingCopy {
   if (!override) return fallback;
   const faqs = override.faqs?.filter((item) => item.q?.trim() && item.a?.trim());

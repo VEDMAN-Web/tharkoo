@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { api, fieldErrors, friendlyError } from "@/lib/ui/api";
-import { draftToForm, validatePost, type SavedDraft } from "@/lib/ui/post-form";
+import { draftToForm, needsIdCheck, validatePost, type SavedDraft } from "@/lib/ui/post-form";
 import { loginPath, postAdPath } from "@/lib/urls";
 import { useUrlPaths } from "./UrlPaths";
 import { HelpCard } from "./ui/HelpCard";
@@ -276,6 +276,13 @@ export function PostWizard() {
     if (!draftId || !title.trim()) return setBanner("Save a draft before submitting.");
     setBusy(true);
     setBanner("");
+    const me = await api<{ verification?: { status?: string }; user?: { verificationStatus?: string } }>("/api/auth/me");
+    const verification = me.ok ? me.data.verification?.status || me.data.user?.verificationStatus : "";
+    if (needsIdCheck(verification)) {
+      setBusy(false);
+      setBanner("Your ID needs a quick check before this ad can go live.");
+      return;
+    }
     const res = await api(`/api/listings/${draftId}/submit`, {
       method: "POST",
       body: JSON.stringify({ attestations: { adult: true, accurate: true, rights: true } }),

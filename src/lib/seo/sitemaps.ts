@@ -31,7 +31,9 @@ export function isShard(value: string): value is SitemapShard {
 }
 
 export function sitemapXml(entries: SitemapEntry[]) {
-  const body = entries
+  const unique = new Map<string, SitemapEntry>();
+  for (const entry of entries) unique.set(entry.loc, entry);
+  const body = [...unique.values()]
     .map((entry) => `<url><loc>${entry.loc}</loc><lastmod>${entry.lastmod}</lastmod></url>`)
     .join("");
   return `<?xml version="1.0" encoding="UTF-8"?><urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">${body}</urlset>`;
@@ -74,7 +76,12 @@ export async function shardEntries(shard: SitemapShard): Promise<SitemapEntry[]>
     for (const post of posts) if (post.slug) urls.push({ loc: loc(blogPath(paths, post.slug)), lastmod: stamp(post.updatedAt) });
     for (const article of articles) if (article.slug) urls.push({ loc: loc(helpPath(paths, article.slug)), lastmod: stamp(article.updatedAt) });
     for (const page of pages) if (page.slug) urls.push({ loc: loc(cmsPath(paths, page.slug)), lastmod: stamp(page.updatedAt) });
-    return urls;
+    const seen = new Set<string>();
+    return urls.filter((entry) => {
+      if (seen.has(entry.loc)) return false;
+      seen.add(entry.loc);
+      return true;
+    });
   }
   const liveMatch = {
     status: "active" as const,

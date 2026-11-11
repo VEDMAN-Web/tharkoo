@@ -13,8 +13,7 @@ export default async function LandingsAdminPage() {
     key,
     h1: value?.h1 || "",
     intro: value?.intro || "",
-    question: value?.faqs?.[0]?.q || "",
-    answer: value?.faqs?.[0]?.a || "",
+    faqs: (value?.faqs || []).map((item) => ({ q: item?.q || "", a: item?.a || "" })).filter((item) => item.q || item.a),
   }));
   return <LandingsEditor landings={landings} freeAds={typeof site?.freeAdsPerWeek === "number" ? site.freeAdsPerWeek : 3} />;
 }

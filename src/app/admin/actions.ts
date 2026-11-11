@@ -1,7 +1,7 @@
 "use server";
 
-import { revalidatePath } from "next/cache";
 import type { Model as MongooseModel } from "mongoose";
+import { refreshPublicCache } from "@/lib/cache";
 import { getStaffFromHeaders, isStaff } from "@/lib/admin-auth";
 import { connectDb } from "@/lib/db";
 import { MODEL_MAP, type ModelName } from "@/lib/models";
@@ -46,6 +46,6 @@ export async function adminMutate(input: {
   } else {
     throw new Error("Unknown op");
   }
-  revalidatePath("/", "layout");
+  await refreshPublicCache();
   return { ok: true, item: doc ? JSON.parse(JSON.stringify(doc)) : null };
 }

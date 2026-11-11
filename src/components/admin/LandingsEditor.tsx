@@ -4,15 +4,31 @@ import { useState } from "react";
 import { AdminShell } from "@/components/admin/AdminShell";
 import { saveFreeAdsForAdmin, saveLandingForAdmin } from "@/app/admin/growth-actions";
 
-type Landing = { key: string; h1: string; intro: string; question: string; answer: string };
+type Faq = { q: string; a: string };
+type Landing = { key: string; h1: string; intro: string; faqs: Faq[] };
+
+function blankFaq(): Faq {
+  return { q: "", a: "" };
+}
+
+function withFaqRow(landing: Landing): Landing {
+  return landing.faqs.length ? landing : { ...landing, faqs: [blankFaq()] };
+}
 
 export function LandingsEditor({ landings, freeAds }: { landings: Landing[]; freeAds: number }) {
   const [message, setMessage] = useState("");
-  const [current, setCurrent] = useState<Landing>(landings[0] || { key: "", h1: "", intro: "", question: "", answer: "" });
+  const [current, setCurrent] = useState<Landing>(withFaqRow(landings[0] || { key: "", h1: "", intro: "", faqs: [] }));
   const [limit, setLimit] = useState(String(freeAds));
 
   function load(key: string) {
-    setCurrent(landings.find((item) => item.key === key) || { key, h1: "", intro: "", question: "", answer: "" });
+    setCurrent(withFaqRow(landings.find((item) => item.key === key) || { key, h1: "", intro: "", faqs: [] }));
+  }
+
+  function setFaq(index: number, patch: Partial<Faq>) {
+    setCurrent({
+      ...current,
+      faqs: current.faqs.map((item, i) => (i === index ? { ...item, ...patch } : item)),
+    });
   }
 
   return (
@@ -23,7 +39,7 @@ export function LandingsEditor({ landings, freeAds }: { landings: Landing[]; fre
         onSubmit={async (event) => {
           event.preventDefault();
           const result = await saveLandingForAdmin(current);
-          setMessage(result.ok ? "Saved" : result.message);
+          setMessage(result.ok ? `Saved ${result.faqs.length} FAQ${result.faqs.length === 1 ? "" : "s"}` : result.message);
         }}
       >
         {landings.length ? (
@@ -37,8 +53,24 @@ export function LandingsEditor({ landings, freeAds }: { landings: Landing[]; fre
         <input name="key" required placeholder="dating|gurgaon" value={current.key} onChange={(event) => setCurrent({ ...current, key: event.target.value })} className="rounded border px-3 py-2" />
         <input name="h1" required placeholder="Dating in Gurgaon" value={current.h1} onChange={(event) => setCurrent({ ...current, h1: event.target.value })} className="rounded border px-3 py-2" />
         <textarea name="intro" required rows={4} placeholder="Intro shown under the listings" value={current.intro} onChange={(event) => setCurrent({ ...current, intro: event.target.value })} className="rounded border px-3 py-2" />
-        <input name="question" placeholder="FAQ question" value={current.question} onChange={(event) => setCurrent({ ...current, question: event.target.value })} className="rounded border px-3 py-2" />
-        <textarea name="answer" rows={3} placeholder="FAQ answer" value={current.answer} onChange={(event) => setCurrent({ ...current, answer: event.target.value })} className="rounded border px-3 py-2" />
+        {current.faqs.map((faq, index) => (
+          <div key={index} className="grid gap-2 rounded border border-line p-3" data-tk="faq-row">
+            <input name={`question-${index}`} placeholder={`FAQ question ${index + 1}`} value={faq.q} onChange={(event) => setFaq(index, { q: event.target.value })} className="rounded border px-3 py-2" />
+            <textarea name={`answer-${index}`} rows={3} placeholder="FAQ answer" value={faq.a} onChange={(event) => setFaq(index, { a: event.target.value })} className="rounded border px-3 py-2" />
+            {current.faqs.length > 1 ? (
+              <button
+                type="button"
+                className="tk-btn w-fit"
+                onClick={() => setCurrent({ ...current, faqs: current.faqs.filter((_, i) => i !== index) })}
+              >
+                Remove FAQ
+              </button>
+            ) : null}
+          </div>
+        ))}
+        <button type="button" className="tk-btn w-fit" onClick={() => setCurrent({ ...current, faqs: [...current.faqs, blankFaq()] })}>
+          Add FAQ
+        </button>
         <button type="submit" className="tk-btn tk-btn-primary w-fit">Save landing</button>
       </form>
       <form

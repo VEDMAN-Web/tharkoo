@@ -542,8 +542,9 @@ export async function submitListing(
   await writeVersion(listing, userId);
   await record(userId, "user", "listing.submit", listing._id.toString(), requestId, { status: "active" });
   try {
+    const { refreshPublicCache } = await import("@/lib/cache");
+    await refreshPublicCache();
     const { revalidatePath } = await import("next/cache");
-    revalidatePath("/", "layout");
     if (listing.slug) revalidatePath(`/ad/${listing.slug}/`);
     if (category.slug) revalidatePath(`/${category.slug}/`);
   } catch {

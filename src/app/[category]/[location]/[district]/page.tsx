@@ -25,7 +25,7 @@ type Props = {
   searchParams: Promise<{ page?: string; photos?: string; verified?: string }>;
 };
 
-export const revalidate = 300;
+export const revalidate = 60;
 
 async function cityFor(slug: string) {
   const loc = await getLocationBySlug(slug);

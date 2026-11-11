@@ -10,7 +10,7 @@
     "seed:dry-run": "tsx scripts/seed-v2.ts --dry-run",
     "seed:rollback": "tsx scripts/seed-v2.ts --rollback",
     "build": "NODE_OPTIONS=--max-old-space-size=4096 next build",
-    "start": "next start -p 4317",
+    "start": "NODE_OPTIONS=--max-old-space-size=256 next start -p 4317",
     "lint": "eslint",
     "typecheck": "NODE_OPTIONS=--max-old-space-size=3072 tsc --noEmit",
     "test": "vitest run",

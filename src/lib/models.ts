@@ -13,6 +13,7 @@ import {
   Location as LocationModel,
   Page as PageModel,
   Product as ProductModel,
+  PromotionOrder as PromotionOrderModel,
   SeoTemplate as SeoTemplateModel,
   Site as SiteModel,
 } from "@/server/models";
@@ -230,6 +231,7 @@ export const BannedWord = asModel<BannedWordDoc>(BannedWordModel);
 export const FeatureFlag = asModel<FeatureFlagDoc>(FeatureFlagModel);
 export const AttributeGroup = asModel<AttributeGroupDoc>(AttributeGroupModel);
 export const Product = asModel<ProductDoc>(ProductModel);
+export const PromotionOrder = asModel<Record<string, unknown>>(PromotionOrderModel);
 
 export const MODEL_MAP = {
   Site,
@@ -247,6 +249,7 @@ export const MODEL_MAP = {
   FeatureFlag,
   AttributeGroup,
   Product,
+  PromotionOrder,
 } as const;
 
 export type ModelName = keyof typeof MODEL_MAP;

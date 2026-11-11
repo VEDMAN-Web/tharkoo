@@ -73,3 +73,7 @@ export function draftToForm(row: SavedDraft) {
     photos: row.mediaIds || [],
   };
 }
+
+export function needsIdCheck(status?: string | null) {
+  return Boolean(status) && status !== "approved";
+}

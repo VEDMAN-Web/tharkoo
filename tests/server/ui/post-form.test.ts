@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { listingDateLabel } from "@/lib/format";
-import { draftToForm, validatePost } from "@/lib/ui/post-form";
+import { draftToForm, needsIdCheck, validatePost } from "@/lib/ui/post-form";
 
 const fields = [
   { key: "age", label: "Age", required: true },
@@ -24,6 +24,13 @@ const base = {
 };
 
 describe("post form", () => {
+  it("asks for an ID check before a publish request when review is not approved", () => {
+    expect(needsIdCheck("unsubmitted")).toBe(true);
+    expect(needsIdCheck("pending_review")).toBe(true);
+    expect(needsIdCheck("approved")).toBe(false);
+    expect(needsIdCheck("")).toBe(false);
+  });
+
   it("requires the dating looking-for field and names it", () => {
     const missing = validatePost({ ...base, attrs: {} });
     expect(missing["looking-for"]).toMatch(/fill in this field/i);

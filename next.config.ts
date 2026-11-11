@@ -26,6 +26,10 @@ const nextConfig: NextConfig = {
   trailingSlash: true,
   poweredByHeader: false,
   output: "standalone",
+  cacheMaxMemorySize: 16 * 1024 * 1024,
+  experimental: {
+    imgOptConcurrency: 1,
+  },
   images: {
     formats: ["image/webp"],
     minimumCacheTTL: 60 * 60 * 24,

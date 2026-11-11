@@ -1,4 +1,4 @@
-import { invalidateTags } from "@/lib/cache";
+import { refreshPublicCache } from "@/lib/cache";
 import { connectDb } from "@/lib/db";
 import { AuditRepository } from "@/server/audit";
 import { ForbiddenError, ValidationError } from "@/server/http";
@@ -88,7 +88,7 @@ async function writeContent(content: SiteContent, actorEmail: string, action: st
     after: content as unknown as Record<string, unknown>,
     requestId: crypto.randomUUID(),
   });
-  invalidateTags(["site"]);
+  await refreshPublicCache();
   return content;
 }
 

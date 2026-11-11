@@ -139,7 +139,7 @@ const badStatus = [];
 context.on("response", (res) => {
   const url = res.url();
   if (url.includes("_rsc") || url.includes("favicon")) return;
-  if (res.status() >= 400 && !url.includes("this-page-does-not-exist") && !(res.status() === 403 && url.includes("/submit"))) {
+  if (res.status() >= 400 && !url.includes("this-page-does-not-exist")) {
     const where = res.frame()?.url() || "";
     badStatus.push(`${res.status()} ${url} @ ${where}`);
   }
@@ -226,7 +226,7 @@ for (const [width, height] of widths) {
       if (!hero || Math.abs(hero.height - expected) > expected * 0.05) extra.push(`hero ${hero?.height}`);
       const search = await page.locator("[data-tk=hero-search]").innerText();
       if (!search.includes("Search By City, Category...")) extra.push("search label");
-      await page.locator("[data-tk=home-card]").first().waitFor({ timeout: 8000 }).catch(() => {});
+      await page.locator("[data-tk=home-card]").first().waitFor({ timeout: 25000 }).catch(() => {});
       if ((await page.locator("[data-tk=home-card]").count()) !== 5) extra.push(`cards ${await page.locator("[data-tk=home-card]").count()}`);
       const post = page.locator("[data-tk=header] [data-tk=post-ad]");
       if ((await post.innerText()) !== "POST YOUR AD") extra.push("post");
@@ -432,6 +432,37 @@ for (const district of ["/dating/delhi/central-delhi/", "/dating/delhi/new-delhi
     await page.close();
   }
 }
+for (const [width, height] of widths) {
+  const latest = await context.newPage();
+  await latest.setViewportSize({ width, height });
+  await latest.goto(base + "/", { waitUntil: "load" });
+  await latest.locator("[data-tk=latest-card]").first().waitFor({ timeout: 8000 }).catch(() => {});
+  const note = await latest.evaluate(() => {
+    const cards = [...document.querySelectorAll("[data-tk=latest-card]")];
+    if (!cards.length) return "missing";
+    function hits(a, b) {
+      if (!a || !b) return false;
+      const A = a.getBoundingClientRect();
+      const B = b.getBoundingClientRect();
+      return A.width > 0 && B.width > 0 && A.left < B.right - 1 && A.right > B.left + 1 && A.top < B.bottom - 1 && A.bottom > B.top + 1;
+    }
+    for (const card of cards) {
+      const box = card.getBoundingClientRect();
+      if (box.right > window.innerWidth + 1 || box.left < -1) return "overflow";
+      if (hits(card.querySelector(".tk-card-photo"), card.querySelector(".tk-card-title"))) return "photo-title";
+      if (!card.querySelector(".tk-latest-chip")) return "chip";
+      if (!card.querySelector(".tk-card-photo img, .tk-card-photo .tk-ph")) return "thumb";
+    }
+    return "";
+  });
+  record("latest ads", width, note === "", note || "grid");
+  await latest.close();
+}
+for (const path of ["/admin/listings/", "/admin/promotions/", "/admin/pages/"]) {
+  const adminRes = await context.request.get(base + path);
+  const adminText = await adminRes.text();
+  record(path, 1440, adminRes.status() === 200 && !/could not be found/i.test(adminText), String(adminRes.status()));
+}
 const mapRes = await context.request.get(base + "/sitemap.xml");
 const mapText = await mapRes.text();
 const shardRes = await context.request.get(base + "/sitemap/cities.xml");
@@ -465,6 +496,9 @@ const mapOk =
   adsRes.ok() &&
   adsText.includes("<urlset");
 record("/sitemap.xml", 1440, mapOk, mapOk ? "index and shards" : mapText.slice(0, 80));
+const contentLocs = [...contentText.matchAll(/<loc>([^<]+)<\/loc>/g)].map((match) => match[1]);
+const duplicateLocs = contentLocs.filter((loc, index) => contentLocs.indexOf(loc) !== index);
+record("sitemap unique", 1440, duplicateLocs.length === 0, duplicateLocs.slice(0, 3).join(" ") || `${contentLocs.length} urls`);
 const deep = await context.request.get(base + "/dating/gurgaon/?page=99");
 record("/dating/gurgaon/?page=99", 1440, deep.status() === 404, String(deep.status()));
 for (const [asset, type] of [
@@ -535,10 +569,14 @@ await loggedOut.locator("[data-tk=photo-input]").setInputFiles({ name: "photo.pn
 await loggedOut.locator("[data-tk=photo-note]").waitFor({ timeout: 15000 }).catch(() => {});
 const photoNote = await loggedOut.locator("[data-tk=photo-note]").innerText().catch(() => "");
 await loggedOut.locator("[data-tk=go-on]").click();
+const publishErrors = [];
+loggedOut.on("console", (msg) => {
+  if (msg.type() === "error") publishErrors.push(msg.text());
+});
 await loggedOut.locator("button", { hasText: "PUBLISH" }).click();
 await loggedOut.locator("[data-tk=verify-id]").waitFor({ timeout: 15000 }).catch(() => {});
 const verifyText = await loggedOut.locator("[aria-live=polite]").innerText().catch(() => "");
-const blocked = /quick check/i.test(verifyText) && !/403/.test(verifyText);
+const blocked = /quick check/i.test(verifyText) && !/403/.test(verifyText) && !publishErrors.some((line) => /403|Failed to load resource/i.test(line));
 record("post-ad kyc message", 1440, blocked && /Photo saved/i.test(photoNote), `${photoNote} | ${verifyText}`);
 const draftUrl = loggedOut.url();
 await loggedOut.locator("[data-tk=verify-id]").click();

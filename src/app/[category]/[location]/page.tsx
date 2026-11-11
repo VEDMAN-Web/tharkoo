@@ -27,7 +27,7 @@ type Props = {
   searchParams: Promise<{ page?: string; photos?: string; verified?: string }>;
 };
 
-export const revalidate = 300;
+export const revalidate = 60;
 
 function landingFor(
   site: { name?: string; landings?: Record<string, Partial<LandingCopy>> },

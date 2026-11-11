@@ -613,7 +613,11 @@
         "src/lib/seo.ts",
         "public/apple-touch-icon.png",
         "public/brand/icon-192.png",
-        "public/brand/icon-512.png"
+        "public/brand/icon-512.png",
+        "package.json",
+        "src/lib/db.ts",
+        "deploy/ecosystem.config.cjs",
+        "src/app/api/admin/mutate/**"
       ]
     },
     "T10.1": {
