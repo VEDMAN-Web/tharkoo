@@ -56,7 +56,7 @@ export function AdCard({
   }
 
   return (
-    <article className="tk-card" data-tk="card" data-variant={variant} data-contact={superTop ? "1" : undefined}>
+    <article className="tk-card" data-tk="card" data-reveal data-variant={variant} data-contact={superTop ? "1" : undefined}>
       <div className="tk-card-photo">
         <PhotoSwipe
           photos={photos}

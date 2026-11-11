@@ -232,7 +232,7 @@ export function ListingPageView({
         </nav>
       ) : null}
       {faqs.length ? (
-        <section className="tk-seo-foot">
+        <section className="tk-seo-foot" data-reveal>
           {faqs.map((item) => (
             <p key={item.q}>
               <strong>{item.q}</strong> {item.a}
