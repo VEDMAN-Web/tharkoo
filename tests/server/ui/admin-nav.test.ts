@@ -41,9 +41,13 @@ describe("admin sidebar by role", () => {
   });
 
   it("links unbuilt screens to the placeholder page", () => {
-    const media = findItem("media");
-    expect(media?.task).toBe("H3.3");
-    expect(media?.href).toBe("/admin/coming/media/");
+    const pending = NAV_GROUPS.flatMap((group) => group.items).filter((entry) => entry.task);
+    for (const entry of pending) {
+      expect(findItem(entry.id)?.href).toBe(`/admin/coming/${entry.id}/`);
+    }
+    const built = findItem("media");
+    expect(built?.task).toBeUndefined();
+    expect(built?.href).toBe("/admin/media/");
   });
 });
 
