@@ -114,7 +114,7 @@ export function Gallery({
                   category={category}
                   width={400}
                   height={500}
-                  sizes="(max-width: 767px) 88vw, 250px"
+                  sizes="(max-width: 767px) 88vw, 300px"
                   priority={index === 0 && slot <= 1}
                 />
               </button>
