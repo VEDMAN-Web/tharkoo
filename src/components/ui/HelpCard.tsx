@@ -30,21 +30,19 @@ export function HelpCard() {
       <Link href="/contact/" className="tk-btn tk-btn-outline-gold" style={{ width: "100%" }}>
         <Mail size={14} /> CONTACT US
       </Link>
-      <p>
-        We are also available on <strong>WhatsApp</strong> or <strong>Telegram</strong> Monday through Friday, excluding holidays, from {facts.hours}.
-      </p>
-      <div className="tk-help-actions">
-        {wa ? (
-          <a className="tk-btn tk-btn-grey" href={`https://wa.me/${wa}`}>WHATSAPP</a>
-        ) : (
-          <button type="button" className="tk-btn tk-btn-grey" aria-disabled="true">WHATSAPP</button>
-        )}
-        {facts.tg ? (
-          <a className="tk-btn tk-btn-grey" href={`https://t.me/${facts.tg.replace(/^@/, "")}`}>TELEGRAM</a>
-        ) : (
-          <button type="button" className="tk-btn tk-btn-grey" aria-disabled="true">TELEGRAM</button>
-        )}
-      </div>
+      {wa || facts.tg ? (
+        <>
+          <p>
+            We are also available on <strong>WhatsApp</strong> or <strong>Telegram</strong> Monday through Friday, excluding holidays, from {facts.hours}.
+          </p>
+          <div className="tk-help-actions">
+            {wa ? <a className="tk-btn tk-btn-outline-gold" href={`https://wa.me/${wa}`}>WhatsApp</a> : null}
+            {facts.tg ? <a className="tk-btn tk-btn-outline-gold" href={`https://t.me/${facts.tg.replace(/^@/, "")}`}>Telegram</a> : null}
+          </div>
+        </>
+      ) : (
+        <p>Support hours: {facts.hours}, excluding holidays.</p>
+      )}
     </section>
   );
 }

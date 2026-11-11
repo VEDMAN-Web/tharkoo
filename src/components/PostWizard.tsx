@@ -324,11 +324,11 @@ export function PostWizard() {
         <i className={step >= 2 ? "on" : ""} />
         <i className={step >= 3 ? "on" : ""} />
       </div>
+      <p className="tk-step-of" data-tk="step-of">Step {step} of 3 · {step === 1 ? "Information" : step === 2 ? "Photos" : "Publish"}</p>
       <div className="tk-step-head">
         <h1 className="tk-page-h1" data-tk="step-title" style={{ margin: 0 }}>
           {step === 1 ? "Information" : step === 2 ? "Photos" : "Publish"}
         </h1>
-        <span className="tk-pill-count">{step}/3</span>
       </div>
       <div aria-live="polite" className="t-small" style={{ color: "var(--danger)", margin: "12px 0" }}>
         {banner}{" "}
@@ -410,21 +410,24 @@ export function PostWizard() {
               ))}
             </div>
             <TextField id="phone" label="Phone Number" required={contactMode !== "email"} value={phone} error={errors.phone} placeholder="+91 81234 56789" onChange={setPhone} />
-            <p className="t-small">WhatsApp <Switch on={whatsapp} onClick={() => setWhatsapp((v) => !v)} /></p>
-            <p className="t-small">Telegram <Switch on={telegramOn} onClick={() => setTelegramOn((v) => !v)} /></p>
+            <div className="tk-switch-row"><span>WhatsApp</span><Switch on={whatsapp} onClick={() => setWhatsapp((v) => !v)} label="WhatsApp" /></div>
+            <div className="tk-switch-row"><span>Telegram</span><Switch on={telegramOn} onClick={() => setTelegramOn((v) => !v)} label="Telegram" /></div>
             {telegramOn ? <TextField id="telegram" label="Telegram" value={telegram} onChange={setTelegram} /> : null}
           </Group>
-          <p className={`t-small ${errors.terms ? "is-bad" : ""}`} style={errors.terms ? { outline: "1px solid var(--danger)", padding: 8 } : undefined}>
-            <Switch on={terms} onClick={() => setTerms((v) => !v)} bad={Boolean(errors.terms)} />{" "}
+          <p className={`t-small tk-consent ${errors.terms ? "is-bad" : ""}`}>
+            <input id="consent-terms" type="checkbox" className="tk-check" checked={terms} onChange={() => setTerms((v) => !v)} aria-invalid={Boolean(errors.terms)} />
+            <label htmlFor="consent-terms">
             <strong>Terms, Conditions and Privacy Policy</strong> I have read the <Link href="/terms/">Terms and Conditions</Link> of use and <Link href="/privacy/">Privacy Policy</Link> and I hereby authorise the processing of my personal data for the purpose of providing this web service.
+            </label>
             {errors.terms ? <span className="tk-error" data-tk="field-error">{errors.terms}</span> : null}
           </p>
-          <p className="t-small" style={errors.adult ? { outline: "1px solid var(--danger)", padding: 8 } : undefined}>
-            <Switch on={adult} onClick={() => setAdult((v) => !v)} bad={Boolean(errors.adult)} /> I confirm that I am 18 or over, that the details in this ad are accurate, and that I own the rights to any photos I add.
+          <p className={`t-small tk-consent ${errors.adult ? "is-bad" : ""}`}>
+            <input id="consent-adult" type="checkbox" className="tk-check" checked={adult} onChange={() => setAdult((v) => !v)} aria-invalid={Boolean(errors.adult)} />
+            <label htmlFor="consent-adult">I confirm that I am 18 or over, that the details in this ad are accurate, and that I own the rights to any photos I add.</label>
             {errors.adult ? <span className="tk-error" data-tk="field-error">{errors.adult}</span> : null}
           </p>
           <p style={{ textAlign: "right", marginTop: 24 }}>
-            <button type="button" className="tk-btn tk-btn-gold" data-tk="go-on" disabled={busy} onClick={goOn}>GO ON</button>
+            <button type="button" className="tk-btn tk-btn-gold" data-tk="go-on" disabled={busy} onClick={goOn}>Continue</button>
           </p>
         </>
       ) : null}
@@ -455,7 +458,7 @@ export function PostWizard() {
           </div>
           <div style={{ display: "flex", justifyContent: "space-between", marginTop: 16 }}>
             <button type="button" className="tk-btn tk-btn-outline-gold" onClick={() => remember(draftId, 1)}>BACK</button>
-            <button type="button" className="tk-btn tk-btn-gold" data-tk="go-on" onClick={() => remember(draftId, 3)}>GO ON</button>
+            <button type="button" className="tk-btn tk-btn-gold" data-tk="go-on" onClick={() => remember(draftId, 3)}>Continue</button>
           </div>
         </>
       ) : null}
@@ -488,7 +491,7 @@ function Group({ title, children }: { title: string; children: React.ReactNode }
   return (
     <section style={{ marginBottom: 18 }}>
       <div style={{ display: "flex", justifyContent: "space-between" }}>
-        <h2 className="t-small">{title}</h2>
+        <h2 className="tk-group-h">{title}</h2>
         <span className="t-caption" style={{ color: "var(--muted)" }}>* Required fields</span>
       </div>
       <div className="tk-form-panel">{children}</div>
@@ -563,11 +566,10 @@ function TextField({
   );
 }
 
-function Switch({ on, onClick, bad }: { on: boolean; onClick: () => void; bad?: boolean }) {
+function Switch({ on, onClick, label }: { on: boolean; onClick: () => void; label: string }) {
   return (
-    <button type="button" className={`tk-switch ${on ? "on" : ""}`} aria-pressed={on} onClick={onClick} style={bad ? { outline: "1px solid var(--danger)" } : undefined}>
+    <button type="button" role="switch" aria-checked={on} aria-label={label} className={`tk-switch ${on ? "on" : ""}`} onClick={onClick}>
       <i />
-      {on ? "YES" : "NO"}
     </button>
   );
 }
