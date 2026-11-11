@@ -426,3 +426,57 @@ Vedant asked for justified text "where applicable". Apply `text-align: justify; 
 
 **Acceptance (each part):** before/after screenshots at 390/768/1440 listed in the report; ui-smoke passes; lint/typecheck/test/build green; I review the result on the live preview, so restart the preview on main after each merge.
 **Order and speed:** do H1.7a → b → c → d back to back. Each part gets its own PR. After each PR is green, merge it only when I write `MERGE: allowed`. While you wait, start the next part on a new branch from github/main.
+
+---
+
+## H1.8 — Phase 1b: Vedant's design pass (layout references + review fixes) — PRs H1.8a, H1.8b, H1.8c
+
+Same files, rules and checks as H1.7 (globs identical; add the H1.8a–c entries to docs/ownership.json in H1.8a). Phase mode (#17): merge each part yourself on green, one-line PART DONE, one PHASE DONE report at the end. Use Sonnet.
+Vedant showed screenshots of another classifieds site as a LAYOUT reference only. Take the structure and behaviour described below. Do NOT copy its colours, wording, categories, icons, watermark or images. Everything stays in our Ivory & Gold tokens.
+
+### H1.8a — Listing cards + swipeable photos (listing pages, "More like this" on the ad page)
+1. Back to ONE column on every screen width (undo the 2-column grid from #15). Each card is a full-width row: photo on the left, text on the right. Desktop: photo 180 × 240; phone: 120 × 160; cover, rounded left corners only, and the photo always fills the card height.
+2. Tier label: move it off the photo to a small tab at the card's TOP-RIGHT corner, sitting on the border edge (absolute, top −10 px, right 12 px): a small up-arrow icon plus "Top" / "SUPER Top" / "Star" / "Highlight" / "New", 11 px bold, pill.
+   - Star and SUPER Top: shiny gold gradient fill with white text.
+   - Top: white with a gold border and deep-gold text.
+   - Highlight and New: tint fill.
+   - Card border: SUPER Top and Star get 1.5 px gold; the rest get the hairline.
+3. Swipeable photos on the card itself (better than the reference):
+   - Touch: swipe left and right. Desktop: round 32 px arrow buttons appear on hover at the left and right middle of the photo.
+   - Small dots at the bottom centre of the photo, max 5 dots.
+   - Infinite loop: after the last photo comes the first.
+   - Smooth 250 ms slide (CSS transform). The next photo is preloaded only when the user starts interacting (no extra downloads on page load).
+   - Clicking the photo (not the arrows) opens the ad. Keep the photo-count chip at the bottom-left.
+   - Keyboard: the arrows are focusable buttons with aria-labels.
+4. Title: max 2 lines, 17 px semibold, deep gold. Description: max 3 lines, 14 px. Age and place: one row of muted 13 px text with icons. Contact icon buttons at the bottom-right, unchanged.
+
+### H1.8b — Ad page gallery + home behaviour + review fixes
+1. Ad page gallery:
+   - Desktop: a consistent swipeable GRID strip, 3 photos visible at once, every tile the same size (4:5, cover, 8 px gap, 12 px radius). Arrows left and right, swipe or drag, infinite loop.
+   - Phone: 1 photo at a time with a 12 % peek of the next one, swipe, dots, infinite loop.
+   - Clicking any tile opens a full-screen lightbox (dark backdrop) with swipe, arrows, a "2 / 5" counter, infinite loop, Esc or X to close, and preloading of the next and previous photo only.
+   - All photos use the same aspect ratio (no mixed heights like the reference; we want consistency).
+2. Home category cards (Dating, Wellness, …): clicking the card IMAGE or TITLE opens the category page, and that page must show ADS right away (all-India feed for that category), not a city list.
+   - Order: the normal ranking (paid tiers first), then the free ads shuffled with a seed that changes every hour (stable within the hour, so caching and SEO stay sane).
+   - Put the city links for that category under the feed in a compact "Browse by city" pill row.
+   - The city pills on the home cards still go to the city page.
+   - Keep the category page's SEO title, description and canonical as they are.
+3. Review fixes from Opus (Phase 1 review):
+   a) Home hero: the photo looks muddy. Make the dark overlay a left-to-right gradient that covers only the text side (rgba(42,35,22,.85) at 0 % → .35 at 55 % → 0 at 100 %), so the photo side stays bright.
+   b) Home category card photos: their purple and pink tones clash with gold. Add a warm overlay (linear-gradient(180deg, rgba(212,175,55,0) 40%, rgba(42,35,22,.55) 100%)) plus `filter: saturate(.9) sepia(.12)`, so all five feel like one set.
+   c) Ad page: put Share and Report in ONE row under the sections. Left: "Share:" then X / WhatsApp / Copy link as 36 px icon buttons. Right: "Report" as a small text button with a flag icon.
+   d) Security tips box: remove the duplicate "SECURITY TIPS" label. Show one shield icon plus the heading "Stay safe" and one sentence. Put the 4 disclaimer lines in one small muted paragraph (13 px, 1.6 line-height) under the box.
+   e) Phone ad page: the floating Call/WhatsApp bar must sit at the very BOTTOM of the screen (fixed, safe-area padding), never over the middle of the photo. Add bottom page padding equal to its height.
+   f) Register page (Vedant: "I am 18 or over" looks congested): each consent is its own row, a 20 px checkbox, 12 px gap to the label, 14 px text, 12 px between rows, 16 px space above the first row, and the whole row is clickable. Same for the login "remember me" and any other checkbox rows.
+
+### H1.8c — Light animations site-wide (fast)
+CSS plus one tiny IntersectionObserver helper (< 1 KB). No animation library, no new package. Respect `prefers-reduced-motion` (all off).
+- Sections and cards fade in and rise 8 px when they first enter the viewport (300 ms ease-out, 40 ms stagger for up to 6 items). Never animate anything above the fold on first load, which would hurt LCP.
+- Card hover: lift 2 px + shadow (already in place); image zoom 1.03 inside the photo frame (300 ms).
+- Buttons: the shine sweep on hover (already in place) and a 0.98 press scale.
+- Pop-ups and lightbox: fade + scale 0.98→1 (150 ms). The phone sheet slides up (200 ms).
+- Images fade in from opacity 0 when loaded (200 ms), on a tint background with no layout shift.
+- Header: a subtle shadow appears after scrolling 8 px.
+Speed budget (must pass, report the numbers): Lighthouse mobile ≥ 90 performance on /, /dating/mumbai/ and one /ad/ page; CLS ≤ 0.05; no new JS bundle over 5 KB gzipped.
+
+At the end: PHASE DONE 1b report with the Lighthouse numbers, the preview link, and screenshots of the listing page, the ad gallery, the lightbox, the category page feed and the register page at 1440 and 390.

@@ -1,11 +1,11 @@
 "use client";
 
 import { useState } from "react";
-import { Calendar, Check, MapPin, Phone } from "lucide-react";
+import { ArrowUp, Calendar, Check, MapPin, Phone } from "lucide-react";
 import type { ListingDoc } from "@/lib/models";
 import { displayTitle, prettyPlace } from "@/lib/format";
 import { listingPhotos } from "@/lib/media";
-import { SmartImage } from "./SmartImage";
+import { PhotoSwipe } from "./PhotoSwipe";
 import { api, friendlyError } from "@/lib/ui/api";
 import { adPath } from "@/lib/urls";
 import { useUrlPaths } from "../UrlPaths";
@@ -40,7 +40,6 @@ export function AdCard({
   const city = prettyPlace(ad.citySlug);
   const area = ad.place && ad.place !== city ? ad.place : "";
   const place = `${city}${area ? `/ ${area}` : ""}`.slice(0, 22);
-  const current = photos[0];
   const tier = TIER_LABEL[variant];
 
   async function reveal(channel: "phone" | "whatsapp") {
@@ -58,22 +57,24 @@ export function AdCard({
 
   return (
     <article className="tk-card" data-tk="card" data-reveal data-variant={variant} data-contact={superTop ? "1" : undefined}>
-      <a className="tk-card-link" href={href}>
-        <span className="tk-card-photo">
-          <SmartImage
-            src={current}
-            alt={title}
-            seed={ad.slug || title}
-            category={ad.categorySlug}
-            width={200}
-            height={250}
-            priority={priority}
-            sizes="(max-width: 767px) 112px, 200px"
-            className="h-full"
-          />
-          {tier ? <span className="tk-badge-promo" data-tier={variant}>{tier}</span> : null}
-          {photos.length ? <span className="tk-photo-count">📷 {photos.length}</span> : null}
+      <div className="tk-card-photo">
+        <PhotoSwipe
+          photos={photos}
+          title={title}
+          seed={ad.slug || title}
+          category={ad.categorySlug}
+          priority={priority}
+          overlay={<a className="tk-card-hit" href={href} aria-label={title} tabIndex={-1} />}
+        />
+        {photos.length > 1 ? <span className="tk-photo-count">📷 {photos.length}</span> : null}
+      </div>
+      {tier ? (
+        <span className="tk-tier-tab" data-tier={variant}>
+          <ArrowUp size={11} aria-hidden />
+          {tier}
         </span>
+      ) : null}
+      <a className="tk-card-link" href={href}>
         <span className="tk-card-body">
           <span className="tk-card-title">{title}</span>
           {ad.description ? <span className="tk-card-desc">{ad.description}</span> : null}
