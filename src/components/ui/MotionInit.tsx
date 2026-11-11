@@ -28,16 +28,15 @@ export function MotionInit() {
     );
 
     const scan = () => {
-      let step = 0;
-      for (const el of document.querySelectorAll<HTMLElement>(REVEAL_SELECTOR)) {
-        if (seen.has(el)) continue;
-        seen.add(el);
-        if (el.getBoundingClientRect().top < window.innerHeight) continue;
+      // Read every position first, then write: avoids a forced layout per element.
+      const fresh = [...document.querySelectorAll<HTMLElement>(REVEAL_SELECTOR)].filter((el) => !seen.has(el));
+      const below = fresh.filter((el) => el.getBoundingClientRect().top >= window.innerHeight);
+      for (const el of fresh) seen.add(el);
+      below.forEach((el, step) => {
         el.classList.add("tk-rv");
         el.style.setProperty("--tk-d", `${(step % MAX_STAGGER_STEPS) * STAGGER_MS}ms`);
-        step += 1;
         observer.observe(el);
-      }
+      });
       for (const img of document.querySelectorAll<HTMLImageElement>("img.tk-fade-img")) {
         if (img.complete && img.naturalWidth > 0) img.classList.add("is-loaded");
         else img.addEventListener("load", () => img.classList.add("is-loaded"), { once: true });
