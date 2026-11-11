@@ -320,8 +320,8 @@ input, select, textarea { font-size: 16px; }
   max-width: 724px;
   margin: 0;
   color: #fff;
+  text-wrap: balance;
 }
-.tk-hero-mob { display: none; }
 .tk-hero-search {
   position: absolute;
   z-index: 2;
@@ -1167,8 +1167,6 @@ input, select, textarea { font-size: 16px; }
   .tk-hero-photo { width: 55%; }
   .tk-hero-copy { margin-top: 28px; padding-left: 25px; width: 70%; }
   .tk-hero h1 { font-size: 20px; line-height: 1.2; font-weight: 700; }
-  .tk-hero-desk { display: none; }
-  .tk-hero-mob { display: inline; }
   .tk-hero-search { top: 171px; bottom: auto; height: 64px; border-radius: 32px; font-size: 15px; }
   .tk-home-post { display: block; width: calc(100% - 30px); margin: 30px auto 0; height: 49px; border-radius: 10px; font-size: 16px; }
   .tk-home-head h2 { font-size: 24px; }

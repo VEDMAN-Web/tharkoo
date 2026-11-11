@@ -32,17 +32,7 @@ export default async function Home() {
           <img className="tk-hero-photo" src={photo} alt={content.hero.photoAlt} width={960} height={880} />
         )}
         <div className="tk-hero-copy">
-          <h1>
-            <span className="tk-hero-desk">{content.hero.desktop}</span>
-            <span className="tk-hero-mob">
-              {content.hero.mobileLines.map((line, index) => (
-                <span key={line}>
-                  {index ? <br /> : null}
-                  {line}
-                </span>
-              ))}
-            </span>
-          </h1>
+          <h1>{content.hero.desktop}</h1>
         </div>
         <HeroSearch label={content.hero.searchPlaceholder} />
       </section>

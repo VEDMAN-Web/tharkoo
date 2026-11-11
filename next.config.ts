@@ -25,6 +25,9 @@ const nextConfig: NextConfig = {
   allowedDevOrigins: ["127.0.0.1"],
   trailingSlash: true,
   poweredByHeader: false,
+  // Send metadata in <head> for every user agent (Next streams it into <body> for JS-capable
+  // bots and browsers by default). Canonical/robots must be in the first HTML for SEO.
+  htmlLimitedBots: /.*/,
   output: "standalone",
   cacheMaxMemorySize: 16 * 1024 * 1024,
   experimental: {
