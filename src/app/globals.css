@@ -715,7 +715,7 @@ input, select, textarea { font-size: 16px; }
   height: 22px;
   padding: 0 10px;
   border-radius: var(--r-pill);
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 700;
   line-height: 1;
   background: var(--tint-strong);
