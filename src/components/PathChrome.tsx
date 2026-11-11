@@ -39,7 +39,7 @@ type Shell = {
 
 export function PathChrome({ shell, paths, children }: { shell: Shell; paths: UrlPaths; children: React.ReactNode }) {
   const path = usePathname() || "/";
-  if (path.startsWith("/admin")) {
+  if (path.startsWith("/admin") || path.startsWith("/styleguide/admin")) {
     return (
       <UrlPathProvider paths={paths}>
         <div className="min-h-screen bg-bg text-text">
@@ -49,6 +49,8 @@ export function PathChrome({ shell, paths, children }: { shell: Shell; paths: Ur
     );
   }
   const { site, categories, topCities, cities, user } = shell;
+  // Style guides are tool pages: no age gate and no cookie banner.
+  const toolPage = path.startsWith("/styleguide");
   const content = readContent(site.homepage);
   const catProps = plain(categories.map((c) => ({ slug: c.slug || "", name: c.name || "" })));
   const cityProps = plain(cities.map((c) => ({ slug: c.slug || "", name: c.name || "", stateSlug: c.stateSlug })));
@@ -103,6 +105,7 @@ export function PathChrome({ shell, paths, children }: { shell: Shell; paths: Ur
         social={content.socials.length ? content.socials : socialLinks}
         content={content.footer}
       />
+      {toolPage ? null : (
       <AgeGate
         brand="Tharkoo"
         title={content.age.title}
@@ -113,6 +116,8 @@ export function PathChrome({ shell, paths, children }: { shell: Shell; paths: Ur
         no={content.age.no}
         noHref={safeHref(content.age.noHref) || "https://www.google.com"}
       />
+      )}
+      {toolPage ? null : (
       <CookieBanner
         body={content.cookies.body}
         accept={content.cookies.accept}
@@ -120,6 +125,7 @@ export function PathChrome({ shell, paths, children }: { shell: Shell; paths: Ur
         notice={content.cookies.notice}
         noticeHref={safeHref(content.cookies.noticeHref) || "/cookies/"}
       />
+      )}
     </CityProvider>
     </UrlPathProvider>
   );
