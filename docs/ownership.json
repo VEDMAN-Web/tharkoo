@@ -1179,7 +1179,8 @@
       "globs": [
         "src/server/models/layout.ts",
         "docs/ownership.json",
-        "progress/H3.2b.md"
+        "progress/H3.2b.md",
+        "src/server/ranking/pins.ts"
       ]
     }
   }
