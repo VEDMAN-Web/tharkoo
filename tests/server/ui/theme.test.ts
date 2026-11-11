@@ -32,7 +32,6 @@ function tokens() {
 
 /** The spec names the previous theme. Two read-only server files use "midnight" for UTC date math. */
 const ALLOW = new Set([
-  "docs/design/CLONE_SPEC.md",
   "src/server/listings/service.ts",
   "src/server/shared/age.ts",
 ]);

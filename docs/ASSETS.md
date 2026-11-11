@@ -17,7 +17,7 @@ Every file under `public/` after T0.4, with licence or origin. `public/brand/` i
 
 Removed in T0.4:
 
-- `public/skokka/*.jpg` (five files). Copied listing chrome. Deleted, not relicensed.
-- `scripts/patch-skokka-copy.ts`. Deleted with that script's copy.
+- `public/reference-site/*.jpg` (five files). Copied listing chrome. Deleted, not relicensed.
+- `scripts/patch-reference-site-copy.ts`. Deleted with that script's copy.
 
 `src/components/Logo.tsx` still draws its own inline mark. That component is not on the T0.4 allow-list, so this task did not replace it. Use `public/logo.svg` when that component is next edited.
