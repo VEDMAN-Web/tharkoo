@@ -800,7 +800,15 @@
         "src/components/admin/layout-editor/**",
         "src/server/seed/layouts.ts",
         "scripts/seed.ts",
-        "tests/server/layout/home.test.ts"
+        "tests/server/layout/home.test.ts",
+        "docs/ownership.json",
+        "progress/H3.4.md",
+        "progress/H3.4-editor.md",
+        "src/server/layout/blocks.ts",
+        "src/components/admin/nav.ts",
+        "src/app/admin/layout-actions.ts",
+        "tests/server/layout/**",
+        "src/lib/layout/**"
       ]
     },
     "H3.5": {
