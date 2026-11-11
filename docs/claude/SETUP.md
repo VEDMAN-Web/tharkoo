@@ -2,6 +2,14 @@
 
 Run from the repo root. Windows: use **Git Bash** (Claude Code's default shell on Windows). If a command fails because a tool is missing, install it and retry once; if it still fails, report.
 
+> **Windows box** (works in Git Bash and PowerShell; the npm scripts use `cross-env`, so the memory settings work on Windows):
+> - Lint: `npm run lint`
+> - Typecheck: `npm run typecheck`
+> - Tests: `npm test` (176 expected)
+> - Build, Git Bash: `unset MONGODB_URI && npm run build` · PowerShell: `$env:MONGODB_URI=$null; npm run build`
+> - Local production site: `node scripts/local-prod.mjs`
+> - SEO check, Git Bash: `BASE_URL=http://127.0.0.1:4317 node scripts/seo-check.mjs` · PowerShell: `$env:BASE_URL="http://127.0.0.1:4317"; node scripts/seo-check.mjs`
+
 ## 1. Repo
 
 ```bash

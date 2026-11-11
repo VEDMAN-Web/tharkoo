@@ -118,7 +118,7 @@ const progressOk = new Set([
 
 const outside = [];
 for (const file of changedFiles(base)) {
-  if (progressOk.has(file)) continue;
+  if (progressOk.has(file) || file.startsWith("docs/claude/")) continue;
   if (matches(file, excluded) || !matches(file, allowed)) outside.push(file);
 }
 

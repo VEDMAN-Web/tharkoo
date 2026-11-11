@@ -8,7 +8,7 @@ Technical fixes (H1), the admin/dynamic pages (H3) and the SEO center (H4) do no
 
 | ID | Decision | Opus recommendation | Why |
 |---|---|---|---|
-| D1 | What does Tharkoo lead with? | **Property, vehicles, jobs, buy & sell** as the core; pets, education, services next; friendship/meetups as a small community section; dating kept but not on the hero; **remove "wellness – spa, massage"** (or rename to "Fitness & classes" with no spa/massage wording). | Matches your goal (cars + property). Real search demand, lower spam risk, payment gateways accept it. |
+| D1 | What does Tharkoo lead with? **DECIDED 11 Nov: nothing. Neutral placeholder site; Vedant curates categories and content himself in the admin.** | **Property, vehicles, jobs, buy & sell** as the core; pets, education, services next; friendship/meetups as a small community section; dating kept but not on the hero; **remove "wellness – spa, massage"** (or rename to "Fitness & classes" with no spa/massage wording). | Matches your goal (cars + property). Real search demand, lower spam risk, payment gateways accept it. |
 | D2 | Keep the name "Tharkoo"? | Decide now. Sounds like "tharki". If kept, avoid dating-first positioning. | Brand searches, trust, partners. |
 | D3 | Where do we launch? | **Gujarat first**: Surat, Ahmedabad, Vadodara, Rajkot (+ Gandhinagar). Add Mumbai/Pune/Bengaluru later. | You are in Surat and can seed real listings; big portals are weaker in tier-2 long tail. |
 | D4 | Domain | Confirm the domain you own; DNS + HTTPS before any indexing. | Nothing ranks without it. |
@@ -86,3 +86,18 @@ H1.1 robots.txt · H1.2 metadata always in `<head>` · H1.3 crawler-safe rate li
 ## 9. What changes in v2 (after H2.1 keyword evidence + decisions D1–D6)
 
 Opus will add: the keyword → URL map per launch city, the sub-category list and URL pattern, title/H1/description templates per category (entered through the H4.3 templates editor), hub copy rules, and the H5 (content/IA), H6 (design) and H7 (launch) task cards.
+
+## 10. Ahead-of-the-race additions (v1.1, 11 Nov 2026 — committed scope, not optional)
+
+| # | Addition | When | How |
+|---|---|---|---|
+| A1 | **Gujarati + Hindi pages** for launch-city hubs with real listings | after launch content (H5+) | `/gu/…` and `/hi/…` prefixes, hreflang `en-IN` / `gu-IN` / `hi-IN` / `x-default`, translated SEO templates (H4.3) and UI text keys (H3.7 dictionary makes this a data job, not code). Only pages that already pass the indexing rules get a translation. |
+| A2 | **Title A/B testing** on top hubs | after launch, once Search Console has ≥ 28 days of data | SEO center: variant B for a URL group, 28-day CTR comparison from Search Console, keep the winner. Never test on pages with < 100 impressions/week. |
+| A3 | **Low-end Android performance budget** | every public-page task from H3.4 on, enforced in H6 | Lighthouse mobile (Moto G-class throttling) ≥ 90 on home, hub, ad; LCP ≤ 2.5 s; CLS ≤ 0.05; public-page JS ≤ 170 KB gzipped; card images ≤ 60 KB, hero ≤ 150 KB (AVIF/WebP); a CI script fails the build over budget. |
+| A4 | **Cloudflare (free) in front of the server** | launch (H7) | CDN for static files and images, HTTPS, WAF + bot rules that allow verified search bots, page rules never caching `/u/`, `/admin/`, `/api/`. Nginx `real_ip` from `CF-Connecting-IP` (Cloudflare ranges only) so the rate limiter's last-XFF key stays the real visitor; treat bots as "bot" only when Cloudflare marks them verified (UA alone can be faked). |
+| A5 | **Google Jobs + Indexing API** | H4.7 + H7 | Complete `JobPosting` (title, description, datePosted, validThrough, employmentType, hiringOrganization, jobLocation, baseSalary when given). Google's Indexing API is officially allowed for job pages: ping it on publish/expire so job ads appear in hours, not weeks. |
+| A6 | **Real inventory before indexing** | before launch (business task + one code card H3.10) | 20–50 genuine ads per launch category in Surat first (brokers, car dealers, job agencies, coaching classes). H3.10: admin **CSV bulk import** for verified partner accounts (validated, moderated, photos by URL from the partner's own uploads), so a partner's 30 listings go live in one step. |
+| A7 | **Freshness signals** | exists + H4.6 | Visible "updated" dates, sitemap `lastmod`, IndexNow (Bing/Yandex) on publish, expired ads → noindex then 410. |
+| A8 | **Share-driven traffic** | H6 | WhatsApp share on every ad and hub (India's main sharing channel), clean OG cards per category and city. |
+| A9 | **Local backlinks** | from launch (non-code, Vedant's team) | Surat/Gujarat business directories, local news and community sites, college placement cells for jobs, dealer and broker partner sites linking to their Tharkoo listings. |
+| A10 | **Hub copy from facts, not filler** | H4.3 / H5 | Each hub shows its own live numbers: count, price range, top localities, newest-ad date. No swapped-word templates. |

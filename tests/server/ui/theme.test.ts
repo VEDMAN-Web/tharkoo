@@ -95,7 +95,7 @@ describe("light theme", () => {
     const hits: string[] = [];
     for (const folder of ["src", "docs", "public"]) {
       for (const file of walk(path.join(root, folder))) {
-        const rel = path.relative(root, file);
+        const rel = path.relative(root, file).split(path.sep).join("/");
         if (ALLOW.has(rel)) continue;
         if (/\.(png|webp|jpg|jpeg|gif|woff2?)$/i.test(file)) continue;
         const text = readFileSync(file, "utf8");

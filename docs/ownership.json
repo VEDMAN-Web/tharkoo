@@ -656,8 +656,10 @@
       "globs": [
         "package.json",
         "tests/server/ui/theme.test.ts",
-        "docs/claude/SETUP.md",
-        "CLAUDE.md"
+        "docs/claude/**",
+        "CLAUDE.md",
+        ".github/scripts/ownership-check.mjs",
+        "docs/ownership.json"
       ]
     },
     "H0.3": {
@@ -929,6 +931,22 @@
         "src/server/models/cms.ts",
         "src/app/admin/seo/settings/**",
         "tests/server/seo/**"
+      ]
+    },
+    "H0.4": {
+      "branchPrefix": "haiku/h0.4",
+      "globs": [
+        "scripts/preview.mjs",
+        "package.json",
+        "docs/claude/SETUP.md"
+      ]
+    },
+    "H3.10": {
+      "branchPrefix": "haiku/h3.10",
+      "globs": [
+        "src/server/listings/import.ts",
+        "src/app/admin/import/**",
+        "tests/server/listings/import.test.ts"
       ]
     }
   }

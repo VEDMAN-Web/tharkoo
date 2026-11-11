@@ -148,3 +148,7 @@ Existing admin pages that are not rebuilt yet still open inside the new shell (o
 H3.1 shell + UI kit → H3.2 block engine → H3.3 media library → H3.4 home as blocks → H3.5 listing pages as blocks → H3.6 post page as blocks + category fields editor → H3.7 UI text → H3.8 listing order → H3.9 dashboard.
 H4.1 SEO rules module + audit runs → H4.2 SEO overview + Pages & issues → H4.3 Templates + SERP preview → H4.4 Page overrides upgrade → H4.5 Redirects & 404 monitor → H4.6 Indexing rules & sitemaps → H4.7 robots/llms/schema.
 Each card keeps PRs ≤ ~400 lines; Haiku may split a card into parts `a`, `b`, … (branch `haiku/h3.2a-...`) — each part its own PR.
+
+## 8. Placeholder-first rule (Vedant, 11 Nov 2026)
+
+Tharkoo leads with no category. Default content shipped in code and seed is a **neutral placeholder**: brand name, a plain heading such as "Find and post local listings", a search box, the category grid driven by whatever categories are enabled, and neutral placeholder images (abstract shapes or city scenes, no people). No dating-style hero, slogans or portraits in defaults. Vedant chooses categories, text, images and order in the admin. H3.4 (home blocks) ships these neutral defaults. H6 (redesign) is a content-agnostic theme that looks right whatever categories are enabled.
