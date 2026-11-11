@@ -606,7 +606,7 @@ input, select, textarea { font-size: 16px; }
   display: inline-flex;
   align-items: center;
   flex: none;
-  height: 36px;
+  height: 40px;
   padding: 0 16px;
   background: var(--tint);
   border: 1px solid var(--border-2);
@@ -1359,7 +1359,7 @@ input, select, textarea { font-size: 16px; }
   }
   .tk-filters::-webkit-scrollbar { display: none; }
   .tk-feed { gap: 12px; }
-  .tk-card-photo { width: 112px; height: 140px; }
+  .tk-card-photo { width: 112px; height: auto; min-height: 140px; align-self: stretch; }
   .tk-card-body { padding: 10px 12px; gap: 4px; }
   .tk-card-title { font-size: 15px; line-height: 18px; }
   .tk-card-desc { font-size: 12px; line-height: 16px; }
@@ -1386,6 +1386,11 @@ input, select, textarea { font-size: 16px; }
 }
 @media (prefers-reduced-motion: reduce) {
   .tk-modal, .tk-menu { animation: none; }
+}
+@media (min-width: 1024px) {
+  .tk-feed { grid-template-columns: 1fr 1fr; }
+  .tk-promo { grid-column: 1 / -1; }
+  .tk-card-photo { width: 160px; height: 200px; }
 }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after {

@@ -408,7 +408,7 @@ const overlap = await narrowCity.evaluate(() => {
   if (hits(card.querySelector(".tk-badge-promo"), card.querySelector(".tk-card-title"))) return "badge-title";
   if (hits(card.querySelector(".tk-circles"), card.querySelector(".tk-card-meta"))) return "circles-location";
   const photo = card.querySelector("img")?.getBoundingClientRect();
-  if (photo && photo.height > 0 && Math.abs(photo.width / photo.height - 0.8) > 0.12) return "ratio";
+  if (photo && (Math.abs(photo.width - 112) > 2 || photo.height < 138)) return "photo-size";
   return "";
 });
 record("/dating/bengaluru/ overlap", 390, overlap === "", overlap);
