@@ -16,9 +16,16 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   if (!article) return {};
   const paths = await getPaths();
   const path = helpPath(paths, article.slug || slug);
+  const articleTitle = article.title || "Help";
+  const plainTitle = articleTitle.replace(/\s*\|\s*Tharkoo$/, "");
+  const helpTitle = `Help: ${plainTitle} | Tharkoo`;
+  const seoTitle = helpTitle.length < 30 ? `Help: ${plainTitle} guide | Tharkoo` : helpTitle;
+  const plain = (article.body || "").replace(/<[^>]+>/g, " ").replace(/[#*_>\[\]()`]/g, " ").replace(/\s+/g, " ").trim();
+  const clipped = plain.length > 160 ? `${plain.slice(0, 157).replace(/\s+\S*$/, "")}…` : plain;
+  const seoDescription = clipped.length >= 70 ? clipped : `${articleTitle} on Tharkoo help. Read the full guide for step-by-step help with posting, your account and contacting people.`;
   return withUrlSeo(path, {
-    title: `${article.title} | Tharkoo help`,
-    description: (article.body || article.title || "").slice(0, 160),
+    title: seoTitle,
+    description: seoDescription,
     path,
   });
 }

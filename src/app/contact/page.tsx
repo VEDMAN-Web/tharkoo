@@ -15,7 +15,7 @@ const copy = TRUST.contact;
 export async function generateMetadata() {
   const paths = await getPaths();
   return withUrlSeo(contactPath(paths), {
-    title: `${copy.title} | Tharkoo`,
+    title: "Contact Tharkoo support | Tharkoo",
     description: copy.description,
     path: contactPath(paths),
   });

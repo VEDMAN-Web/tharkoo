@@ -5,7 +5,7 @@ import { pageMetadata } from "@/lib/ui/meta";
 const copy = TRUST["prohibited-items"];
 
 export const metadata = pageMetadata({
-  title: `${copy.title} | Tharkoo`,
+  title: "Prohibited items and what Tharkoo does not allow | Tharkoo",
   description: copy.description,
   path: "/prohibited-items/",
 });

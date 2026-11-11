@@ -9,7 +9,7 @@ import { pageMetadata } from "@/lib/ui/meta";
 export const revalidate = 300;
 
 export const metadata = pageMetadata({
-  title: "Categories | Tharkoo",
+  title: "Categories on Tharkoo: dating, jobs, homes and more | Tharkoo",
   description: "Browse every Tharkoo classified category, from dating and jobs to homes, vehicles, pets, and local services.",
   path: "/categories/",
 });

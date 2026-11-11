@@ -10,7 +10,7 @@ export const revalidate = 300;
 export async function generateMetadata() {
   const paths = await getPaths();
   return withUrlSeo(blogPath(paths), {
-    title: "Tharkoo Blog | Tharkoo",
+    title: "Tharkoo Blog: tips for safe, clear classified ads | Tharkoo",
     description: "Notes from Tharkoo on using classifieds, staying safe when you meet someone, and posting a clear ad.",
     path: blogPath(paths),
   });

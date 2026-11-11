@@ -5,7 +5,7 @@ import { pageMetadata } from "@/lib/ui/meta";
 const copy = TRUST["how-it-works"];
 
 export const metadata = pageMetadata({
-  title: `${copy.title} | Tharkoo`,
+  title: "How Tharkoo works: posting, browsing and contacting | Tharkoo",
   description: copy.description,
   path: "/how-it-works/",
 });

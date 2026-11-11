@@ -10,7 +10,7 @@ export const revalidate = 300;
 export async function generateMetadata() {
   const paths = await getPaths();
   return withUrlSeo(helpPath(paths), {
-    title: "Help Center | Tharkoo",
+    title: "Help Center: posting, accounts and contacting people | Tharkoo",
     description: "Guides for posting an ad, managing your account, and contacting someone on Tharkoo.",
     path: helpPath(paths),
   });
