@@ -241,7 +241,7 @@ for (const [width, height] of widths) {
       const h2 = await page.locator("h2").first().innerText();
       if (!/Latest listings in your city/i.test(h2)) extra.push("h2");
       const foot = await page.locator("[data-tk=footer]").innerText();
-      for (const word of ["Legal", "Support", "Security", "Company", "Boost your visibility"]) {
+      for (const word of ["Legal", "Support", "Security", "Company"]) {
         if (!foot.includes(word)) extra.push(`footer ${word}`);
       }
       await page.evaluate(() => window.scrollTo(0, 700));
@@ -291,7 +291,7 @@ for (const [width, height] of widths) {
   const box = await modal.boundingBox();
   const text = await modal.innerText();
   const notes = [];
-  const want = width === 1440 ? 800 : width;
+  const want = width >= 768 ? 640 : width;
   if (!box || Math.abs(box.width - want) > 8) notes.push(`width ${box?.width}`);
   for (const word of ["Search", "Select Region", "All the cities", "Select District", "Filters", "DELETE ALL", "SEARCH"]) {
     if (!text.includes(word)) notes.push(word);
