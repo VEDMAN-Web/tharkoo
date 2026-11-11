@@ -126,8 +126,7 @@ input, select, textarea { font-size: 16px; }
 }
 .tk-btn-primary:hover { background: var(--gold-light); }
 .tk-btn-primary.tk-btn-lg { height: 52px; border-radius: var(--r-btn); }
-.tk-btn-gold,
-.tk-btn-rose {
+.tk-btn-gold {
   background: var(--gold);
   color: var(--ink);
   border-radius: var(--r-btn);
@@ -137,12 +136,9 @@ input, select, textarea { font-size: 16px; }
   font-size: 14px;
   font-weight: 700;
 }
-.tk-btn-gold:hover,
-.tk-btn-rose:hover { background: var(--gold-light); }
-.tk-btn-gold.tk-btn-sm,
-.tk-btn-rose.tk-btn-sm { height: 40px; border-radius: var(--r-btn); font-size: 12px; }
+.tk-btn-gold:hover { background: var(--gold-light); }
+.tk-btn-gold.tk-btn-sm { height: 40px; border-radius: var(--r-btn); font-size: 12px; }
 .tk-btn-outline-gold,
-.tk-btn-outline-rose,
 .tk-btn-outline-primary {
   background: #fff;
   color: var(--primary);
@@ -154,7 +150,6 @@ input, select, textarea { font-size: 16px; }
   font-weight: 700;
 }
 .tk-btn-outline-gold:hover,
-.tk-btn-outline-rose:hover,
 .tk-btn-outline-primary:hover { background: var(--tint); }
 .tk-btn-whatsapp {
   background: var(--wa);

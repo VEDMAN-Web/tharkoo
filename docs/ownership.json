@@ -962,7 +962,19 @@
         "src/app/u/post-insert/**",
         "src/lib/ui/site-content.ts",
         "docs/ownership.json",
-        "tests/server/ui/**"
+        "tests/server/ui/**",
+        "scripts/ui-smoke.mjs",
+        "src/app/error.tsx",
+        "src/app/global-error.tsx",
+        "src/app/styleguide/page.tsx",
+        "src/app/submit-report/page.tsx",
+        "public/brand/**",
+        "public/logo.svg",
+        "public/favicon.svg",
+        "public/apple-touch-icon.png",
+        "src/app/favicon.ico",
+        "src/app/icon*",
+        "src/app/apple-icon*"
       ]
     },
     "H1.7b": {
@@ -978,7 +990,12 @@
         "src/app/u/post-insert/**",
         "src/lib/ui/site-content.ts",
         "docs/ownership.json",
-        "tests/server/ui/**"
+        "tests/server/ui/**",
+        "scripts/ui-smoke.mjs",
+        "src/app/error.tsx",
+        "src/app/global-error.tsx",
+        "src/app/styleguide/page.tsx",
+        "src/app/submit-report/page.tsx"
       ]
     },
     "H1.7c": {
@@ -994,7 +1011,12 @@
         "src/app/u/post-insert/**",
         "src/lib/ui/site-content.ts",
         "docs/ownership.json",
-        "tests/server/ui/**"
+        "tests/server/ui/**",
+        "scripts/ui-smoke.mjs",
+        "src/app/error.tsx",
+        "src/app/global-error.tsx",
+        "src/app/styleguide/page.tsx",
+        "src/app/submit-report/page.tsx"
       ]
     },
     "H1.7d": {
@@ -1010,7 +1032,12 @@
         "src/app/u/post-insert/**",
         "src/lib/ui/site-content.ts",
         "docs/ownership.json",
-        "tests/server/ui/**"
+        "tests/server/ui/**",
+        "scripts/ui-smoke.mjs",
+        "src/app/error.tsx",
+        "src/app/global-error.tsx",
+        "src/app/styleguide/page.tsx",
+        "src/app/submit-report/page.tsx"
       ]
     }
   }

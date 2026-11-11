@@ -18,7 +18,7 @@ export default async function ReportPage({ searchParams }: { searchParams: Promi
         A public report form is coming soon. Until then, use the grievance page and include the ad link.
       </p>
       <p className="mt-4">
-        <Link href="/cms/grievance/" className="tk-btn tk-btn-rose">Open grievance</Link>
+        <Link href="/cms/grievance/" className="tk-btn tk-btn-gold">Open grievance</Link>
       </p>
     </Container>
   );

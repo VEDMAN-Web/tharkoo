@@ -9,7 +9,7 @@ export default function GlobalError({ reset }: { error: Error; reset: () => void
           <p>Tharkoo could not load. Try again, or go back home.</p>
           <p>
             <form action="/" method="get">
-              <button type="submit" style={{ color: "#A63A5E", background: "none", border: 0, font: "inherit" }}>
+              <button type="submit" style={{ color: "#8A6416", background: "none", border: 0, font: "inherit" }}>
                 Back to home
               </button>
             </form>
