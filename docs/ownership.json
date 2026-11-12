@@ -1349,6 +1349,17 @@
         "docs/ownership.json",
         "progress/H0.10.md"
       ]
+    },
+    "H5.1a": {
+      "branchPrefix": "haiku/h5.1a",
+      "globs": [
+        "src/app/submit-report/**",
+        "src/app/api/reports/**",
+        "src/server/reports/**",
+        "tests/server/reports/**",
+        "docs/ownership.json",
+        "progress/H5.1a.md"
+      ]
     }
   }
 }
