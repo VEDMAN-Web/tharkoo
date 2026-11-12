@@ -3,6 +3,7 @@
 import { getStaffFromHeaders, isStaff } from "@/lib/admin-auth";
 import { ForbiddenError, HttpError } from "@/server/http";
 import { getDraft, getPublished, listRevisions, publish, restore, saveDraft } from "@/server/layout/service";
+import { seedHomeLayout } from "@/server/seed/layouts";
 import type { BlockBase, PageKey } from "@/server/models/layout";
 
 type Result<T> = ({ ok: true } & T) | { ok: false; error: string };
@@ -27,6 +28,8 @@ export async function loadLayout(key: PageKey, scope: string) {
   return run(async () => {
     const who = await staff();
     if (!who.roles.some((role) => role === "admin" || role === "superadmin")) throw new ForbiddenError("Only an admin can edit page layouts");
+    // The first time an admin opens the home page editor, start from the page as it is today.
+    if (key === "home" && scope === "default") await seedHomeLayout();
     const [draft, published] = await Promise.all([getDraft(key, scope), getPublished(key, scope)]);
     return { draft: (draft ?? published ?? []) as BlockBase[], published: published as BlockBase[] | null };
   });
