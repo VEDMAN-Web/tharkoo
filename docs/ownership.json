@@ -896,7 +896,10 @@
         "scripts/seo-check.ts",
         "package.json",
         "src/app/api/cron/seo-audit/**",
-        "tests/server/seo/**"
+        "tests/server/seo/**",
+        "src/server/seo/crawl.ts",
+        "src/server/seo/**",
+        "docs/ownership.json"
       ]
     },
     "H4.2": {
@@ -1319,6 +1322,13 @@
       "globs": [
         "docs/ownership.json",
         "progress/H0.9.md"
+      ]
+    },
+    "H0.10": {
+      "branchPrefix": "haiku/h0.10",
+      "globs": [
+        "docs/ownership.json",
+        "progress/H0.10.md"
       ]
     }
   }
