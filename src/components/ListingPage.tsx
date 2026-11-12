@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useState } from "react";
 import { MapPin, Search } from "lucide-react";
-import { AdCard } from "./AdCard";
+import { AdCard, UiTextProvider } from "./ui/AdCard";
 import { EmptyState } from "./ui/EmptyState";
 import { JsonLd, breadcrumbJsonLd } from "@/lib/jsonld";
 import { faqPage } from "@/lib/seo/schema";
@@ -331,6 +331,7 @@ export function ListingPageView({
   };
 
   return (
+    <UiTextProvider texts={texts}>
     <div className="tk-container" style={{ paddingTop: 16, paddingBottom: 24 }}>
       <JsonLd
         data={[
@@ -358,5 +359,6 @@ export function ListingPageView({
       ))}
       {tailAt >= blocks.length ? seoTail : null}
     </div>
+    </UiTextProvider>
   );
 }

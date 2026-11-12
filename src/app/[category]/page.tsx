@@ -11,7 +11,7 @@ import { Breadcrumbs } from "@/components/Breadcrumbs";
 import { JsonLd, breadcrumbJsonLd } from "@/lib/jsonld";
 import { faqPage, itemListNode } from "@/lib/seo/schema";
 import { canonical } from "@/lib/seo";
-import { AdCard } from "@/components/AdCard";
+import { AdCard, UiTextProvider } from "@/components/ui/AdCard";
 import { textOverrides } from "@/app/admin/ui-text/store";
 import { makeT, pickTexts } from "@/lib/ui/text";
 import { resolveListingLayout } from "@/components/blocks/ListingLayout";
@@ -103,7 +103,7 @@ export default async function CategoryHub({ params }: Props) {
   const inFeedId = String(layout.blocks.find((block) => block.type === "listingFeed")?.props.inFeedBlockId ?? "");
 
   return (
-    <>
+    <UiTextProvider texts={pickTexts(texts, "card.")}>
       <JsonLd
         data={[
           breadcrumbJsonLd([
@@ -138,6 +138,6 @@ export default async function CategoryHub({ params }: Props) {
           return block.id === inFeedId ? null : wrap(block.id, block.devices, layout.nodes[block.id] ?? null);
         })}
       </div>
-    </>
+    </UiTextProvider>
   );
 }
