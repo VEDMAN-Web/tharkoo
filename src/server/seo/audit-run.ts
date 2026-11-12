@@ -14,6 +14,12 @@ export function rowsForStorage(result: CrawlResult): SeoAuditRowDoc[] {
     status: r.status,
     inSitemap: r.inSitemap,
     title: r.title.slice(0, 200),
+    desc: r.desc.slice(0, 300),
+    h1: (r.h1[0] ?? "").slice(0, 200),
+    canonical: r.canonical.slice(0, 300),
+    words: r.words,
+    ld: r.ld,
+    noindex: /noindex/i.test(r.robots) || /noindex/i.test(r.xRobots),
     p0: r.p0,
     p1: r.p1,
   });

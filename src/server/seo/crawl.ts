@@ -84,7 +84,8 @@ export async function crawlSite(options: CrawlOptions): Promise<CrawlResult> {
     const xml = await fetcher(shard.replace(base, ""), "google");
     urls.push(...locs(xml.html).map((u) => u.replace(base, "")));
   }
-  urls = [...new Set(urls)].slice(0, cap);
+  const allUrls = [...new Set(urls)];
+  urls = allUrls.slice(0, cap);
   const inSitemap = new Set(urls);
   const robotsTxt = (await fetcher("/robots.txt", "google")).html;
 
@@ -102,7 +103,7 @@ export async function crawlSite(options: CrawlOptions): Promise<CrawlResult> {
     urls: urls.length,
     rows,
     robotsIssues,
-    counts: summarise(rows, urls.length, robotsIssues),
+    counts: summarise(rows, urls.length, robotsIssues, allUrls.length),
     startedAt,
     finishedAt: new Date(),
   };
