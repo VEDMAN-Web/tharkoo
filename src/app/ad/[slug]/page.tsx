@@ -94,9 +94,10 @@ export default async function AdPage({ params }: Props) {
   }
   const ad = await getListingBySlug(slug);
   if (!ad) notFound();
-  const row = (await Listing.findOne({ slug: ad.slug }).select("_id attributes publishedAt expiresAt").lean()) as {
+  const row = (await Listing.findOne({ slug: ad.slug }).select("_id attributes price publishedAt expiresAt").lean()) as {
     _id?: unknown;
     attributes?: unknown;
+    price?: number;
     publishedAt?: Date;
     expiresAt?: Date;
   } | null;
@@ -126,7 +127,7 @@ export default async function AdPage({ params }: Props) {
     url: shareUrl,
     image,
     city,
-    price: listedPrice(row?.attributes),
+    price: typeof row?.price === "number" && row.price > 0 ? row.price : listedPrice(row?.attributes),
     datePosted: row?.publishedAt ? new Date(row.publishedAt).toISOString() : undefined,
     validThrough: row?.expiresAt ? new Date(row.expiresAt).toISOString() : undefined,
     hiringOrganization: textAttr(row?.attributes, "company") || textAttr(row?.attributes, "hiringOrganization"),
@@ -135,7 +136,7 @@ export default async function AdPage({ params }: Props) {
   return (
     <>
       <JsonLd data={structured ? [breadcrumbJsonLd(crumbs), structured] : [breadcrumbJsonLd(crumbs)]} />
-      <AdDetail ad={plain(ad)} categoryName={catName} related={plain(related)} listingId={listingId} crumbs={crumbs} shareUrl={shareUrl} heading={heading} />
+      <AdDetail ad={plain(typeof row?.price === "number" ? { ...ad, price: row.price } : ad)} categoryName={catName} related={plain(related)} listingId={listingId} crumbs={crumbs} shareUrl={shareUrl} heading={heading} />
     </>
   );
 }

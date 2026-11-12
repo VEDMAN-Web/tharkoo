@@ -38,6 +38,7 @@ export function PostWizard({ copy = POST_COPY_DEFAULTS }: { copy?: PostCopy }) {
   const [postal, setPostal] = useState("");
   const [area, setArea] = useState("");
   const [age, setAge] = useState("");
+  const [price, setPrice] = useState("");
   const [nickname, setNickname] = useState("");
   const [title, setTitle] = useState("");
   const [text, setText] = useState("");
@@ -88,6 +89,7 @@ export function PostWizard({ copy = POST_COPY_DEFAULTS }: { copy?: PostCopy }) {
             setPostal(form.postal);
             setArea(form.area);
             setAge(form.age);
+            setPrice(form.price);
             setNickname(form.nickname);
             setTitle(form.title);
             setText(form.text);
@@ -141,6 +143,7 @@ export function PostWizard({ copy = POST_COPY_DEFAULTS }: { copy?: PostCopy }) {
       phone,
       contactMode,
       age,
+      price,
       ageRequired: Boolean(ageField?.required),
       terms,
       adult,
@@ -197,6 +200,7 @@ export function PostWizard({ copy = POST_COPY_DEFAULTS }: { copy?: PostCopy }) {
       body: JSON.stringify({
         stage: "details",
         attributes: { ...attrs, ...(age ? { age: Number(age) } : {}) },
+        price: price.trim() ? Number(price.replace(/[,\s]/g, "")) : null,
         contact,
       }),
     });
@@ -383,6 +387,7 @@ export function PostWizard({ copy = POST_COPY_DEFAULTS }: { copy?: PostCopy }) {
           </Group>
           <Group title={steps.details.title} help={steps.details.help}>
             {ageField ? <TextField id="age" label="Age" required value={age} error={errors.age} onChange={setAge} /> : null}
+            <TextField id="price" label="Price (INR)" value={price} error={errors.price} note="whole rupees, optional" onChange={setPrice} />
             <TextField id="nickname" label="Nickname" required value={nickname} error={errors.nickname} note="max 20 characters" placeholder="Insert your name or nickname" onChange={setNickname} />
             <TextField id="title" label="Title" required area value={title} error={errors.title} note="5 characters required" placeholder="Give your ad a good title" onChange={setTitle} />
             <TextField id="text" label="Text" required area rows={5} value={text} error={errors.text} note="20 characters required" placeholder="Use this space to describe your ad, what you offer and what you like ..." onChange={setText} />

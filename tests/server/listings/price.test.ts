@@ -71,3 +71,22 @@ describe("listing price", () => {
     expect(attributeDenied({ price: 100 }).denied).toBe(true);
   });
 });
+
+describe("price in forms and schema", () => {
+  it("the details schema keeps price, and validatePost rejects non-rupee text", async () => {
+    const { listingPatchBodySchema } = await import("@/server/shared/schemas/listings");
+    const parsed = listingPatchBodySchema.parse({ stage: "details", price: 2500 });
+    expect(parsed).toMatchObject({ price: 2500 });
+    expect(() => listingPatchBodySchema.parse({ stage: "details", price: -1 })).toThrow();
+    const { validatePost, draftToForm } = await import("@/lib/ui/post-form");
+    const base = {
+      categoryId: "c", cityId: "x", nickname: "n", title: "A good title", text: "x".repeat(25), phone: "9876543210",
+      contactMode: "both", age: "", terms: true, adult: true, attrs: {}, fields: [],
+    };
+    expect(validatePost({ ...base, price: "abc" }).price).toBeTruthy();
+    expect(validatePost({ ...base, price: "4,500" }).price).toBeUndefined();
+    expect(validatePost({ ...base, price: "" }).price).toBeUndefined();
+    expect(draftToForm({ price: 900 }).price).toBe("900");
+    expect(draftToForm({}).price).toBe("");
+  });
+});

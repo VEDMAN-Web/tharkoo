@@ -90,6 +90,7 @@ export function AdCard({
             </span>
           ) : null}
           <span className="tk-card-meta">
+            {typeof ad.price === "number" ? <p data-tk="price"><strong>₹{ad.price.toLocaleString("en-IN")}</strong></p> : null}
             <p>
               <Calendar size={12} aria-hidden />
               <strong>{ad.age ? `${ad.age} years` : prettyPlace(ad.categorySlug)}</strong>

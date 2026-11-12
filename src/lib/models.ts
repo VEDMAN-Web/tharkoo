@@ -69,6 +69,8 @@ export interface ListingDoc extends BaseDoc {
   description?: string;
   displayName?: string;
   age?: number;
+  /** Asking price in whole rupees. */
+  price?: number;
   categorySlug?: string;
   stateSlug?: string;
   citySlug?: string;

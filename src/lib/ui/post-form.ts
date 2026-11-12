@@ -9,6 +9,7 @@ export type PostDraftInput = {
   phone: string;
   contactMode: string;
   age: string;
+  price?: string;
   ageRequired?: boolean;
   terms: boolean;
   adult: boolean;
@@ -27,6 +28,7 @@ export function validatePost(input: PostDraftInput) {
   if (input.contactMode !== "email" && !input.phone.replace(/[\s-]/g, "")) next.phone = "If you want to be contacted by phone, please fill in this field";
   if (input.ageRequired && !input.age.trim()) next.age = "Please, fill in this field";
   else if (input.age && (Number(input.age) < 18 || Number(input.age) > 120)) next.age = "Invalid field";
+  if (input.price && input.price.trim() && !/^\d{1,10}$/.test(input.price.replace(/[,\s]/g, ""))) next.price = "Enter the price in whole rupees";
   if (!input.terms) next.terms = "Please, fill in this field";
   if (!input.adult) next.adult = "Please, fill in this field";
   for (const field of input.fields) {
@@ -43,6 +45,7 @@ export type SavedDraft = {
   cityId?: string | null;
   districtId?: string | null;
   attributes?: Record<string, unknown> | null;
+  price?: number | null;
   contact?: { phone?: string | null; whatsapp?: string | null; telegram?: string | null } | null;
   mediaIds?: string[] | null;
 };
@@ -61,6 +64,7 @@ export function draftToForm(row: SavedDraft) {
     cityId: row.cityId || "",
     districtId: row.districtId || "",
     age: attributes.age === undefined || attributes.age === null ? "" : String(attributes.age),
+    price: typeof row.price === "number" ? String(row.price) : "",
     nickname: typeof attributes.nickname === "string" ? attributes.nickname : "",
     address: typeof attributes.address === "string" ? attributes.address : "",
     postal: typeof attributes.postal === "string" ? attributes.postal : "",

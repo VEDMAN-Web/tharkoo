@@ -114,6 +114,7 @@ export function AdDetail({
                   {ad.age ? (
                     <span><User size={14} /> {ad.age} years</span>
                   ) : null}
+                  {typeof ad.price === "number" ? <span data-tk="price"><strong>₹{ad.price.toLocaleString("en-IN")}</strong></span> : null}
                   <span>
                     <MapPin size={14} /> <strong>{city}</strong>
                     {district ? ` / ${district}` : ""}
