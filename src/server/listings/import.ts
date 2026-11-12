@@ -5,7 +5,7 @@ import { connectDb } from "@/lib/db";
 import { AuditRepository } from "@/server/audit";
 import { ForbiddenError, HttpError, NotFoundError, ValidationError } from "@/server/http";
 import { parseCsv } from "@/server/listings/csv";
-import { createDraft, patchListing } from "@/server/listings/service";
+import { createDraft, notifyIndexNow, patchListing } from "@/server/listings/service";
 import {
   BannedWord,
   Category,
@@ -443,6 +443,10 @@ async function importRow(input: RowInput, partnerId: string, status: ImportStatu
     await patchListing(id, partnerId, { stage: "details", attributes: input.attributes, contact: { acceptForm: true } }, requestId);
     if (input.mediaIds.length) await patchListing(id, partnerId, { stage: "photos", mediaIds: input.mediaIds }, requestId);
     await finalise(id, status, actor);
+    if (status === "active") {
+      const slug = (await Listing.findById(id).select("slug").lean<{ slug?: string }>())?.slug;
+      if (slug) await notifyIndexNow([`/ad/${slug}/`]);
+    }
   } catch (error) {
     await Listing.updateOne({ _id: id }, { $set: { status: "removed" } });
     throw error;

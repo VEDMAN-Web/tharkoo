@@ -1,5 +1,8 @@
 import mongoose from "mongoose";
-import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
+import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
+
+const queueIndexNow = vi.hoisted(() => vi.fn());
+vi.mock("@/server/indexnow/ping", () => ({ queueIndexNow }));
 import { parseCsv } from "@/server/listings/csv";
 import { MAX_IMPORT_ROWS, dryRunImport, runImport, type ImportActor } from "@/server/listings/import";
 import { AuditEvent, BannedWord, Category, Listing, Location, MediaAsset, User } from "@/server/models";
@@ -127,6 +130,17 @@ describe("partner import", () => {
     expect(listing?.slug).toBe("gear-cycle");
     expect(listing?.seoNoindex).toBe(false);
     expect(listing?.expiresAt).toBeInstanceOf(Date);
+  });
+
+  it("pings IndexNow for each ad that goes straight to active, and not for pending imports", async () => {
+    const owner = await partner();
+    await catalogue(owner._id);
+    queueIndexNow.mockClear();
+    await runImport(admin, owner.email, file(row("Held cycle")), "pending", "req-4");
+    expect(queueIndexNow).not.toHaveBeenCalled();
+    await runImport(superadmin, owner.email, file(row("Fresh cycle"), row("Second cycle")), "active", "req-5");
+    const pinged = queueIndexNow.mock.calls.flatMap((call) => call[0] as string[]).sort();
+    expect(pinged).toEqual(["/ad/fresh-cycle/", "/ad/second-cycle/"]);
   });
 
   it("reports a row with a missing required field and does not import it", async () => {
