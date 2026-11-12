@@ -792,26 +792,18 @@
     "H3.4": {
       "branchPrefix": "haiku/h3.4",
       "globs": [
+        "docs/ownership.json",
+        "progress/H3.4-editor.md",
+        "scripts/seed.ts",
+        "src/app/admin/homepage/**",
+        "src/app/admin/layout-actions.ts",
         "src/app/page.tsx",
         "src/components/HomeBlocks.tsx",
+        "src/components/admin/layout-editor/**",
         "src/components/blocks/**",
         "src/server/layout/defaults/home.ts",
-        "src/app/admin/homepage/**",
-        "src/components/admin/layout-editor/**",
         "src/server/seed/layouts.ts",
-        "scripts/seed.ts",
-        "tests/server/layout/home.test.ts",
-        "docs/ownership.json",
-        "progress/H3.4.md",
-        "progress/H3.4-editor.md",
-        "src/server/layout/blocks.ts",
-        "src/components/admin/nav.ts",
-        "src/app/admin/layout-actions.ts",
-        "tests/server/layout/**",
-        "src/lib/layout/**",
-        "src/server/layout/service.ts",
-        "src/server/seed/run.ts",
-        "src/server/layout/defaults/**"
+        "tests/server/layout/home.test.ts"
       ]
     },
     "H3.5": {
