@@ -30,6 +30,7 @@ export interface CategoryFieldDoc {
   filterable?: boolean;
   shownOnCard?: boolean;
   placeholder?: string;
+  help?: string;
   optionLabels?: Record<string, string>;
 }
 
@@ -114,6 +115,7 @@ const fieldDefinitionSchema = new Schema<CategoryFieldDoc>(
     filterable: { type: Boolean, default: true },
     shownOnCard: { type: Boolean, default: false },
     placeholder: { type: String, default: "" },
+    help: { type: String, default: "" },
     optionLabels: { type: Schema.Types.Mixed, default: {} },
   },
   { _id: false },

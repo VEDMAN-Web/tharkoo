@@ -69,7 +69,7 @@ export const NAV_GROUPS: NavGroup[] = [
     items: [
       item("home-page", "Home page", "/admin/homepage/", "home", "admin"),
       item("listing-pages", "Listing pages", "/admin/listing-pages/", "page", "admin", "H3.5"),
-      item("post-ad-page", "Post-ad page", "/admin/post-ad-page/", "page", "admin", "H3.6"),
+      item("post-ad-page", "Post-ad page", "/admin/post-page/", "page", "admin"),
       item("ui-text", "UI text", "/admin/ui-text/", "text", "admin", "H3.7"),
       item("menus", "Menus & footer", "/admin/menus/", "menu", "admin"),
       item("banners", "Banners & notices", "/admin/banners/", "bell", "admin", "later"),
