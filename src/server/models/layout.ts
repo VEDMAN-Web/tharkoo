@@ -137,7 +137,7 @@ const listingPinSchema = new Schema<ListingPinDoc>(
     endsAt: { type: Date, default: null },
     createdBy: { type: String, default: "" },
   },
-  { timestamps: { createdAt: true, updatedAt: false }, collection: collectionName("listing_pins", "ListingPin") },
+  { timestamps: { createdAt: true, updatedAt: false }, collection: collectionName("listingpins", "ListingPin") },
 );
 listingPinSchema.index({ scope: 1, position: 1 });
 

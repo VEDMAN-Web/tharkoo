@@ -1174,6 +1174,15 @@
         "docs/ownership.json"
       ]
     },
+    "H3.2b": {
+      "branchPrefix": "haiku/h3.2b",
+      "globs": [
+        "src/server/models/layout.ts",
+        "src/server/ranking/pins.ts",
+        "docs/ownership.json",
+        "progress/H3.2b.md"
+      ]
+    },
     "H3.1b": {
       "branchPrefix": "haiku/h3.1b",
       "globs": [
