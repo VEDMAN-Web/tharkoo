@@ -444,6 +444,16 @@ async function finalise(id: string, status: ImportStatus, actor: ImportActor) {
   await ListingVersion.create({ listingId: listing._id, version, snapshot, actorId: actor.id });
 }
 
+/** Same call normal publishing makes (queueIndexNow), which batches the paths and does nothing without INDEXNOW_KEY. */
+async function pingIndexNow(paths: string[]) {
+  try {
+    const { queueIndexNow } = await import("@/server/indexnow/ping");
+    queueIndexNow(paths);
+  } catch {
+    /* a failed ping must never undo an import */
+  }
+}
+
 async function importRow(input: RowInput, partnerId: string, status: ImportStatus, actor: ImportActor, requestId: string) {
   const draft = await createDraft(
     partnerId,
@@ -456,6 +466,10 @@ async function importRow(input: RowInput, partnerId: string, status: ImportStatu
     await patchListing(id, partnerId, { stage: "details", attributes: input.attributes, price: input.price, contact: { acceptForm: true } }, requestId);
     if (input.mediaIds.length) await patchListing(id, partnerId, { stage: "photos", mediaIds: input.mediaIds }, requestId);
     await finalise(id, status, actor);
+    if (status === "active") {
+      const slug = (await Listing.findById(id).select("slug").lean<{ slug?: string }>())?.slug;
+      if (slug) await pingIndexNow([`/ad/${slug}/`]);
+    }
   } catch (error) {
     await Listing.updateOne({ _id: id }, { $set: { status: "removed" } });
     throw error;
