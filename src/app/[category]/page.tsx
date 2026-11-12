@@ -12,6 +12,8 @@ import { JsonLd, breadcrumbJsonLd } from "@/lib/jsonld";
 import { faqPage, itemListNode } from "@/lib/seo/schema";
 import { canonical } from "@/lib/seo";
 import { AdCard } from "@/components/AdCard";
+import { textOverrides } from "@/app/admin/ui-text/store";
+import { makeT, pickTexts } from "@/lib/ui/text";
 import { resolveListingLayout } from "@/components/blocks/ListingLayout";
 import { deviceClass } from "@/components/blocks/device";
 import { listingHeading } from "@/lib/layout/listing";
@@ -49,6 +51,8 @@ export default async function CategoryHub({ params }: Props) {
     getPaths(),
     urlHeading(categoryPath(cat.slug || category), `${cat.name} in India`),
   ]);
+  const texts = await textOverrides();
+  const t = makeT(texts);
   const vars = { category: cat.name, site: site.name, year: new Date().getFullYear() };
   const copy = mergeLanding(
     fallbackLanding({ category: cat.name || category, count: feed.total, site: site.name }),
@@ -75,7 +79,7 @@ export default async function CategoryHub({ params }: Props) {
         ))}
       </div>
       <section className="tk-browse-city" data-tk="browse-by-city">
-        <h2>Browse by city</h2>
+        <h2>{t("listing.hub.browseByCity")}</h2>
         <div className="tk-pills tk-pills-left">
           {states.flatMap((state) =>
             listed
@@ -103,7 +107,7 @@ export default async function CategoryHub({ params }: Props) {
       <JsonLd
         data={[
           breadcrumbJsonLd([
-            { name: "Tharkoo India", path: "/" },
+            { name: t("listing.crumb.home"), path: "/" },
             { name: cat.name || category, path: categoryPath(cat.slug || category) },
           ]),
           itemListNode({
@@ -125,7 +129,7 @@ export default async function CategoryHub({ params }: Props) {
         <MapPin className="tk-banner-pins tk-icon-lg" size={180} color="#fff" aria-hidden />
       </div>
       <div className="tk-container" style={{ paddingBottom: 32 }}>
-        <Breadcrumbs crumbs={[{ name: "Tharkoo India", path: "/" }, { name: cat.name!, path: categoryPath(cat.slug || category) }]} />
+        <Breadcrumbs crumbs={[{ name: t("listing.crumb.home"), path: "/" }, { name: cat.name!, path: categoryPath(cat.slug || category) }]} />
         {/* Blocks in the order the layout gives. The category page draws the ads and the SEO text itself (the ads come with the text below them);
             filters, nearby cities and similar link blocks belong to city pages and are skipped here. */}
         {layout.blocks.map((block) => {
