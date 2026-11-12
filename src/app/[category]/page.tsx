@@ -6,6 +6,7 @@ import { getCategory, getCities, getFeed, getSeoFor, getSite, getStarListings, g
 import { getPaths } from "@/server/urls/service";
 import { adPath, categoryPath, placePath } from "@/lib/urls";
 import { fillTemplate } from "@/lib/seo";
+import { getIndexing, isCategoryOn } from "@/server/seo/indexing";
 import { withUrlSeo, urlHeading } from "@/lib/seo/override";
 import { Breadcrumbs } from "@/components/Breadcrumbs";
 import { JsonLd, breadcrumbJsonLd } from "@/lib/jsonld";
@@ -32,7 +33,8 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const title = fillTemplate(seo?.title || "{category} classifieds across India | Tharkoo", vars);
   const description = fillTemplate(seo?.description || "Browse {category} on Tharkoo: listings from people across Indian cities. Filter by city and district, see photos and contact posters directly.", vars);
   const path = categoryPath(cat.slug || category);
-  return withUrlSeo(path, { title, description, path });
+  const on = isCategoryOn(await getIndexing(), cat.slug || category);
+  return withUrlSeo(path, { title, description, path, index: on });
 }
 
 export default async function CategoryHub({ params }: Props) {

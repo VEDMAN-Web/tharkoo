@@ -5,6 +5,7 @@ import { connectDb } from "@/lib/db";
 import { Listing } from "@/server/models";
 import { countMatching } from "@/server/search";
 import { getPaths, getUrlOverride } from "@/server/urls/service";
+import { districtMinimum, getIndexing, hubMinimum, isCategoryOn, isCityOn } from "@/server/seo/indexing";
 
 export type PageType = "home" | "category" | "city" | "district" | "tag" | "ad" | "search" | "other";
 
@@ -28,6 +29,8 @@ export interface ExplainInput {
   adEnded?: boolean;
   /** District hub whose name matches its city. */
   aliasDistrict?: boolean;
+  /** Switched off in Indexing rules. */
+  switchedOff?: "category" | "city";
 }
 
 export interface EditorLink {
@@ -62,6 +65,13 @@ export function explainIndexability(input: ExplainInput): Explanation {
   const editor = editorFor(input.pageType, input.overrideNoindex);
   const no = (...reasons: string[]): Explanation => ({ indexable: false, reasons, editor });
   if (input.overrideNoindex) return no("noindex: a page override sets this URL to noindex");
+  if (input.switchedOff) {
+    return {
+      indexable: false,
+      reasons: [`noindex and left out of the sitemap: the ${input.switchedOff} is switched off in Indexing rules`],
+      editor: { label: "Open Indexing rules", href: "/admin/seo/indexing/" },
+    };
+  }
   if (input.pageType === "ad") {
     if (input.adEnded) return no("noindex: this ad has ended");
     if (input.demoAd) return no("noindex: demo ad (placeholder content is never indexed)");
@@ -129,15 +139,20 @@ export async function explainUrl(raw: string): Promise<Explanation | { error: st
   }
   const category = await getCategory(segments[0]);
   if (!category) return explainIndexability({ ...base, pageType: "other" });
-  const minHub = category.minListingsIndex ?? DEFAULT_MIN_HUB;
-  const minDistrict = category.minListingsLocality ?? DEFAULT_MIN_DISTRICT;
+  const rules = await getIndexing();
+  const categoryOff = !isCategoryOn(rules, category.slug);
+  const citySlug = segments[1];
+  const cityOff = segments.length >= 2 && segments[1] !== paths.tag && !isCityOn(rules, citySlug);
+  const switchedOff = categoryOff ? ("category" as const) : cityOff ? ("city" as const) : undefined;
+  const minHub = hubMinimum(rules, category, cityOff ? undefined : citySlug);
+  const minDistrict = districtMinimum(rules, category, cityOff ? undefined : citySlug);
   if (segments.length === 1) {
     const count = await countMatching({ categorySlug: category.slug });
-    return explainIndexability({ ...base, pageType: "category", count, minimum: minHub });
+    return explainIndexability({ ...base, pageType: "category", count, minimum: minHub, switchedOff });
   }
   if (segments[1] === paths.tag && segments[2]) {
     const count = await countMatching({ categorySlug: category.slug, tag: segments[2] });
-    return explainIndexability({ ...base, pageType: "tag", count, minimum: minHub });
+    return explainIndexability({ ...base, pageType: "tag", count, minimum: minHub, switchedOff });
   }
   const place = await getLocationBySlug(segments[1]);
   if (!place) return { error: "No city or state with that address" };
@@ -145,7 +160,7 @@ export async function explainUrl(raw: string): Promise<Explanation | { error: st
     const count = await countMatching(
       place.kind === "state" ? { categorySlug: category.slug, stateSlug: place.slug } : { categorySlug: category.slug, citySlug: place.slug },
     );
-    return explainIndexability({ ...base, pageType: "city", count, minimum: minHub });
+    return explainIndexability({ ...base, pageType: "city", count, minimum: minHub, switchedOff });
   }
   const district = await getLocationBySlug(segments[2]);
   const count = await countMatching({ categorySlug: category.slug, citySlug: place.slug, districtSlug: segments[2] });
@@ -154,6 +169,7 @@ export async function explainUrl(raw: string): Promise<Explanation | { error: st
     pageType: "district",
     count,
     minimum: minDistrict,
+    switchedOff,
     aliasDistrict: Boolean(district && isCityAlias(place.name, district.name)),
   });
 }
