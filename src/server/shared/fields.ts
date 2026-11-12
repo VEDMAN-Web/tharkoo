@@ -29,6 +29,7 @@ export interface FieldDefinition {
   filterable?: boolean;
   shownOnCard?: boolean;
   placeholder?: string;
+  help?: string;
   optionLabels?: Record<string, string>;
 }
 
@@ -49,6 +50,7 @@ export const fieldDefinitionSchema = z
     filterable: z.boolean().optional().default(true),
     shownOnCard: z.boolean().optional().default(false),
     placeholder: z.string().trim().max(120).optional().default(""),
+    help: z.string().trim().max(200).optional().default(""),
     optionLabels: z.record(z.string(), z.string().trim().max(80)).optional(),
   })
   .superRefine((field, context) => {

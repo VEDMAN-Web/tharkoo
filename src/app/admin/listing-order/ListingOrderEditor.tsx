@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 import { DataTable, Notice, SaveBar, SortableList, Toggle, type Column, type SortableItem } from "@/components/admin/ui";
 import type { loadListingOrder } from "@/server/ranking/admin";
+import { scopeFromParts } from "@/server/ranking/scope";
 import { addPinAction, previewAction, removePinAction, saveSettingsAction, setHiddenAction } from "./actions";
 
 type State = Awaited<ReturnType<typeof loadListingOrder>>;
@@ -11,6 +12,7 @@ type Pin = State["pins"][number];
 type Hidden = State["hidden"][number];
 type PreviewRow = { position: number; id: string; title: string; slug: string; tier: string; verified: boolean; pinned: boolean };
 type Option = { slug: string; name: string };
+type DistrictOption = Option & { citySlug: string };
 
 const TIER_LABEL: Record<string, string> = {
   star: "Star",
@@ -27,16 +29,11 @@ function tierItems(order: readonly string[]): SortableItem[] {
   return order.map((code) => ({ id: code, label: TIER_LABEL[code] ?? code }));
 }
 
-function scopeOf(category: string, city: string) {
-  if (!category) return "home";
-  return `hub:${category}${city ? `/${city}` : ""}`;
-}
-
 function when(value: string | null) {
   return value ? new Date(value).toISOString().slice(0, 10) : "any time";
 }
 
-export function ListingOrderEditor({ initial, categories, cities }: { initial: State; categories: Option[]; cities: Option[] }) {
+export function ListingOrderEditor({ initial, categories, cities, districts }: { initial: State; categories: Option[]; cities: Option[]; districts: DistrictOption[] }) {
   const router = useRouter();
   const [pending, startTransition] = useTransition();
   const [tiers, setTiers] = useState<SortableItem[]>(tierItems(initial.settings.tierOrder));
@@ -45,6 +42,7 @@ export function ListingOrderEditor({ initial, categories, cities }: { initial: S
   const [dirty, setDirty] = useState(false);
   const [category, setCategory] = useState("");
   const [city, setCity] = useState("");
+  const [district, setDistrict] = useState("");
   const [rows, setRows] = useState<PreviewRow[] | null>(null);
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
@@ -54,7 +52,8 @@ export function ListingOrderEditor({ initial, categories, cities }: { initial: S
   const [endsAt, setEndsAt] = useState("");
   const [hideRef, setHideRef] = useState("");
 
-  const scope = scopeOf(category, city);
+  const scope = scopeFromParts(category, city, district);
+  const cityDistricts = districts.filter((item) => item.citySlug === city);
   const draft = () => ({ tierOrder: tiers.map((item) => item.id), verifiedFirst, photoFirst });
 
   /** Runs a server action, then shows its message or error and reloads the lists. */
@@ -143,7 +142,7 @@ export function ListingOrderEditor({ initial, categories, cities }: { initial: S
         <div className="adm-grid">
           <label className="adm-field">
             <span className="adm-field-label">Category</span>
-            <select className="adm-input" value={category} onChange={(event) => { setCategory(event.target.value); setCity(""); setRows(null); }}>
+            <select className="adm-input" value={category} onChange={(event) => { setCategory(event.target.value); setCity(""); setDistrict(""); setRows(null); }}>
               <option value="">Home page</option>
               {categories.map((item) => (
                 <option key={item.slug} value={item.slug}>{item.name}</option>
@@ -152,9 +151,18 @@ export function ListingOrderEditor({ initial, categories, cities }: { initial: S
           </label>
           <label className="adm-field">
             <span className="adm-field-label">City</span>
-            <select className="adm-input" value={city} disabled={!category} onChange={(event) => { setCity(event.target.value); setRows(null); }}>
+            <select className="adm-input" value={city} disabled={!category} onChange={(event) => { setCity(event.target.value); setDistrict(""); setRows(null); }}>
               <option value="">All cities</option>
               {cities.map((item) => (
+                <option key={item.slug} value={item.slug}>{item.name}</option>
+              ))}
+            </select>
+          </label>
+          <label className="adm-field">
+            <span className="adm-field-label">District</span>
+            <select className="adm-input" value={district} disabled={!city || cityDistricts.length === 0} onChange={(event) => { setDistrict(event.target.value); setRows(null); }}>
+              <option value="">All districts</option>
+              {cityDistricts.map((item) => (
                 <option key={item.slug} value={item.slug}>{item.name}</option>
               ))}
             </select>

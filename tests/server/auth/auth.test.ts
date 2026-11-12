@@ -146,13 +146,13 @@ describe("auth routes", () => {
     expect(sessionCookieHeader("abc", true)).toMatch(/Path=\//);
   });
 
-  it("returns 429 on the sixth wrong password and keeps the counter in Mongo", async () => {
+  it("returns 429 on the 21st wrong password and keeps the counter in Mongo", async () => {
     const email = "lock@example.com";
     await withLogs(async (logs) => {
       await call("POST", "register", person(email));
       await call("POST", "verify-email", { token: mailToken(logs) });
     });
-    for (let attempt = 0; attempt < 5; attempt += 1) {
+    for (let attempt = 0; attempt < 20; attempt += 1) {
       const failed = await call("POST", "login", { email, password: "wrong-password" });
       expect(failed.status).toBe(401);
     }
@@ -162,7 +162,7 @@ describe("auth routes", () => {
     const body = await blocked.json();
     expect(body.error.code).toBe("RATE_LIMITED");
     const doc = await mongoose.connection.collection("auth_rate_limits").findOne({ key: `login:${email}` });
-    expect(doc?.count).toBe(6);
+    expect(doc?.count).toBe(21);
   });
 
   it("revokes every session when the password is reset", async () => {
