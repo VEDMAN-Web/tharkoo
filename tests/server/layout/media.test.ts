@@ -2,7 +2,7 @@ import { existsSync } from "node:fs";
 import { mkdtemp, readdir, rm } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
-import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
+import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 import { publish, saveDraft } from "@/server/layout/service";
 import {
   SITE_MEDIA_MAX_BYTES,
@@ -15,6 +15,7 @@ import {
   uploadSiteMedia,
 } from "@/server/layout/media";
 import { AuditEvent, SiteMedia } from "@/server/models";
+import { setCloudinaryClient, setCloudinaryUploader, type CloudinaryClient } from "@/server/media/client";
 import { denyTerm } from "@/server/shared/policy";
 import { clearMemoryMongo, connectMemoryMongo, disconnectMemoryMongo } from "../../setup/mongo";
 
@@ -201,5 +202,78 @@ describe("delete", () => {
     await saveDraft({ key: "home", scope: "default", blocks: [banner({ assetId: used.id, src: used.url, alt: used.alt, width: 10, height: 10 })], ...admin });
     const unused = await listSiteMedia({ unused: true }, admin.roles);
     expect(unused.items.map((i) => i.alt)).toEqual(["Nobody uses me"]);
+  });
+});
+
+describe("storage adapter", () => {
+  const names = ["CLOUDINARY_CLOUD_NAME", "CLOUDINARY_API_KEY", "CLOUDINARY_API_SECRET", "VERCEL"] as const;
+
+  beforeEach(() => {
+    for (const name of names) delete process.env[name];
+  });
+  afterAll(() => {
+    for (const name of names) delete process.env[name];
+    setCloudinaryUploader(null);
+    setCloudinaryClient(null);
+  });
+
+  function cloudEnv() {
+    process.env.CLOUDINARY_CLOUD_NAME = "demo";
+    process.env.CLOUDINARY_API_KEY = "key";
+    process.env.CLOUDINARY_API_SECRET = "secret";
+  }
+
+  it("uploads to the tharkoo/ folder when all three Cloudinary names are set, and writes no local file", async () => {
+    cloudEnv();
+    const upload = vi.fn(async (_data: Buffer, options: { folder: string; publicId: string }) => ({
+      url: `https://res.cloudinary.com/demo/image/upload/${options.folder}/${options.publicId}.png`,
+      publicId: `${options.folder}/${options.publicId}`,
+    }));
+    setCloudinaryUploader(upload);
+    const item = await uploadSiteMedia({ file: { type: "image/png", data: png(10, 10) }, alt: "A cloud picture", ...admin });
+    expect(upload).toHaveBeenCalledTimes(1);
+    expect(upload.mock.calls[0][1].folder).toBe("tharkoo/site");
+    expect(item.url).toMatch(/^https:\/\/res\.cloudinary\.com\/demo\/image\/upload\/tharkoo\/site\//);
+    expect(await readdir(dir)).toHaveLength(0);
+    expect(JSON.stringify(item)).not.toContain("secret");
+  });
+
+  it("deletes the remote file through the client", async () => {
+    cloudEnv();
+    setCloudinaryUploader(async (_d, o) => ({ url: `https://res.cloudinary.com/demo/${o.publicId}.png`, publicId: `${o.folder}/${o.publicId}` }));
+    const destroyed: string[] = [];
+    setCloudinaryClient({
+      async resource() {
+        return null;
+      },
+      async destroy(id) {
+        destroyed.push(id);
+      },
+      async list() {
+        return [];
+      },
+      signedDownload() {
+        return "";
+      },
+    } satisfies CloudinaryClient);
+    const item = await uploadSiteMedia({ file: { type: "image/png", data: png(10, 10) }, alt: "A cloud picture", ...admin });
+    await deleteSiteMedia(item.id, admin.email, admin.roles);
+    expect(destroyed).toHaveLength(1);
+    expect(destroyed[0]).toMatch(/^tharkoo\/site\//);
+  });
+
+  it("uses local disk when only some Cloudinary names are set", async () => {
+    process.env.CLOUDINARY_CLOUD_NAME = "demo";
+    const item = await uploadSiteMedia({ file: { type: "image/png", data: png(10, 10) }, alt: "A local picture", ...admin });
+    expect(item.url).toMatch(/^\/uploads\//);
+    expect(await readdir(dir)).toHaveLength(1);
+  });
+
+  it("refuses with a clear notice on Vercel without Cloudinary", async () => {
+    process.env.VERCEL = "1";
+    await expect(uploadSiteMedia({ file: { type: "image/png", data: png(10, 10) }, alt: "A picture", ...admin })).rejects.toThrow(
+      "Image upload needs Cloudinary on this server",
+    );
+    expect(await SiteMedia.countDocuments()).toBe(0);
   });
 });

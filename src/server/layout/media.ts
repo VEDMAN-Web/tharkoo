@@ -6,6 +6,8 @@ import { connectDb } from "@/lib/db";
 import { isAdminRole } from "@/lib/ui/site-content";
 import { AuditRepository } from "@/server/audit";
 import { ConflictError, ForbiddenError, NotFoundError, ValidationError } from "@/server/http";
+import { cloudinaryClient, uploadToCloudinary } from "@/server/media/client";
+import { CLOUDINARY_FOLDER, UPLOAD_NEEDS_CLOUDINARY, optionalCloudinary, uploadsAvailable } from "@/server/media/config";
 import { PageLayout, SiteMedia, User } from "@/server/models";
 import type { BlockBase, SiteMediaDoc } from "@/server/models/layout";
 import { textDenied } from "@/server/shared/policy";
@@ -195,14 +197,24 @@ export async function uploadSiteMedia(input: {
   const tags = cleanTags(input.tags);
   const size = readImageSize(file.data, file.type);
   if (!size || size.width < 1 || size.height < 1) throw new ValidationError("This file is not a valid jpeg, png or webp image");
+  if (!uploadsAvailable()) throw new ConflictError(`${UPLOAD_NEEDS_CLOUDINARY}. Add the Cloudinary settings, then try again.`);
   await connectDb();
-  const name = `${new Types.ObjectId().toHexString()}.${TYPES[file.type]}`;
-  const dir = siteMediaDir();
-  await mkdir(dir, { recursive: true });
-  await writeFile(path.join(dir, name), file.data);
+  const id = new Types.ObjectId().toHexString();
+  const name = `${id}.${TYPES[file.type]}`;
+  let url = `/uploads/${name}`;
+  let objectKey = `site/${name}`;
+  if (optionalCloudinary()) {
+    const stored = await uploadToCloudinary(file.data, { contentType: file.type, folder: `${CLOUDINARY_FOLDER}/site`, publicId: id });
+    url = stored.url;
+    objectKey = stored.publicId;
+  } else {
+    const dir = siteMediaDir();
+    await mkdir(dir, { recursive: true });
+    await writeFile(path.join(dir, name), file.data);
+  }
   const doc = await SiteMedia.create({
-    url: `/uploads/${name}`,
-    objectKey: `site/${name}`,
+    url,
+    objectKey,
     alt,
     width: size.width,
     height: size.height,
@@ -284,8 +296,11 @@ export async function deleteSiteMedia(id: string, email: string, roles: string[]
   const usages = await findUsages(id);
   if (usages.length) throw new ConflictError(`This image is still used: ${describeUsage(usages)}. Remove it from those blocks first.`);
   await SiteMedia.deleteOne({ _id: id });
-  const file = path.join(siteMediaDir(), path.basename(current.objectKey));
-  await unlink(file).catch(() => undefined);
+  if (current.objectKey.startsWith(`${CLOUDINARY_FOLDER}/`)) {
+    await cloudinaryClient().destroy(current.objectKey, "upload");
+  } else {
+    await unlink(path.join(siteMediaDir(), path.basename(current.objectKey))).catch(() => undefined);
+  }
   await record("media.site.delete", email, id, { url: current.url, alt: current.alt }, null);
   return { id };
 }

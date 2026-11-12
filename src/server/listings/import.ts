@@ -4,6 +4,7 @@ import { siteUrl } from "@/lib/utils";
 import { connectDb } from "@/lib/db";
 import { AuditRepository } from "@/server/audit";
 import { ForbiddenError, HttpError, NotFoundError, ValidationError } from "@/server/http";
+import { parsePrice } from "@/server/listings/price";
 import { parseCsv } from "@/server/listings/csv";
 import { createDraft, patchListing } from "@/server/listings/service";
 import {
@@ -32,7 +33,7 @@ const DESCRIPTION_MAX = 5000;
 const REQUIRED_COLUMNS = ["category", "city", "title", "description"] as const;
 const PHOTO_COLUMN = "photos";
 const PHOTO_ALIASES = new Set(["photos", "photo_urls", "photo_url", "photo"]);
-const BASE_COLUMNS = new Set<string>([...REQUIRED_COLUMNS, "district", PHOTO_COLUMN]);
+const BASE_COLUMNS = new Set<string>([...REQUIRED_COLUMNS, "district", "price", PHOTO_COLUMN]);
 const CLOUDINARY_HOST = "res.cloudinary.com";
 
 const audit = new AuditRepository();
@@ -72,6 +73,7 @@ interface RowInput {
   title: string;
   description: string;
   attributes: Record<string, unknown>;
+  price?: number;
   mediaIds: string[];
 }
 
@@ -310,6 +312,15 @@ async function lookupPlace(lookups: Lookups, cell: Record<string, string>, error
   return { cityId: city._id.toString(), stateId, districtId: district._id.toString() };
 }
 
+function priceOf(cell: string | undefined, errors: string[]) {
+  try {
+    return parsePrice(cell) ?? undefined;
+  } catch {
+    errors.push(`Price "${cell}" must be a whole number of rupees, 0 or more`);
+    return undefined;
+  }
+}
+
 async function planRow(
   line: number,
   cells: Record<string, string>,
@@ -327,6 +338,7 @@ async function planRow(
   if (cells.category && !category) errors.push(`Unknown category "${cells.category}" (use the category slug)`);
   const place = cells.city ? await lookupPlace(lookups, cells, errors) : null;
   const attributes = category ? attributesFor(category, cells, errors) : null;
+  const price = priceOf(cells.price, errors);
   const mediaIds = await resolvePhotos(partner.id, cells[PHOTO_COLUMN] ?? "", errors);
   if (category && attributes) {
     errors.push(...textErrors({ title, description: cells.description, attributes }, lookups.banned));
@@ -358,6 +370,7 @@ async function planRow(
     title,
     description: cells.description,
     attributes,
+    price,
     mediaIds,
   };
   return { report, input };
@@ -431,6 +444,16 @@ async function finalise(id: string, status: ImportStatus, actor: ImportActor) {
   await ListingVersion.create({ listingId: listing._id, version, snapshot, actorId: actor.id });
 }
 
+/** Same call normal publishing makes (queueIndexNow), which batches the paths and does nothing without INDEXNOW_KEY. */
+async function pingIndexNow(paths: string[]) {
+  try {
+    const { queueIndexNow } = await import("@/server/indexnow/ping");
+    queueIndexNow(paths);
+  } catch {
+    /* a failed ping must never undo an import */
+  }
+}
+
 async function importRow(input: RowInput, partnerId: string, status: ImportStatus, actor: ImportActor, requestId: string) {
   const draft = await createDraft(
     partnerId,
@@ -440,9 +463,13 @@ async function importRow(input: RowInput, partnerId: string, status: ImportStatu
   const id = draft.id as string;
   try {
     await patchListing(id, partnerId, { stage: "basics", title: input.title, description: input.description }, requestId);
-    await patchListing(id, partnerId, { stage: "details", attributes: input.attributes, contact: { acceptForm: true } }, requestId);
+    await patchListing(id, partnerId, { stage: "details", attributes: input.attributes, price: input.price, contact: { acceptForm: true } }, requestId);
     if (input.mediaIds.length) await patchListing(id, partnerId, { stage: "photos", mediaIds: input.mediaIds }, requestId);
     await finalise(id, status, actor);
+    if (status === "active") {
+      const slug = (await Listing.findById(id).select("slug").lean<{ slug?: string }>())?.slug;
+      if (slug) await pingIndexNow([`/ad/${slug}/`]);
+    }
   } catch (error) {
     await Listing.updateOne({ _id: id }, { $set: { status: "removed" } });
     throw error;

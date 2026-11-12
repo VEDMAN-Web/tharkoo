@@ -1,12 +1,26 @@
 import { InternalError } from "@/server/http";
 
-const ENV_NAMES = ["CLOUDINARY_CLOUD_NAME", "CLOUDINARY_API_KEY", "CLOUDINARY_API_SECRET", "CLOUDINARY_FOLDER_PREFIX"] as const;
+const ENV_NAMES = ["CLOUDINARY_CLOUD_NAME", "CLOUDINARY_API_KEY", "CLOUDINARY_API_SECRET"] as const;
 
 export interface CloudinaryEnv {
   cloudName: string;
   apiKey: string;
   apiSecret: string;
   folderPrefix: string;
+}
+
+/** Every Cloudinary upload goes under this folder. It is fixed, not an env var. */
+export const CLOUDINARY_FOLDER = "tharkoo";
+export const UPLOAD_NEEDS_CLOUDINARY = "Image upload needs Cloudinary on this server";
+
+/** True on Vercel, where the disk is read-only, so uploads cannot fall back to local files. */
+export function onVercel() {
+  return Boolean(process.env.VERCEL?.trim());
+}
+
+/** Whether an upload can be stored here: Cloudinary is configured, or we are not on Vercel (local disk, dev). */
+export function uploadsAvailable() {
+  return optionalCloudinary() !== null || !onVercel();
 }
 
 export const MAX_BYTES = 8 * 1024 * 1024;
@@ -31,7 +45,7 @@ export function cloudinaryEnv(): CloudinaryEnv {
     cloudName: process.env.CLOUDINARY_CLOUD_NAME!.trim(),
     apiKey: process.env.CLOUDINARY_API_KEY!.trim(),
     apiSecret: process.env.CLOUDINARY_API_SECRET!.trim(),
-    folderPrefix: process.env.CLOUDINARY_FOLDER_PREFIX!.trim().replace(/^\/+|\/+$/g, ""),
+    folderPrefix: CLOUDINARY_FOLDER,
   };
 }
 

@@ -803,7 +803,19 @@
         "src/components/blocks/**",
         "src/server/layout/defaults/home.ts",
         "src/server/seed/layouts.ts",
-        "tests/server/layout/home.test.ts"
+        "scripts/seed.ts",
+        "tests/server/layout/home.test.ts",
+        "docs/ownership.json",
+        "progress/H3.4.md",
+        "progress/H3.4-editor.md",
+        "src/server/layout/blocks.ts",
+        "src/components/admin/nav.ts",
+        "src/app/admin/layout-actions.ts",
+        "tests/server/layout/**",
+        "src/lib/layout/**",
+        "src/server/layout/service.ts",
+        "src/server/seed/run.ts",
+        "src/server/layout/defaults/**"
       ]
     },
     "H3.5": {
@@ -817,7 +829,14 @@
         "src/server/layout/defaults/listing.ts",
         "src/server/seed/layouts.ts",
         "src/app/admin/listing-pages/**",
-        "tests/server/layout/listing.test.ts"
+        "tests/server/layout/listing.test.ts",
+        "docs/ownership.json",
+        "progress/H3.5.md",
+        "src/server/layout/defaults/**",
+        "src/lib/layout/**",
+        "src/components/admin/nav.ts",
+        "src/app/admin/layout-actions.ts",
+        "tests/server/layout/**"
       ]
     },
     "H3.6": {
@@ -832,7 +851,14 @@
         "src/app/admin/post-page/**",
         "src/app/admin/categories/**",
         "src/components/admin/category-fields/**",
-        "tests/server/layout/post.test.ts"
+        "tests/server/layout/post.test.ts",
+        "docs/ownership.json",
+        "progress/H3.6.md",
+        "src/components/admin/nav.ts",
+        "src/app/admin/layout-actions.ts",
+        "src/server/models/catalog.ts",
+        "src/server/shared/fields.ts",
+        "src/components/admin/layout-editor/**"
       ]
     },
     "H3.7": {
@@ -889,7 +915,10 @@
         "scripts/seo-check.ts",
         "package.json",
         "src/app/api/cron/seo-audit/**",
-        "tests/server/seo/**"
+        "tests/server/seo/**",
+        "src/server/seo/crawl.ts",
+        "src/server/seo/**",
+        "docs/ownership.json"
       ]
     },
     "H4.2": {
@@ -897,7 +926,15 @@
       "globs": [
         "src/app/admin/seo/**",
         "src/server/seo/explain.ts",
-        "tests/server/seo/explain.test.ts"
+        "tests/server/seo/explain.test.ts",
+        "scripts/seo-check.mjs",
+        "scripts/seo-check.ts",
+        "src/app/api/cron/seo-audit/route.ts",
+        "src/server/models/index.ts",
+        "src/server/models/seo.ts",
+        "src/server/seo/**",
+        "tests/server/seo/**",
+        "docs/ownership.json"
       ]
     },
     "H4.3": {
@@ -1312,6 +1349,20 @@
       "globs": [
         "docs/ownership.json",
         "progress/H0.9.md"
+      ]
+    },
+    "H0.10": {
+      "branchPrefix": "haiku/h0.10",
+      "globs": [
+        "docs/ownership.json",
+        "progress/H0.10.md"
+      ]
+    },
+    "H0.11": {
+      "branchPrefix": "haiku/h0.11",
+      "globs": [
+        "docs/ownership.json",
+        "progress/H0.11.md"
       ]
     }
   }
