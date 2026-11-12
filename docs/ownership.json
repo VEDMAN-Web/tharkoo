@@ -926,7 +926,15 @@
       "globs": [
         "src/app/admin/seo/**",
         "src/server/seo/explain.ts",
-        "tests/server/seo/explain.test.ts"
+        "tests/server/seo/explain.test.ts",
+        "scripts/seo-check.mjs",
+        "scripts/seo-check.ts",
+        "src/app/api/cron/seo-audit/route.ts",
+        "src/server/models/index.ts",
+        "src/server/models/seo.ts",
+        "src/server/seo/**",
+        "tests/server/seo/**",
+        "docs/ownership.json"
       ]
     },
     "H4.3": {
@@ -1348,6 +1356,13 @@
       "globs": [
         "docs/ownership.json",
         "progress/H0.10.md"
+      ]
+    },
+    "H0.11": {
+      "branchPrefix": "haiku/h0.11",
+      "globs": [
+        "docs/ownership.json",
+        "progress/H0.11.md"
       ]
     }
   }
