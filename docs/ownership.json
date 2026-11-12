@@ -1246,7 +1246,11 @@
         "src/server/shared/policy.ts",
         "tests/server/listings/**",
         "docs/ownership.json",
-        "progress/H3.11b.md"
+        "progress/H3.11b.md",
+        "src/server/shared/schemas/listings.ts",
+        "src/lib/models.ts",
+        "src/app/ad/[slug]/page.tsx",
+        "src/lib/ui/post-form.ts"
       ]
     },
     "H3.11c": {
@@ -1298,6 +1302,13 @@
       "globs": [
         "docs/ownership.json",
         "progress/H0.8.md"
+      ]
+    },
+    "H0.9": {
+      "branchPrefix": "haiku/h0.9",
+      "globs": [
+        "docs/ownership.json",
+        "progress/H0.9.md"
       ]
     }
   }
