@@ -22,7 +22,14 @@ test.describe("7 SEO center", () => {
     await expect(page.getByText("Pages in sitemap")).toBeVisible();
     await expect(page.getByText("Pages with P0 issues", { exact: true })).toBeVisible();
 
-    await page.locator("a[href=\"/admin/seo/pages/\"]").first().click();
+    // The sidebar is hidden on phones; open the menu there first, then follow the same link.
+    const sidebarLink = page.locator("a[href=\"/admin/seo/pages/\"]").first();
+    if (await sidebarLink.isVisible()) {
+      await sidebarLink.click();
+    } else {
+      await page.getByRole("button", { name: "Menu" }).click();
+      await page.locator(".adm-sheet a[href=\"/admin/seo/pages/\"]").click();
+    }
     await expect(page).toHaveURL(/\/admin\/seo\/pages\//);
     await expect(page.locator("table tbody tr").first()).toBeVisible();
   });
