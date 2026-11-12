@@ -1,6 +1,9 @@
 import { notFound, permanentRedirect } from "next/navigation";
 import type { Metadata } from "next";
+import { resolveListingLayout } from "@/components/blocks/ListingLayout";
 import { ListingPageView } from "@/components/ListingPage";
+import { makeT } from "@/lib/ui/text";
+import { textOverrides } from "@/app/admin/ui-text/store";
 import {
   getCategories,
   getCategory,
@@ -148,15 +151,17 @@ export default async function LocationPage({ params, searchParams }: Props) {
     districts: districts.map((row) => row.name || "").filter(Boolean).slice(0, 3),
     updated: feed.items[0]?.publishedAt ? new Date(feed.items[0].publishedAt).toLocaleDateString("en-IN", { day: "numeric", month: "long", year: "numeric" }) : undefined,
   });
+  const texts = await textOverrides();
+  const t = makeT(texts);
   const filtered = Boolean(sp.photos || sp.verified);
   const siblingLinks = [
     ...sameCategory.map((row) => ({
       href: placePath(cat.slug || category, row._id.citySlug),
-      label: `${cat.name} in ${prettyPlace(row._id.citySlug)}`,
+      label: t("listing.link.in", { name: cat.name, place: prettyPlace(row._id.citySlug) }),
     })),
     ...otherHere.map((row) => ({
       href: placePath(row._id.categorySlug, loc.slug || location),
-      label: `${names.get(row._id.categorySlug) || row._id.categorySlug} in ${loc.name}`,
+      label: t("listing.link.in", { name: names.get(row._id.categorySlug) || row._id.categorySlug, place: loc.name }),
     })),
   ].slice(0, 5);
   const newest = feed.items[0]?.publishedAt;
@@ -164,8 +169,12 @@ export default async function LocationPage({ params, searchParams }: Props) {
     ? new Date(newest).toLocaleDateString("en-IN", { day: "numeric", month: "long", year: "numeric" })
     : undefined;
 
+  const layout = await resolveListingLayout({ path: canonicalPath, category: cat.slug || category, vars });
+
   return (
     <ListingPageView
+      layout={layout}
+      texts={texts}
       h1={heading || visibleHeading(fillTemplate(seo?.h1 || "", vars), copy.h1)}
       h2={fillTemplate(seo?.h2 || "", vars)}
       intro={copy.intro || fillTemplate(seo?.intro || "", vars)}
@@ -173,7 +182,7 @@ export default async function LocationPage({ params, searchParams }: Props) {
       popular={tags.slice(0, 6).map((tag) => ({ href: tagPath(paths, cat.slug || category, tag.slug), label: `${cat.name} ${tag.label}` }))}
       footer={fillTemplate(seo?.footer || "", vars)}
       crumbs={[
-        { name: "Tharkoo India", path: "/" },
+        { name: t("listing.crumb.home"), path: "/" },
         { name: cat.name!, path: `/${cat.slug}/` },
         ...(loc.stateSlug ? [{ name: `${stateName} ${cat.name}`, path: placePath(cat.slug || category, loc.stateSlug) }] : []),
         { name: `${loc.name} ${cat.name}`, path: canonicalPath },

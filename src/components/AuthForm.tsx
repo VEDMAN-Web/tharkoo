@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useMemo, useState } from "react";
-import { api, fieldErrors, friendlyError, isStaffRole, safeNext } from "@/lib/ui/api";
+import { api, fieldErrors, type ApiError, friendlyError, isStaffRole, safeNext } from "@/lib/ui/api";
 import { loginPath, registerPath } from "@/lib/urls";
 import { useUrlPaths } from "./UrlPaths";
 
@@ -17,6 +17,29 @@ function strength(password: string) {
   if (/\d/.test(password)) score += 1;
   if (/[^A-Za-z0-9]/.test(password)) score += 1;
   return score;
+}
+
+/** Message shown when the login API answers 429. N comes from retry-after, rounded up to whole minutes. */
+export function tooManyAttemptsMessage(retryAfter: string | null) {
+  const seconds = Number(retryAfter);
+  const minutes = Math.max(1, Number.isFinite(seconds) && seconds > 0 ? Math.ceil(seconds / 60) : 15);
+  return `Too many attempts. Try again in ${minutes} minute${minutes === 1 ? "" : "s"}.`;
+}
+
+/** Login call that keeps the retry-after header, which the shared api helper drops. */
+export async function loginRequest(email: unknown, password: unknown) {
+  const res = await fetch("/api/auth/login", {
+    method: "POST",
+    credentials: "same-origin",
+    headers: { accept: "application/json", "content-type": "application/json" },
+    body: JSON.stringify({ email, password }),
+  });
+  const body = (await res.json().catch(() => null)) as { ok?: boolean; data?: { user: { roles?: string[] } }; error?: ApiError } | null;
+  if (res.status === 429) {
+    return { ok: false as const, status: 429, error: { code: "RATE_LIMITED", message: tooManyAttemptsMessage(res.headers.get("retry-after")) } as ApiError };
+  }
+  if (body && body.ok && body.data) return { ok: true as const, status: res.status, data: body.data };
+  return { ok: false as const, status: res.status, error: (body?.error || { code: "ERROR", message: "Something went wrong. Please try again." }) as ApiError };
 }
 
 function AuthFormInner({ mode }: { mode: Mode }) {
@@ -46,12 +69,12 @@ function AuthFormInner({ mode }: { mode: Mode }) {
       return;
     }
     setBusy(true);
-    const res = await api<{ user: { roles?: string[] } }>("/api/auth/login", {
-      method: "POST",
-      body: JSON.stringify({ email: data.get("email"), password: data.get("password") }),
-    });
+    const res = await loginRequest(data.get("email"), data.get("password"));
     setBusy(false);
-    if (!res.ok) return fail(res.error);
+    if (!res.ok) {
+      if (res.status === 429) return setMessage(res.error.message || "");
+      return fail(res.error);
+    }
     router.push(next || (isStaffRole(res.data.user?.roles) ? "/admin/" : "/u/account/dashboard/"));
     router.refresh();
   }

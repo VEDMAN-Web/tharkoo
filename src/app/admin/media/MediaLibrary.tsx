@@ -23,7 +23,7 @@ type Item = {
 
 const kb = (bytes: number) => (bytes >= 1024 * 1024 ? `${(bytes / 1024 / 1024).toFixed(1)} MB` : `${Math.round(bytes / 1024)} KB`);
 
-function UploadForm({ onDone }: { onDone: () => void }) {
+function UploadForm({ onDone, enabled }: { onDone: () => void; enabled: boolean }) {
   const [file, setFile] = useState<File | null>(null);
   const [alt, setAlt] = useState("");
   const [tags, setTags] = useState("");
@@ -53,6 +53,15 @@ function UploadForm({ onDone }: { onDone: () => void }) {
     } finally {
       setBusy(false);
     }
+  }
+
+  if (!enabled) {
+    return (
+      <section className="adm-card" style={{ display: "grid", gap: 12 }}>
+        <h2 style={{ fontSize: 16, fontWeight: 800 }}>Upload an image</h2>
+        <Notice kind="error">Image upload needs Cloudinary on this server</Notice>
+      </section>
+    );
   }
 
   return (
@@ -118,7 +127,7 @@ function Card({ item, onChanged, onDelete }: { item: Item; onChanged: () => void
   );
 }
 
-export function MediaLibrary() {
+export function MediaLibrary({ uploadsEnabled = true }: { uploadsEnabled?: boolean }) {
   const [items, setItems] = useState<Item[] | null>(null);
   const [total, setTotal] = useState(0);
   const [q, setQ] = useState("");
@@ -161,7 +170,7 @@ export function MediaLibrary() {
 
   return (
     <div className="adm-stack">
-      <UploadForm onDone={() => void load()} />
+      <UploadForm onDone={() => void load()} enabled={uploadsEnabled} />
       <section className="adm-card" style={{ display: "grid", gap: 12 }}>
         <h2 style={{ fontSize: 16, fontWeight: 800 }}>Library{items ? ` (${total})` : ""}</h2>
         <div style={{ display: "flex", flexWrap: "wrap", gap: 16, alignItems: "center" }}>

@@ -1,5 +1,11 @@
 import mongoose from "mongoose";
-import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
+import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
+
+const revalidated = vi.hoisted(() => ({ paths: [] as string[] }));
+vi.mock("next/cache", () => ({
+  revalidatePath: (path: string) => void revalidated.paths.push(path),
+  revalidateTag: () => undefined,
+}));
 import { POST as expireListings } from "@/app/api/cron/expire/route";
 import { DELETE, GET, PATCH, POST } from "@/app/api/listings/[[...slug]]/route";
 import { hashToken } from "@/server/auth/http";
@@ -124,6 +130,17 @@ describe("listing routes", () => {
     expect((await call("DELETE", id, undefined, owner.cookie)).status).toBe(200);
     const gone = await call("GET", listing?.slug ?? id);
     expect(gone.status).toBe(410);
+  });
+
+  it("refreshes the home, category, city and ad pages when an ad is published", async () => {
+    const owner = await account("fresh@example.com");
+    const { category, city, media } = await catalogue(owner.user._id);
+    const id = await draftFor(owner.cookie, category._id.toString(), city._id.toString(), media._id.toString());
+    revalidated.paths.length = 0;
+    expect((await call("POST", `${id}/submit`, { attestations }, owner.cookie)).status).toBe(200);
+    const slug = (await Listing.findById(id))?.slug;
+    expect(slug).toBeTruthy();
+    expect(revalidated.paths).toEqual(expect.arrayContaining(["/", "/cycles/", "/cycles/pune/", `/ad/${slug}/`]));
   });
 
   it("sends an active listing back to pending after a sensitive edit", async () => {
