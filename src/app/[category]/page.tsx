@@ -2,7 +2,7 @@ import Link from "next/link";
 import { notFound, permanentRedirect } from "next/navigation";
 import type { Metadata } from "next";
 import { MapPin } from "lucide-react";
-import { getCategory, getCities, getFeed, getSeo, getSite, getStarListings, getStates, listingCountsByCategoryCity } from "@/lib/queries";
+import { getCategory, getCities, getFeed, getSeoFor, getSite, getStarListings, getStates, listingCountsByCategoryCity } from "@/lib/queries";
 import { getPaths } from "@/server/urls/service";
 import { adPath, categoryPath, placePath } from "@/lib/urls";
 import { fillTemplate } from "@/lib/seo";
@@ -21,7 +21,7 @@ export const revalidate = 300;
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { category } = await params;
-  const [cat, seo, site] = await Promise.all([getCategory(category), getSeo("category"), getSite()]);
+  const [cat, seo, site] = await Promise.all([getCategory(category), getSeoFor("category", category), getSite()]);
   if (!cat) return {};
   const vars = { category: cat.name, site: site.name, year: new Date().getFullYear() };
   const title = fillTemplate(seo?.title || "{category} classifieds across India | Tharkoo", vars);
@@ -36,7 +36,7 @@ export default async function CategoryHub({ params }: Props) {
   if (!cat) notFound();
   if (cat.slug && cat.slug !== category) permanentRedirect(categoryPath(cat.slug));
   const [seo, site, cities, states, counts, feed, stars, paths, heading] = await Promise.all([
-    getSeo("category"),
+    getSeoFor("category", category),
     getSite(),
     getCities(),
     getStates(),
