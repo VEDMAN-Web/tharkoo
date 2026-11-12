@@ -8,9 +8,10 @@ import { loginPath, postAdPath } from "@/lib/urls";
 import { useUrlPaths } from "./UrlPaths";
 import { HelpCard } from "./ui/HelpCard";
 import { AdCard } from "./ui/AdCard";
+import { POST_COPY_DEFAULTS, wizardFields, type CtaCopy, type PostCopy } from "./post/copy";
 import type { ListingDoc } from "@/lib/models";
 
-type Cat = { _id: string; name: string; slug: string; fields?: { key: string; label: string; type: string; options?: string[]; required?: boolean }[] };
+type Cat = { _id: string; name: string; slug: string; fields?: Record<string, unknown>[] };
 type Place = { id: string; name: string; slug: string; parentId?: string | null };
 
 function tidy(value: string) {
@@ -24,7 +25,7 @@ function normalPhone(raw: string) {
   return tidy(raw);
 }
 
-export function PostWizard() {
+export function PostWizard({ copy = POST_COPY_DEFAULTS }: { copy?: PostCopy }) {
   const paths = useUrlPaths();
   const [step, setStep] = useState(1);
   const [categories, setCategories] = useState<Cat[]>([]);
@@ -55,12 +56,18 @@ export function PostWizard() {
   const [done, setDone] = useState(false);
   const [photoNote, setPhotoNote] = useState("");
   const [photos, setPhotos] = useState<string[]>([]);
-  const [plans, setPlans] = useState<{ id: string; name: string; amount?: number }[]>([]);
+  const [plans, setPlans] = useState<{ id: string; code?: string; name: string; amount?: number }[]>([]);
   const [hydrated, setHydrated] = useState(true);
 
   const category = categories.find((item) => item._id === categoryId);
-  const ageField = category?.fields?.find((field) => field.key === "age" || field.type === "number" && /age/i.test(field.label));
-  const extra = (category?.fields || []).filter((field) => field.key !== "age" && !/age/i.test(field.label));
+  const fields = useMemo(() => wizardFields(category?.fields), [category]);
+  const ageField = fields.find((field) => field.key === "age" || field.type === "number" && /age/i.test(field.label));
+  const extra = fields.filter((field) => field.key !== "age" && !/age/i.test(field.label));
+  const { steps } = copy;
+  const stepTitles = [steps.basics.title, steps.photos.title, steps.review.title];
+  const visiblePlans = copy.promotion.products.length
+    ? plans.filter((plan) => copy.promotion.products.some((code) => code === plan.id || code === plan.code))
+    : plans;
 
   useEffect(() => {
     const sp = new URLSearchParams(window.location.search);
@@ -107,7 +114,7 @@ export function PostWizard() {
       if (res.ok) setCities(res.data.locations || []);
     });
     if (document.cookie.split(";").some((part) => part.trim().startsWith("tk-in="))) {
-      api<{ products: { id: string; name: string; amount?: number }[] }>("/api/promotions/products").then((res) => {
+      api<{ products: { id: string; code?: string; name: string; amount?: number }[] }>("/api/promotions/products").then((res) => {
         if (res.ok) setPlans(res.data.products || []);
       });
     }
@@ -307,11 +314,12 @@ export function PostWizard() {
   if (done) {
     return (
       <div className="tk-container" style={{ padding: "24px 0 40px" }}>
-        <h1 className="tk-page-h1" data-tk="step-title">Your ad is live</h1>
+        <h1 className="tk-page-h1" data-tk="step-title">{copy.success.title}</h1>
+        {copy.success.text ? <p style={{ textAlign: "center" }}>{copy.success.text}</p> : null}
         <p style={{ textAlign: "center" }}>
-          <Link href="/u/account/ads/" style={{ color: "var(--accent)" }}>Your ads</Link>
-          {" · "}
-          <Link href={postAdPath(paths)} style={{ color: "var(--accent)" }}>Post another ad</Link>
+          {copy.success.primaryCta ? <SuccessLink cta={copy.success.primaryCta} fallback={postAdPath(paths)} /> : null}
+          {copy.success.primaryCta && copy.success.secondaryCta ? " · " : null}
+          {copy.success.secondaryCta ? <SuccessLink cta={copy.success.secondaryCta} fallback={postAdPath(paths)} /> : null}
         </p>
       </div>
     );
@@ -319,17 +327,28 @@ export function PostWizard() {
 
   return (
     <div className="tk-container" style={{ padding: "16px 0 40px" }}>
+      {copy.intro ? (
+        <section data-tk="post-intro" style={{ marginBottom: 12 }}>
+          {copy.intro.image ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={copy.intro.image.src} alt={copy.intro.image.alt} width={copy.intro.image.width} height={copy.intro.image.height} style={{ maxWidth: "100%", height: "auto" }} />
+          ) : null}
+          <h2 className="t-h3">{copy.intro.title}</h2>
+          {copy.intro.text ? <p className="t-small">{copy.intro.text}</p> : null}
+        </section>
+      ) : null}
       <div className="tk-progress" data-tk="progress" aria-hidden>
         <i className={step >= 1 ? "on" : ""} />
         <i className={step >= 2 ? "on" : ""} />
         <i className={step >= 3 ? "on" : ""} />
       </div>
-      <p className="tk-step-of" data-tk="step-of">Step {step} of 3 · {step === 1 ? "Information" : step === 2 ? "Photos" : "Publish"}</p>
+      <p className="tk-step-of" data-tk="step-of">Step {step} of 3 · {stepTitles[step - 1]}</p>
       <div className="tk-step-head">
         <h1 className="tk-page-h1" data-tk="step-title" style={{ margin: 0 }}>
-          {step === 1 ? "Information" : step === 2 ? "Photos" : "Publish"}
+          {stepTitles[step - 1]}
         </h1>
       </div>
+      {step === 1 && steps.basics.help ? <p className="t-small" data-tk="step-help">{steps.basics.help}</p> : null}
       <div aria-live="polite" className="t-small" style={{ color: "var(--danger)", margin: "12px 0" }}>
         {banner}{" "}
         {banner.startsWith("Sign in") ? <Link href={`${loginPath(paths)}?next=${encodeURIComponent(postAdPath(paths))}`}>Log in</Link> : null}
@@ -362,7 +381,7 @@ export function PostWizard() {
             </div>
             <TextField id="area" label="Area/District/Neighbourhood" value={area} onChange={setArea} />
           </Group>
-          <Group title="Your data">
+          <Group title={steps.details.title} help={steps.details.help}>
             {ageField ? <TextField id="age" label="Age" required value={age} error={errors.age} onChange={setAge} /> : null}
             <TextField id="nickname" label="Nickname" required value={nickname} error={errors.nickname} note="max 20 characters" placeholder="Insert your name or nickname" onChange={setNickname} />
             <TextField id="title" label="Title" required area value={title} error={errors.title} note="5 characters required" placeholder="Give your ad a good title" onChange={setTitle} />
@@ -372,8 +391,8 @@ export function PostWizard() {
             <Group title="About You">
               {extra.map((field) =>
                 field.options && field.options.length > 8 ? (
-                  <SelectField key={field.key} id={field.key} label={field.label} required={field.required} error={errors[field.key]} value={attrs[field.key] || ""} onChange={(value) => setAttrs((prev) => ({ ...prev, [field.key]: value }))}>
-                    <option value="">Choose</option>
+                  <SelectField key={field.key} id={field.key} label={field.label} required={field.required} help={field.help} error={errors[field.key]} value={attrs[field.key] || ""} onChange={(value) => setAttrs((prev) => ({ ...prev, [field.key]: value }))}>
+                    <option value="">{field.placeholder || "Choose"}</option>
                     {field.options.map((option) => (
                       <option key={option} value={option}>{option}</option>
                     ))}
@@ -381,6 +400,7 @@ export function PostWizard() {
                 ) : field.options?.length ? (
                   <div key={field.key} className={errors[field.key] ? "is-bad" : ""} data-tk={field.key}>
                     <p className="t-small">{field.required ? "* " : ""}{field.label}</p>
+                    {field.help ? <p className="t-caption" style={{ color: "var(--muted)" }}>{field.help}</p> : null}
                     <div style={{ display: "flex", flexWrap: "wrap", gap: 8, outline: errors[field.key] ? "1px solid var(--danger)" : undefined, borderRadius: 8, padding: errors[field.key] ? 8 : 0 }}>
                       {field.options.map((option) => (
                         <button key={option} type="button" className={`tk-choice ${attrs[field.key] === option ? "on" : ""}`} onClick={() => setAttrs((prev) => ({ ...prev, [field.key]: prev[field.key] === option ? "" : option }))}>
@@ -391,12 +411,12 @@ export function PostWizard() {
                     {errors[field.key] ? <span className="tk-error" data-tk="field-error">{errors[field.key]}</span> : null}
                   </div>
                 ) : (
-                  <TextField key={field.key} id={field.key} label={field.label} required={field.required} error={errors[field.key]} value={attrs[field.key] || ""} onChange={(value) => setAttrs((prev) => ({ ...prev, [field.key]: value }))} />
+                  <TextField key={field.key} id={field.key} label={field.label} required={field.required} note={field.help} placeholder={field.placeholder} error={errors[field.key]} value={attrs[field.key] || ""} onChange={(value) => setAttrs((prev) => ({ ...prev, [field.key]: value }))} />
                 ),
               )}
             </Group>
           ) : null}
-          <Group title="Your contacts">
+          <Group title={steps.contact.title} help={steps.contact.help}>
             <p className="t-small">How would you like to be contacted?</p>
             <div className="tk-radios">
               {[
@@ -427,7 +447,7 @@ export function PostWizard() {
             {errors.adult ? <span className="tk-error" data-tk="field-error">{errors.adult}</span> : null}
           </p>
           <p style={{ textAlign: "right", marginTop: 24 }}>
-            <button type="button" className="tk-btn tk-btn-gold" data-tk="go-on" disabled={busy} onClick={goOn}>Continue</button>
+            <button type="button" className="tk-btn tk-btn-gold" data-tk="go-on" disabled={busy} onClick={goOn}>{steps.basics.nextLabel}</button>
           </p>
         </>
       ) : null}
@@ -451,14 +471,17 @@ export function PostWizard() {
                   }}
                 />
               </label>
-              <p className="t-small">JPG, PNG or WebP, 8 MB each.</p>
+              {copy.photoRules.title ? <p className="t-small" style={{ fontWeight: 600 }}>{copy.photoRules.title}</p> : null}
+              {copy.photoRules.items.map((rule) => (
+                <p key={rule} className="t-small">{rule}</p>
+              ))}
             </div>
             {photos.length ? <p className="t-small" data-tk="photo-count">{photos.length} photo{photos.length === 1 ? "" : "s"} saved</p> : null}
-            {photoNote ? <p data-tk="photo-note">{photoNote}</p> : <p className="t-small">Add a photo of the item or place. People ads can use a portrait.</p>}
+            {photoNote ? <p data-tk="photo-note">{photoNote}</p> : steps.photos.help ? <p className="t-small">{steps.photos.help}</p> : null}
           </div>
           <div style={{ display: "flex", justifyContent: "space-between", marginTop: 16 }}>
-            <button type="button" className="tk-btn tk-btn-outline-gold" onClick={() => remember(draftId, 1)}>BACK</button>
-            <button type="button" className="tk-btn tk-btn-gold" data-tk="go-on" onClick={() => remember(draftId, 3)}>Continue</button>
+            <button type="button" className="tk-btn tk-btn-outline-gold" onClick={() => remember(draftId, 1)}>{steps.photos.backLabel}</button>
+            <button type="button" className="tk-btn tk-btn-gold" data-tk="go-on" onClick={() => remember(draftId, 3)}>{steps.photos.nextLabel}</button>
           </div>
         </>
       ) : null}
@@ -468,17 +491,21 @@ export function PostWizard() {
             <h2 className="t-h3">Preview</h2>
             {hydrated && title.trim() ? <AdCard ad={preview as ListingDoc} /> : <p data-tk="draft-loading">{hydrated ? "This draft has no title yet." : "Loading your draft…"}</p>}
           </div>
-          <div className="tk-form-panel" style={{ marginTop: 16 }}>
-            <h2 className="t-h3">Plan</h2>
-            {plans.length ? plans.map((plan) => (
-              <p key={plan.id} className="t-small">{plan.name}{plan.amount !== undefined ? ` · Rs ${plan.amount}` : ""}</p>
-            )) : (
-              <p className="t-small">Free: your ad is published once it passes our checks. <Link href="/u/account/credits/" style={{ color: "var(--accent)" }}>Boost visibility</Link></p>
-            )}
-          </div>
+          {copy.promoteHidden ? null : (
+            <div className="tk-form-panel" style={{ marginTop: 16 }} data-tk="promote-step">
+              <h2 className="t-h3">{steps.promote.title}</h2>
+              {copy.promotion.title ? <p className="t-small" style={{ fontWeight: 600 }}>{copy.promotion.title}</p> : null}
+              {steps.promote.help ? <p className="t-small">{steps.promote.help}</p> : null}
+              {visiblePlans.length ? visiblePlans.map((plan) => (
+                <p key={plan.id} className="t-small">{plan.name}{plan.amount !== undefined ? ` · Rs ${plan.amount}` : ""}</p>
+              )) : (
+                <p className="t-small">{copy.promotion.note} <Link href="/u/account/credits/" style={{ color: "var(--accent)" }}>Boost visibility</Link></p>
+              )}
+            </div>
+          )}
           <p style={{ textAlign: "right", marginTop: 16 }}>
-            <button type="button" className="tk-btn tk-btn-outline-gold" onClick={() => setStep(2)}>BACK</button>{" "}
-            <button type="button" className="tk-btn tk-btn-gold" data-tk="go-on" disabled={busy || !hydrated || !title.trim()} onClick={publish}>PUBLISH</button>
+            <button type="button" className="tk-btn tk-btn-outline-gold" onClick={() => setStep(2)}>{steps.review.backLabel}</button>{" "}
+            <button type="button" className="tk-btn tk-btn-gold" data-tk="go-on" disabled={busy || !hydrated || !title.trim()} onClick={publish}>{steps.review.nextLabel}</button>
           </p>
         </>
       ) : null}
@@ -487,14 +514,21 @@ export function PostWizard() {
   );
 }
 
-function Group({ title, children }: { title: string; children: React.ReactNode }) {
+function SuccessLink({ cta, fallback }: { cta: CtaCopy; fallback: string }) {
+  return <Link href={cta.href || fallback} style={{ color: "var(--accent)" }}>{cta.label}</Link>;
+}
+
+function Group({ title, help, children }: { title: string; help?: string; children: React.ReactNode }) {
   return (
     <section style={{ marginBottom: 18 }}>
       <div style={{ display: "flex", justifyContent: "space-between" }}>
         <h2 className="tk-group-h">{title}</h2>
         <span className="t-caption" style={{ color: "var(--muted)" }}>* Required fields</span>
       </div>
-      <div className="tk-form-panel">{children}</div>
+      <div className="tk-form-panel">
+        {help ? <p className="t-small">{help}</p> : null}
+        {children}
+      </div>
     </section>
   );
 }
@@ -506,6 +540,7 @@ function SelectField({
   value,
   error,
   disabled,
+  help,
   onChange,
   children,
 }: {
@@ -515,6 +550,7 @@ function SelectField({
   value: string;
   error?: string;
   disabled?: boolean;
+  help?: string;
   onChange: (value: string) => void;
   children: React.ReactNode;
 }) {
@@ -522,6 +558,7 @@ function SelectField({
     <label className={`tk-field ${error ? "is-bad" : ""}`} htmlFor={id}>
       <span>{required ? "* " : ""}{label}</span>
       <select id={id} value={value} disabled={disabled} onChange={(event) => onChange(event.target.value)}>{children}</select>
+      {help ? <span className="t-caption" style={{ color: "var(--muted)" }}>{help}</span> : null}
       {error ? <span className="tk-error" data-tk="field-error">{error}</span> : null}
     </label>
   );
