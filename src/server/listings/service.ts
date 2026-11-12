@@ -32,6 +32,7 @@ import { photoLimit } from "@/server/media/config";
 import { assertVerified } from "@/server/verification/service";
 import { hashIp } from "@/server/shared/crypto";
 import { parseListingAttributes, type FieldDefinition } from "@/server/shared/fields";
+import { parsePrice } from "@/server/listings/price";
 import { attributeDenied, categoryDenied, textDenied } from "@/server/shared/policy";
 import { evaluatePublishGate } from "@/server/shared/publish-gate";
 import { toSlug } from "@/server/shared/slug";
@@ -128,6 +129,7 @@ export function publicView(listing: ListingDoc) {
     districtId: idOf(listing.districtId),
     localityId: idOf(listing.localityId),
     attributes: publicAttributes(listing.attributes, secrets),
+    price: listing.price ?? null,
     mediaIds: (listing.mediaIds ?? []).map((id) => id.toString()),
     coverMediaId: idOf(listing.coverMediaId),
     badges: listing.badges ?? [],
@@ -401,8 +403,11 @@ async function applyBasics(
 
 async function applyDetails(
   listing: ListingRow,
-  input: { attributes?: Record<string, unknown>; contact?: ListingContactDoc },
+  input: { attributes?: Record<string, unknown>; price?: number | null; contact?: ListingContactDoc },
 ) {
+  const price = parsePrice(input.price);
+  if (price === null) listing.set("price", undefined);
+  else if (price !== undefined) listing.price = price;
   if (input.attributes) {
     const denied = attributeDenied(input.attributes);
     if (denied.denied) throw new PolicyViolationError("Listing text is not allowed");
@@ -433,7 +438,7 @@ export async function patchListing(
         districtId?: string;
         localityId?: string;
       }
-    | { stage: "details"; attributes?: Record<string, unknown>; contact?: ListingContactDoc }
+    | { stage: "details"; attributes?: Record<string, unknown>; price?: number | null; contact?: ListingContactDoc }
     | { stage: "photos"; mediaIds: string[]; coverMediaId?: string },
   requestId: string,
 ) {
@@ -611,6 +616,7 @@ export async function duplicateListing(id: string, userId: string, requestId: st
     title: listing.title,
     description: listing.description,
     attributes: listing.attributes ?? {},
+    price: listing.price,
     contact: listing.contact,
     mediaIds: listing.mediaIds ?? [],
     coverMediaId: listing.coverMediaId,
