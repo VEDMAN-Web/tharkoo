@@ -153,7 +153,7 @@ describe("structured data", () => {
     const category = await Category.create({ slug: "jobs", name: "Jobs", enabled: true, order: 0, fields: [] });
     const state = await Location.create({ type: "state", slug: "india", name: "India", parentId: null, enabled: true, order: 0 });
     const city = await Location.create({ type: "city", slug: "pune", name: "Pune", parentId: state._id, enabled: true, order: 0 });
-    const base = { ownerId: new mongoose.Types.ObjectId(), categoryId: category._id, stateId: state._id, cityId: city._id, description: "Role.", status: "active", publishedAt: new Date("2026-06-01T00:00:00.000Z") };
+    const base = { ownerId: new mongoose.Types.ObjectId(), categoryId: category._id, stateId: state._id, cityId: city._id, description: "Role.", status: "active" as const, publishedAt: new Date("2026-06-01T00:00:00.000Z") };
     await Listing.create({ ...base, title: "Complete role", slug: "complete-aaaa1", expiresAt: new Date("2027-01-01T00:00:00.000Z"), attributes: { company: "Acme" } });
     await Listing.create({ ...base, title: "No company", slug: "nocompany-aaaa2", expiresAt: new Date("2027-01-01T00:00:00.000Z") });
     await Listing.create({ ...base, title: "No expiry", slug: "noexpiry-aaaa3", attributes: { company: "Acme" } });
