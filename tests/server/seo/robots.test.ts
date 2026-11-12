@@ -5,8 +5,8 @@ type Rule = { userAgent?: string | string[]; allow?: string | string[]; disallow
 
 const savedNoindex = process.env["SITE_NOINDEX"];
 
-function rulesOf(): Rule[] {
-  return ([] as Rule[]).concat(robots().rules as Rule | Rule[]);
+async function rulesOf(): Promise<Rule[]> {
+  return ([] as Rule[]).concat((await robots()).rules as Rule | Rule[]);
 }
 
 describe("robots.txt", () => {
@@ -15,21 +15,21 @@ describe("robots.txt", () => {
     else process.env["SITE_NOINDEX"] = savedNoindex;
   });
 
-  it("returns exactly one rule set for all crawlers when the site is indexable", () => {
+  it("returns exactly one rule set for all crawlers when the site is indexable", async () => {
     delete process.env["SITE_NOINDEX"];
-    const rules = rulesOf();
+    const rules = await rulesOf();
     expect(rules).toHaveLength(1);
     expect(rules[0]).toEqual({ userAgent: "*", allow: "/", disallow: ["/u/", "/search", "/admin/", "/api/"] });
   });
 
-  it("keeps the sitemap line in the indexable branch", () => {
+  it("keeps the sitemap line in the indexable branch", async () => {
     delete process.env["SITE_NOINDEX"];
-    expect(robots().sitemap).toMatch(/\/sitemap\.xml$/);
+    expect((await robots()).sitemap).toMatch(/\/sitemap\.xml$/);
   });
 
-  it("disallows the whole site when SITE_NOINDEX is true", () => {
+  it("disallows the whole site when SITE_NOINDEX is true", async () => {
     process.env["SITE_NOINDEX"] = "true";
-    const rules = rulesOf();
+    const rules = await rulesOf();
     expect(rules).toHaveLength(1);
     expect(rules[0]?.disallow).toBe("/");
   });
