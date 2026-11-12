@@ -1191,6 +1191,143 @@
         "src/app/submit-report/page.tsx",
         "docs/ownership.json"
       ]
+    },
+    "H3.2b": {
+      "branchPrefix": "haiku/h3.2b",
+      "globs": [
+        "src/server/models/layout.ts",
+        "src/server/ranking/pins.ts",
+        "docs/ownership.json",
+        "progress/H3.2b.md"
+      ]
+    },
+    "H3.1b": {
+      "branchPrefix": "haiku/h3.1b",
+      "globs": [
+        "src/styles/admin.css",
+        "src/components/admin/AdminShell.tsx",
+        "src/components/admin/ui/**",
+        "src/components/admin/nav.ts",
+        "src/app/admin/layout.tsx",
+        "src/app/styleguide/admin/**",
+        "tests/server/ui/admin-nav.test.ts",
+        "src/app/admin/coming/**",
+        "docs/ownership.json",
+        "progress/H3.1.md",
+        "docs/claude/**",
+        "src/components/PathChrome.tsx",
+        "docs/ownership.json",
+        "progress/H3.1b.md",
+        "docs/claude/OVERNIGHT_PLAN.md",
+        "src/app/styleguide/admin/layout.tsx",
+        "src/app/styleguide/admin/page.tsx"
+      ]
+    },
+    "H0.7": {
+      "branchPrefix": "haiku/h0.7",
+      "globs": [
+        "src/server/auth/http.ts",
+        "tests/server/auth/**",
+        "src/app/u/login/**",
+        "src/app/admin/login/**",
+        "src/components/AuthForm.tsx",
+        "src/components/admin/AdminLoginForm.tsx",
+        "docs/ownership.json",
+        "progress/H0.7.md"
+      ]
+    },
+    "H3.11a": {
+      "branchPrefix": "haiku/h3.11a",
+      "globs": [
+        "src/server/search/**",
+        "src/lib/queries.ts",
+        "src/components/AdDetail.tsx",
+        "src/components/ui/AdCard.tsx",
+        "src/server/seo/**",
+        "src/lib/seo/**",
+        "src/app/sitemap*/**",
+        "tests/server/seo/**",
+        "tests/server/search/**",
+        "docs/ownership.json",
+        "progress/H3.11a.md"
+      ]
+    },
+    "H3.11b": {
+      "branchPrefix": "haiku/h3.11b",
+      "globs": [
+        "src/server/models/listing.ts",
+        "src/server/listings/**",
+        "src/components/PostWizard.tsx",
+        "src/components/post/**",
+        "src/components/ui/AdCard.tsx",
+        "src/components/AdDetail.tsx",
+        "src/server/shared/policy.ts",
+        "tests/server/listings/**",
+        "docs/ownership.json",
+        "progress/H3.11b.md",
+        "src/server/shared/schemas/listings.ts",
+        "src/lib/models.ts",
+        "src/app/ad/[slug]/page.tsx",
+        "src/lib/ui/post-form.ts"
+      ]
+    },
+    "H3.11c": {
+      "branchPrefix": "haiku/h3.11c",
+      "globs": [
+        "src/server/media/**",
+        "src/app/admin/media/**",
+        "src/components/admin/ui/ImagePicker.tsx",
+        "src/server/layout/media.ts",
+        "tests/server/media/**",
+        "tests/server/layout/media.test.ts",
+        ".env.example",
+        "docs/ownership.json",
+        "progress/H3.11c.md"
+      ]
+    },
+    "H3.11d": {
+      "branchPrefix": "haiku/h3.11d",
+      "globs": [
+        "src/app/admin/listing-order/**",
+        "src/server/ranking/**",
+        "tests/server/ranking/**",
+        "docs/ownership.json",
+        "progress/H3.11d.md"
+      ]
+    },
+    "H3.11e": {
+      "branchPrefix": "haiku/h3.11e",
+      "globs": [
+        "src/server/indexnow/**",
+        "src/server/listings/import.ts",
+        "src/app/admin/import/**",
+        "tests/server/listings/import.test.ts",
+        "docs/ownership.json",
+        "progress/H3.11e.md"
+      ]
+    },
+    "H5.1": {
+      "branchPrefix": "haiku/h5.1",
+      "globs": [
+        "tests/e2e/**",
+        "playwright.config.ts",
+        "docs/ownership.json",
+        "progress/H5.1.md"
+      ]
+    },
+    "H0.8": {
+      "branchPrefix": "haiku/h0.8",
+      "globs": [
+        "docs/ownership.json",
+        "progress/H0.8.md"
+      ]
+    },
+    "H0.9": {
+      "branchPrefix": "haiku/h0.9",
+      "globs": [
+        "docs/ownership.json",
+        "progress/H0.9.md"
+      ]
     }
   }
 }

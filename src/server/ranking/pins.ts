@@ -1,32 +1,7 @@
-import { Schema, type Types } from "mongoose";
-import { collectionName, modelName } from "@/server/models/names";
-import { registerModel } from "@/server/models/register";
 
-/** A pinned ad. `scope` is "home", "hub:<category>", "hub:<category>/<city>" or "hub:<category>/<city>/<district>". */
-export interface ListingPinDoc {
-  _id?: Types.ObjectId;
-  scope: string;
-  listingId: string;
-  position: number;
-  startsAt?: Date | null;
-  endsAt?: Date | null;
-  createdBy: string;
-  createdAt?: Date;
-}
-
-const listingPinSchema = new Schema<ListingPinDoc>(
-  {
-    scope: { type: String, required: true, index: true },
-    listingId: { type: String, required: true },
-    position: { type: Number, required: true, min: 1 },
-    startsAt: { type: Date, default: null },
-    endsAt: { type: Date, default: null },
-    createdBy: { type: String, required: true },
-  },
-  { timestamps: { createdAt: true, updatedAt: false }, collection: collectionName("listingpins", "ListingPin") },
-);
-
-export const ListingPin = registerModel<ListingPinDoc>(modelName("ListingPin"), listingPinSchema);
+/** One model for pins: defined in src/server/models/layout.ts (collection `listingpins`). */
+import { ListingPin, type ListingPinDoc } from "@/server/models/layout";
+export { ListingPin, type ListingPinDoc };
 
 export type PinWindow = Pick<ListingPinDoc, "listingId" | "position" | "startsAt" | "endsAt">;
 
