@@ -48,6 +48,8 @@ export interface SiteDoc extends BaseDoc {
   paths?: unknown;
   /** Indexing rules (H4.6): thresholds, switched-off categories and cities. */
   seoIndexing?: unknown;
+  /** robots extras, llms.txt text, Organization fields, ad schema mapping, default OG image (H4.7). */
+  seoSettings?: unknown;
   /** Listing order settings (H3.8). Missing means the original order. */
   ranking?: { tierOrder?: string[]; verifiedFirst?: boolean; photoFirst?: boolean };
 }
@@ -183,6 +185,7 @@ const siteSchema = new Schema<SiteDoc>(
     freeAdsPerWeek: { type: Number },
     paths: Schema.Types.Mixed,
     seoIndexing: Schema.Types.Mixed,
+    seoSettings: Schema.Types.Mixed,
     ranking: {
       type: new Schema({ tierOrder: [String], verifiedFirst: Boolean, photoFirst: Boolean }, { _id: false }),
     },

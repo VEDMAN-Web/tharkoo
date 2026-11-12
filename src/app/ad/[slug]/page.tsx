@@ -9,6 +9,7 @@ import { safePhoto } from "@/lib/media";
 import { getCategory, getListingBySlug, getRelated, getSite } from "@/lib/queries";
 import { canonical, fillTemplate } from "@/lib/seo";
 import { listingJsonLd } from "@/lib/seo/schema";
+import { getSeoSettings } from "@/app/admin/seo/settings/store";
 import { siteUrl } from "@/lib/utils";
 import { listingVisibility } from "@/server/listings/visibility";
 import { adPath, categoryPath, placePath } from "@/lib/urls";
@@ -119,7 +120,9 @@ export default async function AdPage({ params }: Props) {
     { name: `${city} ${catName}`, path: placePath(ad.categorySlug || "", ad.citySlug || "") },
     ...(district ? [{ name: `${district} ${catName}`, path: placePath(ad.categorySlug || "", ad.citySlug || "", ad.districtSlug || "") }] : []),
   ];
+  const seoSettings = await getSeoSettings().catch(() => null);
   const structured = listingJsonLd({
+    mapping: seoSettings?.adSchema[ad.categorySlug || ""],
     category: ad.categorySlug || "",
     name: displayTitle(ad.title),
     description: (ad.description || displayTitle(ad.title)).slice(0, 300),
