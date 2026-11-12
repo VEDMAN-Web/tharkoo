@@ -16,6 +16,7 @@ import {
 import { prettyPlace } from "@/lib/format";
 import { fillTemplate } from "@/lib/seo";
 import { isCityAlias } from "@/lib/seo/district-alias";
+import { districtMinimum, getIndexing } from "@/server/seo/indexing";
 import { placePath, tagPath } from "@/lib/urls";
 import { withUrlSeo, urlHeading } from "@/lib/seo/override";
 import { fallbackLanding, visibleHeading } from "@/lib/seo/landing";
@@ -47,6 +48,7 @@ export async function generateMetadata({ params, searchParams }: Props): Promise
   ]);
   const dist = districtRows.find((row) => row.slug === district);
   if (!cat || !city || !dist || isCityAlias(city.name, dist.name)) return {};
+  const distMin = districtMinimum(await getIndexing(), cat, city.slug || location);
   const vars = {
     category: cat.name,
     city: city.name,
@@ -82,7 +84,7 @@ export async function generateMetadata({ params, searchParams }: Props): Promise
     title,
     description,
     path: `${path}${suffix ? `?${suffix}` : ""}`,
-    index: pageNo === 1 && !(filtered && feed.total === 0) && !isThin(feed.total, cat.minListingsLocality ?? 10),
+    index: pageNo === 1 && !(filtered && feed.total === 0) && !isThin(feed.total, distMin),
     follow: true,
   });
 }
@@ -99,6 +101,7 @@ export default async function DistrictPage({ params, searchParams }: Props) {
   ]);
   const dist = districtRows.find((row) => row.slug === district);
   if (!cat || !city || !dist) notFound();
+  const distMin = districtMinimum(await getIndexing(), cat, city.slug || location);
   if (isCityAlias(city.name, dist.name)) permanentRedirect(placePath(cat.slug || category, city.slug || location));
   if (cat.slug !== category || city.slug !== location || dist.slug !== district) {
     permanentRedirect(placePath(cat.slug || category, city.slug || location, dist.slug || district));
@@ -118,7 +121,7 @@ export default async function DistrictPage({ params, searchParams }: Props) {
     urlHeading(canonicalPath, ""),
   ]);
   if (pageOutOfRange(sp.page, feed.pages)) notFound();
-  const thin = isThin(feed.total, cat.minListingsLocality ?? 10);
+  const thin = isThin(feed.total, distMin);
   const districtCopy = fallbackLanding({
     category: cat.name || category,
     city: city.name || location,
