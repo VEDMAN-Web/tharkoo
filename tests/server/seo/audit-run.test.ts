@@ -2,8 +2,7 @@ import mongoose from "mongoose";
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 import { POST as cron } from "@/app/api/cron/seo-audit/route";
 import { SeoAuditRun } from "@/server/models";
-import { pruneRuns, runAudit } from "@/server/seo/audit-run";
-import { crawlSite, type PageFetcher } from "@/server/seo/crawl";
+import { crawlSite, type PageFetcher, pruneRuns, runAudit } from "@/server/seo/audit-run";
 import { clearMemoryMongo, connectMemoryMongo, disconnectMemoryMongo } from "../../setup/mongo";
 
 function resetDbCache() {

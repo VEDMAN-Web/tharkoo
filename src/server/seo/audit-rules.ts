@@ -149,15 +149,18 @@ export function countIssues(lists: string[][]) {
 
 export interface AuditCounts {
   urls: number;
+  /** All URLs found in the sitemap (urls may be capped lower). */
+  sitemapUrls?: number;
   requests: number;
   p0Rows: number;
   p1Rows: number;
   robotsIssues: number;
 }
 
-export function summarise(rows: AuditRow[], urls: number, robots: string[]): AuditCounts {
+export function summarise(rows: AuditRow[], urls: number, robots: string[], sitemapUrls = urls): AuditCounts {
   return {
     urls,
+    sitemapUrls,
     requests: rows.length,
     p0Rows: rows.filter((r) => r.p0.length).length,
     p1Rows: rows.filter((r) => r.p1.length).length,

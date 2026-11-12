@@ -7,7 +7,7 @@
 // Exit code: 0 = no P0 failures, 1 = at least one P0 failure.
 import { mkdirSync, writeFileSync } from "node:fs";
 import { countIssues } from "../src/server/seo/audit-rules";
-import { crawlSite, type AgentName } from "../src/server/seo/crawl";
+import { crawlSite, type AgentName } from "../src/server/seo/audit-run";
 
 async function main() {
   const base = (process.env.BASE_URL || "http://127.0.0.1:4317").replace(/\/$/, "");

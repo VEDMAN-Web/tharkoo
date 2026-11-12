@@ -110,6 +110,6 @@ describe("seo rules", () => {
       ["no <title>", 1],
     ]);
     const rows = [{ p0: ["a"], p1: [] }, { p0: [], p1: ["b"] }, { p0: [], p1: [] }] as unknown as AuditRow[];
-    expect(summarise(rows, 2, ["r"])).toEqual({ urls: 2, requests: 3, p0Rows: 1, p1Rows: 1, robotsIssues: 1 });
+    expect(summarise(rows, 2, ["r"])).toEqual({ urls: 2, sitemapUrls: 2, requests: 3, p0Rows: 1, p1Rows: 1, robotsIssues: 1 });
   });
 });

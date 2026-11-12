@@ -10,6 +10,12 @@ export interface SeoAuditRowDoc {
   status: number;
   inSitemap: boolean;
   title: string;
+  desc?: string;
+  h1?: string;
+  canonical?: string;
+  words?: number;
+  ld?: string[];
+  noindex?: boolean;
   p0: string[];
   p1: string[];
 }
@@ -19,7 +25,7 @@ export interface SeoAuditRunDoc {
   startedAt: Date;
   finishedAt?: Date | null;
   base: string;
-  counts: { urls: number; requests: number; p0Rows: number; p1Rows: number; robotsIssues: number };
+  counts: { urls: number; sitemapUrls?: number; requests: number; p0Rows: number; p1Rows: number; robotsIssues: number };
   robotsIssues: string[];
   rows: SeoAuditRowDoc[];
   triggeredBy: string;
