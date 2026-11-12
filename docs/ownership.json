@@ -1567,6 +1567,14 @@
         "docs/ownership.json",
         "progress/H5.3.md"
       ]
+    },
+    "H5.1c": {
+      "branchPrefix": "haiku/h5.1c",
+      "globs": [
+        "tests/e2e/seo-center.e2e.ts",
+        "docs/ownership.json",
+        "progress/H5.1c.md"
+      ]
     }
   }
 }
