@@ -127,6 +127,15 @@ describe("pins", () => {
     expect(d1).toBeTruthy();
   });
 
+  it("marks the pinned ad with its slot so the page can place it before the star cards", async () => {
+    const { c } = await seed();
+    await addPin(admin, { scope: "hub:jobs", ref: String(c._id), position: 1 });
+    const result = await queryListings({ categorySlug: "jobs", excludeStar: true });
+    expect(result.legacy[0].slug).toBe("ad-c-3333");
+    expect(result.legacy[0].pinPosition).toBe(1);
+    expect(result.legacy[1].pinPosition).toBeUndefined();
+  });
+
   it("ignores a pin with expired dates and one whose ad is not in that feed", async () => {
     const { c, car } = await seed();
     await ListingPin.create({ scope: "hub:jobs", listingId: String(c._id), position: 1, startsAt: new Date(Date.now() - 3 * DAY), endsAt: new Date(Date.now() - DAY), createdBy: "t" });

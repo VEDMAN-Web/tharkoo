@@ -9,6 +9,7 @@ import {
   rankScore,
   type RankSettings,
 } from "@/server/ranking";
+import { withPins } from "@/lib/ui/pins";
 import { scopeFromParts } from "@/server/ranking/scope";
 import defaultOrder from "./default-order.json";
 import { fixtureRows, NOW, type FixtureRow } from "./fixture";
@@ -133,5 +134,21 @@ describe("scope from the admin pickers", () => {
     expect(scopeFromParts("property", "surat", "adajan")).toBe(
       pinScopeOf({ categorySlug: "property", citySlug: "surat", districtSlug: "adajan" }),
     );
+  });
+});
+
+describe("pins on the page as shown (stars first)", () => {
+  const ad = (slug: string, pinPosition?: number) => ({ slug, ...(pinPosition ? { pinPosition } : {}) });
+  it("puts a position 1 pin before the star cards", () => {
+    const feed = withPins([ad("star-1")], [ad("a"), ad("pin", 1), ad("b")], 1);
+    expect(feed.map((item) => item.slug)).toEqual(["pin", "star-1", "a", "b"]);
+  });
+  it("keeps stars first when nothing is pinned, and does not repeat a star in the feed", () => {
+    const feed = withPins([ad("star-1")], [ad("star-1"), ad("a")], 1);
+    expect(feed.map((item) => item.slug)).toEqual(["star-1", "a"]);
+  });
+  it("places a position 3 pin in the third slot, and ignores pins after page 1", () => {
+    expect(withPins([ad("s1"), ad("s2")], [ad("a"), ad("p", 3)], 1).map((item) => item.slug)).toEqual(["s1", "s2", "p", "a"]);
+    expect(withPins([], [ad("a"), ad("p", 1)], 2).map((item) => item.slug)).toEqual(["a", "p"]);
   });
 });

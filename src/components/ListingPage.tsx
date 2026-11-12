@@ -1,5 +1,6 @@
 "use client";
 
+import { withPins } from "@/lib/ui/pins";
 import Link from "next/link";
 import { useState } from "react";
 import { MapPin, Search } from "lucide-react";
@@ -101,7 +102,7 @@ export function ListingPageView({
   const paths = useUrlPaths();
   const clear = path.split("?")[0];
   const chips = districts.slice(0, 2);
-  const feed = [...stars, ...items.filter((ad) => !stars.some((star) => star.slug && star.slug === ad.slug))];
+  const feed = withPins(stars, items, page);
   const short = cityName && categoryName ? `${cityName} ${categoryName}` : crumbs[crumbs.length - 1]?.name;
 
   const blocks: BlockBase[] = layout?.blocks ?? listingDefaultBlocks();
@@ -224,7 +225,7 @@ export function ListingPageView({
         <div className="tk-feed">
           {feed.map((ad, index) => (
             <span key={ad.publicId || ad.slug || index} style={{ display: "contents" }}>
-              <AdCard ad={ad} featured={index < stars.length} priority={index === 0} />
+              <AdCard ad={ad} featured={stars.some((star) => star.slug && star.slug === ad.slug)} priority={index === 0} />
               {inFeedEvery > 0 && (index + 1) % inFeedEvery === 0 ? (
                 inFeedId && nodes[inFeedId] ? (
                   nodes[inFeedId]

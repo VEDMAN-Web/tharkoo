@@ -16,6 +16,7 @@ import {
 import { loadLocations, type LocationRow } from "@/server/locations/service";
 import {
   applyPins,
+  isPinActive,
   compareRank,
   loadActivePins,
   loadRankSettings,
@@ -564,6 +565,14 @@ export async function queryListings(input: ListingQuery): Promise<SearchResult> 
   const ordered = applyPins(ranked.map((row) => row.doc), pins, (doc) => String(doc._id), now);
   const promoMap = new Map(ranked.map((row) => [String(row.doc._id), row.promos]));
   const presented = await presentRows(ordered, promoMap, now);
+  const present = new Set(ordered.map((doc) => String(doc._id)));
+  const slotOf = new Map(
+    pins.filter((pin) => isPinActive(pin, now) && present.has(pin.listingId)).map((pin) => [pin.listingId, pin.position] as const),
+  );
+  if (slotOf.size > 0) {
+    const slugSlot = new Map(ordered.flatMap((doc) => (slotOf.has(String(doc._id)) && doc.slug ? [[doc.slug, slotOf.get(String(doc._id))!] as const] : [])));
+    presented.legacy = presented.legacy.map((item) => (item.slug && slugSlot.has(item.slug) ? { ...item, pinPosition: slugSlot.get(item.slug) } : item));
+  }
   const start = (page - 1) * pageSize;
   return {
     hits: presented.hits.slice(start, start + pageSize),
