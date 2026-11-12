@@ -34,6 +34,8 @@ export interface ListingDoc {
   slug?: string;
   description: string;
   attributes?: Record<string, unknown>;
+  /** Asking price in whole rupees (INR). A real field, not an attribute. */
+  price?: number;
   contact?: ListingContactDoc;
   mediaIds?: Types.ObjectId[];
   coverMediaId?: Types.ObjectId;
@@ -151,6 +153,7 @@ const listingSchema = new Schema<ListingDoc>(
     slug: { type: String },
     description: { type: String, required: true },
     attributes: { type: Schema.Types.Mixed, default: {} },
+    price: { type: Number, min: 0 },
     contact: {
       type: new Schema<ListingContactDoc>(
         { phone: String, whatsapp: String, telegram: String, acceptForm: Boolean },
