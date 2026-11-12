@@ -37,3 +37,12 @@
   .tk-block-banner img { max-width: 100%; width: 100%; }
   .tk-block-banner a { margin-left: 0; }
 }
+/* Category grid: 3 columns is the built-in look; other counts apply on wide screens only. */
+@media (min-width: 1024px) {
+  .tk-home-grid[data-cols="2"] .tk-home-card { flex-basis: calc((100% - 24px) / 2); }
+  .tk-home-grid[data-cols="4"] .tk-home-card { flex-basis: calc((100% - 72px) / 4); }
+  .tk-home-grid[data-cols="5"] .tk-home-card { flex-basis: calc((100% - 96px) / 5); }
+  .tk-home-grid[data-cols="6"] .tk-home-card { flex-basis: calc((100% - 120px) / 6); }
+}
+.tk-hero-sub { margin: 8px 0 0; font-size: 18px; }
+.tk-home-count { font-size: 13px; color: var(--muted); }
