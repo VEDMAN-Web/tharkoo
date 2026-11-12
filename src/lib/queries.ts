@@ -153,6 +153,7 @@ export async function getLatestListings(limit = 12): Promise<LatestListing[]> {
       const now = new Date();
       const docs = await Listing.find({
         status: "active",
+        feedHidden: { $ne: true },
         $or: [{ expiresAt: { $exists: false } }, { expiresAt: null }, { expiresAt: { $gt: now } }],
       })
         .sort({ publishedAt: -1, _id: -1 })
@@ -262,7 +263,7 @@ export async function listingCountsByCategoryCity() {
         _id: { categoryId: unknown; cityId: unknown };
         n: number;
       }>([
-        { $match: { status: "active", categoryId: { $exists: true }, cityId: { $exists: true } } },
+        { $match: { status: "active", feedHidden: { $ne: true }, categoryId: { $exists: true }, cityId: { $exists: true } } },
         { $group: { _id: { categoryId: "$categoryId", cityId: "$cityId" }, n: { $sum: 1 } } },
       ]);
       const [categories, locations] = await Promise.all([loadCategories(), loadLocations()]);

@@ -86,6 +86,7 @@ export async function shardEntries(shard: SitemapShard): Promise<SitemapEntry[]>
   }
   const liveMatch = {
     status: "active" as const,
+    feedHidden: { $ne: true },
     $or: [{ expiresAt: { $exists: false } }, { expiresAt: null }, { expiresAt: { $gt: new Date() } }],
   };
   if (shard === "categories" || shard === "cities" || shard === "districts") {

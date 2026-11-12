@@ -3,8 +3,8 @@
 import { getStaffFromHeaders } from "@/lib/admin-auth";
 import { HttpError } from "@/server/http";
 import { explainUrl } from "@/server/seo/explain";
-import { assertSeoEditor } from "@/server/seo/staff";
-import { runNow } from "@/server/seo/overview";
+import { assertSeoEditor } from "@/app/admin/seo/staff";
+import { runNow } from "@/app/admin/seo/overview";
 
 async function actor() {
   const identity = await getStaffFromHeaders();

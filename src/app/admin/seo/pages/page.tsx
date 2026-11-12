@@ -1,6 +1,6 @@
 import { AdminShell } from "@/components/admin/AdminShell";
 import { EmptyState } from "@/components/admin/ui";
-import { loadLastRunRows } from "@/server/seo/overview";
+import { loadLastRunRows } from "@/app/admin/seo/overview";
 import { pageTypeOfPath } from "@/server/seo/explain";
 import { SeoTabs } from "../SeoTabs";
 import { PagesTable, type PageRow } from "./PagesTable";

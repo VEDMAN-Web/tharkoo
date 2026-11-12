@@ -1,7 +1,7 @@
 import { AdminShell } from "@/components/admin/AdminShell";
 import { BarList, EmptyState, KpiCard } from "@/components/admin/ui";
 import { getStaffFromHeaders } from "@/lib/admin-auth";
-import { loadOverview } from "@/server/seo/overview";
+import { loadOverview } from "@/app/admin/seo/overview";
 import { RunSeoCheck } from "./RunSeoCheck";
 import { SeoTabs } from "./SeoTabs";
 

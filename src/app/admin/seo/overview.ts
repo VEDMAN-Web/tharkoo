@@ -4,7 +4,7 @@ import { ConflictError } from "@/server/http";
 import { Redirect } from "@/server/models/cms";
 import { SeoAuditRun, type SeoAuditRowDoc, type SeoAuditRunDoc } from "@/server/models/seo";
 import { runAudit } from "@/server/seo/audit-run";
-import { assertSeoEditor, recordSeo, type SeoActor } from "@/server/seo/staff";
+import { assertSeoEditor, recordSeo, type SeoActor } from "@/app/admin/seo/staff";
 
 export const RUN_COOLDOWN_MS = 10 * 60 * 1000;
 /** A manual run crawls fewer URLs than the nightly one so it finishes inside a request. */
