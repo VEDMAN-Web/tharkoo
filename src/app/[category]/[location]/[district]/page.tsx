@@ -1,6 +1,9 @@
 import { notFound, permanentRedirect } from "next/navigation";
 import type { Metadata } from "next";
+import { resolveListingLayout } from "@/components/blocks/ListingLayout";
 import { ListingPageView } from "@/components/ListingPage";
+import { makeT } from "@/lib/ui/text";
+import { textOverrides } from "@/app/admin/ui-text/store";
 import {
   getCategory,
   getCities,
@@ -142,15 +145,21 @@ export default async function DistrictPage({ params, searchParams }: Props) {
     count: feed.total,
     year: new Date().getFullYear(),
   };
+  const layout = await resolveListingLayout({ path: canonicalPath, category: cat.slug || category, vars });
+  const texts = await textOverrides();
+  const t = makeT(texts);
+
   return (
     <ListingPageView
+      layout={layout}
+      texts={texts}
       h1={heading || visibleHeading(fillTemplate(seo?.h1 || "", vars), districtCopy.h1)}
       faqs={districtCopy.faqs}
       popular={tags.slice(0, 4).map((tag) => ({ href: tagPath(paths, cat.slug || category, tag.slug), label: `${dist.name} ${tag.label}` }))}
       h2={fillTemplate(seo?.h2 || "", vars)}
       intro={districtCopy.intro || fillTemplate(seo?.intro || "", vars)}
       crumbs={[
-        { name: "Tharkoo India", path: "/" },
+        { name: t("listing.crumb.home"), path: "/" },
         { name: cat.name!, path: `/${cat.slug}/` },
         { name: `${prettyPlace(city.stateSlug)} ${cat.name}`, path: placePath(cat.slug || category, city.stateSlug || "") },
         { name: `${city.name} ${cat.name}`, path: placePath(cat.slug || category, city.slug || location) },
@@ -177,9 +186,9 @@ export default async function DistrictPage({ params, searchParams }: Props) {
         .slice(0, 4)
         .map((row) => ({
           href: placePath(cat.slug || category, city.slug || location, row.slug || ""),
-          label: `${cat.name} in ${row.name}, ${city.name}`,
+          label: t("listing.link.in", { name: cat.name, place: `${row.name}, ${city.name}` }),
         }))
-        .concat([{ href: placePath(cat.slug || category, city.slug || location), label: `${cat.name} in ${city.name}` }])
+        .concat([{ href: placePath(cat.slug || category, city.slug || location), label: t("listing.link.in", { name: cat.name, place: city.name }) }])
         .slice(0, 5)}
       emptyNearby={[{ href: placePath(cat.slug || category, city.slug || location), label: city.name! }]}
       photos={sp.photos === "1"}

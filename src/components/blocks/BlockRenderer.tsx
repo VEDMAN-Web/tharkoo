@@ -12,6 +12,7 @@ import { RichTextBlock } from "./RichTextBlock";
 import { SeoTextBlock } from "./SeoTextBlock";
 import { StepsBlock } from "./StepsBlock";
 import { TrustBlock } from "./TrustBlock";
+import { deviceClass } from "./device";
 import "./blocks.css";
 
 // Block types without a component here render nothing. More arrive with the pages that use them (H3.4 to H3.6).
@@ -40,11 +41,6 @@ function fillProps(value: unknown, vars: SeoVars): unknown {
   return value;
 }
 
-export function deviceClass(devices: BlockBase["devices"]) {
-  if (!devices || devices.length !== 1) return undefined;
-  return devices[0] === "mobile" ? "tk-only-mobile" : "tk-only-desktop";
-}
-
 /** `h1Block` is the id of the block whose title should be the page h1 (used when a page has no hero). */
 export function BlockRenderer({ blocks, vars = {}, h1Block }: { blocks: BlockBase[]; vars?: SeoVars; h1Block?: string }) {
   return (
@@ -61,3 +57,5 @@ export function BlockRenderer({ blocks, vars = {}, h1Block }: { blocks: BlockBas
     </>
   );
 }
+
+export { deviceClass };

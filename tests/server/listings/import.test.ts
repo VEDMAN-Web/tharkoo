@@ -1,5 +1,8 @@
 import mongoose from "mongoose";
-import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
+import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
+
+const queueIndexNow = vi.hoisted(() => vi.fn());
+vi.mock("@/server/indexnow/ping", () => ({ queueIndexNow }));
 import { parseCsv } from "@/server/listings/csv";
 import { MAX_IMPORT_ROWS, dryRunImport, runImport, type ImportActor } from "@/server/listings/import";
 import { AuditEvent, BannedWord, Category, Listing, Location, MediaAsset, User } from "@/server/models";
@@ -129,6 +132,17 @@ describe("partner import", () => {
     expect(listing?.expiresAt).toBeInstanceOf(Date);
   });
 
+  it("pings IndexNow for each ad that goes straight to active, and not for pending imports", async () => {
+    const owner = await partner();
+    await catalogue(owner._id);
+    queueIndexNow.mockClear();
+    await runImport(admin, owner.email, file(row("Held cycle")), "pending", "req-4");
+    expect(queueIndexNow).not.toHaveBeenCalled();
+    await runImport(superadmin, owner.email, file(row("Fresh cycle"), row("Second cycle")), "active", "req-5");
+    const pinged = queueIndexNow.mock.calls.flatMap((call) => call[0] as string[]).sort();
+    expect(pinged).toEqual(["/ad/fresh-cycle/", "/ad/second-cycle/"]);
+  });
+
   it("reports a row with a missing required field and does not import it", async () => {
     const owner = await partner();
     await catalogue(owner._id);
@@ -178,13 +192,25 @@ describe("partner import", () => {
     expect(dry.okCount).toBe(200);
   });
 
-  it("reports a price column as an unknown field because the policy blocks price attribute keys", async () => {
+  it("reads the price column into the real price field, not an attribute", async () => {
     const owner = await partner();
     await catalogue(owner._id);
-    const csv = ["category,city,title,description,amount,price", "cycles,surat,Priced cycle,A cycle,100,5000"].join("\n");
+    const csv = ["category,city,title,description,amount,price", "cycles,surat,Priced cycle,A cycle,100,\"5,000\""].join("\n");
+    const dry = await dryRunImport(admin, owner.email, csv);
+    expect(dry.rows[0].errors).toEqual([]);
+    await runImport(admin, owner.email, csv, "pending", "req-price");
+    const saved = await Listing.findOne({ title: "Priced cycle" }).lean();
+    expect(saved?.price).toBe(5000);
+    expect(saved?.attributes).not.toHaveProperty("price");
+  });
+
+  it("rejects a price that is not a whole number of rupees", async () => {
+    const owner = await partner();
+    await catalogue(owner._id);
+    const csv = ["category,city,title,description,amount,price", "cycles,surat,Bad price,A cycle,100,12.5"].join("\n");
     const dry = await dryRunImport(admin, owner.email, csv);
     expect(dry.rows[0].ok).toBe(false);
-    expect(dry.rows[0].errors[0]).toMatch(/no field "price"/);
+    expect(dry.rows[0].errors[0]).toMatch(/Price "12.5"/);
   });
 
   it("refuses staff roles other than admin and superadmin", async () => {
