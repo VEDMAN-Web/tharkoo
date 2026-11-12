@@ -792,15 +792,30 @@
     "H3.4": {
       "branchPrefix": "haiku/h3.4",
       "globs": [
+        "docs/ownership.json",
+        "progress/H3.4-editor.md",
+        "scripts/seed.ts",
+        "src/app/admin/homepage/**",
+        "src/app/admin/layout-actions.ts",
         "src/app/page.tsx",
         "src/components/HomeBlocks.tsx",
+        "src/components/admin/layout-editor/**",
         "src/components/blocks/**",
         "src/server/layout/defaults/home.ts",
-        "src/app/admin/homepage/**",
-        "src/components/admin/layout-editor/**",
         "src/server/seed/layouts.ts",
         "scripts/seed.ts",
-        "tests/server/layout/home.test.ts"
+        "tests/server/layout/home.test.ts",
+        "docs/ownership.json",
+        "progress/H3.4.md",
+        "progress/H3.4-editor.md",
+        "src/server/layout/blocks.ts",
+        "src/components/admin/nav.ts",
+        "src/app/admin/layout-actions.ts",
+        "tests/server/layout/**",
+        "src/lib/layout/**",
+        "src/server/layout/service.ts",
+        "src/server/seed/run.ts",
+        "src/server/layout/defaults/**"
       ]
     },
     "H3.5": {
@@ -814,7 +829,14 @@
         "src/server/layout/defaults/listing.ts",
         "src/server/seed/layouts.ts",
         "src/app/admin/listing-pages/**",
-        "tests/server/layout/listing.test.ts"
+        "tests/server/layout/listing.test.ts",
+        "docs/ownership.json",
+        "progress/H3.5.md",
+        "src/server/layout/defaults/**",
+        "src/lib/layout/**",
+        "src/components/admin/nav.ts",
+        "src/app/admin/layout-actions.ts",
+        "tests/server/layout/**"
       ]
     },
     "H3.6": {
@@ -829,7 +851,14 @@
         "src/app/admin/post-page/**",
         "src/app/admin/categories/**",
         "src/components/admin/category-fields/**",
-        "tests/server/layout/post.test.ts"
+        "tests/server/layout/post.test.ts",
+        "docs/ownership.json",
+        "progress/H3.6.md",
+        "src/components/admin/nav.ts",
+        "src/app/admin/layout-actions.ts",
+        "src/server/models/catalog.ts",
+        "src/server/shared/fields.ts",
+        "src/components/admin/layout-editor/**"
       ]
     },
     "H3.7": {
@@ -886,7 +915,10 @@
         "scripts/seo-check.ts",
         "package.json",
         "src/app/api/cron/seo-audit/**",
-        "tests/server/seo/**"
+        "tests/server/seo/**",
+        "src/server/seo/crawl.ts",
+        "src/server/seo/**",
+        "docs/ownership.json"
       ]
     },
     "H4.2": {
@@ -1246,7 +1278,11 @@
         "src/server/shared/policy.ts",
         "tests/server/listings/**",
         "docs/ownership.json",
-        "progress/H3.11b.md"
+        "progress/H3.11b.md",
+        "src/server/shared/schemas/listings.ts",
+        "src/lib/models.ts",
+        "src/app/ad/[slug]/page.tsx",
+        "src/lib/ui/post-form.ts"
       ]
     },
     "H3.11c": {
@@ -1298,6 +1334,20 @@
       "globs": [
         "docs/ownership.json",
         "progress/H0.8.md"
+      ]
+    },
+    "H0.9": {
+      "branchPrefix": "haiku/h0.9",
+      "globs": [
+        "docs/ownership.json",
+        "progress/H0.9.md"
+      ]
+    },
+    "H0.10": {
+      "branchPrefix": "haiku/h0.10",
+      "globs": [
+        "docs/ownership.json",
+        "progress/H0.10.md"
       ]
     }
   }

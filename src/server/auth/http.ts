@@ -5,8 +5,8 @@ export const SESSION_COOKIE = "sid";
 export const SESSION_MS = 1000 * 60 * 60 * 24 * 14;
 export const SESSION_MAX_AGE = Math.floor(SESSION_MS / 1000);
 export const RATE_WINDOW_MS = 1000 * 60 * 15;
-/** Five failures are allowed. The sixth attempt is rejected. */
-export const LOGIN_MAX = 5;
+/** Twenty attempts are allowed per window. The twenty-first is rejected. */
+export const LOGIN_MAX = 20;
 
 export function hashToken(token: string) {
   const secret = process.env.SESSION_SECRET?.trim();

@@ -458,6 +458,8 @@ export async function runSeed(): Promise<SeedResult> {
   const listings = await seedDemoListings(false);
   const { ensureHomepageDocument } = await import("@/lib/ui/site-store");
   await ensureHomepageDocument();
+  const { seedLayouts } = await import("@/server/seed/layouts");
+  await seedLayouts();
   await seedEditorial();
   invalidateTags(["categories", "locations", "listings", "feed", "counts", "site"]);
   return {

@@ -9,6 +9,7 @@ import {
   rankScore,
   type RankSettings,
 } from "@/server/ranking";
+import { scopeFromParts } from "@/server/ranking/scope";
 import defaultOrder from "./default-order.json";
 import { fixtureRows, NOW, type FixtureRow } from "./fixture";
 
@@ -119,5 +120,18 @@ describe("pins", () => {
     expect(pinScopeOf({ citySlug: "surat" })).toBeNull();
     expect(pinScopeOf({ categorySlug: "property", q: "flat" })).toBeNull();
     expect(pinScopeOf({ categorySlug: "property", excludeSlug: "x" })).toBeNull();
+  });
+});
+
+describe("scope from the admin pickers", () => {
+  it("builds home, category, city and district scopes that match the feed scope", () => {
+    expect(scopeFromParts("", "", "")).toBe("home");
+    expect(scopeFromParts("property", "", "")).toBe("hub:property");
+    expect(scopeFromParts("property", "surat", "")).toBe("hub:property/surat");
+    expect(scopeFromParts("property", "surat", "adajan")).toBe("hub:property/surat/adajan");
+    expect(scopeFromParts("property", "", "adajan")).toBe("hub:property");
+    expect(scopeFromParts("property", "surat", "adajan")).toBe(
+      pinScopeOf({ categorySlug: "property", citySlug: "surat", districtSlug: "adajan" }),
+    );
   });
 });

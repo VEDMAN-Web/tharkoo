@@ -161,3 +161,6 @@ export type {
   SiteMediaDoc,
   UiTextDoc,
 } from "@/server/models/layout";
+
+export { SeoAuditRun, MAX_AUDIT_ROWS } from "@/server/models/seo";
+export type { SeoAuditRowDoc, SeoAuditRunDoc } from "@/server/models/seo";
