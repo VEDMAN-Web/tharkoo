@@ -32,7 +32,7 @@ export function ModerationRow({ ad }: { ad: PendingAd }) {
     <li className="adm-card" style={{ display: "grid", gap: 8 }}>
       <div>
         <strong>{ad.title || "(no title)"}</strong>
-        <span className="t-small text-muted"> {ad.category} / {ad.city} / {new Date(ad.createdAt).toLocaleDateString("en-IN")}</span>
+        <span className="t-small text-muted"> {ad.category} / {ad.city}{ad.createdAt ? ` / ${new Date(ad.createdAt).toLocaleDateString("en-IN")}` : ""}</span>
       </div>
       <p className="t-small" style={{ margin: 0 }}>{ad.description.slice(0, 240)}</p>
       {done ? (

@@ -21,7 +21,7 @@ export default async function Page() {
     description: row.description || "",
     category: nameOf(cats, row.categoryId),
     city: nameOf(places, row.cityId),
-    createdAt: new Date(row.createdAt ?? Date.now()).toISOString(),
+    createdAt: row.createdAt ? new Date(row.createdAt).toISOString() : "",
   }));
   return (
     <AdminShell title="Moderation queue">
