@@ -9,6 +9,7 @@ import { organizationNode, websiteNode } from "@/lib/seo/schema";
 import { categoryPath, placePath, searchPath } from "@/lib/urls";
 import { getCategories, getCities, getHomepageContent, getSeo, getSite, listingCountsByCategoryCity } from "@/lib/queries";
 import { getPaths } from "@/server/urls/service";
+import { uiTexts } from "@/app/admin/ui-text/store";
 import { cardFallback, type HomeCard } from "@/lib/ui/site-content";
 
 const ICONS: Record<string, LucideIcon> = {
@@ -51,6 +52,7 @@ export async function HomeBlocks() {
     getPaths(),
     listingCountsByCategoryCity().catch(() => []),
   ]);
+  const t = await uiTexts();
   const liveKeys = new Set(counts.filter((row) => row.n > 0).map((row) => `${row._id.categorySlug}|${row._id.citySlug}`));
   const bySlug = new Map(categories.map((cat) => [cat.slug, cat as Cat]));
   const cityBySlug = new Map(cities.map((city) => [city.slug, city]));
@@ -93,7 +95,7 @@ export async function HomeBlocks() {
               <Link href={categoryPath(cat.slug || "")} className="tk-home-photo" prefetch={false}>
                 <SmartImage
                   src={card.photo || `/placeholders/${cat.slug}/01.webp`}
-                  alt={`${title || "Category"} classifieds`}
+                  alt={t("home.card.alt", { title: title || "Category" })}
                   seed={cat.slug || "cat"}
                   category={cat.slug}
                   width={600}
