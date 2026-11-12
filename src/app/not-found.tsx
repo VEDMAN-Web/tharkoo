@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
+import { headers } from "next/headers";
 import { EmptyState } from "@/components/ui/EmptyState";
+import { logNotFound } from "@/server/seo/notfound-log";
 
 export const metadata: Metadata = {
   title: "Page not found | Tharkoo",
@@ -7,7 +9,9 @@ export const metadata: Metadata = {
   robots: { index: false, follow: false },
 };
 
-export default function NotFound() {
+export default async function NotFound() {
+  const seen = await headers();
+  await logNotFound({ path: seen.get("x-pathname") ?? "", userAgent: seen.get("user-agent"), referer: seen.get("referer") });
   return (
     <EmptyState
       heading="h1"

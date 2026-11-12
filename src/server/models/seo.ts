@@ -47,3 +47,33 @@ const seoAuditRunSchema = new Schema<SeoAuditRunDoc>(
 seoAuditRunSchema.index({ startedAt: -1 });
 
 export const SeoAuditRun = registerModel<SeoAuditRunDoc>(modelName("SeoAuditRun"), seoAuditRunSchema);
+
+export const MAX_404_PATHS_PER_DAY = 2000;
+const NOT_FOUND_KEEP_SECONDS = 60 * 24 * 3600;
+
+export interface NotFoundDayDoc {
+  _id?: Types.ObjectId;
+  /** UTC day, YYYY-MM-DD. */
+  day: string;
+  path: string;
+  hits: number;
+  botHits: number;
+  refDomain: string;
+  createdAt?: Date;
+  updatedAt?: Date;
+}
+
+const notFoundDaySchema = new Schema<NotFoundDayDoc>(
+  {
+    day: { type: String, required: true },
+    path: { type: String, required: true },
+    hits: { type: Number, default: 0 },
+    botHits: { type: Number, default: 0 },
+    refDomain: { type: String, default: "" },
+  },
+  { timestamps: true, collection: collectionName("seo_not_found_days", "NotFoundDay") },
+);
+notFoundDaySchema.index({ day: 1, path: 1 }, { unique: true });
+notFoundDaySchema.index({ createdAt: 1 }, { expireAfterSeconds: NOT_FOUND_KEEP_SECONDS });
+
+export const NotFoundDay = registerModel<NotFoundDayDoc>(modelName("NotFoundDay"), notFoundDaySchema);
