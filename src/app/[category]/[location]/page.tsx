@@ -16,6 +16,7 @@ import {
   pageOutOfRange,
 } from "@/lib/queries";
 import { prettyPlace } from "@/lib/format";
+import { getIndexing, hubMinimum } from "@/server/seo/indexing";
 import { fillTemplate } from "@/lib/seo";
 import { placePath, tagPath } from "@/lib/urls";
 import { withUrlSeo, urlHeading } from "@/lib/seo/override";
@@ -48,6 +49,7 @@ export async function generateMetadata({ params, searchParams }: Props): Promise
     getSite(),
   ]);
   if (!cat || !loc) return {};
+  const hubMin = hubMinimum(await getIndexing(), cat, loc.slug || location);
   const feed = await getFeed(
     loc.kind === "state"
       ? { categorySlug: category, stateSlug: location }
@@ -67,13 +69,13 @@ export async function generateMetadata({ params, searchParams }: Props): Promise
     category: cat.name || category,
     city: loc.name || location,
     count: feed.total,
-    indexable: !isThin(feed.total, cat.minListingsIndex ?? 3),
+    indexable: !isThin(feed.total, hubMin),
   });
   const title = fillTemplate(seo?.title || copy.title, vars);
   const description = fillTemplate(seo?.description || copy.description, vars);
   const pageNo = Math.max(1, Number(sp.page) || 1);
   const filtered = Boolean(sp.photos || sp.verified);
-  const thin = isThin(feed.total, cat.minListingsIndex ?? 3);
+  const thin = isThin(feed.total, hubMin);
   const query = new URLSearchParams();
   if (sp.photos) query.set("photos", "1");
   if (sp.verified) query.set("verified", "1");
@@ -96,6 +98,7 @@ export default async function LocationPage({ params, searchParams }: Props) {
   const page = Math.max(1, Number(sp.page) || 1);
   const [cat, loc] = await Promise.all([getCategory(category), getLocationBySlug(location)]);
   if (!cat || !loc || (loc.kind !== "city" && loc.kind !== "state")) notFound();
+  const hubMin = hubMinimum(await getIndexing(), cat, loc.slug || location);
   if ((cat.slug && cat.slug !== category) || (loc.slug && loc.slug !== location)) {
     permanentRedirect(placePath(cat.slug || category, loc.slug || location));
   }
@@ -141,7 +144,7 @@ export default async function LocationPage({ params, searchParams }: Props) {
     category: cat.name || category,
     city: loc.name || location,
     count: feed.total,
-    indexable: !isThin(feed.total, cat.minListingsIndex ?? 3),
+    indexable: !isThin(feed.total, hubMin),
     districts: districts.map((row) => row.name || "").filter(Boolean).slice(0, 3),
     updated: feed.items[0]?.publishedAt ? new Date(feed.items[0].publishedAt).toLocaleDateString("en-IN", { day: "numeric", month: "long", year: "numeric" }) : undefined,
   });
@@ -157,7 +160,7 @@ export default async function LocationPage({ params, searchParams }: Props) {
     })),
   ].slice(0, 5);
   const newest = feed.items[0]?.publishedAt;
-  const updated = newest && !isThin(feed.total, cat.minListingsIndex ?? 3)
+  const updated = newest && !isThin(feed.total, hubMin)
     ? new Date(newest).toLocaleDateString("en-IN", { day: "numeric", month: "long", year: "numeric" })
     : undefined;
 
@@ -185,7 +188,7 @@ export default async function LocationPage({ params, searchParams }: Props) {
       page={feed.page}
       pages={feed.pages}
       total={feed.total}
-      noindex={isThin(feed.total, cat.minListingsIndex ?? 3) || page > 1 || (filtered && feed.total === 0)}
+      noindex={isThin(feed.total, hubMin) || page > 1 || (filtered && feed.total === 0)}
       updated={updated}
       siblingLinks={siblingLinks}
       emptyNearby={siblings.slice(0, 6).map((c) => ({ href: placePath(cat.slug || category, c.slug || ""), label: c.name! }))}
