@@ -336,6 +336,8 @@ export interface UrlOverrideDoc extends BaseDoc {
   canonical?: string;
   noindex?: boolean;
   ogImage?: string;
+  intro?: string;
+  faq?: { q: string; a: string }[];
 }
 
 const redirectSchema = new Schema<RedirectDoc>(
@@ -357,6 +359,8 @@ const urlOverrideSchema = new Schema<UrlOverrideDoc>(
     canonical: { type: String, default: "" },
     noindex: { type: Boolean, default: false },
     ogImage: { type: String, default: "" },
+    intro: { type: String, default: "" },
+    faq: { type: [{ _id: false, q: String, a: String }], default: [] },
   },
   { timestamps: true, collection: collectionName("url_overrides", "UrlOverride") },
 );

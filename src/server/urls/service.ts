@@ -14,6 +14,16 @@ import {
   type RedirectRule,
   type UrlPaths,
 } from "@/lib/urls";
+import { ValidationError } from "@/server/http";
+import { siteUrl } from "@/lib/utils";
+import {
+  diffOverride,
+  normalizeOverride,
+  overrideRowsFromCsv,
+  type DiffStatus,
+  type OverrideClean,
+  type OverrideInput,
+} from "@/app/admin/urls/override-rules";
 import { BlogPost, Category, Location, Page, Redirect, Site, UrlOverride, Listing } from "@/server/models";
 
 type StoredRule = RedirectRule & { hits: number; enabled: boolean };
@@ -321,32 +331,130 @@ export async function setPrefixes(input: Partial<Record<PathKey, string>>) {
   return next;
 }
 
-export async function saveUrlOverride(input: {
-  path: string;
+type StoredOverride = {
+  path?: string;
   title?: string;
   description?: string;
   h1?: string;
   canonical?: string;
   noindex?: boolean;
   ogImage?: string;
-}) {
-  await connectDb();
-  const path = cleanPath(input.path);
+  intro?: string;
+  faq?: { q?: string; a?: string }[];
+};
+
+export function overrideFromDoc(doc: StoredOverride): OverrideClean {
+  return {
+    path: doc.path || "/",
+    title: doc.title || "",
+    description: doc.description || "",
+    h1: doc.h1 || "",
+    canonical: doc.canonical || "",
+    noindex: doc.noindex === true,
+    ogImage: doc.ogImage || "",
+    intro: doc.intro || "",
+    faq: (doc.faq ?? []).map((item) => ({ q: item.q || "", a: item.a || "" })),
+  };
+}
+
+function fieldMessages(errors: Record<string, string>) {
+  return Object.fromEntries(Object.entries(errors).map(([key, message]) => [key, [message]]));
+}
+
+async function writeOverride(value: OverrideClean) {
   await UrlOverride.updateOne(
-    { path },
-    {
-      $set: {
-        title: input.title?.trim() || "",
-        description: input.description?.trim() || "",
-        h1: input.h1?.trim() || "",
-        canonical: input.canonical?.trim() || "",
-        noindex: input.noindex === true,
-        ogImage: input.ogImage?.trim() || "",
-      },
-    },
+    { path: value.path },
+    { $set: { title: value.title, description: value.description, h1: value.h1, canonical: value.canonical, noindex: value.noindex, ogImage: value.ogImage, intro: value.intro, faq: value.faq } },
     { upsert: true },
   );
+}
+
+/** Validates, then saves. Intro and FAQ are kept as they were when the caller does not send them. */
+export async function saveUrlOverride(input: OverrideInput) {
+  await connectDb();
+  const path = cleanPath(input.path || "/");
+  const before = await UrlOverride.findOne({ path }).lean<StoredOverride | null>();
+  const merged: OverrideInput = {
+    ...input,
+    intro: input.intro ?? before?.intro,
+    faq: input.faq ?? before?.faq,
+  };
+  const result = normalizeOverride(merged, siteUrl());
+  if (!result.ok) throw new ValidationError("Check the highlighted fields", fieldMessages(result.errors));
+  await writeOverride(result.value);
   await refreshPublic();
+  return { before: before ? overrideFromDoc(before) : null, after: result.value };
+}
+
+export async function deleteUrlOverride(path: string) {
+  await connectDb();
+  const clean = cleanPath(path);
+  const before = await UrlOverride.findOne({ path: clean }).lean<StoredOverride | null>();
+  await UrlOverride.deleteOne({ path: clean });
+  await refreshPublic();
+  return { before: before ? overrideFromDoc(before) : null };
+}
+
+export interface CsvPreviewRow {
+  line: number;
+  path: string;
+  status: DiffStatus | "error";
+  changes: string[];
+  errors: string[];
+}
+
+export interface CsvPlan {
+  rows: CsvPreviewRow[];
+  fileErrors: string[];
+  /** Cleaned values for every row that passed, ready to write. */
+  ready: OverrideClean[];
+}
+
+/** Dry run: parses the file and says what an import would do. Writes nothing. */
+export async function planOverrideCsv(csv: string): Promise<CsvPlan> {
+  const parsed = overrideRowsFromCsv(csv);
+  if (parsed.errors.length) return { rows: [], fileErrors: parsed.errors, ready: [] };
+  await connectDb();
+  const paths = parsed.rows.map((row) => cleanPath(row.input.path || "/"));
+  const found = await UrlOverride.find({ path: { $in: paths } }).lean<StoredOverride[]>();
+  const byPath = new Map(found.map((doc) => [doc.path as string, overrideFromDoc(doc)]));
+  const seen = new Set<string>();
+  const rows: CsvPreviewRow[] = [];
+  const ready: OverrideClean[] = [];
+  for (const row of parsed.rows) {
+    const touched = (["title", "description", "h1"] as const).filter((name) => row.input[name] !== undefined) as string[];
+    if (row.input.robots !== undefined) touched.push("noindex");
+    const path = cleanPath(row.input.path || "/");
+    const existing = byPath.get(path) ?? null;
+    const base: OverrideInput = existing
+      ? { ...existing, ...Object.fromEntries(Object.entries(row.input).filter(([, value]) => value !== undefined)), robots: row.input.robots ?? undefined, noindex: row.input.robots === undefined ? existing.noindex : undefined }
+      : row.input;
+    const result = normalizeOverride(base, siteUrl());
+    if (!result.ok) {
+      rows.push({ line: row.line, path, status: "error", changes: [], errors: Object.values(result.errors) });
+      continue;
+    }
+    if (seen.has(result.value.path)) {
+      rows.push({ line: row.line, path, status: "error", changes: [], errors: ["This path appears twice in the file"] });
+      continue;
+    }
+    seen.add(result.value.path);
+    const diff = diffOverride(existing, result.value, touched);
+    rows.push({ line: row.line, path: result.value.path, status: diff.status, changes: diff.changes, errors: [] });
+    if (diff.status !== "same") ready.push(result.value);
+  }
+  return { rows, fileErrors: [], ready };
+}
+
+/** All or nothing: refuses to write when any row has an error. */
+export async function applyOverrideCsv(csv: string) {
+  const plan = await planOverrideCsv(csv);
+  if (plan.fileErrors.length) throw new ValidationError(plan.fileErrors[0], { file: plan.fileErrors });
+  const bad = plan.rows.filter((row) => row.status === "error");
+  if (bad.length) throw new ValidationError(`Fix ${bad.length} row${bad.length === 1 ? "" : "s"} with errors first; nothing was imported`, { file: [`${bad.length} rows have errors`] });
+  for (const value of plan.ready) await writeOverride(value);
+  if (plan.ready.length) await refreshPublic();
+  return { applied: plan.ready.length, unchanged: plan.rows.length - plan.ready.length };
 }
 
 export async function getUrlOverride(path: string) {
@@ -356,7 +464,7 @@ export async function getUrlOverride(path: string) {
 
 export async function listUrlOverrides() {
   await connectDb();
-  return UrlOverride.find().sort({ path: 1 }).limit(200).lean();
+  return UrlOverride.find().sort({ path: 1 }).limit(1000).lean();
 }
 
 export async function searchAds(q: string) {
