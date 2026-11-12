@@ -1,5 +1,10 @@
 import mongoose from "mongoose";
-import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
+import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
+
+vi.mock("next/headers", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("next/headers")>()),
+  headers: async () => new Headers({ "user-agent": "Mozilla/5.0 Chrome/140" }),
+}));
 import { createRedirectFrom404Action } from "@/app/admin/urls/notfound-actions";
 import { MAX_404_PATHS_PER_DAY, NotFoundDay } from "@/server/models/seo";
 import { Redirect } from "@/server/models/cms";
@@ -96,5 +101,17 @@ describe("create 301 from a 404", () => {
     const out = await createRedirectFrom404Action("/gone/", "/new/");
     expect(out.ok).toBe(false);
     expect(await Redirect.countDocuments()).toBe(0);
+  });
+});
+
+describe("404 beacon", () => {
+  it("logs the path sent by the browser, not request headers", async () => {
+    const { recordNotFoundAction } = await import("@/app/admin/urls/notfound-beacon");
+    await recordNotFoundAction("/browser-sent/?x=1", "https://ref.example/page");
+    const rows = await listNotFound(7);
+    expect(rows.map((row) => row.path)).toContain("/browser-sent/");
+    expect(rows.find((row) => row.path === "/browser-sent/")?.refDomain).toBe("ref.example");
+    await recordNotFoundAction("/_next/static/x.js", "");
+    expect((await listNotFound(7)).some((row) => row.path.startsWith("/_next"))).toBe(false);
   });
 });
