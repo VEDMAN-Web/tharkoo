@@ -10,7 +10,7 @@ import {
   getDistricts,
   getFeed,
   getLocationBySlug,
-  getSeo,
+  getSeoFor,
   getSiblingCities,
   getSite,
   getStarListings,
@@ -47,7 +47,7 @@ export async function generateMetadata({ params, searchParams }: Props): Promise
   const [cat, loc, seo, site] = await Promise.all([
     getCategory(category),
     getLocationBySlug(location),
-    getSeo("location"),
+    getSeoFor("location", category),
     getSite(),
   ]);
   if (!cat || !loc) return {};
@@ -112,7 +112,7 @@ export default async function LocationPage({ params, searchParams }: Props) {
 
   const canonicalPath = placePath(cat.slug || category, loc.slug || location);
   const [seo, site, stars, feed, siblings, districts, paths, tags, heading, counts, categories] = await Promise.all([
-    getSeo("location"),
+    getSeoFor("location", category),
     getSite(),
     getStarListings(loc.kind === "city" ? { categorySlug: category, citySlug: location } : filter),
     getFeed(filter, page),

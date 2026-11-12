@@ -10,7 +10,7 @@ import {
   getDistricts,
   getFeed,
   getLocationBySlug,
-  getSeo,
+  getSeoFor,
   getSite,
   getStarListings,
   isThin,
@@ -45,7 +45,7 @@ export async function generateMetadata({ params, searchParams }: Props): Promise
     getCategory(category),
     cityFor(location),
     getDistricts(location),
-    getSeo("location"),
+    getSeoFor("district", category, "location"),
     getSite(),
   ]);
   const dist = districtRows.find((row) => row.slug === district);
@@ -111,7 +111,7 @@ export default async function DistrictPage({ params, searchParams }: Props) {
   if (sp.photos) Object.assign(filter, { photos: { $exists: true, $ne: [] } });
   if (sp.verified) Object.assign(filter, { verified: true });
   const [seo, site, stars, feed, districts, paths, tags, heading] = await Promise.all([
-    getSeo("location"),
+    getSeoFor("district", category, "location"),
     getSite(),
     getStarListings(filter),
     getFeed(filter, page),

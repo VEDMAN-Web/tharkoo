@@ -139,3 +139,116 @@ export function mergeLanding(fallback: LandingCopy, override?: Partial<LandingCo
     faqs: faqs?.length ? faqs : fallback.faqs,
   };
 }
+
+/* ---- SEO templates: pure helpers shared by the admin editor and the server (H4.3) ---- */
+
+export const TEMPLATE_PAGE_TYPES = [
+  { key: "home", label: "Home page" },
+  { key: "category", label: "Category hub" },
+  { key: "location", label: "City or state hub" },
+  { key: "district", label: "District hub" },
+] as const;
+export type TemplatePageType = (typeof TEMPLATE_PAGE_TYPES)[number]["key"];
+
+/** Accepted in saved text (the built-in defaults use it) but not offered as a button. */
+const LEGACY_VARIABLES = ["districtPref"];
+export const TEMPLATE_VARIABLES = ["category", "city", "district", "state", "count", "year", "site"] as const;
+export const TEMPLATE_FIELDS = ["title", "description", "h1", "intro"] as const;
+export type TemplateField = (typeof TEMPLATE_FIELDS)[number];
+export type TemplateFields = Record<TemplateField, string>;
+
+export const TEMPLATE_LIMITS: Record<TemplateField, number> = { title: 120, description: 320, h1: 120, intro: 1500 };
+export const TITLE_RANGE = [30, 65] as const;
+export const DESCRIPTION_RANGE = [70, 160] as const;
+
+export interface SampleVars {
+  category: string;
+  city: string;
+  district?: string;
+  state?: string;
+  count?: number;
+  site: string;
+}
+
+/** Fills {variables} the same way the hub pages do; unknown names become empty text. */
+export function renderTemplate(template: string, vars: SampleVars, year = new Date().getFullYear()) {
+  const table: Record<string, string | number | undefined> = { ...vars, year };
+  return template.replace(/\{(\w+)\}/g, (_, key: string) => {
+    const value = table[key];
+    return value === undefined || value === null ? "" : String(value);
+  });
+}
+
+export function unknownVariables(template: string) {
+  const known = new Set<string>([...TEMPLATE_VARIABLES, ...LEGACY_VARIABLES]);
+  return [...new Set([...template.matchAll(/\{(\w+)\}/g)].map((m) => m[1]))].filter((name) => !known.has(name));
+}
+
+/** Storage key: the page type, or "type:category-slug" for a category-specific template. */
+export function templateKey(pageType: TemplatePageType, categorySlug?: string | null) {
+  return categorySlug ? `${pageType}:${categorySlug}` : pageType;
+}
+
+export function splitTemplateKey(key: string): { pageType: string; categorySlug: string | null } {
+  const [pageType, categorySlug] = key.split(":");
+  return { pageType, categorySlug: categorySlug || null };
+}
+
+/** Category-specific values win field by field; empty fields fall back to the page-type default. */
+export function mergeTemplates<T extends object>(base?: T | null, specific?: T | null): T | null {
+  if (!base && !specific) return null;
+  const out: Record<string, unknown> = { ...(base ?? {}) };
+  for (const [key, value] of Object.entries(specific ?? {})) {
+    if (typeof value === "string" ? value.trim() : value) out[key] = value;
+  }
+  return out as T;
+}
+
+export interface TemplateWarning {
+  field: TemplateField | "all";
+  text: string;
+}
+
+/**
+ * Advice for one template. `samples` are real city names (the editor passes up to 20) so that a title
+ * without {city} shows up as identical across cities.
+ */
+export function templateWarnings(
+  fields: TemplateFields,
+  context: { category: string; site: string; samples: string[]; denied: (text: string) => boolean },
+): TemplateWarning[] {
+  const out: TemplateWarning[] = [];
+  const cities = context.samples.length ? context.samples : ["Pune"];
+  const fill = (text: string, city: string) =>
+    renderTemplate(text, { category: context.category, city, district: "Central", state: "India", count: 12, site: context.site });
+  const first = (field: TemplateField) => fill(fields[field], cities[0]);
+  const title = first("title");
+  if (title && (title.length < TITLE_RANGE[0] || title.length > TITLE_RANGE[1])) {
+    out.push({ field: "title", text: `Title is ${title.length} characters; aim for ${TITLE_RANGE[0]} to ${TITLE_RANGE[1]}.` });
+  }
+  const description = first("description");
+  if (description && (description.length < DESCRIPTION_RANGE[0] || description.length > DESCRIPTION_RANGE[1])) {
+    out.push({ field: "description", text: `Description is ${description.length} characters; aim for ${DESCRIPTION_RANGE[0]} to ${DESCRIPTION_RANGE[1]}.` });
+  }
+  for (const field of ["title", "description", "h1"] as const) {
+    if (!fields[field] || cities.length < 2) continue;
+    if (new Set(cities.map((city) => fill(fields[field], city))).size < cities.length) {
+      out.push({ field, text: `The ${field === "h1" ? "H1" : field} is the same for some of the ${cities.length} sample cities. Add {city}.` });
+    }
+  }
+  const keyword = context.category.trim().toLowerCase();
+  if (keyword) {
+    if (fields.title && !title.toLowerCase().includes(keyword)) {
+      out.push({ field: "title", text: `The category name "${context.category}" is missing from the title.` });
+    }
+    if (fields.h1 && !first("h1").toLowerCase().includes(keyword)) {
+      out.push({ field: "h1", text: `The category name "${context.category}" is missing from the H1.` });
+    }
+  }
+  for (const field of TEMPLATE_FIELDS) {
+    const bad = unknownVariables(fields[field]);
+    if (bad.length) out.push({ field, text: `Unknown variable${bad.length > 1 ? "s" : ""}: ${bad.map((name) => `{${name}}`).join(", ")}.` });
+    if (fields[field] && context.denied(fields[field])) out.push({ field, text: "This text contains a word that is not allowed on Tharkoo. It cannot be saved." });
+  }
+  return out;
+}

@@ -1,4 +1,5 @@
 import { cached } from "./cache";
+import { mergeTemplates } from "@/lib/seo/landing";
 import { connectDb } from "./db";
 import {
   AttributeGroup,
@@ -82,6 +83,17 @@ export async function getStates() {
 export async function getSeo(pageType: string) {
   await connectDb();
   return SeoTemplate.findOne({ pageType }).lean();
+}
+
+/** Page-type template, with the category-specific template (key "type:category") winning field by field. */
+export async function getSeoFor(pageType: string, categorySlug?: string, fallbackType?: string) {
+  await connectDb();
+  const base =
+    (await SeoTemplate.findOne({ pageType }).lean()) ??
+    (fallbackType ? await SeoTemplate.findOne({ pageType: fallbackType }).lean() : null);
+  if (!categorySlug || !/^[a-z0-9-]{1,60}$/.test(categorySlug)) return base;
+  const specific = await SeoTemplate.findOne({ pageType: `${pageType}:${categorySlug}` }).lean();
+  return mergeTemplates(base, specific);
 }
 
 function pageQuery(filter: Record<string, unknown>): ListingQuery {
