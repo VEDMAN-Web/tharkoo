@@ -1537,6 +1537,24 @@
         "docs/ownership.json",
         "progress/H0.12.md"
       ]
+    },
+    "H5.3": {
+      "branchPrefix": "haiku/h5.3",
+      "globs": [
+        "src/components/ListingPage.tsx",
+        "src/components/PostWizard.tsx",
+        "src/lib/models.ts",
+        "src/lib/ui/post-form.ts",
+        "src/lib/ui/pins.ts",
+        "src/server/listings/service.ts",
+        "src/server/models/listing.ts",
+        "src/server/search/query.ts",
+        "src/server/shared/schemas/listings.ts",
+        "tests/server/ranking/**",
+        "tests/server/listings/**",
+        "docs/ownership.json",
+        "progress/H5.3.md"
+      ]
     }
   }
 }

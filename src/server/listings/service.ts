@@ -147,6 +147,7 @@ export function ownerView(listing: ListingDoc) {
   return {
     ...publicView(listing),
     ownerId: idOf(listing.ownerId),
+    nickname: listing.nickname ?? null,
     contact: {
       phone: listing.contact?.phone ?? null,
       whatsapp: listing.contact?.whatsapp ?? null,
@@ -404,8 +405,13 @@ async function applyBasics(
 
 async function applyDetails(
   listing: ListingRow,
-  input: { attributes?: Record<string, unknown>; price?: number | null; contact?: ListingContactDoc },
+  input: { attributes?: Record<string, unknown>; price?: number | null; nickname?: string; contact?: ListingContactDoc },
 ) {
+  if (input.nickname !== undefined) {
+    const nickname = input.nickname.trim().slice(0, 40);
+    await assertCleanText([nickname]);
+    listing.nickname = nickname || undefined;
+  }
   const price = parsePrice(input.price);
   if (price === null) listing.set("price", undefined);
   else if (price !== undefined) listing.price = price;
@@ -439,7 +445,7 @@ export async function patchListing(
         districtId?: string;
         localityId?: string;
       }
-    | { stage: "details"; attributes?: Record<string, unknown>; price?: number | null; contact?: ListingContactDoc }
+    | { stage: "details"; attributes?: Record<string, unknown>; price?: number | null; nickname?: string; contact?: ListingContactDoc }
     | { stage: "photos"; mediaIds: string[]; coverMediaId?: string },
   requestId: string,
 ) {
@@ -610,6 +616,7 @@ export async function duplicateListing(id: string, userId: string, requestId: st
     description: listing.description,
     attributes: listing.attributes ?? {},
     price: listing.price,
+    nickname: listing.nickname,
     contact: listing.contact,
     mediaIds: listing.mediaIds ?? [],
     coverMediaId: listing.coverMediaId,

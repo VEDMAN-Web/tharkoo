@@ -36,6 +36,8 @@ export interface ListingDoc {
   attributes?: Record<string, unknown>;
   /** Asking price in whole rupees (INR). A real field, not an attribute. */
   price?: number;
+  /** Name or nickname shown on the ad. Saved so editing an ad can load it again. */
+  nickname?: string;
   contact?: ListingContactDoc;
   mediaIds?: Types.ObjectId[];
   coverMediaId?: Types.ObjectId;
@@ -154,6 +156,7 @@ const listingSchema = new Schema<ListingDoc>(
     description: { type: String, required: true },
     attributes: { type: Schema.Types.Mixed, default: {} },
     price: { type: Number, min: 0 },
+    nickname: { type: String, maxlength: 40 },
     contact: {
       type: new Schema<ListingContactDoc>(
         { phone: String, whatsapp: String, telegram: String, acceptForm: Boolean },
