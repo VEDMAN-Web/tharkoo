@@ -72,6 +72,33 @@ function liveClient(): CloudinaryClient {
   };
 }
 
+export interface UploadedAsset {
+  url: string;
+  publicId: string;
+}
+
+export type CloudinaryUploader = (data: Buffer, options: { contentType: string; folder: string; publicId: string }) => Promise<UploadedAsset>;
+
+let uploaderOverride: CloudinaryUploader | null = null;
+
+export function setCloudinaryUploader(uploader: CloudinaryUploader | null) {
+  uploaderOverride = uploader;
+}
+
+/** Signed server-side upload. The secret stays on the server and is never logged. */
+export async function uploadToCloudinary(data: Buffer, options: { contentType: string; folder: string; publicId: string }) {
+  if (uploaderOverride) return uploaderOverride(data, options);
+  configure();
+  const result = await cloudinary.uploader.upload(`data:${options.contentType};base64,${data.toString("base64")}`, {
+    resource_type: "image",
+    type: "upload",
+    folder: options.folder,
+    public_id: options.publicId,
+    overwrite: false,
+  });
+  return { url: result.secure_url, publicId: result.public_id } as UploadedAsset;
+}
+
 export function cloudinaryClient() {
   return override ?? liveClient();
 }
