@@ -85,7 +85,7 @@ test.describe("5 Money (mock provider)", () => {
   test("PAY needs a signed-in account", async ({ request: anon, baseURL }) => {
     const res = await anon.post("/api/wallet/packs", {
       headers: originHeaders(baseURL!, "/u/account/credits/"),
-      data: { packId: "000000000000000000000000", idempotencyKey: "anon-key-12345" },
+      data: { packId: "000000000000000000000000", idempotencyKey: `anonymous-${Date.now()}-e2e` },
     });
     expect(res.status()).toBe(401);
   });
