@@ -13,14 +13,13 @@ import { clearMemoryMongo, connectMemoryMongo, disconnectMemoryMongo } from "../
 
 const origin = "http://127.0.0.1:4317";
 const secret = "test-secret";
-const prefix = "tharkoo_test";
+const prefix = "tharkoo";
 const maxBytes = 8 * 1024 * 1024;
 
 function cloudEnv() {
   process.env.CLOUDINARY_CLOUD_NAME = "demo";
   process.env.CLOUDINARY_API_KEY = "test-key";
   process.env.CLOUDINARY_API_SECRET = secret;
-  process.env.CLOUDINARY_FOLDER_PREFIX = prefix;
   process.env.CSAM_PROVIDER = "stub";
 }
 
@@ -115,7 +114,6 @@ afterAll(async () => {
   delete process.env.CLOUDINARY_CLOUD_NAME;
   delete process.env.CLOUDINARY_API_KEY;
   delete process.env.CLOUDINARY_API_SECRET;
-  delete process.env.CLOUDINARY_FOLDER_PREFIX;
   delete process.env.LISTING_PHOTO_LIMIT_FREE;
   delete process.env.CSAM_PROVIDER;
   await disconnectMemoryMongo();
@@ -310,6 +308,20 @@ describe("media routes", () => {
     expect(text).not.toContain(secret);
     expect(text).not.toContain("test-key");
     expect(text).not.toContain("res.cloudinary.com");
+  });
+
+  it("refuses with a notice on Vercel when Cloudinary is not configured, and writes no record", async () => {
+    const owner = await account("vercel@example.com");
+    delete process.env.CLOUDINARY_API_SECRET;
+    process.env.VERCEL = "1";
+    try {
+      const response = await call("POST", "sign", { contentType: "image/jpeg", byteSize: 10, kind: "image" }, owner.cookie);
+      expect(response.status).toBeGreaterThanOrEqual(400);
+      expect(JSON.stringify(await response.json())).toContain("Image upload needs Cloudinary on this server");
+      expect(await MediaAsset.countDocuments()).toBe(0);
+    } finally {
+      delete process.env.VERCEL;
+    }
   });
 });
 

@@ -8,7 +8,7 @@ import { ForbiddenError, NotFoundError, PolicyViolationError, ValidationError } 
 import { Listing, MediaAsset, PromotionOrder, type ListingDoc, type MediaAssetDoc } from "@/server/models";
 import { cloudinaryClient, type Delivery } from "@/server/media/client";
 import { csamScannerFromEnv, type CsamScanner } from "@/server/media/csam";
-import { EAGER, ID_URL_TTL_SECONDS, MAX_BYTES, ORPHAN_AGE_MS, STRIP_EXIF, cloudinaryEnv, optionalCloudinary, photoLimit } from "@/server/media/config";
+import { EAGER, ID_URL_TTL_SECONDS, UPLOAD_NEEDS_CLOUDINARY, onVercel, MAX_BYTES, ORPHAN_AGE_MS, STRIP_EXIF, cloudinaryEnv, optionalCloudinary, photoLimit } from "@/server/media/config";
 import { signUploadParams } from "@/server/media/sign";
 
 const ALLOWED = new Set(["image/jpeg", "image/png", "image/webp"]);
@@ -135,6 +135,10 @@ export async function signMedia(
     bytes: input.byteSize,
   });
   const publicId = created._id.toString();
+  if (!env && onVercel()) {
+    await created.deleteOne();
+    throw new PolicyViolationError(UPLOAD_NEEDS_CLOUDINARY);
+  }
   if (!env) {
     created.objectKey = `pending-local:${publicId}`;
     await created.save();
