@@ -7,6 +7,9 @@ import { HomeBlocks, SkeletonGrid } from "@/components/HomeBlocks";
 import { getHomepageContent } from "@/lib/queries";
 import { getPageBlocks } from "@/lib/layout/read";
 import { postAdPath } from "@/lib/urls";
+import { textOverrides } from "@/app/admin/ui-text/store";
+import { pickTexts } from "@/lib/ui/text";
+import { UiTextProvider } from "@/components/ui/AdCard";
 import { pageMetadata } from "@/lib/ui/meta";
 import { getPaths } from "@/server/urls/service";
 
@@ -32,13 +35,20 @@ async function publishedHome() {
 }
 
 export default async function Home() {
-  const blocks = await publishedHome();
-  if (blocks) return <HomeLayout blocks={blocks} />;
+  const [blocks, overrides] = await Promise.all([publishedHome(), textOverrides()]);
+  const texts = pickTexts(overrides, "card.");
+  if (blocks) {
+    return (
+      <UiTextProvider texts={texts}>
+        <HomeLayout blocks={blocks} />
+      </UiTextProvider>
+    );
+  }
   const [content, paths] = await Promise.all([getHomepageContent(), getPaths()]);
   const photo = content.hero.photo;
   const localPhoto = photo.startsWith("/");
   return (
-    <>
+    <UiTextProvider texts={texts}>
       <section className="tk-hero" data-tk="hero">
         {localPhoto ? (
           <Image className="tk-hero-photo" src={photo} alt={content.hero.photoAlt} width={960} height={880} priority sizes="42vw" />
@@ -56,6 +66,6 @@ export default async function Home() {
       <Suspense fallback={<SkeletonGrid />}>
         <HomeBlocks />
       </Suspense>
-    </>
+    </UiTextProvider>
   );
 }

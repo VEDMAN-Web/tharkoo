@@ -1,9 +1,10 @@
 "use client";
 
+import { withPins } from "@/lib/ui/pins";
 import Link from "next/link";
 import { useState } from "react";
 import { MapPin, Search } from "lucide-react";
-import { AdCard } from "./AdCard";
+import { AdCard, UiTextProvider } from "./ui/AdCard";
 import { EmptyState } from "./ui/EmptyState";
 import { JsonLd, breadcrumbJsonLd } from "@/lib/jsonld";
 import { faqPage } from "@/lib/seo/schema";
@@ -17,6 +18,7 @@ import type { ListingLayout } from "./blocks/ListingLayout";
 import { listingHeading } from "@/lib/layout/listing";
 import { listingDefaultBlocks } from "@/server/layout/defaults/listing";
 import type { BlockBase } from "@/server/models/layout";
+import { makeT, type UiTextMap } from "@/lib/ui/text";
 import "./blocks/blocks.css";
 
 function toggleHref(path: string, key: string, on: boolean) {
@@ -63,6 +65,7 @@ export function ListingPageView({
   popular = [],
   updated,
   layout,
+  texts,
 }: {
   h1: string;
   h2?: string;
@@ -91,12 +94,15 @@ export function ListingPageView({
   updated?: string;
   /** Block layout for this page. Without one the built-in layout is used, which is the page as it always was. */
   layout?: ListingLayout;
+  /** Admin-edited UI text overrides (see /admin/ui-text/). Without them the built-in text is used. */
+  texts?: UiTextMap;
 }) {
   const [open, setOpen] = useState(false);
+  const t = makeT(texts);
   const paths = useUrlPaths();
   const clear = path.split("?")[0];
   const chips = districts.slice(0, 2);
-  const feed = [...stars, ...items.filter((ad) => !stars.some((star) => star.slug && star.slug === ad.slug))];
+  const feed = withPins(stars, items, page);
   const short = cityName && categoryName ? `${cityName} ${categoryName}` : crumbs[crumbs.length - 1]?.name;
 
   const blocks: BlockBase[] = layout?.blocks ?? listingDefaultBlocks();
@@ -127,7 +133,7 @@ export function ListingPageView({
       <>
         <button type="button" className="tk-loc" data-tk="location-field" onClick={() => window.dispatchEvent(new Event("tk-open-search"))}>
           <MapPin size={18} aria-hidden />
-          <span>{locationLabel || query || "Select a city"}</span>
+          <span>{locationLabel || query || t("listing.location.select")}</span>
           <span className="tk-loc-go" aria-hidden>
             <Search size={16} color="#fff" />
           </span>
@@ -135,12 +141,12 @@ export function ListingPageView({
         <div className="tk-filters">
           {enabled.includes("verified") ? (
             <Link className={`tk-filter ${verified ? "is-on" : ""}`} data-tk="filter-chip" href={toggleHref(path, "verified", !!verified)} prefetch={false}>
-              Verified
+              {t("listing.filters.verified")}
             </Link>
           ) : null}
           {enabled.includes("photos") ? (
             <Link className={`tk-filter ${photos ? "is-on" : ""}`} data-tk="filter-chip" href={toggleHref(path, "photos", !!photos)} prefetch={false}>
-              With photos
+              {t("listing.filters.photos")}
             </Link>
           ) : null}
           {chips.map((link) => (
@@ -159,7 +165,7 @@ export function ListingPageView({
     const introText = listingHeading(String(block.props.introTemplate ?? ""), "", vars);
     return (
       <>
-        <nav className="tk-crumbs tk-crumbs-full" aria-label="Breadcrumb">
+        <nav className="tk-crumbs tk-crumbs-full" aria-label={t("listing.crumb.label")}>
           {crumbs.map((crumb, index) => {
             const last = index === crumbs.length - 1;
             return (
@@ -188,7 +194,7 @@ export function ListingPageView({
           })}
         </nav>
         {short ? (
-          <nav className="tk-crumbs tk-crumbs-short" aria-label="Breadcrumb">
+          <nav className="tk-crumbs tk-crumbs-short" aria-label={t("listing.crumb.label")}>
             <button type="button" onClick={() => setOpen((v) => !v)}>
               {short} ▾
             </button>
@@ -204,32 +210,32 @@ export function ListingPageView({
           </nav>
         ) : null}
         <h1 className="tk-listing-h1">{heading}</h1>
-        {block.props.showCount ? <p className="tk-listing-updated">{total} ads</p> : null}
-        {updated && block.props.showUpdated !== false ? <p className="tk-listing-updated">Updated {updated}</p> : null}
+        {block.props.showCount ? <p className="tk-listing-updated">{t("listing.count", { count: total })}</p> : null}
+        {updated && block.props.showUpdated !== false ? <p className="tk-listing-updated">{t("listing.updated", { date: updated })}</p> : null}
         {introText ? <p className="tk-listing-intro">{introText}</p> : null}
       </>
     );
   };
 
   const feedBlock = () => {
-    const emptyTitle = typeof feedProps.emptyTitle === "string" && feedProps.emptyTitle.trim() ? feedProps.emptyTitle : "No listings yet";
+    const emptyTitle = typeof feedProps.emptyTitle === "string" && feedProps.emptyTitle.trim() ? feedProps.emptyTitle : t("listing.empty.title");
     const emptyText = typeof feedProps.emptyText === "string" ? feedProps.emptyText.trim() : "";
     return (
       <>
         <div className="tk-feed">
           {feed.map((ad, index) => (
             <span key={ad.publicId || ad.slug || index} style={{ display: "contents" }}>
-              <AdCard ad={ad} featured={index < stars.length} priority={index === 0} />
+              <AdCard ad={ad} featured={stars.some((star) => star.slug && star.slug === ad.slug)} priority={index === 0} />
               {inFeedEvery > 0 && (index + 1) % inFeedEvery === 0 ? (
                 inFeedId && nodes[inFeedId] ? (
                   nodes[inFeedId]
                 ) : (
                   <Link href={postAdPath(paths)} className="tk-promo" data-tk="promo-band" prefetch={false}>
                     <span>
-                      <h2>Reach more people</h2>
-                      <p>Promote your ad and stay at the top.</p>
+                      <h2>{t("listing.promo.title")}</h2>
+                      <p>{t("listing.promo.text")}</p>
                     </span>
-                    <span className="tk-btn" data-tk="post-ad">POST YOUR AD</span>
+                    <span className="tk-btn" data-tk="post-ad">{t("listing.promo.button")}</span>
                   </Link>
                 )
               ) : null}
@@ -244,20 +250,20 @@ export function ListingPageView({
                   {item.label}
                 </Link>
               ))}
-              <EmptyState title={emptyTitle} body={emptyText || "Try another word, or post the first ad."} action={{ href: postAdPath(paths), label: "Post the first ad" }} />
+              <EmptyState title={emptyTitle} body={emptyText || t("listing.empty.search")} action={{ href: postAdPath(paths), label: t("listing.empty.post") }} />
             </div>
           ) : (
             <EmptyState
               title={emptyTitle}
-              body={emptyText || (emptyNearby.length ? "Try a nearby city, or be the first to post." : "Be the first to post in this place.")}
-              action={{ href: postAdPath(paths), label: "Post the first ad" }}
+              body={emptyText || (emptyNearby.length ? t("listing.empty.nearby") : t("listing.empty.first"))}
+              action={{ href: postAdPath(paths), label: t("listing.empty.post") }}
             />
           )
         ) : null}
         {page < pages ? (
           <div className="tk-more">
             <Link href={pageHref(path, page + 1)} rel="next" className="tk-btn tk-btn-outline-gold" data-tk="show-more" prefetch={false}>
-              Show more
+              {t("listing.more")}
             </Link>
           </div>
         ) : null}
@@ -314,11 +320,11 @@ export function ListingPageView({
       case "listingFeed":
         return wrap(block, feedBlock());
       case "relatedCategories":
-        return wrap(block, linkNav(title("Popular searches"), "Popular searches", popular, max(6)));
+        return wrap(block, linkNav(title(t("listing.links.popular")), t("listing.links.popular"), popular, max(6)));
       case "districtLinks":
-        return wrap(block, linkNav(title("Areas"), "Areas", districts, max(10)));
+        return wrap(block, linkNav(title(t("listing.links.areas")), t("listing.links.areas"), districts, max(10)));
       case "nearbyCities":
-        return wrap(block, linkNav(title("Nearby"), "Nearby", siblingLinks, max(5)));
+        return wrap(block, linkNav(title(t("listing.links.nearby")), t("listing.links.nearby"), siblingLinks, max(5)));
       default:
         // A block used as the in-feed band is drawn inside the feed, not here.
         return block.id === inFeedId ? null : wrap(block, nodes[block.id] ?? null);
@@ -326,6 +332,7 @@ export function ListingPageView({
   };
 
   return (
+    <UiTextProvider texts={texts}>
     <div className="tk-container" style={{ paddingTop: 16, paddingBottom: 24 }}>
       <JsonLd
         data={[
@@ -353,5 +360,6 @@ export function ListingPageView({
       ))}
       {tailAt >= blocks.length ? seoTail : null}
     </div>
+    </UiTextProvider>
   );
 }

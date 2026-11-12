@@ -32,6 +32,7 @@ export const listingPatchBodySchema = z.discriminatedUnion("stage", [
   z.object({
     stage: z.literal("details"),
     attributes: z.record(z.string(), z.unknown()).optional(),
+    nickname: z.string().trim().max(40).optional(),
     contact: contactSchema.optional(),
   }),
   z.object({

@@ -5,6 +5,7 @@ import { adPath, blogPath, categoriesPath, categoryPath, citiesPath, cmsPath, co
 import { Listing, Location, Page } from "@/server/models";
 import { getPaths, publicTags } from "@/server/urls/service";
 import { isCityAlias } from "@/lib/seo/district-alias";
+import { districtMinimum, getIndexing, hubMinimum, isCategoryOn } from "@/server/seo/indexing";
 
 export const SITEMAP_SHARDS = ["categories", "cities", "districts", "tags", "ads", "content"] as const;
 export type SitemapShard = (typeof SITEMAP_SHARDS)[number];
@@ -109,6 +110,7 @@ export async function shardEntries(shard: SitemapShard): Promise<SitemapEntry[]>
       ]),
       Location.find({ type: "district" }).select("slug").lean(),
     ]);
+    const indexing = await getIndexing();
     const citySlug = new Map(cities.map((city) => [city.id, city.slug]));
     const districtSlug = new Map(districtDocs.map((row) => [String(row._id), row.slug || ""]));
     const categoryById = new Map(categories.filter((cat) => cat.slug).map((cat) => [String(cat._id), cat]));
@@ -122,7 +124,7 @@ export async function shardEntries(shard: SitemapShard): Promise<SitemapEntry[]>
       }
       return [...categoryById.entries()].flatMap(([id, cat]) => {
         const total = totals.get(id);
-        if (!total || total.n < (cat.minListingsIndex ?? 3) || !cat.slug) return [];
+        if (!total || !cat.slug || !isCategoryOn(indexing, cat.slug) || total.n < (indexing.categories[cat.slug]?.hub ?? indexing.hub ?? cat.minListingsIndex ?? 3)) return [];
         return [{ loc: loc(categoryPath(cat.slug)), lastmod: stamp(total.last) }];
       });
     }
@@ -134,7 +136,7 @@ export async function shardEntries(shard: SitemapShard): Promise<SitemapEntry[]>
       if (!cat?.slug || !city) continue;
       if (shard === "districts" && row._id.districtId) {
         const district = districtSlug.get(row._id.districtId);
-        if (district && !isCityAlias(city, district) && row.n >= (cat.minListingsLocality ?? 10)) {
+        if (district && !isCityAlias(city, district) && row.n >= districtMinimum(indexing, cat, city)) {
           urls.push({ loc: loc(placePath(cat.slug, city, district)), lastmod: stamp(row.last) });
         }
       }
@@ -147,7 +149,7 @@ export async function shardEntries(shard: SitemapShard): Promise<SitemapEntry[]>
     if (shard === "cities") {
       for (const row of rolled.values()) {
         const cat = categories.find((item) => item.slug === row.category);
-        if (row.n >= (cat?.minListingsIndex ?? 3)) urls.push({ loc: loc(placePath(row.category, row.city)), lastmod: stamp(row.last) });
+        if (cat && row.n >= hubMinimum(indexing, cat, row.city)) urls.push({ loc: loc(placePath(row.category, row.city)), lastmod: stamp(row.last) });
       }
     }
     return urls;

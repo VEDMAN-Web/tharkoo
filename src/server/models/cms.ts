@@ -46,6 +46,10 @@ export interface SiteDoc extends BaseDoc {
   tags?: { slug?: string; label?: string; replaces?: string }[];
   freeAdsPerWeek?: number;
   paths?: unknown;
+  /** Indexing rules (H4.6): thresholds, switched-off categories and cities. */
+  seoIndexing?: unknown;
+  /** robots extras, llms.txt text, Organization fields, ad schema mapping, default OG image (H4.7). */
+  seoSettings?: unknown;
   /** Listing order settings (H3.8). Missing means the original order. */
   ranking?: { tierOrder?: string[]; verifiedFirst?: boolean; photoFirst?: boolean };
 }
@@ -180,6 +184,8 @@ const siteSchema = new Schema<SiteDoc>(
     tags: { type: [{ slug: String, label: String, replaces: String }], default: [] },
     freeAdsPerWeek: { type: Number },
     paths: Schema.Types.Mixed,
+    seoIndexing: Schema.Types.Mixed,
+    seoSettings: Schema.Types.Mixed,
     ranking: {
       type: new Schema({ tierOrder: [String], verifiedFirst: Boolean, photoFirst: Boolean }, { _id: false }),
     },
@@ -336,6 +342,8 @@ export interface UrlOverrideDoc extends BaseDoc {
   canonical?: string;
   noindex?: boolean;
   ogImage?: string;
+  intro?: string;
+  faq?: { q: string; a: string }[];
 }
 
 const redirectSchema = new Schema<RedirectDoc>(
@@ -357,6 +365,8 @@ const urlOverrideSchema = new Schema<UrlOverrideDoc>(
     canonical: { type: String, default: "" },
     noindex: { type: Boolean, default: false },
     ogImage: { type: String, default: "" },
+    intro: { type: String, default: "" },
+    faq: { type: [{ _id: false, q: String, a: String }], default: [] },
   },
   { timestamps: true, collection: collectionName("url_overrides", "UrlOverride") },
 );

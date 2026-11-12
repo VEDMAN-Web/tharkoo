@@ -69,6 +69,8 @@ export interface ListingDoc extends BaseDoc {
   description?: string;
   displayName?: string;
   age?: number;
+  /** Set when an admin pin is active for this page: the 1-based slot the pin asks for. */
+  pinPosition?: number;
   categorySlug?: string;
   stateSlug?: string;
   citySlug?: string;

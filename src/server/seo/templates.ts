@@ -1,0 +1,93 @@
+import { connectDb } from "@/lib/db";
+import {
+  TEMPLATE_FIELDS,
+  TEMPLATE_LIMITS,
+  TEMPLATE_PAGE_TYPES,
+  splitTemplateKey,
+  templateKey,
+  unknownVariables,
+  type TemplateFields,
+  type TemplatePageType,
+} from "@/lib/seo/landing";
+import { assertSeoEditor, recordSeo, type SeoActor } from "@/app/admin/seo/staff";
+import { ValidationError } from "@/server/http";
+import { SeoTemplate } from "@/server/models/cms";
+import { textDenied } from "@/server/shared/policy";
+
+export interface TemplateInput {
+  pageType: string;
+  categorySlug?: string | null;
+  fields: Partial<TemplateFields>;
+}
+
+export interface StoredTemplate {
+  key: string;
+  pageType: string;
+  categorySlug: string | null;
+  fields: TemplateFields;
+}
+
+const SLUG = /^[a-z0-9-]{1,60}$/;
+const PAGE_KEYS = new Set<string>(TEMPLATE_PAGE_TYPES.map((item) => item.key));
+// eslint-disable-next-line no-control-regex
+const CONTROL_OR_TAG = /[\u0000-\u0008\u000B\u000C\u000E-\u001F<>]/g;
+
+function clean(value: unknown) {
+  return typeof value === "string" ? value.replace(CONTROL_OR_TAG, "").trim() : "";
+}
+
+/** Throws a ValidationError with one message per bad field; returns clean values. */
+export function validateTemplate(input: TemplateInput): { key: string; fields: TemplateFields } {
+  const problems: Record<string, string[]> = {};
+  if (!PAGE_KEYS.has(input.pageType)) problems.pageType = ["Choose a page type from the list"];
+  const slug = input.categorySlug ? String(input.categorySlug) : null;
+  if (slug && !SLUG.test(slug)) problems.categorySlug = ["Category is not valid"];
+  const fields = {} as TemplateFields;
+  for (const name of TEMPLATE_FIELDS) {
+    const value = clean(input.fields?.[name]);
+    fields[name] = value;
+    if (value.length > TEMPLATE_LIMITS[name]) {
+      problems[name] = [`Keep this to ${TEMPLATE_LIMITS[name]} characters or fewer`];
+    } else if (textDenied(value).denied) {
+      problems[name] = ["This text contains a word that is not allowed on Tharkoo"];
+    } else if (unknownVariables(value).length) {
+      problems[name] = [`Unknown variable: ${unknownVariables(value).map((v) => `{${v}}`).join(", ")}`];
+    }
+  }
+  if (Object.keys(problems).length) throw new ValidationError("Check the highlighted fields", problems);
+  return { key: templateKey(input.pageType as TemplatePageType, slug), fields };
+}
+
+export async function listTemplates(): Promise<StoredTemplate[]> {
+  await connectDb();
+  const rows = await SeoTemplate.find().sort({ pageType: 1 }).lean();
+  return rows
+    .filter((row) => row.pageType && PAGE_KEYS.has(splitTemplateKey(row.pageType).pageType))
+    .map((row) => ({
+      key: row.pageType as string,
+      ...splitTemplateKey(row.pageType as string),
+      fields: { title: row.title ?? "", description: row.description ?? "", h1: row.h1 ?? "", intro: row.intro ?? "" },
+    }));
+}
+
+export async function saveTemplate(actor: SeoActor, input: TemplateInput) {
+  assertSeoEditor(actor);
+  const { key, fields } = validateTemplate(input);
+  await connectDb();
+  const before = await SeoTemplate.findOne({ pageType: key }).lean();
+  await SeoTemplate.updateOne({ pageType: key }, { $set: { pageType: key, ...fields } }, { upsert: true });
+  await recordSeo(actor, "seo.template.save", "seo-template", key, before ?? {}, fields);
+  return { key };
+}
+
+/** Only category-specific templates can be removed; the page-type defaults stay. */
+export async function deleteTemplate(actor: SeoActor, key: string) {
+  assertSeoEditor(actor);
+  const { categorySlug } = splitTemplateKey(key);
+  if (!categorySlug) throw new ValidationError("The default template cannot be deleted", { key: ["Only category templates can be deleted"] });
+  await connectDb();
+  const before = await SeoTemplate.findOne({ pageType: key }).lean();
+  await SeoTemplate.deleteOne({ pageType: key });
+  await recordSeo(actor, "seo.template.delete", "seo-template", key, before ?? {}, {});
+  return { key };
+}

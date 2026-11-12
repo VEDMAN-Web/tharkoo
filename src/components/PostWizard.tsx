@@ -197,6 +197,7 @@ export function PostWizard({ copy = POST_COPY_DEFAULTS }: { copy?: PostCopy }) {
       body: JSON.stringify({
         stage: "details",
         attributes: { ...attrs, ...(age ? { age: Number(age) } : {}) },
+        nickname,
         contact,
       }),
     });

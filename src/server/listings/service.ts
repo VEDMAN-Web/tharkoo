@@ -32,6 +32,7 @@ import { photoLimit } from "@/server/media/config";
 import { assertVerified } from "@/server/verification/service";
 import { hashIp } from "@/server/shared/crypto";
 import { parseListingAttributes, type FieldDefinition } from "@/server/shared/fields";
+import { revalidateListingPages } from "@/server/listings/revalidate";
 import { parsePrice } from "@/server/listings/price";
 import { attributeDenied, categoryDenied, textDenied } from "@/server/shared/policy";
 import { evaluatePublishGate } from "@/server/shared/publish-gate";
@@ -146,6 +147,7 @@ export function ownerView(listing: ListingDoc) {
   return {
     ...publicView(listing),
     ownerId: idOf(listing.ownerId),
+    nickname: listing.nickname ?? null,
     contact: {
       phone: listing.contact?.phone ?? null,
       whatsapp: listing.contact?.whatsapp ?? null,
@@ -403,8 +405,13 @@ async function applyBasics(
 
 async function applyDetails(
   listing: ListingRow,
-  input: { attributes?: Record<string, unknown>; price?: number | null; contact?: ListingContactDoc },
+  input: { attributes?: Record<string, unknown>; price?: number | null; nickname?: string; contact?: ListingContactDoc },
 ) {
+  if (input.nickname !== undefined) {
+    const nickname = input.nickname.trim().slice(0, 40);
+    await assertCleanText([nickname]);
+    listing.nickname = nickname || undefined;
+  }
   const price = parsePrice(input.price);
   if (price === null) listing.set("price", undefined);
   else if (price !== undefined) listing.price = price;
@@ -438,7 +445,7 @@ export async function patchListing(
         districtId?: string;
         localityId?: string;
       }
-    | { stage: "details"; attributes?: Record<string, unknown>; price?: number | null; contact?: ListingContactDoc }
+    | { stage: "details"; attributes?: Record<string, unknown>; price?: number | null; nickname?: string; contact?: ListingContactDoc }
     | { stage: "photos"; mediaIds: string[]; coverMediaId?: string },
   requestId: string,
 ) {
@@ -546,15 +553,7 @@ export async function submitListing(
   await listing.save();
   await writeVersion(listing, userId);
   await record(userId, "user", "listing.submit", listing._id.toString(), requestId, { status: "active" });
-  try {
-    const { refreshPublicCache } = await import("@/lib/cache");
-    await refreshPublicCache();
-    const { revalidatePath } = await import("next/cache");
-    if (listing.slug) revalidatePath(`/ad/${listing.slug}/`);
-    if (category.slug) revalidatePath(`/${category.slug}/`);
-  } catch {
-    /* unit tests run outside a Next request */
-  }
+  await revalidateListingPages(listing, category.slug);
   if (listing.slug) notifyIndexNow([`/ad/${listing.slug}/`]);
   return { status: "active" as const };
 }
@@ -617,6 +616,7 @@ export async function duplicateListing(id: string, userId: string, requestId: st
     description: listing.description,
     attributes: listing.attributes ?? {},
     price: listing.price,
+    nickname: listing.nickname,
     contact: listing.contact,
     mediaIds: listing.mediaIds ?? [],
     coverMediaId: listing.coverMediaId,

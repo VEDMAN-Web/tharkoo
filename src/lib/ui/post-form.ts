@@ -43,6 +43,7 @@ export type SavedDraft = {
   cityId?: string | null;
   districtId?: string | null;
   attributes?: Record<string, unknown> | null;
+  nickname?: string | null;
   contact?: { phone?: string | null; whatsapp?: string | null; telegram?: string | null } | null;
   mediaIds?: string[] | null;
 };
@@ -61,7 +62,7 @@ export function draftToForm(row: SavedDraft) {
     cityId: row.cityId || "",
     districtId: row.districtId || "",
     age: attributes.age === undefined || attributes.age === null ? "" : String(attributes.age),
-    nickname: typeof attributes.nickname === "string" ? attributes.nickname : "",
+    nickname: row.nickname || (typeof attributes.nickname === "string" ? attributes.nickname : ""),
     address: typeof attributes.address === "string" ? attributes.address : "",
     postal: typeof attributes.postal === "string" ? attributes.postal : "",
     area: typeof attributes.area === "string" ? attributes.area : "",

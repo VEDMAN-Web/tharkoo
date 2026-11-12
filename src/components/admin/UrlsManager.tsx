@@ -14,14 +14,12 @@ import {
   renameContentAction,
   renameLocationAction,
   renameTagAction,
-  saveOverrideAction,
   savePrefixesAction,
   searchAdsAction,
 } from "@/app/admin/url-actions";
 
 type Row = { id: string; name?: string; title?: string; slug: string; type?: string };
 type RedirectRow = { id: string; from: string; to: string; hits: number; enabled: boolean };
-type OverrideRow = { path: string; title: string; description: string; h1: string; canonical: string; noindex: boolean; ogImage: string };
 
 const LABELS: Record<(typeof PATH_KEYS)[number], string> = {
   ad: "Ad",
@@ -51,7 +49,6 @@ export function UrlsManager({
   pages,
   posts,
   redirects,
-  overrides,
 }: {
   origin: string;
   paths: UrlPaths;
@@ -61,7 +58,6 @@ export function UrlsManager({
   pages: Row[];
   posts: Row[];
   redirects: RedirectRow[];
-  overrides: OverrideRow[];
 }) {
   const router = useRouter();
   const [prefix, setPrefix] = useState<UrlPaths>(paths);
@@ -120,40 +116,6 @@ export function UrlsManager({
         {ads.map((ad) => (
           <SlugField key={ad.id} label={ad.title || ad.slug} slug={ad.slug} preview={(value) => `${origin}${adPath(prefix, value || ad.slug)}`} onSave={(value) => renameAdAction(ad.id, value).then(done)} />
         ))}
-      </section>
-
-      <section className="tk-profile grid gap-3">
-        <h2 className="t-h3">SEO for one URL</h2>
-        <form
-          className="grid gap-2"
-          onSubmit={async (event) => {
-            event.preventDefault();
-            const form = new FormData(event.currentTarget);
-            await done(await saveOverrideAction({
-              path: String(form.get("path") || ""),
-              title: String(form.get("title") || ""),
-              description: String(form.get("description") || ""),
-              h1: String(form.get("h1") || ""),
-              canonical: String(form.get("canonical") || ""),
-              ogImage: String(form.get("ogImage") || ""),
-              noindex: form.get("noindex") === "on",
-            }));
-          }}
-        >
-          <input name="path" required placeholder="/dating/delhi/" className="rounded border px-2 py-1" />
-          <input name="title" placeholder="Title" className="rounded border px-2 py-1" />
-          <textarea name="description" placeholder="Meta description" rows={2} className="rounded border px-2 py-1" />
-          <input name="h1" placeholder="H1" className="rounded border px-2 py-1" />
-          <input name="canonical" placeholder="Canonical override" className="rounded border px-2 py-1" />
-          <input name="ogImage" placeholder="OG image URL" className="rounded border px-2 py-1" />
-          <label className="t-small"><input type="checkbox" name="noindex" /> Hide from search</label>
-          <button className="tk-btn tk-btn-primary w-fit" type="submit">Save SEO</button>
-        </form>
-        <ul className="grid gap-1">
-          {overrides.map((row) => (
-            <li key={row.path} className="t-small break-all">{row.path}{row.noindex ? " · noindex" : ""}{row.title ? ` · ${row.title}` : ""}</li>
-          ))}
-        </ul>
       </section>
 
       <section className="tk-profile grid gap-3">

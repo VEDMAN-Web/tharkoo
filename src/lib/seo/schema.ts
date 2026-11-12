@@ -48,7 +48,10 @@ const GOODS = new Set(["property", "vehicles", "buy-and-sell", "pets"]);
 const SERVICES = new Set(["wellness", "education"]);
 const PERSONAL = new Set(["dating", "friendship", "meetups", "personal-ads"]);
 
-export function listingJsonLd(input: {
+export type AdSchemaMapping = "JobPosting" | "Product" | "none";
+export const AD_SCHEMA_MAPPINGS: readonly AdSchemaMapping[] = ["JobPosting", "Product", "none"];
+
+export interface ListingSchemaInput {
   category: string;
   name: string;
   description: string;
@@ -61,41 +64,57 @@ export function listingJsonLd(input: {
   validThrough?: string;
   hiringOrganization?: string;
   jobLocation?: string;
-}) {
+  /** Set in the SEO center for the ad's category; leave out to use the built-in choice. */
+  mapping?: AdSchemaMapping;
+}
+
+/** What Google needs for each schema type; an ad missing any of these is skipped, never published half-filled. */
+export const AD_SCHEMA_REQUIRED: Record<Exclude<AdSchemaMapping, "none">, { key: keyof ListingSchemaInput; label: string }[]> = {
+  JobPosting: [
+    { key: "name", label: "title" },
+    { key: "description", label: "description" },
+    { key: "datePosted", label: "date posted" },
+    { key: "validThrough", label: "expiry date" },
+    { key: "hiringOrganization", label: "hiring company" },
+    { key: "jobLocation", label: "job location" },
+  ],
+  Product: [
+    { key: "name", label: "title" },
+    { key: "description", label: "description" },
+    { key: "price", label: "price" },
+  ],
+};
+
+/** Names of the required fields an ad does not have for the given schema type. */
+export function missingSchemaFields(mapping: AdSchemaMapping, input: ListingSchemaInput): string[] {
+  if (mapping === "none") return [];
+  return AD_SCHEMA_REQUIRED[mapping]
+    .filter(({ key }) => {
+      const value = input[key];
+      return key === "price" ? !(typeof value === "number" && value > 0) : !value;
+    })
+    .map(({ label }) => label);
+}
+
+function jobPostingNode(input: ListingSchemaInput) {
+  if (missingSchemaFields("JobPosting", input).length) return null;
+  return {
+    "@context": "https://schema.org",
+    "@type": "JobPosting",
+    title: input.name,
+    description: input.description,
+    datePosted: input.datePosted,
+    validThrough: input.validThrough,
+    hiringOrganization: { "@type": "Organization", name: input.hiringOrganization },
+    jobLocation: { "@type": "Place", name: input.jobLocation },
+    url: input.url,
+  };
+}
+
+function productNode(input: ListingSchemaInput, requirePrice: boolean) {
   const price = typeof input.price === "number" && input.price > 0 ? input.price : null;
+  if (requirePrice && !price) return null;
   const image = input.image ? [input.image] : undefined;
-  if (PERSONAL.has(input.category)) return null;
-  if (input.category === "jobs") {
-    if (!input.name || !input.description || !input.datePosted || !input.hiringOrganization || !input.jobLocation || !input.validThrough) {
-      return null;
-    }
-    return {
-      "@context": "https://schema.org",
-      "@type": "JobPosting",
-      title: input.name,
-      description: input.description,
-      datePosted: input.datePosted,
-      validThrough: input.validThrough,
-      hiringOrganization: { "@type": "Organization", name: input.hiringOrganization },
-      jobLocation: { "@type": "Place", name: input.jobLocation },
-      url: input.url,
-    };
-  }
-  if (SERVICES.has(input.category)) {
-    return {
-      "@context": "https://schema.org",
-      "@type": "Service",
-      name: input.name,
-      description: input.description,
-      url: input.url,
-      ...(image ? { image } : {}),
-      areaServed: input.city || "India",
-      ...(price
-        ? { offers: { "@type": "Offer", price: String(price), priceCurrency: "INR", availability: "https://schema.org/InStock", url: input.url } }
-        : {}),
-    };
-  }
-  if (!GOODS.has(input.category)) return null;
   return {
     "@context": "https://schema.org",
     "@type": "Product",
@@ -116,6 +135,53 @@ export function listingJsonLd(input: {
         }
       : {}),
   };
+}
+
+export function listingJsonLd(input: ListingSchemaInput) {
+  const price = typeof input.price === "number" && input.price > 0 ? input.price : null;
+  const image = input.image ? [input.image] : undefined;
+  if (input.mapping === "none") return null;
+  if (input.mapping === "JobPosting") return jobPostingNode(input);
+  if (input.mapping === "Product") return productNode(input, true);
+  if (PERSONAL.has(input.category)) return null;
+  if (input.category === "jobs") return jobPostingNode(input);
+  if (SERVICES.has(input.category)) {
+    return {
+      "@context": "https://schema.org",
+      "@type": "Service",
+      name: input.name,
+      description: input.description,
+      url: input.url,
+      ...(image ? { image } : {}),
+      areaServed: input.city || "India",
+      ...(price
+        ? { offers: { "@type": "Offer", price: String(price), priceCurrency: "INR", availability: "https://schema.org/InStock", url: input.url } }
+        : {}),
+    };
+  }
+  if (!GOODS.has(input.category)) return null;
+  return productNode(input, false);
+}
+
+export interface OrganizationSettings {
+  name?: string;
+  logo?: string;
+  sameAs?: string[];
+  email?: string;
+  phone?: string;
+}
+
+/** Organization schema with the SEO-center fields on top of the built-in ones. */
+export function organizationFromSettings(defaultName: string, base: { logo?: string; sameAs?: string[] }, settings?: OrganizationSettings | null) {
+  const node = organizationNode(settings?.name?.trim() || defaultName, {
+    logo: settings?.logo?.trim() || base.logo,
+    sameAs: settings?.sameAs?.length ? settings.sameAs : base.sameAs,
+  });
+  const email = settings?.email?.trim();
+  const phone = settings?.phone?.trim();
+  return email || phone
+    ? { ...node, contactPoint: { "@type": "ContactPoint", contactType: "customer support", ...(email ? { email } : {}), ...(phone ? { telephone: phone } : {}) } }
+    : node;
 }
 
 export function aboutPageNode(name: string, path = "/cms/about/") {

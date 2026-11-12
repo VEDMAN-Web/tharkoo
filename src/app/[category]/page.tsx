@@ -2,16 +2,19 @@ import Link from "next/link";
 import { notFound, permanentRedirect } from "next/navigation";
 import type { Metadata } from "next";
 import { MapPin } from "lucide-react";
-import { getCategory, getCities, getFeed, getSeo, getSite, getStarListings, getStates, listingCountsByCategoryCity } from "@/lib/queries";
+import { getCategory, getCities, getFeed, getSeoFor, getSite, getStarListings, getStates, listingCountsByCategoryCity } from "@/lib/queries";
 import { getPaths } from "@/server/urls/service";
 import { adPath, categoryPath, placePath } from "@/lib/urls";
 import { fillTemplate } from "@/lib/seo";
+import { getIndexing, isCategoryOn } from "@/server/seo/indexing";
 import { withUrlSeo, urlHeading } from "@/lib/seo/override";
 import { Breadcrumbs } from "@/components/Breadcrumbs";
 import { JsonLd, breadcrumbJsonLd } from "@/lib/jsonld";
 import { faqPage, itemListNode } from "@/lib/seo/schema";
 import { canonical } from "@/lib/seo";
-import { AdCard } from "@/components/AdCard";
+import { AdCard, UiTextProvider } from "@/components/ui/AdCard";
+import { textOverrides } from "@/app/admin/ui-text/store";
+import { makeT, pickTexts } from "@/lib/ui/text";
 import { resolveListingLayout } from "@/components/blocks/ListingLayout";
 import { deviceClass } from "@/components/blocks/device";
 import { listingHeading } from "@/lib/layout/listing";
@@ -24,13 +27,14 @@ export const revalidate = 300;
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { category } = await params;
-  const [cat, seo, site] = await Promise.all([getCategory(category), getSeo("category"), getSite()]);
+  const [cat, seo, site] = await Promise.all([getCategory(category), getSeoFor("category", category), getSite()]);
   if (!cat) return {};
   const vars = { category: cat.name, site: site.name, year: new Date().getFullYear() };
   const title = fillTemplate(seo?.title || "{category} classifieds across India | Tharkoo", vars);
   const description = fillTemplate(seo?.description || "Browse {category} on Tharkoo: listings from people across Indian cities. Filter by city and district, see photos and contact posters directly.", vars);
   const path = categoryPath(cat.slug || category);
-  return withUrlSeo(path, { title, description, path });
+  const on = isCategoryOn(await getIndexing(), cat.slug || category);
+  return withUrlSeo(path, { title, description, path, index: on });
 }
 
 export default async function CategoryHub({ params }: Props) {
@@ -39,7 +43,7 @@ export default async function CategoryHub({ params }: Props) {
   if (!cat) notFound();
   if (cat.slug && cat.slug !== category) permanentRedirect(categoryPath(cat.slug));
   const [seo, site, cities, states, counts, feed, stars, paths, heading] = await Promise.all([
-    getSeo("category"),
+    getSeoFor("category", category),
     getSite(),
     getCities(),
     getStates(),
@@ -49,6 +53,8 @@ export default async function CategoryHub({ params }: Props) {
     getPaths(),
     urlHeading(categoryPath(cat.slug || category), `${cat.name} in India`),
   ]);
+  const texts = await textOverrides();
+  const t = makeT(texts);
   const vars = { category: cat.name, site: site.name, year: new Date().getFullYear() };
   const copy = mergeLanding(
     fallbackLanding({ category: cat.name || category, count: feed.total, site: site.name }),
@@ -75,7 +81,7 @@ export default async function CategoryHub({ params }: Props) {
         ))}
       </div>
       <section className="tk-browse-city" data-tk="browse-by-city">
-        <h2>Browse by city</h2>
+        <h2>{t("listing.hub.browseByCity")}</h2>
         <div className="tk-pills tk-pills-left">
           {states.flatMap((state) =>
             listed
@@ -99,11 +105,11 @@ export default async function CategoryHub({ params }: Props) {
   const inFeedId = String(layout.blocks.find((block) => block.type === "listingFeed")?.props.inFeedBlockId ?? "");
 
   return (
-    <>
+    <UiTextProvider texts={pickTexts(texts, "card.")}>
       <JsonLd
         data={[
           breadcrumbJsonLd([
-            { name: "Tharkoo India", path: "/" },
+            { name: t("listing.crumb.home"), path: "/" },
             { name: cat.name || category, path: categoryPath(cat.slug || category) },
           ]),
           itemListNode({
@@ -125,7 +131,7 @@ export default async function CategoryHub({ params }: Props) {
         <MapPin className="tk-banner-pins tk-icon-lg" size={180} color="#fff" aria-hidden />
       </div>
       <div className="tk-container" style={{ paddingBottom: 32 }}>
-        <Breadcrumbs crumbs={[{ name: "Tharkoo India", path: "/" }, { name: cat.name!, path: categoryPath(cat.slug || category) }]} />
+        <Breadcrumbs crumbs={[{ name: t("listing.crumb.home"), path: "/" }, { name: cat.name!, path: categoryPath(cat.slug || category) }]} />
         {/* Blocks in the order the layout gives. The category page draws the ads and the SEO text itself (the ads come with the text below them);
             filters, nearby cities and similar link blocks belong to city pages and are skipped here. */}
         {layout.blocks.map((block) => {
@@ -134,6 +140,6 @@ export default async function CategoryHub({ params }: Props) {
           return block.id === inFeedId ? null : wrap(block.id, block.devices, layout.nodes[block.id] ?? null);
         })}
       </div>
-    </>
+    </UiTextProvider>
   );
 }

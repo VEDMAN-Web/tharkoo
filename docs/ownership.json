@@ -926,7 +926,15 @@
       "globs": [
         "src/app/admin/seo/**",
         "src/server/seo/explain.ts",
-        "tests/server/seo/explain.test.ts"
+        "tests/server/seo/explain.test.ts",
+        "scripts/seo-check.mjs",
+        "scripts/seo-check.ts",
+        "src/app/api/cron/seo-audit/route.ts",
+        "src/server/models/index.ts",
+        "src/server/models/seo.ts",
+        "src/server/seo/**",
+        "tests/server/seo/**",
+        "docs/ownership.json"
       ]
     },
     "H4.3": {
@@ -935,7 +943,40 @@
         "src/app/admin/seo/templates/**",
         "src/server/seo/templates.ts",
         "src/lib/seo/landing.ts",
-        "tests/server/seo/templates.test.ts"
+        "tests/server/seo/templates.test.ts",
+        "src/app/[category]/[location]/[district]/page.tsx",
+        "src/app/[category]/[location]/page.tsx",
+        "src/app/[category]/page.tsx",
+        "src/app/ad/[slug]/page.tsx",
+        "src/app/admin/seo/indexing/IndexingForm.tsx",
+        "src/app/admin/seo/indexing/IndexingTools.tsx",
+        "src/app/admin/seo/indexing/actions.ts",
+        "src/app/admin/seo/indexing/page.tsx",
+        "src/app/admin/seo/templates/TemplatesEditor.tsx",
+        "src/app/admin/seo/templates/actions.ts",
+        "src/app/admin/seo/templates/page.tsx",
+        "src/app/admin/urls/NotFoundBeacon.tsx",
+        "src/app/admin/urls/NotFoundMonitor.tsx",
+        "src/app/admin/urls/OverridesPanel.tsx",
+        "src/app/admin/urls/notfound-actions.ts",
+        "src/app/admin/urls/notfound-beacon.ts",
+        "src/app/admin/urls/override-actions.ts",
+        "src/app/admin/urls/override-rules.ts",
+        "src/app/admin/urls/page.tsx",
+        "src/app/not-found.tsx",
+        "src/components/admin/UrlsManager.tsx",
+        "src/lib/queries.ts",
+        "src/lib/seo/override.ts",
+        "src/lib/seo/sitemaps.ts",
+        "src/server/indexnow/manual.ts",
+        "src/server/models/cms.ts",
+        "src/server/models/seo.ts",
+        "src/server/seo/explain.ts",
+        "src/server/seo/indexing.ts",
+        "src/server/seo/notfound-log.ts",
+        "src/server/urls/service.ts",
+        "tests/server/seo/notfound.test.ts",
+        "tests/server/urls/overrides.test.ts"
       ]
     },
     "H4.4": {
@@ -945,7 +986,40 @@
         "src/components/admin/UrlsManager.tsx",
         "src/server/urls/service.ts",
         "src/lib/seo/override.ts",
-        "tests/server/urls/**"
+        "tests/server/urls/**",
+        "src/app/[category]/[location]/[district]/page.tsx",
+        "src/app/[category]/[location]/page.tsx",
+        "src/app/[category]/page.tsx",
+        "src/app/ad/[slug]/page.tsx",
+        "src/app/admin/seo/indexing/IndexingForm.tsx",
+        "src/app/admin/seo/indexing/IndexingTools.tsx",
+        "src/app/admin/seo/indexing/actions.ts",
+        "src/app/admin/seo/indexing/page.tsx",
+        "src/app/admin/seo/templates/TemplatesEditor.tsx",
+        "src/app/admin/seo/templates/actions.ts",
+        "src/app/admin/seo/templates/page.tsx",
+        "src/app/admin/urls/NotFoundBeacon.tsx",
+        "src/app/admin/urls/NotFoundMonitor.tsx",
+        "src/app/admin/urls/OverridesPanel.tsx",
+        "src/app/admin/urls/notfound-actions.ts",
+        "src/app/admin/urls/notfound-beacon.ts",
+        "src/app/admin/urls/override-actions.ts",
+        "src/app/admin/urls/override-rules.ts",
+        "src/app/admin/urls/page.tsx",
+        "src/app/not-found.tsx",
+        "src/lib/queries.ts",
+        "src/lib/seo/landing.ts",
+        "src/lib/seo/sitemaps.ts",
+        "src/server/indexnow/manual.ts",
+        "src/server/models/cms.ts",
+        "src/server/models/seo.ts",
+        "src/server/seo/explain.ts",
+        "src/server/seo/indexing.ts",
+        "src/server/seo/notfound-log.ts",
+        "src/server/seo/templates.ts",
+        "tests/server/seo/notfound.test.ts",
+        "tests/server/seo/templates.test.ts",
+        "tests/server/urls/overrides.test.ts"
       ]
     },
     "H4.5": {
@@ -955,7 +1029,39 @@
         "src/server/seo/notfound-log.ts",
         "src/server/models/seo.ts",
         "src/app/admin/urls/**",
-        "tests/server/seo/notfound.test.ts"
+        "tests/server/seo/notfound.test.ts",
+        "src/app/[category]/[location]/[district]/page.tsx",
+        "src/app/[category]/[location]/page.tsx",
+        "src/app/[category]/page.tsx",
+        "src/app/ad/[slug]/page.tsx",
+        "src/app/admin/seo/indexing/IndexingForm.tsx",
+        "src/app/admin/seo/indexing/IndexingTools.tsx",
+        "src/app/admin/seo/indexing/actions.ts",
+        "src/app/admin/seo/indexing/page.tsx",
+        "src/app/admin/seo/templates/TemplatesEditor.tsx",
+        "src/app/admin/seo/templates/actions.ts",
+        "src/app/admin/seo/templates/page.tsx",
+        "src/app/admin/urls/NotFoundBeacon.tsx",
+        "src/app/admin/urls/NotFoundMonitor.tsx",
+        "src/app/admin/urls/OverridesPanel.tsx",
+        "src/app/admin/urls/notfound-actions.ts",
+        "src/app/admin/urls/notfound-beacon.ts",
+        "src/app/admin/urls/override-actions.ts",
+        "src/app/admin/urls/override-rules.ts",
+        "src/app/admin/urls/page.tsx",
+        "src/components/admin/UrlsManager.tsx",
+        "src/lib/queries.ts",
+        "src/lib/seo/landing.ts",
+        "src/lib/seo/override.ts",
+        "src/lib/seo/sitemaps.ts",
+        "src/server/indexnow/manual.ts",
+        "src/server/models/cms.ts",
+        "src/server/seo/explain.ts",
+        "src/server/seo/indexing.ts",
+        "src/server/seo/templates.ts",
+        "src/server/urls/service.ts",
+        "tests/server/seo/templates.test.ts",
+        "tests/server/urls/overrides.test.ts"
       ]
     },
     "H4.6": {
@@ -966,7 +1072,40 @@
         "src/server/models/cms.ts",
         "src/lib/seo/sitemaps.ts",
         "src/server/indexnow/**",
-        "tests/server/seo/indexing.test.ts"
+        "tests/server/seo/indexing.test.ts",
+        "src/app/[category]/[location]/[district]/page.tsx",
+        "src/app/[category]/[location]/page.tsx",
+        "src/app/[category]/page.tsx",
+        "src/app/ad/[slug]/page.tsx",
+        "src/app/admin/seo/indexing/IndexingForm.tsx",
+        "src/app/admin/seo/indexing/IndexingTools.tsx",
+        "src/app/admin/seo/indexing/actions.ts",
+        "src/app/admin/seo/indexing/page.tsx",
+        "src/app/admin/seo/templates/TemplatesEditor.tsx",
+        "src/app/admin/seo/templates/actions.ts",
+        "src/app/admin/seo/templates/page.tsx",
+        "src/app/admin/urls/NotFoundBeacon.tsx",
+        "src/app/admin/urls/NotFoundMonitor.tsx",
+        "src/app/admin/urls/OverridesPanel.tsx",
+        "src/app/admin/urls/notfound-actions.ts",
+        "src/app/admin/urls/notfound-beacon.ts",
+        "src/app/admin/urls/override-actions.ts",
+        "src/app/admin/urls/override-rules.ts",
+        "src/app/admin/urls/page.tsx",
+        "src/app/not-found.tsx",
+        "src/components/admin/UrlsManager.tsx",
+        "src/lib/queries.ts",
+        "src/lib/seo/landing.ts",
+        "src/lib/seo/override.ts",
+        "src/server/indexnow/manual.ts",
+        "src/server/models/seo.ts",
+        "src/server/seo/explain.ts",
+        "src/server/seo/notfound-log.ts",
+        "src/server/seo/templates.ts",
+        "src/server/urls/service.ts",
+        "tests/server/seo/notfound.test.ts",
+        "tests/server/seo/templates.test.ts",
+        "tests/server/urls/overrides.test.ts"
       ]
     },
     "H4.7": {
@@ -978,7 +1117,42 @@
         "src/lib/seo/schema.ts",
         "src/server/models/cms.ts",
         "src/app/admin/seo/settings/**",
-        "tests/server/seo/**"
+        "tests/server/seo/**",
+        "src/app/[category]/[location]/[district]/page.tsx",
+        "src/app/[category]/[location]/page.tsx",
+        "src/app/[category]/page.tsx",
+        "src/app/ad/[slug]/page.tsx",
+        "src/app/admin/seo/indexing/IndexingForm.tsx",
+        "src/app/admin/seo/indexing/IndexingTools.tsx",
+        "src/app/admin/seo/indexing/actions.ts",
+        "src/app/admin/seo/indexing/page.tsx",
+        "src/app/admin/seo/templates/TemplatesEditor.tsx",
+        "src/app/admin/seo/templates/actions.ts",
+        "src/app/admin/seo/templates/page.tsx",
+        "src/app/admin/urls/NotFoundBeacon.tsx",
+        "src/app/admin/urls/NotFoundMonitor.tsx",
+        "src/app/admin/urls/OverridesPanel.tsx",
+        "src/app/admin/urls/notfound-actions.ts",
+        "src/app/admin/urls/notfound-beacon.ts",
+        "src/app/admin/urls/override-actions.ts",
+        "src/app/admin/urls/override-rules.ts",
+        "src/app/admin/urls/page.tsx",
+        "src/app/not-found.tsx",
+        "src/components/admin/UrlsManager.tsx",
+        "src/lib/queries.ts",
+        "src/lib/seo/landing.ts",
+        "src/lib/seo/override.ts",
+        "src/lib/seo/sitemaps.ts",
+        "src/server/indexnow/manual.ts",
+        "src/server/models/seo.ts",
+        "src/server/seo/explain.ts",
+        "src/server/seo/indexing.ts",
+        "src/server/seo/notfound-log.ts",
+        "src/server/seo/templates.ts",
+        "src/server/urls/service.ts",
+        "tests/server/seo/notfound.test.ts",
+        "tests/server/seo/templates.test.ts",
+        "tests/server/urls/overrides.test.ts"
       ]
     },
     "H0.4": {
@@ -1329,6 +1503,18 @@
         "progress/H5.1.md"
       ]
     },
+    "H5.2": {
+      "branchPrefix": "haiku/h5.2",
+      "globs": [
+        "src/app/admin/listing-pages/**",
+        "src/app/admin/moderation/**",
+        "src/server/moderation/**",
+        "src/components/admin/nav.ts",
+        "tests/server/moderation/**",
+        "docs/ownership.json",
+        "progress/H5.2.md"
+      ]
+    },
     "H0.8": {
       "branchPrefix": "haiku/h0.8",
       "globs": [
@@ -1348,6 +1534,46 @@
       "globs": [
         "docs/ownership.json",
         "progress/H0.10.md"
+      ]
+    },
+    "H0.11": {
+      "branchPrefix": "haiku/h0.11",
+      "globs": [
+        "docs/ownership.json",
+        "progress/H0.11.md"
+      ]
+    },
+    "H0.12": {
+      "branchPrefix": "haiku/h0.12",
+      "globs": [
+        "docs/ownership.json",
+        "progress/H0.12.md"
+      ]
+    },
+    "H5.3": {
+      "branchPrefix": "haiku/h5.3",
+      "globs": [
+        "src/components/ListingPage.tsx",
+        "src/components/PostWizard.tsx",
+        "src/lib/models.ts",
+        "src/lib/ui/post-form.ts",
+        "src/lib/ui/pins.ts",
+        "src/server/listings/service.ts",
+        "src/server/models/listing.ts",
+        "src/server/search/query.ts",
+        "src/server/shared/schemas/listings.ts",
+        "tests/server/ranking/**",
+        "tests/server/listings/**",
+        "docs/ownership.json",
+        "progress/H5.3.md"
+      ]
+    },
+    "H5.1c": {
+      "branchPrefix": "haiku/h5.1c",
+      "globs": [
+        "tests/e2e/seo-center.e2e.ts",
+        "docs/ownership.json",
+        "progress/H5.1c.md"
       ]
     },
     "H5.1a": {
