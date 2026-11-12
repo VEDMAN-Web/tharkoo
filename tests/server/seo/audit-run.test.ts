@@ -49,6 +49,15 @@ describe("crawlSite", () => {
     expect(result.robotsIssues).toEqual([]);
   });
 
+  it("crawls a probe once when it is also in the sitemap, so it is not a duplicate of itself", async () => {
+    const both: PageFetcher = async (path, agent) =>
+      path === "/sitemap/a.xml" ? { status: 200, location: "", xRobots: "", html: "<loc>http://x.test/</loc><loc>http://x.test/cities/</loc>" } : fetcher(path, agent);
+    const result = await crawlSite({ base: "http://x.test", agents: ["google"], fetcher: both });
+    expect(result.rows.filter((r) => r.path === "/")).toHaveLength(1);
+    expect(result.rows).toHaveLength(2 + 3);
+    expect(result.rows.flatMap((r) => r.p0).filter((text) => text.startsWith("duplicate"))).toEqual([]);
+  });
+
   it("honours the URL limit and runs every agent", async () => {
     const result = await crawlSite({ base: "http://x.test", limit: 1, fetcher });
     expect(result.urls).toBe(1);
