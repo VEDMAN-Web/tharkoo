@@ -72,8 +72,8 @@ For H3/H4 always read `docs/claude/ADMIN_PLAN.md` sections named in the card (no
 
 **Goal:** the repo is public; it must not hold a competitor's screenshots, brand name or a "copy their layout" spec (FINDINGS §D).
 **Files you may change:** `docs/design/ref/**` (delete), `docs/design/CLONE_SPEC.md` (delete), `docs/design/README.md` (new, 3 lines: "Reference captures were removed on purpose. Tharkoo uses its own design; see docs/claude/ADMIN_PLAN.md and the H6 design brief."), `docs/CODE_MAP.md`, `docs/MASTER_PLAN.md`, `docs/ASSETS.md`, `progress/t0.1.md`, `progress/t0.4.md`, `progress/t0.5.md`, `progress/t9.1.md` (replace the competitor's name with "the reference site"; change nothing else), `tests/server/ui/theme.test.ts` (remove the `docs/design/CLONE_SPEC.md` line from `ALLOW` only), `.github/scripts/forbidden-terms.mjs` (only if needed so it also scans `docs/` except `docs/prd/**`).
-**Read first:** `ls docs/design docs/design/ref`; `git grep -il "skokka" -- docs` (list only).
-**Acceptance:** `git grep -il "skokka" -- . ':!docs/prd' ':!.github/forbidden-terms.txt'` returns nothing; `docs/design/ref/` gone; tests and forbidden-terms pass. Report: old commit messages and old branch names still contain the name (we do not rewrite history); tell Vedant in one line that he can delete the merged `cursor/*` and `codex/*` branches on GitHub and make the repo private (Opus will guide).
+**Read first:** `ls docs/design docs/design/ref`; `git grep -il "the reference site" -- docs` (list only).
+**Acceptance:** `git grep -il "the reference site" -- . ':!docs/prd' ':!.github/forbidden-terms.txt'` returns nothing; `docs/design/ref/` gone; tests and forbidden-terms pass. Report: old commit messages and old branch names still contain the name (we do not rewrite history); tell Vedant in one line that he can delete the merged `cursor/*` and `codex/*` branches on GitHub and make the repo private (Opus will guide).
 
 ---
 

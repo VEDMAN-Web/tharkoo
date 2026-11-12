@@ -1178,9 +1178,31 @@
       "branchPrefix": "haiku/h3.2b",
       "globs": [
         "src/server/models/layout.ts",
+        "src/server/ranking/pins.ts",
         "docs/ownership.json",
-        "progress/H3.2b.md",
-        "src/server/ranking/pins.ts"
+        "progress/H3.2b.md"
+      ]
+    },
+    "H3.1b": {
+      "branchPrefix": "haiku/h3.1b",
+      "globs": [
+        "src/styles/admin.css",
+        "src/components/admin/AdminShell.tsx",
+        "src/components/admin/ui/**",
+        "src/components/admin/nav.ts",
+        "src/app/admin/layout.tsx",
+        "src/app/styleguide/admin/**",
+        "tests/server/ui/admin-nav.test.ts",
+        "src/app/admin/coming/**",
+        "docs/ownership.json",
+        "progress/H3.1.md",
+        "docs/claude/**",
+        "src/components/PathChrome.tsx",
+        "docs/ownership.json",
+        "progress/H3.1b.md",
+        "docs/claude/OVERNIGHT_PLAN.md",
+        "src/app/styleguide/admin/layout.tsx",
+        "src/app/styleguide/admin/page.tsx"
       ]
     }
   }

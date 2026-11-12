@@ -1,3 +1,4 @@
+import { AdminShell } from "@/components/admin/AdminShell";
 import { pageMetadata } from "@/lib/ui/meta";
 import { Demo } from "./Demo";
 
@@ -11,9 +12,8 @@ export const metadata = pageMetadata({
 
 export default function AdminStyleguide() {
   return (
-    <div className="adm-content">
-      <h1 style={{ fontSize: 24, fontWeight: 800, marginBottom: 16 }}>Admin components</h1>
+    <AdminShell title="Admin components">
       <Demo />
-    </div>
+    </AdminShell>
   );
 }
