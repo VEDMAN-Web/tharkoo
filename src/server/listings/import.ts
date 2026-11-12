@@ -5,7 +5,7 @@ import { connectDb } from "@/lib/db";
 import { AuditRepository } from "@/server/audit";
 import { ForbiddenError, HttpError, NotFoundError, ValidationError } from "@/server/http";
 import { parseCsv } from "@/server/listings/csv";
-import { createDraft, notifyIndexNow, patchListing } from "@/server/listings/service";
+import { createDraft, patchListing } from "@/server/listings/service";
 import {
   BannedWord,
   Category,
@@ -431,6 +431,16 @@ async function finalise(id: string, status: ImportStatus, actor: ImportActor) {
   await ListingVersion.create({ listingId: listing._id, version, snapshot, actorId: actor.id });
 }
 
+/** Same call normal publishing makes (queueIndexNow), which batches the paths and does nothing without INDEXNOW_KEY. */
+async function pingIndexNow(paths: string[]) {
+  try {
+    const { queueIndexNow } = await import("@/server/indexnow/ping");
+    queueIndexNow(paths);
+  } catch {
+    /* a failed ping must never undo an import */
+  }
+}
+
 async function importRow(input: RowInput, partnerId: string, status: ImportStatus, actor: ImportActor, requestId: string) {
   const draft = await createDraft(
     partnerId,
@@ -445,7 +455,7 @@ async function importRow(input: RowInput, partnerId: string, status: ImportStatu
     await finalise(id, status, actor);
     if (status === "active") {
       const slug = (await Listing.findById(id).select("slug").lean<{ slug?: string }>())?.slug;
-      if (slug) await notifyIndexNow([`/ad/${slug}/`]);
+      if (slug) await pingIndexNow([`/ad/${slug}/`]);
     }
   } catch (error) {
     await Listing.updateOne({ _id: id }, { $set: { status: "removed" } });

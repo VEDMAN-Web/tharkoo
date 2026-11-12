@@ -693,10 +693,9 @@ export async function expireDue(requestId: string) {
   return { expired };
 }
 
-/** Tells IndexNow about changed paths. Shared by publishing and active imports. Never throws. */
-export function notifyIndexNow(paths: string[]): Promise<void> {
-  if (!paths.length) return Promise.resolve();
-  return import("@/server/indexnow/ping")
+function notifyIndexNow(paths: string[]) {
+  if (!paths.length) return;
+  void import("@/server/indexnow/ping")
     .then((mod) => mod.queueIndexNow(paths))
     .catch(() => undefined);
 }
