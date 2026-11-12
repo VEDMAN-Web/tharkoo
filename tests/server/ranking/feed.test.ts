@@ -105,6 +105,28 @@ describe("pins", () => {
     expect((await slugs({}))[3]).toBe("ad-car-4444");
   });
 
+  it("pins inside one district only, and a district pin does not move the city page", async () => {
+    const { a, b, make, jobs } = await seed();
+    const pune = await Location.findOne({ slug: "pune" });
+    const kothrud = await Location.create({ type: "district", slug: "kothrud", name: "Kothrud", parentId: pune!._id, enabled: true, order: 0 });
+    const inDistrict = { districtId: kothrud._id };
+    const d1 = await make("ad-d1-5555", jobs._id, 5, inDistrict);
+    const d2 = await make("ad-d2-6666", jobs._id, 6, inDistrict);
+    const feed = { categorySlug: "jobs", citySlug: "pune", districtSlug: "kothrud" };
+    expect(await slugs(feed)).toEqual(["ad-d1-5555", "ad-d2-6666"]);
+    await addPin(admin, { scope: "hub:jobs/pune/kothrud", ref: String(d2._id), position: 1 });
+    expect(await slugs(feed)).toEqual(["ad-d2-6666", "ad-d1-5555"]);
+    expect((await slugs({ categorySlug: "jobs", citySlug: "pune" }))[0]).not.toBe("ad-d2-6666");
+    await addPin(admin, { scope: "hub:jobs/pune", ref: String(b._id), position: 1 });
+    expect(await slugs(feed)).toEqual(["ad-d2-6666", "ad-d1-5555"]);
+    expect((await slugs({ categorySlug: "jobs", citySlug: "pune" }))[0]).toBe("ad-b-2222");
+    const preview = await previewOrder(admin, "hub:jobs/pune/kothrud", undefined);
+    expect(preview.map((row) => row.slug)).toEqual(["ad-d2-6666", "ad-d1-5555"]);
+    expect(preview[0].pinned).toBe(true);
+    expect(a).toBeTruthy();
+    expect(d1).toBeTruthy();
+  });
+
   it("ignores a pin with expired dates and one whose ad is not in that feed", async () => {
     const { c, car } = await seed();
     await ListingPin.create({ scope: "hub:jobs", listingId: String(c._id), position: 1, startsAt: new Date(Date.now() - 3 * DAY), endsAt: new Date(Date.now() - DAY), createdBy: "t" });

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { createContext, useContext, useMemo, useState, type ReactNode } from "react";
 import { ArrowUp, Calendar, Check, MapPin, Phone } from "lucide-react";
 import type { ListingDoc } from "@/lib/models";
 import { displayTitle, prettyPlace } from "@/lib/format";
@@ -9,8 +9,21 @@ import { PhotoSwipe } from "./PhotoSwipe";
 import { api, friendlyError } from "@/lib/ui/api";
 import { adPath } from "@/lib/urls";
 import { useUrlPaths } from "../UrlPaths";
+import { makeT, type TextFn, type UiTextMap } from "@/lib/ui/text";
 
-const TIER_LABEL: Record<string, string> = { top: "Top", supertop: "SUPER Top", star: "Star", highlight: "Highlight", new: "New" };
+const TextContext = createContext<UiTextMap | undefined>(undefined);
+
+/** Hands the admin-edited UI text (see /admin/ui-text/) to the ad cards below it. Without one the built-in text is used. */
+export function UiTextProvider({ texts, children }: { texts?: UiTextMap; children: ReactNode }) {
+  return <TextContext.Provider value={texts}>{children}</TextContext.Provider>;
+}
+
+function useT(): TextFn {
+  const texts = useContext(TextContext);
+  return useMemo(() => makeT(texts), [texts]);
+}
+
+const TIER_KEYS = { top: "card.tier.top", supertop: "card.tier.supertop", star: "card.tier.star", highlight: "card.tier.highlight", new: "card.tier.new" } as const;
 
 function variantOf(ad: ListingDoc, featured?: boolean) {
   if (featured) return "star";
@@ -30,8 +43,9 @@ export function AdCard({
   priority?: boolean;
   layout?: "row" | "tile";
 }) {
+  const t = useT();
   const variant = variantOf(ad, featured);
-  const title = displayTitle(ad.title) || "Listing";
+  const title = displayTitle(ad.title) || t("card.fallbackTitle");
   const href = adPath(useUrlPaths(), ad.slug || "");
   const photos = listingPhotos(ad.categorySlug, ad.publicId || ad.slug || "", ad.photos || []);
   const superTop = variant === "supertop" || variant === "star";
@@ -40,7 +54,7 @@ export function AdCard({
   const city = prettyPlace(ad.citySlug);
   const area = ad.place && ad.place !== city ? ad.place : "";
   const place = `${city}${area ? `/ ${area}` : ""}`.slice(0, 22);
-  const tier = TIER_LABEL[variant];
+  const tier = variant in TIER_KEYS ? t(TIER_KEYS[variant as keyof typeof TIER_KEYS]) : "";
 
   async function reveal(channel: "phone" | "whatsapp") {
     setNote("");
@@ -52,7 +66,7 @@ export function AdCard({
       body: JSON.stringify({ channel }),
     });
     if (!res.ok) return setNote(friendlyError(res.error));
-    setShown(res.data.value || "No number shared");
+    setShown(res.data.value || t("card.contact.none"));
   }
 
   return (
@@ -92,7 +106,7 @@ export function AdCard({
           <span className="tk-card-meta">
             <p>
               <Calendar size={12} aria-hidden />
-              <strong>{ad.age ? `${ad.age} years` : prettyPlace(ad.categorySlug)}</strong>
+              <strong>{ad.age ? t("card.age", { age: ad.age }) : prettyPlace(ad.categorySlug)}</strong>
             </p>
             <p>
               <MapPin size={12} aria-hidden />
@@ -107,10 +121,10 @@ export function AdCard({
       </a>
       {superTop ? (
         <div className="tk-circles">
-          <button type="button" className="tk-circle" aria-label="Call" data-tk="call" onClick={() => reveal("phone")}>
+          <button type="button" className="tk-circle" aria-label={t("card.contact.call")} data-tk="call" onClick={() => reveal("phone")}>
             <Phone size={16} color="#8A6416" />
           </button>
-          <button type="button" className="tk-circle" aria-label="WhatsApp" data-tk="whatsapp" onClick={() => reveal("whatsapp")}>
+          <button type="button" className="tk-circle" aria-label={t("card.contact.whatsapp")} data-tk="whatsapp" onClick={() => reveal("whatsapp")}>
             <WaIcon />
           </button>
         </div>

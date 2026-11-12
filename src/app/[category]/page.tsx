@@ -12,7 +12,12 @@ import { Breadcrumbs } from "@/components/Breadcrumbs";
 import { JsonLd, breadcrumbJsonLd } from "@/lib/jsonld";
 import { faqPage, itemListNode } from "@/lib/seo/schema";
 import { canonical } from "@/lib/seo";
-import { AdCard } from "@/components/AdCard";
+import { AdCard, UiTextProvider } from "@/components/ui/AdCard";
+import { textOverrides } from "@/app/admin/ui-text/store";
+import { makeT, pickTexts } from "@/lib/ui/text";
+import { resolveListingLayout } from "@/components/blocks/ListingLayout";
+import { deviceClass } from "@/components/blocks/device";
+import { listingHeading } from "@/lib/layout/listing";
 import { hourSeed, orderFeed } from "@/components/feedOrder";
 import { fallbackLanding, mergeLanding, type LandingCopy } from "@/lib/seo/landing";
 
@@ -48,6 +53,8 @@ export default async function CategoryHub({ params }: Props) {
     getPaths(),
     urlHeading(categoryPath(cat.slug || category), `${cat.name} in India`),
   ]);
+  const texts = await textOverrides();
+  const t = makeT(texts);
   const vars = { category: cat.name, site: site.name, year: new Date().getFullYear() };
   const copy = mergeLanding(
     fallbackLanding({ category: cat.name || category, count: feed.total, site: site.name }),
@@ -59,12 +66,50 @@ export default async function CategoryHub({ params }: Props) {
     ...stars,
     ...orderFeed(feed.items.filter((ad) => !stars.some((star) => star.slug && star.slug === ad.slug)), hourSeed()),
   ];
-  return (
+  const layout = await resolveListingLayout({ path: categoryPath(cat.slug || category), category: cat.slug || category, vars: { ...vars, count: feed.total } });
+  const headerBlock = layout.blocks.find((block) => block.type === "listingHeader");
+  const h1Text = listingHeading(String(headerBlock?.props.h1Template ?? ""), heading, { ...layout.vars, h1: heading });
+  const wrap = (id: string, devices: Parameters<typeof deviceClass>[0], content: React.ReactNode) => {
+    const cls = deviceClass(devices);
+    return cls ? <div key={id} className={cls}>{content}</div> : <span key={id} style={{ display: "contents" }}>{content}</span>;
+  };
+  const feedAndText = (
     <>
+      <div className="tk-feed" data-tk="category-feed">
+        {ads.map((ad, index) => (
+          <AdCard key={ad.publicId || ad.slug || index} ad={ad} featured={index < stars.length} priority={index === 0} />
+        ))}
+      </div>
+      <section className="tk-browse-city" data-tk="browse-by-city">
+        <h2>{t("listing.hub.browseByCity")}</h2>
+        <div className="tk-pills tk-pills-left">
+          {states.flatMap((state) =>
+            listed
+              .filter((city) => city.stateSlug === state.slug)
+              .map((city) => (
+                <Link key={city.slug} href={placePath(cat.slug || category, city.slug || "")} className="tk-pill" prefetch={false}>
+                  {city.name}
+                </Link>
+              )),
+          )}
+        </div>
+      </section>
+      <p className="tk-seo-foot">{copy.intro || fillTemplate(seo?.intro || "", vars)}</p>
+      {copy.faqs.map((item) => (
+        <p key={item.q} className="tk-seo-foot">
+          <strong>{item.q}</strong> {item.a}
+        </p>
+      ))}
+    </>
+  );
+  const inFeedId = String(layout.blocks.find((block) => block.type === "listingFeed")?.props.inFeedBlockId ?? "");
+
+  return (
+    <UiTextProvider texts={pickTexts(texts, "card.")}>
       <JsonLd
         data={[
           breadcrumbJsonLd([
-            { name: "Tharkoo India", path: "/" },
+            { name: t("listing.crumb.home"), path: "/" },
             { name: cat.name || category, path: categoryPath(cat.slug || category) },
           ]),
           itemListNode({
@@ -81,38 +126,20 @@ export default async function CategoryHub({ params }: Props) {
       />
       <div className="tk-banner">
         <div className="tk-container">
-          <h1>{heading}</h1>
+          <h1>{h1Text}</h1>
         </div>
         <MapPin className="tk-banner-pins tk-icon-lg" size={180} color="#fff" aria-hidden />
       </div>
       <div className="tk-container" style={{ paddingBottom: 32 }}>
-          <Breadcrumbs crumbs={[{ name: "Tharkoo India", path: "/" }, { name: cat.name!, path: categoryPath(cat.slug || category) }]} />
-        <div className="tk-feed" data-tk="category-feed">
-          {ads.map((ad, index) => (
-            <AdCard key={ad.publicId || ad.slug || index} ad={ad} featured={index < stars.length} priority={index === 0} />
-          ))}
-        </div>
-        <section className="tk-browse-city" data-tk="browse-by-city">
-          <h2>Browse by city</h2>
-          <div className="tk-pills tk-pills-left">
-            {states.flatMap((state) =>
-              listed
-                .filter((city) => city.stateSlug === state.slug)
-                .map((city) => (
-                  <Link key={city.slug} href={placePath(cat.slug || category, city.slug || "")} className="tk-pill" prefetch={false}>
-                    {city.name}
-                  </Link>
-                )),
-            )}
-          </div>
-        </section>
-        <p className="tk-seo-foot">{copy.intro || fillTemplate(seo?.intro || "", vars)}</p>
-        {copy.faqs.map((item) => (
-          <p key={item.q} className="tk-seo-foot">
-            <strong>{item.q}</strong> {item.a}
-          </p>
-        ))}
+        <Breadcrumbs crumbs={[{ name: t("listing.crumb.home"), path: "/" }, { name: cat.name!, path: categoryPath(cat.slug || category) }]} />
+        {/* Blocks in the order the layout gives. The category page draws the ads and the SEO text itself (the ads come with the text below them);
+            filters, nearby cities and similar link blocks belong to city pages and are skipped here. */}
+        {layout.blocks.map((block) => {
+          if (block.type === "listingFeed") return wrap(block.id, block.devices, feedAndText);
+          if (["listingHeader", "filters", "relatedCategories", "nearbyCities", "districtLinks"].includes(block.type)) return null;
+          return block.id === inFeedId ? null : wrap(block.id, block.devices, layout.nodes[block.id] ?? null);
+        })}
       </div>
-    </>
+    </UiTextProvider>
   );
 }

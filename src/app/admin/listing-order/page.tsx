@@ -16,10 +16,11 @@ export default async function ListingOrderPage() {
       </AdminShell>
     );
   }
-  const [state, categories, cities] = await Promise.all([
+  const [state, categories, cities, districts] = await Promise.all([
     loadListingOrder({ roles: identity.roles, email: identity.email }),
     publicCategories(),
     listLocations({ type: "city" }),
+    listLocations({ type: "district" }),
   ]);
   return (
     <AdminShell title="Listing order">
@@ -30,6 +31,7 @@ export default async function ListingOrderPage() {
         initial={state}
         categories={categories.map((category) => ({ slug: category.slug, name: category.name }))}
         cities={cities.map((city) => ({ slug: city.slug, name: city.name }))}
+        districts={districts.map((district) => ({ slug: district.slug, name: district.name, citySlug: district.citySlug }))}
       />
     </AdminShell>
   );

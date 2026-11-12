@@ -2,7 +2,8 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { api, friendlyError } from "@/lib/ui/api";
+import { friendlyError } from "@/lib/ui/api";
+import { loginRequest } from "@/components/AuthForm";
 import { Button } from "@/components/ui/Button";
 import { Field, Input } from "@/components/ui/Input";
 
@@ -16,13 +17,10 @@ export function AdminLoginForm() {
     setBusy(true);
     setMessage("");
     const data = new FormData(event.currentTarget);
-    const res = await api("/api/auth/login", {
-      method: "POST",
-      body: JSON.stringify({ email: data.get("email"), password: data.get("password") }),
-    });
+    const res = await loginRequest(data.get("email"), data.get("password"));
     setBusy(false);
     if (!res.ok) {
-      setMessage(friendlyError(res.error));
+      setMessage(res.status === 429 ? res.error.message || "" : friendlyError(res.error));
       return;
     }
     router.push("/admin/");
