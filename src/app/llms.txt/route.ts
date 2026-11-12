@@ -1,6 +1,8 @@
 import { getCategories } from "@/lib/queries";
 import { categoriesPath, citiesPath, DEFAULT_PATHS, safetyPath } from "@/lib/urls";
 import { getPaths } from "@/server/urls/service";
+import { getSeoSettings } from "@/app/admin/seo/settings/store";
+import { DEFAULT_SEO_SETTINGS, llmsExtra } from "@/app/admin/seo/settings/rules";
 
 export const revalidate = 300;
 
@@ -14,10 +16,11 @@ export async function GET() {
   } catch {
     categories = [];
   }
+  const extra = llmsExtra(await getSeoSettings().catch(() => DEFAULT_SEO_SETTINGS));
   const lines = [
     "# Tharkoo",
     "",
-    "Tharkoo is a free classifieds site for India. People post dating notes, friendship notes, jobs, homes, vehicles, and local services. Contact stays on the ad.",
+    extra.intro ?? "Tharkoo is a free classifieds site for India. People post dating notes, friendship notes, jobs, homes, vehicles, and local services. Contact stays on the ad.",
     "",
     "## Public pages",
     `- Home: /`,
@@ -31,6 +34,7 @@ export async function GET() {
     "",
     "## Categories",
     ...categories.filter((cat) => cat.slug).map((cat) => `- ${cat.name}: /${cat.slug}/`),
+    ...extra.sections,
     "",
     "Account pages and the admin tools are not public guides.",
   ];
