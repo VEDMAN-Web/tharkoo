@@ -91,7 +91,9 @@ export async function crawlSite(options: CrawlOptions): Promise<CrawlResult> {
   const inSitemap = new Set(urls);
   const robotsTxt = (await fetcher("/robots.txt", "google")).html;
 
-  const jobs = agents.flatMap((agent) => [...urls, ...PROBES].map((path) => ({ agent, path })));
+  // A probe that is also in the sitemap is crawled once, otherwise it would count as a duplicate of itself.
+  const probes = PROBES.filter((path) => !inSitemap.has(path));
+  const jobs = agents.flatMap((agent) => [...urls, ...probes].map((path) => ({ agent, path })));
   const rows = await pool(jobs, options.concurrency ?? 1, options.gapMs ?? 0, async ({ agent, path }) => {
     const analysed = analyse(path, await fetcher(path, agent), base);
     const listed = inSitemap.has(path);
