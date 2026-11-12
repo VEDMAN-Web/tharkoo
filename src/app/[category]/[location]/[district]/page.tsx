@@ -1,5 +1,6 @@
 import { notFound, permanentRedirect } from "next/navigation";
 import type { Metadata } from "next";
+import { resolveListingLayout } from "@/components/blocks/ListingLayout";
 import { ListingPageView } from "@/components/ListingPage";
 import {
   getCategory,
@@ -139,8 +140,11 @@ export default async function DistrictPage({ params, searchParams }: Props) {
     count: feed.total,
     year: new Date().getFullYear(),
   };
+  const layout = await resolveListingLayout({ path: canonicalPath, category: cat.slug || category, vars });
+
   return (
     <ListingPageView
+      layout={layout}
       h1={heading || visibleHeading(fillTemplate(seo?.h1 || "", vars), districtCopy.h1)}
       faqs={districtCopy.faqs}
       popular={tags.slice(0, 4).map((tag) => ({ href: tagPath(paths, cat.slug || category, tag.slug), label: `${dist.name} ${tag.label}` }))}

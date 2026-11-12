@@ -825,7 +825,14 @@
         "src/server/layout/defaults/listing.ts",
         "src/server/seed/layouts.ts",
         "src/app/admin/listing-pages/**",
-        "tests/server/layout/listing.test.ts"
+        "tests/server/layout/listing.test.ts",
+        "docs/ownership.json",
+        "progress/H3.5.md",
+        "src/server/layout/defaults/**",
+        "src/lib/layout/**",
+        "src/components/admin/nav.ts",
+        "src/app/admin/layout-actions.ts",
+        "tests/server/layout/**"
       ]
     },
     "H3.6": {

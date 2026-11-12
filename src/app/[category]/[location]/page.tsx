@@ -1,5 +1,6 @@
 import { notFound, permanentRedirect } from "next/navigation";
 import type { Metadata } from "next";
+import { resolveListingLayout } from "@/components/blocks/ListingLayout";
 import { ListingPageView } from "@/components/ListingPage";
 import {
   getCategories,
@@ -161,8 +162,11 @@ export default async function LocationPage({ params, searchParams }: Props) {
     ? new Date(newest).toLocaleDateString("en-IN", { day: "numeric", month: "long", year: "numeric" })
     : undefined;
 
+  const layout = await resolveListingLayout({ path: canonicalPath, category: cat.slug || category, vars });
+
   return (
     <ListingPageView
+      layout={layout}
       h1={heading || visibleHeading(fillTemplate(seo?.h1 || "", vars), copy.h1)}
       h2={fillTemplate(seo?.h2 || "", vars)}
       intro={copy.intro || fillTemplate(seo?.intro || "", vars)}
