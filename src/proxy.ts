@@ -119,7 +119,7 @@ export async function proxy(req: NextRequest) {
   }
   const cronPost = req.method === "POST" && path.startsWith("/api/cron/");
   // A payment provider posts without an Origin header. The route checks its signature and timestamp instead.
-  const providerPost = req.method === "POST" && path.replace(//+$/, "") === "/api/payments/webhook";
+  const providerPost = req.method === "POST" && "/" + path.split("/").filter(Boolean).join("/") === "/api/payments/webhook";
   if (!cronPost && !providerPost && !originAllowed(req)) {
     return NextResponse.json(
       { ok: false, data: null, error: { code: "FORBIDDEN", message: "Origin is not allowed" } },
