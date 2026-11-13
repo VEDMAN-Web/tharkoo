@@ -28,6 +28,7 @@ export const TEXT_DEFAULTS = {
   "listing.links.nearby": "Nearby",
   "listing.link.in": "{name} in {place}",
   "listing.hub.browseByCity": "Browse by city",
+  "listing.hub.browseBySub": "Browse by type",
   // Ad card
   "card.fallbackTitle": "Listing",
   "card.tier.top": "Top",

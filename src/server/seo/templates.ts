@@ -3,6 +3,8 @@ import {
   TEMPLATE_FIELDS,
   TEMPLATE_LIMITS,
   TEMPLATE_PAGE_TYPES,
+  mergeTemplates,
+  renderTemplate,
   splitTemplateKey,
   templateKey,
   unknownVariables,
@@ -28,7 +30,9 @@ export interface StoredTemplate {
 }
 
 const SLUG = /^[a-z0-9-]{1,60}$/;
-const PAGE_KEYS = new Set<string>(TEMPLATE_PAGE_TYPES.map((item) => item.key));
+/** The sub-category hub page type (H6.2b). It uses the same four fields as the other hubs. */
+export const SUBCATEGORY_PAGE_TYPE = "subcategory";
+const PAGE_KEYS = new Set<string>([...TEMPLATE_PAGE_TYPES.map((item) => item.key), SUBCATEGORY_PAGE_TYPE]);
 // eslint-disable-next-line no-control-regex
 const CONTROL_OR_TAG = /[\u0000-\u0008\u000B\u000C\u000E-\u001F<>]/g;
 
@@ -90,4 +94,37 @@ export async function deleteTemplate(actor: SeoActor, key: string) {
   await SeoTemplate.deleteOne({ pageType: key });
   await recordSeo(actor, "seo.template.delete", "seo-template", key, before ?? {}, {});
   return { key };
+}
+
+export interface SubcategoryCopy {
+  title: string;
+  description: string;
+  h1: string;
+  intro: string;
+}
+
+/**
+ * Copy for a sub-category page from the "subcategory" template (the category's own one wins field by field).
+ * {category} is filled with the sub-category name. Empty template fields keep the built-in copy in `fallback`.
+ */
+export async function subcategoryCopy(
+  categorySlug: string,
+  vars: { subcategory: string; city: string; count?: number; site: string },
+  fallback: SubcategoryCopy,
+): Promise<SubcategoryCopy> {
+  await connectDb();
+  const rows = await SeoTemplate.find({ pageType: { $in: [SUBCATEGORY_PAGE_TYPE, `${SUBCATEGORY_PAGE_TYPE}:${categorySlug}`] } }).lean();
+  const pick = (key: string) => rows.find((row) => row.pageType === key) ?? null;
+  const merged = mergeTemplates(pick(SUBCATEGORY_PAGE_TYPE), pick(`${SUBCATEGORY_PAGE_TYPE}:${categorySlug}`));
+  if (!merged) return fallback;
+  const fill = (text: string | undefined, fall: string) => {
+    const out = text ? renderTemplate(text, { category: vars.subcategory, city: vars.city, count: vars.count, site: vars.site }).replace(/\s+/g, " ").trim() : "";
+    return out || fall;
+  };
+  return {
+    title: fill(merged.title, fallback.title),
+    description: fill(merged.description, fallback.description),
+    h1: fill(merged.h1, fallback.h1),
+    intro: fill(merged.intro, fallback.intro),
+  };
 }
