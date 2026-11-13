@@ -26,6 +26,7 @@ export interface ListingDoc {
   ownerId: Types.ObjectId;
   status: ListingStatus;
   categoryId: Types.ObjectId;
+  subcategoryId?: Types.ObjectId;
   stateId?: Types.ObjectId;
   cityId?: Types.ObjectId;
   districtId?: Types.ObjectId;
@@ -147,6 +148,7 @@ const listingSchema = new Schema<ListingDoc>(
       default: "draft",
     },
     categoryId: { type: Schema.Types.ObjectId, required: true },
+    subcategoryId: { type: Schema.Types.ObjectId, index: true },
     stateId: { type: Schema.Types.ObjectId },
     cityId: { type: Schema.Types.ObjectId },
     districtId: { type: Schema.Types.ObjectId },

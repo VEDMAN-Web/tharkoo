@@ -5,6 +5,7 @@ import { adPath, blogPath, categoriesPath, categoryPath, citiesPath, cmsPath, co
 import { Listing, Location, Page } from "@/server/models";
 import { getPaths, publicTags } from "@/server/urls/service";
 import { isCityAlias } from "@/lib/seo/district-alias";
+import { subcategorySitemapEntries } from "@/server/seo/subcategory-sitemap";
 import { districtMinimum, getIndexing, hubMinimum, isCategoryOn } from "@/server/seo/indexing";
 
 export const SITEMAP_SHARDS = ["categories", "cities", "districts", "tags", "ads", "content"] as const;
@@ -151,6 +152,9 @@ export async function shardEntries(shard: SitemapShard): Promise<SitemapEntry[]>
         const cat = categories.find((item) => item.slug === row.category);
         if (cat && row.n >= hubMinimum(indexing, cat, row.city)) urls.push({ loc: loc(placePath(row.category, row.city)), lastmod: stamp(row.last) });
       }
+    }
+    if (shard === "districts") {
+      for (const entry of await subcategorySitemapEntries(loc)) urls.push({ loc: entry.loc, lastmod: entry.lastmod ?? stamp() });
     }
     return urls;
   }

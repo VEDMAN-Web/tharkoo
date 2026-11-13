@@ -1808,6 +1808,74 @@
         "docs/ownership.json",
         "progress/H5.1d.md"
       ]
+    },
+    "H6.2b": {
+      "branchPrefix": "haiku/h6.2b",
+      "globs": [
+        "src/server/models/listing.ts",
+        "src/server/models/catalog.ts",
+        "src/server/listings/service.ts",
+        "src/server/listings/import.ts",
+        "src/app/sitemap/**",
+        "src/server/seo/**",
+        "src/server/seo/templates.ts",
+        "src/lib/ui/text.ts",
+        "tests/server/listings/**",
+        "tests/server/categories/**",
+        "tests/server/seo/**",
+        "docs/ownership.json",
+        "progress/H6.2b.md"
+      ]
+    },
+    "H6.2c": {
+      "branchPrefix": "haiku/h6.2c",
+      "globs": [
+        "src/lib/seo/sitemaps.ts",
+        "src/lib/seo/landing.ts",
+        "src/app/[category]/page.tsx",
+        "src/app/[category]/SubcategoryChips.tsx",
+        "src/app/[category]/[location]/[district]/sub-hub.tsx",
+        "src/lib/ui/text.ts",
+        "tests/server/seo/**",
+        "tests/server/categories/**",
+        "docs/ownership.json",
+        "progress/H6.2c.md"
+      ]
+    },
+    "H5.8": {
+      "branchPrefix": "haiku/h5.8",
+      "globs": [
+        "src/server/seo/**",
+        "src/app/seo/**",
+        "src/app/admin/seo/**",
+        "src/app/[category]/**",
+        "src/app/cities/**",
+        "src/lib/seo*.ts",
+        "src/lib/ui/meta*.ts",
+        "src/server/search/**",
+        "src/components/SearchResults*.tsx",
+        "src/components/search/**",
+        "tests/server/seo/**",
+        "tests/server/search/**",
+        "tests/e2e/seo-center.e2e.ts",
+        "docs/ownership.json",
+        "progress/H5.8.md"
+      ]
+    },
+    "H5.8b": {
+      "branchPrefix": "haiku/h5.8b",
+      "globs": [
+        "src/components/ui/AdCard.tsx",
+        "src/lib/models.ts",
+        "src/components/blocks/HomeLayout.tsx",
+        "src/components/HomeBlocks.tsx",
+        "src/lib/seo/override.ts",
+        "src/app/layout.tsx",
+        "tests/server/ui/**",
+        "tests/server/seo/**",
+        "docs/ownership.json",
+        "progress/H5.8b.md"
+      ]
     }
   }
 }

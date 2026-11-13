@@ -441,3 +441,16 @@ describe("listing indexes", () => {
     expect(categories.some((index) => index.key.oldSlugs === 1)).toBe(true);
   });
 });
+
+describe("search hit price", () => {
+  it("carries the asking price, and null when the ad has none", async () => {
+    const { category, state, city } = await place();
+    const priced = await listing({ categoryId: category._id, stateId: state._id, cityId: city._id, title: "Priced desk", slug: "priced-desk" });
+    await listing({ categoryId: category._id, stateId: state._id, cityId: city._id, title: "Free desk", slug: "free-desk" });
+    await Listing.collection.updateOne({ _id: priced._id }, { $set: { price: 12500 } });
+    const out = await queryListings({ categorySlug: "jobs", citySlug: "pune" });
+    const bySlug = new Map(out.hits.map((hit) => [hit.slug, hit]));
+    expect(bySlug.get("priced-desk")?.price).toBe(12500);
+    expect(bySlug.get("free-desk")?.price).toBeNull();
+  });
+});

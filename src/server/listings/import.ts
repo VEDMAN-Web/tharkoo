@@ -6,6 +6,7 @@ import { AuditRepository } from "@/server/audit";
 import { ForbiddenError, HttpError, NotFoundError, ValidationError } from "@/server/http";
 import { parsePrice } from "@/server/listings/price";
 import { parseCsv } from "@/server/listings/csv";
+import { resolveSubcategory, categoryNeedsSubcategory } from "@/server/categories/public";
 import { createDraft, patchListing } from "@/server/listings/service";
 import {
   BannedWord,
@@ -33,7 +34,7 @@ const DESCRIPTION_MAX = 5000;
 const REQUIRED_COLUMNS = ["category", "city", "title", "description"] as const;
 const PHOTO_COLUMN = "photos";
 const PHOTO_ALIASES = new Set(["photos", "photo_urls", "photo_url", "photo"]);
-const BASE_COLUMNS = new Set<string>([...REQUIRED_COLUMNS, "district", "price", PHOTO_COLUMN]);
+const BASE_COLUMNS = new Set<string>([...REQUIRED_COLUMNS, "district", "price", "subcategory", PHOTO_COLUMN]);
 const CLOUDINARY_HOST = "res.cloudinary.com";
 
 const audit = new AuditRepository();
@@ -67,6 +68,7 @@ export interface ImportReport extends DryRunReport {
 
 interface RowInput {
   categoryId: string;
+  subcategoryId?: string;
   stateId?: string;
   cityId: string;
   districtId?: string;
@@ -217,6 +219,18 @@ function attributesFor(category: CategoryDoc, cells: Record<string, string>, err
   }
 }
 
+/** Reads the optional "subcategory" column. A blank cell is an error when the category has sub-categories. */
+async function subcategoryOf(categoryId: string, value: string, errors: string[]) {
+  const typed = value.trim();
+  if (!typed) {
+    if (await categoryNeedsSubcategory(categoryId)) errors.push('Required column "subcategory" is empty for this category');
+    return undefined;
+  }
+  const id = await resolveSubcategory(categoryId, typed);
+  if (!id) errors.push(`Unknown subcategory "${typed}" for this category (use its name or slug)`);
+  return id ?? undefined;
+}
+
 function photoCandidates(value: string): string[] | null {
   if (value.startsWith("/") && !value.startsWith("//")) return [value];
   let url: URL;
@@ -338,6 +352,7 @@ async function planRow(
   if (cells.category && !category) errors.push(`Unknown category "${cells.category}" (use the category slug)`);
   const place = cells.city ? await lookupPlace(lookups, cells, errors) : null;
   const attributes = category ? attributesFor(category, cells, errors) : null;
+  const subcategoryId = category ? await subcategoryOf(category._id.toString(), cells.subcategory ?? "", errors) : undefined;
   const price = priceOf(cells.price, errors);
   const mediaIds = await resolvePhotos(partner.id, cells[PHOTO_COLUMN] ?? "", errors);
   if (category && attributes) {
@@ -364,6 +379,7 @@ async function planRow(
   if (errors.length > 0 || !category || !place || !attributes) return { report };
   const input: RowInput = {
     categoryId: category._id.toString(),
+    subcategoryId,
     cityId: place.cityId,
     stateId: place.stateId,
     districtId: "districtId" in place ? place.districtId : undefined,
@@ -457,7 +473,7 @@ async function pingIndexNow(paths: string[]) {
 async function importRow(input: RowInput, partnerId: string, status: ImportStatus, actor: ImportActor, requestId: string) {
   const draft = await createDraft(
     partnerId,
-    { categoryId: input.categoryId, stateId: input.stateId, cityId: input.cityId, districtId: input.districtId },
+    { categoryId: input.categoryId, subcategoryId: input.subcategoryId, stateId: input.stateId, cityId: input.cityId, districtId: input.districtId },
     requestId,
   );
   const id = draft.id as string;

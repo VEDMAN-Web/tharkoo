@@ -147,6 +147,7 @@ export const TEMPLATE_PAGE_TYPES = [
   { key: "category", label: "Category hub" },
   { key: "location", label: "City or state hub" },
   { key: "district", label: "District hub" },
+  { key: "subcategory", label: "Sub-category hub" },
 ] as const;
 export type TemplatePageType = (typeof TEMPLATE_PAGE_TYPES)[number]["key"];
 
