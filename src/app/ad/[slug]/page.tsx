@@ -2,6 +2,8 @@ import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import { AdDetail } from "@/components/AdDetail";
 import { ChatNow } from "@/components/chat/ChatNow";
+import { AdVideos } from "@/components/ad/AdVideos";
+import { listAdVideos } from "@/server/media/video";
 import { prettyPlace, displayTitle } from "@/lib/format";
 import { JsonLd, breadcrumbJsonLd } from "@/lib/jsonld";
 import { connectDb } from "@/lib/db";
@@ -103,7 +105,11 @@ export default async function AdPage({ params }: Props) {
     expiresAt?: Date;
   } | null;
   const listingId = row?._id ? String(row._id) : undefined;
-  const [cat, related] = await Promise.all([getCategory(ad.categorySlug || ""), getRelated(ad, 6)]);
+  const [cat, related, videos] = await Promise.all([
+    getCategory(ad.categorySlug || ""),
+    getRelated(ad, 6),
+    listingId ? listAdVideos(listingId).catch(() => []) : Promise.resolve([]),
+  ]);
   const cover = safePhoto(ad.photos?.[0]);
   const paths = await getPaths();
   const publicAd = adPath(paths, ad.slug || slug);
@@ -143,6 +149,7 @@ export default async function AdPage({ params }: Props) {
       <section className="tk-container" aria-label="Chat" style={{ paddingBottom: 16, maxWidth: 480 }}>
         <ChatNow listingId={listingId} />
       </section>
+      <AdVideos videos={videos} title={displayTitle(ad.title) || "Listing"} />
     </>
   );
 }

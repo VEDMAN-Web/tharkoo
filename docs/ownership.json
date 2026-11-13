@@ -1571,9 +1571,19 @@
     "H5.1c": {
       "branchPrefix": "haiku/h5.1c",
       "globs": [
-        "tests/e2e/seo-center.e2e.ts",
+        "src/proxy.ts",
+        "src/lib/admin-gate.ts",
+        "src/lib/admin-model-access.ts",
+        "src/server/admin/**",
+        "src/app/api/admin/list/route.ts",
+        "src/app/api/admin/mutate/route.ts",
+        "src/components/admin/nav.ts",
+        "tests/server/admin/**",
+        "tests/e2e/roles.e2e.ts",
         "docs/ownership.json",
-        "progress/H5.1c.md"
+        "progress/H5.1c.md",
+        "src/app/admin/actions.ts",
+        "tests/server/ui/admin-nav.test.ts"
       ]
     },
     "H5.1a": {

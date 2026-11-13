@@ -6,6 +6,7 @@ import { Logo } from "./Logo";
 import { safeHref } from "@/lib/sanitize";
 import { applyPrefixes, blogPath, categoriesPath, citiesPath, cmsPath, contactPath, helpPath, howItWorksPath, prohibitedPath, reportPath, safetyPath } from "@/lib/urls";
 import { useUrlPaths } from "./UrlPaths";
+import { FooterCountries } from "./FooterCountries";
 
 type LinkItem = { label: string; href: string };
 
@@ -19,6 +20,7 @@ export function Footer({
   siteName,
   legalName,
   cityCount,
+  categories,
   social,
   content,
 }: {
@@ -88,6 +90,7 @@ export function Footer({
             </div>
           ))}
         </div>
+        <FooterCountries title={content?.countriesLabel} categorySlug={categories?.[0]?.slug || ""} />
       </div>
       <div className="tk-bar">
         <div className="tk-container tk-bar-row">

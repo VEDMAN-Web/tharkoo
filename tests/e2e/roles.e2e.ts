@@ -112,7 +112,6 @@ test.describe("8 Roles", () => {
   });
 
   test("a seo_editor cannot open money or system screens by URL", async ({ baseURL }) => {
-    test.fixme(true, "BUG 8 Roles: /admin/finance/, /admin/settings/ and /admin/coupons/ render for a seo_editor typing the URL.");
     const email = uniqueEmail("seourl");
     const api = await newApi(baseURL!);
     await registerApi(api, baseURL!, email);
@@ -127,7 +126,6 @@ test.describe("8 Roles", () => {
   });
 
   test("a seo_editor cannot write coupons through /api/admin/mutate", async ({ baseURL }) => {
-    test.fixme(true, "BUG 8 Roles (critical): a seo_editor can create a Coupon and list any model through /api/admin.");
     const email = uniqueEmail("seoapi");
     const api = await newApi(baseURL!);
     await registerApi(api, baseURL!, email);

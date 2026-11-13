@@ -8,8 +8,9 @@ import { ForbiddenError, NotFoundError, PolicyViolationError, ValidationError } 
 import { Listing, MediaAsset, PromotionOrder, type ListingDoc, type MediaAssetDoc } from "@/server/models";
 import { cloudinaryClient, type Delivery } from "@/server/media/client";
 import { csamScannerFromEnv, type CsamScanner } from "@/server/media/csam";
-import { EAGER, ID_URL_TTL_SECONDS, UPLOAD_NEEDS_CLOUDINARY, onVercel, MAX_BYTES, ORPHAN_AGE_MS, STRIP_EXIF, cloudinaryEnv, optionalCloudinary, photoLimit } from "@/server/media/config";
+import { EAGER, ID_URL_TTL_SECONDS, VIDEO_FORMAT_MIME, VIDEO_MAX_BYTES, VIDEO_MAX_PER_AD, VIDEO_MAX_SECONDS, VIDEO_RULE_MESSAGE, VIDEO_TYPES, UPLOAD_NEEDS_CLOUDINARY, onVercel, MAX_BYTES, ORPHAN_AGE_MS, STRIP_EXIF, cloudinaryEnv, optionalCloudinary, photoLimit } from "@/server/media/config";
 import { signUploadParams } from "@/server/media/sign";
+import { videoSeconds } from "@/server/media/duration";
 
 const ALLOWED = new Set(["image/jpeg", "image/png", "image/webp"]);
 const FORMAT_MIME: Record<string, string> = { jpg: "image/jpeg", jpeg: "image/jpeg", png: "image/png", webp: "image/webp" };
@@ -75,6 +76,7 @@ export async function saveLocalMedia(
   requestId: string,
 ) {
   const asset = await loadOwned(mediaId, userId);
+  if (asset.kind === "video") return saveLocalVideo(userId, asset, file, requestId);
   if (!ALLOWED.has(file.type) || file.data.length > MAX_BYTES) {
     asset.status = "rejected_policy";
     await asset.save();
@@ -109,6 +111,68 @@ export async function saveLocalMedia(
   return { status: "cleared" as const, url: privateDoc ? null : asset.objectKey };
 }
 
+async function saveLocalVideo(
+  userId: string,
+  asset: InstanceType<typeof MediaAsset>,
+  file: { type: string; data: Buffer },
+  requestId: string,
+) {
+  const seconds = (VIDEO_TYPES as readonly string[]).includes(file.type) ? videoSeconds(file.data, file.type) : null;
+  if (!(VIDEO_TYPES as readonly string[]).includes(file.type) || file.data.length > VIDEO_MAX_BYTES || seconds === null || seconds > VIDEO_MAX_SECONDS) {
+    asset.status = "rejected_policy";
+    await asset.save();
+    throw new PolicyViolationError(VIDEO_RULE_MESSAGE);
+  }
+  const ext = file.type === "video/webm" ? "webm" : file.type === "video/quicktime" ? "mov" : "mp4";
+  const dir = path.join(process.cwd(), "public", "uploads");
+  await mkdir(dir, { recursive: true });
+  await writeFile(path.join(dir, `${asset._id.toString()}.${ext}`), file.data);
+  asset.contentType = file.type;
+  asset.bytes = file.data.length;
+  asset.objectKey = `/uploads/${asset._id.toString()}.${ext}`;
+  asset.status = "cleared";
+  asset.clearedAt = new Date();
+  await asset.save();
+  await record(userId, "media.complete", "media", asset._id.toString(), requestId, { status: "cleared", local: true, kind: "video" });
+  return { status: "cleared" as const, url: asset.objectKey };
+}
+
+async function assertVideoAllowed(userId: string, input: { listingId?: string; contentType: string; byteSize: number }) {
+  if (!(VIDEO_TYPES as readonly string[]).includes(input.contentType) || input.byteSize > VIDEO_MAX_BYTES || !input.listingId) {
+    throw new PolicyViolationError(VIDEO_RULE_MESSAGE);
+  }
+  const listing = await ownedListing(input.listingId, userId);
+  const count = await MediaAsset.countDocuments({ listingId: listing._id, kind: "video", status: { $nin: CLOSED } });
+  if (count >= VIDEO_MAX_PER_AD) throw new PolicyViolationError("Video limit reached: up to 2 videos per ad");
+}
+
+async function completeVideo(userId: string, asset: InstanceType<typeof MediaAsset>, requestId: string) {
+  const client = cloudinaryClient();
+  const remote = await client.resource(asset.objectKey, "upload", "video");
+  if (!remote) throw new NotFoundError("Upload was not found");
+  const mime = VIDEO_FORMAT_MIME[remote.format];
+  if (!mime || remote.bytes > VIDEO_MAX_BYTES || !remote.duration || remote.duration > VIDEO_MAX_SECONDS) {
+    await client.destroy(asset.objectKey, "upload", "video").catch(() => undefined);
+    asset.status = "rejected_policy";
+    await asset.save();
+    throw new PolicyViolationError(VIDEO_RULE_MESSAGE);
+  }
+  const scan = await (scannerOverride ?? csamScannerFromEnv()).scan({ objectKey: asset.objectKey, contentType: mime, bytes: remote.bytes });
+  asset.contentType = mime;
+  asset.bytes = remote.bytes;
+  if (scan.match) {
+    asset.status = "rejected_csam";
+    asset.csamMatch = { listId: scan.listId, hitId: scan.hitId };
+    await asset.save();
+    throw new PolicyViolationError("Upload was rejected");
+  }
+  asset.status = "cleared";
+  asset.clearedAt = new Date();
+  await asset.save();
+  await record(userId, "media.complete", "media", asset._id.toString(), requestId, { status: "cleared", kind: "video" });
+  return { status: "cleared" as const };
+}
+
 export async function signMedia(
   userId: string,
   input: { listingId?: string; contentType: string; byteSize: number; kind: "image" | "video" | "id_document" },
@@ -116,7 +180,8 @@ export async function signMedia(
 ) {
   const env = optionalCloudinary();
   await connectDb();
-  if (input.kind === "video" || !ALLOWED.has(input.contentType) || input.byteSize > MAX_BYTES) {
+  if (input.kind === "video") await assertVideoAllowed(userId, input);
+  else if (!ALLOWED.has(input.contentType) || input.byteSize > MAX_BYTES) {
     throw new PolicyViolationError("Only jpeg, png, and webp photos up to 8 MB are allowed");
   }
   const listingId = input.kind === "id_document" ? undefined : input.listingId;
@@ -162,10 +227,10 @@ export async function signMedia(
     timestamp: Math.floor(Date.now() / 1000),
     folder,
     public_id: publicId,
-    transformation: STRIP_EXIF,
+    ...(input.kind === "video" ? {} : { transformation: STRIP_EXIF }),
   };
   if (input.kind === "id_document") params.type = "authenticated";
-  else params.eager = EAGER;
+  else if (input.kind === "image") params.eager = EAGER;
   await record(userId, "media.sign", "media", publicId, requestId, { kind: input.kind, folder });
   return {
     timestamp: params.timestamp,
@@ -175,7 +240,7 @@ export async function signMedia(
     folder,
     mediaId: publicId,
     params,
-    uploadUrl: `https://api.cloudinary.com/v1_1/${env.cloudName}/image/upload`,
+    uploadUrl: `https://api.cloudinary.com/v1_1/${env.cloudName}/${input.kind === "video" ? "video" : "image"}/upload`,
   };
 }
 
@@ -184,6 +249,7 @@ export async function completeMedia(userId: string, mediaId: string, requestId: 
   if (asset.objectKey.startsWith("/uploads/") || asset.objectKey.startsWith("private:")) {
     return { status: asset.status === "cleared" ? ("cleared" as const) : ("scanning" as const) };
   }
+  if (asset.kind === "video") return completeVideo(userId, asset, requestId);
   const remote = await cloudinaryClient().resource(asset.objectKey, deliveryType(asset.kind));
   if (!remote) throw new NotFoundError("Upload was not found");
   const mime = FORMAT_MIME[remote.format];
@@ -249,7 +315,7 @@ export async function deleteMedia(userId: string, mediaId: string, requestId: st
   if (asset.ownerId.toString() !== userId) throw new ForbiddenError("Not allowed");
   const stored = localFile(asset.objectKey);
   if (stored) await unlink(stored).catch(() => undefined);
-  else await cloudinaryClient().destroy(asset.objectKey, deliveryType(asset.kind));
+  else await cloudinaryClient().destroy(asset.objectKey, deliveryType(asset.kind), asset.kind === "video" ? "video" : "image");
   asset.status = "deleted";
   await asset.save();
   if (asset.listingId) {
