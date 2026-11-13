@@ -2,7 +2,8 @@ import type { Metadata } from "next";
 import { canonical } from "@/lib/seo";
 import { publicPath } from "@/lib/seo/schema";
 
-const OG = "/brand/og-default.png";
+export const DEFAULT_OG_PATH = "/brand/og-default.png";
+const OG = DEFAULT_OG_PATH;
 
 function absolute(image: string) {
   if (image.startsWith("http://") || image.startsWith("https://")) return image;

@@ -3,27 +3,35 @@ import { MapPin } from "lucide-react";
 import { getCategories, getCities, getDistricts, getStates } from "@/lib/queries";
 import { citiesPath, placePath } from "@/lib/urls";
 import { withUrlSeo } from "@/lib/seo/override";
+import { hubCopy } from "@/lib/seo-site";
+import { withSeoDefaults } from "@/lib/ui/meta-defaults";
+import { JsonLd } from "@/lib/jsonld";
+import { faqPage } from "@/lib/seo/schema";
 import { getPaths } from "@/server/urls/service";
 
 export const revalidate = 300;
 
 export async function generateMetadata() {
   const paths = await getPaths();
-  return withUrlSeo(citiesPath(paths), {
-    title: "Cities across India: browse classifieds by city | Tharkoo",
-    description: "Pick your city to browse free classifieds across India. See ads, photos and how to contact each poster.",
-    path: citiesPath(paths),
-  });
+  return withSeoDefaults(
+    await withUrlSeo(citiesPath(paths), {
+      title: "Cities across India: browse classifieds by city | Tharkoo",
+      description: "Pick your city to browse free classifieds across India. See ads, photos and how to contact each poster.",
+      path: citiesPath(paths),
+    }),
+  );
 }
 
 export default async function CitiesPage() {
-  const [states, cities, categories] = await Promise.all([getStates(), getCities(), getCategories()]);
+  const paths = await getPaths();
+  const [states, cities, categories, hub] = await Promise.all([getStates(), getCities(), getCategories(), hubCopy(citiesPath(paths), { intro: "", faqs: [] })]);
   const first = categories[0]?.slug || "dating";
   const top = cities.filter((city) => city.isTop).slice(0, 10);
   const districtLists = await Promise.all(top.map(async (city) => ({ slug: city.slug, rows: await getDistricts(city.slug!) })));
   const districts = new Map(districtLists.map((item) => [item.slug, item.rows]));
   return (
     <>
+      {hub.faqs.length ? <JsonLd data={[faqPage(hub.faqs)]} /> : null}
       <div className="tk-banner" data-tk="cities-banner">
         <div className="tk-container">
           <h1>Tharkoo India</h1>
@@ -56,6 +64,12 @@ export default async function CitiesPage() {
             );
           })}
         </div>
+        {hub.intro ? <p className="tk-seo-foot">{hub.intro}</p> : null}
+        {hub.faqs.map((item) => (
+          <p key={item.q} className="tk-seo-foot">
+            <strong>{item.q}</strong> {item.a}
+          </p>
+        ))}
       </div>
     </>
   );
