@@ -158,13 +158,18 @@ export const WEBHOOK_SECRET = process.env.PAYMENT_WEBHOOK_SECRET || "e2e-webhook
 
 /** Confirms a mock payment the way the provider does: a signed webhook. */
 export async function confirmPayment(baseURL: string, providerRef: string, { withOrigin = true } = {}) {
-  // A fresh client: the provider sends no cookies. A real provider also sends no Origin header
-  // (BUG 5 in lane-d-bugs: the site rejects that), so the tests add one by default.
+  // A fresh client: the provider sends no cookies and, like a real provider, may send no Origin header.
   const api = await newApi(baseURL);
   const raw = JSON.stringify({ eventId: `evt_${providerRef}`, status: "paid", providerRef });
-  const signature = createHmac("sha256", WEBHOOK_SECRET).update(raw).digest("hex");
+  const timestamp = Math.floor(Date.now() / 1000);
+  const signature = createHmac("sha256", WEBHOOK_SECRET).update(`${timestamp}.${raw}`).digest("hex");
   const res = await api.post("/api/payments/webhook/", {
-    headers: { "content-type": "application/json", "x-payment-signature": signature, ...(withOrigin ? { origin: baseURL } : {}) },
+    headers: {
+      "content-type": "application/json",
+      "x-payment-signature": signature,
+      "x-payment-timestamp": String(timestamp),
+      ...(withOrigin ? { origin: baseURL } : {}),
+    },
     data: raw,
   });
   expect(res.status(), await res.text()).toBe(200);
