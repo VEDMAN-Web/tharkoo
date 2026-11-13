@@ -1,4 +1,6 @@
+import Link from "next/link";
 import { Dashboard } from "@/components/vendor/VendorScreens";
+import { UnreadBadge } from "@/components/chat/UnreadBadge";
 import { pageMetadata } from "@/lib/ui/meta";
 
 export const metadata = pageMetadata({
@@ -10,5 +12,14 @@ export const metadata = pageMetadata({
 
 export default async function Page({ searchParams }: { searchParams: Promise<{ locked?: string }> }) {
   const sp = await searchParams;
-  return <Dashboard locked={sp.locked === "1"} />;
+  return (
+    <>
+      <div className="tk-container" style={{ paddingTop: 12 }}>
+        <Link href="/u/account/messages/" className="tk-btn tk-btn-outline-gold" data-tk="messages-link">
+          Messages <UnreadBadge />
+        </Link>
+      </div>
+      <Dashboard locked={sp.locked === "1"} />
+    </>
+  );
 }

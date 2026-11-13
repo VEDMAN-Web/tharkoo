@@ -61,14 +61,14 @@ test.describe("3 Account", () => {
     expect(me.status()).toBe(401);
   });
 
-  test("six wrong passwords are rate limited with 429", async ({ request, baseURL }) => {
-    test.skip(true, "TODO H0.7 (lane C): enable once the login lockout lands on main; expect the 6th wrong attempt to return 429.");
+  test("21 wrong passwords are rate limited with 429 (LOGIN_MAX is 20)", async ({ request, baseURL }) => {
     const email = uniqueEmail("lock");
     const statuses: number[] = [];
-    for (let i = 0; i < 6; i += 1) {
+    for (let i = 0; i < 21; i += 1) {
       const res = await request.post("/api/auth/login", { headers: originHeaders(baseURL!, "/u/login/"), data: { email, password: "WrongPass1!" } });
       statuses.push(res.status());
     }
+    expect(statuses.slice(0, 20).every((status) => status === 401)).toBe(true);
     expect(statuses.at(-1)).toBe(429);
   });
 

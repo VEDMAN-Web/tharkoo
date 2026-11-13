@@ -2,9 +2,12 @@ import { createHash } from "node:crypto";
 import { connectDb } from "@/lib/db";
 import { ValidationError, NotFoundError } from "@/server/http";
 import { Listing, Report } from "@/server/models";
+import { VideoReport } from "@/server/reports/video-report";
 import type { ReportReason, Severity } from "@/server/models/trust";
 
-export const REPORT_REASONS: readonly ReportReason[] = [
+export type AdReportReason = ReportReason | "video";
+
+export const REPORT_REASONS: readonly AdReportReason[] = [
   "prohibited_content",
   "trafficking_concern",
   "stolen_media",
@@ -12,13 +15,14 @@ export const REPORT_REASONS: readonly ReportReason[] = [
   "fake",
   "duplicate",
   "wrong_contact",
+  "video",
   "other",
 ];
 
 export const REPORT_DETAILS_MAX = 1000;
 
 /** Severity by reason: the most serious reasons are reviewed first. */
-export function severityFor(reason: ReportReason): Severity {
+export function severityFor(reason: AdReportReason): Severity {
   if (reason === "trafficking_concern") return "S0";
   if (reason === "prohibited_content") return "S1";
   if (reason === "stolen_media" || reason === "wrong_contact") return "S2";
@@ -41,10 +45,19 @@ export async function fileReport(input: { ad: unknown; reason: unknown; details:
   if (typeof input.reason !== "string" || !(REPORT_REASONS as readonly string[]).includes(input.reason)) {
     throw new ValidationError("Choose a reason for the report");
   }
-  const reason = input.reason as ReportReason;
+  const reason = input.reason as AdReportReason;
   await connectDb();
   const listing = await Listing.findOne({ $or: [{ slug: ad }, { publicId: ad }] }).select("_id").lean();
   if (!listing) throw new NotFoundError("That ad could not be found");
+  if (reason === "video") {
+    await VideoReport.create({
+      listingId: listing._id,
+      reporterIpHash: hashReporterIp(input.ip),
+      details: cleanDetails(input.details),
+      status: "open",
+    });
+    return { ok: true as const };
+  }
   await Report.create({
     listingId: listing._id,
     reporterIpHash: hashReporterIp(input.ip),

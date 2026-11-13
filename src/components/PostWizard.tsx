@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { api, fieldErrors, friendlyError } from "@/lib/ui/api";
+import { VideoUploader } from "@/components/ad/VideoUploader";
 import { draftToForm, needsIdCheck, validatePost, type SavedDraft } from "@/lib/ui/post-form";
 import { loginPath, postAdPath } from "@/lib/urls";
 import { useUrlPaths } from "./UrlPaths";
@@ -479,6 +480,7 @@ export function PostWizard({ copy = POST_COPY_DEFAULTS }: { copy?: PostCopy }) {
             </div>
             {photos.length ? <p className="t-small" data-tk="photo-count">{photos.length} photo{photos.length === 1 ? "" : "s"} saved</p> : null}
             {photoNote ? <p data-tk="photo-note">{photoNote}</p> : steps.photos.help ? <p className="t-small">{steps.photos.help}</p> : null}
+            <VideoUploader listingId={draftId} />
           </div>
           <div style={{ display: "flex", justifyContent: "space-between", marginTop: 16 }}>
             <button type="button" className="tk-btn tk-btn-outline-gold" onClick={() => remember(draftId, 1)}>{steps.photos.backLabel}</button>

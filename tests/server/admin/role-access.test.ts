@@ -28,7 +28,7 @@ const ROUTE_TABLE: [string, RoleName[]][] = [
   ["/admin/seo/", ["superadmin", "admin", "seo_editor"]],
   ["/admin/seo/pages/", ["superadmin", "admin", "seo_editor"]],
   ["/admin/seo/indexing/", ["superadmin", "admin", "seo_editor"]],
-  ["/admin/coming/seo-robots/", ["superadmin", "admin", "seo_editor"]],
+  ["/admin/seo/settings/", ["superadmin", "admin", "seo_editor"]],
   ["/admin/urls/", ["superadmin", "admin", "seo_editor"]],
   ["/admin/templates/", ["superadmin", "admin", "seo_editor"]],
   ["/admin/coupons/", ["superadmin", "admin", "finance"]],

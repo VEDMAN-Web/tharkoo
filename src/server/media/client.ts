@@ -4,13 +4,16 @@ import { cloudinaryEnv } from "@/server/media/config";
 export interface RemoteAsset {
   bytes: number;
   format: string;
+  /** Play length in seconds. Only set for videos. */
+  duration?: number;
 }
 
+export type ResourceKind = "image" | "video";
 export type Delivery = "upload" | "authenticated";
 
 export interface CloudinaryClient {
-  resource(publicId: string, type: Delivery): Promise<RemoteAsset | null>;
-  destroy(publicId: string, type: Delivery): Promise<void>;
+  resource(publicId: string, type: Delivery, resourceType?: ResourceKind): Promise<RemoteAsset | null>;
+  destroy(publicId: string, type: Delivery, resourceType?: ResourceKind): Promise<void>;
   list(prefix: string): Promise<string[]>;
   signedDownload(publicId: string, format: string, expiresAt: number): string;
 }
@@ -33,22 +36,27 @@ function httpCode(error: unknown) {
 
 function liveClient(): CloudinaryClient {
   return {
-    async resource(publicId, type) {
+    async resource(publicId, type, resourceType = "image") {
       configure();
       try {
-        const found = (await cloudinary.api.resource(publicId, { resource_type: "image", type })) as {
+        const found = (await cloudinary.api.resource(publicId, { resource_type: resourceType, type })) as {
           bytes?: number;
           format?: string;
+          duration?: number;
         };
-        return { bytes: Number(found.bytes) || 0, format: String(found.format || "") };
+        return {
+          bytes: Number(found.bytes) || 0,
+          format: String(found.format || ""),
+          ...(resourceType === "video" ? { duration: Number(found.duration) || 0 } : {}),
+        };
       } catch (error) {
         if (httpCode(error) === 404) return null;
         throw error;
       }
     },
-    async destroy(publicId, type) {
+    async destroy(publicId, type, resourceType = "image") {
       configure();
-      await cloudinary.uploader.destroy(publicId, { resource_type: "image", type, invalidate: true });
+      await cloudinary.uploader.destroy(publicId, { resource_type: resourceType, type, invalidate: true });
     },
     async list(prefix) {
       configure();

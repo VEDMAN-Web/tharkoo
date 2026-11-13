@@ -66,7 +66,8 @@
   text-decoration: none;
 }
 .adm-link:hover { background: var(--adm-bg); }
-.adm-link.is-active { background: var(--adm-primary-soft); color: var(--adm-primary) !important; }
+/* Active link text uses a deeper blue: --adm-primary on --adm-primary-soft is 4.35:1, below the 4.5:1 minimum. */
+.adm-link.is-active { background: var(--adm-primary-soft); color: #1d4ed8 !important; }
 .adm-link:focus-visible, .adm-btn:focus-visible, .adm-menu-btn:focus-visible { outline: 2px solid var(--adm-primary); outline-offset: 2px; }
 .adm-icon { flex: none; }
 .adm-soon { margin-left: auto; flex: none; white-space: nowrap; padding: 1px 8px; border-radius: var(--adm-r-pill); background: var(--adm-bg); color: var(--adm-muted); font-size: 11px; font-weight: 700; }

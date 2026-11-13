@@ -1638,7 +1638,10 @@
         "tests/server/auth/**",
         "src/app/api/auth/**",
         "docs/ownership.json",
-        "progress/H5.6.md"
+        "progress/H5.6.md",
+        "src/app/globals.css",
+        "tests/e2e/account.e2e.ts",
+        "tests/e2e/quality.e2e.ts"
       ]
     },
     "H6.1": {
@@ -1763,6 +1766,18 @@
         "tests/e2e/**",
         "docs/ownership.json",
         "progress/H6.7.md"
+      ]
+    },
+    "H5.7": {
+      "branchPrefix": "haiku/h5.7",
+      "globs": [
+        "src/lib/ui/site-content.ts",
+        "src/components/admin/nav.ts",
+        "src/components/admin/layout-editor/**",
+        "tests/server/ui/**",
+        "tests/server/admin/role-access.test.ts",
+        "docs/ownership.json",
+        "progress/H5.7.md"
       ]
     },
     "H5.1d": {
