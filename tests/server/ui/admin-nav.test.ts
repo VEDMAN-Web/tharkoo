@@ -10,8 +10,10 @@ function labels(roles: string[]) {
 }
 
 describe("admin sidebar by role", () => {
-  it("shows support only Dashboard and Users", () => {
-    expect(labels(["support"])).toEqual(["Dashboard", "Users"]);
+  it("shows support only the Dashboard (Users is admin-only, per BUG 8)", () => {
+    expect(labels(["support"])).toEqual(["Dashboard"]);
+    expect(labels(["admin"])).toContain("Users");
+    expect(labels(["seo_editor"])).not.toContain("Users");
   });
 
   it("shows superadmin every screen", () => {

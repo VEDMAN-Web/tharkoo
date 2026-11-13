@@ -1,7 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
+import { canOpenAdminPath } from "@/lib/admin-gate";
 import { allowRequest, clientKey, limitBucket, type LimitBucket } from "@/lib/rate-limit";
-import { originAllowed } from "@/server/auth/http";
+import { originAllowed, SESSION_COOKIE } from "@/server/auth/http";
 import { consumeRateLimit } from "@/server/auth/rate-limit";
+import { userFromToken } from "@/server/auth/service";
 import { countRedirectHit, decideRequest } from "@/server/urls/service";
 
 const STATIC_EXT = /\.(?:svg|png|jpg|jpeg|webp|avif|ico|woff2|css|js|map|txt|xml)$/i;
@@ -60,7 +62,36 @@ function skipRedirect(path: string) {
   );
 }
 
+/** A 403 page for a staff screen the viewer's role does not open. Marked noindex like every admin page. */
+function adminForbidden() {
+  const html = '<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="robots" content="noindex, nofollow"><title>403 | Tharkoo staff</title></head><body><h1>403</h1><p>Your staff role does not open this screen.</p></body></html>';
+  return new NextResponse(html, { status: 403, headers: { "content-type": "text/html; charset=utf-8" } });
+}
+
+/**
+ * Every /admin page (and its server actions) is checked here, on the server: signed-out visitors go to the sign-in page,
+ * signed-in users without a staff role that the sidebar would show get 403. Failures close the page.
+ */
+async function adminGate(req: NextRequest): Promise<NextResponse | null> {
+  const path = req.nextUrl.pathname;
+  const isAdmin = path === "/admin" || path.startsWith("/admin/");
+  if (!isAdmin || path === "/admin/login" || path.startsWith("/admin/login/")) return null;
+  try {
+    const found = await userFromToken(req.cookies.get(SESSION_COOKIE)?.value);
+    if (!found) {
+      if (req.method === "GET" || req.method === "HEAD") return NextResponse.redirect(new URL("/admin/login/", req.url), 307);
+      return adminForbidden();
+    }
+    return canOpenAdminPath(found.user.roles, path) ? null : adminForbidden();
+  } catch (error) {
+    console.error("admin gate could not read the session; refusing the staff screen", error);
+    return adminForbidden();
+  }
+}
+
 export async function proxy(req: NextRequest) {
+  const denied = await adminGate(req);
+  if (denied) return denied;
   const path = req.nextUrl.pathname;
   let rewriteTo = "";
   if ((req.method === "GET" || req.method === "HEAD") && !skipRedirect(path)) {
