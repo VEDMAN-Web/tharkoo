@@ -1581,7 +1581,9 @@
         "tests/server/admin/**",
         "tests/e2e/roles.e2e.ts",
         "docs/ownership.json",
-        "progress/H5.1c.md"
+        "progress/H5.1c.md",
+        "src/app/admin/actions.ts",
+        "tests/server/ui/admin-nav.test.ts"
       ]
     },
     "H5.1a": {
