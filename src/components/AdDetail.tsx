@@ -1,8 +1,5 @@
-"use client";
-
-import { useState } from "react";
 import Link from "next/link";
-import { Flag, Heart, Link2, MapPin, MessageCircle, Shield, Smile, User } from "lucide-react";
+import { Flag, Heart, MapPin, MessageCircle, Shield, Smile, User } from "lucide-react";
 import type { ListingDoc } from "@/lib/models";
 import { displayTitle, listingDateLabel, prettyPlace } from "@/lib/format";
 import { listingTagSections } from "@/lib/media";
@@ -13,6 +10,7 @@ import { Gallery } from "./ui/Gallery";
 import { SaveButton } from "./ui/SaveButton";
 import { AdCard } from "./ui/AdCard";
 import { TrackView } from "./ui/RecentlyViewed";
+import { BackLink, CopyLinkButton } from "@/app/ad/[slug]/AdClientBits";
 
 const PERSONAL = new Set(["dating", "friendship", "meetups", "personal-ads"]);
 
@@ -48,7 +46,6 @@ export function AdDetail({
   const personal = PERSONAL.has(ad.categorySlug || "");
   const date = listingDateLabel(ad.publishedAt || ad.createdAt);
   const listHref = `/${ad.categorySlug}/${ad.citySlug}/`;
-  const [copied, setCopied] = useState("");
   const tier =
     ad.variant === "supertop" || ad.variant === "star"
       ? { key: "supertop", label: "SUPER Top" }
@@ -59,13 +56,6 @@ export function AdDetail({
           : { key: "category", label: categoryName };
   const nick = ad.displayName && ad.displayName !== title ? ad.displayName : "";
 
-  function back(event: React.MouseEvent) {
-    if (document.referrer && document.referrer.startsWith(window.location.origin)) {
-      event.preventDefault();
-      window.history.back();
-    }
-  }
-
   return (
     <ContactProvider listingSlug={ad.slug} listingId={listingId}>
       <div className="tk-ad">
@@ -73,9 +63,7 @@ export function AdDetail({
         <CitySync name={city} slug={ad.citySlug} />
         <div className="tk-container" style={{ paddingTop: 8 }}>
           <p className="tk-hair" style={{ paddingTop: 10 }}>
-            <Link href={listHref} className="tk-back" onClick={back}>
-              &lt; Back to search
-            </Link>
+            <BackLink href={listHref}>&lt; Back to search</BackLink>
           </p>
           <nav className="tk-crumbs" aria-label="Breadcrumb">
             {crumbs.map((crumb, index) => (
@@ -176,15 +164,7 @@ export function AdDetail({
               <span>Share:</span>
               <a className="tk-share-btn" href={`https://twitter.com/intent/tweet?url=${encodeURIComponent(shareUrl)}`} target="_blank" rel="noopener noreferrer" aria-label="Share on X">X</a>
               <a className="tk-share-btn" href={`https://wa.me/?text=${encodeURIComponent(shareUrl)}`} target="_blank" rel="noopener noreferrer" aria-label="Share on WhatsApp"><MessageCircle size={18} /></a>
-              <button type="button" className="tk-share-btn" aria-label="Copy link" onClick={async () => {
-                try {
-                  await navigator.clipboard.writeText(window.location.href);
-                  setCopied("Link copied");
-                } catch {
-                  setCopied("Copy the address bar.");
-                }
-              }}><Link2 size={18} /></button>
-              {copied ? <span role="status">{copied}</span> : null}
+              <CopyLinkButton />
             </div>
             <Link className="tk-report" href={`/submit-report/?ad=${ad.publicId || ad.slug || ""}`}><Flag size={14} /> Report</Link>
           </div>
