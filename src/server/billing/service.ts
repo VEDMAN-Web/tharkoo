@@ -181,6 +181,20 @@ export async function checkoutPack(input: {
   }
 }
 
+/** Records a webhook that was refused. Only the reason is stored: never the body, the signature or the secret. */
+export async function recordWebhookRejection(reason: string, requestId: string) {
+  await readyBilling();
+  await audit.append({
+    actorId: null,
+    actorType: "system",
+    action: "payment.webhook.rejected",
+    targetType: "webhook",
+    targetId: "payments",
+    after: { reason },
+    requestId,
+  });
+}
+
 export async function applyWebhook(
   body: {
     eventId: string;

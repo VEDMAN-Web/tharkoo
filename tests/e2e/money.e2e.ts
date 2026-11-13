@@ -68,7 +68,6 @@ test.describe("5 Money (mock provider)", () => {
   });
 
   test("provider webhook without an Origin header is accepted", async ({ page, baseURL }) => {
-    test.fixme(true, "BUG 5 Money: /api/payments/webhook is rejected by the origin check when no Origin header is sent, as real providers do.");
     const email = uniqueEmail("hook");
     const signup = await newApi(baseURL!);
     await registerApi(signup, baseURL!, email);

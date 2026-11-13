@@ -1594,6 +1594,19 @@
         "docs/ownership.json",
         "progress/H5.1a.md"
       ]
+    },
+    "H5.1d": {
+      "branchPrefix": "haiku/h5.1d",
+      "globs": [
+        "src/proxy.ts",
+        "src/server/billing/**",
+        "src/app/api/payments/**",
+        "tests/server/billing/**",
+        "tests/e2e/helpers.ts",
+        "tests/e2e/money.e2e.ts",
+        "docs/ownership.json",
+        "progress/H5.1d.md"
+      ]
     }
   }
 }
