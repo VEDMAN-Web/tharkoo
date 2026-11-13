@@ -243,6 +243,25 @@ describe("billing", () => {
     expect(res.status).toBe(400);
   });
 
+  it("credits a payment once when two different paid deliveries arrive at the same time", async () => {
+    const user = await account("parallel@example.com");
+    const pack = await CreditPack.create({ credits: 50, price: 500, bonus: 0, status: "active", order: 0 });
+    const checkout = await bodyOf(await post("/api/payments/checkout", { packId: String(pack._id) }, user.cookie));
+    const providerRef = checkout.data?.providerRef;
+    const deliver = (eventId: string) => {
+      const raw = JSON.stringify({ eventId, status: "paid", providerRef });
+      return paymentPost(new Request(`${origin}/api/payments/webhook`, {
+        method: "POST",
+        headers: { "content-type": "application/json", ...signedWebhook(raw) },
+        body: raw,
+      }));
+    };
+    const results = await Promise.all([deliver("evt-parallel-a"), deliver("evt-parallel-b")]);
+    expect(results.map((r) => r.status)).toEqual([200, 200]);
+    expect(await walletBalance(user.id)).toBe(50);
+    expect(await WalletEntry.countDocuments({ userId: user.id })).toBe(1);
+  });
+
   it("rejects overspending with 402 and leaves the balance unchanged", async () => {
     const user = await account("bee@example.com");
     const cityId = new mongoose.Types.ObjectId();

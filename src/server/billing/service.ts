@@ -230,6 +230,25 @@ export async function applyWebhook(
   if (payment.status === "paid" || payment.providerEventId === body.eventId) {
     return { received: true as const };
   }
+  // Claim the payment before crediting. Only the delivery that moves it from pending or failed to paid credits the wallet;
+  // a concurrent or repeated delivery finds it paid and stops. If crediting throws, the claim is undone so a retry can run.
+  const claim = await Payment.findOneAndUpdate(
+    { _id: payment._id, status: { $in: ["pending", "failed"] } },
+    { $set: { status: "paid", providerEventId: body.eventId } },
+    { new: false },
+  ).lean<{ status: string; providerEventId?: string }>();
+  if (!claim) return { received: true as const };
+  try {
+    await creditPaidOrder(payment, requestId);
+  } catch (error) {
+    await undoClaim(payment._id, claim, body.eventId);
+    throw error;
+  }
+  return { received: true as const };
+}
+
+/** Credits the pack, its bonus and any coupon bonus once for a payment that this delivery claimed. */
+async function creditPaidOrder(payment: { _id: unknown; orderId: unknown; userId: unknown }, requestId: string) {
   const pack = await CreditPack.findById(payment.orderId);
   if (!pack) throw new NotFoundError("Not found");
   const checkout = await AuditEvent.findOne({ action: "payment.checkout", targetId: String(payment._id) })
@@ -273,12 +292,14 @@ export async function applyWebhook(
       actorType: "system",
     });
   }
-  if (payment.status === "pending" || payment.status === "failed") {
-    payment.status = "paid";
-    payment.providerEventId = body.eventId;
-    await payment.save();
-  }
-  return { received: true as const };
+}
+
+/** Puts a claimed payment back to its previous status so a later delivery can credit it. */
+async function undoClaim(paymentId: Types.ObjectId, before: { status: string; providerEventId?: string }, eventId: string) {
+  const restore = before.providerEventId
+    ? { $set: { status: before.status, providerEventId: before.providerEventId } }
+    : { $set: { status: before.status }, $unset: { providerEventId: "" } };
+  await Payment.updateOne({ _id: paymentId, status: "paid", providerEventId: eventId }, restore);
 }
 
 export async function purchasePromotion(input: {
