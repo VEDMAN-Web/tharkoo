@@ -1792,6 +1792,24 @@
         "docs/ownership.json",
         "progress/H5.1d.md"
       ]
+    },
+    "H6.2b": {
+      "branchPrefix": "haiku/h6.2b",
+      "globs": [
+        "src/server/models/listing.ts",
+        "src/server/models/catalog.ts",
+        "src/server/listings/service.ts",
+        "src/server/listings/import.ts",
+        "src/app/sitemap/**",
+        "src/server/seo/**",
+        "src/server/seo/templates.ts",
+        "src/lib/ui/text.ts",
+        "tests/server/listings/**",
+        "tests/server/categories/**",
+        "tests/server/seo/**",
+        "docs/ownership.json",
+        "progress/H6.2b.md"
+      ]
     }
   }
 }
