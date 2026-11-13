@@ -6,6 +6,7 @@ import { makeT } from "@/lib/ui/text";
 import { textOverrides } from "@/app/admin/ui-text/store";
 import { getCategory, getCities, getLocationBySlug, getSite } from "@/lib/queries";
 import { fallbackLanding } from "@/lib/seo/landing";
+import { subcategoryCopy } from "@/server/seo/templates";
 import { withUrlSeo, urlHeading } from "@/lib/seo/override";
 import { placePath } from "@/lib/urls";
 import { findSubcategory, isSubcategoryIndexable, subcategoryChips, subcategoryFeed } from "@/server/categories/public";
@@ -33,6 +34,15 @@ function copyFor(input: { catName: string; cityName: string; subName: string; su
   return { ...base, h1: `${input.subName} in ${input.cityName}`, intro: input.subIntro || base.intro };
 }
 
+type CopyInput = Parameters<typeof copyFor>[0];
+
+/** Built-in copy, with the "subcategory" SEO template (if one is saved) winning field by field. */
+async function templatedCopy(categorySlug: string, input: CopyInput) {
+  const base = copyFor(input);
+  const merged = await subcategoryCopy(categorySlug, { subcategory: input.subName, city: input.cityName, count: input.count, site: input.site || "" }, base);
+  return { ...base, ...merged };
+}
+
 /** True when the last address part is a sub-category of this category. Used by the district route before it gives up. */
 export async function isSubHub(params: SubHubParams) {
   return (await resolve(params)) !== null;
@@ -42,7 +52,7 @@ export async function subHubMetadata(params: SubHubParams, page: number): Promis
   const hub = await resolve(params);
   if (!hub) return {};
   const [site, feed] = await Promise.all([getSite(), subcategoryFeed({ categoryId: String(hub.cat._id), cityId: hub.cityId, subcategoryId: hub.sub.id, page: 1 })]);
-  const copy = copyFor({
+  const copy = await templatedCopy(hub.cat.slug || params.category, {
     catName: hub.cat.name || params.category,
     cityName: hub.city.name || params.location,
     subName: hub.sub.name,
@@ -79,7 +89,7 @@ export async function SubHub({ params, page }: { params: SubHubParams; page: num
   ]);
   if (page > feed.pages) notFound();
   const t = makeT(texts);
-  const copy = copyFor({
+  const copy = await templatedCopy(catSlug, {
     catName: hub.cat.name || catSlug,
     cityName: hub.city.name || citySlug,
     subName: hub.sub.name,

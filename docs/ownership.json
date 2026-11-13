@@ -1811,6 +1811,21 @@
         "progress/H6.2b.md"
       ]
     },
+    "H6.2c": {
+      "branchPrefix": "haiku/h6.2c",
+      "globs": [
+        "src/lib/seo/sitemaps.ts",
+        "src/lib/seo/landing.ts",
+        "src/app/[category]/page.tsx",
+        "src/app/[category]/SubcategoryChips.tsx",
+        "src/app/[category]/[location]/[district]/sub-hub.tsx",
+        "src/lib/ui/text.ts",
+        "tests/server/seo/**",
+        "tests/server/categories/**",
+        "docs/ownership.json",
+        "progress/H6.2c.md"
+      ]
+    },
     "H5.8": {
       "branchPrefix": "haiku/h5.8",
       "globs": [
