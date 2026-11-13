@@ -28,6 +28,8 @@ import {
   type ListingDoc,
   type ListingStatus,
 } from "@/server/models";
+import { categoryNeedsSubcategory } from "@/server/categories/public";
+import { Subcategory } from "@/server/models/subcategory";
 import { photoLimit } from "@/server/media/config";
 import { assertVerified } from "@/server/verification/service";
 import { hashIp } from "@/server/shared/crypto";
@@ -125,6 +127,7 @@ export function publicView(listing: ListingDoc) {
     description: stripSecrets(listing.description, secrets),
     status: listing.status,
     categoryId: idOf(listing.categoryId),
+    subcategoryId: idOf(listing.subcategoryId),
     stateId: idOf(listing.stateId),
     cityId: idOf(listing.cityId),
     districtId: idOf(listing.districtId),
@@ -197,6 +200,25 @@ async function requireCategory(id: string) {
     throw new PolicyViolationError("Category is not allowed");
   }
   return category;
+}
+
+/**
+ * Checks the sub-category for a category: it must belong to it and be visible. A category with visible
+ * sub-categories needs one when `required`. Returns the id to store, or undefined for none.
+ */
+async function resolveSubcategoryId(categoryId: Types.ObjectId, value: string | undefined, required: boolean) {
+  if (value) {
+    if (!mongoose.isValidObjectId(value)) throw new ValidationError("Invalid request", { subcategoryId: ["Invalid id"] });
+    const sub = await Subcategory.findById(value).lean<{ _id: Types.ObjectId; categoryId: Types.ObjectId; enabled?: boolean }>();
+    if (!sub || sub.enabled === false || sub.categoryId.toString() !== categoryId.toString()) {
+      throw new ValidationError("Invalid request", { subcategoryId: ["Choose a type from this category"] });
+    }
+    return sub._id;
+  }
+  if (required && (await categoryNeedsSubcategory(categoryId.toString()))) {
+    throw new ValidationError("Invalid request", { subcategoryId: ["Choose a type"] });
+  }
+  return undefined;
 }
 
 async function requirePlace(id: string | undefined, field: string) {
@@ -315,6 +337,7 @@ export async function createDraft(
   userId: string,
   input: {
     categoryId: string;
+    subcategoryId?: string;
     title?: string;
     description?: string;
     stateId?: string;
@@ -326,10 +349,12 @@ export async function createDraft(
 ) {
   await connectDb();
   const category = await requireCategory(input.categoryId);
+  const subcategoryId = await resolveSubcategoryId(category._id, input.subcategoryId, true);
   const listing = await Listing.create({
     ownerId: userId,
     status: "draft",
     categoryId: category._id,
+    ...(subcategoryId ? { subcategoryId } : {}),
     stateId: await requirePlace(input.stateId, "stateId"),
     cityId: await requirePlace(input.cityId, "cityId"),
     districtId: await requirePlace(input.districtId, "districtId"),
@@ -384,6 +409,7 @@ async function applyBasics(
   listing: ListingRow,
   input: {
     categoryId?: string;
+    subcategoryId?: string;
     title?: string;
     description?: string;
     stateId?: string;
@@ -392,7 +418,16 @@ async function applyBasics(
     localityId?: string;
   },
 ) {
-  if (input.categoryId) listing.categoryId = (await requireCategory(input.categoryId))._id;
+  if (input.categoryId || input.subcategoryId) {
+    const category = input.categoryId ? await requireCategory(input.categoryId) : null;
+    const categoryId = category?._id ?? listing.categoryId;
+    const changed = Boolean(category) && category!._id.toString() !== listing.categoryId.toString();
+    const carried = changed ? undefined : listing.subcategoryId?.toString();
+    const subcategoryId = await resolveSubcategoryId(categoryId, input.subcategoryId ?? carried, true);
+    if (category) listing.categoryId = category._id;
+    if (subcategoryId) listing.subcategoryId = subcategoryId;
+    else listing.set("subcategoryId", undefined);
+  }
   if (input.title) listing.title = input.title;
   if (input.description) listing.description = input.description;
   if (input.stateId) listing.stateId = await requirePlace(input.stateId, "stateId");
@@ -438,6 +473,7 @@ export async function patchListing(
     | {
         stage: "basics";
         categoryId?: string;
+        subcategoryId?: string;
         title?: string;
         description?: string;
         stateId?: string;
