@@ -124,7 +124,7 @@ export const NAV_GROUPS: NavGroup[] = [
     id: "people",
     label: "People",
     items: [
-      item("users", "Users", "/admin/users/", "user", "support"),
+      item("users", "Users", "/admin/users/", "user", "admin"),
       item("team", "Team & roles", "/admin/admins/", "team", "superadmin"),
     ],
   },

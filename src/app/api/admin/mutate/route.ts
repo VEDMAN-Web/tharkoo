@@ -2,14 +2,17 @@ import { NextRequest, NextResponse } from "next/server";
 import { refreshPublicCache } from "@/lib/cache";
 import type { Model as MongooseModel } from "mongoose";
 import { adminUnauthorized, requireStaffRequest } from "@/lib/admin-auth";
+import { canUseModel } from "@/lib/admin-model-access";
 import { connectDb } from "@/lib/db";
 import { MODEL_MAP, type ModelName } from "@/lib/models";
 import { sanitizeRecord } from "@/lib/sanitize";
+import { auditAdminDenial } from "@/server/admin/denials";
 
 export const dynamic = "force-dynamic";
 
 export async function POST(req: NextRequest) {
-  if (!(await requireStaffRequest(req))) return adminUnauthorized();
+  const identity = await requireStaffRequest(req);
+  if (!identity) return adminUnauthorized();
   const body = await req.json();
   const modelName = body.model as ModelName;
   const op = body.op as "create" | "update" | "delete";
@@ -17,6 +20,10 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Unknown model" }, { status: 400 });
   }
   await connectDb();
+  if (!canUseModel(identity.roles, modelName, "write")) {
+    await auditAdminDenial(identity, modelName, String(op));
+    return adminUnauthorized();
+  }
   const Model = MODEL_MAP[modelName] as unknown as MongooseModel<Record<string, unknown>>;
   const data = body.data ? sanitizeRecord(body.data) : {};
   let doc = null;
