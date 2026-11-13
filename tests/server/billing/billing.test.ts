@@ -3,6 +3,7 @@ import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from "vites
 import { POST as couponPost } from "@/app/api/coupons/[[...slug]]/route";
 import { POST as cronPost } from "@/app/api/cron/boost/route";
 import { POST as paymentPost } from "@/app/api/payments/[[...slug]]/route";
+import { webhookSignature } from "@/server/billing/provider";
 import { POST as promotionPost } from "@/app/api/promotions/[[...slug]]/route";
 import { GET as walletGet, POST as walletPost } from "@/app/api/wallet/[[...slug]]/route";
 import { createCheckoutOrder } from "@/server/billing/provider";
@@ -11,11 +12,15 @@ import { hashToken } from "@/server/auth/http";
 import { PaymentRequiredError } from "@/server/http";
 import { AuditEvent, Coupon, CreditPack, Listing, Payment, PromotionOrder, PromotionProduct, Session, User, WalletEntry } from "@/server/models";
 import { compareRank, rankScore } from "@/server/ranking";
-import { hmacSha256 } from "@/server/shared/crypto";
 import { clearMemoryMongo, connectMemoryMongo, disconnectMemoryMongo } from "../../setup/mongo";
 
 const origin = "http://127.0.0.1:4317";
 const webhookSecret = "webhook-secret";
+
+/** Headers a provider sends with a webhook: the signature covers the timestamp and the body. */
+function signedWebhook(raw: string, timestamp = Math.floor(Date.now() / 1000)) {
+  return { "x-payment-signature": webhookSignature(webhookSecret, timestamp, raw), "x-payment-timestamp": String(timestamp) };
+}
 const cronSecret = "cron-secret";
 const HOUR = 60 * 60 * 1000;
 
@@ -185,13 +190,13 @@ describe("billing", () => {
     const raw = JSON.stringify(payload);
     const signed = new Request(`${origin}/api/payments/webhook`, {
       method: "POST",
-      headers: { "content-type": "application/json", "x-payment-signature": hmacSha256(webhookSecret, raw) },
+      headers: { "content-type": "application/json", ...signedWebhook(raw) },
       body: raw,
     });
     const first = await bodyOf(await paymentPost(signed));
     const second = await bodyOf(await paymentPost(new Request(`${origin}/api/payments/webhook`, {
       method: "POST",
-      headers: { "content-type": "application/json", "x-payment-signature": hmacSha256(webhookSecret, raw) },
+      headers: { "content-type": "application/json", ...signedWebhook(raw) },
       body: raw,
     })));
     expect(first).toMatchObject({ ok: true, data: { received: true } });
@@ -203,14 +208,58 @@ describe("billing", () => {
 
     const bad = await paymentPost(new Request(`${origin}/api/payments/webhook`, {
       method: "POST",
-      headers: { "content-type": "application/json", "x-payment-signature": "nope" },
+      headers: { "content-type": "application/json", "x-payment-signature": "nope", "x-payment-timestamp": String(Math.floor(Date.now() / 1000)) },
       body: raw,
     }));
-    expect(bad.status).toBe(401);
+    expect(bad.status).toBe(400);
     expect(await walletBalance(user.id)).toBe(50);
+    const rejected = await AuditEvent.findOne({ action: "payment.webhook.rejected" }).lean();
+    expect(rejected?.after).toEqual({ reason: "bad-signature" });
     const audits = JSON.stringify(await AuditEvent.find({ targetId: user.id }).lean());
     expect(audits).not.toContain(webhookSecret);
     expect(audits).not.toContain("pay_test_");
+  });
+
+  it("refuses a correctly signed webhook older than five minutes and records why", async () => {
+    const raw = JSON.stringify({ eventId: "evt-old", status: "paid", providerRef: "pay_test_missing" });
+    const stale = Math.floor(Date.now() / 1000) - 600;
+    const res = await paymentPost(new Request(`${origin}/api/payments/webhook`, {
+      method: "POST",
+      headers: { "content-type": "application/json", ...signedWebhook(raw, stale) },
+      body: raw,
+    }));
+    expect(res.status).toBe(400);
+    const rejected = await AuditEvent.findOne({ action: "payment.webhook.rejected", "after.reason": "stale" }).lean();
+    expect(rejected).not.toBeNull();
+  });
+
+  it("refuses a webhook with no timestamp", async () => {
+    const raw = JSON.stringify({ eventId: "evt-none", status: "paid", providerRef: "pay_test_missing" });
+    const res = await paymentPost(new Request(`${origin}/api/payments/webhook`, {
+      method: "POST",
+      headers: { "content-type": "application/json", "x-payment-signature": webhookSignature(webhookSecret, 0, raw) },
+      body: raw,
+    }));
+    expect(res.status).toBe(400);
+  });
+
+  it("credits a payment once when two different paid deliveries arrive at the same time", async () => {
+    const user = await account("parallel@example.com");
+    const pack = await CreditPack.create({ credits: 50, price: 500, bonus: 0, status: "active", order: 0 });
+    const checkout = await bodyOf(await post("/api/payments/checkout", { packId: String(pack._id) }, user.cookie));
+    const providerRef = checkout.data?.providerRef;
+    const deliver = (eventId: string) => {
+      const raw = JSON.stringify({ eventId, status: "paid", providerRef });
+      return paymentPost(new Request(`${origin}/api/payments/webhook`, {
+        method: "POST",
+        headers: { "content-type": "application/json", ...signedWebhook(raw) },
+        body: raw,
+      }));
+    };
+    const results = await Promise.all([deliver("evt-parallel-a"), deliver("evt-parallel-b")]);
+    expect(results.map((r) => r.status)).toEqual([200, 200]);
+    expect(await walletBalance(user.id)).toBe(50);
+    expect(await WalletEntry.countDocuments({ userId: user.id })).toBe(1);
   });
 
   it("rejects overspending with 402 and leaves the balance unchanged", async () => {
@@ -356,7 +405,7 @@ describe("billing", () => {
     const raw = JSON.stringify(payload);
     await paymentPost(new Request(`${origin}/api/payments/webhook`, {
       method: "POST",
-      headers: { "content-type": "application/json", "x-payment-signature": hmacSha256(webhookSecret, raw) },
+      headers: { "content-type": "application/json", ...signedWebhook(raw) },
       body: raw,
     }));
     expect(await walletBalance(buyer.id)).toBe(50);
