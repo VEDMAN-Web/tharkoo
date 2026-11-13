@@ -144,12 +144,15 @@ export function LayoutEditor({
     return max !== undefined && countOf(type) >= max;
   };
 
+  // The default choice is the first type that is not already on the page (a single-instance type stays disabled once it is there).
+  const selectedAdd = addType && !isFull(addType) ? addType : (allowedTypes.find((type) => !isFull(type)) ?? "");
+
   function addBlock() {
-    if (!addType || isFull(addType)) return;
-    const row: Row = { key: nextKey(), block: { type: addType, visible: true, startsAt: null, endsAt: null, props: { ...metaFor(addType).defaults } } };
+    if (!selectedAdd) return;
+    const row: Row = { key: nextKey(), block: { type: selectedAdd, visible: true, startsAt: null, endsAt: null, props: { ...metaFor(selectedAdd).defaults } } };
     setRows((current) => [...current, row]);
     setOpen(row.key);
-    setMsg({ kind: "info", text: `${metaFor(addType).label} added at the bottom. Edit it, then save the draft.` });
+    setMsg({ kind: "info", text: `${metaFor(selectedAdd).label} added at the bottom. Edit it, then save the draft.` });
   }
 
   function duplicate(row: Row) {
@@ -296,7 +299,7 @@ export function LayoutEditor({
       <div className="lay-add">
         <label className="adm-field">
           <span className="adm-field-label">Add block</span>
-          <select className="adm-input" value={addType} onChange={(event) => setAddType(event.target.value)}>
+          <select className="adm-input" value={selectedAdd} onChange={(event) => setAddType(event.target.value)}>
             {allowedTypes.map((type) => (
               <option key={type} value={type} disabled={isFull(type)}>
                 {metaFor(type).label}{isFull(type) ? " (already on the page)" : ""}
@@ -304,7 +307,7 @@ export function LayoutEditor({
             ))}
           </select>
         </label>
-        <button type="button" className="adm-btn" disabled={!addType || isFull(addType)} onClick={addBlock}>Add block</button>
+        <button type="button" className="adm-btn" disabled={!selectedAdd} onClick={addBlock}>Add block</button>
       </div>
 
       <SaveBar dirty={dirty} busy={busy} onSaveDraft={() => void saveDraft()} onPreview={() => void preview()} onPublish={() => setPublishing(true)} />

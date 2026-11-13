@@ -22,7 +22,7 @@ beforeEach(async () => {
 describe("homepage content", () => {
   it("uses the current homepage when nothing is stored", () => {
     const content = readContent(undefined);
-    expect(content.hero.desktop).toBe("Single? Taken? Doesn't matter, Tharkoo is for everyone");
+    expect(content.hero.desktop).toBe("Find anything near you");
     expect(content.hero.searchPlaceholder).toBe("Search By City, Category...");
     expect(content.cards.filter((card) => card.visible)).toHaveLength(5);
     expect(content.header.drawer.map((item) => item.label)).toEqual(["Tharkoo Blog", "Help Center"]);

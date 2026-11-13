@@ -100,10 +100,10 @@ function column(title: string, links: NavLink[]): FooterColumn {
 export function defaultSiteContent(): SiteContent {
   return {
     hero: {
-      desktop: "Single? Taken? Doesn't matter, Tharkoo is for everyone",
-      mobileLines: ["Single? Taken?", "Doesn't matter,", "Tharkoo is", "for everyone"],
-      photo: "/placeholders/hero.webp",
-      photoAlt: "Friends in an Indian city",
+      desktop: "Find anything near you",
+      mobileLines: ["Find anything", "near you"],
+      photo: "/placeholders/buy-and-sell/01.webp",
+      photoAlt: "Local listings on Tharkoo",
       searchPlaceholder: "Search By City, Category...",
       postLabel: "POST YOUR AD",
       postHref: POST,
