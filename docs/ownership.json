@@ -1780,6 +1780,22 @@
         "progress/H5.7.md"
       ]
     },
+    "H5.4b": {
+      "branchPrefix": "haiku/h5.4b",
+      "globs": [
+        "src/components/SiteShell.tsx",
+        "src/app/layout.tsx",
+        "src/components/AdDetail.tsx",
+        "src/components/ui/Gallery.tsx",
+        "src/app/globals.css",
+        "src/app/ad/**",
+        "src/components/blocks/blocks.css",
+        "tests/server/ui/**",
+        "tests/e2e/quality.e2e.ts",
+        "docs/ownership.json",
+        "progress/H5.4b.md"
+      ]
+    },
     "H5.1d": {
       "branchPrefix": "haiku/h5.1d",
       "globs": [
