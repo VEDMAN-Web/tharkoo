@@ -1,0 +1,2 @@
+/* H5.4: the first gallery photo (fetchpriority high) is the largest paint. Keep it visible before hydration. */
+.tk-motion img.tk-fade-img[fetchpriority="high"] { opacity: 1; }
