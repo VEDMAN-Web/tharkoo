@@ -20,6 +20,7 @@ import { deviceClass } from "@/components/blocks/device";
 import { listingHeading } from "@/lib/layout/listing";
 import { hourSeed, orderFeed } from "@/components/feedOrder";
 import { fallbackLanding, mergeLanding, type LandingCopy } from "@/lib/seo/landing";
+import { SubcategoryChips } from "./SubcategoryChips";
 
 type Props = { params: Promise<{ category: string }> };
 
@@ -140,6 +141,7 @@ export default async function CategoryHub({ params }: Props) {
           return block.id === inFeedId ? null : wrap(block.id, block.devices, layout.nodes[block.id] ?? null);
         })}
       </div>
+      <SubcategoryChips category={cat.slug || category} />
     </UiTextProvider>
   );
 }
