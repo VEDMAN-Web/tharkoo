@@ -1825,6 +1825,26 @@
         "docs/ownership.json",
         "progress/H6.2c.md"
       ]
+    },
+    "H5.8": {
+      "branchPrefix": "haiku/h5.8",
+      "globs": [
+        "src/server/seo/**",
+        "src/app/seo/**",
+        "src/app/admin/seo/**",
+        "src/app/[category]/**",
+        "src/app/cities/**",
+        "src/lib/seo*.ts",
+        "src/lib/ui/meta*.ts",
+        "src/server/search/**",
+        "src/components/SearchResults*.tsx",
+        "src/components/search/**",
+        "tests/server/seo/**",
+        "tests/server/search/**",
+        "tests/e2e/seo-center.e2e.ts",
+        "docs/ownership.json",
+        "progress/H5.8.md"
+      ]
     }
   }
 }

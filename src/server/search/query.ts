@@ -86,6 +86,7 @@ interface Row {
   title: string;
   slug?: string;
   description: string;
+  price?: number;
   attributes?: Record<string, unknown>;
   mediaIds?: Types.ObjectId[];
   coverMediaId?: Types.ObjectId;
@@ -111,6 +112,8 @@ export interface PublicHit {
   districtId: string | null;
   localityId: string | null;
   attributes: Record<string, unknown>;
+  /** Asking price in whole rupees, or null when the ad has none. */
+  price: number | null;
   mediaIds: string[];
   coverMediaId: string | null;
   badges: string[];
@@ -318,6 +321,11 @@ function ageOf(attributes?: Record<string, unknown>) {
   return typeof age === "number" ? age : undefined;
 }
 
+/** A usable asking price, or null for a missing, zero, negative or non-numeric one. */
+export function cleanPrice(value: unknown): number | null {
+  return typeof value === "number" && Number.isFinite(value) && value > 0 ? value : null;
+}
+
 function detailRows(attributes?: Record<string, unknown>) {
   if (!attributes) return [];
   return Object.entries(attributes)
@@ -479,8 +487,10 @@ export async function presentRows(docs: Row[], promotions: Map<string, RankPromo
     const photoList = listingPhotos(categorySlug, publicId, photos.get(id) ?? []);
     const trust = trustMarks(person?.verificationStatus, person?.attestedAdultAt, verified, photoList.length);
     const age = ageOf(doc.attributes);
+    const price = cleanPrice(doc.price);
     hits.push({
       ...view,
+      price,
       categorySlug,
       stateSlug,
       citySlug,
