@@ -141,7 +141,7 @@ export default async function CategoryHub({ params }: Props) {
           return block.id === inFeedId ? null : wrap(block.id, block.devices, layout.nodes[block.id] ?? null);
         })}
       </div>
-      <SubcategoryChips category={cat.slug || category} />
+      <SubcategoryChips category={cat.slug || category} heading={t("listing.hub.browseBySub")} />
     </UiTextProvider>
   );
 }
