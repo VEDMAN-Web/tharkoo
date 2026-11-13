@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import { AdDetail } from "@/components/AdDetail";
+import { ChatNow } from "@/components/chat/ChatNow";
 import { prettyPlace, displayTitle } from "@/lib/format";
 import { JsonLd, breadcrumbJsonLd } from "@/lib/jsonld";
 import { connectDb } from "@/lib/db";
@@ -139,6 +140,9 @@ export default async function AdPage({ params }: Props) {
     <>
       <JsonLd data={structured ? [breadcrumbJsonLd(crumbs), structured] : [breadcrumbJsonLd(crumbs)]} />
       <AdDetail ad={plain(ad)} categoryName={catName} related={plain(related)} listingId={listingId} crumbs={crumbs} shareUrl={shareUrl} heading={heading} />
+      <section className="tk-container" aria-label="Chat" style={{ paddingBottom: 16, maxWidth: 480 }}>
+        <ChatNow listingId={listingId} />
+      </section>
     </>
   );
 }
