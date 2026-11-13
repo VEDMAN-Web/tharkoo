@@ -5,7 +5,8 @@ import { AdCardSkeleton } from "./ui/Skeleton";
 import { JsonLd } from "@/lib/jsonld";
 import { safeHtml } from "@/lib/sanitize";
 import { canonical } from "@/lib/seo";
-import { organizationNode, websiteNode } from "@/lib/seo/schema";
+import { websiteNode } from "@/lib/seo/schema";
+import { siteOrganizationNode } from "@/lib/seo-site";
 import { categoryPath, placePath, searchPath } from "@/lib/urls";
 import { getCategories, getCities, getHomepageContent, getSeo, getSite, listingCountsByCategoryCity } from "@/lib/queries";
 import { getPaths } from "@/server/urls/service";
@@ -73,7 +74,7 @@ export async function HomeBlocks() {
     <>
       <JsonLd
         data={[
-          organizationNode(site.name || "Tharkoo", {
+          await siteOrganizationNode(site.name || "Tharkoo", {
             logo: canonical("/brand/logo-mark.svg"),
             sameAs: content.socials.map((item) => item.href),
           }),
