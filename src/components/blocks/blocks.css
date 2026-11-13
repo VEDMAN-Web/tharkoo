@@ -46,3 +46,7 @@
 }
 .tk-hero-sub { margin: 8px 0 0; font-size: 18px; }
 .tk-home-count { font-size: 13px; color: var(--muted); }
+
+/* H5.4: the first (priority) photo is the largest paint on listing pages. Never hold it back at opacity 0 until
+   hydration adds .is-loaded, or the browser cannot count it as the largest contentful paint. */
+.tk-motion img.tk-fade-img[fetchpriority="high"] { opacity: 1; }
