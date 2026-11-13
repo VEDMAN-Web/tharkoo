@@ -26,6 +26,7 @@ import { withUrlSeo, urlHeading } from "@/lib/seo/override";
 import { getPaths, publicTags } from "@/server/urls/service";
 import { fallbackLanding, mergeLanding, visibleHeading, type LandingCopy } from "@/lib/seo/landing";
 import { isCityAlias } from "@/lib/seo/district-alias";
+import { SubcategoryChips } from "../SubcategoryChips";
 
 type Props = {
   params: Promise<{ category: string; location: string }>;
@@ -172,6 +173,7 @@ export default async function LocationPage({ params, searchParams }: Props) {
   const layout = await resolveListingLayout({ path: canonicalPath, category: cat.slug || category, vars });
 
   return (
+    <>
     <ListingPageView
       layout={layout}
       texts={texts}
@@ -204,5 +206,7 @@ export default async function LocationPage({ params, searchParams }: Props) {
       photos={sp.photos === "1"}
       verified={sp.verified === "1"}
     />
+    {loc.kind === "city" ? <SubcategoryChips category={cat.slug || category} city={loc.slug || location} /> : null}
+    </>
   );
 }

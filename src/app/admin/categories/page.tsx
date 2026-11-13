@@ -3,15 +3,35 @@ import { AdminShell } from "@/components/admin/AdminShell";
 import { CollectionEditor } from "@/components/admin/CollectionEditor";
 import { connectDb } from "@/lib/db";
 import { Category } from "@/server/models";
+import { Subcategory } from "@/server/models/subcategory";
+import { CategoriesManager, type ManagedCategory, type ManagedSub } from "./CategoriesManager";
 
 export const dynamic = "force-dynamic";
 
 export default async function Page() {
   await connectDb();
-  const rows = await Category.find({ deletedAt: null }).select("slug name fields").sort({ order: 1, name: 1 }).lean();
+  const rows = await Category.find({ deletedAt: null }).select("slug name fields enabled introHtml").sort({ order: 1, name: 1 }).lean();
+  const subRows = await Subcategory.find({}).sort({ order: 1, name: 1 }).lean();
+  const categories: ManagedCategory[] = rows.map((row) => ({
+    id: String(row._id),
+    slug: row.slug,
+    name: row.name,
+    enabled: row.enabled !== false,
+    seoIntro: row.introHtml ?? "",
+  }));
+  const subs: ManagedSub[] = subRows.map((row) => ({
+    id: String(row._id),
+    categoryId: String(row.categoryId),
+    slug: row.slug,
+    name: row.name,
+    icon: row.icon ?? "",
+    enabled: row.enabled !== false,
+    seoIntro: row.seoIntro ?? "",
+  }));
   return (
     <AdminShell title="Categories">
-      <section className="adm-card" style={{ marginBottom: 16 }} aria-labelledby="post-fields-h">
+      <CategoriesManager categories={categories} subs={subs} />
+      <section className="adm-card" style={{ margin: "16px 0" }} aria-labelledby="post-fields-h">
         <h2 id="post-fields-h" className="adm-field-label" style={{ fontSize: 16 }}>Post form fields</h2>
         <p className="adm-field-help">Choose a category to change the labels, help text, placeholders, required flags, order and options of its post-ad form.</p>
         <ul style={{ listStyle: "none", padding: 0, margin: "12px 0 0", display: "flex", flexWrap: "wrap", gap: 8 }}>
