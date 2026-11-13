@@ -69,6 +69,8 @@ export interface ListingDoc extends BaseDoc {
   description?: string;
   displayName?: string;
   age?: number;
+  /** Asking price, when the ad has one. */
+  price?: number | null;
   /** Set when an admin pin is active for this page: the 1-based slot the pin asks for. */
   pinPosition?: number;
   categorySlug?: string;

@@ -1830,6 +1830,21 @@
         "docs/ownership.json",
         "progress/H5.8.md"
       ]
+    },
+    "H5.8b": {
+      "branchPrefix": "haiku/h5.8b",
+      "globs": [
+        "src/components/ui/AdCard.tsx",
+        "src/lib/models.ts",
+        "src/components/blocks/HomeLayout.tsx",
+        "src/components/HomeBlocks.tsx",
+        "src/lib/seo/override.ts",
+        "src/app/layout.tsx",
+        "tests/server/ui/**",
+        "tests/server/seo/**",
+        "docs/ownership.json",
+        "progress/H5.8b.md"
+      ]
     }
   }
 }

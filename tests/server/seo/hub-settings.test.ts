@@ -91,3 +91,21 @@ describe("organization and default image settings", () => {
     expect((out.openGraph as { images: { url: string }[] }).images[0].url).toContain("/brand/og-default.png");
   });
 });
+
+describe("site-wide default image on pages with per-URL SEO", () => {
+  it("gives a page without its own image the default from the settings", async () => {
+    await saveSeoSettings(editor, { defaultOgImage: "https://cdn.example.test/share.png" });
+    const { withUrlSeo } = await import("@/lib/seo/override");
+    const meta = await withUrlSeo("/jobs/", { title: "Jobs", description: "Jobs list", path: "/jobs/" });
+    expect(JSON.stringify(meta.openGraph?.images)).toContain("https://cdn.example.test/share.png");
+  });
+
+  it("keeps a page's own image", async () => {
+    await saveSeoSettings(editor, { defaultOgImage: "https://cdn.example.test/share.png" });
+    const { withUrlSeo } = await import("@/lib/seo/override");
+    const meta = await withUrlSeo("/jobs/", { title: "Jobs", description: "Jobs list", path: "/jobs/", image: "https://cdn.example.test/own.png" });
+    const text = JSON.stringify(meta.openGraph?.images);
+    expect(text).toContain("own.png");
+    expect(text).not.toContain("share.png");
+  });
+});

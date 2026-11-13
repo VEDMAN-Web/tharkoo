@@ -1,6 +1,7 @@
 import { JsonLd } from "@/lib/jsonld";
 import { canonical } from "@/lib/seo";
-import { organizationNode, websiteNode } from "@/lib/seo/schema";
+import { websiteNode } from "@/lib/seo/schema";
+import { siteOrganizationNode } from "@/lib/seo-site";
 import { getHomepageContent, getSite } from "@/lib/queries";
 import { searchPath } from "@/lib/urls";
 import { getPaths } from "@/server/urls/service";
@@ -26,7 +27,7 @@ export async function HomeLayout({ blocks }: { blocks: BlockBase[] }) {
     <>
       <JsonLd
         data={[
-          organizationNode(site.name || "Tharkoo", {
+          await siteOrganizationNode(site.name || "Tharkoo", {
             logo: canonical("/brand/logo-mark.svg"),
             sameAs: content.socials.map((item) => item.href),
           }),
