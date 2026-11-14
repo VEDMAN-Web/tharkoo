@@ -2174,7 +2174,8 @@
         "tests/server/media/**",
         "tests/e2e/post-media.e2e.ts",
         "docs/ownership.json",
-        "progress/H6.16.md"
+        "progress/H6.16.md",
+        "src/components/PostWizard.tsx"
       ]
     },
     "H6.8": {
