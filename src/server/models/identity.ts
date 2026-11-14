@@ -2,13 +2,37 @@ import { Schema, type Types } from "mongoose";
 import { collectionName, modelName } from "@/server/models/names";
 import { registerModel } from "@/server/models/register";
 
+/** Roles that always sign in with a password. Users and sellers have no password (H7.2b). */
+export const STAFF_ROLE_NAMES: ReadonlySet<string> = new Set([
+  "admin",
+  "superadmin",
+  "moderator",
+  "trust_safety",
+  "support",
+  "seo_editor",
+  "finance",
+]);
+
+/** The seller profile, asked once before the first ad (H7.2b). Name and city show on ads. Date of birth never shows. */
+export interface SellerProfileDoc {
+  name: string;
+  city: string;
+  whatsapp?: string;
+  availableNow: boolean;
+  completedAt: Date;
+}
+
 export interface UserDoc {
   _id?: Types.ObjectId;
   email: string;
-  passwordHash: string;
+  /** Required for staff only. Users and sellers sign in with a code and have no password. */
+  passwordHash?: string;
   displayName: string;
-  dateOfBirth: Date;
-  attestedAdultAt: Date;
+  /** Set once, in the seller profile step, before posting. Required for staff. Never shown on the site. */
+  dateOfBirth?: Date;
+  /** Set with dateOfBirth, when the 18+ tick is ticked. Required for staff. */
+  attestedAdultAt?: Date;
+  sellerProfile?: SellerProfileDoc | null;
   emailVerifiedAt?: Date;
   roles: string[];
   verificationStatus: "unsubmitted" | "pending_review" | "approved" | "rejected";
@@ -59,13 +83,30 @@ export interface IdentityVerificationDoc {
   createdAt?: Date;
 }
 
+/** Staff keep every field the old sign-up asked for. Users and sellers may leave them empty. */
+function isStaffDoc(this: { roles?: string[] }) {
+  return (this.roles ?? []).some((role) => STAFF_ROLE_NAMES.has(role));
+}
+
+const sellerProfileSchema = new Schema<SellerProfileDoc>(
+  {
+    name: { type: String, required: true, trim: true, maxlength: 60 },
+    city: { type: String, required: true, trim: true, maxlength: 60 },
+    whatsapp: { type: String, trim: true, maxlength: 20 },
+    availableNow: { type: Boolean, default: false },
+    completedAt: { type: Date, required: true },
+  },
+  { _id: false },
+);
+
 const userSchema = new Schema<UserDoc>(
   {
     email: { type: String, required: true, unique: true, lowercase: true, trim: true },
-    passwordHash: { type: String, required: true, select: false },
+    passwordHash: { type: String, select: false, required: isStaffDoc },
     displayName: { type: String, required: true },
-    dateOfBirth: { type: Date, required: true },
-    attestedAdultAt: { type: Date, required: true },
+    dateOfBirth: { type: Date, required: isStaffDoc },
+    attestedAdultAt: { type: Date, required: isStaffDoc },
+    sellerProfile: { type: sellerProfileSchema, default: undefined },
     emailVerifiedAt: { type: Date },
     roles: { type: [String], default: ["user"] },
     verificationStatus: {

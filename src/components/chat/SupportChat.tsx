@@ -1,12 +1,9 @@
 "use client";
 
-import Link from "next/link";
 import { ArrowUp, MessageCircle, Phone, Send, X } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { safeHref } from "@/lib/sanitize";
 import { api, friendlyError, hasSessionHint } from "@/lib/ui/api";
-import { loginPath } from "@/lib/urls";
-import { useUrlPaths } from "../UrlPaths";
 import type { ShellConfig } from "@/server/site-links/shell-config-rules";
 import type { SupportTopic } from "@/server/support/constants";
 
@@ -27,7 +24,6 @@ function callLink(value: string) {
 
 /** H7.1: the live chat bubble, bottom right, closed by default. Each chat opens or continues an H6.21 support ticket. */
 export function SupportChat({ chat }: { chat: Chat }) {
-  const paths = useUrlPaths();
   const [open, setOpen] = useState(false);
   const [session, setSession] = useState<Session>("unknown");
   const [topic, setTopic] = useState<SupportTopic>("something_else");
@@ -40,6 +36,7 @@ export function SupportChat({ chat }: { chat: Chat }) {
   const [guest, setGuest] = useState({ name: "", contact: "" });
   const [guestError, setGuestError] = useState("");
   const [guestDone, setGuestDone] = useState(false);
+  const [guestSent, setGuestSent] = useState(false);
   const nextLine = useRef(0);
   const bubble = useRef<HTMLButtonElement>(null);
 
@@ -96,10 +93,34 @@ export function SupportChat({ chat }: { chat: Chat }) {
     setGuestDone(true);
   }
 
+  /** H7.1: a guest opens one ticket with the name and contact given. Replies come by email link when an address was given. */
+  async function sendAsGuest(text: string) {
+    setBusy(true);
+    setError("");
+    const contact = guest.contact.trim();
+    const byEmail = EMAIL.test(contact);
+    const res = await api<{ replyVia: "email" | "phone"; emailed: boolean }>("/api/support/guest/tickets", {
+      method: "POST",
+      body: JSON.stringify({ name: guest.name.trim(), email: byEmail ? contact : "", phone: byEmail ? "" : contact, topic, body: text }),
+    });
+    setBusy(false);
+    if (!res.ok) return setError(friendlyError(res.error));
+    setGuestSent(true);
+    add("you", text);
+    add(
+      "support",
+      res.data.replyVia === "email"
+        ? "Thanks. Support will reply to the email address you gave."
+        : "Thanks. Support will contact you on the phone number you gave.",
+    );
+    setDraft("");
+  }
+
   async function send(event: React.FormEvent) {
     event.preventDefault();
     const text = draft.trim();
     if (text.length < BODY_MIN) return setError(`Write at least ${BODY_MIN} characters.`);
+    if (session === "guest") return sendAsGuest(text);
     setBusy(true);
     setError("");
     const res = ticketId
@@ -124,7 +145,8 @@ export function SupportChat({ chat }: { chat: Chat }) {
     telegram ? { label: "Telegram", href: telegram, icon: "tg" } : null,
     call ? { label: "Call", href: call, icon: "call" } : null,
   ].filter((item): item is { label: string; href: string; icon: string } => item !== null);
-  const canWrite = session === "member";
+  // Members write at once. A guest writes after the name and contact step, and once: the first message opens the ticket.
+  const canWrite = session === "member" || (session === "guest" && guestDone && !guestSent);
   const showGuest = session === "guest" && !guestDone;
 
   return (
@@ -185,12 +207,6 @@ export function SupportChat({ chat }: { chat: Chat }) {
               <p key={line.id} className={line.from === "you" ? "tkn-bubble tkn-bubble-you" : "tkn-bubble tkn-bubble-in"}>{line.text}</p>
             ))}
             {error ? <p className="tkn-error" role="alert">{error}</p> : null}
-            {session === "guest" && guestDone ? (
-              <div className="tkn-guest">
-                <p className="t-small">Log in to send your message. Support then answers in your account.</p>
-                <Link href={loginPath(paths)} className="tkn-btn tkn-btn-primary tkn-btn-block">Log in to chat</Link>
-              </div>
-            ) : null}
           </div>
           {canWrite ? (
             <form className="tkn-composer" onSubmit={send}>
