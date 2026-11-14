@@ -1557,6 +1557,7 @@
         "src/components/PostWizard.tsx",
         "src/lib/models.ts",
         "src/lib/ui/post-form.ts",
+        "src/lib/ui/pick-options.ts",
         "src/lib/ui/pins.ts",
         "src/server/listings/service.ts",
         "src/server/models/listing.ts",
