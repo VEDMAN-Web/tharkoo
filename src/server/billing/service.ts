@@ -27,6 +27,7 @@ import {
   PromotionProduct,
   WalletEntry,
 } from "@/server/models";
+import { boostFitsBeforeExpiry } from "@/server/billing/boost-window";
 import { productCodeDenied } from "@/server/shared/policy";
 import { randomToken, sha256 } from "@/server/shared/crypto";
 
@@ -362,6 +363,9 @@ export async function purchasePromotion(input: {
   }
   const startsAt = requested.getTime() < now.getTime() ? now : requested;
   const endsAt = new Date(startsAt.getTime() + rule.durationMs);
+  if (!boostFitsBeforeExpiry(endsAt, listing.expiresAt)) {
+    throw new ConflictError("This boost would run past the ad's expiry. Renew the ad first or choose a shorter boost.");
+  }
   const order = await PromotionOrder.create({
     userId,
     listingId,
@@ -550,7 +554,10 @@ export async function renewDuePromotions(requestId: string) {
   let renewed = 0;
   for (const order of due) {
     const product = await PromotionProduct.findById(order.productId);
-    if (!product) {
+    const adRow = await Listing.findById(order.listingId).select("expiresAt").lean<{ expiresAt?: Date | null }>();
+    const renewRule = product ? promotionRule(product.code, order.durationDays, product.durationDays) : null;
+    const fits = renewRule ? boostFitsBeforeExpiry(new Date(Date.now() + renewRule.durationMs), adRow?.expiresAt) : false;
+    if (!product || !adRow || !fits) {
       order.autoRenew = false;
       await order.save();
       continue;

@@ -37,10 +37,10 @@ import { parseListingAttributes, type FieldDefinition } from "@/server/shared/fi
 import { revalidateListingPages } from "@/server/listings/revalidate";
 import { parsePrice } from "@/server/listings/price";
 import { attributeDenied, categoryDenied, textDenied } from "@/server/shared/policy";
+import { adLifetimeMs } from "@/server/listings/lifetime";
 import { evaluatePublishGate } from "@/server/shared/publish-gate";
 import { toSlug } from "@/server/shared/slug";
 
-const LIFETIME_MS = 30 * 24 * 60 * 60 * 1000;
 const REVEAL_WINDOW_MS = 60 * 60 * 1000;
 const REVEAL_TTL_MS = 15 * 60 * 1000;
 const COUNTED = ["pending", "active", "paused", "rejected", "expired", "archived"] as const;
@@ -582,7 +582,7 @@ export async function submitListing(
   listing.status = "active";
   listing.seoNoindex = false;
   if (!listing.publishedAt) listing.publishedAt = new Date();
-  listing.expiresAt = new Date(Date.now() + LIFETIME_MS);
+  listing.expiresAt = new Date(Date.now() + (await adLifetimeMs()));
   listing.attestations = { ...attestations, submittedAt: new Date().toISOString() };
   listing.markModified("attestations");
   await assignSlug(listing);
@@ -628,7 +628,7 @@ export async function renewListing(id: string, userId: string, requestId: string
     throw new ConflictError(`Cannot renew a ${listing.status} listing`);
   }
   const base = Math.max(Date.now(), listing.expiresAt?.getTime() ?? 0);
-  listing.expiresAt = new Date(base + LIFETIME_MS);
+  listing.expiresAt = new Date(base + (await adLifetimeMs()));
   if (listing.status === "expired") {
     listing.status = "active";
     if (!listing.publishedAt) listing.publishedAt = new Date();

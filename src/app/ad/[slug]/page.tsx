@@ -55,7 +55,8 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const image = safePhoto(ad.photos?.[0]) || "/brand/og-default.png";
   const paths = await getPaths();
   const path = adPath(paths, ad.slug || slug);
-  return withUrlSeo(path, { title, description, path, image, index: record?.seoNoindex !== true });
+  // H6.7: a live ad is noindex, follow (follow comes from the default). It is not in the sitemap.
+  return withUrlSeo(path, { title, description, path, image, index: false });
 }
 
 function listedPrice(attributes: unknown) {

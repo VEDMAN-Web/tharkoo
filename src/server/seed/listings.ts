@@ -3,6 +3,7 @@ import path from "node:path";
 import { Types } from "mongoose";
 import { Category, Listing, Location, MediaAsset, PromotionOrder, PromotionProduct, User } from "@/server/models";
 import { textDenied } from "@/server/shared/policy";
+import { adLifetimeMs } from "@/server/listings/lifetime";
 import { demoListings, SEED_USER_EMAIL, type DemoListing } from "@/server/seed/data";
 
 function demoWhen(index: number) {
@@ -55,6 +56,7 @@ export async function seedDemoListings(dryRun: boolean): Promise<{ inserted: str
     const districts = await Location.find({ type: "district" }).select("slug parentId").lean();
     const districtId = new Map(districts.map((row) => [`${String(row.parentId)}:${row.slug}`, row._id]));
 
+    const lifetime = await adLifetimeMs();
     const docs = pending.map((spec) => {
       const city = cityBySlug.get(spec.citySlug);
       const category = categoryId.get(spec.categorySlug);
@@ -75,6 +77,8 @@ export async function seedDemoListings(dryRun: boolean): Promise<{ inserted: str
         badges: spec.verified ? ["verified"] : [],
         publishedAt: demoWhen(index),
         contact: demoContact(index),
+        // H6.7: demo ads expire from the seed time, like real ads; "Refresh demo ads" renews them on staging.
+        expiresAt: new Date(Date.now() + lifetime),
         seoNoindex: true,
       };
     });
