@@ -4,14 +4,17 @@ import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { usePathname } from "next/navigation";
 import { LayoutDashboard, List, LogOut, Menu, Search, Settings, ShieldCheck, User, Wallet, X, MessageCircle, CircleHelp } from "lucide-react";
+import dynamic from "next/dynamic";
 import { Logo } from "./Logo";
-import { SearchModal } from "./SearchModal";
 import { useCity } from "./CityContext";
 import { useFocusTrap } from "./ui/useFocusTrap";
 import { api, hasSessionHint, isStaffRole } from "@/lib/ui/api";
 import { safeHref } from "@/lib/sanitize";
 import { applyPrefixes, blogPath, helpPath, loginPath, postAdPath, registerPath } from "@/lib/urls";
 import { useUrlPaths } from "./UrlPaths";
+
+// The search modal is only drawn after the visitor opens search, so its code loads then, not with the page.
+const SearchModal = dynamic(() => import("./SearchModal").then((mod) => mod.SearchModal), { ssr: false });
 
 type Cat = { slug: string; name: string };
 type City = { slug: string; name: string; stateSlug?: string };

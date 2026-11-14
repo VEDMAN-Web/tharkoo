@@ -33,7 +33,6 @@ export type ChromeData = {
   socialLinks: NavLink[];
   categories: Cat[];
   cities: City[];
-  topCities: City[];
   cityCount: number;
   user: { email: string; roles: string[] } | null;
 };
@@ -49,7 +48,7 @@ export function PathChrome({ shell, paths, children }: { shell: ChromeData; path
       </UrlPathProvider>
     );
   }
-  const { site, categories, topCities, cities, cityCount, user, content, footerLinks, socialLinks } = shell;
+  const { site, categories, cities, cityCount, user, content, footerLinks, socialLinks } = shell;
   // Style guides are tool pages: no age gate and no cookie banner.
   const toolPage = path.startsWith("/styleguide");
   return (
@@ -91,7 +90,6 @@ export function PathChrome({ shell, paths, children }: { shell: ChromeData; path
         cityCount={cityCount}
         about={site.tagline || ""}
         categories={categories}
-        cities={topCities}
         links={footerLinks}
         social={content.socials.length ? content.socials : socialLinks}
         content={content.footer}

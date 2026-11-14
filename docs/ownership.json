@@ -1882,7 +1882,9 @@
         "docs/ownership.json",
         "progress/H6.7.md",
         "src/components/SiteShell.tsx",
-        "src/components/PathChrome.tsx"
+        "src/components/PathChrome.tsx",
+        "src/components/Header.tsx",
+        "src/components/Footer.tsx"
       ]
     },
     "H5.7": {

@@ -29,7 +29,6 @@ export function Footer({
   cityCount: number;
   about?: string;
   categories?: { slug: string; name: string }[];
-  cities?: { slug: string; name: string }[];
   links?: LinkItem[];
   social: LinkItem[];
   content?: {

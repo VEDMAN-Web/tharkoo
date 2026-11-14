@@ -1,5 +1,5 @@
 import { readPaths } from "@/lib/urls";
-import { getCategories, getCities, getSite, getTopCities } from "@/lib/queries";
+import { getCategories, getCities, getSite } from "@/lib/queries";
 import { plain } from "@/lib/plain";
 import { safeHref } from "@/lib/sanitize";
 import { readContent } from "@/lib/ui/site-content";
@@ -7,8 +7,8 @@ import { MotionInit } from "./ui/MotionInit";
 import { PathChrome, type ChromeData } from "./PathChrome";
 
 export async function loadShell() {
-  const [site, categories, topCities, cities] = await Promise.all([getSite(), getCategories(), getTopCities(), getCities()]);
-  return { site, categories, topCities, cities, user: null as { email: string; roles: string[] } | null };
+  const [site, categories, cities] = await Promise.all([getSite(), getCategories(), getCities()]);
+  return { site, categories, cities, user: null as { email: string; roles: string[] } | null };
 }
 
 type Shell = Awaited<ReturnType<typeof loadShell>>;
@@ -39,7 +39,7 @@ type SiteFields = {
 
 function chromeData(shell: Shell): ChromeData {
   const site = shell.site as SiteFields;
-  const { categories, topCities, cities, user } = shell;
+  const { categories, cities, user } = shell;
   const { hero, header, socials, support, footer, age, cookies } = readContent(site.homepage);
   return {
     site: {
@@ -55,7 +55,6 @@ function chromeData(shell: Shell): ChromeData {
     socialLinks: plain(navLinks(site.socialLinks)),
     categories: plain(categories.map((c) => ({ slug: c.slug || "", name: c.name || "" }))),
     cities: plain(cities.map((c) => ({ slug: c.slug || "", name: c.name || "", stateSlug: c.stateSlug }))),
-    topCities: plain(topCities.map((c) => ({ slug: c.slug || "", name: c.name || "" }))),
     cityCount: cities.length,
     user,
   };
