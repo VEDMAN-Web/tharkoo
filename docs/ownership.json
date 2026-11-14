@@ -2002,6 +2002,21 @@
       ]
     },
 
+    "H6.10": {
+      "branchPrefix": "haiku/h6.10",
+      "globs": [
+        "src/app/admin/homepage/**",
+        "src/app/admin/content-actions.ts",
+        "src/app/admin/seo/tools/FixDashesPanel.tsx",
+        "src/lib/ui/home-seo.ts",
+        "src/lib/ui/site-store.ts",
+        "src/server/content/dash-repair.ts",
+        "tests/server/content/home-title.test.ts",
+        "docs/ownership.json",
+        "progress/H6.10.md"
+      ]
+    },
+
     "H6.9": {
       "branchPrefix": "haiku/h6.9",
       "globs": [
