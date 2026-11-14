@@ -2180,6 +2180,35 @@
         "src/components/PostWizard.tsx"
       ]
     },
+    "H6.17": {
+      "branchPrefix": "haiku/h6.17",
+      "globs": [
+        "src/components/ad/**",
+        "src/components/listing/**",
+        "src/components/AdCard*.tsx",
+        "src/components/ui/AdCard.tsx",
+        "src/app/ad/**",
+        "src/app/[category]/**",
+        "src/app/[city]/**",
+        "src/app/[...slug]/**",
+        "src/app/admin/listing-pages/**",
+        "src/app/admin/ads/**",
+        "src/app/api/events/**",
+        "src/app/api/views/**",
+        "src/server/analytics/**",
+        "src/server/listings/**",
+        "src/server/models/listing.ts",
+        "src/server/models/ad-event.ts",
+        "src/server/models/cms.ts",
+        "src/app/globals.css",
+        "tests/server/analytics/**",
+        "tests/server/listings/**",
+        "tests/e2e/ad-counts.e2e.ts",
+        "tests/e2e/card-width.e2e.ts",
+        "docs/ownership.json",
+        "progress/H6.17.md"
+      ]
+    },
     "H6.8": {
       "branchPrefix": "haiku/h6.8",
       "globs": [
