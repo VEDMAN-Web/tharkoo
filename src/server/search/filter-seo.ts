@@ -7,6 +7,8 @@ export type ListingParams = Record<string, string | string[] | undefined>;
 
 /** Parameters that only mark where a visitor came from. They never make a page a filter page. */
 const TRACKING_PARAM = /^(utm_[a-z]+|gclid|fbclid|msclkid)$/i;
+/** Pagination is not a filter: page 2 of an unfiltered listing keeps its own canonical. */
+const NOT_FILTER_PARAM = new Set(["page"]);
 const FIELD_PARAM = /^f\.([a-z][a-z0-9_]{0,40})$/;
 export const MAX_PICKS_PER_FILTER = 20;
 const MAX_VALUE_LENGTH = 200;
@@ -19,8 +21,17 @@ function hasValue(value: string | string[] | undefined): boolean {
 /** The filter parameters on a listing URL, sorted. Empty values and tracking parameters are left out. */
 export function activeFilterKeys(params: ListingParams): string[] {
   return Object.keys(params)
-    .filter((key) => !TRACKING_PARAM.test(key) && hasValue(params[key]))
+    .filter((key) => !TRACKING_PARAM.test(key) && !NOT_FILTER_PARAM.has(key) && hasValue(params[key]))
     .sort();
+}
+
+/**
+ * The query string a listing page names as its canonical. Filters are left out, so every filter URL points at the
+ * clean page. Pagination stays on unfiltered pages only.
+ */
+export function listingCanonicalSuffix(params: ListingParams, page: number): string {
+  if (activeFilterKeys(params).length > 0 || page <= 1) return "";
+  return `?page=${page}`;
 }
 
 /** Robots for a listing URL. Any filter makes the page noindex, follow, so its links still count. */

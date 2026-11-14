@@ -24,13 +24,15 @@ import { hourSeed, orderFeed } from "@/components/feedOrder";
 import { fallbackLanding, mergeLanding, type LandingCopy } from "@/lib/seo/landing";
 import { SubcategoryChips } from "./SubcategoryChips";
 import { loadCardWidth } from "@/server/listings/card-width";
+import { listingRobots, type ListingParams } from "@/server/search/filter-seo";
 
-type Props = { params: Promise<{ category: string }> };
+type Props = { params: Promise<{ category: string }>; searchParams: Promise<ListingParams> };
 
 export const revalidate = 300;
 
-export async function generateMetadata({ params }: Props): Promise<Metadata> {
+export async function generateMetadata({ params, searchParams }: Props): Promise<Metadata> {
   const { category } = await params;
+  const robots = listingRobots(await searchParams);
   const [cat, seo, site] = await Promise.all([getCategory(category), getSeoFor("category", category), getSite()]);
   if (!cat) return {};
   const vars = { category: cat.name, site: site.name, year: new Date().getFullYear() };
@@ -38,7 +40,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const description = fillTemplate(seo?.description || "Browse {category} on Tharkoo: listings from people across Indian cities. Filter by city and district, see photos and contact posters directly.", vars);
   const path = categoryPath(cat.slug || category);
   const on = isCategoryOn(await getIndexing(), cat.slug || category);
-  return withSeoDefaults(await withUrlSeo(path, { title, description, path, index: on }));
+  return withSeoDefaults(await withUrlSeo(path, { title, description, path, index: on && robots.index, follow: robots.follow }));
 }
 
 export default async function CategoryHub({ params }: Props) {

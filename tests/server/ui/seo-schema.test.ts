@@ -81,9 +81,9 @@ describe("structured data", () => {
   });
 
   it("lists every sitemap shard from the index", () => {
-    const xml = sitemapIndexXml(["categories", "cities", "districts", "tags", "ads", "content"]);
+    const xml = sitemapIndexXml(["categories", "cities", "districts", "ads", "content"]);
     expect(xml).toContain("<sitemapindex");
-    for (const shard of ["categories", "cities", "districts", "tags", "ads", "content"]) {
+    for (const shard of ["categories", "cities", "districts", "ads", "content"] as const) {
       expect(xml).toContain(`/sitemap/${shard}.xml`);
     }
   });

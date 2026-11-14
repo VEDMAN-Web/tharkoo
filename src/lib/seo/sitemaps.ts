@@ -1,14 +1,14 @@
 import { connectDb } from "@/lib/db";
 import { getBlogPosts, getCategories, getCities, getHelpArticles } from "@/lib/queries";
 import { siteUrl } from "@/lib/utils";
-import { blogPath, categoriesPath, categoryPath, citiesPath, cmsPath, contactPath, helpPath, howItWorksPath, placePath, prohibitedPath, safetyPath, tagPath } from "@/lib/urls";
+import { blogPath, categoriesPath, categoryPath, citiesPath, cmsPath, contactPath, helpPath, howItWorksPath, placePath, prohibitedPath, safetyPath } from "@/lib/urls";
 import { Listing, Location, Page } from "@/server/models";
-import { getPaths, publicTags } from "@/server/urls/service";
+import { getPaths } from "@/server/urls/service";
 import { isCityAlias } from "@/lib/seo/district-alias";
-import { subcategorySitemapEntries } from "@/server/seo/subcategory-sitemap";
 import { districtMinimum, getIndexing, hubMinimum, isCategoryOn } from "@/server/seo/indexing";
 
-export const SITEMAP_SHARDS = ["categories", "cities", "districts", "tags", "ads", "content"] as const;
+/** Listing shards hold only the three indexable page types (category, category+city, category+city+area). */
+export const SITEMAP_SHARDS = ["categories", "cities", "districts", "ads", "content"] as const;
 export type SitemapShard = (typeof SITEMAP_SHARDS)[number];
 
 export interface SitemapEntry {
@@ -151,26 +151,6 @@ export async function shardEntries(shard: SitemapShard): Promise<SitemapEntry[]>
       for (const row of rolled.values()) {
         const cat = categories.find((item) => item.slug === row.category);
         if (cat && row.n >= hubMinimum(indexing, cat, row.city)) urls.push({ loc: loc(placePath(row.category, row.city)), lastmod: stamp(row.last) });
-      }
-    }
-    if (shard === "districts") {
-      for (const entry of await subcategorySitemapEntries(loc)) urls.push({ loc: entry.loc, lastmod: entry.lastmod ?? stamp() });
-    }
-    return urls;
-  }
-  if (shard === "tags") {
-    const [categories, tags, used] = await Promise.all([
-      getCategories(),
-      publicTags(),
-      Listing.distinct("attributes.tag", { ...liveMatch, seoNoindex: { $ne: true }, "attributes.tag": { $type: "string" } }),
-    ]);
-    const live = new Set(used.map((tag) => String(tag)));
-    const urls: SitemapEntry[] = [];
-    for (const cat of categories) {
-      if (!cat.slug) continue;
-      for (const tag of tags) {
-        if (!live.has(tag.slug)) continue;
-        urls.push({ loc: loc(tagPath(paths, cat.slug, tag.slug)), lastmod: now });
       }
     }
     return urls;

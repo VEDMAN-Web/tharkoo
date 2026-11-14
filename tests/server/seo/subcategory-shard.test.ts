@@ -36,7 +36,7 @@ async function ads(categoryId: Types.ObjectId, cityId: Types.ObjectId, subcatego
 }
 
 describe("districts sitemap shard", () => {
-  it("includes an indexable sub-category hub and excludes one with 4 ads", async () => {
+  it("keeps sub-category hubs out of the sitemap: only category, category+city and category+area are listed", async () => {
     const cat = await Category.create({ slug: "services", name: "Services", enabled: true, fields: [] });
     const city = await Location.create({ type: "city", slug: "pune", name: "Pune", enabled: true });
     const full = await Subcategory.create({ categoryId: cat._id, slug: "plumbers", name: "Plumbers" });
@@ -44,7 +44,7 @@ describe("districts sitemap shard", () => {
     await ads(cat._id, city._id, full._id, 5);
     await ads(cat._id, city._id, thin._id, 4);
     const locs = (await shardEntries("districts")).map((entry) => entry.loc);
-    expect(locs.some((loc) => loc.includes("/services/pune/plumbers")), JSON.stringify(locs)).toBe(true);
+    expect(locs.some((loc) => loc.includes("/services/pune/plumbers")), JSON.stringify(locs)).toBe(false);
     expect(locs.some((loc) => loc.includes("/tutors"))).toBe(false);
   });
 });

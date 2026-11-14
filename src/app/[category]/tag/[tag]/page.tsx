@@ -15,7 +15,7 @@ async function tagLabel(tag: string) {
 
 export async function generateMetadata({ params }: { params: Promise<{ category: string; tag: string }> }): Promise<Metadata> {
   const { category, tag } = await params;
-  const [meta, cat, feed, paths] = await Promise.all([tagLabel(tag), getCategory(category), getFeed({ categorySlug: category, tag }, 1), getPaths()]);
+  const [meta, cat, paths] = await Promise.all([tagLabel(tag), getCategory(category), getPaths()]);
   const path = tagPath(paths, cat?.slug || category, tag);
   if (!cat || !meta) {
     return withUrlSeo(path, {
@@ -26,12 +26,12 @@ export async function generateMetadata({ params }: { params: Promise<{ category:
       follow: false,
     });
   }
-  const live = feed.total >= 1;
+  // Tag pages are not one of the three indexable listing types (see filter-seo.ts).
   return withUrlSeo(path, {
     title: `${meta.label} ${cat.name} ads | Tharkoo`,
     description: `Browse ${cat.name} ads tagged ${meta.label} on Tharkoo. Open a listing to see the details, photos, and how to get in touch.`,
     path,
-    index: live,
+    index: false,
     follow: true,
   });
 }

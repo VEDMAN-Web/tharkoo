@@ -2383,6 +2383,7 @@
         "tests/server/fields/**",
         "tests/server/listings/**",
         "tests/server/seo/**",
+        "tests/server/ui/seo-schema.test.ts",
         "progress/H7.3b.md",
         "docs/ownership.json"
       ]

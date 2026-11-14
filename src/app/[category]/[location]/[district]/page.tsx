@@ -17,10 +17,11 @@ import {
   pageOutOfRange,
 } from "@/lib/queries";
 import { prettyPlace } from "@/lib/format";
-import { fillTemplate } from "@/lib/seo";
+import { canonical, fillTemplate } from "@/lib/seo";
 import { isCityAlias } from "@/lib/seo/district-alias";
 import { districtMinimum, getIndexing } from "@/server/seo/indexing";
 import { placePath, tagPath } from "@/lib/urls";
+import { activeFilterKeys, listingCanonicalSuffix } from "@/server/search/filter-seo";
 import { withUrlSeo, urlHeading } from "@/lib/seo/override";
 import { fallbackLanding, visibleHeading } from "@/lib/seo/landing";
 import { getPaths, publicTags } from "@/server/urls/service";
@@ -75,22 +76,19 @@ export async function generateMetadata({ params, searchParams }: Props): Promise
   const rawDescription = fillTemplate(seo?.description || copy.description, counted);
   const description = rawDescription.length <= 160 ? rawDescription : `${rawDescription.slice(0, 157).replace(/\s+\S*$/, "")}`;
   const pageNo = Math.max(1, Number(sp.page) || 1);
-  const filtered = Boolean(sp.photos || sp.verified);
+  const filtered = activeFilterKeys(sp).length > 0;
   const feed = await getFeed(
     { categorySlug: category, citySlug: location, districtSlug: district, ...(sp.photos ? { photos: true } : {}), ...(sp.verified ? { verified: true } : {}) },
     pageNo,
   );
-  const query = new URLSearchParams();
-  if (sp.photos) query.set("photos", "1");
-  if (sp.verified) query.set("verified", "1");
-  if (pageNo > 1) query.set("page", String(pageNo));
-  const suffix = query.toString();
   const path = placePath(cat.slug || category, city.slug || location, dist.slug || district);
+  const suffix = listingCanonicalSuffix(sp, pageNo);
   return withUrlSeo(path, {
     title,
     description,
-    path: `${path}${suffix ? `?${suffix}` : ""}`,
-    index: pageNo === 1 && !(filtered && feed.total === 0) && !isThin(feed.total, distMin),
+    path: `${path}${suffix}`,
+    canonicalUrl: canonical(`${path}${suffix}`),
+    index: pageNo === 1 && !filtered && !isThin(feed.total, distMin),
     follow: true,
   });
 }
