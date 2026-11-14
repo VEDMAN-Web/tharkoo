@@ -2,6 +2,10 @@ import { AdminShell } from "@/components/admin/AdminShell";
 import { BarList, EmptyState, KpiCard, Notice } from "@/components/admin/ui";
 import { getDashboardData, type DashboardDay } from "@/server/admin/dashboard";
 import { DeskNotice } from "@/components/support/DeskNotice";
+import { CodeOnlyLoginSwitch } from "@/components/auth/CodeOnlyLoginSwitch";
+import { getStaffFromHeaders } from "@/lib/admin-auth";
+import { codeOnlyLoginEnabled } from "@/server/auth/code-only";
+import { loginCodeWarning } from "@/server/auth/email-code";
 
 export const dynamic = "force-dynamic";
 
@@ -46,6 +50,10 @@ export default async function AdminHome() {
   const data = await getDashboardData();
   const { kpis } = data;
   const seriesTotal = data.newAdsPerDay.reduce((sum, day) => sum + day.count, 0);
+  // H7.2b: a warning, never a fake "sent", when no login code can leave the server.
+  const loginWarning = loginCodeWarning();
+  const isSuperadmin = (await getStaffFromHeaders()).roles.includes("superadmin");
+  const codeOnly = isSuperadmin ? await codeOnlyLoginEnabled() : false;
   return (
     <AdminShell title="Dashboard">
       <div className="adm-stack">
@@ -54,6 +62,12 @@ export default async function AdminHome() {
             {data.demoListings.toLocaleString("en-IN")} demo ads are mixed into the numbers below. They were added for testing and do not come from real people.
           </Notice>
         ) : null}
+        {loginWarning ? (
+          <Notice kind="warn" title={loginWarning}>
+            No email or SMS provider can send a login code, so users and sellers cannot log in or sign up until BREVO_API_KEY is set.
+          </Notice>
+        ) : null}
+        {isSuperadmin ? <CodeOnlyLoginSwitch initial={codeOnly} /> : null}
         <DeskNotice />
 
         <div className="adm-grid">

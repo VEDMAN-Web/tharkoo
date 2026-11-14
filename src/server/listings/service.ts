@@ -551,7 +551,8 @@ export async function submitListing(
     assets.every((asset) => asset.ownerId.toString() === userId && asset.status === "cleared" && asset.kind !== "id_document");
   if (mediaIds.length + (await adVideoCount(listing._id)) > AD_MEDIA_MAX) throw new PolicyViolationError(AD_MEDIA_LIMIT_MESSAGE);
   const gate = evaluatePublishGate({
-    dateOfBirth: user.dateOfBirth,
+    // H7.2b: a code account without a seller profile has no date of birth, and the gate refuses it.
+    dateOfBirth: user.dateOfBirth ?? null,
     attestedAdult: Boolean(user.attestedAdultAt),
     verificationStatus: user.verificationStatus,
     accountStatus: user.status,

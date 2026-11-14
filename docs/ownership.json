@@ -2332,6 +2332,26 @@
         "docs/ownership.json"
       ]
     },
+    "H7.2b": {
+      "branchPrefix": "haiku/h7.2b",
+      "globs": [
+        "src/server/models/identity.ts",
+        "src/server/auth/**",
+        "src/app/api/auth/**",
+        "src/components/auth/**",
+        "src/app/u/login/**",
+        "src/app/u/seller-profile/**",
+        "src/app/u/post-insert/page.tsx",
+        "src/app/admin/page.tsx",
+        "src/server/verification/service.ts",
+        "src/server/listings/service.ts",
+        "src/server/mailer/**",
+        "tests/server/auth/**",
+        "tests/e2e/login*.e2e.ts",
+        "progress/H7.2b.md",
+        "docs/ownership.json"
+      ]
+    },
     "H7.3": {
       "branchPrefix": "haiku/h7.3",
       "globs": [

@@ -1,6 +1,10 @@
 import { AuthForm } from "@/components/AuthForm";
+import { SignInSheet } from "@/components/auth/SignInSheet";
 import { loginPath } from "@/lib/urls";
 import { withUrlSeo } from "@/lib/seo/override";
+import { smsDeliverable } from "@/server/auth/otp";
+import { landingPathsFor } from "@/server/auth/landing-paths";
+import { newDesignOn } from "@/server/site-links/new-design";
 import { getPaths } from "@/server/urls/service";
 
 export async function generateMetadata() {
@@ -14,6 +18,19 @@ export async function generateMetadata() {
   });
 }
 
-export default function Page() {
-  return <AuthForm mode="login" />;
+export default async function Page({ searchParams }: { searchParams: Promise<Record<string, string | string[] | undefined>> }) {
+  // The sheet is a New design screen. Off, the old password form stays.
+  if (!(await newDesignOn())) return <AuthForm mode="login" />;
+  const params = await searchParams;
+  const role = params.role === "seller" ? "seller" : "user";
+  const next = typeof params.next === "string" ? params.next : null;
+  return (
+    <SignInSheet
+      inline
+      initialRole={role}
+      initialNext={next}
+      landing={landingPathsFor(await getPaths())}
+      showMobile={smsDeliverable()}
+    />
+  );
 }
