@@ -75,7 +75,7 @@ export function PathChrome({ shell, paths, children }: { shell: ChromeData; path
       )}
       {newDesign ? (
         <div className="tkn" data-design="new">
-          <HeaderNew siteName={siteName} shell={config} cities={cities} />
+          <HeaderNew siteName={siteName} shell={config} cities={cities} categories={categories} />
           <MainInner>{children}</MainInner>
           <FooterNew siteName={siteName} shell={config} categories={categories} />
           <SupportChat chat={config.chat} />

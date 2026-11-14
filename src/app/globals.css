@@ -1853,6 +1853,30 @@ input, select, textarea { font-size: 16px; }
 .tkn-sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
 @media (max-width: 600px) { .tkn-float { right: 16px; bottom: 16px; } }
 
+/* Search pop-up (shared with the hero search): glass panel inside the New design. */
+.tkn .tk-modal-back { background: rgba(30, 11, 56, 0.35); }
+.tkn .tk-modal {
+  background: rgba(255, 255, 255, 0.82); -webkit-backdrop-filter: blur(24px) saturate(180%); backdrop-filter: blur(24px) saturate(180%);
+  border: 1px solid rgba(255, 255, 255, 0.95); border-radius: 20px; box-shadow: 0 22px 60px rgba(45, 18, 72, 0.22);
+}
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  .tkn .tk-modal { background: #ffffff; }
+}
+@media (prefers-reduced-transparency: reduce) {
+  .tkn .tk-modal { background: #ffffff; -webkit-backdrop-filter: none; backdrop-filter: none; }
+}
+
+/* Phones: the search button sits right before the burger; Log in is hidden there (the drawer carries it). */
+@media (max-width: 1023px) {
+  .tkn-header-actions .tkn-city-wrap { display: none; }
+}
+@media (max-width: 600px) {
+  .tkn-header-actions { gap: 8px; }
+  .tkn-header-actions .tkn-search-btn { order: 1; }
+  .tkn-header-actions .tkn-btn-primary { order: 0; }
+  .tkn-header-actions .tkn-burger { order: 2; }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .tkn * { transition: none !important; animation: none !important; }
 }

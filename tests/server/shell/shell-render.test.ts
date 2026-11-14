@@ -29,7 +29,7 @@ function wrap(node: React.ReactNode) {
 }
 
 function header(config: ShellConfig = defaultShellConfig()) {
-  return wrap(createElement(HeaderNew, { siteName: "Tharkoo", shell: config, cities }));
+  return wrap(createElement(HeaderNew, { siteName: "Tharkoo", shell: config, cities, categories }));
 }
 
 describe("H7.1 new header", () => {

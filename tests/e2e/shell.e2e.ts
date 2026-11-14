@@ -53,6 +53,23 @@ test.describe("H7.1 shell: visitor", () => {
     await expect(drawer).toHaveCount(0);
   });
 
+  test("at 390 the header search button sits by the burger and opens the search pop-up", async ({ page }) => {
+    test.skip(!isPhone(page), "The phone placement is checked at 390 px");
+    await page.goto("/");
+    const search = page.locator('header [data-tk="header-search"]');
+    const burger = page.getByRole("button", { name: "Open menu" });
+    await expect(search).toBeVisible();
+    const [searchBox, burgerBox] = await Promise.all([search.boundingBox(), burger.boundingBox()]);
+    expect(searchBox && burgerBox && searchBox.x < burgerBox.x).toBe(true);
+    await search.click();
+    const modal = page.locator('[data-tk="search-modal"]');
+    await expect(modal).toBeVisible();
+    await modal.locator('[data-tk="search-text"]').fill("coffee");
+    await modal.locator('[data-tk="search-submit"]').click();
+    await expect(page).toHaveURL(/\/search\/\?.*q=coffee/);
+    expect(await hasHorizontalScroll(page)).toBe(false);
+  });
+
   test("the shell passes axe with no serious or critical issues", async ({ page }) => {
     await page.goto("/");
     const result = await new AxeBuilder({ page })
