@@ -15,10 +15,12 @@ export async function POST(request: NextRequest) {
     const form = await request.formData();
     const file = form.get("file");
     if (!(file instanceof File)) return NextResponse.json({ ok: false, error: "Choose an image file" }, { status: 400 });
-    if (file.size > SITE_MEDIA_MAX_BYTES) return NextResponse.json({ ok: false, error: "Images can be at most 5 MB" }, { status: 413 });
+    if (file.size > SITE_MEDIA_MAX_BYTES) return NextResponse.json({ ok: false, error: "Images can be at most 8 MB" }, { status: 413 });
     const item = await uploadSiteMedia({
       file: { type: file.type, data: Buffer.from(await file.arrayBuffer()) },
       alt: form.get("alt"),
+      fileName: file.name,
+      autoAlt: form.get("auto_alt") === "1",
       tags: form.get("tags"),
       email: staff.email,
       roles: staff.roles,

@@ -64,6 +64,8 @@ export interface CategoryDoc {
   canonicalOverride?: string;
   minListingsIndex?: number;
   minListingsLocality?: number;
+  /** Photos per ad for a superadmin partner import (H6.12). Null means the default of 10. */
+  importMaxPhotos?: number | null;
   seedBatch?: string;
   createdAt?: Date;
   updatedAt?: Date;
@@ -155,6 +157,7 @@ const categorySchema = new Schema<CategoryDoc>(
     canonicalOverride: { type: String, default: "" },
     minListingsIndex: { type: Number, default: 3 },
     minListingsLocality: { type: Number, default: 10 },
+    importMaxPhotos: { type: Number, default: null, min: 1, max: 30 },
     seedBatch: { type: String },
   },
   { timestamps: true, collection: collectionName("categories", "Category") },

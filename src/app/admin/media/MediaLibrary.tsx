@@ -7,6 +7,7 @@ import { Notice } from "@/components/admin/ui/Notice";
 import { Skeleton } from "@/components/admin/ui/Skeleton";
 import { TextField } from "@/components/admin/ui/TextField";
 import { deleteMediaAction, listMediaAction, updateMediaAction } from "./actions";
+import { BatchUpload } from "./BatchUpload";
 
 type Item = {
   id: string;
@@ -18,77 +19,18 @@ type Item = {
   tags: string[];
   oversize: boolean;
   missingAlt: boolean;
+  autoAlt: boolean;
   used: boolean;
 };
 
 const kb = (bytes: number) => (bytes >= 1024 * 1024 ? `${(bytes / 1024 / 1024).toFixed(1)} MB` : `${Math.round(bytes / 1024)} KB`);
-
-function UploadForm({ onDone, enabled }: { onDone: () => void; enabled: boolean }) {
-  const [file, setFile] = useState<File | null>(null);
-  const [alt, setAlt] = useState("");
-  const [tags, setTags] = useState("");
-  const [busy, setBusy] = useState(false);
-  const [error, setError] = useState("");
-
-  async function submit() {
-    if (!file) return setError("Choose an image first");
-    setBusy(true);
-    setError("");
-    const form = new FormData();
-    form.set("file", file);
-    form.set("alt", alt);
-    form.set("tags", tags);
-    try {
-      const res = await fetch("/admin/media/upload/", { method: "POST", body: form });
-      const body = (await res.json()) as { ok: boolean; error?: string };
-      if (!body.ok) setError(body.error || "Upload failed");
-      else {
-        setFile(null);
-        setAlt("");
-        setTags("");
-        onDone();
-      }
-    } catch {
-      setError("Upload failed. Check your connection and try again.");
-    } finally {
-      setBusy(false);
-    }
-  }
-
-  if (!enabled) {
-    return (
-      <section className="adm-card" style={{ display: "grid", gap: 12 }}>
-        <h2 style={{ fontSize: 16, fontWeight: 800 }}>Upload an image</h2>
-        <Notice kind="error">Image upload needs Cloudinary on this server</Notice>
-      </section>
-    );
-  }
-
-  return (
-    <section className="adm-card" style={{ display: "grid", gap: 12 }}>
-      <h2 style={{ fontSize: 16, fontWeight: 800 }}>Upload an image</h2>
-      <label className="adm-field">
-        <span className="adm-field-label">Image (jpeg, png or webp, up to 5 MB)</span>
-        <input className="adm-input" type="file" accept="image/jpeg,image/png,image/webp" onChange={(event) => setFile(event.target.files?.[0] ?? null)} />
-      </label>
-      <TextField label="Alt text" value={alt} onChange={setAlt} min={3} max={125} required help="Describe what the image shows. Search engines and screen readers use it." />
-      <TextField label="Tags (comma separated)" value={tags} onChange={setTags} max={120} />
-      {error ? <Notice kind="error">{error}</Notice> : null}
-      <div>
-        <button type="button" className="adm-btn" disabled={busy || !file || alt.trim().length < 3} onClick={submit}>
-          {busy ? "Uploading…" : "Upload"}
-        </button>
-      </div>
-    </section>
-  );
-}
 
 function Card({ item, onChanged, onDelete }: { item: Item; onChanged: () => void; onDelete: (item: Item) => void }) {
   const [alt, setAlt] = useState(item.alt);
   const [tags, setTags] = useState(item.tags.join(", "));
   const [note, setNote] = useState("");
   const [error, setError] = useState("");
-  const dirty = alt !== item.alt || tags !== item.tags.join(", ");
+  const dirty = alt !== item.alt || tags !== item.tags.join(", ") || item.autoAlt;
 
   async function save() {
     setError("");
@@ -107,7 +49,7 @@ function Card({ item, onChanged, onDelete }: { item: Item; onChanged: () => void
       </div>
       <p className="adm-field-help" style={{ margin: 0 }}>
         {item.width} × {item.height} · {kb(item.bytes)}
-        {item.missingAlt ? " · Missing alt" : ""}
+        {item.autoAlt ? " · Auto alt, check it" : item.missingAlt ? " · Missing alt" : ""}
         {item.oversize ? " · Oversize" : ""}
         {!item.used ? " · Unused" : ""}
       </p>
@@ -170,7 +112,7 @@ export function MediaLibrary({ uploadsEnabled = true }: { uploadsEnabled?: boole
 
   return (
     <div className="adm-stack">
-      <UploadForm onDone={() => void load()} enabled={uploadsEnabled} />
+      <BatchUpload enabled={uploadsEnabled} onDone={() => void load()} />
       <section className="adm-card" style={{ display: "grid", gap: 12 }}>
         <h2 style={{ fontSize: 16, fontWeight: 800 }}>Library{items ? ` (${total})` : ""}</h2>
         <div style={{ display: "flex", flexWrap: "wrap", gap: 16, alignItems: "center" }}>

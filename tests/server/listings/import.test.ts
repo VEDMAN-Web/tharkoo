@@ -182,14 +182,14 @@ describe("partner import", () => {
     expect(await AuditEvent.countDocuments({ action: "listing.import" })).toBe(0);
   });
 
-  it("refuses a file with more than 200 rows and accepts exactly 200", async () => {
+  it("refuses a file with more than 500 rows and accepts exactly 500", async () => {
     const owner = await partner();
     await catalogue(owner._id);
     const make = (count: number) => file(...Array.from({ length: count }, (_, index) => row(`Cycle number ${index}`)));
-    await expect(dryRunImport(admin, owner.email, make(MAX_IMPORT_ROWS + 1))).rejects.toThrow(/Too many rows: 201/);
+    await expect(dryRunImport(admin, owner.email, make(MAX_IMPORT_ROWS + 1))).rejects.toThrow(/Too many rows: 501/);
     const dry = await dryRunImport(admin, owner.email, make(MAX_IMPORT_ROWS));
-    expect(dry.total).toBe(200);
-    expect(dry.okCount).toBe(200);
+    expect(dry.total).toBe(500);
+    expect(dry.okCount).toBe(500);
   });
 
   it("reads the price column into the real price field, not an attribute", async () => {

@@ -85,7 +85,15 @@ export interface UploadedAsset {
   publicId: string;
 }
 
-export type CloudinaryUploader = (data: Buffer, options: { contentType: string; folder: string; publicId: string }) => Promise<UploadedAsset>;
+export interface UploadOptions {
+  contentType: string;
+  folder: string;
+  publicId: string;
+  /** Optional Cloudinary transformation string, for example the EXIF strip used for listing photos. */
+  transformation?: string;
+}
+
+export type CloudinaryUploader = (data: Buffer, options: UploadOptions) => Promise<UploadedAsset>;
 
 let uploaderOverride: CloudinaryUploader | null = null;
 
@@ -94,7 +102,7 @@ export function setCloudinaryUploader(uploader: CloudinaryUploader | null) {
 }
 
 /** Signed server-side upload. The secret stays on the server and is never logged. */
-export async function uploadToCloudinary(data: Buffer, options: { contentType: string; folder: string; publicId: string }) {
+export async function uploadToCloudinary(data: Buffer, options: UploadOptions) {
   if (uploaderOverride) return uploaderOverride(data, options);
   configure();
   const result = await cloudinary.uploader.upload(`data:${options.contentType};base64,${data.toString("base64")}`, {
@@ -103,6 +111,7 @@ export async function uploadToCloudinary(data: Buffer, options: { contentType: s
     folder: options.folder,
     public_id: options.publicId,
     overwrite: false,
+    ...(options.transformation ? { transformation: options.transformation } : {}),
   });
   return { url: result.secure_url, publicId: result.public_id } as UploadedAsset;
 }
