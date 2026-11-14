@@ -1,4 +1,5 @@
 import { z, type ZodType } from "zod";
+import { HERO_ALIGNS, HERO_FITS, HERO_FOCUS, HERO_HEIGHTS, HERO_LAYOUTS, HERO_OVERLAY_MAX_OPACITY, HERO_TONES, HERO_VERTICALS } from "@/lib/layout/hero";
 import { safeHref } from "@/lib/sanitize";
 import type { PageKey } from "@/server/models/layout";
 
@@ -41,6 +42,7 @@ const opt = <T extends ZodType>(schema: T) => schema.optional().nullable();
 
 /* ---- block props ---- */
 
+/* Hero look (H6.9). All optional: a block saved before H6.9 has none of them and renders as the split hero it always was (resolveHero). */
 const hero = z.object({
   heading: required(120),
   subheading: text(300).default(""),
@@ -49,7 +51,21 @@ const hero = z.object({
   searchPlaceholder: text(80).default(""),
   primaryCta: opt(link),
   secondaryCta: opt(link),
-  overlay: z.enum(["none", "light", "dark"]).default("light"),
+  layout: z.enum(HERO_LAYOUTS).optional(),
+  fit: z.enum(HERO_FITS).optional(),
+  focus: z.enum(HERO_FOCUS).optional(),
+  height: z.enum(HERO_HEIGHTS).optional(),
+  overlayOn: z.boolean().optional(),
+  overlayColor: z.string().regex(/^#[0-9a-fA-F]{6}$/, "Use a colour such as #2a2316").optional(),
+  overlayOpacity: z.number().int().min(0).max(HERO_OVERLAY_MAX_OPACITY).optional(),
+  showHeadline: z.boolean().optional(),
+  showSubtext: z.boolean().optional(),
+  showSearch: z.boolean().optional(),
+  textAlign: z.enum(HERO_ALIGNS).optional(),
+  textVertical: z.enum(HERO_VERTICALS).optional(),
+  textTone: z.enum(HERO_TONES).optional(),
+  textShadow: z.boolean().optional(),
+  bannerLink: opt(link),
 });
 
 const categoryGrid = z.object({

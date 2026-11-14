@@ -24,7 +24,6 @@ export function homeDefaultBlocks(content: SiteContent): Omit<BlockBase, "id">[]
           ...HERO_SIZE,
         },
         primaryCta: { label: content.hero.postLabel, href: content.hero.postHref },
-        overlay: "light",
       },
     },
     {

@@ -17,6 +17,12 @@
 .lay-block-body { display: grid; gap: var(--adm-s4); margin-top: var(--adm-s4); padding-top: var(--adm-s4); border-top: 1px solid var(--adm-border); }
 
 .lay-fields { display: grid; gap: var(--adm-s4); min-width: 0; }
+.lay-image { display: grid; gap: var(--adm-s2); min-width: 0; }
+.lay-color { width: 64px; height: 40px; padding: 2px; border: 1px solid var(--adm-border); border-radius: var(--adm-r-card); background: var(--adm-card); cursor: pointer; }
+.lay-preview { display: grid; gap: var(--adm-s2); min-width: 0; }
+.lay-preview-frame { position: relative; overflow: hidden; width: 100%; border: 1px solid var(--adm-border); border-radius: var(--adm-r-card); background: #fff; }
+.lay-preview-frame iframe { position: absolute; top: 0; left: 0; border: 0; pointer-events: none; transform-origin: 0 0; }
+.lay-preview-phone { max-width: 390px; }
 .lay-group { display: grid; gap: var(--adm-s2); min-width: 0; margin: 0; padding: 0; border: 0; }
 .lay-group > legend { padding: 0; margin-bottom: var(--adm-s2); }
 .lay-chips { display: flex; flex-wrap: wrap; gap: var(--adm-s2); }

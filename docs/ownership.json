@@ -2001,6 +2001,26 @@
         "progress/H5.8b.md"
       ]
     },
+
+    "H6.9": {
+      "branchPrefix": "haiku/h6.9",
+      "globs": [
+        "src/app/globals.css",
+        "src/lib/layout/hero.ts",
+        "src/server/layout/blocks.ts",
+        "src/server/layout/defaults/home.ts",
+        "src/components/blocks/HeroBlock.tsx",
+        "src/components/admin/layout-editor/fields.ts",
+        "src/components/admin/layout-editor/FieldControls.tsx",
+        "src/components/admin/layout-editor/BlockCard.tsx",
+        "src/components/admin/layout-editor/HeroPreview.tsx",
+        "src/components/admin/layout-editor/layout-editor.css",
+        "tests/server/layout/hero.test.ts",
+        "tests/e2e/hero-banner.e2e.ts",
+        "docs/ownership.json",
+        "progress/H6.9.md"
+      ]
+    },
     "H6.8": {
       "branchPrefix": "haiku/h6.8",
       "globs": [
