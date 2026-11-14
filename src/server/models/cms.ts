@@ -54,6 +54,8 @@ export interface SiteDoc extends BaseDoc {
   seoSettings?: unknown;
   /** Listing order settings (H3.8). Missing means the original order. */
   ranking?: { tierOrder?: string[]; verifiedFirst?: boolean; photoFirst?: boolean };
+  /** Require an approved ID check before posting (H6.14). Missing means off. */
+  requireIdCheckToPost?: boolean;
 }
 
 export interface PageDoc extends BaseDoc {
@@ -192,6 +194,7 @@ const siteSchema = new Schema<SiteDoc>(
     ranking: {
       type: new Schema({ tierOrder: [String], verifiedFirst: Boolean, photoFirst: Boolean }, { _id: false }),
     },
+    requireIdCheckToPost: { type: Boolean },
   },
   { timestamps: true, collection: collectionName("sites", "Site") },
 );

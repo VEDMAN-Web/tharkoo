@@ -4,6 +4,7 @@ import { connectDb } from "@/lib/db";
 import { ConflictError, ForbiddenError, InternalError, NotFoundError, UnauthorizedError, ValidationError, VerificationRequiredError } from "@/server/http";
 import { IdentityVerification, MediaAsset, User } from "@/server/models";
 import { completeMedia, signedIdDocumentUrl, signMedia } from "@/server/media/service";
+import { idCheckRequired } from "@/server/settings/id-check";
 
 const REVIEW_ROLES = new Set(["superadmin", "admin", "trust_safety", "moderator"]);
 const audit = new AuditRepository();
@@ -17,8 +18,10 @@ function assertManual() {
   if (provider !== "manual") throw new InternalError("Manual identity review is the only available provider");
 }
 
+/** Throws unless the user's ID is approved. With the ID-check switch off (H6.14) nobody is asked, so this returns at once. */
 export async function assertVerified(userId: string) {
   await connectDb();
+  if (!(await idCheckRequired())) return;
   if (!mongoose.isValidObjectId(userId)) throw new VerificationRequiredError("Identity verification is required");
   const user = await User.findById(userId).select("verificationStatus");
   if (!user || user.verificationStatus !== "approved") {

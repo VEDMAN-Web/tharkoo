@@ -8,6 +8,7 @@ import { repairCategoryKinds } from "@/server/categories/kind";
 import { expireDueTours } from "@/server/tours/service";
 import { repairDashes, repairDemoListingDashes } from "@/server/content/dash-repair";
 import { convertHeroLayouts } from "@/server/layout/hero-migration";
+import { ensureIdCheckSetting } from "@/server/settings/id-check";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -37,6 +38,8 @@ async function dispatch(request: Request) {
   const demoDashes = await repairDemoListingDashes(requestId);
   // The home hero becomes a full banner by default (H6.13, relay #56). Converts the stored blocks once; a later run changes nothing.
   const heroLayouts = await convertHeroLayouts(requestId);
+  // "Require ID check before posting" is stored OFF when it was never set (H6.14). Idempotent, like the hero conversion.
+  const idCheck = await ensureIdCheckSetting(requestId);
   return Response.json(
     success(
       {
@@ -49,6 +52,7 @@ async function dispatch(request: Request) {
         dashesUpdated: dashes.updated,
         demoListingDashesUpdated: demoDashes.updated,
         heroLayoutsConverted: heroLayouts.updated,
+        idCheckSettingSet: idCheck.updated,
       },
       requestId,
     ),

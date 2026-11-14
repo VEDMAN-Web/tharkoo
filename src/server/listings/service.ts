@@ -39,6 +39,7 @@ import { parsePrice } from "@/server/listings/price";
 import { attributeDenied, categoryDenied, textDenied } from "@/server/shared/policy";
 import { adLifetimeMs } from "@/server/listings/lifetime";
 import { evaluatePublishGate } from "@/server/shared/publish-gate";
+import { idCheckRequired } from "@/server/settings/id-check";
 import { toSlug } from "@/server/shared/slug";
 
 const REVEAL_WINDOW_MS = 60 * 60 * 1000;
@@ -554,6 +555,7 @@ export async function submitListing(
     categoryEnabled: category.enabled !== false,
     mediaCleared: mediaIds.length === 0 || mediaCleared,
     attributes,
+    idCheckRequired: await idCheckRequired(),
   });
   if (!gate.ok) {
     if (gate.reason === "VERIFICATION_REQUIRED") throw new VerificationRequiredError("Identity verification is required");

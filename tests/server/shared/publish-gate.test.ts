@@ -14,6 +14,7 @@ function input(overrides: Partial<PublishGateInput> = {}): PublishGateInput {
     categoryEnabled: true,
     mediaCleared: true,
     attributes: { make: "Honda", year: 2018 },
+    idCheckRequired: true,
     now,
     ...overrides,
   };
@@ -22,6 +23,21 @@ function input(overrides: Partial<PublishGateInput> = {}): PublishGateInput {
 describe("publish gates", () => {
   it("allows an approved adult with cleared media in an allowed category", () => {
     expect(evaluatePublishGate(input())).toEqual({ ok: true });
+  });
+
+  it("with the ID-check switch off, an unsubmitted adult with cleared media is allowed (H6.14)", () => {
+    const off = { idCheckRequired: false };
+    expect(evaluatePublishGate(input({ ...off, verificationStatus: "unsubmitted" }))).toEqual({ ok: true });
+    expect(evaluatePublishGate(input({ ...off, verificationStatus: "rejected" }))).toEqual({ ok: true });
+  });
+
+  it("with the ID-check switch off, the age, attestation, media and category rules still apply (H6.14)", () => {
+    const off = { idCheckRequired: false, verificationStatus: "unsubmitted" as const };
+    expect(evaluatePublishGate(input({ ...off, dateOfBirth: parseDateOnly("2012-01-01") }))).toMatchObject({ reason: "UNDERAGE" });
+    expect(evaluatePublishGate(input({ ...off, attestedAdult: false }))).toMatchObject({ reason: "ADULT_ATTESTATION_REQUIRED" });
+    expect(evaluatePublishGate(input({ ...off, mediaCleared: false }))).toMatchObject({ reason: "MEDIA_NOT_CLEARED" });
+    expect(evaluatePublishGate(input({ ...off, categorySlug: "escort", categoryName: "Escort" }))).toMatchObject({ reason: "CATEGORY_DENIED" });
+    expect(evaluatePublishGate(input({ ...off, attributes: { hourlyRate: 2000 } }))).toMatchObject({ reason: "ATTRIBUTE_DENIED" });
   });
 
   it("blocks underage dates of birth", () => {
