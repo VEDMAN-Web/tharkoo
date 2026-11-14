@@ -11,6 +11,8 @@ import {
   sessionHintCookie,
 } from "@/server/auth/http";
 import { sendLoginCode, verifyLoginCode } from "@/server/auth/otp";
+import { sendEmailLoginCode, verifyEmailLoginCode } from "@/server/auth/email-code";
+import { codeOnlyBodySchema, codeOnlyLoginEnabled, setCodeOnlyLogin } from "@/server/auth/code-only";
 import { consumeRateLimit } from "@/server/auth/rate-limit";
 import {
   confirmPhone,
@@ -27,7 +29,7 @@ import {
   verifyEmail,
 } from "@/server/auth/service";
 import { z } from "zod";
-import { NotFoundError, failure, handle, parseInput, requestIdFrom, success } from "@/server/http";
+import { ForbiddenError, NotFoundError, failure, handle, parseInput, requestIdFrom, success } from "@/server/http";
 import {
   forgotPasswordBodySchema,
   loginBodySchema,
@@ -40,6 +42,15 @@ import {
 
 const otpSendBodySchema = z.object({
   phone: z.string().trim().min(8).max(20),
+});
+
+const emailOtpSendBodySchema = z.object({
+  email: z.string().trim().min(3).max(254),
+});
+
+const emailOtpVerifyBodySchema = z.object({
+  email: z.string().trim().min(3).max(254),
+  code: z.string().trim().regex(/^\d{6}$/),
 });
 
 const otpVerifyBodySchema = z.object({
@@ -176,6 +187,44 @@ async function dispatch(request: Request) {
     });
     return json({ user: result.user }, requestId, 200, [sessionCookieHeader(result.token), sessionHintCookie()]);
   }
+  if (request.method === "POST" && path === "email/otp/send") {
+    const body = parseInput(emailOtpSendBodySchema, await readBody(request));
+    const sent = await sendEmailLoginCode({ email: body.email, ip });
+    if (!sent.ok) {
+      return Response.json(failure({ code: "RATE_LIMITED", message: "Too many codes requested. Try again later." }, requestId), {
+        status: 429,
+        headers: { "retry-after": String(sent.retryAfter), "x-request-id": requestId },
+      });
+    }
+    return json({ sent: true }, requestId);
+  }
+  if (request.method === "POST" && path === "email/otp/verify") {
+    const body = parseInput(emailOtpVerifyBodySchema, await readBody(request));
+    const blocked = await limit(`email-otp-verify:${ip}`, LOGIN_MAX, requestId);
+    if (blocked) return blocked;
+    const result = await verifyEmailLoginCode({
+      email: body.email,
+      code: body.code,
+      userAgent: request.headers.get("user-agent"),
+      ip,
+      existingToken: token,
+      requestId,
+    });
+    return json({ user: result.user }, requestId, 200, [sessionCookieHeader(result.token), sessionHintCookie()]);
+  }
+  if (path === "code-only-login" && request.method === "GET") {
+    const found = await requireUser(token);
+    if (!found.user.roles.includes("superadmin")) throw new ForbiddenError("Only a superadmin can read this setting");
+    return json({ enabled: await codeOnlyLoginEnabled() }, requestId);
+  }
+  if (path === "code-only-login" && request.method === "PUT") {
+    const found = await requireUser(token);
+    const body = parseInput(codeOnlyBodySchema, await readBody(request));
+    return json(
+      await setCodeOnlyLogin({ actorId: found.user.id, roles: found.user.roles, enabled: body.enabled, requestId }),
+      requestId,
+    );
+  }
   if (request.method === "GET" && path === "sessions") {
     const found = await requireUser(token);
     return json(await listSessions(found.user.id, found.sessionId), requestId);
@@ -190,3 +239,4 @@ async function dispatch(request: Request) {
 export const GET = handle(dispatch);
 export const POST = handle(dispatch);
 export const DELETE = handle(dispatch);
+export const PUT = handle(dispatch);
