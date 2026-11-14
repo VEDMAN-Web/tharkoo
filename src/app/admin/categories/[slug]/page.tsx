@@ -21,14 +21,19 @@ export default async function CategoryFieldsPage({ params }: { params: Promise<{
   if (!/^[a-z0-9-]{1,80}$/.test(slug)) notFound();
   const data = await readCategoryFields(slug);
   if (!data) notFound();
+  // Options are read by the editor one page at a time; the page only needs how many each field has.
   const fields: EditorField[] = data.fields.map((field) => ({
     key: String(field.key),
     label: String(field.label ?? ""),
+    filterLabel: String(field.filterLabel ?? ""),
     type: String(field.type ?? "text"),
     help: String(field.help ?? ""),
     placeholder: String(field.placeholder ?? ""),
     required: field.required === true,
-    options: Array.isArray(field.options) ? field.options.map(String) : [],
+    enabled: field.enabled !== false,
+    filterable: field.filterable === true,
+    maxPicks: typeof field.maxPicks === "number" ? field.maxPicks : null,
+    optionCount: Array.isArray(field.options) ? field.options.length : 0,
   }));
   return (
     <AdminShell title={`Post fields: ${data.name}`}>
