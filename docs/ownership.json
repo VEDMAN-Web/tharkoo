@@ -1741,9 +1741,11 @@
         "src/app/u/**",
         "src/server/auth/**",
         "src/app/api/auth/**",
+        "src/proxy.ts",
         "tests/server/wallet/**",
         "tests/server/billing/**",
         "tests/server/auth/**",
+        "tests/server/proxy/**",
         "tests/e2e/**",
         "docs/ownership.json",
         "progress/H6.6.md"
