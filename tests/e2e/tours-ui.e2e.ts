@@ -28,7 +28,7 @@ test.describe("Live video tours UI", () => {
     const path = await firstAdPath(page, "/dating/bengaluru/");
     await page.goto(path);
     await expect(page.locator("h1").first()).toBeVisible();
-    await expect(page.getByRole("button", { name: /Request live video tour/ })).toHaveCount(0);
+    await expect(page.getByRole("button", { name: /Video call and verify/ })).toHaveCount(0);
     expect(await hasHorizontalScroll(page)).toBe(false);
   });
 });

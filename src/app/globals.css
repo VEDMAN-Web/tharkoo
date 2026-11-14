@@ -1029,9 +1029,11 @@ input, select, textarea { font-size: 16px; }
   background: #fff;
   border-top: 1px solid var(--border);
   padding: 10px 8px calc(10px + env(safe-area-inset-bottom, 0px));
-  gap: 15px;
+  gap: 6px;
 }
-.tk-bottom .tk-btn { flex: 1; height: 50px; border-radius: 6px; }
+/* Four contact buttons share the bar on a phone: labels wrap inside the button. */
+.tk-bottom .tk-btn { flex: 1; min-width: 0; height: auto; min-height: 50px; padding: 6px 4px; border-radius: 6px; white-space: normal; line-height: 1.15; font-size: 12px; text-align: center; }
+.tk-bar-note { position: absolute; left: 8px; right: 8px; bottom: 100%; margin: 0 0 6px; padding: 8px 10px; background: var(--card); border: 1px solid var(--border); border-radius: 8px; font-size: 13px; line-height: 1.4; }
 .tk-sheet {
   position: fixed;
   inset: 0;
@@ -1421,7 +1423,7 @@ input, select, textarea { font-size: 16px; }
   .tk-nick { font-size: 22px; }
   .tk-summary h1 { font-size: 24px; line-height: 1.25; }
   .tk-bottom { display: flex; }
-  .tk-ad { padding-bottom: calc(70px + env(safe-area-inset-bottom, 0px)); }
+  .tk-ad { padding-bottom: calc(92px + env(safe-area-inset-bottom, 0px)); }
   .tk-cookie.on-ad { bottom: calc(74px + env(safe-area-inset-bottom, 0px)); }
   .tk-page-h1 { font-size: 28px; }
 }
