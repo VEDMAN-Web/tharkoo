@@ -7,6 +7,7 @@ import { userFromToken } from "@/server/auth/service";
 import { HttpError } from "@/server/http";
 import { dryRunImport, type DryRunReport, type ImportActor, type ImportStatus } from "@/server/listings/import";
 import { createImportJob, getImportJob, openImportJob, runImportChunk, type JobSummary } from "@/server/import/job";
+import type { ChosenVideo } from "@/server/import/videos";
 
 export type ImportResult<T> = { ok: true; data: T } | { ok: false; error: string };
 
@@ -29,19 +30,31 @@ async function run<T>(job: (actor: ImportActor) => Promise<T>): Promise<ImportRe
   }
 }
 
-/** Step 1: check the file. Writes nothing. */
-export async function dryRunAction(input: { partnerEmail: string; csv: string; fileNames: string[] }): Promise<ImportResult<DryRunReport>> {
-  return run((actor) => dryRunImport(actor, input.partnerEmail, input.csv, input.fileNames));
+/** Step 1: check the file. Writes nothing. Videos are sent as their size and length only, never as bytes. */
+export async function dryRunAction(input: {
+  partnerEmail: string;
+  csv: string;
+  fileNames: string[];
+  videos: ChosenVideo[];
+}): Promise<ImportResult<DryRunReport>> {
+  return run((actor) => dryRunImport(actor, input.partnerEmail, input.csv, input.fileNames, input.videos));
 }
 
-/** Step 2a: save the job. The page then uploads the photos it lists and calls chunkAction until done. */
+/** Step 2a: save the job. The page then uploads the files it lists and calls chunkAction until done. */
 export async function createJobAction(input: {
   partnerEmail: string;
   csv: string;
   fileNames: string[];
+  videos: ChosenVideo[];
   status: ImportStatus;
 }): Promise<ImportResult<{ job: JobSummary; report: DryRunReport }>> {
-  return run((actor) => createImportJob(actor, { ...input, status: input.status === "active" ? "active" : "pending" }, randomUUID()));
+  return run((actor) =>
+    createImportJob(
+      actor,
+      { partnerEmail: input.partnerEmail, csv: input.csv, fileNames: input.fileNames, videoFiles: input.videos, status: input.status === "active" ? "active" : "pending" },
+      randomUUID(),
+    ),
+  );
 }
 
 /** The unfinished job of this staff member, if one exists. */

@@ -91,6 +91,8 @@ export interface UploadOptions {
   publicId: string;
   /** Optional Cloudinary transformation string, for example the EXIF strip used for listing photos. */
   transformation?: string;
+  /** Defaults to an image. Import videos are stored as video. */
+  resourceType?: "image" | "video";
 }
 
 export type CloudinaryUploader = (data: Buffer, options: UploadOptions) => Promise<UploadedAsset>;
@@ -106,7 +108,7 @@ export async function uploadToCloudinary(data: Buffer, options: UploadOptions) {
   if (uploaderOverride) return uploaderOverride(data, options);
   configure();
   const result = await cloudinary.uploader.upload(`data:${options.contentType};base64,${data.toString("base64")}`, {
-    resource_type: "image",
+    resource_type: options.resourceType ?? "image",
     type: "upload",
     folder: options.folder,
     public_id: options.publicId,

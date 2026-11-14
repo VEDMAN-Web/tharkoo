@@ -27,6 +27,8 @@ import { toSlug } from "@/server/shared/slug";
 import { assertVerified } from "@/server/verification/service";
 import { idCheckRequired } from "@/server/settings/id-check";
 import { assertRowCap, parsePhotoCell, photoLimitForImport } from "@/server/import/rules";
+import { parseVideoCell, videoProblem, type ChosenVideo } from "@/server/import/videos";
+import { VIDEO_MAX_PER_AD } from "@/server/media/config";
 
 export { MAX_IMPORT_ROWS, IMPORT_CHUNK_ROWS } from "@/server/import/rules";
 const MAX_CSV_BYTES = 2 * 1024 * 1024;
@@ -35,8 +37,11 @@ const DESCRIPTION_MAX = 5000;
 const REQUIRED_COLUMNS = ["category", "city", "title", "description"] as const;
 const PHOTO_COLUMN = "photos";
 const PHOTO_ALIASES = new Set(["photos", "photo_urls", "photo_url", "photo"]);
+const VIDEO_COLUMN = "videos";
 /** Key is the lower-cased file name. mediaId is "" until the photo is uploaded (dry run only needs the names). */
 export type UploadedFiles = Map<string, { name: string; mediaId: string }>;
+/** Chosen videos by lower-cased name, with the size and length the browser read. mediaId is "" until uploaded. */
+export type ChosenVideos = Map<string, ChosenVideo & { mediaId: string }>;
 
 export function uploadedFromNames(names: readonly string[], known: Map<string, string> = new Map()): UploadedFiles {
   const files: UploadedFiles = new Map();
@@ -47,7 +52,18 @@ export function uploadedFromNames(names: readonly string[], known: Map<string, s
   }
   return files;
 }
-const BASE_COLUMNS = new Set<string>([...REQUIRED_COLUMNS, "district", "price", "subcategory", PHOTO_COLUMN]);
+
+export function chosenVideos(list: readonly ChosenVideo[], known: Map<string, string> = new Map()): ChosenVideos {
+  const videos: ChosenVideos = new Map();
+  for (const video of list) {
+    const name = video.name.trim();
+    const key = name.toLowerCase();
+    if (!key || videos.has(key)) continue;
+    videos.set(key, { name, size: video.size, type: video.type, seconds: video.seconds, mediaId: known.get(key) ?? "" });
+  }
+  return videos;
+}
+const BASE_COLUMNS = new Set<string>([...REQUIRED_COLUMNS, "district", "price", "subcategory", PHOTO_COLUMN, VIDEO_COLUMN]);
 const CLOUDINARY_HOST = "res.cloudinary.com";
 
 const audit = new AuditRepository();
@@ -74,12 +90,20 @@ export interface PhotoSummary {
   unusedFiles: string[];
 }
 
+/** The same count for videos: how many would be attached, and which chosen videos would be uploaded. */
+export interface VideoSummary {
+  videosToAttach: number;
+  filesToUpload: string[];
+  unusedFiles: string[];
+}
+
 export interface DryRunReport {
   partner: { id: string; email: string; displayName: string };
   total: number;
   okCount: number;
   rows: ImportRowReport[];
   photos: PhotoSummary;
+  videos: VideoSummary;
 }
 
 export interface ImportReport extends DryRunReport {
@@ -102,6 +126,8 @@ interface RowInput {
   attributes: Record<string, unknown>;
   price?: number;
   photos: RowPhoto[];
+  /** Names of the chosen videos on this row. */
+  videos: string[];
 }
 
 interface Plan {
@@ -113,6 +139,7 @@ export interface Prepared {
   partner: { id: string; email: string; displayName: string; doc: UserRow };
   plans: Plan[];
   files: UploadedFiles;
+  videos: ChosenVideos;
 }
 
 type UserRow = {
@@ -131,6 +158,7 @@ interface Lookups {
   districts: Map<string, PlaceRow | null>;
   taken: Set<string>;
   files: UploadedFiles;
+  videos: ChosenVideos;
   superadmin: boolean;
   /** The ID-check switch (H6.14), read once per import. */
   requireIdCheck: boolean;
@@ -317,6 +345,28 @@ async function resolvePhotos(partnerId: string, cell: string, errors: string[], 
   return photos;
 }
 
+/** Each entry names a chosen video. A missing, too big, too long or wrong-type video is a row error, the same as for photos. */
+function resolveVideos(cell: string, errors: string[], lookups: Lookups): string[] {
+  const refs = parseVideoCell(cell);
+  if (refs.length > VIDEO_MAX_PER_AD) {
+    errors.push(`Too many videos: ${refs.length}. The limit is ${VIDEO_MAX_PER_AD} per ad`);
+    return [];
+  }
+  const names: string[] = [];
+  for (const ref of refs) {
+    const video = lookups.videos.get(ref.toLowerCase());
+    if (!video) {
+      errors.push(`Missing file: ${ref.slice(0, 80)} is not among the chosen videos`);
+      continue;
+    }
+    const problem = videoProblem(video);
+    if (problem) errors.push(problem);
+    else if (names.includes(video.name)) errors.push(`The same video is listed twice: ${video.name}`);
+    else names.push(video.name);
+  }
+  return names;
+}
+
 function bannedHit(text: string, banned: string[]) {
   const haystack = text.toLowerCase();
   return textDenied(text).denied || banned.some((needle) => haystack.includes(needle));
@@ -396,6 +446,7 @@ async function planRow(
   const subcategoryId = category ? await subcategoryOf(category._id.toString(), cells.subcategory ?? "", errors) : undefined;
   const price = priceOf(cells.price, errors);
   const photos = await resolvePhotos(partner.id, cells[PHOTO_COLUMN] ?? "", errors, lookups, category?.importMaxPhotos);
+  const videos = resolveVideos(cells[VIDEO_COLUMN] ?? "", errors, lookups);
   if (category && attributes) {
     errors.push(...textErrors({ title, description: cells.description, attributes }, lookups.banned));
     const gate = evaluatePublishGate({
@@ -430,12 +481,19 @@ async function planRow(
     attributes,
     price,
     photos,
+    videos,
   };
   return { report, input };
 }
 
 /** Validates every row of a file without writing. `files` maps chosen image names to uploads (or "" before upload). */
-export async function prepareImport(actor: ImportActor, partnerEmail: string, csv: string, files: UploadedFiles): Promise<Prepared> {
+export async function prepareImport(
+  actor: ImportActor,
+  partnerEmail: string,
+  csv: string,
+  files: UploadedFiles,
+  videos: ChosenVideos = new Map(),
+): Promise<Prepared> {
   assertStaff(actor);
   const { headers, body } = readTable(csv);
   const partner = await findPartner(partnerEmail);
@@ -452,6 +510,7 @@ export async function prepareImport(actor: ImportActor, partnerEmail: string, cs
     districts: new Map(),
     taken: new Set(existing.map((row) => `${row.categoryId}|${row.cityId}|${row.title.toLowerCase()}`)),
     files,
+    videos,
     superadmin: actor.roles.includes("superadmin"),
     requireIdCheck: await idCheckRequired(),
   };
@@ -463,7 +522,7 @@ export async function prepareImport(actor: ImportActor, partnerEmail: string, cs
     });
     plans.push(await planRow(index + 2, cells, partner, lookups));
   }
-  return { partner, plans, files };
+  return { partner, plans, files, videos };
 }
 
 /** Counts for the check: ads and photos that would be created, and the chosen images no ready row uses. */
@@ -486,6 +545,24 @@ export function photoSummary(plans: Plan[], files: UploadedFiles): PhotoSummary 
   };
 }
 
+/** Counts for the check: videos that would be attached, and the chosen videos no ready row uses. */
+export function videoSummary(plans: Plan[], videos: ChosenVideos): VideoSummary {
+  const used = new Set<string>();
+  let videosToAttach = 0;
+  for (const plan of plans) {
+    for (const name of plan.input?.videos ?? []) {
+      videosToAttach += 1;
+      used.add(name.toLowerCase());
+    }
+  }
+  const all = [...videos.entries()];
+  return {
+    videosToAttach,
+    filesToUpload: all.filter(([key]) => used.has(key)).map(([, video]) => video.name),
+    unusedFiles: all.filter(([key]) => !used.has(key)).map(([, video]) => video.name),
+  };
+}
+
 function toReport(prepared: Prepared): DryRunReport {
   const { id, email, displayName } = prepared.partner;
   const rows = prepared.plans.map((plan) => plan.report);
@@ -495,12 +572,22 @@ function toReport(prepared: Prepared): DryRunReport {
     okCount: rows.filter((row) => row.ok).length,
     rows,
     photos: photoSummary(prepared.plans, prepared.files),
+    videos: videoSummary(prepared.plans, prepared.videos),
   };
 }
 
-/** Step 1: validate every row with the post-form rules. Writes nothing. `fileNames` are the chosen images. */
-export async function dryRunImport(actor: ImportActor, partnerEmail: string, csv: string, fileNames: readonly string[] = []): Promise<DryRunReport> {
-  return toReport(await prepareImport(actor, partnerEmail, csv, uploadedFromNames(fileNames)));
+/**
+ * Step 1: validate every row with the post-form rules. Writes nothing.
+ * `fileNames` are the chosen images. `videoFiles` are the chosen videos with the size and length the browser read.
+ */
+export async function dryRunImport(
+  actor: ImportActor,
+  partnerEmail: string,
+  csv: string,
+  fileNames: readonly string[] = [],
+  videoFiles: readonly ChosenVideo[] = [],
+): Promise<DryRunReport> {
+  return toReport(await prepareImport(actor, partnerEmail, csv, uploadedFromNames(fileNames), chosenVideos(videoFiles)));
 }
 
 async function uniqueSlug(title: string, id: Types.ObjectId) {
@@ -564,8 +651,30 @@ export async function attachPhotos(listingId: string, mediaIds: string[]) {
   await MediaAsset.updateMany({ _id: { $in: mediaIds } }, { $set: { listingId: new Types.ObjectId(listingId) } });
 }
 
-async function importRow(input: RowInput, partnerId: string, status: ImportStatus, actor: ImportActor, requestId: string, files: UploadedFiles) {
-  const mediaIds = photoIdsFor(input.photos, files);
+/** The upload id behind each chosen video on a row. Throws when a video has not been uploaded yet, so that row fails clearly. */
+export function videoIdsFor(names: readonly string[], videos: ChosenVideos): string[] {
+  return names.map((name) => {
+    const id = videos.get(name.toLowerCase())?.mediaId;
+    if (!id) throw new Error(`Video ${name} is not uploaded yet`);
+    return id;
+  });
+}
+
+/** Puts the videos on the ad. Like photos, they belong to the listing; the ad page shows them. */
+export async function attachVideos(listingId: string, mediaIds: string[]) {
+  await MediaAsset.updateMany({ _id: { $in: mediaIds } }, { $set: { listingId: new Types.ObjectId(listingId) } });
+}
+
+async function importRow(
+  input: RowInput,
+  partnerId: string,
+  status: ImportStatus,
+  actor: ImportActor,
+  requestId: string,
+  prepared: Pick<Prepared, "files" | "videos">,
+) {
+  const mediaIds = photoIdsFor(input.photos, prepared.files);
+  const videoIds = videoIdsFor(input.videos, prepared.videos);
   const draft = await createDraft(
     partnerId,
     { categoryId: input.categoryId, subcategoryId: input.subcategoryId, stateId: input.stateId, cityId: input.cityId, districtId: input.districtId },
@@ -576,6 +685,7 @@ async function importRow(input: RowInput, partnerId: string, status: ImportStatu
     await patchListing(id, partnerId, { stage: "basics", title: input.title, description: input.description }, requestId);
     await patchListing(id, partnerId, { stage: "details", attributes: input.attributes, price: input.price, contact: { acceptForm: true } }, requestId);
     if (mediaIds.length) await attachPhotos(id, mediaIds);
+    if (videoIds.length) await attachVideos(id, videoIds);
     await finalise(id, status, actor);
     if (status === "active") {
       const slug = (await Listing.findById(id).select("slug").lean<{ slug?: string }>())?.slug;
@@ -614,9 +724,9 @@ export async function runImport(
   assertStaff(actor);
   assertPublishRight(actor, status);
   const prepared = await prepareImport(actor, partnerEmail, csv, uploadedFromNames([]));
-  const { imported, failed } = await importPlanRange(prepared, 0, prepared.plans.length, actor, status, requestId);
+  const { imported, failed, videos } = await importPlanRange(prepared, 0, prepared.plans.length, actor, status, requestId);
   const report = toReport(prepared);
-  await recordImportAudit(actor, prepared.partner.id, requestId, { rows: report.total, imported, failed, status });
+  await recordImportAudit(actor, prepared.partner.id, requestId, { rows: report.total, imported, failed, status, videos });
   if (status === "active") await refreshCaches();
   return { ...report, okCount: imported, status, imported, failed };
 }
@@ -627,7 +737,7 @@ export function assertPublishRight(actor: ImportActor, status: ImportStatus) {
   }
 }
 
-/** Imports the ready rows in [from, to). A row that fails while saving is reported and the rest carry on. */
+/** Imports the ready rows in [from, to). A row that fails while saving is reported and the rest carry on. `videos` counts the videos attached. */
 export async function importPlanRange(
   prepared: Prepared,
   from: number,
@@ -635,28 +745,30 @@ export async function importPlanRange(
   actor: ImportActor,
   status: ImportStatus,
   requestId: string,
-): Promise<{ imported: number; failed: number }> {
+): Promise<{ imported: number; failed: number; videos: number }> {
   let imported = 0;
   let failed = 0;
+  let videos = 0;
   for (const plan of prepared.plans.slice(from, to)) {
     if (!plan.input) continue;
     try {
-      await importRow(plan.input, prepared.partner.id, status, actor, requestId, prepared.files);
+      await importRow(plan.input, prepared.partner.id, status, actor, requestId, prepared);
       imported += 1;
+      videos += plan.input.videos.length;
     } catch (error) {
       plan.report.ok = false;
       plan.report.errors.push(message(error));
       failed += 1;
     }
   }
-  return { imported, failed };
+  return { imported, failed, videos };
 }
 
 export async function recordImportAudit(
   actor: ImportActor,
   partnerId: string,
   requestId: string,
-  after: { rows: number; imported: number; failed: number; status: ImportStatus; jobId?: string },
+  after: { rows: number; imported: number; failed: number; status: ImportStatus; jobId?: string; videos?: number },
 ) {
   await audit.append({
     actorId: actor.id,
