@@ -80,8 +80,11 @@ function heroVars(settings: HeroSettings, desktop: Photo | null, phone: Photo | 
     "--hero-bg": settings.overlay === "color" ? settings.overlayColor : HERO_CONTAIN_BACKGROUND,
   };
   if (settings.overlay === "color") vars["--hero-overlay"] = overlayRgba(settings.overlayColor, settings.overlayOpacity);
-  if (desktop) vars["--ar-d"] = `${desktop.width} / ${desktop.height}`;
-  if (phone) vars["--ar-m"] = `${phone.width} / ${phone.height}`;
+  // The banner's height follows the photo's shape at the screen width (H6.13). A one-photo banner uses that photo on every screen.
+  const wide = desktop ?? phone;
+  const tall = phone ?? desktop;
+  if (wide) vars["--ar-d-h"] = String(wide.height / wide.width);
+  if (tall) vars["--ar-m-h"] = String(tall.height / tall.width);
   return vars as unknown as CSSProperties;
 }
 

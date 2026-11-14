@@ -391,10 +391,14 @@ input, select, textarea { font-size: 16px; }
 .tk-hero[data-overlay="none"]::after { display: none; }
 .tk-hero[data-overlay="color"]::after { display: block; background: var(--hero-overlay); }
 .tk-hero[data-layout="full"] .tk-hero-photo { position: absolute; top: 0; right: 0; bottom: 0; left: 0; width: 100%; height: 100%; mask-image: none; }
-.tk-hero[data-layout="full"][data-height="auto"][data-ar-d] { min-height: auto; aspect-ratio: var(--ar-d); }
+/* H6.13: the full banner's height follows the photo's shape at the screen width. The text stays inside it, so a taller
+   text block grows the banner instead of being clipped (aspect-ratio would clip it). Capped at 80% of the screen height. */
+.tk-hero[data-layout="full"][data-height="auto"] { min-height: min(calc(100vw * var(--ar-d-h, 0)), 80vh); }
 @media (max-width: 767px) {
-  .tk-hero[data-layout="full"][data-height="auto"][data-ar-m] { min-height: auto; aspect-ratio: var(--ar-m); }
+  .tk-hero[data-layout="full"][data-height="auto"] { min-height: min(calc(100vw * var(--ar-m-h, var(--ar-d-h, 0))), 80vh); }
 }
+/* No photo (a removed banner): the plain theme colour, with the heading and search still shown. */
+.tk-hero[data-layout="full"]:not([data-ar-d]):not([data-ar-m]) { background: var(--primary); }
 .tk-hero[data-height="small"] { min-height: clamp(260px, 36vh, 360px); }
 .tk-hero[data-height="medium"] { min-height: clamp(340px, 50vh, 480px); }
 .tk-hero[data-height="large"] { min-height: clamp(420px, 68vh, 640px); }
@@ -443,8 +447,15 @@ input, select, textarea { font-size: 16px; }
   transition: transform var(--t-fast) var(--ease), box-shadow var(--t-fast) var(--ease);
 }
 .tk-home-card:hover { transform: translateY(-2px); box-shadow: var(--sh-hover); }
-.tk-home-photo { position: relative; display: block; aspect-ratio: 16 / 9; overflow: hidden; background: var(--letterbox); }
-.tk-home-photo img { width: 100%; height: 100%; object-fit: cover; filter: sepia(0.35) saturate(0.75) brightness(1.02); transition: transform var(--t-slow) ease; }
+/* H6.13: the card photo box is reserved by aspect-ratio (no layout shift). 3:2 on desktop and tablet, 4:5 on phones (see the 639 px rule).
+   The image wrapper fills the box; its inline ratio is cleared so the box decides the shape. */
+.tk-home-photo { position: relative; display: block; aspect-ratio: 3 / 2; overflow: hidden; background: var(--letterbox); }
+.tk-home-photo > div { position: absolute; inset: 0; width: 100%; height: 100%; aspect-ratio: auto !important; }
+.tk-home-photo img { width: 100%; height: 100%; object-fit: cover; object-position: center center; filter: sepia(0.35) saturate(0.75) brightness(1.02); transition: transform var(--t-slow) ease; }
+.tk-home-photo[data-focus="top"] img { object-position: center top; }
+.tk-home-photo[data-focus="bottom"] img { object-position: center bottom; }
+.tk-home-photo[data-focus="left"] img { object-position: left center; }
+.tk-home-photo[data-focus="right"] img { object-position: right center; }
 .tk-home-card:hover .tk-home-photo img { transform: scale(1.04); }
 .tk-home-shade {
   position: absolute;
@@ -1516,6 +1527,7 @@ input, select, textarea { font-size: 16px; }
 }
 @media (max-width: 639px) {
   .tk-home-card { flex-basis: 100%; }
+  .tk-home-photo { aspect-ratio: 4 / 5; }
   .tk-home-head { margin-top: 32px; }
   .tk-home-head h2 { font-size: 26px; }
 }

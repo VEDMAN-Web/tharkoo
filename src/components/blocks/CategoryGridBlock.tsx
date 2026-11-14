@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { CalendarDays, Heart, Leaf, MessageSquareHeart, Sparkles, Users, type LucideIcon } from "lucide-react";
 import { SmartImage } from "@/components/ui/SmartImage";
+import { CARD_SIZES, type CardFocus } from "@/lib/layout/cards";
 import { getCategories, getCities, listingCountsByCategoryCity } from "@/lib/queries";
 import { safeHref } from "@/lib/sanitize";
 import { cardFallback } from "@/lib/ui/site-content";
@@ -20,6 +21,8 @@ interface Item {
   blurb?: string;
   citySlugs?: string[];
   image?: { src: string; alt: string } | null;
+  /** Which part of the photo stays in view when the frame crops it (H6.13). Centre when unset. */
+  focus?: CardFocus;
 }
 
 interface Props {
@@ -70,7 +73,7 @@ export async function CategoryGridBlock({ title, intro, items = [], columnsDeskt
           const photo = item.image ? safeHref(item.image.src) : "";
           return (
             <article key={item.categorySlug} className="tk-home-card" data-tk="home-card">
-              <Link href={categoryPath(cat.slug || "")} className="tk-home-photo" prefetch={false}>
+              <Link href={categoryPath(cat.slug || "")} className="tk-home-photo" data-focus={item.focus ?? "center"} prefetch={false}>
                 <SmartImage
                   src={photo || `/placeholders/${cat.slug}/01.webp`}
                   alt={item.image?.alt || `${cardTitle || "Category"} classifieds`}
@@ -78,7 +81,7 @@ export async function CategoryGridBlock({ title, intro, items = [], columnsDeskt
                   category={cat.slug}
                   width={600}
                   height={402}
-                  sizes="300px"
+                  sizes={CARD_SIZES}
                 />
                 <span className="tk-home-shade" />
                 <span className="tk-home-title">
