@@ -2,10 +2,10 @@
 
 const DATE_FORMAT = new Intl.DateTimeFormat("en-IN", { day: "numeric", month: "short", year: "numeric", timeZone: "Asia/Kolkata" });
 
-/** The request button text, for example "Request live video tour · 1 coin". */
+/** The contact card button text, for example "Video call and verify, 1 coin". */
 export function tourRequestLabel(coins: number): string {
   const unit = coins === 1 ? "coin" : "coins";
-  return `Request live video tour · ${coins} ${unit}`;
+  return `Video call and verify, ${coins} ${unit}`;
 }
 
 /** "Video verified · 12 Mar 2027" while the badge is still in force, otherwise null. */
