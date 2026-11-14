@@ -2001,7 +2001,6 @@
         "progress/H5.8b.md"
       ]
     },
-
     "H6.10": {
       "branchPrefix": "haiku/h6.10",
       "globs": [
@@ -2016,7 +2015,6 @@
         "progress/H6.10.md"
       ]
     },
-
     "H6.10b": {
       "branchPrefix": "haiku/h6.10b",
       "globs": [
@@ -2035,7 +2033,6 @@
         "progress/H6.10b.md"
       ]
     },
-
     "H6.9": {
       "branchPrefix": "haiku/h6.9",
       "globs": [
@@ -2464,7 +2461,12 @@
         "src/server/alerts/**",
         "tests/e2e/user*.e2e.ts",
         "progress/H7.6.md",
-        "docs/ownership.json"
+        "docs/ownership.json",
+        "src/app/api/discover/**",
+        "src/app/api/alerts/**",
+        "tests/server/discover/**",
+        "tests/server/notifications/**",
+        "src/server/discover/**"
       ]
     },
     "H7.7": {
