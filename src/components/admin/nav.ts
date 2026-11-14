@@ -63,7 +63,11 @@ function item(
 
 /** Sidebar groups and screens, as in docs/claude/ADMIN_PLAN.md section 4. */
 export const NAV_GROUPS: NavGroup[] = [
-  { id: "overview", label: "Overview", items: [item("dashboard", "Dashboard", "/admin/", "chart", "support")] },
+  {
+    id: "overview",
+    label: "Overview",
+    items: [item("dashboard", "Dashboard", "/admin/", "chart", "support"), item("support", "Support desk", "/admin/support/", "ticket", "support")],
+  },
   {
     id: "pages",
     label: "Pages",
