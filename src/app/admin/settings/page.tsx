@@ -4,7 +4,9 @@ import { CollectionEditor } from "@/components/admin/CollectionEditor";
 import { getStaffFromHeaders } from "@/lib/admin-auth";
 import { idCheckRequired } from "@/server/settings/id-check";
 import { readWatermarkSettings } from "@/server/settings/watermark";
+import { newDesignOn } from "@/server/site-links/new-design";
 import { IdCheckSwitch } from "./IdCheckSwitch";
+import { NewDesignSwitch } from "./NewDesignSwitch";
 import { WatermarkSettings } from "./WatermarkSettings";
 
 export const dynamic = "force-dynamic";
@@ -16,11 +18,15 @@ export default async function Page() {
   const isSuperadmin = identity.roles.includes("superadmin");
   return (
     <AdminShell title="Settings">
+      {isSuperadmin ? <NewDesignSwitch initial={await newDesignOn()} /> : null}
       {isSuperadmin ? <IdCheckSwitch initial={await idCheckRequired()} /> : null}
       {isSuperadmin ? <WatermarkSettings initial={await readWatermarkSettings()} /> : null}
       <p className="mb-3 t-small text-muted">Age gate, cookies, hours and brand. Also on the CMS homepage editor.</p>
       <p className="mb-3 t-small">
         Live video tours: <Link href="/admin/settings/video-tours/">switch on per category and set the coin price</Link>.
+      </p>
+      <p className="mb-3 t-small">
+        Support chat text and buttons: <Link href="/admin/settings/chat/">edit the live chat</Link>. Header and footer: <Link href="/admin/menus/">menus and footer</Link>.
       </p>
       <CollectionEditor model="Site" title="Settings" />
     </AdminShell>
