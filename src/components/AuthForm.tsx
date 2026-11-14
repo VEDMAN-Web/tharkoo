@@ -6,6 +6,7 @@ import { Suspense, useMemo, useState } from "react";
 import { api, fieldErrors, type ApiError, friendlyError, isStaffRole, safeNext } from "@/lib/ui/api";
 import { loginPath, registerPath } from "@/lib/urls";
 import { useUrlPaths } from "./UrlPaths";
+import { PhoneLogin } from "./PhoneLogin";
 
 type Mode = "login" | "register" | "forgot" | "reset" | "verify" | "expired";
 
@@ -246,6 +247,7 @@ function AuthFormInner({ mode }: { mode: Mode }) {
           <Link href={withNext(registerPath(paths))} style={{ color: "var(--accent)" }}>Create account</Link>
         </p>
       ) : null}
+      {mode === "login" ? <PhoneLogin next={next} /> : null}
       {mode === "register" ? (
         <p className="t-small" style={{ textAlign: "center" }}>
           Already registered? <Link href={withNext(loginPath(paths))} style={{ color: "var(--accent)" }}>Log in</Link>

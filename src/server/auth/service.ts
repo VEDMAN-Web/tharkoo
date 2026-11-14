@@ -25,6 +25,7 @@ import {
 import { registerModel } from "@/server/models/register";
 import { isAtLeast18, parseDateOnly } from "@/server/shared/age";
 import { hashIp, randomToken, safeEqual, sha256 } from "@/server/shared/crypto";
+import { PhoneIdentity, normalizePhone } from "@/server/auth/phone";
 
 const VERIFY_MS = 1000 * 60 * 60 * 24;
 const RESET_MS = 1000 * 60 * 60;
@@ -216,6 +217,14 @@ export async function loginUser(input: {
   if (!user || !matches) throw new UnauthorizedError("Email or password is incorrect");
   if (user.status !== "active") throw new ForbiddenError("Account is not active");
   if (!user.emailVerifiedAt) throw new ForbiddenError("Verify your email before signing in");
+  return createSession(user, input);
+}
+
+/** Starts a session for an active account. An older session from the same browser is revoked. */
+export async function createSession(
+  user: UserDoc & { _id: Types.ObjectId },
+  input: { userAgent?: string | null; ip?: string; existingToken?: string },
+) {
   if (input.existingToken) {
     await Session.updateOne(
       { tokenHash: hashToken(input.existingToken), revokedAt: null },
@@ -331,9 +340,11 @@ async function phoneEnabled() {
   return Boolean(flag);
 }
 
-export async function startPhone(userId: string, phone: string) {
+export async function startPhone(userId: string, rawPhone: string) {
   await ready();
   if (!(await phoneEnabled())) throw new ForbiddenError("Phone verification is not available");
+  const phone = normalizePhone(rawPhone);
+  if (!phone) throw new ValidationError("Invalid request", { phone: ["Enter a valid phone number"] });
   const code = String(randomInt(100000, 1000000));
   const doc = await PhoneChallenge.create({
     userId,
@@ -365,6 +376,13 @@ export async function confirmPhone(userId: string, challengeId: string, code: st
   }
   doc.confirmedAt = new Date();
   await doc.save();
+  // A confirmed number becomes this account's login number. Another account already holding it is a conflict.
+  try {
+    await PhoneIdentity.updateOne({ userId }, { $set: { phone: doc.phone } }, { upsert: true });
+  } catch (error) {
+    if (isDuplicateKey(error)) throw new ConflictError("That phone number is already linked to another account");
+    throw error;
+  }
   return { phoneVerified: true as const };
 }
 

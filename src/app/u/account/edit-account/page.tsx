@@ -1,4 +1,5 @@
 import { AccountSettings } from "@/components/account/AccountTools";
+import { PhoneLinkCard } from "@/components/PhoneLinkCard";
 import { pageMetadata } from "@/lib/ui/meta";
 
 export const metadata = pageMetadata({
@@ -9,5 +10,10 @@ export const metadata = pageMetadata({
 });
 
 export default function Page() {
-  return <AccountSettings />;
+  return (
+    <>
+      <AccountSettings />
+      <PhoneLinkCard />
+    </>
+  );
 }

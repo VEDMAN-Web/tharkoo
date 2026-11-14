@@ -15,6 +15,7 @@ import {
   updateFinanceSettings,
 } from "@/server/wallet";
 import { assertFinanceStaff } from "@/server/wallet/settings";
+import { handlePayoutRequest } from "@/server/wallet/payout-api";
 import { z } from "zod";
 
 const coinCheckoutSchema = z.object({
@@ -81,6 +82,8 @@ async function dispatch(request: Request) {
       );
     }
   }
+  const payout = await handlePayoutRequest(request, requestId, { id: user.user.id, roles: user.user.roles }, segments, clientKey(request.headers));
+  if (payout) return payout;
   throw new NotFoundError("Not found");
 }
 
