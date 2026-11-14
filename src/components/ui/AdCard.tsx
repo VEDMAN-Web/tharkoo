@@ -5,6 +5,7 @@ import { ArrowUp, Calendar, Check, MapPin, Phone } from "lucide-react";
 import type { ListingDoc } from "@/lib/models";
 import { displayTitle, prettyPlace } from "@/lib/format";
 import { listingPhotos } from "@/lib/media";
+import { PriceTag } from "../search/PriceTag";
 import { PhotoSwipe } from "./PhotoSwipe";
 import { api, friendlyError } from "@/lib/ui/api";
 import { adPath } from "@/lib/urls";
@@ -91,6 +92,7 @@ export function AdCard({
       <a className="tk-card-link" href={href}>
         <span className="tk-card-body">
           <span className="tk-card-title">{title}</span>
+          <PriceTag price={ad.price} />
           {ad.description ? <span className="tk-card-desc">{ad.description}</span> : null}
           {ad.trust?.length ? (
             <span className="tk-trust">

@@ -126,7 +126,7 @@ describe("buying coins", () => {
     const user = await account("amt@example.test");
     const pack = await CreditPack.create({ credits: 5, price: 500, status: "active" });
     const purchase = await buy(user, String(pack._id));
-    const response = await webhook({ eventId: "e", providerPaymentId: purchase.providerPaymentId, status: "succeeded", amount: 1 });
+    const response = await webhook({ eventId: "e", providerPaymentId: purchase.providerPaymentId, status: "succeeded", amount: 1, currency: "INR" });
     expect(response.status).toBe(409);
     expect(await walletBalance(user.id)).toBe(0);
   });
@@ -140,25 +140,51 @@ describe("buying coins", () => {
     expect((await CoinPurchase.findById(failed.id))?.status).toBe("failed");
 
     const paid = await buy(user, String(pack._id), "paid-key-00001");
-    await webhook({ eventId: "p1", providerPaymentId: paid.providerPaymentId, status: "succeeded" });
+    await webhook({ eventId: "p1", providerPaymentId: paid.providerPaymentId, status: "succeeded", amount: 500, currency: "INR" });
     expect(await walletBalance(user.id)).toBe(5);
-    await webhook({ eventId: "r1", providerPaymentId: paid.providerPaymentId, status: "refunded" });
-    await webhook({ eventId: "r2", providerPaymentId: paid.providerPaymentId, status: "refunded" });
+    await webhook({ eventId: "r1", providerPaymentId: paid.providerPaymentId, status: "refunded", amount: 500, currency: "INR" });
+    await webhook({ eventId: "r2", providerPaymentId: paid.providerPaymentId, status: "refunded", amount: 500, currency: "INR" });
     expect(await walletBalance(user.id)).toBe(0);
     expect((await CoinPurchase.findById(paid.id))?.status).toBe("refunded");
     expect(await trialBalance()).toBe(0);
   });
 
-  it("does not refund coins that were already spent, and keeps the purchase paid", async () => {
+  it("parks a refund for spent coins as refund_blocked, audits it, and answers 200 so the provider stops retrying", async () => {
     const user = await account("spent@example.test");
     const pack = await CreditPack.create({ credits: 1, price: 100, status: "active" });
     const paid = await buy(user, String(pack._id));
-    await webhook({ eventId: "p1", providerPaymentId: paid.providerPaymentId, status: "succeeded" });
+    await webhook({ eventId: "p1", providerPaymentId: paid.providerPaymentId, status: "succeeded", amount: 100, currency: "INR" });
     const { debitWallet } = await import("@/server/billing/ledger");
     await debitWallet({ userId: user.id, amount: 1, refType: "spend", refId: "s1", requestId: "r" });
-    const refund = await webhook({ eventId: "r1", providerPaymentId: paid.providerPaymentId, status: "refunded" });
-    expect(refund.status).toBe(402);
-    expect((await CoinPurchase.findById(paid.id))?.status).toBe("succeeded");
+    const refund = await webhook({ eventId: "r1", providerPaymentId: paid.providerPaymentId, status: "refunded", amount: 100, currency: "INR" });
+    expect(refund.status).toBe(200);
+    expect((await CoinPurchase.findById(paid.id))?.status).toBe("refund_blocked");
+    expect(await walletBalance(user.id)).toBe(0);
+    expect(await AuditEvent.countDocuments({ action: "coins.refund.blocked", targetId: paid.id })).toBe(1);
+    expect(await trialBalance()).toBe(0);
+    const retry = await webhook({ eventId: "r2", providerPaymentId: paid.providerPaymentId, status: "refunded", amount: 100, currency: "INR" });
+    expect(retry.status).toBe(200);
+    expect(await AuditEvent.countDocuments({ action: "coins.refund.blocked" })).toBe(1);
+  });
+
+  it("refuses a succeeded or refunded event with no amount or currency, with 400 and an audit row", async () => {
+    const user = await account("noamount@example.test");
+    const pack = await CreditPack.create({ credits: 5, price: 500, status: "active" });
+    const purchase = await buy(user, String(pack._id));
+    const missing = await webhook({ eventId: "n1", providerPaymentId: purchase.providerPaymentId, status: "succeeded" });
+    const noCurrency = await webhook({ eventId: "n2", providerPaymentId: purchase.providerPaymentId, status: "succeeded", amount: 500 });
+    expect([missing.status, noCurrency.status]).toEqual([400, 400]);
+    expect(await walletBalance(user.id)).toBe(0);
+    expect(await AuditEvent.countDocuments({ action: "coins.webhook.rejected", "after.reason": "missing-amount" })).toBe(2);
+  });
+
+  it("accepts a valid signature on the coin path even with no Origin header", async () => {
+    const user = await account("noorigin@example.test");
+    const pack = await CreditPack.create({ credits: 2, price: 200, status: "active" });
+    const purchase = await buy(user, String(pack._id));
+    const response = await webhook({ eventId: "o1", providerPaymentId: purchase.providerPaymentId, status: "succeeded", amount: 200, currency: "INR" });
+    expect(response.status).toBe(200);
+    expect(await walletBalance(user.id)).toBe(2);
   });
 
   it("lists packs as coins and snapshots the TDS and GST in force", async () => {
@@ -189,7 +215,7 @@ describe("buying coins", () => {
     await creditWallet({ userId: user.id, amount: 7, refType: "pack", refId: "old", requestId: "r" });
     const pack = await CreditPack.create({ credits: 1, price: 100, status: "active" });
     const paid = await buy(user, String(pack._id));
-    await webhook({ eventId: "p1", providerPaymentId: paid.providerPaymentId, status: "succeeded" });
+    await webhook({ eventId: "p1", providerPaymentId: paid.providerPaymentId, status: "succeeded", amount: 100, currency: "INR" });
     expect(await walletBalance(user.id)).toBe(8);
   });
 });

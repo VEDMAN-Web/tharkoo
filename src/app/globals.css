@@ -660,6 +660,8 @@ input, select, textarea { font-size: 16px; }
 }
 .tk-card:hover { transform: translateY(-2px); box-shadow: var(--sh-hover); }
 .tk-card[data-variant="highlight"] { background: var(--tint-strong); }
+/* The gold title (#8a6416) on the highlight tint is 4.49:1; this deeper gold is 5.4:1. */
+.tk-card[data-variant="highlight"] .tk-card-title { color: #7a5812; }
 .tk-card[data-variant="supertop"], .tk-card[data-variant="star"] { border: 1.5px solid var(--gold); }
 .tk-card-link { display: flex; min-width: 0; flex: 1; color: inherit; }
 .tk-card-photo {
@@ -1558,9 +1560,9 @@ input, select, textarea { font-size: 16px; }
 }
 
 /* H1.8c light motion. Everything here is off with prefers-reduced-motion (MotionInit does not run). */
-.tk-rv:not(.is-in) { opacity: 0; transform: translateY(8px); }
-.tk-rv { transition: opacity 300ms ease-out var(--tk-d, 0ms), transform 300ms ease-out var(--tk-d, 0ms); }
-.tk-rv.is-in { opacity: 1; }
+/* Reveal moves the card up; it does not fade it, so content is never measured at opacity 0 (axe contrast). */
+.tk-rv:not(.is-in) { transform: translateY(8px); }
+.tk-rv { transition: transform 300ms ease-out var(--tk-d, 0ms); }
 .tk-fade-img { transition: opacity 200ms ease-out; }
 .tk-motion .tk-fade-img:not(.is-loaded) { opacity: 0; }
 .tk-card:hover .tk-cc-slide img { transform: scale(1.03); }

@@ -3,6 +3,8 @@
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { api, fieldErrors, friendlyError } from "@/lib/ui/api";
+import { loadPostSubcategories, type PostSubcategory } from "@/server/categories/actions";
+import { VideoUploader } from "@/components/ad/VideoUploader";
 import { draftToForm, needsIdCheck, validatePost, type SavedDraft } from "@/lib/ui/post-form";
 import { loginPath, postAdPath } from "@/lib/urls";
 import { useUrlPaths } from "./UrlPaths";
@@ -32,6 +34,8 @@ export function PostWizard({ copy = POST_COPY_DEFAULTS }: { copy?: PostCopy }) {
   const [cities, setCities] = useState<Place[]>([]);
   const [districts, setDistricts] = useState<Place[]>([]);
   const [categoryId, setCategoryId] = useState("");
+  const [subsByCategory, setSubsByCategory] = useState<Record<string, PostSubcategory[]>>({});
+  const [subcategoryId, setSubcategoryId] = useState("");
   const [cityId, setCityId] = useState("");
   const [districtId, setDistrictId] = useState("");
   const [address, setAddress] = useState("");
@@ -60,6 +64,7 @@ export function PostWizard({ copy = POST_COPY_DEFAULTS }: { copy?: PostCopy }) {
   const [hydrated, setHydrated] = useState(true);
 
   const category = categories.find((item) => item._id === categoryId);
+  const subOptions = subsByCategory[categoryId] ?? [];
   const fields = useMemo(() => wizardFields(category?.fields), [category]);
   const ageField = fields.find((field) => field.key === "age" || field.type === "number" && /age/i.test(field.label));
   const extra = fields.filter((field) => field.key !== "age" && !/age/i.test(field.label));
@@ -82,6 +87,7 @@ export function PostWizard({ copy = POST_COPY_DEFAULTS }: { copy?: PostCopy }) {
           if (res.ok && res.data) {
             const form = draftToForm(res.data);
             setCategoryId(form.categoryId);
+            setSubcategoryId(form.subcategoryId);
             setCityId(form.cityId);
             setDistrictId(form.districtId);
             setAddress(form.address);
@@ -110,6 +116,7 @@ export function PostWizard({ copy = POST_COPY_DEFAULTS }: { copy?: PostCopy }) {
     api<{ categories: Cat[] }>("/api/categories").then((res) => {
       if (res.ok) setCategories(res.data.categories || []);
     });
+    loadPostSubcategories().then(setSubsByCategory).catch(() => setSubsByCategory({}));
     api<{ locations: Place[] }>("/api/locations?type=city").then((res) => {
       if (res.ok) setCities(res.data.locations || []);
     });
@@ -134,6 +141,8 @@ export function PostWizard({ copy = POST_COPY_DEFAULTS }: { copy?: PostCopy }) {
   function validate() {
     const next = validatePost({
       categoryId,
+      subcategoryId,
+      needsSubcategory: subOptions.length > 0,
       cityId,
       nickname,
       title,
@@ -170,6 +179,7 @@ export function PostWizard({ copy = POST_COPY_DEFAULTS }: { copy?: PostCopy }) {
       categoryId,
       title: title.trim(),
       description: text.trim(),
+      ...(subcategoryId ? { subcategoryId } : {}),
       ...(cityId ? { cityId } : {}),
       ...(districtId ? { districtId } : {}),
     };
@@ -358,12 +368,20 @@ export function PostWizard({ copy = POST_COPY_DEFAULTS }: { copy?: PostCopy }) {
       {step === 1 ? (
         <>
           <Group title="Your Ad">
-            <SelectField id="category" label="Select category" required value={categoryId} error={errors.category} onChange={(value) => setCategoryId(value)}>
+            <SelectField id="category" label="Select category" required value={categoryId} error={errors.category} onChange={(value) => { setCategoryId(value); setSubcategoryId(""); }}>
               <option value="">Select category</option>
               {categories.map((cat) => (
                 <option key={cat._id} value={cat._id}>{cat.name}</option>
               ))}
             </SelectField>
+            {subOptions.length > 0 ? (
+              <SelectField id="subcategory" label="Select sub-category" required value={subcategoryId} error={errors.subcategory} onChange={setSubcategoryId}>
+                <option value="">Select sub-category</option>
+                {subOptions.map((sub) => (
+                  <option key={sub.id} value={sub.id}>{sub.name}</option>
+                ))}
+              </SelectField>
+            ) : null}
             <SelectField id="city" label="Select city" required value={cityId} error={errors.city} onChange={(value) => { setCityId(value); setDistrictId(""); }}>
               <option value="">Select city</option>
               {cities.map((city) => (
@@ -479,6 +497,7 @@ export function PostWizard({ copy = POST_COPY_DEFAULTS }: { copy?: PostCopy }) {
             </div>
             {photos.length ? <p className="t-small" data-tk="photo-count">{photos.length} photo{photos.length === 1 ? "" : "s"} saved</p> : null}
             {photoNote ? <p data-tk="photo-note">{photoNote}</p> : steps.photos.help ? <p className="t-small">{steps.photos.help}</p> : null}
+            <VideoUploader listingId={draftId} />
           </div>
           <div style={{ display: "flex", justifyContent: "space-between", marginTop: 16 }}>
             <button type="button" className="tk-btn tk-btn-outline-gold" onClick={() => remember(draftId, 1)}>{steps.photos.backLabel}</button>

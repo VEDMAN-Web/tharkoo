@@ -2,6 +2,9 @@ export type PostField = { key: string; label: string; required?: boolean };
 
 export type PostDraftInput = {
   categoryId: string;
+  /** Needed only when the category has sub-categories. */
+  subcategoryId?: string;
+  needsSubcategory?: boolean;
   cityId: string;
   nickname: string;
   title: string;
@@ -19,6 +22,7 @@ export type PostDraftInput = {
 export function validatePost(input: PostDraftInput) {
   const next: Record<string, string> = {};
   if (!input.categoryId) next.category = "Please, fill in this field";
+  if (input.needsSubcategory && !input.subcategoryId) next.subcategory = "Please, fill in this field";
   if (!input.cityId) next.city = "Please, fill in this field";
   if (!input.nickname.trim()) next.nickname = "Name / Nickname is required";
   const alnum = (input.title.match(/[a-z0-9]/gi) || []).length;
@@ -40,6 +44,7 @@ export type SavedDraft = {
   title?: string | null;
   description?: string | null;
   categoryId?: string | null;
+  subcategoryId?: string | null;
   cityId?: string | null;
   districtId?: string | null;
   attributes?: Record<string, unknown> | null;
@@ -59,6 +64,7 @@ export function draftToForm(row: SavedDraft) {
     title: row.title || "",
     text: row.description || "",
     categoryId: row.categoryId || "",
+    subcategoryId: row.subcategoryId || "",
     cityId: row.cityId || "",
     districtId: row.districtId || "",
     age: attributes.age === undefined || attributes.age === null ? "" : String(attributes.age),

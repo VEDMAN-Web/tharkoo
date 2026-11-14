@@ -1,4 +1,4 @@
-import { InternalError, PolicyViolationError, UnauthorizedError } from "@/server/http";
+import { InternalError, PolicyViolationError } from "@/server/http";
 import { hmacSha256, randomToken, safeEqual } from "@/server/shared/crypto";
 
 export interface ProviderOrder {
@@ -51,11 +51,23 @@ export function createCheckoutOrder(input: { amount: number; currency: string; r
   };
 }
 
-export function assertWebhookSignature(request: Request, raw: string) {
-  const expected = process.env.PAYMENT_WEBHOOK_SECRET?.trim() ?? "";
-  const given =
-    request.headers.get("x-payment-signature") || request.headers.get("x-razorpay-signature") || "";
-  if (!expected || !given || !safeEqual(given, hmacSha256(expected, raw))) {
-    throw new UnauthorizedError("Unauthorized");
-  }
+/** A webhook whose timestamp is further than this (seconds) from now is refused, so a captured request cannot be replayed later. */
+export const WEBHOOK_TOLERANCE_SECONDS = 300;
+
+export type WebhookRefusal = "missing" | "stale" | "bad-signature";
+
+/** What the provider signs: the timestamp and the raw body together, so neither can be changed alone. */
+export function webhookSignature(secret: string, timestamp: number, raw: string) {
+  return hmacSha256(secret, `${timestamp}.${raw}`);
+}
+
+/** Returns why a webhook must be refused, or null when its signature and timestamp are valid. */
+export function webhookRejection(request: Request, raw: string, nowMs = Date.now()): WebhookRefusal | null {
+  const secret = process.env.PAYMENT_WEBHOOK_SECRET?.trim() ?? "";
+  const given = request.headers.get("x-payment-signature")?.trim() ?? "";
+  const stamp = request.headers.get("x-payment-timestamp")?.trim() ?? "";
+  if (!secret || !given || !/^\d{1,12}$/.test(stamp)) return "missing";
+  const timestamp = Number(stamp);
+  if (Math.abs(nowMs / 1000 - timestamp) > WEBHOOK_TOLERANCE_SECONDS) return "stale";
+  return safeEqual(given, webhookSignature(secret, timestamp, raw)) ? null : "bad-signature";
 }

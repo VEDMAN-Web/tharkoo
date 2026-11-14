@@ -1,7 +1,8 @@
 import { AuditRepository } from "@/server/audit";
 import { json } from "@/server/billing/http";
 import { handle, requestIdFrom } from "@/server/http";
-import { applyCoinEvent, verifyWebhook } from "@/server/wallet";
+import { webhookRejection } from "@/server/billing";
+import { applyCoinEvent } from "@/server/wallet";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -15,7 +16,7 @@ const audit = new AuditRepository();
 async function dispatch(request: Request) {
   const requestId = requestIdFrom(request);
   const raw = await request.text();
-  const refusal = verifyWebhook(request.headers, raw);
+  const refusal = webhookRejection(request, raw);
   if (refusal) {
     await audit.append({
       actorId: null,

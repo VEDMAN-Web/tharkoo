@@ -10,6 +10,7 @@ const REASONS: [string, string][] = [
   ["fake", "Fake or misleading ad"],
   ["duplicate", "Duplicate ad"],
   ["wrong_contact", "Wrong or dead contact details"],
+  ["video", "A video on this ad"],
   ["other", "Something else"],
 ];
 

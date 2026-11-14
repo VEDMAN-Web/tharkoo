@@ -1,7 +1,9 @@
 import { Schema, type Types } from "mongoose";
 import { registerModel } from "@/server/models/register";
 
-export type CoinPurchaseStatus = "pending" | "succeeded" | "failed" | "refunded";
+/** refund_blocked: the provider refunded a purchase whose coins were already spent. Finance resolves it by hand. */
+export const COIN_PURCHASE_STATUSES = ["pending", "succeeded", "failed", "refunded", "refund_blocked"] as const;
+export type CoinPurchaseStatus = (typeof COIN_PURCHASE_STATUSES)[number];
 
 export interface CoinPurchaseDoc {
   _id?: Types.ObjectId;
@@ -33,7 +35,7 @@ const purchaseSchema = new Schema<CoinPurchaseDoc>(
     coins: { type: Number, required: true },
     amount: { type: Number, required: true },
     currency: { type: String, required: true },
-    status: { type: String, enum: ["pending", "succeeded", "failed", "refunded"], default: "pending" },
+    status: { type: String, enum: COIN_PURCHASE_STATUSES, default: "pending" },
     tdsPercent: { type: Number, default: 0 },
     gstPercent: { type: Number, default: 0 },
     eventId: { type: String },

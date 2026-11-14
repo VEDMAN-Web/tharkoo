@@ -24,6 +24,7 @@ import { placePath, tagPath } from "@/lib/urls";
 import { withUrlSeo, urlHeading } from "@/lib/seo/override";
 import { fallbackLanding, visibleHeading } from "@/lib/seo/landing";
 import { getPaths, publicTags } from "@/server/urls/service";
+import { SubHub, subHubMetadata } from "./sub-hub";
 
 type Props = {
   params: Promise<{ category: string; location: string; district: string }>;
@@ -50,6 +51,8 @@ export async function generateMetadata({ params, searchParams }: Props): Promise
     getSite(),
   ]);
   const dist = districtRows.find((row) => row.slug === district);
+  // A last address part that is not a district may be a sub-category: /{category}/{city}/{sub}/.
+  if (cat && city && !dist) return subHubMetadata({ category, location, district }, Math.max(1, Number(sp.page) || 1));
   if (!cat || !city || !dist || isCityAlias(city.name, dist.name)) return {};
   const distMin = districtMinimum(await getIndexing(), cat, city.slug || location);
   const vars = {
@@ -103,6 +106,7 @@ export default async function DistrictPage({ params, searchParams }: Props) {
     getDistricts(location),
   ]);
   const dist = districtRows.find((row) => row.slug === district);
+  if (cat && city && !dist) return <SubHub params={{ category, location, district }} page={page} />;
   if (!cat || !city || !dist) notFound();
   const distMin = districtMinimum(await getIndexing(), cat, city.slug || location);
   if (isCityAlias(city.name, dist.name)) permanentRedirect(placePath(cat.slug || category, city.slug || location));

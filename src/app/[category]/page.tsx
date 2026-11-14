@@ -8,6 +8,8 @@ import { adPath, categoryPath, placePath } from "@/lib/urls";
 import { fillTemplate } from "@/lib/seo";
 import { getIndexing, isCategoryOn } from "@/server/seo/indexing";
 import { withUrlSeo, urlHeading } from "@/lib/seo/override";
+import { hubCopy } from "@/lib/seo-site";
+import { withSeoDefaults } from "@/lib/ui/meta-defaults";
 import { Breadcrumbs } from "@/components/Breadcrumbs";
 import { JsonLd, breadcrumbJsonLd } from "@/lib/jsonld";
 import { faqPage, itemListNode } from "@/lib/seo/schema";
@@ -20,6 +22,7 @@ import { deviceClass } from "@/components/blocks/device";
 import { listingHeading } from "@/lib/layout/listing";
 import { hourSeed, orderFeed } from "@/components/feedOrder";
 import { fallbackLanding, mergeLanding, type LandingCopy } from "@/lib/seo/landing";
+import { SubcategoryChips } from "./SubcategoryChips";
 
 type Props = { params: Promise<{ category: string }> };
 
@@ -34,7 +37,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const description = fillTemplate(seo?.description || "Browse {category} on Tharkoo: listings from people across Indian cities. Filter by city and district, see photos and contact posters directly.", vars);
   const path = categoryPath(cat.slug || category);
   const on = isCategoryOn(await getIndexing(), cat.slug || category);
-  return withUrlSeo(path, { title, description, path, index: on });
+  return withSeoDefaults(await withUrlSeo(path, { title, description, path, index: on }));
 }
 
 export default async function CategoryHub({ params }: Props) {
@@ -60,6 +63,7 @@ export default async function CategoryHub({ params }: Props) {
     fallbackLanding({ category: cat.name || category, count: feed.total, site: site.name }),
     (site as { landings?: Record<string, Partial<LandingCopy>> }).landings?.[`${category}|india`],
   );
+  const hub = await hubCopy(categoryPath(cat.slug || category), { intro: copy.intro || fillTemplate(seo?.intro || "", vars), faqs: copy.faqs });
   const allowed = new Set(counts.filter((row) => row._id.categorySlug === category && row.n > 0).map((row) => row._id.citySlug));
   const listed = allowed.size ? cities.filter((city) => allowed.has(city.slug || "")) : cities;
   const ads = [
@@ -94,8 +98,8 @@ export default async function CategoryHub({ params }: Props) {
           )}
         </div>
       </section>
-      <p className="tk-seo-foot">{copy.intro || fillTemplate(seo?.intro || "", vars)}</p>
-      {copy.faqs.map((item) => (
+      <p className="tk-seo-foot">{hub.intro}</p>
+      {hub.faqs.map((item) => (
         <p key={item.q} className="tk-seo-foot">
           <strong>{item.q}</strong> {item.a}
         </p>
@@ -121,7 +125,7 @@ export default async function CategoryHub({ params }: Props) {
               position: index + 1,
             })),
           }),
-          faqPage(copy.faqs),
+          faqPage(hub.faqs),
         ]}
       />
       <div className="tk-banner">
@@ -140,6 +144,7 @@ export default async function CategoryHub({ params }: Props) {
           return block.id === inFeedId ? null : wrap(block.id, block.devices, layout.nodes[block.id] ?? null);
         })}
       </div>
+      <SubcategoryChips category={cat.slug || category} heading={t("listing.hub.browseBySub")} />
     </UiTextProvider>
   );
 }

@@ -56,3 +56,14 @@ export function photoLimit(promoted: boolean) {
   if (Number.isInteger(parsed) && parsed >= 0) return parsed;
   return promoted ? 10 : 1;
 }
+
+/** Ad videos ("reels"): up to 2 per ad, mp4, webm or mov, 10 MB and 30 seconds each. */
+export const VIDEO_MAX_BYTES = 10 * 1024 * 1024;
+export const VIDEO_MAX_SECONDS = 30;
+export const VIDEO_MAX_PER_AD = 2;
+export const VIDEO_TYPES = ["video/mp4", "video/webm", "video/quicktime"] as const;
+export const VIDEO_FORMAT_MIME: Record<string, string> = { mp4: "video/mp4", webm: "video/webm", mov: "video/quicktime" };
+export const VIDEO_RULE_LINE = "Videos: up to 2, max 10 MB and 30 seconds each.";
+/** An ad's videos are hidden once this many different people have an open report on them. */
+export const VIDEO_HIDE_REPORTS = 3;
+export const VIDEO_RULE_MESSAGE = "Videos must be mp4, webm or mov, up to 10 MB and 30 seconds each, with up to 2 per ad";

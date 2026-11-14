@@ -2,7 +2,7 @@ import mongoose from "mongoose";
 import { connectDb } from "@/lib/db";
 import { AuditRepository } from "@/server/audit";
 import { objectId } from "@/server/billing/ledger";
-import { ConflictError, NotFoundError, ValidationError } from "@/server/http";
+import { ConflictError, NotFoundError, PaymentRequiredError, ValidationError } from "@/server/http";
 import { SYSTEM_OWNER } from "@/server/ledger/accounts";
 import { postTransaction } from "@/server/ledger/service";
 import { CreditPack } from "@/server/models";
@@ -150,6 +150,18 @@ export async function applyCoinEvent(raw: unknown, requestId: string) {
   const parsed = providerEventSchema.safeParse(raw);
   if (!parsed.success) throw new ValidationError("Invalid request", { body: ["Invalid event"] });
   const event: ProviderEvent = parsed.data;
+  if (event.status !== "failed" && (event.amount === undefined || !event.currency)) {
+    await audit.append({
+      actorId: null,
+      actorType: "system",
+      action: "coins.webhook.rejected",
+      targetType: "webhook",
+      targetId: "coins",
+      after: { reason: "missing-amount", status: event.status },
+      requestId,
+    });
+    throw new ValidationError("Invalid request", { body: ["amount and currency are required"] });
+  }
   const purchase = await CoinPurchase.findOne({ providerPaymentId: event.providerPaymentId }).lean();
   if (!purchase) throw new NotFoundError("Not found");
   if (event.amount !== undefined && event.amount !== purchase.amount) throw new ConflictError("Amount does not match");
@@ -202,8 +214,39 @@ export async function applyCoinEvent(raw: unknown, requestId: string) {
       actorType: "system",
     });
   } catch (error) {
-    await CoinPurchase.updateOne({ _id: purchase._id, status: "refunded", eventId: event.eventId }, { $set: { status: "succeeded" } });
-    throw error;
+    if (!(error instanceof PaymentRequiredError)) {
+      await CoinPurchase.updateOne({ _id: purchase._id, status: "refunded", eventId: event.eventId }, { $set: { status: "succeeded" } });
+      throw error;
+    }
+    // The coins were already spent. Park the purchase for manual handling in Finance and answer 200, so the provider stops retrying.
+    await CoinPurchase.updateOne({ _id: purchase._id, status: "refunded", eventId: event.eventId }, { $set: { status: "refund_blocked" } });
+    await audit.append({
+      actorId: null,
+      actorType: "system",
+      action: "coins.refund.blocked",
+      targetType: "coin_purchase",
+      targetId: id,
+      after: { coins: purchase.coins, reason: "coins-spent" },
+      requestId,
+    });
   }
   return { received: true as const };
+}
+
+/** Purchases whose refund could not be applied because the coins were already spent. Finance handles these by hand. */
+export async function listRefundBlockedPurchases(limit = 100) {
+  await connectDb();
+  const rows = await CoinPurchase.find({ status: "refund_blocked" })
+    .sort({ updatedAt: -1, _id: -1 })
+    .limit(limit)
+    .lean();
+  return rows.map((row) => ({
+    id: String(row._id),
+    userId: String(row.userId),
+    coins: row.coins,
+    amount: row.amount,
+    currency: row.currency,
+    eventId: row.eventId ?? null,
+    updatedAt: row.updatedAt ? new Date(row.updatedAt).toISOString() : null,
+  }));
 }

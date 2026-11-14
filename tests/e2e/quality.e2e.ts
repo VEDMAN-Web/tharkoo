@@ -59,12 +59,7 @@ test.describe("Plus: accessibility (axe, serious and critical)", () => {
   }
 
   // Known findings, listed in lane-d-bugs.txt. Remove an entry when its bug is fixed.
-  const KNOWN: Record<string, string> = {
-    "listing@phone-390": "BUG axe: color-contrast on the TOP badge (span[data-tier=top]) on the phone listing page.",
-    "ad@phone-390": "BUG axe: color-contrast on .tk-card-title of the top-styled card in More like this.",
-    "ad@desktop-1440": "BUG axe: color-contrast on .tk-card-title of the top-styled card in More like this.",
-    "admin@desktop-1440": "BUG axe: color-contrast on the active admin sidebar link label.",
-  };
+  const KNOWN: Record<string, string> = {};
   function knownBug(name: string) {
     const reason = KNOWN[`${name}@${test.info().project.name}`];
     if (reason) test.fixme(true, reason);

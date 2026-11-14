@@ -23,9 +23,12 @@ import { getIndexing, hubMinimum } from "@/server/seo/indexing";
 import { fillTemplate } from "@/lib/seo";
 import { placePath, tagPath } from "@/lib/urls";
 import { withUrlSeo, urlHeading } from "@/lib/seo/override";
+import { hubCopy } from "@/lib/seo-site";
+import { withSeoDefaults } from "@/lib/ui/meta-defaults";
 import { getPaths, publicTags } from "@/server/urls/service";
 import { fallbackLanding, mergeLanding, visibleHeading, type LandingCopy } from "@/lib/seo/landing";
 import { isCityAlias } from "@/lib/seo/district-alias";
+import { SubcategoryChips } from "../SubcategoryChips";
 
 type Props = {
   params: Promise<{ category: string; location: string }>;
@@ -85,13 +88,15 @@ export async function generateMetadata({ params, searchParams }: Props): Promise
   if (pageNo > 1) query.set("page", String(pageNo));
   const suffix = query.toString();
   const path = `${placePath(cat.slug || category, loc.slug || location)}${suffix ? `?${suffix}` : ""}`;
-  return withUrlSeo(placePath(cat.slug || category, loc.slug || location), {
-    title,
-    description,
-    path,
-    index: !thin && pageNo === 1 && !(filtered && feed.total === 0),
-    follow: true,
-  });
+  return withSeoDefaults(
+    await withUrlSeo(placePath(cat.slug || category, loc.slug || location), {
+      title,
+      description,
+      path,
+      index: !thin && pageNo === 1 && !(filtered && feed.total === 0),
+      follow: true,
+    }),
+  );
 }
 
 export default async function LocationPage({ params, searchParams }: Props) {
@@ -152,6 +157,7 @@ export default async function LocationPage({ params, searchParams }: Props) {
     updated: feed.items[0]?.publishedAt ? new Date(feed.items[0].publishedAt).toLocaleDateString("en-IN", { day: "numeric", month: "long", year: "numeric" }) : undefined,
   });
   const texts = await textOverrides();
+  const hub = await hubCopy(canonicalPath, { intro: copy.intro || fillTemplate(seo?.intro || "", vars), faqs: copy.faqs });
   const t = makeT(texts);
   const filtered = Boolean(sp.photos || sp.verified);
   const siblingLinks = [
@@ -172,13 +178,14 @@ export default async function LocationPage({ params, searchParams }: Props) {
   const layout = await resolveListingLayout({ path: canonicalPath, category: cat.slug || category, vars });
 
   return (
+    <>
     <ListingPageView
       layout={layout}
       texts={texts}
       h1={heading || visibleHeading(fillTemplate(seo?.h1 || "", vars), copy.h1)}
       h2={fillTemplate(seo?.h2 || "", vars)}
-      intro={copy.intro || fillTemplate(seo?.intro || "", vars)}
-      faqs={copy.faqs}
+      intro={hub.intro}
+      faqs={hub.faqs}
       popular={tags.slice(0, 6).map((tag) => ({ href: tagPath(paths, cat.slug || category, tag.slug), label: `${cat.name} ${tag.label}` }))}
       footer={fillTemplate(seo?.footer || "", vars)}
       crumbs={[
@@ -204,5 +211,7 @@ export default async function LocationPage({ params, searchParams }: Props) {
       photos={sp.photos === "1"}
       verified={sp.verified === "1"}
     />
+    {loc.kind === "city" ? <SubcategoryChips category={cat.slug || category} city={loc.slug || location} /> : null}
+    </>
   );
 }

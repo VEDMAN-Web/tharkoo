@@ -10,6 +10,7 @@ const contactSchema = z.object({
 
 export const listingCreateBodySchema = z.object({
   categoryId: idSchema,
+  subcategoryId: idSchema.optional(),
   title: z.string().trim().min(1).max(140).optional(),
   description: z.string().trim().min(1).max(5000).optional(),
   stateId: idSchema.optional(),
@@ -22,6 +23,7 @@ export const listingPatchBodySchema = z.discriminatedUnion("stage", [
   z.object({
     stage: z.literal("basics"),
     categoryId: idSchema.optional(),
+    subcategoryId: idSchema.optional(),
     title: z.string().trim().min(1).max(140).optional(),
     description: z.string().trim().min(1).max(5000).optional(),
     stateId: idSchema.optional(),

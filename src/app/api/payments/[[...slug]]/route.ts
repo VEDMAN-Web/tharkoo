@@ -2,9 +2,8 @@ import { z } from "zod";
 import { clientKey } from "@/lib/rate-limit";
 import { SESSION_COOKIE, assertOrigin, readCookie } from "@/server/auth/http";
 import { requireUser } from "@/server/auth/service";
-import { applyWebhook, checkoutPack, refundPayment } from "@/server/billing";
+import { applyWebhook, checkoutPack, recordWebhookRejection, refundPayment, webhookRejection } from "@/server/billing";
 import { json, readJson, segmentsOf } from "@/server/billing/http";
-import { assertWebhookSignature } from "@/server/billing/provider";
 import { NotFoundError, handle, parseInput, requestIdFrom } from "@/server/http";
 import { idSchema } from "@/server/shared/schemas/common";
 import { paymentWebhookBodySchema, refundBodySchema } from "@/server/shared/schemas/commerce";
@@ -23,7 +22,14 @@ async function dispatch(request: Request) {
   const path = segmentsOf(request, "/api/payments").join("/");
   if (request.method === "POST" && path === "webhook") {
     const raw = await request.text();
-    assertWebhookSignature(request, raw);
+    const refusal = webhookRejection(request, raw);
+    if (refusal) {
+      await recordWebhookRejection(refusal, requestId);
+      return Response.json(
+        { ok: false, data: null, error: { code: "INVALID_SIGNATURE", message: "Invalid webhook signature" } },
+        { status: 400, headers: { "x-request-id": requestId } },
+      );
+    }
     let body: unknown;
     try {
       body = raw ? JSON.parse(raw) : undefined;

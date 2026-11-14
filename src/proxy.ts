@@ -6,7 +6,10 @@ import { consumeRateLimit } from "@/server/auth/rate-limit";
 import { userFromToken } from "@/server/auth/service";
 import { countRedirectHit, decideRequest } from "@/server/urls/service";
 
-const STATIC_EXT = /\.(?:svg|png|jpg|jpeg|webp|avif|ico|woff2|css|js|map|txt|xml)$/i;
+/** Exact paths a payment provider posts to. Only these skip the Origin check, and each one verifies its own signature. */
+const PROVIDER_WEBHOOK_PATHS = new Set(["/api/payments/webhook", "/api/payments/coins/webhook"]);
+
+const STATIC_EXT =/\.(?:svg|png|jpg|jpeg|webp|avif|ico|woff2|css|js|map|txt|xml)$/i;
 
 function requestLimit(name: string, fallback: number) {
   const value = Number(process.env[name]);
@@ -118,7 +121,9 @@ export async function proxy(req: NextRequest) {
     }
   }
   const cronPost = req.method === "POST" && path.startsWith("/api/cron/");
-  if (!cronPost && !originAllowed(req)) {
+  // A payment provider posts without an Origin header. Each webhook route checks its own signature and timestamp instead.
+  const providerPost = req.method === "POST" && PROVIDER_WEBHOOK_PATHS.has("/" + path.split("/").filter(Boolean).join("/"));
+  if (!cronPost && !providerPost && !originAllowed(req)) {
     return NextResponse.json(
       { ok: false, data: null, error: { code: "FORBIDDEN", message: "Origin is not allowed" } },
       { status: 403 },

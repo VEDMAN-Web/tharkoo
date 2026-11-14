@@ -1638,7 +1638,10 @@
         "tests/server/auth/**",
         "src/app/api/auth/**",
         "docs/ownership.json",
-        "progress/H5.6.md"
+        "progress/H5.6.md",
+        "src/app/globals.css",
+        "tests/e2e/account.e2e.ts",
+        "tests/e2e/quality.e2e.ts"
       ]
     },
     "H6.1": {
@@ -1763,6 +1766,115 @@
         "tests/e2e/**",
         "docs/ownership.json",
         "progress/H6.7.md"
+      ]
+    },
+    "H5.7": {
+      "branchPrefix": "haiku/h5.7",
+      "globs": [
+        "src/lib/ui/site-content.ts",
+        "src/components/admin/nav.ts",
+        "src/components/admin/layout-editor/**",
+        "tests/server/ui/**",
+        "tests/server/admin/role-access.test.ts",
+        "docs/ownership.json",
+        "progress/H5.7.md"
+      ]
+    },
+    "H5.4b": {
+      "branchPrefix": "haiku/h5.4b",
+      "globs": [
+        "src/components/SiteShell.tsx",
+        "src/app/layout.tsx",
+        "src/components/AdDetail.tsx",
+        "src/components/ui/Gallery.tsx",
+        "src/app/globals.css",
+        "src/app/ad/**",
+        "src/components/blocks/blocks.css",
+        "tests/server/ui/**",
+        "tests/e2e/quality.e2e.ts",
+        "docs/ownership.json",
+        "progress/H5.4b.md"
+      ]
+    },
+    "H5.1d": {
+      "branchPrefix": "haiku/h5.1d",
+      "globs": [
+        "src/proxy.ts",
+        "src/server/billing/**",
+        "src/app/api/payments/**",
+        "tests/server/billing/**",
+        "tests/e2e/helpers.ts",
+        "tests/e2e/money.e2e.ts",
+        "docs/ownership.json",
+        "progress/H5.1d.md"
+      ]
+    },
+    "H6.2b": {
+      "branchPrefix": "haiku/h6.2b",
+      "globs": [
+        "src/server/models/listing.ts",
+        "src/server/models/catalog.ts",
+        "src/server/listings/service.ts",
+        "src/server/listings/import.ts",
+        "src/app/sitemap/**",
+        "src/server/seo/**",
+        "src/server/seo/templates.ts",
+        "src/lib/ui/text.ts",
+        "tests/server/listings/**",
+        "tests/server/categories/**",
+        "tests/server/seo/**",
+        "docs/ownership.json",
+        "progress/H6.2b.md"
+      ]
+    },
+    "H6.2c": {
+      "branchPrefix": "haiku/h6.2c",
+      "globs": [
+        "src/lib/seo/sitemaps.ts",
+        "src/lib/seo/landing.ts",
+        "src/app/[category]/page.tsx",
+        "src/app/[category]/SubcategoryChips.tsx",
+        "src/app/[category]/[location]/[district]/sub-hub.tsx",
+        "src/lib/ui/text.ts",
+        "tests/server/seo/**",
+        "tests/server/categories/**",
+        "docs/ownership.json",
+        "progress/H6.2c.md"
+      ]
+    },
+    "H5.8": {
+      "branchPrefix": "haiku/h5.8",
+      "globs": [
+        "src/server/seo/**",
+        "src/app/seo/**",
+        "src/app/admin/seo/**",
+        "src/app/[category]/**",
+        "src/app/cities/**",
+        "src/lib/seo*.ts",
+        "src/lib/ui/meta*.ts",
+        "src/server/search/**",
+        "src/components/SearchResults*.tsx",
+        "src/components/search/**",
+        "tests/server/seo/**",
+        "tests/server/search/**",
+        "tests/e2e/seo-center.e2e.ts",
+        "docs/ownership.json",
+        "progress/H5.8.md"
+      ]
+    },
+    "H5.8b": {
+      "branchPrefix": "haiku/h5.8b",
+      "globs": [
+        "src/components/ui/AdCard.tsx",
+        "src/lib/models.ts",
+        "src/components/blocks/HomeLayout.tsx",
+        "src/components/HomeBlocks.tsx",
+        "src/lib/seo/override.ts",
+        "src/app/layout.tsx",
+        "tests/server/ui/**",
+        "tests/server/seo/**",
+        "docs/ownership.json",
+        "progress/H5.8b.md"
       ]
     }
   }
