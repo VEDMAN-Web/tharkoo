@@ -386,6 +386,33 @@ input, select, textarea { font-size: 16px; }
 }
 .tk-hero-search:hover { box-shadow: var(--sh-hover); }
 .tk-hero-search svg { width: 20px; height: 20px; color: var(--primary); flex: none; }
+/* H6.9 hero looks. Attributes come from HeroBlock. A block saved before H6.9 sets none of the full-banner
+   attributes, so it keeps the split hero above (the gradient, the right-hand photo, the white text). */
+.tk-hero[data-overlay="none"]::after { display: none; }
+.tk-hero[data-overlay="color"]::after { display: block; background: var(--hero-overlay); }
+.tk-hero[data-layout="full"] .tk-hero-photo { position: absolute; top: 0; right: 0; bottom: 0; left: 0; width: 100%; height: 100%; mask-image: none; }
+.tk-hero[data-layout="full"][data-height="auto"][data-ar-d] { min-height: auto; aspect-ratio: var(--ar-d); }
+@media (max-width: 767px) {
+  .tk-hero[data-layout="full"][data-height="auto"][data-ar-m] { min-height: auto; aspect-ratio: var(--ar-m); }
+}
+.tk-hero[data-height="small"] { min-height: clamp(260px, 36vh, 360px); }
+.tk-hero[data-height="medium"] { min-height: clamp(340px, 50vh, 480px); }
+.tk-hero[data-height="large"] { min-height: clamp(420px, 68vh, 640px); }
+.tk-hero[data-height="full"] { min-height: 100vh; min-height: 100svh; }
+.tk-hero[data-y="top"] { align-items: flex-start; justify-content: flex-start; }
+.tk-hero[data-y="middle"] { align-items: center; justify-content: center; }
+.tk-hero[data-y="bottom"] { align-items: flex-end; justify-content: flex-end; }
+.tk-hero[data-y="top"] .tk-hero-copy, .tk-hero[data-y="middle"] .tk-hero-copy { padding: 40px 0; }
+.tk-hero[data-x="center"] .tk-hero-copy { align-items: center; text-align: center; }
+.tk-hero[data-x="right"] .tk-hero-copy { align-items: flex-end; text-align: right; }
+.tk-hero[data-tone="dark"], .tk-hero[data-tone="dark"] h1 { color: #1d1a14; }
+.tk-hero[data-shadow="on"] h1, .tk-hero[data-shadow="on"] .tk-hero-sub { text-shadow: 0 1px 12px rgba(0, 0, 0, 0.55); }
+.tk-hero[data-shadow="on"][data-tone="dark"] h1, .tk-hero[data-shadow="on"][data-tone="dark"] .tk-hero-sub { text-shadow: 0 1px 12px rgba(255, 255, 255, 0.6); }
+.tk-hero[data-fit="contain"] { background: var(--hero-bg, #1d1a14); }
+.tk-hero-link { position: absolute; inset: 0; z-index: 2; }
+.tk-hero-link:focus-visible { outline: 3px solid #fff; outline-offset: -6px; }
+/* A heading that is hidden on screen (showHeadline off) stays in the page for search engines and screen readers. */
+.tk-hero .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; }
 .tk-home-post { display: none; }
 
 .tk-home-head { text-align: center; margin-top: 48px; }

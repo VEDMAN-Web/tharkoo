@@ -19,13 +19,13 @@ export function FieldsForm({ fields, value, onChange }: { fields: readonly Field
   return (
     <div className="lay-fields">
       {fields.map((field) => (
-        <FieldInput key={field.key} field={field} value={value[field.key]} onChange={(next) => onChange({ ...value, [field.key]: next })} />
+        <FieldInput key={field.key} field={field} value={value[field.key]} props={value} onChange={(next) => onChange({ ...value, [field.key]: next })} />
       ))}
     </div>
   );
 }
 
-function FieldInput({ field, value, onChange }: { field: Field; value: unknown; onChange: (next: unknown) => void }) {
+function FieldInput({ field, value, props, onChange }: { field: Field; value: unknown; props: Props; onChange: (next: unknown) => void }) {
   switch (field.kind) {
     case "text":
       return (
@@ -48,7 +48,14 @@ function FieldInput({ field, value, onChange }: { field: Field; value: unknown; 
         </div>
       );
     case "image":
-      return <ImagePicker label={field.label} value={(value as ImageRef | null | undefined) ?? null} onChange={onChange} />;
+      return (
+        <div className="lay-image">
+          <ImagePicker label={field.label} value={(value as ImageRef | null | undefined) ?? null} onChange={onChange} />
+          {field.help ? <p className="adm-field-help">{field.help}</p> : null}
+        </div>
+      );
+    case "color":
+      return <ColorField field={field} value={value} onChange={onChange} />;
     case "link":
       return <LinkField label={field.label} value={asRecord(value)} onChange={onChange} />;
     case "number":
@@ -56,7 +63,7 @@ function FieldInput({ field, value, onChange }: { field: Field; value: unknown; 
     case "select":
       return <SelectField field={field} value={value} onChange={onChange} />;
     case "boolean":
-      return <Toggle label={field.label} checked={typeof value === "boolean" ? value : field.def} onChange={onChange} />;
+      return <Toggle label={field.label} checked={typeof value === "boolean" ? value : typeof field.def === "function" ? field.def(props) : field.def} onChange={onChange} />;
     case "stringList":
       return <StringList field={field} value={Array.isArray(value) ? asStrings(value) : [...(field.def ?? [])]} onChange={onChange} />;
     case "multiSelect":
@@ -64,6 +71,19 @@ function FieldInput({ field, value, onChange }: { field: Field; value: unknown; 
     case "items":
       return <ItemsField field={field} value={asRows(value)} onChange={onChange} />;
   }
+}
+
+const HEX6 = /^#[0-9a-fA-F]{6}$/;
+
+function ColorField({ field, value, onChange }: { field: Extract<Field, { kind: "color" }>; value: unknown; onChange: (next: unknown) => void }) {
+  const id = useId();
+  return (
+    <div className="adm-field">
+      <label className="adm-field-label" htmlFor={id}>{field.label}</label>
+      <input id={id} type="color" className="lay-color" value={typeof value === "string" && HEX6.test(value) ? value.toLowerCase() : field.def} onChange={(event) => onChange(event.target.value)} />
+      {field.help ? <p className="adm-field-help">{field.help}</p> : null}
+    </div>
+  );
 }
 
 function LinkField({ label, value, onChange }: { label: string; value: Props; onChange: (next: unknown) => void }) {

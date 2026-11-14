@@ -3,16 +3,19 @@
  * Keep in step with src/server/layout/blocks.ts (the server validates everything again on save).
  */
 
+import { HERO_OVERLAY_COLOR, HERO_OVERLAY_MAX_OPACITY, HERO_OVERLAY_OPACITY, heroOverlayOn } from "@/lib/layout/hero";
+
 export type Props = Record<string, unknown>;
 
 export type Field =
   | { kind: "text"; key: string; label: string; max: number; required?: boolean; multiline?: boolean; help?: string }
   | { kind: "richText"; key: string; label: string; max: number; required?: boolean }
-  | { kind: "image"; key: string; label: string }
+  | { kind: "image"; key: string; label: string; help?: string }
+  | { kind: "color"; key: string; label: string; def: string; help?: string }
   | { kind: "link"; key: string; label: string }
   | { kind: "number"; key: string; label: string; min: number; max: number; def?: number }
   | { kind: "select"; key: string; label: string; options: readonly (readonly [string, string])[]; def: string }
-  | { kind: "boolean"; key: string; label: string; def: boolean }
+  | { kind: "boolean"; key: string; label: string; def: boolean | ((props: Props) => boolean) }
   | { kind: "stringList"; key: string; label: string; max: number; itemMax: number; itemLabel: string; def?: readonly string[] }
   | { kind: "multiSelect"; key: string; label: string; options: readonly string[]; def: readonly string[] }
   | { kind: "items"; key: string; label: string; max: number; itemName: string; titleKey: string; fields: Field[] };
@@ -24,6 +27,8 @@ export interface BlockMeta {
   max?: number;
   defaults: Props;
   fields: Field[];
+  /** Blocks with a live preview in the editor. */
+  preview?: "hero";
 }
 
 const text = (key: string, label: string, max: number, extra: { required?: boolean; multiline?: boolean; help?: string } = {}): Field => ({
@@ -33,9 +38,9 @@ const text = (key: string, label: string, max: number, extra: { required?: boole
   max,
   ...extra,
 });
-const image = (key: string, label: string): Field => ({ kind: "image", key, label });
+const image = (key: string, label: string, help?: string): Field => ({ kind: "image", key, label, ...(help ? { help } : {}) });
 const link = (key: string, label: string): Field => ({ kind: "link", key, label });
-const toggle = (key: string, label: string, def: boolean): Field => ({ kind: "boolean", key, label, def });
+const toggle = (key: string, label: string, def: boolean | ((props: Props) => boolean)): Field => ({ kind: "boolean", key, label, def });
 const num = (key: string, label: string, min: number, max: number, def?: number): Field => ({ kind: "number", key, label, min, max, def });
 const choice = (key: string, label: string, options: readonly (readonly [string, string])[], def: string): Field => ({
   kind: "select",
@@ -50,19 +55,34 @@ const linkListFields: Field[] = [title, num("max", "How many to show", 1, 30, 10
 export const BLOCK_META: Record<string, BlockMeta> = {
   hero: {
     label: "Hero",
-    hint: "Big top section with a heading and search",
+    hint: "Big top section with a heading, sub-heading and search. The preview below shows phone and desktop widths.",
     deletable: true,
     max: 1,
     defaults: { heading: "Find what you need" },
+    preview: "hero",
     fields: [
-      text("heading", "Heading", 120, { required: true }),
+      text("heading", "Heading", 120, { required: true, help: "This is the page heading. It stays on the page for search engines even when it is hidden." }),
       text("subheading", "Sub-heading", 300, { multiline: true }),
-      image("imageDesktop", "Image for desktop"),
-      image("imageMobile", "Image for phone"),
       text("searchPlaceholder", "Search box hint", 80),
       link("primaryCta", "Main button"),
       link("secondaryCta", "Second button"),
-      choice("overlay", "Dark layer over image", [["none", "None"], ["light", "Light"], ["dark", "Dark"]], "light"),
+      choice("layout", "Layout", [["split", "Split: photo on the right"], ["full", "Full banner: photo behind the whole hero"]], "split"),
+      image("imageDesktop", "Image for desktop", "Recommended 1920 x 640 px. JPG, PNG or WebP, ideally under 2 MB."),
+      image("imageMobile", "Image for phone (optional)", "Recommended 1080 x 1350 px. Leave empty to use the desktop image on phones."),
+      choice("height", "Height", [["auto", "From the image shape"], ["small", "Small"], ["medium", "Medium"], ["large", "Large"], ["full", "Full screen"]], "auto"),
+      choice("fit", "Image fit", [["cover", "Fill the area (edges may be cropped)"], ["contain", "Show the whole image (bars may show)"]], "cover"),
+      choice("focus", "Focal point", [["left", "Left"], ["center", "Centre"], ["right", "Right"], ["top", "Top"], ["bottom", "Bottom"]], "top"),
+      toggle("overlayOn", "Dark layer over image", heroOverlayOn),
+      { kind: "color", key: "overlayColor", label: "Layer colour", def: HERO_OVERLAY_COLOR, help: "Used when the dark layer is on." },
+      num("overlayOpacity", "Layer opacity (%)", 0, HERO_OVERLAY_MAX_OPACITY, HERO_OVERLAY_OPACITY),
+      toggle("showHeadline", "Show heading", true),
+      toggle("showSubtext", "Show sub-heading", true),
+      toggle("showSearch", "Show search box", true),
+      choice("textAlign", "Text position: side", [["left", "Left"], ["center", "Centre"], ["right", "Right"]], "left"),
+      choice("textVertical", "Text position: height", [["top", "Top"], ["middle", "Middle"], ["bottom", "Bottom"]], "bottom"),
+      choice("textTone", "Text colour", [["light", "Light"], ["dark", "Dark"]], "light"),
+      toggle("textShadow", "Text shadow (for readability)", false),
+      link("bannerLink", "Whole-banner link (only when heading, sub-heading and search are all hidden)"),
     ],
   },
   categoryGrid: {

@@ -3,6 +3,7 @@
 import { TextField } from "../ui/TextField";
 import { Toggle } from "../ui/Toggle";
 import { FieldsForm } from "./FieldControls";
+import { HeroPreview } from "./HeroPreview";
 import { metaFor, type Props } from "./fields";
 
 export type Device = "mobile" | "desktop";
@@ -146,6 +147,7 @@ export function BlockCard({
               </label>
             </div>
           </fieldset>
+          {meta.preview === "hero" ? <HeroPreview props={block.props} /> : null}
           <FieldsForm fields={meta.fields} value={block.props} onChange={(props) => patch({ props })} />
         </div>
       ) : null}
