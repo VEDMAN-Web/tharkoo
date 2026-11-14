@@ -20,6 +20,7 @@ import { adPath, categoryPath, placePath } from "@/lib/urls";
 import { withUrlSeo, urlHeading } from "@/lib/seo/override";
 import { plain } from "@/lib/plain";
 import { getPaths } from "@/server/urls/service";
+import { videoTourOffer } from "@/server/tours/offer";
 
 type Props = { params: Promise<{ slug: string }> };
 
@@ -107,11 +108,13 @@ export default async function AdPage({ params }: Props) {
     expiresAt?: Date;
   } | null;
   const listingId = row?._id ? String(row._id) : undefined;
-  const [cat, related, videos] = await Promise.all([
+  const [cat, related, videos, tourOffer] = await Promise.all([
     getCategory(ad.categorySlug || ""),
     getRelated(ad, 6),
     listingId ? listAdVideos(listingId).catch(() => []) : Promise.resolve([]),
+    listingId ? videoTourOffer(listingId) : Promise.resolve(null),
   ]);
+  const tour = listingId && tourOffer ? { listingId, coins: tourOffer.coins } : null;
   const cover = safePhoto(ad.photos?.[0]);
   const paths = await getPaths();
   const publicAd = adPath(paths, ad.slug || slug);
@@ -147,7 +150,7 @@ export default async function AdPage({ params }: Props) {
   return (
     <>
       <JsonLd data={structured ? [breadcrumbJsonLd(crumbs), structured] : [breadcrumbJsonLd(crumbs)]} />
-      <AdDetail ad={plain(ad)} categoryName={catName} related={plain(related)} listingId={listingId} crumbs={crumbs} shareUrl={shareUrl} heading={heading} />
+      <AdDetail ad={plain(ad)} categoryName={catName} related={plain(related)} listingId={listingId} crumbs={crumbs} shareUrl={shareUrl} heading={heading} tour={tour} />
       <section className="tk-container" aria-label="Chat" style={{ paddingBottom: 16, maxWidth: 480 }}>
         <LazyChat listingId={listingId} />
       </section>
