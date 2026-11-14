@@ -45,6 +45,9 @@ test.describe("My photos & videos", () => {
     const otherTitle = `Chair ${Date.now()}`;
 
     const adId = await draftAd(owner.api, base, title);
+    // Two photos need a promoted ad (a free ad allows one).
+    const promoted = await withLocalDb((db) => db.collection("listings").updateOne({ _id: new ObjectId(adId) }, { $set: { badges: ["featured"] } }));
+    expect(promoted?.modifiedCount).toBe(1);
     const cover = await uploadPhoto(owner.api, base, adId);
     const extra = await uploadPhoto(owner.api, base, adId);
     await uploadPhoto(owner.api, base, undefined, "id_document");

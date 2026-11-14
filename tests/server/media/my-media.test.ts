@@ -2,7 +2,7 @@ import mongoose from "mongoose";
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 import { patchListing } from "@/server/listings/service";
 import { listDraftMedia, listMyMedia, LIVE_COVER_MESSAGE, removeMyMedia } from "@/server/media/mine";
-import { AuditEvent, Listing, MediaAsset } from "@/server/models";
+import { AuditEvent, Listing, MediaAsset, type MediaStatus } from "@/server/models";
 import { NotFoundError } from "@/server/http";
 import { clearMemoryMongo, connectMemoryMongo, disconnectMemoryMongo } from "../../setup/mongo";
 
@@ -12,12 +12,12 @@ function owner() {
   return new mongoose.Types.ObjectId();
 }
 
-async function adFor(ownerId: mongoose.Types.ObjectId, status = "draft", title = "Desk") {
+async function adFor(ownerId: mongoose.Types.ObjectId, status: "draft" | "active" = "draft", title = "Desk") {
   const doc = await Listing.create({ ownerId, categoryId, title, description: "A wooden desk", status });
   return doc;
 }
 
-async function photo(ownerId: mongoose.Types.ObjectId, listingId: mongoose.Types.ObjectId | null, status: string, name: string, createdAt = new Date()) {
+async function photo(ownerId: mongoose.Types.ObjectId, listingId: mongoose.Types.ObjectId | null, status: MediaStatus, name: string, createdAt = new Date()) {
   const doc = await MediaAsset.create({
     ownerId,
     listingId: listingId ?? undefined,
@@ -171,7 +171,7 @@ describe("remove", () => {
 
     await removeMyMedia(alice.toString(), extra._id.toString(), "req-extra");
     const after = await Listing.findById(ad._id);
-    expect(after?.mediaIds.map(String)).toEqual([cover._id.toString()]);
+    expect(after?.mediaIds?.map(String)).toEqual([cover._id.toString()]);
     expect(after?.coverMediaId?.toString()).toBe(cover._id.toString());
     expect((await MediaAsset.findById(extra._id))?.status).toBe("deleted");
     const audit = await AuditEvent.findOne({ action: "media.remove", requestId: "req-extra" });
@@ -187,7 +187,7 @@ describe("remove", () => {
 
     await removeMyMedia(alice.toString(), first._id.toString(), "req-draft");
     const after = await Listing.findById(ad._id);
-    expect(after?.mediaIds.map(String)).toEqual([second._id.toString()]);
+    expect(after?.mediaIds?.map(String)).toEqual([second._id.toString()]);
     expect(after?.coverMediaId?.toString()).toBe(second._id.toString());
   });
 });
