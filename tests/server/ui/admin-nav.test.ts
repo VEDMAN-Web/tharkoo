@@ -10,8 +10,8 @@ function labels(roles: string[]) {
 }
 
 describe("admin sidebar by role", () => {
-  it("shows support only the Dashboard (Users is admin-only, per BUG 8)", () => {
-    expect(labels(["support"])).toEqual(["Dashboard"]);
+  it("shows support only the Dashboard and the Support desk (Users is admin-only, per BUG 8)", () => {
+    expect(labels(["support"])).toEqual(["Dashboard", "Support desk"]);
     expect(labels(["admin"])).toContain("Users");
     expect(labels(["seo_editor"])).not.toContain("Users");
   });
