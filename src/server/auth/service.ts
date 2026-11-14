@@ -23,6 +23,7 @@ import {
   type UserDoc,
 } from "@/server/models";
 import { registerModel } from "@/server/models/register";
+import { codeOnlyLoginEnabled } from "@/server/auth/code-only";
 import { isAtLeast18, parseDateOnly } from "@/server/shared/age";
 import { hashIp, randomToken, safeEqual, sha256 } from "@/server/shared/crypto";
 import { PhoneIdentity, normalizePhone } from "@/server/auth/phone";
@@ -149,6 +150,7 @@ export function stagingAutoVerifyDecision(): "on" | "off" {
 
 export async function registerUser(input: RegisterInput) {
   await ready();
+  if (await codeOnlyLoginEnabled()) throw new ForbiddenError("Passwords are off. Sign up with a one-time code.");
   const dateOfBirth = parseDateOnly(input.dateOfBirth);
   if (!dateOfBirth) throw new ValidationError("Invalid request", { dateOfBirth: ["Invalid date"] });
   if (!isAtLeast18(dateOfBirth)) throw new VerificationRequiredError("You must be 18 or older");
@@ -214,7 +216,9 @@ export async function loginUser(input: {
   const user = await User.findOne({ email }).select("+passwordHash");
   const passwordHash = user?.get("passwordHash") ?? (await dummyPasswordHash());
   const matches = await bcrypt.compare(input.password, String(passwordHash));
-  if (!user || !matches) throw new UnauthorizedError("Email or password is incorrect");
+  // Code-only mode: a password never signs in a user or seller. The answer is the same as a wrong password.
+  const passwordAllowed = isStaffRole(user?.roles ?? []) || !(await codeOnlyLoginEnabled());
+  if (!user || !matches || !passwordAllowed) throw new UnauthorizedError("Email or password is incorrect");
   if (user.status !== "active") throw new ForbiddenError("Account is not active");
   if (!user.emailVerifiedAt) throw new ForbiddenError("Verify your email before signing in");
   return createSession(user, input);
@@ -276,7 +280,7 @@ export async function requireUser(token: string | undefined) {
 export async function forgotPassword(email: string) {
   await ready();
   const user = await User.findOne({ email: email.toLowerCase(), status: "active" });
-  if (user) {
+  if (user && (isStaffRole(user.roles) || !(await codeOnlyLoginEnabled()))) {
     const token = randomToken();
     await PasswordResetToken.create({
       userId: user._id,
@@ -300,6 +304,10 @@ export async function resetPassword(token: string, password: string) {
     expiresAt: { $gt: new Date() },
   });
   if (!doc) throw new NotFoundError("Reset link is invalid or expired");
+  const target = await User.findById(doc.userId).select("roles").lean();
+  if ((await codeOnlyLoginEnabled()) && !isStaffRole(target?.roles ?? [])) {
+    throw new NotFoundError("Reset link is invalid or expired");
+  }
   doc.usedAt = new Date();
   await doc.save();
   await User.updateOne({ _id: doc.userId }, { $set: { passwordHash: await bcrypt.hash(password, rounds()) } });
