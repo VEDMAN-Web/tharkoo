@@ -14,12 +14,22 @@ import {
   type ManageResult,
 } from "./manage-actions";
 
-export type ManagedCategory = { id: string; slug: string; name: string; enabled: boolean; seoIntro: string };
+export type ManagedCategory = { id: string; slug: string; name: string; enabled: boolean; seoIntro: string; kind: string };
 export type ManagedSub = { id: string; categoryId: string; slug: string; name: string; icon: string; enabled: boolean; seoIntro: string };
-type Draft = { name: string; slug: string; icon: string; seoIntro: string; enabled: boolean };
+type Draft = { name: string; slug: string; icon: string; seoIntro: string; enabled: boolean; kind: string };
 type Removing = { kind: "category" | "subcategory"; id: string; name: string; slug: string };
 
-const EMPTY: Draft = { name: "", slug: "", icon: "", seoIntro: "", enabled: true };
+/** Kinds an admin chooses from. There is no preselected value: a category needs one before it can be saved (H6.5). */
+const KIND_OPTIONS: { value: string; label: string }[] = [
+  { value: "goods", label: "Goods" },
+  { value: "property", label: "Property" },
+  { value: "vehicle", label: "Vehicle" },
+  { value: "job", label: "Job" },
+  { value: "service", label: "Service" },
+  { value: "people", label: "People (no live video tours)" },
+];
+
+const EMPTY: Draft = { name: "", slug: "", icon: "", seoIntro: "", enabled: true, kind: "" };
 const grid = { display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(160px, 1fr))", gap: 10, alignItems: "end" } as const;
 
 function Field({ label, value, onChange, wide }: { label: string; value: string; onChange: (next: string) => void; wide?: boolean }) {
@@ -31,12 +41,31 @@ function Field({ label, value, onChange, wide }: { label: string; value: string;
   );
 }
 
-function Editor({ draft, onChange, withIcon, actions }: { draft: Draft; onChange: (next: Draft) => void; withIcon: boolean; actions: React.ReactNode }) {
+function KindField({ value, onChange }: { value: string; onChange: (next: string) => void }) {
+  return (
+    <label className="adm-field">
+      <span className="adm-field-label">Kind (required)</span>
+      <select className="adm-input" value={value} onChange={(event) => onChange(event.target.value)}>
+        <option value="" disabled>
+          Choose a kind
+        </option>
+        {KIND_OPTIONS.map((option) => (
+          <option key={option.value} value={option.value}>
+            {option.label}
+          </option>
+        ))}
+      </select>
+    </label>
+  );
+}
+
+function Editor({ draft, onChange, withIcon, withKind, actions }: { draft: Draft; onChange: (next: Draft) => void; withIcon: boolean; withKind?: boolean; actions: React.ReactNode }) {
   return (
     <div style={grid}>
       <Field label="Name" value={draft.name} onChange={(name) => onChange({ ...draft, name })} />
       <Field label="Slug" value={draft.slug} onChange={(slug) => onChange({ ...draft, slug })} />
       {withIcon ? <Field label="Icon (name)" value={draft.icon} onChange={(icon) => onChange({ ...draft, icon })} /> : null}
+      {withKind ? <KindField value={draft.kind} onChange={(kind) => onChange({ ...draft, kind })} /> : null}
       <Toggle checked={draft.enabled} onChange={(enabled) => onChange({ ...draft, enabled })} label={draft.enabled ? "Visible" : "Hidden"} />
       <Field label="SEO intro" value={draft.seoIntro} onChange={(seoIntro) => onChange({ ...draft, seoIntro })} wide />
       <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>{actions}</div>
@@ -61,7 +90,9 @@ export function CategoriesManager({ categories, subs }: { categories: ManagedCat
   const mine = category ? subs.filter((row) => row.categoryId === category.id) : [];
   const draftOf = (id: string, base: Draft) => drafts[id] ?? base;
   const patch = (id: string, next: Draft) => setDrafts((current) => ({ ...current, [id]: next }));
-  const categoryBase = category ? { name: category.name, slug: category.slug, icon: "", seoIntro: category.seoIntro, enabled: category.enabled } : EMPTY;
+  const categoryBase: Draft = category
+    ? { name: category.name, slug: category.slug, icon: "", seoIntro: category.seoIntro, enabled: category.enabled, kind: category.kind }
+    : EMPTY;
 
   async function done(result: ManageResult, ok: string, after?: () => void) {
     if (!result.ok) {
@@ -114,8 +145,9 @@ export function CategoriesManager({ categories, subs }: { categories: ManagedCat
           draft={fresh}
           onChange={setFresh}
           withIcon={false}
+          withKind
           actions={
-            <button type="button" className="adm-btn" disabled={!fresh.name.trim()} onClick={async () => done(await createCategoryAction(fresh), "Category added.", () => setFresh(EMPTY))}>
+            <button type="button" className="adm-btn" disabled={!fresh.name.trim() || !fresh.kind} onClick={async () => done(await createCategoryAction(fresh), "Category added.", () => setFresh(EMPTY))}>
               Add category
             </button>
           }
@@ -129,9 +161,15 @@ export function CategoriesManager({ categories, subs }: { categories: ManagedCat
             draft={draftOf(category.id, categoryBase)}
             onChange={(next) => patch(category.id, next)}
             withIcon={false}
+            withKind
             actions={
               <>
-                <button type="button" className="adm-btn" onClick={async () => done(await updateCategoryAction(category.id, draftOf(category.id, categoryBase)), "Saved.")}>
+                <button
+                  type="button"
+                  className="adm-btn"
+                  disabled={!draftOf(category.id, categoryBase).kind}
+                  onClick={async () => done(await updateCategoryAction(category.id, draftOf(category.id, categoryBase)), "Saved.")}
+                >
                   Save
                 </button>
                 <button type="button" className="adm-btn adm-btn-danger" onClick={() => setRemoving({ kind: "category", id: category.id, name: category.name, slug: category.slug })}>
@@ -140,7 +178,7 @@ export function CategoriesManager({ categories, subs }: { categories: ManagedCat
               </>
             }
           />
-          <p className="adm-field-help">A category that has ads cannot be removed. Switch it to Hidden instead.</p>
+          <p className="adm-field-help">A category that has ads cannot be removed. Switch it to Hidden instead. A category with no kind cannot be saved until you choose one.</p>
         </section>
       ) : null}
 
@@ -156,7 +194,7 @@ export function CategoriesManager({ categories, subs }: { categories: ManagedCat
             />
           ) : null}
           {mine.map((row) => {
-            const base: Draft = { name: row.name, slug: row.slug, icon: row.icon, seoIntro: row.seoIntro, enabled: row.enabled };
+            const base: Draft = { name: row.name, slug: row.slug, icon: row.icon, seoIntro: row.seoIntro, enabled: row.enabled, kind: "" };
             const draft = draftOf(row.id, base);
             return (
               <div key={row.id} style={{ marginTop: 14 }} data-testid="sub-row">

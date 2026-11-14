@@ -46,6 +46,8 @@ export interface ListingDoc {
   qualityScore?: number;
   publishedAt?: Date;
   expiresAt?: Date;
+  /** "Video verified" badge (H6.5): set for 90 days after a completed live tour. */
+  videoVerifiedUntil?: Date | null;
   lastModerationAt?: Date;
   seoNoindex?: boolean;
   /** Admin only: the ad stays reachable by URL but is skipped in feeds. */
@@ -172,6 +174,7 @@ const listingSchema = new Schema<ListingDoc>(
     qualityScore: { type: Number, default: 0 },
     publishedAt: { type: Date },
     expiresAt: { type: Date },
+    videoVerifiedUntil: { type: Date, default: null },
     lastModerationAt: { type: Date },
     seoNoindex: { type: Boolean, default: true },
     feedHidden: { type: Boolean, default: false },

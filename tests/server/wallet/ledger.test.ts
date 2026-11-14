@@ -12,6 +12,8 @@ import {
   type LedgerAccount,
   type LedgerMove,
 } from "@/server/ledger";
+import { Category, Listing } from "@/server/models";
+import type { CategoryKind } from "@/server/models/catalog";
 import { holdInEscrow, refundEscrow, registerSpendGuard, releaseEscrow } from "@/server/wallet";
 import { clearMemoryMongo, connectMemoryMongo, disconnectMemoryMongo } from "../../setup/mongo";
 
@@ -29,6 +31,22 @@ function prng(seed: number) {
 
 let counter = 0;
 const key = (prefix: string) => `${prefix}-${(counter += 1)}`;
+
+/** An ad in a category with live tours switched on (the only kind a hold may draw on). */
+async function tourListing(kind: CategoryKind | null = "goods", enabled = true) {
+  const category = await Category.create({ slug: key("cat"), name: "Cars", kind: kind ?? "goods", videoTourEnabled: enabled, videoTourCoins: 1 });
+  // A category stored without a kind (for example one from before the field existed) must fail closed.
+  if (kind === null) await Category.collection.updateOne({ _id: category._id }, { $unset: { kind: "" } });
+  const listing = await Listing.create({
+    ownerId: new mongoose.Types.ObjectId(),
+    categoryId: category._id,
+    status: "active",
+    title: "A title here",
+    description: "A description that is long enough",
+    publishedAt: new Date(),
+  });
+  return String(listing._id);
+}
 
 beforeAll(async () => {
   if (mongoose.connection.readyState !== 0) await mongoose.disconnect();
@@ -136,7 +154,8 @@ describe("ledger", () => {
     const user = uid();
     const vendor = uid();
     await creditWallet({ userId: user, amount: 5, refType: "test", refId: "seed", requestId: req });
-    const hold = (id: string) => holdInEscrow({ userId: user, vendorId: vendor, coins: 5, bookingId: id, requestId: req });
+    const listingId = await tourListing();
+    const hold = (id: string) => holdInEscrow({ userId: user, vendorId: vendor, coins: 5, bookingId: id, listingId, requestId: req });
     const results = await Promise.allSettled([hold("b1"), hold("b2"), hold("b3")]);
     expect(results.filter((row) => row.status === "fulfilled")).toHaveLength(1);
     expect(await walletBalance(user)).toBe(0);
@@ -171,7 +190,8 @@ describe("escrow", () => {
     const user = uid();
     const vendor = uid();
     await creditWallet({ userId: user, amount: 10, refType: "test", refId: "seed", requestId: req });
-    await holdInEscrow({ userId: user, vendorId: vendor, coins: 4, bookingId: "tour-1", requestId: req });
+    const listingId = await tourListing();
+    await holdInEscrow({ userId: user, vendorId: vendor, coins: 4, bookingId: "tour-1", listingId, requestId: req });
     expect(await walletBalance(user)).toBe(6);
     await refundEscrow({ userId: user, vendorId: vendor, coins: 4, bookingId: "tour-1", requestId: req });
     await refundEscrow({ userId: user, vendorId: vendor, coins: 4, bookingId: "tour-1", requestId: req });
@@ -184,7 +204,8 @@ describe("escrow", () => {
     const user = uid();
     const vendor = uid();
     await creditWallet({ userId: user, amount: 10, refType: "test", refId: "seed", requestId: req });
-    await holdInEscrow({ userId: user, vendorId: vendor, coins: 10, bookingId: "tour-2", requestId: req });
+    const listingId = await tourListing();
+    await holdInEscrow({ userId: user, vendorId: vendor, coins: 10, bookingId: "tour-2", listingId, requestId: req });
     await releaseEscrow({ userId: user, vendorId: vendor, coins: 10, bookingId: "tour-2", platformFee: 1, requestId: req });
     expect(await accountBalance("vendor_earnings", vendor)).toBe(9);
     expect(await accountBalance("platform_revenue", SYSTEM_OWNER)).toBe(1);
@@ -194,13 +215,36 @@ describe("escrow", () => {
   it("a registered spend guard (the people-category hook) can refuse a hold and leaves the wallet untouched", async () => {
     const user = uid();
     await creditWallet({ userId: user, amount: 3, refType: "test", refId: "seed", requestId: req });
+    const listingId = await tourListing();
     const off = registerSpendGuard(() => "Not allowed for this category");
     await expect(
-      holdInEscrow({ userId: user, vendorId: uid(), coins: 1, bookingId: "g1", requestId: req }),
+      holdInEscrow({ userId: user, vendorId: uid(), coins: 1, bookingId: "g1", listingId, requestId: req }),
     ).rejects.toThrow(/Not allowed/);
     off();
     expect(await walletBalance(user)).toBe(3);
-    await holdInEscrow({ userId: user, vendorId: uid(), coins: 1, bookingId: "g2", requestId: req });
+    await holdInEscrow({ userId: user, vendorId: uid(), coins: 1, bookingId: "g2", listingId, requestId: req });
     expect(await walletBalance(user)).toBe(2);
+  });
+
+  it("refuses a hold on a people category from the database, with no spend guard registered", async () => {
+    const user = uid();
+    await creditWallet({ userId: user, amount: 3, refType: "test", refId: "seed", requestId: req });
+    const listingId = await tourListing("people", false);
+    await expect(holdInEscrow({ userId: user, vendorId: uid(), coins: 1, bookingId: "p1", listingId, requestId: req })).rejects.toThrow(
+      /people listings/,
+    );
+    expect(await walletBalance(user)).toBe(3);
+  });
+
+  it("refuses a hold when the switch is off, the ad is missing, or the category kind is unknown (fails closed)", async () => {
+    const user = uid();
+    await creditWallet({ userId: user, amount: 3, refType: "test", refId: "seed", requestId: req });
+    const off = await tourListing("goods", false);
+    const unknownKind = await tourListing(null, true);
+    const missing = String(new mongoose.Types.ObjectId());
+    for (const listingId of [off, unknownKind, missing, "not-an-id"]) {
+      await expect(holdInEscrow({ userId: user, vendorId: uid(), coins: 1, bookingId: key("f"), listingId, requestId: req })).rejects.toThrow();
+    }
+    expect(await walletBalance(user)).toBe(3);
   });
 });

@@ -1,4 +1,5 @@
 import type { CategoryFieldDoc } from "@/server/models";
+import type { CategoryKind } from "@/server/models/catalog";
 import { TAG_PAGES } from "@/data/catalog";
 import { textDenied } from "@/server/shared/policy";
 
@@ -21,6 +22,8 @@ export interface SeedField {
 
 export interface SeedCategory {
   slug: string;
+  /** Set explicitly for every seeded category (H6.5). */
+  kind: CategoryKind;
   name: string;
   description: string;
   order: number;
@@ -54,6 +57,7 @@ function fields(rows: FieldRow[]): SeedField[] {
 export const CATEGORIES: SeedCategory[] = [
   {
     slug: "dating",
+    kind: "people",
     name: "Dating",
     description: "Dating notices for people who want to meet.",
     order: 0,
@@ -65,6 +69,7 @@ export const CATEGORIES: SeedCategory[] = [
   },
   {
     slug: "friendship",
+    kind: "people",
     name: "Friendship",
     description: "Friendship and social notices.",
     order: 1,
@@ -73,6 +78,7 @@ export const CATEGORIES: SeedCategory[] = [
   },
   {
     slug: "meetups",
+    kind: "people",
     name: "Meetups",
     description: "Local meetups and group activities.",
     order: 2,
@@ -84,6 +90,7 @@ export const CATEGORIES: SeedCategory[] = [
   },
   {
     slug: "personal-ads",
+    kind: "people",
     name: "Personal ads",
     description: "Short personal notices for dating, friendship, and activities.",
     order: 3,
@@ -92,6 +99,7 @@ export const CATEGORIES: SeedCategory[] = [
   },
   {
     slug: "jobs",
+    kind: "job",
     name: "Jobs",
     description: "Job posts and roles for hire.",
     order: 4,
@@ -103,6 +111,7 @@ export const CATEGORIES: SeedCategory[] = [
   },
   {
     slug: "wellness",
+    kind: "people",
     name: "Wellness",
     description: "Spa, massage, yoga, and fitness bookings.",
     order: 5,
@@ -113,6 +122,7 @@ export const CATEGORIES: SeedCategory[] = [
   },
   {
     slug: "property",
+    kind: "property",
     name: "Property",
     description: "Homes, plots, and other property.",
     order: 6,
@@ -124,6 +134,7 @@ export const CATEGORIES: SeedCategory[] = [
   },
   {
     slug: "vehicles",
+    kind: "vehicle",
     name: "Vehicles",
     description: "Cars, bikes, and other vehicles.",
     order: 7,
@@ -136,6 +147,7 @@ export const CATEGORIES: SeedCategory[] = [
   },
   {
     slug: "buy-and-sell",
+    kind: "goods",
     name: "Buy and sell",
     description: "Goods for sale from one person to another.",
     order: 8,
@@ -144,6 +156,7 @@ export const CATEGORIES: SeedCategory[] = [
   },
   {
     slug: "pets",
+    kind: "goods",
     name: "Pets",
     description: "Pets and pet supplies.",
     order: 9,
@@ -152,6 +165,7 @@ export const CATEGORIES: SeedCategory[] = [
   },
   {
     slug: "education",
+    kind: "service",
     name: "Education",
     description: "Classes, tutoring, and courses.",
     order: 10,

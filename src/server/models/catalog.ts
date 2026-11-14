@@ -34,6 +34,10 @@ export interface CategoryFieldDoc {
   optionLabels?: Record<string, string>;
 }
 
+/** people: dating, friendship, personals. Live video tours can never be switched on for these. */
+export const CATEGORY_KINDS = ["goods", "property", "vehicle", "job", "service", "people"] as const;
+export type CategoryKind = (typeof CATEGORY_KINDS)[number];
+
 export interface CategoryDoc {
   _id?: Types.ObjectId;
   slug: string;
@@ -41,6 +45,10 @@ export interface CategoryDoc {
   description?: string;
   parentId?: Types.ObjectId | null;
   enabled?: boolean;
+  kind?: CategoryKind;
+  /** Live video tour switch (H6.5). Off by default. */
+  videoTourEnabled?: boolean;
+  videoTourCoins?: number;
   order?: number;
   fields?: CategoryFieldDoc[];
   oldSlugs?: string[];
@@ -128,6 +136,10 @@ const categorySchema = new Schema<CategoryDoc>(
     description: { type: String, default: "" },
     parentId: { type: Schema.Types.ObjectId, default: null },
     enabled: { type: Boolean, default: true },
+    /** No default: a category without a kind fails closed for tours until an admin sets one (H6.5, relay #40). */
+    kind: { type: String, enum: CATEGORY_KINDS },
+    videoTourEnabled: { type: Boolean, default: false },
+    videoTourCoins: { type: Number, default: 1, min: 1, max: 100 },
     order: { type: Number, default: 0 },
     fields: { type: [fieldDefinitionSchema], default: [] },
     oldSlugs: { type: [String], default: [] },
