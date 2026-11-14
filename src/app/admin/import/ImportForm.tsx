@@ -2,12 +2,14 @@
 
 import { useEffect, useState } from "react";
 import { DataTable, Notice, TextField, type Column } from "@/components/admin/ui";
-import { BATCH_PARALLEL, checkBatch } from "@/server/media/batch";
+import { clipSeconds } from "@/components/post/mediaUpload";
+import { BATCH_PARALLEL, checkBatch, imageTypeOf } from "@/server/media/batch";
 import { runLimited } from "@/server/media/run-limited";
 import { readZipImages } from "@/server/media/zip-images";
 import type { DryRunReport, ImportRowReport } from "@/server/listings/import";
 import type { JobSummary } from "@/server/import/job";
 import { IMPORT_HELP_LINES } from "@/server/import/template";
+import { isVideoFile, videoTypeOf, type ChosenVideo } from "@/server/import/videos";
 import { chunkAction, createJobAction, dryRunAction, jobAction, openJobAction } from "./actions";
 
 const COLUMNS: Column<ImportRowReport>[] = [
@@ -17,18 +19,65 @@ const COLUMNS: Column<ImportRowReport>[] = [
   { key: "errors", label: "Problems", value: (row) => row.errors.join("; ") },
 ];
 
+const FILE_ACCEPT = "image/jpeg,image/png,image/webp,video/mp4,video/webm,video/quicktime";
+
 interface UploadRow {
   name: string;
   state: "queued" | "uploading" | "done" | "failed";
   reason: string;
 }
 
-async function uploadPhoto(jobId: string, file: File): Promise<{ ok: true } | { ok: false; reason: string }> {
+/** A chosen video: the file to send, and what the browser read about it (size, type and length). */
+interface ChosenClip {
+  file: File;
+  info: ChosenVideo;
+}
+
+/** A file the job still needs to receive. */
+interface PendingFile {
+  name: string;
+  file: File;
+  kind: "image" | "video";
+}
+
+/** A ZIP entry or a picked file may carry no type. The type is set from the name, so the server gets the real one. */
+function typed(file: File): File {
+  const type = isVideoFile(file) ? videoTypeOf(file) : (imageTypeOf(file) ?? file.type);
+  return type === file.type ? file : new File([file], file.name, { type });
+}
+
+async function describeVideo(file: File): Promise<ChosenClip> {
+  const seconds = await clipSeconds(file);
+  return {
+    file,
+    info: { name: file.name, size: file.size, type: file.type, seconds: Number.isFinite(seconds) && seconds > 0 ? seconds : null },
+  };
+}
+
+/** The chosen files a job still needs: the photos and videos its rows name, minus the ones already stored. */
+function pendingFor(job: JobSummary, images: File[], clips: ChosenClip[]) {
+  const items: PendingFile[] = [];
+  const notChosen: string[] = [];
+  for (const name of job.filesToUpload.filter((item) => !job.uploadedFiles.includes(item))) {
+    const file = images.find((item) => item.name === name);
+    if (file) items.push({ name, file, kind: "image" });
+    else notChosen.push(name);
+  }
+  for (const name of job.videosToUpload.filter((item) => !job.uploadedVideos.includes(item))) {
+    const clip = clips.find((item) => item.info.name === name);
+    if (clip) items.push({ name, file: clip.file, kind: "video" });
+    else notChosen.push(name);
+  }
+  return { items, notChosen };
+}
+
+async function uploadFile(jobId: string, item: PendingFile): Promise<{ ok: true } | { ok: false; reason: string }> {
   const form = new FormData();
   form.set("jobId", jobId);
-  form.set("file", file);
+  form.set("file", item.file);
+  form.set("kind", item.kind);
   try {
-    const res = await fetch("/admin/import/photos/", { method: "POST", body: form });
+    const res = await fetch("/admin/import/files/", { method: "POST", body: form });
     const body = (await res.json()) as { ok: boolean; error?: string };
     return body.ok ? { ok: true } : { ok: false, reason: body.error || "Upload failed" };
   } catch {
@@ -41,6 +90,7 @@ export function ImportForm({ canPublish }: { canPublish: boolean }) {
   const [csv, setCsv] = useState("");
   const [csvName, setCsvName] = useState("");
   const [images, setImages] = useState<File[]>([]);
+  const [clips, setClips] = useState<ChosenClip[]>([]);
   const [refused, setRefused] = useState<string[]>([]);
   const [publishNow, setPublishNow] = useState(false);
   const [dry, setDry] = useState<DryRunReport | null>(null);
@@ -56,10 +106,13 @@ export function ImportForm({ canPublish }: { canPublish: boolean }) {
     });
   }, []);
 
-  function chooseImages(list: File[]) {
-    const check = checkBatch(list, 500);
+  /** Photos are checked here (type and size). Videos are kept whatever they are: the dry run reports each problem on its row. */
+  async function chooseFiles(list: File[]) {
+    const chosen = list.map(typed);
+    const check = checkBatch(chosen.filter((file) => !isVideoFile(file)), 500);
     setImages(check.accepted);
     setRefused(check.rejected.map((item) => `${item.name}: ${item.reason}`));
+    setClips(await Promise.all(chosen.filter((file) => isVideoFile(file)).map(describeVideo)));
     setDry(null);
   }
 
@@ -67,8 +120,9 @@ export function ImportForm({ canPublish }: { canPublish: boolean }) {
     if (!file) return;
     setError("");
     try {
-      const entries = await readZipImages(await file.arrayBuffer());
-      chooseImages(entries.map((entry) => new File([entry.data as BlobPart], entry.name)));
+      // No size cap here: an oversized entry is refused with its reason, not dropped silently.
+      const entries = await readZipImages(await file.arrayBuffer(), Number.POSITIVE_INFINITY);
+      await chooseFiles(entries.map((entry) => new File([entry.data as BlobPart], entry.name)));
     } catch (failure) {
       setError(failure instanceof Error ? failure.message : "Could not read this ZIP file");
     }
@@ -89,36 +143,34 @@ export function ImportForm({ canPublish }: { canPublish: boolean }) {
   async function check() {
     setBusy(true);
     setError("");
-    const res = await dryRunAction({ partnerEmail: partner, csv, fileNames: images.map((file) => file.name) });
+    const res = await dryRunAction({ partnerEmail: partner, csv, fileNames: images.map((file) => file.name), videos: clips.map((clip) => clip.info) });
     setBusy(false);
     if (!res.ok) return setError(res.error);
     setDry(res.data);
   }
 
-  /** Uploads the photos the job still needs, then imports the rows in blocks until the job is done. */
+  /** Uploads the photos and videos the job still needs, then imports the rows in blocks until the job is done. */
   async function drive(current: JobSummary) {
     setJob(current);
     setError("");
-    const missing = current.filesToUpload.filter((name) => !current.uploadedFiles.includes(name));
-    if (missing.length) {
-      const chosen = missing.map((name) => images.find((file) => file.name === name));
-      const notChosen = missing.filter((_, index) => !chosen[index]);
-      if (notChosen.length) {
-        setError(`Choose these images to finish the import: ${notChosen.slice(0, 8).join(", ")}`);
-        return;
-      }
-      setUploads(missing.map((name) => ({ name, state: "queued", reason: "" })));
+    const { items, notChosen } = pendingFor(current, images, clips);
+    if (notChosen.length) {
+      setError(`Choose these files to finish the import: ${notChosen.slice(0, 8).join(", ")}`);
+      return;
+    }
+    if (items.length) {
+      setUploads(items.map(({ name }) => ({ name, state: "queued", reason: "" })));
       const failed: string[] = [];
-      await runLimited(chosen as File[], BATCH_PARALLEL, async (file) => {
-        setUploads((rows) => rows.map((row) => (row.name === file.name ? { ...row, state: "uploading" } : row)));
-        const result = await uploadPhoto(current.jobId, file);
-        if (!result.ok) failed.push(file.name);
+      await runLimited(items, BATCH_PARALLEL, async (item) => {
+        setUploads((rows) => rows.map((row) => (row.name === item.name ? { ...row, state: "uploading" } : row)));
+        const result = await uploadFile(current.jobId, item);
+        if (!result.ok) failed.push(item.name);
         setUploads((rows) =>
-          rows.map((row) => (row.name === file.name ? { ...row, state: result.ok ? "done" : "failed", reason: result.ok ? "" : result.reason } : row)),
+          rows.map((row) => (row.name === item.name ? { ...row, state: result.ok ? "done" : "failed", reason: result.ok ? "" : result.reason } : row)),
         );
       });
       if (failed.length) {
-        setError(`${failed.length} photo${failed.length === 1 ? " did not" : "s did not"} upload. Retry them, then the rows are imported.`);
+        setError(`${failed.length} file${failed.length === 1 ? " did not" : "s did not"} upload. Retry them, then the rows are imported.`);
         return;
       }
     }
@@ -143,6 +195,7 @@ export function ImportForm({ canPublish }: { canPublish: boolean }) {
       partnerEmail: partner,
       csv,
       fileNames: images.map((file) => file.name),
+      videos: clips.map((clip) => clip.info),
       status: publishNow ? "active" : "pending",
     });
     if (!created.ok) {
@@ -174,12 +227,15 @@ export function ImportForm({ canPublish }: { canPublish: boolean }) {
     setCsv("");
     setCsvName("");
     setImages([]);
+    setClips([]);
     setRefused([]);
     setDry(null);
     setError("");
   }
 
   const uploadFailures = uploads.filter((row) => row.state === "failed");
+  const awaitingFiles = job ? job.filesToUpload.length + job.videosToUpload.length > job.uploadedFiles.length + job.uploadedVideos.length : false;
+  const unusedFiles = dry ? [...dry.photos.unusedFiles, ...dry.videos.unusedFiles] : [];
   const ready = Boolean(partner.trim() && csv);
   const running = busy;
   const finished = job?.state === "done";
@@ -189,8 +245,9 @@ export function ImportForm({ canPublish }: { canPublish: boolean }) {
     <div className="adm-stack">
       {job && !finished ? (
         <Notice kind="warn" title="An import is not finished">
-          {job.partnerEmail}: {job.nextRow} of {job.total} rows done. {job.filesToUpload.length > 0 && job.uploadedFiles.length < job.filesToUpload.length
-            ? "Choose the same images again, then continue. Photos already sent are skipped."
+          {job.partnerEmail}: {job.nextRow} of {job.total} rows done.{" "}
+          {awaitingFiles
+            ? "Choose the same photos and videos again, then continue. Files already sent are skipped."
             : "Continue to import the rest."}
           <div style={{ marginTop: 8 }}>
             <button type="button" className="adm-btn" disabled={running} onClick={() => void resume()}>
@@ -212,18 +269,20 @@ export function ImportForm({ canPublish }: { canPublish: boolean }) {
             </p>
           </div>
           <div className="adm-field">
-            <label className="adm-field-label" htmlFor="import-images">Photos: choose the images, or one ZIP of images</label>
+            <label className="adm-field-label" htmlFor="import-images">Photos and videos: choose the files, or one ZIP of them</label>
             <input
               id="import-images"
               className="adm-input"
               type="file"
               multiple
-              accept="image/jpeg,image/png,image/webp"
-              onChange={(event) => chooseImages(Array.from(event.target.files ?? []))}
+              accept={FILE_ACCEPT}
+              onChange={(event) => void chooseFiles(Array.from(event.target.files ?? []))}
             />
-            <input className="adm-input" type="file" accept=".zip,application/zip" aria-label="ZIP of images" onChange={(event) => void pickZip(event.target.files?.[0])} />
+            <input className="adm-input" type="file" accept=".zip,application/zip" aria-label="ZIP of photos and videos" onChange={(event) => void pickZip(event.target.files?.[0])} />
             <p className="adm-field-help">
-              {images.length ? `${images.length} image${images.length === 1 ? "" : "s"} chosen. Each photo cell in the CSV names a file, for example flat1-a.jpg|flat1-b.jpg.` : "Name each file in the photos column of the CSV. Up to 8 MB each."}
+              {images.length || clips.length
+                ? `${images.length} photo${images.length === 1 ? "" : "s"} and ${clips.length} video${clips.length === 1 ? "" : "s"} chosen. Name each file in the photos or videos column of the CSV, for example flat1-a.jpg|flat1-b.jpg.`
+                : "Name each file in the photos or videos column of the CSV. Photos up to 8 MB each. Videos mp4, webm or mov, up to 10 MB and 30 seconds each."}
             </p>
             {refused.length ? <Notice kind="warn" title="Not chosen">{refused.slice(0, 8).join("; ")}</Notice> : null}
           </div>
@@ -253,7 +312,7 @@ export function ImportForm({ canPublish }: { canPublish: boolean }) {
 
       {uploads.length > 0 ? (
         <section className="adm-card" style={{ display: "grid", gap: 8 }}>
-          <h2 style={{ fontSize: 16, fontWeight: 800 }}>Photos</h2>
+          <h2 style={{ fontSize: 16, fontWeight: 800 }}>Files</h2>
           <ul style={{ listStyle: "none", padding: 0, margin: 0, display: "grid", gap: 4 }} aria-label="Photo upload progress">
             {uploads.map((row) => (
               <li key={row.name} className="adm-field-help" style={{ overflowWrap: "anywhere" }}>
@@ -264,7 +323,7 @@ export function ImportForm({ canPublish }: { canPublish: boolean }) {
           {uploadFailures.length && !running ? (
             <div>
               <button type="button" className="adm-btn adm-btn-quiet" onClick={() => void resume()}>
-                Retry failed photos ({uploadFailures.length})
+                Retry failed files ({uploadFailures.length})
               </button>
             </div>
           ) : null}
@@ -294,8 +353,9 @@ export function ImportForm({ canPublish }: { canPublish: boolean }) {
           <Notice kind={dry.okCount === dry.total ? "info" : "warn"} title="Dry run, nothing has been saved">
             {dry.photos.ads} ad{dry.photos.ads === 1 ? "" : "s"} ready ({dry.okCount} of {dry.total} rows) for {dry.partner.displayName} ({dry.partner.email}).{" "}
             {dry.photos.photosToAttach} photo{dry.photos.photosToAttach === 1 ? "" : "s"} to attach, {dry.photos.filesToUpload.length} image
-            {dry.photos.filesToUpload.length === 1 ? "" : "s"} to upload.
-            {dry.photos.unusedFiles.length ? ` Not uploaded, no ready row uses them: ${dry.photos.unusedFiles.slice(0, 10).join(", ")}.` : ""}
+            {dry.photos.filesToUpload.length === 1 ? "" : "s"} to upload. {dry.videos.videosToAttach} video{dry.videos.videosToAttach === 1 ? "" : "s"} to
+            attach, {dry.videos.filesToUpload.length} video{dry.videos.filesToUpload.length === 1 ? "" : "s"} to upload.
+            {unusedFiles.length ? ` Not uploaded, no ready row uses them: ${unusedFiles.slice(0, 10).join(", ")}.` : ""}
           </Notice>
           <section>
             <DataTable columns={COLUMNS} rows={dry.rows} rowKey={(row) => String(row.line)} csvName="import-check" />

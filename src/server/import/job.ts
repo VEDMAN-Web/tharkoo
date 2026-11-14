@@ -5,31 +5,46 @@ import { connectDb } from "@/lib/db";
 import { AuditRepository } from "@/server/audit";
 import { isSiteMediaType, readImageSize } from "@/server/layout/media";
 import { cloudinaryClient, uploadToCloudinary } from "@/server/media/client";
-import { CLOUDINARY_FOLDER, MAX_BYTES, STRIP_EXIF, UPLOAD_NEEDS_CLOUDINARY, onVercel, optionalCloudinary } from "@/server/media/config";
+import {
+  CLOUDINARY_FOLDER,
+  MAX_BYTES,
+  STRIP_EXIF,
+  UPLOAD_NEEDS_CLOUDINARY,
+  VIDEO_TYPES,
+  onVercel,
+  optionalCloudinary,
+} from "@/server/media/config";
 import { csamScannerFromEnv } from "@/server/media/csam";
+import { videoSeconds } from "@/server/media/duration";
 import { ConflictError, ForbiddenError, NotFoundError, PolicyViolationError, ValidationError } from "@/server/http";
 import {
   assertPublishRight,
+  chosenVideos,
   dryRunImport,
   importPlanRange,
   prepareImport,
   recordImportAudit,
   refreshCaches,
   uploadedFromNames,
+  type ChosenVideos,
   type DryRunReport,
   type ImportActor,
   type ImportStatus,
 } from "@/server/listings/import";
 import { IMPORT_CHUNK_ROWS } from "@/server/import/rules";
 import { ImportJob, type ImportJobDoc, type ImportJobRowResult, type ImportJobState } from "@/server/import/model";
+import { videoProblem, videoTypeOf, type ChosenVideo } from "@/server/import/videos";
 import { MediaAsset } from "@/server/models";
 
 const audit = new AuditRepository();
 /** A chunk that has run longer than this is treated as abandoned, so a closed tab cannot block the job forever. */
 const LOCK_MS = 2 * 60 * 1000;
 const EXTENSION: Record<string, string> = { "image/jpeg": "jpg", "image/png": "png", "image/webp": "webp" };
+const VIDEO_EXTENSION: Record<string, string> = { "video/mp4": "mp4", "video/webm": "webm", "video/quicktime": "mov" };
+const VIDEO_NEEDS_CLOUDINARY = "Video upload needs Cloudinary on this server";
 
 type JobDoc = ImportJobDoc & { _id: Types.ObjectId };
+type Stored = Array<{ name: string; mediaId: string }>;
 type Uploaded = Map<string, { name: string; mediaId: string }>;
 
 export interface JobSummary {
@@ -43,6 +58,8 @@ export interface JobSummary {
   failed: number;
   filesToUpload: string[];
   uploadedFiles: string[];
+  videosToUpload: string[];
+  uploadedVideos: string[];
   rowResults: ImportJobRowResult[];
 }
 
@@ -59,9 +76,27 @@ async function loadOwnedJob(actor: ImportActor, jobId: string): Promise<JobDoc> 
   return job as JobDoc;
 }
 
-/** Uploaded photos of one job, keyed by lower-cased file name. */
+/** Stored files of one job, keyed by lower-cased file name. */
+function storedBy(list: Stored): Uploaded {
+  return new Map(list.map((file) => [file.name.toLowerCase(), { name: file.name, mediaId: file.mediaId }] as const));
+}
+
 function uploadedFor(job: JobDoc): Uploaded {
-  return new Map(job.uploaded.map((file) => [file.name.toLowerCase(), { name: file.name, mediaId: file.mediaId }] as const));
+  return storedBy(job.uploaded);
+}
+
+function uploadedVideosFor(job: JobDoc): Uploaded {
+  return storedBy(job.uploadedVideos);
+}
+
+function plainVideo(video: ChosenVideo): ChosenVideo {
+  return { name: video.name, size: video.size, type: video.type, seconds: video.seconds ?? null };
+}
+
+/** The chosen videos of a job, with the media id of each one already stored. */
+function videosOf(job: JobDoc): ChosenVideos {
+  const known = new Map([...uploadedVideosFor(job).entries()].map(([key, file]) => [key, file.mediaId] as const));
+  return chosenVideos(job.videoFiles.map(plainVideo), known);
 }
 
 function summarise(job: JobDoc, uploaded: Uploaded): JobSummary {
@@ -76,37 +111,45 @@ function summarise(job: JobDoc, uploaded: Uploaded): JobSummary {
     failed: job.failed,
     filesToUpload: job.filesToUpload,
     uploadedFiles: [...uploaded.values()].map((file) => file.name),
+    videosToUpload: job.videosToUpload,
+    uploadedVideos: job.uploadedVideos.map((file) => file.name),
     rowResults: job.rowResults.map((row) => ({ line: row.line, title: row.title, ok: row.ok, errors: row.errors })),
   };
 }
 
-/** Step 2a: checks the file, then saves the job. Nothing is imported and no photo is uploaded yet. */
+/** Step 2a: checks the file, then saves the job. Nothing is imported and no photo or video is uploaded yet. */
 export async function createImportJob(
   actor: ImportActor,
-  input: { partnerEmail: string; csv: string; fileNames: string[]; status: ImportStatus },
+  input: { partnerEmail: string; csv: string; fileNames: string[]; videoFiles?: ChosenVideo[]; status: ImportStatus },
   requestId: string,
 ): Promise<{ job: JobSummary; report: DryRunReport }> {
   assertStaff(actor);
   assertPublishRight(actor, input.status);
-  const report = await dryRunImport(actor, input.partnerEmail, input.csv, input.fileNames);
+  const videoFiles = (input.videoFiles ?? []).map(plainVideo);
+  const report = await dryRunImport(actor, input.partnerEmail, input.csv, input.fileNames, videoFiles);
   if (report.okCount === 0) throw new ValidationError("No row can be imported yet. Fix the rows shown in the check first.");
   await connectDb();
   const filesToUpload = report.photos.filesToUpload;
+  const videosToUpload = report.videos.filesToUpload;
   const job = (await ImportJob.create({
     actorId: new Types.ObjectId(actor.id),
     partnerId: new Types.ObjectId(report.partner.id),
     partnerEmail: report.partner.email,
     publishStatus: input.status,
-    state: filesToUpload.length ? "uploading" : "importing",
+    state: filesToUpload.length + videosToUpload.length ? "uploading" : "importing",
     csv: input.csv,
     fileNames: input.fileNames,
     filesToUpload,
+    videoFiles,
+    videosToUpload,
     total: report.total,
     nextRow: 0,
     imported: 0,
     failed: 0,
+    videos: 0,
     rowResults: [],
     uploaded: [],
+    uploadedVideos: [],
   })) as JobDoc;
   await audit.append({
     actorId: actor.id,
@@ -114,7 +157,14 @@ export async function createImportJob(
     action: "listing.import.start",
     targetType: "user",
     targetId: report.partner.id,
-    after: { jobId: job._id.toString(), rows: report.total, ready: report.okCount, photos: filesToUpload.length, status: input.status },
+    after: {
+      jobId: job._id.toString(),
+      rows: report.total,
+      ready: report.okCount,
+      photos: filesToUpload.length,
+      videos: videosToUpload.length,
+      status: input.status,
+    },
     requestId,
   });
   return { job: summarise(job, new Map()), report };
@@ -134,12 +184,19 @@ export async function getImportJob(actor: ImportActor, jobId: string): Promise<J
   return summarise(job, uploadedFor(job));
 }
 
-async function removeStored(objectKey: string) {
+async function removeStored(objectKey: string, resource: "image" | "video" = "image") {
   if (objectKey.startsWith("/uploads/")) {
     await unlink(path.join(process.cwd(), "public", "uploads", path.basename(objectKey))).catch(() => undefined);
   } else {
-    await cloudinaryClient().destroy(objectKey, "upload").catch(() => undefined);
+    await cloudinaryClient().destroy(objectKey, "upload", resource).catch(() => undefined);
   }
+}
+
+async function writeUpload(name: string, data: Buffer): Promise<string> {
+  const dir = path.join(process.cwd(), "public", "uploads");
+  await mkdir(dir, { recursive: true });
+  await writeFile(path.join(dir, name), data);
+  return `/uploads/${name}`;
 }
 
 async function storeImage(file: { name: string; type: string; data: Buffer }, id: Types.ObjectId): Promise<string> {
@@ -153,11 +210,22 @@ async function storeImage(file: { name: string; type: string; data: Buffer }, id
     return stored.publicId;
   }
   if (onVercel()) throw new ConflictError(`${UPLOAD_NEEDS_CLOUDINARY}. Add the Cloudinary settings, then try again.`);
-  const name = `${id.toHexString()}.${EXTENSION[file.type]}`;
-  const dir = path.join(process.cwd(), "public", "uploads");
-  await mkdir(dir, { recursive: true });
-  await writeFile(path.join(dir, name), file.data);
-  return `/uploads/${name}`;
+  return writeUpload(`${id.toHexString()}.${EXTENSION[file.type]}`, file.data);
+}
+
+/** Videos go to Cloudinary as video when it is set up. Otherwise they are kept on this server's disk. */
+async function storeVideo(data: Buffer, type: string, id: Types.ObjectId): Promise<string> {
+  if (optionalCloudinary()) {
+    const stored = await uploadToCloudinary(data, {
+      contentType: type,
+      folder: `${CLOUDINARY_FOLDER}/listings`,
+      publicId: id.toHexString(),
+      resourceType: "video",
+    });
+    return stored.publicId;
+  }
+  if (onVercel()) throw new ConflictError(`${VIDEO_NEEDS_CLOUDINARY}. Add the Cloudinary settings, then try again.`);
+  return writeUpload(`${id.toHexString()}.${VIDEO_EXTENSION[type]}`, data);
 }
 
 /** Step 2b: stores one chosen image as a photo of the partner. Same checks as a normal photo upload. */
@@ -171,7 +239,7 @@ export async function recordImportPhoto(
   if (job.state === "done") throw new ConflictError("This import has already finished");
   const wanted = job.filesToUpload.find((name) => name.toLowerCase() === file.name.trim().toLowerCase());
   if (!wanted) throw new ValidationError(`${file.name} is not used by a row in this import`);
-  if ((uploadedFor(job)).has(wanted.toLowerCase())) return { status: "exists", name: wanted };
+  if (uploadedFor(job).has(wanted.toLowerCase())) return { status: "exists", name: wanted };
   if (!isSiteMediaType(file.type) || file.data.length === 0 || file.data.length > MAX_BYTES) {
     throw new PolicyViolationError("Only jpeg, png, and webp photos up to 8 MB are allowed");
   }
@@ -200,7 +268,56 @@ export async function recordImportPhoto(
     action: "media.import.upload",
     targetType: "media",
     targetId: id.toHexString(),
-    after: { jobId: job._id.toString(), name: wanted, bytes: file.data.length },
+    after: { jobId: job._id.toString(), name: wanted, bytes: file.data.length, kind: "image" },
+    requestId,
+  });
+  return { status: "cleared", name: wanted };
+}
+
+/**
+ * Step 2b for a video: checks the real file against the post-ad rule (type, 10 MB, 30 seconds),
+ * stores it, and records it so that the ad that names it gets it at import.
+ */
+export async function recordImportVideo(
+  actor: ImportActor,
+  jobId: string,
+  file: { name: string; type: string; data: Buffer },
+  requestId: string,
+): Promise<{ status: "cleared" | "exists"; name: string }> {
+  const job = await loadOwnedJob(actor, jobId);
+  if (job.state === "done") throw new ConflictError("This import has already finished");
+  const wanted = job.videosToUpload.find((name) => name.toLowerCase() === file.name.trim().toLowerCase());
+  if (!wanted) throw new ValidationError(`${file.name} is not used by a row in this import`);
+  if (uploadedVideosFor(job).has(wanted.toLowerCase())) return { status: "exists", name: wanted };
+  const type = videoTypeOf({ name: file.name, type: file.type });
+  const seconds = (VIDEO_TYPES as readonly string[]).includes(type) ? videoSeconds(file.data, type) : null;
+  const problem = videoProblem({ name: wanted, size: file.data.length, type, seconds });
+  if (problem) throw new PolicyViolationError(problem);
+  const id = new Types.ObjectId();
+  const objectKey = await storeVideo(file.data, type, id);
+  const scan = await csamScannerFromEnv().scan({ objectKey, contentType: type, bytes: file.data.length });
+  if (scan.match) {
+    await removeStored(objectKey, "video");
+    throw new PolicyViolationError("Upload was rejected");
+  }
+  await MediaAsset.create({
+    _id: id,
+    ownerId: job.partnerId,
+    kind: "video",
+    objectKey,
+    status: "cleared",
+    clearedAt: new Date(),
+    contentType: type,
+    bytes: file.data.length,
+  });
+  await ImportJob.updateOne({ _id: job._id }, { $push: { uploadedVideos: { name: wanted, mediaId: id.toHexString() } } });
+  await audit.append({
+    actorId: actor.id,
+    actorType: "admin",
+    action: "media.import.upload",
+    targetType: "media",
+    targetId: id.toHexString(),
+    after: { jobId: job._id.toString(), name: wanted, bytes: file.data.length, kind: "video" },
     requestId,
   });
   return { status: "cleared", name: wanted };
@@ -224,26 +341,30 @@ export async function runImportChunk(actor: ImportActor, jobId: string, requestI
   if (job.state === "done") return summarise(job, uploadedFor(job));
   assertPublishRight(actor, job.publishStatus);
   const uploaded = uploadedFor(job);
-  const missing = job.filesToUpload.filter((name) => !uploaded.has(name.toLowerCase()));
+  const uploadedVideos = uploadedVideosFor(job);
+  const missing = [
+    ...job.filesToUpload.filter((name) => !uploaded.has(name.toLowerCase())),
+    ...job.videosToUpload.filter((name) => !uploadedVideos.has(name.toLowerCase())),
+  ];
   if (missing.length) {
-    throw new ValidationError(`${missing.length} photo${missing.length === 1 ? " is" : "s are"} still to upload: ${missing.slice(0, 5).join(", ")}`);
+    throw new ValidationError(`${missing.length} file${missing.length === 1 ? " is" : "s are"} still to upload: ${missing.slice(0, 5).join(", ")}`);
   }
   await claim(job._id);
   try {
     const known = new Map([...uploaded.entries()].map(([key, file]) => [key, file.mediaId] as const));
     const files = uploadedFromNames(job.fileNames, known);
-    const prepared = await prepareImport(actor, job.partnerEmail, job.csv, files);
+    const prepared = await prepareImport(actor, job.partnerEmail, job.csv, files, videosOf(job));
     if (prepared.partner.id !== job.partnerId.toString()) throw new ConflictError("The partner account changed. Start a new import.");
     const from = job.nextRow;
     const to = Math.min(from + chunkRows, prepared.plans.length);
-    const { imported, failed } = await importPlanRange(prepared, from, to, actor, job.publishStatus, requestId);
+    const { imported, failed, videos } = await importPlanRange(prepared, from, to, actor, job.publishStatus, requestId);
     const rows = prepared.plans.slice(from, to).map((plan) => plan.report);
     const done = to >= prepared.plans.length;
     await ImportJob.updateOne(
       { _id: job._id },
       {
         $set: { nextRow: to, state: done ? "done" : "importing" },
-        $inc: { imported, failed },
+        $inc: { imported, failed, videos },
         $push: { rowResults: { $each: rows } },
       },
     );
@@ -254,6 +375,7 @@ export async function runImportChunk(actor: ImportActor, jobId: string, requestI
         failed: job.failed + failed,
         status: job.publishStatus,
         jobId: job._id.toString(),
+        videos: job.videos + videos,
       });
       if (job.publishStatus === "active") await refreshCaches();
     }

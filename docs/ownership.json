@@ -2076,7 +2076,9 @@
         "src/server/models/layout.ts",
         "src/server/models/catalog.ts",
         "tests/server/layout/media.test.ts",
-        "tests/server/listings/import.test.ts"
+        "tests/server/listings/import.test.ts",
+        "progress/H6.12-videos.md",
+        "src/components/post/mediaUpload.ts"
       ]
     },
     "H6.13": {
