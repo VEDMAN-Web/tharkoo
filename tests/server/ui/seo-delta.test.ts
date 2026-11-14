@@ -64,10 +64,10 @@ describe("SEO delta", () => {
     expect(full?.["@type"]).toBe("JobPosting");
   });
 
-  it("returns 410 for a removed ad and a 200 window for a fresh expiry", () => {
+  it("returns 410 for a removed ad and as soon as an ad expires (H6.7: no ended window)", () => {
     expect(listingVisibility({ status: "removed" })).toBe("gone");
     expect(listingVisibility({ status: "deleted" })).toBe("gone");
-    expect(listingVisibility({ status: "expired", expiresAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000) })).toBe("ended");
+    expect(listingVisibility({ status: "expired", expiresAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000) })).toBe("gone");
     expect(listingVisibility({ status: "expired", expiresAt: new Date(Date.now() - 40 * 24 * 60 * 60 * 1000) })).toBe("gone");
     expect(listingVisibility({ status: "active", expiresAt: new Date(Date.now() + 86_400_000) })).toBe("live");
     expect(listingVisibility(null)).toBe("missing");

@@ -77,9 +77,8 @@ describe("hidden ads stay out of public lists", () => {
     expect(counts[0]?.n).toBe(1);
 
     const ads = await shardEntries("ads");
-    const urls = ads.map((row) => row.loc).join(" ");
-    expect(urls).toContain("shown-role-aaaa1111");
-    expect(urls).not.toContain("hidden-role");
+    // H6.7: ad pages are not in the sitemap, shown or hidden.
+    expect(ads).toEqual([]);
   });
 
   it("still serves a hidden ad by its own slug", async () => {

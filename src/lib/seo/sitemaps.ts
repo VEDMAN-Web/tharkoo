@@ -1,7 +1,7 @@
 import { connectDb } from "@/lib/db";
 import { getBlogPosts, getCategories, getCities, getHelpArticles } from "@/lib/queries";
 import { siteUrl } from "@/lib/utils";
-import { adPath, blogPath, categoriesPath, categoryPath, citiesPath, cmsPath, contactPath, helpPath, howItWorksPath, placePath, prohibitedPath, safetyPath, tagPath } from "@/lib/urls";
+import { blogPath, categoriesPath, categoryPath, citiesPath, cmsPath, contactPath, helpPath, howItWorksPath, placePath, prohibitedPath, safetyPath, tagPath } from "@/lib/urls";
 import { Listing, Location, Page } from "@/server/models";
 import { getPaths, publicTags } from "@/server/urls/service";
 import { isCityAlias } from "@/lib/seo/district-alias";
@@ -175,10 +175,6 @@ export async function shardEntries(shard: SitemapShard): Promise<SitemapEntry[]>
     }
     return urls;
   }
-  const ads = await Listing.find({ ...liveMatch, seoNoindex: { $ne: true }, slug: { $exists: true } })
-    .select("slug updatedAt publishedAt")
-    .lean();
-  return ads
-    .filter((ad) => ad.slug)
-    .map((ad) => ({ loc: loc(adPath(paths, ad.slug!)), lastmod: stamp(ad.updatedAt || ad.publishedAt) }));
+  // H6.7: ad pages are not in the sitemap. They live about 3 days; hubs, cities and sub-categories carry the SEO.
+  return [];
 }
