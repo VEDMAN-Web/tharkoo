@@ -5,7 +5,8 @@ import Link from "next/link";
 import { api, fieldErrors, friendlyError } from "@/lib/ui/api";
 import { loadPostSubcategories, type PostSubcategory } from "@/server/categories/actions";
 import { PhotoStep } from "@/components/post/PhotoStep";
-import { draftToForm, needsIdCheck, validatePost, type SavedDraft } from "@/lib/ui/post-form";
+import { PickGroup } from "@/components/post/PickGroup";
+import { cleanAttrs, DEFAULT_PICK_LIMIT, draftToForm, needsIdCheck, picksOf, textOf, validatePost, type PostAttrs, type SavedDraft } from "@/lib/ui/post-form";
 import { loginPath, postAdPath } from "@/lib/urls";
 import { useUrlPaths } from "./UrlPaths";
 import { HelpCard } from "./ui/HelpCard";
@@ -52,7 +53,7 @@ export function PostWizard({ copy = POST_COPY_DEFAULTS, requireIdCheck = false }
   const [telegram, setTelegram] = useState("");
   const [terms, setTerms] = useState(false);
   const [adult, setAdult] = useState(false);
-  const [attrs, setAttrs] = useState<Record<string, string>>({});
+  const [attrs, setAttrs] = useState<PostAttrs>({});
   const [draftId, setDraftId] = useState("");
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [banner, setBanner] = useState("");
@@ -203,7 +204,7 @@ export function PostWizard({ copy = POST_COPY_DEFAULTS, requireIdCheck = false }
       method: "PATCH",
       body: JSON.stringify({
         stage: "details",
-        attributes: { ...attrs, ...(age ? { age: Number(age) } : {}) },
+        attributes: { ...cleanAttrs(attrs), ...(age ? { age: Number(age) } : {}) },
         nickname,
         contact,
       }),
@@ -346,28 +347,21 @@ export function PostWizard({ copy = POST_COPY_DEFAULTS, requireIdCheck = false }
           {extra.length ? (
             <Group title="About You">
               {extra.map((field) =>
-                field.options && field.options.length > 8 ? (
-                  <SelectField key={field.key} id={field.key} label={field.label} required={field.required} help={field.help} error={errors[field.key]} value={attrs[field.key] || ""} onChange={(value) => setAttrs((prev) => ({ ...prev, [field.key]: value }))}>
-                    <option value="">{field.placeholder || "Choose"}</option>
-                    {field.options.map((option) => (
-                      <option key={option} value={option}>{option}</option>
-                    ))}
-                  </SelectField>
-                ) : field.options?.length ? (
-                  <div key={field.key} className={errors[field.key] ? "is-bad" : ""} data-tk={field.key}>
-                    <p className="t-small">{field.required ? "* " : ""}{field.label}</p>
-                    {field.help ? <p className="t-caption" style={{ color: "var(--muted)" }}>{field.help}</p> : null}
-                    <div style={{ display: "flex", flexWrap: "wrap", gap: 8, outline: errors[field.key] ? "1px solid var(--danger)" : undefined, borderRadius: 8, padding: errors[field.key] ? 8 : 0 }}>
-                      {field.options.map((option) => (
-                        <button key={option} type="button" className={`tk-choice ${attrs[field.key] === option ? "on" : ""}`} onClick={() => setAttrs((prev) => ({ ...prev, [field.key]: prev[field.key] === option ? "" : option }))}>
-                          {option}
-                        </button>
-                      ))}
-                    </div>
-                    {errors[field.key] ? <span className="tk-error" data-tk="field-error">{errors[field.key]}</span> : null}
-                  </div>
+                field.options.length && (field.type === "select" || field.type === "multiselect") ? (
+                  <PickGroup
+                    key={field.key}
+                    label={field.label}
+                    help={field.help}
+                    required={field.required}
+                    options={field.options}
+                    mode={field.type === "multiselect" ? "many" : "one"}
+                    max={field.maxPicks ?? DEFAULT_PICK_LIMIT}
+                    selected={picksOf(attrs[field.key])}
+                    error={errors[field.key]}
+                    onChange={(next) => setAttrs((prev) => ({ ...prev, [field.key]: field.type === "multiselect" ? next : (next[0] ?? "") }))}
+                  />
                 ) : (
-                  <TextField key={field.key} id={field.key} label={field.label} required={field.required} note={field.help} placeholder={field.placeholder} error={errors[field.key]} value={attrs[field.key] || ""} onChange={(value) => setAttrs((prev) => ({ ...prev, [field.key]: value }))} />
+                  <TextField key={field.key} id={field.key} label={field.label} required={field.required} note={field.help} placeholder={field.placeholder} error={errors[field.key]} value={textOf(attrs[field.key])} onChange={(value) => setAttrs((prev) => ({ ...prev, [field.key]: value }))} />
                 ),
               )}
             </Group>

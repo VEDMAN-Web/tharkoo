@@ -26,6 +26,7 @@ import {
   type RankSettings,
 } from "@/server/ranking";
 import { publicView } from "@/server/listings/service";
+import { pickLimitsByCategory } from "@/server/fields/service";
 import { TOP_CITY_SLUGS } from "@/server/seed/data";
 
 const TIER: Record<string, number> = {
@@ -625,12 +626,25 @@ export function presentCategory(doc: CategoryDoc) {
   };
 }
 
+/** Pick limits by category slug and field key, cached with the category rows. */
+async function loadPickLimits() {
+  return cached("categories:pick-limits", 30_000, () => pickLimitsByCategory(), ["categories"]);
+}
+
+/** The categories for the public site. Each field carries its pick limit (maxPicks), or null when none is set. */
 export async function publicCategories() {
-  const rows = await loadCategories();
+  const [rows, limits] = await Promise.all([loadCategories(), loadPickLimits()]);
   return rows
     .filter((row) => row.enabled !== false && !row.deletedAt)
     .sort((a, b) => (a.order ?? 0) - (b.order ?? 0) || a.name.localeCompare(b.name))
-    .map((row) => presentCategory(row));
+    .map((row) => {
+      const present = presentCategory(row);
+      const fieldLimits = limits.get(row.slug);
+      return {
+        ...present,
+        fields: present.fields.map((field) => ({ ...field, maxPicks: fieldLimits?.get(String(field.key)) ?? null })),
+      };
+    });
 }
 
 export async function categoryBySlug(slug: string) {

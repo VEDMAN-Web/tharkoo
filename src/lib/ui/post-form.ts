@@ -1,5 +1,29 @@
 export type PostField = { key: string; label: string; required?: boolean };
 
+/** Chip answers: one value for a pick-one field, a list for a pick-many field. */
+export type PostAttrs = Record<string, string | string[]>;
+
+/** Most picks on a pick-many field when the admin set no limit. Matches the server default. */
+export const DEFAULT_PICK_LIMIT = 20;
+
+/** The picks in a chip answer, as a list. */
+export function picksOf(value: string | string[] | undefined): string[] {
+  if (Array.isArray(value)) return value;
+  return value ? [value] : [];
+}
+
+/** A text answer, or empty when the answer is a list. */
+export function textOf(value: string | string[] | undefined): string {
+  return typeof value === "string" ? value : "";
+}
+
+/** The answers to send: empty text and empty picks are left out, so optional fields do not fail on "". */
+export function cleanAttrs(attrs: PostAttrs): PostAttrs {
+  return Object.fromEntries(
+    Object.entries(attrs).filter(([, value]) => (Array.isArray(value) ? value.length > 0 : value.trim() !== "")),
+  );
+}
+
 export type PostDraftInput = {
   categoryId: string;
   /** Needed only when the category has sub-categories. */
@@ -15,7 +39,7 @@ export type PostDraftInput = {
   ageRequired?: boolean;
   terms: boolean;
   adult: boolean;
-  attrs: Record<string, string>;
+  attrs: PostAttrs;
   fields: PostField[];
 };
 
@@ -35,7 +59,9 @@ export function validatePost(input: PostDraftInput) {
   if (!input.adult) next.adult = "Please, fill in this field";
   for (const field of input.fields) {
     if (!field.required || field.key === "age") continue;
-    if (!String(input.attrs[field.key] || "").trim()) next[field.key] = "Please, fill in this field";
+    const answer = input.attrs[field.key];
+    const empty = Array.isArray(answer) ? answer.length === 0 : textOf(answer).trim() === "";
+    if (empty) next[field.key] = "Please, fill in this field";
   }
   return next;
 }
@@ -55,10 +81,10 @@ export type SavedDraft = {
 
 export function draftToForm(row: SavedDraft) {
   const attributes = row.attributes || {};
-  const attrs: Record<string, string> = {};
+  const attrs: PostAttrs = {};
   for (const [key, value] of Object.entries(attributes)) {
     if (key === "age" || value === undefined || value === null) continue;
-    attrs[key] = String(value);
+    attrs[key] = Array.isArray(value) ? value.map(String) : String(value);
   }
   return {
     title: row.title || "",
@@ -75,7 +101,7 @@ export function draftToForm(row: SavedDraft) {
     phone: row.contact?.phone || "",
     whatsapp: Boolean(row.contact?.whatsapp),
     telegram: row.contact?.telegram || "",
-    lookingFor: attrs["looking-for"] || "",
+    lookingFor: textOf(attrs["looking-for"]),
     attrs,
     photos: row.mediaIds || [],
   };

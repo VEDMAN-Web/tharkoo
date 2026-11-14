@@ -21,6 +21,7 @@ import {
   type ListingDoc,
 } from "@/server/models";
 import { parseListingAttributes, type FieldDefinition } from "@/server/shared/fields";
+import { withPickLimits } from "@/server/fields/service";
 import { textDenied } from "@/server/shared/policy";
 import { evaluatePublishGate } from "@/server/shared/publish-gate";
 import { toSlug } from "@/server/shared/slug";
@@ -246,8 +247,8 @@ function toValue(def: FieldDefinition | undefined, raw: string): unknown {
   }
 }
 
-function attributesFor(category: CategoryDoc, cells: Record<string, string>, errors: string[]) {
-  const defs = fieldDefs(category);
+async function attributesFor(category: CategoryDoc, cells: Record<string, string>, errors: string[]) {
+  const defs = await withPickLimits(category.slug, fieldDefs(category));
   const byKey = new Map(defs.map((def) => [def.key, def]));
   const raw: Record<string, unknown> = {};
   for (const [key, cell] of Object.entries(cells)) {
@@ -443,7 +444,7 @@ async function planRow(
   const category = cells.category ? await lookupCategory(lookups, cells.category.toLowerCase()) : null;
   if (cells.category && !category) errors.push(`Unknown category "${cells.category}" (use the category slug)`);
   const place = cells.city ? await lookupPlace(lookups, cells, errors) : null;
-  const attributes = category ? attributesFor(category, cells, errors) : null;
+  const attributes = category ? await attributesFor(category, cells, errors) : null;
   const subcategoryId = category ? await subcategoryOf(category._id.toString(), cells.subcategory ?? "", errors) : undefined;
   const price = priceOf(cells.price, errors);
   const photos = await resolvePhotos(partner.id, cells[PHOTO_COLUMN] ?? "", errors, lookups, category?.importMaxPhotos);

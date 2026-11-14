@@ -27,6 +27,8 @@ export interface FieldDefinition {
   order: number;
   enabled: boolean;
   filterable?: boolean;
+  /** Most options a user may pick on a pick-many field. Null or missing means the default. */
+  maxPicks?: number | null;
   shownOnCard?: boolean;
   placeholder?: string;
   help?: string;
@@ -34,6 +36,14 @@ export interface FieldDefinition {
 }
 
 const keyPattern = /^[a-z][a-z0-9_]{0,40}$/;
+
+/** Most options a pick-many field takes when the admin set no limit. */
+export const DEFAULT_MAX_PICKS = 20;
+
+/** The pick limit that applies to a pick-many field. */
+export function pickLimitOf(field: Pick<FieldDefinition, "maxPicks">): number {
+  return field.maxPicks ?? DEFAULT_MAX_PICKS;
+}
 
 export const fieldDefinitionSchema = z
   .object({
@@ -110,7 +120,7 @@ function fieldValueSchema(field: FieldDefinition): ZodType {
     case "multiselect":
       return z
         .array(z.string())
-        .max(20)
+        .max(pickLimitOf(field), { message: `Choose up to ${pickLimitOf(field)}` })
         .refine(
           (values) => values.every((value) => field.options.includes(value)),
           "Choose listed options",
@@ -147,4 +157,27 @@ export function parseListingAttributes(
     .object(shape)
     .strict()
     .parse(record ?? {}) as Record<string, unknown>;
+}
+
+/**
+ * Choice problems for a partly filled listing: a value that is not in the admin list, or more picks than the limit.
+ * Empty values are skipped so drafts can be saved. Keys that are not fields are ignored here.
+ */
+export function choiceProblems(fields: FieldDefinition[], input: unknown): Record<string, string[]> {
+  const problems: Record<string, string[]> = {};
+  if (!input || typeof input !== "object" || Array.isArray(input)) return problems;
+  const values = input as Record<string, unknown>;
+  for (const field of fields) {
+    const value = values[field.key];
+    if (field.type === "select" && typeof value === "string" && value !== "" && !field.options.includes(value)) {
+      problems[field.key] = ["Choose a listed option"];
+    }
+    if (field.type !== "multiselect" || !Array.isArray(value)) continue;
+    if (value.length > pickLimitOf(field)) {
+      problems[field.key] = [`Choose up to ${pickLimitOf(field)}`];
+    } else if (value.some((item) => typeof item !== "string" || (item !== "" && !field.options.includes(item)))) {
+      problems[field.key] = ["Choose listed options"];
+    }
+  }
+  return problems;
 }

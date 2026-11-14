@@ -260,3 +260,24 @@ export async function saveFieldSettings(input: { categorySlug: string; fieldKey:
   await CategoryFieldSetting.updateOne({ categorySlug: input.categorySlug, fieldKey: input.fieldKey }, { $set: { filterLabel, maxPicks } }, { upsert: true });
   return { filterLabel, maxPicks };
 }
+
+/** The field definitions of a category, each with its pick limit from the admin settings (null when none is set). */
+export async function withPickLimits<T extends { key: string }>(
+  categorySlug: string,
+  defs: T[],
+): Promise<(T & { maxPicks: number | null })[]> {
+  const settings = await readFieldSettings(categorySlug);
+  return defs.map((def) => ({ ...def, maxPicks: settings.get(def.key)?.maxPicks ?? null }));
+}
+
+/** Public pick limits by category slug and field key, for every field that sets one. */
+export async function pickLimitsByCategory(): Promise<Map<string, Map<string, number>>> {
+  const rows = await CategoryFieldSetting.find({ maxPicks: { $ne: null } }).select("categorySlug fieldKey maxPicks").lean();
+  const byCategory = new Map<string, Map<string, number>>();
+  for (const row of rows) {
+    const limits = byCategory.get(row.categorySlug) ?? new Map<string, number>();
+    if (row.maxPicks) limits.set(row.fieldKey, row.maxPicks);
+    byCategory.set(row.categorySlug, limits);
+  }
+  return byCategory;
+}
