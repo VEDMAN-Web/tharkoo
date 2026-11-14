@@ -6,13 +6,17 @@ import { canonical } from "@/lib/seo";
 import { safeHref } from "@/lib/sanitize";
 import type { SiteContent } from "@/lib/ui/site-content";
 import type { UrlPaths } from "@/lib/urls";
+import type { ShellConfig } from "@/server/site-links/shell-config-rules";
 import { AgeGate } from "./AgeGate";
 import { CityProvider } from "./CityContext";
 import { CookieBanner } from "./CookieBanner";
 import { Footer } from "./Footer";
+import { FooterNew } from "./FooterNew";
 import { Header } from "./Header";
+import { HeaderNew } from "./HeaderNew";
 import { MainInner } from "./MainInner";
 import { UrlPathProvider } from "./UrlPaths";
+import { SupportChat } from "./chat/SupportChat";
 
 type City = { slug: string; name: string; stateSlug?: string };
 type Cat = { slug: string; name: string };
@@ -35,6 +39,9 @@ export type ChromeData = {
   cities: City[];
   cityCount: number;
   user: { email: string; roles: string[] } | null;
+  /** H7.1: the New design switch. Off shows the old header, footer and no chat. */
+  newDesign: boolean;
+  shell: ShellConfig;
 };
 
 export function PathChrome({ shell, paths, children }: { shell: ChromeData; paths: UrlPaths; children: React.ReactNode }) {
@@ -48,9 +55,10 @@ export function PathChrome({ shell, paths, children }: { shell: ChromeData; path
       </UrlPathProvider>
     );
   }
-  const { site, categories, cities, cityCount, user, content, footerLinks, socialLinks } = shell;
+  const { site, categories, cities, cityCount, user, content, footerLinks, socialLinks, newDesign, shell: config } = shell;
   // Style guides are tool pages: no age gate and no cookie banner.
   const toolPage = path.startsWith("/styleguide");
+  const siteName = site.logoText || site.name || "Tharkoo";
   return (
     <UrlPathProvider paths={paths}>
     <CityProvider cities={cities}>
@@ -65,35 +73,46 @@ export function PathChrome({ shell, paths, children }: { shell: ChromeData; path
           }}
         />
       )}
-      <Header
-        siteName={site.logoText || site.name || "Tharkoo"}
-        countryName={site.countryName || "India"}
-        searchPlaceholder={content.hero.searchPlaceholder}
-        postCta={content.header.postLabel}
-        categories={categories}
-        cities={cities}
-        user={user}
-        social={content.socials.length ? content.socials : socialLinks}
-        chrome={content.header}
-      />
-      <MainInner>{children}</MainInner>
-      <div
-        id="tk-facts"
-        hidden
-        data-hours={content.support.hours || site.supportHours || "Monday through Friday"}
-        data-wa={content.support.whatsapp || ""}
-        data-tg={content.support.telegram || ""}
-      />
-      <Footer
-        siteName={site.name || "Tharkoo"}
-        legalName={site.legalName || "Tharkoo"}
-        cityCount={cityCount}
-        about={site.tagline || ""}
-        categories={categories}
-        links={footerLinks}
-        social={content.socials.length ? content.socials : socialLinks}
-        content={content.footer}
-      />
+      {newDesign ? (
+        <div className="tkn" data-design="new">
+          <HeaderNew siteName={siteName} shell={config} cities={cities} />
+          <MainInner>{children}</MainInner>
+          <FooterNew siteName={siteName} shell={config} categories={categories} />
+          <SupportChat chat={config.chat} />
+        </div>
+      ) : (
+        <>
+          <Header
+            siteName={siteName}
+            countryName={site.countryName || "India"}
+            searchPlaceholder={content.hero.searchPlaceholder}
+            postCta={content.header.postLabel}
+            categories={categories}
+            cities={cities}
+            user={user}
+            social={content.socials.length ? content.socials : socialLinks}
+            chrome={content.header}
+          />
+          <MainInner>{children}</MainInner>
+          <div
+            id="tk-facts"
+            hidden
+            data-hours={content.support.hours || site.supportHours || "Monday through Friday"}
+            data-wa={content.support.whatsapp || ""}
+            data-tg={content.support.telegram || ""}
+          />
+          <Footer
+            siteName={site.name || "Tharkoo"}
+            legalName={site.legalName || "Tharkoo"}
+            cityCount={cityCount}
+            about={site.tagline || ""}
+            categories={categories}
+            links={footerLinks}
+            social={content.socials.length ? content.socials : socialLinks}
+            content={content.footer}
+          />
+        </>
+      )}
       {toolPage ? null : (
       <AgeGate
         brand="Tharkoo"
