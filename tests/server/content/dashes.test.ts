@@ -60,3 +60,14 @@ describe("stored dashes are repaired, idempotently", () => {
     expect(second.updated).toBe(0);
   });
 });
+
+describe("repair keeps database types intact", () => {
+  it("does not turn an ObjectId reference into a plain object", async () => {
+    const parent = new mongoose.Types.ObjectId();
+    await Category.collection.insertOne({ slug: "child", name: `Child ${EM} thing`, parentId: parent, fields: [], enabled: true });
+    await repairDashes("req-dash-3");
+    const row = await Category.collection.findOne({ slug: "child" });
+    expect(row?.parentId).toBeInstanceOf(mongoose.Types.ObjectId);
+    expect(String(row?.parentId)).toBe(String(parent));
+  });
+});

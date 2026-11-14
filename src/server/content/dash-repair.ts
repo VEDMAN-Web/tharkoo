@@ -19,6 +19,13 @@ const TITLE_KEY = /title|h1|heading|label|name|seo/i;
 
 type Json = unknown;
 
+/** Only plain objects are walked. ObjectId, Date and other class instances are kept as they are. */
+function isPlainObject(value: unknown): value is Record<string, Json> {
+  if (!value || typeof value !== "object") return false;
+  const proto = Object.getPrototypeOf(value);
+  return proto === Object.prototype || proto === null;
+}
+
 function replaceIn(value: Json, key: string): Json {
   if (typeof value === "string") {
     if (!DASH_CHARS.test(value)) return value;
@@ -26,7 +33,7 @@ function replaceIn(value: Json, key: string): Json {
     return replaceDashes(value, separator);
   }
   if (Array.isArray(value)) return value.map((item) => replaceIn(item, key));
-  if (value && typeof value === "object") {
+  if (isPlainObject(value)) {
     const out: Record<string, Json> = {};
     for (const [inner, item] of Object.entries(value as Record<string, Json>)) out[inner] = replaceIn(item, inner);
     return out;
