@@ -25,6 +25,7 @@ import { textDenied } from "@/server/shared/policy";
 import { evaluatePublishGate } from "@/server/shared/publish-gate";
 import { toSlug } from "@/server/shared/slug";
 import { assertVerified } from "@/server/verification/service";
+import { idCheckRequired } from "@/server/settings/id-check";
 import { assertRowCap, parsePhotoCell, photoLimitForImport } from "@/server/import/rules";
 
 export { MAX_IMPORT_ROWS, IMPORT_CHUNK_ROWS } from "@/server/import/rules";
@@ -131,6 +132,8 @@ interface Lookups {
   taken: Set<string>;
   files: UploadedFiles;
   superadmin: boolean;
+  /** The ID-check switch (H6.14), read once per import. */
+  requireIdCheck: boolean;
 }
 
 function assertStaff(actor: ImportActor) {
@@ -405,6 +408,7 @@ async function planRow(
       categoryEnabled: category.enabled !== false,
       mediaCleared: true,
       attributes,
+      idCheckRequired: lookups.requireIdCheck,
     });
     if (!gate.ok) errors.push(`Cannot be published: ${gate.reason}`);
   }
@@ -449,6 +453,7 @@ export async function prepareImport(actor: ImportActor, partnerEmail: string, cs
     taken: new Set(existing.map((row) => `${row.categoryId}|${row.cityId}|${row.title.toLowerCase()}`)),
     files,
     superadmin: actor.roles.includes("superadmin"),
+    requireIdCheck: await idCheckRequired(),
   };
   const plans: Plan[] = [];
   for (const [index, row] of body.entries()) {

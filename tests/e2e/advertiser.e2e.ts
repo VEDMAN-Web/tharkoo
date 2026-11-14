@@ -1,19 +1,38 @@
-import { isPhone, adminApi, expect, loginUi, newApi, newUserApi, originHeaders, PNG, test, uniqueEmail, registerApi, USER_PASSWORD } from "./helpers";
+import { isPhone, expect, loginUi, newApi, newUserApi, PNG, test, uniqueEmail, registerApi, setIdCheckSwitch, USER_PASSWORD } from "./helpers";
+import { approveLatestKyc } from "./flows";
 
 test.describe("4 Advertiser", () => {
-  test("login, KYC, post an ad in 3 steps, publish, edit, renew, pause", async ({ page, baseURL }) => {
+  // H6.14: this spec runs with "Require ID check before posting" on. Switch it back off after every test.
+  test.afterEach(async ({ baseURL }) => {
+    await setIdCheckSwitch(baseURL!, false);
+  });
+
+  test("login, ID check first, post an ad in 3 steps, publish, edit, renew, pause", async ({ page, baseURL }) => {
     test.setTimeout(150_000);
     const base = baseURL!;
     const email = uniqueEmail("adv");
     const title = `E2E listing ${Date.now()}`;
 
+    await setIdCheckSwitch(base, true);
     const signup = await newApi(base);
     await registerApi(signup, base, email);
     await signup.dispose();
 
-    // Login through the post-ad redirect.
+    // Login through the post-ad redirect. With the switch on, the ID check comes before step 1.
     await loginUi(page, email, USER_PASSWORD, "/u/post-insert/");
     await page.waitForURL(/\/u\/post-insert\//);
+    await expect(page.locator("[data-tk=id-check-first] [data-tk=step-title]")).toContainText(/verify your id first/i);
+    await expect(page.locator("#category")).toHaveCount(0);
+    await page.locator("[data-tk=verify-id]").click();
+    await page.waitForURL(/\/u\/account\/kyc/);
+    await page.locator("#front-id").setInputFiles({ name: "front.png", mimeType: "image/png", buffer: PNG });
+    await page.locator("#selfie-id").setInputFiles({ name: "selfie.png", mimeType: "image/png", buffer: PNG });
+    await page.locator("[data-tk=kyc-submit]").click();
+    await expect(page.locator("[data-tk=kyc-note]")).toContainText(/review/i);
+    await approveLatestKyc(base);
+
+    // Approved: back to post-ad, the form opens.
+    await page.goto("/u/post-insert/");
 
     // Step 1: information.
     await expect(page.locator("[data-tk=step-title]")).toContainText(/information/i);
@@ -35,36 +54,7 @@ test.describe("4 Advertiser", () => {
     await expect(page.locator("[data-tk=photo-note]")).toContainText(/Photo saved/i);
     await page.locator("[data-tk=go-on]").click();
 
-    // Step 3: preview and publish. Without ID verification the site asks for it first.
-    await page.locator("button", { hasText: "PUBLISH" }).click();
-    const verify = page.locator("[data-tk=verify-id]");
-    await expect(verify).toBeVisible();
-    await expect(page.locator("[aria-live=polite]").filter({ hasText: /quick check/i })).toBeVisible();
-    const draftUrl = page.url();
-
-    // KYC upload.
-    await verify.click();
-    await page.locator("#front-id").setInputFiles({ name: "front.png", mimeType: "image/png", buffer: PNG });
-    await page.locator("#selfie-id").setInputFiles({ name: "selfie.png", mimeType: "image/png", buffer: PNG });
-    await page.locator("[data-tk=kyc-submit]").click();
-    await expect(page.locator("[data-tk=kyc-note]")).toContainText(/review/i);
-
-    // Admin approves the KYC through the API.
-    const admin = await adminApi(base);
-    const queue = await admin.get("/api/admin/verifications/?page=1&pageSize=50");
-    expect(queue.status()).toBe(200);
-    const items = ((await queue.json()).data?.items || []) as { id: string; email?: string; userEmail?: string }[];
-    expect(items.length).toBeGreaterThan(0);
-    const verificationId = items[items.length - 1].id;
-    const decision = await admin.post(`/api/admin/verifications/${verificationId}/decision/`, {
-      headers: originHeaders(base, "/admin/"),
-      data: { decision: "approved", reason: "Documents match the account" },
-    });
-    expect(decision.status(), await decision.text()).toBe(200);
-
-    // Publish now works.
-    await page.goto(draftUrl.includes("step=") ? draftUrl.replace(/step=\d+/, "step=3") : draftUrl);
-    await page.locator("[data-tk=card]").waitFor();
+    // Step 3: preview and publish. The ID is approved, so it goes straight through.
     await page.locator("button", { hasText: "PUBLISH" }).click();
     await expect(page.locator("[data-tk=step-title]").filter({ hasText: /live|review|pending/i })).toBeVisible();
     const state = (await page.locator("[data-tk=step-title]").innerText()).toLowerCase();
@@ -125,7 +115,6 @@ test.describe("4 Advertiser", () => {
     // A paused ad is no longer public.
     const gone = await page.request.get(adHref!);
     expect([404, 410]).toContain(gone.status());
-    await admin.dispose();
   });
 
   test("unverified poster cannot publish without KYC (API)", async ({ baseURL }) => {

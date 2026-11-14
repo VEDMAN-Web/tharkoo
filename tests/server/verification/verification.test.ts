@@ -4,7 +4,7 @@ import { GET as adminGet, POST as adminPost } from "@/app/api/admin/verification
 import { GET as userGet, POST as userPost } from "@/app/api/verification/[[...slug]]/route";
 import { hashToken } from "@/server/auth/http";
 import { setCloudinaryClient, type CloudinaryClient } from "@/server/media/client";
-import { AuditEvent, IdentityVerification, MediaAsset, Session, User } from "@/server/models";
+import { AuditEvent, IdentityVerification, MediaAsset, Session, Site, User } from "@/server/models";
 import { assertVerified } from "@/server/verification/service";
 import { clearMemoryMongo, connectMemoryMongo, disconnectMemoryMongo } from "../../setup/mongo";
 
@@ -144,6 +144,8 @@ describe("manual identity verification", () => {
   it("blocks an unverified user, accepts one pending submit, and allows a resubmit after rejection", async () => {
     const owner = await account("ada@example.com");
     const staff = await account("staff@example.com", ["trust_safety"]);
+    // The ID check is asked for only when the switch is on (H6.14). The default is off.
+    await Site.updateOne({ key: "default" }, { $set: { requireIdCheckToPost: true } }, { upsert: true });
     await expect(assertVerified(owner.id)).rejects.toMatchObject({ code: "VERIFICATION_REQUIRED" });
 
     const first = await submit(owner.cookie);

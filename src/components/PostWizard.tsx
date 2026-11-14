@@ -27,7 +27,7 @@ function normalPhone(raw: string) {
   return tidy(raw);
 }
 
-export function PostWizard({ copy = POST_COPY_DEFAULTS }: { copy?: PostCopy }) {
+export function PostWizard({ copy = POST_COPY_DEFAULTS, requireIdCheck = false }: { copy?: PostCopy; requireIdCheck?: boolean }) {
   const paths = useUrlPaths();
   const [step, setStep] = useState(1);
   const [categories, setCategories] = useState<Cat[]>([]);
@@ -294,12 +294,15 @@ export function PostWizard({ copy = POST_COPY_DEFAULTS }: { copy?: PostCopy }) {
     if (!draftId || !title.trim()) return setBanner("Save a draft before submitting.");
     setBusy(true);
     setBanner("");
-    const me = await api<{ verification?: { status?: string }; user?: { verificationStatus?: string } }>("/api/auth/me");
-    const verification = me.ok ? me.data.verification?.status || me.data.user?.verificationStatus : "";
-    if (needsIdCheck(verification)) {
-      setBusy(false);
-      setBanner("Your ID needs a quick check before this ad can go live.");
-      return;
+    // H6.14: the ID check is asked for only when the switch is on. Off, the submit goes straight to the server.
+    if (requireIdCheck) {
+      const me = await api<{ verification?: { status?: string }; user?: { verificationStatus?: string } }>("/api/auth/me");
+      const verification = me.ok ? me.data.verification?.status || me.data.user?.verificationStatus : "";
+      if (needsIdCheck(verification)) {
+        setBusy(false);
+        setBanner("Your ID needs a quick check before this ad can go live.");
+        return;
+      }
     }
     const res = await api(`/api/listings/${draftId}/submit`, {
       method: "POST",

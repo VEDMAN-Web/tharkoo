@@ -11,6 +11,8 @@ import { withUrlSeo } from "@/lib/seo/override";
 import { userFromToken } from "@/server/auth/service";
 import { SESSION_COOKIE } from "@/server/auth/http";
 import { getPaths } from "@/server/urls/service";
+import { idCheckRequired, idCheckScreen } from "@/server/settings/id-check";
+import { IdCheckFirst } from "@/components/post/IdCheckFirst";
 
 export async function generateMetadata() {
   const paths = await getPaths();
@@ -40,6 +42,10 @@ export default async function PostInsertPage({
     const dest = query.size ? `${postAdPath(paths)}?${query.toString()}` : postAdPath(paths);
     redirect(`${loginPath(paths)}?next=${encodeURIComponent(dest)}`);
   }
+  // H6.14: with the ID-check switch on, the ID check comes first, before step 1. Off, the form always opens.
+  const requireIdCheck = await idCheckRequired();
+  const screen = idCheckScreen(requireIdCheck, session.user.verificationStatus);
+  if (screen !== "form") return <IdCheckFirst screen={screen} postPath={postAdPath(await getPaths())} />;
   let blocks = null;
   try {
     // "?preview=1" shows an admin the saved draft instead of the published layout.
@@ -50,5 +56,5 @@ export default async function PostInsertPage({
   } catch (error) {
     console.error("post-ad layout could not be read; using the built-in wording", error);
   }
-  return <PostWizard copy={buildPostCopy(blocks)} />;
+  return <PostWizard copy={buildPostCopy(blocks)} requireIdCheck={requireIdCheck} />;
 }

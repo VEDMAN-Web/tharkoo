@@ -5,7 +5,7 @@ const queueIndexNow = vi.hoisted(() => vi.fn());
 vi.mock("@/server/indexnow/ping", () => ({ queueIndexNow }));
 import { parseCsv } from "@/server/listings/csv";
 import { MAX_IMPORT_ROWS, dryRunImport, runImport, type ImportActor } from "@/server/listings/import";
-import { AuditEvent, BannedWord, Category, Listing, Location, MediaAsset, User } from "@/server/models";
+import { AuditEvent, BannedWord, Category, Listing, Location, MediaAsset, Site, User } from "@/server/models";
 import { denyTerm } from "@/server/shared/policy";
 import { clearMemoryMongo, connectMemoryMongo, disconnectMemoryMongo } from "../../setup/mongo";
 
@@ -176,6 +176,8 @@ describe("partner import", () => {
   it("refuses a partner who is not ID-verified", async () => {
     const owner = await partner("unsubmitted", "unverified@example.com");
     await catalogue(owner._id);
+    // The ID check is asked for only when the switch is on (H6.14). The default is off.
+    await Site.updateOne({ key: "default" }, { $set: { requireIdCheckToPost: true } }, { upsert: true });
     await expect(dryRunImport(admin, owner.email, file(row("Cycle")))).rejects.toThrow(/verification/i);
     await expect(runImport(admin, owner.email, file(row("Cycle")), "pending", "req-6")).rejects.toThrow(/verification/i);
     expect(await Listing.countDocuments({})).toBe(0);
