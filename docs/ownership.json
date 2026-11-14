@@ -2089,6 +2089,11 @@
         "tests/server/layout/**",
         "tests/e2e/home-hero.e2e.ts",
         "tests/e2e/home-cards.e2e.ts",
+        "tests/e2e/hero-banner.e2e.ts",
+        "src/app/api/cron/expire/route.ts",
+        "src/server/seed/run.ts",
+        "src/components/admin/ui/ImagePicker.tsx",
+        "src/components/HomeBlocks.tsx",
         "docs/ownership.json",
         "progress/H6.13.md"
       ]

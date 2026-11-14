@@ -106,12 +106,12 @@ describe("upload", () => {
     expect(await SiteMedia.countDocuments()).toBe(0);
   });
 
-  it("rejects other file types, fake files, empty files and files over 5 MB", async () => {
+  it("rejects other file types, fake files, empty files and files over 8 MB", async () => {
     await expect(uploadSiteMedia({ file: { type: "image/gif", data: png(10, 10) }, alt: "A picture", ...admin })).rejects.toThrow(/jpeg, png and webp/i);
     await expect(uploadSiteMedia({ file: { type: "image/svg+xml", data: Buffer.from("<svg onload=alert(1)>") }, alt: "A picture", ...admin })).rejects.toThrow(/jpeg, png and webp/i);
     await expect(uploadSiteMedia({ file: { type: "image/jpeg", data: png(10, 10) }, alt: "A picture", ...admin })).rejects.toThrow(/valid/i);
     await expect(uploadSiteMedia({ file: { type: "image/png", data: Buffer.alloc(0) }, alt: "A picture", ...admin })).rejects.toThrow(/empty/i);
-    await expect(uploadSiteMedia({ file: { type: "image/png", data: png(10, 10, SITE_MEDIA_MAX_BYTES) }, alt: "A picture", ...admin })).rejects.toThrow(/5 MB/);
+    await expect(uploadSiteMedia({ file: { type: "image/png", data: png(10, 10, SITE_MEDIA_MAX_BYTES) }, alt: "A picture", ...admin })).rejects.toThrow(/8 MB/);
     expect(await SiteMedia.countDocuments()).toBe(0);
     expect(await readdir(dir)).toHaveLength(0);
   });
