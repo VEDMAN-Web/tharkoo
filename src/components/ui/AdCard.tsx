@@ -11,6 +11,7 @@ import { api, friendlyError } from "@/lib/ui/api";
 import { adPath } from "@/lib/urls";
 import { useUrlPaths } from "../UrlPaths";
 import { makeT, type TextFn, type UiTextMap } from "@/lib/ui/text";
+import { videoVerifiedLabel } from "../ad/tourLabels";
 
 const TextContext = createContext<UiTextMap | undefined>(undefined);
 
@@ -56,6 +57,7 @@ export function AdCard({
   const area = ad.place && ad.place !== city ? ad.place : "";
   const place = `${city}${area ? `/ ${area}` : ""}`.slice(0, 22);
   const tier = variant in TIER_KEYS ? t(TIER_KEYS[variant as keyof typeof TIER_KEYS]) : "";
+  const videoVerified = videoVerifiedLabel(ad.videoVerifiedUntil);
 
   async function reveal(channel: "phone" | "whatsapp") {
     setNote("");
@@ -103,6 +105,11 @@ export function AdCard({
                   <span className="sr-only">{item}</span>
                 </span>
               ))}
+            </span>
+          ) : null}
+          {videoVerified ? (
+            <span className="tk-chip" data-tk="video-verified" style={{ alignSelf: "flex-start", background: "var(--ok-bg)", color: "var(--ok)" }}>
+              <Check size={12} aria-hidden /> {videoVerified}
             </span>
           ) : null}
           <span className="tk-card-meta">

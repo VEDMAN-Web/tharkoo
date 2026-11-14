@@ -13,6 +13,7 @@ import { readSaved, type SavedItem } from "../ui/SaveButton";
 import { RecentlyViewedRail } from "../ui/RecentlyViewed";
 import { AdCard } from "../ui/AdCard";
 import { HelpCard } from "../ui/HelpCard";
+import { TourInbox } from "./TourInbox";
 import type { ListingDoc } from "@/lib/models";
 
 type Me = { user: { displayName?: string; email?: string; verificationStatus?: string } };
@@ -129,6 +130,7 @@ export function Dashboard({ locked = false }: { locked?: boolean }) {
               </div>
             </div>
           </div>
+          <TourInbox />
           <aside className="tk-security" data-tk="security-tips">
             <p>
               <strong>Security tips:</strong> Scammers may pretend to be the Tharkoo team to ask for money. Never send payments or personal information to unofficial contacts.{" "}

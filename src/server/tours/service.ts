@@ -381,7 +381,11 @@ export async function listTours(userId: string) {
     .sort({ requestedAt: -1 })
     .limit(50)
     .lean();
-  return rows.map((row) => ({ ...present(row), role: String(row.ownerId) === userId ? "advertiser" : "buyer" }));
+  return rows.map((row) => {
+    const isAdvertiser = String(row.ownerId) === userId;
+    const joinUrl = isAdvertiser && row.roomId ? videoRoomProvider().joinUrlFor(row.roomId) : null;
+    return { ...present(row), role: isAdvertiser ? "advertiser" : "buyer", joinUrl };
+  });
 }
 
 export async function listVideoTourCategories() {

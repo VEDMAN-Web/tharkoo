@@ -84,6 +84,8 @@ export interface ListingDoc extends BaseDoc {
   photoCountVisible?: number;
   variant?: string;
   verified?: boolean;
+  /** "Video verified" badge end (H6.5). A date string once it has passed through plain(). */
+  videoVerifiedUntil?: Date | string | null;
   trust?: string[];
   subscriber?: boolean;
   lastBumpedAt?: Date;

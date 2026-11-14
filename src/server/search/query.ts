@@ -98,6 +98,7 @@ interface Row {
   createdAt?: Date;
   updatedAt?: Date;
   bumpedAt?: Date;
+  videoVerifiedUntil?: Date | null;
 }
 
 export interface PublicHit {
@@ -523,6 +524,7 @@ export async function presentRows(docs: Row[], promotions: Map<string, RankPromo
       trust,
       lastBumpedAt: bumped ? new Date(bumped) : undefined,
       publishedAt: doc.publishedAt,
+      videoVerifiedUntil: doc.videoVerifiedUntil ?? null,
       status: "live",
     });
   }
