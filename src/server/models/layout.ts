@@ -61,6 +61,8 @@ export interface SiteMediaDoc extends BaseDoc {
   contentType: "image/jpeg" | "image/png" | "image/webp";
   tags: string[];
   uploadedBy: string;
+  /** True when the alt text was filled from the file name and no one has checked it yet (H6.12). */
+  altAuto?: boolean;
 }
 
 export interface ListingPinDoc extends BaseDoc {
@@ -123,6 +125,7 @@ const siteMediaSchema = new Schema<SiteMediaDoc>(
     contentType: { type: String, enum: ["image/jpeg", "image/png", "image/webp"], required: true },
     tags: { type: [String], default: [] },
     uploadedBy: { type: String, default: "" },
+    altAuto: { type: Boolean, default: false },
   },
   { timestamps: { createdAt: true, updatedAt: false }, collection: collectionName("site_media", "SiteMedia") },
 );

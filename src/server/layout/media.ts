@@ -11,6 +11,7 @@ import { CLOUDINARY_FOLDER, UPLOAD_NEEDS_CLOUDINARY, optionalCloudinary, uploads
 import { PageLayout, SiteMedia, User } from "@/server/models";
 import type { BlockBase, SiteMediaDoc } from "@/server/models/layout";
 import { textDenied } from "@/server/shared/policy";
+import { altFromFileName } from "@/server/media/alt-from-filename";
 
 const audit = new AuditRepository();
 
@@ -130,7 +131,8 @@ function present(doc: SiteMediaDoc & { _id: unknown }) {
     uploadedBy: doc.uploadedBy,
     createdAt: doc.createdAt ? new Date(doc.createdAt).toISOString() : "",
     oversize: doc.bytes > SITE_MEDIA_OVERSIZE_BYTES,
-    missingAlt: !doc.alt || doc.alt.trim().length < ALT_MIN,
+    autoAlt: doc.altAuto === true,
+    missingAlt: !doc.alt || doc.alt.trim().length < ALT_MIN || doc.altAuto === true,
   };
 }
 
@@ -192,7 +194,10 @@ function inUseMessage(usages: MediaUsage[]) {
 
 export async function uploadSiteMedia(input: {
   file: { type: string; data: Buffer };
+  /** Alt text as typed. Empty with `autoAlt` means: fill it from `fileName`. */
   alt: unknown;
+  fileName?: string;
+  autoAlt?: boolean;
   tags?: unknown;
   email: string;
   roles: string[];
@@ -202,7 +207,9 @@ export async function uploadSiteMedia(input: {
   if (!isSiteMediaType(file.type)) throw new ValidationError("Only jpeg, png and webp images are allowed");
   if (file.data.length === 0) throw new ValidationError("The file is empty");
   if (file.data.length > SITE_MEDIA_MAX_BYTES) throw new ValidationError("Images can be at most 8 MB");
-  const alt = validateAlt(input.alt);
+  const typedAlt = typeof input.alt === "string" ? input.alt.trim() : "";
+  const autoAlt = input.autoAlt === true && typedAlt === "";
+  const alt = validateAlt(autoAlt ? altFromFileName(input.fileName ?? "") : input.alt);
   const tags = cleanTags(input.tags);
   const size = readImageSize(file.data, file.type);
   if (!size || size.width < 1 || size.height < 1) throw new ValidationError("This file is not a valid jpeg, png or webp image");
@@ -231,9 +238,10 @@ export async function uploadSiteMedia(input: {
     contentType: file.type,
     tags,
     uploadedBy: input.email,
+    altAuto: autoAlt,
   });
   const item = present(doc.toObject() as SiteMediaDoc & { _id: unknown });
-  await record("media.site.upload", input.email, item.id, null, { url: item.url, alt, tags, bytes: item.bytes });
+  await record("media.site.upload", input.email, item.id, null, { url: item.url, alt, tags, bytes: item.bytes, autoAlt });
   return item;
 }
 
@@ -258,7 +266,8 @@ export async function listSiteMedia(filter: MediaFilter, roles: string[]) {
     and.push({ $or: [{ alt: rx }, { tags: rx }, { objectKey: rx }] });
   }
   if (filter.tag) query.tags = filter.tag.toLowerCase();
-  if (filter.missingAlt) and.push({ $or: [{ alt: "" }, { alt: { $regex: `^.{0,${ALT_MIN - 1}}$` } }] });
+  // An auto alt (from the file name) counts as missing until someone checks it and saves the card.
+  if (filter.missingAlt) and.push({ $or: [{ alt: "" }, { alt: { $regex: `^.{0,${ALT_MIN - 1}}$` } }, { altAuto: true }] });
   if (filter.oversize) query.bytes = { $gt: SITE_MEDIA_OVERSIZE_BYTES };
   if (and.length) query.$and = and;
   const limit = Math.min(Math.max(filter.limit ?? 48, 1), 200);
@@ -288,7 +297,10 @@ export async function updateSiteMedia(id: string, patch: { alt?: unknown; tags?:
   const current = await SiteMedia.findById(id);
   if (!current) throw new NotFoundError("Image not found");
   const before = { alt: current.alt, tags: current.tags };
-  if (patch.alt !== undefined) current.alt = validateAlt(patch.alt);
+  if (patch.alt !== undefined) {
+    current.alt = validateAlt(patch.alt);
+    current.altAuto = false;
+  }
   if (patch.tags !== undefined) current.tags = cleanTags(patch.tags);
   await current.save();
   await record("media.site.update", email, id, before, { alt: current.alt, tags: current.tags });

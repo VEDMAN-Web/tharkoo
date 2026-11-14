@@ -2071,7 +2071,12 @@
         "tests/server/import/**",
         "tests/e2e/bulk-upload.e2e.ts",
         "docs/ownership.json",
-        "progress/H6.12.md"
+        "progress/H6.12.md",
+        "src/server/layout/media.ts",
+        "src/server/models/layout.ts",
+        "src/server/models/catalog.ts",
+        "tests/server/layout/media.test.ts",
+        "tests/server/listings/import.test.ts"
       ]
     },
     "H6.13": {

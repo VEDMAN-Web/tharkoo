@@ -1,4 +1,4 @@
-import { type Types } from "mongoose";
+import { Types } from "mongoose";
 import { z } from "zod";
 import { siteUrl } from "@/lib/utils";
 import { connectDb } from "@/lib/db";
@@ -20,20 +20,32 @@ import {
   type CategoryDoc,
   type ListingDoc,
 } from "@/server/models";
-import { photoLimit } from "@/server/media/config";
 import { parseListingAttributes, type FieldDefinition } from "@/server/shared/fields";
 import { textDenied } from "@/server/shared/policy";
 import { evaluatePublishGate } from "@/server/shared/publish-gate";
 import { toSlug } from "@/server/shared/slug";
 import { assertVerified } from "@/server/verification/service";
+import { assertRowCap, parsePhotoCell, photoLimitForImport } from "@/server/import/rules";
 
-export const MAX_IMPORT_ROWS = 200;
+export { MAX_IMPORT_ROWS, IMPORT_CHUNK_ROWS } from "@/server/import/rules";
 const MAX_CSV_BYTES = 2 * 1024 * 1024;
 const TITLE_MAX = 140;
 const DESCRIPTION_MAX = 5000;
 const REQUIRED_COLUMNS = ["category", "city", "title", "description"] as const;
 const PHOTO_COLUMN = "photos";
 const PHOTO_ALIASES = new Set(["photos", "photo_urls", "photo_url", "photo"]);
+/** Key is the lower-cased file name. mediaId is "" until the photo is uploaded (dry run only needs the names). */
+export type UploadedFiles = Map<string, { name: string; mediaId: string }>;
+
+export function uploadedFromNames(names: readonly string[], known: Map<string, string> = new Map()): UploadedFiles {
+  const files: UploadedFiles = new Map();
+  for (const name of names) {
+    const key = name.trim().toLowerCase();
+    if (!key || files.has(key)) continue;
+    files.set(key, { name: name.trim(), mediaId: known.get(key) ?? "" });
+  }
+  return files;
+}
 const BASE_COLUMNS = new Set<string>([...REQUIRED_COLUMNS, "district", "price", "subcategory", PHOTO_COLUMN]);
 const CLOUDINARY_HOST = "res.cloudinary.com";
 
@@ -53,11 +65,20 @@ export interface ImportRowReport {
   errors: string[];
 }
 
+/** What the check found: how many ads and photos the import would create, and which chosen images it would upload. */
+export interface PhotoSummary {
+  ads: number;
+  photosToAttach: number;
+  filesToUpload: string[];
+  unusedFiles: string[];
+}
+
 export interface DryRunReport {
   partner: { id: string; email: string; displayName: string };
   total: number;
   okCount: number;
   rows: ImportRowReport[];
+  photos: PhotoSummary;
 }
 
 export interface ImportReport extends DryRunReport {
@@ -65,6 +86,9 @@ export interface ImportReport extends DryRunReport {
   imported: number;
   failed: number;
 }
+
+/** A photo on a row: an existing upload (by id) or one of the chosen files (by name). */
+export type RowPhoto = { kind: "id"; id: string } | { kind: "file"; name: string };
 
 interface RowInput {
   categoryId: string;
@@ -76,7 +100,7 @@ interface RowInput {
   description: string;
   attributes: Record<string, unknown>;
   price?: number;
-  mediaIds: string[];
+  photos: RowPhoto[];
 }
 
 interface Plan {
@@ -84,9 +108,10 @@ interface Plan {
   input?: RowInput;
 }
 
-interface Prepared {
+export interface Prepared {
   partner: { id: string; email: string; displayName: string; doc: UserRow };
   plans: Plan[];
+  files: UploadedFiles;
 }
 
 type UserRow = {
@@ -104,6 +129,8 @@ interface Lookups {
   cities: Map<string, PlaceRow | null>;
   districts: Map<string, PlaceRow | null>;
   taken: Set<string>;
+  files: UploadedFiles;
+  superadmin: boolean;
 }
 
 function assertStaff(actor: ImportActor) {
@@ -134,9 +161,8 @@ function readTable(csv: string) {
   if (new Set(headers).size !== headers.length) throw new ValidationError("Two columns have the same name");
   const body = table.slice(1);
   if (body.length === 0) throw new ValidationError("The file has a header row and no listings");
-  if (body.length > MAX_IMPORT_ROWS) {
-    throw new ValidationError(`Too many rows: ${body.length}. The limit is ${MAX_IMPORT_ROWS} per file`);
-  }
+  const cap = assertRowCap(body.length);
+  if (cap) throw new ValidationError(cap);
   return { headers, body };
 }
 
@@ -251,29 +277,41 @@ function photoCandidates(value: string): string[] | null {
   return keys;
 }
 
-async function resolvePhotos(partnerId: string, cell: string, errors: string[]) {
-  const urls = cell.split(/[|;\s]+/).map((part) => part.trim()).filter(Boolean);
-  if (urls.length === 0) return [];
-  const limit = photoLimit(false);
-  if (urls.length > limit) errors.push(`Too many photos: ${urls.length}. The limit is ${limit}`);
-  const ids: string[] = [];
-  for (const url of urls.slice(0, limit)) {
-    const candidates = photoCandidates(url);
-    if (!candidates) {
-      errors.push(`Photo URL is not from our own uploads: ${url.slice(0, 80)}`);
+async function photoByUrl(partnerId: string, url: string, errors: string[]): Promise<RowPhoto | null> {
+  const candidates = photoCandidates(url);
+  if (!candidates) {
+    errors.push(`Photo URL is not from our own uploads: ${url.slice(0, 80)}`);
+    return null;
+  }
+  const asset = await MediaAsset.findOne({ ownerId: partnerId, kind: "image", status: "cleared", objectKey: { $in: candidates } }).select("_id");
+  if (!asset) {
+    errors.push(`Photo is not among the partner's cleared uploads: ${url.slice(0, 80)}`);
+    return null;
+  }
+  return { kind: "id", id: asset._id.toString() };
+}
+
+/** Each photo entry is a chosen file (by name) or an existing upload URL. A missing file is a row error. */
+async function resolvePhotos(partnerId: string, cell: string, errors: string[], lookups: Lookups, categoryMax?: number | null) {
+  const refs = parsePhotoCell(cell);
+  if (refs.length === 0) return [];
+  const limit = photoLimitForImport(lookups.superadmin, categoryMax);
+  if (refs.length > limit) errors.push(`Too many photos: ${refs.length}. The limit is ${limit}`);
+  const photos: RowPhoto[] = [];
+  for (const ref of refs.slice(0, limit)) {
+    if (ref.kind === "url") {
+      const photo = await photoByUrl(partnerId, ref.value, errors);
+      if (photo && photos.some((item) => item.kind === "id" && photo.kind === "id" && item.id === photo.id)) {
+        errors.push(`The same photo is listed twice: ${ref.value.slice(0, 80)}`);
+      } else if (photo) photos.push(photo);
       continue;
     }
-    const asset = await MediaAsset.findOne({
-      ownerId: partnerId,
-      kind: "image",
-      status: "cleared",
-      objectKey: { $in: candidates },
-    }).select("_id");
-    if (!asset) errors.push(`Photo is not among the partner's cleared uploads: ${url.slice(0, 80)}`);
-    else if (ids.includes(asset._id.toString())) errors.push(`The same photo is listed twice: ${url.slice(0, 80)}`);
-    else ids.push(asset._id.toString());
+    const file = lookups.files.get(ref.value.toLowerCase());
+    if (!file) errors.push(`Missing file: ${ref.value.slice(0, 80)} is not among the chosen images`);
+    else if (photos.some((item) => item.kind === "file" && item.name === file.name)) errors.push(`The same photo is listed twice: ${file.name}`);
+    else photos.push({ kind: "file", name: file.name });
   }
-  return ids;
+  return photos;
 }
 
 function bannedHit(text: string, banned: string[]) {
@@ -354,7 +392,7 @@ async function planRow(
   const attributes = category ? attributesFor(category, cells, errors) : null;
   const subcategoryId = category ? await subcategoryOf(category._id.toString(), cells.subcategory ?? "", errors) : undefined;
   const price = priceOf(cells.price, errors);
-  const mediaIds = await resolvePhotos(partner.id, cells[PHOTO_COLUMN] ?? "", errors);
+  const photos = await resolvePhotos(partner.id, cells[PHOTO_COLUMN] ?? "", errors, lookups, category?.importMaxPhotos);
   if (category && attributes) {
     errors.push(...textErrors({ title, description: cells.description, attributes }, lookups.banned));
     const gate = evaluatePublishGate({
@@ -387,12 +425,13 @@ async function planRow(
     description: cells.description,
     attributes,
     price,
-    mediaIds,
+    photos,
   };
   return { report, input };
 }
 
-async function prepare(actor: ImportActor, partnerEmail: string, csv: string): Promise<Prepared> {
+/** Validates every row of a file without writing. `files` maps chosen image names to uploads (or "" before upload). */
+export async function prepareImport(actor: ImportActor, partnerEmail: string, csv: string, files: UploadedFiles): Promise<Prepared> {
   assertStaff(actor);
   const { headers, body } = readTable(csv);
   const partner = await findPartner(partnerEmail);
@@ -408,6 +447,8 @@ async function prepare(actor: ImportActor, partnerEmail: string, csv: string): P
     cities: new Map(),
     districts: new Map(),
     taken: new Set(existing.map((row) => `${row.categoryId}|${row.cityId}|${row.title.toLowerCase()}`)),
+    files,
+    superadmin: actor.roles.includes("superadmin"),
   };
   const plans: Plan[] = [];
   for (const [index, row] of body.entries()) {
@@ -417,18 +458,44 @@ async function prepare(actor: ImportActor, partnerEmail: string, csv: string): P
     });
     plans.push(await planRow(index + 2, cells, partner, lookups));
   }
-  return { partner, plans };
+  return { partner, plans, files };
+}
+
+/** Counts for the check: ads and photos that would be created, and the chosen images no ready row uses. */
+export function photoSummary(plans: Plan[], files: UploadedFiles): PhotoSummary {
+  const ready = plans.filter((plan) => plan.input);
+  const used = new Set<string>();
+  let photosToAttach = 0;
+  for (const plan of ready) {
+    for (const photo of plan.input?.photos ?? []) {
+      photosToAttach += 1;
+      if (photo.kind === "file") used.add(photo.name.toLowerCase());
+    }
+  }
+  const all = [...files.entries()];
+  return {
+    ads: ready.length,
+    photosToAttach,
+    filesToUpload: all.filter(([key]) => used.has(key)).map(([, file]) => file.name),
+    unusedFiles: all.filter(([key]) => !used.has(key)).map(([, file]) => file.name),
+  };
 }
 
 function toReport(prepared: Prepared): DryRunReport {
   const { id, email, displayName } = prepared.partner;
   const rows = prepared.plans.map((plan) => plan.report);
-  return { partner: { id, email, displayName }, total: rows.length, okCount: rows.filter((row) => row.ok).length, rows };
+  return {
+    partner: { id, email, displayName },
+    total: rows.length,
+    okCount: rows.filter((row) => row.ok).length,
+    rows,
+    photos: photoSummary(prepared.plans, prepared.files),
+  };
 }
 
-/** Step 1: validate every row with the post-form rules. Writes nothing. */
-export async function dryRunImport(actor: ImportActor, partnerEmail: string, csv: string): Promise<DryRunReport> {
-  return toReport(await prepare(actor, partnerEmail, csv));
+/** Step 1: validate every row with the post-form rules. Writes nothing. `fileNames` are the chosen images. */
+export async function dryRunImport(actor: ImportActor, partnerEmail: string, csv: string, fileNames: readonly string[] = []): Promise<DryRunReport> {
+  return toReport(await prepareImport(actor, partnerEmail, csv, uploadedFromNames(fileNames)));
 }
 
 async function uniqueSlug(title: string, id: Types.ObjectId) {
@@ -470,7 +537,30 @@ async function pingIndexNow(paths: string[]) {
   }
 }
 
-async function importRow(input: RowInput, partnerId: string, status: ImportStatus, actor: ImportActor, requestId: string) {
+/** The upload id behind a chosen file. Throws when the file has not been uploaded yet, so that row fails clearly. */
+export function photoIdsFor(photos: RowPhoto[], files: UploadedFiles): string[] {
+  return photos.map((photo) => {
+    if (photo.kind === "id") return photo.id;
+    const id = files.get(photo.name.toLowerCase())?.mediaId;
+    if (!id) throw new Error(`Photo ${photo.name} is not uploaded yet`);
+    return id;
+  });
+}
+
+/**
+ * Puts the photos on the listing. The import has already checked the photo limit for its own rule (photoLimitForImport),
+ * so this skips the plan limit of the normal photo step, which would refuse a superadmin's category maximum.
+ */
+async function attachPhotos(listingId: string, mediaIds: string[]) {
+  await Listing.updateOne(
+    { _id: listingId },
+    { $set: { mediaIds: mediaIds.map((id) => new Types.ObjectId(id)), coverMediaId: new Types.ObjectId(mediaIds[0]) } },
+  );
+  await MediaAsset.updateMany({ _id: { $in: mediaIds } }, { $set: { listingId: new Types.ObjectId(listingId) } });
+}
+
+async function importRow(input: RowInput, partnerId: string, status: ImportStatus, actor: ImportActor, requestId: string, files: UploadedFiles) {
+  const mediaIds = photoIdsFor(input.photos, files);
   const draft = await createDraft(
     partnerId,
     { categoryId: input.categoryId, subcategoryId: input.subcategoryId, stateId: input.stateId, cityId: input.cityId, districtId: input.districtId },
@@ -480,7 +570,7 @@ async function importRow(input: RowInput, partnerId: string, status: ImportStatu
   try {
     await patchListing(id, partnerId, { stage: "basics", title: input.title, description: input.description }, requestId);
     await patchListing(id, partnerId, { stage: "details", attributes: input.attributes, price: input.price, contact: { acceptForm: true } }, requestId);
-    if (input.mediaIds.length) await patchListing(id, partnerId, { stage: "photos", mediaIds: input.mediaIds }, requestId);
+    if (mediaIds.length) await attachPhotos(id, mediaIds);
     await finalise(id, status, actor);
     if (status === "active") {
       const slug = (await Listing.findById(id).select("slug").lean<{ slug?: string }>())?.slug;
@@ -496,7 +586,7 @@ function message(error: unknown) {
   return error instanceof HttpError || error instanceof Error ? error.message : "Could not import this row";
 }
 
-async function refreshCaches() {
+export async function refreshCaches() {
   try {
     const { refreshPublicCache } = await import("@/lib/cache");
     await refreshPublicCache();
@@ -517,32 +607,59 @@ export async function runImport(
   requestId: string,
 ): Promise<ImportReport> {
   assertStaff(actor);
+  assertPublishRight(actor, status);
+  const prepared = await prepareImport(actor, partnerEmail, csv, uploadedFromNames([]));
+  const { imported, failed } = await importPlanRange(prepared, 0, prepared.plans.length, actor, status, requestId);
+  const report = toReport(prepared);
+  await recordImportAudit(actor, prepared.partner.id, requestId, { rows: report.total, imported, failed, status });
+  if (status === "active") await refreshCaches();
+  return { ...report, okCount: imported, status, imported, failed };
+}
+
+export function assertPublishRight(actor: ImportActor, status: ImportStatus) {
   if (status === "active" && !actor.roles.includes("superadmin")) {
     throw new ForbiddenError("Only a superadmin can publish an import directly");
   }
-  const prepared = await prepare(actor, partnerEmail, csv);
+}
+
+/** Imports the ready rows in [from, to). A row that fails while saving is reported and the rest carry on. */
+export async function importPlanRange(
+  prepared: Prepared,
+  from: number,
+  to: number,
+  actor: ImportActor,
+  status: ImportStatus,
+  requestId: string,
+): Promise<{ imported: number; failed: number }> {
   let imported = 0;
-  for (const plan of prepared.plans) {
+  let failed = 0;
+  for (const plan of prepared.plans.slice(from, to)) {
     if (!plan.input) continue;
     try {
-      await importRow(plan.input, prepared.partner.id, status, actor, requestId);
+      await importRow(plan.input, prepared.partner.id, status, actor, requestId, prepared.files);
       imported += 1;
     } catch (error) {
       plan.report.ok = false;
       plan.report.errors.push(message(error));
+      failed += 1;
     }
   }
-  const report = toReport(prepared);
-  const failed = prepared.plans.filter((plan) => plan.input && !plan.report.ok).length;
+  return { imported, failed };
+}
+
+export async function recordImportAudit(
+  actor: ImportActor,
+  partnerId: string,
+  requestId: string,
+  after: { rows: number; imported: number; failed: number; status: ImportStatus; jobId?: string },
+) {
   await audit.append({
     actorId: actor.id,
     actorType: "admin",
     action: "listing.import",
     targetType: "user",
-    targetId: prepared.partner.id,
-    after: { rows: report.total, imported, failed, status },
+    targetId: partnerId,
+    after,
     requestId,
   });
-  if (status === "active") await refreshCaches();
-  return { ...report, okCount: imported, status, imported, failed };
 }
