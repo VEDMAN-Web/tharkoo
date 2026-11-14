@@ -687,6 +687,15 @@ input, select, textarea { font-size: 16px; }
 }
 .tk-listing-updated { margin: 0 0 24px; font-size: 13px; color: var(--muted); }
 .tk-feed { display: grid; gap: 16px; }
+/* H6.17: card width, set in Admin > Listing pages. Both widths are above 390 px, so phones are unchanged. */
+[data-card-width="narrow"] .tk-feed { max-width: 760px; }
+[data-card-width="medium"] .tk-feed { max-width: 880px; }
+/* H6.17: views and clicks in the bottom right corner of each card. Muted; taps go through to the card. */
+.tk-ad-counts { position: absolute; right: 14px; bottom: 10px; z-index: 2; display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 2px 12px; font-size: 12px; line-height: 16px; color: var(--muted); pointer-events: none; }
+.tk-ad-count { display: inline-flex; align-items: center; gap: 4px; white-space: nowrap; }
+.tk-card[data-contact] .tk-ad-counts { bottom: 62px; }
+.tk-ad-counts-bar { display: flex; justify-content: flex-end; min-height: 20px; padding: 6px 0; }
+.tk-ad-counts-bar .tk-ad-counts { position: static; pointer-events: auto; }
 .tk-card {
   position: relative;
   display: flex;
@@ -800,6 +809,8 @@ input, select, textarea { font-size: 16px; }
   overflow: hidden;
 }
 .tk-trust { display: flex; flex-wrap: nowrap; gap: 6px; }
+/* H6.17: on a phone the three trust chips wrap inside the card instead of pushing the card past 390 px. */
+.tk-card-body .tk-trust { flex-wrap: wrap; }
 .tk-chk {
   display: inline-flex;
   align-items: center;
