@@ -2347,6 +2347,46 @@
         "docs/ownership.json"
       ]
     },
+    "H7.3b": {
+      "branchPrefix": "haiku/h7.3b",
+      "globs": [
+        "src/components/PostWizard.tsx",
+        "src/components/post/**",
+        "src/lib/ui/post-form.ts",
+        "src/server/fields/**",
+        "src/server/shared/fields.ts",
+        "src/server/listings/service.ts",
+        "src/server/listings/admin-create.ts",
+        "src/server/listings/import.ts",
+        "src/server/search/query.ts",
+        "src/app/api/categories/**",
+        "src/components/ListingPage.tsx",
+        "src/components/listing/**",
+        "src/components/SearchModal.tsx",
+        "src/components/ui/ListingFilters*.tsx",
+        "src/app/[category]/**",
+        "src/app/search/**",
+        "src/app/cities/**",
+        "src/app/categories/**",
+        "src/app/robots.ts",
+        "src/app/sitemap/**",
+        "src/app/sitemap.xml/**",
+        "src/lib/seo/**",
+        "src/lib/urls.ts",
+        "src/lib/ui/meta.ts",
+        "src/app/landing/**",
+        "src/app/admin/landings/**",
+        "src/components/admin/LandingsEditor.tsx",
+        "tests/e2e/post-fields*.e2e.ts",
+        "tests/e2e/filters*.e2e.ts",
+        "tests/e2e/seo-filters*.e2e.ts",
+        "tests/server/fields/**",
+        "tests/server/listings/**",
+        "tests/server/seo/**",
+        "progress/H7.3b.md",
+        "docs/ownership.json"
+      ]
+    },
     "H7.4": {
       "branchPrefix": "haiku/h7.4",
       "globs": [
