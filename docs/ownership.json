@@ -2029,6 +2029,7 @@
         "src/components/admin/PageTitleEditor.tsx",
         "src/lib/seo/page-title-defaults.ts",
         "src/server/seo/page-titles.ts",
+        "src/styles/admin.css",
         "tests/server/seo/page-titles.test.ts",
         "docs/ownership.json",
         "progress/H6.10b.md"

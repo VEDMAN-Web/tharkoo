@@ -1,7 +1,7 @@
 import mongoose from "mongoose";
 import { revalidatePath, revalidateTag } from "next/cache";
 import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
-import { PAGE_GROUPS } from "@/lib/seo/page-title-defaults";
+import { PAGE_GROUPS, type PageTitleTarget } from "@/lib/seo/page-title-defaults";
 import { defaultSiteContent } from "@/lib/ui/site-content";
 import { cleanPath, countryPath, postAdPath, readPaths } from "@/lib/urls";
 import { AuditEvent, Site, UrlOverride } from "@/server/models";
@@ -16,7 +16,6 @@ import {
   savePageTitle,
   savePageTitleForEditor,
   templateChain,
-  type PageTitleTarget,
   type TemplateMap,
 } from "@/server/seo/page-titles";
 import { clearMemoryMongo, connectMemoryMongo, disconnectMemoryMongo } from "../../setup/mongo";
