@@ -11,6 +11,8 @@ import { getSite } from "@/lib/queries";
 import { typesForPage } from "@/server/layout/blocks";
 import { readPageTitle } from "@/server/seo/page-titles";
 import { Category } from "@/server/models";
+import { loadCardWidth } from "@/server/listings/card-width";
+import { CardWidthForm } from "./CardWidthForm";
 
 export const dynamic = "force-dynamic";
 
@@ -79,6 +81,7 @@ export default async function ListingPagesAdmin({ searchParams }: Search) {
       <p className="mb-4 t-small text-muted">
         Edit the category, city and district pages. Pick which pages a layout covers: all listing pages, one category, or one exact address. A layout for an exact address wins over a category layout, which wins over the default. Save a draft, then publish.
       </p>
+      <CardWidthForm initial={await loadCardWidth()} />
       <form method="get" className="adm-card" style={{ display: "flex", gap: 12, flexWrap: "wrap", alignItems: "end", marginBottom: 16 }}>
         <label className="adm-field">
           <span className="adm-field-label">Applies to</span>

@@ -56,6 +56,8 @@ export interface SiteDoc extends BaseDoc {
   ranking?: { tierOrder?: string[]; verifiedFirst?: boolean; photoFirst?: boolean };
   /** Require an approved ID check before posting (H6.14). Missing means off. */
   requireIdCheckToPost?: boolean;
+  /** Listing card width on category and city pages (H6.17): narrow 760, medium 880 (default), full. Missing means medium. */
+  listingCardWidth?: "narrow" | "medium" | "full";
 }
 
 export interface PageDoc extends BaseDoc {
@@ -195,6 +197,7 @@ const siteSchema = new Schema<SiteDoc>(
       type: new Schema({ tierOrder: [String], verifiedFirst: Boolean, photoFirst: Boolean }, { _id: false }),
     },
     requireIdCheckToPost: { type: Boolean },
+    listingCardWidth: { type: String, enum: ["narrow", "medium", "full"] },
   },
   { timestamps: true, collection: collectionName("sites", "Site") },
 );

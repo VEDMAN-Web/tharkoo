@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import { AdDetail } from "@/components/AdDetail";
 import "./ad-perf.css";
+import { AdCountsBar } from "./AdCountsBar";
 import { AdVideos } from "@/components/ad/AdVideos";
 import { listAdVideos } from "@/server/media/video";
 import { prettyPlace, displayTitle } from "@/lib/format";
@@ -150,6 +151,9 @@ export default async function AdPage({ params }: Props) {
     <>
       <JsonLd data={structured ? [breadcrumbJsonLd(crumbs), structured] : [breadcrumbJsonLd(crumbs)]} />
       <AdDetail ad={plain(ad)} categoryName={catName} related={plain(related)} listingId={listingId} crumbs={crumbs} shareUrl={shareUrl} heading={heading} tour={tour} />
+      <div className="tk-container">
+        <AdCountsBar slug={ad.slug || slug} />
+      </div>
       <AdVideos videos={videos} title={displayTitle(ad.title) || "Listing"} />
     </>
   );
