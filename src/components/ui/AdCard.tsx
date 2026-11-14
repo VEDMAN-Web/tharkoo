@@ -1,6 +1,6 @@
 "use client";
 
-import { createContext, useContext, useMemo, useState, type ReactNode } from "react";
+import { createContext, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { ArrowUp, Calendar, Check, MapPin, Phone } from "lucide-react";
 import type { ListingDoc } from "@/lib/models";
 import { displayTitle, prettyPlace } from "@/lib/format";
@@ -12,6 +12,8 @@ import { adPath } from "@/lib/urls";
 import { useUrlPaths } from "../UrlPaths";
 import { makeT, type TextFn, type UiTextMap } from "@/lib/ui/text";
 import { videoVerifiedLabel } from "../ad/tourLabels";
+import { recordAdClick, useShownCounts, watchAdCard } from "../ad/adCountStore";
+import { AdCountsLabel } from "../ad/AdCountsLabel";
 
 const TextContext = createContext<UiTextMap | undefined>(undefined);
 
@@ -58,6 +60,20 @@ export function AdCard({
   const place = `${city}${area ? `/ ${area}` : ""}`.slice(0, 22);
   const tier = variant in TIER_KEYS ? t(TIER_KEYS[variant as keyof typeof TIER_KEYS]) : "";
   const videoVerified = videoVerifiedLabel(ad.videoVerifiedUntil);
+  const cardRef = useRef<HTMLElement>(null);
+  const counts = useShownCounts(ad.slug || "");
+
+  useEffect(() => {
+    const el = cardRef.current;
+    if (!el || !ad.slug) return;
+    return watchAdCard(el, ad.slug);
+  }, [ad.slug]);
+
+  /** A click on the card's own link to the ad counts as a click (H6.17). Other clicks on the card do not. */
+  function onCardClick(event: React.MouseEvent<HTMLElement>) {
+    const link = (event.target as Element).closest?.("a[href]");
+    if (ad.slug && link && link.getAttribute("href") === href) recordAdClick(ad.slug);
+  }
 
   async function reveal(channel: "phone" | "whatsapp") {
     setNote("");
@@ -73,7 +89,15 @@ export function AdCard({
   }
 
   return (
-    <article className="tk-card" data-tk="card" data-reveal data-variant={variant} data-contact={superTop ? "1" : undefined}>
+    <article
+      ref={cardRef}
+      className="tk-card"
+      data-tk="card"
+      data-reveal
+      data-variant={variant}
+      data-contact={superTop ? "1" : undefined}
+      onClickCapture={onCardClick}
+    >
       <div className="tk-card-photo">
         <PhotoSwipe
           photos={photos}
@@ -140,6 +164,7 @@ export function AdCard({
       ) : null}
       {shown ? <p className="t-caption" style={{ position: "absolute", left: 12, bottom: 8 }}>{shown}</p> : null}
       {note ? <p className="t-caption" style={{ position: "absolute", left: 12, bottom: 8 }}>{note}</p> : null}
+      <AdCountsLabel counts={counts} />
     </article>
   );
 }
