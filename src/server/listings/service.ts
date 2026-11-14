@@ -42,6 +42,7 @@ import { adLifetimeMs } from "@/server/listings/lifetime";
 import { evaluatePublishGate } from "@/server/shared/publish-gate";
 import { idCheckRequired } from "@/server/settings/id-check";
 import { toSlug } from "@/server/shared/slug";
+import { ownerFilter, type OwnerGroup } from "@/server/listings/owner-groups";
 
 const REVEAL_WINDOW_MS = 60 * 60 * 1000;
 const REVEAL_TTL_MS = 15 * 60 * 1000;
@@ -375,10 +376,9 @@ export async function createDraft(
   return ownerView(saved);
 }
 
-export async function listOwn(userId: string, query: { status?: ListingStatus; page: number; pageSize: number }) {
+export async function listOwn(userId: string, query: { status?: ListingStatus; group?: OwnerGroup; page: number; pageSize: number }) {
   await connectDb();
-  const filter: Record<string, unknown> = { ownerId: userId };
-  if (query.status) filter.status = query.status;
+  const filter = ownerFilter(userId, query);
   const [rows, total] = await Promise.all([
     Listing.find(filter)
       .select("+contact")

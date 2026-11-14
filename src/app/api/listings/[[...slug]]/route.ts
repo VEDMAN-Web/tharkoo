@@ -2,12 +2,12 @@ import { clientKey } from "@/lib/rate-limit";
 import { SESSION_COOKIE, assertOrigin, readCookie } from "@/server/auth/http";
 import { requireUser, userFromToken } from "@/server/auth/service";
 import { NotFoundError, failure, handle, parseInput, requestIdFrom, success } from "@/server/http";
+import { listOwnCards } from "@/server/listings/owner-cards";
 import {
   FreeLimitError,
   RevealLimitError,
   createDraft,
   duplicateListing,
-  listOwn,
   listVersions,
   patchListing,
   pauseListing,
@@ -88,8 +88,9 @@ async function route(request: Request, requestId: string) {
   if (method === "GET" && segments.length === 0) {
     const user = await requireUser(token);
     const query = parseInput(listingQuerySchema, Object.fromEntries(new URL(request.url).searchParams));
-    const data = await listOwn(user.user.id, query);
-    return json(data, requestId, 200, { page: query.page, pageSize: query.pageSize, total: data.total });
+    const data = await listOwnCards(user.user.id, query);
+    // H6.19: the vendor panel may reuse a page for a few seconds; a write from the panel refetches anyway.
+    return json(data, requestId, 200, { page: query.page, pageSize: query.pageSize, total: data.total }, { "cache-control": "private, max-age=10" });
   }
   if (method === "POST" && segments.length === 0) {
     const user = await requireUser(token);

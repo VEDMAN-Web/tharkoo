@@ -103,6 +103,8 @@ interface SharpLike {
   toBuffer(options: { resolveWithObject: true }): Promise<{ data: Buffer; info: { width: number; height: number } }>;
   composite(layers: { input: Buffer; gravity: string }[]): SharpLike;
   toFormat(format: "jpeg" | "png" | "webp"): SharpLike;
+  resize(options: { width: number; height: number; fit: "inside"; withoutEnlargement: true }): SharpLike;
+  png(): SharpLike;
 }
 
 function formatOf(contentType: string): "jpeg" | "png" | "webp" {
@@ -116,7 +118,12 @@ export async function watermarkLocalPhoto(data: Buffer, contentType: string, set
   const sharp = await loadSharp();
   const base = await sharp(data).rotate().toBuffer({ resolveWithObject: true });
   const { svg, gravity } = localWatermarkSvg(base.info.width, settings);
-  const out = sharp(base.data).composite([{ input: Buffer.from(svg), gravity }]).toFormat(formatOf(contentType));
+  // A very small photo cannot hold the full mark: the mark is shrunk to fit, so the composite never overflows.
+  const overlay = await sharp(Buffer.from(svg))
+    .resize({ width: base.info.width, height: base.info.height, fit: "inside", withoutEnlargement: true })
+    .png()
+    .toBuffer();
+  const out = sharp(base.data).composite([{ input: overlay, gravity }]).toFormat(formatOf(contentType));
   return out.toBuffer();
 }
 

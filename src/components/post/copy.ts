@@ -31,11 +31,11 @@ export interface PostCopy {
 export const POST_COPY_DEFAULTS: PostCopy = {
   intro: null,
   steps: {
-    basics: { title: "Information", help: "", nextLabel: "Continue", backLabel: "" },
-    details: { title: "Your data", help: "", nextLabel: "", backLabel: "" },
-    photos: { title: "Photos", help: "Add a photo of the item or place. People ads can use a portrait.", nextLabel: "Continue", backLabel: "BACK" },
-    contact: { title: "Your contacts", help: "", nextLabel: "", backLabel: "" },
-    review: { title: "Publish", help: "", nextLabel: "PUBLISH", backLabel: "BACK" },
+    basics: { title: "Category", help: "", nextLabel: "Continue", backLabel: "" },
+    details: { title: "Details", help: "", nextLabel: "Continue", backLabel: "BACK" },
+    photos: { title: "Photos & videos", help: "Add a photo of the item or place. People ads can use a portrait.", nextLabel: "Continue", backLabel: "BACK" },
+    contact: { title: "Contact", help: "", nextLabel: "Continue", backLabel: "BACK" },
+    review: { title: "Review", help: "", nextLabel: "PUBLISH", backLabel: "BACK" },
     promote: { title: "Plan", help: "", nextLabel: "", backLabel: "" },
   },
   promoteHidden: false,

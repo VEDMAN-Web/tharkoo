@@ -26,19 +26,18 @@ test.describe("H6.14 ID-check switch on post-ad", () => {
     await loginUi(page, email, USER_PASSWORD, "/u/post-insert/");
     await page.waitForURL(/\/u\/post-insert\//);
     // The form opens straight away: no check-first screen, no Verify ID link.
-    await expect(page.locator("[data-tk=step-title]")).toContainText(/information/i);
+    await expect(page.locator("[data-tk=step-title]")).toContainText(/category/i);
     await expect(page.locator("[data-tk=id-check-first]")).toHaveCount(0);
     await expectNoHorizontalScroll(page);
 
-    await page.locator("#category").selectOption({ label: "Jobs" });
+    // Five steps: Category, Details, Photos & videos, Contact, Review.
+    await page.locator("[data-tk=category-tile]", { hasText: "Jobs" }).click();
     await page.locator("#city").selectOption({ label: "Mumbai" });
+    await page.locator("[data-tk=go-on]").click();
     await page.locator("#nickname").fill("Asha");
     await page.locator("#role").fill("Office assistant");
     await page.locator("#title").fill(title);
     await page.locator("#text").fill("A weekday office role with a clear description of the work and the hours.");
-    await page.locator("#phone").fill("9876543210");
-    await page.locator("#consent-terms").check();
-    await page.locator("#consent-adult").check();
     await page.locator("[data-tk=go-on]").click();
 
     await page.locator("[data-tk=photo-input]").waitFor({ state: "attached" });
@@ -46,6 +45,11 @@ test.describe("H6.14 ID-check switch on post-ad", () => {
     await expect(page.locator("[data-tk=photo-note]")).toContainText(/Photo saved/i);
     await page.locator("[data-tk=go-on]").click();
 
+    await page.locator("#phone").fill("9876543210");
+    await page.locator("[data-tk=go-on]").click();
+
+    await page.locator("#consent-terms").check();
+    await page.locator("#consent-adult").check();
     // Submit goes through without any ID check.
     await page.locator("button", { hasText: "PUBLISH" }).click();
     await expect(page.locator("[data-tk=step-title]").filter({ hasText: /live/i })).toBeVisible();
@@ -66,7 +70,7 @@ test.describe("H6.14 ID-check switch on post-ad", () => {
     await page.waitForURL(/\/u\/post-insert\//);
     await expect(page.locator("[data-tk=id-check-first] [data-tk=step-title]")).toContainText(/verify your id first/i);
     await expect(page.locator("[data-tk=verify-id]")).toHaveAttribute("href", /\/u\/account\/kyc/);
-    await expect(page.locator("#category")).toHaveCount(0);
+    await expect(page.locator("[data-tk=category-tile]")).toHaveCount(0);
     await expectNoHorizontalScroll(page);
   });
 });

@@ -2,37 +2,48 @@
 
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import { useRouter, useSearchParams } from "next/navigation";
-import { Images, Megaphone, Settings, Ticket, UserRound, Wallet } from "lucide-react";
-import { Suspense } from "react";
 import { VendorShell } from "./VendorShell";
 import { api, hasSessionHint } from "@/lib/ui/api";
 import { EmptyState } from "../ui/EmptyState";
-import { displayTitle } from "@/lib/format";
 import { readSaved, type SavedItem } from "../ui/SaveButton";
 import { RecentlyViewedRail } from "../ui/RecentlyViewed";
 import { AdCard } from "../ui/AdCard";
 import { HelpCard } from "../ui/HelpCard";
+import { UnreadBadge } from "../chat/UnreadBadge";
 import { TourInbox } from "./TourInbox";
+import { OwnAds, type OwnPage } from "./OwnAds";
 import type { ListingDoc } from "@/lib/models";
 
 type Me = { user: { displayName?: string; email?: string; verificationStatus?: string } };
-type Own = { items: { id: string; title?: string; status?: string; slug?: string; description?: string }[]; total: number };
-type Entry = { id: string; delta: number; reason: string };
+type Counts = OwnPage["counts"];
 
-const UNPUBLISHED = new Set(["draft", "pending", "rejected", "paused", "expired"]);
+const VERIFIED = new Set(["verified", "approved"]);
 
-function statusChip(status?: string) {
-  if (status === "verified" || status === "approved") return { label: "ID verified", bg: "var(--ok-bg)", color: "var(--ok)" };
-  if (status === "pending") return { label: "ID check pending", bg: "var(--warn-bg)", color: "var(--warn)" };
-  return { label: "ID not submitted", bg: "var(--chip)", color: "var(--muted)" };
+/** H6.19 profile progress: three checks, each from data the panel already has. */
+export function profileChecks(user: Me["user"] | null, counts: Counts | null) {
+  return [
+    { label: "Add your name", done: Boolean(user?.displayName) },
+    { label: "Verify your ID", done: VERIFIED.has(user?.verificationStatus ?? "") },
+    { label: "Post your first ad", done: (counts?.all ?? 0) > 0 },
+  ];
+}
+
+const num = (value: number | null | undefined) => (value === null || value === undefined ? "-" : value.toLocaleString("en-IN"));
+
+function Stat({ label, value, hint, tone }: { label: string; value: string; hint?: string; tone: "rose" | "violet" | "sky" | "gold" }) {
+  return (
+    <div className={`tk-glass tk-v-stat tk-v-stat-${tone}`}>
+      <p className="tk-v-stat-label">{label}</p>
+      <p className="tk-v-stat-value">{value}</p>
+      {hint ? <p className="tk-v-stat-hint">{hint}</p> : null}
+    </div>
+  );
 }
 
 export function Dashboard({ locked = false }: { locked?: boolean }) {
   const [me, setMe] = useState<Me["user"] | null>(null);
-  const [rows, setRows] = useState<Own["items"] | null>(null);
   const [balance, setBalance] = useState<number | null>(null);
-  const [used, setUsed] = useState<number | null>(null);
+  const [page, setPage] = useState<OwnPage | null>(null);
   const [signedOut, setSignedOut] = useState(false);
 
   useEffect(() => {
@@ -45,203 +56,131 @@ export function Dashboard({ locked = false }: { locked?: boolean }) {
         if (!res.ok) setSignedOut(true);
         else setMe(res.data.user);
       });
-      api<Own>("/api/listings?pageSize=100").then((res) => {
-        if (res.ok) setRows(res.data.items || []);
-      });
-      api<{ balance: number }>("/api/wallet").then((res) => {
-        if (res.ok) setBalance(res.data.balance);
-        else setBalance(null);
-      });
-      api<{ items: Entry[] }>("/api/wallet/entries").then((res) => {
-        if (!res.ok) return setUsed(null);
-        const spent = (res.data.items || []).filter((row) => row.delta < 0).reduce((sum, row) => sum + Math.abs(row.delta), 0);
-        setUsed(spent);
-      });
+      api<{ balance: number }>("/api/wallet").then((res) => setBalance(res.ok ? res.data.balance : null));
     }, 0);
     return () => window.clearTimeout(id);
   }, []);
 
-  const active = rows?.filter((row) => row.status === "active").length;
-  const hidden = rows?.filter((row) => UNPUBLISHED.has(row.status || "")).length;
-  const chip = statusChip(me?.verificationStatus);
-  const num = (value: number | null | undefined) => (value === null || value === undefined ? "-" : String(value));
+  const counts = page?.counts ?? null;
+  const checks = profileChecks(me, counts);
+  const doneChecks = checks.filter((check) => check.done).length;
+  const percent = Math.round((doneChecks / checks.length) * 100);
 
-  return (
-    <VendorShell>
-      <h1 className="tk-page-h1">Dashboard</h1>
-      {signedOut ? (
+  if (signedOut) {
+    return (
+      <VendorShell>
         <EmptyState title="Sign in to continue" body="Your dashboard loads after you log in." action={{ href: "/u/login/?next=/u/account/dashboard/", label: "Log in" }} />
-      ) : (
-        <>
-          {locked ? (
-            <p className="t-small" style={{ textAlign: "center" }}>
-              Verify your ID to publish. <Link href="/u/account/kyc/">Open verification</Link>
-            </p>
-          ) : null}
-          <div className="tk-dash">
-            <div className="tk-dcard" data-tk="tile" data-tile="ads">
-              <h2><Megaphone size={20} aria-hidden /> Your ads</h2>
-              <div className="tk-dcard-body">
-                <p className="tk-count-row">Active <span className="tk-count">{num(active ?? null)}</span></p>
-                <p className="tk-count-row">Not published <span className="tk-count">{num(hidden ?? null)}</span></p>
-              </div>
-              <div className="tk-dcard-actions">
-                <Link href="/u/post-insert/" className="tk-btn tk-btn-gold">Post an ad</Link>
-                <Link href="/u/account/ads/" className="tk-dlink">See all ads</Link>
-              </div>
-            </div>
-            <div className="tk-dcard" data-tk="tile" data-tile="media">
-              <h2><Images size={20} aria-hidden /> Photos &amp; videos</h2>
-              <div className="tk-dcard-body">
-                <p className="t-small">Every photo and video on your ads, and whether it is live.</p>
-              </div>
-              <div className="tk-dcard-actions">
-                <Link href="/u/account/media/" className="tk-btn tk-btn-outline-gold">Open photos &amp; videos</Link>
-              </div>
-            </div>
-            <div className="tk-dcard" data-tk="tile" data-tile="wallet">
-              <h2><Wallet size={20} aria-hidden /> Wallet</h2>
-              <div className="tk-dcard-body">
-                <p className="tk-count-row">Available <span className="tk-count">{num(balance)}</span></p>
-                <p className="tk-count-row">Used <span className="tk-count">{num(used)}</span></p>
-              </div>
-              <div className="tk-dcard-actions">
-                <Link href="/u/account/credits/" className="tk-btn tk-btn-gold">Buy credits</Link>
-              </div>
-            </div>
-            <div className="tk-dcard" data-tk="tile" data-tile="profile">
-              <h2><UserRound size={20} aria-hidden /> Profile</h2>
-              <div className="tk-dcard-body">
-                <p style={{ fontWeight: 700, overflowWrap: "anywhere" }}>{me?.displayName || me?.email || "…"}</p>
-                <p className="t-small" style={{ color: "var(--muted)", overflowWrap: "anywhere" }}>{me?.email}</p>
-                <span className="tk-chip" style={{ background: chip.bg, color: chip.color, marginTop: 8 }}>{chip.label}</span>
-              </div>
-              <div className="tk-dcard-actions">
-                <Link href="/u/account/kyc/" className="tk-btn tk-btn-outline-gold">{chip.label !== "ID verified" ? "Verify your ID" : "View verification"}</Link>
-              </div>
-            </div>
-            <div className="tk-dcard" data-tk="tile" data-tile="coupons">
-              <h2><Ticket size={20} aria-hidden /> Coupons</h2>
-              <div className="tk-dcard-body">
-                <p className="t-small">Manage your coupons.</p>
-              </div>
-              <div className="tk-dcard-actions">
-                <Link href="/u/account/coupons/" className="tk-btn tk-btn-outline-gold">Open coupons</Link>
-              </div>
-            </div>
-            <div className="tk-dcard" data-tk="tile" data-tile="settings">
-              <h2><Settings size={20} aria-hidden /> Settings</h2>
-              <div className="tk-dcard-body">
-                <p className="t-small">Manage your personal info.</p>
-              </div>
-              <div className="tk-dcard-actions">
-                <Link href="/u/account/edit-account/" className="tk-btn tk-btn-outline-gold">Open settings</Link>
-              </div>
-            </div>
-          </div>
-          <TourInbox />
-          <aside className="tk-security" data-tk="security-tips">
-            <p>
-              <strong>Security tips:</strong> Scammers may pretend to be the Tharkoo team to ask for money. Never send payments or personal information to unofficial contacts.{" "}
-              <Link href="/help/">Visit our Help Center to learn more.</Link>
-            </p>
-          </aside>
-          <HelpCard />
-        </>
-      )}
-    </VendorShell>
-  );
-}
-
-function AdsInner() {
-  const params = useSearchParams();
-  const router = useRouter();
-  const tab = params.get("tab") === "unpublished" ? "unpublished" : "active";
-  const [rows, setRows] = useState<Own["items"] | null>(null);
-  const [signedOut, setSignedOut] = useState(false);
-  const [note, setNote] = useState("");
-
-  useEffect(() => {
-    const id = window.setTimeout(() => {
-      if (!hasSessionHint()) {
-        setSignedOut(true);
-        return;
-      }
-      api<Own>("/api/listings?pageSize=100").then((res) => {
-        if (!res.ok) setSignedOut(true);
-        else setRows(res.data.items || []);
-      });
-    }, 0);
-    return () => window.clearTimeout(id);
-  }, []);
-
-  const active = (rows || []).filter((row) => row.status === "active");
-  const hidden = (rows || []).filter((row) => UNPUBLISHED.has(row.status || ""));
-  const shown = tab === "active" ? active : hidden;
-
-  async function act(id: string, action: "pause" | "resume" | "renew" | "duplicate" | "delete") {
-    if (action === "delete" && !window.confirm("Delete this ad?")) return;
-    const res = action === "delete"
-      ? await api(`/api/listings/${id}`, { method: "DELETE" })
-      : await api(`/api/listings/${id}/${action}`, { method: "POST", body: "{}" });
-    setNote(res.ok ? "Updated." : "That action could not be completed.");
-    if (res.ok) {
-      const again = await api<Own>("/api/listings?pageSize=100");
-      if (again.ok) setRows(again.data.items || []);
-    }
+      </VendorShell>
+    );
   }
 
   return (
     <VendorShell>
-      <h1 className="tk-page-h1">Your Ads</h1>
-      {signedOut ? (
-        <EmptyState title="Sign in to see your ads" body="Drafts and live ads appear here after you log in." action={{ href: "/u/login/?next=/u/account/ads/", label: "Log in" }} />
-      ) : (
-        <>
-          <div className="tk-tabs" role="tablist">
-            <button type="button" role="tab" data-tk="tab" aria-selected={tab === "active"} onClick={() => router.replace("/u/account/ads/?tab=active")}>
-              <sup>{active.length}</sup> Active
-            </button>
-            <button type="button" role="tab" data-tk="tab" aria-selected={tab === "unpublished"} onClick={() => router.replace("/u/account/ads/?tab=unpublished")}>
-              <sup>{hidden.length}</sup> Not published
-            </button>
-          </div>
-          <p className="t-small" style={{ margin: "14px 0" }}>
-            You have <strong>{tab === "active" ? active.length : hidden.length} {tab === "active" ? "active" : "not published"} ads</strong>
-          </p>
-          {shown.length === 0 ? (
-            <p>
-              <Link href="/u/post-insert/" style={{ color: "var(--accent)" }}>Post an ad</Link>
+      <section className="tk-glass tk-v-welcome" aria-label="Welcome">
+        <div>
+          <p className="tk-v-eyebrow">Your panel</p>
+          <h1 className="tk-v-title">{me?.displayName ? `Welcome back, ${me.displayName}` : "Welcome back"}</h1>
+          <p className="tk-v-lede">{counts ? `${counts.live} ads are live. ${counts.review} in review.` : "Loading your ads…"}</p>
+          {locked ? (
+            <p className="tk-v-lede">
+              Verify your ID to publish. <Link href="/u/account/kyc/">Open verification</Link>
             </p>
-          ) : (
-            <div className="tk-feed">
-              {shown.map((row) => (
-                <div key={row.id}>
-                  <AdCard ad={{ slug: row.slug, title: displayTitle(row.title), description: row.description, publicId: row.id, variant: "free" } as ListingDoc} />
-                  <p style={{ display: "flex", gap: 12, fontSize: 13 }}>
-                    <Link href={`/u/post-insert/?draft=${row.id}`} style={{ color: "var(--accent)" }}>Edit</Link>
-                    <button type="button" style={{ color: "var(--accent)", background: "none", border: 0 }} onClick={() => act(row.id, row.status === "active" ? "pause" : "resume")}>Pause</button>
-                    <button type="button" style={{ color: "var(--accent)", background: "none", border: 0 }} onClick={() => act(row.id, "renew")}>Renew</button>
-                    <button type="button" style={{ color: "var(--accent)", background: "none", border: 0 }} onClick={() => act(row.id, "duplicate")}>Duplicate</button>
-                    <button type="button" style={{ color: "var(--accent)", background: "none", border: 0 }} onClick={() => act(row.id, "delete")}>Delete</button>
-                  </p>
-                </div>
-              ))}
+          ) : null}
+        </div>
+        <Link href="/u/post-insert/" className="tk-v-cta">Post an ad</Link>
+      </section>
+
+      <section aria-label="Your numbers" className="tk-v-stats">
+        <Stat label="Live ads" value={num(counts?.live)} tone="rose" />
+        <Stat label="Views" value={num(page?.totals.views)} hint="All time" tone="violet" />
+        <Stat label="Clicks" value={num(page?.totals.clicks)} hint="All time" tone="sky" />
+        <Stat label="Coins" value={num(balance)} hint="Available" tone="gold" />
+      </section>
+
+      <div className="tk-v-grid">
+        <section className="tk-glass tk-v-panel" aria-labelledby="my-ads-heading">
+          <div className="tk-v-head">
+            <h2 id="my-ads-heading">My ads</h2>
+            <Link href="/u/account/ads/" className="tk-v-link">See all ads</Link>
+          </div>
+          <OwnAds compact onLoaded={setPage} />
+        </section>
+
+        <aside className="tk-v-side" aria-label="Wallet, messages and profile">
+          <section className="tk-v-wallet" aria-labelledby="wallet-heading">
+            <h2 id="wallet-heading">Wallet</h2>
+            <p className="tk-v-big">{num(balance)}</p>
+            <p className="tk-v-wallet-note">Available coins</p>
+            <div className="tk-v-wallet-actions">
+              <Link href="/u/account/credits/bank/" className="tk-v-pill tk-v-pill-light">Withdraw</Link>
+              <Link href="/u/account/credits/history/" className="tk-v-pill tk-v-pill-ghost">History</Link>
             </div>
-          )}
-          <p aria-live="polite" className="t-small">{note}</p>
-          <HelpCard />
-        </>
-      )}
+          </section>
+
+          <section className="tk-glass tk-v-panel" aria-labelledby="chats-heading">
+            <div className="tk-v-head">
+              <h2 id="chats-heading">Chats</h2>
+              <Link href="/u/account/messages/" className="tk-v-link">Open chats <UnreadBadge /></Link>
+            </div>
+          </section>
+
+          <section className="tk-glass tk-v-panel" aria-labelledby="profile-heading">
+            <h2 id="profile-heading">Your profile</h2>
+            <p className="tk-v-lede">{percent}% complete{percent < 100 ? ". Finish these to get more replies." : "."}</p>
+            <div className="tk-v-progress" role="progressbar" aria-label="Profile progress" aria-valuemin={0} aria-valuemax={100} aria-valuenow={percent}>
+              <i style={{ width: `${percent}%` }} />
+            </div>
+            <ul className="tk-v-checks">
+              {checks.map((check) => (
+                <li key={check.label} data-done={check.done ? "1" : "0"}>
+                  {check.done ? "Done: " : "To do: "}
+                  {check.label}
+                </li>
+              ))}
+            </ul>
+          </section>
+        </aside>
+      </div>
+
+      <TourInbox />
+      <aside className="tk-security" data-tk="security-tips">
+        <p>
+          <strong>Security tips:</strong> Scammers may pretend to be the Tharkoo team to ask for money. Never send payments or personal information to unofficial contacts.{" "}
+          <Link href="/help/">Visit our Help Center to learn more.</Link>
+        </p>
+      </aside>
+      <HelpCard />
     </VendorShell>
   );
 }
 
 export function AdsList() {
+  const [signedOut, setSignedOut] = useState(false);
+  const [ready, setReady] = useState(false);
+
+  useEffect(() => {
+    const id = window.setTimeout(() => {
+      if (!hasSessionHint()) setSignedOut(true);
+      setReady(true);
+    }, 0);
+    return () => window.clearTimeout(id);
+  }, []);
+
   return (
-    <Suspense fallback={<p className="tk-container">Loading…</p>}>
-      <AdsInner />
-    </Suspense>
+    <VendorShell>
+      <div className="tk-v-head tk-v-head-page">
+        <h1 className="tk-page-h1">Your ads</h1>
+        <Link href="/u/post-insert/" className="tk-v-cta">Post an ad</Link>
+      </div>
+      {!ready ? null : signedOut ? (
+        <EmptyState title="Sign in to see your ads" body="Drafts and live ads appear here after you log in." action={{ href: "/u/login/?next=/u/account/ads/", label: "Log in" }} />
+      ) : (
+        <section className="tk-glass tk-v-panel">
+          <OwnAds />
+        </section>
+      )}
+      <HelpCard />
+    </VendorShell>
   );
 }
 
@@ -261,7 +200,7 @@ export function SavedList() {
       ) : (
         <div className="tk-feed">
           {cards.map((item) => (
-            <AdCard key={item.id} ad={{ slug: item.slug, title: item.title, place: item.place, photos: item.photo ? [item.photo] : [], publicId: item.id }} />
+            <AdCard key={item.id} ad={{ slug: item.slug, title: item.title, place: item.place, photos: item.photo ? [item.photo] : [], publicId: item.id } as ListingDoc} />
           ))}
         </div>
       )}

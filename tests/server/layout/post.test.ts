@@ -91,7 +91,7 @@ describe("wizard copy from a published layout", () => {
     const copy = buildPostCopy(await getPageBlocks("post", ["default"]));
     expect(copy.steps.basics.title).toBe("Tell us about it");
     expect(copy.steps.basics.help).toBe("Takes two minutes.");
-    expect(copy.steps.photos.title).toBe("Photos");
+    expect(copy.steps.photos.title).toBe("Photos & videos");
   });
 
   it("hides the promote step when it is switched off, and refuses to hide any other step", async () => {

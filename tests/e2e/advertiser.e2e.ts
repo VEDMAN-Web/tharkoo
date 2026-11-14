@@ -22,7 +22,7 @@ test.describe("4 Advertiser", () => {
     await loginUi(page, email, USER_PASSWORD, "/u/post-insert/");
     await page.waitForURL(/\/u\/post-insert\//);
     await expect(page.locator("[data-tk=id-check-first] [data-tk=step-title]")).toContainText(/verify your id first/i);
-    await expect(page.locator("#category")).toHaveCount(0);
+    await expect(page.locator("[data-tk=category-tile]")).toHaveCount(0);
     await page.locator("[data-tk=verify-id]").click();
     await page.waitForURL(/\/u\/account\/kyc/);
     await page.locator("#front-id").setInputFiles({ name: "front.png", mimeType: "image/png", buffer: PNG });
@@ -34,27 +34,29 @@ test.describe("4 Advertiser", () => {
     // Approved: back to post-ad, the form opens.
     await page.goto("/u/post-insert/");
 
-    // Step 1: information.
-    await expect(page.locator("[data-tk=step-title]")).toContainText(/information/i);
-    await expect(page.locator("[data-tk=progress] i")).toHaveCount(3);
-    await page.locator("#category").selectOption({ label: "Jobs" });
+    // Step 1: category. Step 2: details. Step 3: photos. Step 4: contact. Step 5: review and publish.
+    await expect(page.locator("[data-tk=step-title]")).toContainText(/category/i);
+    await expect(page.locator("[data-tk=progress] li")).toHaveCount(5);
+    await page.locator("[data-tk=category-tile]", { hasText: "Jobs" }).click();
     await page.locator("#city").selectOption({ label: "Mumbai" });
+    await page.locator("[data-tk=go-on]").click();
     await page.locator("#nickname").fill("Asha");
     await page.locator("#role").fill("Office assistant");
     await page.locator("#title").fill(title);
     await page.locator("#text").fill("A friendly weekend event for new people in the city, with a clear description of what to expect.");
-    await page.locator("#phone").fill("9876543210");
-    await page.locator("#consent-terms").check();
-    await page.locator("#consent-adult").check();
     await page.locator("[data-tk=go-on]").click();
 
-    // Step 2: photos.
     await page.locator("[data-tk=photo-input]").waitFor({ state: "attached" });
     await page.locator("[data-tk=photo-input]").setInputFiles({ name: "photo.png", mimeType: "image/png", buffer: PNG });
     await expect(page.locator("[data-tk=photo-note]")).toContainText(/Photo saved/i);
     await page.locator("[data-tk=go-on]").click();
 
-    // Step 3: preview and publish. The ID is approved, so it goes straight through.
+    await page.locator("#phone").fill("9876543210");
+    await page.locator("[data-tk=go-on]").click();
+
+    // The ID is approved, so it goes straight through.
+    await page.locator("#consent-terms").check();
+    await page.locator("#consent-adult").check();
     await page.locator("button", { hasText: "PUBLISH" }).click();
     await expect(page.locator("[data-tk=step-title]").filter({ hasText: /live|review|pending/i })).toBeVisible();
     const state = (await page.locator("[data-tk=step-title]").innerText()).toLowerCase();
@@ -89,8 +91,10 @@ test.describe("4 Advertiser", () => {
     // Edit: change the title.
     const edited = title + " edited";
     await page.goto("/u/account/ads/");
-    await page.locator("[data-tk=card]").filter({ hasText: title }).first().locator("xpath=following-sibling::p").getByRole("link", { name: "Edit" }).click();
+    await page.locator("[data-tk=card]").filter({ hasText: title }).first().getByRole("link", { name: "Edit" }).click();
     await page.waitForURL(/draft=/);
+    await expect(page.locator("[data-tk=category-tile][aria-pressed=true]")).toHaveCount(1);
+    await page.locator("[data-tk=go-on]").click();
     await expect(page.locator("#title")).toHaveValue(title);
     // The edit form does not bring the nickname back (BUG 4 in lane-d-bugs), so enter it again.
     if (!(await page.locator("#nickname").inputValue())) await page.locator("#nickname").fill("Asha");
@@ -98,18 +102,23 @@ test.describe("4 Advertiser", () => {
     await page.locator("[data-tk=go-on]").click();
     await page.locator("[data-tk=photo-input]").waitFor({ state: "attached" });
     await page.locator("[data-tk=go-on]").click();
+    await page.locator("[data-tk=go-on]").click();
+    await page.locator("#consent-terms").check();
+    await page.locator("#consent-adult").check();
     await page.locator("button", { hasText: "PUBLISH" }).click();
     await page.locator("[data-tk=step-title]").filter({ hasText: /live|review|pending/i }).waitFor();
 
     // Renew and pause from My ads.
     await page.goto("/u/account/ads/");
-    const row = () => page.locator("[data-tk=card]").filter({ hasText: edited }).first().locator("xpath=following-sibling::p");
+    const row = () => page.locator("[data-tk=card]").filter({ hasText: edited }).first();
     await row().getByRole("button", { name: "Renew" }).click();
-    await expect(page.getByText("Updated.")).toBeVisible();
+    await expect(page.getByText("Renewed.")).toBeVisible();
+    await row().locator("summary", { hasText: "More" }).click();
     await row().getByRole("button", { name: "Pause" }).click();
     await expect(page.getByText("Updated.")).toBeVisible();
-    await expect(page.locator("[data-tk=card]").filter({ hasText: edited })).toHaveCount(0);
-    await page.getByRole("tab", { name: /Not published/ }).click();
+    // A paused ad leaves Live and shows under All.
+    await expect(page.locator("[data-tk=card]").filter({ hasText: edited }).first()).toBeVisible();
+    await page.getByRole("tab", { name: /^All/ }).click();
     await expect(page.locator("[data-tk=card]").filter({ hasText: edited }).first()).toBeVisible();
 
     // A paused ad is no longer public.

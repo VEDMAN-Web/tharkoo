@@ -56,6 +56,7 @@ export const listingQuerySchema = z.object({
   status: z
     .enum(["draft", "pending", "active", "rejected", "paused", "expired", "archived", "removed", "deleted"])
     .optional(),
+  group: z.enum(["live", "review", "ended"]).optional(),
   page: z.coerce.number().int().positive().default(1),
   pageSize: z.coerce.number().int().positive().max(100).default(20),
 });

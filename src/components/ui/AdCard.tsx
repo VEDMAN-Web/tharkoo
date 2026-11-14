@@ -14,6 +14,7 @@ import { makeT, type TextFn, type UiTextMap } from "@/lib/ui/text";
 import { videoVerifiedLabel } from "../ad/tourLabels";
 import { recordAdClick, useShownCounts, watchAdCard } from "../ad/adCountStore";
 import { AdCountsLabel } from "../ad/AdCountsLabel";
+import type { OwnAdStatus } from "@/lib/ui/ad-status";
 
 const TextContext = createContext<UiTextMap | undefined>(undefined);
 
@@ -37,15 +38,25 @@ function variantOf(ad: ListingDoc, featured?: boolean) {
   return "free";
 }
 
+/**
+ * H6.19: `owner` is the vendor panel's own feed. Such a card never counts the owner's own views or clicks (H6.17),
+ * and shows the status label and owner actions passed in.
+ */
 export function AdCard({
   ad,
   featured,
   priority,
+  owner,
+  ownerStatus,
+  ownerActions,
 }: {
   ad: ListingDoc;
   featured?: boolean;
   priority?: boolean;
   layout?: "row" | "tile";
+  owner?: boolean;
+  ownerStatus?: OwnAdStatus;
+  ownerActions?: ReactNode;
 }) {
   const t = useT();
   const variant = variantOf(ad, featured);
@@ -65,12 +76,13 @@ export function AdCard({
 
   useEffect(() => {
     const el = cardRef.current;
-    if (!el || !ad.slug) return;
+    if (!el || !ad.slug || owner) return;
     return watchAdCard(el, ad.slug);
-  }, [ad.slug]);
+  }, [ad.slug, owner]);
 
   /** A click on the card's own link to the ad counts as a click (H6.17). Other clicks on the card do not. */
   function onCardClick(event: React.MouseEvent<HTMLElement>) {
+    if (owner) return;
     const link = (event.target as Element).closest?.("a[href]");
     if (ad.slug && link && link.getAttribute("href") === href) recordAdClick(ad.slug);
   }
@@ -109,6 +121,11 @@ export function AdCard({
         />
         {photos.length > 1 ? <span className="tk-photo-count">📷 {photos.length}</span> : null}
       </div>
+      {ownerStatus ? (
+        <span className="tk-owner-status" data-tk="owner-status" style={{ background: ownerStatus.bg, color: ownerStatus.fg }}>
+          {ownerStatus.label}
+        </span>
+      ) : null}
       {tier ? (
         <span className="tk-tier-tab" data-tier={variant}>
           <ArrowUp size={11} aria-hidden />
@@ -164,6 +181,7 @@ export function AdCard({
       ) : null}
       {shown ? <p className="t-caption" style={{ position: "absolute", left: 12, bottom: 8 }}>{shown}</p> : null}
       {note ? <p className="t-caption" style={{ position: "absolute", left: 12, bottom: 8 }}>{note}</p> : null}
+      {ownerActions ? <div className="tk-owner-actions" data-tk="owner-actions">{ownerActions}</div> : null}
       <AdCountsLabel counts={counts} />
     </article>
   );

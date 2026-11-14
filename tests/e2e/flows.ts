@@ -23,20 +23,23 @@ export async function createLiveAd(page: Page, base: string, prefix = "poster"):
 
   await loginUi(page, email, USER_PASSWORD, "/u/post-insert/");
   await page.waitForURL(/\/u\/post-insert\//);
-  await page.locator("#category").selectOption({ label: "Jobs" });
+  // Five steps: Category, Details, Photos & videos, Contact, Review.
+  await page.locator("[data-tk=category-tile]", { hasText: "Jobs" }).click();
   await page.locator("#city").selectOption({ label: "Mumbai" });
+  await page.locator("[data-tk=go-on]").click();
   await page.locator("#nickname").fill("Asha");
   await page.locator("#role").fill("Office assistant");
   await page.locator("#title").fill(title);
   await page.locator("#text").fill("A weekday office role with a clear description of the work and the hours.");
-  await page.locator("#phone").fill("9876543210");
-  await page.locator("#consent-terms").check();
-  await page.locator("#consent-adult").check();
   await page.locator("[data-tk=go-on]").click();
   await page.locator("[data-tk=photo-input]").waitFor({ state: "attached" });
   await page.locator("[data-tk=photo-input]").setInputFiles({ name: "photo.png", mimeType: "image/png", buffer: PNG });
   await expect(page.locator("[data-tk=photo-note]")).toContainText(/Photo saved/i);
   await page.locator("[data-tk=go-on]").click();
+  await page.locator("#phone").fill("9876543210");
+  await page.locator("[data-tk=go-on]").click();
+  await page.locator("#consent-terms").check();
+  await page.locator("#consent-adult").check();
   // The ID-check switch is off by default (H6.14), so PUBLISH goes straight to live with no ID check.
   await page.locator("button", { hasText: "PUBLISH" }).click();
   await expect(page.locator("[data-tk=step-title]").filter({ hasText: /live/i })).toBeVisible();
