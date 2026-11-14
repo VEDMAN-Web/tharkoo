@@ -25,7 +25,7 @@ export function checkPhoto(file: File): string | null {
 }
 
 /** Reads the clip length in the browser. NaN when the browser cannot read the file. */
-function clipSeconds(file: File): Promise<number> {
+export function clipSeconds(file: File): Promise<number> {
   return new Promise((resolve) => {
     const video = document.createElement("video");
     const url = URL.createObjectURL(file);
