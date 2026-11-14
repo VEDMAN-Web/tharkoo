@@ -28,10 +28,15 @@ export function FixDashesPanel({ canRun }: { canRun: boolean }) {
 
   return (
     <div style={{ display: "grid", gap: 8 }}>
-      <div>
-        <button type="button" className="adm-btn" onClick={run} disabled={pending || !canRun}>
-          {pending ? "Fixing, please wait..." : "Fix long dashes"}
-        </button>
+      <div style={{ display: "grid", gap: 4 }}>
+        <div>
+          <button type="button" className="adm-btn" onClick={run} disabled={pending || !canRun}>
+            {pending ? "Fixing, please wait..." : "Remove long dashes from saved text"}
+          </button>
+        </div>
+        <p className="adm-field-help" style={{ margin: 0 }}>
+          To edit page titles, use the Page titles tab.
+        </p>
       </div>
       {!canRun ? <p className="adm-field-help">Only a superadmin can run this fix.</p> : null}
       {counts ? (

@@ -1,4 +1,5 @@
 import type { Types } from "mongoose";
+import { refreshPublicCache } from "@/lib/cache";
 import { connectDb } from "@/lib/db";
 import { AuditRepository } from "@/server/audit";
 import { Category, Listing, Location, PageLayout, PageLayoutRevision, Page, Site, SeoTemplate, UiText, UrlOverride, User } from "@/server/models";
@@ -16,8 +17,9 @@ function replaceDashes(text: string, separator: string) {
   return text.split(DASH_SPLIT).map((piece) => piece.trim()).join(separator);
 }
 
-/** Title-like keys get " | " as the separator; body text gets ", ". */
+/** Title-like keys get " | " as the separator; body text, and descriptions (seoDescription), get ", " (H6.10). */
 const TITLE_KEY = /title|h1|heading|label|name|seo/i;
+const DESCRIPTION_KEY = /description/i;
 
 type Json = unknown;
 
@@ -31,7 +33,7 @@ function isPlainObject(value: unknown): value is Record<string, Json> {
 function replaceIn(value: Json, key: string): Json {
   if (typeof value === "string") {
     if (!DASH_CHARS.test(value)) return value;
-    const separator = TITLE_KEY.test(key) ? " | " : ", ";
+    const separator = TITLE_KEY.test(key) && !DESCRIPTION_KEY.test(key) ? " | " : ", ";
     return replaceDashes(value, separator);
   }
   if (Array.isArray(value)) return value.map((item) => replaceIn(item, key));
@@ -91,6 +93,8 @@ export async function repairDashes(requestId: string) {
       requestId,
       after: { documents: counts },
     });
+    // The home title is read through the cached site document: drop those caches and refresh the home page (H6.10).
+    await refreshPublicCache();
   }
   return { updated: total, collections: counts };
 }
