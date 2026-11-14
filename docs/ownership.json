@@ -1884,7 +1884,12 @@
         "src/components/SiteShell.tsx",
         "src/components/PathChrome.tsx",
         "src/components/Header.tsx",
-        "src/components/Footer.tsx"
+        "src/components/Footer.tsx",
+        "progress/H6.7-e2e.md",
+        "src/app/countries/**",
+        "src/server/locations/countries.ts",
+        "src/components/FooterCountries.tsx",
+        "src/lib/urls.ts"
       ]
     },
     "H5.7": {
