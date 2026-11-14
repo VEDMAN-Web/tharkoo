@@ -13,6 +13,7 @@ import {
 import { sendLoginCode, verifyLoginCode } from "@/server/auth/otp";
 import { sendEmailLoginCode, verifyEmailLoginCode } from "@/server/auth/email-code";
 import { codeOnlyBodySchema, codeOnlyLoginEnabled, setCodeOnlyLogin } from "@/server/auth/code-only";
+import { saveSellerProfile, sellerProfileBodySchema } from "@/server/auth/seller-profile";
 import { consumeRateLimit } from "@/server/auth/rate-limit";
 import {
   confirmPhone,
@@ -224,6 +225,13 @@ async function dispatch(request: Request) {
       await setCodeOnlyLogin({ actorId: found.user.id, roles: found.user.roles, enabled: body.enabled, requestId }),
       requestId,
     );
+  }
+  if (request.method === "PUT" && path === "seller-profile") {
+    const found = await requireUser(token);
+    const blocked = await limit(`seller-profile:${found.user.id}`, 20, requestId);
+    if (blocked) return blocked;
+    const body = parseInput(sellerProfileBodySchema, await readBody(request));
+    return json(await saveSellerProfile({ userId: found.user.id, body, requestId }), requestId);
   }
   if (request.method === "GET" && path === "sessions") {
     const found = await requireUser(token);

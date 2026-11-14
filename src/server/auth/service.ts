@@ -22,6 +22,7 @@ import {
   User,
   type UserDoc,
 } from "@/server/models";
+import { STAFF_ROLE_NAMES } from "@/server/models/identity";
 import { registerModel } from "@/server/models/register";
 import { codeOnlyLoginEnabled } from "@/server/auth/code-only";
 import { isAtLeast18, parseDateOnly } from "@/server/shared/age";
@@ -32,15 +33,7 @@ const VERIFY_MS = 1000 * 60 * 60 * 24;
 const RESET_MS = 1000 * 60 * 60;
 const PHONE_MS = 1000 * 60 * 10;
 
-export const STAFF_ROLES = new Set([
-  "admin",
-  "superadmin",
-  "moderator",
-  "trust_safety",
-  "support",
-  "seo_editor",
-  "finance",
-]);
+export const STAFF_ROLES = STAFF_ROLE_NAMES;
 
 const ROLE_PERMISSIONS: Record<string, readonly string[]> = {
   user: ["listings.write"],
@@ -53,16 +46,27 @@ const ROLE_PERMISSIONS: Record<string, readonly string[]> = {
   finance: ["admin", "finance"],
 };
 
+/** What a signed-in person may see about their seller profile. Date of birth is never included. */
+export interface SellerView {
+  name: string;
+  city: string;
+  whatsapp: string | null;
+  availableNow: boolean;
+}
+
 export interface PublicUser {
   id: string;
   email: string;
   displayName: string;
-  dateOfBirth: string;
-  attestedAdultAt: string;
+  /** Null for users and sellers who have not reached the seller profile step yet. */
+  dateOfBirth: string | null;
+  attestedAdultAt: string | null;
   emailVerifiedAt: string | null;
   roles: string[];
   verificationStatus: UserDoc["verificationStatus"];
   status: UserDoc["status"];
+  /** Null until the seller profile is saved once. */
+  seller: SellerView | null;
 }
 
 export interface RegisterInput {
@@ -121,17 +125,34 @@ function dummyPasswordHash() {
 }
 
 function publicUser(user: UserDoc & { _id: Types.ObjectId }): PublicUser {
+  const profile = user.sellerProfile;
   return {
     id: user._id.toString(),
     email: user.email,
     displayName: user.displayName,
-    dateOfBirth: user.dateOfBirth.toISOString(),
-    attestedAdultAt: user.attestedAdultAt.toISOString(),
+    dateOfBirth: user.dateOfBirth ? user.dateOfBirth.toISOString() : null,
+    attestedAdultAt: user.attestedAdultAt ? user.attestedAdultAt.toISOString() : null,
     emailVerifiedAt: user.emailVerifiedAt ? user.emailVerifiedAt.toISOString() : null,
     roles: user.roles?.length ? user.roles : ["user"],
     verificationStatus: user.verificationStatus,
     status: user.status,
+    seller: profile ? { name: profile.name, city: profile.city, whatsapp: profile.whatsapp ?? null, availableNow: profile.availableNow } : null,
   };
+}
+
+/**
+ * A new account from a one-time email code (H7.2b). No password, no date of birth: the seller profile asks for those
+ * once, before the first ad. A duplicate (two codes at once) throws the duplicate-key error for the caller to handle.
+ */
+export async function createCodeAccount(email: string) {
+  return User.create({
+    email,
+    displayName: "Member",
+    roles: ["user"],
+    verificationStatus: "unsubmitted",
+    status: "active",
+    emailVerifiedAt: new Date(),
+  });
 }
 
 async function ready() {
@@ -214,8 +235,10 @@ export async function loginUser(input: {
   await bootstrapAdmin();
   const email = input.email.toLowerCase();
   const user = await User.findOne({ email }).select("+passwordHash");
-  const passwordHash = user?.get("passwordHash") ?? (await dummyPasswordHash());
-  const matches = await bcrypt.compare(input.password, String(passwordHash));
+  const storedHash = user?.get("passwordHash") as string | undefined;
+  // An account with no password (code sign-up) never matches. The dummy hash keeps the timing the same.
+  const compared = await bcrypt.compare(input.password, storedHash ?? (await dummyPasswordHash()));
+  const matches = Boolean(storedHash) && compared;
   // Code-only mode: a password never signs in a user or seller. The answer is the same as a wrong password.
   const passwordAllowed = isStaffRole(user?.roles ?? []) || !(await codeOnlyLoginEnabled());
   if (!user || !matches || !passwordAllowed) throw new UnauthorizedError("Email or password is incorrect");

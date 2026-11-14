@@ -13,6 +13,7 @@ import { SESSION_COOKIE } from "@/server/auth/http";
 import { getPaths } from "@/server/urls/service";
 import { idCheckRequired, idCheckScreen } from "@/server/settings/id-check";
 import { IdCheckFirst } from "@/components/post/IdCheckFirst";
+import { newDesignOn } from "@/server/site-links/new-design";
 
 export async function generateMetadata() {
   const paths = await getPaths();
@@ -32,16 +33,16 @@ export default async function PostInsertPage({
   const token = (await cookies()).get(SESSION_COOKIE)?.value;
   const session = await userFromToken(token);
   const params = await searchParams;
-  if (!session) {
-    const query = new URLSearchParams();
-    for (const key of ["draft", "step"] as const) {
-      const value = params[key];
-      if (typeof value === "string" && /^[a-zA-Z0-9_-]{1,80}$/.test(value)) query.set(key, value);
-    }
-    const paths = await getPaths();
-    const dest = query.size ? `${postAdPath(paths)}?${query.toString()}` : postAdPath(paths);
-    redirect(`${loginPath(paths)}?next=${encodeURIComponent(dest)}`);
+  const paths = await getPaths();
+  const query = new URLSearchParams();
+  for (const key of ["draft", "step"] as const) {
+    const value = params[key];
+    if (typeof value === "string" && /^[a-zA-Z0-9_-]{1,80}$/.test(value)) query.set(key, value);
   }
+  const dest = query.size ? `${postAdPath(paths)}?${query.toString()}` : postAdPath(paths);
+  if (!session) redirect(`${loginPath(paths)}?role=seller&next=${encodeURIComponent(dest)}`);
+  // H7.2b (New design): a seller profile is asked once, before the first ad. A returning seller skips it.
+  if (!session.user.seller && (await newDesignOn())) redirect(`/u/seller-profile/?next=${encodeURIComponent(dest)}`);
   // H6.14: with the ID-check switch on, the ID check comes first, before step 1. Off, the form always opens.
   const requireIdCheck = await idCheckRequired();
   const screen = idCheckScreen(requireIdCheck, session.user.verificationStatus);

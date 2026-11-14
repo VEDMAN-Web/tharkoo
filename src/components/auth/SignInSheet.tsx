@@ -2,9 +2,11 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { api, friendlyError, isStaffRole, safeNext } from "@/lib/ui/api";
+import { api, friendlyError, safeNext } from "@/lib/ui/api";
+import { DEFAULT_LANDING, landingFor, type LandingPaths, type SignInRole } from "@/components/auth/landing";
 
-export type SignInRole = "user" | "seller";
+export type { SignInRole } from "@/components/auth/landing";
+export { landingFor, DEFAULT_LANDING } from "@/components/auth/landing";
 type Step = "role" | "identifier" | "code";
 type Channel = "phone" | "email";
 
@@ -14,12 +16,6 @@ export const RESEND_SECONDS = 30;
 /** Opens the sign-in sheet from anywhere on the page. "Log in" passes "user", "Post your ad" passes "seller". */
 export function openSignIn(role: SignInRole = "user", next?: string | null) {
   window.dispatchEvent(new CustomEvent(SIGN_IN_EVENT, { detail: { role, next: next ?? null } }));
-}
-
-/** Where a signed-in person lands when the page did not name a return address. Staff go to the admin area. */
-export function destinationFor(roles: string[] | undefined, next: string | null) {
-  if (next) return next;
-  return isStaffRole(roles) ? "/admin/" : "/u/account/dashboard/";
 }
 
 /** Keeps only digits, so a pasted code with spaces still works. */
@@ -33,25 +29,32 @@ export function normalizeIdentifier(channel: Channel, raw: string) {
 }
 
 const COPY: Record<Step, { title: string; help: string }> = {
-  role: { title: "Log in or sign up", help: "Choose how you will use Tharkoo. No password needed: we send you a one-time code." },
-  identifier: { title: "Enter your mobile or email", help: "We will send a 6-digit code to this number or address." },
-  code: { title: "Enter your code", help: "The code is valid for 10 minutes. Check your inbox or messages." },
+  role: { title: "Log in or sign up", help: "Choose how you will use Tharkoo. No password, ever: we send you a one-time code." },
+  identifier: { title: "Enter your email", help: "We will send a 6-digit code to this address. New here? The same step creates your account." },
+  code: { title: "Enter your code", help: "The code is valid for 10 minutes. Check your inbox." },
 };
 
 interface Props {
   /** Test and fallback pages can render the sheet already open. */
   initiallyOpen?: boolean;
-  /** Fallback page for direct links to the login address: shows the same content inline, without the overlay. */
+  /** Login page: shows the same content inline, without the overlay. */
   inline?: boolean;
+  /** Login page: the role and return address from the URL. */
+  initialRole?: SignInRole;
+  initialNext?: string | null;
+  /** Where each kind of person lands. The server passes the real paths. */
+  landing?: LandingPaths;
+  /** The mobile tab is shown only when an SMS gateway can deliver. Until then only email is offered. */
+  showMobile?: boolean;
 }
 
-export function SignInSheet({ initiallyOpen = false, inline = false }: Props) {
+export function SignInSheet({ initiallyOpen = false, inline = false, initialRole = "user", initialNext = null, landing = DEFAULT_LANDING, showMobile = false }: Props) {
   const router = useRouter();
   const [open, setOpen] = useState(initiallyOpen || inline);
-  const [role, setRole] = useState<SignInRole>("user");
-  const [next, setNext] = useState<string | null>(null);
+  const [role, setRole] = useState<SignInRole>(initialRole);
+  const [next, setNext] = useState<string | null>(safeNext(initialNext));
   const [step, setStep] = useState<Step>("role");
-  const [channel, setChannel] = useState<Channel>("phone");
+  const [channel, setChannel] = useState<Channel>("email");
   const [identifier, setIdentifier] = useState("");
   const [code, setCode] = useState("");
   const [busy, setBusy] = useState(false);
@@ -117,18 +120,28 @@ export function SignInSheet({ initiallyOpen = false, inline = false }: Props) {
     const value = normalizeIdentifier(channel, identifier);
     const path = channel === "phone" ? "/api/auth/otp/verify" : "/api/auth/email/otp/verify";
     const body = channel === "phone" ? { phone: value, code } : { email: value, code };
-    const res = await api<{ user: { roles?: string[] } }>(path, { method: "POST", body: JSON.stringify(body) });
+    const res = await api<{ user: { roles?: string[]; seller?: unknown | null } }>(path, { method: "POST", body: JSON.stringify(body) });
     setBusy(false);
     if (!res.ok) {
       setMessage(res.status === 401 ? "That code is not valid. Check it, or ask for a new one." : friendlyError(res.error));
       return;
     }
     setOpen(false);
-    router.push(destinationFor(res.data.user?.roles, next));
+    router.push(
+      landingFor({
+        roles: res.data.user?.roles,
+        hasSellerProfile: Boolean(res.data.user?.seller),
+        role,
+        next,
+        paths: landing,
+      }),
+    );
     router.refresh();
   }
 
   const copy = COPY[step];
+  // The login page has one h1; the overlay sits on a page that already has one.
+  const TitleTag = inline ? "h1" : "h2";
   const roleLabel = role === "seller" ? "I am a seller" : "I am a user";
 
   const body = (
@@ -139,7 +152,7 @@ export function SignInSheet({ initiallyOpen = false, inline = false }: Props) {
           ×
         </button>
       ) : null}
-      <h2 id="tk-si-title" className="tk-si-title">{copy.title}</h2>
+      <TitleTag id="tk-si-title" className="tk-si-title">{copy.title}</TitleTag>
       <p className="tk-si-help">{copy.help}</p>
 
       {step === "role" ? (
@@ -173,13 +186,15 @@ export function SignInSheet({ initiallyOpen = false, inline = false }: Props) {
             void sendCode();
           }}
         >
-          <div role="tablist" aria-label="Send the code to" className="tk-si-roles">
-            {(["phone", "email"] as Channel[]).map((value) => (
-              <button key={value} type="button" role="tab" aria-selected={channel === value} className={`tk-si-role ${channel === value ? "is-on" : ""}`} onClick={() => setChannel(value)}>
-                {value === "phone" ? "Mobile (+91)" : "Email"}
-              </button>
-            ))}
-          </div>
+          {showMobile ? (
+            <div role="tablist" aria-label="Send the code to" className="tk-si-roles">
+              {(["email", "phone"] as Channel[]).map((value) => (
+                <button key={value} type="button" role="tab" aria-selected={channel === value} className={`tk-si-role ${channel === value ? "is-on" : ""}`} onClick={() => setChannel(value)}>
+                  {value === "phone" ? "Mobile (+91)" : "Email"}
+                </button>
+              ))}
+            </div>
+          ) : null}
           <label className="tk-si-label">
             <span>{channel === "phone" ? "Mobile number" : "Email address"}</span>
             <input
