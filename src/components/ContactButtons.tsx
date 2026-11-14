@@ -16,6 +16,9 @@ type Notice = { text: string; signIn?: boolean };
 /** Set only when the server says a live video tour can be requested on this ad (H6.5). */
 export type AdTour = { listingId: string; coins: number };
 
+/** Shown instead of a coin purchase until a real coin provider is set in production. */
+export const COIN_PURCHASE_SOON = "Coin purchases open soon. No coins were used.";
+
 type Ctx = {
   shown: Partial<Record<Channel, Reveal>>;
   notice: Notice | null;
@@ -110,6 +113,8 @@ export function ContactProvider({
       return setNotice({ text: "Request sent. The advertiser has 30 minutes to accept. The coins are held and refunded if the tour does not go ahead." });
     }
     if (res.status === 401) return setNotice({ text: "Sign in to request a live video tour.", signIn: true });
+    // H7.4: no coin provider is live yet, so a visitor without coins is told purchases are coming, never shown a fake success.
+    if (res.status === 402) return setNotice({ text: COIN_PURCHASE_SOON });
     setNotice({ text: friendlyError(res.error) });
   }
 
