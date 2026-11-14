@@ -9,7 +9,7 @@ vi.mock("next/cache", () => ({
 import { POST as expireListings } from "@/app/api/cron/expire/route";
 import { DELETE, GET, PATCH, POST } from "@/app/api/listings/[[...slug]]/route";
 import { hashToken } from "@/server/auth/http";
-import { AuditEvent, BannedWord, Category, Listing, Location, MediaAsset, Session, User } from "@/server/models";
+import { AuditEvent, BannedWord, Category, Listing, Location, MediaAsset, Session, Site, User } from "@/server/models";
 import { randomToken } from "@/server/shared/crypto";
 import { clearMemoryMongo, connectMemoryMongo, disconnectMemoryMongo } from "../../setup/mongo";
 
@@ -172,6 +172,8 @@ describe("listing routes", () => {
     const owner = await account("review@example.com", "unsubmitted");
     const { category, city, media } = await catalogue(owner.user._id);
     const id = await draftFor(owner.cookie, category._id.toString(), city._id.toString(), media._id.toString());
+    // The ID check is asked for only when the switch is on (H6.14). The default is off.
+    await Site.updateOne({ key: "default" }, { $set: { requireIdCheckToPost: true } }, { upsert: true });
     const unverified = await call("POST", `${id}/submit`, { attestations }, owner.cookie);
     expect(unverified.status).toBe(403);
     expect((await unverified.json()).error.code).toBe("VERIFICATION_REQUIRED");
@@ -183,6 +185,17 @@ describe("listing routes", () => {
     const submitted = await call("POST", `${id}/submit`, { attestations }, owner.cookie);
     expect(submitted.status).toBe(422);
     expect((await submitted.json()).error.code).toBe("POLICY_VIOLATION");
+  });
+
+  it("publishes for an unsubmitted adult while the ID-check switch is off, and marks no one approved (H6.14)", async () => {
+    const owner = await account("switch-off@example.com", "unsubmitted");
+    const { category, city, media } = await catalogue(owner.user._id);
+    const id = await draftFor(owner.cookie, category._id.toString(), city._id.toString(), media._id.toString(), "Switch off ad");
+    const submitted = await call("POST", `${id}/submit`, { attestations }, owner.cookie);
+    expect(submitted.status).toBe(200);
+    expect((await submitted.json()).data.status).toBe("active");
+    const after = await User.findById(owner.user._id).lean();
+    expect(after?.verificationStatus).toBe("unsubmitted");
   });
 
   it("rejects an illegal transition and accepts pause, resume, renew, and duplicate", async () => {
