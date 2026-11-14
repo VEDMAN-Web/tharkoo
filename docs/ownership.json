@@ -1772,6 +1772,8 @@
         "tests/server/listings/**",
         "tests/server/seo/**",
         "tests/server/ui/seo-delta.test.ts",
+        "tests/server/search/hidden-ads.test.ts",
+        "tests/server/urls/urls.test.ts",
         "scripts/seo-check.mjs",
         "tests/e2e/**",
         "docs/ownership.json",
