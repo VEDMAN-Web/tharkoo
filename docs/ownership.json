@@ -2004,6 +2004,7 @@
     "H6.8": {
       "branchPrefix": "haiku/h6.8",
       "globs": [
+        "tests/e2e/helpers.ts",
         "src/components/ContactButtons.tsx",
         "src/components/AdDetail.tsx",
         "src/components/chat/ChatPanel.tsx",
