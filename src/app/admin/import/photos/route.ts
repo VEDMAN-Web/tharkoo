@@ -21,7 +21,7 @@ export async function POST(request: NextRequest) {
     if (!(file instanceof File) || typeof jobId !== "string") {
       return NextResponse.json({ ok: false, error: "Choose an image file" }, { status: 400 });
     }
-    if (file.size > MAX_BYTES) return NextResponse.json({ ok: false, error: "Photos can be at most 8 MB" }, { status: 413 });
+    if (file.size > MAX_BYTES) return NextResponse.json({ ok: false, error: "Images can be at most 8 MB" }, { status: 413 });
     await connectDb();
     const user = await User.findOne({ email: staff.email }).select("_id").lean<{ _id: { toString(): string } }>();
     if (!user) return NextResponse.json({ ok: false, error: "Sign in as staff to import photos" }, { status: 403 });
