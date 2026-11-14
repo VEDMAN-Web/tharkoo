@@ -103,7 +103,7 @@ export async function loginUi(page: Page, email: string, password = USER_PASSWOR
   await page.goto(`/u/login/${next ? `?next=${encodeURIComponent(next)}` : ""}`);
   await page.locator("#email").fill(email);
   await page.locator("#password").fill(password);
-  await page.getByRole("button", { name: "LOG IN" }).click();
+  await page.locator("form", { has: page.locator("#email") }).getByRole("button", { name: "LOG IN", exact: true }).click();
 }
 
 /** Visible-or-not safe text of the page, scripts and styles removed. */

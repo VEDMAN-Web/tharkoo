@@ -3,11 +3,11 @@ import { roomLine, tourRequestLabel, tourStatusLabel, videoVerifiedLabel } from 
 
 describe("tourRequestLabel", () => {
   it("uses the singular for one coin", () => {
-    expect(tourRequestLabel(1)).toBe("Request live video tour · 1 coin");
+    expect(tourRequestLabel(1)).toBe("Video call and verify, 1 coin");
   });
 
   it("uses the plural for other prices", () => {
-    expect(tourRequestLabel(3)).toBe("Request live video tour · 3 coins");
+    expect(tourRequestLabel(3)).toBe("Video call and verify, 3 coins");
   });
 });
 

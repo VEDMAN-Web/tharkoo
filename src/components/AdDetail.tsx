@@ -11,7 +11,6 @@ import { SaveButton } from "./ui/SaveButton";
 import { AdCard } from "./ui/AdCard";
 import { TrackView } from "./ui/RecentlyViewed";
 import { BackLink, CopyLinkButton } from "@/app/ad/[slug]/AdClientBits";
-import { TourRequestButton } from "./ad/TourRequestButton";
 import { videoVerifiedLabel } from "./ad/tourLabels";
 
 const PERSONAL = new Set(["dating", "friendship", "meetups", "personal-ads"]);
@@ -63,7 +62,7 @@ export function AdDetail({
   const nick = ad.displayName && ad.displayName !== title ? ad.displayName : "";
 
   return (
-    <ContactProvider listingSlug={ad.slug} listingId={listingId}>
+    <ContactProvider listingSlug={ad.slug} listingId={listingId} tour={tour}>
       <div className="tk-ad">
         <TrackView ad={ad} />
         <CitySync name={city} slug={ad.citySlug} />
@@ -127,7 +126,6 @@ export function AdDetail({
               <div className="tk-contact-card" data-tk="contact-card">
                 <h2>Contact</h2>
                 <ContactButtons />
-                {tour ? <TourRequestButton listingId={tour.listingId} coins={tour.coins} /> : null}
               </div>
             </aside>
             <div className="tk-ad-rest">
