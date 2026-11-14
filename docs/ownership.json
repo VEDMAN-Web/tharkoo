@@ -2036,6 +2036,44 @@
         "progress/H6.9.md"
       ]
     },
+    "H6.12": {
+      "branchPrefix": "haiku/h6.12",
+      "globs": [
+        "src/app/admin/media/**",
+        "src/components/admin/media/**",
+        "src/app/admin/import/**",
+        "src/components/admin/import/**",
+        "src/server/media/**",
+        "src/server/listings/import.ts",
+        "src/server/import/**",
+        "src/app/api/admin/import/**",
+        "src/app/api/admin/media/**",
+        "tests/server/media/**",
+        "tests/server/import/**",
+        "tests/e2e/bulk-upload.e2e.ts",
+        "docs/ownership.json",
+        "progress/H6.12.md"
+      ]
+    },
+    "H6.13": {
+      "branchPrefix": "haiku/h6.13",
+      "globs": [
+        "src/app/admin/settings/**",
+        "src/components/blocks/**",
+        "src/components/admin/layout-editor/**",
+        "src/lib/layout/**",
+        "src/server/layout/**",
+        "src/server/models/layout.ts",
+        "src/app/globals.css",
+        "src/app/page.tsx",
+        "src/components/home/**",
+        "tests/server/layout/**",
+        "tests/e2e/home-hero.e2e.ts",
+        "tests/e2e/home-cards.e2e.ts",
+        "docs/ownership.json",
+        "progress/H6.13.md"
+      ]
+    },
     "H6.8": {
       "branchPrefix": "haiku/h6.8",
       "globs": [
