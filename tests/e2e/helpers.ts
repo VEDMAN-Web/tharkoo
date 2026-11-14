@@ -71,6 +71,18 @@ export async function loginApi(api: APIRequestContext, baseURL: string, email: s
 }
 
 /**
+ * Sets "Require ID check before posting" (H6.14) as the bootstrap superadmin. Returns the stored value.
+ * Tests that turn it on must turn it back off, because the suite shares one database.
+ */
+export async function setIdCheckSwitch(baseURL: string, required: boolean) {
+  const admin = await adminApi(baseURL);
+  const res = await admin.put("/api/admin/settings/id-check", { headers: originHeaders(baseURL, "/admin/settings/"), data: { required } });
+  expect(res.status(), await res.text()).toBe(200);
+  await admin.dispose();
+  return required;
+}
+
+/**
  * A signed-in admin API client. Logins are limited to 5 per 15 minutes per account, so the session is
  * saved to .shots/e2e/ and reused while it still works.
  */

@@ -468,6 +468,9 @@ export async function runSeed(): Promise<SeedResult> {
   // The home hero is a full banner by default (H6.13). Same idempotent conversion as the daily cron.
   const { convertHeroLayouts } = await import("@/server/layout/hero-migration");
   await convertHeroLayouts(`seed:${SEED_BATCH}`);
+  // "Require ID check before posting" is stored OFF when it was never set (H6.14). Same idempotent step as the cron.
+  const { ensureIdCheckSetting } = await import("@/server/settings/id-check");
+  await ensureIdCheckSetting(`seed:${SEED_BATCH}`);
   await seedEditorial();
   // Seeded copy must not carry em or en dashes (relay #42).
   const { repairDashes, repairDemoListingDashes } = await import("@/server/content/dash-repair");

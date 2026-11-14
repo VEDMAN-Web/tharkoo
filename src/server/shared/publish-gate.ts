@@ -26,6 +26,8 @@ export interface PublishGateInput {
   /** Every attached media asset must be status cleared. */
   mediaCleared: boolean;
   attributes: Record<string, unknown>;
+  /** The "Require ID check before posting" switch (H6.14). When off, the approved-ID step is skipped. */
+  idCheckRequired: boolean;
   now?: Date;
 }
 
@@ -41,8 +43,8 @@ function listedAge(attributes: Record<string, unknown>): number | undefined {
 }
 
 /**
- * Publishing requires age 18 or older, an adult attestation, approved ID review,
- * and cleared media. Category and attribute deny-lists run again here.
+ * Publishing requires age 18 or older, an adult attestation, approved ID review (only when the
+ * ID-check switch is on, H6.14), and cleared media. Category and attribute deny-lists run again here.
  */
 export function evaluatePublishGate(input: PublishGateInput): PublishGateResult {
   const now = input.now ?? new Date();
@@ -55,7 +57,7 @@ export function evaluatePublishGate(input: PublishGateInput): PublishGateResult 
   if (!input.dateOfBirth || !isAtLeast18(input.dateOfBirth, now)) {
     return { ok: false, reason: "UNDERAGE" };
   }
-  if (input.verificationStatus !== "approved") {
+  if (input.idCheckRequired && input.verificationStatus !== "approved") {
     return { ok: false, reason: "VERIFICATION_REQUIRED" };
   }
   if (!input.mediaCleared) {

@@ -37,20 +37,7 @@ export async function createLiveAd(page: Page, base: string, prefix = "poster"):
   await page.locator("[data-tk=photo-input]").setInputFiles({ name: "photo.png", mimeType: "image/png", buffer: PNG });
   await expect(page.locator("[data-tk=photo-note]")).toContainText(/Photo saved/i);
   await page.locator("[data-tk=go-on]").click();
-  await page.locator("button", { hasText: "PUBLISH" }).click();
-  const verify = page.locator("[data-tk=verify-id]");
-  await expect(verify).toBeVisible();
-  const draftUrl = page.url();
-  await verify.click();
-  await page.locator("#front-id").setInputFiles({ name: "front.png", mimeType: "image/png", buffer: PNG });
-  await page.locator("#selfie-id").setInputFiles({ name: "selfie.png", mimeType: "image/png", buffer: PNG });
-  await page.locator("[data-tk=kyc-submit]").click();
-  await expect(page.locator("[data-tk=kyc-note]")).toContainText(/review/i);
-
-  await approveLatestKyc(base);
-
-  await page.goto(draftUrl.includes("step=") ? draftUrl.replace(/step=\d+/, "step=3") : draftUrl);
-  await page.locator("[data-tk=card]").waitFor();
+  // The ID-check switch is off by default (H6.14), so PUBLISH goes straight to live with no ID check.
   await page.locator("button", { hasText: "PUBLISH" }).click();
   await expect(page.locator("[data-tk=step-title]").filter({ hasText: /live/i })).toBeVisible();
 

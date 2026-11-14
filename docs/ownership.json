@@ -2117,7 +2117,28 @@
         "tests/server/listings/**",
         "tests/e2e/post-check-switch.e2e.ts",
         "docs/ownership.json",
-        "progress/H6.14.md"
+        "progress/H6.14.md",
+        "src/app/admin/settings/IdCheckSwitch.tsx",
+        "src/app/admin/settings/page.tsx",
+        "src/app/api/admin/settings/id-check/route.ts",
+        "src/app/api/cron/expire/route.ts",
+        "src/app/u/post-insert/page.tsx",
+        "src/components/PostWizard.tsx",
+        "src/components/post/IdCheckFirst.tsx",
+        "src/server/listings/import.ts",
+        "src/server/listings/service.ts",
+        "src/server/models/cms.ts",
+        "src/server/seed/run.ts",
+        "src/server/settings/id-check.ts",
+        "src/server/verification/service.ts",
+        "tests/e2e/advertiser.e2e.ts",
+        "tests/e2e/flows.ts",
+        "tests/e2e/helpers.ts",
+        "tests/server/listings/import.test.ts",
+        "tests/server/listings/listings.test.ts",
+        "tests/server/settings/id-check.test.ts",
+        "tests/server/shared/publish-gate.test.ts",
+        "tests/server/verification/verification.test.ts"
       ]
     },
     "H6.15": {
@@ -2153,7 +2174,8 @@
         "tests/server/media/**",
         "tests/e2e/post-media.e2e.ts",
         "docs/ownership.json",
-        "progress/H6.16.md"
+        "progress/H6.16.md",
+        "src/components/PostWizard.tsx"
       ]
     },
     "H6.8": {
