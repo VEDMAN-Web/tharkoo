@@ -2274,6 +2274,10 @@
         "src/components/support/**",
         "tests/server/support/**",
         "tests/e2e/support*.e2e.ts",
+        "src/components/admin/nav.ts",
+        "src/app/admin/page.tsx",
+        "src/app/u/account/dashboard/page.tsx",
+        "tests/server/ui/admin-nav.test.ts",
         "progress/H6.21.md",
         "docs/ownership.json"
       ]

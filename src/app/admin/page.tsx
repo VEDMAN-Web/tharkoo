@@ -1,6 +1,7 @@
 import { AdminShell } from "@/components/admin/AdminShell";
 import { BarList, EmptyState, KpiCard, Notice } from "@/components/admin/ui";
 import { getDashboardData, type DashboardDay } from "@/server/admin/dashboard";
+import { DeskNotice } from "@/components/support/DeskNotice";
 
 export const dynamic = "force-dynamic";
 
@@ -53,6 +54,7 @@ export default async function AdminHome() {
             {data.demoListings.toLocaleString("en-IN")} demo ads are mixed into the numbers below. They were added for testing and do not come from real people.
           </Notice>
         ) : null}
+        <DeskNotice />
 
         <div className="adm-grid">
           <KpiCard label="Live ads" value={kpis.liveAds} hint="Ads people can see now" />

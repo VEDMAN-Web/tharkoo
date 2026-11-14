@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { Dashboard } from "@/components/vendor/VendorScreens";
 import { UnreadBadge } from "@/components/chat/UnreadBadge";
+import { SupportNotice } from "@/components/support/SupportNotice";
 import { pageMetadata } from "@/lib/ui/meta";
 
 export const metadata = pageMetadata({
@@ -17,7 +18,13 @@ export default async function Page({ searchParams }: { searchParams: Promise<{ l
       <div className="tk-container" style={{ paddingTop: 12 }}>
         <Link href="/u/account/messages/" className="tk-btn tk-btn-outline-gold" data-tk="messages-link">
           Messages <UnreadBadge />
+        </Link>{" "}
+        <Link href="/u/account/support/" className="tk-btn tk-btn-outline-gold" data-tk="support-link">
+          Support
         </Link>
+        <div style={{ marginTop: 12 }}>
+          <SupportNotice />
+        </div>
       </div>
       <Dashboard locked={sp.locked === "1"} />
     </>
