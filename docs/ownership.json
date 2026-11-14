@@ -2103,6 +2103,59 @@
         "progress/H6.13.md"
       ]
     },
+    "H6.14": {
+      "branchPrefix": "haiku/h6.14",
+      "globs": [
+        "src/server/verification/**",
+        "src/server/shared/publish-gate.ts",
+        "src/server/settings/**",
+        "src/app/admin/settings/**",
+        "src/app/post/**",
+        "src/components/post/**",
+        "src/app/u/account/kyc/**",
+        "tests/server/verification/**",
+        "tests/server/listings/**",
+        "tests/e2e/post-check-switch.e2e.ts",
+        "docs/ownership.json",
+        "progress/H6.14.md"
+      ]
+    },
+    "H6.15": {
+      "branchPrefix": "haiku/h6.15",
+      "globs": [
+        "src/app/admin/ads/**",
+        "src/app/admin/import/**",
+        "src/app/admin/locations/**",
+        "src/app/admin/categories/**",
+        "src/app/admin/settings/**",
+        "src/components/admin/nav.ts",
+        "src/components/admin/CreateAd*.tsx",
+        "src/server/listings/**",
+        "src/server/locations/**",
+        "src/server/categories/**",
+        "src/app/post/**",
+        "tests/server/listings/**",
+        "tests/server/admin/**",
+        "tests/e2e/admin-create-ad.e2e.ts",
+        "docs/ownership.json",
+        "progress/H6.15.md"
+      ]
+    },
+    "H6.16": {
+      "branchPrefix": "haiku/h6.16",
+      "globs": [
+        "src/app/post/**",
+        "src/components/post/**",
+        "src/app/u/account/media/**",
+        "src/components/vendor/**",
+        "src/server/media/**",
+        "src/server/listings/**",
+        "tests/server/media/**",
+        "tests/e2e/post-media.e2e.ts",
+        "docs/ownership.json",
+        "progress/H6.16.md"
+      ]
+    },
     "H6.8": {
       "branchPrefix": "haiku/h6.8",
       "globs": [
