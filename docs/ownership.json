@@ -2017,6 +2017,25 @@
       ]
     },
 
+    "H6.10b": {
+      "branchPrefix": "haiku/h6.10b",
+      "globs": [
+        "src/app/admin/seo/page-titles/**",
+        "src/app/admin/seo/SeoTabs.tsx",
+        "src/app/admin/listing-pages/page.tsx",
+        "src/app/admin/post-page/page.tsx",
+        "src/app/admin/homepage/HomeSeoSection.tsx",
+        "src/components/admin/SeoTitleSection.tsx",
+        "src/components/admin/PageTitleEditor.tsx",
+        "src/lib/seo/page-title-defaults.ts",
+        "src/server/seo/page-titles.ts",
+        "src/styles/admin.css",
+        "tests/server/seo/page-titles.test.ts",
+        "docs/ownership.json",
+        "progress/H6.10b.md"
+      ]
+    },
+
     "H6.9": {
       "branchPrefix": "haiku/h6.9",
       "globs": [
