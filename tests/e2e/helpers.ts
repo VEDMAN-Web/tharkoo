@@ -2,7 +2,7 @@ import { createHmac } from "node:crypto";
 import { existsSync, mkdirSync, readFileSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import { expect, request, test as base, type APIRequestContext, type Page } from "@playwright/test";
-import { MongoClient } from "mongodb";
+import { MongoClient, type Db } from "mongodb";
 
 export const ADMIN_EMAIL = process.env.ADMIN_BOOTSTRAP_EMAIL || "homepage-admin@example.test";
 export const ADMIN_PASSWORD = process.env.ADMIN_BOOTSTRAP_PASSWORD || "HomepageAdmin1!";
@@ -116,26 +116,37 @@ export function visibleText(html: string) {
 }
 
 /**
- * Promote an existing account to a staff role by writing to the in-memory test database.
- * The URI file is written by tests/e2e/server.mjs. Returns false when it is not available.
+ * Runs one write against the in-memory test database. The URI file is written by tests/e2e/server.mjs.
+ * Returns null when that file is not there, so a caller can say the database is not reachable.
  */
-export async function setRoles(email: string, roles: string[]) {
+export async function withLocalDb<T>(run: (db: Db) => Promise<T>): Promise<T | null> {
   const file = resolve(process.env.E2E_MONGO_URI_FILE || ".shots/e2e/mongo-uri.txt");
   let uri = "";
   try {
     uri = readFileSync(file, "utf8").trim();
   } catch {
-    return false;
+    return null;
   }
   if (!/^mongodb:\/\/(127\.0\.0\.1|localhost)[:/]/.test(uri)) throw new Error("Refusing to touch a non-local database");
   const client = new MongoClient(uri);
   try {
     await client.connect();
-    const res = await client.db("tharkoo").collection("users").updateOne({ email: email.toLowerCase() }, { $set: { roles } });
-    return res.matchedCount === 1;
+    return await run(client.db("tharkoo"));
   } finally {
     await client.close();
   }
+}
+
+/** Promote an existing account to a staff role by writing to the in-memory test database. */
+export async function setRoles(email: string, roles: string[]) {
+  const res = await withLocalDb((db) => db.collection("users").updateOne({ email: email.toLowerCase() }, { $set: { roles } }));
+  return res ? res.matchedCount === 1 : false;
+}
+
+/** Sets an ad's expiry in the in-memory test database. A date in the past makes the ad gone (410). */
+export async function setListingExpiry(slug: string, expiresAt: Date) {
+  const res = await withLocalDb((db) => db.collection("listings").updateOne({ slug }, { $set: { expiresAt } }));
+  return res ? res.matchedCount === 1 : false;
 }
 
 export async function hasHorizontalScroll(page: Page) {

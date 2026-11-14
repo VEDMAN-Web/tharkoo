@@ -148,6 +148,11 @@ export function placePath(category: string, place: string, district?: string) {
   return joinPath(category, place, district);
 }
 
+/** Country hub page (/countries/<country>/), which lists its states and cities. */
+export function countryPath(country: string) {
+  return joinPath("countries", country);
+}
+
 export function tagPath(paths: UrlPaths, category: string, tag: string) {
   return joinPath(category, paths.tag, tag);
 }

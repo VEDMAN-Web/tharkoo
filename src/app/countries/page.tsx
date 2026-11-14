@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { Globe } from "lucide-react";
 import { getCategories } from "@/lib/queries";
-import { placePath } from "@/lib/urls";
+import { countryPath, placePath } from "@/lib/urls";
 import { withUrlSeo } from "@/lib/seo/override";
 import { loadCountryDirectory } from "@/server/locations/countries";
 
@@ -35,7 +35,7 @@ export default async function CountriesPage() {
             <div className="tk-panel-head">
               <span aria-hidden>{country.flag || "🌐"}</span> {country.name} ({country.count})
             </div>
-            <Link href={placePath(first, country.slug)} className="tk-dir-state" prefetch={false}>
+            <Link href={countryPath(country.slug)} className="tk-dir-state" prefetch={false}>
               {country.name}
             </Link>
             {country.cities.map((city) => (
