@@ -1,5 +1,6 @@
 import { v2 as cloudinary } from "cloudinary";
 import { cloudinaryEnv } from "@/server/media/config";
+import { markWatermarked, watermarkTransformationFor } from "@/server/media/watermark";
 
 export interface RemoteAsset {
   bytes: number;
@@ -93,6 +94,8 @@ export interface UploadOptions {
   transformation?: string;
   /** Defaults to an image. Import videos are stored as video. */
   resourceType?: "image" | "video";
+  /** Replaces the file already stored under publicId. Used only by the H6.18 watermark migration. */
+  overwrite?: boolean;
 }
 
 export type CloudinaryUploader = (data: Buffer, options: UploadOptions) => Promise<UploadedAsset>;
@@ -103,16 +106,29 @@ export function setCloudinaryUploader(uploader: CloudinaryUploader | null) {
   uploaderOverride = uploader;
 }
 
-/** Signed server-side upload. The secret stays on the server and is never logged. */
+/**
+ * Signed server-side upload. The secret stays on the server and is never logged.
+ * H6.18: an upload into the listings folder (ad photos and videos) gets the watermark as an incoming transformation,
+ * and is recorded as watermarked so the daily migration skips it.
+ */
 export async function uploadToCloudinary(data: Buffer, options: UploadOptions) {
-  if (uploaderOverride) return uploaderOverride(data, options);
+  const watermark = await watermarkTransformationFor(options.folder);
+  const transformation = [options.transformation, watermark].filter(Boolean).join("/") || undefined;
+  const final: UploadOptions = { ...options, transformation };
+  const stored = uploaderOverride ? await uploaderOverride(data, final) : await uploadRaw(data, final);
+  if (watermark) await markWatermarked(stored.publicId);
+  return stored;
+}
+
+async function uploadRaw(data: Buffer, options: UploadOptions): Promise<UploadedAsset> {
   configure();
   const result = await cloudinary.uploader.upload(`data:${options.contentType};base64,${data.toString("base64")}`, {
     resource_type: options.resourceType ?? "image",
     type: "upload",
     folder: options.folder,
     public_id: options.publicId,
-    overwrite: false,
+    overwrite: options.overwrite ?? false,
+    ...(options.overwrite ? { invalidate: true } : {}),
     ...(options.transformation ? { transformation: options.transformation } : {}),
   });
   return { url: result.secure_url, publicId: result.public_id } as UploadedAsset;

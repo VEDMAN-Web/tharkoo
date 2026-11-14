@@ -3,10 +3,9 @@ import { connectDb } from "@/lib/db";
 import { displayTitle } from "@/lib/format";
 import { AuditRepository } from "@/server/audit";
 import { NotFoundError, PolicyViolationError } from "@/server/http";
-import { promoted } from "@/server/listings/service";
 import { Listing, MediaAsset, type MediaAssetDoc, type MediaStatus } from "@/server/models";
 import { deleteMedia } from "@/server/media/service";
-import { optionalCloudinary, photoLimit, VIDEO_RULE_MESSAGE } from "@/server/media/config";
+import { AD_MEDIA_MAX, optionalCloudinary, VIDEO_RULE_MESSAGE } from "@/server/media/config";
 import { videoUrls } from "@/server/media/video";
 
 /** The owner's own photos and videos for their ads. ID documents never reach these queries. */
@@ -109,7 +108,7 @@ export async function listMyMedia(userId: string, filter: MediaFilter = "all"): 
 export interface DraftMedia {
   photos: MyMediaRow[];
   videos: MyMediaRow[];
-  /** The photos this ad may hold: free ads 1, promoted ads more (see photoLimit). */
+  /** Photos and videos this ad may hold together (AD_MEDIA_MAX). */
   limit: number;
   coverId: string | null;
 }
@@ -137,7 +136,7 @@ export async function listDraftMedia(userId: string, listingId: string): Promise
   return {
     photos,
     videos,
-    limit: photoLimit(await promoted(listing)),
+    limit: AD_MEDIA_MAX,
     coverId: listing.coverMediaId ? listing.coverMediaId.toString() : null,
   };
 }

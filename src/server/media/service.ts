@@ -1,20 +1,21 @@
 import { mkdir, unlink, writeFile } from "node:fs/promises";
 import path from "node:path";
-import mongoose, { type Types } from "mongoose";
+import mongoose from "mongoose";
 import { connectDb } from "@/lib/db";
 import { AuditRepository } from "@/server/audit";
 import { isStaffRole } from "@/server/auth/service";
 import { ForbiddenError, NotFoundError, PolicyViolationError, ValidationError } from "@/server/http";
-import { Listing, MediaAsset, PromotionOrder, type ListingDoc, type MediaAssetDoc } from "@/server/models";
+import { Listing, MediaAsset, type MediaAssetDoc } from "@/server/models";
 import { cloudinaryClient, type Delivery } from "@/server/media/client";
 import { csamScannerFromEnv, type CsamScanner } from "@/server/media/csam";
-import { EAGER, ID_URL_TTL_SECONDS, VIDEO_FORMAT_MIME, VIDEO_MAX_BYTES, VIDEO_MAX_PER_AD, VIDEO_MAX_SECONDS, VIDEO_RULE_MESSAGE, VIDEO_TYPES, UPLOAD_NEEDS_CLOUDINARY, onVercel, MAX_BYTES, ORPHAN_AGE_MS, STRIP_EXIF, cloudinaryEnv, optionalCloudinary, photoLimit } from "@/server/media/config";
+import { AD_MEDIA_LIMIT_MESSAGE, AD_MEDIA_MAX, EAGER, ID_URL_TTL_SECONDS, VIDEO_FORMAT_MIME, VIDEO_MAX_BYTES, VIDEO_MAX_SECONDS, VIDEO_RULE_MESSAGE, VIDEO_TYPES, UPLOAD_NEEDS_CLOUDINARY, onVercel, MAX_BYTES, ORPHAN_AGE_MS, STRIP_EXIF, cloudinaryEnv, optionalCloudinary } from "@/server/media/config";
+import { adVideoCount, assertAdMediaRoom } from "@/server/media/limit";
+import { assertLocalVideoAllowed, markWatermarked, prepareLocalAdFile, watermarkTransformationFor } from "@/server/media/watermark";
 import { signUploadParams } from "@/server/media/sign";
 import { videoSeconds } from "@/server/media/duration";
 
 const ALLOWED = new Set(["image/jpeg", "image/png", "image/webp"]);
 const FORMAT_MIME: Record<string, string> = { jpg: "image/jpeg", jpeg: "image/jpeg", png: "image/png", webp: "image/webp" };
-const CLOSED = ["deleted", "failed", "rejected_policy", "rejected_csam"] as const;
 const audit = new AuditRepository();
 let scannerOverride: CsamScanner | null = null;
 
@@ -28,17 +29,6 @@ function deliveryType(kind: MediaAssetDoc["kind"]): Delivery {
 
 function assertId(value: string, message = "Media not found") {
   if (!mongoose.isValidObjectId(value)) throw new NotFoundError(message);
-}
-
-async function promoted(listing: ListingDoc & { _id: Types.ObjectId }) {
-  if (listing.badges?.some((badge) => badge && badge !== "free")) return true;
-  return Boolean(
-    await PromotionOrder.exists({
-      listingId: listing._id,
-      status: "active",
-      $or: [{ endsAt: { $exists: false } }, { endsAt: null }, { endsAt: { $gt: new Date() } }],
-    }),
-  );
 }
 
 async function ownedListing(listingId: string, userId: string) {
@@ -85,6 +75,8 @@ export async function saveLocalMedia(
   const ext = file.type === "image/png" ? "png" : file.type === "image/webp" ? "webp" : "jpg";
   const filename = `${asset._id.toString()}.${ext}`;
   const privateDoc = asset.kind === "id_document";
+  // H6.18: an ad photo is marked before it is written, so the file on disk always carries the watermark.
+  const prepared = privateDoc ? { data: file.data, watermarked: false } : await prepareLocalAdFile("image", file);
   if (privateDoc) {
     const dir = path.join(process.cwd(), "data", "id-docs");
     await mkdir(dir, { recursive: true });
@@ -92,14 +84,15 @@ export async function saveLocalMedia(
   } else {
     const dir = path.join(process.cwd(), "public", "uploads");
     await mkdir(dir, { recursive: true });
-    await writeFile(path.join(dir, filename), file.data);
+    await writeFile(path.join(dir, filename), prepared.data);
   }
   asset.contentType = file.type;
-  asset.bytes = file.data.length;
+  asset.bytes = prepared.data.length;
   asset.objectKey = privateDoc ? `private:${filename}` : `/uploads/${filename}`;
   asset.status = "cleared";
   asset.clearedAt = new Date();
   await asset.save();
+  if (prepared.watermarked) await markWatermarked(asset.objectKey);
   if (!privateDoc && asset.listingId) {
     await Listing.updateOne({ _id: asset.listingId }, { $addToSet: { mediaIds: asset._id } });
     await Listing.updateOne(
@@ -123,6 +116,7 @@ async function saveLocalVideo(
     await asset.save();
     throw new PolicyViolationError(VIDEO_RULE_MESSAGE);
   }
+  await assertLocalVideoAllowed();
   const ext = file.type === "video/webm" ? "webm" : file.type === "video/quicktime" ? "mov" : "mp4";
   const dir = path.join(process.cwd(), "public", "uploads");
   await mkdir(dir, { recursive: true });
@@ -142,8 +136,7 @@ async function assertVideoAllowed(userId: string, input: { listingId?: string; c
     throw new PolicyViolationError(VIDEO_RULE_MESSAGE);
   }
   const listing = await ownedListing(input.listingId, userId);
-  const count = await MediaAsset.countDocuments({ listingId: listing._id, kind: "video", status: { $nin: CLOSED } });
-  if (count >= VIDEO_MAX_PER_AD) throw new PolicyViolationError("Video limit reached: up to 2 videos per ad");
+  await assertAdMediaRoom(listing._id);
 }
 
 async function completeVideo(userId: string, asset: InstanceType<typeof MediaAsset>, requestId: string) {
@@ -187,9 +180,9 @@ export async function signMedia(
   const listingId = input.kind === "id_document" ? undefined : input.listingId;
   if (input.kind === "image" && listingId) {
     const listing = await ownedListing(listingId, userId);
-    const count = await MediaAsset.countDocuments({ listingId: listing._id, kind: "image", status: { $nin: CLOSED } });
-    if (count >= photoLimit(await promoted(listing))) throw new PolicyViolationError("Photo limit reached");
+    await assertAdMediaRoom(listing._id);
   }
+  if (!env && input.kind === "video") await assertLocalVideoAllowed();
   const created = await MediaAsset.create({
     ownerId: userId,
     listingId: listingId || undefined,
@@ -223,14 +216,18 @@ export async function signMedia(
   const folder = `${env.folderPrefix}/${input.kind === "id_document" ? "id" : "listings"}`;
   created.objectKey = `${folder}/${publicId}`;
   await created.save();
+  // H6.18: ad photos and videos carry the watermark as an incoming transformation, so the stored file has it.
+  const watermark = input.kind === "id_document" ? null : await watermarkTransformationFor(folder);
+  const transformation = [input.kind === "video" ? "" : STRIP_EXIF, watermark ?? ""].filter(Boolean).join("/");
   const params: Record<string, string | number> = {
     timestamp: Math.floor(Date.now() / 1000),
     folder,
     public_id: publicId,
-    ...(input.kind === "video" ? {} : { transformation: STRIP_EXIF }),
+    ...(transformation ? { transformation } : {}),
   };
   if (input.kind === "id_document") params.type = "authenticated";
   else if (input.kind === "image") params.eager = EAGER;
+  if (watermark) await markWatermarked(created.objectKey);
   await record(userId, "media.sign", "media", publicId, requestId, { kind: input.kind, folder });
   return {
     timestamp: params.timestamp,
@@ -342,7 +339,7 @@ export async function reorderMedia(
     status: { $ne: "deleted" },
   });
   if (found !== ids.length) throw new ForbiddenError("Not allowed");
-  if (ids.length > photoLimit(await promoted(listing))) throw new PolicyViolationError("Photo limit reached");
+  if (ids.length + (await adVideoCount(listing._id)) > AD_MEDIA_MAX) throw new PolicyViolationError(AD_MEDIA_LIMIT_MESSAGE);
   const cover = input.coverId ?? ids[0];
   if (cover && !ids.includes(cover)) {
     throw new ValidationError("Invalid request", { coverId: ["Cover must be one of the photos"] });

@@ -123,7 +123,7 @@ describe("draft photo step", () => {
     const draft = await listDraftMedia(alice.toString(), ad._id.toString());
     expect(draft.photos.map((row) => row.id)).toEqual([second._id.toString(), first._id.toString()]);
     expect(draft.coverId).toBe(first._id.toString());
-    expect(draft.limit).toBe(1);
+    expect(draft.limit).toBe(10);
 
     await expect(listDraftMedia(owner().toString(), ad._id.toString())).rejects.toBeInstanceOf(NotFoundError);
   });

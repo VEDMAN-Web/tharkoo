@@ -7,6 +7,8 @@ interface Props {
   kind: "image" | "video";
   items: MediaItem[];
   limit: number;
+  /** H6.18: the photos and videos total, shown under the label. */
+  totalNote?: string;
   note: string;
   disabled?: boolean;
   onFiles: (files: File[]) => void;
@@ -65,7 +67,7 @@ function Tile({ item, index, count, kind, onRemove, onMove, onCover }: { item: M
 }
 
 /** Choose many at once, see thumbnails, remove, make cover and reorder. Each file uploads as it is chosen. */
-export function AdMediaPicker({ kind, items, limit, note, disabled, onFiles, onRemove, onMove, onCover }: Props) {
+export function AdMediaPicker({ kind, items, limit, totalNote, note, disabled, onFiles, onRemove, onMove, onCover }: Props) {
   const label = kind === "image" ? "Photos" : "Videos";
   const accept = kind === "image" ? "image/jpeg,image/png,image/webp" : "video/mp4,video/webm,video/quicktime";
   const full = items.length >= limit;
@@ -74,6 +76,7 @@ export function AdMediaPicker({ kind, items, limit, note, disabled, onFiles, onR
       <div className="adm-field-label">
         {label} ({items.length} of {limit})
       </div>
+      {totalNote ? <p className="adm-field-help">{totalNote}</p> : null}
       <input
         type="file"
         multiple

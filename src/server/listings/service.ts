@@ -30,7 +30,8 @@ import {
 } from "@/server/models";
 import { categoryNeedsSubcategory } from "@/server/categories/public";
 import { Subcategory } from "@/server/models/subcategory";
-import { photoLimit } from "@/server/media/config";
+import { AD_MEDIA_LIMIT_MESSAGE, AD_MEDIA_MAX } from "@/server/media/config";
+import { adVideoCount } from "@/server/media/limit";
 import { assertVerified } from "@/server/verification/service";
 import { hashIp } from "@/server/shared/crypto";
 import { parseListingAttributes, type FieldDefinition } from "@/server/shared/fields";
@@ -266,8 +267,8 @@ async function assertPhotos(ownerId: string, listing: ListingRow, mediaIds: stri
   if (new Set(mediaIds).size !== mediaIds.length) {
     throw new ValidationError("Invalid request", { mediaIds: ["Duplicate photos"] });
   }
-  const limit = photoLimit(await promoted(listing));
-  if (mediaIds.length > limit) throw new PolicyViolationError("Photo limit reached");
+  // H6.18: one limit for photos and videos together. The videos already on the ad count too.
+  if (mediaIds.length + (await adVideoCount(listing._id)) > AD_MEDIA_MAX) throw new PolicyViolationError(AD_MEDIA_LIMIT_MESSAGE);
   if (coverMediaId && !mediaIds.includes(coverMediaId)) {
     throw new ValidationError("Invalid request", { coverMediaId: ["Cover must be one of the photos"] });
   }
@@ -544,7 +545,7 @@ export async function submitListing(
   const mediaCleared =
     assets.length === mediaIds.length &&
     assets.every((asset) => asset.ownerId.toString() === userId && asset.status === "cleared" && asset.kind !== "id_document");
-  if (mediaIds.length > photoLimit(await promoted(listing))) throw new PolicyViolationError("Photo limit reached");
+  if (mediaIds.length + (await adVideoCount(listing._id)) > AD_MEDIA_MAX) throw new PolicyViolationError(AD_MEDIA_LIMIT_MESSAGE);
   const gate = evaluatePublishGate({
     dateOfBirth: user.dateOfBirth,
     attestedAdult: Boolean(user.attestedAdultAt),

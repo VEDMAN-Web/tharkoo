@@ -1,4 +1,4 @@
-import { photoLimit } from "@/server/media/config";
+import { importPhotoLimit } from "@/server/media/config";
 
 /** Rows per import file. Above this the file is refused before anything is read. */
 export const MAX_IMPORT_ROWS = 500;
@@ -34,9 +34,8 @@ export function parsePhotoCell(cell: string): PhotoRef[] {
  * Photo limit for one imported row. A superadmin gets the category maximum (an admin setting, or the default).
  * Anyone else keeps the plan limit for a free listing.
  */
-export function photoLimitForImport(isSuperadmin: boolean, categoryMax?: number | null) {
-  if (!isSuperadmin) return photoLimit(false);
-  return Number.isInteger(categoryMax) && (categoryMax as number) >= 1 ? (categoryMax as number) : DEFAULT_CATEGORY_IMPORT_MAX;
+export function photoLimitForImport(_isSuperadmin: boolean, categoryMax?: number | null) {
+  return importPhotoLimit(categoryMax);
 }
 
 /** Throws the message the admin sees when a file has more rows than one import allows. */

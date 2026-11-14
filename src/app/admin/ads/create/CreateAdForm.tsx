@@ -11,7 +11,8 @@ import { createAdAction } from "./actions";
 import { useAdMedia } from "./useAdMedia";
 
 const DEFAULT_PHOTO_LIMIT = 10;
-const VIDEO_LIMIT = 2;
+/** H6.18: photos and videos share one limit for every ad. The server checks the same number. */
+const AD_MEDIA_MAX = 10;
 const DESCRIPTION_MIN = 20;
 
 interface FormState {
@@ -154,7 +155,10 @@ export function CreateAdForm({ options, canPublish }: { options: AdFormOptions; 
   const category = options.categories.find((row) => row.id === form.categoryId);
   const photoLimit = category?.photoLimit ?? DEFAULT_PHOTO_LIMIT;
   const photos = useAdMedia("image", photoLimit, ownerKey);
-  const videos = useAdMedia("video", VIDEO_LIMIT, ownerKey);
+  const videos = useAdMedia("video", AD_MEDIA_MAX, ownerKey);
+  // Each picker takes only what is left after the other kind.
+  const mediaRoom = AD_MEDIA_MAX - photos.items.length - videos.items.length;
+  const mediaTotal = `Photos and videos together: ${photos.items.length + videos.items.length} of ${AD_MEDIA_MAX}`;
 
   function change(next: Partial<FormState>) {
     setForm((current) => ({ ...current, ...next }));
@@ -226,8 +230,9 @@ export function CreateAdForm({ options, canPublish }: { options: AdFormOptions; 
           items={photos.items}
           limit={photoLimit}
           note={photos.note}
-          disabled={!category}
-          onFiles={(files) => void photos.add(files)}
+          disabled={!category || mediaRoom <= 0}
+          totalNote={mediaTotal}
+          onFiles={(files) => void photos.add(files.slice(0, Math.max(0, mediaRoom)))}
           onRemove={photos.remove}
           onMove={photos.move}
           onCover={photos.makeCover}
@@ -235,7 +240,7 @@ export function CreateAdForm({ options, canPublish }: { options: AdFormOptions; 
       </section>
       <section className="adm-card" aria-labelledby="ad-videos-h" style={section}>
         <Heading id="ad-videos-h">5. Videos (optional)</Heading>
-        <AdMediaPicker kind="video" items={videos.items} limit={VIDEO_LIMIT} note={videos.note} onFiles={(files) => void videos.add(files)} onRemove={videos.remove} onMove={videos.move} />
+        <AdMediaPicker kind="video" items={videos.items} limit={AD_MEDIA_MAX} note={videos.note} disabled={mediaRoom <= 0} totalNote={mediaTotal} onFiles={(files) => void videos.add(files.slice(0, Math.max(0, mediaRoom)))} onRemove={videos.remove} onMove={videos.move} />
       </section>
       <section className="adm-card" aria-labelledby="ad-publish-h" style={section}>
         <Heading id="ad-publish-h">6. Publish</Heading>
