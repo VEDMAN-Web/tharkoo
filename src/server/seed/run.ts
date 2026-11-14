@@ -467,8 +467,9 @@ export async function runSeed(): Promise<SeedResult> {
   await seedLayouts();
   await seedEditorial();
   // Seeded copy must not carry em or en dashes (relay #42).
-  const { repairDashes } = await import("@/server/content/dash-repair");
+  const { repairDashes, repairDemoListingDashes } = await import("@/server/content/dash-repair");
   await repairDashes(`seed:${SEED_BATCH}`);
+  await repairDemoListingDashes(`seed:${SEED_BATCH}`);
   invalidateTags(["categories", "locations", "listings", "feed", "counts", "site"]);
   return {
     batch: SEED_BATCH,

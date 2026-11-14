@@ -7,6 +7,7 @@ const TABS = [
   { href: "/admin/urls/", label: "Page overrides" },
   { href: "/admin/seo/indexing/", label: "Indexing" },
   { href: "/admin/seo/settings/", label: "robots, llms & schema" },
+  { href: "/admin/seo/tools/", label: "Tools" },
 ];
 
 export function SeoTabs({ current }: { current: string }) {

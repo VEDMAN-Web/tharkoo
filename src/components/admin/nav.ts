@@ -47,6 +47,7 @@ const ICON = {
   toggle: "M7 8h10a4 4 0 0 1 0 8H7a4 4 0 0 1 0-8zM17 12h.01",
   history: "M4 12a8 8 0 1 0 2.5-5.8M4 4v4h4M12 8v4l3 2",
   layers: "M12 4l9 5-9 5-9-5zM3 14l9 5 9-5",
+  wrench: "M14.7 6.3a4 4 0 0 0-5.4 5.4L3.6 17.4a2.1 2.1 0 0 0 3 3l5.7-5.7a4 4 0 0 0 5.4-5.4l-2.5 2.5-2.5-.5-.5-2.5z",
 } as const;
 
 function item(
@@ -107,6 +108,7 @@ export const NAV_GROUPS: NavGroup[] = [
       item("seo-redirects", "Redirects & 404s", "/admin/urls/", "link", "seo_editor"),
       item("seo-indexing", "Indexing rules & sitemaps", "/admin/seo/indexing/", "globe", "seo_editor"),
       item("seo-robots", "robots, llms & schema", "/admin/seo/settings/", "robot", "seo_editor"),
+      item("seo-tools", "Tools", "/admin/seo/tools/", "wrench", "seo_editor"),
       item("seo-console", "Search Console", "/admin/search-console/", "chart", "seo_editor", "later"),
     ],
   },
