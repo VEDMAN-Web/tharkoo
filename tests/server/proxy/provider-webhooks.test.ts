@@ -23,6 +23,11 @@ describe("payment provider webhooks skip the Origin check, and only those", () =
     expect(res.status).not.toBe(403);
   });
 
+  test("the live tour webhook path accepts a POST with no Origin header", async () => {
+    const res = await post("/api/tours/webhook", `tour-hook-${Date.now()}-${Math.random()}`);
+    expect(res.status).not.toBe(403);
+  });
+
   test("the billing webhook path accepts a POST with no Origin header", async () => {
     const res = await post("/api/payments/webhook", `bill-hook-${Date.now()}-${Math.random()}`);
     expect(res.status).not.toBe(403);

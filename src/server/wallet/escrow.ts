@@ -1,4 +1,5 @@
 import { postTransaction } from "@/server/ledger/service";
+import { assertVideoTourAllowed } from "@/server/wallet/listing-guard";
 import { assertSpendAllowed } from "@/server/wallet/guards";
 
 interface EscrowRef {
@@ -14,8 +15,12 @@ interface EscrowRef {
 /** The escrow account is owned by the booking, so one booking can never draw on another booking's coins. */
 const escrowOwner = (bookingId: string) => `booking:${bookingId}`;
 
-/** Holds the user's coins for a booking. Refused if a spend guard says no, or the wallet is short. */
-export async function holdInEscrow(input: EscrowRef) {
+/**
+ * Holds the user's coins for a booking. Refused unless the listing's category allows live tours (read from the database),
+ * if a registered spend guard says no, or if the wallet is short.
+ */
+export async function holdInEscrow(input: EscrowRef & { listingId: string }) {
+  await assertVideoTourAllowed(input.listingId);
   await assertSpendAllowed({
     userId: input.userId,
     vendorId: input.vendorId,

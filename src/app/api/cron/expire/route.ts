@@ -4,6 +4,7 @@ import { expireDue } from "@/server/listings/service";
 import { sendSavedSearchDigests } from "@/server/listings/alerts";
 import { safeEqual } from "@/server/shared/crypto";
 import { cronBodySchema } from "@/server/shared/schemas/common";
+import { expireDueTours } from "@/server/tours/service";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -25,7 +26,8 @@ async function dispatch(request: Request) {
   const data = await expireDue(requestId);
   const renewed = await renewDuePromotions(requestId);
   const alerts = await sendSavedSearchDigests(requestId);
-  return Response.json(success({ ...data, ...renewed, ...alerts }, requestId), { status: 200, headers: { "x-request-id": requestId } });
+  const tours = await expireDueTours(requestId);
+  return Response.json(success({ ...data, ...renewed, ...alerts, ...tours }, requestId), { status: 200, headers: { "x-request-id": requestId } });
 }
 
 export const POST = handle(dispatch);

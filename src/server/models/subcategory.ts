@@ -12,6 +12,8 @@ export interface SubcategoryDoc {
   /** Short text shown at the top of the sub-category page. Plain text. */
   seoIntro?: string;
   oldSlugs?: string[];
+  /** Overrides the category's live video tour switch when set. Null means inherit. */
+  videoTourEnabled?: boolean | null;
   createdAt?: Date;
   updatedAt?: Date;
 }
@@ -26,6 +28,7 @@ const subcategorySchema = new Schema<SubcategoryDoc>(
     enabled: { type: Boolean, default: true },
     seoIntro: { type: String, default: "" },
     oldSlugs: { type: [String], default: [] },
+    videoTourEnabled: { type: Boolean, default: null },
   },
   { timestamps: true, collection: "subcategories" },
 );
