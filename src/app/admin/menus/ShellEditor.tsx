@@ -3,7 +3,20 @@
 import { useState } from "react";
 import { Notice } from "@/components/admin/ui";
 import { SUPPORT_TOPICS, TOPIC_LABELS } from "@/server/support/constants";
-import { CONTACT_KINDS, SHELL_ICONS, type ContactKind, type ShellConfig, type ShellContact, type ShellIcon, type ShellLink } from "@/server/site-links/shell-config-rules";
+import {
+  CONTACT_KINDS,
+  SHELL_ICONS,
+  TRUST_TONES,
+  type ContactKind,
+  type HowStep,
+  type ShellConfig,
+  type ShellContact,
+  type ShellIcon,
+  type ShellImage,
+  type ShellLink,
+  type TrustPill,
+  type TrustTone,
+} from "@/server/site-links/shell-config-rules";
 import { saveShellAction } from "./actions";
 
 type Banner = { kind: "error" | "info"; text: string };
@@ -93,6 +106,128 @@ function ContactRows({ items, onChange }: { items: ShellContact[]; onChange: (ne
   );
 }
 
+const TONE_LABEL: Record<TrustTone, string> = { pink: "Pink", green: "Green", violet: "Violet", sky: "Blue", amber: "Amber" };
+
+/** H7.4: the five trust pills on the New design home page. */
+function TrustRows({ items, onChange }: { items: TrustPill[]; onChange: (next: TrustPill[]) => void }) {
+  return (
+    <fieldset className="mb-4 grid gap-2">
+      <legend className="t-small font-semibold">Trust pills (up to 5)</legend>
+      {items.map((item, index) => (
+        <div key={index} className="flex flex-wrap items-end gap-2">
+          <label className="flex min-w-[10rem] flex-1 flex-col t-small">
+            Text
+            <input
+              className="adm-input"
+              value={item.label}
+              maxLength={200}
+              onChange={(e) => onChange(items.map((row, i) => (i === index ? { ...row, label: e.target.value } : row)))}
+            />
+          </label>
+          <label className="flex flex-col t-small">
+            Colour
+            <select
+              className="adm-input"
+              value={item.tone}
+              onChange={(e) => onChange(items.map((row, i) => (i === index ? { ...row, tone: e.target.value as TrustTone } : row)))}
+            >
+              {TRUST_TONES.map((tone) => <option key={tone} value={tone}>{TONE_LABEL[tone]}</option>)}
+            </select>
+          </label>
+          <button type="button" className="adm-btn" aria-label={`Remove ${item.label || "pill"}`} onClick={() => onChange(items.filter((_, i) => i !== index))}>Remove</button>
+        </div>
+      ))}
+      {items.length < 5 ? (
+        <button type="button" className="adm-btn w-fit" onClick={() => onChange([...items, { label: "", tone: "pink" }])}>Add a pill</button>
+      ) : null}
+    </fieldset>
+  );
+}
+
+/** H7.4: the How it works steps (three). */
+function StepRows({ items, onChange }: { items: HowStep[]; onChange: (next: HowStep[]) => void }) {
+  return (
+    <fieldset className="mb-4 grid gap-2">
+      <legend className="t-small font-semibold">How it works steps (up to 3)</legend>
+      {items.map((item, index) => (
+        <div key={index} className="grid gap-2">
+          <label className="flex flex-col t-small">
+            Step {index + 1} title
+            <input
+              className="adm-input"
+              value={item.title}
+              maxLength={200}
+              onChange={(e) => onChange(items.map((row, i) => (i === index ? { ...row, title: e.target.value } : row)))}
+            />
+          </label>
+          <label className="flex flex-col t-small">
+            Step {index + 1} text
+            <textarea
+              className="adm-input"
+              rows={2}
+              maxLength={400}
+              value={item.text}
+              onChange={(e) => onChange(items.map((row, i) => (i === index ? { ...row, text: e.target.value } : row)))}
+            />
+          </label>
+          <div>
+            <button type="button" className="adm-btn" aria-label={`Remove step ${index + 1}`} onClick={() => onChange(items.filter((_, i) => i !== index))}>Remove step</button>
+          </div>
+        </div>
+      ))}
+      {items.length < 3 ? (
+        <button type="button" className="adm-btn w-fit" onClick={() => onChange([...items, { title: "", text: "" }])}>Add a step</button>
+      ) : null}
+    </fieldset>
+  );
+}
+
+/**
+ * H7.4: category photos (cards on the home page) and the listing title band images for a category or a city.
+ * Paste a site path (/uploads/...) or an https address. Empty fields show the built-in gradient.
+ */
+function ImageRows({ items, onChange }: { items: ShellImage[]; onChange: (next: ShellImage[]) => void }) {
+  const update = (index: number, patch: Partial<ShellImage>) => onChange(items.map((row, i) => (i === index ? { ...row, ...patch } : row)));
+  return (
+    <fieldset className="mb-4 grid gap-2">
+      <legend className="t-small font-semibold">Photos and listing bands (category or city slug)</legend>
+      {items.map((item, index) => (
+        <div key={index} className="grid gap-2 rounded border border-line p-2">
+          <div className="flex flex-wrap items-end gap-2">
+            <label className="flex flex-col t-small">
+              For
+              <select className="adm-input" value={item.scope} onChange={(e) => update(index, { scope: e.target.value as ShellImage["scope"] })}>
+                <option value="category">Category</option>
+                <option value="city">City</option>
+              </select>
+            </label>
+            <label className="flex min-w-[8rem] flex-1 flex-col t-small">
+              Slug
+              <input className="adm-input" value={item.slug} maxLength={120} placeholder="dating" onChange={(e) => update(index, { slug: e.target.value })} />
+            </label>
+            <button type="button" className="adm-btn" aria-label={`Remove image row ${index + 1}`} onClick={() => onChange(items.filter((_, i) => i !== index))}>Remove</button>
+          </div>
+          <label className="flex flex-col t-small">
+            Card photo (category only)
+            <input className="adm-input" value={item.photo} maxLength={2048} onChange={(e) => update(index, { photo: e.target.value })} />
+          </label>
+          <label className="flex flex-col t-small">
+            Band image, desktop
+            <input className="adm-input" value={item.band} maxLength={2048} onChange={(e) => update(index, { band: e.target.value })} />
+          </label>
+          <label className="flex flex-col t-small">
+            Band image, phone (optional)
+            <input className="adm-input" value={item.bandPhone} maxLength={2048} onChange={(e) => update(index, { bandPhone: e.target.value })} />
+          </label>
+        </div>
+      ))}
+      {items.length < 40 ? (
+        <button type="button" className="adm-btn w-fit" onClick={() => onChange([...items, { scope: "category", slug: "", photo: "", band: "", bandPhone: "" }])}>Add an image row</button>
+      ) : null}
+    </fieldset>
+  );
+}
+
 function Text({ label, value, onChange, max = 200, multiline }: { label: string; value: string; onChange: (v: string) => void; max?: number; multiline?: boolean }) {
   return (
     <label className="mb-3 flex flex-col t-small">
@@ -130,6 +265,12 @@ export function ShellEditor({ initial, section }: { initial: ShellConfig; sectio
     <div className="grid gap-4">
       {section === "menus" ? (
         <>
+          <section aria-labelledby="home-edit">
+            <h2 className="t-h3" id="home-edit">Home page (New design)</h2>
+            <TrustRows items={draft.home.trust} onChange={(next) => setDraft({ ...draft, home: { ...draft.home, trust: next } })} />
+            <StepRows items={draft.home.steps} onChange={(next) => setDraft({ ...draft, home: { ...draft.home, steps: next } })} />
+            <ImageRows items={draft.media.images} onChange={(next) => setDraft({ ...draft, media: { images: next } })} />
+          </section>
           <section aria-labelledby="header-edit">
             <h2 className="t-h3" id="header-edit">Header</h2>
             <Text label="Log in button" value={header.loginLabel} onChange={(v) => setDraft({ ...draft, header: { ...header, loginLabel: v } })} />

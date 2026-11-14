@@ -4,7 +4,7 @@ import Link from "next/link";
 import { HeroSearch } from "@/components/HeroSearch";
 import { HomeLayout } from "@/components/blocks/HomeLayout";
 import { HomeBlocks, SkeletonGrid } from "@/components/HomeBlocks";
-import { getHomepageContent } from "@/lib/queries";
+import { getCategories, getFeed, getHomepageContent } from "@/lib/queries";
 import { getPageBlocks } from "@/lib/layout/read";
 import { postAdPath } from "@/lib/urls";
 import { textOverrides } from "@/app/admin/ui-text/store";
@@ -12,6 +12,10 @@ import { pickTexts } from "@/lib/ui/text";
 import { UiTextProvider } from "@/components/ui/AdCard";
 import { pageMetadata } from "@/lib/ui/meta";
 import { getPaths } from "@/server/urls/service";
+import { plain } from "@/lib/plain";
+import { newDesignOn } from "@/server/site-links/new-design";
+import { readShellConfig } from "@/server/site-links/shell-config";
+import { NewHome } from "@/components/new/NewHome";
 
 export const revalidate = 60;
 
@@ -34,9 +38,27 @@ async function publishedHome() {
   }
 }
 
+/** H7.4: the New design home, as in the Home mockup. Used only while the New design switch is on. */
+async function newHome(texts: ReturnType<typeof pickTexts>) {
+  const [content, paths, categories, feed, shell] = await Promise.all([
+    getHomepageContent(),
+    getPaths(),
+    getCategories(),
+    getFeed({}, 1),
+    readShellConfig(),
+  ]);
+  return (
+    <UiTextProvider texts={texts}>
+      <NewHome hero={plain(content.hero)} categories={plain(categories)} ads={plain(feed.items)} shell={shell} paths={paths} />
+    </UiTextProvider>
+  );
+}
+
 export default async function Home() {
-  const [blocks, overrides] = await Promise.all([publishedHome(), textOverrides()]);
+  const [overrides, newDesign] = await Promise.all([textOverrides(), newDesignOn()]);
   const texts = pickTexts(overrides, "card.");
+  if (newDesign) return newHome(texts);
+  const blocks = await publishedHome();
   if (blocks) {
     return (
       <UiTextProvider texts={texts}>
