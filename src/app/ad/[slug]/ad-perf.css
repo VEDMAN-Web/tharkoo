@@ -1,2 +1,5 @@
 /* H5.4: the first gallery photo (fetchpriority high) is the largest paint. Keep it visible before hydration. */
 .tk-motion img.tk-fade-img[fetchpriority="high"] { opacity: 1; }
+
+/* H6.7 perf: sections below the fold skip layout and paint until they are near the screen. Content stays in the HTML. */
+.tk-ad-rest > * { content-visibility: auto; contain-intrinsic-size: auto 240px; }
