@@ -2393,7 +2393,8 @@
         "src/app/api/discover/**",
         "src/app/api/alerts/**",
         "tests/server/discover/**",
-        "tests/server/notifications/**"
+        "tests/server/notifications/**",
+        "src/server/discover/**"
       ]
     },
     "H7.7": {
