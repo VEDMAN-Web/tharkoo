@@ -2360,6 +2360,7 @@
         "src/server/listings/admin-create.ts",
         "src/server/listings/import.ts",
         "src/server/search/query.ts",
+        "src/server/search/filter-seo.ts",
         "src/app/api/categories/**",
         "src/components/ListingPage.tsx",
         "src/components/listing/**",
