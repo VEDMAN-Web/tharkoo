@@ -33,7 +33,7 @@ export async function getSite() {
           tagline: "Tharkoo, premium classifieds in India.",
           legalName: "SparkBeta Tech",
           countryName: "India",
-          supportHours: "Mon–Fri 14:00–20:00 IST",
+          supportHours: "Mon-Fri 14:00-20:00 IST",
           ageGateEnabled: true,
         }
       );

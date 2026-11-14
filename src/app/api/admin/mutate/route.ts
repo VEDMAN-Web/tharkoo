@@ -6,6 +6,10 @@ import { canUseModel } from "@/lib/admin-model-access";
 import { connectDb } from "@/lib/db";
 import { MODEL_MAP, type ModelName } from "@/lib/models";
 import { sanitizeRecord } from "@/lib/sanitize";
+import { DASH_MESSAGE, dashFields } from "@/server/content/dashes";
+
+/** SEO text: a dash here is refused with a clear message (relay #42). */
+const SEO_DASH_MODELS = new Set(["SeoTemplate", "UrlOverride", "Category", "Location", "Site"]);
 import { auditAdminDenial } from "@/server/admin/denials";
 
 export const dynamic = "force-dynamic";
@@ -26,6 +30,10 @@ export async function POST(req: NextRequest) {
   }
   const Model = MODEL_MAP[modelName] as unknown as MongooseModel<Record<string, unknown>>;
   const data = body.data ? sanitizeRecord(body.data) : {};
+  if (SEO_DASH_MODELS.has(String(modelName))) {
+    const bad = dashFields(data as Record<string, unknown>);
+    if (bad.length) return NextResponse.json({ error: DASH_MESSAGE, fields: bad }, { status: 400 });
+  }
   let doc = null;
   if (op === "create") {
     doc = await Model.create(data);

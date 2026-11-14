@@ -4,7 +4,7 @@ export type TrustCopy = {
   paragraphs: string[];
 };
 
-const POSTAL = "Postal address: [placeholder — Ved to confirm the registered office address before publication].";
+const POSTAL = "Postal address: [placeholder: Ved to confirm the full registered office address before publication].";
 
 export const TRUST: Record<string, TrustCopy> = {
   terms: {

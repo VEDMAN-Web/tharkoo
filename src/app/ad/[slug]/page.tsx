@@ -46,7 +46,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   }
   const [ad, site] = await Promise.all([getListingBySlug(slug), getSite()]);
   if (!ad) return {};
-  const title = fillTemplate("{title} — {city} {category} | {site}", {
+  const title = fillTemplate("{title}, {city} {category} | {site}", {
     title: displayTitle(ad.title),
     city: prettyPlace(ad.citySlug),
     category: ad.categorySlug,

@@ -6,7 +6,7 @@ export const dynamic = "force-dynamic";
 
 export default function Page() {
   return (
-    <AdminShell title="CMS — banners and static pages">
+    <AdminShell title="CMS: banners and static pages">
       <p className="mb-4 text-[13px]">
         Edit the home page under <Link href="/admin/homepage/" className="text-accent">Homepage</Link> and the header and footer under{" "}
         <Link href="/admin/menus/" className="text-accent">Menus</Link>.

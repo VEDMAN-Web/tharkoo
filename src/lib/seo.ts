@@ -49,7 +49,7 @@ export const DEFAULT_SEO = {
   },
   ad: {
     pageType: "ad",
-    title: "{title} — {city} {category} | {site}",
+    title: "{title}, {city} {category} | {site}",
     description: "{title} in {city}. Contact the vendor on the channels they enabled.",
     h1: "{title}",
     h2: "",

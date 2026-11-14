@@ -1714,6 +1714,33 @@
         "progress/H6.4.md"
       ]
     },
+    "H5.9": {
+      "branchPrefix": "haiku/h5.9",
+      "globs": [
+        "src/app/ad/**",
+        "src/lib/seo.ts",
+        "src/lib/ui/site-content.ts",
+        "src/app/admin/ads/page.tsx",
+        "src/app/admin/cms/page.tsx",
+        "src/app/admin/settings/page.tsx",
+        "src/components/admin/CollectionEditor.tsx",
+        "src/components/StaticPage.tsx",
+        "src/components/vendor/VendorScreens.tsx",
+        "src/content/trust.ts",
+        "src/lib/queries.ts",
+        "src/server/content/**",
+        "src/server/seo/templates.ts",
+        "src/server/seed/run.ts",
+        "src/app/admin/urls/override-actions.ts",
+        "src/app/api/admin/mutate/route.ts",
+        "src/app/api/admin/repair/**",
+        "scripts/seo-check.ts",
+        ".github/forbidden-terms.txt",
+        "tests/server/content/**",
+        "docs/ownership.json",
+        "progress/H5.9.md"
+      ]
+    },
     "H6.5": {
       "branchPrefix": "haiku/h6.5",
       "globs": [
