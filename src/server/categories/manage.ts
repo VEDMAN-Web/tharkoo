@@ -31,6 +31,8 @@ export interface CategoryInput {
   seoIntro?: string;
   /** Required when a category is created. There is no default kind (H6.5). */
   kind?: string;
+  /** Photos for an ad made by staff or imported (1 to 30). Blank means the default of 10. */
+  importMaxPhotos?: number | string | null;
 }
 
 export interface SubcategoryInput extends CategoryInput {
@@ -60,6 +62,14 @@ function cleanSlug(value: string) {
   const parsed = validateSlug(value);
   if (!parsed.ok) throw new ValidationError(parsed.message);
   return parsed.slug;
+}
+
+/** Blank means "use the default" (stored as null). Anything else must be a whole number from 1 to 30. */
+export function cleanImportMaxPhotos(value: unknown): number | null {
+  if (value === undefined || value === null || String(value).trim() === "") return null;
+  const count = Number(value);
+  if (!Number.isInteger(count) || count < 1 || count > 30) throw new ValidationError("Max photos must be a whole number from 1 to 30");
+  return count;
 }
 
 function cleanKind(value: unknown): CategoryKind {
@@ -121,8 +131,9 @@ export async function updateCategory(actor: Actor, id: string, input: CategoryIn
   await connectDb();
   const doc = await Category.findById(objectId(id, "Category"));
   if (!doc || doc.deletedAt) throw new NotFoundError("Category not found");
-  const before = { slug: doc.slug, name: doc.name, order: doc.order, enabled: doc.enabled, seoIntro: doc.introHtml };
+  const before = { slug: doc.slug, name: doc.name, order: doc.order, enabled: doc.enabled, seoIntro: doc.introHtml, importMaxPhotos: doc.importMaxPhotos ?? null };
   if (input.name !== undefined) doc.name = cleanText(input.name, "Name", MAX_NAME, true);
+  if (input.importMaxPhotos !== undefined) doc.importMaxPhotos = cleanImportMaxPhotos(input.importMaxPhotos);
   if (input.order !== undefined) doc.order = cleanOrder(input.order);
   if (input.enabled !== undefined) doc.enabled = Boolean(input.enabled);
   if (input.seoIntro !== undefined) doc.introHtml = cleanText(input.seoIntro, "SEO intro", MAX_INTRO, false);
@@ -146,6 +157,7 @@ export async function updateCategory(actor: Actor, id: string, input: CategoryIn
     order: after?.order,
     enabled: after?.enabled,
     seoIntro: after?.introHtml,
+    importMaxPhotos: after?.importMaxPhotos ?? null,
   });
   await refreshPublicCache();
   return { ok: true as const };

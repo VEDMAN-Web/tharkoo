@@ -92,6 +92,8 @@ export const NAV_GROUPS: NavGroup[] = [
     items: [
       item("moderation", "Moderation queue", "/admin/moderation/", "shield", "moderator"),
       item("all-ads", "All ads", "/admin/listings/", "list", "moderator"),
+      item("create-ad", "Create ad", "/admin/ads/create/", "page", "admin"),
+      item("bulk-import", "Bulk import", "/admin/import/", "box", "admin"),
       item("listing-order", "Listing order", "/admin/listing-order/", "layers", "admin"),
       item("reports", "Reports", "/admin/reports/", "flag", "trust_safety"),
       item("id-checks", "ID checks", "/admin/kyc/", "id", "trust_safety"),

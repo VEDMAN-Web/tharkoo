@@ -166,7 +166,7 @@ function readTable(csv: string) {
   return { headers, body };
 }
 
-async function findPartner(email: string) {
+export async function findPartner(email: string) {
   await connectDb();
   const user = await User.findOne({ email: email.trim().toLowerCase() });
   if (!user) throw new NotFoundError("No account with that email");
@@ -176,7 +176,7 @@ async function findPartner(email: string) {
   return { id, email: user.email, displayName: user.displayName, doc: user as UserRow };
 }
 
-function fieldDefs(category: CategoryDoc): FieldDefinition[] {
+export function fieldDefs(category: CategoryDoc): FieldDefinition[] {
   return (category.fields ?? []).map((field) => ({
     key: field.key,
     label: field.label,
@@ -319,7 +319,7 @@ function bannedHit(text: string, banned: string[]) {
   return textDenied(text).denied || banned.some((needle) => haystack.includes(needle));
 }
 
-function textErrors(input: { title: string; description: string; attributes: Record<string, unknown> }, banned: string[]) {
+export function textErrors(input: { title: string; description: string; attributes: Record<string, unknown> }, banned: string[]) {
   const checks: Array<[string, string]> = [
     ["title", input.title],
     ["description", input.description],
@@ -508,7 +508,7 @@ async function uniqueSlug(title: string, id: Types.ObjectId) {
   return `${base}-${id.toString().slice(-6)}`;
 }
 
-async function finalise(id: string, status: ImportStatus, actor: ImportActor) {
+export async function finalise(id: string, status: ImportStatus, actor: ImportActor) {
   const listing = await Listing.findById(id);
   if (!listing) throw new NotFoundError("Not found");
   listing.status = status;
@@ -528,7 +528,7 @@ async function finalise(id: string, status: ImportStatus, actor: ImportActor) {
 }
 
 /** Same call normal publishing makes (queueIndexNow), which batches the paths and does nothing without INDEXNOW_KEY. */
-async function pingIndexNow(paths: string[]) {
+export async function pingIndexNow(paths: string[]) {
   try {
     const { queueIndexNow } = await import("@/server/indexnow/ping");
     queueIndexNow(paths);
@@ -551,7 +551,7 @@ export function photoIdsFor(photos: RowPhoto[], files: UploadedFiles): string[] 
  * Puts the photos on the listing. The import has already checked the photo limit for its own rule (photoLimitForImport),
  * so this skips the plan limit of the normal photo step, which would refuse a superadmin's category maximum.
  */
-async function attachPhotos(listingId: string, mediaIds: string[]) {
+export async function attachPhotos(listingId: string, mediaIds: string[]) {
   await Listing.updateOne(
     { _id: listingId },
     { $set: { mediaIds: mediaIds.map((id) => new Types.ObjectId(id)), coverMediaId: new Types.ObjectId(mediaIds[0]) } },

@@ -14,9 +14,9 @@ import {
   type ManageResult,
 } from "./manage-actions";
 
-export type ManagedCategory = { id: string; slug: string; name: string; enabled: boolean; seoIntro: string; kind: string };
+export type ManagedCategory = { id: string; slug: string; name: string; enabled: boolean; seoIntro: string; kind: string; importMaxPhotos: number | null };
 export type ManagedSub = { id: string; categoryId: string; slug: string; name: string; icon: string; enabled: boolean; seoIntro: string };
-type Draft = { name: string; slug: string; icon: string; seoIntro: string; enabled: boolean; kind: string };
+type Draft = { name: string; slug: string; icon: string; seoIntro: string; enabled: boolean; kind: string; importMaxPhotos: string };
 type Removing = { kind: "category" | "subcategory"; id: string; name: string; slug: string };
 
 /** Kinds an admin chooses from. There is no preselected value: a category needs one before it can be saved (H6.5). */
@@ -29,7 +29,7 @@ const KIND_OPTIONS: { value: string; label: string }[] = [
   { value: "people", label: "People (no live video tours)" },
 ];
 
-const EMPTY: Draft = { name: "", slug: "", icon: "", seoIntro: "", enabled: true, kind: "" };
+const EMPTY: Draft = { name: "", slug: "", icon: "", seoIntro: "", enabled: true, kind: "", importMaxPhotos: "" };
 const grid = { display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(160px, 1fr))", gap: 10, alignItems: "end" } as const;
 
 function Field({ label, value, onChange, wide }: { label: string; value: string; onChange: (next: string) => void; wide?: boolean }) {
@@ -59,13 +59,28 @@ function KindField({ value, onChange }: { value: string; onChange: (next: string
   );
 }
 
-function Editor({ draft, onChange, withIcon, withKind, actions }: { draft: Draft; onChange: (next: Draft) => void; withIcon: boolean; withKind?: boolean; actions: React.ReactNode }) {
+function Editor({ draft, onChange, withIcon, withKind, withMaxPhotos, actions }: { draft: Draft; onChange: (next: Draft) => void; withIcon: boolean; withKind?: boolean; withMaxPhotos?: boolean; actions: React.ReactNode }) {
   return (
     <div style={grid}>
       <Field label="Name" value={draft.name} onChange={(name) => onChange({ ...draft, name })} />
       <Field label="Slug" value={draft.slug} onChange={(slug) => onChange({ ...draft, slug })} />
       {withIcon ? <Field label="Icon (name)" value={draft.icon} onChange={(icon) => onChange({ ...draft, icon })} /> : null}
       {withKind ? <KindField value={draft.kind} onChange={(kind) => onChange({ ...draft, kind })} /> : null}
+      {withMaxPhotos ? (
+        <label className="adm-field">
+          <span className="adm-field-label">Max photos for admin posts and imports (1 to 30)</span>
+          <input
+            className="adm-input"
+            type="number"
+            min={1}
+            max={30}
+            placeholder="10"
+            value={draft.importMaxPhotos}
+            onChange={(event) => onChange({ ...draft, importMaxPhotos: event.target.value })}
+          />
+          <span className="adm-field-help">Blank means 10.</span>
+        </label>
+      ) : null}
       <Toggle checked={draft.enabled} onChange={(enabled) => onChange({ ...draft, enabled })} label={draft.enabled ? "Visible" : "Hidden"} />
       <Field label="SEO intro" value={draft.seoIntro} onChange={(seoIntro) => onChange({ ...draft, seoIntro })} wide />
       <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>{actions}</div>
@@ -91,7 +106,7 @@ export function CategoriesManager({ categories, subs }: { categories: ManagedCat
   const draftOf = (id: string, base: Draft) => drafts[id] ?? base;
   const patch = (id: string, next: Draft) => setDrafts((current) => ({ ...current, [id]: next }));
   const categoryBase: Draft = category
-    ? { name: category.name, slug: category.slug, icon: "", seoIntro: category.seoIntro, enabled: category.enabled, kind: category.kind }
+    ? { name: category.name, slug: category.slug, icon: "", seoIntro: category.seoIntro, enabled: category.enabled, kind: category.kind, importMaxPhotos: category.importMaxPhotos == null ? "" : String(category.importMaxPhotos) }
     : EMPTY;
 
   async function done(result: ManageResult, ok: string, after?: () => void) {
@@ -162,13 +177,18 @@ export function CategoriesManager({ categories, subs }: { categories: ManagedCat
             onChange={(next) => patch(category.id, next)}
             withIcon={false}
             withKind
+            withMaxPhotos
             actions={
               <>
                 <button
                   type="button"
                   className="adm-btn"
                   disabled={!draftOf(category.id, categoryBase).kind}
-                  onClick={async () => done(await updateCategoryAction(category.id, draftOf(category.id, categoryBase)), "Saved.")}
+                  onClick={async () => {
+                    const draft = draftOf(category.id, categoryBase);
+                    const importMaxPhotos = draft.importMaxPhotos.trim() === "" ? null : Number(draft.importMaxPhotos);
+                    await done(await updateCategoryAction(category.id, { ...draft, importMaxPhotos }), "Saved.");
+                  }}
                 >
                   Save
                 </button>
@@ -194,7 +214,7 @@ export function CategoriesManager({ categories, subs }: { categories: ManagedCat
             />
           ) : null}
           {mine.map((row) => {
-            const base: Draft = { name: row.name, slug: row.slug, icon: row.icon, seoIntro: row.seoIntro, enabled: row.enabled, kind: "" };
+            const base: Draft = { name: row.name, slug: row.slug, icon: row.icon, seoIntro: row.seoIntro, enabled: row.enabled, kind: "", importMaxPhotos: "" };
             const draft = draftOf(row.id, base);
             return (
               <div key={row.id} style={{ marginTop: 14 }} data-testid="sub-row">
