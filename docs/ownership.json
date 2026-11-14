@@ -1816,7 +1816,42 @@
         "tests/server/proxy/**",
         "tests/e2e/**",
         "docs/ownership.json",
-        "progress/H6.6.md"
+        "progress/H6.6.md",
+        "src/components/wallet/**",
+        "src/components/PhoneLogin.tsx",
+        "src/components/PhoneLinkCard.tsx",
+        "src/components/AuthForm.tsx",
+        "tests/server/auth/otp.test.ts",
+        "progress/H6.6b.md"
+      ]
+    },
+    "H6.6b": {
+      "branchPrefix": "haiku/h6.6b",
+      "globs": [
+        "src/server/wallet/**",
+        "src/server/ledger/**",
+        "src/server/billing/**",
+        "src/app/api/wallet/**",
+        "src/app/api/payments/**",
+        "src/app/admin/finance/**",
+        "src/app/admin/settings/**",
+        "src/app/u/**",
+        "src/server/auth/**",
+        "src/app/api/auth/**",
+        "src/proxy.ts",
+        "tests/server/wallet/**",
+        "tests/server/billing/**",
+        "tests/server/auth/**",
+        "tests/server/proxy/**",
+        "tests/e2e/**",
+        "docs/ownership.json",
+        "progress/H6.6.md",
+        "src/components/wallet/**",
+        "src/components/PhoneLogin.tsx",
+        "src/components/PhoneLinkCard.tsx",
+        "src/components/AuthForm.tsx",
+        "tests/server/auth/otp.test.ts",
+        "progress/H6.6b.md"
       ]
     },
     "H6.7": {

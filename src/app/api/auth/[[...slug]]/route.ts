@@ -10,6 +10,7 @@ import {
   sessionCookieHeader,
   sessionHintCookie,
 } from "@/server/auth/http";
+import { sendLoginCode, verifyLoginCode } from "@/server/auth/otp";
 import { consumeRateLimit } from "@/server/auth/rate-limit";
 import {
   confirmPhone,
@@ -25,6 +26,7 @@ import {
   startPhone,
   verifyEmail,
 } from "@/server/auth/service";
+import { z } from "zod";
 import { NotFoundError, failure, handle, parseInput, requestIdFrom, success } from "@/server/http";
 import {
   forgotPasswordBodySchema,
@@ -35,6 +37,15 @@ import {
   resetPasswordBodySchema,
   verifyEmailBodySchema,
 } from "@/server/shared/schemas/auth";
+
+const otpSendBodySchema = z.object({
+  phone: z.string().trim().min(8).max(20),
+});
+
+const otpVerifyBodySchema = z.object({
+  phone: z.string().trim().min(8).max(20),
+  code: z.string().trim().regex(/^\d{6}$/),
+});
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -140,6 +151,30 @@ async function dispatch(request: Request) {
     const found = await requireUser(token);
     const body = parseInput(phoneConfirmBodySchema, await readBody(request));
     return json(await confirmPhone(found.user.id, body.challengeId, body.code), requestId);
+  }
+  if (request.method === "POST" && path === "otp/send") {
+    const body = parseInput(otpSendBodySchema, await readBody(request));
+    const sent = await sendLoginCode({ phone: body.phone, ip });
+    if (!sent.ok) {
+      return Response.json(failure({ code: "RATE_LIMITED", message: "Too many codes requested. Try again later." }, requestId), {
+        status: 429,
+        headers: { "retry-after": String(sent.retryAfter), "x-request-id": requestId },
+      });
+    }
+    return json({ sent: true }, requestId);
+  }
+  if (request.method === "POST" && path === "otp/verify") {
+    const body = parseInput(otpVerifyBodySchema, await readBody(request));
+    const blocked = await limit(`otp-verify:${ip}`, LOGIN_MAX, requestId);
+    if (blocked) return blocked;
+    const result = await verifyLoginCode({
+      phone: body.phone,
+      code: body.code,
+      userAgent: request.headers.get("user-agent"),
+      ip,
+      existingToken: token,
+    });
+    return json({ user: result.user }, requestId, 200, [sessionCookieHeader(result.token), sessionHintCookie()]);
   }
   if (request.method === "GET" && path === "sessions") {
     const found = await requireUser(token);
