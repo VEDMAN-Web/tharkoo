@@ -29,6 +29,7 @@ import { getPaths, publicTags } from "@/server/urls/service";
 import { fallbackLanding, mergeLanding, visibleHeading, type LandingCopy } from "@/lib/seo/landing";
 import { isCityAlias } from "@/lib/seo/district-alias";
 import { SubcategoryChips } from "../SubcategoryChips";
+import { loadCardWidth } from "@/server/listings/card-width";
 
 type Props = {
   params: Promise<{ category: string; location: string }>;
@@ -119,7 +120,7 @@ export default async function LocationPage({ params, searchParams }: Props) {
   if (sp.verified) Object.assign(filter, { verified: true });
 
   const canonicalPath = placePath(cat.slug || category, loc.slug || location);
-  const [seo, site, stars, feed, siblings, districts, paths, tags, heading, counts, categories] = await Promise.all([
+  const [seo, site, stars, feed, siblings, districts, paths, tags, heading, counts, categories, cardWidth] = await Promise.all([
     getSeoFor("location", category),
     getSite(),
     getStarListings(loc.kind === "city" ? { categorySlug: category, citySlug: location } : filter),
@@ -131,6 +132,7 @@ export default async function LocationPage({ params, searchParams }: Props) {
     urlHeading(canonicalPath, ""),
     listingCountsByCategoryCity().catch(() => []),
     getCategories().catch(() => []),
+    loadCardWidth(),
   ]);
   if (sp.page && Number(sp.page) > feed.pages) notFound();
 
@@ -179,6 +181,7 @@ export default async function LocationPage({ params, searchParams }: Props) {
 
   return (
     <>
+    <div data-card-width={cardWidth}>
     <ListingPageView
       layout={layout}
       texts={texts}
@@ -211,6 +214,7 @@ export default async function LocationPage({ params, searchParams }: Props) {
       photos={sp.photos === "1"}
       verified={sp.verified === "1"}
     />
+    </div>
     {loc.kind === "city" ? <SubcategoryChips category={cat.slug || category} city={loc.slug || location} /> : null}
     </>
   );

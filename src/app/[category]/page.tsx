@@ -23,6 +23,7 @@ import { listingHeading } from "@/lib/layout/listing";
 import { hourSeed, orderFeed } from "@/components/feedOrder";
 import { fallbackLanding, mergeLanding, type LandingCopy } from "@/lib/seo/landing";
 import { SubcategoryChips } from "./SubcategoryChips";
+import { loadCardWidth } from "@/server/listings/card-width";
 
 type Props = { params: Promise<{ category: string }> };
 
@@ -45,7 +46,7 @@ export default async function CategoryHub({ params }: Props) {
   const cat = await getCategory(category);
   if (!cat) notFound();
   if (cat.slug && cat.slug !== category) permanentRedirect(categoryPath(cat.slug));
-  const [seo, site, cities, states, counts, feed, stars, paths, heading] = await Promise.all([
+  const [seo, site, cities, states, counts, feed, stars, paths, heading, cardWidth] = await Promise.all([
     getSeoFor("category", category),
     getSite(),
     getCities(),
@@ -55,6 +56,7 @@ export default async function CategoryHub({ params }: Props) {
     getStarListings({ categorySlug: category }).catch(() => []),
     getPaths(),
     urlHeading(categoryPath(cat.slug || category), `${cat.name} in India`),
+    loadCardWidth(),
   ]);
   const texts = await textOverrides();
   const t = makeT(texts);
@@ -134,7 +136,7 @@ export default async function CategoryHub({ params }: Props) {
         </div>
         <MapPin className="tk-banner-pins tk-icon-lg" size={180} color="#fff" aria-hidden />
       </div>
-      <div className="tk-container" style={{ paddingBottom: 32 }}>
+      <div className="tk-container" style={{ paddingBottom: 32 }} data-card-width={cardWidth}>
         <Breadcrumbs crumbs={[{ name: t("listing.crumb.home"), path: "/" }, { name: cat.name!, path: categoryPath(cat.slug || category) }]} />
         {/* Blocks in the order the layout gives. The category page draws the ads and the SEO text itself (the ads come with the text below them);
             filters, nearby cities and similar link blocks belong to city pages and are skipped here. */}
