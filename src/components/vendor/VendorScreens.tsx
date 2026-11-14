@@ -63,7 +63,7 @@ export function Dashboard({ locked = false }: { locked?: boolean }) {
   const active = rows?.filter((row) => row.status === "active").length;
   const hidden = rows?.filter((row) => UNPUBLISHED.has(row.status || "")).length;
   const chip = statusChip(me?.verificationStatus);
-  const num = (value: number | null | undefined) => (value === null || value === undefined ? "–" : String(value));
+  const num = (value: number | null | undefined) => (value === null || value === undefined ? "-" : String(value));
 
   return (
     <VendorShell>

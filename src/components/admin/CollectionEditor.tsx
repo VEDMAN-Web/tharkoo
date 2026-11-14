@@ -123,7 +123,7 @@ export function CollectionEditor({
       <div className="rounded-lg border border-line bg-surface p-3 text-text">
         {edit ? (
           <>
-            <p className="mb-2 t-caption text-muted">JSON editor — every field is live on the site after Save.</p>
+            <p className="mb-2 t-caption text-muted">JSON editor. Every field is live on the site after Save.</p>
             <textarea value={json} onChange={(e) => setJson(e.target.value)} rows={22} className="w-full rounded-md border border-line bg-bg p-2 font-mono text-[12px] text-text" />
             <div className="mt-2 flex gap-2">
               <button type="button" className="tk-btn tk-btn-gold" onClick={save}>

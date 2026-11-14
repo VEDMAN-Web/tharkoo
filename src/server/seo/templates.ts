@@ -13,6 +13,7 @@ import {
 } from "@/lib/seo/landing";
 import { assertSeoEditor, recordSeo, type SeoActor } from "@/app/admin/seo/staff";
 import { ValidationError } from "@/server/http";
+import { DASH_CHARS, DASH_MESSAGE } from "@/server/content/dashes";
 import { SeoTemplate } from "@/server/models/cms";
 import { textDenied } from "@/server/shared/policy";
 
@@ -52,6 +53,8 @@ export function validateTemplate(input: TemplateInput): { key: string; fields: T
     fields[name] = value;
     if (value.length > TEMPLATE_LIMITS[name]) {
       problems[name] = [`Keep this to ${TEMPLATE_LIMITS[name]} characters or fewer`];
+    } else if (DASH_CHARS.test(value)) {
+      problems[name] = [DASH_MESSAGE];
     } else if (textDenied(value).denied) {
       problems[name] = ["This text contains a word that is not allowed on Tharkoo"];
     } else if (unknownVariables(value).length) {

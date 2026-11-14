@@ -10,3 +10,5 @@ skokka
 adult classif
 paid meeting
 companionship
+# Em dash and en dash: Vedant does not want them on the site (relay #42)
+—|–

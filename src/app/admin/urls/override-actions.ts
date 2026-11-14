@@ -2,6 +2,7 @@
 
 import { getStaffFromHeaders } from "@/lib/admin-auth";
 import { HttpError } from "@/server/http";
+import { assertNoDashes } from "@/server/content/dashes";
 import { assertSeoEditor, recordSeo } from "@/app/admin/seo/staff";
 import { applyOverrideCsv, deleteUrlOverride, planOverrideCsv, saveUrlOverride } from "@/server/urls/service";
 import type { OverrideInput } from "./override-rules";
@@ -22,6 +23,7 @@ function failed(error: unknown) {
 export async function saveOverrideFieldsAction(input: OverrideInput) {
   try {
     const who = await actor();
+    assertNoDashes(input as unknown as Record<string, unknown>);
     const out = await saveUrlOverride(input);
     await recordSeo(who, "seo.override.save", "url-override", out.after.path, out.before ?? {}, out.after);
     return { ok: true as const, path: out.after.path };

@@ -26,7 +26,7 @@ async function main() {
   const statusCounts = new Map<number, number>();
   for (const r of rows) statusCounts.set(r.status, (statusCounts.get(r.status) || 0) + 1);
   const md = [
-    `# SEO check — ${new Date().toISOString()}`,
+    `# SEO check: ${new Date().toISOString()}`,
     `Base: ${base} · sitemap URLs: ${result.urls} · requests: ${rows.length} · agents: ${agents.join(", ")} · ${Math.round((Date.now() - started) / 1000)}s`,
     "",
     `## P0 (${p0rows.length} page-agent rows, ${robotsIssues.length} robots issues)`,
