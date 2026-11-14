@@ -2207,6 +2207,75 @@
         "progress/H6.17.md"
       ]
     },
+    "H6.18": {
+      "branchPrefix": "haiku/h6.18",
+      "globs": [
+        "src/server/media/**",
+        "src/server/listings/**",
+        "src/app/api/media/**",
+        "src/app/api/cron/expire/route.ts",
+        "src/server/settings/**",
+        "src/app/admin/settings/**",
+        "src/app/admin/import/**",
+        "src/server/listings/import.ts",
+        "src/components/post/**",
+        "src/components/PostWizard.tsx",
+        "src/app/u/post-insert/**",
+        "src/app/u/account/media/**",
+        "tests/server/media/**",
+        "tests/server/listings/**",
+        "tests/e2e/media*.e2e.ts",
+        "progress/H6.18.md",
+        "docs/ownership.json"
+      ]
+    },
+    "H6.19": {
+      "branchPrefix": "haiku/h6.19",
+      "globs": [
+        "src/app/u/post-insert/**",
+        "src/components/post/**",
+        "src/components/PostWizard.tsx",
+        "src/app/u/account/**",
+        "src/components/vendor/**",
+        "src/components/ui/**",
+        "src/app/globals.css",
+        "tests/e2e/post-*.e2e.ts",
+        "tests/e2e/vendor*.e2e.ts",
+        "progress/H6.19.md",
+        "docs/ownership.json"
+      ]
+    },
+    "H6.20": {
+      "branchPrefix": "haiku/h6.20",
+      "globs": [
+        "src/app/u/account/**",
+        "src/components/buyer/**",
+        "src/components/header/**",
+        "src/app/u/**",
+        "src/server/wallet/**",
+        "src/server/billing/**",
+        "tests/server/wallet/**",
+        "tests/e2e/user-panel*.e2e.ts",
+        "progress/H6.20.md",
+        "docs/ownership.json"
+      ]
+    },
+    "H6.21": {
+      "branchPrefix": "haiku/h6.21",
+      "globs": [
+        "src/app/admin/support/**",
+        "src/app/u/account/support/**",
+        "src/server/support/**",
+        "src/server/models/support*.ts",
+        "src/app/api/support/**",
+        "src/app/api/admin/support/**",
+        "src/components/support/**",
+        "tests/server/support/**",
+        "tests/e2e/support*.e2e.ts",
+        "progress/H6.21.md",
+        "docs/ownership.json"
+      ]
+    },
     "H6.8": {
       "branchPrefix": "haiku/h6.8",
       "globs": [
