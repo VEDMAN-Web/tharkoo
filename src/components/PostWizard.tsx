@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { api, fieldErrors, friendlyError } from "@/lib/ui/api";
 import { loadPostSubcategories, type PostSubcategory } from "@/server/categories/actions";
-import { VideoUploader } from "@/components/ad/VideoUploader";
+import { PhotoStep } from "@/components/post/PhotoStep";
 import { draftToForm, needsIdCheck, validatePost, type SavedDraft } from "@/lib/ui/post-form";
 import { loginPath, postAdPath } from "@/lib/urls";
 import { useUrlPaths } from "./UrlPaths";
@@ -58,8 +58,6 @@ export function PostWizard({ copy = POST_COPY_DEFAULTS }: { copy?: PostCopy }) {
   const [banner, setBanner] = useState("");
   const [busy, setBusy] = useState(false);
   const [done, setDone] = useState(false);
-  const [photoNote, setPhotoNote] = useState("");
-  const [photos, setPhotos] = useState<string[]>([]);
   const [plans, setPlans] = useState<{ id: string; code?: string; name: string; amount?: number }[]>([]);
   const [hydrated, setHydrated] = useState(true);
 
@@ -102,7 +100,6 @@ export function PostWizard({ copy = POST_COPY_DEFAULTS }: { copy?: PostCopy }) {
             setTelegram(form.telegram);
             setTelegramOn(Boolean(form.telegram));
             setAttrs(form.attrs);
-            setPhotos(form.photos);
             setTerms(true);
             setAdult(true);
           } else setBanner("This draft could not be loaded. Go back and save it again.");
@@ -224,69 +221,6 @@ export function PostWizard({ copy = POST_COPY_DEFAULTS }: { copy?: PostCopy }) {
       return;
     }
     remember(id, 2);
-  }
-
-  async function uploadPhoto(file: File) {
-    if (!draftId) {
-      setPhotoNote("Save the ad details before adding a photo.");
-      return;
-    }
-    if (!["image/jpeg", "image/png", "image/webp"].includes(file.type) || file.size > 8 * 1024 * 1024) {
-      setPhotoNote("Use a JPG, PNG, or WebP photo up to 8 MB.");
-      return;
-    }
-    const signed = await api<{
-      uploadUrl: string;
-      mediaId: string;
-      mode?: string;
-      apiKey?: string;
-      timestamp?: number;
-      signature?: string;
-      folder?: string;
-      params?: Record<string, string | number>;
-    }>("/api/media/sign", {
-      method: "POST",
-      body: JSON.stringify({ listingId: draftId, contentType: file.type, byteSize: file.size, kind: "image" }),
-    });
-    if (!signed.ok) {
-      setPhotoNote(friendlyError(signed.error));
-      return;
-    }
-    if (signed.data.uploadUrl.startsWith("/")) {
-      const body = new FormData();
-      body.set("file", file);
-      body.set("mediaId", signed.data.mediaId);
-      const saved = await fetch(signed.data.uploadUrl, { method: "POST", body, credentials: "same-origin" });
-      if (!saved.ok) {
-        setPhotoNote("That photo could not be saved. Try a smaller JPG, PNG, or WebP.");
-        return;
-      }
-    } else {
-      const body = new FormData();
-      body.set("file", file);
-      body.set("api_key", signed.data.apiKey || "");
-      body.set("timestamp", String(signed.data.timestamp || ""));
-      body.set("signature", signed.data.signature || "");
-      body.set("folder", signed.data.folder || "");
-      for (const [key, value] of Object.entries(signed.data.params || {})) body.set(key, String(value));
-      const saved = await fetch(signed.data.uploadUrl, { method: "POST", body });
-      if (!saved.ok) {
-        setPhotoNote("That photo could not be saved. Try a smaller JPG, PNG, or WebP.");
-        return;
-      }
-      const done = await api("/api/media/complete", { method: "POST", body: JSON.stringify({ mediaId: signed.data.mediaId }) });
-      if (!done.ok) {
-        setPhotoNote(friendlyError(done.error));
-        return;
-      }
-    }
-    const ids = [...photos, signed.data.mediaId];
-    setPhotos(ids);
-    const attached = await api(`/api/listings/${draftId}`, {
-      method: "PATCH",
-      body: JSON.stringify({ stage: "photos", mediaIds: ids, coverMediaId: ids[0] }),
-    });
-    setPhotoNote(attached.ok ? "Photo saved." : friendlyError(attached.error));
   }
 
   async function publish() {
@@ -471,39 +405,7 @@ export function PostWizard({ copy = POST_COPY_DEFAULTS }: { copy?: PostCopy }) {
         </>
       ) : null}
       {step === 2 ? (
-        <>
-          <div className="tk-form-panel">
-            <h2 className="t-h3">Your photos</h2>
-            <div className="tk-drop">
-              <p>Drag photos here or</p>
-              <label className="tk-btn tk-btn-outline-gold">
-                ADD PHOTOS
-                <input
-                  type="file"
-                  accept="image/jpeg,image/png,image/webp"
-                  data-tk="photo-input"
-                  hidden
-                  onChange={(event) => {
-                    const file = event.target.files?.[0];
-                    event.target.value = "";
-                    if (file) void uploadPhoto(file);
-                  }}
-                />
-              </label>
-              {copy.photoRules.title ? <p className="t-small" style={{ fontWeight: 600 }}>{copy.photoRules.title}</p> : null}
-              {copy.photoRules.items.map((rule) => (
-                <p key={rule} className="t-small">{rule}</p>
-              ))}
-            </div>
-            {photos.length ? <p className="t-small" data-tk="photo-count">{photos.length} photo{photos.length === 1 ? "" : "s"} saved</p> : null}
-            {photoNote ? <p data-tk="photo-note">{photoNote}</p> : steps.photos.help ? <p className="t-small">{steps.photos.help}</p> : null}
-            <VideoUploader listingId={draftId} />
-          </div>
-          <div style={{ display: "flex", justifyContent: "space-between", marginTop: 16 }}>
-            <button type="button" className="tk-btn tk-btn-outline-gold" onClick={() => remember(draftId, 1)}>{steps.photos.backLabel}</button>
-            <button type="button" className="tk-btn tk-btn-gold" data-tk="go-on" onClick={() => remember(draftId, 3)}>{steps.photos.nextLabel}</button>
-          </div>
-        </>
+        <PhotoStep listingId={draftId} copy={copy} onBack={() => remember(draftId, 1)} onNext={() => remember(draftId, 3)} />
       ) : null}
       {step === 3 ? (
         <>

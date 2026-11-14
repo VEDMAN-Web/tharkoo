@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Megaphone, Settings, Ticket, UserRound, Wallet } from "lucide-react";
+import { Images, Megaphone, Settings, Ticket, UserRound, Wallet } from "lucide-react";
 import { Suspense } from "react";
 import { VendorShell } from "./VendorShell";
 import { api, hasSessionHint } from "@/lib/ui/api";
@@ -88,6 +88,15 @@ export function Dashboard({ locked = false }: { locked?: boolean }) {
               <div className="tk-dcard-actions">
                 <Link href="/u/post-insert/" className="tk-btn tk-btn-gold">Post an ad</Link>
                 <Link href="/u/account/ads/" className="tk-dlink">See all ads</Link>
+              </div>
+            </div>
+            <div className="tk-dcard" data-tk="tile" data-tile="media">
+              <h2><Images size={20} aria-hidden /> Photos &amp; videos</h2>
+              <div className="tk-dcard-body">
+                <p className="t-small">Every photo and video on your ads, and whether it is live.</p>
+              </div>
+              <div className="tk-dcard-actions">
+                <Link href="/u/account/media/" className="tk-btn tk-btn-outline-gold">Open photos &amp; videos</Link>
               </div>
             </div>
             <div className="tk-dcard" data-tk="tile" data-tile="wallet">

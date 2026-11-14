@@ -248,7 +248,7 @@ function fieldDefs(category: CategoryDoc): FieldDefinition[] {
   }));
 }
 
-async function promoted(listing: ListingRow) {
+export async function promoted(listing: ListingRow) {
   if (listing.badges?.some((badge) => badge && badge !== "free")) return true;
   return Boolean(
     await PromotionOrder.exists({
@@ -258,6 +258,8 @@ async function promoted(listing: ListingRow) {
     }),
   );
 }
+
+const ATTACHABLE_PHOTO_STATUS = new Set(["cleared", "scanning"]);
 
 async function assertPhotos(ownerId: string, listing: ListingRow, mediaIds: string[], coverMediaId?: string) {
   if (new Set(mediaIds).size !== mediaIds.length) {
@@ -273,7 +275,8 @@ async function assertPhotos(ownerId: string, listing: ListingRow, mediaIds: stri
   if (assets.length !== mediaIds.length) throw new NotFoundError("Media not found");
   for (const asset of assets) {
     if (asset.ownerId.toString() !== ownerId) throw new ForbiddenError("Forbidden");
-    if (asset.kind === "id_document" || asset.status !== "cleared") {
+    // A photo can be attached while it is still being checked. Publishing still needs it cleared (submitListing).
+    if (asset.kind === "id_document" || !ATTACHABLE_PHOTO_STATUS.has(asset.status)) {
       throw new PolicyViolationError("MEDIA_NOT_CLEARED");
     }
   }
