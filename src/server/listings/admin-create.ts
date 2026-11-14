@@ -42,6 +42,7 @@ import { videoSeconds } from "@/server/media/duration";
 import { BannedWord, Category, Listing, Location, MediaAsset, User, type CategoryDoc } from "@/server/models";
 import { Subcategory } from "@/server/models/subcategory";
 import { parseListingAttributes } from "@/server/shared/fields";
+import { withPickLimits } from "@/server/fields/service";
 import { idCheckRequired } from "@/server/settings/id-check";
 import { evaluatePublishGate } from "@/server/shared/publish-gate";
 
@@ -128,8 +129,8 @@ function textRules(title: string, description: string, errors: string[]) {
 }
 
 /** Field rules are the category's own: the same parse the post form and the import use. Null when a field is wrong. */
-function checkAttributes(category: CategoryRow, attributes: Record<string, unknown>, errors: string[]) {
-  const defs = fieldDefs(category);
+async function checkAttributes(category: CategoryRow, attributes: Record<string, unknown>, errors: string[]) {
+  const defs = await withPickLimits(category.slug, fieldDefs(category));
   const labels = new Map(defs.map((def) => [def.key, def.label]));
   try {
     return parseListingAttributes(defs, attributes);
@@ -221,7 +222,7 @@ async function checkAd(input: ParsedAd, owner: Owner): Promise<{ errors: string[
   textRules(title, description, errors);
   const category = (await Category.findOne({ _id: input.categoryId, deletedAt: null }).lean()) as CategoryRow | null;
   if (!category || category.enabled === false) return { errors: [...errors, "Choose a category"], resolved: null };
-  const attributes = checkAttributes(category, input.attributes, errors);
+  const attributes = await checkAttributes(category, input.attributes, errors);
   const subcategoryId = await checkSubcategory(category._id, input.subcategoryId, errors);
   const place = await checkPlace(input, errors);
   const limit = adPhotoLimit(category.importMaxPhotos);

@@ -122,6 +122,8 @@ export interface WizardField {
   options: string[];
   placeholder: string;
   help: string;
+  /** Most picks for a pick-many field, or null for the default. */
+  maxPicks: number | null;
 }
 
 interface RawField {
@@ -134,6 +136,7 @@ interface RawField {
   help?: unknown;
   order?: unknown;
   enabled?: unknown;
+  maxPicks?: unknown;
 }
 
 /** Category fields in the order the admin set, without the ones switched off. */
@@ -150,5 +153,6 @@ export function wizardFields(fields: readonly RawField[] | null | undefined): Wi
       options: strList(field.options),
       placeholder: str(field.placeholder),
       help: str(field.help),
+      maxPicks: typeof field.maxPicks === "number" && field.maxPicks > 0 ? Math.floor(field.maxPicks) : null,
     }));
 }

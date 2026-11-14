@@ -34,7 +34,8 @@ import { AD_MEDIA_LIMIT_MESSAGE, AD_MEDIA_MAX } from "@/server/media/config";
 import { adVideoCount } from "@/server/media/limit";
 import { assertVerified } from "@/server/verification/service";
 import { hashIp } from "@/server/shared/crypto";
-import { parseListingAttributes, type FieldDefinition } from "@/server/shared/fields";
+import { choiceProblems, parseListingAttributes, type FieldDefinition } from "@/server/shared/fields";
+import { withPickLimits } from "@/server/fields/service";
 import { revalidateListingPages } from "@/server/listings/revalidate";
 import { parsePrice } from "@/server/listings/price";
 import { attributeDenied, categoryDenied, textDenied } from "@/server/shared/policy";
@@ -460,6 +461,9 @@ async function applyDetails(
     if (denied.denied) throw new PolicyViolationError("Listing text is not allowed");
     const strings = Object.values(input.attributes).filter((value): value is string => typeof value === "string");
     await assertCleanText(strings);
+    const category = await requireCategory(listing.categoryId.toString());
+    const problems = choiceProblems(await withPickLimits(category.slug, fieldDefs(category)), input.attributes);
+    if (Object.keys(problems).length > 0) throw new ValidationError("Invalid request", problems);
     listing.attributes = input.attributes;
     listing.markModified("attributes");
   }
@@ -537,7 +541,7 @@ export async function submitListing(
   const user = await User.findById(userId);
   if (!user || user.status !== "active") throw new UnauthorizedError("Sign in required");
   const category = await requireCategory(listing.categoryId.toString());
-  const attributes = parseListingAttributes(fieldDefs(category), listing.attributes ?? {});
+  const attributes = parseListingAttributes(await withPickLimits(category.slug, fieldDefs(category)), listing.attributes ?? {});
   listing.attributes = attributes;
   listing.markModified("attributes");
   const mediaIds = listing.mediaIds ?? [];
