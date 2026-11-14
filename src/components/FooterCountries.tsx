@@ -5,7 +5,7 @@ import { useEffect, useState } from "react";
 import { getFooterCountries } from "@/server/locations/footer-action";
 import type { DirectoryCountry } from "@/server/locations/countries";
 import { useUrlPaths } from "./UrlPaths";
-import { applyPrefixes, placePath } from "@/lib/urls";
+import { applyPrefixes, countryPath, placePath } from "@/lib/urls";
 
 const countStyle = { color: "var(--muted)", fontSize: 12, marginLeft: "auto", paddingLeft: 8 } as const;
 const rowStyle = { display: "flex", alignItems: "center", gap: 8, minHeight: 28, fontSize: 14 } as const;
@@ -40,7 +40,7 @@ export function FooterCountries({ title, allLabel, categorySlug }: { title?: str
               <span style={countStyle}>{country.count}</span>
             </summary>
             <div style={{ paddingLeft: 24, paddingBottom: 6 }}>
-              <Link href={applyPrefixes(placePath(categorySlug, country.slug), paths)} prefetch={false} style={{ ...rowStyle, color: "var(--primary)" }}>
+              <Link href={countryPath(country.slug)} prefetch={false} style={{ ...rowStyle, color: "var(--primary)" }}>
                 {country.name}
               </Link>
               {country.cities.map((city) => (

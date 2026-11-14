@@ -1880,7 +1880,12 @@
         "scripts/seo-check.mjs",
         "tests/e2e/**",
         "docs/ownership.json",
-        "progress/H6.7.md"
+        "progress/H6.7.md",
+        "progress/H6.7-e2e.md",
+        "src/app/countries/**",
+        "src/server/locations/countries.ts",
+        "src/components/FooterCountries.tsx",
+        "src/lib/urls.ts"
       ]
     },
     "H5.7": {
