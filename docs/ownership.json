@@ -2289,6 +2289,124 @@
         "docs/ownership.json"
       ]
     },
+    "H7.1": {
+      "branchPrefix": "haiku/h7.1",
+      "globs": [
+        "src/components/Header*.tsx",
+        "src/components/Footer*.tsx",
+        "src/components/chat/**",
+        "src/components/SiteShell.tsx",
+        "src/components/PathChrome.tsx",
+        "src/app/layout.tsx",
+        "src/server/chat/**",
+        "src/server/site-links/**",
+        "src/app/admin/menus/**",
+        "src/app/admin/footer/**",
+        "src/app/admin/settings/**",
+        "src/app/globals.css",
+        "tests/e2e/shell*.e2e.ts",
+        "tests/server/shell/**",
+        "progress/H7.1.md",
+        "docs/ownership.json"
+      ]
+    },
+    "H7.2": {
+      "branchPrefix": "haiku/h7.2",
+      "globs": [
+        "src/app/login/**",
+        "src/app/u/login/**",
+        "src/app/u/account/**",
+        "src/server/auth/**",
+        "src/app/api/auth/**",
+        "src/components/auth/**",
+        "src/server/otp/**",
+        "src/server/mailer/**",
+        "tests/server/auth/**",
+        "tests/e2e/login*.e2e.ts",
+        "progress/H7.2.md",
+        "docs/ownership.json"
+      ]
+    },
+    "H7.3": {
+      "branchPrefix": "haiku/h7.3",
+      "globs": [
+        "src/app/admin/categories/**",
+        "src/server/categories/**",
+        "src/server/fields/**",
+        "src/components/admin/category-fields/**",
+        "src/app/admin/options/**",
+        "src/server/search/**",
+        "src/app/[category]/**",
+        "src/server/seo/**",
+        "src/app/landing/**",
+        "src/app/sitemap/**",
+        "tests/server/categories/**",
+        "tests/server/search/**",
+        "tests/server/fields/**",
+        "progress/H7.3.md",
+        "docs/ownership.json"
+      ]
+    },
+    "H7.4": {
+      "branchPrefix": "haiku/h7.4",
+      "globs": [
+        "src/app/page.tsx",
+        "src/components/home/**",
+        "src/components/listing/**",
+        "src/components/AdCard*.tsx",
+        "src/app/[category]/**",
+        "src/app/ad/**",
+        "src/components/ad/**",
+        "src/server/listings/**",
+        "src/server/home/**",
+        "tests/e2e/home*.e2e.ts",
+        "tests/e2e/listing*.e2e.ts",
+        "tests/e2e/ad*.e2e.ts",
+        "progress/H7.4.md",
+        "docs/ownership.json"
+      ]
+    },
+    "H7.5": {
+      "branchPrefix": "haiku/h7.5",
+      "globs": [
+        "src/app/u/post-insert/**",
+        "src/components/post/**",
+        "src/components/PostWizard.tsx",
+        "src/app/u/account/**",
+        "src/components/vendor/**",
+        "src/server/listings/**",
+        "src/server/availability/**",
+        "tests/e2e/post*.e2e.ts",
+        "tests/e2e/vendor*.e2e.ts",
+        "progress/H7.5.md",
+        "docs/ownership.json"
+      ]
+    },
+    "H7.6": {
+      "branchPrefix": "haiku/h7.6",
+      "globs": [
+        "src/app/u/account/**",
+        "src/app/u/**",
+        "src/components/buyer/**",
+        "src/server/notifications/**",
+        "src/server/alerts/**",
+        "tests/e2e/user*.e2e.ts",
+        "progress/H7.6.md",
+        "docs/ownership.json"
+      ]
+    },
+    "H7.7": {
+      "branchPrefix": "haiku/h7.7",
+      "globs": [
+        "src/app/admin/**",
+        "src/server/content/**",
+        "src/server/layout/**",
+        "src/lib/ui/**",
+        "src/components/admin/**",
+        "progress/H7.7.md",
+        "docs/ownership.json"
+      ]
+    },
     "H6.8": {
       "branchPrefix": "haiku/h6.8",
       "globs": [
