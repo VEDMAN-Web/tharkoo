@@ -7,7 +7,6 @@ import { AuditRepository } from "@/server/audit";
 import { categoryNeedsSubcategory } from "@/server/categories/public";
 import { isSiteMediaType, readImageSize } from "@/server/layout/media";
 import { ConflictError, ForbiddenError, NotFoundError, PolicyViolationError, ValidationError } from "@/server/http";
-import { DEFAULT_CATEGORY_IMPORT_MAX } from "@/server/import/rules";
 import {
   assertPublishRight,
   attachPhotos,
@@ -23,18 +22,21 @@ import {
 import { createDraft, patchListing } from "@/server/listings/service";
 import { uploadToCloudinary } from "@/server/media/client";
 import {
+  AD_MEDIA_LIMIT_MESSAGE,
+  AD_MEDIA_MAX,
   CLOUDINARY_FOLDER,
   MAX_BYTES,
   STRIP_EXIF,
   UPLOAD_NEEDS_CLOUDINARY,
   VIDEO_MAX_BYTES,
-  VIDEO_MAX_PER_AD,
   VIDEO_MAX_SECONDS,
   VIDEO_RULE_MESSAGE,
   VIDEO_TYPES,
+  importPhotoLimit,
   onVercel,
   optionalCloudinary,
 } from "@/server/media/config";
+import { markWatermarked, prepareLocalAdFile } from "@/server/media/watermark";
 import { csamScannerFromEnv } from "@/server/media/csam";
 import { videoSeconds } from "@/server/media/duration";
 import { BannedWord, Category, Listing, Location, MediaAsset, User, type CategoryDoc } from "@/server/models";
@@ -50,7 +52,6 @@ const TITLE_MAX = 140;
 const DESCRIPTION_MIN = 20;
 const DESCRIPTION_MAX = 5000;
 const PRICE_MAX = 100_000_000;
-const PHOTO_LIMIT_MAX = 30;
 const IMAGE_EXTENSION: Record<string, string> = { "image/jpeg": "jpg", "image/png": "png", "image/webp": "webp" };
 const VIDEO_EXTENSION: Record<string, string> = { "video/mp4": "mp4", "video/webm": "webm", "video/quicktime": "mov" };
 
@@ -66,7 +67,7 @@ export interface AdminMediaFile {
 
 /** Photo limit for a staff-made ad: the category's own maximum, or the default of 10. Same rule as the import. */
 export function adPhotoLimit(categoryMax?: number | null) {
-  return Number.isInteger(categoryMax) && (categoryMax as number) >= 1 ? (categoryMax as number) : DEFAULT_CATEGORY_IMPORT_MAX;
+  return importPhotoLimit(categoryMax);
 }
 
 const objectId = z.string().regex(OBJECT_ID, "Choose from the list");
@@ -82,8 +83,8 @@ export const adminAdSchema = z.object({
   description: z.string().max(10000),
   price: z.number().int().min(0).max(PRICE_MAX).nullable().optional(),
   attributes: z.record(z.string(), z.unknown()).default({}),
-  photoIds: z.array(objectId).max(PHOTO_LIMIT_MAX).default([]),
-  videoIds: z.array(objectId).max(VIDEO_MAX_PER_AD).default([]),
+  photoIds: z.array(objectId).max(AD_MEDIA_MAX).default([]),
+  videoIds: z.array(objectId).max(AD_MEDIA_MAX).default([]),
   status: z.enum(["pending", "active"]),
 });
 
@@ -225,6 +226,7 @@ async function checkAd(input: ParsedAd, owner: Owner): Promise<{ errors: string[
   const place = await checkPlace(input, errors);
   const limit = adPhotoLimit(category.importMaxPhotos);
   if (input.photoIds.length > limit) errors.push(`Too many photos: ${input.photoIds.length}. The limit for this category is ${limit}`);
+  if (input.photoIds.length + input.videoIds.length > AD_MEDIA_MAX) errors.push(AD_MEDIA_LIMIT_MESSAGE);
   await checkMedia(owner.id, input.photoIds, "image", errors);
   await checkMedia(owner.id, input.videoIds, "video", errors);
   if (place) await checkDuplicate(owner.id, category._id, place.cityId, title, errors);
@@ -347,20 +349,25 @@ export async function storeAdminMedia(actor: ImportActor, ownerEmail: string, ki
   if (kind === "video") assertVideo(file);
   else assertImage(file);
   const id = new Types.ObjectId();
-  const objectKey = kind === "video" ? await storeVideo(file, id) : await storeImage(file, id);
-  const scan = await csamScannerFromEnv().scan({ objectKey, contentType: file.type, bytes: file.data.length });
+  // H6.18: on the local disk fallback the photo is marked before it is written (a video is refused while the watermark is on).
+  const local = !optionalCloudinary() && !onVercel();
+  const prepared = local ? await prepareLocalAdFile(kind, file) : { data: file.data, watermarked: false };
+  const stored = { ...file, data: prepared.data };
+  const objectKey = kind === "video" ? await storeVideo(stored, id) : await storeImage(stored, id);
+  if (prepared.watermarked) await markWatermarked(objectKey);
+  const scan = await csamScannerFromEnv().scan({ objectKey, contentType: file.type, bytes: stored.data.length });
   if (scan.match) {
     await removeStored(objectKey);
     throw new PolicyViolationError("Upload was rejected");
   }
-  await MediaAsset.create({ _id: id, ownerId: owner.id, kind, objectKey, status: "cleared", clearedAt: new Date(), contentType: file.type, bytes: file.data.length });
+  await MediaAsset.create({ _id: id, ownerId: owner.id, kind, objectKey, status: "cleared", clearedAt: new Date(), contentType: file.type, bytes: stored.data.length });
   await audit.append({
     actorId: actor.id,
     actorType: "admin",
     action: "media.admin_upload",
     targetType: "media",
     targetId: id.toHexString(),
-    after: { ownerId: owner.id, ownerEmail: owner.email, kind, bytes: file.data.length },
+    after: { ownerId: owner.id, ownerEmail: owner.email, kind, bytes: stored.data.length },
     requestId,
   });
   return { mediaId: id.toHexString(), kind, name: file.name };

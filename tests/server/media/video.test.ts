@@ -76,6 +76,8 @@ beforeAll(async () => {
 });
 beforeEach(async () => {
   await clearMemoryMongo();
+  // H6.18: the watermark is on by default, and a local video is refused while it is on. These tests cover the rules for videos, so the mark is off here.
+  await mongoose.connection.collection("watermark_settings").insertOne({ key: "default", enabled: false, position: "south_east", opacity: 60 });
 });
 afterEach(async () => {
   for (const id of created.splice(0)) {
@@ -133,13 +135,12 @@ describe("video upload rules", () => {
     await expect(saveLocalMedia(userId, signed.mediaId, { type: "video/mp4", data: mp4(5, 10 * 1024 * 1024) }, "r")).rejects.toThrow();
   });
 
-  it("allows at most 2 videos per ad and only for the ad owner", async () => {
+  it("allows up to 10 photos and videos per ad (H6.18) and only for the ad owner", async () => {
     const userId = await owner();
     const other = await owner("bob@example.com");
     const listingId = await ad(userId);
-    await upload(userId, listingId, mp4(5));
-    await upload(userId, listingId, mp4(6));
-    await expect(signMedia(userId, { listingId, contentType: "video/mp4", byteSize: 100, kind: "video" }, "r")).rejects.toThrow(/limit/i);
+    for (let index = 0; index < 10; index += 1) await upload(userId, listingId, mp4(5));
+    await expect(signMedia(userId, { listingId, contentType: "video/mp4", byteSize: 100, kind: "video" }, "r")).rejects.toThrow(/10 photos and videos/);
     await expect(signMedia(other, { listingId, contentType: "video/mp4", byteSize: 100, kind: "video" }, "r")).rejects.toThrow();
   });
 });

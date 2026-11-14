@@ -26,9 +26,9 @@ import { evaluatePublishGate } from "@/server/shared/publish-gate";
 import { toSlug } from "@/server/shared/slug";
 import { assertVerified } from "@/server/verification/service";
 import { idCheckRequired } from "@/server/settings/id-check";
-import { assertRowCap, parsePhotoCell, photoLimitForImport } from "@/server/import/rules";
+import { assertRowCap, parsePhotoCell } from "@/server/import/rules";
 import { parseVideoCell, videoProblem, type ChosenVideo } from "@/server/import/videos";
-import { VIDEO_MAX_PER_AD } from "@/server/media/config";
+import { AD_MEDIA_MAX, importPhotoLimit } from "@/server/media/config";
 
 export { MAX_IMPORT_ROWS, IMPORT_CHUNK_ROWS } from "@/server/import/rules";
 const MAX_CSV_BYTES = 2 * 1024 * 1024;
@@ -326,7 +326,8 @@ async function photoByUrl(partnerId: string, url: string, errors: string[]): Pro
 async function resolvePhotos(partnerId: string, cell: string, errors: string[], lookups: Lookups, categoryMax?: number | null) {
   const refs = parsePhotoCell(cell);
   if (refs.length === 0) return [];
-  const limit = photoLimitForImport(lookups.superadmin, categoryMax);
+  // H6.18: every import row has the same limit as an ad (10 in total), bounded by the category maximum.
+  const limit = importPhotoLimit(categoryMax);
   if (refs.length > limit) errors.push(`Too many photos: ${refs.length}. The limit is ${limit}`);
   const photos: RowPhoto[] = [];
   for (const ref of refs.slice(0, limit)) {
@@ -348,8 +349,8 @@ async function resolvePhotos(partnerId: string, cell: string, errors: string[], 
 /** Each entry names a chosen video. A missing, too big, too long or wrong-type video is a row error, the same as for photos. */
 function resolveVideos(cell: string, errors: string[], lookups: Lookups): string[] {
   const refs = parseVideoCell(cell);
-  if (refs.length > VIDEO_MAX_PER_AD) {
-    errors.push(`Too many videos: ${refs.length}. The limit is ${VIDEO_MAX_PER_AD} per ad`);
+  if (refs.length > AD_MEDIA_MAX) {
+    errors.push(`Too many videos: ${refs.length}. The limit is ${AD_MEDIA_MAX} photos and videos in total`);
     return [];
   }
   const names: string[] = [];
@@ -447,6 +448,7 @@ async function planRow(
   const price = priceOf(cells.price, errors);
   const photos = await resolvePhotos(partner.id, cells[PHOTO_COLUMN] ?? "", errors, lookups, category?.importMaxPhotos);
   const videos = resolveVideos(cells[VIDEO_COLUMN] ?? "", errors, lookups);
+  if (photos.length + videos.length > AD_MEDIA_MAX) errors.push(`Too many photos and videos: ${photos.length + videos.length}. The limit is ${AD_MEDIA_MAX} in total`);
   if (category && attributes) {
     errors.push(...textErrors({ title, description: cells.description, attributes }, lookups.banned));
     const gate = evaluatePublishGate({
@@ -640,7 +642,7 @@ export function photoIdsFor(photos: RowPhoto[], files: UploadedFiles): string[] 
 }
 
 /**
- * Puts the photos on the listing. The import has already checked the photo limit for its own rule (photoLimitForImport),
+ * Puts the photos on the listing. The import has already checked the photo limit (importPhotoLimit, the shared ad limit),
  * so this skips the plan limit of the normal photo step, which would refuse a superadmin's category maximum.
  */
 export async function attachPhotos(listingId: string, mediaIds: string[]) {

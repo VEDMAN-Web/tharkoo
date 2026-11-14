@@ -3,7 +3,8 @@ import { requireStaffRequest } from "@/lib/admin-auth";
 import { assertOrigin } from "@/server/auth/http";
 import { HttpError } from "@/server/http";
 import { recordImportPhoto, recordImportVideo } from "@/server/import/job";
-import { MAX_BYTES, VIDEO_MAX_BYTES } from "@/server/media/config";
+import { MAX_BYTES, VIDEO_MAX_BYTES, optionalCloudinary } from "@/server/media/config";
+import { prepareLocalAdFile } from "@/server/media/watermark";
 import { connectDb } from "@/lib/db";
 import { User } from "@/server/models";
 
@@ -30,7 +31,10 @@ export async function POST(request: NextRequest) {
     const user = await User.findOne({ email: staff.email }).select("_id").lean<{ _id: { toString(): string } }>();
     if (!user) return NextResponse.json({ ok: false, error: "Sign in as staff to import files" }, { status: 403 });
     const actor = { id: user._id.toString(), roles: staff.roles };
-    const chosen = { name: file.name, type: file.type, data: Buffer.from(await file.arrayBuffer()) };
+    const raw = Buffer.from(await file.arrayBuffer());
+    // H6.18: with no Cloudinary (local disk), the photo is marked here before it is stored; a video is refused while the watermark is on.
+    const data = optionalCloudinary() ? raw : (await prepareLocalAdFile(isVideo ? "video" : "image", { type: file.type, data: raw })).data;
+    const chosen = { name: file.name, type: file.type, data };
     const result = isVideo
       ? await recordImportVideo(actor, jobId, chosen, crypto.randomUUID())
       : await recordImportPhoto(actor, jobId, chosen, crypto.randomUUID());

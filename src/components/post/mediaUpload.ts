@@ -6,7 +6,8 @@ export const PHOTO_RULE_NOTE = "Use a JPG, PNG, or WebP photo up to 8 MB.";
 export const VIDEO_TYPES = ["video/mp4", "video/webm", "video/quicktime"];
 export const VIDEO_MAX_BYTES = 10 * 1024 * 1024;
 export const VIDEO_MAX_SECONDS = 30;
-export const VIDEO_MAX_PER_AD = 2;
+/** H6.18: photos and videos together for one ad. The server checks the same number. */
+export const AD_MEDIA_MAX = 10;
 export const VIDEO_RULE_NOTE = "Use an mp4, webm or mov video up to 10 MB and 30 seconds.";
 
 type Signed = {

@@ -6,9 +6,9 @@ import type { DraftMedia } from "@/server/media/mine";
 import type { PostCopy } from "./copy";
 import { listDraftMediaAction, removeMyMediaAction } from "./mediaActions";
 import { MediaTile } from "./MediaTile";
-import { VIDEO_MAX_PER_AD, checkPhoto, checkVideo, uploadMedia } from "./mediaUpload";
+import { AD_MEDIA_MAX, checkPhoto, checkVideo, uploadMedia } from "./mediaUpload";
 
-const VIDEO_RULE_LINE = "Videos: up to 2, max 10 MB and 30 seconds each.";
+const VIDEO_RULE_LINE = "Videos: max 10 MB and 30 seconds each. Photos and videos: up to 10 in total.";
 const GRID = { display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(150px, 1fr))", gap: 16, padding: 0, margin: 0 } as const;
 
 type Upload = { key: string; kind: "image" | "video"; previewUrl: string | null; progress: number };
@@ -46,8 +46,10 @@ export function PhotoStep({ listingId, copy, onBack, onNext }: { listingId: stri
 
   const photos = draft?.photos ?? [];
   const videos = draft?.videos ?? [];
-  const limit = draft?.limit ?? 1;
-  const photoUploads = uploads.filter((upload) => upload.kind === "image").length;
+  // H6.18: one limit for photos and videos together. Uploads still in progress count too.
+  const limit = draft?.limit ?? AD_MEDIA_MAX;
+  const shown = photos.length + videos.length;
+  const atLimit = shown + uploads.length >= limit;
   const busy = uploads.length > 0 || busyId !== "";
 
   function patchUpload(key: string, progress: number) {
@@ -88,9 +90,9 @@ export function PhotoStep({ listingId, copy, onBack, onNext }: { listingId: stri
 
   async function addPhotos(files: File[]) {
     if (!listingId) return setNote("Save the ad details before adding a photo.");
-    const room = limit - photos.length - photoUploads;
-    if (room <= 0) return setNote(`Your ad allows ${limit} ${limit === 1 ? "photo" : "photos"}. Remove one to add another.`);
-    let problem = files.length > room ? `Only ${room} more ${room === 1 ? "photo fits" : "photos fit"} within your limit of ${limit}.` : "";
+    const room = limit - shown - uploads.length;
+    if (room <= 0) return setNote(`Your ad allows ${limit} photos and videos in total. Remove one to add another.`);
+    let problem = files.length > room ? `Only ${room} more ${room === 1 ? "item fits" : "items fit"} within your limit of ${limit} photos and videos.` : "";
     let saved = 0;
     for (const file of files.slice(0, room)) {
       const rule = checkPhoto(file);
@@ -104,9 +106,7 @@ export function PhotoStep({ listingId, copy, onBack, onNext }: { listingId: stri
 
   async function addVideo(file: File) {
     if (!listingId) return setNote("Save the ad details before adding a video.");
-    if (videos.length + uploads.filter((upload) => upload.kind === "video").length >= VIDEO_MAX_PER_AD) {
-      return setNote("You can add up to 2 videos. Remove one first.");
-    }
+    if (atLimit) return setNote(`Your ad allows ${limit} photos and videos in total. Remove one first.`);
     const rule = await checkVideo(file);
     if (rule) return setNote(rule);
     const error = await sendOne(file, "video");
@@ -177,7 +177,7 @@ export function PhotoStep({ listingId, copy, onBack, onNext }: { listingId: stri
             <p key={rule} className="t-small">{rule}</p>
           ))}
         </div>
-        <p className="t-small" data-tk="photo-count">{photos.length} of {limit} {limit === 1 ? "photo" : "photos"}</p>
+        <p className="t-small" data-tk="photo-count">{shown} of {limit} photos and videos</p>
         {note ? <p data-tk="photo-note" role="status">{note}</p> : steps.photos.help ? <p className="t-small">{steps.photos.help}</p> : null}
         <ul data-tk="photo-grid" style={GRID}>
           {photos.map((photo, index) => (
@@ -201,14 +201,14 @@ export function PhotoStep({ listingId, copy, onBack, onNext }: { listingId: stri
           ))}
         </ul>
         <h3 className="t-h3" style={{ marginTop: 16 }}>Your videos</h3>
-        <label className="tk-btn tk-btn-outline-gold" aria-disabled={busy || videos.length >= VIDEO_MAX_PER_AD}>
+        <label className="tk-btn tk-btn-outline-gold" aria-disabled={busy || atLimit}>
           ADD VIDEO
           <input
             type="file"
             accept="video/mp4,video/webm,video/quicktime"
             data-tk="video-input"
             hidden
-            disabled={busy || videos.length >= VIDEO_MAX_PER_AD}
+            disabled={busy || atLimit}
             onChange={(event) => {
               const file = event.target.files?.[0];
               event.target.value = "";

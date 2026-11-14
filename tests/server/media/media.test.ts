@@ -6,7 +6,7 @@ import { DELETE, GET, PATCH, POST } from "@/app/api/media/[[...slug]]/route";
 import { hashToken } from "@/server/auth/http";
 import { setCloudinaryClient, type CloudinaryClient } from "@/server/media/client";
 import { signUploadParams } from "@/server/media/sign";
-import { setCsamScanner } from "@/server/media/service";
+import { setCsamScanner, signMedia } from "@/server/media/service";
 import { AuditEvent, Listing, MediaAsset, Session, User } from "@/server/models";
 import { dryRunRequested } from "../../../scripts/media-orphan-sweep";
 import { clearMemoryMongo, connectMemoryMongo, disconnectMemoryMongo } from "../../setup/mongo";
@@ -114,7 +114,6 @@ afterAll(async () => {
   delete process.env.CLOUDINARY_CLOUD_NAME;
   delete process.env.CLOUDINARY_API_KEY;
   delete process.env.CLOUDINARY_API_SECRET;
-  delete process.env.LISTING_PHOTO_LIMIT_FREE;
   delete process.env.CSAM_PROVIDER;
   await disconnectMemoryMongo();
 });
@@ -208,54 +207,39 @@ describe("media routes", () => {
     expect(reorder.status).toBe(403);
   });
 
-  it("enforces free and promoted photo limits", async () => {
+  it("allows 10 photos and videos in total for every ad, and refuses the 11th (H6.18)", async () => {
     const owner = await account("ada@example.com");
     const freeId = await listingFor(owner.id);
-    const first = await call(
-      "POST",
-      "sign",
-      { listingId: freeId, contentType: "image/png", byteSize: 10, kind: "image" },
-      owner.cookie,
-    );
-    expect(first.status).toBe(200);
-    const second = await call(
-      "POST",
-      "sign",
-      { listingId: freeId, contentType: "image/png", byteSize: 10, kind: "image" },
-      owner.cookie,
-    );
-    expect(second.status).toBe(422);
-    expect((await dataOf(second)).error?.code).toBe("POLICY_VIOLATION");
-
-    process.env.LISTING_PHOTO_LIMIT_FREE = "2";
-    const tuned = await listingFor(owner.id);
-    expect(
-      (await call("POST", "sign", { listingId: tuned, contentType: "image/webp", byteSize: 10, kind: "image" }, owner.cookie)).status,
-    ).toBe(200);
-    expect(
-      (await call("POST", "sign", { listingId: tuned, contentType: "image/webp", byteSize: 10, kind: "image" }, owner.cookie)).status,
-    ).toBe(200);
-    expect(
-      (await call("POST", "sign", { listingId: tuned, contentType: "image/webp", byteSize: 10, kind: "image" }, owner.cookie)).status,
-    ).toBe(422);
+    for (let index = 0; index < 10; index += 1) {
+      const response = await call("POST", "sign", { listingId: freeId, contentType: "image/png", byteSize: 10, kind: "image" }, owner.cookie);
+      expect(response.status).toBe(200);
+    }
+    const eleventh = await call("POST", "sign", { listingId: freeId, contentType: "image/png", byteSize: 10, kind: "image" }, owner.cookie);
+    expect(eleventh.status).toBe(422);
+    expect((await dataOf(eleventh)).error?.code).toBe("POLICY_VIOLATION");
 
     const promotedId = await listingFor(owner.id, ["featured"]);
     for (let index = 0; index < 10; index += 1) {
-      const response = await call(
-        "POST",
-        "sign",
-        { listingId: promotedId, contentType: "image/jpeg", byteSize: 10, kind: "image" },
-        owner.cookie,
-      );
+      const response = await call("POST", "sign", { listingId: promotedId, contentType: "image/jpeg", byteSize: 10, kind: "image" }, owner.cookie);
       expect(response.status).toBe(200);
     }
-    const eleventh = await call(
-      "POST",
-      "sign",
-      { listingId: promotedId, contentType: "image/jpeg", byteSize: 10, kind: "image" },
-      owner.cookie,
-    );
-    expect(eleventh.status).toBe(422);
+    const promotedEleventh = await call("POST", "sign", { listingId: promotedId, contentType: "image/jpeg", byteSize: 10, kind: "image" }, owner.cookie);
+    expect(promotedEleventh.status).toBe(422);
+  });
+
+  it("counts photos and videos together: 6 photos and 4 videos fill the ad, and an 11th of either kind is refused (H6.18)", async () => {
+    const owner = await account("ada@example.com");
+    const mixedId = await listingFor(owner.id);
+    for (let index = 0; index < 6; index += 1) {
+      const response = await call("POST", "sign", { listingId: mixedId, contentType: "image/png", byteSize: 10, kind: "image" }, owner.cookie);
+      expect(response.status).toBe(200);
+    }
+    for (let index = 0; index < 4; index += 1) {
+      await expect(signMedia(owner.id, { listingId: mixedId, contentType: "video/mp4", byteSize: 10, kind: "video" }, "r")).resolves.toBeDefined();
+    }
+    await expect(signMedia(owner.id, { listingId: mixedId, contentType: "video/mp4", byteSize: 10, kind: "video" }, "r")).rejects.toThrow(/10 photos and videos/);
+    const photoEleventh = await call("POST", "sign", { listingId: mixedId, contentType: "image/png", byteSize: 10, kind: "image" }, owner.cookie);
+    expect(photoEleventh.status).toBe(422);
   });
 
   it("keeps identity documents on the authenticated type and expires the signed URL", async () => {
