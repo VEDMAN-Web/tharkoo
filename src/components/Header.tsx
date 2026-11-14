@@ -1,11 +1,13 @@
 "use client";
 
 import Link from "next/link";
+import dynamic from "next/dynamic";
 import { useEffect, useRef, useState } from "react";
 import { usePathname } from "next/navigation";
 import { LayoutDashboard, List, LogOut, Menu, Search, Settings, ShieldCheck, User, Wallet, X, MessageCircle, CircleHelp } from "lucide-react";
 import { Logo } from "./Logo";
-import { SearchModal } from "./SearchModal";
+// H6.7 perf: the search modal is only shown on demand, so its code loads on the first tap instead of on every page.
+const SearchModal = dynamic(() => import("./SearchModal").then((mod) => mod.SearchModal), { ssr: false });
 import { useCity } from "./CityContext";
 import { useFocusTrap } from "./ui/useFocusTrap";
 import { api, hasSessionHint, isStaffRole } from "@/lib/ui/api";
