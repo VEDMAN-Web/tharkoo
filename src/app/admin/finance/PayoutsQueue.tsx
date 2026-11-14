@@ -1,9 +1,34 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { DataTable, Notice, TextField, type Column } from "@/components/admin/ui";
 import { api, friendlyError } from "@/lib/ui/api";
+
+/** Revealed details disappear after this long, and are never kept in the page after that. */
+const REVEAL_MS = 60_000;
+
+interface RevealedDetails {
+  method: "bank" | "upi";
+  legalName: string;
+  pan: string;
+  accountNumber?: string;
+  ifsc?: string;
+  upiId?: string;
+}
+
+interface Revealed {
+  withdrawalId: string;
+  details: RevealedDetails;
+  expiresAt: number;
+}
+
+function detailsText(details: RevealedDetails) {
+  const lines = [`Name: ${details.legalName}`, `PAN: ${details.pan}`];
+  if (details.method === "upi") lines.push(`UPI ID: ${details.upiId ?? ""}`);
+  else lines.push(`Account: ${details.accountNumber ?? ""}`, `IFSC: ${details.ifsc ?? ""}`);
+  return lines.join("\n");
+}
 
 export interface PayoutRow {
   id: string;
@@ -59,8 +84,16 @@ export function PayoutsQueue({ rows }: { rows: PayoutRow[] }) {
   const [reference, setReference] = useState("");
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState<{ kind: "info" | "error"; text: string } | null>(null);
+  const [revealed, setRevealed] = useState<Revealed | null>(null);
   const selected = rows.find((row) => row.id === selectedId) ?? null;
   const actions = selected ? ACTIONS[selected.status] ?? [] : [];
+
+  // Hide revealed details after 60 seconds, whatever the staff member is doing.
+  useEffect(() => {
+    if (!revealed) return;
+    const timer = window.setTimeout(() => setRevealed(null), Math.max(0, revealed.expiresAt - Date.now()));
+    return () => window.clearTimeout(timer);
+  }, [revealed]);
 
   const columns: Column<PayoutRow>[] = [
     ...COLUMNS,
@@ -69,12 +102,39 @@ export function PayoutsQueue({ rows }: { rows: PayoutRow[] }) {
       label: "Action",
       value: () => "",
       render: (row) => (
-        <button type="button" className="adm-btn adm-btn-quiet" aria-pressed={row.id === selectedId} onClick={() => setSelectedId(row.id)}>
+        <button
+          type="button"
+          className="adm-btn adm-btn-quiet"
+          aria-pressed={row.id === selectedId}
+          onClick={() => {
+            setSelectedId(row.id);
+            setRevealed(null);
+          }}
+        >
           {row.id === selectedId ? "Selected" : "Open"}
         </button>
       ),
     },
   ];
+
+  async function reveal() {
+    if (!selected) return;
+    setBusy(true);
+    setMessage(null);
+    const res = await api<{ withdrawalId: string; details: RevealedDetails }>(`/api/wallet/admin/payouts/${selected.id}/reveal`, { method: "POST" });
+    setBusy(false);
+    if (!res.ok) return setMessage({ kind: "error", text: friendlyError(res.error) });
+    setRevealed({ withdrawalId: selected.id, details: res.data.details, expiresAt: Date.now() + REVEAL_MS });
+  }
+
+  async function copyRevealed(details: RevealedDetails) {
+    try {
+      await navigator.clipboard.writeText(detailsText(details));
+      setMessage({ kind: "info", text: "Copied. The details will hide after 60 seconds." });
+    } catch {
+      setMessage({ kind: "error", text: "Could not copy. Select the text and copy it by hand." });
+    }
+  }
 
   async function run(path: "approve" | "reject" | "paid" | "failed", needs?: "reason" | "reference") {
     if (!selected) return;
@@ -99,6 +159,7 @@ export function PayoutsQueue({ rows }: { rows: PayoutRow[] }) {
     setReason("");
     setReference("");
     setSelectedId(null);
+    setRevealed(null);
     router.refresh();
   }
 
@@ -124,6 +185,44 @@ export function PayoutsQueue({ rows }: { rows: PayoutRow[] }) {
             ))}
             {actions.length === 0 ? <span className="t-small">No action for this status.</span> : null}
           </div>
+          {selected.payout ? (
+            <div style={{ display: "grid", gap: 8 }}>
+              <div>
+                <button type="button" className="adm-btn adm-btn-quiet" disabled={busy} onClick={reveal}>
+                  Reveal full details
+                </button>
+              </div>
+              {revealed && revealed.withdrawalId === selected.id ? (
+                <section aria-label="Revealed payout details" style={{ display: "grid", gap: 8, padding: 12, border: "1px solid var(--adm-border, #ddd)", borderRadius: 8 }}>
+                  <p className="t-small">Shown for 60 seconds. Do not share it.</p>
+                  <dl style={{ display: "grid", gridTemplateColumns: "max-content 1fr", gap: "4px 12px", margin: 0 }}>
+                    <dt>Name</dt>
+                    <dd style={{ margin: 0 }}>{revealed.details.legalName}</dd>
+                    <dt>PAN</dt>
+                    <dd style={{ margin: 0 }}>{revealed.details.pan}</dd>
+                    {revealed.details.method === "upi" ? (
+                      <>
+                        <dt>UPI ID</dt>
+                        <dd style={{ margin: 0 }}>{revealed.details.upiId}</dd>
+                      </>
+                    ) : (
+                      <>
+                        <dt>Account</dt>
+                        <dd style={{ margin: 0 }}>{revealed.details.accountNumber}</dd>
+                        <dt>IFSC</dt>
+                        <dd style={{ margin: 0 }}>{revealed.details.ifsc}</dd>
+                      </>
+                    )}
+                  </dl>
+                  <div>
+                    <button type="button" className="adm-btn" onClick={() => copyRevealed(revealed.details)}>
+                      Copy
+                    </button>
+                  </div>
+                </section>
+              ) : null}
+            </div>
+          ) : null}
         </section>
       ) : null}
       {message ? <Notice kind={message.kind === "error" ? "error" : "info"}>{message.text}</Notice> : null}

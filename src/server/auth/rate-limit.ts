@@ -50,3 +50,9 @@ export async function consumeRateLimit(key: string, max: number, windowMs: numbe
   const retryAfter = Math.max(1, Math.ceil(((doc?.expiresAt ?? expiresAt).getTime() - Date.now()) / 1000));
   return { ok: Boolean(doc && doc.count <= max), retryAfter };
 }
+
+/** Clears a counter, so an action that was charged but never happened does not use up its window. */
+export async function resetRateLimit(key: string) {
+  await connectDb();
+  await AuthRateLimit.deleteOne({ key });
+}

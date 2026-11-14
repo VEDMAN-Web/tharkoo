@@ -2,10 +2,17 @@ import { Schema, Types } from "mongoose";
 import { z } from "zod";
 import { connectDb } from "@/lib/db";
 import { AuditRepository } from "@/server/audit";
-import { ConflictError, isDuplicateKey } from "@/server/http";
+import { ConflictError, InternalError, isDuplicateKey } from "@/server/http";
 import { hashIp } from "@/server/shared/crypto";
 import { registerModel } from "@/server/models/register";
-import { decryptField, encryptField, maskTail, maskUpi } from "@/server/wallet/payout-crypto";
+import {
+  decryptField,
+  encryptField,
+  isEncryptionConfigured,
+  maskTail,
+  maskUpi,
+  PAYOUT_DETAILS_UNAVAILABLE,
+} from "@/server/wallet/payout-crypto";
 
 const audit = new AuditRepository();
 
@@ -98,6 +105,28 @@ export function maskedKyc(row: PayoutKycDoc): MaskedPayoutKyc {
   };
 }
 
+/** Full values for one payout record. Only the reveal service calls this, after the role, rate and audit steps. */
+export interface RevealedPayoutKyc {
+  method: "bank" | "upi";
+  legalName: string;
+  pan: string;
+  accountNumber?: string;
+  ifsc?: string;
+  upiId?: string;
+}
+
+export function revealedKyc(row: PayoutKycDoc): RevealedPayoutKyc {
+  const base = { method: row.method, legalName: decryptField(row.legalNameEnc), pan: decryptField(row.panEnc) };
+  if (row.method === "upi") {
+    return { ...base, upiId: row.upiEnc ? decryptField(row.upiEnc) : undefined };
+  }
+  return {
+    ...base,
+    accountNumber: row.accountEnc ? decryptField(row.accountEnc) : undefined,
+    ifsc: row.ifscEnc ? decryptField(row.ifscEnc) : undefined,
+  };
+}
+
 export async function getPayoutKyc(userId: string): Promise<MaskedPayoutKyc | null> {
   await connectDb();
   await PayoutKyc.init();
@@ -110,6 +139,11 @@ export async function getPayoutKyc(userId: string): Promise<MaskedPayoutKyc | nu
  * redirect money, so a second submit is refused; a correction goes through support.
  */
 export async function submitPayoutKyc(input: { userId: string; values: PayoutKycInput; requestId: string; ip?: string }) {
+  // Fail closed: without the key nothing is encrypted, so nothing is stored at all.
+  if (!isEncryptionConfigured()) {
+    console.error("payout.kyc.unavailable: CONTACT_ENCRYPTION_KEY is not set");
+    throw new InternalError(PAYOUT_DETAILS_UNAVAILABLE);
+  }
   await connectDb();
   await PayoutKyc.init();
   const userId = new Types.ObjectId(input.userId);

@@ -9,12 +9,23 @@ const ALGORITHM = "aes-256-gcm";
 const VERSION = "v1";
 const MIN_SECRET_LENGTH = 16;
 
+/** The message a vendor sees when payout details cannot be stored safely. Nothing is written when it is shown. */
+export const PAYOUT_DETAILS_UNAVAILABLE = "Payout details are temporarily unavailable";
+
+function secret(): string {
+  return process.env.CONTACT_ENCRYPTION_KEY?.trim() ?? "";
+}
+
+/** True when CONTACT_ENCRYPTION_KEY is set long enough to encrypt. Used to refuse a save before anything is written. */
+export function isEncryptionConfigured(): boolean {
+  return secret().length >= MIN_SECRET_LENGTH;
+}
+
 function key(): Buffer {
-  const secret = process.env.CONTACT_ENCRYPTION_KEY?.trim() ?? "";
-  if (secret.length < MIN_SECRET_LENGTH) {
+  if (!isEncryptionConfigured()) {
     throw new InternalError("Encryption is not configured (set CONTACT_ENCRYPTION_KEY)");
   }
-  return createHash("sha256").update(secret).digest();
+  return createHash("sha256").update(secret()).digest();
 }
 
 export function encryptField(plain: string): string {

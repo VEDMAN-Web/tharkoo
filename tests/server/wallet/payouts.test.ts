@@ -148,6 +148,22 @@ describe("payout KYC", () => {
     expect(body.error.fields?.pan).toBeDefined();
   });
 
+  it("fails closed without CONTACT_ENCRYPTION_KEY: the save says unavailable and stores nothing", async () => {
+    const vendor = await person("kyc-no-key@example.com");
+    delete process.env.CONTACT_ENCRYPTION_KEY;
+    try {
+      await expect(withKyc(vendor.id)).rejects.toThrow("Payout details are temporarily unavailable");
+      const response = await call("PUT", "/api/wallet/payouts/kyc", vendor.cookie, bankDetails);
+      expect(response.status).toBe(500);
+      const body = (await response.json()) as { error: { message: string } };
+      expect(body.error.message).toBe("Payout details are temporarily unavailable");
+    } finally {
+      process.env.CONTACT_ENCRYPTION_KEY = ENCRYPTION_KEY;
+    }
+    expect(await PayoutKyc.countDocuments({ userId: vendor.id })).toBe(0);
+    expect(await PayoutKyc.collection.countDocuments({})).toBe(0);
+  });
+
   it("encrypts with the key from CONTACT_ENCRYPTION_KEY and round-trips", () => {
     const sealed = encryptField("123456789012");
     expect(sealed).not.toContain("123456789012");

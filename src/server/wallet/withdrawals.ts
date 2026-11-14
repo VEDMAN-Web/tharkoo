@@ -1,7 +1,7 @@
 import { Schema, Types } from "mongoose";
 import { connectDb } from "@/lib/db";
 import { AuditRepository } from "@/server/audit";
-import { consumeRateLimit } from "@/server/auth/rate-limit";
+import { consumeRateLimit, resetRateLimit } from "@/server/auth/rate-limit";
 import { objectId } from "@/server/billing/ledger";
 import { ConflictError, NotFoundError, PaymentRequiredError, ValidationError, VerificationRequiredError } from "@/server/http";
 import { accountBalance, postTransaction, type PostInput } from "@/server/ledger";
@@ -64,7 +64,7 @@ export const Withdrawal = registerModel<WithdrawalDoc>("Withdrawal", withdrawalS
 
 type WithdrawalRow = WithdrawalDoc & { _id: Types.ObjectId };
 
-interface StaffInput {
+export interface StaffInput {
   id: string;
   actorId: string;
   roles: readonly string[];
@@ -112,22 +112,26 @@ export async function requestWithdrawal(input: { userId: string; coins: number; 
     throw new PaymentRequiredError("Not enough earnings for that withdrawal");
   }
   // One atomic counter per vendor: the first request in a window takes it, so parallel requests cannot both pass.
+  const cooldownKey = `withdraw-cooldown:${input.userId}`;
+  let cooldownTaken = false;
   if (settings.withdrawCooldownDays > 0) {
-    const gate = await consumeRateLimit(`withdraw-cooldown:${input.userId}`, 1, settings.withdrawCooldownDays * DAY_MS);
+    const gate = await consumeRateLimit(cooldownKey, 1, settings.withdrawCooldownDays * DAY_MS);
     if (!gate.ok) throw new ConflictError(`You can request another withdrawal in ${formatWait(gate.retryAfter)}`);
+    cooldownTaken = true;
   }
-  const row = await Withdrawal.create({
-    userId,
-    coins: input.coins,
-    coinValueInr: settings.coinValueInr,
-    amountInr: input.coins * settings.coinValueInr,
-    tdsPercent: settings.tdsPercent,
-    gstPercent: settings.gstPercent,
-    method: kyc.method,
-    status: "requested",
-    requestedAt: new Date(),
-  });
+  let row;
   try {
+    row = await Withdrawal.create({
+      userId,
+      coins: input.coins,
+      coinValueInr: settings.coinValueInr,
+      amountInr: input.coins * settings.coinValueInr,
+      tdsPercent: settings.tdsPercent,
+      gstPercent: settings.gstPercent,
+      method: kyc.method,
+      status: "requested",
+      requestedAt: new Date(),
+    });
     await postTransaction({
       idempotencyKey: `withdraw-hold:${row._id}`,
       kind: "withdrawal_hold",
@@ -143,7 +147,9 @@ export async function requestWithdrawal(input: { userId: string; coins: number; 
       ip: input.ip,
     });
   } catch (error) {
-    await Withdrawal.deleteOne({ _id: row._id });
+    // The hold did not happen: remove the request and give the cooldown back, so the vendor is not locked out for nothing.
+    if (row) await Withdrawal.deleteOne({ _id: row._id });
+    if (cooldownTaken) await resetRateLimit(cooldownKey);
     throw error;
   }
   await audit.append({

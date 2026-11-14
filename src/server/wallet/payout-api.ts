@@ -3,6 +3,7 @@ import { json, readJson } from "@/server/billing/http";
 import { parseInput } from "@/server/http";
 import { pageQuerySchema } from "@/server/shared/schemas/common";
 import { getPayoutKyc, payoutKycSchema, submitPayoutKyc } from "@/server/wallet/payout-kyc";
+import { revealWithdrawalDetails } from "@/server/wallet/payout-reveal";
 import {
   approveWithdrawal,
   listOwnWithdrawals,
@@ -69,6 +70,8 @@ async function staffAction(
 ): Promise<Response | null> {
   const base = { ...input, requestId };
   if (action === "approve") return json(await approveWithdrawal(base), requestId);
+  // Full details for one withdrawal: finance or superadmin only, rate-limited and audited in the service. Sent with no-store.
+  if (action === "reveal") return json(await revealWithdrawalDetails(base), requestId);
   if (action === "reject") {
     const body = parseInput(reasonBodySchema, await readJson(request));
     return json(await rejectWithdrawal({ ...base, reason: body.reason }), requestId);
