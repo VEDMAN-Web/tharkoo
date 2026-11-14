@@ -5,7 +5,7 @@ import { isVideoFile, parseVideoCell, videoProblem, videoTypeOf, type ChosenVide
 import { createImportJob, recordImportVideo, runImportChunk } from "@/server/import/job";
 import { dryRunImport, type ImportActor } from "@/server/listings/import";
 import { setCloudinaryUploader, type UploadOptions } from "@/server/media/client";
-import { VIDEO_MAX_BYTES, VIDEO_MAX_PER_AD } from "@/server/media/config";
+import { AD_MEDIA_MAX, VIDEO_MAX_BYTES } from "@/server/media/config";
 import { AuditEvent, Category, Listing, Location, MediaAsset, User } from "@/server/models";
 import { clearMemoryMongo, connectMemoryMongo, disconnectMemoryMongo } from "../../setup/mongo";
 
@@ -127,8 +127,8 @@ describe("videos column: the post-ad rule", () => {
     expect(videoProblem(video("long.mp4", { seconds: 30.5 }))).toMatch(/longer than 30 seconds/);
   });
 
-  it("allows two videos per ad", () => {
-    expect(VIDEO_MAX_PER_AD).toBe(2);
+  it("one limit for every ad (H6.18): 10 photos and videos in total", () => {
+    expect(AD_MEDIA_MAX).toBe(10);
   });
 });
 
@@ -156,9 +156,10 @@ describe("videos in the dry run", () => {
   it("reports each video problem on its own row, and imports only the good row", async () => {
     await partner();
     await catalogue();
+    const manyClips = Array.from({ length: 11 }, (_, index) => `v${index}.mp4`);
     const csv = csvOf(
       listingRow("Missing clip", "gone.mp4"),
-      listingRow("Too many clips", "a.mp4|b.mp4|c.mp4"),
+      listingRow("Too many clips", manyClips.join("|")),
       listingRow("Too big clip", "big.mp4"),
       listingRow("Too long clip", "long.mp4"),
       listingRow("Wrong type clip", "old.avi"),
@@ -170,9 +171,7 @@ describe("videos in the dry run", () => {
       csv,
       [],
       [
-        video("a.mp4"),
-        video("b.mp4"),
-        video("c.mp4"),
+        ...manyClips.map((name) => video(name)),
         video("big.mp4", { size: 11 * MB }),
         video("long.mp4", { seconds: 31 }),
         video("old.avi", { type: "video/x-msvideo" }),
@@ -181,7 +180,7 @@ describe("videos in the dry run", () => {
     );
     const errorsOf = (title: string) => dry.rows.find((row) => row.title === title)?.errors.join(" ") ?? "";
     expect(errorsOf("Missing clip")).toMatch(/Missing file: gone\.mp4 is not among the chosen videos/);
-    expect(errorsOf("Too many clips")).toMatch(/Too many videos: 3\. The limit is 2 per ad/);
+    expect(errorsOf("Too many clips")).toMatch(/Too many videos: 11\. The limit is 10 photos and videos in total/);
     expect(errorsOf("Too big clip")).toMatch(/larger than 10 MB/);
     expect(errorsOf("Too long clip")).toMatch(/longer than 30 seconds/);
     expect(errorsOf("Wrong type clip")).toMatch(/not mp4, webm or mov/);

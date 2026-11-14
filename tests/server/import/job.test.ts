@@ -116,11 +116,12 @@ describe("dry run for a file with photos", () => {
     expect(dry.rows[0].errors.join(" ")).toMatch(/The limit is 4/);
   });
 
-  it("keeps the free limit for an admin: two photos on one row are refused", async () => {
+  it("one limit for every ad (H6.18): a row may hold 10 photos, and an 11th is refused", async () => {
     await partner();
     await catalogue(4);
-    const dry = await dryRunImport(admin, EMAIL, file(row("Cycle one", "a.jpg|b.jpg")), ["a.jpg", "b.jpg"]);
-    expect(dry.rows[0].errors.join(" ")).toMatch(/Too many photos: 2/);
+    const names = Array.from({ length: 11 }, (_, index) => `p${index}.jpg`);
+    const dry = await dryRunImport(admin, EMAIL, file(row("Cycle one", names.join("|"))), names);
+    expect(dry.rows[0].errors.join(" ")).toMatch(/Too many photos: 11. The limit is 10/);
   });
 
   it("refuses a file with more than 500 rows before it reads the rows", async () => {

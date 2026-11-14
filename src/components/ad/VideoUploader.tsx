@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { api, friendlyError } from "@/lib/ui/api";
 import { listMyVideosAction, removeMyVideoAction } from "./videoActions";
 
-export const VIDEO_RULE_LINE = "Videos: up to 2, max 10 MB and 30 seconds each.";
+export const VIDEO_RULE_LINE = "Videos: max 10 MB and 30 seconds each. Photos and videos: up to 10 in total.";
 const MAX_BYTES = 10 * 1024 * 1024;
 const MAX_SECONDS = 30;
 const MAX_VIDEOS = 2;

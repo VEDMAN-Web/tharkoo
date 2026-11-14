@@ -2227,6 +2227,13 @@
         "tests/server/media/**",
         "tests/server/listings/**",
         "tests/e2e/media*.e2e.ts",
+        "tests/server/import/**",
+        "src/app/admin/ads/create/CreateAdForm.tsx",
+        "src/app/admin/ads/create/AdMediaPicker.tsx",
+        "src/components/ad/VideoUploader.tsx",
+        "src/server/import/rules.ts",
+        "package.json",
+        "package-lock.json",
         "progress/H6.18.md",
         "docs/ownership.json"
       ]
