@@ -40,6 +40,7 @@ import { videoSeconds } from "@/server/media/duration";
 import { BannedWord, Category, Listing, Location, MediaAsset, User, type CategoryDoc } from "@/server/models";
 import { Subcategory } from "@/server/models/subcategory";
 import { parseListingAttributes } from "@/server/shared/fields";
+import { idCheckRequired } from "@/server/settings/id-check";
 import { evaluatePublishGate } from "@/server/shared/publish-gate";
 
 const audit = new AuditRepository();
@@ -195,9 +196,10 @@ async function bannedWords() {
     .filter(Boolean);
 }
 
-function gateErrors(owner: Owner, category: CategoryRow, attributes: Record<string, unknown>, errors: string[]) {
+function gateErrors(owner: Owner, category: CategoryRow, attributes: Record<string, unknown>, errors: string[], requireIdCheck: boolean) {
   const gate = evaluatePublishGate({
     dateOfBirth: owner.doc.dateOfBirth,
+    idCheckRequired: requireIdCheck,
     attestedAdult: Boolean(owner.doc.attestedAdultAt),
     verificationStatus: owner.doc.verificationStatus,
     accountStatus: owner.doc.status,
@@ -228,7 +230,7 @@ async function checkAd(input: ParsedAd, owner: Owner): Promise<{ errors: string[
   if (place) await checkDuplicate(owner.id, category._id, place.cityId, title, errors);
   if (attributes) {
     errors.push(...textErrors({ title, description, attributes }, await bannedWords()));
-    gateErrors(owner, category, attributes, errors);
+    gateErrors(owner, category, attributes, errors, await idCheckRequired());
   }
   if (errors.length || !attributes || !place) return { errors, resolved: null };
   return { errors, resolved: { category, attributes, subcategoryId, place } };
