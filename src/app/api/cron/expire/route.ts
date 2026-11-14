@@ -6,6 +6,7 @@ import { safeEqual } from "@/server/shared/crypto";
 import { cronBodySchema } from "@/server/shared/schemas/common";
 import { repairCategoryKinds } from "@/server/categories/kind";
 import { expireDueTours } from "@/server/tours/service";
+import { repairDashes, repairDemoListingDashes } from "@/server/content/dash-repair";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -30,8 +31,23 @@ async function dispatch(request: Request) {
   const tours = await expireDueTours(requestId);
   // Keeps the people rule on every database, even one that was never reseeded (H6.5, relay #40).
   const kinds = await repairCategoryKinds();
+  // Keeps stored text free of em and en dashes, on every run (H5.9b, relay #43). Both repairs are idempotent.
+  const dashes = await repairDashes(requestId);
+  const demoDashes = await repairDemoListingDashes(requestId);
   return Response.json(
-    success({ ...data, ...renewed, ...alerts, ...tours, kindsUpdated: kinds.updated, categoriesWithoutKind: kinds.withoutKind.length }, requestId),
+    success(
+      {
+        ...data,
+        ...renewed,
+        ...alerts,
+        ...tours,
+        kindsUpdated: kinds.updated,
+        categoriesWithoutKind: kinds.withoutKind.length,
+        dashesUpdated: dashes.updated,
+        demoListingDashesUpdated: demoDashes.updated,
+      },
+      requestId,
+    ),
     { status: 200, headers: { "x-request-id": requestId } },
   );
 }
