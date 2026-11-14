@@ -10,7 +10,7 @@ export const dynamic = "force-dynamic";
 
 export default async function Page() {
   await connectDb();
-  const rows = await Category.find({ deletedAt: null }).select("slug name fields enabled introHtml").sort({ order: 1, name: 1 }).lean();
+  const rows = await Category.find({ deletedAt: null }).select("slug name fields enabled introHtml kind").sort({ order: 1, name: 1 }).lean();
   const subRows = await Subcategory.find({}).sort({ order: 1, name: 1 }).lean();
   const categories: ManagedCategory[] = rows.map((row) => ({
     id: String(row._id),
@@ -18,6 +18,7 @@ export default async function Page() {
     name: row.name,
     enabled: row.enabled !== false,
     seoIntro: row.introHtml ?? "",
+    kind: row.kind ?? "",
   }));
   const subs: ManagedSub[] = subRows.map((row) => ({
     id: String(row._id),

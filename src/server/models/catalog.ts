@@ -136,7 +136,8 @@ const categorySchema = new Schema<CategoryDoc>(
     description: { type: String, default: "" },
     parentId: { type: Schema.Types.ObjectId, default: null },
     enabled: { type: Boolean, default: true },
-    kind: { type: String, enum: CATEGORY_KINDS, default: "goods" },
+    /** No default: a category without a kind fails closed for tours until an admin sets one (H6.5, relay #40). */
+    kind: { type: String, enum: CATEGORY_KINDS },
     videoTourEnabled: { type: Boolean, default: false },
     videoTourCoins: { type: Number, default: 1, min: 1, max: 100 },
     order: { type: Number, default: 0 },

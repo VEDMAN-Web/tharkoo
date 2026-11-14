@@ -4,6 +4,7 @@ import { expireDue } from "@/server/listings/service";
 import { sendSavedSearchDigests } from "@/server/listings/alerts";
 import { safeEqual } from "@/server/shared/crypto";
 import { cronBodySchema } from "@/server/shared/schemas/common";
+import { repairCategoryKinds } from "@/server/categories/kind";
 import { expireDueTours } from "@/server/tours/service";
 
 export const runtime = "nodejs";
@@ -27,7 +28,12 @@ async function dispatch(request: Request) {
   const renewed = await renewDuePromotions(requestId);
   const alerts = await sendSavedSearchDigests(requestId);
   const tours = await expireDueTours(requestId);
-  return Response.json(success({ ...data, ...renewed, ...alerts, ...tours }, requestId), { status: 200, headers: { "x-request-id": requestId } });
+  // Keeps the people rule on every database, even one that was never reseeded (H6.5, relay #40).
+  const kinds = await repairCategoryKinds();
+  return Response.json(
+    success({ ...data, ...renewed, ...alerts, ...tours, kindsUpdated: kinds.updated, categoriesWithoutKind: kinds.withoutKind.length }, requestId),
+    { status: 200, headers: { "x-request-id": requestId } },
+  );
 }
 
 export const POST = handle(dispatch);

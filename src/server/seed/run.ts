@@ -2,6 +2,7 @@ import type { Types } from "mongoose";
 import { invalidateTags } from "@/lib/cache";
 import { BlogPost, Category, CreditPack, FeatureFlag, HelpArticle, Listing, Location, Page, PromotionProduct, SeedBackup } from "@/server/models";
 import { attributeKeyDenied, categoryDenied, productCodeDenied, textDenied } from "@/server/shared/policy";
+import { repairCategoryKinds } from "@/server/categories/kind";
 import { seedDemoListings } from "@/server/seed/listings";
 import {
   CATEGORIES,
@@ -306,6 +307,8 @@ async function walkCategories(dryRun: boolean): Promise<Bucket> {
               fields: category.fields,
               parentId: null,
               seedBatch: SEED_BATCH,
+              kind: category.kind,
+              videoTourEnabled: false,
             },
           },
           { upsert: true },
@@ -315,6 +318,8 @@ async function walkCategories(dryRun: boolean): Promise<Bucket> {
       bucket,
     );
   }
+  // Categories that already existed get their kind here, so the people rule holds on every seeded database (H6.5).
+  if (!dryRun) await repairCategoryKinds();
   return bucket;
 }
 

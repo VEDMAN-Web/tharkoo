@@ -6,7 +6,9 @@ import { isAdminRole } from "@/lib/ui/site-content";
 import { validateSlug } from "@/lib/urls";
 import { AuditRepository } from "@/server/audit";
 import { ForbiddenError, NotFoundError, ValidationError } from "@/server/http";
+import { isCategoryKind } from "@/server/categories/kind";
 import { Category, Listing, User } from "@/server/models";
+import type { CategoryKind } from "@/server/models/catalog";
 import { Subcategory } from "@/server/models/subcategory";
 import { textDenied } from "@/server/shared/policy";
 import { renameCategory } from "@/server/urls/service";
@@ -27,6 +29,8 @@ export interface CategoryInput {
   order?: number;
   enabled?: boolean;
   seoIntro?: string;
+  /** Required when a category is created. There is no default kind (H6.5). */
+  kind?: string;
 }
 
 export interface SubcategoryInput extends CategoryInput {
@@ -56,6 +60,11 @@ function cleanSlug(value: string) {
   const parsed = validateSlug(value);
   if (!parsed.ok) throw new ValidationError(parsed.message);
   return parsed.slug;
+}
+
+function cleanKind(value: unknown): CategoryKind {
+  if (!isCategoryKind(value)) throw new ValidationError("Choose a kind for this category");
+  return value;
 }
 
 function objectId(id: string, what: string) {
@@ -91,15 +100,18 @@ export async function createCategory(actor: Actor, input: CategoryInput) {
   await connectDb();
   const name = cleanText(input.name, "Name", MAX_NAME, true);
   const slug = cleanSlug(input.slug || name);
+  const kind = cleanKind(input.kind);
   if (await Category.exists({ slug })) throw new ValidationError("That slug is already used");
   const doc = await Category.create({
     slug,
     name,
+    kind,
+    videoTourEnabled: false,
     order: cleanOrder(input.order),
     enabled: input.enabled !== false,
     introHtml: cleanText(input.seoIntro, "SEO intro", MAX_INTRO, false),
   });
-  await record(actor, "category.create", "category", String(doc._id), null, { slug, name });
+  await record(actor, "category.create", "category", String(doc._id), null, { slug, name, kind });
   await refreshPublicCache();
   return { id: String(doc._id) };
 }
@@ -114,6 +126,11 @@ export async function updateCategory(actor: Actor, id: string, input: CategoryIn
   if (input.order !== undefined) doc.order = cleanOrder(input.order);
   if (input.enabled !== undefined) doc.enabled = Boolean(input.enabled);
   if (input.seoIntro !== undefined) doc.introHtml = cleanText(input.seoIntro, "SEO intro", MAX_INTRO, false);
+  if (input.kind !== undefined) {
+    doc.kind = cleanKind(input.kind);
+    // A people category can never keep live tours on (H6.5).
+    if (doc.kind === "people") doc.videoTourEnabled = false;
+  }
   await doc.save();
   if (input.slug !== undefined && input.slug !== doc.slug) {
     try {

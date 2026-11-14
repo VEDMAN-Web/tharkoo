@@ -3,12 +3,12 @@ import { connectDb } from "@/lib/db";
 import { canSee } from "@/components/admin/nav";
 import { AuditRepository } from "@/server/audit";
 import { ConflictError, ForbiddenError, NotFoundError, ValidationError } from "@/server/http";
+import { adLifetimeMs } from "@/server/listings/lifetime";
 import { revalidateListingPages } from "@/server/listings/revalidate";
 import { Category, Listing, ListingVersion, User } from "@/server/models";
 import { toSlug } from "@/server/shared/slug";
 
 const audit = new AuditRepository();
-const LIFETIME_MS = 30 * 24 * 60 * 60 * 1000;
 
 async function slugFor(title: string, id: Types.ObjectId) {
   const base = toSlug(title, 60);
@@ -54,7 +54,7 @@ export async function approveListing(input: { id: string; roles: string[]; email
   listing.status = "active";
   listing.seoNoindex = false;
   if (!listing.publishedAt) listing.publishedAt = new Date();
-  listing.expiresAt = new Date(Date.now() + LIFETIME_MS);
+  listing.expiresAt = new Date(Date.now() + (await adLifetimeMs()));
   if (!listing.slug) listing.slug = await slugFor(listing.title, listing._id);
   await listing.save();
   const version = (await ListingVersion.countDocuments({ listingId: listing._id })) + 1;

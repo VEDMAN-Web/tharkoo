@@ -4,6 +4,7 @@ import { siteUrl } from "@/lib/utils";
 import { connectDb } from "@/lib/db";
 import { AuditRepository } from "@/server/audit";
 import { ForbiddenError, HttpError, NotFoundError, ValidationError } from "@/server/http";
+import { adLifetimeMs } from "@/server/listings/lifetime";
 import { parsePrice } from "@/server/listings/price";
 import { parseCsv } from "@/server/listings/csv";
 import { resolveSubcategory, categoryNeedsSubcategory } from "@/server/categories/public";
@@ -28,7 +29,6 @@ import { assertVerified } from "@/server/verification/service";
 
 export const MAX_IMPORT_ROWS = 200;
 const MAX_CSV_BYTES = 2 * 1024 * 1024;
-const LIFETIME_MS = 30 * 24 * 60 * 60 * 1000;
 const TITLE_MAX = 140;
 const DESCRIPTION_MAX = 5000;
 const REQUIRED_COLUMNS = ["category", "city", "title", "description"] as const;
@@ -450,7 +450,7 @@ async function finalise(id: string, status: ImportStatus, actor: ImportActor) {
   listing.markModified("attestations");
   if (status === "active") {
     listing.publishedAt = new Date();
-    listing.expiresAt = new Date(Date.now() + LIFETIME_MS);
+    listing.expiresAt = new Date(Date.now() + (await adLifetimeMs()));
     listing.slug = await uniqueSlug(listing.title, listing._id);
   }
   await listing.save();

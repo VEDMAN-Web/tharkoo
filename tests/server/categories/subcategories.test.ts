@@ -73,7 +73,7 @@ async function ad(categoryId: string, cityId: string, subcategoryId: string | nu
 }
 
 async function setup() {
-  const { id: categoryId } = await createCategory(admin, { name: "Services" });
+  const { id: categoryId } = await createCategory(admin, { name: "Services", kind: "service" });
   const { id: plumbers } = await createSubcategory(admin, { categoryId, name: "Plumbers" });
   const { id: tutors } = await createSubcategory(admin, { categoryId, name: "Tutors" });
   const mumbai = await city("mumbai");
@@ -86,7 +86,7 @@ describe("managing sub-categories", () => {
     const { categoryId } = await setup();
     const user = { email: "", roles: ["user"] };
     await expect(createSubcategory(user, { categoryId, name: "Cleaners" })).rejects.toThrow(/admin/i);
-    await expect(createCategory(user, { name: "Nope" })).rejects.toThrow(/admin/i);
+    await expect(createCategory(user, { name: "Nope", kind: "goods" })).rejects.toThrow(/admin/i);
   });
 
   it("creates with a slug taken from the name and refuses a repeated slug and bad input", async () => {
@@ -108,7 +108,7 @@ describe("managing sub-categories", () => {
 
   it("reorders categories too", async () => {
     const { categoryId } = await setup();
-    const { id: other } = await createCategory(admin, { name: "Jobs" });
+    const { id: other } = await createCategory(admin, { name: "Jobs", kind: "job" });
     await reorder(admin, "category", [other, categoryId]);
     const rows = await Category.find({}).sort({ order: 1 }).lean();
     expect(rows.map((row) => row.slug)).toEqual(["jobs", "services"]);
@@ -147,7 +147,7 @@ describe("managing sub-categories", () => {
     await expect(deleteCategory(admin, categoryId)).rejects.toThrow(/Hide it/);
     await updateCategory(admin, categoryId, { enabled: false, seoIntro: "Hidden for now" });
     expect(await Category.findById(categoryId)).toMatchObject({ enabled: false, introHtml: "Hidden for now" });
-    const { id: empty } = await createCategory(admin, { name: "Empty" });
+    const { id: empty } = await createCategory(admin, { name: "Empty", kind: "goods" });
     await createSubcategory(admin, { categoryId: empty, name: "Inside" });
     await deleteCategory(admin, empty);
     expect(await Category.findById(empty)).toBeNull();
