@@ -3,18 +3,18 @@
  * Keep in step with src/server/layout/blocks.ts (the server validates everything again on save).
  */
 
-import { HERO_OVERLAY_COLOR, HERO_OVERLAY_MAX_OPACITY, HERO_OVERLAY_OPACITY, heroOverlayOn } from "@/lib/layout/hero";
+import { HERO_OVERLAY_COLOR, HERO_OVERLAY_MAX_OPACITY, HERO_OVERLAY_OPACITY, HERO_VERSION, heroOverlayOn, layoutFor } from "@/lib/layout/hero";
 
 export type Props = Record<string, unknown>;
 
 export type Field =
   | { kind: "text"; key: string; label: string; max: number; required?: boolean; multiline?: boolean; help?: string }
   | { kind: "richText"; key: string; label: string; max: number; required?: boolean }
-  | { kind: "image"; key: string; label: string; help?: string }
+  | { kind: "image"; key: string; label: string; help?: string; banner?: boolean }
   | { kind: "color"; key: string; label: string; def: string; help?: string }
   | { kind: "link"; key: string; label: string }
   | { kind: "number"; key: string; label: string; min: number; max: number; def?: number }
-  | { kind: "select"; key: string; label: string; options: readonly (readonly [string, string])[]; def: string }
+  | { kind: "select"; key: string; label: string; options: readonly (readonly [string, string])[]; def: string | ((props: Props) => string) }
   | { kind: "boolean"; key: string; label: string; def: boolean | ((props: Props) => boolean) }
   | { kind: "stringList"; key: string; label: string; max: number; itemMax: number; itemLabel: string; def?: readonly string[] }
   | { kind: "multiSelect"; key: string; label: string; options: readonly string[]; def: readonly string[] }
@@ -49,6 +49,12 @@ const choice = (key: string, label: string, options: readonly (readonly [string,
   options,
   def,
 });
+/** Upload size and recommended sizes for the hero banner (H6.13). */
+const BANNER_HELP = {
+  desktop: "Up to 8 MB (2 MB or less loads faster). Recommended 1920 x 640 px.",
+  mobile: "Up to 8 MB (2 MB or less loads faster). Recommended 1080 x 1350 px. Leave empty to use the desktop banner on phones.",
+};
+const CARD_IMAGE_HELP = "Best size 1080 x 1350 (portrait). Desktop shows the middle part in a wider frame.";
 const title = text("title", "Title", 120);
 const linkListFields: Field[] = [title, num("max", "How many to show", 1, 30, 10)];
 
@@ -58,7 +64,7 @@ export const BLOCK_META: Record<string, BlockMeta> = {
     hint: "Big top section with a heading, sub-heading and search. The preview below shows phone and desktop widths.",
     deletable: true,
     max: 1,
-    defaults: { heading: "Find what you need" },
+    defaults: { heading: "Find what you need", layout: "full", heroVersion: HERO_VERSION },
     preview: "hero",
     fields: [
       text("heading", "Heading", 120, { required: true, help: "This is the page heading. It stays on the page for search engines even when it is hidden." }),
@@ -66,9 +72,15 @@ export const BLOCK_META: Record<string, BlockMeta> = {
       text("searchPlaceholder", "Search box hint", 80),
       link("primaryCta", "Main button"),
       link("secondaryCta", "Second button"),
-      choice("layout", "Layout", [["split", "Split: photo on the right"], ["full", "Full banner: photo behind the whole hero"]], "split"),
-      image("imageDesktop", "Image for desktop", "Recommended 1920 x 640 px. JPG, PNG or WebP, ideally under 2 MB."),
-      image("imageMobile", "Image for phone (optional)", "Recommended 1080 x 1350 px. Leave empty to use the desktop image on phones."),
+      {
+        kind: "select",
+        key: "layout",
+        label: "Layout",
+        options: [["full", "Full banner: one photo across the whole hero"], ["split", "Split: photo on the right"]],
+        def: layoutFor,
+      },
+      { kind: "image", key: "imageDesktop", label: "Image for desktop", help: BANNER_HELP.desktop, banner: true },
+      { kind: "image", key: "imageMobile", label: "Image for phone (optional)", help: BANNER_HELP.mobile, banner: true },
       choice("height", "Height", [["auto", "From the image shape"], ["small", "Small"], ["medium", "Medium"], ["large", "Large"], ["full", "Full screen"]], "auto"),
       choice("fit", "Image fit", [["cover", "Fill the area (edges may be cropped)"], ["contain", "Show the whole image (bars may show)"]], "cover"),
       choice("focus", "Focal point", [["left", "Left"], ["center", "Centre"], ["right", "Right"], ["top", "Top"], ["bottom", "Bottom"]], "top"),
@@ -104,7 +116,13 @@ export const BLOCK_META: Record<string, BlockMeta> = {
           text("categorySlug", "Category slug", 80, { required: true, help: "Lower-case letters, numbers and dashes, for example property" }),
           text("label", "Card title", 60),
           text("blurb", "Short text", 160),
-          image("image", "Card image"),
+          image("image", "Card image", CARD_IMAGE_HELP),
+          choice(
+            "focus",
+            "Photo focal point",
+            [["center", "Centre"], ["top", "Top"], ["bottom", "Bottom"], ["left", "Left"], ["right", "Right"]],
+            "center",
+          ),
         ],
       },
       num("columnsDesktop", "Columns on desktop", 2, 6, 3),

@@ -8,6 +8,7 @@ import { canonical } from "@/lib/seo";
 import { websiteNode } from "@/lib/seo/schema";
 import { siteOrganizationNode } from "@/lib/seo-site";
 import { categoryPath, placePath, searchPath } from "@/lib/urls";
+import { CARD_SIZES } from "@/lib/layout/cards";
 import { getCategories, getCities, getHomepageContent, getSeo, getSite, listingCountsByCategoryCity } from "@/lib/queries";
 import { getPaths } from "@/server/urls/service";
 import { uiTexts } from "@/app/admin/ui-text/store";
@@ -101,7 +102,7 @@ export async function HomeBlocks() {
                   category={cat.slug}
                   width={600}
                   height={402}
-                  sizes="300px"
+                  sizes={CARD_SIZES}
                 />
                 <span className="tk-home-shade" />
                 <span className="tk-home-title">

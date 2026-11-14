@@ -465,6 +465,9 @@ export async function runSeed(): Promise<SeedResult> {
   await ensureHomepageDocument();
   const { seedLayouts } = await import("@/server/seed/layouts");
   await seedLayouts();
+  // The home hero is a full banner by default (H6.13). Same idempotent conversion as the daily cron.
+  const { convertHeroLayouts } = await import("@/server/layout/hero-migration");
+  await convertHeroLayouts(`seed:${SEED_BATCH}`);
   await seedEditorial();
   // Seeded copy must not carry em or en dashes (relay #42).
   const { repairDashes, repairDemoListingDashes } = await import("@/server/content/dash-repair");

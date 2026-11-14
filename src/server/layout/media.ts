@@ -15,7 +15,7 @@ import { altFromFileName } from "@/server/media/alt-from-filename";
 
 const audit = new AuditRepository();
 
-/** Batch uploads take up to 8 MB per file (H6.12). */
+/** Upload limit for staff images (H6.13: 8 MB; the editors say "2 MB or less loads faster"). */
 export const SITE_MEDIA_MAX_BYTES = 8 * 1024 * 1024;
 /** Files above this size are listed under "Oversize" so they can be replaced with a lighter copy. */
 export const SITE_MEDIA_OVERSIZE_BYTES = 500 * 1024;
@@ -182,6 +182,14 @@ function describeUsage(usages: MediaUsage[]) {
   return places.slice(0, 4).join("; ") + (places.length > 4 ? ` and ${places.length - 4} more` : "");
 }
 
+/** The refusal when an image is still in use. A Home page hero banner gets its own wording (H6.13). */
+function inUseMessage(usages: MediaUsage[]) {
+  if (usages.every((use) => use.key === "home" && use.blockType === "hero")) {
+    return "This image is still used by the Home page hero. Remove it from the Home page hero first.";
+  }
+  return `This image is still used: ${describeUsage(usages)}. Remove it from those blocks first.`;
+}
+
 /* ---- operations ---- */
 
 export async function uploadSiteMedia(input: {
@@ -307,7 +315,7 @@ export async function deleteSiteMedia(id: string, email: string, roles: string[]
   const current = await SiteMedia.findById(id);
   if (!current) throw new NotFoundError("Image not found");
   const usages = await findUsages(id);
-  if (usages.length) throw new ConflictError(`This image is still used: ${describeUsage(usages)}. Remove it from those blocks first.`);
+  if (usages.length) throw new ConflictError(inUseMessage(usages));
   await SiteMedia.deleteOne({ _id: id });
   if (current.objectKey.startsWith(`${CLOUDINARY_FOLDER}/`)) {
     await cloudinaryClient().destroy(current.objectKey, "upload");

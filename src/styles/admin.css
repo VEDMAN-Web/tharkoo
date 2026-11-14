@@ -174,8 +174,9 @@
 .adm-input.is-bad { border-color: var(--adm-danger); }
 textarea.adm-input { min-height: 96px; resize: vertical; }
 .adm-counter { justify-self: end; font-size: 12px; font-weight: 700; color: var(--adm-muted); }
-.adm-counter.is-short { color: var(--adm-warning); }
-.adm-counter.is-ok { color: var(--adm-success); }
+/* Counter text is 12px, so it uses darker shades that meet 4.5:1 contrast on white (H6.10b). */
+.adm-counter.is-short { color: #b45309; }
+.adm-counter.is-ok { color: #15803d; }
 .adm-counter.is-long { color: var(--adm-danger); }
 
 /* ---- toggle ---- */

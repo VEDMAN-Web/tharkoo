@@ -7,6 +7,7 @@ import { cronBodySchema } from "@/server/shared/schemas/common";
 import { repairCategoryKinds } from "@/server/categories/kind";
 import { expireDueTours } from "@/server/tours/service";
 import { repairDashes, repairDemoListingDashes } from "@/server/content/dash-repair";
+import { convertHeroLayouts } from "@/server/layout/hero-migration";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -34,6 +35,8 @@ async function dispatch(request: Request) {
   // Keeps stored text free of em and en dashes, on every run (H5.9b, relay #43). Both repairs are idempotent.
   const dashes = await repairDashes(requestId);
   const demoDashes = await repairDemoListingDashes(requestId);
+  // The home hero becomes a full banner by default (H6.13, relay #56). Converts the stored blocks once; a later run changes nothing.
+  const heroLayouts = await convertHeroLayouts(requestId);
   return Response.json(
     success(
       {
@@ -45,6 +48,7 @@ async function dispatch(request: Request) {
         categoriesWithoutKind: kinds.withoutKind.length,
         dashesUpdated: dashes.updated,
         demoListingDashesUpdated: demoDashes.updated,
+        heroLayoutsConverted: heroLayouts.updated,
       },
       requestId,
     ),

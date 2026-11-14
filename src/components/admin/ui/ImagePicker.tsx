@@ -19,9 +19,10 @@ const toRef = (row: Row): ImageRef => ({ assetId: row.id, src: row.url, alt: row
 
 /**
  * Chooses an image from the media library or uploads a new one (alt text is required).
- * Block editors use it for every image field.
+ * Block editors use it for every image field. `banner` (H6.13) names the buttons for a hero banner:
+ * choose / replace from the library, upload a new banner, remove the banner.
  */
-export function ImagePicker({ label, value, onChange }: { label: string; value?: ImageRef | null; onChange: (next: ImageRef | null) => void }) {
+export function ImagePicker({ label, value, onChange, banner = false }: { label: string; value?: ImageRef | null; onChange: (next: ImageRef | null) => void; banner?: boolean }) {
   const [open, setOpen] = useState(false);
   const [tab, setTab] = useState<"library" | "upload">("library");
   const [q, setQ] = useState("");
@@ -49,6 +50,11 @@ export function ImagePicker({ label, value, onChange }: { label: string; value?:
   function pick(row: Row) {
     onChange(toRef(row));
     setOpen(false);
+  }
+
+  function openAt(next: "library" | "upload") {
+    setTab(next);
+    setOpen(true);
   }
 
   async function upload() {
@@ -82,16 +88,34 @@ export function ImagePicker({ label, value, onChange }: { label: string; value?:
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src={value.src} alt={value.alt} width={72} height={54} style={{ objectFit: "cover", borderRadius: 8 }} />
           <span className="adm-field-help" style={{ flex: 1 }}>{value.alt}</span>
-          <button type="button" className="adm-btn adm-btn-quiet" onClick={() => onChange(null)}>
-            Remove
-          </button>
+          {banner ? null : (
+            <button type="button" className="adm-btn adm-btn-quiet" onClick={() => onChange(null)}>
+              Remove
+            </button>
+          )}
         </div>
       ) : null}
-      <div>
-        <button type="button" className="adm-btn adm-btn-ghost" onClick={() => setOpen(true)}>
-          {value ? "Change image" : "Choose image"}
-        </button>
-      </div>
+      {banner ? (
+        <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
+          <button type="button" className="adm-btn adm-btn-ghost" onClick={() => openAt("library")}>
+            {value ? "Replace" : "Choose from media library"}
+          </button>
+          <button type="button" className="adm-btn adm-btn-ghost" onClick={() => openAt("upload")}>
+            Upload new banner
+          </button>
+          {value ? (
+            <button type="button" className="adm-btn adm-btn-quiet" onClick={() => onChange(null)}>
+              Remove banner
+            </button>
+          ) : null}
+        </div>
+      ) : (
+        <div>
+          <button type="button" className="adm-btn adm-btn-ghost" onClick={() => setOpen(true)}>
+            {value ? "Change image" : "Choose image"}
+          </button>
+        </div>
+      )}
       {open ? (
         <div className="adm-dialog-back" onClick={() => setOpen(false)}>
           <div className="adm-dialog" role="dialog" aria-modal="true" aria-label={label} style={{ width: "min(720px, 100%)" }} onClick={(event) => event.stopPropagation()}>

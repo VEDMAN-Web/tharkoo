@@ -1,5 +1,6 @@
 import { z, type ZodType } from "zod";
-import { HERO_ALIGNS, HERO_FITS, HERO_FOCUS, HERO_HEIGHTS, HERO_LAYOUTS, HERO_OVERLAY_MAX_OPACITY, HERO_TONES, HERO_VERTICALS } from "@/lib/layout/hero";
+import { HERO_ALIGNS, HERO_FITS, HERO_FOCUS, HERO_HEIGHTS, HERO_LAYOUTS, HERO_OVERLAY_MAX_OPACITY, HERO_TONES, HERO_VERSION, HERO_VERTICALS } from "@/lib/layout/hero";
+import { CARD_FOCUS } from "@/lib/layout/cards";
 import { safeHref } from "@/lib/sanitize";
 import type { PageKey } from "@/server/models/layout";
 
@@ -66,13 +67,24 @@ const hero = z.object({
   textTone: z.enum(HERO_TONES).optional(),
   textShadow: z.boolean().optional(),
   bannerLink: opt(link),
+  /** 2 from H6.13: the full banner is the default for a block with no layout. Set by the editor and by the migration. */
+  heroVersion: z.number().int().min(1).max(HERO_VERSION).optional(),
 });
 
 const categoryGrid = z.object({
   title: text(120).default(""),
   intro: text(300).optional(),
   items: z
-    .array(z.object({ categorySlug: slug, label: text(60).optional(), image: opt(image), blurb: text(160).optional(), citySlugs: z.array(slug).max(8).optional() }))
+    .array(
+      z.object({
+        categorySlug: slug,
+        label: text(60).optional(),
+        image: opt(image),
+        blurb: text(160).optional(),
+        citySlugs: z.array(slug).max(8).optional(),
+        focus: z.enum(CARD_FOCUS).optional(),
+      }),
+    )
     .max(24)
     .default([]),
   columnsDesktop: z.number().int().min(2).max(6).default(3),
@@ -188,7 +200,13 @@ export interface BlockDef {
 const ALL: PageKey[] = ["home", "listing", "post"];
 
 export const BLOCKS = {
-  hero: { pages: ["home"], schema: hero, defaults: () => ({ heading: "Find what you need" }), deletable: true, max: 1 },
+  hero: {
+    pages: ["home"],
+    schema: hero,
+    defaults: () => ({ heading: "Find what you need", layout: "full", heroVersion: HERO_VERSION }),
+    deletable: true,
+    max: 1,
+  },
   categoryGrid: { pages: ["home", "listing"], schema: categoryGrid, defaults: () => ({ title: "Browse categories" }), deletable: true },
   cityLinks: { pages: ["home", "listing"], schema: cityLinks, defaults: () => ({ title: "Browse by city" }), deletable: true },
   latestAds: { pages: ["home"], schema: latestAds, defaults: () => ({ title: "Latest ads" }), deletable: true },

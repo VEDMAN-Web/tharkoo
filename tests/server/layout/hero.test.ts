@@ -25,13 +25,13 @@ function render(props: Record<string, unknown>) {
 }
 
 describe("hero settings (resolveHero)", () => {
-  it("gives a block with no look fields the split hero it always was", () => {
+  it("gives a block with no look fields the full banner, with no overlay (H6.13 default)", () => {
     expect(resolveHero({})).toEqual({
-      layout: "split",
+      layout: "full",
       fit: "cover",
       focus: "top",
       height: "auto",
-      overlay: "gradient",
+      overlay: "none",
       overlayColor: "#2a2316",
       overlayOpacity: 40,
       showHeadline: true,
@@ -44,9 +44,20 @@ describe("hero settings (resolveHero)", () => {
     });
   });
 
-  it("uses the old gradient for an old block even when it had overlay none or dark", () => {
-    expect(resolveHero({ ...legacyProps, overlay: "none" }).overlay).toBe("gradient");
-    expect(resolveHero({ ...legacyProps, overlay: "dark" }).overlay).toBe("gradient");
+  it("keeps the split hero and its gradient for an old block that has its own look settings", () => {
+    expect(resolveHero({ ...legacyProps, textTone: "dark" })).toMatchObject({ layout: "split", overlay: "gradient" });
+    expect(resolveHero({ ...legacyProps, overlay: "none", textTone: "dark" }).overlay).toBe("gradient");
+  });
+
+  it("shows an old block with no look settings as the full banner, and a versioned block with no layout as full", () => {
+    expect(resolveHero(legacyProps)).toMatchObject({ layout: "full", overlay: "none" });
+    expect(resolveHero({ heroVersion: 2, textTone: "dark" })).toMatchObject({ layout: "full", overlay: "none" });
+  });
+
+  it("keeps a layout the user chose, split or full, whatever the version", () => {
+    expect(resolveHero({ layout: "split", heroVersion: 2 }).layout).toBe("split");
+    expect(resolveHero({ layout: "split" }).layout).toBe("split");
+    expect(resolveHero({ layout: "full" }).layout).toBe("full");
   });
 
   it("has no overlay for the full banner until the layer is switched on", () => {
@@ -84,8 +95,8 @@ describe("hero settings (resolveHero)", () => {
 });
 
 describe("hero block defaults and saved data", () => {
-  it("keeps the registry defaults valid and adds no look fields", () => {
-    expect(BLOCKS.hero.defaults()).toEqual({ heading: "Find what you need" });
+  it("keeps the registry defaults valid: a new hero is a versioned full banner with no look fields", () => {
+    expect(BLOCKS.hero.defaults()).toEqual({ heading: "Find what you need", layout: "full", heroVersion: 2 });
     expect(BLOCKS.hero.schema.safeParse(BLOCKS.hero.defaults()).success).toBe(true);
   });
 
@@ -162,8 +173,8 @@ describe("hero block defaults and saved data", () => {
 });
 
 describe("hero rendering", () => {
-  it("renders a block saved before H6.9 as the split hero", () => {
-    const html = render(legacyProps);
+  it("renders an old block that set a look setting as the split hero it had", () => {
+    const html = render({ ...legacyProps, textTone: "dark" });
     expect(html).toContain('data-layout="split"');
     expect(html).toContain('data-overlay="gradient"');
     expect(html).toContain('data-height="auto"');
@@ -172,6 +183,29 @@ describe("hero rendering", () => {
     expect(html).toContain("tk-hero-search");
     expect(html).not.toContain("sr-only");
     expect(html).not.toContain("tk-hero-link");
+  });
+
+  it("renders an old block with no look settings as a full banner with no gradient", () => {
+    const html = render(legacyProps);
+    expect(html).toContain('data-layout="full"');
+    expect(html).toContain('data-overlay="none"');
+  });
+
+  it("uses the plain theme colour when the banner photo is removed, and keeps the text", () => {
+    const html = render({ heading: "Find what you need", searchPlaceholder: "Search", layout: "full" });
+    expect(html).not.toContain("tk-hero-photo");
+    expect(html).not.toContain("data-ar-d");
+    expect(html).not.toContain("--ar-d-h");
+    expect(html).toContain("<h1>Find what you need</h1>");
+    expect(html).toContain("tk-hero-search");
+  });
+
+  it("sets the banner height ratio from the desktop photo, and from the phone photo on phones", () => {
+    expect(render({ heading: "Hi", imageDesktop: photo })).toContain("--ar-d-h:0.3333333333333333");
+    const both = render({ heading: "Hi", imageDesktop: photo, imageMobile: phonePhoto });
+    expect(both).toContain("--ar-d-h:0.3333333333333333");
+    expect(both).toContain("--ar-m-h:1.25");
+    expect(render({ heading: "Hi", imageMobile: phonePhoto })).toContain("--ar-d-h:1.25");
   });
 
   it("renders a full banner with no text, no overlay and a banner link", () => {

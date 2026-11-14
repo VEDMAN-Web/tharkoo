@@ -50,7 +50,7 @@ function FieldInput({ field, value, props, onChange }: { field: Field; value: un
     case "image":
       return (
         <div className="lay-image">
-          <ImagePicker label={field.label} value={(value as ImageRef | null | undefined) ?? null} onChange={onChange} />
+          <ImagePicker label={field.label} value={(value as ImageRef | null | undefined) ?? null} onChange={onChange} banner={field.banner} />
           {field.help ? <p className="adm-field-help">{field.help}</p> : null}
         </div>
       );
@@ -61,7 +61,7 @@ function FieldInput({ field, value, props, onChange }: { field: Field; value: un
     case "number":
       return <NumberField field={field} value={value} onChange={onChange} />;
     case "select":
-      return <SelectField field={field} value={value} onChange={onChange} />;
+      return <SelectField field={field} value={value} fallback={typeof field.def === "function" ? field.def(props) : field.def} onChange={onChange} />;
     case "boolean":
       return <Toggle label={field.label} checked={typeof value === "boolean" ? value : typeof field.def === "function" ? field.def(props) : field.def} onChange={onChange} />;
     case "stringList":
@@ -122,12 +122,13 @@ function NumberField({ field, value, onChange }: { field: Extract<Field, { kind:
   );
 }
 
-function SelectField({ field, value, onChange }: { field: Extract<Field, { kind: "select" }>; value: unknown; onChange: (next: unknown) => void }) {
+/** `fallback` is what the block shows when the field is unset (for the hero layout, the layout the public page uses). */
+function SelectField({ field, value, fallback, onChange }: { field: Extract<Field, { kind: "select" }>; value: unknown; fallback: string; onChange: (next: unknown) => void }) {
   const id = useId();
   return (
     <div className="adm-field">
       <label className="adm-field-label" htmlFor={id}>{field.label}</label>
-      <select id={id} className="adm-input" value={typeof value === "string" ? value : field.def} onChange={(event) => onChange(event.target.value)}>
+      <select id={id} className="adm-input" value={typeof value === "string" ? value : fallback} onChange={(event) => onChange(event.target.value)}>
         {field.options.map(([optionValue, optionLabel]) => (
           <option key={optionValue} value={optionValue}>{optionLabel}</option>
         ))}

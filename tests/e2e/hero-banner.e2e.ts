@@ -61,8 +61,9 @@ test.describe("H6.9 hero banner", () => {
     await expect(page.getByText("All changes saved")).toBeVisible();
     await publish(page, "e2e full banner");
 
+    // The full banner is the default now, so wait for what this publish changes: the banner link (no text or search).
     await expect
-      .poll(async () => (await (await request.get("/")).text()).includes('data-layout="full"'), POLL)
+      .poll(async () => (await (await request.get("/")).text()).includes("tk-hero-link"), POLL)
       .toBe(true);
 
     // The public page at each width.
@@ -118,7 +119,8 @@ test.describe("H6.9 hero banner", () => {
     await expect(page.locator("li.lay-block").first()).toBeVisible();
     const editHero = heroBlock(page);
     await editHero.getByRole("button", { name: "Edit", exact: true }).click();
-    await editHero.getByLabel("Layout").selectOption("split");
+    // Back to the default (the full banner since H6.13), with the text and search on and no banner link.
+    await editHero.getByLabel("Layout").selectOption("full");
     await setSwitch(editHero.getByRole("switch", { name: "Show heading" }), true);
     await setSwitch(editHero.getByRole("switch", { name: "Show sub-heading" }), true);
     await setSwitch(editHero.getByRole("switch", { name: "Show search box" }), true);
@@ -126,19 +128,19 @@ test.describe("H6.9 hero banner", () => {
     await restoreLink.getByRole("button", { name: /Remove whole-banner link/ }).click();
     await page.getByRole("button", { name: "Save draft" }).click();
     await expect(page.getByText("All changes saved")).toBeVisible();
-    await publish(page, "e2e restore split hero");
+    await publish(page, "e2e restore default hero");
 
     await expect
       .poll(async () => {
         const html = await (await request.get("/")).text();
-        return html.includes('data-layout="split"') && !html.includes("tk-hero-link");
+        return html.includes('data-layout="full"') && !html.includes("tk-hero-link") && html.includes("tk-hero-search");
       }, POLL)
       .toBe(true);
 
-    // The restored split hero at desktop width, for comparison with the full banner.
+    // The restored hero at desktop width: the default layout with text and search.
     await page.setViewportSize({ width: 1440, height: 900 });
     await page.goto("/");
-    await expect(page.locator('section[data-tk="hero"]')).toHaveAttribute("data-layout", "split");
-    await page.screenshot({ path: join(SHOTS, "home-split-restored-1440.png") });
+    await expect(page.locator('section[data-tk="hero"]')).toHaveAttribute("data-layout", "full");
+    await page.screenshot({ path: join(SHOTS, "home-restored-1440.png") });
   });
 });
