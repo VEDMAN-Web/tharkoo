@@ -11,6 +11,8 @@ import { SaveButton } from "./ui/SaveButton";
 import { AdCard } from "./ui/AdCard";
 import { TrackView } from "./ui/RecentlyViewed";
 import { BackLink, CopyLinkButton } from "@/app/ad/[slug]/AdClientBits";
+import { TourRequestButton } from "./ad/TourRequestButton";
+import { videoVerifiedLabel } from "./ad/tourLabels";
 
 const PERSONAL = new Set(["dating", "friendship", "meetups", "personal-ads"]);
 
@@ -30,6 +32,7 @@ export function AdDetail({
   crumbs = [],
   shareUrl,
   heading,
+  tour,
 }: {
   ad: ListingDoc;
   categoryName: string;
@@ -38,8 +41,11 @@ export function AdDetail({
   crumbs?: { name: string; path: string }[];
   shareUrl: string;
   heading?: string;
+  /** Set only when the server says a live video tour can be requested on this ad (H6.5). */
+  tour?: { listingId: string; coins: number } | null;
 }) {
   const title = heading || displayTitle(ad.title) || "Listing";
+  const videoVerified = videoVerifiedLabel(ad.videoVerifiedUntil);
   const city = prettyPlace(ad.citySlug);
   const district = ad.place && ad.place !== city ? ad.place : prettyPlace(ad.districtSlug);
   const sections = listingTagSections(ad.tags);
@@ -98,6 +104,13 @@ export function AdDetail({
                     ))}
                   </div>
                 ) : null}
+                {videoVerified ? (
+                  <div className="tk-attr">
+                    <span className="tk-chip" data-tk="video-verified" style={{ background: "var(--ok-bg)", color: "var(--ok)" }}>
+                      <Shield size={14} aria-hidden /> {videoVerified}
+                    </span>
+                  </div>
+                ) : null}
                 <div className="tk-attr">
                   {ad.age ? (
                     <span><User size={14} /> {ad.age} years</span>
@@ -114,6 +127,7 @@ export function AdDetail({
               <div className="tk-contact-card" data-tk="contact-card">
                 <h2>Contact</h2>
                 <ContactButtons />
+                {tour ? <TourRequestButton listingId={tour.listingId} coins={tour.coins} /> : null}
               </div>
             </aside>
             <div className="tk-ad-rest">

@@ -1741,7 +1741,13 @@
         "tests/server/proxy/**",
         "tests/e2e/**",
         "docs/ownership.json",
-        "progress/H6.5.md"
+        "progress/H6.5.md",
+        "progress/H6.5-ui.md",
+        "src/components/AdDetail.tsx",
+        "src/components/ui/AdCard.tsx",
+        "src/components/vendor/**",
+        "src/server/search/query.ts",
+        "src/lib/models.ts"
       ]
     },
     "H6.6": {
