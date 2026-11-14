@@ -2353,6 +2353,7 @@
         "src/components/PostWizard.tsx",
         "src/components/post/**",
         "src/lib/ui/post-form.ts",
+        "src/lib/ui/pick-options.ts",
         "src/server/fields/**",
         "src/server/shared/fields.ts",
         "src/server/listings/service.ts",
