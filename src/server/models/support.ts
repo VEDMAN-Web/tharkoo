@@ -3,19 +3,23 @@ import { collectionName, modelName } from "@/server/models/names";
 import { registerModel } from "@/server/models/register";
 import { SUPPORT_STATUSES, SUPPORT_TOPICS, type SupportStatus, type SupportTopic } from "@/server/support/constants";
 
-/** One support ticket. The owner is the account that opened it. */
+/**
+ * One support ticket. The owner is the account that opened it.
+ * H7.1: a guest ticket (ownerKind "guest") has no account. Its contact details live in the guest fields, and
+ * the guest answers through a signed link that is only sent by email.
+ */
 export interface SupportTicketDoc {
   _id?: Types.ObjectId;
   number: number;
-  ownerId: Types.ObjectId;
-  /** "vendor" when the owner has at least one ad, otherwise "user". Set once, when the ticket is opened. */
-  ownerKind: "user" | "vendor";
+  ownerId?: Types.ObjectId | null;
+  /** "vendor" when the owner has at least one ad, "user" otherwise, "guest" when no account was used. Set once, when the ticket is opened. */
+  ownerKind: "user" | "vendor" | "guest";
   topic: SupportTopic;
   subject: string;
   status: SupportStatus;
   assigneeId: Types.ObjectId | null;
   lastMessageAt: Date;
-  /** The newest message written by the owner. Drives "oldest waiting first" and the age shown to staff. */
+  /** The newest message written by the owner (or the guest). Drives "oldest waiting first" and the age shown to staff. */
   lastCustomerMessageAt: Date;
   /** True while the owner has a staff reply they have not opened yet. */
   unreadForOwner: boolean;
@@ -23,6 +27,17 @@ export interface SupportTicketDoc {
   unreadForStaff: boolean;
   closedBy: Types.ObjectId | null;
   closedAt: Date | null;
+  /** Guest tickets only. Name and one contact; email and phone are both kept when both were given. */
+  guestName?: string;
+  guestEmail?: string;
+  guestPhone?: string;
+  /** Hash of the contact the rate limit counts against. Never the raw contact. */
+  guestContactHash?: string;
+  /** Hash of the client address the rate limit counts against. Never the raw address. */
+  guestIpHash?: string;
+  /** Hash of the current reply link's token. Issuing a new link replaces it, so the older link stops working. */
+  guestLinkHash?: string;
+  guestLinkExpiresAt?: Date;
   createdAt?: Date;
   updatedAt?: Date;
 }
@@ -30,8 +45,14 @@ export interface SupportTicketDoc {
 const ticketSchema = new Schema<SupportTicketDoc>(
   {
     number: { type: Number, required: true },
-    ownerId: { type: Schema.Types.ObjectId, required: true },
-    ownerKind: { type: String, enum: ["user", "vendor"], required: true },
+    ownerId: {
+      type: Schema.Types.ObjectId,
+      default: null,
+      required: function (this: { ownerKind?: string }) {
+        return this.ownerKind !== "guest";
+      },
+    },
+    ownerKind: { type: String, enum: ["user", "vendor", "guest"], required: true },
     topic: { type: String, enum: SUPPORT_TOPICS, required: true },
     subject: { type: String, required: true, maxlength: 120 },
     status: { type: String, enum: SUPPORT_STATUSES, required: true, default: "waiting_for_support" },
@@ -42,6 +63,13 @@ const ticketSchema = new Schema<SupportTicketDoc>(
     unreadForStaff: { type: Boolean, default: true },
     closedBy: { type: Schema.Types.ObjectId, default: null },
     closedAt: { type: Date, default: null },
+    guestName: { type: String, maxlength: 80 },
+    guestEmail: { type: String, maxlength: 120 },
+    guestPhone: { type: String, maxlength: 24 },
+    guestContactHash: { type: String },
+    guestIpHash: { type: String },
+    guestLinkHash: { type: String },
+    guestLinkExpiresAt: { type: Date },
   },
   { timestamps: true, collection: collectionName("support_tickets", "SupportTicket") },
 );
@@ -50,12 +78,18 @@ ticketSchema.index({ ownerId: 1, lastMessageAt: -1 });
 ticketSchema.index({ status: 1, lastCustomerMessageAt: 1 });
 ticketSchema.index({ assigneeId: 1, status: 1 });
 ticketSchema.index({ unreadForStaff: 1, status: 1 });
+ticketSchema.index({ guestContactHash: 1, createdAt: -1 }, { sparse: true });
+ticketSchema.index({ guestIpHash: 1, createdAt: -1 }, { sparse: true });
+ticketSchema.index({ guestLinkHash: 1 }, { sparse: true });
 
-/** One message in a ticket. Internal notes are staff-only and are never returned to the owner. */
+/**
+ * One message in a ticket. Internal notes are staff-only and are never returned to the owner.
+ * A guest's message is written as authorType "user" with no author (guests have no account).
+ */
 export interface TicketMessageDoc {
   _id?: Types.ObjectId;
   ticketId: Types.ObjectId;
-  author: Types.ObjectId;
+  author: Types.ObjectId | null;
   authorType: "user" | "staff";
   body: string;
   attachments: Types.ObjectId[];
@@ -68,7 +102,7 @@ export interface TicketMessageDoc {
 const messageSchema = new Schema<TicketMessageDoc>(
   {
     ticketId: { type: Schema.Types.ObjectId, required: true },
-    author: { type: Schema.Types.ObjectId, required: true },
+    author: { type: Schema.Types.ObjectId, default: null },
     authorType: { type: String, enum: ["user", "staff"], required: true },
     body: { type: String, default: "", maxlength: 4000 },
     attachments: { type: [Schema.Types.ObjectId], default: [] },

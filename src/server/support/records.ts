@@ -14,7 +14,7 @@ export interface TicketSummary {
   subject: string;
   status: SupportStatus;
   statusLabel: string;
-  ownerKind: "user" | "vendor";
+  ownerKind: "user" | "vendor" | "guest";
   assigned: boolean;
   unread: boolean;
   lastMessageAt: string;
