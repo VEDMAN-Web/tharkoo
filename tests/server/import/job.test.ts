@@ -116,12 +116,12 @@ describe("dry run for a file with photos", () => {
     expect(dry.rows[0].errors.join(" ")).toMatch(/The limit is 4/);
   });
 
-  it("one limit for every ad (H6.18): a row may hold 10 photos, and an 11th is refused", async () => {
+  it("one limit for every ad (H6.18): a row may hold up to the category maximum (4 here), and a fifth is refused", async () => {
     await partner();
     await catalogue(4);
-    const names = Array.from({ length: 11 }, (_, index) => `p${index}.jpg`);
+    const names = Array.from({ length: 5 }, (_, index) => `p${index}.jpg`);
     const dry = await dryRunImport(admin, EMAIL, file(row("Cycle one", names.join("|"))), names);
-    expect(dry.rows[0].errors.join(" ")).toMatch(/Too many photos: 11. The limit is 10/);
+    expect(dry.rows[0].errors.join(" ")).toMatch(/Too many photos: 5. The limit is 4/);
   });
 
   it("refuses a file with more than 500 rows before it reads the rows", async () => {

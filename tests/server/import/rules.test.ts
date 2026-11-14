@@ -44,9 +44,11 @@ describe("photo limit per import", () => {
     expect(photoLimitForImport(true, 0)).toBe(DEFAULT_CATEGORY_IMPORT_MAX);
   });
 
-  it("keeps the free plan limit for an admin, whatever the category says", () => {
-    expect(photoLimitForImport(false, 6)).toBe(photoLimit(false));
-    expect(photoLimitForImport(false, null)).toBe(photoLimit(false));
+  it("one limit for every ad (H6.18): an admin gets the category maximum too, and never more than 10", () => {
+    expect(photoLimit(false)).toBe(10);
+    expect(photoLimitForImport(false, 6)).toBe(6);
+    expect(photoLimitForImport(false, null)).toBe(10);
+    expect(photoLimitForImport(false, 40)).toBe(10);
   });
 });
 
