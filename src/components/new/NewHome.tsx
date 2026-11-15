@@ -6,6 +6,7 @@ import { displayTitle, prettyPlace } from "@/lib/format";
 import { listingPhotos, safePhoto } from "@/lib/media";
 import { adPath, applyPrefixes, categoryPath, type UrlPaths } from "@/lib/urls";
 import { makeT, type UiTextMap } from "@/lib/ui/text";
+import type { HeroPlate } from "@/lib/ui/site-content";
 import type { ShellConfig } from "@/server/site-links/shell-config-rules";
 import { HomeAdCard } from "./HomeAdCard";
 import { HomeSearchForm } from "./HomeSearchForm";
@@ -13,7 +14,7 @@ import { commonCity, splitHeadline, tierKeyOf } from "./home-copy";
 import "./home-spec.css";
 
 type Cat = { slug?: string; name?: string; homeBlurb?: string; description?: string };
-type Hero = { photo: string; photoAlt: string; desktop: string; searchPlaceholder: string };
+type Hero = { photo: string; photoPhone?: string; photoAlt: string; desktop: string; searchPlaceholder: string; plate?: HeroPlate };
 type Place = { slug: string; name: string };
 
 const BLURB_MAX = 70;
@@ -125,8 +126,13 @@ export function NewHome({
       </div>
 
       <section className="tkh-page" aria-label="Banner">
-        <div className="tkh-banner">
-          {hero.photo ? (
+        <div className="tkh-banner" data-plate={hero.plate ?? "auto"}>
+          {hero.photo && hero.photoPhone ? (
+            <picture>
+              <source media="(max-width: 599px)" srcSet={hero.photoPhone} />
+              <img className="tkh-banner-img" src={hero.photo} alt={hero.photoAlt} width={1280} height={420} fetchPriority="high" />
+            </picture>
+          ) : hero.photo ? (
             localPhoto ? (
               <Image className="tkh-banner-img" src={hero.photo} alt={hero.photoAlt} width={1280} height={420} priority sizes="(max-width: 1280px) 100vw, 1280px" />
             ) : (

@@ -2436,6 +2436,8 @@
         "tests/server/shell/home-config*.test.ts",
         "src/app/admin/menus/ShellEditor.tsx",
         "src/lib/ui/text.ts",
+        "src/lib/ui/site-content.ts",
+        "src/components/admin/SiteContentForm.tsx",
         "progress/H7.4.md",
         "docs/ownership.json"
       ]

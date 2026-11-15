@@ -75,9 +75,12 @@ export function HomeAdCard({
           {ad.place ? <span className="tkh-pill tkh-pill-lavender">{ad.place}</span> : null}
         </p>
         <div className="tkh-ad-foot">
-          <span className="tkh-ad-price">{price}</span>
-          <span className="tkh-ad-views">{counts ? fillText(labels.views, { count: formatIndianCount(counts.views) }) : ""}</span>
-          {ad.slug ? <SaveButton item={{ id: ad.slug, slug: ad.slug, title: ad.title, place: ad.place, at: 0 }} className="tkh-save" /> : null}
+          {price ? <span className="tkh-ad-price">{price}</span> : null}
+          <span className="tkh-ad-meta">
+            {/* The count is 0 until the shown counts arrive, and stays 0 for an ad nobody has viewed yet. */}
+            <span className="tkh-ad-views">{fillText(labels.views, { count: formatIndianCount(counts?.views ?? 0) })}</span>
+            {ad.slug ? <SaveButton item={{ id: ad.slug, slug: ad.slug, title: ad.title, place: ad.place, at: 0 }} className="tkh-save" /> : null}
+          </span>
         </div>
         <Link className="tkh-ad-more" href={ad.href} prefetch={false}>
           {labels.view}

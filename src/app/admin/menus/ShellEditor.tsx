@@ -6,7 +6,6 @@ import { SUPPORT_TOPICS, TOPIC_LABELS } from "@/server/support/constants";
 import {
   CONTACT_KINDS,
   SHELL_ICONS,
-  TRUST_TONES,
   type ContactKind,
   type HowStep,
   type ShellConfig,
@@ -15,7 +14,6 @@ import {
   type ShellImage,
   type ShellLink,
   type TrustPill,
-  type TrustTone,
 } from "@/server/site-links/shell-config-rules";
 import { saveShellAction } from "./actions";
 
@@ -106,7 +104,6 @@ function ContactRows({ items, onChange }: { items: ShellContact[]; onChange: (ne
   );
 }
 
-const TONE_LABEL: Record<TrustTone, string> = { pink: "Pink", green: "Green", violet: "Violet", sky: "Blue", amber: "Amber" };
 
 /** H7.4: the five trust pills on the New design home page. */
 function TrustRows({ items, onChange }: { items: TrustPill[]; onChange: (next: TrustPill[]) => void }) {
@@ -123,16 +120,6 @@ function TrustRows({ items, onChange }: { items: TrustPill[]; onChange: (next: T
               maxLength={200}
               onChange={(e) => onChange(items.map((row, i) => (i === index ? { ...row, label: e.target.value } : row)))}
             />
-          </label>
-          <label className="flex flex-col t-small">
-            Colour
-            <select
-              className="adm-input"
-              value={item.tone}
-              onChange={(e) => onChange(items.map((row, i) => (i === index ? { ...row, tone: e.target.value as TrustTone } : row)))}
-            >
-              {TRUST_TONES.map((tone) => <option key={tone} value={tone}>{TONE_LABEL[tone]}</option>)}
-            </select>
           </label>
           <button type="button" className="adm-btn" aria-label={`Remove ${item.label || "pill"}`} onClick={() => onChange(items.filter((_, i) => i !== index))}>Remove</button>
         </div>
