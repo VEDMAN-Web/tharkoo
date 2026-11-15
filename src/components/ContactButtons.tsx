@@ -35,7 +35,7 @@ type Ctx = {
   requestTour: () => void;
   /** H7.5: the ad seller Online now or Away. Calls pause while Away; chat does not. */
   seller: SellerStatus | undefined;
-  /** H7.5: people ads have no Call button. */
+  /** H7.5: people ads have no video call and verify button. Call, WhatsApp and chat stay. */
   people: boolean;
 };
 
@@ -74,7 +74,7 @@ export function ContactProvider({
   listingSlug?: string;
   listingId?: string;
   tour?: AdTour | null;
-  /** H7.5: the ad is in a people category (server check). No Call button; chat stays. */
+  /** H7.5: the ad is in a people category (server check). No video call button; Call, WhatsApp and chat stay. */
   peopleAd?: boolean;
   children: React.ReactNode;
 }) {
@@ -89,7 +89,6 @@ export function ContactProvider({
 
   async function open(channel: Channel) {
     if (shown[channel]) return;
-    if (channel === "phone" && people) return;
     if (channel === "phone" && seller?.callsAllowed === false) {
       return setNotice({ text: CALLS_PAUSED });
     }
@@ -182,7 +181,6 @@ export function ContactButtons({
   const { shown, notice, busy, tour, tourRequested, open, openChat, requestTour, seller, people } = useContact();
   const callsPaused = seller?.callsAllowed === false;
   const channelButtons = channels.map((channel) => {
-    if (channel === "phone" && people) return null;
     const hit = shown[channel];
     if (hit?.value) {
       const href = hit.href || (channel === "phone" ? `tel:${hit.value}` : channel === "whatsapp" ? `https://wa.me/${hit.value.replace(/\D/g, "")}` : undefined);
@@ -205,13 +203,13 @@ export function ContactButtons({
     <button key="chat" type="button" className="tk-btn tk-btn-gold" data-tk="chat" onClick={() => void openChat()} disabled={busy === "chat"}>
       <MessageCircle size={16} aria-hidden /> {busy === "chat" ? "…" : "Chat online now"}
     </button>,
-    tour ? (
+    tour && !people ? (
       <button key="tour" type="button" className="tk-btn tk-btn-gold" data-tk="tour" onClick={() => void requestTour()} disabled={busy === "tour" || tourRequested} aria-busy={busy === "tour"}>
         <Video size={16} aria-hidden /> {busy === "tour" ? "…" : tourRequestLabel(tour.coins)}
       </button>
     ) : null,
   ];
-  const pausedLine = callsPaused && !people && channels.includes("phone") ? <p id="tk-calls-paused" className="t-caption" data-tk="calls-paused" style={{ gridColumn: "1 / -1" }}>{CALLS_PAUSED}</p> : null;
+  const pausedLine = callsPaused && channels.includes("phone") ? <p id="tk-calls-paused" className="t-caption" data-tk="calls-paused" style={{ gridColumn: "1 / -1" }}>{CALLS_PAUSED}</p> : null;
   if (sticky) {
     return (
       <>

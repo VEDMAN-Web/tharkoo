@@ -3,7 +3,7 @@ import { connectDb } from "@/lib/db";
 import { isAdminRole } from "@/lib/ui/site-content";
 import { AuditRepository } from "@/server/audit";
 import { ForbiddenError, parseInput } from "@/server/http";
-import { AWAY_HOURS_MAX, AWAY_HOURS_MIN, DEFAULT_AWAY_HOURS, callsAllowed, presenceStatus, type PresenceStatus } from "./status";
+import { AWAY_HOURS_MAX, AWAY_HOURS_MIN, DEFAULT_AWAY_HOURS, awayReason, callsAllowed, presenceStatus, type AwayReason, type PresenceStatus } from "./status";
 import { AvailabilitySettings, VendorPresence } from "./models";
 
 const audit = new AuditRepository();
@@ -17,6 +17,7 @@ export const awayHoursBodySchema = z
 export interface OwnPresence {
   available: boolean;
   status: PresenceStatus;
+  awayReason: AwayReason;
   callsAllowed: boolean;
   lastActivityAt: string | null;
   awayAfterHours: number;
@@ -50,12 +51,14 @@ export async function setAwayHours(input: { actorId: string; roles: readonly str
 }
 
 function toOwn(row: { available?: boolean; lastActivityAt?: Date | null } | null, hours: number, now: number): OwnPresence {
-  const available = row?.available === true;
+  // A seller starts Available now: a missing switch counts as on. Only an explicit off is a manual Away.
+  const available = row?.available !== false;
   const lastActivityAt = row?.lastActivityAt ? new Date(row.lastActivityAt) : null;
   const status = presenceStatus({ available, lastActivityAt }, now, hours);
   return {
     available,
     status,
+    awayReason: awayReason({ available, lastActivityAt }, now, hours),
     callsAllowed: callsAllowed(status),
     lastActivityAt: lastActivityAt ? lastActivityAt.toISOString() : null,
     awayAfterHours: hours,

@@ -1,6 +1,7 @@
 import { randomUUID } from "node:crypto";
 import mongoose, { type Types } from "mongoose";
 import { connectDb } from "@/lib/db";
+import { touchOwnPresence } from "@/server/availability/service";
 import { AuditRepository } from "@/server/audit";
 import { isStaffRole } from "@/server/auth/service";
 import {
@@ -118,6 +119,8 @@ export async function sendMessage(
   const text = cleanChatText(input.text);
   if (!text && !input.image) throw new ValidationError("Write a message or add a photo");
   await assertUnderRateLimit(userId, now);
+  // H7.5: a chat message is activity; it brings an auto-away seller back to Online (a manual Off stays Off).
+  await touchOwnPresence(userId, now);
   const imageUrl = input.image ? await storeChatImage(input.image) : undefined;
   const message = await ChatMessage.create({ conversationId: conv._id, senderId: userId, text, imageUrl, createdAt: now });
   await Conversation.updateOne({ _id: conv._id }, { $set: { lastMessageAt: now, lastText: text ? text.slice(0, 200) : "Photo" } });

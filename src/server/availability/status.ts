@@ -33,6 +33,14 @@ export function presenceStatus(input: PresenceInput, now: number, awayAfterHours
 }
 
 /** Calls are allowed only while online. Chat is always allowed. */
+/** Why a seller shows Away: "manual" when the switch is off, "auto" after the idle hours, null when Online. */
+export type AwayReason = "manual" | "auto" | null;
+
+export function awayReason(input: PresenceInput, now: number, awayAfterHours: number): AwayReason {
+  if (!input.available) return "manual";
+  return presenceStatus(input, now, awayAfterHours) === "away" ? "auto" : null;
+}
+
 export function callsAllowed(status: PresenceStatus): boolean {
   return status === "online";
 }
