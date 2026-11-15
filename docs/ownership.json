@@ -2909,7 +2909,6 @@
       "branchPrefix": "haiku/h7.19",
       "globs": [
         "docs/ownership.json",
-        "globals.css",
         "src/app/globals.css",
         "src/app/u/login/page.tsx",
         "src/components/ContactButtons.tsx",
@@ -2928,7 +2927,8 @@
         "src/server/site-links/shell-config-rules.ts",
         "tests/e2e/contact-card.e2e.ts",
         "tests/e2e/login-sheet.e2e.ts",
-        "tests/server/auth/sign-in-sheet.test.ts"
+        "tests/server/auth/sign-in-sheet.test.ts",
+        "src/components/auth/SellerSetup.tsx"
       ]
     }
   }
