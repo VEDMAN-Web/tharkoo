@@ -1,6 +1,7 @@
 import { randomUUID } from "node:crypto";
 import { Types } from "mongoose";
 import { refreshPublicCache } from "@/lib/cache";
+import { isCategoryIconKey } from "@/lib/category-icons";
 import { connectDb } from "@/lib/db";
 import { isAdminRole } from "@/lib/ui/site-content";
 import { validateSlug } from "@/lib/urls";
@@ -16,7 +17,6 @@ import { renameCategory } from "@/server/urls/service";
 const audit = new AuditRepository();
 const MAX_NAME = 80;
 const MAX_INTRO = 600;
-const MAX_ICON = 40;
 
 export interface Actor {
   email: string;
@@ -31,6 +31,8 @@ export interface CategoryInput {
   seoIntro?: string;
   /** Required when a category is created. There is no default kind (H6.5). */
   kind?: string;
+  /** H7.4c: a key from lib/category-icons.ts, or empty for the default of the kind. */
+  icon?: string;
   /** Photos for an ad made by staff or imported (1 to 30). Blank means the default of 10. */
   importMaxPhotos?: number | string | null;
 }
@@ -118,6 +120,7 @@ export async function createCategory(actor: Actor, input: CategoryInput) {
     slug,
     name,
     kind,
+    icon: isCategoryIconKey(input.icon) ? input.icon : "",
     videoTourEnabled: false,
     order: cleanOrder(input.order),
     enabled: input.enabled !== false,
@@ -136,6 +139,7 @@ export async function updateCategory(actor: Actor, id: string, input: CategoryIn
   const before = { slug: doc.slug, name: doc.name, order: doc.order, enabled: doc.enabled, seoIntro: doc.introHtml, importMaxPhotos: doc.importMaxPhotos ?? null };
   if (input.name !== undefined) doc.name = cleanText(input.name, "Name", MAX_NAME, true);
   if (input.importMaxPhotos !== undefined) doc.importMaxPhotos = cleanImportMaxPhotos(input.importMaxPhotos);
+  if (input.icon !== undefined) doc.icon = isCategoryIconKey(input.icon) ? input.icon : "";
   if (input.order !== undefined) doc.order = cleanOrder(input.order);
   if (input.enabled !== undefined) doc.enabled = Boolean(input.enabled);
   if (input.seoIntro !== undefined) doc.introHtml = cleanText(input.seoIntro, "SEO intro", MAX_INTRO, false);
@@ -191,7 +195,7 @@ export async function createSubcategory(actor: Actor, input: SubcategoryInput) {
     categoryId: category._id,
     slug,
     name,
-    icon: cleanText(input.icon, "Icon", MAX_ICON, false),
+    icon: isCategoryIconKey(input.icon) ? input.icon : "",
     order: cleanOrder(input.order),
     enabled: input.enabled !== false,
     seoIntro: cleanText(input.seoIntro, "SEO intro", MAX_INTRO, false),
@@ -208,7 +212,7 @@ export async function updateSubcategory(actor: Actor, id: string, input: Subcate
   if (!doc) throw new NotFoundError("Sub-category not found");
   const before = { slug: doc.slug, name: doc.name, icon: doc.icon, order: doc.order, enabled: doc.enabled, seoIntro: doc.seoIntro };
   if (input.name !== undefined) doc.name = cleanText(input.name, "Name", MAX_NAME, true);
-  if (input.icon !== undefined) doc.icon = cleanText(input.icon, "Icon", MAX_ICON, false);
+  if (input.icon !== undefined) doc.icon = isCategoryIconKey(input.icon) ? input.icon : "";
   if (input.order !== undefined) doc.order = cleanOrder(input.order);
   if (input.enabled !== undefined) doc.enabled = Boolean(input.enabled);
   if (input.seoIntro !== undefined) doc.seoIntro = cleanText(input.seoIntro, "SEO intro", MAX_INTRO, false);

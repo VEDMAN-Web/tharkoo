@@ -1,57 +1,72 @@
-import { Search } from "lucide-react";
-import { searchPath, type UrlPaths } from "@/lib/urls";
+"use client";
+
+import { useRouter } from "next/navigation";
+import { useState, type FormEvent } from "react";
+import { useSiteCountry } from "@/components/SiteCountry";
+import type { UrlPaths } from "@/lib/urls";
+import type { CountryPlaces } from "@/server/locations/site-country";
+import { heroSearchHref } from "./hero-search-href";
 
 type Option = { slug: string; name: string };
 
 /**
- * H7.4: the search card under the home banner: keyword, city, category and the Search button.
- * A plain GET form to the search page, so it works without script and the results page reads the same fields.
+ * H7.4c: the hero search under the banner. Three selects and the Search button, nothing else: All states (of the chosen
+ * country), All cities (of the chosen state), All categories. Search goes to the clean SEO address (see hero-search-href).
  */
 export function HomeSearchForm({
   paths,
-  placeholder,
   labels,
-  cities,
+  countries,
   categories,
 }: {
   paths: UrlPaths;
-  placeholder: string;
-  labels: { keyword: string; city: string; category: string; allCities: string; allCategories: string; button: string };
-  cities: Option[];
+  labels: { state: string; city: string; category: string; allStates: string; allCities: string; allCategories: string; button: string };
+  countries: CountryPlaces[];
   categories: Option[];
 }) {
+  const router = useRouter();
+  const country = useSiteCountry(countries);
+  const [state, setState] = useState("");
+  const [city, setCity] = useState("");
+  const [category, setCategory] = useState("");
+  const states = country?.states ?? [];
+  const cities = (country?.cities ?? []).filter((item) => !state || item.stateSlug === state);
+
+  function onSubmit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    router.push(heroSearchHref(paths, { category, state, city }));
+  }
+
   return (
-    <form role="search" className="tkh-search" action={searchPath(paths)} method="get">
-      <label className="tkh-field tkh-field-keyword">
-        <Search size={18} aria-hidden />
-        <span className="tkh-sr">{labels.keyword}</span>
-        <input type="search" name="q" placeholder={placeholder || labels.keyword} autoComplete="off" />
+    <form role="search" className="tkh-search" onSubmit={onSubmit}>
+      <label className="tkh-field tkh-field-select">
+        <span className="tkh-sr">{labels.state}</span>
+        <select name="state" value={state} onChange={(event) => { setState(event.target.value); setCity(""); }}>
+          <option value="">{labels.allStates}</option>
+          {states.map((item) => (
+            <option key={item.slug} value={item.slug}>{item.name}</option>
+          ))}
+        </select>
       </label>
       <label className="tkh-field tkh-field-select">
         <span className="tkh-sr">{labels.city}</span>
-        <select name="city" defaultValue="">
+        <select name="city" value={city} onChange={(event) => setCity(event.target.value)}>
           <option value="">{labels.allCities}</option>
-          {cities.map((city) => (
-            <option key={city.slug} value={city.slug}>
-              {city.name}
-            </option>
+          {cities.map((item) => (
+            <option key={item.slug} value={item.slug}>{item.name}</option>
           ))}
         </select>
       </label>
       <label className="tkh-field tkh-field-select">
         <span className="tkh-sr">{labels.category}</span>
-        <select name="category" defaultValue="">
+        <select name="category" value={category} onChange={(event) => setCategory(event.target.value)}>
           <option value="">{labels.allCategories}</option>
           {categories.map((cat) => (
-            <option key={cat.slug} value={cat.slug}>
-              {cat.name}
-            </option>
+            <option key={cat.slug} value={cat.slug}>{cat.name}</option>
           ))}
         </select>
       </label>
-      <button type="submit" className="tkh-go">
-        {labels.button}
-      </button>
+      <button type="submit" className="tkh-go">{labels.button}</button>
     </form>
   );
 }

@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { ConfirmDialog, Notice, SortableList, Toggle } from "@/components/admin/ui";
+import { CATEGORY_ICONS, categoryIconKey } from "@/lib/category-icons";
 import {
   createCategoryAction,
   createSubcategoryAction,
@@ -14,7 +15,7 @@ import {
   type ManageResult,
 } from "./manage-actions";
 
-export type ManagedCategory = { id: string; slug: string; name: string; enabled: boolean; seoIntro: string; kind: string; importMaxPhotos: number | null };
+export type ManagedCategory = { id: string; slug: string; name: string; enabled: boolean; seoIntro: string; kind: string; icon: string; importMaxPhotos: number | null };
 export type ManagedSub = { id: string; categoryId: string; slug: string; name: string; icon: string; enabled: boolean; seoIntro: string };
 type Draft = { name: string; slug: string; icon: string; seoIntro: string; enabled: boolean; kind: string; importMaxPhotos: string };
 type Removing = { kind: "category" | "subcategory"; id: string; name: string; slug: string };
@@ -37,6 +38,25 @@ function Field({ label, value, onChange, wide }: { label: string; value: string;
     <label className="adm-field" style={wide ? { gridColumn: "1 / -1" } : undefined}>
       <span className="adm-field-label">{label}</span>
       <input className="adm-input" value={value} onChange={(event) => onChange(event.target.value)} />
+    </label>
+  );
+}
+
+/** H7.4c: the icon a category shows on the home page when it has no photo. Blank means the default of its kind. */
+function IconField({ value, kind, onChange }: { value: string; kind: string; onChange: (next: string) => void }) {
+  const fallback = CATEGORY_ICONS.find((choice) => choice.key === categoryIconKey("", kind));
+  return (
+    <label className="adm-field">
+      <span className="adm-field-label">Icon when there is no photo</span>
+      <select className="adm-input" value={value} onChange={(event) => onChange(event.target.value)}>
+        <option value="">{fallback ? `Default for this kind (${fallback.label})` : "Default for this kind"}</option>
+        {CATEGORY_ICONS.map((choice) => (
+          <option key={choice.key} value={choice.key}>
+            {choice.label}
+          </option>
+        ))}
+      </select>
+      <span className="adm-field-help">Shown in a pink tile on the home page when this category has no photo.</span>
     </label>
   );
 }
@@ -64,7 +84,7 @@ function Editor({ draft, onChange, withIcon, withKind, withMaxPhotos, actions }:
     <div style={grid}>
       <Field label="Name" value={draft.name} onChange={(name) => onChange({ ...draft, name })} />
       <Field label="Slug" value={draft.slug} onChange={(slug) => onChange({ ...draft, slug })} />
-      {withIcon ? <Field label="Icon (name)" value={draft.icon} onChange={(icon) => onChange({ ...draft, icon })} /> : null}
+      {withIcon ? <IconField value={draft.icon} kind={draft.kind} onChange={(icon) => onChange({ ...draft, icon })} /> : null}
       {withKind ? <KindField value={draft.kind} onChange={(kind) => onChange({ ...draft, kind })} /> : null}
       {withMaxPhotos ? (
         <label className="adm-field">
@@ -106,7 +126,7 @@ export function CategoriesManager({ categories, subs }: { categories: ManagedCat
   const draftOf = (id: string, base: Draft) => drafts[id] ?? base;
   const patch = (id: string, next: Draft) => setDrafts((current) => ({ ...current, [id]: next }));
   const categoryBase: Draft = category
-    ? { name: category.name, slug: category.slug, icon: "", seoIntro: category.seoIntro, enabled: category.enabled, kind: category.kind, importMaxPhotos: category.importMaxPhotos == null ? "" : String(category.importMaxPhotos) }
+    ? { name: category.name, slug: category.slug, icon: category.icon, seoIntro: category.seoIntro, enabled: category.enabled, kind: category.kind, importMaxPhotos: category.importMaxPhotos == null ? "" : String(category.importMaxPhotos) }
     : EMPTY;
 
   async function done(result: ManageResult, ok: string, after?: () => void) {
@@ -159,7 +179,7 @@ export function CategoriesManager({ categories, subs }: { categories: ManagedCat
         <Editor
           draft={fresh}
           onChange={setFresh}
-          withIcon={false}
+          withIcon
           withKind
           actions={
             <button type="button" className="adm-btn" disabled={!fresh.name.trim() || !fresh.kind} onClick={async () => done(await createCategoryAction(fresh), "Category added.", () => setFresh(EMPTY))}>
@@ -175,7 +195,7 @@ export function CategoriesManager({ categories, subs }: { categories: ManagedCat
           <Editor
             draft={draftOf(category.id, categoryBase)}
             onChange={(next) => patch(category.id, next)}
-            withIcon={false}
+            withIcon
             withKind
             withMaxPhotos
             actions={

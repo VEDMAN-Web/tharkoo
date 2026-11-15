@@ -10,6 +10,8 @@ export interface VendorPresenceDoc {
   userId: string;
   available: boolean;
   lastActivityAt: Date | null;
+  /** H7.4c: the seller's Live chat switch. Off for every seller until they turn it on, so existing sellers start off. */
+  liveChat?: boolean;
   updatedAt?: Date;
 }
 
@@ -26,6 +28,7 @@ const presenceSchema = new Schema<VendorPresenceDoc>(
     userId: { type: String, required: true, unique: true, maxlength: 64 },
     available: { type: Boolean, default: true },
     lastActivityAt: { type: Date, default: null },
+    liveChat: { type: Boolean, default: false },
   },
   { timestamps: { createdAt: false, updatedAt: true }, collection: "vendor_presence" },
 );

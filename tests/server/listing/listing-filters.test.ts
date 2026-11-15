@@ -21,6 +21,11 @@ describe("filterableFields", () => {
 });
 
 describe("attributePicks", () => {
+  it("reads a hyphenated field key through the shared parser", () => {
+    const hyphen = [{ key: "looking-for", label: "Looking for", type: "select", options: ["Dating", "Friendship"], filterable: true, enabled: true }];
+    expect(attributePicks({ "f.looking-for": "Dating", "f.looking-for_extra": "x" }, hyphen)).toEqual({ "looking-for": ["Dating"] });
+  });
+
   it("reads chips, a number range and a yes/no chip, and drops keys the category does not offer", () => {
     const picks = attributePicks(
       { "f.hair": ["Brown", "Purple"], "f.age_min": "25", "f.age_max": "40", "f.smoker": "1", "f.tall": "Yes", "f.nope": "x" },

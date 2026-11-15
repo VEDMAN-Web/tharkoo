@@ -5,6 +5,7 @@ import { MessageCircle, Phone, Clock, MapPin, Mail, ArrowRight } from "lucide-re
 import { safeHref } from "@/lib/sanitize";
 import { applyPrefixes, categoryPath } from "@/lib/urls";
 import { useUrlPaths } from "./UrlPaths";
+import "./FooterNew.css";
 import type { ContactKind, ShellConfig, ShellLink } from "@/server/site-links/shell-config-rules";
 
 type Cat = { slug: string; name: string };
@@ -52,7 +53,7 @@ export function FooterNew({ siteName, shell, categories }: { siteName: string; s
   const contacts = f.contacts.filter((item) => item.visible && (item.label || item.value));
   return (
     <footer className="tkn-footer" data-tk="footer">
-      <div className="tkn-wrap tkn-foot-grid">
+      <div className={contacts.length ? "tkn-wrap tkn-foot-grid" : "tkn-wrap tkn-foot-grid is-three"}>
         <div className="tkn-foot-brand">
           <div className="tkn-brand">
             <span className="tkn-mark" aria-hidden="true">t</span>
@@ -84,30 +85,32 @@ export function FooterNew({ siteName, shell, categories }: { siteName: string; s
         </div>
         <LinkColumn title="Quick links" items={f.quickLinks} />
         <LinkColumn title="Top categories" items={topCategories} />
-        <div className="tkn-foot-col">
-          <p className="tkn-foot-title"><span aria-hidden="true" className="tkn-foot-dot" />Get in touch</p>
-          <ul className="tkn-contacts">
-            {contacts.map((item) => {
-              const Icon = CONTACT_ICON[item.kind] ?? Mail;
-              const href = safeHref(item.href);
-              const body = (
-                <>
-                  <Icon size={18} aria-hidden="true" focusable="false" />
-                  <span>
-                    <strong>{item.label}</strong>
-                    {item.value ? <span className="tkn-contact-value">{item.value}</span> : null}
-                  </span>
-                  {href ? <ArrowRight size={16} aria-hidden="true" focusable="false" /> : null}
-                </>
-              );
-              return (
-                <li key={item.label + item.value}>
-                  {href ? <a href={href} className="tkn-contact">{body}</a> : <span className="tkn-contact">{body}</span>}
-                </li>
-              );
-            })}
-          </ul>
-        </div>
+        {contacts.length ? (
+          <div className="tkn-foot-col">
+            <p className="tkn-foot-title"><span aria-hidden="true" className="tkn-foot-dot" />Get in touch</p>
+            <ul className="tkn-contacts">
+              {contacts.map((item) => {
+                const Icon = CONTACT_ICON[item.kind] ?? Mail;
+                const href = safeHref(item.href);
+                const body = (
+                  <>
+                    <Icon size={18} aria-hidden="true" focusable="false" />
+                    <span>
+                      <strong>{item.label}</strong>
+                      {item.value ? <span className="tkn-contact-value">{item.value}</span> : null}
+                    </span>
+                    {href ? <ArrowRight size={16} aria-hidden="true" focusable="false" /> : null}
+                  </>
+                );
+                return (
+                  <li key={item.label + item.value}>
+                    {href ? <a href={href} className="tkn-contact">{body}</a> : <span className="tkn-contact">{body}</span>}
+                  </li>
+                );
+              })}
+            </ul>
+          </div>
+        ) : null}
       </div>
       <div className="tkn-bar">
         <div className="tkn-wrap tkn-bar-row">

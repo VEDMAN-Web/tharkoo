@@ -3,6 +3,7 @@
 import { ArrowUp, MessageCircle, Phone, Send, X } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { safeHref } from "@/lib/sanitize";
+import { useDismiss } from "@/components/ui/useDismiss";
 import { api, friendlyError, hasSessionHint } from "@/lib/ui/api";
 import type { ShellConfig } from "@/server/site-links/shell-config-rules";
 import type { SupportTopic } from "@/server/support/constants";
@@ -52,6 +53,10 @@ export function SupportChat({ chat }: { chat: Chat }) {
       window.removeEventListener("scroll", onScroll);
     };
   }, []);
+
+  // H7.4c: a click or tap outside the chat (panel and bubble) closes it, as does Escape.
+  const float = useRef<HTMLDivElement>(null);
+  useDismiss(open, float, () => setOpen(false));
 
   useEffect(() => {
     if (!open) return;
@@ -150,7 +155,7 @@ export function SupportChat({ chat }: { chat: Chat }) {
   const showGuest = session === "guest" && !guestDone;
 
   return (
-    <div className="tkn-float">
+    <div className="tkn-float" ref={float}>
       {open ? (
         <section aria-label={chat.title} className="tkn-chatbox" id="tkn-chat-panel">
           <div className="tkn-chat-head">

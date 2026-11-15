@@ -132,6 +132,13 @@
   width: 100%;
   height: 100%;
   object-fit: cover;
+  /* H7.4c: the admin focus point (default centre, 20% down). The phone value applies below 600 px. */
+  object-position: var(--tkh-focus, 50% 20%);
+}
+@media (max-width: 599px) {
+  .tkh-banner-img {
+    object-position: var(--tkh-focus-phone, 50% 20%);
+  }
 }
 .tkh-banner-empty {
   display: block;
@@ -171,7 +178,7 @@
 }
 
 /* Text plate: a frosted white box behind the heading block. It is not a colour overlay on the image.
-   Admin "on" plates always; "auto" (the default) plates on phones only, below 600 px.
+   H7.4c: on by default on every screen; the admin can switch it off (data-plate="off").
    On a plate the heading span uses a deeper rose so it keeps 4.5:1 contrast. */
 .tkh-banner[data-plate="on"] .tkh-banner-copy {
   background: rgba(255, 255, 255, 0.72);
@@ -184,20 +191,6 @@
   background: linear-gradient(135deg, #a8124f, #8e1046);
   -webkit-background-clip: text;
   background-clip: text;
-}
-@media (max-width: 599px) {
-  .tkh-banner[data-plate="auto"] .tkh-banner-copy {
-    background: rgba(255, 255, 255, 0.72);
-    -webkit-backdrop-filter: blur(16px);
-    backdrop-filter: blur(16px);
-    border-radius: 16px;
-    padding: 16px 20px;
-  }
-  .tkh-banner[data-plate="auto"] .tkh-grad {
-    background: linear-gradient(135deg, #a8124f, #8e1046);
-    -webkit-background-clip: text;
-    background-clip: text;
-  }
 }
 
 /* 4. Search card: overlaps the banner by 46 px, glass */
@@ -232,9 +225,6 @@
 .tkh-field:focus-within {
   outline: 3px solid #7c3aed;
   outline-offset: 2px;
-}
-.tkh-field-keyword {
-  flex: 3 1 260px;
 }
 .tkh-field input,
 .tkh-field select {
@@ -395,8 +385,16 @@
   aspect-ratio: 3 / 2;
   object-fit: cover;
 }
+/* H7.4c: a category with no photo shows its line icon, centred, in --deep, on the pastel fill, at 16:9 on every screen. */
 .tkh-cat-empty {
   background: linear-gradient(135deg, var(--tone), var(--tone-end));
+}
+.tkh-cat-photo.tkh-cat-empty {
+  aspect-ratio: 16 / 9;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--deep);
 }
 .tkh-cat-strip {
   display: flex;
@@ -460,7 +458,8 @@
 }
 .tkh-ad-photo {
   position: relative;
-  height: 260px;
+  /* H7.4c: 4:5 on every screen, and the crop keeps the top of the picture (heads) in view. */
+  aspect-ratio: 4 / 5;
   background: linear-gradient(135deg, #fce4f0, #ede9ff);
 }
 .tkh-ad-photo > img,
@@ -469,6 +468,7 @@
   width: 100%;
   height: 100%;
   object-fit: cover;
+  object-position: center 20%;
 }
 .tkh-ad-empty {
   background: linear-gradient(135deg, #fce4f0, #ede9ff, #e0f2fe);
@@ -706,8 +706,9 @@
   .tkh-search {
     margin: -46px 12px 0;
   }
+  /* H7.4c: on a phone the three selects stack, with the full-width Search under them. */
   .tkh-field-select {
-    flex: 1 1 calc(50% - 5px);
+    flex: 1 1 100%;
   }
   .tkh-go {
     flex: 1 1 100%;
@@ -721,5 +722,14 @@
   .tkh-cat:hover,
   .tkh-ad:hover {
     transform: none;
+  }
+}
+
+/* H7.4c: on a phone the utility row scrolls sideways. A right-edge fade shows that more pills are there. */
+@media (max-width: 599px) {
+  .tkh-utility-in {
+    padding-right: 36px;
+    -webkit-mask-image: linear-gradient(90deg, #000 calc(100% - 36px), transparent);
+    mask-image: linear-gradient(90deg, #000 calc(100% - 36px), transparent);
   }
 }

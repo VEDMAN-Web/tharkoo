@@ -5,7 +5,8 @@ import dynamic from "next/dynamic";
 import { usePathname } from "next/navigation";
 import { Menu, Search } from "lucide-react";
 import { useEffect, useState } from "react";
-import { HeaderCityButton, HeaderCityList } from "./HeaderCity";
+import { HeaderCountry } from "./HeaderCountry";
+import type { CountryOption } from "@/server/locations/country-scope";
 import { HeaderDrawer } from "./HeaderDrawer";
 import { useUrlPaths } from "./UrlPaths";
 import { safeHref } from "@/lib/sanitize";
@@ -24,10 +25,21 @@ type Cat = { slug: string; name: string };
  * Under 1024 px the pill navigation becomes a burger that opens the drawer.
  * Search opens the same pop-up as the hero search (the "tk-open-search" event) and the header button.
  */
-export function HeaderNew({ siteName, shell, cities, categories }: { siteName: string; shell: ShellConfig; cities: City[]; categories: Cat[] }) {
+export function HeaderNew({
+  siteName,
+  shell,
+  cities,
+  countries,
+  categories,
+}: {
+  siteName: string;
+  shell: ShellConfig;
+  cities: City[];
+  countries: CountryOption[];
+  categories: Cat[];
+}) {
   const path = usePathname() || "/";
   const paths = useUrlPaths();
-  const [cityOpen, setCityOpen] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
   const links = shell.header.navLinks.filter((item) => item.visible && safeHref(item.href));
@@ -64,14 +76,7 @@ export function HeaderNew({ siteName, shell, cities, categories }: { siteName: s
           })}
         </nav>
         <div className="tkn-header-actions">
-          <div className="tkn-city-wrap">
-            <HeaderCityButton expanded={cityOpen} onToggle={() => setCityOpen((v) => !v)} />
-            {cityOpen ? (
-              <div className="tkn-pop" role="group" aria-label="Cities">
-                <HeaderCityList cities={cities} onPick={() => setCityOpen(false)} />
-              </div>
-            ) : null}
-          </div>
+          <HeaderCountry countries={countries} />
           <button
             type="button"
             className="tkn-icon-btn tkn-search-btn"
@@ -104,7 +109,7 @@ export function HeaderNew({ siteName, shell, cities, categories }: { siteName: s
     {menuOpen ? (
       <HeaderDrawer
         links={shell.header.navLinks}
-        cities={cities}
+        countries={countries}
         loginLabel={shell.header.loginLabel}
         postLabel={shell.header.postLabel}
         paths={paths}

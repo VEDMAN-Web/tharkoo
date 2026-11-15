@@ -9,6 +9,7 @@ import type { UrlPaths } from "@/lib/urls";
 import type { ShellConfig } from "@/server/site-links/shell-config-rules";
 import { AgeGate } from "./AgeGate";
 import { CityProvider } from "./CityContext";
+import type { CountryOption } from "@/server/locations/country-scope";
 import { CookieBanner } from "./CookieBanner";
 import { Footer } from "./Footer";
 import { FooterNew } from "./FooterNew";
@@ -37,6 +38,8 @@ export type ChromeData = {
   socialLinks: NavLink[];
   categories: Cat[];
   cities: City[];
+  /** H7.4c: the enabled countries, for the header country list. */
+  countries: CountryOption[];
   cityCount: number;
   user: { email: string; roles: string[] } | null;
   /** H7.1: the New design switch. Off shows the old header, footer and no chat. */
@@ -55,7 +58,7 @@ export function PathChrome({ shell, paths, children }: { shell: ChromeData; path
       </UrlPathProvider>
     );
   }
-  const { site, categories, cities, cityCount, user, content, footerLinks, socialLinks, newDesign, shell: config } = shell;
+  const { site, categories, cities, countries, cityCount, user, content, footerLinks, socialLinks, newDesign, shell: config } = shell;
   // Style guides are tool pages: no age gate and no cookie banner.
   const toolPage = path.startsWith("/styleguide");
   const siteName = site.logoText || site.name || "Tharkoo";
@@ -75,7 +78,7 @@ export function PathChrome({ shell, paths, children }: { shell: ChromeData; path
       )}
       {newDesign ? (
         <div className="tkn" data-design="new">
-          <HeaderNew siteName={siteName} shell={config} cities={cities} categories={categories} />
+          <HeaderNew siteName={siteName} shell={config} cities={cities} countries={countries} categories={categories} />
           <MainInner>{children}</MainInner>
           <FooterNew siteName={siteName} shell={config} categories={categories} />
           <SupportChat chat={config.chat} />

@@ -1,8 +1,10 @@
+import type { CSSProperties } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 import type { ListingDoc } from "@/lib/models";
 import { displayTitle, prettyPlace } from "@/lib/format";
+import { categoryIconFor } from "@/lib/category-icons";
 import { listingPhotos, safePhoto } from "@/lib/media";
 import { adPath, applyPrefixes, categoryPath, type UrlPaths } from "@/lib/urls";
 import { makeT, type UiTextMap } from "@/lib/ui/text";
@@ -10,18 +12,36 @@ import type { HeroPlate } from "@/lib/ui/site-content";
 import type { ShellConfig } from "@/server/site-links/shell-config-rules";
 import { HomeAdCard } from "./HomeAdCard";
 import { HomeSearchForm } from "./HomeSearchForm";
+import type { CountryPlaces } from "@/server/locations/site-country";
 import { commonCity, splitHeadline, tierKeyOf } from "./home-copy";
 import "./home-spec.css";
 
-type Cat = { slug?: string; name?: string; homeBlurb?: string; description?: string };
-type Hero = { photo: string; photoPhone?: string; photoAlt: string; desktop: string; searchPlaceholder: string; plate?: HeroPlate };
-type Place = { slug: string; name: string };
+type Cat = { slug?: string; name?: string; homeBlurb?: string; description?: string; icon?: string; kind?: string };
+type Hero = {
+  photo: string;
+  photoPhone?: string;
+  photoAlt: string;
+  desktop: string;
+  searchPlaceholder: string;
+  plate?: HeroPlate;
+  focusX?: number;
+  focusY?: number;
+  phoneFocusX?: number;
+  phoneFocusY?: number;
+};
 
 const BLURB_MAX = 70;
 
 function blurbOf(cat: Cat) {
   const text = (cat.homeBlurb || cat.description || "").replace(/\s+/g, " ").trim();
   return text.length > BLURB_MAX ? `${text.slice(0, BLURB_MAX - 1)}…` : text;
+}
+
+/** H7.4c: the focus point of each banner picture as CSS variables. A phone picture that is not set uses the computer one. */
+function bannerFocus(hero: Hero): CSSProperties {
+  const desktop = `${hero.focusX ?? 50}% ${hero.focusY ?? 20}%`;
+  const phone = hero.photoPhone ? `${hero.phoneFocusX ?? 50}% ${hero.phoneFocusY ?? 20}%` : desktop;
+  return { "--tkh-focus": desktop, "--tkh-focus-phone": phone } as CSSProperties;
 }
 
 function placeOf(ad: ListingDoc) {
@@ -72,7 +92,7 @@ export function NewHome({
   ads,
   shell,
   paths,
-  cities,
+  countries,
   texts,
 }: {
   hero: Hero;
@@ -80,7 +100,7 @@ export function NewHome({
   ads: ListingDoc[];
   shell: ShellConfig;
   paths: UrlPaths;
-  cities: Place[];
+  countries: CountryPlaces[];
   texts: UiTextMap;
 }) {
   const t = makeT(texts);
@@ -104,9 +124,10 @@ export function NewHome({
     views: t("home.ads.views"),
   };
   const searchLabels = {
-    keyword: t("home.search.keyword"),
+    state: t("home.search.state"),
     city: t("home.search.city"),
     category: t("home.search.category"),
+    allStates: t("home.search.allStates"),
     allCities: t("home.search.allCities"),
     allCategories: t("home.search.allCategories"),
     button: t("home.search.button"),
@@ -127,7 +148,7 @@ export function NewHome({
       </div>
 
       <section className="tkh-page" aria-label="Banner">
-        <div className="tkh-banner" data-plate={hero.plate ?? "auto"}>
+        <div className="tkh-banner" data-plate={hero.plate === "off" ? "off" : "on"} style={bannerFocus(hero)}>
           {hero.photo && hero.photoPhone ? (
             <picture>
               <source media="(max-width: 599px)" srcSet={hero.photoPhone} />
@@ -153,9 +174,8 @@ export function NewHome({
 
         <HomeSearchForm
           paths={paths}
-          placeholder={hero.searchPlaceholder}
           labels={searchLabels}
-          cities={cities}
+          countries={countries}
           categories={categories.filter((cat) => cat.slug && cat.name).map((cat) => ({ slug: cat.slug || "", name: cat.name || "" }))}
         />
 
@@ -181,13 +201,16 @@ export function NewHome({
           {cats.map((cat) => {
             const slug = cat.slug || "";
             const photo = photos.get(slug);
+            const CatIcon = categoryIconFor(cat.icon, cat.kind);
             return (
               <li key={slug}>
                 <Link className="tkh-cat" href={applyPrefixes(categoryPath(slug), paths)} prefetch={false}>
                   {photo ? (
                     <img className="tkh-cat-photo" src={photo} alt="" width={480} height={320} loading="lazy" />
                   ) : (
-                    <span className="tkh-cat-photo tkh-cat-empty" aria-hidden="true" />
+                    <span className="tkh-cat-photo tkh-cat-empty" aria-hidden="true">
+                      <CatIcon size={48} strokeWidth={1.75} />
+                    </span>
                   )}
                   <span className="tkh-cat-strip">
                     <span className="tkh-cat-text">
