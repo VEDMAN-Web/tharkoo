@@ -2884,6 +2884,7 @@
     "H7.17": {
       "branchPrefix": "haiku/h7.17",
       "globs": [
+        "docs/ownership.json",
         "src/components/buyer/**",
         "src/components/support/**",
         "src/components/account/AccountTools.tsx",
