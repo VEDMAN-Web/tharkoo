@@ -2717,6 +2717,15 @@
         "src/app/globals.css"
       ]
     },
+    "H7.27": {
+      "branchPrefix": "haiku/h7.27",
+      "globs": [
+        "src/app/categories/page.tsx",
+        "src/app/cities/page.tsx",
+        "src/components/h714/**",
+        "docs/ownership.json"
+      ]
+    },
     "H7.14": {
       "branchPrefix": "haiku/h7.14",
       "globs": [
@@ -2979,6 +2988,14 @@
         "src/app/u/reset/**",
         "tests/e2e/user-panel.e2e.ts",
         "tests/e2e/account.e2e.ts"
+      ]
+    },
+    "H7.22": {
+      "branchPrefix": "haiku/h7.22",
+      "globs": [
+        "docs/ownership.json",
+        "src/components/HeaderNew.tsx",
+        "src/app/globals.css"
       ]
     },
     "H7.20": {
