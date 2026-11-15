@@ -2480,7 +2480,9 @@
         "tests/server/availability/listings.test.ts",
         "src/app/ad/[slug]/page.tsx",
         "src/components/AdDetail.tsx",
-        "tests/e2e/contact-card.e2e.ts"
+        "tests/e2e/contact-card.e2e.ts",
+        "src/server/auth/service.ts",
+        "src/server/chat/service.ts"
       ]
     },
     "H7.6": {
