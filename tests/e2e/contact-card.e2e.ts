@@ -25,6 +25,8 @@ const DATING_FEED = "/dating/bengaluru/";
 const PROPERTY_FEED = "/property/bengaluru/";
 const TOUR_COINS = 2;
 const BASE_LABELS = ["Call", "WhatsApp", "Chat online now"];
+// H7.5: a people ad (dating) has no Call button. Chat and WhatsApp stay.
+const PEOPLE_LABELS = ["WhatsApp", "Chat online now"];
 const TOUR_LABEL = `Video call and verify, ${TOUR_COINS} coins`;
 
 /** The first ad on a city feed. (firstAdPath needs a super-top card, which the property feed may not have.) */
@@ -82,10 +84,10 @@ async function expectTapTargets(page: Page) {
 }
 
 test.describe("H6.8 contact card on a dating ad (people, no tour)", () => {
-  test("three contact buttons: Call, WhatsApp, Chat online now", async ({ page }) => {
+  test("two contact buttons on a people ad: WhatsApp, Chat online now (no Call)", async ({ page }) => {
     await page.goto(await firstAdPath(page, DATING_FEED));
     await expect(page.locator("h1")).toHaveCount(1);
-    expect(await buttonLabels(page)).toEqual(BASE_LABELS);
+    expect(await buttonLabels(page)).toEqual(PEOPLE_LABELS);
     await expect(contactScope(page).locator("[data-tk=tour]")).toHaveCount(0);
     expect(await hasHorizontalScroll(page)).toBe(false);
   });

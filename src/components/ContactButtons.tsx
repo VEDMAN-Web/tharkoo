@@ -5,6 +5,8 @@ import dynamic from "next/dynamic";
 import { MessageCircle, Phone, Video } from "lucide-react";
 import { api, friendlyError, hasSessionHint } from "@/lib/ui/api";
 import { tourRequestLabel } from "@/components/ad/tourLabels";
+import { useSellerStatus, type SellerStatus } from "@/components/availability/sellerStatus";
+import { AvailabilityBadge } from "@/components/availability/AvailabilityBadge";
 
 // The chat panel code loads only when a visitor opens the chat.
 const ChatPanel = dynamic(() => import("@/components/chat/ChatPanel").then((mod) => mod.ChatPanel), { ssr: false });
@@ -15,6 +17,9 @@ type Action = Channel | "chat" | "tour";
 type Notice = { text: string; signIn?: boolean };
 /** Set only when the server says a live video tour can be requested on this ad (H6.5). */
 export type AdTour = { listingId: string; coins: number };
+
+/** H7.5: shown when a visitor asks for a seller's number while the seller is Away. Chat still works. */
+export const CALLS_PAUSED = "The seller is away, so calls are paused. You can still chat.";
 
 /** Shown instead of a coin purchase until a real coin provider is set in production. */
 export const COIN_PURCHASE_SOON = "Coin purchases open soon. No coins were used.";
@@ -28,6 +33,10 @@ type Ctx = {
   open: (channel: Channel) => void;
   openChat: () => void;
   requestTour: () => void;
+  /** H7.5: the ad seller Online now or Away. Calls pause while Away; chat does not. */
+  seller: SellerStatus | undefined;
+  /** H7.5: people ads have no Call button. */
+  people: boolean;
 };
 
 const ContactCtx = createContext<Ctx | null>(null);
@@ -59,11 +68,14 @@ export function ContactProvider({
   listingSlug,
   listingId,
   tour = null,
+  peopleAd = false,
   children,
 }: {
   listingSlug?: string;
   listingId?: string;
   tour?: AdTour | null;
+  /** H7.5: the ad is in a people category (server check). No Call button; chat stays. */
+  peopleAd?: boolean;
   children: React.ReactNode;
 }) {
   const [shown, setShown] = useState<Partial<Record<Channel, Reveal>>>({});
@@ -72,9 +84,15 @@ export function ContactProvider({
   const [conversationId, setConversationId] = useState("");
   const [chatOpen, setChatOpen] = useState(false);
   const [tourRequested, setTourRequested] = useState(false);
+  const seller = useSellerStatus(listingSlug);
+  const people = peopleAd || seller?.people === true;
 
   async function open(channel: Channel) {
     if (shown[channel]) return;
+    if (channel === "phone" && people) return;
+    if (channel === "phone" && seller?.callsAllowed === false) {
+      return setNotice({ text: CALLS_PAUSED });
+    }
     setBusy(channel);
     setNotice(null);
     const result = await reveal(listingSlug, listingId, channel);
@@ -118,7 +136,7 @@ export function ContactProvider({
     setNotice({ text: friendlyError(res.error) });
   }
 
-  const value: Ctx = { shown, notice, busy, tour, tourRequested, open, openChat, requestTour };
+  const value: Ctx = { shown, notice, busy, tour, tourRequested, open, openChat, requestTour, seller, people };
   return (
     <ContactCtx.Provider value={value}>
       {children}
@@ -161,8 +179,10 @@ export function ContactButtons({
   sticky?: boolean;
   channels?: Channel[];
 }) {
-  const { shown, notice, busy, tour, tourRequested, open, openChat, requestTour } = useContact();
+  const { shown, notice, busy, tour, tourRequested, open, openChat, requestTour, seller, people } = useContact();
+  const callsPaused = seller?.callsAllowed === false;
   const channelButtons = channels.map((channel) => {
+    if (channel === "phone" && people) return null;
     const hit = shown[channel];
     if (hit?.value) {
       const href = hit.href || (channel === "phone" ? `tel:${hit.value}` : channel === "whatsapp" ? `https://wa.me/${hit.value.replace(/\D/g, "")}` : undefined);
@@ -174,7 +194,7 @@ export function ContactButtons({
     }
     const label = channel === "phone" ? "Call" : channel === "whatsapp" ? "WhatsApp" : "Telegram";
     return (
-      <button key={channel} type="button" className={channel === "whatsapp" ? "tk-btn tk-btn-whatsapp" : "tk-btn tk-btn-gold"} data-tk={channel === "phone" ? "call" : channel === "whatsapp" ? "whatsapp" : undefined} onClick={() => open(channel)} disabled={busy === channel}>
+      <button key={channel} type="button" className={channel === "whatsapp" ? "tk-btn tk-btn-whatsapp" : "tk-btn tk-btn-gold"} data-tk={channel === "phone" ? "call" : channel === "whatsapp" ? "whatsapp" : undefined} onClick={() => open(channel)} disabled={busy === channel || (channel === "phone" && callsPaused)} aria-describedby={channel === "phone" && callsPaused ? "tk-calls-paused" : undefined}>
         {channel === "phone" ? <Phone size={16} aria-hidden /> : channel === "whatsapp" ? <Wa /> : null}
         {busy === channel ? "…" : label}
       </button>
@@ -191,6 +211,7 @@ export function ContactButtons({
       </button>
     ) : null,
   ];
+  const pausedLine = callsPaused && !people && channels.includes("phone") ? <p id="tk-calls-paused" className="t-caption" data-tk="calls-paused" style={{ gridColumn: "1 / -1" }}>{CALLS_PAUSED}</p> : null;
   if (sticky) {
     return (
       <>
@@ -202,9 +223,16 @@ export function ContactButtons({
   return (
     <div className="tk-actions">
       {buttons}
+      {pausedLine}
       <NoticeLine notice={notice} />
     </div>
   );
+}
+
+/** H7.5: the Online now / Away badge for the ad's seller, shown in the contact panel. */
+export function ContactAvailability() {
+  const { seller } = useContact();
+  return seller ? <AvailabilityBadge status={seller.status} /> : null;
 }
 
 function Wa() {

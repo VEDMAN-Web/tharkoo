@@ -221,3 +221,26 @@ export async function signInAdminContext(context: import("@playwright/test").Bro
   await api.dispose();
   await context.addCookies(state.cookies);
 }
+
+/**
+ * H7.5: turns the ad seller's "Available now" switch on or off in the test database, as the seller would from the panel.
+ * On sets recent activity, so the seller shows Online now until the admin's hours pass with no activity.
+ */
+export async function setSellerAvailable(slug: string, available: boolean) {
+  const done = await withLocalDb(async (db) => {
+    const listing = await db.collection("listings").findOne({ slug });
+    expect(listing, "the ad exists").toBeTruthy();
+    await db.collection("vendor_presence").updateOne(
+      { userId: String(listing!.ownerId) },
+      { $set: { available, lastActivityAt: new Date() } },
+      { upsert: true },
+    );
+    return true;
+  });
+  expect(done, "E2E_MONGO_URI_FILE must point at the in-memory database").toBe(true);
+}
+
+/** The ad slug from its public path, e.g. /ad/in00012/ gives in00012. */
+export function slugFromAdPath(path: string) {
+  return path.replace(/^\/ad\//, "").replace(/\/$/, "");
+}

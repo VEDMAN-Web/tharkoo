@@ -4,7 +4,7 @@ import type { ListingDoc } from "@/lib/models";
 import { displayTitle, listingDateLabel, prettyPlace } from "@/lib/format";
 import { listingPhotos, listingTagSections } from "@/lib/media";
 import { CitySync } from "@/components/CityContext";
-import { ContactButtons, ContactProvider } from "@/components/ContactButtons";
+import { ContactAvailability, ContactButtons, ContactProvider } from "@/components/ContactButtons";
 import { SaveButton } from "@/components/ui/SaveButton";
 import { AdCard } from "@/components/ui/AdCard";
 import { TrackView } from "@/components/ui/RecentlyViewed";
@@ -36,6 +36,7 @@ export function NewAdDetail({
   shareUrl,
   heading,
   tour,
+  peopleAd = false,
 }: {
   ad: ListingDoc;
   categoryName: string;
@@ -45,6 +46,8 @@ export function NewAdDetail({
   shareUrl: string;
   heading?: string;
   tour?: { listingId: string; coins: number } | null;
+  /** H7.5: people category (server check). No Call button. */
+  peopleAd?: boolean;
 }) {
   const title = heading || displayTitle(ad.title) || "Listing";
   const videoVerified = videoVerifiedLabel(ad.videoVerifiedUntil);
@@ -58,7 +61,7 @@ export function NewAdDetail({
   const photos = listingPhotos(ad.categorySlug, ad.publicId || ad.slug || "", ad.photos || []);
 
   return (
-    <ContactProvider listingSlug={ad.slug} listingId={listingId} tour={tour}>
+    <ContactProvider listingSlug={ad.slug} listingId={listingId} tour={tour} peopleAd={peopleAd}>
       <div className="tkn-page tkn-ad" data-tk="new-ad">
         <TrackView ad={ad} />
         <CitySync name={city} slug={ad.citySlug} />
@@ -141,7 +144,10 @@ export function NewAdDetail({
           </div>
           <aside className="tkn-ad-side" aria-label="Contact">
             <div className="tkn-contact-panel" data-tk="contact-card">
-              <h2>Contact</h2>
+              <div className="tkn-contact-head">
+                <h2>Contact</h2>
+                <ContactAvailability />
+              </div>
               <ContactButtons />
             </div>
           </aside>

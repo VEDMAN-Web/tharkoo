@@ -1,4 +1,4 @@
-import { expect, firstAdPath, hasHorizontalScroll, isPhone, test } from "./helpers";
+import { expect, firstAdPath, hasHorizontalScroll, isPhone, setSellerAvailable, slugFromAdPath, test } from "./helpers";
 
 const FEED = "/dating/bengaluru/";
 
@@ -52,6 +52,8 @@ test.describe("1 Visitor", () => {
 
   test("ad page: gallery, lightbox, contact reveal, share, report", async ({ page, request, context }) => {
     const path = await firstAdPath(page, FEED);
+    // H7.5: calls pause while the seller is Away, so this ad's seller is online for the call below.
+    await setSellerAvailable(slugFromAdPath(path), true);
     // The raw HTML carries no phone, WhatsApp or Telegram value.
     const html = await (await request.get(path)).text();
     expect(html).not.toMatch(/\b[6-9]\d{9}\b/);
