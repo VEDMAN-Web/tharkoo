@@ -51,7 +51,6 @@ export type ChromeData = {
   shell: ShellConfig;
   /** H7.8: the UI-text overrides for the header and the live chat. */
   texts?: UiTextMap;
-  /** H7.12: the sign-in pop-up's paths and whether text codes can be sent. */
   signIn: { landing: LandingPaths; showMobile: boolean };
 };
 

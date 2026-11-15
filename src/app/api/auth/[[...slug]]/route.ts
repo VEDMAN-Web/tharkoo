@@ -54,11 +54,9 @@ const emailOtpSendBodySchema = z.object({
 const emailOtpVerifyBodySchema = z.object({
   email: z.string().trim().min(3).max(254),
   code: z.string().trim().regex(/^\d{6}$/),
-  /** H7.12: "Keep me logged in". Ticked: 30 days. Left out or unticked: the session ends with the browser. */
   remember: z.boolean().optional(),
 });
 
-/** Code logins only. Password login keeps the standard cookie. */
 function codeLife(remember: boolean | undefined): CookieLife {
   return remember ? "remembered" : "browser";
 }

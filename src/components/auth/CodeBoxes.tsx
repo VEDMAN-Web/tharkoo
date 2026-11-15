@@ -4,16 +4,13 @@ import { type KeyboardEvent, useRef } from "react";
 import { CODE_LENGTH, backspaceCode, clearCodeDigit, focusIndexAfterWrite, typedDigits, writeCodeDigits } from "@/components/auth/sign-in-input";
 
 interface Props {
-  /** The digits entered so far, no gaps. */
   value: string;
   onChange: (next: string) => void;
   disabled?: boolean;
-  /** Id of the message under the boxes, so a wrong code is read out with them. */
   describedBy?: string;
   invalid?: boolean;
 }
 
-/** Six one-digit boxes. Typing, pasting, overwriting and Backspace all work; the parent gets the joined digits. */
 export function CodeBoxes({ value, onChange, disabled = false, describedBy, invalid = false }: Props) {
   const boxes = useRef<(HTMLInputElement | null)[]>([]);
 

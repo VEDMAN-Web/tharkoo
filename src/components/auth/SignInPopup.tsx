@@ -10,10 +10,6 @@ interface Request {
   next: string;
 }
 
-/**
- * H7.12: mounted once on every New-design page. Log in, Post your ad (when signed out), Chat and Video call open the
- * same card over the current page. The page address is the return address, so the visitor stays where they were.
- */
 export function SignInPopup({ landing, showMobile }: { landing: LandingPaths; showMobile: boolean }) {
   const [request, setRequest] = useState<Request | null>(null);
 

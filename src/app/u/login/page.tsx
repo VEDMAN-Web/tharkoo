@@ -19,12 +19,10 @@ export async function generateMetadata() {
 }
 
 export default async function Page({ searchParams }: { searchParams: Promise<Record<string, string | string[] | undefined>> }) {
-  // The card is a New design screen. Off, the old password form stays.
   if (!(await newDesignOn())) return <AuthForm mode="login" />;
   const params = await searchParams;
   const role = params.role === "seller" ? "seller" : "user";
   const next = typeof params.next === "string" ? params.next : null;
-  // The same card as the pop-up, shown once. The page has no box around it.
   return (
     <SignInSheet
       mode="page"

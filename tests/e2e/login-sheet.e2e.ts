@@ -39,7 +39,6 @@ async function mockSendOk(page: Page) {
   );
 }
 
-/** The card itself, so buttons with the same name elsewhere on the page are not matched. */
 function sheet(page: Page) {
   return page.locator(".tk-si");
 }
@@ -49,14 +48,12 @@ async function openSheet(page: Page, role: "user" | "seller" = "user") {
   await expect(page.getByRole("heading", { name: "Log in or sign up" })).toBeVisible();
 }
 
-/** Address step, then the code step once the mock provider has sent a code (H7.12: one card, no separate role step). */
 async function sendCodeTo(page: Page, email: string) {
   await sheet(page).getByLabel("Email address").fill(email);
   await sheet(page).getByRole("button", { name: "Send me a code" }).click();
   await expect(sheet(page).getByRole("group", { name: "6-digit code" })).toBeVisible();
 }
 
-/** Types the code into the six boxes, the way a visitor does. The sixth digit submits by itself. */
 async function typeCode(page: Page, code: string) {
   for (const [index, digit] of [...code].entries()) {
     await sheet(page).getByLabel(`Digit ${index + 1} of 6`).fill(digit);
@@ -103,7 +100,6 @@ test.describe("sign-in card (H7.2b, H7.12): runs at 390 and 1440", () => {
     await deliverCode(email, code);
     await typeCode(page, code);
 
-    // The seller step sits in the same card, on the login page.
     await expect(sheet(page).getByRole("heading", { name: "Your seller profile" })).toBeVisible();
     await expect(page.locator('input[type="password"]')).toHaveCount(0);
     expect(await hasHorizontalScroll(page)).toBe(false);

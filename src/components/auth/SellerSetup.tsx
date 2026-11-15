@@ -10,14 +10,12 @@ export interface SellerValues {
 }
 
 interface Props {
-  /** True while the account has no date of birth yet. Asked once, then never again. */
   askDateOfBirth: boolean;
   busy: boolean;
   errors: Record<string, string[]>;
   onSubmit: (values: SellerValues) => void;
 }
 
-/** H7.12: the seller step inside the sign-in card. Name, city and (once) date of birth with the 18+ tick. */
 export function SellerSetup({ askDateOfBirth, busy, errors, onSubmit }: Props) {
   const [name, setName] = useState("");
   const [city, setCity] = useState("");

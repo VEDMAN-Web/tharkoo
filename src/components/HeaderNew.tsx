@@ -83,7 +83,6 @@ export function HeaderNew({
         </nav>
         <div className="tkn-header-actions">
           <HeaderCountry countries={countries} />
-          {/* H7.12: Log in and Post your ad (signed out) open the sign-in card over this page; the links are the fallback. */}
           <Link href={loginPath(paths)} className="tkn-btn tkn-btn-ghost tkn-hide-sm" onClick={(event) => openSignInFromLink(event, "user")}>{shell.header.loginLabel}</Link>
           <Link
             href={postAdPath(paths)}

@@ -4,13 +4,8 @@ import { hmacSha256, sha256 } from "@/server/shared/crypto";
 export const SESSION_COOKIE = "sid";
 export const SESSION_MS = 1000 * 60 * 60 * 24 * 14;
 export const SESSION_MAX_AGE = Math.floor(SESSION_MS / 1000);
-/** H7.12: "Keep me logged in" ticked. The session and its cookie last 30 days. */
 export const SESSION_REMEMBER_MS = 1000 * 60 * 60 * 24 * 30;
 export const SESSION_REMEMBER_MAX_AGE = Math.floor(SESSION_REMEMBER_MS / 1000);
-/**
- * standard: the 14-day cookie (password login, unchanged). remembered: 30 days. browser: a session cookie that ends
- * when the browser closes (code login with "Keep me logged in" unticked).
- */
 export type CookieLife = "standard" | "remembered" | "browser";
 export const RATE_WINDOW_MS = 1000 * 60 * 15;
 /** Twenty attempts are allowed per window. The twenty-first is rejected. */

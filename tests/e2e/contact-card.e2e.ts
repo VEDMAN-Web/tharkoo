@@ -4,10 +4,8 @@ import type { Page } from "@playwright/test";
 import { ObjectId } from "mongodb";
 import { expect, firstAdPath, hasHorizontalScroll, isPhone, newUserApi, originHeaders, test, withLocalDb } from "./helpers";
 
-// Must match SESSION_SECRET in tests/e2e/server.mjs (the same value login-sheet.e2e.ts uses).
 const E2E_SESSION_SECRET = "local-only-session-secret-not-real-0001";
 
-/** Stores a live login code for the address, as the mail provider would have sent it. */
 async function deliverCode(email: string, code: string) {
   const codeHash = createHmac("sha256", E2E_SESSION_SECRET).update(`email-otp:${email}:${code}`).digest("hex");
   const stored = await withLocalDb(async (db) => {

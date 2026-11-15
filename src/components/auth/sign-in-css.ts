@@ -1,4 +1,3 @@
-/** Styles for the sign-in card (H7.12). Numbers are copied from .relay/mockups/v2/04-Login.html. */
 export const SIGN_IN_CSS = `
 .tk-si-backdrop{position:fixed;inset:0;z-index:1000;display:flex;align-items:center;justify-content:center;padding:24px 16px;background:rgba(17,5,32,.36);overflow:auto}
 .tk-si-page{padding:40px 0 72px}

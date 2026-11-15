@@ -116,7 +116,6 @@ export async function SiteShell({
   admin?: boolean;
 }) {
   const paths = readPaths((shell.site as { paths?: unknown } | null)?.paths);
-  // H7.12: the sign-in pop-up needs the landing paths and whether text codes can go out.
   const signIn = { landing: landingPathsFor(await getPaths()), showMobile: smsDeliverable() };
   return (
     <>

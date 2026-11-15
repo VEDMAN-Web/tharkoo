@@ -26,9 +26,7 @@ interface VerifiedUser {
 
 export const SIGN_IN_EVENT = "tk:open-sign-in";
 export const RESEND_SECONDS = 30;
-/** Set on the pop-up host in the page. A link only opens the pop-up where the host is mounted (the New design). */
 export const SIGN_IN_HOST_ATTR = "data-signin-host";
-/** The cookie set on login (same name as SESSION_HINT on the server). Its presence means "probably signed in". */
 const SIGN_IN_HINT = "tk-in";
 
 export interface SignInEventDetail {
@@ -36,7 +34,6 @@ export interface SignInEventDetail {
   next?: string | null;
 }
 
-/** Opens the sign-in pop-up over the current page. Returns false when no pop-up is mounted, so the link still works. */
 export function openSignIn(role: SignInRole = "user", next?: string | null): boolean {
   if (typeof document === "undefined" || !document.querySelector(`[${SIGN_IN_HOST_ATTR}]`)) return false;
   const detail: SignInEventDetail = { role, next: next ?? null };
@@ -44,13 +41,11 @@ export function openSignIn(role: SignInRole = "user", next?: string | null): boo
   return true;
 }
 
-/** A plain left click opens the pop-up; a modified click or middle click keeps the normal link. */
 export function openSignInFromLink(event: MouseEvent<HTMLElement>, role: SignInRole = "user", next?: string) {
   if (event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
   if (openSignIn(role, next)) event.preventDefault();
 }
 
-/** True when the browser has the login hint cookie. Used to skip the sign-in pop-up for people already in. */
 export function isProbablySignedIn(): boolean {
   if (typeof document === "undefined") return false;
   return document.cookie.split(";").some((part) => part.trim().startsWith(`${SIGN_IN_HINT}=`));
@@ -73,22 +68,15 @@ const COPY: Record<Step, { title: string; help: string }> = {
 };
 
 export interface SignInSheetProps {
-  /** "page": the /u/login/ page shows the card once. "popup": the card sits over the current page. */
   mode: "page" | "popup";
   initialRole?: SignInRole;
-  /** Where to go after sign-in. The pop-up always gets the current page here, so the visitor stays where they were. */
   initialNext?: string | null;
   /** Where each kind of person lands. The server passes the real paths. */
   landing?: LandingPaths;
-  /** Text codes need an SMS gateway. Until one is on, the Mobile number tab is shown but cannot be used. */
   showMobile?: boolean;
   onClose?: () => void;
 }
 
-/**
- * H7.12: the one sign-in card, used as a pop-up and on /u/login/. Left: "One code. No password." with three points.
- * Right: choose user or seller, mobile or email, the six code boxes, then (sellers, once) the seller profile.
- */
 export function SignInSheet({ mode, initialRole = "user", initialNext = null, landing = DEFAULT_LANDING, showMobile = false, onClose }: SignInSheetProps) {
   const router = useRouter();
   const paths = useUrlPaths();
@@ -105,7 +93,6 @@ export function SignInSheet({ mode, initialRole = "user", initialNext = null, la
   const [message, setMessage] = useState("");
   const [sellerErrors, setSellerErrors] = useState<Record<string, string[]>>({});
   const [resendIn, setResendIn] = useState(0);
-  // The pop-up keeps Tab inside the card and returns focus to the opener on close (the shared hook). The page has no trap.
   const rootRef = useFocusTrap<HTMLDivElement>(popup, () => onClose?.());
   const skipFirstFocus = useRef(true);
   const next = safeNext(initialNext);
@@ -116,7 +103,6 @@ export function SignInSheet({ mode, initialRole = "user", initialNext = null, la
     return () => window.clearTimeout(timer);
   }, [resendIn]);
 
-  // The pop-up moves focus into the card when it opens and at each step. The login page does not steal focus on load.
   useEffect(() => {
     if (skipFirstFocus.current) {
       skipFirstFocus.current = false;
@@ -192,10 +178,6 @@ export function SignInSheet({ mode, initialRole = "user", initialNext = null, la
     finish(undefined, true, true);
   }
 
-  /**
-   * The pop-up closes and the visitor stays on the page they were on. The login page goes to the return address,
-   * or to the panel for their kind. A seller who has just made a profile goes on to the ad form.
-   */
   function finish(roles: string[] | undefined, hasSellerProfile: boolean, newSeller: boolean) {
     const current = window.location.pathname + window.location.search;
     const returnTo = popup ? (next ?? current) : (next ?? (newSeller ? landing.postAd : null));
