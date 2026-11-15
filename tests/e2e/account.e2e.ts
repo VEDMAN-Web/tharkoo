@@ -40,7 +40,7 @@ test.describe("3 Account", () => {
 
     // Logout ends the session.
     await page.goto("/u/logout/");
-    await page.waitForURL(/\/$/);
+    await page.waitForURL((url) => url.pathname === "/");
     const me = await page.request.get("/api/auth/me");
     expect(me.status()).toBe(401);
     await page.goto("/u/account/dashboard/");

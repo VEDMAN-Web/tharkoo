@@ -3012,6 +3012,20 @@
         "tests/e2e/logout.e2e.ts",
         "tests/server/auth/auth.test.ts"
       ]
+    },
+    "H7.30": {
+      "branchPrefix": "haiku/h7.30",
+      "globs": [
+        "docs/ownership.json",
+        "src/components/auth/LogoutButton.tsx",
+        "src/components/HeaderNew.tsx",
+        "src/components/Header.tsx",
+        "src/components/admin/AdminShell.tsx",
+        "src/components/vendor/NewVendorPanel.tsx",
+        "src/app/globals.css",
+        "tests/e2e/logout.e2e.ts",
+        "tests/e2e/account.e2e.ts"
+      ]
     }
   }
 }

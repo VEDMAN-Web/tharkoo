@@ -13,6 +13,7 @@ import { api, hasSessionHint, isStaffRole } from "@/lib/ui/api";
 import { safeHref } from "@/lib/sanitize";
 import { applyPrefixes, blogPath, helpPath, loginPath, postAdPath, registerPath } from "@/lib/urls";
 import { useUrlPaths } from "./UrlPaths";
+import { LogoutButton } from "./auth/LogoutButton";
 
 // The search modal is only drawn after the visitor opens search, so its code loads then, not with the page.
 const SearchModal = dynamic(() => import("./SearchModal").then((mod) => mod.SearchModal), { ssr: false });
@@ -128,7 +129,7 @@ export function Header({
                       <Link role="menuitem" className="tk-menu-row" href="/u/account/edit-account/" onClick={() => setAccount(false)}><Settings size={18} aria-hidden />Settings</Link>
                       {isStaffRole(session.roles) ? <Link role="menuitem" className="tk-menu-row" href="/admin/" onClick={() => setAccount(false)}><ShieldCheck size={18} aria-hidden />Admin</Link> : null}
                       <hr />
-                      <Link role="menuitem" className="tk-menu-row tk-menu-out" href="/u/logout/" onClick={() => setAccount(false)}><LogOut size={18} aria-hidden />Log out</Link>
+                      <LogoutButton role="menuitem" className="tk-menu-row tk-menu-out" onClick={() => setAccount(false)}><LogOut size={18} aria-hidden />Log out</LogoutButton>
                     </>
                   ) : (
                     <div className="tk-menu-guest">
