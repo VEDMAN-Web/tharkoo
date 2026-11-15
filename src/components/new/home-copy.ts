@@ -3,7 +3,6 @@ import type { UiTextKey } from "@/lib/ui/text";
 /** H7.4: small pure helpers for the New design home page. Kept apart from the components so they can be tested. */
 
 const TIER_KEYS: Partial<Record<string, UiTextKey>> = {
-  top: "card.tier.top",
   supertop: "card.tier.supertop",
   flash: "card.tier.supertop",
   star: "card.tier.star",

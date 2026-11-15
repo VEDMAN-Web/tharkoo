@@ -1,26 +1,26 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { ArrowRight } from "lucide-react";
+import { ArrowRight, ChevronLeft, ChevronRight } from "lucide-react";
 import { SaveButton } from "@/components/ui/SaveButton";
-import { recordAdClick, useShownCounts, watchAdCard } from "@/components/ad/adCountStore";
+import { recordAdClick, watchAdCard } from "@/components/ad/adCountStore";
 import { useSellerStatus } from "@/components/availability/sellerStatus";
-import { formatIndianCount } from "@/components/ad/counts-format";
 import { formatPrice } from "@/components/search/price";
-import { fillText } from "@/lib/ui/text";
 
 export type HomeAdCardData = {
   slug: string;
   title: string;
   price?: number | null;
   photo: string | null;
+  photos?: string[];
   categoryName: string;
   place: string;
   href: string;
 };
 
-/** The New design ad card for the home page (vertical). Same view counting and click counting as the shared card. */
+const SWIPE_PX = 40;
+
 export function HomeAdCard({
   ad,
   badge,
@@ -31,9 +31,12 @@ export function HomeAdCard({
   labels: { view: string; online: string; away: string; watermark: string; views: string; viewOne: string };
 }) {
   const cardRef = useRef<HTMLElement>(null);
+  const touchX = useRef<number | null>(null);
   const seller = useSellerStatus(ad.slug || undefined);
-  const counts = useShownCounts(ad.slug);
   const price = formatPrice(ad.price);
+  const photos = ad.photos?.length ? ad.photos : ad.photo ? [ad.photo] : [];
+  const [index, setIndex] = useState(0);
+  const step = (delta: number) => setIndex((current) => (current + delta + photos.length) % photos.length);
 
   useEffect(() => {
     const el = cardRef.current;
@@ -43,22 +46,46 @@ export function HomeAdCard({
 
   return (
     <article ref={cardRef} className="tkh-ad" data-tk="home-ad">
-      <div className="tkh-ad-photo">
-        {ad.photo ? (
-          <>
-            {/* P1: the whole picture shows (contain). The same photo, blurred and cropped, fills the rest of the frame. */}
-            <img className="tkh-ad-blur" src={ad.photo} alt="" aria-hidden="true" loading="lazy" />
-            <img className="tkh-ad-main" src={ad.photo} alt="" width={400} height={260} loading="lazy" />
-          </>
+      <div
+        className="tkh-ad-photo"
+        onTouchStart={(event) => {
+          touchX.current = event.touches[0].clientX;
+        }}
+        onTouchEnd={(event) => {
+          const start = touchX.current;
+          touchX.current = null;
+          if (start === null || photos.length < 2) return;
+          const dx = event.changedTouches[0].clientX - start;
+          if (Math.abs(dx) > SWIPE_PX) step(dx < 0 ? 1 : -1);
+        }}
+      >
+        {photos.length ? (
+          <img className="tkh-ad-main" src={photos[index]} alt="" width={400} height={260} loading="lazy" />
         ) : (
           <span className="tkh-ad-empty" aria-hidden />
         )}
         {badge ? <span className="tkh-ad-badge">{badge}</span> : null}
+        {ad.slug ? <SaveButton item={{ id: ad.slug, slug: ad.slug, title: ad.title, place: ad.place, at: 0 }} className="tkh-save tkh-ad-save" /> : null}
         {seller && seller.chatOn ? (
           <span className={`tkh-ad-status ${seller.status === "online" ? "is-online" : "is-away"}`} data-tk="availability" data-status={seller.status}>
             <span aria-hidden />
             {seller.status === "online" ? labels.online : labels.away}
           </span>
+        ) : null}
+        {photos.length > 1 ? (
+          <>
+            <button type="button" className="tkh-ad-arrow is-prev" aria-label="Previous photo" onClick={() => step(-1)}>
+              <ChevronLeft size={16} aria-hidden />
+            </button>
+            <button type="button" className="tkh-ad-arrow is-next" aria-label="Next photo" onClick={() => step(1)}>
+              <ChevronRight size={16} aria-hidden />
+            </button>
+            <span className="tkh-ad-dots">
+              {photos.map((_, dot) => (
+                <i key={dot} className={dot === index ? "is-on" : undefined} />
+              ))}
+            </span>
+          </>
         ) : null}
         <span className="tkh-ad-watermark" aria-hidden>{labels.watermark}</span>
       </div>
@@ -80,11 +107,6 @@ export function HomeAdCard({
         </p>
         <div className="tkh-ad-foot">
           {price ? <span className="tkh-ad-price">{price}</span> : null}
-          <span className="tkh-ad-meta">
-            {/* The count is 0 until the shown counts arrive, and stays 0 for an ad nobody has viewed yet. */}
-            <span className="tkh-ad-views">{fillText(counts?.views === 1 ? labels.viewOne : labels.views, { count: formatIndianCount(counts?.views ?? 0) })}</span>
-            {ad.slug ? <SaveButton item={{ id: ad.slug, slug: ad.slug, title: ad.title, place: ad.place, at: 0 }} className="tkh-save" /> : null}
-          </span>
         </div>
         <Link className="tkh-ad-more" href={ad.href} prefetch={false}>
           {labels.view}

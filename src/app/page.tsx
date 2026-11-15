@@ -4,7 +4,7 @@ import Link from "next/link";
 import { HeroSearch } from "@/components/HeroSearch";
 import { HomeLayout } from "@/components/blocks/HomeLayout";
 import { HomeBlocks, SkeletonGrid } from "@/components/HomeBlocks";
-import { getCategories, getFeed, getHomepageContent } from "@/lib/queries";
+import { getCategories, getFeed, getHomepageContent, getListingBySlug } from "@/lib/queries";
 import { getPageBlocks } from "@/lib/layout/read";
 import { postAdPath } from "@/lib/urls";
 import { textOverrides } from "@/app/admin/ui-text/store";
@@ -39,10 +39,19 @@ async function publishedHome() {
   }
 }
 
+async function latestAds(blocks: Awaited<ReturnType<typeof getPageBlocks>>, newest: Awaited<ReturnType<typeof getFeed>>["items"]) {
+  const block = blocks?.find((item) => item.type === "latestAds");
+  const slugs = Array.isArray(block?.props.pickedAds) ? (block.props.pickedAds as unknown[]).filter((slug): slug is string => typeof slug === "string").slice(0, 8) : [];
+  if (!slugs.length) return newest.slice(0, 4);
+  const picked = await Promise.all(slugs.map((slug) => getListingBySlug(slug)));
+  return picked.filter((ad) => ad != null) as typeof newest;
+}
+
 /** H7.4: the New design home, as in the Home mockup. Used only while the New design switch is on. */
 async function newHome(texts: ReturnType<typeof pickTexts>) {
-  const [content, paths, categories, countries, feed, shell] = await Promise.all([
+  const [content, blocks, paths, categories, countries, feed, shell] = await Promise.all([
     getHomepageContent(),
+    publishedHome(),
     getPaths(),
     getCategories(),
     countryPlaces(),
@@ -54,7 +63,7 @@ async function newHome(texts: ReturnType<typeof pickTexts>) {
       <NewHome
         hero={plain(content.hero)}
         categories={plain(categories)}
-        ads={plain(feed.items)}
+        ads={plain(await latestAds(blocks, feed.items))}
         shell={shell}
         paths={paths}
         countries={plain(countries)}

@@ -2980,6 +2980,19 @@
         "tests/e2e/user-panel.e2e.ts",
         "tests/e2e/account.e2e.ts"
       ]
+    },
+    "H7.24": {
+      "branchPrefix": "haiku/h7.24",
+      "globs": [
+        "src/app/page.tsx",
+        "src/components/new/HomeAdCard.tsx",
+        "src/components/new/NewHome.tsx",
+        "src/components/new/home-copy.ts",
+        "src/components/new/home-spec.css",
+        "src/components/admin/layout-editor/fields.ts",
+        "src/server/layout/blocks.ts",
+        "docs/ownership.json"
+      ]
     }
   }
 }

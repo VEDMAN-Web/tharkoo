@@ -101,6 +101,7 @@ const cityLinks = z.object({
 
 const latestAds = z.object({
   title: text(120).default(""),
+  pickedAds: z.array(z.string().trim().min(1).max(160)).max(8).default([]),
   source: z.enum(["visitorCity", "fixedCity", "all"]).default("all"),
   citySlug: slug.optional(),
   categorySlug: slug.optional(),

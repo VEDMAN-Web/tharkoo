@@ -105,7 +105,7 @@ export function NewHome({
   const photos = new Map(shell.media.images.filter((image) => image.scope === "category" && image.photo).map((image) => [image.slug, image.photo]));
   const cats = categories.filter((cat) => cat.slug && cat.name).slice(0, 8);
   const categoryNames = new Map(categories.map((cat) => [cat.slug || "", cat.name || ""]));
-  const shown = ads.slice(0, 4);
+  const shown = ads.slice(0, 8);
   const city = commonCity(shown);
   // P1: "Latest ads in {city}", or "Latest ads in India" when no city is chosen.
   const adsTitle = t("home.ads.title", { city: city ? prettyPlace(city) : t("home.ads.defaultPlace") });
@@ -225,7 +225,7 @@ export function NewHome({
           />
           <div className="tkh-ads">
             {shown.map((ad) => {
-              const photo = safePhoto(listingPhotos(ad.categorySlug, ad.publicId || ad.slug || "", ad.photos || [])[0]);
+              const photos = listingPhotos(ad.categorySlug, ad.publicId || ad.slug || "", ad.photos || []).map((src) => safePhoto(src)).filter((src): src is string => Boolean(src));
               return (
                 <HomeAdCard
                   key={ad.slug}
@@ -233,7 +233,8 @@ export function NewHome({
                     slug: ad.slug || "",
                     title: displayTitle(ad.title) || t("card.fallbackTitle"),
                     price: ad.price,
-                    photo,
+                    photo: photos[0] ?? null,
+                    photos,
                     categoryName: categoryNames.get(ad.categorySlug || "") || prettyPlace(ad.categorySlug),
                     place: placeOf(ad),
                     href: adPath(paths, ad.slug || ""),

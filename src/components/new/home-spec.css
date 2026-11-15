@@ -434,6 +434,7 @@
 }
 .tkh-ad {
   min-width: 0;
+  height: 100%;
   display: flex;
   flex-direction: column;
   background: #fff;
@@ -454,23 +455,63 @@
   height: 260px;
   background: linear-gradient(135deg, #fce4f0, #ede9ff);
 }
-/* P1: the whole picture shows (contain). A blurred copy of the same picture fills the frame behind it. */
-.tkh-ad-blur {
-  position: absolute;
-  inset: -24px;
-  width: calc(100% + 48px);
-  height: calc(100% + 48px);
-  object-fit: cover;
-  filter: blur(18px);
-  transform: scale(1.05);
-}
 .tkh-ad-main {
   position: relative;
   display: block;
   width: 100%;
   height: 100%;
-  object-fit: contain;
-  object-position: center center;
+  object-fit: cover;
+  object-position: 50% 20%;
+}
+.tkh-ad-photo .tkh-ad-save {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  z-index: 2;
+  width: 36px !important;
+  min-width: 36px !important;
+  height: 36px !important;
+  min-height: 36px !important;
+}
+.tkh-ad-arrow {
+  position: absolute;
+  top: 50%;
+  z-index: 2;
+  transform: translateY(-50%);
+  width: 32px;
+  height: 32px;
+  border: 0;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 255, 255, 0.85);
+  color: var(--ink-strong);
+  cursor: pointer;
+}
+.tkh-ad-arrow.is-prev {
+  left: 8px;
+}
+.tkh-ad-arrow.is-next {
+  right: 8px;
+}
+.tkh-ad-dots {
+  position: absolute;
+  left: 50%;
+  bottom: 10px;
+  z-index: 2;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 5px;
+}
+.tkh-ad-dots i {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.6);
+}
+.tkh-ad-dots i.is-on {
+  background: #fff;
 }
 .tkh-ad-empty {
   display: block;
@@ -508,6 +549,12 @@
   border-radius: 50%;
   background: #a7f3d0;
 }
+.tkh-ad-photo .tkh-ad-status {
+  top: auto;
+  right: auto;
+  bottom: 10px;
+  left: 10px;
+}
 .tkh-ad-status.is-away {
   background: #4b5563;
 }
@@ -535,6 +582,9 @@
   font-weight: 600;
   line-height: 1.35;
   color: var(--ink-strong);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 .tkh-ad-title a {
   color: inherit;
@@ -546,10 +596,17 @@
 .tkh-ad-pills {
   margin: 0 0 14px;
   display: flex;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
   gap: 5px;
+  min-width: 0;
+  overflow: hidden;
 }
 .tkh-pill {
+  flex: 0 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
   font-size: 11px;
   font-weight: 600;
   padding: 3px 9px;

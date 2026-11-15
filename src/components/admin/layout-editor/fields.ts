@@ -149,6 +149,7 @@ export const BLOCK_META: Record<string, BlockMeta> = {
     defaults: { title: "Latest ads" },
     fields: [
       title,
+      { kind: "stringList", key: "pickedAds", label: "Which ads: hand-picked, in this order (leave empty for the newest)", max: 8, itemMax: 160, itemLabel: "Ad slug" },
       choice("source", "Which ads", [["all", "All cities"], ["visitorCity", "The visitor's city"], ["fixedCity", "One chosen city"]], "all"),
       text("citySlug", "City slug (for one chosen city)", 80),
       text("categorySlug", "Only category (slug)", 80),
