@@ -1719,31 +1719,28 @@ input, select, textarea { font-size: 16px; }
 .tkn-citylist-row > svg { margin-left: auto; flex: none; }
 /* P1: country menu (mockup 00-CountryMenu): search on top, Popular, All countries A to Z, tick or "No ads yet" on the right */
 .tkn-city-arrow { color: var(--tkn-muted); margin-left: 2px; }
-/* Search follow-up: the menu is a column. The search box is a fixed top row; only .tkn-countrylist-scroll scrolls, so no row
-   ever passes above the box. The flags are SVG files from public/flags. */
-.tkn-pop-country { width: 342px; max-height: min(560px, 70vh); padding: 12px; display: flex; flex-direction: column; overflow: hidden; }
-.tkn-countrylist-wrap { display: flex; flex-direction: column; flex: 1 1 auto; min-height: 0; }
-.tkn-countrylist-scroll { flex: 1 1 auto; min-height: 0; overflow-y: auto; overflow-x: hidden; overscroll-behavior: contain; }
-/* No sideways scroll in the list: rows are exactly the list width (border-box), and a long name ends in an ellipsis */
+/* Opus #103: the menu is 280 px (90vw on a phone). The whole menu scrolls, search box included; there is no sideways
+   scroll, and long names wrap. The flags are SVG files from public/flags. */
+.tkn-pop-country { width: 280px; max-width: 90vw; max-height: min(560px, 70vh); padding: 12px; overflow-x: hidden; overflow-y: auto; overscroll-behavior: contain; }
+.tkn-countrylist-wrap { min-width: 0; max-width: 100%; overflow-x: hidden; }
+/* No sideways scroll in the list: rows are exactly the list width (border-box) */
 .tkn-citylist, .tkn-citylist > li { min-width: 0; max-width: 100%; }
 .tkn-citylist-row { box-sizing: border-box; min-width: 0; max-width: 100%; }
 .tkn-country-search {
-  flex: none; display: flex; align-items: center; gap: 10px; min-height: 44px; padding: 0 14px; margin-bottom: 8px; border-radius: 12px;
+  display: flex; align-items: center; gap: 10px; min-height: 44px; padding: 0 14px; margin-bottom: 8px; border-radius: 12px;
   border: 1.5px solid var(--tkn-line); background: #fff; color: var(--tkn-muted-2, #6b4a8a); box-sizing: border-box;
 }
 .tkn-flag {
   display: inline-block; width: 16px; height: 12px; flex: none; border-radius: 2px; object-fit: cover; box-shadow: 0 0 0 1px rgba(30, 11, 56, 0.08);
 }
-.tkn-citylist-none { color: #6b4a8a; }
 .tkn-country-search input {
   flex: 1; min-width: 0; border: 0; outline: none; background: transparent; font: inherit; font-size: 14px; color: var(--tkn-ink);
 }
 .tkn-country-group {
   margin: 12px 0 4px; padding: 0 12px; font-size: 11px; font-weight: 800; letter-spacing: 0.12em; text-transform: uppercase; color: #5b21b6;
 }
-.tkn-citylist-name { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.tkn-citylist-name { flex: 1; min-width: 0; overflow-wrap: anywhere; white-space: normal; }
 .tkn-citylist-tick { color: var(--tkn-rose-text, #c2185b); margin-left: auto; flex: none; }
-.tkn-citylist-none { margin-left: auto; flex: none; font-size: 12px; color: #6b4a8a; white-space: nowrap; }
 .tkn-country-empty { margin: 8px 12px; font-size: 13px; color: #6b4a8a; }
 .tkn-btn {
   display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 48px; padding: 0 20px; border-radius: 12px;

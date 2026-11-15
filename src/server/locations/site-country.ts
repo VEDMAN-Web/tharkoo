@@ -15,7 +15,7 @@ export async function countryPlaces(): Promise<CountryPlaces[]> {
   return countryOptionsFrom(rows).map((option) => ({ ...option, ...placesOfCountry(rows, option.slug) }));
 }
 
-/** An enabled country with its live ad count, for the header country menu ("No ads yet" when 0). */
+/** An enabled country with its live ad count (the header country menu shows flag and name only). */
 export interface CountryChoice extends CountryOption {
   ads: number;
 }
