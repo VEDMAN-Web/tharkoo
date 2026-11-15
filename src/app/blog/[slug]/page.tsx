@@ -10,6 +10,7 @@ import { Prose } from "@/components/ui/Prose";
 import { LegalView } from "@/components/new/LegalView";
 import { bodyParagraphs, readingMinutes, toSections } from "@/components/new/legal-copy";
 import { blogPath, contactPath } from "@/lib/urls";
+import { blogCoverOf } from "@/data/help";
 import { withUrlSeo, urlHeading } from "@/lib/seo/override";
 import { getPaths } from "@/server/urls/service";
 import { newDesignOn } from "@/server/site-links/new-design";
@@ -63,6 +64,7 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
           updatedPrefix="Published"
           minutes={readingMinutes(paragraphs)}
           author={post.author || undefined}
+          cover={blogCoverOf(post.slug || slug)}
           sections={toSections(paragraphs, slug)}
           askHref={contactPath(paths)}
           askLabel="Questions about this article?"

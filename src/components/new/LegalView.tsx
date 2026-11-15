@@ -12,6 +12,7 @@ export function LegalView({
   minutes,
   author,
   summary,
+  cover,
   sections,
   askHref,
   askLabel,
@@ -23,6 +24,7 @@ export function LegalView({
   minutes: number;
   author?: string;
   summary?: string;
+  cover?: string;
   sections: LegalSection[];
   askHref: string;
   askLabel: string;
@@ -30,7 +32,7 @@ export function LegalView({
   const withHeadings = sections.filter((section) => section.heading);
   return (
     <>
-      <PageBand crumbs={crumbs} title={title} strong>
+      <PageBand crumbs={crumbs} title={title} strong cover={cover}>
         <div className="tkp-pills">
           {updated ? <span className="tkp-pill">{updatedPrefix} {updated}</span> : null}
           <span className="tkp-pill">{minutes} min read</span>

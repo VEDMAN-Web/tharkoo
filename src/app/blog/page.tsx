@@ -2,6 +2,7 @@ import Link from "next/link";
 import { getBlogPosts } from "@/lib/queries";
 import { Container } from "@/components/ui/Container";
 import { BlogList } from "@/components/new/BlogView";
+import { blogCoverOf } from "@/data/help";
 import { blogPath } from "@/lib/urls";
 import { withUrlSeo } from "@/lib/seo/override";
 import { getPaths } from "@/server/urls/service";
@@ -36,6 +37,7 @@ export default async function Blog({ searchParams }: { searchParams: Promise<{ c
           date: post.date || "",
           body: post.body || "",
           category: post.category || "",
+          cover: blogCoverOf(post.slug || ""),
           href: blogPath(paths, post.slug),
         }))}
         categories={categories}

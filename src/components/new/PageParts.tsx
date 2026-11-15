@@ -22,10 +22,13 @@ export function Icon({ name, size = 20, color = "currentColor", width = 2 }: { n
   );
 }
 
-export function PageBand({ crumbs, title, strong, children }: { crumbs: { label: string; href?: string }[]; title: string; strong?: boolean; children?: ReactNode }) {
+export function PageBand({ crumbs, title, strong, cover, children }: { crumbs: { label: string; href?: string }[]; title: string; strong?: boolean; cover?: string; children?: ReactNode }) {
   return (
     <section className="tkp-section tkp-band-section">
-      <div className="tkp-band">
+      <div
+        className="tkp-band"
+        style={cover ? { backgroundImage: `linear-gradient(rgba(255, 255, 255, 0.88), rgba(255, 255, 255, 0.88)), url("${cover}")`, backgroundSize: "cover", backgroundPosition: "50% 25%" } : undefined}
+      >
         <nav aria-label="Breadcrumb" className="tkp-crumbs">
           {crumbs.map((crumb, index) => (
             <span key={`${crumb.label}-${index}`}>

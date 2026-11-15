@@ -2965,6 +2965,19 @@
         "src/components/auth/SellerProfileForm.tsx",
         "src/app/u/seller-profile/page.tsx"
       ]
+    },
+    "H7.28": {
+      "branchPrefix": "haiku/h7.28",
+      "globs": [
+        "src/data/help.ts",
+        "src/components/new/PageParts.tsx",
+        "src/components/new/LegalView.tsx",
+        "src/components/new/BlogView.tsx",
+        "src/components/new/p10-p13.css",
+        "src/app/blog/page.tsx",
+        "src/app/blog/[slug]/page.tsx",
+        "docs/ownership.json"
+      ]
     }
   }
 }

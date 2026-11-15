@@ -8,10 +8,11 @@ export type BlogPostCard = {
   date: string;
   body: string;
   category: string;
+  cover: string;
   href: string;
 };
 
-type Card = { href: string; title: string; date: string; minutes: number; excerpt: string; category: string };
+type Card = { href: string; title: string; date: string; minutes: number; excerpt: string; category: string; cover: string };
 
 function excerptOf(body: string): string {
   const first = bodyParagraphs(body).find((paragraph) => !paragraph.startsWith("## ")) || "";
@@ -24,6 +25,7 @@ function toCard(post: BlogPostCard): Card {
     title: post.title,
     date: post.date,
     category: post.category,
+    cover: post.cover,
     minutes: readingMinutes(bodyParagraphs(post.body)),
     excerpt: excerptOf(post.body),
   };
@@ -52,7 +54,7 @@ export function BlogList({
   const [feature, ...rest] = cards;
   return (
     <>
-      <PageBand crumbs={[{ label: "Tharkoo India", href: "/" }, { label: "Blog" }]} title="Tips, guides and city news" strong>
+      <PageBand crumbs={[{ label: "Tharkoo India", href: "/" }, { label: "Blog" }]} title="Tips, guides and city news" strong cover={feature?.cover}>
         <p className="tkp-lede">Short reads to help you buy, sell and meet safely.</p>
         <nav aria-label="Categories" className="tkp-chips tkp-chips-scroll" style={{ marginTop: 18 }}>
           <Link href={hrefOf("")} className="tkp-chip" aria-current={active ? undefined : "page"}>
@@ -69,7 +71,9 @@ export function BlogList({
       {feature ? (
         <section className="tkp-section" aria-label="Featured article">
           <Link href={feature.href} className="tkp-feature">
-            <div className="tkp-feature-cover" aria-hidden="true" />
+            <div className="tkp-feature-cover" aria-hidden="true">
+              {feature.cover ? <img className="tkp-cover-img" src={feature.cover} alt="" /> : null}
+            </div>
             <div className="tkp-feature-body">
               {feature.category ? <span className="tkp-tag">{feature.category}</span> : null}
               <h2 className="tkp-feature-title">{feature.title}</h2>
@@ -95,7 +99,9 @@ export function BlogList({
           <div className="tkp-grid3">
             {rest.map((card) => (
               <article key={card.href} className="tkp-blog-card">
-                <div className="tkp-post-cover" aria-hidden="true" />
+                <div className="tkp-post-cover" aria-hidden="true">
+                  {card.cover ? <img className="tkp-cover-img" src={card.cover} alt="" /> : null}
+                </div>
                 <div className="tkp-post-body">
                   {card.category ? <span className="tkp-post-tag">{card.category}</span> : null}
                   <h3 className="tkp-post-title">{card.title}</h3>

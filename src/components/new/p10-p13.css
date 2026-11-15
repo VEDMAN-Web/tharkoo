@@ -98,6 +98,7 @@
   transition: transform 0.28s, box-shadow 0.28s, border-color 0.28s; min-width: 0;
 }
 .tkn .tkp-blog-card:hover { transform: translateY(-5px); box-shadow: 0 14px 36px rgba(233, 30, 140, 0.14); border-color: rgba(233, 30, 140, 0.25); }
+.tkn .tkp-cover-img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: 50% 20%; }
 .tkn .tkp-post-cover { position: relative; aspect-ratio: 16 / 10; background: linear-gradient(145deg, #fce4f0, #ede9ff); }
 .tkn .tkp-post-body { padding: 16px 16px 18px; display: flex; flex-direction: column; flex: 1; }
 .tkn .tkp-post-title { margin: 0 0 8px; font-size: 17px; line-height: 1.35; font-weight: 700; color: #110520; overflow-wrap: anywhere; }

@@ -10,7 +10,11 @@ export const HELP_ARTICLES = [
 ];
 
 export const BLOG_POSTS = [
-  { slug: "most-searched-hyderabad", title: "Most searched in Hyderabad this week", date: "3 November 2026", body: "Jobs, property, and dating in Hyderabad are the busiest demo queries. Use a city URL, not search, if you want the page indexed." },
-  { slug: "how-star-works", title: "How Star listings work", date: "28 October 2026", body: "Star is a premium city-page slot, sold in two daily windows with six spots. Use one placeholder image and a short name." },
+  { slug: "most-searched-hyderabad", title: "Most searched in Hyderabad this week", date: "3 November 2026", cover: "https://res.cloudinary.com/tat1zj72/image/upload/tharkoo/site/6afa00d2ec3e7b72ad3e1e53.jpg", body: "Jobs, property, and dating in Hyderabad are the busiest demo queries. Use a city URL, not search, if you want the page indexed." },
+  { slug: "how-star-works", title: "How Star listings work", date: "28 October 2026", cover: "https://res.cloudinary.com/tat1zj72/image/upload/tharkoo/site/6afa00d2ec3e7b72ad3e1e56.jpg", body: "Star is a premium city-page slot, sold in two daily windows with six spots. Use one placeholder image and a short name." },
   { slug: "stay-safe", title: "Stay safe when you meet", date: "12 October 2026", body: "Meet in public first. Do not pay a deposit. Report stolen photos and fake numbers with the Ad ID." },
 ];
+
+export function blogCoverOf(slug: string) {
+  return BLOG_POSTS.find((post) => post.slug === slug)?.cover ?? "";
+}
