@@ -2965,6 +2965,14 @@
         "src/components/auth/SellerProfileForm.tsx",
         "src/app/u/seller-profile/page.tsx"
       ]
+    },
+    "H7.22": {
+      "branchPrefix": "haiku/h7.22",
+      "globs": [
+        "docs/ownership.json",
+        "src/components/HeaderNew.tsx",
+        "src/app/globals.css"
+      ]
     }
   }
 }
