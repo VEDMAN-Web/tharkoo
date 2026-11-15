@@ -1,0 +1,48 @@
+/* H7.32: the city page (/cities/[city]/). Plain CSS, scoped under .tkn-city-body. The title band is the shared
+   listing band (listing-spec.css, .tkn-ls-band). Breakpoints: 600 px (2 to 3 columns), 900 px (wider gaps), 1100 px (4 columns). */
+/* The page root sits in a flex row of the New design shell; without this it shrinks to its content. */
+.tkn-ls.tkn-city { display: block; width: 100%; min-width: 0; }
+.tkn-city-body {
+  box-sizing: border-box; max-width: 1280px; margin: 0 auto; padding: 0 24px 72px;
+  display: grid; gap: 32px;
+}
+@media (min-width: 900px) { .tkn-city-body { gap: 48px; } }
+.tkn-city-body h2 { margin: 0 0 14px; font-size: 22px; line-height: 1.25; font-weight: 800; color: #1e0b38; }
+
+.tkn-city-ads { max-width: 880px; }
+
+/* Browse by category: 2 columns on a phone, 3 on a tablet, 4 on a desktop. */
+.tkn-city-cats { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
+@media (min-width: 600px) { .tkn-city-cats { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+@media (min-width: 1100px) { .tkn-city-cats { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
+.tkn-city-cat {
+  display: flex; flex-direction: column; height: 100%; box-sizing: border-box; overflow: hidden; border-radius: 16px;
+  background: #fff; border: 1px solid #ead8f0; box-shadow: 0 2px 14px rgba(45, 18, 72, 0.07); color: #1e0b38; text-decoration: none;
+  transition: transform 0.25s, box-shadow 0.25s;
+}
+.tkn-city-cat:hover { transform: translateY(-3px); box-shadow: 0 14px 36px rgba(233, 30, 140, 0.13); }
+.tkn-city-cat:focus-visible { outline: 3px solid #7c3aed; outline-offset: 2px; }
+.tkn-city-cat-photo {
+  display: block; width: 100%; aspect-ratio: 4 / 3; object-fit: cover; object-position: 50% 20%;
+  background: linear-gradient(135deg, #fff0f7, #ede9ff);
+}
+.tkn-city-cat-body { display: flex; flex-direction: column; gap: 2px; padding: 12px 14px 14px; }
+.tkn-city-cat-name { font-size: 16px; font-weight: 800; }
+.tkn-city-cat-count { font-size: 13px; color: #6b4a8a; }
+.tkn-city-cat-count.is-new { color: #a8124f; font-weight: 700; }
+
+/* Areas: 1 column on a phone, 2 on a tablet, 3 on a desktop. */
+.tkn-city-areas { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: minmax(0, 1fr); gap: 16px; }
+@media (min-width: 600px) { .tkn-city-areas { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (min-width: 1100px) { .tkn-city-areas { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+.tkn-city-area {
+  display: flex; flex-direction: column; gap: 8px; box-sizing: border-box; padding: 16px 18px; border-radius: 16px;
+  background: #fff; border: 1px solid #ead8f0; box-shadow: 0 2px 14px rgba(45, 18, 72, 0.07);
+}
+.tkn-city-area-name { margin: 0; font-size: 18px; font-weight: 800; color: #1e0b38; }
+.tkn-city-area-count { margin: 0; font-size: 13px; color: #6b4a8a; }
+.tkn-city-chips { margin: 0; display: flex; flex-wrap: wrap; gap: 8px; }
+.tkn-city-empty {
+  margin: 0; padding: 18px 20px; box-sizing: border-box; border-radius: 16px; font-size: 16px; color: #4a2870;
+  background: rgba(255, 255, 255, 0.88); border: 1px solid #ead8f0;
+}

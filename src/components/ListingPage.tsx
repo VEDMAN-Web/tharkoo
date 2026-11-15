@@ -68,6 +68,8 @@ export function ListingPageView({
   layout,
   texts,
   frame = false,
+  fallback,
+  hideEmpty = false,
 }: {
   h1: string;
   h2?: string;
@@ -98,6 +100,10 @@ export function ListingPageView({
   layout?: ListingLayout;
   /** Admin-edited UI text overrides (see /admin/ui-text/). Without them the built-in text is used. */
   texts?: UiTextMap;
+  /** H7.32: fallback ads under the page's own results (see FallbackAds). Drawn after the feed. */
+  fallback?: React.ReactNode;
+  /** H7.32: leave out the built-in empty state, for a page that draws its own under the fallback. */
+  hideEmpty?: boolean;
   /**
    * H7.4b: the page frame (title band, filter panel) is drawn by the page around this view. The header and filter
    * blocks are then left out here, and the ads use the row card. Without it the page is drawn as it always was.
@@ -257,7 +263,7 @@ export function ListingPageView({
             </span>
           ))}
         </div>
-        {!feed.length ? (
+        {!feed.length && !hideEmpty ? (
           query ? (
             <div className="tk-empty">
               {suggestions.map((item) => (
@@ -282,6 +288,7 @@ export function ListingPageView({
             </Link>
           </div>
         ) : null}
+        {fallback}
       </>
     );
   };

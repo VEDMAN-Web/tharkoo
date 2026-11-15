@@ -1,0 +1,10 @@
+/* H7.32: the fallback block under a page's own results (FallbackAds). Plain CSS, scoped under .tkn-fb. */
+.tkn-fb { display: grid; gap: 32px; }
+@media (min-width: 900px) { .tkn-fb { gap: 48px; } }
+.tkn-fb-lead {
+  display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; box-sizing: border-box;
+  padding: 18px 20px; border-radius: 16px; background: rgba(255, 255, 255, 0.88); border: 1px solid #ead8f0;
+}
+.tkn-fb-lead p { margin: 0; font-size: 16px; font-weight: 600; color: #1e0b38; }
+.tkn-fb-title { margin: 0 0 14px; font-size: 22px; line-height: 1.25; font-weight: 800; color: #1e0b38; }
+.tkn-fb-sec .tk-feed { max-width: 880px; }

@@ -11,9 +11,12 @@ describe("heroSearchHref", () => {
     expect(heroSearchHref(paths, { category: "buy-and-sell", state: "gujarat" })).toBe("/buy-and-sell/gujarat/");
   });
 
-  it("uses the city page without a category, and the cities page for a state alone", () => {
+  it("uses the city page without a category", () => {
     expect(heroSearchHref(paths, { city: "surat" })).toBe("/cities/surat/");
-    expect(heroSearchHref(paths, { state: "gujarat" })).toBe("/cities/");
+  });
+
+  it("goes to the search page filtered to the state for a state alone", () => {
+    expect(heroSearchHref(paths, { state: "gujarat" })).toBe("/search/?state=gujarat");
   });
 
   it("goes to search when nothing is picked", () => {

@@ -1,14 +1,23 @@
 import type { ShellConfig, ShellImage } from "@/server/site-links/shell-config-rules";
 
 /**
+ * H7.32: the band image for a city page: the image the admin set for that city, or null (the band keeps its
+ * gradient). Pure, so the server page and the tests share it.
+ */
+export function cityBandImageFor(shell: ShellConfig, citySlug: string): ShellImage | null {
+  const city = shell.media.images.find((image) => image.scope === "city" && image.slug === citySlug);
+  return city && (city.band || city.bandPhone) ? city : null;
+}
+
+/**
  * H7.4: the image for a category and city listing title band. The city's image wins when the admin set one for
  * that city; otherwise the category's. Pure, so the server page and the tests share it. A category page has no city,
  * so pass no city slug there.
  */
 export function bandImageFor(shell: ShellConfig, categorySlug: string, citySlug?: string): ShellImage | null {
   const images = shell.media.images;
-  const city = citySlug ? images.find((image) => image.scope === "city" && image.slug === citySlug) : undefined;
-  if (city && (city.band || city.bandPhone)) return city;
+  const city = citySlug ? cityBandImageFor(shell, citySlug) : null;
+  if (city) return city;
   const category = images.find((image) => image.scope === "category" && image.slug === categorySlug);
   return category && (category.band || category.bandPhone) ? category : null;
 }
