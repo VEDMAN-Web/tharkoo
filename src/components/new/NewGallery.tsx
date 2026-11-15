@@ -2,10 +2,14 @@
 
 import { useState } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
+import { useContact } from "@/components/ContactButtons";
 import { useT } from "@/components/ui/AdCard";
 
-export function NewGallery({ photos, title, badge }: { photos: string[]; title: string; badge?: string | null }) {
+const THUMB_SLOTS = 8;
+
+export function NewGallery({ photos, title, badge, isNew = false }: { photos: string[]; title: string; badge?: string | null; isNew?: boolean }) {
   const t = useT();
+  const { seller } = useContact();
   const [index, setIndex] = useState(0);
   const count = photos.length;
   if (!count) {
@@ -20,7 +24,11 @@ export function NewGallery({ photos, title, badge }: { photos: string[]; title: 
           <img className="tkn-gal-blur" src={current} alt="" aria-hidden="true" loading="lazy" />
           <img className="tkn-gal-img" src={current} alt={`${title}, ${t("ad.gallery.photo", { index: index + 1, count })}`} />
         </div>
-        {badge ? <span className="tkn-gal-badge">{badge}</span> : null}
+        <span className="tkn-gal-badges">
+          {isNew ? <span className="tkn-gal-new">New</span> : null}
+          {badge ? <span className="tkn-gal-badge">{badge}</span> : null}
+          {seller?.chatOn && seller.status === "online" ? <span className="tkn-gal-live">{t("ad.seller.online")}</span> : null}
+        </span>
         <span className="tkn-gal-wm" aria-hidden="true">tharkoo.com</span>
         <span className="tkn-gal-counter" aria-hidden="true">{t("ad.gallery.counter", { index: index + 1, count })}</span>
         {count > 1 ? (
@@ -34,17 +42,22 @@ export function NewGallery({ photos, title, badge }: { photos: string[]; title: 
           </>
         ) : null}
       </figure>
-      {count > 1 ? (
-        <ul className="tkn-thumbs">
-          {photos.map((src, i) => (
-            <li key={`${src}-${i}`}>
-              <button type="button" className="tkn-thumb" aria-label={t("ad.gallery.show", { index: i + 1 })} aria-pressed={i === index} onClick={() => setIndex(i)}>
-                <img src={src} alt="" loading="lazy" />
-              </button>
+      <ul className="tkn-thumbs">
+        {Array.from({ length: THUMB_SLOTS }, (_, i) => {
+          const src = photos[i];
+          return (
+            <li key={i}>
+              {src ? (
+                <button type="button" className="tkn-thumb" aria-label={t("ad.gallery.show", { index: i + 1 })} aria-pressed={i === index} onClick={() => setIndex(i)}>
+                  <img src={src} alt="" loading="lazy" />
+                </button>
+              ) : (
+                <span className="tkn-thumb tkn-thumb-empty" aria-hidden="true" />
+              )}
             </li>
-          ))}
-        </ul>
-      ) : null}
+          );
+        })}
+      </ul>
     </div>
   );
 }

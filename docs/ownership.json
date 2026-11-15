@@ -2764,7 +2764,13 @@
         "tests/server/ad/ad-details.test.ts",
         "tests/server/tours/tour-labels.test.ts",
         "src/components/new/listing-spec.css",
-        "docs/ownership.json"
+        "docs/ownership.json",
+        "src/app/[category]/page.tsx",
+        "src/components/CookieBanner.tsx",
+        "src/components/ListingPage.tsx",
+        "src/lib/queries.ts",
+        "src/components/CookieBanner.css",
+        "src/components/new/ListingMore.tsx"
       ]
     }
   }

@@ -20,9 +20,6 @@ type Notice = { text: string; signIn?: boolean };
 /** Set only when the server says a live video tour can be requested on this ad (H6.5). */
 export type AdTour = { listingId: string; coins: number };
 
-/** H7.5: shown when a visitor asks for a seller's number while the seller is Away. Chat still works. */
-export const CALLS_PAUSED = "The seller is away, so calls are paused. You can still chat.";
-
 /** Shown instead of a coin purchase until a real coin provider is set in production. */
 export const COIN_PURCHASE_SOON = "Coin purchases open soon. No coins were used.";
 
@@ -103,9 +100,6 @@ export function ContactProvider({
 
   async function open(channel: Channel) {
     if (shown[channel]) return;
-    if (channel === "phone" && seller?.callsAllowed === false) {
-      return setNotice({ text: CALLS_PAUSED });
-    }
     setBusy(channel);
     setNotice(null);
     const result = await reveal(listingSlug, listingId, channel);
@@ -249,9 +243,6 @@ export function ContactButtons({
 }) {
   const { shown, notice, busy, tour, tourRequested, open, openChatFlow, openCall, seller, people } = useContact();
   const t = useT();
-  const callsPaused = seller?.callsAllowed === false;
-  // H7.4c: no chat button for a seller without Live chat on.
-  const chatOn = seller?.chatOn === true;
   const channelButtons = channels.map((channel) => {
     const hit = shown[channel];
     if (hit?.value) {
@@ -264,7 +255,7 @@ export function ContactButtons({
     }
     const label = channel === "phone" ? "Call" : channel === "whatsapp" ? "WhatsApp" : "Telegram";
     return (
-      <button key={channel} type="button" className={channel === "whatsapp" ? "tk-btn tk-btn-whatsapp" : "tk-btn"} data-tk={channel === "phone" ? "call" : channel === "whatsapp" ? "whatsapp" : undefined} onClick={() => open(channel)} disabled={busy === channel || (channel === "phone" && callsPaused)} aria-describedby={channel === "phone" && callsPaused ? "tk-calls-paused" : undefined}>
+      <button key={channel} type="button" className={channel === "whatsapp" ? "tk-btn tk-btn-whatsapp" : "tk-btn"} data-tk={channel === "phone" ? "call" : channel === "whatsapp" ? "whatsapp" : undefined} onClick={() => open(channel)} disabled={busy === channel}>
         {channel === "phone" ? <Phone size={16} aria-hidden /> : channel === "whatsapp" ? <Wa /> : null}
         {busy === channel ? "…" : label}
       </button>
@@ -272,19 +263,16 @@ export function ContactButtons({
   });
   const buttons = [
     ...channelButtons,
-    chatOn ? (
-      <button key="chat" type="button" className="tk-btn" data-tk="chat" onClick={() => openChatFlow()} disabled={busy === "chat"}>
+    <button key="chat" type="button" className="tk-btn" data-tk="chat" onClick={() => openChatFlow()} disabled={busy === "chat"}>
       {seller ? <span className="tkn-dot" data-status={seller.status} aria-hidden /> : null}
       <MessageCircle size={16} aria-hidden /> {busy === "chat" ? "…" : t(sticky ? "ad.bar.chat" : "ad.chat")}
-    </button>
-    ) : null,
+    </button>,
     tour && !people ? (
       <button key="tour" type="button" className="tk-btn" data-tk="tour" onClick={() => openCall()} disabled={busy === "tour" || tourRequested} aria-busy={busy === "tour"}>
         <Video size={16} aria-hidden /> {busy === "tour" ? "…" : tourRequested ? "Request sent" : sticky ? barVideoLabel(t, tour.coins) : tourRequestLabel(tour.coins)}
       </button>
     ) : null,
   ];
-  const pausedLine = callsPaused && channels.includes("phone") ? <p id="tk-calls-paused" className="t-caption" data-tk="calls-paused" style={{ gridColumn: "1 / -1" }}>{CALLS_PAUSED}</p> : null;
   if (sticky) {
     return (
       <>
@@ -296,7 +284,6 @@ export function ContactButtons({
   return (
     <div className="tk-actions">
       {buttons}
-      {pausedLine}
       <NoticeLine notice={notice} />
     </div>
   );

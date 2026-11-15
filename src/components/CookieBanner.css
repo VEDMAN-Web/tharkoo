@@ -1,0 +1,17 @@
+.tkc-banner {
+  position: fixed; left: 16px; bottom: 16px; z-index: 40; box-sizing: border-box; max-width: 360px; padding: 16px 18px; border-radius: 16px;
+  background: rgba(255, 255, 255, 0.92); -webkit-backdrop-filter: blur(18px) saturate(170%); backdrop-filter: blur(18px) saturate(170%);
+  border: 1px solid rgba(255, 255, 255, 0.95); box-shadow: 0 8px 32px rgba(45, 18, 72, 0.14);
+  color: #1e0b38; font-size: 13px; line-height: 1.5;
+}
+.tkc-banner p { margin: 0; }
+.tkc-banner a { color: #a8124f; text-decoration: underline; }
+.tkc-actions { display: flex; gap: 8px; margin-top: 12px; flex-wrap: wrap; }
+.tkc-accept, .tkc-necessary {
+  min-height: 40px; padding: 0 16px; border-radius: 12px; font: inherit; font-size: 14px; font-weight: 700; cursor: pointer; text-transform: none;
+}
+.tkc-accept { border: 0; background: linear-gradient(135deg, #d1137a, #a8124f); color: #fff; }
+.tkc-necessary { border: 1.5px solid #ead8f0; background: #fff; color: #4a2870; }
+@media (max-width: 600px) {
+  .tkc-banner { left: 16px; right: 16px; max-width: none; bottom: 92px; }
+}

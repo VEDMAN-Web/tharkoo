@@ -13,7 +13,7 @@ export function AdSellerRow({ name }: { name: string }) {
       <span className="tkn-seller-avatar" aria-hidden>{initial}</span>
       <span className="tkn-seller-text">
         <strong>{name}</strong>
-        {seller ? (
+        {seller?.chatOn ? (
           <span className="tkn-seller-status" data-status={seller.status}>
             {seller.status === "online" ? t("ad.seller.online") : t("ad.seller.away")}
           </span>

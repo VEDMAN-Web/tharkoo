@@ -1,13 +1,10 @@
 import Link from "next/link";
-import { Flag, Shield } from "lucide-react";
 import type { ListingDoc } from "@/lib/models";
 import { displayTitle, prettyPlace, shortDateLabel } from "@/lib/format";
-import { listingPhotos, listingTagSections } from "@/lib/media";
+import { listingPhotos } from "@/lib/media";
 import { ContactButtons, ContactProvider, type ContactPopupInfo } from "@/components/ContactButtons";
-import { SaveButton } from "@/components/ui/SaveButton";
 import { AdCard, UiTextProvider } from "@/components/ui/AdCard";
 import { TrackView } from "@/components/ui/RecentlyViewed";
-import { videoVerifiedLabel } from "@/components/ad/tourLabels";
 import { adPath, type UrlPaths } from "@/lib/urls";
 import { makeT, type UiTextMap } from "@/lib/ui/text";
 import { formatPrice } from "@/components/search/price";
@@ -21,12 +18,17 @@ import "./ad-spec.css";
 
 const PERSONAL = new Set(["dating", "friendship", "meetups", "personal-ads"]);
 const GOLD_TIERS = new Set(["supertop", "top"]);
+const WEEK_MS = 7 * 24 * 60 * 60 * 1000;
 
 function tierOf(ad: ListingDoc, categoryName: string) {
   if (ad.variant === "supertop" || ad.variant === "star") return { key: "supertop", label: "SUPER Top" };
   if (ad.variant === "top") return { key: "top", label: "Top" };
   if (ad.verified) return { key: "verified", label: "Verified" };
   return { key: "category", label: categoryName };
+}
+
+function isRecent(ad: ListingDoc) {
+  return Date.now() - new Date(ad.publishedAt || ad.createdAt || 0).getTime() < WEEK_MS;
 }
 
 function placeOf(ad: ListingDoc) {
@@ -58,7 +60,6 @@ export function NewAdDetail({
   related = [],
   listingId,
   crumbs = [],
-  shareUrl,
   heading,
   tour,
   peopleAd = false,
@@ -83,10 +84,8 @@ export function NewAdDetail({
 }) {
   const t = makeT(texts);
   const title = heading || displayTitle(ad.title) || "Listing";
-  const videoVerified = videoVerifiedLabel(ad.videoVerifiedUntil);
   const { city, district } = placeOf(ad);
   const placeText = district ? `${city} / ${district}` : city;
-  const sections = listingTagSections(ad.tags);
   const personal = PERSONAL.has(ad.categorySlug || "");
   const date = shortDateLabel(ad.publishedAt || ad.createdAt);
   const listHref = `/${ad.categorySlug}/${ad.citySlug}/`;
@@ -113,28 +112,10 @@ export function NewAdDetail({
           </nav>
           <div className="tkn-ad-grid">
             <div className="tkn-ad-main">
-              <NewGallery photos={photos} title={title} badge={GOLD_TIERS.has(tier.key) ? tier.label : null} />
+              <NewGallery photos={photos} title={title} badge={GOLD_TIERS.has(tier.key) ? tier.label : null} isNew={isRecent(ad)} />
               <section className="tkn-ad-head" data-tk="ad-summary">
-                <div className="tkn-ad-titlerow">
-                  <h1>{title}</h1>
-                  <SaveButton item={{ id: ad.slug || title, slug: ad.slug || "", title, place: city, at: 0 }} className="bg-transparent text-accent" />
-                </div>
+                <h1>{title}</h1>
                 <AdMetaLine slug={ad.slug || ""} place={placeText} posted={date} />
-                {ad.age || ad.publicId ? (
-                  <p className="tkn-ad-date">
-                    {ad.age ? `${ad.age} years` : ""}
-                    {ad.age && ad.publicId ? " · " : ""}
-                    {ad.publicId ? `Ad ID: ${ad.publicId}` : ""}
-                  </p>
-                ) : null}
-                {ad.trust?.length || videoVerified ? (
-                  <ul className="tkn-ad-marks">
-                    {ad.trust?.map((mark) => (
-                      <li key={mark}><Shield size={14} aria-hidden="true" /> {mark}</li>
-                    ))}
-                    {videoVerified ? <li data-tk="video-verified"><Shield size={14} aria-hidden="true" /> {videoVerified}</li> : null}
-                  </ul>
-                ) : null}
               </section>
               <section className="tkn-ad-block" aria-labelledby="tkn-about">
                 <h2 id="tkn-about">{personal ? "About me" : t("ad.about")}</h2>
@@ -153,27 +134,10 @@ export function NewAdDetail({
                   </dl>
                 </section>
               ) : null}
-              {sections.map((section) => (
-                <section key={section.title} className="tkn-ad-block" aria-label={section.title}>
-                  <h2>{section.title === "Where" ? (personal ? "Where we can meet" : "Where") : section.title}</h2>
-                  <ul className="tkn-ad-marks">
-                    {section.items.map((item) => (
-                      <li key={item}>{item}</li>
-                    ))}
-                  </ul>
-                </section>
-              ))}
-              <div className="tkn-ad-share">
-                <a href={`https://wa.me/?text=${encodeURIComponent(shareUrl)}`} target="_blank" rel="noopener noreferrer">Share on WhatsApp</a>
-                <Link href={`/submit-report/?ad=${ad.publicId || ad.slug || ""}`} prefetch={false} className="tkn-report"><Flag size={14} aria-hidden="true" /> Report</Link>
-              </div>
-              <p className="tkn-ad-more">
-                All ads in <Link href={listHref}><strong>{categoryName} in {city}</strong></Link>
-              </p>
             </div>
             <aside className="tkn-ad-side" aria-label="Contact">
               <div className="tkn-contact-panel" data-tk="contact-card">
-                {price ? <p className="tkn-ad-price">{price}</p> : null}
+                <p className="tkn-ad-price">{price || "Price on request"}</p>
                 <AdSellerRow name={seller} />
                 <ContactButtons />
               </div>

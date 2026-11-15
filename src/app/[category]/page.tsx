@@ -29,6 +29,7 @@ import { newDesignOn } from "@/server/site-links/new-design";
 import { readShellConfig } from "@/server/site-links/shell-config";
 import { bandImageFor } from "@/components/new/band-image";
 import { ListingFrame } from "@/components/new/ListingFrame";
+import { ListingMore } from "@/components/new/ListingMore";
 import { listingFrameProps, listingLabels, placeSelects } from "@/components/new/listing-frame-props";
 import { attributePicks, hasFieldPicks, type ListingToggles } from "@/components/new/listing-filters";
 
@@ -55,6 +56,7 @@ export default async function CategoryHub({ params, searchParams }: Props) {
   if (!cat) notFound();
   if (cat.slug && cat.slug !== category) permanentRedirect(categoryPath(cat.slug));
   const sp = await searchParams;
+  const page = Math.max(1, Number(sp.page) || 1);
   // H7.4b: the filter panel's field picks and quick toggles narrow the feed the same way they do on a city page.
   const picks = attributePicks(sp, cat.fields);
   const toggles: ListingToggles = { verified: sp.verified === "1", photos: sp.photos === "1", video: sp.video === "1", online: sp.online === "1" };
@@ -72,7 +74,7 @@ export default async function CategoryHub({ params, searchParams }: Props) {
     getCities(),
     getStates(),
     listingCountsByCategoryCity().catch(() => []),
-    getFeed(narrow, 1),
+    getFeed(narrow, page),
     getStarListings(narrow).catch(() => []),
     getPaths(),
     urlHeading(categoryPath(cat.slug || category), `${cat.name} in India`),
@@ -92,7 +94,7 @@ export default async function CategoryHub({ params, searchParams }: Props) {
   const allowed = new Set(counts.filter((row) => row._id.categorySlug === category && row.n > 0).map((row) => row._id.citySlug));
   const listed = allowed.size ? cities.filter((city) => allowed.has(city.slug || "")) : cities;
   const ads = [
-    ...stars,
+    ...(page === 1 ? stars : []),
     ...orderFeed(feed.items.filter((ad) => !stars.some((star) => star.slug && star.slug === ad.slug)), hourSeed()),
   ];
   const layout = await resolveListingLayout({ path: categoryPath(cat.slug || category), category: cat.slug || category, vars: { ...vars, count: feed.total } });
@@ -106,9 +108,10 @@ export default async function CategoryHub({ params, searchParams }: Props) {
     <>
       <div className="tk-feed" data-tk="category-feed">
         {ads.map((ad, index) => (
-          <AdCard key={ad.publicId || ad.slug || index} ad={ad} featured={index < stars.length} priority={index === 0} layout={shell ? "row" : undefined} />
+          <AdCard key={ad.publicId || ad.slug || index} ad={ad} featured={page === 1 && index < stars.length} priority={index === 0} layout={shell ? "row" : undefined} />
         ))}
       </div>
+      <ListingMore page={page} pages={feed.pages} params={sp} label={t("listing.more")} />
       <section className="tk-browse-city" data-tk="browse-by-city">
         <h2>{t("listing.hub.browseByCity")}</h2>
         <div className="tk-pills tk-pills-left">
@@ -123,12 +126,14 @@ export default async function CategoryHub({ params, searchParams }: Props) {
           )}
         </div>
       </section>
-      <p className="tk-seo-foot">{hub.intro}</p>
-      {hub.faqs.map((item) => (
-        <p key={item.q} className="tk-seo-foot">
-          <strong>{item.q}</strong> {item.a}
-        </p>
-      ))}
+      <div className="tkn-ls-seo">
+        <p className="tk-seo-foot">{hub.intro}</p>
+        {hub.faqs.map((item) => (
+          <p key={item.q} className="tk-seo-foot">
+            <strong>{item.q}</strong> {item.a}
+          </p>
+        ))}
+      </div>
     </>
   );
   const inFeedId = String(layout.blocks.find((block) => block.type === "listingFeed")?.props.inFeedBlockId ?? "");
