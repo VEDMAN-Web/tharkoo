@@ -21,10 +21,10 @@ test.describe("3 Account", () => {
     await loginUi(page, email);
     await page.waitForURL(/\/u\/account\/dashboard\//);
 
-    // Dashboard cards.
-    for (const tile of ["ads", "wallet", "coupons", "settings"]) {
-      await expect(page.locator(`[data-tk=tile][data-tile=${tile}]`)).toBeVisible();
-    }
+    // Dashboard menu: the user panel links to coins and settings.
+    const menu = page.getByRole("navigation", { name: "My account" });
+    await expect(menu.getByRole("link", { name: "Coins and payments" })).toBeVisible();
+    await expect(menu.getByRole("link", { name: "Settings" })).toBeVisible();
     await expect(page.locator("h1")).toHaveCount(1);
 
     // Settings (the profile screen): shows the email, password change sends a reset email.
