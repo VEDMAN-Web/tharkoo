@@ -6,7 +6,6 @@ import { displayTitle } from "@/lib/format";
 import { api } from "@/lib/ui/api";
 import type { ListingDoc } from "@/lib/models";
 import type { DiscoverPage, FeedCard } from "@/server/discover/feed";
-import styles from "./UserPanel.module.css";
 
 /** H7.6: "Discover ads" under the user panel and the chats screen. Same card as the listing pages. */
 
@@ -144,26 +143,26 @@ export function DiscoverFeed({
   const showEmpty = !loading && !failed && seed !== null && items.length === 0;
 
   return (
-    <section aria-labelledby="discover-heading" className={`${styles.panel} ${styles.glass}`} data-tk="discover">
-      <div className={styles.panelHead}>
+    <section aria-labelledby="discover-heading" className={`up-panel up-glass`} data-tk="discover">
+      <div className="up-panel-head">
         <div>
-          <h2 id="discover-heading" className={styles.h2}>{heading}</h2>
-          <p className={styles.muted}>{intro}</p>
+          <h2 id="discover-heading" className="up-h2">{heading}</h2>
+          <p className="up-muted">{intro}</p>
         </div>
       </div>
-      <div role="group" aria-label="Filter ads" className={styles.filters}>
-        <label className={styles.label}>
+      <div role="group" aria-label="Filter ads" className="up-filters">
+        <label className="up-label">
           Category
-          <select className={styles.select} value={filters.category} onChange={(event) => setFilter({ category: event.target.value })}>
+          <select className="up-select" value={filters.category} onChange={(event) => setFilter({ category: event.target.value })}>
             <option value="">All categories</option>
             {categories.map((option) => (
               <option key={option.slug} value={option.slug}>{option.name}</option>
             ))}
           </select>
         </label>
-        <label className={styles.label}>
+        <label className="up-label">
           City
-          <select className={styles.select} value={filters.city} onChange={(event) => setFilter({ city: event.target.value })}>
+          <select className="up-select" value={filters.city} onChange={(event) => setFilter({ city: event.target.value })}>
             <option value="">All cities</option>
             {cities.map((option) => (
               <option key={option.slug} value={option.slug}>{option.name}</option>
@@ -174,7 +173,7 @@ export function DiscoverFeed({
           <button
             key={band.label}
             type="button"
-            className={`${styles.filterBtn} ${filters.band === index ? styles.filterBtnOn : ""}`}
+            className={`up-filter-btn ${filters.band === index ? "up-filter-on" : ""}`}
             aria-pressed={filters.band === index}
             onClick={() => setFilter({ band: index })}
           >
@@ -183,23 +182,23 @@ export function DiscoverFeed({
         ))}
         <button
           type="button"
-          className={`${styles.filterBtn} ${filters.withVideo ? styles.filterBtnOn : ""}`}
+          className={`up-filter-btn ${filters.withVideo ? "up-filter-on" : ""}`}
           aria-pressed={filters.withVideo}
           onClick={() => setFilter({ withVideo: !filters.withVideo })}
         >
           With video
         </button>
       </div>
-      <p aria-live="polite" className={styles.muted} style={{ margin: "14px 0" }}>
+      <p aria-live="polite" className="up-muted" style={{ margin: "14px 0" }}>
         {loading && items.length === 0 ? "Loading ads" : items.length ? `${items.length} ads shown` : ""}
       </p>
       {failed ? (
-        <p className={styles.error} role="alert">
-          The ads could not load. <button type="button" className={styles.link} onClick={() => seed && void fetchPage(filters, seed, 1, false)}>Try again</button>
+        <p className="up-error" role="alert">
+          The ads could not load. <button type="button" className="up-link" onClick={() => seed && void fetchPage(filters, seed, 1, false)}>Try again</button>
         </p>
       ) : null}
       {items.length > 0 ? (
-        <ul className={styles.cards} style={{ listStyle: "none", padding: 0, margin: 0 }}>
+        <ul className="up-cards-fill" style={{ listStyle: "none", padding: 0, margin: 0 }}>
           {items.map((card) => (
             <li key={card.id}>
               <AdCard ad={toAdDoc(card)} />
@@ -208,31 +207,31 @@ export function DiscoverFeed({
         </ul>
       ) : null}
       {loading && items.length === 0 ? (
-        <div className={styles.cards} aria-hidden="true">
+        <div className="up-cards-fill" aria-hidden="true">
           {Array.from({ length: SKELETON_COUNT }, (_, index) => (
-            <div key={index} className={styles.skeleton} />
+            <div key={index} className="up-skeleton" />
           ))}
         </div>
       ) : null}
       {showEmpty ? (
-        <div className={`${styles.empty} ${styles.glass}`} style={{ marginTop: 8 }}>
-          <p className={styles.emptyTitle}>No ads match these filters</p>
-          <p className={styles.emptyBody}>Try another category, city or price range.</p>
-          <button type="button" className={styles.ghost} onClick={() => setFilters({ category: "", city: "", band: 0, withVideo: false })}>
+        <div className={`up-empty up-glass`} style={{ marginTop: 8 }}>
+          <p className="up-empty-title">No ads match these filters</p>
+          <p className="up-empty-body">Try another category, city or price range.</p>
+          <button type="button" className="up-btn-ghost" onClick={() => setFilters({ category: "", city: "", band: 0, withVideo: false })}>
             Clear filters
           </button>
         </div>
       ) : null}
       {loading && items.length > 0 ? (
-        <div className={styles.cards} aria-hidden="true" style={{ marginTop: 16 }}>
-          <div className={styles.skeleton} />
-          <div className={styles.skeleton} />
+        <div className="up-cards-fill" aria-hidden="true" style={{ marginTop: 16 }}>
+          <div className="up-skeleton" />
+          <div className="up-skeleton" />
         </div>
       ) : null}
       <div ref={sentinelRef} aria-hidden="true" style={{ height: 1 }} />
       {hasMore ? (
         <div style={{ display: "flex", justifyContent: "center", marginTop: 18 }}>
-          <button type="button" className={styles.ghost} onClick={loadMore} disabled={loading}>
+          <button type="button" className="up-btn-ghost" onClick={loadMore} disabled={loading}>
             Load more ads
           </button>
         </div>

@@ -5,7 +5,6 @@ import { useRouter } from "next/navigation";
 import { SectionHelp } from "@/components/help/SectionHelp";
 import { api, friendlyError } from "@/lib/ui/api";
 import type { SavedSearchRow } from "@/server/alerts/saved-searches";
-import styles from "./UserPanel.module.css";
 
 /** H7.6: Saved search alerts. Lists the signed-in user's saved searches, removes one, or saves a new one. */
 
@@ -64,21 +63,21 @@ export function AlertsPanel({
   }
 
   return (
-    <div className={styles.stack}>
-      <section aria-labelledby="alerts-list" className={`${styles.panel} ${styles.glass}`}>
-        <h2 id="alerts-list" className={styles.h2}>Your alerts</h2>
+    <div className="up-stack">
+      <section aria-labelledby="alerts-list" className={`up-panel up-glass`}>
+        <h1 id="alerts-list" className="up-h2">Your alerts</h1>
         <SectionHelp textKey="help.section.alerts" />
         {rows.length === 0 ? (
-          <div className={styles.empty}>
-            <p className={styles.emptyTitle}>No saved searches yet</p>
-            <p className={styles.emptyBody}>Save a search below and we will email {email} when a new ad matches it.</p>
+          <div className="up-empty">
+            <p className="up-empty-title">No saved searches yet</p>
+            <p className="up-empty-body">Save a search below and we will email {email} when a new ad matches it.</p>
           </div>
         ) : (
           <ul style={{ listStyle: "none", padding: 0, margin: "12px 0 0", display: "flex", flexDirection: "column", gap: 10 }}>
             {rows.map((row) => (
-              <li key={row.id} className={styles.statRow} style={{ border: "1px solid #ead8f0", borderRadius: 16, padding: "10px 14px", background: "#fff" }}>
+              <li key={row.id} className="up-stat-row" style={{ border: "1px solid #ead8f0", borderRadius: 16, padding: "10px 14px", background: "#fff" }}>
                 <span style={{ overflowWrap: "anywhere", fontWeight: 600 }}>{alertLabel(row, categories, cities)}</span>
-                <button type="button" className={styles.ghost} disabled={busy} onClick={() => void remove(row.id)} aria-label={`Remove alert ${alertLabel(row, categories, cities)}`}>
+                <button type="button" className="up-btn-ghost" disabled={busy} onClick={() => void remove(row.id)} aria-label={`Remove alert ${alertLabel(row, categories, cities)}`}>
                   Remove
                 </button>
               </li>
@@ -87,36 +86,36 @@ export function AlertsPanel({
         )}
       </section>
 
-      <section aria-labelledby="alerts-new" className={`${styles.panel} ${styles.glass}`}>
-        <h2 id="alerts-new" className={styles.h2}>Save a new search</h2>
-        <form onSubmit={create} className={styles.filters} style={{ marginTop: 12 }}>
-          <label className={styles.label}>
+      <section aria-labelledby="alerts-new" className={`up-panel up-glass`}>
+        <h2 id="alerts-new" className="up-h2">Save a new search</h2>
+        <form onSubmit={create} className="up-filters" style={{ marginTop: 12 }}>
+          <label className="up-label">
             Words
-            <input name="q" maxLength={120} placeholder="Any words" className={styles.select} />
+            <input name="q" maxLength={120} placeholder="Any words" className="up-select" />
           </label>
-          <label className={styles.label}>
+          <label className="up-label">
             Category
-            <select name="category" className={styles.select} defaultValue="">
+            <select name="category" className="up-select" defaultValue="">
               <option value="">All categories</option>
               {categories.map((option) => (
                 <option key={option.slug} value={option.slug}>{option.name}</option>
               ))}
             </select>
           </label>
-          <label className={styles.label}>
+          <label className="up-label">
             City
-            <select name="city" className={styles.select} defaultValue="">
+            <select name="city" className="up-select" defaultValue="">
               <option value="">All cities</option>
               {cities.map((option) => (
                 <option key={option.slug} value={option.slug}>{option.name}</option>
               ))}
             </select>
           </label>
-          <button type="submit" className={styles.cta} disabled={busy || !email}>
+          <button type="submit" className="up-btn" disabled={busy || !email}>
             Save search
           </button>
         </form>
-        <p aria-live="polite" className={styles.muted} style={{ marginTop: 12 }}>{note}</p>
+        <p aria-live="polite" className="up-muted" style={{ marginTop: 12 }}>{note}</p>
       </section>
     </div>
   );

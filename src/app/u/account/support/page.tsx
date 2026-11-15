@@ -1,6 +1,10 @@
-import { SupportList } from "@/components/support/SupportList";
-import { Container } from "@/components/ui/Container";
+import { cookies } from "next/headers";
+import { SupportPanel } from "@/components/buyer/SupportPanel";
+import { SESSION_COOKIE } from "@/server/auth/http";
+import { loadPanelSummary } from "@/server/notifications/summary";
 import { pageMetadata } from "@/lib/ui/meta";
+
+export const dynamic = "force-dynamic";
 
 export const metadata = pageMetadata({
   title: "Support | Tharkoo",
@@ -9,14 +13,7 @@ export const metadata = pageMetadata({
   index: false,
 });
 
-export default function Page() {
-  return (
-    <Container className="py-8">
-      <h1 className="t-h1">Support</h1>
-      <p className="t-body mt-2 text-muted">Ask us about coins and payments, your ads, your account or a problem you found.</p>
-      <div className="mt-6">
-        <SupportList />
-      </div>
-    </Container>
-  );
+export default async function Page() {
+  const summary = await loadPanelSummary((await cookies()).get(SESSION_COOKIE)?.value);
+  return <SupportPanel summary={summary} />;
 }

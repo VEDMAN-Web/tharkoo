@@ -30,8 +30,8 @@ test.describe("3 Account", () => {
     // Settings (the profile screen): shows the email, password change sends a reset email.
     await page.goto("/u/account/edit-account/");
     await expect(page.getByText(email, { exact: false })).toBeVisible();
-    await page.getByRole("button", { name: "CHANGE PASSWORD" }).click();
-    await expect(page.getByRole("button", { name: /We have sent you an email/ })).toBeVisible();
+    await page.getByRole("button", { name: "Change password" }).click();
+    await expect(page.getByRole("button", { name: "Email sent" })).toBeVisible();
 
     // Other account screens load for a signed-in user.
     for (const path of ["/u/account/ads/", "/u/account/credits/", "/u/account/coupons/", "/u/account/saved/", "/u/account/kyc/"]) {

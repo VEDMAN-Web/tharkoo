@@ -52,3 +52,12 @@ test.describe("H7.6 user panel: signed in", () => {
     if (isPhone(page)) expect(await hasHorizontalScroll(page)).toBe(false);
   });
 });
+
+test.describe("H7.17 after-login pages: no CSS class resolves to undefined", () => {
+  test("every /u/account page renders real class names", async ({ page }) => {
+    for (const path of ["/u/account/dashboard/", "/u/account/messages/", "/u/account/notifications/", "/u/account/alerts/", "/u/account/saved/", "/u/account/credits/", "/u/account/support/", "/u/account/edit-account/"]) {
+      await page.goto(path);
+      await expect(page.locator('[class~="undefined"]'), path).toHaveCount(0);
+    }
+  });
+});

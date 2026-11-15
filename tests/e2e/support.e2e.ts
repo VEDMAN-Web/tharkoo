@@ -37,7 +37,7 @@ test("support ticket: create, reply, staff reply and note, close, reopen", async
 
   // 1. Empty list, then create a ticket with a screenshot.
   await page.goto("/u/account/support/");
-  await expect(page.getByRole("heading", { level: 1, name: "Support" })).toBeVisible();
+  await expect(page.getByRole("heading", { level: 1, name: "Help and support" })).toBeVisible();
   await page.getByRole("link", { name: "New ticket" }).first().click();
   await page.waitForURL("**/u/account/support/new/");
   await page.locator("#support-topic").selectOption("my_ads");

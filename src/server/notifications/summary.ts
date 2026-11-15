@@ -4,6 +4,7 @@ import { unreadCount } from "@/server/chat/service";
 import { getCategories, getCities, getCreditPacks } from "@/lib/queries";
 import { unreadForOwner } from "@/server/support/tickets";
 import { connectDb } from "@/lib/db";
+import { accountName } from "@/lib/account-name";
 
 /**
  * H7.6: what the user panel shell shows: coins, unread counts and the first name for the greeting.
@@ -37,7 +38,7 @@ export async function loadPanelSummary(token: string | undefined): Promise<Panel
     signedIn: true,
     userId,
     email,
-    displayName: session.user.displayName || email.split("@")[0] || "there",
+    displayName: accountName(session.user.displayName, email),
     balance,
     unreadChat,
     unreadSupport,
