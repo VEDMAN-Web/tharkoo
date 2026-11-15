@@ -105,10 +105,31 @@ describe("email login codes", () => {
     expect(await Session.countDocuments({ userId: user._id })).toBe(1);
   });
 
-  it("answers the same way for an unknown address but sends nothing", async () => {
+  it("sends a code to an unknown address too, so a new person can sign up with it", async () => {
     expect(await sendEmailLoginCode({ email: "nobody@example.com", ip })).toEqual({ ok: true });
-    expect(mail.sent).toHaveLength(0);
-    expect(await EmailLoginChallenge.countDocuments({})).toBe(0);
+    expect(mail.sent).toHaveLength(1);
+    expect(mail.sent[0]?.to).toBe("nobody@example.com");
+    expect(await User.countDocuments({ email: "nobody@example.com" })).toBe(0);
+  });
+
+  it("creates a new account with no password and no date of birth on the first correct code", async () => {
+    await sendEmailLoginCode({ email: "New.Person@Example.com", ip });
+    const result = await verifyEmailLoginCode({ email: "new.person@example.com", code: await latestCode(), ip, requestId: "t-new" });
+    expect(result.user.email).toBe("new.person@example.com");
+    expect(result.user.seller).toBeNull();
+    expect(result.user.dateOfBirth).toBeNull();
+    expect(result.user.attestedAdultAt).toBeNull();
+    const created = await User.findOne({ email: "new.person@example.com" }).select("+passwordHash").lean();
+    expect(created?.passwordHash).toBeUndefined();
+    expect(created?.emailVerifiedAt).toBeInstanceOf(Date);
+    expect(await AuditEvent.countDocuments({ action: "auth.sign_up.code_account" })).toBe(1);
+  });
+
+  it("a passwordless account never matches a password, even the placeholder text", async () => {
+    await sendEmailLoginCode({ email: "no-password@example.com", ip });
+    await verifyEmailLoginCode({ email: "no-password@example.com", code: await latestCode(), ip, requestId: "t-nopw" });
+    await expect(loginUser({ email: "no-password@example.com", password: "placeholder-password", ip })).rejects.toBeInstanceOf(UnauthorizedError);
+    await expect(loginUser({ email: "no-password@example.com", password, ip })).rejects.toBeInstanceOf(UnauthorizedError);
   });
 
   it("refuses to report a code as sent when delivery fails, and stores no live code", async () => {
@@ -214,6 +235,15 @@ describe("code-only login switch", () => {
     await sendEmailLoginCode({ email: user.email, ip });
     const result = await verifyEmailLoginCode({ email: user.email, code: await latestCode(), ip, requestId: "t-code" });
     expect(result.user.id).toBe(user.id);
+  });
+
+  it("with the switch on, a new person can still sign up with a code", async () => {
+    const admin = await person("root2@example.com", ["superadmin"]);
+    await setCodeOnlyLogin({ actorId: admin.id, roles: admin.roles, enabled: true, requestId: "t-on2" });
+    await sendEmailLoginCode({ email: "code-signup@example.com", ip });
+    const result = await verifyEmailLoginCode({ email: "code-signup@example.com", code: await latestCode(), ip, requestId: "t-cs" });
+    expect(result.user.email).toBe("code-signup@example.com");
+    await setCodeOnlyLogin({ actorId: admin.id, roles: admin.roles, enabled: false, requestId: "t-off2" });
   });
 
   it("with the switch off, the old password login still works for users", async () => {

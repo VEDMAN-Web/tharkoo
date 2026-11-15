@@ -36,13 +36,13 @@ async function ads(categoryId: Types.ObjectId, cityId: Types.ObjectId, subcatego
 }
 
 describe("sub-category sitemap", () => {
-  it("lists a hub with 5 active ads and leaves out one with 4", async () => {
+  it("lists a hub with 3 active ads and leaves out one with 2", async () => {
     const cat = await Category.create({ slug: "services", name: "Services", enabled: true, fields: [] });
     const city = await Location.create({ type: "city", slug: "pune", name: "Pune", enabled: true });
     const full = await Subcategory.create({ categoryId: cat._id, slug: "plumbers", name: "Plumbers" });
     const thin = await Subcategory.create({ categoryId: cat._id, slug: "tutors", name: "Tutors" });
-    await ads(cat._id, city._id, full._id, 5);
-    await ads(cat._id, city._id, thin._id, 4);
+    await ads(cat._id, city._id, full._id, 3);
+    await ads(cat._id, city._id, thin._id, 2);
     const entries = await subcategorySitemapEntries((path) => `https://example.test${path}`);
     expect(entries).toHaveLength(1);
     expect(entries[0].loc).toContain("/services/pune/plumbers");

@@ -4,6 +4,7 @@ import { siteUrl } from "@/lib/utils";
 import { blogPath, categoriesPath, categoryPath, citiesPath, cmsPath, contactPath, helpPath, howItWorksPath, placePath, prohibitedPath, safetyPath } from "@/lib/urls";
 import { Listing, Location, Page } from "@/server/models";
 import { getPaths } from "@/server/urls/service";
+import { subcategorySitemapEntries } from "@/server/seo/subcategory-sitemap";
 import { isCityAlias } from "@/lib/seo/district-alias";
 import { districtMinimum, getIndexing, hubMinimum, isCategoryOn } from "@/server/seo/indexing";
 
@@ -152,6 +153,9 @@ export async function shardEntries(shard: SitemapShard): Promise<SitemapEntry[]>
         const cat = categories.find((item) => item.slug === row.category);
         if (cat && row.n >= hubMinimum(indexing, cat, row.city)) urls.push({ loc: loc(placePath(row.category, row.city)), lastmod: stamp(row.last) });
       }
+    }
+    if (shard === "districts") {
+      for (const entry of await subcategorySitemapEntries(loc)) urls.push({ loc: entry.loc, lastmod: entry.lastmod ?? stamp() });
     }
     return urls;
   }

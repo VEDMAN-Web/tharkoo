@@ -31,6 +31,10 @@ import { fallbackLanding, mergeLanding, visibleHeading, type LandingCopy } from 
 import { isCityAlias } from "@/lib/seo/district-alias";
 import { SubcategoryChips } from "../SubcategoryChips";
 import { loadCardWidth } from "@/server/listings/card-width";
+import { newDesignOn } from "@/server/site-links/new-design";
+import { readShellConfig } from "@/server/site-links/shell-config";
+import { ListingBand } from "@/components/new/ListingBand";
+import { bandImageFor } from "@/components/new/band-image";
 
 type Props = {
   params: Promise<{ category: string; location: string }>;
@@ -176,10 +180,22 @@ export default async function LocationPage({ params, searchParams }: Props) {
     ? new Date(newest).toLocaleDateString("en-IN", { day: "numeric", month: "long", year: "numeric" })
     : undefined;
 
-  const layout = await resolveListingLayout({ path: canonicalPath, category: cat.slug || category, vars });
+  const [layout, newDesign] = await Promise.all([resolveListingLayout({ path: canonicalPath, category: cat.slug || category, vars }), newDesignOn()]);
+  // H7.4: the New design title band (image, search bar and chips) replaces the chips that sit under the list.
+  const shell = newDesign ? await readShellConfig() : null;
+  const citySlug = loc.slug || location;
+  const categorySlug = cat.slug || category;
 
   return (
     <>
+    {shell ? (
+      <ListingBand
+        categoryName={cat.name!}
+        cityName={loc.name!}
+        image={bandImageFor(shell, categorySlug, citySlug)}
+        chips={loc.kind === "city" ? <SubcategoryChips category={categorySlug} city={citySlug} /> : undefined}
+      />
+    ) : null}
     <div data-card-width={cardWidth}>
     <ListingPageView
       layout={layout}
@@ -214,7 +230,7 @@ export default async function LocationPage({ params, searchParams }: Props) {
       verified={sp.verified === "1"}
     />
     </div>
-    {loc.kind === "city" ? <SubcategoryChips category={cat.slug || category} city={loc.slug || location} /> : null}
+    {loc.kind === "city" && !newDesign ? <SubcategoryChips category={cat.slug || category} city={loc.slug || location} /> : null}
     </>
   );
 }

@@ -100,6 +100,7 @@ async function activeCityCounts(): Promise<Map<string, number>> {
 
 /** Every enabled country with its cities and live ad counts. Cached briefly. */
 export async function loadCountryDirectory(): Promise<DirectoryCountry[]> {
+  await connectDb();
   return cached(
     "locations:country-directory",
     60_000,
@@ -170,6 +171,7 @@ export function buildCountryPage(
 
 /** Country page data for /countries/<slug>/. Null when the country is missing or hidden. */
 export async function loadCountryPage(countrySlug: string): Promise<DirectoryCountryPage | null> {
+  await connectDb();
   return cached(
     `locations:country-page:${countrySlug}`,
     60_000,

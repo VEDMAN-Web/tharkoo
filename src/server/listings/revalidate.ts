@@ -1,4 +1,5 @@
 import { Location } from "@/server/models";
+import { connectDb } from "@/lib/db";
 
 interface PublishedListing {
   slug?: string | null;
@@ -8,6 +9,7 @@ interface PublishedListing {
 
 /** Every public page that shows a newly published ad: home, category, city, district and the ad itself. */
 export async function listingPagePaths(listing: PublishedListing, categorySlug?: string | null) {
+  await connectDb();
   const paths = new Set<string>(["/"]);
   if (listing.slug) paths.add(`/ad/${listing.slug}/`);
   if (categorySlug) {
@@ -28,6 +30,7 @@ export async function listingPagePaths(listing: PublishedListing, categorySlug?:
  * the 60 second revalidate. Safe outside a Next request (scripts, unit tests): it then does nothing.
  */
 export async function revalidateListingPages(listing: PublishedListing, categorySlug?: string | null) {
+  await connectDb();
   try {
     const { refreshPublicCache } = await import("@/lib/cache");
     await refreshPublicCache();

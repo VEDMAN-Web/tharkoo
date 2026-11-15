@@ -54,9 +54,13 @@ test.describe("3 Account", () => {
     expect(baseURL).toBeTruthy();
   });
 
-  test("wrong password shows an error, not a session", async ({ page }) => {
-    await loginUi(page, "nobody-" + uniqueEmail("x"), "WrongPass1!");
-    await expect(page).toHaveURL(/\/u\/login\//);
+  test("wrong password is refused and makes no session", async ({ page, baseURL }) => {
+    // The login page is a code sheet now (H7.2), so the wrong password is tried against the password API directly.
+    const res = await page.request.post("/api/auth/login", {
+      headers: originHeaders(baseURL!, "/u/login/"),
+      data: { email: "nobody-" + uniqueEmail("x"), password: "WrongPass1!" },
+    });
+    expect(res.ok()).toBe(false);
     const me = await page.request.get("/api/auth/me");
     expect(me.status()).toBe(401);
   });

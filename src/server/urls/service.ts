@@ -68,10 +68,12 @@ export async function getUrlTable() {
 type StoredRedirect = { _id?: unknown; fromPath: string; toPath: string; hits?: number };
 
 export async function getPaths() {
+  await connectDb();
   return (await getUrlTable()).paths;
 }
 
 export async function decideRequest(pathname: string) {
+  await connectDb();
   const table = await getUrlTable();
   return decidePath(pathname, table.paths, table.rules);
 }
@@ -89,6 +91,7 @@ async function rulesNow() {
 }
 
 export async function saveRedirect(from: string, to: string) {
+  await connectDb();
   const source = cleanPath(from.includes("*") ? from.replace(/\*$/, "") : from);
   const storedFrom = from.includes("*") ? `${source}*` : source;
   const dest = cleanPath(to.includes("*") ? to.replace(/\*$/, "") : to);
@@ -132,6 +135,7 @@ export function redirectsToCsv(rows: { fromPath?: string; toPath?: string; enabl
 }
 
 export async function importRedirectCsv(text: string) {
+  await connectDb();
   const lines = text.split(/\r?\n/).map((line) => line.trim()).filter(Boolean);
   let count = 0;
   for (const line of lines) {
@@ -448,6 +452,7 @@ export async function planOverrideCsv(csv: string): Promise<CsvPlan> {
 
 /** All or nothing: refuses to write when any row has an error. */
 export async function applyOverrideCsv(csv: string) {
+  await connectDb();
   const plan = await planOverrideCsv(csv);
   if (plan.fileErrors.length) throw new ValidationError(plan.fileErrors[0], { file: plan.fileErrors });
   const bad = plan.rows.filter((row) => row.status === "error");

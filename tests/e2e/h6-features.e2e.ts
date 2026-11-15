@@ -41,17 +41,16 @@ async function sendCoinEvent(baseURL: string, event: Record<string, unknown>, { 
   return result;
 }
 
-/** Fills step 1 of the post-ad form (the same fields the advertiser suite uses). */
+/** Fills steps 1 and 2 of the New design post-ad form (category, then details) and continues to the photos step. */
 async function fillAdInformation(page: Page, title: string) {
-  await page.locator("#category").selectOption({ label: "Jobs" });
+  await page.locator(".tkp-tile", { hasText: "Jobs" }).click();
+  await page.locator("[data-tk=go-on]").click();
   await page.locator("#city").selectOption({ label: "Mumbai" });
   await page.locator("#nickname").fill("Asha");
   await page.locator("#role").fill("Office assistant");
   await page.locator("#title").fill(title);
   await page.locator("#text").fill("A weekday office role with a clear description of the work and the hours.");
-  await page.locator("#phone").fill("9876543210");
-  await page.locator("#consent-terms").check();
-  await page.locator("#consent-adult").check();
+  await page.locator("[data-tk=go-on]").click();
 }
 
 test.describe("H6.2 categories and sub-category chips", () => {
@@ -87,9 +86,9 @@ test.describe("H6.3 video rule on the post form", () => {
     await loginUi(page, email, undefined, "/u/post-insert/");
     await page.waitForURL(/\/u\/post-insert\//);
     await fillAdInformation(page, `E2E video rule ${Date.now()}`);
-    await page.locator("[data-tk=go-on]").click();
     await page.locator("[data-tk=photo-input]").waitFor({ state: "attached" });
-    await expect(page.getByText("Videos: up to 2, max 10 MB and 30 seconds each.", { exact: true })).toBeVisible();
+    // H6.18 wording: one limit of 10 for photos and videos together.
+    await expect(page.getByText("Videos: max 10 MB and 30 seconds each. Photos and videos: up to 10 in total.", { exact: true })).toBeVisible();
   });
 });
 

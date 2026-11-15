@@ -32,6 +32,7 @@ export function AdDetail({
   shareUrl,
   heading,
   tour,
+  peopleAd = false,
 }: {
   ad: ListingDoc;
   categoryName: string;
@@ -42,6 +43,8 @@ export function AdDetail({
   heading?: string;
   /** Set only when the server says a live video tour can be requested on this ad (H6.5). */
   tour?: { listingId: string; coins: number } | null;
+  /** H7.5: people category (server check). No Call button. */
+  peopleAd?: boolean;
 }) {
   const title = heading || displayTitle(ad.title) || "Listing";
   const videoVerified = videoVerifiedLabel(ad.videoVerifiedUntil);
@@ -62,7 +65,7 @@ export function AdDetail({
   const nick = ad.displayName && ad.displayName !== title ? ad.displayName : "";
 
   return (
-    <ContactProvider listingSlug={ad.slug} listingId={listingId} tour={tour}>
+    <ContactProvider listingSlug={ad.slug} listingId={listingId} tour={tour} peopleAd={peopleAd}>
       <div className="tk-ad">
         <TrackView ad={ad} />
         <CitySync name={city} slug={ad.citySlug} />

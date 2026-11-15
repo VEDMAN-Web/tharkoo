@@ -2,6 +2,8 @@ import Link from "next/link";
 import { Dashboard } from "@/components/vendor/VendorScreens";
 import { UnreadBadge } from "@/components/chat/UnreadBadge";
 import { SupportNotice } from "@/components/support/SupportNotice";
+import { PanelHomePage } from "@/components/buyer/PanelHomePage";
+import { newDesignOn } from "@/server/site-links/new-design";
 import { pageMetadata } from "@/lib/ui/meta";
 
 export const metadata = pageMetadata({
@@ -13,6 +15,7 @@ export const metadata = pageMetadata({
 
 export default async function Page({ searchParams }: { searchParams: Promise<{ locked?: string }> }) {
   const sp = await searchParams;
+  if (await newDesignOn()) return <PanelHomePage />;
   return (
     <>
       <div className="tk-container" style={{ paddingTop: 12 }}>

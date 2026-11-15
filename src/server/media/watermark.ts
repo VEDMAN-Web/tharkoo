@@ -57,6 +57,7 @@ export function isAdFolder(folder: string) {
 
 /** The incoming transformation for an upload into this folder, or null when no mark applies. */
 export async function watermarkTransformationFor(folder: string): Promise<string | null> {
+  await connectDb();
   if (!isAdFolder(folder)) return null;
   const settings = await readWatermarkSettings();
   return settings.enabled ? cloudinaryWatermarkTransformation(settings) : null;
@@ -103,6 +104,8 @@ interface SharpLike {
   toBuffer(options: { resolveWithObject: true }): Promise<{ data: Buffer; info: { width: number; height: number } }>;
   composite(layers: { input: Buffer; gravity: string }[]): SharpLike;
   toFormat(format: "jpeg" | "png" | "webp"): SharpLike;
+  resize(options: { width: number; height: number; fit: "inside"; withoutEnlargement: true }): SharpLike;
+  png(): SharpLike;
 }
 
 function formatOf(contentType: string): "jpeg" | "png" | "webp" {
@@ -116,7 +119,12 @@ export async function watermarkLocalPhoto(data: Buffer, contentType: string, set
   const sharp = await loadSharp();
   const base = await sharp(data).rotate().toBuffer({ resolveWithObject: true });
   const { svg, gravity } = localWatermarkSvg(base.info.width, settings);
-  const out = sharp(base.data).composite([{ input: Buffer.from(svg), gravity }]).toFormat(formatOf(contentType));
+  // H6.19: a very small photo cannot hold the full mark, so the mark is shrunk to fit and the composite never overflows.
+  const overlay = await sharp(Buffer.from(svg))
+    .resize({ width: base.info.width, height: base.info.height, fit: "inside", withoutEnlargement: true })
+    .png()
+    .toBuffer();
+  const out = sharp(base.data).composite([{ input: overlay, gravity }]).toFormat(formatOf(contentType));
   return out.toBuffer();
 }
 
@@ -125,6 +133,7 @@ export const LOCAL_VIDEO_WATERMARK_MESSAGE =
   "Videos need Cloudinary on this server while the watermark is on. Turn the watermark off in Settings, or add the Cloudinary settings.";
 
 export async function assertLocalVideoAllowed() {
+  await connectDb();
   const settings = await readWatermarkSettings();
   if (settings.enabled) throw new PolicyViolationError(LOCAL_VIDEO_WATERMARK_MESSAGE);
 }
@@ -137,6 +146,7 @@ export async function prepareLocalAdFile(
   kind: "image" | "video",
   file: { type: string; data: Buffer },
 ): Promise<{ data: Buffer; watermarked: boolean }> {
+  await connectDb();
   const settings = await readWatermarkSettings();
   if (!settings.enabled) return { data: file.data, watermarked: false };
   if (kind === "video") {

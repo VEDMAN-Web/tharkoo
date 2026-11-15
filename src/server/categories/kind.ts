@@ -1,5 +1,6 @@
 import { Category } from "@/server/models";
 import { CATEGORY_KINDS, type CategoryKind } from "@/server/models/catalog";
+import { connectDb } from "@/lib/db";
 
 /**
  * Slugs that are people listings (dating, friendship, personals and similar). Live video tours can never be on for them.
@@ -57,6 +58,7 @@ interface RawCategory {
  * Other categories only get a kind when they have none. Categories that still have no kind are listed for an admin to set.
  */
 export async function repairCategoryKinds(): Promise<{ updated: number; withoutKind: string[] }> {
+  await connectDb();
   const rows = (await Category.collection
     .find({}, { projection: { slug: 1, kind: 1, fields: 1, videoTourEnabled: 1 } })
     .toArray()) as unknown as RawCategory[];

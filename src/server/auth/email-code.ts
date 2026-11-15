@@ -5,9 +5,10 @@ import { AuditRepository } from "@/server/audit";
 import { hashToken } from "@/server/auth/http";
 import { OTP_MAX_ATTEMPTS, OTP_SENDS_PER_WINDOW, OTP_WINDOW_MS } from "@/server/auth/phone";
 import { consumeRateLimit } from "@/server/auth/rate-limit";
-import { createSession } from "@/server/auth/service";
-import { InternalError, UnauthorizedError, ValidationError } from "@/server/http";
+import { createCodeAccount, createSession } from "@/server/auth/service";
+import { InternalError, UnauthorizedError, ValidationError, isDuplicateKey } from "@/server/http";
 import { deliverLoginCodeEmail, loginCodeDelivery } from "@/server/mailer";
+import { smsDeliverable } from "@/server/auth/otp";
 import { User } from "@/server/models";
 import { registerModel } from "@/server/models/register";
 import { hashIp, safeEqual, sha256 } from "@/server/shared/crypto";
@@ -71,8 +72,8 @@ export async function sendEmailLoginCode(input: { email: string; ip: string }): 
   if (!byEmail.ok || !byIp.ok) {
     return { ok: false, retryAfter: Math.max(byEmail.retryAfter, byIp.retryAfter) };
   }
-  const user = await User.findOne({ email, status: "active" }).select("_id").lean();
-  if (!user) return { ok: true };
+  // The code goes to any address, known or new: a new address signs up by proving it with this code (H7.2b).
+  // The answer is the same either way, so the endpoint does not reveal which addresses have accounts.
   const code = String(randomInt(100000, 1000000));
   const challenge = await EmailLoginChallenge.create({
     email,
@@ -124,10 +125,21 @@ export async function verifyEmailLoginCode(input: {
   }
   const used = await EmailLoginChallenge.updateOne({ _id: challenge._id, consumedAt: null }, { $set: { consumedAt: new Date() } });
   if (used.modifiedCount !== 1) throw invalidCode();
-  const user = await User.findOne({ email, status: "active" });
-  if (!user) throw invalidCode();
+  const { user, created } = await userForCode(email);
+  if (user.status !== "active") throw invalidCode();
   // The code proves the address, so a legacy account gets its email marked verified here.
   if (!user.emailVerifiedAt) await User.updateOne({ _id: user._id }, { $set: { emailVerifiedAt: new Date() } });
+  if (created) {
+    await audit.append({
+      actorId: user._id,
+      actorType: "user",
+      action: "auth.sign_up.code_account",
+      targetType: "user",
+      targetId: user._id.toString(),
+      requestId: input.requestId,
+      ipHash: hashIp(input.ip),
+    });
+  }
   await audit.append({
     actorId: user._id,
     actorType: "user",
@@ -140,7 +152,25 @@ export async function verifyEmailLoginCode(input: {
   return createSession(user, { userAgent: input.userAgent, ip: input.ip, existingToken: input.existingToken });
 }
 
-/** Admin dashboard warning. Shown in production only when no email provider can send login codes. SMS is still a stub. */
+/** The account for a proven address. A new address gets a new account with no password. Two codes racing is handled. */
+async function userForCode(email: string) {
+  const existing = await User.findOne({ email });
+  if (existing) return { user: existing, created: false };
+  try {
+    return { user: await createCodeAccount(email), created: true };
+  } catch (error) {
+    if (!isDuplicateKey(error)) throw error;
+    const raced = await User.findOne({ email });
+    if (!raced) throw error;
+    return { user: raced, created: false };
+  }
+}
+
+/**
+ * Admin dashboard warning (H7.2b). Shown when no code can leave the server: no email provider in production and no
+ * SMS provider that can deliver. Off production, the dev log counts as a delivery, so no warning there.
+ */
 export function loginCodeWarning(): string | null {
-  return loginCodeDelivery() === "unavailable" ? CODE_CANNOT_BE_SENT : null;
+  const emailReady = loginCodeDelivery() !== "unavailable";
+  return emailReady || smsDeliverable() ? null : CODE_CANNOT_BE_SENT;
 }

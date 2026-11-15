@@ -24,6 +24,7 @@ export async function codeOnlyLoginEnabled(): Promise<boolean> {
 
 /** Superadmin only. Writes the flag and an audit entry with the value before and after. */
 export async function setCodeOnlyLogin(input: { actorId: string; roles: readonly string[]; enabled: boolean; requestId: string }) {
+  await connectDb();
   if (!input.roles.includes("superadmin")) throw new ForbiddenError("Only a superadmin can change this setting");
   const before = await codeOnlyLoginEnabled();
   await FeatureFlag.updateOne(

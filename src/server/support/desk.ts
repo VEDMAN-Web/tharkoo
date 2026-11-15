@@ -7,6 +7,7 @@ import { SupportTicket, TicketMessage } from "@/server/models/support";
 import { DESK_ROLES, SUPPORT_PAGE_SIZE, type SupportStatus } from "@/server/support/constants";
 import { assertDeskActor, canWorkDesk, type DeskActor } from "@/server/support/access";
 import { storeScreenshots, type Screenshot } from "@/server/support/attachments";
+import { notifyGuestOfReply } from "@/server/support/guest";
 import { notifyOwnerOfReply } from "@/server/support/notify";
 import { assertObjectId, isClosed, messageView, summarize, type MessageRow, type TicketRow } from "@/server/support/records";
 import type { QueueQuery, ReplyInput } from "@/server/support/schemas";
@@ -39,6 +40,12 @@ function queueMatch(query: QueueQuery, actor: DeskActor) {
 }
 
 /** Queue: customers waiting for support come first, then the oldest customer message. */
+/** Name shown for a ticket's owner. Guests have no account, so the name they gave is shown. */
+function ownerLabel(row: TicketRow, names: Map<string, string>): string {
+  if (row.ownerKind === "guest") return row.guestName || "Guest";
+  return (row.ownerId && names.get(row.ownerId.toString())) || "Member";
+}
+
 export async function deskQueue(actor: DeskActor | null, query: QueueQuery) {
   assertDeskActor(actor);
   await connectDb();
@@ -54,10 +61,13 @@ export async function deskQueue(actor: DeskActor | null, query: QueueQuery) {
       { $limit: SUPPORT_PAGE_SIZE },
     ]),
   ]);
-  const names = await namesById([...rows.map((row) => row.ownerId), ...rows.flatMap((row) => (row.assigneeId ? [row.assigneeId] : []))]);
+  const names = await namesById([
+    ...rows.flatMap((row) => (row.ownerId ? [row.ownerId] : [])),
+    ...rows.flatMap((row) => (row.assigneeId ? [row.assigneeId] : [])),
+  ]);
   const items: QueueItem[] = rows.map((row) => ({
     ...summarize(row, row.unreadForStaff),
-    ownerName: names.get(row.ownerId.toString()) ?? "Member",
+    ownerName: ownerLabel(row, names),
     assigneeName: row.assigneeId ? (names.get(row.assigneeId.toString()) ?? "Staff") : "",
     waitingSince: row.lastCustomerMessageAt.toISOString(),
   }));
@@ -85,12 +95,14 @@ export async function deskStaff() {
 
 /** Full thread for staff, internal notes included. Opening it clears the staff unread mark and is audited. */
 export async function deskThread(actor: DeskActor | null, ticketId: string, requestId: string) {
+  await connectDb();
   assertDeskActor(actor);
   const ticket = await loadTicket(ticketId);
   const rows = (await TicketMessage.find({ ticketId: ticket._id }).sort({ createdAt: 1, _id: 1 }).limit(500).lean()) as MessageRow[];
-  const owner = await User.findById(ticket.ownerId)
-    .select("displayName email")
-    .lean<{ displayName?: string; email?: string } | null>();
+  // Guest tickets have no account: staff see the name and the contact the guest gave.
+  const owner = ticket.ownerKind === "guest"
+    ? { displayName: ticket.guestName || "Guest", email: ticket.guestEmail || "", phone: ticket.guestPhone || "" }
+    : await User.findById(ticket.ownerId).select("displayName email").lean<{ displayName?: string; email?: string; phone?: string } | null>();
   if (ticket.unreadForStaff) await SupportTicket.updateOne({ _id: ticket._id }, { $set: { unreadForStaff: false } });
   await audit.append({
     actorId: actor.id,
@@ -102,7 +114,7 @@ export async function deskThread(actor: DeskActor | null, ticketId: string, requ
   });
   return {
     ticket: summarize(ticket, false),
-    owner: { name: owner?.displayName || "Member", email: owner?.email || "" },
+    owner: { name: owner?.displayName || "Member", email: owner?.email || "", phone: owner?.phone || "" },
     messages: rows.map(messageView),
     staff: await deskStaff(),
   };
@@ -128,6 +140,7 @@ export async function deskReply(
   requestId: string,
   now = new Date(),
 ) {
+  await connectDb();
   assertDeskActor(actor);
   const ticket = await loadTicket(ticketId);
   if (!input.internal && isClosed(ticket)) throw new ConflictError("Reopen this ticket before replying to the customer.");
@@ -150,7 +163,12 @@ export async function deskReply(
       { _id: ticket._id },
       { $set: { status: "waiting_for_user", lastMessageAt: now, unreadForOwner: true, unreadForStaff: false } },
     );
-    await notifyOwnerOfReply({ ownerId: ticket.ownerId.toString(), ticketId: ticket._id.toString(), number: ticket.number });
+    if (ticket.ownerKind === "guest") {
+      // H7.1: a guest is told by email only, and only when an address was given. Otherwise staff reach them on the contact in the desk.
+      if (ticket.guestEmail) await notifyGuestOfReply({ ticketId: ticket._id.toString(), number: ticket.number, email: ticket.guestEmail, now });
+    } else if (ticket.ownerId) {
+      await notifyOwnerOfReply({ ownerId: ticket.ownerId.toString(), ticketId: ticket._id.toString(), number: ticket.number });
+    }
   }
   await audit.append({
     actorId: actor.id,
@@ -171,6 +189,7 @@ export async function deskSetStatus(
   status: Exclude<SupportStatus, "closed">,
   requestId: string,
 ) {
+  await connectDb();
   assertDeskActor(actor);
   const ticket = await loadTicket(ticketId);
   if (isClosed(ticket)) throw new ConflictError("Reopen this ticket before changing its status.");
@@ -199,6 +218,7 @@ async function assigneeFor(actor: DeskActor, assigneeId: string): Promise<Types.
 }
 
 export async function deskAssign(actor: DeskActor | null, ticketId: string, assigneeId: string, requestId: string) {
+  await connectDb();
   assertDeskActor(actor);
   const ticket = await loadTicket(ticketId);
   const next = await assigneeFor(actor, assigneeId);
@@ -217,6 +237,7 @@ export async function deskAssign(actor: DeskActor | null, ticketId: string, assi
 }
 
 export async function deskClose(actor: DeskActor | null, ticketId: string, requestId: string, now = new Date()) {
+  await connectDb();
   assertDeskActor(actor);
   const ticket = await loadTicket(ticketId);
   if (isClosed(ticket)) throw new ConflictError("This ticket is already closed.");
@@ -238,6 +259,7 @@ export async function deskClose(actor: DeskActor | null, ticketId: string, reque
 }
 
 export async function deskReopen(actor: DeskActor | null, ticketId: string, requestId: string) {
+  await connectDb();
   assertDeskActor(actor);
   const ticket = await loadTicket(ticketId);
   if (!isClosed(ticket)) throw new ConflictError("Only a closed ticket can be reopened.");

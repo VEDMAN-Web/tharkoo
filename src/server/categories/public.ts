@@ -4,8 +4,8 @@ import { Category, Listing, Location } from "@/server/models";
 import { Subcategory, type SubcategoryDoc } from "@/server/models/subcategory";
 import { presentRows } from "@/server/search/query";
 
-/** A sub-category page is indexable only with at least this many real active ads. */
-export const SUBCATEGORY_HUB_MINIMUM = 5;
+/** A sub-category page is indexable only with at least this many real active ads (3, same thin-page rule at every level). */
+export const SUBCATEGORY_HUB_MINIMUM = 3;
 export const SUBCATEGORY_PAGE_SIZE = 20;
 
 export interface SubcategoryView {
@@ -158,6 +158,7 @@ export async function indexableSubcategoryHubs(minimum = SUBCATEGORY_HUB_MINIMUM
  * Returns the id, or null when the category has none or nothing matches.
  */
 export async function resolveSubcategory(categoryId: string, value: string) {
+  await connectDb();
   const wanted = value.trim().toLowerCase();
   if (!wanted) return null;
   const subs = await listSubcategories(categoryId, { includeHidden: true });
@@ -166,5 +167,6 @@ export async function resolveSubcategory(categoryId: string, value: string) {
 
 /** True when the post form must ask for a sub-category in this category. */
 export async function categoryNeedsSubcategory(categoryId: string) {
+  await connectDb();
   return (await listSubcategories(categoryId)).length > 0;
 }

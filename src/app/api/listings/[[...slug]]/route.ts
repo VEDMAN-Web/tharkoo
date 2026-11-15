@@ -2,12 +2,12 @@ import { clientKey } from "@/lib/rate-limit";
 import { SESSION_COOKIE, assertOrigin, readCookie } from "@/server/auth/http";
 import { requireUser, userFromToken } from "@/server/auth/service";
 import { NotFoundError, failure, handle, parseInput, requestIdFrom, success } from "@/server/http";
+import { listOwnCards } from "@/server/listings/owner-cards";
 import {
   FreeLimitError,
   RevealLimitError,
   createDraft,
   duplicateListing,
-  listOwn,
   listVersions,
   patchListing,
   pauseListing,
@@ -88,7 +88,8 @@ async function route(request: Request, requestId: string) {
   if (method === "GET" && segments.length === 0) {
     const user = await requireUser(token);
     const query = parseInput(listingQuerySchema, Object.fromEntries(new URL(request.url).searchParams));
-    const data = await listOwn(user.user.id, query);
+    // H7.5: the vendor panel gets the card data, the tab counts and the all-time views and clicks in one call.
+    const data = await listOwnCards(user.user.id, query);
     return json(data, requestId, 200, { page: query.page, pageSize: query.pageSize, total: data.total });
   }
   if (method === "POST" && segments.length === 0) {

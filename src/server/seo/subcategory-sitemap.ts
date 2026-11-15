@@ -1,5 +1,6 @@
 import { placePath } from "@/lib/urls";
 import { indexableSubcategoryHubs, SUBCATEGORY_HUB_MINIMUM } from "@/server/categories/public";
+import { connectDb } from "@/lib/db";
 
 export interface SubcategorySitemapEntry {
   loc: string;
@@ -14,6 +15,7 @@ export async function subcategorySitemapEntries(
   toLoc: (path: string) => string,
   minimum = SUBCATEGORY_HUB_MINIMUM,
 ): Promise<SubcategorySitemapEntry[]> {
+  await connectDb();
   const hubs = await indexableSubcategoryHubs(minimum);
   return hubs.map((hub) => ({ loc: toLoc(placePath(hub.category, hub.city, hub.sub)) }));
 }

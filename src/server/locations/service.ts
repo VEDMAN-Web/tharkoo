@@ -90,6 +90,7 @@ function enabled(row: LocationRow) {
 }
 
 export async function listLocations(input: { type?: LocationLevel; parentId?: string; q?: string }) {
+  await connectDb();
   const rows = await loadLocations();
   const index = byId(rows);
   const q = input.q ? safeSearch(input.q) : "";
@@ -104,6 +105,7 @@ export async function listLocations(input: { type?: LocationLevel; parentId?: st
 }
 
 export async function childLocations(id: string) {
+  await connectDb();
   if (!Types.ObjectId.isValid(id)) return null;
   const rows = await loadLocations();
   const parent = rows.find((row) => String(row._id) === id);
@@ -128,6 +130,7 @@ function sameParent(doc: LocationRow, parentId: Types.ObjectId | null) {
 }
 
 export async function resolveLocations(slugs: string[]): Promise<ResolveResult | null> {
+  await connectDb();
   const rows = await loadLocations();
   const index = byId(rows);
   const chain: PublicLocation[] = [];
@@ -155,6 +158,7 @@ export async function resolveLocations(slugs: string[]): Promise<ResolveResult |
 }
 
 export async function locationBySlug(slug: string) {
+  await connectDb();
   const rows = await loadLocations();
   const index = byId(rows);
   const doc = rows.find(
@@ -164,6 +168,7 @@ export async function locationBySlug(slug: string) {
 }
 
 export async function cities(limit?: number) {
+  await connectDb();
   const rows = await loadLocations();
   const index = byId(rows);
   const list = rows
@@ -174,6 +179,7 @@ export async function cities(limit?: number) {
 }
 
 export async function topCities() {
+  await connectDb();
   const rows = await cities();
   const order = new Map<string, number>(TOP_CITY_SLUGS.map((slug, index) => [slug, index]));
   return rows
@@ -182,6 +188,7 @@ export async function topCities() {
 }
 
 export async function siblingCities(stateSlug: string) {
+  await connectDb();
   const rows = await loadLocations();
   const index = byId(rows);
   const state = rows.find((row) => enabled(row) && row.type === "state" && row.slug === stateSlug);
@@ -193,6 +200,7 @@ export async function siblingCities(stateSlug: string) {
 }
 
 export async function districts(citySlug: string) {
+  await connectDb();
   const rows = await loadLocations();
   const index = byId(rows);
   const city = rows.find((row) => enabled(row) && row.type === "city" && row.slug === citySlug);
@@ -204,6 +212,7 @@ export async function districts(citySlug: string) {
 }
 
 export async function states() {
+  await connectDb();
   const rows = await loadLocations();
   const index = byId(rows);
   return rows

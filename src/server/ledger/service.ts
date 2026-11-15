@@ -80,6 +80,7 @@ async function tip(account: LedgerAccount, ownerKey: string) {
 
 /** Balance of any account. user_wallet is the existing WalletEntry chain, so there is still one wallet. */
 export async function accountBalance(account: LedgerAccount, ownerKey: string) {
+  await connectDb();
   await readyLedger();
   if (account === "user_wallet") return walletBalance(ownerKey);
   return (await tip(account, ownerKey)).balance;
@@ -87,6 +88,7 @@ export async function accountBalance(account: LedgerAccount, ownerKey: string) {
 
 /** Sum of every delta ever posted. Always zero. */
 export async function trialBalance() {
+  await connectDb();
   await readyLedger();
   const rows = await LedgerTransaction.aggregate<{ total: number }>([
     { $unwind: "$lines" },
@@ -190,6 +192,7 @@ async function buildLines(moves: LedgerMove[], idempotencyKey: string) {
  * Calling again with the same idempotency key returns the first result.
  */
 export async function postTransaction(input: PostInput) {
+  await connectDb();
   assertBalanced(input.moves);
   await readyLedger();
   const moves = mergeByAccount(input.moves);

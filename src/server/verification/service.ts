@@ -34,6 +34,7 @@ export async function uploadUrl(
   input: { contentType: "image/jpeg" | "image/png" | "image/webp"; byteSize: number },
   requestId: string,
 ) {
+  await connectDb();
   assertManual();
   const signed = await signMedia(userId, { ...input, kind: "id_document" }, requestId);
   return { uploadUrl: signed.uploadUrl, assetId: signed.mediaId };
@@ -63,6 +64,8 @@ export async function submitVerification(
   if (!mongoose.isValidObjectId(userId)) throw new ValidationError("Upload was not found");
   const user = await User.findById(userId);
   if (!user) throw new UnauthorizedError("Sign in required");
+  // H7.2b: a code sign-up has no date of birth until its seller profile is saved, so the ID check waits for it.
+  if (!user.dateOfBirth) throw new VerificationRequiredError("Save your seller profile first, then send your ID");
   if (user.verificationStatus === "pending_review") throw new ConflictError("A verification is already pending");
   if (user.verificationStatus === "approved") throw new ConflictError("Verification is already approved");
   await ownIdDocument(userId, input.frontAssetId, requestId);

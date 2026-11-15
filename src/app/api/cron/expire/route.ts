@@ -9,6 +9,7 @@ import { expireDueTours } from "@/server/tours/service";
 import { repairDashes, repairDemoListingDashes } from "@/server/content/dash-repair";
 import { convertHeroLayouts } from "@/server/layout/hero-migration";
 import { ensureIdCheckSetting } from "@/server/settings/id-check";
+import { ensureNewDesignSetting } from "@/server/site-links/new-design";
 import { watermarkExistingAdMedia } from "@/server/media/watermark-migration";
 
 export const runtime = "nodejs";
@@ -41,6 +42,8 @@ async function dispatch(request: Request) {
   const heroLayouts = await convertHeroLayouts(requestId);
   // "Require ID check before posting" is stored OFF when it was never set (H6.14). Idempotent, like the hero conversion.
   const idCheck = await ensureIdCheckSetting(requestId);
+  // H7.1: the "New design" switch is stored once (on only where SITE_NOINDEX is true). Idempotent, a saved value is never changed.
+  const newDesign = await ensureNewDesignSetting(requestId);
   // H6.18: ad photos and videos uploaded before the watermark get it, a few per run. A file already marked is skipped.
   const watermark = await watermarkExistingAdMedia(requestId);
   return Response.json(
@@ -56,6 +59,7 @@ async function dispatch(request: Request) {
         demoListingDashesUpdated: demoDashes.updated,
         heroLayoutsConverted: heroLayouts.updated,
         idCheckSettingSet: idCheck.updated,
+        newDesignSettingSet: newDesign.updated,
         adMediaWatermarked: watermark.processed,
         adMediaWatermarkFailed: watermark.failed,
       },

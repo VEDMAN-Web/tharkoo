@@ -252,6 +252,7 @@ function fieldDefs(category: CategoryDoc): FieldDefinition[] {
 }
 
 export async function promoted(listing: ListingRow) {
+  await connectDb();
   if (listing.badges?.some((badge) => badge && badge !== "free")) return true;
   return Boolean(
     await PromotionOrder.exists({
@@ -392,6 +393,7 @@ export async function listOwn(userId: string, query: { status?: ListingStatus; p
 }
 
 export async function readOwned(id: string, userId: string, roles: string[]) {
+  await connectDb();
   const listing = await load(id);
   if (listing.ownerId.toString() !== userId && !isStaffRole(roles)) throw new ForbiddenError("Forbidden");
   return ownerView(listing);
@@ -446,7 +448,7 @@ async function applyBasics(
 
 async function applyDetails(
   listing: ListingRow,
-  input: { attributes?: Record<string, unknown>; price?: number | null; nickname?: string; contact?: ListingContactDoc },
+  input: { attributes?: Record<string, unknown>; price?: unknown; nickname?: string; contact?: ListingContactDoc },
 ) {
   if (input.nickname !== undefined) {
     const nickname = input.nickname.trim().slice(0, 40);
@@ -490,10 +492,11 @@ export async function patchListing(
         districtId?: string;
         localityId?: string;
       }
-    | { stage: "details"; attributes?: Record<string, unknown>; price?: number | null; nickname?: string; contact?: ListingContactDoc }
+    | { stage: "details"; attributes?: Record<string, unknown>; price?: unknown; nickname?: string; contact?: ListingContactDoc }
     | { stage: "photos"; mediaIds: string[]; coverMediaId?: string },
   requestId: string,
 ) {
+  await connectDb();
   const listing = await owned(id, userId);
   if (listing.status === "removed" || listing.status === "deleted") throw new ConflictError("Listing is removed");
   let sensitive = false;
@@ -528,6 +531,7 @@ export async function submitListing(
   attestations: { adult: true; accurate: true; rights: true },
   requestId: string,
 ) {
+  await connectDb();
   const listing = await owned(id, userId);
   assertTransition(listing.status, "active");
   if (!listing.title.trim() || !listing.description.trim() || !listing.cityId) {
@@ -551,7 +555,8 @@ export async function submitListing(
     assets.every((asset) => asset.ownerId.toString() === userId && asset.status === "cleared" && asset.kind !== "id_document");
   if (mediaIds.length + (await adVideoCount(listing._id)) > AD_MEDIA_MAX) throw new PolicyViolationError(AD_MEDIA_LIMIT_MESSAGE);
   const gate = evaluatePublishGate({
-    dateOfBirth: user.dateOfBirth,
+    // H7.2b: a code account without a seller profile has no date of birth, and the gate refuses it.
+    dateOfBirth: user.dateOfBirth ?? null,
     attestedAdult: Boolean(user.attestedAdultAt),
     verificationStatus: user.verificationStatus,
     accountStatus: user.status,
@@ -615,10 +620,12 @@ async function move(id: string, userId: string, to: ListingStatus, action: strin
 }
 
 export async function pauseListing(id: string, userId: string, requestId: string) {
+  await connectDb();
   return ownerView(await move(id, userId, "paused", "listing.pause", requestId));
 }
 
 export async function resumeListing(id: string, userId: string, requestId: string) {
+  await connectDb();
   const listing = await owned(id, userId);
   assertTransition(listing.status, "active");
   if (listing.expiresAt && listing.expiresAt.getTime() <= Date.now()) {
@@ -632,6 +639,7 @@ export async function resumeListing(id: string, userId: string, requestId: strin
 }
 
 export async function renewListing(id: string, userId: string, requestId: string) {
+  await connectDb();
   const listing = await owned(id, userId);
   if (listing.status === "expired") assertTransition("expired", "active");
   else if (listing.status !== "active" && listing.status !== "paused") {
@@ -649,6 +657,7 @@ export async function renewListing(id: string, userId: string, requestId: string
 }
 
 export async function duplicateListing(id: string, userId: string, requestId: string) {
+  await connectDb();
   const listing = await owned(id, userId);
   const copy = await Listing.create({
     ownerId: listing.ownerId,
@@ -674,11 +683,13 @@ export async function duplicateListing(id: string, userId: string, requestId: st
 }
 
 export async function removeListing(id: string, userId: string, requestId: string) {
+  await connectDb();
   await move(id, userId, "removed", "listing.remove", requestId);
   return { status: "removed" as const };
 }
 
 export async function listVersions(id: string, userId: string, roles: string[]) {
+  await connectDb();
   const listing = await load(id);
   if (listing.ownerId.toString() !== userId && !isStaffRole(roles)) throw new ForbiddenError("Forbidden");
   const versions = await ListingVersion.find({ listingId: listing._id }).sort({ version: 1 });
@@ -700,6 +711,7 @@ export async function revealContact(
   requestId: string,
   ip: string,
 ) {
+  await connectDb();
   const listing = await load(id);
   if (listing.status === "removed" || listing.status === "deleted") throw new GoneError();
   if (listing.status !== "active") throw new NotFoundError("Not found");

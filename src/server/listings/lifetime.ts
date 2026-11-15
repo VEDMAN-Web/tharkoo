@@ -1,4 +1,5 @@
 import { Site } from "@/server/models";
+import { connectDb } from "@/lib/db";
 
 const HOUR_MS = 60 * 60 * 1000;
 
@@ -20,6 +21,7 @@ export function lifetimeMs(hours: number): number {
 
 /** The lifetime in force now, read from the site settings. Used for new ads, renewals and approvals. */
 export async function adLifetimeMs(): Promise<number> {
+  await connectDb();
   const site = await Site.findOne({ key: "default" }).select("adLifetimeHours").lean<{ adLifetimeHours?: number }>();
   return lifetimeMs(site?.adLifetimeHours ?? DEFAULT_AD_LIFETIME_HOURS);
 }

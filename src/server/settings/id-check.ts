@@ -34,6 +34,7 @@ export async function idCheckRequired(): Promise<boolean> {
 
 /** Superadmin only. Writes the switch and an audit entry with the value before and after. */
 export async function setIdCheckRequired(input: { actorId: string; roles: readonly string[]; required: boolean; requestId: string }) {
+  await connectDb();
   if (!input.roles.includes("superadmin")) throw new ForbiddenError("Only a superadmin can change this setting");
   const before = await idCheckRequired();
   await Site.updateOne({ key: SITE_KEY }, { $set: { requireIdCheckToPost: input.required } }, { upsert: true });

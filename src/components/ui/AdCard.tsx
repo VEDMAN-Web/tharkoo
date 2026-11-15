@@ -14,6 +14,8 @@ import { makeT, type TextFn, type UiTextMap } from "@/lib/ui/text";
 import { videoVerifiedLabel } from "../ad/tourLabels";
 import { recordAdClick, useShownCounts, watchAdCard } from "../ad/adCountStore";
 import { AdCountsLabel } from "../ad/AdCountsLabel";
+import { useSellerStatus } from "../availability/sellerStatus";
+import { AvailabilityBadge } from "../availability/AvailabilityBadge";
 
 const TextContext = createContext<UiTextMap | undefined>(undefined);
 
@@ -37,15 +39,23 @@ function variantOf(ad: ListingDoc, featured?: boolean) {
   return "free";
 }
 
+/**
+ * H7.5: the seller's own view of a card in the vendor panel. The status chip, the ad's own shown views and clicks,
+ * and the owner actions. In owner mode the card does not count the owner's own visits or clicks.
+ */
+export type AdOwnerView = { label: string; bg: string; fg: string; views: number; clicks: number; actions?: ReactNode };
+
 export function AdCard({
   ad,
   featured,
   priority,
+  owner,
 }: {
   ad: ListingDoc;
   featured?: boolean;
   priority?: boolean;
   layout?: "row" | "tile";
+  owner?: AdOwnerView;
 }) {
   const t = useT();
   const variant = variantOf(ad, featured);
@@ -62,15 +72,19 @@ export function AdCard({
   const videoVerified = videoVerifiedLabel(ad.videoVerifiedUntil);
   const cardRef = useRef<HTMLElement>(null);
   const counts = useShownCounts(ad.slug || "");
+  const isOwner = Boolean(owner);
+  // H7.5: the seller's Online now or Away, and whether calls are allowed. The owner view does not show it.
+  const seller = useSellerStatus(isOwner ? undefined : ad.slug);
 
   useEffect(() => {
     const el = cardRef.current;
-    if (!el || !ad.slug) return;
+    if (!el || !ad.slug || isOwner) return;
     return watchAdCard(el, ad.slug);
-  }, [ad.slug]);
+  }, [ad.slug, isOwner]);
 
   /** A click on the card's own link to the ad counts as a click (H6.17). Other clicks on the card do not. */
   function onCardClick(event: React.MouseEvent<HTMLElement>) {
+    if (isOwner) return;
     const link = (event.target as Element).closest?.("a[href]");
     if (ad.slug && link && link.getAttribute("href") === href) recordAdClick(ad.slug);
   }
@@ -98,6 +112,11 @@ export function AdCard({
       data-contact={superTop ? "1" : undefined}
       onClickCapture={onCardClick}
     >
+      {seller ? (
+        <span className="tkp-card-avail">
+          <AvailabilityBadge status={seller.status} />
+        </span>
+      ) : null}
       <div className="tk-card-photo">
         <PhotoSwipe
           photos={photos}
@@ -154,9 +173,11 @@ export function AdCard({
       </a>
       {superTop ? (
         <div className="tk-circles">
-          <button type="button" className="tk-circle" aria-label={t("card.contact.call")} data-tk="call" onClick={() => reveal("phone")}>
-            <Phone size={16} color="#8A6416" />
-          </button>
+          {seller && !seller.people ? (
+            <button type="button" className="tk-circle" aria-label={seller.callsAllowed === false ? `${t("card.contact.call")}: the seller is away` : t("card.contact.call")} data-tk="call" disabled={seller.callsAllowed === false} onClick={() => reveal("phone")}>
+              <Phone size={16} color="#8A6416" />
+            </button>
+          ) : null}
           <button type="button" className="tk-circle" aria-label={t("card.contact.whatsapp")} data-tk="whatsapp" onClick={() => reveal("whatsapp")}>
             <WaIcon />
           </button>
@@ -164,7 +185,17 @@ export function AdCard({
       ) : null}
       {shown ? <p className="t-caption" style={{ position: "absolute", left: 12, bottom: 8 }}>{shown}</p> : null}
       {note ? <p className="t-caption" style={{ position: "absolute", left: 12, bottom: 8 }}>{note}</p> : null}
-      <AdCountsLabel counts={counts} />
+      {owner ? (
+        <div className="tkp-owner" data-tk="owner-card">
+          <div className="tkp-owner-row">
+            <span className="tkp-owner-status" style={{ background: owner.bg, color: owner.fg }}>{owner.label}</span>
+            <span className="tkp-owner-counts">{owner.views} views · {owner.clicks} clicks</span>
+          </div>
+          {owner.actions ? <div className="tkp-owner-actions">{owner.actions}</div> : null}
+        </div>
+      ) : (
+        <AdCountsLabel counts={counts} />
+      )}
     </article>
   );
 }

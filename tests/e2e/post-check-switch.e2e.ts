@@ -1,5 +1,6 @@
 import type { Page } from "@playwright/test";
-import { expect, loginUi, newApi, PNG, registerApi, setIdCheckSwitch, test, uniqueEmail, USER_PASSWORD } from "./helpers";
+import { expect, loginUi, newApi, registerApi, setIdCheckSwitch, test, uniqueEmail, USER_PASSWORD } from "./helpers";
+import { fillNewPostAd } from "./flows";
 
 /** No horizontal page scroll at the current viewport (phone 390, desktop 1440). */
 async function expectNoHorizontalScroll(page: Page) {
@@ -30,25 +31,7 @@ test.describe("H6.14 ID-check switch on post-ad", () => {
     await expect(page.locator("[data-tk=id-check-first]")).toHaveCount(0);
     await expectNoHorizontalScroll(page);
 
-    await page.locator("#category").selectOption({ label: "Jobs" });
-    await page.locator("#city").selectOption({ label: "Mumbai" });
-    await page.locator("#nickname").fill("Asha");
-    await page.locator("#role").fill("Office assistant");
-    await page.locator("#title").fill(title);
-    await page.locator("#text").fill("A weekday office role with a clear description of the work and the hours.");
-    await page.locator("#phone").fill("9876543210");
-    await page.locator("#consent-terms").check();
-    await page.locator("#consent-adult").check();
-    await page.locator("[data-tk=go-on]").click();
-
-    await page.locator("[data-tk=photo-input]").waitFor({ state: "attached" });
-    await page.locator("[data-tk=photo-input]").setInputFiles({ name: "photo.png", mimeType: "image/png", buffer: PNG });
-    await expect(page.locator("[data-tk=photo-note]")).toContainText(/Photo saved/i);
-    await page.locator("[data-tk=go-on]").click();
-
-    // Submit goes through without any ID check.
-    await page.locator("button", { hasText: "PUBLISH" }).click();
-    await expect(page.locator("[data-tk=step-title]").filter({ hasText: /live/i })).toBeVisible();
+    await fillNewPostAd(page, base, { title });
     await expect(page.locator("[data-tk=verify-id]")).toHaveCount(0);
     await expect(page.locator("[aria-live=polite]").filter({ hasText: /quick check/i })).toHaveCount(0);
     await expectNoHorizontalScroll(page);

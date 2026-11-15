@@ -105,6 +105,7 @@ export async function listFieldOptions(
   input: { categorySlug: string; fieldKey: string; q?: string; offset?: number; limit?: number },
   actor: FieldActor,
 ): Promise<OptionPage> {
+  await connectDb();
   requireFieldAdmin(actor);
   const { field } = await loadField(input.categorySlug, input.fieldKey);
   requireChoice(field.type);
@@ -135,6 +136,7 @@ export async function addFieldOptions(input: {
   source: "paste" | "csv";
   actor: FieldActor;
 }): Promise<AddOptionsResult> {
+  await connectDb();
   requireFieldAdmin(input.actor);
   const { category, field } = await loadField(input.categorySlug, input.fieldKey);
   requireChoice(field.type);
@@ -176,6 +178,7 @@ export async function addFieldOptions(input: {
 
 /** Removes one option from the list. Ads that already use it keep their value. */
 export async function removeFieldOption(input: { categorySlug: string; fieldKey: string; value: string; actor: FieldActor }) {
+  await connectDb();
   requireFieldAdmin(input.actor);
   const { category, field } = await loadField(input.categorySlug, input.fieldKey);
   requireChoice(field.type);
@@ -199,6 +202,7 @@ export async function removeFieldOption(input: { categorySlug: string; fieldKey:
 
 /** Replaces the whole list with the values given. Refuses an empty list. */
 export async function replaceFieldOptions(input: { categorySlug: string; fieldKey: string; values: readonly string[]; actor: FieldActor }) {
+  await connectDb();
   requireFieldAdmin(input.actor);
   const { category, field } = await loadField(input.categorySlug, input.fieldKey);
   requireChoice(field.type);
@@ -229,6 +233,7 @@ export async function replaceFieldOptions(input: { categorySlug: string; fieldKe
 
 /** The filter name and pick limit of each field of a category, keyed by field key. */
 export async function readFieldSettings(categorySlug: string): Promise<Map<string, { filterLabel: string; maxPicks: number | null }>> {
+  await connectDb();
   const rows = await CategoryFieldSetting.find({ categorySlug }).select("fieldKey filterLabel maxPicks").lean();
   return new Map(rows.map((row) => [row.fieldKey, { filterLabel: row.filterLabel ?? "", maxPicks: row.maxPicks ?? null }]));
 }
@@ -253,6 +258,7 @@ export function checkMaxPicks(raw: unknown, type: string): number | null {
 
 /** Saves the filter name and pick limit of one field. Admin only. */
 export async function saveFieldSettings(input: { categorySlug: string; fieldKey: string; filterLabel: string; maxPicks: unknown; actor: FieldActor }) {
+  await connectDb();
   requireFieldAdmin(input.actor);
   const { field } = await loadField(input.categorySlug, input.fieldKey);
   const filterLabel = checkFilterLabel(input.filterLabel);
@@ -266,12 +272,14 @@ export async function withPickLimits<T extends { key: string }>(
   categorySlug: string,
   defs: T[],
 ): Promise<(T & { maxPicks: number | null })[]> {
+  await connectDb();
   const settings = await readFieldSettings(categorySlug);
   return defs.map((def) => ({ ...def, maxPicks: settings.get(def.key)?.maxPicks ?? null }));
 }
 
 /** Public pick limits by category slug and field key, for every field that sets one. */
 export async function pickLimitsByCategory(): Promise<Map<string, Map<string, number>>> {
+  await connectDb();
   const rows = await CategoryFieldSetting.find({ maxPicks: { $ne: null } }).select("categorySlug fieldKey maxPicks").lean();
   const byCategory = new Map<string, Map<string, number>>();
   for (const row of rows) {

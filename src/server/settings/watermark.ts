@@ -41,6 +41,7 @@ export async function readWatermarkSettings(): Promise<WatermarkSettings> {
 
 /** Superadmin only. Writes the three values and an audit entry with the values before and after. */
 export async function setWatermarkSettings(input: { actorId: string; roles: readonly string[]; settings: unknown; requestId: string }) {
+  await connectDb();
   if (!input.roles.includes("superadmin")) throw new ForbiddenError("Only a superadmin can change this setting");
   const next = parseInput(watermarkBodySchema, input.settings);
   const before = await readWatermarkSettings();

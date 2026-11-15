@@ -4,6 +4,7 @@ import { ConflictError, NotFoundError } from "@/server/http";
 import { AuditEvent, Coupon, type CouponDoc } from "@/server/models";
 import { creditWallet, readyBilling } from "@/server/billing/ledger";
 import { hashIp } from "@/server/shared/crypto";
+import { connectDb } from "@/lib/db";
 
 const audit = new AuditRepository();
 
@@ -61,6 +62,7 @@ async function assertUsable(coupon: CouponQuote, userId: string) {
 }
 
 export async function validateCoupon(code: string, userId: string) {
+  await connectDb();
   await readyBilling();
   const coupon = await findCoupon(code);
   if (!coupon) throw new NotFoundError("Coupon is invalid");
@@ -69,6 +71,7 @@ export async function validateCoupon(code: string, userId: string) {
 }
 
 export async function consumeCoupon(coupon: CouponQuote, userId: string, requestId: string, ip?: string) {
+  await connectDb();
   await readyBilling();
   await assertUsable(coupon, userId);
   const filter: Record<string, unknown> = { _id: coupon._id, status: "active" };
@@ -102,6 +105,7 @@ export function packBonus(coupon: CouponQuote, packCredits: number) {
 }
 
 export async function redeemCoupon(userId: string, code: string, requestId: string) {
+  await connectDb();
   const coupon = await validateCoupon(code, userId);
   if (coupon.kind === "percent") return { couponId: String(coupon._id) };
   const updated = await consumeCoupon(coupon, userId, requestId);

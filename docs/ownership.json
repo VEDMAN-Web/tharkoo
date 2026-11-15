@@ -2001,7 +2001,6 @@
         "progress/H5.8b.md"
       ]
     },
-
     "H6.10": {
       "branchPrefix": "haiku/h6.10",
       "globs": [
@@ -2016,7 +2015,6 @@
         "progress/H6.10.md"
       ]
     },
-
     "H6.10b": {
       "branchPrefix": "haiku/h6.10b",
       "globs": [
@@ -2035,7 +2033,6 @@
         "progress/H6.10b.md"
       ]
     },
-
     "H6.9": {
       "branchPrefix": "haiku/h6.9",
       "globs": [
@@ -2304,6 +2301,11 @@
         "src/app/admin/footer/**",
         "src/app/admin/settings/**",
         "src/app/globals.css",
+        "src/app/api/cron/expire/route.ts",
+        "src/app/api/support/guest/**",
+        "src/app/support/guest/**",
+        "src/server/models/support.ts",
+        "src/server/support/**",
         "tests/e2e/shell*.e2e.ts",
         "tests/server/shell/**",
         "progress/H7.1.md",
@@ -2324,6 +2326,26 @@
         "tests/server/auth/**",
         "tests/e2e/login*.e2e.ts",
         "progress/H7.2.md",
+        "docs/ownership.json"
+      ]
+    },
+    "H7.2b": {
+      "branchPrefix": "haiku/h7.2b",
+      "globs": [
+        "src/server/models/identity.ts",
+        "src/server/auth/**",
+        "src/app/api/auth/**",
+        "src/components/auth/**",
+        "src/app/u/login/**",
+        "src/app/u/seller-profile/**",
+        "src/app/u/post-insert/page.tsx",
+        "src/app/admin/page.tsx",
+        "src/server/verification/service.ts",
+        "src/server/listings/service.ts",
+        "src/server/mailer/**",
+        "tests/server/auth/**",
+        "tests/e2e/login*.e2e.ts",
+        "progress/H7.2b.md",
         "docs/ownership.json"
       ]
     },
@@ -2405,6 +2427,12 @@
         "tests/e2e/home*.e2e.ts",
         "tests/e2e/listing*.e2e.ts",
         "tests/e2e/ad*.e2e.ts",
+        "src/components/new/**",
+        "src/components/ContactButtons.tsx",
+        "src/server/site-links/shell-config-rules.ts",
+        "tests/e2e/new-live*.e2e.ts",
+        "tests/server/shell/home-config*.test.ts",
+        "src/app/admin/menus/ShellEditor.tsx",
         "progress/H7.4.md",
         "docs/ownership.json"
       ]
@@ -2422,7 +2450,39 @@
         "tests/e2e/post*.e2e.ts",
         "tests/e2e/vendor*.e2e.ts",
         "progress/H7.5.md",
-        "docs/ownership.json"
+        "docs/ownership.json",
+        "src/app/api/availability/**",
+        "src/app/api/listings/**",
+        "src/app/admin/settings/**",
+        "src/app/globals.css",
+        "src/components/ui/AdCard.tsx",
+        "src/components/availability/**",
+        "src/lib/ui/post-form.ts",
+        "src/lib/ui/ad-status.ts",
+        "src/server/shared/schemas/listings.ts",
+        "tests/server/availability/**",
+        "tests/server/ui/post-steps.test.ts",
+        "tests/server/ui/ad-status.test.ts",
+        "tests/server/listings/owner-groups.test.ts",
+        "tests/server/listings/owner-tab-counts.test.ts",
+        "tests/e2e/flows.ts",
+        "tests/e2e/advertiser.e2e.ts",
+        "tests/e2e/h6-features.e2e.ts",
+        "src/server/media/watermark.ts",
+        "tests/server/media/watermark.test.ts",
+        "tests/e2e/helpers.ts",
+        "tests/e2e/account.e2e.ts",
+        "src/components/ContactButtons.tsx",
+        "src/components/new/NewAdDetail.tsx",
+        "src/components/availability/**",
+        "src/server/availability/**",
+        "src/app/api/availability/**",
+        "tests/e2e/listing-availability.e2e.ts",
+        "tests/e2e/visitor.e2e.ts",
+        "tests/server/availability/listings.test.ts",
+        "src/app/ad/[slug]/page.tsx",
+        "src/components/AdDetail.tsx",
+        "tests/e2e/contact-card.e2e.ts"
       ]
     },
     "H7.6": {
@@ -2435,7 +2495,12 @@
         "src/server/alerts/**",
         "tests/e2e/user*.e2e.ts",
         "progress/H7.6.md",
-        "docs/ownership.json"
+        "docs/ownership.json",
+        "src/app/api/discover/**",
+        "src/app/api/alerts/**",
+        "tests/server/discover/**",
+        "tests/server/notifications/**",
+        "src/server/discover/**"
       ]
     },
     "H7.7": {
@@ -2469,6 +2534,14 @@
         "tests/server/tours/tour-labels.test.ts",
         "docs/ownership.json",
         "progress/H6.8.md"
+      ]
+    },
+    "H7.0": {
+      "branchPrefix": "haiku/h7.0",
+      "globs": [
+        "src/server/**",
+        "tests/server/db/**",
+        "docs/ownership.json"
       ]
     }
   }

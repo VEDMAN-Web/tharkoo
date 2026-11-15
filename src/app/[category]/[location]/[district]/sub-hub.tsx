@@ -66,8 +66,7 @@ export async function subHubMetadata(params: SubHubParams, page: number): Promis
     title: copy.title,
     description: copy.description,
     path: page > 1 ? `${path}?page=${page}` : path,
-    // Only category, category+city and category+city+area pages are indexable (see filter-seo.ts).
-    index: false,
+    index: isSubcategoryIndexable(feed.total, page),
     follow: true,
   });
 }

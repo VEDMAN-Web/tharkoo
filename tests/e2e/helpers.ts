@@ -110,12 +110,27 @@ export async function newUserApi(baseURL: string, prefix = "user") {
   return { api, email };
 }
 
-/** Sign in through the real login page. */
+/**
+ * Signs the page's browser in with the password API, then opens `next`. H7.2 turned the login page into a sheet
+ * that asks for a one-time code first, so the form no longer has a password field to fill. page.request shares the
+ * browser context's cookies, so the session carries into the page.
+ */
 export async function loginUi(page: Page, email: string, password = USER_PASSWORD, next = "") {
-  await page.goto(`/u/login/${next ? `?next=${encodeURIComponent(next)}` : ""}`);
-  await page.locator("#email").fill(email);
-  await page.locator("#password").fill(password);
-  await page.locator("form", { has: page.locator("#email") }).getByRole("button", { name: "LOG IN", exact: true }).click();
+  const base = String(test.info().project.use.baseURL || "http://127.0.0.1:4342");
+  const res = await page.request.post("/api/auth/login", { headers: originHeaders(base, "/u/login/"), data: { email, password } });
+  expect(res.status(), await res.text()).toBe(200);
+  // H7.2b: with the New design on, posting an ad needs a saved seller profile first.
+  if (next.startsWith("/u/post-insert")) await becomeSeller(page, base);
+  await page.goto(next || "/u/account/dashboard/");
+}
+
+/** Saves a seller profile for the signed-in page (H7.2b). Needed before the post-ad form opens in the New design. */
+export async function becomeSeller(page: Page, base: string, name = "E2E Seller", city = "Mumbai") {
+  const res = await page.request.put("/api/auth/seller-profile", {
+    headers: originHeaders(base, "/u/seller-profile/"),
+    data: { name, city, whatsapp: "", availableNow: false },
+  });
+  expect(res.status(), await res.text()).toBe(200);
 }
 
 /** Visible-or-not safe text of the page, scripts and styles removed. */
@@ -205,4 +220,27 @@ export async function signInAdminContext(context: import("@playwright/test").Bro
   const state = await api.storageState();
   await api.dispose();
   await context.addCookies(state.cookies);
+}
+
+/**
+ * H7.5: turns the ad seller's "Available now" switch on or off in the test database, as the seller would from the panel.
+ * On sets recent activity, so the seller shows Online now until the admin's hours pass with no activity.
+ */
+export async function setSellerAvailable(slug: string, available: boolean) {
+  const done = await withLocalDb(async (db) => {
+    const listing = await db.collection("listings").findOne({ slug });
+    expect(listing, "the ad exists").toBeTruthy();
+    await db.collection("vendor_presence").updateOne(
+      { userId: String(listing!.ownerId) },
+      { $set: { available, lastActivityAt: new Date() } },
+      { upsert: true },
+    );
+    return true;
+  });
+  expect(done, "E2E_MONGO_URI_FILE must point at the in-memory database").toBe(true);
+}
+
+/** The ad slug from its public path, e.g. /ad/in00012/ gives in00012. */
+export function slugFromAdPath(path: string) {
+  return path.replace(/^\/ad\//, "").replace(/\/$/, "");
 }

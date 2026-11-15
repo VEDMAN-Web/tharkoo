@@ -22,6 +22,7 @@ import {
   User,
   type UserDoc,
 } from "@/server/models";
+import { STAFF_ROLE_NAMES } from "@/server/models/identity";
 import { registerModel } from "@/server/models/register";
 import { codeOnlyLoginEnabled } from "@/server/auth/code-only";
 import { isAtLeast18, parseDateOnly } from "@/server/shared/age";
@@ -32,15 +33,7 @@ const VERIFY_MS = 1000 * 60 * 60 * 24;
 const RESET_MS = 1000 * 60 * 60;
 const PHONE_MS = 1000 * 60 * 10;
 
-export const STAFF_ROLES = new Set([
-  "admin",
-  "superadmin",
-  "moderator",
-  "trust_safety",
-  "support",
-  "seo_editor",
-  "finance",
-]);
+export const STAFF_ROLES = STAFF_ROLE_NAMES;
 
 const ROLE_PERMISSIONS: Record<string, readonly string[]> = {
   user: ["listings.write"],
@@ -53,16 +46,27 @@ const ROLE_PERMISSIONS: Record<string, readonly string[]> = {
   finance: ["admin", "finance"],
 };
 
+/** What a signed-in person may see about their seller profile. Date of birth is never included. */
+export interface SellerView {
+  name: string;
+  city: string;
+  whatsapp: string | null;
+  availableNow: boolean;
+}
+
 export interface PublicUser {
   id: string;
   email: string;
   displayName: string;
-  dateOfBirth: string;
-  attestedAdultAt: string;
+  /** Null for users and sellers who have not reached the seller profile step yet. */
+  dateOfBirth: string | null;
+  attestedAdultAt: string | null;
   emailVerifiedAt: string | null;
   roles: string[];
   verificationStatus: UserDoc["verificationStatus"];
   status: UserDoc["status"];
+  /** Null until the seller profile is saved once. */
+  seller: SellerView | null;
 }
 
 export interface RegisterInput {
@@ -121,17 +125,35 @@ function dummyPasswordHash() {
 }
 
 function publicUser(user: UserDoc & { _id: Types.ObjectId }): PublicUser {
+  const profile = user.sellerProfile;
   return {
     id: user._id.toString(),
     email: user.email,
     displayName: user.displayName,
-    dateOfBirth: user.dateOfBirth.toISOString(),
-    attestedAdultAt: user.attestedAdultAt.toISOString(),
+    dateOfBirth: user.dateOfBirth ? user.dateOfBirth.toISOString() : null,
+    attestedAdultAt: user.attestedAdultAt ? user.attestedAdultAt.toISOString() : null,
     emailVerifiedAt: user.emailVerifiedAt ? user.emailVerifiedAt.toISOString() : null,
     roles: user.roles?.length ? user.roles : ["user"],
     verificationStatus: user.verificationStatus,
     status: user.status,
+    seller: profile ? { name: profile.name, city: profile.city, whatsapp: profile.whatsapp ?? null, availableNow: profile.availableNow } : null,
   };
+}
+
+/**
+ * A new account from a one-time email code (H7.2b). No password, no date of birth: the seller profile asks for those
+ * once, before the first ad. A duplicate (two codes at once) throws the duplicate-key error for the caller to handle.
+ */
+export async function createCodeAccount(email: string) {
+  await connectDb();
+  return User.create({
+    email,
+    displayName: "Member",
+    roles: ["user"],
+    verificationStatus: "unsubmitted",
+    status: "active",
+    emailVerifiedAt: new Date(),
+  });
 }
 
 async function ready() {
@@ -149,6 +171,7 @@ export function stagingAutoVerifyDecision(): "on" | "off" {
 }
 
 export async function registerUser(input: RegisterInput) {
+  await connectDb();
   await ready();
   if (await codeOnlyLoginEnabled()) throw new ForbiddenError("Passwords are off. Sign up with a one-time code.");
   const dateOfBirth = parseDateOnly(input.dateOfBirth);
@@ -190,6 +213,7 @@ export async function registerUser(input: RegisterInput) {
 }
 
 export async function verifyEmail(token: string) {
+  await connectDb();
   await ready();
   const doc = await EmailVerificationToken.findOne({
     tokenHash: sha256(token),
@@ -210,12 +234,15 @@ export async function loginUser(input: {
   ip?: string;
   existingToken?: string;
 }) {
+  await connectDb();
   await ready();
   await bootstrapAdmin();
   const email = input.email.toLowerCase();
   const user = await User.findOne({ email }).select("+passwordHash");
-  const passwordHash = user?.get("passwordHash") ?? (await dummyPasswordHash());
-  const matches = await bcrypt.compare(input.password, String(passwordHash));
+  const storedHash = user?.get("passwordHash") as string | undefined;
+  // An account with no password (code sign-up) never matches. The dummy hash keeps the timing the same.
+  const compared = await bcrypt.compare(input.password, storedHash ?? (await dummyPasswordHash()));
+  const matches = Boolean(storedHash) && compared;
   // Code-only mode: a password never signs in a user or seller. The answer is the same as a wrong password.
   const passwordAllowed = isStaffRole(user?.roles ?? []) || !(await codeOnlyLoginEnabled());
   if (!user || !matches || !passwordAllowed) throw new UnauthorizedError("Email or password is incorrect");
@@ -229,6 +256,7 @@ export async function createSession(
   user: UserDoc & { _id: Types.ObjectId },
   input: { userAgent?: string | null; ip?: string; existingToken?: string },
 ) {
+  await connectDb();
   if (input.existingToken) {
     await Session.updateOne(
       { tokenHash: hashToken(input.existingToken), revokedAt: null },
@@ -247,6 +275,7 @@ export async function createSession(
 }
 
 export async function logoutSession(token: string | undefined) {
+  await connectDb();
   await ready();
   if (!token) throw new UnauthorizedError("Sign in required");
   const updated = await Session.updateOne(
@@ -258,6 +287,7 @@ export async function logoutSession(token: string | undefined) {
 }
 
 export async function userFromToken(token: string | undefined) {
+  await connectDb();
   if (!token) return null;
   await ready();
   const session = await Session.findOne({
@@ -272,12 +302,14 @@ export async function userFromToken(token: string | undefined) {
 }
 
 export async function requireUser(token: string | undefined) {
+  await connectDb();
   const found = await userFromToken(token);
   if (!found) throw new UnauthorizedError("Sign in required");
   return found;
 }
 
 export async function forgotPassword(email: string) {
+  await connectDb();
   await ready();
   const user = await User.findOne({ email: email.toLowerCase(), status: "active" });
   if (user && (isStaffRole(user.roles) || !(await codeOnlyLoginEnabled()))) {
@@ -297,6 +329,7 @@ export async function forgotPassword(email: string) {
 }
 
 export async function resetPassword(token: string, password: string) {
+  await connectDb();
   await ready();
   const doc = await PasswordResetToken.findOne({
     tokenHash: sha256(token),
@@ -316,6 +349,7 @@ export async function resetPassword(token: string, password: string) {
 }
 
 export async function listSessions(userId: string, currentSessionId: string) {
+  await connectDb();
   await ready();
   const sessions = await Session.find({ userId, revokedAt: null, expiresAt: { $gt: new Date() } })
     .sort({ createdAt: -1 })
@@ -332,6 +366,7 @@ export async function listSessions(userId: string, currentSessionId: string) {
 }
 
 export async function revokeOwnedSession(userId: string, sessionId: string) {
+  await connectDb();
   await ready();
   if (!Types.ObjectId.isValid(sessionId)) throw new NotFoundError("Session not found");
   const updated = await Session.updateOne(
@@ -349,6 +384,7 @@ async function phoneEnabled() {
 }
 
 export async function startPhone(userId: string, rawPhone: string) {
+  await connectDb();
   await ready();
   if (!(await phoneEnabled())) throw new ForbiddenError("Phone verification is not available");
   const phone = normalizePhone(rawPhone);
@@ -371,6 +407,7 @@ export async function startPhone(userId: string, rawPhone: string) {
 }
 
 export async function confirmPhone(userId: string, challengeId: string, code: string) {
+  await connectDb();
   await ready();
   if (!Types.ObjectId.isValid(challengeId)) throw new UnauthorizedError("Code is invalid or expired");
   const doc = await PhoneChallenge.findOne({
@@ -396,6 +433,7 @@ export async function confirmPhone(userId: string, challengeId: string, code: st
 
 /** Creates one superadmin when both env vars are set and that email is absent. */
 export async function bootstrapAdmin(): Promise<"created" | "skipped"> {
+  await connectDb();
   const email = process.env.ADMIN_BOOTSTRAP_EMAIL?.trim().toLowerCase();
   const password = process.env.ADMIN_BOOTSTRAP_PASSWORD ?? "";
   if (!email || password.length < 8 || !process.env.MONGODB_URI) return "skipped";

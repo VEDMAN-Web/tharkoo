@@ -1,6 +1,8 @@
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import { AdDetail } from "@/components/AdDetail";
+import { NewAdDetail } from "@/components/new/NewAdDetail";
+import { newDesignOn } from "@/server/site-links/new-design";
 import "./ad-perf.css";
 import { AdCountsBar } from "./AdCountsBar";
 import { AdVideos } from "@/components/ad/AdVideos";
@@ -21,6 +23,7 @@ import { withUrlSeo, urlHeading } from "@/lib/seo/override";
 import { plain } from "@/lib/plain";
 import { getPaths } from "@/server/urls/service";
 import { videoTourOffer } from "@/server/tours/offer";
+import { listingIsPeople } from "@/server/availability/people";
 
 type Props = { params: Promise<{ slug: string }> };
 
@@ -108,11 +111,14 @@ export default async function AdPage({ params }: Props) {
     expiresAt?: Date;
   } | null;
   const listingId = row?._id ? String(row._id) : undefined;
-  const [cat, related, videos, tourOffer] = await Promise.all([
+  const [cat, related, videos, tourOffer, newDesign, peopleAd] = await Promise.all([
     getCategory(ad.categorySlug || ""),
     getRelated(ad, 6),
     listingId ? listAdVideos(listingId).catch(() => []) : Promise.resolve([]),
     listingId ? videoTourOffer(listingId) : Promise.resolve(null),
+    newDesignOn(),
+    // H7.5: a people category never shows the Call button. The same server check as the video tour rule.
+    listingId ? listingIsPeople(listingId) : Promise.resolve(true),
   ]);
   const tour = listingId && tourOffer ? { listingId, coins: tourOffer.coins } : null;
   const cover = safePhoto(ad.photos?.[0]);
@@ -150,7 +156,11 @@ export default async function AdPage({ params }: Props) {
   return (
     <>
       <JsonLd data={structured ? [breadcrumbJsonLd(crumbs), structured] : [breadcrumbJsonLd(crumbs)]} />
-      <AdDetail ad={plain(ad)} categoryName={catName} related={plain(related)} listingId={listingId} crumbs={crumbs} shareUrl={shareUrl} heading={heading} tour={tour} />
+      {newDesign ? (
+        <NewAdDetail ad={plain(ad)} categoryName={catName} related={plain(related)} listingId={listingId} crumbs={crumbs} shareUrl={shareUrl} heading={heading} tour={tour} peopleAd={peopleAd} />
+      ) : (
+        <AdDetail ad={plain(ad)} categoryName={catName} related={plain(related)} listingId={listingId} crumbs={crumbs} shareUrl={shareUrl} heading={heading} tour={tour} peopleAd={peopleAd} />
+      )}
       <div className="tk-container">
         <AdCountsBar slug={ad.slug || slug} />
       </div>

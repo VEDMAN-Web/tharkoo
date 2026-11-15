@@ -1,6 +1,7 @@
 import { v2 as cloudinary } from "cloudinary";
 import { cloudinaryEnv } from "@/server/media/config";
 import { markWatermarked, watermarkTransformationFor } from "@/server/media/watermark";
+import { connectDb } from "@/lib/db";
 
 export interface RemoteAsset {
   bytes: number;
@@ -112,6 +113,7 @@ export function setCloudinaryUploader(uploader: CloudinaryUploader | null) {
  * and is recorded as watermarked so the daily migration skips it.
  */
 export async function uploadToCloudinary(data: Buffer, options: UploadOptions) {
+  await connectDb();
   const watermark = await watermarkTransformationFor(options.folder);
   const transformation = [options.transformation, watermark].filter(Boolean).join("/") || undefined;
   const final: UploadOptions = { ...options, transformation };

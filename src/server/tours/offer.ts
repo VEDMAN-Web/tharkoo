@@ -1,5 +1,6 @@
 import { ForbiddenError } from "@/server/http";
 import { assertVideoTourAllowed, videoTourPrice } from "@/server/wallet/listing-guard";
+import { connectDb } from "@/lib/db";
 
 /**
  * The live video tour offer shown on an ad page: the coin price when a tour can be requested, otherwise null.
@@ -7,6 +8,7 @@ import { assertVideoTourAllowed, videoTourPrice } from "@/server/wallet/listing-
  * The server stays the authority: a stale or forged button still gets refused on request.
  */
 export async function videoTourOffer(listingId: string): Promise<{ coins: number } | null> {
+  await connectDb();
   try {
     await assertVideoTourAllowed(listingId);
   } catch (error) {

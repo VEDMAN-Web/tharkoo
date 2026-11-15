@@ -47,5 +47,6 @@ export async function seedPostLayout(): Promise<boolean> {
 }
 
 export async function seedLayouts() {
+  await connectDb();
   return { home: await seedHomeLayout(), post: await seedPostLayout() };
 }

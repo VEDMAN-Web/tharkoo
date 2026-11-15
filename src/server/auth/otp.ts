@@ -33,6 +33,14 @@ const smsOtp: OtpProvider = {
   },
 };
 
+/** False until the SMS gateway above is written. Until then no SMS code can leave the server, whatever the env says. */
+const SMS_GATEWAY_BUILT = false;
+
+/** True only when an SMS gateway exists and its keys are set. Read by the admin warning (H7.2b). */
+export function smsDeliverable(): boolean {
+  return SMS_GATEWAY_BUILT && Boolean(process.env.SMS_PROVIDER?.trim() && process.env.SMS_API_KEY?.trim());
+}
+
 let override: OtpProvider | null = null;
 
 /** Tests swap in a recording provider here. Pass null to restore the environment choice. */
