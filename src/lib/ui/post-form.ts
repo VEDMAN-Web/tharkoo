@@ -74,6 +74,7 @@ export type SavedDraft = {
   cityId?: string | null;
   districtId?: string | null;
   attributes?: Record<string, unknown> | null;
+  price?: number | null;
   nickname?: string | null;
   contact?: { phone?: string | null; whatsapp?: string | null; telegram?: string | null } | null;
   mediaIds?: string[] | null;
@@ -95,6 +96,7 @@ export function draftToForm(row: SavedDraft) {
     districtId: row.districtId || "",
     age: attributes.age === undefined || attributes.age === null ? "" : String(attributes.age),
     nickname: row.nickname || (typeof attributes.nickname === "string" ? attributes.nickname : ""),
+    price: row.price === undefined || row.price === null ? "" : String(row.price),
     address: typeof attributes.address === "string" ? attributes.address : "",
     postal: typeof attributes.postal === "string" ? attributes.postal : "",
     area: typeof attributes.area === "string" ? attributes.area : "",
@@ -109,4 +111,29 @@ export function draftToForm(row: SavedDraft) {
 
 export function needsIdCheck(status?: string | null) {
   return Boolean(status) && status !== "approved";
+}
+
+/**
+ * H7.5: the five steps of the New design post-ad form, and which validation keys each one owns.
+ * Category: category and sub-category. Details: city, title, text, nickname, age and the category's fields.
+ * Photos have no form errors (the photo step checks its own uploads). Contact: phone. Review: the two consents.
+ */
+export const NEW_POST_STEPS = ["category", "details", "photos", "contact", "review"] as const;
+export type NewPostStep = (typeof NEW_POST_STEPS)[number];
+
+/** The step a validation key belongs to. Any key not listed is a detail (title, text, city, a category field...). */
+export function stepOfError(key: string): NewPostStep {
+  if (key === "category" || key === "subcategory") return "category";
+  if (key === "phone") return "contact";
+  if (key === "terms" || key === "adult") return "review";
+  return "details";
+}
+
+/** The errors one step is responsible for. Continue on a step checks only these, so a later step cannot block an earlier one. */
+export function errorsForStep(errors: Record<string, string>, step: NewPostStep): Record<string, string> {
+  const out: Record<string, string> = {};
+  for (const [key, message] of Object.entries(errors)) {
+    if (stepOfError(key) === step) out[key] = message;
+  }
+  return out;
 }

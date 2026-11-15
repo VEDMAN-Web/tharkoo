@@ -262,3 +262,14 @@ describe("one limit for every ad (H6.18)", () => {
     expect(AD_MEDIA_MAX).toBe(10);
   });
 });
+
+describe("H6.19 local mark on a tiny photo", () => {
+  it("marks a 1 x 1 photo without an overflow error", async () => {
+    const { watermarkLocalPhoto } = await import("@/server/media/watermark");
+    const tiny = await sharp({ create: { width: 1, height: 1, channels: 3, background: "#abcdef" } }).png().toBuffer();
+    const settings = { enabled: true, position: "south_east", opacity: 60 } as unknown as Parameters<typeof watermarkLocalPhoto>[2];
+    const marked = await watermarkLocalPhoto(tiny, "image/png", settings);
+    expect(marked.length).toBeGreaterThan(0);
+    expect((await sharp(marked).metadata()).width).toBe(1);
+  });
+});

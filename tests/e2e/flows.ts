@@ -11,8 +11,47 @@ export interface LiveAd {
 }
 
 /**
- * Registers a poster, walks the 3-step post form, passes KYC (admin approves through the API)
- * and publishes. Leaves `page` signed in as the poster. Jobs in Mumbai.
+ * H7.5: walks the New design post-ad form (five steps: category, details, photos, contact, review) and publishes.
+ * The page must already be the post-ad page for a signed-in poster. Uses the "Jobs" category and Mumbai by default.
+ * Returns the new listing's id and the title it was saved with.
+ */
+export async function fillNewPostAd(page: Page, base: string, options: { title: string; category?: string; city?: string }) {
+  const { title, category = "Jobs", city = "Mumbai" } = options;
+  // Step 1: category.
+  await page.locator(".tkp-tile", { hasText: category }).click();
+  await page.locator("[data-tk=go-on]").click();
+  // Step 2: details.
+  await page.locator("#city").selectOption({ label: city });
+  await page.locator("#nickname").fill("Asha");
+  await page.locator("#role").fill("Office assistant");
+  await page.locator("#title").fill(title);
+  await page.locator("#text").fill("A weekday office role with a clear description of the work and the hours.");
+  await page.locator("[data-tk=go-on]").click();
+  // Step 3: photos (the photo step has its own Continue).
+  await page.locator("[data-tk=photo-input]").waitFor({ state: "attached" });
+  await page.locator("[data-tk=photo-input]").setInputFiles({ name: "photo.png", mimeType: "image/png", buffer: PNG });
+  await expect(page.locator("[data-tk=photo-note]")).toContainText(/Photo saved/i);
+  await page.locator("[data-tk=go-on]").click();
+  // Step 4: contact.
+  await page.locator("#phone").fill("9876543210");
+  await page.locator("[data-tk=go-on]").click();
+  // Step 5: review. The ID-check switch is off by default (H6.14), so PUBLISH goes straight to live.
+  await page.locator("#consent-terms").check();
+  await page.locator("#consent-adult").check();
+  await page.locator(".tkp-nav button", { hasText: "PUBLISH" }).click();
+  await expect(page.locator("[data-tk=step-title]").filter({ hasText: /live/i })).toBeVisible();
+
+  const own = await page.request.get("/api/listings/?pageSize=100");
+  expect(own.status()).toBe(200);
+  const rows = ((await own.json()).data?.items || []) as { id: string; title: string; slug?: string }[];
+  const row = rows.find((item) => item.title.includes(title));
+  expect(row, "the published ad is in the poster's list").toBeTruthy();
+  return { title, listingId: row!.id, slug: row!.slug || "" };
+}
+
+/**
+ * Registers a poster, walks the post form (fillNewPostAd), and publishes. Leaves `page` signed in as the poster.
+ * Jobs in Mumbai.
  */
 export async function createLiveAd(page: Page, base: string, prefix = "poster"): Promise<LiveAd> {
   const email = uniqueEmail(prefix);
@@ -23,30 +62,8 @@ export async function createLiveAd(page: Page, base: string, prefix = "poster"):
 
   await loginUi(page, email, USER_PASSWORD, "/u/post-insert/");
   await page.waitForURL(/\/u\/post-insert\//);
-  await page.locator("#category").selectOption({ label: "Jobs" });
-  await page.locator("#city").selectOption({ label: "Mumbai" });
-  await page.locator("#nickname").fill("Asha");
-  await page.locator("#role").fill("Office assistant");
-  await page.locator("#title").fill(title);
-  await page.locator("#text").fill("A weekday office role with a clear description of the work and the hours.");
-  await page.locator("#phone").fill("9876543210");
-  await page.locator("#consent-terms").check();
-  await page.locator("#consent-adult").check();
-  await page.locator("[data-tk=go-on]").click();
-  await page.locator("[data-tk=photo-input]").waitFor({ state: "attached" });
-  await page.locator("[data-tk=photo-input]").setInputFiles({ name: "photo.png", mimeType: "image/png", buffer: PNG });
-  await expect(page.locator("[data-tk=photo-note]")).toContainText(/Photo saved/i);
-  await page.locator("[data-tk=go-on]").click();
-  // The ID-check switch is off by default (H6.14), so PUBLISH goes straight to live with no ID check.
-  await page.locator("button", { hasText: "PUBLISH" }).click();
-  await expect(page.locator("[data-tk=step-title]").filter({ hasText: /live/i })).toBeVisible();
-
-  const own = await page.request.get("/api/listings/?pageSize=100");
-  expect(own.status()).toBe(200);
-  const rows = ((await own.json()).data?.items || []) as { id: string; title: string; slug?: string }[];
-  const row = rows.find((item) => item.title.includes(title));
-  expect(row, "the published ad is in the poster's list").toBeTruthy();
-  return { email, title, adHref: `/ad/${row!.slug}/`, listingId: row!.id };
+  const ad = await fillNewPostAd(page, base, { title });
+  return { email, title, adHref: `/ad/${ad.slug}/`, listingId: ad.listingId };
 }
 
 /** Admin approves the newest pending identity check (API, as an admin would in the queue). */
