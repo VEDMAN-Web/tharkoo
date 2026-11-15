@@ -281,11 +281,11 @@ export function ContactButtons({
     ...channelButtons,
     <button key="chat" type="button" className="tk-btn tk-btn-gold" data-tk="chat" onClick={() => openChatFlow()} disabled={busy === "chat"}>
       {seller ? <span className="tkn-dot" data-status={seller.status} aria-hidden /> : null}
-      <MessageCircle size={16} aria-hidden /> {busy === "chat" ? "…" : t("ad.chat")}
+      <MessageCircle size={16} aria-hidden /> {busy === "chat" ? "…" : t(sticky ? "ad.bar.chat" : "ad.chat")}
     </button>,
     tour && !people ? (
       <button key="tour" type="button" className="tk-btn tk-btn-gold" data-tk="tour" onClick={() => openCall()} disabled={busy === "tour" || tourRequested} aria-busy={busy === "tour"}>
-        <Video size={16} aria-hidden /> {busy === "tour" ? "…" : tourRequested ? "Request sent" : tourRequestLabel(tour.coins)}
+        <Video size={16} aria-hidden /> {busy === "tour" ? "…" : tourRequested ? "Request sent" : sticky ? barVideoLabel(t, tour.coins) : tourRequestLabel(tour.coins)}
       </button>
     ) : null,
   ];
@@ -311,6 +311,11 @@ export function ContactButtons({
 export function ContactAvailability() {
   const { seller } = useContact();
   return seller ? <AvailabilityBadge status={seller.status} /> : null;
+}
+
+/** The phone bar's short video label, for example "Video · 2 coins". */
+function barVideoLabel(t: (key: "ad.bar.videoOne" | "ad.bar.videoMany", params?: Record<string, string | number>) => string, coins: number) {
+  return coins === 1 ? t("ad.bar.videoOne") : t("ad.bar.videoMany", { coins });
 }
 
 function Wa() {

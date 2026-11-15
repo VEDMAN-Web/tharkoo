@@ -4,7 +4,7 @@
 /* Page grid and breadcrumb */
 .tkn .tkn-ad { padding-top: 20px; padding-bottom: 72px; }
 .tkn .tkn-ad-back { margin: 0 0 6px; }
-.tkn .tkn-ad-crumbs { display: flex; flex-wrap: wrap; gap: 4px; font-size: 13px; color: #6b4a8a; margin-bottom: 16px; }
+.tkn .tkn-ad-crumbs { display: flex; flex-wrap: wrap; gap: 4px; font-size: 13px; line-height: 1.4; color: #6b4a8a; margin-bottom: 16px; }
 .tkn .tkn-ad-crumbs a { color: #6b4a8a; min-height: 44px; display: inline-flex; align-items: center; }
 .tkn .tkn-ad-crumbs a:hover { color: #a8124f; }
 .tkn .tkn-ad-grid { display: grid; grid-template-columns: minmax(0, 1fr) 360px; gap: 24px; align-items: start; }
@@ -108,6 +108,8 @@
   font-size: 15px; gap: 10px; transition: transform 0.15s, box-shadow 0.2s;
 }
 .tkn .tkn-contact-panel .tk-btn:hover:not(:disabled), .tkn .tkn-ad-bar .tk-btn:hover:not(:disabled) { transform: translateY(-1px); box-shadow: 0 8px 20px rgba(45, 18, 72, 0.14); }
+/* H7.9 (F2): sentence case on the ad page buttons (the global .tk-btn is uppercase) */
+.tkn .tkn-ad .tk-btn { text-transform: none; }
 .tkn .tk-btn[data-tk="call"] { background: linear-gradient(135deg, #d1137a, #a8124f); color: #fff; border: 0; }
 .tkn .tk-btn[data-tk="whatsapp"] { background: linear-gradient(135deg, #0f7a45, #0b5e3e); color: #fff; border: 0; }
 .tkn .tk-btn[data-tk="chat"] { background: #fff; color: #a8124f; border: 1.5px solid #ead8f0; }
@@ -252,15 +254,19 @@
   .tkn .tkn-det { grid-template-columns: minmax(0, 1fr); }
   .tkn .tkn-ad-head, .tkn .tkn-ad-block { padding: 18px; }
   .tkn .tkn-ad-head h1 { font-size: 30px; }
+  /* H7.9 (F6): the breadcrumb is one line that scrolls sideways */
+  .tkn .tkn-ad-crumbs { flex-wrap: nowrap; overflow-x: auto; white-space: nowrap; scrollbar-width: none; }
+  .tkn .tkn-ad-crumbs::-webkit-scrollbar { display: none; }
   .tkn .tkn-ad-bar {
     display: grid; grid-template-columns: 1fr 1fr; gap: 8px; position: fixed; left: 0; right: 0; bottom: 0; z-index: 25;
     padding: 10px 16px calc(18px + env(safe-area-inset-bottom)); box-sizing: border-box;
     background: rgba(255, 255, 255, 0.88); -webkit-backdrop-filter: blur(18px) saturate(170%); backdrop-filter: blur(18px) saturate(170%);
     border-top: 1px solid #ead8f0;
   }
-  .tkn .tkn-ad-bar.has-video { grid-template-columns: 1fr 1fr 1.6fr; }
+  .tkn .tkn-ad-bar.has-video { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1.5fr); }
+  .tkn .tkn-ad-bar.has-call { grid-template-columns: repeat(3, minmax(0, 1fr)); }
   .tkn .tkn-ad-bar > * { min-width: 0; }
-  .tkn .tkn-ad-bar .tk-btn { min-height: 50px; font-size: 13px; padding: 0 8px; border-radius: 12px; }
+  .tkn .tkn-ad-bar .tk-btn { height: 48px; min-height: 48px; gap: 6px; font-size: 13px; padding: 0 6px; border-radius: 12px; }
   .tkn .tkn-ad-bar .tk-btn[data-tk="whatsapp"] { font-size: 13px; }
   .tkn .tkn-ad-bar .tk-bar-note { grid-column: 1 / -1; }
   .tkn .tkn-similar-head { align-items: flex-start; }

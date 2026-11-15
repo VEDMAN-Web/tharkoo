@@ -14,6 +14,14 @@ export function listingDateLabel(value?: string | Date | null) {
   return new Intl.DateTimeFormat("en-GB", { day: "2-digit", month: "long", timeZone: "Asia/Kolkata" }).format(date).toUpperCase();
 }
 
+/** H7.9 (F5): "14 Nov" in sentence case, for the ad page's posted line. */
+export function shortDateLabel(value?: string | Date | null) {
+  if (!value) return "";
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "";
+  return new Intl.DateTimeFormat("en-GB", { day: "numeric", month: "short", timeZone: "Asia/Kolkata" }).format(date);
+}
+
 export function displayTitle(title?: string | null) {
   if (!title) return "";
   return title.replace(/^\d{6,}\s*-\s*/, "").trim();

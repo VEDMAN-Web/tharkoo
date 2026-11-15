@@ -28,6 +28,8 @@ import { coinProviderName } from "@/server/wallet/provider";
 import { textOverrides } from "@/app/admin/ui-text/store";
 import { pickTexts } from "@/lib/ui/text";
 import { popupAlternatives } from "@/components/new/NewAdDetail";
+import { adDetailRows } from "@/lib/ad-details";
+import { User } from "@/server/models";
 
 type Props = { params: Promise<{ slug: string }> };
 
@@ -108,8 +110,9 @@ export default async function AdPage({ params }: Props) {
   }
   const ad = await getListingBySlug(slug);
   if (!ad) notFound();
-  const row = (await Listing.findOne({ slug: ad.slug }).select("_id attributes publishedAt expiresAt").lean()) as {
+  const row = (await Listing.findOne({ slug: ad.slug }).select("_id attributes publishedAt expiresAt ownerId").lean()) as {
     _id?: unknown;
+    ownerId?: unknown;
     attributes?: unknown;
     publishedAt?: Date;
     expiresAt?: Date;
@@ -125,6 +128,10 @@ export default async function AdPage({ params }: Props) {
     listingId ? listingIsPeople(listingId) : Promise.resolve(true),
   ]);
   const tour = listingId && tourOffer ? { listingId, coins: tourOffer.coins } : null;
+  // H7.9 (F9): the seller's display name for the contact panel. The ad title is never used.
+  const owner = row?.ownerId ? ((await User.findById(row.ownerId).select("displayName").lean()) as { displayName?: string } | null) : null;
+  // H7.9 (F4): the detail tiles use the category's enabled fields and labels.
+  const adView = { ...plain(ad), details: adDetailRows(row?.attributes, cat?.fields) };
   const cover = safePhoto(ad.photos?.[0]);
   const paths = await getPaths();
   const publicAd = adPath(paths, ad.slug || slug);
@@ -162,7 +169,8 @@ export default async function AdPage({ params }: Props) {
       <JsonLd data={structured ? [breadcrumbJsonLd(crumbs), structured] : [breadcrumbJsonLd(crumbs)]} />
       {newDesign ? (
         <NewAdDetail
-          ad={plain(ad)}
+          ad={adView}
+          sellerName={owner?.displayName?.trim() || ""}
           categoryName={catName}
           related={plain(related)}
           listingId={listingId}
@@ -176,11 +184,13 @@ export default async function AdPage({ params }: Props) {
           texts={pickTexts(await textOverrides(), "ad.", "card.")}
         />
       ) : (
-        <AdDetail ad={plain(ad)} categoryName={catName} related={plain(related)} listingId={listingId} crumbs={crumbs} shareUrl={shareUrl} heading={heading} tour={tour} peopleAd={peopleAd} />
+        <AdDetail ad={adView} categoryName={catName} related={plain(related)} listingId={listingId} crumbs={crumbs} shareUrl={shareUrl} heading={heading} tour={tour} peopleAd={peopleAd} />
       )}
-      <div className="tk-container">
-        <AdCountsBar slug={ad.slug || slug} />
-      </div>
+      {newDesign ? null : (
+        <div className="tk-container">
+          <AdCountsBar slug={ad.slug || slug} />
+        </div>
+      )}
       <AdVideos videos={videos} title={displayTitle(ad.title) || "Listing"} />
     </>
   );

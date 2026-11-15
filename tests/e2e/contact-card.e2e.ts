@@ -17,7 +17,8 @@ async function signInUi(page: Page, email: string) {
 
 // H6.8: the ad page contact card (desktop sidebar) and the mobile sticky bar.
 // Dating ad (people category): Call, WhatsApp, Chat online now.
-// Property ad with live tours on: the same three, then "Video call and verify, N coins".
+// Property ad with live tours on: the same three, then "Video call and verify · N coins".
+// H7.9 (review #85): the phone bottom bar is short. People ads: Call, WhatsApp, Chat. Video ads: WhatsApp, Chat, Video.
 // The tour switch is turned on in the in-memory test database for this file only, and put back afterwards.
 // The seed data, production and the people guard are not touched.
 
@@ -27,7 +28,9 @@ const TOUR_COINS = 2;
 const BASE_LABELS = ["Call", "WhatsApp", "Chat online now"];
 // H7.5 (relay #69): a people ad has no video call. Call, WhatsApp and chat stay.
 const PEOPLE_LABELS = ["Call", "WhatsApp", "Chat online now"];
-const TOUR_LABEL = `Video call and verify, ${TOUR_COINS} coins`;
+const TOUR_LABEL = `Video call and verify · ${TOUR_COINS} coins`;
+const PHONE_PEOPLE_LABELS = ["Call", "WhatsApp", "Chat"];
+const PHONE_TOUR_LABELS = ["WhatsApp", "Chat", `Video · ${TOUR_COINS} coins`];
 
 /** The first ad on a city feed. (firstAdPath needs a super-top card, which the property feed may not have.) */
 async function anyAdPath(page: Page, feed: string) {
@@ -87,7 +90,7 @@ test.describe("H6.8 contact card on a dating ad (people, no tour)", () => {
   test("people ad: Call, WhatsApp and Chat online now, and no video call", async ({ page }) => {
     await page.goto(await firstAdPath(page, DATING_FEED));
     await expect(page.locator("h1")).toHaveCount(1);
-    expect(await buttonLabels(page)).toEqual(PEOPLE_LABELS);
+    expect(await buttonLabels(page)).toEqual(isPhone(page) ? PHONE_PEOPLE_LABELS : PEOPLE_LABELS);
     await expect(contactScope(page).locator("[data-tk=tour]")).toHaveCount(0);
     expect(await hasHorizontalScroll(page)).toBe(false);
   });
@@ -111,10 +114,10 @@ test.describe("H6.8 contact card on a property ad with live tours on", () => {
     if (original) await writePropertyTourSwitch(original);
   });
 
-  test("four contact buttons in order, the video call last", async ({ page }) => {
+  test("contact buttons in order, the video call last", async ({ page }) => {
     await page.goto(await anyAdPath(page, PROPERTY_FEED));
     await expect(page.locator("h1")).toHaveCount(1);
-    expect(await buttonLabels(page)).toEqual([...BASE_LABELS, TOUR_LABEL]);
+    expect(await buttonLabels(page)).toEqual(isPhone(page) ? PHONE_TOUR_LABELS : [...BASE_LABELS, TOUR_LABEL]);
     expect(await hasHorizontalScroll(page)).toBe(false);
     const boxes = await expectTapTargets(page);
     // The buttons sit side by side in the bar on a phone and never overlap.
@@ -136,7 +139,9 @@ test.describe("H6.8 contact card on a property ad with live tours on", () => {
     await page.locator("[data-tk=tour]:visible").click();
     const note = page.getByRole("status").filter({ hasText: "Sign in to request a live video tour." });
     await expect(note).toBeVisible();
-    await expect(note.getByRole("link", { name: "Sign in" })).toHaveAttribute("href", /^\/u\/login\/\?next=/);
+    // H7.9 (review #85): the extra "Sign in" link above the log-in form is removed; the form is the sign-in.
+    await expect(note.getByRole("link", { name: "Sign in" })).toHaveCount(0);
+    await expect(page.locator("[data-tk=ad-popup] form")).toBeVisible();
   });
 
   test("a signed-in visitor without coins is told by the server, and no request is sent", async ({ page, baseURL }) => {

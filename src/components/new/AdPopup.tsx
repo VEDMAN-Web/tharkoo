@@ -20,6 +20,8 @@ export type AdPopupAlt = { slug: string; href: string; title: string; place: str
 type Step = "login" | "code" | "call" | "away" | "buy" | "calling" | "error";
 type Channel = "phone" | "email";
 type Pack = { id: string; coins: number; price: number };
+/** The buy step shows the first three packs in the admin's order; "More packs" shows the rest. */
+const PACKS_SHOWN = 3;
 
 export type AdPopupProps = {
   kind: PopupKind;
@@ -39,12 +41,6 @@ export type AdPopupProps = {
   onSwitchToChat: () => void;
 };
 
-/** The full log-in page, for a visitor who prefers a password. Keeps the visitor on this ad after sign-in. */
-function signInHref() {
-  const next = typeof window === "undefined" ? "/" : window.location.pathname;
-  return `/u/login/?next=${encodeURIComponent(next)}`;
-}
-
 function firstStep(props: Pick<AdPopupProps, "kind" | "signedIn" | "seller">): Step {
   if (props.kind === "chat" || !props.signedIn) return "login";
   return props.seller?.status === "away" ? "away" : "call";
@@ -61,6 +57,7 @@ export function AdPopup(props: AdPopupProps) {
   const [packs, setPacks] = useState<Pack[]>([]);
   const [pick, setPick] = useState(0);
   const [payError, setPayError] = useState("");
+  const [showAllPacks, setShowAllPacks] = useState(false);
 
   // The balance is read when the call step opens (and again on the buy step, so a fresh pack shows the new total).
   useEffect(() => {
@@ -121,7 +118,7 @@ export function AdPopup(props: AdPopupProps) {
   const coins = props.tourCoins ?? 1;
   const coinUnit = coins === 1 ? t("ad.call.coinOne") : t("ad.call.coinMany", { count: coins });
   const title = titleFor(step, name, t);
-  const help = helpFor(step, { kind, name, coins, contact: contact.value, t });
+  const help = helpFor(step, { kind, name, coins, coinText: coinUnit, contact: contact.value, t });
 
   return (
     <div
@@ -140,14 +137,7 @@ export function AdPopup(props: AdPopupProps) {
         <div className="tkn-pop-body">
           {help ? <p className="tkn-pop-help">{help}</p> : null}
 
-          {step === "login" && kind === "call" ? (
-            <p role="status" className="tkn-pop-note">
-              {t("ad.call.signIn")}{" "}
-              <a className="tkn-pop-inline" href={signInHref()}>
-                {t("ad.call.signInLink")}
-              </a>
-            </p>
-          ) : null}
+          {step === "login" && kind === "call" ? <p role="status" className="tkn-pop-note">{t("ad.call.signIn")}</p> : null}
 
           {step === "login" ? (
             <LoginStep
@@ -199,7 +189,7 @@ export function AdPopup(props: AdPopupProps) {
           {step === "buy" ? (
             <div className="tkn-pop-stack">
               <div role="radiogroup" aria-label={t("ad.buy.packs")} className="tkn-packs">
-                {packs.map((pack, index) => {
+                {(showAllPacks ? packs : packs.slice(0, PACKS_SHOWN)).map((pack, index) => {
                   const on = index === pick;
                   return (
                     <button
@@ -218,6 +208,11 @@ export function AdPopup(props: AdPopupProps) {
                   );
                 })}
               </div>
+              {packs.length > PACKS_SHOWN && !showAllPacks ? (
+                <button type="button" className="tkn-pop-link" onClick={() => setShowAllPacks(true)}>
+                  {t("ad.buy.more")}
+                </button>
+              ) : null}
               {props.paymentsLive ? (
                 <button type="button" className="tkn-pop-btn" disabled={busy || packs.length === 0} onClick={() => void pay()}>
                   {t("ad.buy.pay", { amount: `₹${(packs[pick]?.price ?? 0).toLocaleString("en-IN")}` })}
@@ -226,7 +221,7 @@ export function AdPopup(props: AdPopupProps) {
                 <p role="status" className="tkn-pop-note">{t("ad.buy.soon")}</p>
               )}
               {payError ? <p role="status" className="tkn-pop-note">{payError}</p> : null}
-              <p className="tkn-pop-sub">{t("ad.buy.note")}</p>
+              <p className="tkn-pop-sub">{t(coins === 1 ? "ad.buy.noteOne" : "ad.buy.noteMany")}</p>
             </div>
           ) : null}
 
@@ -279,7 +274,7 @@ function titleFor(step: Step, name: string, t: T) {
   }
 }
 
-function helpFor(step: Step, v: { kind: PopupKind; name: string; coins: number; contact: string; t: T }) {
+function helpFor(step: Step, v: { kind: PopupKind; name: string; coins: number; coinText: string; contact: string; t: T }) {
   const { t } = v;
   switch (step) {
     case "login":
@@ -291,7 +286,7 @@ function helpFor(step: Step, v: { kind: PopupKind; name: string; coins: number; 
     case "away":
       return t("ad.away.help");
     case "buy":
-      return t("ad.buy.help", { coins: v.coins });
+      return t("ad.buy.help", { coins: v.coinText });
     case "calling":
       return t("ad.calling.help", { name: v.name });
     default:

@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { Flag, Shield } from "lucide-react";
 import type { ListingDoc } from "@/lib/models";
-import { displayTitle, listingDateLabel, prettyPlace } from "@/lib/format";
+import { displayTitle, prettyPlace, shortDateLabel } from "@/lib/format";
 import { listingPhotos, listingTagSections } from "@/lib/media";
 import { ContactButtons, ContactProvider, type ContactPopupInfo } from "@/components/ContactButtons";
 import { SaveButton } from "@/components/ui/SaveButton";
@@ -73,6 +73,7 @@ export function NewAdDetail({
   peopleAd = false,
   paymentsLive = false,
   alternatives = [],
+  sellerName = "",
   texts,
 }: {
   ad: ListingDoc;
@@ -88,6 +89,8 @@ export function NewAdDetail({
   /** H7.9: true only when a real coin provider is set. Until then the pop-up says purchases open soon. */
   paymentsLive?: boolean;
   alternatives?: AdPopupAlt[];
+  /** H7.9 (F9): the seller's display name. Empty shows "Seller". Never the ad title. */
+  sellerName?: string;
   /** Admin-edited UI text (ad.* and card.* keys). Without it the built-in text is used. */
   texts?: UiTextMap;
 }) {
@@ -98,14 +101,14 @@ export function NewAdDetail({
   const placeText = district ? `${city} / ${district}` : city;
   const sections = listingTagSections(ad.tags);
   const personal = PERSONAL.has(ad.categorySlug || "");
-  const date = listingDateLabel(ad.publishedAt || ad.createdAt);
+  const date = shortDateLabel(ad.publishedAt || ad.createdAt);
   const listHref = `/${ad.categorySlug}/${ad.citySlug}/`;
   const tier = tierOf(ad, categoryName);
   const photos = listingPhotos(ad.categorySlug, ad.publicId || ad.slug || "", ad.photos || []);
-  const sellerName = ad.displayName?.trim() || t("ad.seller.name");
+  const seller = sellerName?.trim() || t("ad.seller.name");
   const price = formatPrice(ad.price);
   const similar = related.filter((item) => item.slug !== ad.slug).slice(0, 4);
-  const popupInfo: ContactPopupInfo = { sellerName, paymentsLive, alternatives };
+  const popupInfo: ContactPopupInfo = { sellerName: seller, paymentsLive, alternatives };
 
   return (
     <UiTextProvider texts={texts}>
@@ -187,7 +190,7 @@ export function NewAdDetail({
             <aside className="tkn-ad-side" aria-label="Contact">
               <div className="tkn-contact-panel" data-tk="contact-card">
                 {price ? <p className="tkn-ad-price">{price}</p> : null}
-                <AdSellerRow name={sellerName} />
+                <AdSellerRow name={seller} />
                 <ContactButtons />
               </div>
               <section className="tkn-safe" data-tk="security-tips">
@@ -213,8 +216,8 @@ export function NewAdDetail({
               </div>
             </section>
           ) : null}
-          <div className={`tkn-ad-bar${tour && !peopleAd ? " has-video" : ""}`} data-tk="bottom-bar">
-            <ContactButtons sticky channels={["whatsapp"]} />
+          <div className={`tkn-ad-bar${peopleAd ? " has-call" : tour ? " has-video" : ""}`} data-tk="bottom-bar">
+            <ContactButtons sticky channels={peopleAd ? ["phone", "whatsapp"] : ["whatsapp"]} />
           </div>
         </div>
       </ContactProvider>
