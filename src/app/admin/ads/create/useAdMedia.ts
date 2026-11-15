@@ -11,9 +11,14 @@ export interface MediaItem {
   state: "uploading" | "ready" | "failed";
   /** 0 to 1 while the file is sent. */
   progress?: number;
+  /** H7.8: the file size in bytes, shown on the tile. */
+  size: number;
   mediaId: string;
   error: string;
 }
+
+/** H7.8: a refused or failed file does not count toward the limit. */
+const countsToward = (item: MediaItem) => item.state !== "failed";
 
 /**
  * The photo or video list of the create-ad form. Files upload one at a time as they are chosen.
@@ -30,7 +35,7 @@ export function useAdMedia(kind: MediaKind, limit: number, ownerEmail: string) {
 
   const add = useCallback(
     async (files: File[]) => {
-      const room = limit - items.length;
+      const room = limit - items.filter(countsToward).length;
       if (room <= 0) {
         setNote(`The limit is ${limit}. Remove one first.`);
         return;
@@ -39,7 +44,7 @@ export function useAdMedia(kind: MediaKind, limit: number, ownerEmail: string) {
       const fresh = files.slice(0, room).map((file) => {
         counter.current += 1;
         // H7.8: both kinds get a preview; a video shows its first frame in the box.
-        return { file, item: { key: `${Date.now()}-${counter.current}`, name: file.name, previewUrl: URL.createObjectURL(file), state: "uploading" as const, progress: 0, mediaId: "", error: "" } };
+        return { file, item: { key: `${Date.now()}-${counter.current}`, name: file.name, previewUrl: URL.createObjectURL(file), state: "uploading" as const, progress: 0, size: file.size, mediaId: "", error: "" } };
       });
       setItems((current) => [...current, ...fresh.map((entry) => entry.item)]);
       for (const entry of fresh) {
@@ -52,7 +57,7 @@ export function useAdMedia(kind: MediaKind, limit: number, ownerEmail: string) {
         patch(entry.item.key, result.ok ? { state: "ready", mediaId: result.mediaId } : { state: "failed", error: result.error });
       }
     },
-    [items.length, kind, limit, ownerEmail, patch],
+    [items, kind, limit, ownerEmail, patch],
   );
 
   const remove = useCallback(
@@ -86,6 +91,8 @@ export function useAdMedia(kind: MediaKind, limit: number, ownerEmail: string) {
 
   return {
     items,
+    /** H7.8: the files that count toward the limit (refused ones do not). */
+    counted: items.filter(countsToward).length,
     note,
     add,
     remove,

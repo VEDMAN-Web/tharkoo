@@ -35,14 +35,23 @@ test.describe("H7.8 shared uploader", () => {
     ]);
     await expect(photos.getByText("This photo is 9 MB. The limit is 8 MB.")).toBeVisible();
     await expect(photos.locator("[data-state=ready]")).toHaveCount(3, { timeout: 30_000 });
-    await expect(photos.locator("[data-tk=upload-count]")).toHaveText(/^4 of \d+$/);
+    // The refused file does not count: three photos are counted, not four.
+    await expect(photos.locator("[data-tk=upload-count]")).toHaveText(/^3 of \d+$/);
+    await expect(photos.locator(".upl-cover")).toHaveText("Cover");
+    await expect(photos.locator("li", { hasText: "photo-1.png" }).getByText(/ · Ready$/)).toBeVisible();
+
+    // A refused tile has only Remove: no move or cover buttons.
+    const refused = photos.locator("li", { hasText: "too-big.png" });
+    await expect(refused.getByRole("button", { name: "Move too-big.png earlier" })).toHaveCount(0);
+    await expect(refused.getByRole("button", { name: "Make too-big.png the cover" })).toHaveCount(0);
+    await expect(refused.getByRole("button", { name: "Remove too-big.png" })).toBeVisible();
 
     // Remove one, then move the last photo earlier.
     await photos.getByRole("button", { name: "Remove photo-2.png" }).click();
-    await expect(photos.locator("[data-tk=upload-count]")).toHaveText(/^3 of \d+$/);
+    await expect(photos.locator("[data-tk=upload-count]")).toHaveText(/^2 of \d+$/);
     await photos.getByRole("button", { name: "Move photo-3.png earlier" }).click();
     const names = await photos.locator(".upl-name").allTextContents();
-    expect(names.map((name) => name.replace(/^Cover\.\s*/, "").trim())).toEqual(["photo-3.png", "photo-1.png", "too-big.png"]);
+    expect(names).toEqual(["photo-3.png", "photo-1.png", "too-big.png"]);
     await photos.screenshot({ path: `${SHOTS}/h7.8-admin-photos-after-${testInfo.project.name}.png` });
 
     expect(await hasHorizontalScroll(page)).toBe(false);

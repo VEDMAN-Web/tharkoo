@@ -30,6 +30,7 @@ export function AdMediaPicker({ kind, items, limit, totalNote, note, disabled, o
     previewUrl: item.previewUrl || undefined,
     state: item.state,
     progress: item.progress,
+    size: item.size,
     error: item.error,
   }));
   return (

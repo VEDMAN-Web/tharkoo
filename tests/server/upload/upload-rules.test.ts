@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { fileProblem, megabytes, moveItem, UPLOAD_RULES, videoProblem } from "@/components/upload/rules";
+import { fileProblem, fileSize, megabytes, moveItem, UPLOAD_RULES, videoProblem } from "@/components/upload/rules";
 
 const MB = 1024 * 1024;
 
@@ -41,6 +41,8 @@ describe("upload rules (H7.8)", () => {
     expect(megabytes(1.5 * MB)).toBe("1.5 MB");
     expect(megabytes(9.0001 * MB)).toBe("9 MB");
     expect(megabytes(12.4 * MB)).toBe("12 MB");
+    expect(fileSize(50 * 1024)).toBe("50 KB");
+    expect(fileSize(1.2 * MB)).toBe("1.2 MB");
   });
 
   it("moves an item and clamps at the ends", () => {

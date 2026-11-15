@@ -158,15 +158,35 @@
   background: rgba(0, 0, 0, 0.25);
 }
 
+/* One line each for the name and the size, so every tile in the grid has the same height. */
 .upl-name {
+  display: block;
   font-size: 12px;
-  overflow-wrap: anywhere;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
   color: var(--ink-strong, #1f1530);
 }
 
 .upl-state {
+  display: block;
+  min-height: 1.2em;
   font-size: 12px;
+  white-space: nowrap;
   color: var(--muted, #5f5870);
+}
+
+.upl-cover {
+  position: absolute;
+  top: 6px;
+  left: 6px;
+  z-index: 1;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: #1f1530;
+  color: #fff;
+  font-size: 11px;
+  font-weight: 700;
 }
 
 .upl-error {
@@ -181,27 +201,37 @@
   accent-color: #c2185b;
 }
 
+/* One row of equal icon buttons on every tile; the row never wraps, so the grid stays even at 390. */
 .upl-tile-actions {
   display: flex;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
   gap: 4px;
+  justify-content: space-between;
 }
 
-.upl-tile-actions button {
-  min-height: 32px;
-  padding: 4px 8px;
+.upl-icon-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  min-width: 32px;
+  padding: 0;
   border-radius: 8px;
   border: 1px solid var(--line-strong, #c9bfd9);
   background: var(--surface, #fff);
-  font: inherit;
-  font-size: 12px;
   color: var(--ink-strong, #1f1530);
   cursor: pointer;
 }
 
-.upl-tile-actions button[disabled] {
-  opacity: 0.5;
+.upl-icon-btn[disabled] {
+  opacity: 0.4;
   cursor: not-allowed;
+}
+
+.upl-icon-danger {
+  border-color: #b3261e;
+  color: #b3261e;
 }
 
 .upl-info-wrap {

@@ -1,8 +1,9 @@
 "use client";
 
+import { ArrowLeft, ArrowRight, Star, Trash2, type LucideIcon } from "lucide-react";
 import { useId, useRef, useState, type DragEvent } from "react";
 import { InfoPopover } from "./InfoPopover";
-import type { UploadRule } from "./rules";
+import { fileSize, type UploadRule } from "./rules";
 import "./upload.css";
 
 /** One file in the box. The owner of the list decides what the states mean and when a file is saved. */
@@ -14,6 +15,8 @@ export type UploadItem = {
   state: "uploading" | "ready" | "failed";
   /** 0 to 1 while the file is sent, when the sender can report it. */
   progress?: number;
+  /** The file size in bytes, shown on a ready tile. */
+  size?: number;
   error?: string;
 };
 
@@ -39,16 +42,23 @@ type Props = {
 
 const DRAG_TYPE = "application/x-upload-key";
 
-function stateText(item: UploadItem): string {
-  if (item.state === "uploading") return "Uploading...";
-  if (item.state === "failed") return "";
-  return "Ready";
+/** The line under a ready tile: its size and "Ready". */
+function readyLine(item: UploadItem): string {
+  return item.size ? `${fileSize(item.size)} · Ready` : "Ready";
+}
+
+function TileButton({ label, icon: Icon, disabled, danger, onClick }: { label: string; icon: LucideIcon; disabled?: boolean; danger?: boolean; onClick: () => void }) {
+  return (
+    <button type="button" className={`upl-icon-btn${danger ? " upl-icon-danger" : ""}`} aria-label={label} title={label} disabled={disabled} onClick={onClick}>
+      <Icon size={16} aria-hidden="true" focusable="false" />
+    </button>
+  );
 }
 
 /**
  * H7.8: the one upload box used by every photo or video field. Drop or choose several files, see each one
- * upload, preview them, remove, drag or move, make cover, and count against the limit. Nothing is saved
- * here: the owner of the list saves it with the form.
+ * upload, preview them, remove, drag or move, make cover, and count against the limit. A refused file does not
+ * count: it shows its reason and a Remove button only. Nothing is saved here: the owner of the list saves it with the form.
  */
 export function UploadBox({ label, rule, items, limit, disabled = false, hint, note, onFiles, onRemove, onMove, onCover, onPickLibrary }: Props) {
   const uid = useId();
@@ -58,8 +68,10 @@ export function UploadBox({ label, rule, items, limit, disabled = false, hint, n
   const [over, setOver] = useState(false);
   const [dragKey, setDragKey] = useState("");
   const dragRef = useRef("");
-  const full = items.length >= limit;
+  const counted = items.filter((item) => item.state !== "failed").length;
+  const full = counted >= limit;
   const off = disabled || full;
+  const last = items.length - 1;
 
   function onDropFiles(event: DragEvent<HTMLElement>) {
     event.preventDefault();
@@ -94,7 +106,7 @@ export function UploadBox({ label, rule, items, limit, disabled = false, hint, n
           </ul>
         </InfoPopover>
         <span className="upl-count" data-tk="upload-count">
-          {items.length} of {limit}
+          {counted} of {limit}
         </span>
       </div>
       <p className="upl-line" id={lineId}>
@@ -145,84 +157,73 @@ export function UploadBox({ label, rule, items, limit, disabled = false, hint, n
       ) : null}
       {items.length ? (
         <ul className="upl-grid" aria-label={`${label}, in order`}>
-          {items.map((item, index) => (
-            <li
-              key={item.key}
-              className="upl-tile"
-              draggable={Boolean(onMove) && !disabled && items.length > 1}
-              data-state={item.state}
-              data-dragging={dragKey === item.key}
-              onDragStart={(event) => {
-                dragRef.current = item.key;
-                setDragKey(item.key);
-                event.dataTransfer.setData(DRAG_TYPE, item.key);
-                event.dataTransfer.effectAllowed = "move";
-              }}
-              onDragEnd={() => {
-                dragRef.current = "";
-                setDragKey("");
-              }}
-              onDragOver={(event) => {
-                if (dragRef.current) event.preventDefault();
-              }}
-              onDrop={(event) => onDropTile(event, index)}
-            >
-              <div className="upl-thumb">
-                {item.kind === "image" && item.previewUrl ? (
-                  // eslint-disable-next-line @next/next/no-img-element -- local object URL preview
-                  <img src={item.previewUrl} alt="" />
-                ) : item.kind === "video" && item.previewUrl ? (
-                  <video src={item.previewUrl} muted preload="metadata" aria-hidden="true" />
-                ) : (
-                  <span aria-hidden="true">{item.kind === "video" ? "Video" : "Photo"}</span>
-                )}
-                {item.kind === "video" ? (
-                  <span className="upl-play" aria-hidden="true">
-                    &#9654;
+          {items.map((item, index) => {
+            const refused = item.state === "failed";
+            const cover = index === 0 && item.kind === "image" && !refused;
+            return (
+              <li
+                key={item.key}
+                className="upl-tile"
+                draggable={Boolean(onMove) && !disabled && !refused && items.length > 1}
+                data-state={item.state}
+                data-dragging={dragKey === item.key}
+                onDragStart={(event) => {
+                  dragRef.current = item.key;
+                  setDragKey(item.key);
+                  event.dataTransfer.setData(DRAG_TYPE, item.key);
+                  event.dataTransfer.effectAllowed = "move";
+                }}
+                onDragEnd={() => {
+                  dragRef.current = "";
+                  setDragKey("");
+                }}
+                onDragOver={(event) => {
+                  if (dragRef.current) event.preventDefault();
+                }}
+                onDrop={(event) => onDropTile(event, index)}
+              >
+                <div className="upl-thumb">
+                  {item.kind === "image" && item.previewUrl ? (
+                    // eslint-disable-next-line @next/next/no-img-element -- local object URL preview
+                    <img src={item.previewUrl} alt="" />
+                  ) : item.kind === "video" && item.previewUrl ? (
+                    <video src={item.previewUrl} muted preload="metadata" aria-hidden="true" />
+                  ) : (
+                    <span aria-hidden="true">{item.kind === "video" ? "Video" : "Photo"}</span>
+                  )}
+                  {item.kind === "video" ? (
+                    <span className="upl-play" aria-hidden="true">
+                      &#9654;
+                    </span>
+                  ) : null}
+                  {cover ? <span className="upl-cover">Cover</span> : null}
+                </div>
+                <span className="upl-name">{item.name}</span>
+                {item.state === "uploading" ? (
+                  <progress className="upl-progress" max={1} value={item.progress} aria-label={`Uploading ${item.name}`} />
+                ) : null}
+                {refused ? (
+                  <span className="upl-error" role="alert">
+                    {item.error}
                   </span>
-                ) : null}
-              </div>
-              <span className="upl-name">
-                {index === 0 && item.kind === "image" ? "Cover. " : ""}
-                {item.name}
-              </span>
-              {item.state === "uploading" ? (
-                <progress
-                  className="upl-progress"
-                  max={1}
-                  value={item.progress}
-                  aria-label={`Uploading ${item.name}`}
-                />
-              ) : null}
-              {item.state === "failed" ? (
-                <span className="upl-error" role="alert">
-                  {item.error}
-                </span>
-              ) : (
-                <span className="upl-state">{stateText(item)}</span>
-              )}
-              <div className="upl-tile-actions">
-                {onMove && index > 0 ? (
-                  <button type="button" onClick={() => onMove(item.key, -1)} aria-label={`Move ${item.name} earlier`}>
-                    Earlier
-                  </button>
-                ) : null}
-                {onMove && index < items.length - 1 ? (
-                  <button type="button" onClick={() => onMove(item.key, 1)} aria-label={`Move ${item.name} later`}>
-                    Later
-                  </button>
-                ) : null}
-                {onCover && index > 0 ? (
-                  <button type="button" onClick={() => onCover(item.key)} aria-label={`Make ${item.name} the cover`}>
-                    Make cover
-                  </button>
-                ) : null}
-                <button type="button" className="upl-btn-danger" onClick={() => onRemove(item.key)} aria-label={`Remove ${item.name}`}>
-                  Remove
-                </button>
-              </div>
-            </li>
-          ))}
+                ) : (
+                  <span className="upl-state">{item.state === "uploading" ? "Uploading..." : readyLine(item)}</span>
+                )}
+                <div className="upl-tile-actions" role="group" aria-label={`Actions for ${item.name}`}>
+                  {refused || !onMove ? null : (
+                    <>
+                      <TileButton label={`Move ${item.name} earlier`} icon={ArrowLeft} disabled={index === 0} onClick={() => onMove(item.key, -1)} />
+                      <TileButton label={`Move ${item.name} later`} icon={ArrowRight} disabled={index === last} onClick={() => onMove(item.key, 1)} />
+                    </>
+                  )}
+                  {refused || !onCover ? null : (
+                    <TileButton label={`Make ${item.name} the cover`} icon={Star} disabled={index === 0} onClick={() => onCover(item.key)} />
+                  )}
+                  <TileButton label={`Remove ${item.name}`} icon={Trash2} danger onClick={() => onRemove(item.key)} />
+                </div>
+              </li>
+            );
+          })}
         </ul>
       ) : null}
     </div>

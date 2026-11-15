@@ -80,6 +80,12 @@ export function megabytes(bytes: number): string {
   return `${shown} MB`;
 }
 
+/** A file size for a tile: "640 KB" under 100 KB, otherwise "1.2 MB". */
+export function fileSize(bytes: number): string {
+  if (bytes < 100 * 1024) return `${Math.max(1, Math.round(bytes / 1024))} KB`;
+  return megabytes(bytes);
+}
+
 /** The reason one file cannot be uploaded to this box, or null when the type and size are fine. Length is checked by `videoProblem`. */
 export function fileProblem(file: { name: string; type: string; size: number }, rule: UploadRule): string | null {
   if (!rule.accept.includes(file.type)) return `This ${rule.noun} is not ${rule.formats} (${file.name}).`;
