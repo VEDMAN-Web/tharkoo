@@ -1,5 +1,5 @@
-import { AuthForm } from "@/components/AuthForm";
 import { SignInSheet } from "@/components/auth/SignInSheet";
+import { AuthForm } from "@/components/AuthForm";
 import { loginPath } from "@/lib/urls";
 import { withUrlSeo } from "@/lib/seo/override";
 import { smsDeliverable } from "@/server/auth/otp";
@@ -19,14 +19,15 @@ export async function generateMetadata() {
 }
 
 export default async function Page({ searchParams }: { searchParams: Promise<Record<string, string | string[] | undefined>> }) {
-  // The sheet is a New design screen. Off, the old password form stays.
+  // The card is a New design screen. Off, the old password form stays.
   if (!(await newDesignOn())) return <AuthForm mode="login" />;
   const params = await searchParams;
   const role = params.role === "seller" ? "seller" : "user";
   const next = typeof params.next === "string" ? params.next : null;
+  // The same card as the pop-up, shown once. The page has no box around it.
   return (
     <SignInSheet
-      inline
+      mode="page"
       initialRole={role}
       initialNext={next}
       landing={landingPathsFor(await getPaths())}

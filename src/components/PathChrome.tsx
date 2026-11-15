@@ -20,6 +20,8 @@ import { MainInner } from "./MainInner";
 import { UrlPathProvider } from "./UrlPaths";
 import { UiTextProvider } from "./help/UiTextProvider";
 import { SupportChat } from "./chat/SupportChat";
+import { SignInPopup } from "./auth/SignInPopup";
+import type { LandingPaths } from "./auth/landing";
 
 type City = { slug: string; name: string; stateSlug?: string };
 type Cat = { slug: string; name: string };
@@ -49,6 +51,8 @@ export type ChromeData = {
   shell: ShellConfig;
   /** H7.8: the UI-text overrides for the header and the live chat. */
   texts?: UiTextMap;
+  /** H7.12: the sign-in pop-up's paths and whether text codes can be sent. */
+  signIn: { landing: LandingPaths; showMobile: boolean };
 };
 
 export function PathChrome({ shell, paths, children }: { shell: ChromeData; paths: UrlPaths; children: React.ReactNode }) {
@@ -62,7 +66,7 @@ export function PathChrome({ shell, paths, children }: { shell: ChromeData; path
       </UrlPathProvider>
     );
   }
-  const { site, categories, cities, countries, cityCount, user, content, footerLinks, socialLinks, newDesign, shell: config, texts } = shell;
+  const { site, categories, cities, countries, cityCount, user, content, footerLinks, socialLinks, newDesign, shell: config, texts, signIn } = shell;
   // Style guides are tool pages: no age gate and no cookie banner.
   const toolPage = path.startsWith("/styleguide");
   const siteName = site.logoText || site.name || "Tharkoo";
@@ -87,6 +91,7 @@ export function PathChrome({ shell, paths, children }: { shell: ChromeData; path
           <MainInner>{children}</MainInner>
           <FooterNew siteName={siteName} shell={config} categories={categories} />
           <SupportChat chat={config.chat} texts={texts} />
+          <SignInPopup landing={signIn.landing} showMobile={signIn.showMobile} />
         </div>
       ) : (
         <>

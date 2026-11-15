@@ -6,6 +6,9 @@ import { textOverrides } from "@/app/admin/ui-text/store";
 import { readContent } from "@/lib/ui/site-content";
 import { pickTexts } from "@/lib/ui/text";
 import { newDesignOn } from "@/server/site-links/new-design";
+import { landingPathsFor } from "@/server/auth/landing-paths";
+import { smsDeliverable } from "@/server/auth/otp";
+import { getPaths } from "@/server/urls/service";
 import { countryChoices } from "@/server/locations/site-country";
 import { readShellConfig } from "@/server/site-links/shell-config";
 import { normaliseShellConfig, type ShellConfig, type ShellLink } from "@/server/site-links/shell-config-rules";
@@ -62,7 +65,7 @@ function shellWithFallbacks(config: ShellConfig, legacy: { whatsapp: string; tel
   };
 }
 
-function chromeData(shell: Shell): ChromeData {
+function chromeData(shell: Shell, signIn: ChromeData["signIn"]): ChromeData {
   const site = shell.site as SiteFields;
   const { categories, cities, countries, user } = shell;
   const { hero, header, socials, support, footer, age, cookies } = readContent(site.homepage);
@@ -92,6 +95,7 @@ function chromeData(shell: Shell): ChromeData {
     newDesign: shell.newDesign,
     // H7.8: the header and live chat words from the UI-text store (only those keys reach the client).
     texts: pickTexts(shell.texts, "header.", "chat.", "help."),
+    signIn,
     shell: plain(
       shellWithFallbacks(normaliseShellConfig(shell.shell), {
         whatsapp: support.whatsapp || "",
@@ -102,7 +106,7 @@ function chromeData(shell: Shell): ChromeData {
   };
 }
 
-export function SiteShell({
+export async function SiteShell({
   children,
   shell,
 }: {
@@ -112,9 +116,11 @@ export function SiteShell({
   admin?: boolean;
 }) {
   const paths = readPaths((shell.site as { paths?: unknown } | null)?.paths);
+  // H7.12: the sign-in pop-up needs the landing paths and whether text codes can go out.
+  const signIn = { landing: landingPathsFor(await getPaths()), showMobile: smsDeliverable() };
   return (
     <>
-      <PathChrome shell={chromeData(shell)} paths={paths}>{children}</PathChrome>
+      <PathChrome shell={chromeData(shell, signIn)} paths={paths}>{children}</PathChrome>
       <MotionInit />
     </>
   );

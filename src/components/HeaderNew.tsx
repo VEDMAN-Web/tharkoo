@@ -8,6 +8,7 @@ import { useEffect, useState } from "react";
 import { HeaderCountry } from "./HeaderCountry";
 import type { CountryOption } from "@/server/locations/country-scope";
 import { HeaderDrawer } from "./HeaderDrawer";
+import { isProbablySignedIn, openSignInFromLink } from "./auth/SignInSheet";
 import { useUrlPaths } from "./UrlPaths";
 import { safeHref } from "@/lib/sanitize";
 import { makeT, type UiTextMap } from "@/lib/ui/text";
@@ -91,8 +92,17 @@ export function HeaderNew({
           >
             <Search size={20} aria-hidden="true" focusable="false" />
           </button>
-          <Link href={loginPath(paths)} className="tkn-btn tkn-btn-ghost tkn-hide-sm">{shell.header.loginLabel}</Link>
-          <Link href={postAdPath(paths)} className="tkn-btn tkn-btn-primary" data-tk="post-ad" prefetch={false}>
+          {/* H7.12: Log in and Post your ad (signed out) open the sign-in card over this page; the links are the fallback. */}
+          <Link href={loginPath(paths)} className="tkn-btn tkn-btn-ghost tkn-hide-sm" onClick={(event) => openSignInFromLink(event, "user")}>{shell.header.loginLabel}</Link>
+          <Link
+            href={postAdPath(paths)}
+            className="tkn-btn tkn-btn-primary"
+            data-tk="post-ad"
+            prefetch={false}
+            onClick={(event) => {
+              if (!isProbablySignedIn()) openSignInFromLink(event, "seller", postAdPath(paths));
+            }}
+          >
             <span className="tkn-post-long">{shell.header.postLabel}</span>
             <span className="tkn-post-short">{t("header.postShort")}</span>
           </Link>

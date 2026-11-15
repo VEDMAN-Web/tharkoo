@@ -1,21 +1,58 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { type FormEvent, type MouseEvent, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { api, friendlyError, safeNext } from "@/lib/ui/api";
+import { CodeBoxes } from "@/components/auth/CodeBoxes";
+import { SellerSetup, type SellerValues } from "@/components/auth/SellerSetup";
+import { SIGN_IN_CSS } from "@/components/auth/sign-in-css";
+import { CODE_LENGTH, formatCountdown, indiaPhone } from "@/components/auth/sign-in-input";
 import { DEFAULT_LANDING, landingFor, type LandingPaths, type SignInRole } from "@/components/auth/landing";
+import { useUrlPaths } from "@/components/UrlPaths";
+import { api, fieldErrors, friendlyError, isStaffRole, safeNext } from "@/lib/ui/api";
+import { applyPrefixes } from "@/lib/urls";
 
 export type { SignInRole } from "@/components/auth/landing";
 export { landingFor, DEFAULT_LANDING } from "@/components/auth/landing";
-type Step = "role" | "identifier" | "code";
+
+type Step = "identify" | "code" | "seller";
 type Channel = "phone" | "email";
+
+interface VerifiedUser {
+  roles?: string[];
+  seller?: unknown | null;
+  dateOfBirth?: string | null;
+}
 
 export const SIGN_IN_EVENT = "tk:open-sign-in";
 export const RESEND_SECONDS = 30;
+/** Set on the pop-up host in the page. A link only opens the pop-up where the host is mounted (the New design). */
+export const SIGN_IN_HOST_ATTR = "data-signin-host";
+/** The cookie set on login (same name as SESSION_HINT on the server). Its presence means "probably signed in". */
+const SIGN_IN_HINT = "tk-in";
 
-/** Opens the sign-in sheet from anywhere on the page. "Log in" passes "user", "Post your ad" passes "seller". */
-export function openSignIn(role: SignInRole = "user", next?: string | null) {
-  window.dispatchEvent(new CustomEvent(SIGN_IN_EVENT, { detail: { role, next: next ?? null } }));
+export interface SignInEventDetail {
+  role?: SignInRole;
+  next?: string | null;
+}
+
+/** Opens the sign-in pop-up over the current page. Returns false when no pop-up is mounted, so the link still works. */
+export function openSignIn(role: SignInRole = "user", next?: string | null): boolean {
+  if (typeof document === "undefined" || !document.querySelector(`[${SIGN_IN_HOST_ATTR}]`)) return false;
+  const detail: SignInEventDetail = { role, next: next ?? null };
+  window.dispatchEvent(new CustomEvent<SignInEventDetail>(SIGN_IN_EVENT, { detail }));
+  return true;
+}
+
+/** A plain left click opens the pop-up; a modified click or middle click keeps the normal link. */
+export function openSignInFromLink(event: MouseEvent<HTMLElement>, role: SignInRole = "user", next?: string) {
+  if (event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+  if (openSignIn(role, next)) event.preventDefault();
+}
+
+/** True when the browser has the login hint cookie. Used to skip the sign-in pop-up for people already in. */
+export function isProbablySignedIn(): boolean {
+  if (typeof document === "undefined") return false;
+  return document.cookie.split(";").some((part) => part.trim().startsWith(`${SIGN_IN_HINT}=`));
 }
 
 /** Keeps only digits, so a pasted code with spaces still works. */
@@ -29,51 +66,47 @@ export function normalizeIdentifier(channel: Channel, raw: string) {
 }
 
 const COPY: Record<Step, { title: string; help: string }> = {
-  role: { title: "Log in or sign up", help: "Choose how you will use Tharkoo. No password, ever: we send you a one-time code." },
-  identifier: { title: "Enter your email", help: "We will send a 6-digit code to this address. New here? The same step creates your account." },
-  code: { title: "Enter your code", help: "The code is valid for 10 minutes. Check your inbox." },
+  identify: { title: "Log in or sign up", help: "Enter your mobile number or email and we send you a 6-digit code. No password, ever." },
+  code: { title: "Enter your code", help: "We sent a 6-digit code. It is valid for 10 minutes." },
+  seller: { title: "Your seller profile", help: "This is what people see on your ads. You can change it any time." },
 };
 
-interface Props {
-  /** Test and fallback pages can render the sheet already open. */
-  initiallyOpen?: boolean;
-  /** Login page: shows the same content inline, without the overlay. */
-  inline?: boolean;
-  /** Login page: the role and return address from the URL. */
+export interface SignInSheetProps {
+  /** "page": the /u/login/ page shows the card once. "popup": the card sits over the current page. */
+  mode: "page" | "popup";
   initialRole?: SignInRole;
+  /** Where to go after sign-in. The pop-up always gets the current page here, so the visitor stays where they were. */
   initialNext?: string | null;
   /** Where each kind of person lands. The server passes the real paths. */
   landing?: LandingPaths;
-  /** The mobile tab is shown only when an SMS gateway can deliver. Until then only email is offered. */
+  /** Text codes need an SMS gateway. Until one is on, the Mobile number tab is shown but cannot be used. */
   showMobile?: boolean;
+  onClose?: () => void;
 }
 
-export function SignInSheet({ initiallyOpen = false, inline = false, initialRole = "user", initialNext = null, landing = DEFAULT_LANDING, showMobile = false }: Props) {
+/**
+ * H7.12: the one sign-in card, used as a pop-up and on /u/login/. Left: "One code. No password." with three points.
+ * Right: choose user or seller, mobile or email, the six code boxes, then (sellers, once) the seller profile.
+ */
+export function SignInSheet({ mode, initialRole = "user", initialNext = null, landing = DEFAULT_LANDING, showMobile = false, onClose }: SignInSheetProps) {
   const router = useRouter();
-  const [open, setOpen] = useState(initiallyOpen || inline);
+  const paths = useUrlPaths();
+  const popup = mode === "popup";
   const [role, setRole] = useState<SignInRole>(initialRole);
-  const [next, setNext] = useState<string | null>(safeNext(initialNext));
-  const [step, setStep] = useState<Step>("role");
-  const [channel, setChannel] = useState<Channel>("email");
+  const [channel, setChannel] = useState<Channel>(showMobile ? "phone" : "email");
   const [identifier, setIdentifier] = useState("");
+  const [sentTo, setSentTo] = useState("");
+  const [step, setStep] = useState<Step>("identify");
   const [code, setCode] = useState("");
+  const [keepIn, setKeepIn] = useState(true);
+  const [askDob, setAskDob] = useState(false);
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState("");
+  const [sellerErrors, setSellerErrors] = useState<Record<string, string[]>>({});
   const [resendIn, setResendIn] = useState(0);
-  const dialogRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    function onOpen(event: Event) {
-      const detail = (event as CustomEvent<{ role?: SignInRole; next?: string | null }>).detail;
-      setRole(detail?.role === "seller" ? "seller" : "user");
-      setNext(safeNext(detail?.next ?? null));
-      setStep("role");
-      setMessage("");
-      setOpen(true);
-    }
-    window.addEventListener(SIGN_IN_EVENT, onOpen);
-    return () => window.removeEventListener(SIGN_IN_EVENT, onOpen);
-  }, []);
+  const rootRef = useRef<HTMLDivElement>(null);
+  const skipFirstFocus = useRef(true);
+  const next = safeNext(initialNext);
 
   useEffect(() => {
     if (resendIn <= 0) return;
@@ -81,211 +114,236 @@ export function SignInSheet({ initiallyOpen = false, inline = false, initialRole
     return () => window.clearTimeout(timer);
   }, [resendIn]);
 
+  // The pop-up moves focus into the card when it opens and at each step. The login page does not steal focus on load.
   useEffect(() => {
-    if (!open || inline) return;
-    function onKey(event: KeyboardEvent) {
-      if (event.key === "Escape") setOpen(false);
+    if (skipFirstFocus.current) {
+      skipFirstFocus.current = false;
+      if (!popup) return;
     }
-    window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
-  }, [open, inline]);
+    rootRef.current?.querySelector<HTMLElement>("[data-focus]")?.focus();
+  }, [step, popup]);
 
-  useEffect(() => {
-    if (open) dialogRef.current?.querySelector<HTMLElement>("input,button")?.focus();
-  }, [open, step]);
-
-  if (!open) return null;
+  const identifierReady = channel === "phone" ? identifier.replace(/\D/g, "").length >= 10 : identifier.trim().length >= 5;
 
   async function sendCode(resend = false) {
+    const value = channel === "phone" ? indiaPhone(identifier) : normalizeIdentifier("email", identifier);
     setBusy(true);
     setMessage("");
-    const value = normalizeIdentifier(channel, identifier);
-    const path = channel === "phone" ? "/api/auth/otp/send" : "/api/auth/email/otp/send";
-    const body = channel === "phone" ? { phone: value } : { email: value };
-    const res = await api<{ sent: boolean }>(path, { method: "POST", body: JSON.stringify(body) });
+    const res =
+      channel === "phone"
+        ? await api<{ sent: boolean }>("/api/auth/otp/send", { method: "POST", body: JSON.stringify({ phone: value }) })
+        : await api<{ sent: boolean }>("/api/auth/email/otp/send", { method: "POST", body: JSON.stringify({ email: value }) });
     setBusy(false);
     if (!res.ok) {
       setMessage(friendlyError(res.error));
       return;
     }
+    setSentTo(value);
     setStep("code");
     setCode("");
     setResendIn(RESEND_SECONDS);
     setMessage(resend ? "A new code was sent." : "");
   }
 
-  async function verifyCode() {
+  async function verifyCode(value: string) {
+    if (busy) return;
     setBusy(true);
     setMessage("");
-    const value = normalizeIdentifier(channel, identifier);
-    const path = channel === "phone" ? "/api/auth/otp/verify" : "/api/auth/email/otp/verify";
-    const body = channel === "phone" ? { phone: value, code } : { email: value, code };
-    const res = await api<{ user: { roles?: string[]; seller?: unknown | null } }>(path, { method: "POST", body: JSON.stringify(body) });
+    const res =
+      channel === "phone"
+        ? await api<{ user: VerifiedUser }>("/api/auth/otp/verify", { method: "POST", body: JSON.stringify({ phone: sentTo, code: value }) })
+        : await api<{ user: VerifiedUser }>("/api/auth/email/otp/verify", { method: "POST", body: JSON.stringify({ email: sentTo, code: value }) });
     setBusy(false);
     if (!res.ok) {
+      setCode("");
       setMessage(res.status === 401 ? "That code is not valid. Check it, or ask for a new one." : friendlyError(res.error));
+      rootRef.current?.querySelector<HTMLElement>("[data-focus]")?.focus();
       return;
     }
-    setOpen(false);
-    router.push(
-      landingFor({
-        roles: res.data.user?.roles,
-        hasSellerProfile: Boolean(res.data.user?.seller),
-        role,
-        next,
-        paths: landing,
-      }),
-    );
+    const user = res.data.user;
+    if (role === "seller" && !user.seller && !isStaffRole(user.roles)) {
+      setAskDob(!user.dateOfBirth);
+      setStep("seller");
+      return;
+    }
+    finish(user.roles, Boolean(user.seller), false);
+  }
+
+  async function saveSeller(values: SellerValues) {
+    setBusy(true);
+    setMessage("");
+    setSellerErrors({});
+    const body = {
+      name: values.name.trim(),
+      city: values.city.trim(),
+      whatsapp: "",
+      availableNow: false,
+      ...(askDob ? { dateOfBirth: values.dateOfBirth, adultConfirmed: values.adultConfirmed } : {}),
+    };
+    const res = await api<{ seller: unknown }>("/api/auth/seller-profile", { method: "PUT", body: JSON.stringify(body) });
+    setBusy(false);
+    if (!res.ok) {
+      setSellerErrors(fieldErrors(res.error));
+      setMessage(friendlyError(res.error));
+      return;
+    }
+    finish(undefined, true, true);
+  }
+
+  /**
+   * The pop-up closes and the visitor stays on the page they were on. The login page goes to the return address,
+   * or to the panel for their kind. A seller who has just made a profile goes on to the ad form.
+   */
+  function finish(roles: string[] | undefined, hasSellerProfile: boolean, newSeller: boolean) {
+    const current = window.location.pathname + window.location.search;
+    const returnTo = popup ? (next ?? current) : (next ?? (newSeller ? landing.postAd : null));
+    const destination = landingFor({ roles, hasSellerProfile, role, next: returnTo, paths: landing });
+    if (popup) {
+      onClose?.();
+      if (destination !== current) router.push(destination);
+    } else {
+      router.push(destination);
+    }
     router.refresh();
   }
 
   const copy = COPY[step];
-  // The login page has one h1; the overlay sits on a page that already has one.
-  const TitleTag = inline ? "h1" : "h2";
-  const roleLabel = role === "seller" ? "I am a seller" : "I am a user";
+  const Title = popup ? "h2" : "h1";
+  const describedBy = message ? "tk-si-msg" : undefined;
 
-  const body = (
-    <div ref={dialogRef} role={inline ? undefined : "dialog"} aria-modal={inline ? undefined : true} aria-labelledby="tk-si-title" className="tk-si">
-      <style>{SHEET_CSS}</style>
-      {!inline ? (
-        <button type="button" className="tk-si-close" onClick={() => setOpen(false)} aria-label="Close">
-          ×
-        </button>
-      ) : null}
-      <TitleTag id="tk-si-title" className="tk-si-title">{copy.title}</TitleTag>
-      <p className="tk-si-help">{copy.help}</p>
-
-      {step === "role" ? (
-        <div className="tk-si-form">
-          <div role="radiogroup" aria-label="I am here to" className="tk-si-roles">
-            {(["user", "seller"] as SignInRole[]).map((value) => (
-              <button
-                key={value}
-                type="button"
-                role="radio"
-                aria-checked={role === value}
-                className={`tk-si-role ${role === value ? "is-on" : ""}`}
-                onClick={() => setRole(value)}
-              >
-                {value === "user" ? "I am a user" : "I am a seller"}
-              </button>
-            ))}
-          </div>
-          <button type="button" className="tk-si-primary" onClick={() => setStep("identifier")}>
-            Continue
-          </button>
-        </div>
-      ) : null}
-
-      {step === "identifier" ? (
-        <form
-          className="tk-si-form"
-          noValidate
-          onSubmit={(event) => {
-            event.preventDefault();
-            void sendCode();
-          }}
-        >
-          {showMobile ? (
-            <div role="tablist" aria-label="Send the code to" className="tk-si-roles">
-              {(["email", "phone"] as Channel[]).map((value) => (
-                <button key={value} type="button" role="tab" aria-selected={channel === value} className={`tk-si-role ${channel === value ? "is-on" : ""}`} onClick={() => setChannel(value)}>
-                  {value === "phone" ? "Mobile (+91)" : "Email"}
-                </button>
-              ))}
-            </div>
-          ) : null}
-          <label className="tk-si-label">
-            <span>{channel === "phone" ? "Mobile number" : "Email address"}</span>
-            <input
-              className="tk-si-input"
-              name={channel}
-              type={channel === "phone" ? "tel" : "email"}
-              inputMode={channel === "phone" ? "tel" : "email"}
-              autoComplete={channel === "phone" ? "tel" : "email"}
-              value={identifier}
-              onChange={(event) => setIdentifier(event.target.value)}
-              required
-            />
-          </label>
-          <button type="submit" className="tk-si-primary" disabled={busy || identifier.trim().length < 5}>
-            {busy ? "Sending" : "Send code"}
-          </button>
-        </form>
-      ) : null}
-
-      {step === "code" ? (
-        <form
-          className="tk-si-form"
-          noValidate
-          onSubmit={(event) => {
-            event.preventDefault();
-            void verifyCode();
-          }}
-        >
-          <label className="tk-si-label">
-            <span>6-digit code</span>
-            <input
-              className="tk-si-input tk-si-code"
-              name="code"
-              inputMode="numeric"
-              autoComplete="one-time-code"
-              maxLength={6}
-              value={code}
-              onChange={(event) => setCode(digitsOnly(event.target.value, 6))}
-              required
-            />
-          </label>
-          <button type="submit" className="tk-si-primary" disabled={busy || code.length !== 6}>
-            {busy ? "Checking" : "Log in"}
-          </button>
-          <div className="tk-si-row">
-            <button type="button" className="tk-si-link" disabled={busy || resendIn > 0} onClick={() => void sendCode(true)}>
-              {resendIn > 0 ? `Resend code in ${resendIn}s` : "Resend code"}
-            </button>
-            <button type="button" className="tk-si-link" onClick={() => setStep("identifier")}>
-              Use a different address
-            </button>
-          </div>
-        </form>
-      ) : null}
-
-      <p aria-live="polite" className="tk-si-message">{message}</p>
-      {step !== "role" ? (
-        <p className="tk-si-help">{roleLabel}. <button type="button" className="tk-si-link" onClick={() => setStep("role")}>Change</button></p>
-      ) : null}
-    </div>
-  );
-
-  if (inline) return <section className="tk-si-inline" aria-label="Log in">{body}</section>;
   return (
-    <div className="tk-si-backdrop" onMouseDown={(event) => event.target === event.currentTarget && setOpen(false)}>
-      {body}
+    <div ref={rootRef} className={`tk-si ${popup ? "tk-si-popup" : "tk-si-page"}`} role={popup ? "dialog" : undefined} aria-modal={popup ? true : undefined} aria-labelledby="tk-si-title">
+      <style>{SIGN_IN_CSS}</style>
+      <div className="tk-si-card">
+        <aside className="tk-si-side">
+          <p className="tk-si-eyebrow">Tharkoo account</p>
+          <h2 className="tk-si-pitch">One code. No password.</h2>
+          <ul className="tk-si-points">
+            <li className="tk-si-point"><span className="tk-si-num" aria-hidden="true">1</span><span className="tk-si-point-text">No password to remember</span></li>
+            <li className="tk-si-point"><span className="tk-si-num" aria-hidden="true">2</span><span className="tk-si-point-text">Chat, save ads and get alerts</span></li>
+            <li className="tk-si-point"><span className="tk-si-num" aria-hidden="true">3</span><span className="tk-si-point-text">Post your own ads for free</span></li>
+          </ul>
+        </aside>
+
+        <section className="tk-si-main">
+          {popup ? (
+            <button type="button" className="tk-si-close tk-si-focus" aria-label="Close" onClick={() => onClose?.()}>
+              ×
+            </button>
+          ) : null}
+          <div>
+            <Title id="tk-si-title" className="tk-si-title">{copy.title}</Title>
+            <p className="tk-si-help">{step === "code" ? `We sent a 6-digit code to ${sentTo}. It is valid for 10 minutes.` : copy.help}</p>
+          </div>
+
+          {step === "identify" ? (
+            <form
+              className="tk-si-stack"
+              noValidate
+              onSubmit={(event: FormEvent<HTMLFormElement>) => {
+                event.preventDefault();
+                if (busy) return;
+                if (!identifierReady) {
+                  setMessage(channel === "phone" ? "Enter your 10-digit mobile number." : "Enter your email address.");
+                  return;
+                }
+                void sendCode();
+              }}
+            >
+              <div role="radiogroup" aria-label="I am here to" className="tk-si-roles">
+                {(["user", "seller"] as SignInRole[]).map((value) => (
+                  <button key={value} type="button" role="radio" aria-checked={role === value} className={`tk-si-role tk-si-focus ${role === value ? "is-on" : ""}`} onClick={() => setRole(value)}>
+                    <span className="tk-si-role-name">{value === "user" ? "I am a user" : "I am a seller"}</span>
+                    <span className="tk-si-role-sub">{value === "user" ? "Browse, save and chat" : "Post ads and get calls"}</span>
+                  </button>
+                ))}
+              </div>
+
+              <div role="tablist" aria-label="Send the code by" className="tk-si-tabs">
+                <button type="button" role="tab" aria-selected={channel === "phone"} disabled={!showMobile} className="tk-si-tab tk-si-focus" onClick={() => setChannel("phone")}>
+                  Mobile number
+                </button>
+                <button type="button" role="tab" aria-selected={channel === "email"} className="tk-si-tab tk-si-focus" onClick={() => setChannel("email")}>
+                  Email
+                </button>
+              </div>
+
+              {channel === "phone" ? (
+                <div>
+                  <label className="tk-si-lab" htmlFor="tk-si-phone">Mobile number</label>
+                  <div className="tk-si-phone">
+                    <span className="tk-si-prefix">+91</span>
+                    <input id="tk-si-phone" data-focus="" className="tk-si-in tk-si-focus" name="phone" type="tel" inputMode="tel" autoComplete="tel-national" placeholder="98250 12345" value={identifier} onChange={(event) => setIdentifier(event.target.value)} aria-describedby={describedBy} />
+                  </div>
+                  {!showMobile ? <p className="tk-si-help" style={{ marginTop: 6 }}>Codes by text message are not on yet. Use email for now.</p> : null}
+                </div>
+              ) : (
+                <div>
+                  <label className="tk-si-lab" htmlFor="tk-si-email">Email address</label>
+                  <input id="tk-si-email" data-focus="" className="tk-si-in tk-si-focus" name="email" type="email" inputMode="email" autoComplete="email" placeholder="you@example.com" value={identifier} onChange={(event) => setIdentifier(event.target.value)} aria-describedby={describedBy} />
+                </div>
+              )}
+
+              <label className="tk-si-check">
+                <input type="checkbox" checked={keepIn} onChange={(event) => setKeepIn(event.target.checked)} />
+                Keep me logged in on this device
+              </label>
+              <button type="submit" className="tk-si-primary tk-si-focus" disabled={busy}>
+                {busy ? "Sending" : "Send me a code"}
+              </button>
+              <p className="tk-si-terms">
+                By continuing you agree to the <a href={applyPrefixes("/terms/", paths)}>Terms</a> and <a href={applyPrefixes("/privacy/", paths)}>Privacy Policy</a>.
+              </p>
+              <p className="tk-si-note">Users land in the user panel. Users are never asked for their age; everyone confirms 18+ once when they open Tharkoo.</p>
+            </form>
+          ) : null}
+
+          {step === "code" ? (
+            <form
+              className="tk-si-stack"
+              noValidate
+              onSubmit={(event: FormEvent<HTMLFormElement>) => {
+                event.preventDefault();
+                if (code.length === CODE_LENGTH) void verifyCode(code);
+              }}
+            >
+              <CodeBoxes
+                value={code}
+                disabled={busy}
+                invalid={Boolean(message)}
+                describedBy={describedBy}
+                onChange={(next) => {
+                  setCode(next);
+                  if (next.length === CODE_LENGTH) void verifyCode(next);
+                }}
+              />
+              <button type="submit" className="tk-si-primary tk-si-focus" disabled={busy || code.length !== CODE_LENGTH}>
+                {busy ? "Checking" : "Log in"}
+              </button>
+              <div className="tk-si-row">
+                <button type="button" className="tk-si-link tk-si-focus" disabled={busy || resendIn > 0} onClick={() => void sendCode(true)}>
+                  {resendIn > 0 ? `Resend in ${formatCountdown(resendIn)}` : "Resend code"}
+                </button>
+                <button
+                  type="button"
+                  className="tk-si-link tk-si-focus"
+                  onClick={() => {
+                    setStep("identify");
+                    setCode("");
+                    setMessage("");
+                  }}
+                >
+                  Use a different address
+                </button>
+              </div>
+            </form>
+          ) : null}
+
+          {step === "seller" ? <SellerSetup askDateOfBirth={askDob} busy={busy} errors={sellerErrors} onSubmit={(values) => void saveSeller(values)} /> : null}
+
+          <p id="tk-si-msg" className="tk-si-error" aria-live="polite">{message}</p>
+        </section>
+      </div>
     </div>
   );
 }
-
-const SHEET_CSS = `
-.tk-si-backdrop{position:fixed;inset:0;z-index:1000;display:flex;align-items:center;justify-content:center;background:rgba(17,5,32,.36);padding:16px}
-.tk-si,.tk-si-inline{position:relative;box-sizing:border-box;width:100%;max-width:460px;max-height:90vh;overflow:auto;padding:32px 28px 28px;border-radius:20px;background:rgba(255,255,255,.92);border:1px solid #fff;box-shadow:0 24px 64px rgba(45,18,72,.22);backdrop-filter:blur(22px) saturate(180%);color:#1E0B38;font-family:'Plus Jakarta Sans',system-ui,sans-serif}
-.tk-si-inline{margin:24px auto}
-.tk-si-title{margin:0 0 6px;font-size:24px;letter-spacing:-.02em;color:#110520}
-.tk-si-help{margin:0 0 12px;font-size:14px;line-height:1.55;color:#4A2870}
-.tk-si-close{position:absolute;top:10px;right:10px;min-width:44px;min-height:44px;border:0;background:none;font-size:26px;color:#4A2870;cursor:pointer}
-.tk-si-form{display:grid;gap:14px}
-.tk-si-roles{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
-.tk-si-role{min-height:48px;padding:0 12px;border-radius:14px;border:1.5px solid #EAD8F0;background:#fff;font:inherit;font-size:15px;font-weight:700;color:#4A2870;cursor:pointer}
-.tk-si-role.is-on{border-color:#D1137A;background:linear-gradient(135deg,#FFE4F1,#F3E8FF);color:#A8124F}
-.tk-si-label{display:grid;gap:8px;font-size:14px;font-weight:700}
-.tk-si-input{width:100%;box-sizing:border-box;min-height:48px;border:1.5px solid #EAD8F0;border-radius:12px;padding:0 14px;font:inherit;font-size:16px;color:#1E0B38;background:#fff}
-.tk-si-code{letter-spacing:.4em;text-align:center;font-size:20px}
-.tk-si-input:focus-visible,.tk-si-role:focus-visible,.tk-si-primary:focus-visible,.tk-si-link:focus-visible,.tk-si-close:focus-visible{outline:3px solid #7C3AED;outline-offset:2px}
-.tk-si-primary{min-height:48px;border:0;border-radius:999px;background:linear-gradient(135deg,#D1137A,#A8124F);color:#fff;font:inherit;font-size:15px;font-weight:700;cursor:pointer}
-.tk-si-primary:disabled{opacity:.55;cursor:not-allowed}
-.tk-si-link{min-height:44px;padding:0 4px;border:0;background:none;font:inherit;font-size:14px;font-weight:600;color:#A8124F;text-decoration:underline;cursor:pointer}
-.tk-si-link:disabled{color:#8a7a99;cursor:default;text-decoration:none}
-.tk-si-row{display:flex;flex-wrap:wrap;justify-content:space-between;gap:8px}
-.tk-si-message{min-height:20px;margin:8px 0 0;font-size:14px;color:#A8124F}
-@media (max-width:640px){.tk-si-backdrop{align-items:flex-end;padding:0}.tk-si{max-width:none;border-radius:20px 20px 0 0;padding:28px 20px calc(24px + env(safe-area-inset-bottom))}}
-@media (prefers-reduced-motion:reduce){.tk-si *{transition:none !important;animation:none !important}}
-`;
