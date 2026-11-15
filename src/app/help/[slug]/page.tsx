@@ -1,14 +1,14 @@
-import Link from "next/link";
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
-import { getHelp } from "@/lib/queries";
-import { Container } from "@/components/ui/Container";
-import { Prose } from "@/components/ui/Prose";
+import { getHelp, getHelpArticles } from "@/lib/queries";
 import { helpPath } from "@/lib/urls";
 import { withUrlSeo, urlHeading } from "@/lib/seo/override";
 import { getPaths } from "@/server/urls/service";
+import { HelpArticleView } from "@/components/h714/HelpArticleView";
 
 export const revalidate = 300;
+
+const WORDS_PER_MINUTE = 200;
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
   const { slug } = await params;
@@ -30,18 +30,37 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   });
 }
 
+function updatedLabel(date?: Date) {
+  if (!date) return "";
+  return `Updated ${new Intl.DateTimeFormat("en-GB", { day: "numeric", month: "short", year: "numeric" }).format(new Date(date))}`;
+}
+
+function readLabel(body: string) {
+  const words = body.trim() ? body.trim().split(/\s+/).length : 0;
+  return `${Math.max(1, Math.ceil(words / WORDS_PER_MINUTE))} min read`;
+}
+
 export default async function HelpArticlePage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
-  const [article, paths] = await Promise.all([getHelp(slug), getPaths()]);
+  const [article, articles, paths] = await Promise.all([getHelp(slug), getHelpArticles(), getPaths()]);
   if (!article) notFound();
   const heading = await urlHeading(helpPath(paths, article.slug || slug), article.title || "Help");
+  const section = (article.section || "").trim();
+  const sameSection = section ? articles.filter((item) => (item.section || "").trim() === section) : [];
+  const related = (sameSection.length ? sameSection : [article]).map((item) => ({
+    title: item.title || "",
+    href: helpPath(paths, item.slug || ""),
+  }));
   return (
-    <Container className="py-8">
-      <p className="t-small">
-        <Link href={helpPath(paths)} className="text-accent">Help Center</Link>
-      </p>
-      <h1 className="t-h1 mt-2">{heading}</h1>
-      <Prose className="mt-4 whitespace-pre-wrap">{article.body}</Prose>
-    </Container>
+    <HelpArticleView
+      helpRoot={helpPath(paths)}
+      section={section || "Help"}
+      title={heading}
+      updatedLabel={updatedLabel(article.updatedAt)}
+      readLabel={readLabel(article.body || "")}
+      related={related}
+      body={article.body || ""}
+      contactHref="/contact/"
+    />
   );
 }
