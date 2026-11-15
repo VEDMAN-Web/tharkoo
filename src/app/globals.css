@@ -1712,10 +1712,11 @@ input, select, textarea { font-size: 16px; }
 }
 .tkn-citylist { list-style: none; margin: 0; padding: 0; }
 .tkn-citylist-row {
-  display: block; width: 100%; min-height: 44px; padding: 0 12px; border: 0; border-radius: 12px; background: none; text-align: left;
+  display: flex; align-items: center; gap: 8px; width: 100%; min-height: 40px; padding: 0 12px; border: 0; border-radius: 12px; background: none; text-align: left;
   font: inherit; font-size: 14px; color: var(--tkn-ink); cursor: pointer;
 }
 .tkn-citylist-row[aria-pressed="true"] { background: rgba(233, 30, 140, 0.1); color: var(--tkn-deep); font-weight: 700; }
+.tkn-citylist-row > svg { margin-left: auto; flex: none; }
 .tkn-btn {
   display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 48px; padding: 0 20px; border-radius: 12px;
   border: 1.5px solid transparent; font: inherit; font-size: 14px; font-weight: 700; text-decoration: none; cursor: pointer; box-sizing: border-box;
