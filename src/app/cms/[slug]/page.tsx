@@ -49,7 +49,9 @@ export default async function CmsPage({ params }: { params: Promise<{ slug: stri
   const aboutData = page?.slug === "about" ? <JsonLd data={aboutPageNode(page.title || "About", cmsPath(paths, "about"))} /> : null;
   if (newDesign) {
     const paragraphs = bodyParagraphs(page?.body);
-    const built = page ? toSections(paragraphs, slug) : [];
+    const summary = paragraphs.find((paragraph) => paragraph.startsWith("In short:"));
+    const body = paragraphs.filter((paragraph) => paragraph !== summary);
+    const built = page ? toSections(body, slug) : [];
     const sections = built.length ? built : [{ id: "intro", paragraphs: [UNPUBLISHED_TEXT] }];
     return (
       <>
@@ -59,6 +61,7 @@ export default async function CmsPage({ params }: { params: Promise<{ slug: stri
           title={heading}
           updated={updatedLabel(page?.updatedAt)}
           minutes={readingMinutes(paragraphs)}
+          summary={summary?.replace(/^In short:\s*/, "")}
           sections={sections}
           askHref={contactPath(paths)}
           askLabel="Questions about this page?"

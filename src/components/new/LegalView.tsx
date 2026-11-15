@@ -11,6 +11,7 @@ export function LegalView({
   updatedPrefix = "Last updated",
   minutes,
   author,
+  summary,
   sections,
   askHref,
   askLabel,
@@ -21,6 +22,7 @@ export function LegalView({
   updatedPrefix?: string;
   minutes: number;
   author?: string;
+  summary?: string;
   sections: LegalSection[];
   askHref: string;
   askLabel: string;
@@ -51,6 +53,11 @@ export function LegalView({
         ) : null}
 
         <article className="tkp-article">
+          {summary ? (
+            <div className="tkp-summary">
+              <strong>In short:</strong> {summary}
+            </div>
+          ) : null}
           {sections.map((section) => (
             <section key={section.id} id={section.id === "intro" ? undefined : section.id}>
               {section.heading ? <h2>{section.heading}</h2> : null}

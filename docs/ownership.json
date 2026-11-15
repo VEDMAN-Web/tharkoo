@@ -2830,7 +2830,9 @@
         "src/components/wallet/KycForm.tsx",
         "src/components/wallet/VendorEarnings.tsx",
         "src/components/wallet/format.ts",
-        "src/styles/tokens.css"
+        "src/styles/tokens.css",
+        "src/server/models/cms.ts",
+        "src/lib/models.ts"
       ]
     }
   }

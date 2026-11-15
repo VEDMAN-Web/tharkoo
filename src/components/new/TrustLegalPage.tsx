@@ -8,10 +8,12 @@ import { publicParagraphs, readingMinutes, toSections } from "./legal-copy";
 
 export type TrustLegalKey = "privacy" | "terms" | "cookies";
 
+const TITLES: Record<TrustLegalKey, string> = { privacy: "Privacy policy", terms: "Terms of use", cookies: "Cookie policy" };
+
 const TRUST_HEADINGS: Record<TrustLegalKey, Record<number, string>> = {
-  privacy: { 0: "What we store", 1: "What a public ad shows", 2: "Cookies", 3: "Staff access", 4: "Your requests", 6: "About this note" },
-  terms: { 0: "Using Tharkoo", 1: "Age and ID checks", 2: "Free ads and paid options", 3: "Your content", 4: "Removing ads", 6: "Status of these terms" },
-  cookies: { 0: "Cookies we use", 1: "Choices saved in your browser", 2: "Other websites", 3: "Blocking cookies", 4: "The cookie note", 5: "More than one browser", 7: "Status of this note" },
+  privacy: { 0: "1. What we store", 1: "2. What a public ad shows", 2: "3. Cookies", 3: "4. Staff access", 4: "5. Your requests", 6: "6. About this note" },
+  terms: { 0: "1. Using Tharkoo", 1: "2. Age and ID checks", 2: "3. Free ads and paid options", 3: "4. Your content", 4: "5. Removing ads", 6: "6. Status of these terms" },
+  cookies: { 0: "1. Cookies we use", 1: "2. Choices saved in your browser", 2: "3. Other websites", 3: "4. Blocking cookies", 4: "5. The cookie note", 5: "6. More than one browser", 7: "7. Status of this note" },
 };
 
 export async function TrustLegalPage({ trustKey }: { trustKey: TrustLegalKey }) {
@@ -28,10 +30,11 @@ export async function TrustLegalPage({ trustKey }: { trustKey: TrustLegalKey }) 
   }
   return (
     <LegalView
-      crumbs={[{ label: "Tharkoo India", href: "/" }, { label: copy.title }]}
-      title={copy.title}
+      crumbs={[{ label: "Tharkoo India", href: "/" }, { label: TITLES[trustKey] }]}
+      title={TITLES[trustKey]}
       updated="November 2026"
       minutes={readingMinutes(copy.paragraphs)}
+      summary={copy.description}
       sections={toSections(copy.paragraphs, trustKey, TRUST_HEADINGS[trustKey])}
       askHref={contactPath(paths)}
       askLabel="Questions about this page?"

@@ -9,6 +9,8 @@ import { newDesignOn } from "@/server/site-links/new-design";
 
 export const revalidate = 300;
 
+const PAGE_SIZE = 9;
+
 export async function generateMetadata() {
   const paths = await getPaths();
   return withUrlSeo(blogPath(paths), {
@@ -18,18 +20,29 @@ export async function generateMetadata() {
   });
 }
 
-export default async function Blog() {
-  const [posts, paths, newDesign] = await Promise.all([getBlogPosts(), getPaths(), newDesignOn()]);
+export default async function Blog({ searchParams }: { searchParams: Promise<{ category?: string; page?: string }> }) {
+  const [{ category = "", page: pageParam = "1" }, posts, paths, newDesign] = await Promise.all([searchParams, getBlogPosts(), getPaths(), newDesignOn()]);
   if (newDesign) {
+    const categories = [...new Set(posts.map((post) => post.category || "").filter(Boolean))];
+    const matching = category ? posts.filter((post) => post.category === category) : posts;
+    const pages = Math.max(1, Math.ceil(matching.length / PAGE_SIZE));
+    const page = Math.min(pages, Math.max(1, Number(pageParam) || 1));
+    const visible = matching.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
     return (
       <BlogList
-        posts={posts.map((post) => ({
+        posts={visible.map((post) => ({
           slug: post.slug || "",
           title: post.title || "Untitled",
           date: post.date || "",
           body: post.body || "",
+          category: post.category || "",
           href: blogPath(paths, post.slug),
         }))}
+        categories={categories}
+        active={category}
+        page={page}
+        pages={pages}
+        basePath={blogPath(paths)}
       />
     );
   }
