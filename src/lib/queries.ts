@@ -108,7 +108,14 @@ function pageQuery(filter: Record<string, unknown>): ListingQuery {
     verified: filter.verified === true ? true : undefined,
     photos: photosOn,
     tag: typeof filter.tag === "string" ? filter.tag : undefined,
+    // H7.4b: the field picks from the filter panel. The query checks the keys against the category's filter fields.
+    attributes: isPickMap(filter.attributes) ? (filter.attributes as ListingQuery["attributes"]) : undefined,
+    video: filter.video === true ? true : undefined,
   };
+}
+
+function isPickMap(value: unknown): value is Record<string, string[]> {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
 }
 
 export async function countListings(filter: Record<string, unknown>) {

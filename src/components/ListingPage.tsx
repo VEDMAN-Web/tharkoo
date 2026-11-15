@@ -66,6 +66,7 @@ export function ListingPageView({
   updated,
   layout,
   texts,
+  frame = false,
 }: {
   h1: string;
   h2?: string;
@@ -96,6 +97,11 @@ export function ListingPageView({
   layout?: ListingLayout;
   /** Admin-edited UI text overrides (see /admin/ui-text/). Without them the built-in text is used. */
   texts?: UiTextMap;
+  /**
+   * H7.4b: the page frame (title band, filter panel) is drawn by the page around this view. The header and filter
+   * blocks are then left out here, and the ads use the row card. Without it the page is drawn as it always was.
+   */
+  frame?: boolean;
 }) {
   const [open, setOpen] = useState(false);
   const t = makeT(texts);
@@ -105,7 +111,10 @@ export function ListingPageView({
   const feed = withPins(stars, items, page);
   const short = cityName && categoryName ? `${cityName} ${categoryName}` : crumbs[crumbs.length - 1]?.name;
 
-  const blocks: BlockBase[] = layout?.blocks ?? listingDefaultBlocks();
+  // In frame mode the title band (header block) and the filter panel (filters block) are drawn by the frame.
+  const blocks: BlockBase[] = (layout?.blocks ?? listingDefaultBlocks()).filter(
+    (block) => !(frame && (block.type === "listingHeader" || block.type === "filters")),
+  );
   const nodes = layout?.nodes ?? {};
   const vars = { ...(layout?.vars ?? {}), h1, count: total };
   const feedProps = (blocks.find((block) => block.type === "listingFeed")?.props ?? {}) as Record<string, unknown>;
@@ -224,7 +233,7 @@ export function ListingPageView({
         <div className="tk-feed">
           {feed.map((ad, index) => (
             <span key={ad.publicId || ad.slug || index} style={{ display: "contents" }}>
-              <AdCard ad={ad} featured={stars.some((star) => star.slug && star.slug === ad.slug)} priority={index === 0} />
+              <AdCard ad={ad} featured={stars.some((star) => star.slug && star.slug === ad.slug)} priority={index === 0} layout={frame ? "row" : undefined} />
               {inFeedEvery > 0 && (index + 1) % inFeedEvery === 0 ? (
                 inFeedId && nodes[inFeedId] ? (
                   nodes[inFeedId]
@@ -330,9 +339,8 @@ export function ListingPageView({
     }
   };
 
-  return (
-    <UiTextProvider texts={texts}>
-    <div className="tk-container" style={{ paddingTop: 16, paddingBottom: 24 }}>
+  const body = (
+    <>
       <JsonLd
         data={[
           breadcrumbJsonLd(crumbs),
@@ -358,7 +366,11 @@ export function ListingPageView({
         </span>
       ))}
       {tailAt >= blocks.length ? seoTail : null}
-    </div>
+    </>
+  );
+  return (
+    <UiTextProvider texts={texts}>
+      {frame ? body : <div className="tk-container" style={{ paddingTop: 16, paddingBottom: 24 }}>{body}</div>}
     </UiTextProvider>
   );
 }

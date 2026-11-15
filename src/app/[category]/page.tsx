@@ -2,9 +2,9 @@ import Link from "next/link";
 import { notFound, permanentRedirect } from "next/navigation";
 import type { Metadata } from "next";
 import { MapPin } from "lucide-react";
-import { getCategory, getCities, getFeed, getSeoFor, getSite, getStarListings, getStates, listingCountsByCategoryCity } from "@/lib/queries";
+import { getCategories, getCategory, getCities, getFeed, getSeoFor, getSite, getStarListings, getStates, listingCountsByCategoryCity } from "@/lib/queries";
 import { getPaths } from "@/server/urls/service";
-import { adPath, categoryPath, placePath } from "@/lib/urls";
+import { adPath, categoryPath, placePath, searchPath } from "@/lib/urls";
 import { fillTemplate } from "@/lib/seo";
 import { getIndexing, isCategoryOn } from "@/server/seo/indexing";
 import { withUrlSeo, urlHeading } from "@/lib/seo/override";
@@ -25,6 +25,12 @@ import { fallbackLanding, mergeLanding, type LandingCopy } from "@/lib/seo/landi
 import { SubcategoryChips } from "./SubcategoryChips";
 import { loadCardWidth } from "@/server/listings/card-width";
 import { listingRobots, type ListingParams } from "@/server/search/filter-seo";
+import { newDesignOn } from "@/server/site-links/new-design";
+import { readShellConfig } from "@/server/site-links/shell-config";
+import { bandImageFor } from "@/components/new/band-image";
+import { ListingFrame } from "@/components/new/ListingFrame";
+import { listingFrameProps, listingLabels, placeSelects } from "@/components/new/listing-frame-props";
+import { attributePicks, hasFieldPicks, type ListingToggles } from "@/components/new/listing-filters";
 
 type Props = { params: Promise<{ category: string }>; searchParams: Promise<ListingParams> };
 
@@ -43,23 +49,37 @@ export async function generateMetadata({ params, searchParams }: Props): Promise
   return withSeoDefaults(await withUrlSeo(path, { title, description, path, index: on && robots.index, follow: robots.follow }));
 }
 
-export default async function CategoryHub({ params }: Props) {
+export default async function CategoryHub({ params, searchParams }: Props) {
   const { category } = await params;
   const cat = await getCategory(category);
   if (!cat) notFound();
   if (cat.slug && cat.slug !== category) permanentRedirect(categoryPath(cat.slug));
-  const [seo, site, cities, states, counts, feed, stars, paths, heading, cardWidth] = await Promise.all([
+  const sp = await searchParams;
+  // H7.4b: the filter panel's field picks and quick toggles narrow the feed the same way they do on a city page.
+  const picks = attributePicks(sp, cat.fields);
+  const toggles: ListingToggles = { verified: sp.verified === "1", photos: sp.photos === "1", video: sp.video === "1" };
+  const narrow = {
+    categorySlug: category,
+    ...(hasFieldPicks(picks) ? { attributes: picks } : {}),
+    ...(toggles.verified ? { verified: true } : {}),
+    ...(toggles.photos ? { photos: { $exists: true, $ne: [] } } : {}),
+    ...(toggles.video ? { video: true } : {}),
+  };
+  const [seo, site, cities, states, counts, feed, stars, paths, heading, cardWidth, newDesign, allCategories] = await Promise.all([
     getSeoFor("category", category),
     getSite(),
     getCities(),
     getStates(),
     listingCountsByCategoryCity().catch(() => []),
-    getFeed({ categorySlug: category }, 1),
-    getStarListings({ categorySlug: category }).catch(() => []),
+    getFeed(narrow, 1),
+    getStarListings(narrow).catch(() => []),
     getPaths(),
     urlHeading(categoryPath(cat.slug || category), `${cat.name} in India`),
     loadCardWidth(),
+    newDesignOn(),
+    getCategories().catch(() => []),
   ]);
+  const shell = newDesign ? await readShellConfig() : null;
   const texts = await textOverrides();
   const t = makeT(texts);
   const vars = { category: cat.name, site: site.name, year: new Date().getFullYear() };
@@ -85,7 +105,7 @@ export default async function CategoryHub({ params }: Props) {
     <>
       <div className="tk-feed" data-tk="category-feed">
         {ads.map((ad, index) => (
-          <AdCard key={ad.publicId || ad.slug || index} ad={ad} featured={index < stars.length} priority={index === 0} />
+          <AdCard key={ad.publicId || ad.slug || index} ad={ad} featured={index < stars.length} priority={index === 0} layout={shell ? "row" : undefined} />
         ))}
       </div>
       <section className="tk-browse-city" data-tk="browse-by-city">
@@ -111,6 +131,45 @@ export default async function CategoryHub({ params }: Props) {
     </>
   );
   const inFeedId = String(layout.blocks.find((block) => block.type === "listingFeed")?.props.inFeedBlockId ?? "");
+  // Blocks in the order the layout gives. The category page draws the ads and the SEO text itself (the ads come with the text below them);
+  // filters, nearby cities and similar link blocks belong to city pages and are skipped here.
+  const body = layout.blocks.map((block) => {
+    if (block.type === "listingFeed") return wrap(block.id, block.devices, feedAndText);
+    if (["listingHeader", "filters", "relatedCategories", "nearbyCities", "districtLinks"].includes(block.type)) return null;
+    return block.id === inFeedId ? null : wrap(block.id, block.devices, layout.nodes[block.id] ?? null);
+  });
+  // H7.4b: New design. The title band and the filter panel frame the list.
+  const introTemplate = String(headerBlock?.props.introTemplate ?? "");
+  const labels = listingLabels(t);
+  const places = placeSelects({
+    categorySlug: cat.slug || category,
+    categories: allCategories,
+    states,
+    cities,
+    districts: [],
+    labels,
+  });
+  const frame = shell
+    ? listingFrameProps({
+        crumbs: [
+          { name: t("listing.crumb.home"), path: "/" },
+          { name: cat.name || category, path: categoryPath(cat.slug || category) },
+        ],
+        h1: h1Text,
+        intro: listingHeading(introTemplate, "", { ...layout.vars, h1: h1Text }) || undefined,
+        image: bandImageFor(shell, cat.slug || category),
+        categorySlug: cat.slug || category,
+        searchAction: searchPath(paths),
+        searchPlaceholder: t("listing.band.searchCategory", { category: cat.name }),
+        chips: <SubcategoryChips variant="band" category={cat.slug || category} />,
+        fields: cat.fields,
+        picks,
+        toggles,
+        panelPath: categoryPath(cat.slug || category),
+        labels,
+        places,
+      })
+    : null;
 
   return (
     <UiTextProvider texts={pickTexts(texts, "card.")}>
@@ -132,23 +191,35 @@ export default async function CategoryHub({ params }: Props) {
           faqPage(hub.faqs),
         ]}
       />
-      <div className="tk-banner">
-        <div className="tk-container">
-          <h1>{h1Text}</h1>
+      {frame ? (
+        <div data-card-width={cardWidth}>
+          <ListingFrame
+            bandStyle={frame.bandStyle}
+            labels={labels}
+            head={frame.head}
+            chips={frame.chips}
+            searchForm={frame.searchForm}
+            filters={frame.filters}
+            activeCount={frame.activeCount}
+          >
+            {body}
+          </ListingFrame>
         </div>
-        <MapPin className="tk-banner-pins tk-icon-lg" size={180} color="#fff" aria-hidden />
-      </div>
-      <div className="tk-container" style={{ paddingBottom: 32 }} data-card-width={cardWidth}>
-        <Breadcrumbs crumbs={[{ name: t("listing.crumb.home"), path: "/" }, { name: cat.name!, path: categoryPath(cat.slug || category) }]} />
-        {/* Blocks in the order the layout gives. The category page draws the ads and the SEO text itself (the ads come with the text below them);
-            filters, nearby cities and similar link blocks belong to city pages and are skipped here. */}
-        {layout.blocks.map((block) => {
-          if (block.type === "listingFeed") return wrap(block.id, block.devices, feedAndText);
-          if (["listingHeader", "filters", "relatedCategories", "nearbyCities", "districtLinks"].includes(block.type)) return null;
-          return block.id === inFeedId ? null : wrap(block.id, block.devices, layout.nodes[block.id] ?? null);
-        })}
-      </div>
-      <SubcategoryChips category={cat.slug || category} heading={t("listing.hub.browseBySub")} />
+      ) : (
+        <>
+          <div className="tk-banner">
+            <div className="tk-container">
+              <h1>{h1Text}</h1>
+            </div>
+            <MapPin className="tk-banner-pins tk-icon-lg" size={180} color="#fff" aria-hidden />
+          </div>
+          <div className="tk-container" style={{ paddingBottom: 32 }} data-card-width={cardWidth}>
+            <Breadcrumbs crumbs={[{ name: t("listing.crumb.home"), path: "/" }, { name: cat.name!, path: categoryPath(cat.slug || category) }]} />
+            {body}
+          </div>
+          <SubcategoryChips category={cat.slug || category} heading={t("listing.hub.browseBySub")} />
+        </>
+      )}
     </UiTextProvider>
   );
 }
