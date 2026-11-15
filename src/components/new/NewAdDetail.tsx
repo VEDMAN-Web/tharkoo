@@ -36,6 +36,7 @@ export function NewAdDetail({
   shareUrl,
   heading,
   tour,
+  peopleAd = false,
 }: {
   ad: ListingDoc;
   categoryName: string;
@@ -45,6 +46,8 @@ export function NewAdDetail({
   shareUrl: string;
   heading?: string;
   tour?: { listingId: string; coins: number } | null;
+  /** H7.5: people category (server check). No Call button. */
+  peopleAd?: boolean;
 }) {
   const title = heading || displayTitle(ad.title) || "Listing";
   const videoVerified = videoVerifiedLabel(ad.videoVerifiedUntil);
@@ -58,7 +61,7 @@ export function NewAdDetail({
   const photos = listingPhotos(ad.categorySlug, ad.publicId || ad.slug || "", ad.photos || []);
 
   return (
-    <ContactProvider listingSlug={ad.slug} listingId={listingId} tour={tour}>
+    <ContactProvider listingSlug={ad.slug} listingId={listingId} tour={tour} peopleAd={peopleAd}>
       <div className="tkn-page tkn-ad" data-tk="new-ad">
         <TrackView ad={ad} />
         <CitySync name={city} slug={ad.citySlug} />

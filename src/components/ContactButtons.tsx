@@ -35,6 +35,8 @@ type Ctx = {
   requestTour: () => void;
   /** H7.5: the ad seller Online now or Away. Calls pause while Away; chat does not. */
   seller: SellerStatus | undefined;
+  /** H7.5: people ads have no Call button. */
+  people: boolean;
 };
 
 const ContactCtx = createContext<Ctx | null>(null);
@@ -66,11 +68,14 @@ export function ContactProvider({
   listingSlug,
   listingId,
   tour = null,
+  peopleAd = false,
   children,
 }: {
   listingSlug?: string;
   listingId?: string;
   tour?: AdTour | null;
+  /** H7.5: the ad is in a people category (server check). No Call button; chat stays. */
+  peopleAd?: boolean;
   children: React.ReactNode;
 }) {
   const [shown, setShown] = useState<Partial<Record<Channel, Reveal>>>({});
@@ -80,9 +85,11 @@ export function ContactProvider({
   const [chatOpen, setChatOpen] = useState(false);
   const [tourRequested, setTourRequested] = useState(false);
   const seller = useSellerStatus(listingSlug);
+  const people = peopleAd || seller?.people === true;
 
   async function open(channel: Channel) {
     if (shown[channel]) return;
+    if (channel === "phone" && people) return;
     if (channel === "phone" && seller?.callsAllowed === false) {
       return setNotice({ text: CALLS_PAUSED });
     }
@@ -129,7 +136,7 @@ export function ContactProvider({
     setNotice({ text: friendlyError(res.error) });
   }
 
-  const value: Ctx = { shown, notice, busy, tour, tourRequested, open, openChat, requestTour, seller };
+  const value: Ctx = { shown, notice, busy, tour, tourRequested, open, openChat, requestTour, seller, people };
   return (
     <ContactCtx.Provider value={value}>
       {children}
@@ -172,9 +179,10 @@ export function ContactButtons({
   sticky?: boolean;
   channels?: Channel[];
 }) {
-  const { shown, notice, busy, tour, tourRequested, open, openChat, requestTour, seller } = useContact();
+  const { shown, notice, busy, tour, tourRequested, open, openChat, requestTour, seller, people } = useContact();
   const callsPaused = seller?.callsAllowed === false;
   const channelButtons = channels.map((channel) => {
+    if (channel === "phone" && people) return null;
     const hit = shown[channel];
     if (hit?.value) {
       const href = hit.href || (channel === "phone" ? `tel:${hit.value}` : channel === "whatsapp" ? `https://wa.me/${hit.value.replace(/\D/g, "")}` : undefined);
@@ -203,7 +211,7 @@ export function ContactButtons({
       </button>
     ) : null,
   ];
-  const pausedLine = callsPaused && channels.includes("phone") ? <p id="tk-calls-paused" className="t-caption" data-tk="calls-paused" style={{ gridColumn: "1 / -1" }}>{CALLS_PAUSED}</p> : null;
+  const pausedLine = callsPaused && !people && channels.includes("phone") ? <p id="tk-calls-paused" className="t-caption" data-tk="calls-paused" style={{ gridColumn: "1 / -1" }}>{CALLS_PAUSED}</p> : null;
   if (sticky) {
     return (
       <>

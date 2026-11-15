@@ -1,5 +1,5 @@
 import type { Page } from "@playwright/test";
-import { expect, isPhone, setSellerAvailable, slugFromAdPath, test } from "./helpers";
+import { expect, firstAdPath, isPhone, setSellerAvailable, slugFromAdPath, test } from "./helpers";
 import { createLiveAd } from "./flows";
 
 /** H7.5: Online now / Away on the listing card and the ad page, and the call button following it. Both widths. */
@@ -9,7 +9,43 @@ async function expectChatWorks(page: Page) {
   await expect(chat).toBeEnabled();
 }
 
+/** The seeded people category: a live dating ad and its feed. */
+const PEOPLE_FEED = "/dating/bengaluru/";
+
 test.describe("H7.5 Online now and Away on cards and the ad page", () => {
+  test("a people ad has no Call button on the ad page or the card; chat and the badge stay", async ({ page }) => {
+    test.setTimeout(120_000);
+    const path = await firstAdPath(page, PEOPLE_FEED);
+    await page.goto(path);
+    await expect(page.locator("h1")).toHaveCount(1);
+    // The contact panel is hidden on phones, so the ad page badge is checked as rendered; the card badge is visible.
+    await expect(page.locator("[data-tk=availability]").first()).toBeAttached();
+    await expect(page.locator("[data-tk=contact-card] [data-tk=call], [data-tk=bottom-bar] [data-tk=call]")).toHaveCount(0);
+    await expect(page.locator("[data-tk=chat]:visible").first()).toBeEnabled();
+
+    await page.goto(PEOPLE_FEED);
+    await expect(page.locator("[data-tk=card]").first()).toBeVisible();
+    await expect(page.locator("[data-tk=card] [data-tk=call]")).toHaveCount(0);
+    await expect(page.locator("[data-tk=card] [data-tk=availability]").first()).toBeVisible();
+  });
+
+  test("a job ad keeps its Call button, and it pauses while the seller is Away", async ({ page, baseURL }) => {
+    test.setTimeout(180_000);
+    const ad = await createLiveAd(page, baseURL!, "callable");
+    const slug = slugFromAdPath(ad.adHref);
+    await setSellerAvailable(slug, true);
+    await page.goto(ad.adHref);
+    if (!isPhone(page)) {
+      await expect(page.locator("[data-tk=contact-card] [data-tk=call]")).toBeEnabled();
+    }
+    await setSellerAvailable(slug, false);
+    await page.goto(ad.adHref);
+    if (!isPhone(page)) {
+      await expect(page.locator("[data-tk=contact-card] [data-tk=call]")).toBeDisabled();
+    }
+    await expect(page.locator("[data-tk=chat]:visible").first()).toBeEnabled();
+  });
+
   test("the ad page follows the seller's switch and pauses the call while Away", async ({ page, baseURL }) => {
     test.setTimeout(180_000);
     const ad = await createLiveAd(page, baseURL!, "avail");

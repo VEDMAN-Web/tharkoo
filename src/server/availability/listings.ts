@@ -2,6 +2,7 @@ import { connectDb } from "@/lib/db";
 import { Listing } from "@/server/models/listing";
 import { readAwayHours } from "./service";
 import { VendorPresence } from "./models";
+import { peopleCategoryIds } from "./people";
 import { callsAllowed, presenceStatus, type PresenceStatus } from "./status";
 
 /** H7.5: the most ad slugs one request may ask for. Keeps the lookup bounded. */
@@ -11,6 +12,8 @@ const SLUG_PATTERN = /^[A-Za-z0-9][A-Za-z0-9._-]{0,159}$/;
 export interface ListingPresence {
   status: PresenceStatus;
   callsAllowed: boolean;
+  /** The listing is in a people category: no Call button (chat stays). */
+  people: boolean;
 }
 
 /** The slugs from a comma-separated query value: valid ones only, at most MAX_STATUS_SLUGS. */
@@ -28,9 +31,11 @@ export async function presenceForSlugs(slugs: string[], now: Date = new Date()):
   if (slugs.length === 0) return {};
   await connectDb();
   const rows = await Listing.find({ slug: { $in: slugs } })
-    .select("slug ownerId")
-    .lean<{ slug?: string; ownerId?: unknown }[]>();
+    .select("slug ownerId categoryId")
+    .lean<{ slug?: string; ownerId?: unknown; categoryId?: unknown }[]>();
   const owners = [...new Set(rows.map((row) => String(row.ownerId ?? "")).filter(Boolean))];
+  const categories = [...new Set(rows.map((row) => String(row.categoryId ?? "")).filter(Boolean))];
+  const people = await peopleCategoryIds(categories);
   const [presences, hours] = await Promise.all([
     VendorPresence.find({ userId: { $in: owners } }).lean<{ userId: string; available?: boolean; lastActivityAt?: Date | null }[]>(),
     readAwayHours(),
@@ -41,7 +46,7 @@ export async function presenceForSlugs(slugs: string[], now: Date = new Date()):
     if (!row.slug) continue;
     const own = byOwner.get(String(row.ownerId ?? ""));
     const status = presenceStatus({ available: own?.available === true, lastActivityAt: own?.lastActivityAt ?? null }, now.getTime(), hours);
-    items[row.slug] = { status, callsAllowed: callsAllowed(status) };
+    items[row.slug] = { status, callsAllowed: callsAllowed(status), people: people.has(String(row.categoryId ?? "")) };
   }
   return items;
 }

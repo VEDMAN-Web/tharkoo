@@ -2477,7 +2477,10 @@
         "src/app/api/availability/**",
         "tests/e2e/listing-availability.e2e.ts",
         "tests/e2e/visitor.e2e.ts",
-        "tests/server/availability/listings.test.ts"
+        "tests/server/availability/listings.test.ts",
+        "src/app/ad/[slug]/page.tsx",
+        "src/components/AdDetail.tsx",
+        "tests/e2e/contact-card.e2e.ts"
       ]
     },
     "H7.6": {

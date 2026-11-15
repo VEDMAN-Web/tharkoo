@@ -10,6 +10,8 @@ import { api } from "@/lib/ui/api";
 export interface SellerStatus {
   status: "online" | "away";
   callsAllowed: boolean;
+  /** A people category: the Call button is never shown (chat stays). */
+  people: boolean;
 }
 
 const STATUS_PATH = "/api/availability/listings";
