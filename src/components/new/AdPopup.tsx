@@ -187,7 +187,7 @@ export function AdPopup(props: AdPopupProps) {
                       type="button"
                       role="radio"
                       aria-checked={on}
-                      className="tkn-pack"
+                      className="tkn-pack m-lift"
                       data-on={on ? "true" : undefined}
                       onClick={() => setPick(index)}
                     >

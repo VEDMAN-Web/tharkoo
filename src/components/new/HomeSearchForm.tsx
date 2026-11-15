@@ -38,7 +38,7 @@ export function HomeSearchForm({
   }
 
   return (
-    <form role="search" className="tkh-search" onSubmit={onSubmit}>
+    <form role="search" className="tkh-search m-enter m-enter-2" onSubmit={onSubmit}>
       <label className="tkh-field tkh-field-select">
         <span className="tkh-sr">{labels.state}</span>
         <select name="state" value={state} onChange={(event) => { setState(event.target.value); setCity(""); }}>

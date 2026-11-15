@@ -63,7 +63,7 @@ function SectionHead({
   link?: { href: string; text: string };
 }) {
   return (
-    <div className="tkh-head">
+    <div className="tkh-head" data-reveal>
       <div>
         <p className={`tkh-eyebrow tkh-eyebrow-${tone}`}>{eyebrow}</p>
         <h2 id={id} className="tkh-h2">
@@ -151,7 +151,7 @@ export function NewHome({
           ) : (
             <span className="tkh-banner-img tkh-banner-empty" aria-hidden="true" />
           )}
-          <div className="tkh-banner-copy">
+          <div className="tkh-banner-copy m-enter">
             <h1>
               {lead ? `${lead} ` : ""}
               <span className="tkh-grad">{accent}</span>
@@ -190,8 +190,8 @@ export function NewHome({
             const slug = cat.slug || "";
             const photo = photos.get(slug);
             return (
-              <li key={slug}>
-                <Link className="tkh-cat" href={applyPrefixes(categoryPath(slug), paths)} prefetch={false}>
+              <li key={slug} data-reveal>
+                <Link className="tkh-cat m-lift" href={applyPrefixes(categoryPath(slug), paths)} prefetch={false}>
                   {photo ? (
                     <img className="tkh-cat-photo" src={photo} alt="" width={480} height={320} loading="lazy" />
                   ) : (

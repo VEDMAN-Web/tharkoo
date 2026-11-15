@@ -222,21 +222,21 @@ export function NewVendorPanel({ initialTab = "all" }: { initialTab?: Tab }) {
         <section className="tkv-stats" aria-label="Your numbers">
           <div className="tkv-stat tkv-stat-rose">
             <p className="tkv-stat-label">Live ads</p>
-            <p className="tkv-stat-value">{counts ? counts.live : "-"}</p>
+            <p className="tkv-stat-value" data-count-up>{counts ? counts.live : "-"}</p>
           </div>
           <div className="tkv-stat tkv-stat-violet">
             <p className="tkv-stat-label">Views</p>
-            <p className="tkv-stat-value">{totals ? totals.views.toLocaleString("en-IN") : "-"}</p>
+            <p className="tkv-stat-value" data-count-up>{totals ? totals.views.toLocaleString("en-IN") : "-"}</p>
             <p className="tkv-stat-foot">All time</p>
           </div>
           <div className="tkv-stat tkv-stat-sky">
             <p className="tkv-stat-label">Clicks</p>
-            <p className="tkv-stat-value">{totals ? totals.clicks.toLocaleString("en-IN") : "-"}</p>
+            <p className="tkv-stat-value" data-count-up>{totals ? totals.clicks.toLocaleString("en-IN") : "-"}</p>
             <p className="tkv-stat-foot">All time</p>
           </div>
           <div className="tkv-stat tkv-stat-rose">
             <p className="tkv-stat-label">Coins</p>
-            <p className="tkv-stat-value">{balance ?? "-"}</p>
+            <p className="tkv-stat-value" data-count-up>{balance ?? "-"}</p>
           </div>
         </section>
 

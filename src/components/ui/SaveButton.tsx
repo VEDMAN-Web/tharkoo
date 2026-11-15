@@ -34,6 +34,7 @@ export function SaveButton({
   label?: string;
 }) {
   const [on, setOn] = useState(false);
+  const [popping, setPopping] = useState(false);
 
   useEffect(() => {
     const sync = () => setOn(readSaved().some((row) => row.id === item.id));
@@ -53,6 +54,7 @@ export function SaveButton({
         if (!on) next.unshift({ ...item, at: Date.now() });
         writeSaved(next);
         setOn(!on);
+        setPopping(true);
         if (hasSessionHint() && item.slug) {
           void api("/api/saved/", {
             method: on ? "DELETE" : "POST",
@@ -61,7 +63,11 @@ export function SaveButton({
         }
       }}
     >
-      <Heart className={on ? "fill-current text-accent" : ""} size={18} />
+      <Heart
+        className={[on ? "fill-current text-accent" : "", popping ? "m-heart" : ""].join(" ").trim()}
+        size={18}
+        onAnimationEnd={() => setPopping(false)}
+      />
       {label === "Save" ? null : <span className="t-small">{on ? "Saved" : label}</span>}
     </button>
   );
