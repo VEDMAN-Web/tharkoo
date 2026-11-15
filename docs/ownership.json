@@ -2538,7 +2538,8 @@
       "branchPrefix": "haiku/h7.0",
       "globs": [
         "src/server/**",
-        "tests/server/db/**"
+        "tests/server/db/**",
+        "docs/ownership.json"
       ]
     }
   }
