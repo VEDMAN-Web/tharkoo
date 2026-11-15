@@ -99,8 +99,9 @@ test.describe("My photos & videos", () => {
     const promoted = await withLocalDb((db) => db.collection("listings").updateOne({ _id: new ObjectId(adId) }, { $set: { badges: ["featured"] } }));
     expect(promoted?.modifiedCount).toBe(1);
 
-    await loginUi(page, owner.email, USER_PASSWORD, `/u/post-insert/?draft=${adId}&step=2`);
-    await page.waitForURL(/step=2/);
+    // step=photos is the photo step in both designs (H7.5: it is step 3 in the New design, step 2 in the old one).
+    await loginUi(page, owner.email, USER_PASSWORD, `/u/post-insert/?draft=${adId}&step=photos`);
+    await page.waitForURL(/step=photos/);
     await expect(page.locator("[data-tk=photo-count]")).toContainText(/0 of \d+ photos/);
     await page.locator("[data-tk=photo-input]").setInputFiles([
       { name: "a.png", mimeType: "image/png", buffer: PNG },

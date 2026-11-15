@@ -31,7 +31,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<Rec
   const [{ rows, truncated }, paths] = await Promise.all([listMyMedia(session.user.id, filter), getPaths()]);
   const libraryRows: LibraryRow[] = rows.map((row) => ({
     ...row,
-    adHref: row.adStatus === "active" && row.adSlug ? adPath(paths, row.adSlug) : `/u/post-insert/?draft=${row.listingId}&step=2`,
+    adHref: row.adStatus === "active" && row.adSlug ? adPath(paths, row.adSlug) : `/u/post-insert/?draft=${row.listingId}&step=photos`,
   }));
   return (
     <VendorShell>

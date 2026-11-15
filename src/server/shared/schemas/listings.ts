@@ -34,6 +34,8 @@ export const listingPatchBodySchema = z.discriminatedUnion("stage", [
   z.object({
     stage: z.literal("details"),
     attributes: z.record(z.string(), z.unknown()).optional(),
+    /** H7.5: the New design price field. Whole rupees, or null to clear. The service checks the number. */
+    price: z.union([z.number(), z.string().max(20)]).nullable().optional(),
     nickname: z.string().trim().max(40).optional(),
     contact: contactSchema.optional(),
   }),
@@ -56,6 +58,8 @@ export const listingQuerySchema = z.object({
   status: z
     .enum(["draft", "pending", "active", "rejected", "paused", "expired", "archived", "removed", "deleted"])
     .optional(),
+  /** H7.5: the vendor panel tabs. Live, In review and Ended; All is no group. */
+  group: z.enum(["live", "review", "ended"]).optional(),
   page: z.coerce.number().int().positive().default(1),
   pageSize: z.coerce.number().int().positive().max(100).default(20),
 });

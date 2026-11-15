@@ -446,7 +446,7 @@ async function applyBasics(
 
 async function applyDetails(
   listing: ListingRow,
-  input: { attributes?: Record<string, unknown>; price?: number | null; nickname?: string; contact?: ListingContactDoc },
+  input: { attributes?: Record<string, unknown>; price?: unknown; nickname?: string; contact?: ListingContactDoc },
 ) {
   if (input.nickname !== undefined) {
     const nickname = input.nickname.trim().slice(0, 40);
@@ -490,7 +490,7 @@ export async function patchListing(
         districtId?: string;
         localityId?: string;
       }
-    | { stage: "details"; attributes?: Record<string, unknown>; price?: number | null; nickname?: string; contact?: ListingContactDoc }
+    | { stage: "details"; attributes?: Record<string, unknown>; price?: unknown; nickname?: string; contact?: ListingContactDoc }
     | { stage: "photos"; mediaIds: string[]; coverMediaId?: string },
   requestId: string,
 ) {
