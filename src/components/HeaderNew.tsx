@@ -84,7 +84,8 @@ export function HeaderNew({ siteName, shell, cities, categories }: { siteName: s
           </button>
           <Link href={loginPath(paths)} className="tkn-btn tkn-btn-ghost tkn-hide-sm">{shell.header.loginLabel}</Link>
           <Link href={postAdPath(paths)} className="tkn-btn tkn-btn-primary" data-tk="post-ad" prefetch={false}>
-            {shell.header.postLabel}
+            <span className="tkn-post-long">{shell.header.postLabel}</span>
+            <span className="tkn-post-short">Post ad</span>
           </Link>
           <button
             type="button"

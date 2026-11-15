@@ -1686,6 +1686,9 @@ input, select, textarea { font-size: 16px; }
 .tkn-brand-text { display: flex; flex-direction: column; }
 .tkn-brand-name { font-weight: 800; font-size: 19px; letter-spacing: -0.02em; color: #110520; }
 .tkn-brand-tag { font-size: 9px; letter-spacing: 0.18em; text-transform: uppercase; color: #6b4a8a; }
+/* Review #77: the header never wraps; the short button label shows only on very small phones. */
+.tkn-brand-name, .tkn-header-row, .tkn-header-actions .tkn-btn { white-space: nowrap; }
+.tkn-post-short { display: none; }
 .tkn-nav {
   display: flex; gap: 2px; padding: 4px; border-radius: 999px;
   background: rgba(255, 255, 255, 0.6); border: 1px solid rgba(234, 216, 240, 0.8);
@@ -1803,7 +1806,7 @@ input, select, textarea { font-size: 16px; }
 /* Live chat bubble, panel and back to top: bottom right only */
 .tkn-float { position: fixed; right: 24px; bottom: 24px; z-index: 30; display: flex; flex-direction: column; align-items: flex-end; gap: 12px; }
 .tkn-chat-bubble {
-  width: 60px; height: 60px; border-radius: 999px; border: 0; padding: 0; cursor: pointer; color: #fff;
+  width: 56px; height: 56px; border-radius: 999px; border: 0; padding: 0; cursor: pointer; color: #fff;
   background: linear-gradient(135deg, #d1137a, #a8124f); box-shadow: 0 14px 34px rgba(209, 19, 122, 0.4);
   display: inline-flex; align-items: center; justify-content: center;
 }
@@ -1852,6 +1855,17 @@ input, select, textarea { font-size: 16px; }
 }
 .tkn-sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
 @media (max-width: 600px) { .tkn-float { right: 16px; bottom: 16px; } }
+@media (max-width: 599px) { .tkn-chat-bubble { width: 52px; height: 52px; } .tkn-brand-tag { display: none; } }
+/* Review #77: no bubble while a dialog, sheet or drawer is open; it sits above a sticky bottom bar; the footer keeps room at the end. */
+body:has([role="dialog"]) .tkn-float { display: none; }
+body:has([data-tk="bottom-bar"]) .tkn-float { bottom: 96px; }
+@media (min-width: 600px) { body:has([data-tk="bottom-bar"]) .tkn-float { bottom: 24px; } }
+@media (max-width: 599px) { .tkn-footer { padding-bottom: 96px; } }
+@media (max-width: 419px) {
+  .tkn-post-long { display: none; }
+  .tkn-post-short { display: inline; }
+  .tkn-header-actions .tkn-btn-primary { height: 40px; min-height: 40px; }
+}
 
 /* Search pop-up (shared with the hero search): glass panel inside the New design. */
 .tkn .tk-modal-back { background: rgba(30, 11, 56, 0.35); }
