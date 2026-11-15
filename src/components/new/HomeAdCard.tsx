@@ -28,7 +28,7 @@ export function HomeAdCard({
 }: {
   ad: HomeAdCardData;
   badge: string;
-  labels: { view: string; online: string; away: string; watermark: string; views: string };
+  labels: { view: string; online: string; away: string; watermark: string; views: string; viewOne: string };
 }) {
   const cardRef = useRef<HTMLElement>(null);
   const seller = useSellerStatus(ad.slug || undefined);
@@ -82,7 +82,7 @@ export function HomeAdCard({
           {price ? <span className="tkh-ad-price">{price}</span> : null}
           <span className="tkh-ad-meta">
             {/* The count is 0 until the shown counts arrive, and stays 0 for an ad nobody has viewed yet. */}
-            <span className="tkh-ad-views">{fillText(labels.views, { count: formatIndianCount(counts?.views ?? 0) })}</span>
+            <span className="tkh-ad-views">{fillText(counts?.views === 1 ? labels.viewOne : labels.views, { count: formatIndianCount(counts?.views ?? 0) })}</span>
             {ad.slug ? <SaveButton item={{ id: ad.slug, slug: ad.slug, title: ad.title, place: ad.place, at: 0 }} className="tkh-save" /> : null}
           </span>
         </div>

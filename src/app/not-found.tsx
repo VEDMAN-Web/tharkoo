@@ -36,6 +36,7 @@ async function latestAds(categoryNames: Map<string, string>): Promise<NotFoundAd
       away: t("home.ads.away"),
       watermark: t("home.ads.watermark"),
       views: t("home.ads.views"),
+      viewOne: t("home.ads.viewOne"),
     },
     cards: shown.map((ad) => {
       const place = prettyPlace(ad.citySlug);

@@ -1,5 +1,6 @@
 "use client";
 
+import { viewsLabel } from "@/components/ad/counts-format";
 import { useShownCounts } from "@/components/ad/adCountStore";
 import { useContact } from "@/components/ContactButtons";
 import { useT } from "@/components/ui/AdCard";
@@ -28,7 +29,7 @@ export function AdMetaLine({ slug, place, posted }: { slug: string; place: strin
   const counts = useShownCounts(slug);
   return (
     <p className="tkn-ad-meta">
-      {t("ad.meta.line", { place, date: posted, views: counts?.views ?? 0, clicks: counts?.clicks ?? 0 })}
+      {t("ad.meta.line", { place, date: posted, views: `${counts?.views ?? 0} ${viewsLabel(counts?.views ?? 0)}`, clicks: counts?.clicks ?? 0 })}
     </p>
   );
 }
