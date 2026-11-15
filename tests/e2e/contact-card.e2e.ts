@@ -1,18 +1,48 @@
+import { createHmac, randomInt } from "node:crypto";
 import AxeBuilder from "@axe-core/playwright";
 import type { Page } from "@playwright/test";
 import { ObjectId } from "mongodb";
-import { expect, firstAdPath, hasHorizontalScroll, isPhone, newUserApi, originHeaders, test, USER_PASSWORD, withLocalDb } from "./helpers";
+import { expect, firstAdPath, hasHorizontalScroll, isPhone, newUserApi, originHeaders, test, withLocalDb } from "./helpers";
+
+// Must match SESSION_SECRET in tests/e2e/server.mjs (the same value login-sheet.e2e.ts uses).
+const E2E_SESSION_SECRET = "local-only-session-secret-not-real-0001";
+
+/** Stores a live login code for the address, as the mail provider would have sent it. */
+async function deliverCode(email: string, code: string) {
+  const codeHash = createHmac("sha256", E2E_SESSION_SECRET).update(`email-otp:${email}:${code}`).digest("hex");
+  const stored = await withLocalDb(async (db) => {
+    await db.collection("email_login_challenges").insertOne({
+      email,
+      codeHash,
+      attempts: 0,
+      expiresAt: new Date(Date.now() + 10 * 60 * 1000),
+      consumedAt: null,
+      createdAt: new Date(),
+    });
+    return true;
+  });
+  expect(stored, "E2E_MONGO_URI_FILE must point at the in-memory database").toBe(true);
+}
 
 /**
- * Signs in through the password form. The login page has two LOG IN buttons (password and phone code),
- * so the button is scoped to the form that holds the password field.
+ * Signs in through the current login card (H7.12): the email address, a code from a mocked send, then the six boxes.
+ * The code is stored the way the mail provider would have delivered it. Ends on the user panel.
  */
 async function signInUi(page: Page, email: string) {
+  const code = String(randomInt(100000, 1000000));
+  await page.route("**/api/auth/email/otp/send", (route) =>
+    route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({ ok: true, data: { sent: true } }) }),
+  );
   await page.goto("/u/login/");
-  await page.locator("#email").fill(email);
-  await page.locator("#password").fill(USER_PASSWORD);
-  await page.locator("form", { has: page.locator("#password") }).getByRole("button", { name: "LOG IN", exact: true }).click();
-  await page.waitForURL(/\/u\/account\/dashboard\//);
+  await page.getByLabel("Email address").fill(email);
+  await page.getByRole("button", { name: "Send me a code" }).click();
+  await expect(page.getByRole("group", { name: "6-digit code" })).toBeVisible();
+  await deliverCode(email, code);
+  for (const [index, digit] of [...code].entries()) {
+    await page.getByLabel(`Digit ${index + 1} of 6`).fill(digit);
+  }
+  await page.waitForURL(/\/u\/account\//);
+  await page.goto("/u/account/dashboard/");
 }
 
 // H6.8: the ad page contact card (desktop sidebar) and the mobile sticky bar.

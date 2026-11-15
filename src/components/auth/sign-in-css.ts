@@ -46,14 +46,14 @@ export const SIGN_IN_CSS = `
 .tk-si-link{color:#C2185B}
 .tk-si-link{min-height:44px;padding:0 4px;border:0;background:none;font:inherit;font-size:14px;font-weight:600;text-decoration:underline;cursor:pointer}
 .tk-si-link:disabled{color:#8a7a99;text-decoration:none;cursor:default}
-.tk-si-note{margin:4px 0 0;padding-top:16px;border-top:1px solid #F3E8F7;font-size:13px;line-height:1.55;color:#6B4A8A}
 .tk-si-row{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:8px}
 .tk-si-codes{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:8px}
 .tk-si-code{width:100%;min-width:0;min-height:56px;text-align:center;font-size:22px;font-weight:800;padding:0}
+.tk-si-soon{margin:6px 0 0;font-size:12px;line-height:1.5;color:#6B4A8A}
 .tk-si-error{min-height:20px;margin:0;font-size:14px;color:#A8124F}
 .tk-si-focus:focus-visible,.tk-si-in:focus-visible,.tk-si-role:focus-visible,.tk-si-tab:focus-visible,.tk-si-primary:focus-visible,.tk-si-link:focus-visible,.tk-si-close:focus-visible,.tk-si-check input:focus-visible{outline:3px solid #7C3AED;outline-offset:2px}
 @media (max-width:820px){
-  .tk-si-page{padding:24px 0 48px}
+  .tk-si-page{padding:24px 16px 48px}
   .tk-si-card{grid-template-columns:minmax(0,1fr)}
   .tk-si-side{padding:16px 20px;gap:10px}
   .tk-si-eyebrow,.tk-si-pitch{display:none}
@@ -66,6 +66,7 @@ export const SIGN_IN_CSS = `
   .tk-si-codes{gap:6px}
   .tk-si-code{min-height:52px;font-size:20px}
 }
+@media (max-width:599px){.tk-si-side{display:none}}
 @media (max-width:360px){.tk-si-code{font-size:18px}}
 @media (prefers-reduced-motion:reduce){.tk-si *{transition:none !important;animation:none !important}}
 `;

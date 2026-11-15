@@ -4,6 +4,14 @@ import { hmacSha256, sha256 } from "@/server/shared/crypto";
 export const SESSION_COOKIE = "sid";
 export const SESSION_MS = 1000 * 60 * 60 * 24 * 14;
 export const SESSION_MAX_AGE = Math.floor(SESSION_MS / 1000);
+/** H7.12: "Keep me logged in" ticked. The session and its cookie last 30 days. */
+export const SESSION_REMEMBER_MS = 1000 * 60 * 60 * 24 * 30;
+export const SESSION_REMEMBER_MAX_AGE = Math.floor(SESSION_REMEMBER_MS / 1000);
+/**
+ * standard: the 14-day cookie (password login, unchanged). remembered: 30 days. browser: a session cookie that ends
+ * when the browser closes (code login with "Keep me logged in" unticked).
+ */
+export type CookieLife = "standard" | "remembered" | "browser";
 export const RATE_WINDOW_MS = 1000 * 60 * 15;
 /** Twenty attempts are allowed per window. The twenty-first is rejected. */
 export const LOGIN_MAX = 20;
@@ -20,21 +28,26 @@ export function cookieSecure() {
 
 export const SESSION_HINT = "tk-in";
 
-export function sessionCookieHeader(token: string, secure = cookieSecure()) {
+export function maxAgeFor(life: CookieLife): string[] {
+  if (life === "browser") return [];
+  return [`Max-Age=${life === "remembered" ? SESSION_REMEMBER_MAX_AGE : SESSION_MAX_AGE}`];
+}
+
+export function sessionCookieHeader(token: string, secure = cookieSecure(), life: CookieLife = "standard") {
   const parts = [
     `${SESSION_COOKIE}=${encodeURIComponent(token)}`,
     "Path=/",
     "HttpOnly",
     "SameSite=Lax",
-    `Max-Age=${SESSION_MAX_AGE}`,
+    ...maxAgeFor(life),
   ];
   if (secure) parts.push("Secure");
   return parts.join("; ");
 }
 
 /** Readable flag so public pages can skip account fetches when nobody is signed in. */
-export function sessionHintCookie(secure = cookieSecure()) {
-  const parts = [`${SESSION_HINT}=1`, "Path=/", "SameSite=Lax", `Max-Age=${SESSION_MAX_AGE}`];
+export function sessionHintCookie(secure = cookieSecure(), life: CookieLife = "standard") {
+  const parts = [`${SESSION_HINT}=1`, "Path=/", "SameSite=Lax", ...maxAgeFor(life)];
   if (secure) parts.push("Secure");
   return parts.join("; ");
 }

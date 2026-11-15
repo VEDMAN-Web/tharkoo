@@ -10,6 +10,7 @@ import { DEFAULT_LANDING, landingFor, type LandingPaths, type SignInRole } from 
 import { useUrlPaths } from "@/components/UrlPaths";
 import { api, fieldErrors, friendlyError, isStaffRole, safeNext } from "@/lib/ui/api";
 import { applyPrefixes } from "@/lib/urls";
+import { useFocusTrap } from "@/components/ui/useFocusTrap";
 
 export type { SignInRole } from "@/components/auth/landing";
 export { landingFor, DEFAULT_LANDING } from "@/components/auth/landing";
@@ -104,7 +105,8 @@ export function SignInSheet({ mode, initialRole = "user", initialNext = null, la
   const [message, setMessage] = useState("");
   const [sellerErrors, setSellerErrors] = useState<Record<string, string[]>>({});
   const [resendIn, setResendIn] = useState(0);
-  const rootRef = useRef<HTMLDivElement>(null);
+  // The pop-up keeps Tab inside the card and returns focus to the opener on close (the shared hook). The page has no trap.
+  const rootRef = useFocusTrap<HTMLDivElement>(popup, () => onClose?.());
   const skipFirstFocus = useRef(true);
   const next = safeNext(initialNext);
 
@@ -121,7 +123,7 @@ export function SignInSheet({ mode, initialRole = "user", initialNext = null, la
       if (!popup) return;
     }
     rootRef.current?.querySelector<HTMLElement>("[data-focus]")?.focus();
-  }, [step, popup]);
+  }, [step, popup, rootRef]);
 
   const identifierReady = channel === "phone" ? identifier.replace(/\D/g, "").length >= 10 : identifier.trim().length >= 5;
 
@@ -151,8 +153,8 @@ export function SignInSheet({ mode, initialRole = "user", initialNext = null, la
     setMessage("");
     const res =
       channel === "phone"
-        ? await api<{ user: VerifiedUser }>("/api/auth/otp/verify", { method: "POST", body: JSON.stringify({ phone: sentTo, code: value }) })
-        : await api<{ user: VerifiedUser }>("/api/auth/email/otp/verify", { method: "POST", body: JSON.stringify({ email: sentTo, code: value }) });
+        ? await api<{ user: VerifiedUser }>("/api/auth/otp/verify", { method: "POST", body: JSON.stringify({ phone: sentTo, code: value, remember: keepIn }) })
+        : await api<{ user: VerifiedUser }>("/api/auth/email/otp/verify", { method: "POST", body: JSON.stringify({ email: sentTo, code: value, remember: keepIn }) });
     setBusy(false);
     if (!res.ok) {
       setCode("");
@@ -267,6 +269,7 @@ export function SignInSheet({ mode, initialRole = "user", initialNext = null, la
                   Email
                 </button>
               </div>
+              {!showMobile ? <p className="tk-si-soon">Text message codes are coming soon. Use email for now.</p> : null}
 
               {channel === "phone" ? (
                 <div>
@@ -275,7 +278,6 @@ export function SignInSheet({ mode, initialRole = "user", initialNext = null, la
                     <span className="tk-si-prefix">+91</span>
                     <input id="tk-si-phone" data-focus="" className="tk-si-in tk-si-focus" name="phone" type="tel" inputMode="tel" autoComplete="tel-national" placeholder="98250 12345" value={identifier} onChange={(event) => setIdentifier(event.target.value)} aria-describedby={describedBy} />
                   </div>
-                  {!showMobile ? <p className="tk-si-help" style={{ marginTop: 6 }}>Codes by text message are not on yet. Use email for now.</p> : null}
                 </div>
               ) : (
                 <div>
@@ -294,7 +296,6 @@ export function SignInSheet({ mode, initialRole = "user", initialNext = null, la
               <p className="tk-si-terms">
                 By continuing you agree to the <a href={applyPrefixes("/terms/", paths)}>Terms</a> and <a href={applyPrefixes("/privacy/", paths)}>Privacy Policy</a>.
               </p>
-              <p className="tk-si-note">Users land in the user panel. Users are never asked for their age; everyone confirms 18+ once when they open Tharkoo.</p>
             </form>
           ) : null}
 
