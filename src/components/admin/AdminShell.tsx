@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { createContext, useContext, useState } from "react";
 import { visibleGroups, type NavItem } from "./nav";
+import { LogoutButton } from "@/components/auth/LogoutButton";
 
 type Viewer = { name: string; roles: readonly string[] };
 
@@ -89,7 +90,7 @@ export function AdminShell({ title, children }: { title: string; children: React
                 <strong>{name || "Staff"}</strong>
                 <small>{roles.join(", ") || "staff"}</small>
               </span>
-              <Link href="/u/logout/" className="adm-user-out">Log out</Link>
+              <LogoutButton className="adm-user-out">Log out</LogoutButton>
             </div>
           </header>
           <div className="adm-content" id="adm-content">{children}</div>

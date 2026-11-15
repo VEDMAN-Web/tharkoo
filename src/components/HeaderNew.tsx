@@ -16,6 +16,7 @@ import { UtilityStrip } from "./new/UtilityStrip";
 import { applyPrefixes, loginPath, postAdPath } from "@/lib/urls";
 import type { ShellConfig } from "@/server/site-links/shell-config-rules";
 import { api } from "@/lib/ui/api";
+import { LogoutButton } from "./auth/LogoutButton";
 import { accountName } from "@/lib/account-name";
 
 // The search pop-up loads only when a visitor opens it, as in the old header.
@@ -126,7 +127,7 @@ export function HeaderNew({
                     <Link role="menuitem" href="/u/account/saved/" onClick={() => setAccountOpen(false)}>Saved ads</Link>
                     <Link role="menuitem" href="/u/account/messages/" onClick={() => setAccountOpen(false)}>Chats</Link>
                     <Link role="menuitem" href="/u/account/edit-account/" onClick={() => setAccountOpen(false)}>Settings</Link>
-                    <Link role="menuitem" href="/u/logout/" onClick={() => setAccountOpen(false)}>Log out</Link>
+                    <LogoutButton role="menuitem" onClick={() => setAccountOpen(false)}>Log out</LogoutButton>
                   </div>
                 ) : null}
               </div>
