@@ -1,6 +1,6 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
-import { Bell, ChartColumn, Heart, House, LifeBuoy, Megaphone, MessageSquare, Search, Settings, Wallet } from "lucide-react";
+import { Bell, Heart, House, LifeBuoy, Megaphone, MessageSquare, Search, Settings, Wallet } from "lucide-react";
 import type { PanelSummary } from "@/server/notifications/summary";
 import "./user-panel.css";
 
@@ -19,9 +19,8 @@ const LINKS: { key: PanelKey; label: string; href: string; icon: typeof House }[
   { key: "settings", label: "Settings", href: "/u/account/edit-account/", icon: Settings },
 ];
 
-const ADS_LINKS: { key: "ads" | "stats"; label: string; href: string; icon: typeof House }[] = [
+const ADS_LINKS: { key: "ads"; label: string; href: string; icon: typeof House }[] = [
   { key: "ads", label: "My ads", href: "/u/account/ads/", icon: Megaphone },
-  { key: "stats", label: "Stats", href: "/u/account/analytics/", icon: ChartColumn },
 ];
 
 function renderLink(item: { key: string; label: string; href: string; icon: typeof House }, count: number, active: PanelKey) {

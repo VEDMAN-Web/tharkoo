@@ -2717,6 +2717,18 @@
         "src/app/globals.css"
       ]
     },
+    "H7.14": {
+      "branchPrefix": "haiku/h7.14",
+      "globs": [
+        "src/app/categories/**",
+        "src/app/cities/**",
+        "src/app/how-it-works/**",
+        "src/app/help/**",
+        "src/components/h714/**",
+        "src/components/CookieBanner.tsx",
+        "docs/ownership.json"
+      ]
+    },
     "H7.10": {
       "branchPrefix": "haiku/h7.10",
       "globs": [
@@ -2952,6 +2964,21 @@
         "src/components/auth/SellerSetup.tsx",
         "src/components/auth/SellerProfileForm.tsx",
         "src/app/u/seller-profile/page.tsx"
+      ]
+    },
+    "H7.21": {
+      "branchPrefix": "haiku/h7.21",
+      "globs": [
+        "docs/ownership.json",
+        "src/components/buyer/**",
+        "src/components/HeaderNew.tsx",
+        "src/components/AuthForm.tsx",
+        "src/components/auth/**",
+        "src/app/globals.css",
+        "src/app/u/forgot/**",
+        "src/app/u/reset/**",
+        "tests/e2e/user-panel.e2e.ts",
+        "tests/e2e/account.e2e.ts"
       ]
     },
     "H7.20": {

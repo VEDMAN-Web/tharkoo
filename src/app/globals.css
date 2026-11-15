@@ -1705,9 +1705,10 @@ input, select, textarea { font-size: 16px; }
   background: #fdf0f7; border: 1px solid #ead8f0; color: #a8124f; font-weight: 700; font-size: 14px; text-decoration: none;
 }
 .tkn-account { position: relative; }
-.tkn-avatar {
-  display: inline-flex; align-items: center; gap: 2px; height: 40px; padding: 0 8px 0 0; border-radius: 999px; border: 0; cursor: pointer; flex: none;
-  background: linear-gradient(135deg, #e0f2fe, #ede9ff); color: #5b21b6; font: inherit; font-weight: 800;
+.tkn-avatar { display: inline-flex; align-items: center; gap: 6px; padding: 0; border: 0; background: none; cursor: pointer; flex: none; color: #5b21b6; font: inherit; }
+.tkn-avatar-circle {
+  display: inline-flex; align-items: center; justify-content: center; width: 36px; height: 36px; border-radius: 50%;
+  background: linear-gradient(135deg, #e0f2fe, #ede9ff); color: #5b21b6; font-weight: 800;
 }
 .tkn-account-menu {
   position: absolute; right: 0; top: calc(100% + 8px); z-index: 50; min-width: 200px; padding: 8px; border-radius: 16px;

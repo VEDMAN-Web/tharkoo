@@ -1,0 +1,48 @@
+.h714-g4 { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:22px; }
+.h714-g3 { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:22px; }
+@media (max-width:1024px) {
+  .h714-g4 { grid-template-columns:repeat(3,minmax(0,1fr)); }
+}
+@media (max-width:820px) {
+  .h714-g4 { grid-template-columns:repeat(2,minmax(0,1fr)); gap:12px; }
+  .h714-g3 { grid-template-columns:minmax(0,1fr); }
+  .h714-h1 { font-size:30px !important; }
+  .h714-h2 { font-size:28px !important; }
+}
+@media (max-width:600px) {
+  .h714-pad { padding-left:16px !important; padding-right:16px !important; }
+}
+.h714-catimg { aspect-ratio:3/2; }
+@media (max-width:640px) {
+  .h714-catimg { aspect-ratio:4/5; }
+}
+.h714 a { color:#C2185B; }
+.h714 a:hover { color:#8E1046; }
+.h714-card { transition:transform .28s,box-shadow .28s,border-color .28s; }
+.h714-card:hover { transform:translateY(-5px); box-shadow:0 14px 36px rgba(233,30,140,.14); border-color:rgba(233,30,140,.25); }
+.h714-cat { transition:transform .25s,box-shadow .25s; }
+.h714-cat:hover { transform:translateY(-3px); box-shadow:0 12px 30px rgba(45,18,72,.14); }
+.h714-b:focus-visible, .h714-card a:focus-visible, .h714-cat:focus-visible { outline:3px solid #7C3AED; outline-offset:2px; }
+.h714-2l { display:grid; grid-template-columns:280px minmax(0,1fr); gap:28px; align-items:start; }
+.h714-2r { display:grid; grid-template-columns:minmax(0,1fr) 360px; gap:24px; align-items:start; }
+.h714-2e { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:22px; align-items:center; }
+.h714-g4b { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:16px; }
+.h714-row-link { transition:background .2s; }
+.h714-row-link:hover { background:rgba(253,240,247,.9); }
+.h714-chips { display:flex; gap:8px; flex-wrap:wrap; }
+@media (max-width:1024px) {
+  .h714-g4b { grid-template-columns:repeat(2,minmax(0,1fr)); }
+}
+@media (max-width:900px) {
+  .h714-2l, .h714-2r, .h714-2e { grid-template-columns:minmax(0,1fr); }
+  .h714-aside-static { position:static !important; }
+}
+@media (max-width:600px) {
+  .h714-band { padding:22px 18px !important; }
+  .h714-g4b { grid-template-columns:minmax(0,1fr); }
+  .h714-chips { flex-wrap:nowrap; overflow-x:auto; scrollbar-width:none; }
+  .h714-chips::-webkit-scrollbar { display:none; }
+  .h714-art { padding:22px 18px !important; }
+  .h714-hide-xs { display:none !important; }
+}
+.h714 .h714-h1 { font-weight: 800 !important; letter-spacing: -0.02em !important; }
