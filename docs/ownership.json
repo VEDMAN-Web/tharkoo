@@ -2693,7 +2693,8 @@
         "tests/server/locations/countries.test.ts",
         "tests/server/shell/shell-render.test.ts",
         "tests/server/ui/country-flag.test.ts",
-        "tests/e2e/h7-4d-followups.e2e.ts"
+        "tests/e2e/h7-4d-followups.e2e.ts",
+        "docs/ownership.json"
       ]
     }
   }
