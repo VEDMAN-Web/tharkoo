@@ -2547,6 +2547,27 @@
         "tests/server/db/**",
         "docs/ownership.json"
       ]
+    },
+    "H7.4b": {
+      "branchPrefix": "haiku/h7.4b",
+      "globs": [
+        "src/app/[category]/page.tsx",
+        "src/app/[category]/SubcategoryChips.tsx",
+        "src/app/[category]/[location]/page.tsx",
+        "src/components/ListingPage.tsx",
+        "src/components/ui/AdCard.tsx",
+        "src/components/new/ListingFrame.tsx",
+        "src/components/new/ListingHead.tsx",
+        "src/components/new/ListingSearchForm.tsx",
+        "src/components/new/ListingFilterPanel.tsx",
+        "src/components/new/listing-filters.ts",
+        "src/components/new/listing-frame-props.tsx",
+        "src/components/new/listing-spec.css",
+        "src/components/new/band-image.ts",
+        "src/lib/queries.ts",
+        "tests/server/listing/**",
+        "docs/ownership.json"
+      ]
     }
   }
 }
