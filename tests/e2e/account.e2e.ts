@@ -21,17 +21,15 @@ test.describe("3 Account", () => {
     await loginUi(page, email);
     await page.waitForURL(/\/u\/account\/dashboard\//);
 
-    // Dashboard cards.
-    for (const tile of ["ads", "wallet", "coupons", "settings"]) {
-      await expect(page.locator(`[data-tk=tile][data-tile=${tile}]`)).toBeVisible();
-    }
+    // Dashboard menu: the user panel links to coins and settings.
+    const menu = page.getByRole("navigation", { name: "My account" });
+    await expect(menu.getByRole("link", { name: "Coins and payments" })).toBeVisible();
+    await expect(menu.getByRole("link", { name: "Settings" })).toBeVisible();
     await expect(page.locator("h1")).toHaveCount(1);
 
-    // Settings (the profile screen): shows the email, password change sends a reset email.
     await page.goto("/u/account/edit-account/");
-    await expect(page.getByText(email, { exact: false })).toBeVisible();
-    await page.getByRole("button", { name: "CHANGE PASSWORD" }).click();
-    await expect(page.getByRole("button", { name: /We have sent you an email/ })).toBeVisible();
+    await expect(page.getByRole("region", { name: "Settings" }).getByText(email, { exact: false })).toBeVisible();
+    await expect(page.getByText("Text message codes are coming soon")).toBeVisible();
 
     // Other account screens load for a signed-in user.
     for (const path of ["/u/account/ads/", "/u/account/credits/", "/u/account/coupons/", "/u/account/saved/", "/u/account/kyc/"]) {
@@ -46,7 +44,7 @@ test.describe("3 Account", () => {
     const me = await page.request.get("/api/auth/me");
     expect(me.status()).toBe(401);
     await page.goto("/u/account/dashboard/");
-    await expect(page.getByText(/sign in|log in/i).first()).toBeVisible();
+    await expect(page.getByRole("heading", { name: /log in/i }).first()).toBeVisible();
 
     // And the same credentials work again.
     await loginUi(page, email);

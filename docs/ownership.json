@@ -2881,6 +2881,27 @@
         "src/lib/models.ts"
       ]
     },
+    "H7.17": {
+      "branchPrefix": "haiku/h7.17",
+      "globs": [
+        "docs/ownership.json",
+        "src/components/buyer/**",
+        "src/components/support/**",
+        "src/components/account/AccountTools.tsx",
+        "src/components/HeaderNew.tsx",
+        "src/components/ui/RecentlyViewed.tsx",
+        "src/lib/account-name.ts",
+        "src/server/notifications/summary.ts",
+        "src/app/u/account/**",
+        "src/app/globals.css",
+        "tests/e2e/user-panel.e2e.ts",
+        "tests/e2e/support.e2e.ts",
+        "tests/e2e/account.e2e.ts",
+        "src/components/PhoneLinkCard.tsx",
+        "src/components/chat/Inbox.tsx",
+        "tests/server/notifications/feed.test.ts"
+      ]
+    },
     "H7.18": {
       "branchPrefix": "haiku/h7.18",
       "globs": [

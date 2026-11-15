@@ -2,7 +2,6 @@ import Link from "next/link";
 import { SectionHelp } from "@/components/help/SectionHelp";
 import { SignedOutPanel } from "./UserPanelShell";
 import type { NotificationItem } from "@/server/notifications/feed";
-import styles from "./UserPanel.module.css";
 
 /** H7.6: the Notifications list. Items come from real sources (support, chats, coins). */
 
@@ -13,14 +12,14 @@ export function NotificationsPanel({ items }: { items: NotificationItem[] | null
     return <SignedOutPanel next="/u/account/notifications/" title="Log in to see notifications" body="Replies, chat messages and coin updates show here after you log in." />;
   }
   return (
-    <section aria-labelledby="notif-heading" className={`${styles.panel} ${styles.glass}`}>
-      <h2 id="notif-heading" className={styles.h2}>Notifications</h2>
+    <section aria-labelledby="notif-heading" className={`up-panel up-glass`}>
+      <h1 id="notif-heading" className="up-h2">Notifications</h1>
       <SectionHelp textKey="help.section.notifications" />
       {items.length === 0 ? (
-        <div className={styles.empty}>
-          <p className={styles.emptyTitle}>No notifications yet</p>
-          <p className={styles.emptyBody}>Support replies, unread chats and coin updates will show here.</p>
-          <Link href="/u/account/dashboard/" className={styles.ghost}>Back to my panel</Link>
+        <div className="up-empty">
+          <p className="up-empty-title">No notifications yet</p>
+          <p className="up-empty-body">Support replies, unread chats and coin updates will show here.</p>
+          <Link href="/u/account/dashboard/" className="up-btn-ghost">Back to my panel</Link>
         </div>
       ) : (
         <ul style={{ listStyle: "none", padding: 0, margin: "12px 0 0", display: "flex", flexDirection: "column", gap: 10 }}>

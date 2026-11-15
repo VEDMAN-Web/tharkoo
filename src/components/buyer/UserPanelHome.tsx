@@ -1,101 +1,116 @@
 import Link from "next/link";
-import { DiscoverFeed } from "./DiscoverFeed";
+import { FreshAds } from "./FreshAds";
+import { PackPicker } from "./PackPicker";
+import { MyAdsList } from "./MyAdsList";
 import { SavedAdsRail } from "./SavedAdsRail";
 import { SectionHelp } from "@/components/help/SectionHelp";
 import { SignedOutPanel, UserPanelShell } from "./UserPanelShell";
+import { howItWorksPath } from "@/lib/urls";
+import type { listOwnCards } from "@/server/listings/owner-cards";
 import type { PackRow, PanelSummary } from "@/server/notifications/summary";
-import styles from "./UserPanel.module.css";
 
-/** H7.6: the user panel home (New design). Every number here comes from the server. */
+/** H7.6, H7.17: the user panel home (New design). Every number here comes from the server. */
 
-type Option = { slug: string; name: string };
-
-function inr(value: number) {
-  return `₹${value.toLocaleString("en-IN")}`;
-}
+type Ads = Awaited<ReturnType<typeof listOwnCards>>;
 
 export function UserPanelHome({
   summary,
+  ads,
   packs,
-  categories,
-  cities,
 }: {
   summary: PanelSummary;
+  ads: Ads | null;
   packs: PackRow[];
-  categories: Option[];
-  cities: Option[];
 }) {
+  const aside = (
+    <>
+      <section aria-labelledby="coins-heading" className="up-coins-card">
+        <h2 id="coins-heading" className="up-coins-label">Your coins</h2>
+        {summary.signedIn ? (
+          <p className="up-coins-value" data-tk="coin-balance">{summary.balance} coins</p>
+        ) : (
+          <p className="up-coins-worth">Log in to see your coin balance.</p>
+        )}
+        <Link href="/u/account/credits/history/" className="up-coins-link">See history</Link>
+      </section>
+      <section aria-labelledby="support-heading" className="up-glass up-panel">
+        <div className="up-panel-head">
+          <h2 id="support-heading" className="up-h2">Help and support</h2>
+          <Link href="/u/account/support/" className="up-link">Open</Link>
+        </div>
+        <SectionHelp textKey="help.section.support" />
+        {summary.signedIn && summary.unreadSupport > 0 ? (
+          <div className="up-reply">
+            <span className="up-pill">New reply</span>
+            <span className="up-reply-text">A ticket has a reply from support</span>
+          </div>
+        ) : (
+          <p className="up-muted">No new replies from support.</p>
+        )}
+        <Link href="/u/account/support/new/" className="up-dashed" style={{ marginTop: 12 }}>Raise a new ticket</Link>
+      </section>
+    </>
+  );
   return (
-    <UserPanelShell active="home" summary={summary}>
+    <UserPanelShell active="home" summary={summary} aside={aside} below={<FreshAds />}>
       {summary.signedIn ? null : (
         <SignedOutPanel next="/u/account/dashboard/" title="Log in to see your panel" body="Your saved ads, chats and coins show here after you log in." />
       )}
-      <section className={`${styles.hero}`} aria-labelledby="panel-hero">
-        <p className={styles.eyebrow}>{summary.signedIn ? `Hello ${summary.displayName}` : "Welcome to Tharkoo"}</p>
-        <h1 id="panel-hero" className={styles.h1}>Find it, save it, chat with the seller</h1>
-        <p className={styles.lead}>Your saved ads, chats and coins in one place.</p>
-      </section>
-
-      <section aria-labelledby="buy-heading" className={`${styles.panel} ${styles.glass}`}>
-        <div className={styles.panelHead}>
-          <h2 id="buy-heading" className={styles.h2}>Buy coins</h2>
-          <p className={styles.muted}>Packs on sale now</p>
-        </div>
-        {packs.length === 0 ? (
-          <p className={styles.muted}>No coin packs are on sale right now.</p>
-        ) : (
-          <ul className={styles.packs} style={{ listStyle: "none", padding: 0, margin: 0 }}>
-            {packs.map((pack) => (
-              <li key={pack.id}>
-                <Link href="/u/account/credits/" className={styles.pack}>
-                  {pack.tag ? <span className={styles.packTag}>{pack.tag}</span> : null}
-                  <span className={styles.packCoins}>{pack.credits + (pack.bonus || 0)}</span>
-                  <span className={styles.packUnit}>coins{pack.bonus ? ` (${pack.credits} + ${pack.bonus} free)` : ""}</span>
-                  <span className={styles.packPrice}>{inr(pack.price)}</span>
-                </Link>
-              </li>
-            ))}
-          </ul>
-        )}
-      </section>
-
-      <div className={styles.homeGrid}>
-        <SavedAdsRail />
-        <div className={styles.stack}>
-          <section aria-labelledby="coins-heading" className={`${styles.panel} ${styles.glass}`}>
-            <h2 id="coins-heading" className={styles.h2}>Your coins</h2>
-            {summary.signedIn ? (
-              <>
-                <p className={styles.stat}>{summary.balance}</p>
-                <p className={styles.muted}>coins available</p>
-              </>
-            ) : (
-              <p className={styles.muted}>Log in to see your coin balance.</p>
-            )}
-            <div style={{ marginTop: 14 }}>
-              <Link href="/u/account/credits/history/" className={styles.link}>See history</Link>
+      {summary.signedIn && ads ? (
+        <>
+          <section className="up-hero" aria-labelledby="panel-hero">
+            <p className="up-eyebrow">{`Hello ${summary.displayName}`}</p>
+            <h1 id="panel-hero" className="up-h1">{ads.totals.views > 0 ? "Your ads are getting seen" : "Your ads are live"}</h1>
+            <p className="up-lead">{`${ads.counts.live} live now · ${ads.totals.views} views in total`}</p>
+            <div className="up-promo-row" style={{ marginTop: 16 }}>
+              <Link href="/u/post-insert/" className="up-btn">Post another ad</Link>
             </div>
           </section>
-          <section aria-labelledby="support-heading" className={`${styles.panel} ${styles.glass}`}>
-            <h2 id="support-heading" className={styles.h2}>Help and support</h2>
-            <SectionHelp textKey="help.section.support" />
-            {summary.signedIn && summary.unreadSupport > 0 ? (
-              <p className={styles.statRow}>
-                <span>New reply on a ticket</span>
-                <span className={styles.navBadge}>{summary.unreadSupport}</span>
-              </p>
-            ) : (
-              <p className={styles.muted}>No new replies from support.</p>
-            )}
-            <div className={styles.filters} style={{ marginTop: 12 }}>
-              <Link href="/u/account/support/" className={styles.ghost}>Open support</Link>
-              <Link href="/u/account/support/new/" className={styles.ghost}>New ticket</Link>
+          <div className="up-stats">
+            <div className="up-stat"><span className="up-stat-num">{ads.counts.live}</span><span className="up-stat-label">Live ads</span></div>
+            <div className="up-stat"><span className="up-stat-num">{ads.totals.views}</span><span className="up-stat-label">Views</span></div>
+            <div className="up-stat"><span className="up-stat-num">{ads.counts.review}</span><span className="up-stat-label">In review</span></div>
+            <div className="up-stat"><span className="up-stat-num">{ads.counts.ended}</span><span className="up-stat-label">Ended</span></div>
+          </div>
+          <section aria-labelledby="my-ads-heading" className="up-glass up-panel">
+            <div className="up-panel-head">
+              <h2 id="my-ads-heading" className="up-h2">My ads</h2>
+              <Link href="/u/account/ads/" className="up-link">{`See all ${ads.counts.all}`}</Link>
             </div>
+            <MyAdsList items={ads.items} />
           </section>
-        </div>
-      </div>
+        </>
+      ) : (
+        <>
+          <section className="up-hero" aria-labelledby="panel-hero">
+            <p className="up-eyebrow">{summary.signedIn ? `Hello ${summary.displayName}` : "Welcome to Tharkoo"}</p>
+            <h1 id="panel-hero" className="up-h1">Find it, save it, chat with the seller</h1>
+            <p className="up-lead">Your saved ads, chats and coins in one place.</p>
+          </section>
+          {summary.signedIn ? (
+            <section aria-labelledby="promo-heading" className="up-promo">
+              <p className="up-promo-kicker">FREE TO POST</p>
+              <h2 id="promo-heading" className="up-promo-title">Have something to offer?</h2>
+              <p className="up-promo-text">Post a free ad in 2 minutes. People in your city see it today, and they reach you by chat or video call.</p>
+              <div className="up-promo-row">
+                <Link href="/u/post-insert/" className="up-btn-white">Post a free ad</Link>
+                <Link href={howItWorksPath()} className="up-btn-outline">How it works</Link>
+              </div>
+            </section>
+          ) : null}
+        </>
+      )}
 
-      <DiscoverFeed categories={categories} cities={cities} />
+      {packs.length > 0 ? (
+        <section aria-labelledby="buy-heading" className="up-glass up-panel">
+          <div className="up-panel-head">
+            <h2 id="buy-heading" className="up-h2">Buy coins</h2>
+            <Link href="/u/account/credits/" className="up-link">See all packs</Link>
+          </div>
+          <PackPicker packs={packs} />
+        </section>
+      ) : null}
+      <SavedAdsRail />
     </UserPanelShell>
   );
 }

@@ -10,13 +10,13 @@ type Recent = ListingDoc & { at?: number };
 
 export function track(item: ListingDoc) {
   if (typeof window === "undefined" || !item.slug) return;
-  const current = read();
+  const current = readRecent();
   const next = [item, ...current.filter((row) => row.slug !== item.slug)].slice(0, 12);
   localStorage.setItem(KEY, JSON.stringify(next));
   window.dispatchEvent(new Event("tk-recent"));
 }
 
-function read(): Recent[] {
+export function readRecent(): Recent[] {
   try {
     const parsed = JSON.parse(localStorage.getItem(KEY) || "[]");
     return Array.isArray(parsed) ? parsed : [];
@@ -28,7 +28,7 @@ function read(): Recent[] {
 export function RecentlyViewedRail({ current }: { current?: string }) {
   const [items, setItems] = useState<Recent[]>([]);
   useEffect(() => {
-    const sync = () => setItems(read().filter((row) => row.slug !== current));
+    const sync = () => setItems(readRecent().filter((row) => row.slug !== current));
     sync();
     window.addEventListener("tk-recent", sync);
     return () => window.removeEventListener("tk-recent", sync);
