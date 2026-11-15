@@ -2974,6 +2974,21 @@
         "src/components/auth/SellerProfileForm.tsx",
         "src/app/u/seller-profile/page.tsx"
       ]
+    },
+    "H7.21": {
+      "branchPrefix": "haiku/h7.21",
+      "globs": [
+        "docs/ownership.json",
+        "src/components/buyer/**",
+        "src/components/HeaderNew.tsx",
+        "src/components/AuthForm.tsx",
+        "src/components/auth/**",
+        "src/app/globals.css",
+        "src/app/u/forgot/**",
+        "src/app/u/reset/**",
+        "tests/e2e/user-panel.e2e.ts",
+        "tests/e2e/account.e2e.ts"
+      ]
     }
   }
 }

@@ -1,4 +1,5 @@
 import { AuthForm } from "@/components/AuthForm";
+import { ResetCard } from "@/components/auth/ResetCard";
 import { pageMetadata } from "@/lib/ui/meta";
 
 export const metadata = pageMetadata({
@@ -9,5 +10,9 @@ export const metadata = pageMetadata({
 });
 
 export default function Page() {
-  return <AuthForm mode="reset" />;
+  return (
+    <ResetCard>
+      <AuthForm mode="reset" />
+    </ResetCard>
+  );
 }
