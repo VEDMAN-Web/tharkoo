@@ -454,23 +454,13 @@
   height: 260px;
   background: linear-gradient(135deg, #fce4f0, #ede9ff);
 }
-/* P1: the whole picture shows (contain). A blurred copy of the same picture fills the frame behind it. */
-.tkh-ad-blur {
-  position: absolute;
-  inset: -24px;
-  width: calc(100% + 48px);
-  height: calc(100% + 48px);
-  object-fit: cover;
-  filter: blur(18px);
-  transform: scale(1.05);
-}
 .tkh-ad-main {
   position: relative;
   display: block;
   width: 100%;
   height: 100%;
-  object-fit: contain;
-  object-position: center center;
+  object-fit: cover;
+  object-position: 50% 20%;
 }
 .tkh-ad-empty {
   display: block;

@@ -45,11 +45,7 @@ export function HomeAdCard({
     <article ref={cardRef} className="tkh-ad" data-tk="home-ad">
       <div className="tkh-ad-photo">
         {ad.photo ? (
-          <>
-            {/* P1: the whole picture shows (contain). The same photo, blurred and cropped, fills the rest of the frame. */}
-            <img className="tkh-ad-blur" src={ad.photo} alt="" aria-hidden="true" loading="lazy" />
-            <img className="tkh-ad-main" src={ad.photo} alt="" width={400} height={260} loading="lazy" />
-          </>
+          <img className="tkh-ad-main" src={ad.photo} alt="" width={400} height={260} loading="lazy" />
         ) : (
           <span className="tkh-ad-empty" aria-hidden />
         )}

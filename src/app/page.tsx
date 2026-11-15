@@ -39,10 +39,25 @@ async function publishedHome() {
   }
 }
 
+type SiteHero = Awaited<ReturnType<typeof getHomepageContent>>["hero"];
+
+const FOCUS_XY: Record<string, [number, number]> = { left: [0, 50], center: [50, 50], right: [100, 50], top: [50, 0], bottom: [50, 100] };
+
+function heroFromBlocks(blocks: Awaited<ReturnType<typeof getPageBlocks>>, hero: SiteHero): SiteHero {
+  const block = blocks?.find((item) => item.type === "hero");
+  const desktop = block?.props.imageDesktop as { src?: string; alt?: string } | undefined;
+  if (!block || !desktop?.src) return hero;
+  const phone = block.props.imageMobile as { src?: string } | undefined;
+  const focus = block.props.focus;
+  const [focusX, focusY] = typeof focus === "string" && focus in FOCUS_XY ? FOCUS_XY[focus] : [70, 15];
+  return { ...hero, photo: desktop.src, photoAlt: desktop.alt || hero.photoAlt, photoPhone: phone?.src ?? "", focusX, focusY, phoneFocusX: 50, phoneFocusY: 10 };
+}
+
 /** H7.4: the New design home, as in the Home mockup. Used only while the New design switch is on. */
 async function newHome(texts: ReturnType<typeof pickTexts>) {
-  const [content, paths, categories, countries, feed, shell] = await Promise.all([
+  const [content, blocks, paths, categories, countries, feed, shell] = await Promise.all([
     getHomepageContent(),
+    publishedHome(),
     getPaths(),
     getCategories(),
     countryPlaces(),
@@ -52,7 +67,7 @@ async function newHome(texts: ReturnType<typeof pickTexts>) {
   return (
     <UiTextProvider texts={texts}>
       <NewHome
-        hero={plain(content.hero)}
+        hero={plain(heroFromBlocks(blocks, content.hero))}
         categories={plain(categories)}
         ads={plain(feed.items)}
         shell={shell}
