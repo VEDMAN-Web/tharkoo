@@ -1,12 +1,14 @@
 "use client";
 
 import { createContext, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
-import { ArrowUp, Calendar, Check, MapPin, Phone } from "lucide-react";
+import { ArrowUp, Calendar, Camera, Check, MapPin, Phone } from "lucide-react";
 import type { ListingDoc } from "@/lib/models";
 import { displayTitle, prettyPlace } from "@/lib/format";
 import { listingPhotos } from "@/lib/media";
 import { PriceTag } from "../search/PriceTag";
+import { formatPrice } from "../search/price";
 import { PhotoSwipe } from "./PhotoSwipe";
+import { SaveButton } from "./SaveButton";
 import { api, friendlyError } from "@/lib/ui/api";
 import { adPath } from "@/lib/urls";
 import { useUrlPaths } from "../UrlPaths";
@@ -50,10 +52,12 @@ export function AdCard({
   featured,
   priority,
   owner,
+  layout,
 }: {
   ad: ListingDoc;
   featured?: boolean;
   priority?: boolean;
+  /** "row": the H7.4b listing card (photo left, text right; photo on top below 600 px). Default: the card used everywhere else. */
   layout?: "row" | "tile";
   owner?: AdOwnerView;
 }) {
@@ -100,6 +104,53 @@ export function AdCard({
     });
     if (!res.ok) return setNote(friendlyError(res.error));
     setShown(res.data.value || t("card.contact.none"));
+  }
+
+  if (layout === "row") {
+    const verifiedText = videoVerified || ad.trust?.[0] || "";
+    const placeText = `${city}${area ? ` / ${area}` : ""}`;
+    const priceText = formatPrice(ad.price);
+    return (
+      <article ref={cardRef} className="tk-card tkn-ls-card" data-tk="card" data-reveal data-variant={variant} onClickCapture={onCardClick}>
+        <div className="tkn-ls-photo">
+          <PhotoSwipe photos={photos} title={title} seed={ad.slug || title} category={ad.categorySlug} priority={priority} />
+          {tier ? (
+            <span className="tkn-ls-tier" data-tier={variant}>
+              {tier}
+            </span>
+          ) : null}
+          {photos.length > 1 ? (
+            <span className="tkn-ls-count">
+              <Camera size={12} aria-hidden />
+              {photos.length}
+            </span>
+          ) : null}
+          <span className="tkn-ls-wm" aria-hidden>
+            tharkoo.com
+          </span>
+        </div>
+        <a className="tkn-ls-stretch" href={href} aria-label={title} />
+        <div className="tkn-ls-body">
+          <div className="tkn-ls-titlerow">
+            <h2 className="tkn-ls-title">{title}</h2>
+            <SaveButton
+              item={{ id: ad.publicId || ad.slug || title, slug: ad.slug || "", title, photo: photos[0] ?? null, place: placeText, at: 0 }}
+              className="tkn-ls-save relative z-[2] h-[38px] w-[38px] min-h-[38px] min-w-[38px] shrink-0 justify-center border border-[#EAD8F0] bg-white px-0 text-[#C2185B]"
+            />
+          </div>
+          {ad.description ? <p className="tkn-ls-desc">{ad.description}</p> : null}
+          <div className="tkn-ls-pills">
+            {verifiedText ? <span className="tkn-ls-pill-ok">{verifiedText}</span> : null}
+            {ad.categorySlug ? <span className="tkn-ls-pill-cat">{prettyPlace(ad.categorySlug)}</span> : null}
+            {placeText ? <span className="tkn-ls-pill-place">{placeText}</span> : null}
+          </div>
+          <div className="tkn-ls-foot">
+            {priceText ? <span className="tkn-ls-price" data-tk="card-price">{priceText}</span> : <span />}
+            <AdCountsLabel counts={counts ?? { views: 0, clicks: 0 }} />
+          </div>
+        </div>
+      </article>
+    );
   }
 
   return (
