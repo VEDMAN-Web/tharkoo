@@ -74,10 +74,11 @@ export interface SignInSheetProps {
   /** Where each kind of person lands. The server passes the real paths. */
   landing?: LandingPaths;
   showMobile?: boolean;
+  image?: string;
   onClose?: () => void;
 }
 
-export function SignInSheet({ mode, initialRole = "user", initialNext = null, landing = DEFAULT_LANDING, showMobile = false, onClose }: SignInSheetProps) {
+export function SignInSheet({ mode, initialRole = "user", initialNext = null, landing = DEFAULT_LANDING, showMobile = false, image = "", onClose }: SignInSheetProps) {
   const router = useRouter();
   const paths = useUrlPaths();
   const popup = mode === "popup";
@@ -199,15 +200,7 @@ export function SignInSheet({ mode, initialRole = "user", initialNext = null, la
     <div ref={rootRef} className={`tk-si ${popup ? "tk-si-popup" : "tk-si-page"}`} role={popup ? "dialog" : undefined} aria-modal={popup ? true : undefined} aria-labelledby="tk-si-title">
       <style>{SIGN_IN_CSS}</style>
       <div className="tk-si-card">
-        <aside className="tk-si-side">
-          <p className="tk-si-eyebrow">Tharkoo account</p>
-          <h2 className="tk-si-pitch">One code. No password.</h2>
-          <ul className="tk-si-points">
-            <li className="tk-si-point"><span className="tk-si-num" aria-hidden="true">1</span><span className="tk-si-point-text">No password to remember</span></li>
-            <li className="tk-si-point"><span className="tk-si-num" aria-hidden="true">2</span><span className="tk-si-point-text">Chat, save ads and get alerts</span></li>
-            <li className="tk-si-point"><span className="tk-si-num" aria-hidden="true">3</span><span className="tk-si-point-text">Post your own ads for free</span></li>
-          </ul>
-        </aside>
+        <aside className="tk-si-side">{image ? <img src={image} alt="" /> : null}</aside>
 
         <section className="tk-si-main">
           {popup ? (
