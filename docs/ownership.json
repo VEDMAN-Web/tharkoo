@@ -2881,7 +2881,6 @@
         "src/lib/models.ts"
       ]
     },
-<<<<<<< HEAD
     "H7.17": {
       "branchPrefix": "haiku/h7.17",
       "globs": [
@@ -2898,7 +2897,8 @@
         "tests/e2e/user-panel.e2e.ts",
         "tests/e2e/support.e2e.ts",
         "tests/e2e/account.e2e.ts"
-=======
+      ]
+    },
     "H7.18": {
       "branchPrefix": "haiku/h7.18",
       "globs": [
@@ -2921,7 +2921,6 @@
         "src/components/new/NewHome.tsx",
         "src/components/new/NotFoundView.tsx",
         "src/app/not-found.tsx"
->>>>>>> github/main
       ]
     }
   }
