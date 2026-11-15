@@ -1723,7 +1723,10 @@ input, select, textarea { font-size: 16px; }
    ever passes above the box. The flags are SVG files from public/flags. */
 .tkn-pop-country { width: 342px; max-height: min(560px, 70vh); padding: 12px; display: flex; flex-direction: column; overflow: hidden; }
 .tkn-countrylist-wrap { display: flex; flex-direction: column; flex: 1 1 auto; min-height: 0; }
-.tkn-countrylist-scroll { flex: 1 1 auto; min-height: 0; overflow-y: auto; overscroll-behavior: contain; }
+.tkn-countrylist-scroll { flex: 1 1 auto; min-height: 0; overflow-y: auto; overflow-x: hidden; overscroll-behavior: contain; }
+/* No sideways scroll in the list: rows are exactly the list width (border-box), and a long name ends in an ellipsis */
+.tkn-citylist, .tkn-citylist > li { min-width: 0; max-width: 100%; }
+.tkn-citylist-row { box-sizing: border-box; min-width: 0; max-width: 100%; }
 .tkn-country-search {
   flex: none; display: flex; align-items: center; gap: 10px; min-height: 44px; padding: 0 14px; margin-bottom: 8px; border-radius: 12px;
   border: 1.5px solid var(--tkn-line); background: #fff; color: var(--tkn-muted-2, #6b4a8a); box-sizing: border-box;
@@ -1738,7 +1741,7 @@ input, select, textarea { font-size: 16px; }
 .tkn-country-group {
   margin: 12px 0 4px; padding: 0 12px; font-size: 11px; font-weight: 800; letter-spacing: 0.12em; text-transform: uppercase; color: #5b21b6;
 }
-.tkn-citylist-name { flex: 1; min-width: 0; }
+.tkn-citylist-name { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .tkn-citylist-tick { color: var(--tkn-rose-text, #c2185b); margin-left: auto; flex: none; }
 .tkn-citylist-none { margin-left: auto; flex: none; font-size: 12px; color: #6b4a8a; white-space: nowrap; }
 .tkn-country-empty { margin: 8px 12px; font-size: 13px; color: #6b4a8a; }
@@ -1775,7 +1778,8 @@ input, select, textarea { font-size: 16px; }
 }
 .tkn-drawer-head { display: flex; align-items: center; justify-content: space-between; }
 .tkn-drawer-title { font-weight: 800; font-size: 18px; }
-.tkn-drawer-nav { display: grid; gap: 4px; }
+.tkn-drawer-nav { display: grid; gap: 4px; grid-template-columns: minmax(0, 1fr); }
+.tkn-countrylist-wrap { min-width: 0; }
 .tkn-drawer-row {
   display: flex; align-items: center; gap: 12px; width: 100%; min-height: 48px; padding: 0 14px; border: 0; border-radius: 16px;
   background: transparent; color: var(--tkn-ink); font: inherit; font-size: 15px; font-weight: 600; text-align: left; text-decoration: none; cursor: pointer; box-sizing: border-box;
