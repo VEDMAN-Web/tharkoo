@@ -2733,9 +2733,11 @@
         "src/components/new/home-spec.css",
         "src/lib/countries.ts",
         "src/lib/ui/text.ts",
+        "src/lib/ui/site-content.ts",
         "src/server/locations/site-country.ts",
         "src/app/globals.css",
         "public/flags/**",
+        "tests/server/shell/home-config-banner.test.ts",
         "tests/e2e/h7-4d-followups.e2e.ts",
         "tests/e2e/shell.e2e.ts",
         "docs/ownership.json"
