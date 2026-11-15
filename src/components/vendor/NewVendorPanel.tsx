@@ -173,6 +173,7 @@ export function NewVendorPanel({ initialTab = "all" }: { initialTab?: Tab }) {
         <Link href="/u/account/wallet/" className="tkv-navlink">Wallet</Link>
         <Link href="/u/account/saved/" className="tkv-navlink">Saved</Link>
         <Link href="/u/account/edit-account/" className="tkv-navlink">Settings</Link>
+        <Link href="/u/logout/" className="tkv-navlink">Log out</Link>
       </nav>
 
       <main className="tkv-main">
