@@ -50,7 +50,7 @@ export function HomeAdCard({
           <span className="tkh-ad-empty" aria-hidden />
         )}
         {badge ? <span className="tkh-ad-badge">{badge}</span> : null}
-        {seller ? (
+        {seller && seller.chatOn ? (
           <span className={`tkh-ad-status ${seller.status === "online" ? "is-online" : "is-away"}`} data-tk="availability" data-status={seller.status}>
             <span aria-hidden />
             {seller.status === "online" ? labels.online : labels.away}

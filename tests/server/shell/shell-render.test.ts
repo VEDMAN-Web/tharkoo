@@ -29,16 +29,20 @@ function wrap(node: React.ReactNode) {
 }
 
 function header(config: ShellConfig = defaultShellConfig()) {
-  return wrap(createElement(HeaderNew, { siteName: "Tharkoo", shell: config, cities, categories }));
+  return wrap(createElement(HeaderNew, { siteName: "Tharkoo", shell: config, cities, countries: [{ slug: "india", name: "India", flag: "🇮🇳" }], categories }));
 }
 
 describe("H7.1 new header", () => {
-  it("shows the pill nav, city picker, Log in and Post your ad, and no saved or heart icon", () => {
+  it("shows the pill nav, the country pill, Log in and Post your ad, and no saved or heart icon", () => {
     const html = header();
-    for (const label of ["Home", "Categories", "Cities", "How it works", "Help", "Log in", "Post your ad"]) {
+    for (const label of ["Home", "Categories", "Cities", "How it works", "Help", "Log in"]) {
       expect(html).toContain(label);
     }
-    expect(html).toContain("All cities");
+    // H7.4c: the location pill shows the country (flag and name), not a city.
+    expect(html).toContain("tkn-city");
+    expect(html).toContain("India");
+    // The long label shows on wide screens; the short "Post ad" shows below 420 px (merged in #157). Both are accepted.
+    expect(html).toMatch(/Post your ad|Post ad/);
     expect(html).not.toMatch(/saved|favourite|favorite|heart/i);
   });
 

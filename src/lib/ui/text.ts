@@ -12,6 +12,8 @@ export const TEXT_DEFAULTS = {
   "home.utility.hours": "Fresh ads, live for 72 hours",
   "home.banner.sub": "Free ads across India. Chat with sellers online and verify on a video call.",
   "home.search.keyword": "What are you looking for?",
+  "home.search.state": "State",
+  "home.search.allStates": "All states",
   "home.search.city": "City",
   "home.search.category": "Category",
   "home.search.allCities": "All cities",

@@ -5,6 +5,7 @@ import { ForbiddenError, NotFoundError, ValidationError, VerificationRequiredErr
 import { User } from "@/server/models";
 import type { SellerView } from "@/server/auth/service";
 import { isAtLeast18, parseDateOnly } from "@/server/shared/age";
+import { setOwnLiveChat } from "@/server/availability/service";
 
 /**
  * H7.2b: the seller profile, asked once before the first ad. Name and city show on ads. WhatsApp is optional.
@@ -20,6 +21,8 @@ export const sellerProfileBodySchema = z
     city: z.string().trim().min(2).max(60),
     whatsapp: z.string().trim().max(20).regex(/^[+0-9 ()-]*$/).default(""),
     availableNow: z.boolean().default(false),
+    /** H7.4c: the Live chat switch, asked in step 2 ("Turn on live chat?"). Left out means no change. */
+    liveChat: z.boolean().optional(),
     dateOfBirth: z.string().trim().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
     adultConfirmed: z.boolean().optional(),
   })
@@ -77,6 +80,7 @@ export async function saveSellerProfile(input: { userId: string; body: SellerPro
     set.attestedAdultAt = new Date();
   }
   await User.updateOne({ _id: user._id }, { $set: set });
+  if (input.body.liveChat !== undefined) await setOwnLiveChat(user._id.toString(), input.body.liveChat);
   await audit.append({
     actorId: user._id,
     actorType: "user",

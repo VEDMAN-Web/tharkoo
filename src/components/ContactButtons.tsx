@@ -259,6 +259,8 @@ export function ContactButtons({
   const { shown, notice, busy, tour, tourRequested, open, openChatFlow, openCall, seller, people } = useContact();
   const t = useT();
   const callsPaused = seller?.callsAllowed === false;
+  // H7.4c: no chat button for a seller without Live chat on.
+  const chatOn = seller?.chatOn === true;
   const channelButtons = channels.map((channel) => {
     const hit = shown[channel];
     if (hit?.value) {
@@ -279,10 +281,12 @@ export function ContactButtons({
   });
   const buttons = [
     ...channelButtons,
-    <button key="chat" type="button" className="tk-btn tk-btn-gold" data-tk="chat" onClick={() => openChatFlow()} disabled={busy === "chat"}>
+    chatOn ? (
+      <button key="chat" type="button" className="tk-btn tk-btn-gold" data-tk="chat" onClick={() => openChatFlow()} disabled={busy === "chat"}>
       {seller ? <span className="tkn-dot" data-status={seller.status} aria-hidden /> : null}
       <MessageCircle size={16} aria-hidden /> {busy === "chat" ? "…" : t(sticky ? "ad.bar.chat" : "ad.chat")}
-    </button>,
+    </button>
+    ) : null,
     tour && !people ? (
       <button key="tour" type="button" className="tk-btn tk-btn-gold" data-tk="tour" onClick={() => openCall()} disabled={busy === "tour" || tourRequested} aria-busy={busy === "tour"}>
         <Video size={16} aria-hidden /> {busy === "tour" ? "…" : tourRequested ? "Request sent" : sticky ? barVideoLabel(t, tour.coins) : tourRequestLabel(tour.coins)}
@@ -310,7 +314,8 @@ export function ContactButtons({
 /** H7.5: the Online now / Away badge for the ad's seller, shown in the contact panel. */
 export function ContactAvailability() {
   const { seller } = useContact();
-  return seller ? <AvailabilityBadge status={seller.status} /> : null;
+  // H7.4c: the badge shows only when the seller has Live chat on.
+  return seller && seller.chatOn ? <AvailabilityBadge status={seller.status} /> : null;
 }
 
 /** The phone bar's short video label, for example "Video · 2 coins". */

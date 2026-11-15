@@ -2,7 +2,7 @@ import { SESSION_COOKIE, assertOrigin, readCookie } from "@/server/auth/http";
 import { requireUser } from "@/server/auth/service";
 import { json, readJson, segmentsOf } from "@/server/billing/http";
 import { NotFoundError, handle, parseInput, requestIdFrom } from "@/server/http";
-import { availabilityBodySchema, publicStatus, readOwnPresence, setOwnAvailable, touchOwnPresence } from "@/server/availability/service";
+import { availabilityBodySchema, liveChatBodySchema, publicStatus, readOwnPresence, setOwnAvailable, setOwnLiveChat, touchOwnPresence } from "@/server/availability/service";
 import { idSchema } from "@/server/shared/schemas/common";
 import { presenceForSlugs, slugsFromQuery } from "@/server/availability/listings";
 
@@ -38,6 +38,10 @@ async function dispatch(request: Request) {
   if (request.method === "PATCH" && path === "") {
     const body = parseInput(availabilityBodySchema, await readJson(request));
     return json(await setOwnAvailable(user.user.id, body.available), requestId);
+  }
+  if (request.method === "PATCH" && path === "live-chat") {
+    const body = parseInput(liveChatBodySchema, await readJson(request));
+    return json(await setOwnLiveChat(user.user.id, body.liveChat), requestId);
   }
   if (request.method === "POST" && path === "activity") {
     return json(await touchOwnPresence(user.user.id), requestId);

@@ -10,6 +10,7 @@ const audit = new AuditRepository();
 const SETTINGS_KEY = "default";
 
 export const availabilityBodySchema = z.object({ available: z.boolean() }).strict();
+export const liveChatBodySchema = z.object({ liveChat: z.boolean() }).strict();
 export const awayHoursBodySchema = z
   .object({ awayAfterHours: z.number().int().min(AWAY_HOURS_MIN).max(AWAY_HOURS_MAX) })
   .strict();
@@ -21,6 +22,8 @@ export interface OwnPresence {
   callsAllowed: boolean;
   lastActivityAt: string | null;
   awayAfterHours: number;
+  /** H7.4c: the Live chat switch. The Online now / Away badge and the chat button show only when it is on. */
+  liveChat: boolean;
 }
 
 /** The hours without activity before a seller shows Away. A missing value is the default (2). */
@@ -50,7 +53,7 @@ export async function setAwayHours(input: { actorId: string; roles: readonly str
   return { awayAfterHours };
 }
 
-function toOwn(row: { available?: boolean; lastActivityAt?: Date | null } | null, hours: number, now: number): OwnPresence {
+function toOwn(row: { available?: boolean; lastActivityAt?: Date | null; liveChat?: boolean } | null, hours: number, now: number): OwnPresence {
   // A seller starts Available now: a missing switch counts as on. Only an explicit off is a manual Away.
   const available = row?.available !== false;
   const lastActivityAt = row?.lastActivityAt ? new Date(row.lastActivityAt) : null;
@@ -62,6 +65,7 @@ function toOwn(row: { available?: boolean; lastActivityAt?: Date | null } | null
     callsAllowed: callsAllowed(status),
     lastActivityAt: lastActivityAt ? lastActivityAt.toISOString() : null,
     awayAfterHours: hours,
+    liveChat: row?.liveChat === true,
   };
 }
 
@@ -69,7 +73,7 @@ function toOwn(row: { available?: boolean; lastActivityAt?: Date | null } | null
 export async function readOwnPresence(userId: string, now: Date = new Date()): Promise<OwnPresence> {
   await connectDb();
   const [row, hours] = await Promise.all([
-    VendorPresence.findOne({ userId }).lean<{ available?: boolean; lastActivityAt?: Date | null } | null>(),
+    VendorPresence.findOne({ userId }).lean<{ available?: boolean; lastActivityAt?: Date | null; liveChat?: boolean } | null>(),
     readAwayHours(),
   ]);
   return toOwn(row, hours, now.getTime());
@@ -82,6 +86,13 @@ export async function setOwnAvailable(userId: string, available: boolean, now: D
   return readOwnPresence(userId, now);
 }
 
+/** H7.4c: turns the Live chat switch on or off for one seller. Changing it is not activity. */
+export async function setOwnLiveChat(userId: string, liveChat: boolean, now: Date = new Date()): Promise<OwnPresence> {
+  await connectDb();
+  await VendorPresence.updateOne({ userId }, { $set: { liveChat } }, { upsert: true });
+  return readOwnPresence(userId, now);
+}
+
 /** Records activity from the panel. Only moves the activity time; the switch itself is not changed. */
 export async function touchOwnPresence(userId: string, now: Date = new Date()): Promise<OwnPresence> {
   await connectDb();
@@ -90,8 +101,8 @@ export async function touchOwnPresence(userId: string, now: Date = new Date()): 
 }
 
 /** What buyers may see about a seller: the status only, never the switch or the times. */
-export async function publicStatus(userId: string, now: Date = new Date()): Promise<{ status: PresenceStatus; callsAllowed: boolean }> {
+export async function publicStatus(userId: string, now: Date = new Date()): Promise<{ status: PresenceStatus; callsAllowed: boolean; chatOn: boolean }> {
   await connectDb();
   const own = await readOwnPresence(userId, now);
-  return { status: own.status, callsAllowed: own.callsAllowed };
+  return { status: own.status, callsAllowed: own.callsAllowed, chatOn: own.liveChat };
 }

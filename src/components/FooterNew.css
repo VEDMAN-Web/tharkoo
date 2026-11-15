@@ -1,0 +1,36 @@
+/* H7.4c: footer alignment and one spacing rhythm (12px between items, 16px under headings). Columns with no items are
+   not rendered (see FooterNew.tsx). When the "Get in touch" column is empty the grid has three columns. */
+.tkn-foot-grid {
+  align-items: start;
+}
+.tkn-foot-title {
+  margin-bottom: 16px;
+}
+.tkn-foot-about {
+  line-height: 1.55;
+}
+.tkn-foot-links {
+  gap: 12px 16px;
+}
+.tkn-contacts {
+  gap: 12px;
+}
+.tkn-foot-grid.is-three {
+  grid-template-columns: 1.4fr 1.2fr 1.2fr;
+}
+@media (max-width: 1023px) {
+  .tkn-foot-grid.is-three {
+    grid-template-columns: 1fr 1fr;
+  }
+  .tkn-foot-grid.is-three .tkn-foot-brand {
+    grid-column: 1 / -1;
+  }
+}
+@media (max-width: 600px) {
+  .tkn-foot-grid.is-three {
+    grid-template-columns: 1fr;
+  }
+  .tkn-foot-grid.is-three .tkn-foot-brand {
+    grid-column: auto;
+  }
+}

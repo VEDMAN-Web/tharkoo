@@ -4,14 +4,15 @@ import Link from "next/link";
 import { X } from "lucide-react";
 import { useState } from "react";
 import { useFocusTrap } from "./ui/useFocusTrap";
-import { HeaderCityList } from "./HeaderCity";
+import { CountryList } from "./HeaderCountry";
+import { useSiteCountry } from "./SiteCountry";
+import type { CountryOption } from "@/server/locations/country-scope";
 import { ShellGlyph } from "./HeaderIcons";
 import { safeHref } from "@/lib/sanitize";
 import { applyPrefixes, loginPath, postAdPath } from "@/lib/urls";
 import type { ShellLink } from "@/server/site-links/shell-config-rules";
 import type { UrlPaths } from "@/lib/urls";
 
-type City = { slug: string; name: string; stateSlug?: string };
 
 /**
  * H7.1: the right-hand menu under 1024 px. 340 px wide (90vw at most), glass, focus trapped, Escape closes.
@@ -19,20 +20,21 @@ type City = { slug: string; name: string; stateSlug?: string };
  */
 export function HeaderDrawer({
   links,
-  cities,
+  countries,
   loginLabel,
   postLabel,
   paths,
   onClose,
 }: {
   links: ShellLink[];
-  cities: City[];
+  countries: CountryOption[];
   loginLabel: string;
   postLabel: string;
   paths: UrlPaths;
   onClose: () => void;
 }) {
-  const [cityOpen, setCityOpen] = useState(false);
+  const [countryOpen, setCountryOpen] = useState(false);
+  const siteCountry = useSiteCountry(countries);
   const ref = useFocusTrap<HTMLElement>(true, onClose);
   const visible = links.filter((item) => item.visible && safeHref(item.href));
   return (
@@ -59,11 +61,11 @@ export function HeaderDrawer({
               <span>{item.label}</span>
             </Link>
           ))}
-          <button type="button" className="tkn-drawer-row" aria-expanded={cityOpen} onClick={() => setCityOpen((v) => !v)}>
+          <button type="button" className="tkn-drawer-row" aria-expanded={countryOpen} onClick={() => setCountryOpen((v) => !v)}>
             <ShellGlyph icon="pin" />
-            <span>Your city</span>
+            <span>Your country{siteCountry ? `: ${siteCountry.name}` : ""}</span>
           </button>
-          {cityOpen ? <HeaderCityList cities={cities} onPick={onClose} /> : null}
+          {countryOpen ? <CountryList countries={countries} onPick={onClose} /> : null}
         </nav>
         <div className="tkn-drawer-foot">
           <Link href={loginPath(paths)} className="tkn-btn tkn-btn-ghost" onClick={onClose}>{loginLabel}</Link>

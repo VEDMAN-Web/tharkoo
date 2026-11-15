@@ -19,6 +19,7 @@ export default async function Page() {
     enabled: row.enabled !== false,
     seoIntro: row.introHtml ?? "",
     kind: row.kind ?? "",
+    icon: row.icon ?? "",
     importMaxPhotos: row.importMaxPhotos ?? null,
   }));
   const subs: ManagedSub[] = subRows.map((row) => ({

@@ -163,7 +163,7 @@ export function AdCard({
       data-contact={superTop ? "1" : undefined}
       onClickCapture={onCardClick}
     >
-      {seller ? (
+      {seller && seller.chatOn ? (
         <span className="tkp-card-avail">
           <AvailabilityBadge status={seller.status} />
         </span>

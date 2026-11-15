@@ -14,6 +14,8 @@ export interface ListingPresence {
   callsAllowed: boolean;
   /** The listing is in a people category: no Call button (chat stays). */
   people: boolean;
+  /** H7.4c: the seller has Live chat on. Without it there is no badge and no chat button. */
+  chatOn: boolean;
 }
 
 /** The slugs from a comma-separated query value: valid ones only, at most MAX_STATUS_SLUGS. */
@@ -37,7 +39,7 @@ export async function presenceForSlugs(slugs: string[], now: Date = new Date()):
   const categories = [...new Set(rows.map((row) => String(row.categoryId ?? "")).filter(Boolean))];
   const people = await peopleCategoryIds(categories);
   const [presences, hours] = await Promise.all([
-    VendorPresence.find({ userId: { $in: owners } }).lean<{ userId: string; available?: boolean; lastActivityAt?: Date | null }[]>(),
+    VendorPresence.find({ userId: { $in: owners } }).lean<{ userId: string; available?: boolean; lastActivityAt?: Date | null; liveChat?: boolean }[]>(),
     readAwayHours(),
   ]);
   const byOwner = new Map(presences.map((row) => [row.userId, row]));
@@ -46,7 +48,7 @@ export async function presenceForSlugs(slugs: string[], now: Date = new Date()):
     if (!row.slug) continue;
     const own = byOwner.get(String(row.ownerId ?? ""));
     const status = presenceStatus({ available: own?.available !== false, lastActivityAt: own?.lastActivityAt ?? null }, now.getTime(), hours);
-    items[row.slug] = { status, callsAllowed: callsAllowed(status), people: people.has(String(row.categoryId ?? "")) };
+    items[row.slug] = { status, callsAllowed: callsAllowed(status), people: people.has(String(row.categoryId ?? "")), chatOn: own?.liveChat === true };
   }
   return items;
 }
