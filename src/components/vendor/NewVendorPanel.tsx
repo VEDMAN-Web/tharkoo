@@ -10,6 +10,7 @@ import { displayTitle } from "@/lib/format";
 import { AvailabilityBadge } from "../availability/AvailabilityBadge";
 import type { PresenceStatus } from "@/server/availability/status";
 import { OwnerActions } from "./OwnerActions";
+import { SectionHelp } from "@/components/help/SectionHelp";
 import { TourInbox } from "./TourInbox";
 
 /** H7.5: the New design seller panel (the mockup's VendorPanel). Same data as the old panel, new look. */
@@ -180,6 +181,7 @@ export function NewVendorPanel({ initialTab = "all" }: { initialTab?: Tab }) {
             <p className="tkv-kicker">Your panel</p>
             <h1 id="tkv-welcome" className="tkv-h1">{name ? `Welcome back, ${name.split(" ")[0]}` : "Welcome back"}</h1>
             <p className="tkv-lead">{counts ? `${counts.live} ${counts.live === 1 ? "ad is" : "ads are"} live.` : "Loading your ads."}</p>
+            <SectionHelp textKey="help.section.availableNow" />
           </div>
           <div className="tkv-hero-actions">
             {presence ? (
@@ -239,6 +241,7 @@ export function NewVendorPanel({ initialTab = "all" }: { initialTab?: Tab }) {
         <section className="tkv-card tkv-glass" aria-labelledby="tkv-ads-title">
           <div className="tkv-card-head">
             <h2 id="tkv-ads-title" className="tkv-h2">My ads</h2>
+            <SectionHelp textKey="help.section.myAds" />
             <div className="tkv-tabs" role="group" aria-label="Filter ads">
               {TABS.map((item) => (
                 <button
@@ -297,6 +300,7 @@ export function NewVendorPanel({ initialTab = "all" }: { initialTab?: Tab }) {
           <p id="tkv-wallet-title" className="tkv-wallet-kicker">Wallet</p>
           <p className="tkv-wallet-value">{balance ?? "-"} coins</p>
           <p className="tkv-wallet-help">Coins buy promotions and video calls.</p>
+          <SectionHelp textKey="help.section.wallet" tone="dark" />
           <div className="tkv-wallet-actions">
             <Link href="/u/account/wallet/" className="tkv-btn tkv-btn-light">Withdraw</Link>
             <Link href="/u/account/credits/" className="tkv-btn tkv-btn-outline">Buy coins</Link>

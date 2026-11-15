@@ -3,7 +3,7 @@ import { Listing } from "@/server/models/listing";
 import { readAwayHours } from "./service";
 import { VendorPresence } from "./models";
 import { peopleCategoryIds } from "./people";
-import { callsAllowed, presenceStatus, type PresenceStatus } from "./status";
+import { callsAllowed, clampAwayHours, presenceStatus, type PresenceStatus } from "./status";
 
 /** H7.5: the most ad slugs one request may ask for. Keeps the lookup bounded. */
 export const MAX_STATUS_SLUGS = 60;
@@ -51,4 +51,18 @@ export async function presenceForSlugs(slugs: string[], now: Date = new Date()):
     items[row.slug] = { status, callsAllowed: callsAllowed(status), people: people.has(String(row.categoryId ?? "")), chatOn: own?.liveChat === true };
   }
   return items;
+}
+
+/**
+ * H7.8: the sellers who are Online now at `now`: switch on and activity inside the away window. The same rule as
+ * presenceStatus, run as one query so the "Online now" filter can join it onto the listing query.
+ */
+export async function onlineOwnerIds(now: Date = new Date()): Promise<string[]> {
+  await connectDb();
+  const hours = await readAwayHours();
+  const cutoff = new Date(now.getTime() - clampAwayHours(hours) * 60 * 60 * 1000);
+  const rows = await VendorPresence.find({ available: { $ne: false }, lastActivityAt: { $gte: cutoff } })
+    .select("userId")
+    .lean<{ userId: string }[]>();
+  return rows.map((row) => String(row.userId));
 }

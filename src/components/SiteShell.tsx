@@ -2,7 +2,9 @@ import { readPaths } from "@/lib/urls";
 import { getCategories, getCities, getSite } from "@/lib/queries";
 import { plain } from "@/lib/plain";
 import { safeHref } from "@/lib/sanitize";
+import { textOverrides } from "@/app/admin/ui-text/store";
 import { readContent } from "@/lib/ui/site-content";
+import { pickTexts } from "@/lib/ui/text";
 import { newDesignOn } from "@/server/site-links/new-design";
 import { countryChoices } from "@/server/locations/site-country";
 import { readShellConfig } from "@/server/site-links/shell-config";
@@ -11,8 +13,8 @@ import { MotionInit } from "./ui/MotionInit";
 import { PathChrome, type ChromeData } from "./PathChrome";
 
 export async function loadShell() {
-  const [site, categories, cities, newDesign, shell, countries] = await Promise.all([getSite(), getCategories(), getCities(), newDesignOn(), readShellConfig(), countryChoices()]);
-  return { site, categories, cities, countries, user: null as { email: string; roles: string[] } | null, newDesign, shell };
+  const [site, categories, cities, newDesign, shell, countries, texts] = await Promise.all([getSite(), getCategories(), getCities(), newDesignOn(), readShellConfig(), countryChoices(), textOverrides()]);
+  return { site, categories, cities, countries, user: null as { email: string; roles: string[] } | null, newDesign, shell, texts };
 }
 
 type Shell = Awaited<ReturnType<typeof loadShell>>;
@@ -88,6 +90,8 @@ function chromeData(shell: Shell): ChromeData {
     countries: plain(countries),
     user,
     newDesign: shell.newDesign,
+    // H7.8: the header and live chat words from the UI-text store (only those keys reach the client).
+    texts: pickTexts(shell.texts, "header.", "chat.", "help."),
     shell: plain(
       shellWithFallbacks(normaliseShellConfig(shell.shell), {
         whatsapp: support.whatsapp || "",

@@ -3,6 +3,7 @@ import { cached } from "@/lib/cache";
 import { connectDb } from "@/lib/db";
 import type { ListingDoc as LegacyListing } from "@/lib/models";
 import { listingPhotos } from "@/lib/media";
+import { onlineOwnerIds } from "@/server/availability/listings";
 import {
   Category,
   Listing,
@@ -67,6 +68,8 @@ export interface ListingQuery {
   attributes?: Record<string, string | number | boolean | string[] | { min?: number; max?: number }>;
   /** H7.4b: only ads with a verified video tour. */
   video?: boolean;
+  /** H7.8: only ads whose seller is Online now (see onlineOwnerIds). */
+  online?: boolean;
   sort?: "ranked" | "fresh";
   page?: number;
   pageSize?: number;
@@ -401,6 +404,11 @@ export async function buildFilter(input: ListingQuery): Promise<QueryFilter<List
   if (badges.length > 1) filter.badges = { $all: badges };
   if (input.photos) filter["mediaIds.0"] = { $exists: true };
   if (input.video) filter.videoVerifiedUntil = { $gt: new Date() };
+  // H7.8: "Online now" joins the seller's presence in the query, so it always matches the badge on the card.
+  if (input.online) {
+    const owners = (await onlineOwnerIds()).filter((id) => Types.ObjectId.isValid(id)).map((id) => new Types.ObjectId(id));
+    filter.ownerId = { $in: owners };
+  }
   if (input.tag && /^[a-z0-9-]{1,40}$/.test(input.tag)) filter["attributes.tag"] = input.tag;
   if (input.slug) filter.slug = input.slug;
   else {

@@ -10,6 +10,7 @@ import type { CountryOption } from "@/server/locations/country-scope";
 import { HeaderDrawer } from "./HeaderDrawer";
 import { useUrlPaths } from "./UrlPaths";
 import { safeHref } from "@/lib/sanitize";
+import { makeT, type UiTextMap } from "@/lib/ui/text";
 import { applyPrefixes, loginPath, postAdPath } from "@/lib/urls";
 import type { ShellConfig } from "@/server/site-links/shell-config-rules";
 
@@ -31,13 +32,16 @@ export function HeaderNew({
   cities,
   countries,
   categories,
+  texts,
 }: {
   siteName: string;
   shell: ShellConfig;
   cities: City[];
   countries: CountryOption[];
   categories: Cat[];
+  texts?: UiTextMap;
 }) {
+  const t = makeT(texts);
   const path = usePathname() || "/";
   const paths = useUrlPaths();
   const [menuOpen, setMenuOpen] = useState(false);
@@ -90,7 +94,7 @@ export function HeaderNew({
           <Link href={loginPath(paths)} className="tkn-btn tkn-btn-ghost tkn-hide-sm">{shell.header.loginLabel}</Link>
           <Link href={postAdPath(paths)} className="tkn-btn tkn-btn-primary" data-tk="post-ad" prefetch={false}>
             <span className="tkn-post-long">{shell.header.postLabel}</span>
-            <span className="tkn-post-short">Post ad</span>
+            <span className="tkn-post-short">{t("header.postShort")}</span>
           </Link>
           <button
             type="button"

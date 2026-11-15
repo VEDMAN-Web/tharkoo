@@ -129,6 +129,7 @@ export default async function LocationPage({ params, searchParams }: Props) {
   if (sp.photos) Object.assign(filter, { photos: { $exists: true, $ne: [] } });
   if (sp.verified) Object.assign(filter, { verified: true });
   if (sp.video === "1") Object.assign(filter, { video: true });
+  if (sp.online === "1") Object.assign(filter, { online: true });
   // H7.4b: the field picks from the filter panel (choices, number ranges, yes/no), applied by the listing query.
   const picks = attributePicks(sp, cat.fields);
   const attributes = hasFieldPicks(picks) ? { attributes: picks } : {};
@@ -207,7 +208,7 @@ export default async function LocationPage({ params, searchParams }: Props) {
     { name: `${loc.name} ${cat.name}`, path: canonicalPath },
   ];
   const h1 = heading || visibleHeading(fillTemplate(seo?.h1 || "", vars), copy.h1);
-  const toggles: ListingToggles = { verified: sp.verified === "1", photos: sp.photos === "1", video: sp.video === "1" };
+  const toggles: ListingToggles = { verified: sp.verified === "1", photos: sp.photos === "1", video: sp.video === "1", online: sp.online === "1" };
   const filterQs = listingFilterQuery(picks, toggles);
   const listing = (
     <ListingPageView

@@ -57,13 +57,14 @@ export default async function CategoryHub({ params, searchParams }: Props) {
   const sp = await searchParams;
   // H7.4b: the filter panel's field picks and quick toggles narrow the feed the same way they do on a city page.
   const picks = attributePicks(sp, cat.fields);
-  const toggles: ListingToggles = { verified: sp.verified === "1", photos: sp.photos === "1", video: sp.video === "1" };
+  const toggles: ListingToggles = { verified: sp.verified === "1", photos: sp.photos === "1", video: sp.video === "1", online: sp.online === "1" };
   const narrow = {
     categorySlug: category,
     ...(hasFieldPicks(picks) ? { attributes: picks } : {}),
     ...(toggles.verified ? { verified: true } : {}),
     ...(toggles.photos ? { photos: { $exists: true, $ne: [] } } : {}),
     ...(toggles.video ? { video: true } : {}),
+    ...(toggles.online ? { online: true } : {}),
   };
   const [seo, site, cities, states, counts, feed, stars, paths, heading, cardWidth, newDesign, allCategories] = await Promise.all([
     getSeoFor("category", category),

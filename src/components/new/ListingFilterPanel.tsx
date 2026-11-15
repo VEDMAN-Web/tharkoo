@@ -39,11 +39,7 @@ export function ListingFilterPanel({
         <ChipLine icon="verified" name="verified" label={labels.verified} checked={toggles.verified} />
         <ChipLine icon="photos" name="photos" label={labels.photos} checked={toggles.photos} />
         <ChipLine icon="video" name="video" label={labels.video} checked={toggles.video} />
-        <div className="tkn-ls-chipline is-disabled" aria-disabled="true">
-          <FixedIcon icon="online" />
-          <span>{labels.online}</span>
-          <span className="tkn-ls-soon">{labels.soon}</span>
-        </div>
+        <ChipLine icon="online" name="online" label={labels.online} checked={Boolean(toggles.online)} />
       </div>
       {rows.length === 0 ? <p className="tkn-ls-empty">{labels.noFilters}</p> : null}
       {rows.map((row) => {
@@ -94,7 +90,7 @@ export function ListingFilterPanel({
   );
 }
 
-function ChipLine({ icon, name, value, label, checked }: { icon: "verified" | "photos" | "video" | "toggle"; name: string; value?: string; label: string; checked: boolean }) {
+function ChipLine({ icon, name, value, label, checked }: { icon: "verified" | "photos" | "video" | "online" | "toggle"; name: string; value?: string; label: string; checked: boolean }) {
   return (
     <label className="tkn-ls-chipline">
       <input type="checkbox" name={name} value={value ?? "1"} defaultChecked={checked} />

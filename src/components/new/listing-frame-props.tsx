@@ -43,7 +43,6 @@ export function listingLabels(t: TextFn): ListingLabels {
     photos: t("listing.filters.photos"),
     video: t("listing.filters.video"),
     online: t("listing.filters.online"),
-    soon: t("listing.filters.soon"),
     min: t("listing.filters.min"),
     max: t("listing.filters.max"),
   };
