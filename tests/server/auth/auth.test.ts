@@ -139,6 +139,13 @@ describe("auth routes", () => {
     });
   });
 
+  it("logout without a session still returns 200 and clears both cookies", async () => {
+    const res = await call("POST", "logout", undefined, undefined);
+    expect(res.status).toBe(200);
+    expect(res.headers.get("set-cookie")).toMatch(/Max-Age=0/);
+    expect(res.headers.get("set-cookie")).toMatch(/tk-in=/);
+  });
+
   it("sets Secure on the session cookie in production", () => {
     expect(sessionCookieHeader("abc", true)).toMatch(/Secure/);
     expect(sessionCookieHeader("abc", true)).toMatch(/HttpOnly/);
