@@ -697,11 +697,12 @@
     padding: 7px 16px;
   }
   .tkh-banner {
-    height: 300px;
+    height: 480px;
   }
   .tkh-banner-copy {
     left: 16px;
-    top: 20px;
+    top: auto;
+    bottom: 62px;
     right: 16px;
     padding: 18px 20px;
   }

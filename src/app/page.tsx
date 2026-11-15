@@ -50,7 +50,7 @@ function heroFromBlocks(blocks: Awaited<ReturnType<typeof getPageBlocks>>, hero:
   const phone = block.props.imageMobile as { src?: string } | undefined;
   const focus = block.props.focus;
   const [focusX, focusY] = typeof focus === "string" && focus in FOCUS_XY ? FOCUS_XY[focus] : [70, 15];
-  return { ...hero, photo: desktop.src, photoAlt: desktop.alt || hero.photoAlt, photoPhone: phone?.src ?? "", focusX, focusY, phoneFocusX: 50, phoneFocusY: 10 };
+  return { ...hero, photo: desktop.src, photoAlt: desktop.alt || hero.photoAlt, photoPhone: phone?.src ?? "", focusX, focusY, phoneFocusX: 50, phoneFocusY: 0 };
 }
 
 /** H7.4: the New design home, as in the Home mockup. Used only while the New design switch is on. */
