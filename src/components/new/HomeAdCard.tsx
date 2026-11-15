@@ -42,7 +42,7 @@ export function HomeAdCard({
   }, [ad.slug]);
 
   return (
-    <article ref={cardRef} className="tkh-ad" data-tk="home-ad">
+    <article ref={cardRef} className="tkh-ad m-lift" data-tk="home-ad" data-reveal>
       <div className="tkh-ad-photo">
         {ad.photo ? (
           <>

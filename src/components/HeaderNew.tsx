@@ -4,7 +4,7 @@ import Link from "next/link";
 import dynamic from "next/dynamic";
 import { usePathname } from "next/navigation";
 import { ChevronDown, Menu } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { HeaderCountry } from "./HeaderCountry";
 import type { CountryOption } from "@/server/locations/country-scope";
 import { HeaderDrawer } from "./HeaderDrawer";
@@ -74,6 +74,20 @@ export function HeaderNew({
     };
   }, []);
 
+  const navRef = useRef<HTMLElement>(null);
+  const placePill = useCallback((hit: Element | null) => {
+    const nav = navRef.current;
+    if (!nav) return;
+    const target = hit ?? nav.querySelector(".tkn-nav-link[aria-current='page']");
+    nav.querySelectorAll(".tkn-nav-link").forEach((link) => link.classList.toggle("is-under", link === target));
+    nav.style.setProperty("--m-on", target ? "1" : "0");
+    if (target instanceof HTMLElement) {
+      nav.style.setProperty("--m-x", `${target.offsetLeft}px`);
+      nav.style.setProperty("--m-w", `${target.offsetWidth}px`);
+    }
+  }, []);
+  useEffect(() => placePill(null), [path, placePill]);
+
   // The drawer and search sit outside the header: the header has a backdrop filter, which would trap a fixed layer inside it.
   return (
     <>
@@ -87,7 +101,14 @@ export function HeaderNew({
             <span className="tkn-brand-tag">Free classifieds</span>
           </span>
         </Link>
-        <nav aria-label="Main" className="tkn-nav">
+        <nav
+          aria-label="Main"
+          className="tkn-nav"
+          ref={navRef}
+          onPointerOver={(event) => placePill(event.target instanceof Element ? event.target.closest(".tkn-nav-link") : null)}
+          onPointerLeave={() => placePill(null)}
+          onFocus={(event) => placePill(event.target instanceof Element ? event.target.closest(".tkn-nav-link") : null)}
+        >
           {links.map((item) => {
             const href = applyPrefixes(safeHref(item.href), paths);
             const current = path === safeHref(item.href);

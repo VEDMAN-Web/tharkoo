@@ -1616,9 +1616,6 @@ input, select, textarea { font-size: 16px; }
 }
 
 /* H1.8c light motion. Everything here is off with prefers-reduced-motion (MotionInit does not run). */
-/* Reveal moves the card up; it does not fade it, so content is never measured at opacity 0 (axe contrast). */
-.tk-rv:not(.is-in) { transform: translateY(8px); }
-.tk-rv { transition: transform 300ms ease-out var(--tk-d, 0ms); }
 .tk-fade-img { transition: opacity 200ms ease-out; }
 .tk-motion .tk-fade-img:not(.is-loaded) { opacity: 0; }
 .tk-card:hover .tk-cc-slide img { transform: scale(1.03); }

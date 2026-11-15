@@ -112,7 +112,7 @@ export function AdCard({
     const placeText = `${city}${area ? ` / ${area}` : ""}`;
     const priceText = formatPrice(ad.price);
     return (
-      <article ref={cardRef} className="tk-card tkn-ls-card" data-tk="card" data-reveal data-variant={variant} onClickCapture={onCardClick}>
+      <article ref={cardRef} className="tk-card tkn-ls-card m-lift" data-tk="card" data-reveal data-variant={variant} onClickCapture={onCardClick}>
         <div className="tkn-ls-photo">
           <PhotoSwipe photos={photos} title={title} seed={ad.slug || title} category={ad.categorySlug} priority={priority} />
           {tier ? (

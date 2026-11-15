@@ -5,6 +5,7 @@ import { Plus_Jakarta_Sans } from "next/font/google";
 import { canonical } from "@/lib/seo";
 import { siteUrl } from "@/lib/utils";
 import "./globals.css";
+import "../styles/motion.css";
 
 export const revalidate = 60;
 

@@ -94,7 +94,7 @@ export function BlogList({
         <section className="tkp-section" aria-label="More articles">
           <div className="tkp-grid3">
             {rest.map((card) => (
-              <article key={card.href} className="tkp-blog-card">
+              <article key={card.href} className="tkp-blog-card m-lift" data-reveal>
                 <div className="tkp-post-cover" aria-hidden="true" />
                 <div className="tkp-post-body">
                   {card.category ? <span className="tkp-post-tag">{card.category}</span> : null}
