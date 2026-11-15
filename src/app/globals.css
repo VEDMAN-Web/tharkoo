@@ -1704,7 +1704,7 @@ input, select, textarea { font-size: 16px; }
 .tkn-nav-link[aria-current="page"] { background: linear-gradient(135deg, #d1137a, #a8124f); color: #fff; font-weight: 600; }
 .tkn-header-actions { display: flex; align-items: center; gap: 10px; }
 .tkn-coin-chip {
-  display: inline-flex; align-items: center; min-height: 40px; padding: 0 14px; border-radius: 999px; white-space: nowrap;
+  display: inline-flex; align-items: center; min-height: 44px; padding: 0 14px; border-radius: 999px; white-space: nowrap;
   background: #fdf0f7; border: 1px solid #ead8f0; color: #a8124f; font-weight: 700; font-size: 14px; text-decoration: none;
 }
 .tkn-account { position: relative; }
