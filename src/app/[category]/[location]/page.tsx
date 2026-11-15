@@ -11,6 +11,7 @@ import {
   getStates,
   getDistricts,
   getFeed,
+  getHomepageContent,
   getLocationBySlug,
   getSeoFor,
   getSiblingCities,
@@ -23,7 +24,7 @@ import {
 import { prettyPlace } from "@/lib/format";
 import { getIndexing, hubMinimum } from "@/server/seo/indexing";
 import { canonical, fillTemplate } from "@/lib/seo";
-import { placePath, searchPath, tagPath } from "@/lib/urls";
+import { placePath, postAdPath, searchPath, tagPath } from "@/lib/urls";
 import { activeFilterKeys, listingCanonicalSuffix } from "@/server/search/filter-seo";
 import { withUrlSeo, urlHeading } from "@/lib/seo/override";
 import { hubCopy } from "@/lib/seo-site";
@@ -33,9 +34,10 @@ import { fallbackLanding, mergeLanding, visibleHeading, type LandingCopy } from 
 import { isCityAlias } from "@/lib/seo/district-alias";
 import { SubcategoryChips } from "../SubcategoryChips";
 import { loadCardWidth } from "@/server/listings/card-width";
-import { newDesignOn } from "@/server/site-links/new-design";
 import { readShellConfig } from "@/server/site-links/shell-config";
-import { bandImageFor } from "@/components/new/band-image";
+import { bandChoice, heroBandFrom } from "@/components/new/band-image";
+import { FallbackAds } from "@/components/FallbackAds";
+import { FALLBACK_OWN_MINIMUM, loadFallbackSections } from "@/lib/fallback-ads";
 import { ListingFrame } from "@/components/new/ListingFrame";
 import { listingFrameProps } from "@/components/new/listing-frame-props";
 import { attributePicks, hasFieldPicks, listingFilterQuery, type ListingToggles } from "@/components/new/listing-filters";
@@ -136,7 +138,7 @@ export default async function LocationPage({ params, searchParams }: Props) {
   Object.assign(filter, attributes);
 
   const canonicalPath = placePath(cat.slug || category, loc.slug || location);
-  const [seo, site, stars, feed, siblings, districts, paths, tags, heading, counts, categories, cardWidth, states, cities] = await Promise.all([
+  const [seo, site, stars, feed, siblings, districts, paths, tags, heading, counts, categories, cardWidth, states, cities, hero] = await Promise.all([
     getSeoFor("location", category),
     getSite(),
     getStarListings(loc.kind === "city" ? { categorySlug: category, citySlug: location, ...attributes } : filter),
@@ -151,6 +153,7 @@ export default async function LocationPage({ params, searchParams }: Props) {
     loadCardWidth(),
     getStates().catch(() => []),
     getCities().catch(() => []),
+    getHomepageContent().then(heroBandFrom),
   ]);
   if (sp.page && Number(sp.page) > feed.pages) notFound();
 
@@ -195,9 +198,10 @@ export default async function LocationPage({ params, searchParams }: Props) {
     ? new Date(newest).toLocaleDateString("en-IN", { day: "numeric", month: "long", year: "numeric" })
     : undefined;
 
-  const [layout, newDesign] = await Promise.all([resolveListingLayout({ path: canonicalPath, category: cat.slug || category, vars }), newDesignOn()]);
+  const layout = await resolveListingLayout({ path: canonicalPath, category: cat.slug || category, vars });
   // H7.4: the New design title band (image, search bar and chips) replaces the chips that sit under the list.
-  const shell = newDesign ? await readShellConfig() : null;
+  // H7.32: the New design band on every location page, always.
+  const shell = await readShellConfig();
   const citySlug = loc.slug || location;
   const categorySlug = cat.slug || category;
 
@@ -210,6 +214,23 @@ export default async function LocationPage({ params, searchParams }: Props) {
   const h1 = heading || visibleHeading(fillTemplate(seo?.h1 || "", vars), copy.h1);
   const toggles: ListingToggles = { verified: sp.verified === "1", photos: sp.photos === "1", video: sp.video === "1", online: sp.online === "1" };
   const filterQs = listingFilterQuery(picks, toggles);
+  // H7.32 (FIX B): few own ads keep their place, and fallback ads go below them. Nothing is empty.
+  const own = feed.total < FALLBACK_OWN_MINIMUM;
+  const fallback = own
+    ? await loadFallbackSections({
+        scope: {
+          categorySlug: cat.slug || category,
+          categoryName: cat.name || undefined,
+          stateSlug: loc.kind === "city" ? loc.stateSlug || undefined : loc.slug || location,
+          placeName: loc.name,
+        },
+        ownSlugs: feed.items.map((ad) => ad.slug || "").filter(Boolean),
+      })
+    : [];
+  const emptyLead =
+    feed.total === 0
+      ? { text: `No ads in ${loc.name} yet. Here are ads close by.`, button: `Post the first ad in ${loc.name}`, href: postAdPath(paths) }
+      : undefined;
   const listing = (
     <ListingPageView
       frame={Boolean(shell)}
@@ -238,16 +259,10 @@ export default async function LocationPage({ params, searchParams }: Props) {
       emptyNearby={siblings.slice(0, 6).map((c) => ({ href: placePath(cat.slug || category, c.slug || ""), label: c.name! }))}
       photos={toggles.photos}
       verified={toggles.verified}
+      hideEmpty={feed.total === 0}
+      fallback={own ? <FallbackAds sections={fallback} layout="row" lead={emptyLead} /> : undefined}
     />
   );
-  if (!shell) {
-    return (
-      <>
-        <div data-card-width={cardWidth}>{listing}</div>
-        {loc.kind === "city" && !newDesign ? <SubcategoryChips category={cat.slug || category} city={loc.slug || location} /> : null}
-      </>
-    );
-  }
   // H7.4b: New design. The title band and the filter panel frame the list; the ads and the blocks below go in the list column.
   const introTemplate = String(layout.blocks.find((block) => block.type === "listingHeader")?.props.introTemplate ?? "");
   const labels = listingLabels(t);
@@ -265,7 +280,7 @@ export default async function LocationPage({ params, searchParams }: Props) {
     crumbs,
     h1,
     intro: listingHeading(introTemplate, "", { ...layout.vars, h1 }) || undefined,
-    image: bandImageFor(shell, categorySlug, loc.kind === "city" ? citySlug : undefined),
+    photo: bandChoice(shell, hero, { city: loc.kind === "city" ? citySlug : undefined, category: categorySlug }),
     categorySlug,
     citySlug: loc.kind === "city" ? citySlug : undefined,
     searchAction: searchPath(paths),

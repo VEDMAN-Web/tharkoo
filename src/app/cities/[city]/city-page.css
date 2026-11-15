@@ -1,15 +1,4 @@
-/* H7.32: the city page (/cities/[city]/). Plain CSS, scoped under .tkn-city-body. The title band is the shared
-   listing band (listing-spec.css, .tkn-ls-band). Breakpoints: 600 px (2 to 3 columns), 900 px (wider gaps), 1100 px (4 columns). */
-/* The page root sits in a flex row of the New design shell; without this it shrinks to its content. */
-.tkn-ls.tkn-city { display: block; width: 100%; min-width: 0; }
-.tkn-city-body {
-  box-sizing: border-box; max-width: 1280px; margin: 0 auto; padding: 0 24px 72px;
-  display: grid; gap: 32px;
-}
-@media (min-width: 900px) { .tkn-city-body { gap: 48px; } }
-.tkn-city-body h2 { margin: 0 0 14px; font-size: 22px; line-height: 1.25; font-weight: 800; color: #1e0b38; }
-
-.tkn-city-ads { max-width: 880px; }
+/* H7.32: the city page cards (/cities/[city]/). Plain CSS. The frame and the headings come from listing-page.css. */
 
 /* Browse by category: 2 columns on a phone, 3 on a tablet, 4 on a desktop. */
 .tkn-city-cats { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }

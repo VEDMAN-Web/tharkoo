@@ -2,13 +2,20 @@ import { notFound, permanentRedirect } from "next/navigation";
 import type { Metadata } from "next";
 import { resolveListingLayout } from "@/components/blocks/ListingLayout";
 import { ListingPageView } from "@/components/ListingPage";
+import { NewListingPage } from "@/components/new/ListingBand";
+import { bandChoice, heroBandFrom } from "@/components/new/band-image";
+import { listingLabels } from "@/components/new/listing-frame-props";
+import { FallbackAds } from "@/components/FallbackAds";
+import { FALLBACK_OWN_MINIMUM, loadFallbackSections } from "@/lib/fallback-ads";
+import { readShellConfig } from "@/server/site-links/shell-config";
+import { getPaths } from "@/server/urls/service";
 import { makeT } from "@/lib/ui/text";
 import { textOverrides } from "@/app/admin/ui-text/store";
-import { getCategory, getCities, getLocationBySlug, getSite } from "@/lib/queries";
+import { getCategory, getCities, getHomepageContent, getLocationBySlug, getSite } from "@/lib/queries";
 import { fallbackLanding } from "@/lib/seo/landing";
 import { subcategoryCopy } from "@/server/seo/templates";
 import { withUrlSeo, urlHeading } from "@/lib/seo/override";
-import { placePath } from "@/lib/urls";
+import { placePath, postAdPath } from "@/lib/urls";
 import { findSubcategory, isSubcategoryIndexable, subcategoryChips, subcategoryFeed } from "@/server/categories/public";
 import { Location } from "@/server/models";
 import { connectDb } from "@/lib/db";
@@ -80,12 +87,15 @@ export async function SubHub({ params, page }: { params: SubHubParams; page: num
     permanentRedirect(placePath(catSlug, citySlug, hub.sub.slug));
   }
   const canonicalPath = placePath(catSlug, citySlug, hub.sub.slug);
-  const [site, feed, siblings, texts, heading] = await Promise.all([
+  const [site, feed, siblings, texts, heading, shell, hero, paths] = await Promise.all([
     getSite(),
     subcategoryFeed({ categoryId: String(hub.cat._id), cityId: hub.cityId, subcategoryId: hub.sub.id, page }),
     subcategoryChips(catSlug, citySlug),
     textOverrides(),
     urlHeading(canonicalPath, ""),
+    readShellConfig(),
+    getHomepageContent().then(heroBandFrom),
+    getPaths(),
   ]);
   if (page > feed.pages) notFound();
   const t = makeT(texts);
@@ -100,19 +110,46 @@ export async function SubHub({ params, page }: { params: SubHubParams; page: num
   });
   const vars = { category: hub.cat.name, city: hub.city.name, sub: hub.sub.name, site: site.name, count: feed.total, year: new Date().getFullYear() };
   const layout = await resolveListingLayout({ path: canonicalPath, category: catSlug, vars });
+  const crumbs = [
+    { name: t("listing.crumb.home"), path: "/" },
+    { name: hub.cat.name!, path: `/${catSlug}/` },
+    { name: `${hub.city.name} ${hub.cat.name}`, path: placePath(catSlug, citySlug) },
+    { name: `${hub.sub.name} ${hub.city.name}`, path: canonicalPath },
+  ];
+  const h1 = heading || copy.h1;
+  const own = feed.total < FALLBACK_OWN_MINIMUM;
+  const fallback = own
+    ? await loadFallbackSections({
+        scope: { categorySlug: hub.cat.slug || catSlug, categoryName: hub.cat.name || undefined, stateSlug: hub.city.stateSlug || undefined, placeName: hub.city.name },
+        ownSlugs: feed.items.map((ad) => ad.slug || "").filter(Boolean),
+      })
+    : [];
+  const lead =
+    feed.total === 0
+      ? { text: `No ads in ${hub.city.name} yet. Here are ads close by.`, button: `Post the first ad in ${hub.city.name}`, href: postAdPath(paths) }
+      : undefined;
   return (
+    <NewListingPage
+      tk="sub-hub"
+      band={{
+        crumbs,
+        h1,
+        photo: bandChoice(shell, hero, { city: citySlug, category: catSlug }),
+        categorySlug: catSlug,
+        citySlug,
+        searchAction: placePath(catSlug, citySlug),
+        placeholder: `Search ${hub.cat.name} in ${hub.city.name}`,
+        labels: listingLabels(t),
+      }}
+    >
     <ListingPageView
+      frame
       layout={layout}
       texts={texts}
-      h1={heading || copy.h1}
+      h1={h1}
       faqs={copy.faqs}
       intro={copy.intro}
-      crumbs={[
-        { name: t("listing.crumb.home"), path: "/" },
-        { name: hub.cat.name!, path: `/${catSlug}/` },
-        { name: `${hub.city.name} ${hub.cat.name}`, path: placePath(catSlug, citySlug) },
-        { name: `${hub.sub.name} ${hub.city.name}`, path: canonicalPath },
-      ]}
+      crumbs={crumbs}
       cityName={hub.city.name}
       categoryName={hub.sub.name}
       locationLabel={hub.city.name}
@@ -129,6 +166,9 @@ export async function SubHub({ params, page }: { params: SubHubParams; page: num
         .map((chip) => ({ href: placePath(catSlug, citySlug, chip.slug), label: t("listing.link.in", { name: chip.name, place: hub.city.name }) }))
         .concat([{ href: placePath(catSlug, citySlug), label: t("listing.link.in", { name: hub.cat.name, place: hub.city.name }) }])}
       emptyNearby={[{ href: placePath(catSlug, citySlug), label: hub.city.name! }]}
+      hideEmpty={feed.total === 0}
+      fallback={own ? <FallbackAds sections={fallback} lead={lead} layout="row" /> : undefined}
     />
+    </NewListingPage>
   );
 }

@@ -1,9 +1,8 @@
 import "./city-page.css";
-import type { CSSProperties } from "react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
-import { countListings, getCategories, getCityLatest, getDistricts, getLocationBySlug, listingCountsByCategoryCity, pageOutOfRange } from "@/lib/queries";
+import { countListings, getCategories, getCityLatest, getDistricts, getHomepageContent, getLocationBySlug, listingCountsByCategoryCity, pageOutOfRange } from "@/lib/queries";
 import { isCityAlias } from "@/lib/seo/district-alias";
 import { citiesPath, joinPath, placePath, postAdPath, searchPath } from "@/lib/urls";
 import { withUrlSeo } from "@/lib/seo/override";
@@ -14,11 +13,10 @@ import { readShellConfig } from "@/server/site-links/shell-config";
 import { textOverrides } from "@/app/admin/ui-text/store";
 import { makeT, pickTexts } from "@/lib/ui/text";
 import { AdCard, UiTextProvider } from "@/components/ui/AdCard";
-import { ListingHead } from "@/components/new/ListingHead";
-import { ListingSearchForm } from "@/components/new/ListingSearchForm";
 import { ListingMore } from "@/components/new/ListingMore";
+import { NewListingPage } from "@/components/new/ListingBand";
 import { listingLabels } from "@/components/new/listing-frame-props";
-import { bandStyleFor, cityBandImageFor } from "@/components/new/band-image";
+import { bandChoice, heroBandFrom } from "@/components/new/band-image";
 import { FallbackAds } from "@/components/FallbackAds";
 import { FALLBACK_OWN_MINIMUM, loadFallbackSections } from "@/lib/fallback-ads";
 
@@ -69,12 +67,13 @@ export default async function CityAreasPage({ params, searchParams }: Props) {
   const data = await cityAreas(city);
   if (!data) notFound();
   const page = Math.max(1, Number(sp.page) || 1);
-  const [latest, paths, shell, texts, perArea] = await Promise.all([
+  const [latest, paths, shell, texts, perArea, hero] = await Promise.all([
     getCityLatest(city, page),
     getPaths(),
     readShellConfig(),
     textOverrides(),
     Promise.all(data.areas.map((area) => countListings({ citySlug: city, districtSlug: area.slug ?? "" }).catch(() => null))),
+    getHomepageContent().then(heroBandFrom),
   ]);
   if (pageOutOfRange(sp.page, latest.pages)) notFound();
 
@@ -86,8 +85,8 @@ export default async function CityAreasPage({ params, searchParams }: Props) {
     { name: "Cities", path: hub },
     { name: data.name, path: joinPath(hub, city) },
   ];
-  const bandStyle = bandStyleFor(cityBandImageFor(shell, city));
-  const hasPhoto = Boolean(bandStyle["--band-desk"] || bandStyle["--band-phone"]);
+  // H7.32: the band photo: the city, then the state, then the home hero.
+  const band = bandChoice(shell, hero, { city, state: data.stateSlug || undefined });
   const photos = new Map(shell.media.images.filter((image) => image.scope === "category" && image.photo).map((image) => [image.slug, image.photo]));
 
   // H7.32 (FIX B): few own ads keep their place, and fallback ads go below them. With none, one line and a post button.
@@ -105,15 +104,20 @@ export default async function CityAreasPage({ params, searchParams }: Props) {
 
   return (
     <UiTextProvider texts={pickTexts(texts, "card.")}>
-      <div className="tkn-ls tkn-city" data-tk="city-areas">
+      <NewListingPage
+        tk="city-areas"
+        band={{
+          crumbs,
+          h1: data.name,
+          intro: `Free classifieds across ${data.name}. Pick a category or an area.`,
+          photo: band,
+          searchAction: searchPath(paths),
+          citySlug: city,
+          placeholder: `Search ads in ${data.name}`,
+          labels,
+        }}
+      >
         <JsonLd data={breadcrumbJsonLd(crumbs)} />
-        <section className="tkn-ls-band" data-tk="listing-band" data-photo={hasPhoto ? "true" : "false"} style={bandStyle as CSSProperties}>
-          <ListingHead crumbs={crumbs} h1={data.name} intro={`Free classifieds across ${data.name}. Pick a category or an area.`} labels={labels} />
-          <div className="tkn-ls-searchrow">
-            <ListingSearchForm action={searchPath(paths)} categorySlug="" citySlug={city} placeholder={`Search ads in ${data.name}`} labels={labels} />
-          </div>
-        </section>
-        <div className="tkn-city-body">
           {latest.total > 0 ? (
             <section data-tk="city-latest">
               <h2>Latest ads in {data.name}</h2>
@@ -176,8 +180,7 @@ export default async function CityAreasPage({ params, searchParams }: Props) {
               </ul>
             )}
           </section>
-        </div>
-      </div>
+      </NewListingPage>
     </UiTextProvider>
   );
 }

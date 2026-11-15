@@ -2,6 +2,12 @@ import { notFound, permanentRedirect } from "next/navigation";
 import type { Metadata } from "next";
 import { resolveListingLayout } from "@/components/blocks/ListingLayout";
 import { ListingPageView } from "@/components/ListingPage";
+import { NewListingPage } from "@/components/new/ListingBand";
+import { bandChoice, heroBandFrom } from "@/components/new/band-image";
+import { listingLabels } from "@/components/new/listing-frame-props";
+import { FallbackAds } from "@/components/FallbackAds";
+import { FALLBACK_OWN_MINIMUM, loadFallbackSections } from "@/lib/fallback-ads";
+import { readShellConfig } from "@/server/site-links/shell-config";
 import { makeT } from "@/lib/ui/text";
 import { textOverrides } from "@/app/admin/ui-text/store";
 import {
@@ -9,6 +15,7 @@ import {
   getCities,
   getDistricts,
   getFeed,
+  getHomepageContent,
   getLocationBySlug,
   getSeoFor,
   getSite,
@@ -20,7 +27,7 @@ import { prettyPlace } from "@/lib/format";
 import { canonical, fillTemplate } from "@/lib/seo";
 import { isCityAlias } from "@/lib/seo/district-alias";
 import { districtMinimum, getIndexing } from "@/server/seo/indexing";
-import { placePath, tagPath } from "@/lib/urls";
+import { placePath, postAdPath, tagPath } from "@/lib/urls";
 import { activeFilterKeys, listingCanonicalSuffix } from "@/server/search/filter-seo";
 import { withUrlSeo, urlHeading } from "@/lib/seo/override";
 import { fallbackLanding, visibleHeading } from "@/lib/seo/landing";
@@ -115,7 +122,7 @@ export default async function DistrictPage({ params, searchParams }: Props) {
   const filter: Record<string, unknown> = { categorySlug: category, citySlug: location, districtSlug: district };
   if (sp.photos) Object.assign(filter, { photos: { $exists: true, $ne: [] } });
   if (sp.verified) Object.assign(filter, { verified: true });
-  const [seo, site, stars, feed, districts, paths, tags, heading] = await Promise.all([
+  const [seo, site, stars, feed, districts, paths, tags, heading, shell, hero] = await Promise.all([
     getSeoFor("district", category, "location"),
     getSite(),
     getStarListings(filter),
@@ -124,6 +131,8 @@ export default async function DistrictPage({ params, searchParams }: Props) {
     getPaths(),
     publicTags(),
     urlHeading(canonicalPath, ""),
+    readShellConfig(),
+    getHomepageContent().then(heroBandFrom),
   ]);
   if (pageOutOfRange(sp.page, feed.pages)) notFound();
   const thin = isThin(feed.total, distMin);
@@ -150,23 +159,49 @@ export default async function DistrictPage({ params, searchParams }: Props) {
   const layout = await resolveListingLayout({ path: canonicalPath, category: cat.slug || category, vars });
   const texts = await textOverrides();
   const t = makeT(texts);
-
-  return (
-    <ListingPageView
-      layout={layout}
-      texts={texts}
-      h1={heading || visibleHeading(fillTemplate(seo?.h1 || "", vars), districtCopy.h1)}
-      faqs={districtCopy.faqs}
-      popular={tags.slice(0, 4).map((tag) => ({ href: tagPath(paths, cat.slug || category, tag.slug), label: `${dist.name} ${tag.label}` }))}
-      h2={fillTemplate(seo?.h2 || "", vars)}
-      intro={districtCopy.intro || fillTemplate(seo?.intro || "", vars)}
-      crumbs={[
+  const h1 = heading || visibleHeading(fillTemplate(seo?.h1 || "", vars), districtCopy.h1);
+  const own = feed.total < FALLBACK_OWN_MINIMUM;
+  const fallback = own
+    ? await loadFallbackSections({
+        scope: { categorySlug: cat.slug || category, categoryName: cat.name || undefined, stateSlug: city.stateSlug || undefined, placeName: city.name },
+        ownSlugs: feed.items.map((ad) => ad.slug || "").filter(Boolean),
+      })
+    : [];
+  const lead =
+    feed.total === 0
+      ? { text: `No ads in ${dist.name} yet. Here are ads close by.`, button: `Post the first ad in ${dist.name}`, href: postAdPath(paths) }
+      : undefined;
+  const crumbs = [
         { name: t("listing.crumb.home"), path: "/" },
         { name: cat.name!, path: `/${cat.slug}/` },
         { name: `${prettyPlace(city.stateSlug)} ${cat.name}`, path: placePath(cat.slug || category, city.stateSlug || "") },
         { name: `${city.name} ${cat.name}`, path: placePath(cat.slug || category, city.slug || location) },
         { name: `${dist.name} ${cat.name}`, path: canonicalPath },
-      ]}
+      ];
+  return (
+    <NewListingPage
+      tk="district"
+      band={{
+        crumbs,
+        h1,
+        photo: bandChoice(shell, hero, { city: city.slug || location, category: cat.slug || category }),
+        categorySlug: cat.slug || category,
+        citySlug: city.slug || location,
+        searchAction: placePath(cat.slug || category, city.slug || location),
+        placeholder: `Search ${cat.name} in ${dist.name}`,
+        labels: listingLabels(t),
+      }}
+    >
+    <ListingPageView
+      frame
+      texts={texts}
+      h1={h1}
+      layout={layout}
+      faqs={districtCopy.faqs}
+      popular={tags.slice(0, 4).map((tag) => ({ href: tagPath(paths, cat.slug || category, tag.slug), label: `${dist.name} ${tag.label}` }))}
+      h2={fillTemplate(seo?.h2 || "", vars)}
+      intro={districtCopy.intro || fillTemplate(seo?.intro || "", vars)}
+      crumbs={crumbs}
       locationLabel={`${prettyPlace(city.stateSlug)} - ${city.name}`}
       cityName={city.name}
       categoryName={cat.name}
@@ -195,6 +230,9 @@ export default async function DistrictPage({ params, searchParams }: Props) {
       emptyNearby={[{ href: placePath(cat.slug || category, city.slug || location), label: city.name! }]}
       photos={sp.photos === "1"}
       verified={sp.verified === "1"}
+      hideEmpty={feed.total === 0}
+      fallback={own ? <FallbackAds sections={fallback} lead={lead} layout="row" /> : undefined}
     />
+    </NewListingPage>
   );
 }
