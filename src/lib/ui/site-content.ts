@@ -247,9 +247,9 @@ function heroPlate(value: unknown): HeroPlate {
   return value === "off" ? "off" : "on";
 }
 
-/** H7.4c: the default focus of a banner picture: centre across, 20% down (keeps heads in portrait crops). */
+/** H7.4c / H7.10: the default focus of a banner picture for new uploads: centre across, 25% down (keeps heads in view). */
 export const FOCUS_DEFAULT_X = 50;
-export const FOCUS_DEFAULT_Y = 20;
+export const FOCUS_DEFAULT_Y = 25;
 
 /** A focus value in percent: a whole number from 0 to 100, or the default when the value is missing or wrong. */
 function focusPercent(value: unknown, fallback: number): number {

@@ -35,10 +35,10 @@ function blurbOf(cat: Cat) {
   return text.length > BLURB_MAX ? `${text.slice(0, BLURB_MAX - 1)}…` : text;
 }
 
-/** H7.4c / P1: the focus point of each banner picture as CSS variables (default centre, 50% 50%). A phone picture that is not set uses the computer one. */
+/** H7.4c / H7.10: the focus point of each banner picture as CSS variables (default 50% 25%). A phone picture that is not set uses the computer one. */
 function bannerFocus(hero: Hero): CSSProperties {
-  const desktop = `${hero.focusX ?? 50}% ${hero.focusY ?? 50}%`;
-  const phone = hero.photoPhone ? `${hero.phoneFocusX ?? 50}% ${hero.phoneFocusY ?? 50}%` : desktop;
+  const desktop = `${hero.focusX ?? 50}% ${hero.focusY ?? 25}%`;
+  const phone = hero.photoPhone ? `${hero.phoneFocusX ?? 50}% ${hero.phoneFocusY ?? 25}%` : desktop;
   return { "--tkh-focus": desktop, "--tkh-focus-phone": phone } as CSSProperties;
 }
 
