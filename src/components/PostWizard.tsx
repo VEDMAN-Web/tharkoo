@@ -7,31 +7,28 @@ import { loadPostSubcategories, type PostSubcategory } from "@/server/categories
 import { PhotoStep } from "@/components/post/PhotoStep";
 import { PickGroup } from "@/components/post/PickGroup";
 import { NEW_POST_STEPS, cleanAttrs, DEFAULT_PICK_LIMIT, draftToForm, errorsForStep, needsIdCheck, picksOf, textOf, validatePost, type NewPostStep, type PostAttrs, type SavedDraft } from "@/lib/ui/post-form";
-import { loginPath, postAdPath } from "@/lib/urls";
+import { loginPath, postAdPath, type UrlPaths } from "@/lib/urls";
 import { useUrlPaths } from "./UrlPaths";
 import { HelpCard } from "./ui/HelpCard";
 import { AdCard } from "./ui/AdCard";
-import { POST_COPY_DEFAULTS, wizardFields, type CtaCopy, type PostCopy, type PostStepKey } from "./post/copy";
-import { CATEGORY_TINTS, NEW_POST_TIPS, PostPreviewCard, PostRail, PostTip, type RailItem } from "./post/NewPostParts";
+import { POST_COPY_DEFAULTS, wizardFields, type CtaCopy, type PostCopy } from "./post/copy";
+import { CATEGORY_TINTS, NEW_POST_STEP_TEXT, NEW_POST_TIPS, PostPreviewCard, PostRail, PostTip, type RailItem } from "./post/NewPostParts";
 import type { ListingDoc } from "@/lib/models";
 
 type Cat = { _id: string; name: string; slug: string; fields?: Record<string, unknown>[] };
 type Place = { id: string; name: string; slug: string; parentId?: string | null };
+type SaveState = "idle" | "saving" | "saved" | "unsaved";
 
-/** H7.5: the New design step that reads each step's wording from the post-ad copy (see copy.ts). */
-const NEW_STEP_COPY: Record<NewPostStep, PostStepKey> = {
-  category: "basics",
-  details: "details",
-  photos: "photos",
-  contact: "contact",
-  review: "review",
-};
-
+/** H7.13: the draft saves itself this long after the last change (ms). */
+const AUTOSAVE_DELAY_MS = 1200;
 /** Step number of the photo step in each design. `?step=photos` in the URL means this step. */
 const OLD_PHOTO_STEP = 2;
 const NEW_PHOTO_STEP = 3;
 const NEW_CONTACT_STEP = 4;
 const NEW_REVIEW_STEP = 5;
+/** H7.13: the category tiles shown while the admin has none yet, copied from the v2 mockup (the tiles are not clickable). */
+const PLACEHOLDER_CATEGORIES = ["Property", "Vehicles", "Jobs", "Services", "Electronics", "Home & furniture", "Wellness", "Dating"];
+const SAVE_LABEL: Record<SaveState, string> = { idle: "Not saved yet", saving: "Saving…", saved: "Draft saved", unsaved: "Not saved yet" };
 
 function tidy(value: string) {
   return value.replace(/[\s-]/g, "");
@@ -94,6 +91,12 @@ export function PostWizard({
   const [done, setDone] = useState(false);
   const [plans, setPlans] = useState<{ id: string; code?: string; name: string; amount?: number }[]>([]);
   const [hydrated, setHydrated] = useState(true);
+  /** H7.13: the draft's save state for the top bar, and the mobile preview switch. */
+  const [saveState, setSaveState] = useState<SaveState>("idle");
+  const [previewOpen, setPreviewOpen] = useState(false);
+  /** H7.13: the ad's address after Publish, when the server returns it. Empty falls back to My ads. */
+  const [liveSlug, setLiveSlug] = useState("");
+  const [shareNote, setShareNote] = useState("");
 
   const category = categories.find((item) => item._id === categoryId);
   const subOptions = subsByCategory[categoryId] ?? [];
@@ -174,6 +177,17 @@ export function PostWizard({
     });
   }, [cityId]);
 
+  /** H7.13: once the draft exists, every change saves itself a moment later. Errors stay quiet here; Continue shows them. */
+  useEffect(() => {
+    if (!newDesign || !draftId || !hydrated || done) return;
+    const id = window.setTimeout(() => {
+      setSaveState("saving");
+      void saveAll(step >= NEW_CONTACT_STEP, true).then((saved) => setSaveState(saved ? "saved" : "unsaved"));
+    }, AUTOSAVE_DELAY_MS);
+    return () => window.clearTimeout(id);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- saveAll reads the current form values on every run of this effect.
+  }, [newDesign, draftId, hydrated, done, step, categoryId, subcategoryId, cityId, districtId, address, postal, area, age, nickname, title, text, price, contactMode, phone, whatsapp, telegramOn, telegram, attrs]);
+
   function validate() {
     const next = validatePost({
       categoryId,
@@ -213,10 +227,11 @@ export function PostWizard({
   /**
    * Saves the basics and the details of the draft, creating it on the first save. Returns the draft id, or "" when
    * the save failed (the banner then says why). The contact is sent only when `includeContact` is set, so a save from
-   * an earlier step never clears a phone number that was saved later.
+   * an earlier step never clears a phone number that was saved later. A `quiet` save (the auto-save) shows no banner
+   * and does not block the buttons.
    */
-  async function saveAll(includeContact: boolean): Promise<string> {
-    setBusy(true);
+  async function saveAll(includeContact: boolean, quiet = false): Promise<string> {
+    if (!quiet) setBusy(true);
     const basics = {
       categoryId,
       title: title.trim(),
@@ -229,8 +244,10 @@ export function PostWizard({
       ? await api(`/api/listings/${draftId}`, { method: "PATCH", body: JSON.stringify({ stage: "basics", ...basics }) })
       : await api<{ id: string }>("/api/listings", { method: "POST", body: JSON.stringify(basics) });
     if (!created.ok) {
-      setBusy(false);
-      setBanner(created.error.code === "UNAUTHORIZED" ? "Sign in to save this draft." : friendlyError(created.error));
+      if (!quiet) {
+        setBusy(false);
+        setBanner(created.error.code === "UNAUTHORIZED" ? "Sign in to save this draft." : friendlyError(created.error));
+      }
       return "";
     }
     const id = draftId || String((created.data as { id?: string })?.id || "");
@@ -250,8 +267,9 @@ export function PostWizard({
         ...(includeContact ? { contact } : {}),
       }),
     });
-    setBusy(false);
+    if (!quiet) setBusy(false);
     if (!details.ok) {
+      if (quiet) return "";
       const mapped = fieldErrors(details.error);
       const nextErrors: Record<string, string> = {};
       for (const [key, messages] of Object.entries(mapped)) {
@@ -277,7 +295,17 @@ export function PostWizard({
     if (!showErrors(errorsForStep(validate(), from))) return;
     if (from === "category") return setStep(2);
     const id = await saveAll(from === "contact");
-    if (id) remember(id, from === "details" ? NEW_PHOTO_STEP : NEW_REVIEW_STEP);
+    if (id) {
+      setSaveState("saved");
+      remember(id, from === "details" ? NEW_PHOTO_STEP : NEW_REVIEW_STEP);
+    }
+  }
+
+  /** H7.13: Back keeps everything typed; only the step changes. */
+  function goBackNew() {
+    if (step <= 1) return;
+    if (draftId) remember(draftId, step - 1);
+    else setStep(step - 1);
   }
 
   async function publish() {
@@ -296,7 +324,7 @@ export function PostWizard({
         return;
       }
     }
-    const res = await api(`/api/listings/${draftId}/submit`, {
+    const res = await api<{ slug?: string }>(`/api/listings/${draftId}/submit`, {
       method: "POST",
       body: JSON.stringify({ attestations: { adult: true, accurate: true, rights: true } }),
     });
@@ -309,7 +337,20 @@ export function PostWizard({
       setBanner(friendlyError(res.error));
       return;
     }
+    if (typeof res.data?.slug === "string") setLiveSlug(res.data.slug);
     setDone(true);
+  }
+
+  /** H7.13: Share opens the system share sheet, or copies the link where there is none. */
+  async function shareAd() {
+    const url = `${window.location.origin}${liveSlug ? `/${paths.ad.replace(/^\/|\/$/g, "")}/${liveSlug}` : "/u/account/ads/"}`;
+    try {
+      if (navigator.share) await navigator.share({ title: title.trim() || "My ad on Tharkoo", url });
+      else await navigator.clipboard.writeText(url);
+      setShareNote("Link ready to share.");
+    } catch {
+      setShareNote("Could not share. Copy the address from your browser bar.");
+    }
   }
 
   const preview = useMemo(
@@ -317,9 +358,11 @@ export function PostWizard({
     [title, text],
   );
 
+  if (done && newDesign) return renderLive(paths);
+
   if (done) {
     return (
-      <div className={newDesign ? "tkp-post" : "tk-container"} style={newDesign ? undefined : { padding: "24px 0 40px" }}>
+      <div className="tk-container" style={{ padding: "24px 0 40px" }}>
         <h1 className="tk-page-h1" data-tk="step-title">{copy.success.title}</h1>
         {copy.success.text ? <p style={{ textAlign: "center" }}>{copy.success.text}</p> : null}
         <p style={{ textAlign: "center" }}>
@@ -511,21 +554,30 @@ export function PostWizard({
     );
   }
 
-  /** H7.5: the New design. Five steps, a step rail, the live preview and the tip. Logic is shared with the three-step form. */
+  /** H7.5, H7.13: the New design. Five steps, the step rail, the live preview and the tip, laid out as the v2 mockup. */
   function renderNewDesign() {
     const current = NEW_POST_STEPS[step - 1] ?? "category";
-    const stepCopy = steps[NEW_STEP_COPY[current]];
+    const stepText = NEW_POST_STEP_TEXT[current];
     const railItems: RailItem[] = NEW_POST_STEPS.map((key, index) => ({
       key,
-      label: steps[NEW_STEP_COPY[key]].title,
+      label: NEW_POST_STEP_TEXT[key].label,
+      line: NEW_POST_STEP_TEXT[key].line,
       num: index + 1,
       state: index + 1 < step ? "done" : index + 1 === step ? "current" : "todo",
-      clickable: index + 1 < step ? true : index + 1 === step,
+      clickable: index + 1 <= step,
     }));
     const placeParts = [cityName, districtName].filter(Boolean).join(" / ");
     const previewPrice = priceDigits ? `₹${Number(priceDigits).toLocaleString("en-IN")}` : "";
+    const onLastStep = current === "review";
     return (
       <div className="tkp-post" data-design="post-new">
+        <div className="tkp-topbar">
+          <span className={`tkp-saved tkp-saved-${saveState}`} role="status" data-tk="draft-state">
+            <span className="tkp-saved-dot" aria-hidden />
+            {SAVE_LABEL[saveState]}
+          </span>
+          <Link href="/" className="tkp-exit">Exit</Link>
+        </div>
         <div className="tkp-progress" aria-hidden><i style={{ width: `${(step / NEW_POST_STEPS.length) * 100}%` }} /></div>
         <div className="tkp-grid">
           <PostRail
@@ -538,146 +590,213 @@ export function PostWizard({
             }}
           />
           <section className="tkp-main" aria-labelledby="post-step-title">
-            <p className="tkp-kicker" data-tk="step-of">Step {step} of {NEW_POST_STEPS.length}</p>
-            <h1 id="post-step-title" className="tkp-h1" data-tk="step-title">{stepCopy.title}</h1>
-            {stepCopy.help ? <p className="tkp-help" data-tk="step-help">{stepCopy.help}</p> : null}
+            <p className="tkp-kicker-pill" data-tk="step-of">Step {step} of {NEW_POST_STEPS.length}</p>
+            <h1 id="post-step-title" className="tkp-h1" data-tk="step-title">{stepText.heading}</h1>
+            <p className="tkp-help" data-tk="step-help">{stepText.help}</p>
             <div aria-live="polite" className="tkp-banner">
               {banner}{" "}
               {banner.startsWith("Sign in") ? <Link href={`${loginPath(paths)}?next=${encodeURIComponent(postAdPath(paths))}`}>Log in</Link> : null}
               {/ID needs a quick check/i.test(banner) ? <Link href="/u/account/kyc/" data-tk="verify-id">Verify ID</Link> : null}
             </div>
 
-            {current === "category" ? (
-              <>
-                <div className="tkp-tiles" role="group" aria-label="Category">
-                  {categories.map((cat, index) => {
-                    const pressed = cat._id === categoryId;
-                    const tint = CATEGORY_TINTS[index % CATEGORY_TINTS.length];
-                    return (
-                      <button
-                        key={cat._id}
-                        type="button"
-                        className={`tkp-tile ${pressed ? "on" : ""}`}
-                        aria-pressed={pressed}
-                        onClick={() => { setCategoryId(cat._id); setSubcategoryId(""); }}
-                      >
-                        <span className="tkp-tile-mark" style={{ background: tint.tint, color: tint.ink }} aria-hidden>{cat.name.charAt(0).toUpperCase()}</span>
-                        <span className="tkp-tile-name">{cat.name}</span>
-                      </button>
-                    );
-                  })}
-                </div>
-                {errors.category ? <p className="tk-error" data-tk="field-error">{errors.category}</p> : null}
-                {subOptions.length > 0 ? (
-                  <>
-                    <p className="tkp-sub-title" id="sub-title">{category ? `Sub-category in ${category.name}` : "Sub-category"}</p>
-                    <div className="tkp-chips" role="group" aria-labelledby="sub-title">
-                      {subOptions.map((sub) => {
-                        const pressed = sub.id === subcategoryId;
-                        return (
-                          <button key={sub.id} type="button" className={`tkp-chip ${pressed ? "on" : ""}`} aria-pressed={pressed} onClick={() => setSubcategoryId(sub.id)}>
-                            {sub.name}
-                          </button>
-                        );
-                      })}
-                    </div>
-                    {errors.subcategory ? <p className="tk-error" data-tk="field-error">{errors.subcategory}</p> : null}
-                  </>
-                ) : null}
-              </>
+            {current === "category" ? renderCategoryStep() : null}
+            {current === "details" ? renderDetailsStep() : null}
+            {current === "photos" && draftId ? (
+              <PhotoStep listingId={draftId} copy={copy} newDesign onBack={goBackNew} onNext={() => remember(draftId, NEW_CONTACT_STEP)} />
             ) : null}
+            {current === "contact" ? renderContactStep() : null}
+            {current === "review" ? renderReviewStep(previewPrice, placeParts) : null}
 
-            {current === "details" ? (
-              <div className="tkp-fields">
-                <div className="tkp-two">
-                  <SelectField id="city" label="City" required value={cityId} error={errors.city} onChange={(value) => { setCityId(value); setDistrictId(""); }}>
-                    <option value="">Select city</option>
-                    {cities.map((city) => (
-                      <option key={city.id} value={city.id}>{city.name}</option>
-                    ))}
-                  </SelectField>
-                  <SelectField id="district" label="Area" value={districtId} error={errors.district} disabled={!cityId} onChange={setDistrictId}>
-                    <option value="">Select area</option>
-                    {districts.map((item) => (
-                      <option key={item.id} value={item.id}>{item.name}</option>
-                    ))}
-                  </SelectField>
-                </div>
-                <TextField id="title" label="Ad title" required value={title} error={errors.title} note={`${title.length} / 70`} placeholder="For example: 2 BHK flat near Adajan" onChange={(value) => setTitle(value.slice(0, 70))} />
-                <TextField id="text" label="Description" required area rows={5} value={text} error={errors.text} note="20 characters required" placeholder="Spacious 2 BHK on the 4th floor with lift and covered parking." onChange={setText} />
-                <div className="tkp-two">
-                  <TextField id="price" label="Price (₹)" value={price} error={errors.price} placeholder="18,000" onChange={setPrice} />
-                  <TextField id="nickname" label="Nickname" required value={nickname} error={errors.nickname} note="max 20 characters" placeholder="Insert your name or nickname" onChange={setNickname} />
-                </div>
-                {ageField ? <TextField id="age" label="Age" required value={age} error={errors.age} onChange={setAge} /> : null}
-                {renderExtraFields()}
-              </div>
-            ) : null}
-
-            {current === "photos" ? (
-              <PhotoStep listingId={draftId} copy={copy} onBack={() => remember(draftId, 2)} onNext={() => remember(draftId, NEW_CONTACT_STEP)} />
-            ) : null}
-
-            {current === "contact" ? (
-              <div className="tkp-fields">
-                <p className="tkp-sub-title">How would you like to be contacted?</p>
-                <div className="tkp-chips" role="group" aria-label="How buyers reach you">
-                  {[
-                    ["phone", "Only Phone"],
-                    ["email", "Only Email"],
-                    ["both", "Email and Phone"],
-                  ].map(([id, label]) => (
-                    <button key={id} type="button" className={`tkp-chip ${contactMode === id ? "on" : ""}`} aria-pressed={contactMode === id} onClick={() => setContactMode(id)}>
-                      {label}
-                    </button>
-                  ))}
-                </div>
-                <TextField id="phone" label="Phone number" required={contactMode !== "email"} value={phone} error={errors.phone} placeholder="+91 81234 56789" onChange={setPhone} />
-                <div className="tkp-toggle-row"><span>WhatsApp</span><Switch on={whatsapp} onClick={() => setWhatsapp((v) => !v)} label="WhatsApp" /></div>
-                <div className="tkp-toggle-row"><span>Telegram</span><Switch on={telegramOn} onClick={() => setTelegramOn((v) => !v)} label="Telegram" /></div>
-                {telegramOn ? <TextField id="telegram" label="Telegram" value={telegram} onChange={setTelegram} /> : null}
-              </div>
-            ) : null}
-
-            {current === "review" ? (
-              <div className="tkp-fields">
-                <dl className="tkp-summary">
-                  <div><dt>Category</dt><dd>{[category?.name, subOptions.find((sub) => sub.id === subcategoryId)?.name].filter(Boolean).join(" › ") || "Not chosen"}</dd></div>
-                  <div><dt>Title</dt><dd>{title.trim() || "No title yet"}</dd></div>
-                  <div><dt>Price</dt><dd>{previewPrice || "Not set"}</dd></div>
-                  <div><dt>Place</dt><dd>{placeParts || "Not set"}</dd></div>
-                  <div><dt>Contact</dt><dd>{contactMode === "email" ? "Email only" : phone ? normalPhone(phone) : "Not set"}</dd></div>
-                </dl>
-                <p className="tkp-note">Your ad stays live for 72 hours after it is approved. You can renew it from your panel.</p>
-                {renderConsents()}
-              </div>
-            ) : null}
-
-            {current !== "photos" ? (
-              <div className="tkp-nav">
-                {step > 1 ? (
-                  <button type="button" className="tkp-btn tkp-btn-ghost" onClick={() => (draftId ? remember(draftId, step - 1) : setStep(step - 1))}>
-                    {stepCopy.backLabel || "Back"}
-                  </button>
-                ) : <span />}
-                {current === "review" ? (
-                  <button type="button" className="tkp-btn tkp-btn-primary" data-tk="go-on" disabled={busy || !hydrated || !title.trim()} onClick={publish}>
-                    {stepCopy.nextLabel || "Publish ad"}
-                  </button>
-                ) : (
-                  <button type="button" className="tkp-btn tkp-btn-primary" data-tk="go-on" disabled={busy} onClick={() => continueFrom(current)}>
-                    {stepCopy.nextLabel || "Continue"}
-                  </button>
-                )}
-              </div>
-            ) : null}
+            <div className="tkp-nav">
+              <button type="button" className="tkp-btn tkp-btn-ghost" disabled={step <= 1} onClick={goBackNew}>Back</button>
+              <button type="button" className="tkp-preview-toggle" aria-expanded={previewOpen} aria-controls="post-preview" onClick={() => setPreviewOpen((open) => !open)}>
+                {previewOpen ? "Hide preview" : "Preview"}
+              </button>
+              {onLastStep ? (
+                <button type="button" className="tkp-btn tkp-btn-primary" data-tk="go-on" disabled={busy || !hydrated || !title.trim()} onClick={publish}>
+                  Publish ad
+                  {renderArrow()}
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  className="tkp-btn tkp-btn-primary"
+                  data-tk="go-on"
+                  disabled={busy}
+                  onClick={() => (current === "photos" && draftId ? remember(draftId, NEW_CONTACT_STEP) : continueFrom(current))}
+                >
+                  Continue
+                  {renderArrow()}
+                </button>
+              )}
+            </div>
           </section>
-          <aside className="tkp-aside">
+          <aside className={`tkp-aside ${previewOpen ? "is-open" : ""}`} id="post-preview">
+            <p className="tkp-aside-label">Live preview</p>
             <PostPreviewCard title={title.trim()} category={category?.name ?? ""} place={placeParts} price={previewPrice} previewLabel="Live preview" />
             <PostTip text={NEW_POST_TIPS[current]} />
           </aside>
         </div>
         <HelpCard />
+      </div>
+    );
+  }
+
+  function renderArrow() {
+    return (
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+        <path d="M5 12h14M13 6l6 6-6 6" />
+      </svg>
+    );
+  }
+
+  /** H7.13: step 1. The admin's categories as tiles, then the sub-categories of the chosen one as chips. */
+  function renderCategoryStep() {
+    return (
+      <>
+        <div className="tkp-tiles" role="group" aria-label="Category">
+          {categories.length
+            ? categories.map((cat, index) => {
+                const pressed = cat._id === categoryId;
+                const tint = CATEGORY_TINTS[index % CATEGORY_TINTS.length];
+                return (
+                  <button
+                    key={cat._id}
+                    type="button"
+                    className={`tkp-tile ${pressed ? "on" : ""}`}
+                    aria-pressed={pressed}
+                    onClick={() => { setCategoryId(cat._id); setSubcategoryId(""); }}
+                  >
+                    <span className="tkp-tile-mark" style={{ background: tint.tint, color: tint.ink }} aria-hidden>{cat.name.charAt(0).toUpperCase()}</span>
+                    <span className="tkp-tile-name">{cat.name}</span>
+                  </button>
+                );
+              })
+            : PLACEHOLDER_CATEGORIES.map((name, index) => {
+                const tint = CATEGORY_TINTS[index % CATEGORY_TINTS.length];
+                return (
+                  <span key={name} className="tkp-tile tkp-tile-placeholder" aria-hidden>
+                    <span className="tkp-tile-mark" style={{ background: tint.tint, color: tint.ink }}>{name.charAt(0)}</span>
+                    <span className="tkp-tile-name">{name}</span>
+                  </span>
+                );
+              })}
+        </div>
+        {errors.category ? <p className="tk-error" data-tk="field-error">{errors.category}</p> : null}
+        {subOptions.length > 0 ? (
+          <>
+            <p className="tkp-sub-title" id="sub-title">{category ? `Sub-category in ${category.name}` : "Sub-category"}</p>
+            <div className="tkp-chips" role="group" aria-labelledby="sub-title">
+              {subOptions.map((sub) => {
+                const pressed = sub.id === subcategoryId;
+                return (
+                  <button key={sub.id} type="button" className={`tkp-chip ${pressed ? "on" : ""}`} aria-pressed={pressed} onClick={() => setSubcategoryId(sub.id)}>
+                    {sub.name}
+                  </button>
+                );
+              })}
+            </div>
+            {errors.subcategory ? <p className="tk-error" data-tk="field-error">{errors.subcategory}</p> : null}
+          </>
+        ) : null}
+      </>
+    );
+  }
+
+  function renderDetailsStep() {
+    return (
+      <div className="tkp-fields">
+        <div className="tkp-two">
+          <SelectField id="city" label="City" required value={cityId} error={errors.city} onChange={(value) => { setCityId(value); setDistrictId(""); }}>
+            <option value="">Select city</option>
+            {cities.map((city) => (
+              <option key={city.id} value={city.id}>{city.name}</option>
+            ))}
+          </SelectField>
+          <SelectField id="district" label="Area" value={districtId} error={errors.district} disabled={!cityId} onChange={setDistrictId}>
+            <option value="">Select area</option>
+            {districts.map((item) => (
+              <option key={item.id} value={item.id}>{item.name}</option>
+            ))}
+          </SelectField>
+        </div>
+        <TextField id="title" label="Ad title" required value={title} error={errors.title} note={`${title.length} / 70`} placeholder="For example: 2 BHK flat near Adajan" onChange={(value) => setTitle(value.slice(0, 70))} />
+        <TextField id="text" label="Description" required area rows={5} value={text} error={errors.text} note="20 characters required" placeholder="Spacious 2 BHK on the 4th floor with lift and covered parking." onChange={setText} />
+        <div className="tkp-two">
+          <TextField id="price" label="Price (₹)" value={price} error={errors.price} placeholder="18,000" onChange={setPrice} />
+          <TextField id="nickname" label="Nickname" required value={nickname} error={errors.nickname} note="max 20 characters" placeholder="Insert your name or nickname" onChange={setNickname} />
+        </div>
+        {ageField ? <TextField id="age" label="Age" required value={age} error={errors.age} onChange={setAge} /> : null}
+        {renderExtraFields()}
+      </div>
+    );
+  }
+
+  function renderContactStep() {
+    return (
+      <div className="tkp-fields">
+        <p className="tkp-sub-title">How would you like to be contacted?</p>
+        <div className="tkp-chips" role="group" aria-label="How buyers reach you">
+          {[
+            ["phone", "Only Phone"],
+            ["email", "Only Email"],
+            ["both", "Email and Phone"],
+          ].map(([id, label]) => (
+            <button key={id} type="button" className={`tkp-chip ${contactMode === id ? "on" : ""}`} aria-pressed={contactMode === id} onClick={() => setContactMode(id)}>
+              {label}
+            </button>
+          ))}
+        </div>
+        <TextField id="phone" label="Phone number" required={contactMode !== "email"} value={phone} error={errors.phone} placeholder="+91 81234 56789" onChange={setPhone} />
+        <div className="tkp-toggle-row"><span>WhatsApp</span><Switch on={whatsapp} onClick={() => setWhatsapp((v) => !v)} label="WhatsApp" /></div>
+        <div className="tkp-toggle-row"><span>Telegram</span><Switch on={telegramOn} onClick={() => setTelegramOn((v) => !v)} label="Telegram" /></div>
+        {telegramOn ? <TextField id="telegram" label="Telegram" value={telegram} onChange={setTelegram} /> : null}
+      </div>
+    );
+  }
+
+  /** H7.13: step 5. The summary, the optional boost plans when the site sells them, and the consents. */
+  function renderReviewStep(previewPrice: string, placeParts: string) {
+    return (
+      <div className="tkp-fields">
+        <dl className="tkp-summary">
+          <div><dt>Category</dt><dd>{[category?.name, subOptions.find((sub) => sub.id === subcategoryId)?.name].filter(Boolean).join(" › ") || "Not chosen"}</dd></div>
+          <div><dt>Title</dt><dd>{title.trim() || "No title yet"}</dd></div>
+          <div><dt>Price</dt><dd>{previewPrice || "Not set"}</dd></div>
+          <div><dt>Place</dt><dd>{placeParts || "Not set"}</dd></div>
+          <div><dt>Contact</dt><dd>{contactMode === "email" ? "Email only" : phone ? normalPhone(phone) : "Not set"}</dd></div>
+        </dl>
+        {visiblePlans.length ? (
+          <div className="tkp-boost" data-tk="boost">
+            <p className="tkp-sub-title">Optional: boost your ad</p>
+            {visiblePlans.map((plan) => (
+              <p key={plan.id} className="t-small">{plan.name}{plan.amount !== undefined ? ` · Rs ${plan.amount}` : ""}</p>
+            ))}
+            <Link href="/u/account/credits/" style={{ color: "var(--accent)" }}>Boost visibility</Link>
+          </div>
+        ) : null}
+        <p className="tkp-note">Your ad stays live for 72 hours after it is approved. You can renew it from your panel.</p>
+        {renderConsents()}
+      </div>
+    );
+  }
+
+  /** H7.13: "Your ad is live" after Publish, with View ad and Share. */
+  function renderLive(linkPaths: UrlPaths) {
+    const viewHref = liveSlug ? `/${linkPaths.ad.replace(/^\/|\/$/g, "")}/${liveSlug}` : "/u/account/ads/";
+    return (
+      <div className="tkp-post" data-design="post-live">
+        <div className="tkp-progress" aria-hidden><i style={{ width: "100%" }} /></div>
+        <section className="tkp-main tkp-live" aria-labelledby="post-live-title">
+          <p className="tkp-kicker-pill">Published</p>
+          <h1 id="post-live-title" className="tkp-h1" data-tk="step-title">Your ad is live</h1>
+          <p className="tkp-help">Buyers can find it on Tharkoo now. You can edit it any time from your panel.</p>
+          <div className="tkp-nav">
+            <Link href={viewHref} className="tkp-btn tkp-btn-primary" data-tk="view-ad">View ad</Link>
+            <button type="button" className="tkp-btn tkp-btn-ghost" onClick={() => void shareAd()}>Share</button>
+          </div>
+          {shareNote ? <p className="tkp-help" role="status">{shareNote}</p> : null}
+        </section>
       </div>
     );
   }

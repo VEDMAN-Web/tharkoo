@@ -24,7 +24,7 @@ test.describe("H7.5 post-ad, New design", () => {
     test.setTimeout(180_000);
     await signedInPoster(page, baseURL!, "steps");
     await expect(page.locator(".tkp-post")).toBeVisible();
-    await expect(page.locator("[data-tk=step-title]")).toContainText(/information/i);
+    await expect(page.locator("[data-tk=step-title]")).toContainText(/what are you posting/i);
     await expect(page.locator(".tkp-step")).toHaveCount(5);
     await expect(page.locator("[data-tk=step-of]")).toContainText("Step 1 of 5");
     await expect(page.locator("h1")).toHaveCount(1);

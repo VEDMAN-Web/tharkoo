@@ -2697,6 +2697,18 @@
         "docs/ownership.json",
         "src/app/globals.css"
       ]
+    },
+    "H7.13": {
+      "branchPrefix": "haiku/h7.13",
+      "globs": [
+        "src/components/PostWizard.tsx",
+        "src/components/post/PhotoStep.tsx",
+        "src/components/post/NewPostParts.tsx",
+        "src/app/globals.css",
+        "tests/e2e/post-new-design.e2e.ts",
+        "tests/e2e/post-media.e2e.ts",
+        "docs/ownership.json"
+      ]
     }
   }
 }

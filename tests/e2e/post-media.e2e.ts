@@ -103,20 +103,22 @@ test.describe("My photos & videos", () => {
     await loginUi(page, owner.email, USER_PASSWORD, `/u/post-insert/?draft=${adId}&step=photos`);
     await page.waitForURL(/step=photos/);
     await expect(page.locator("[data-tk=photo-count]")).toContainText(/0 of \d+ photos/);
-    await page.locator("[data-tk=photo-input]").setInputFiles([
+    // H7.13: the photo step uses the shared upload box (section "Photos"); its tiles are .upl-tile.
+    const photoBox = page.locator("section[aria-label=Photos]");
+    await photoBox.locator("input[type=file]").setInputFiles([
       { name: "a.png", mimeType: "image/png", buffer: PNG },
       { name: "b.png", mimeType: "image/png", buffer: PNG },
       { name: "c.png", mimeType: "image/png", buffer: PNG },
     ]);
-    await expect(page.locator("[data-tk=photo-tile]")).toHaveCount(3, { timeout: 30_000 });
+    await expect(photoBox.locator(".upl-tile")).toHaveCount(3, { timeout: 30_000 });
     await expect(page.locator("[data-tk=photo-count]")).toContainText(/3 of \d+ photos/);
     expect(await hasHorizontalScroll(page)).toBe(false);
 
-    await page.locator("[data-tk=photo-tile]").nth(1).getByRole("button", { name: "Make cover" }).click();
-    await expect(page.locator("[data-tk=photo-tile]").nth(0).locator("[data-tk=photo-cover]")).toHaveCount(1);
+    await photoBox.locator(".upl-tile").nth(1).getByRole("button", { name: /the cover/ }).click();
+    await expect(photoBox.locator(".upl-tile").nth(0).locator(".upl-cover")).toHaveCount(1);
 
-    await page.locator("[data-tk=photo-tile]").nth(2).getByRole("button", { name: /Remove/ }).click();
-    await expect(page.locator("[data-tk=photo-tile]")).toHaveCount(2);
+    await photoBox.locator(".upl-tile").nth(2).getByRole("button", { name: /^Remove/ }).click();
+    await expect(photoBox.locator(".upl-tile")).toHaveCount(2);
     await expect(page.locator("[data-tk=photo-count]")).toContainText(/2 of \d+ photos/);
   });
 });
