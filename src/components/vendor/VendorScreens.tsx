@@ -86,7 +86,7 @@ export function Dashboard({ locked = false }: { locked?: boolean }) {
                 <p className="tk-count-row">Not published <span className="tk-count">{num(hidden ?? null)}</span></p>
               </div>
               <div className="tk-dcard-actions">
-                <Link href="/u/post-insert/" className="tk-btn tk-btn-gold">Post an ad</Link>
+                <Link href="/u/post-insert/" className="tk-btn tk-btn-cta">Post an ad</Link>
                 <Link href="/u/account/ads/" className="tk-dlink">See all ads</Link>
               </div>
             </div>
@@ -96,7 +96,7 @@ export function Dashboard({ locked = false }: { locked?: boolean }) {
                 <p className="t-small">Every photo and video on your ads, and whether it is live.</p>
               </div>
               <div className="tk-dcard-actions">
-                <Link href="/u/account/media/" className="tk-btn tk-btn-outline-gold">Open photos &amp; videos</Link>
+                <Link href="/u/account/media/" className="tk-btn tk-btn-outline-primary">Open photos &amp; videos</Link>
               </div>
             </div>
             <div className="tk-dcard" data-tk="tile" data-tile="wallet">
@@ -106,7 +106,7 @@ export function Dashboard({ locked = false }: { locked?: boolean }) {
                 <p className="tk-count-row">Used <span className="tk-count">{num(used)}</span></p>
               </div>
               <div className="tk-dcard-actions">
-                <Link href="/u/account/credits/" className="tk-btn tk-btn-gold">Buy credits</Link>
+                <Link href="/u/account/credits/" className="tk-btn tk-btn-cta">Buy credits</Link>
               </div>
             </div>
             <div className="tk-dcard" data-tk="tile" data-tile="profile">
@@ -117,7 +117,7 @@ export function Dashboard({ locked = false }: { locked?: boolean }) {
                 <span className="tk-chip" style={{ background: chip.bg, color: chip.color, marginTop: 8 }}>{chip.label}</span>
               </div>
               <div className="tk-dcard-actions">
-                <Link href="/u/account/kyc/" className="tk-btn tk-btn-outline-gold">{chip.label !== "ID verified" ? "Verify your ID" : "View verification"}</Link>
+                <Link href="/u/account/kyc/" className="tk-btn tk-btn-outline-primary">{chip.label !== "ID verified" ? "Verify your ID" : "View verification"}</Link>
               </div>
             </div>
             <div className="tk-dcard" data-tk="tile" data-tile="coupons">
@@ -126,7 +126,7 @@ export function Dashboard({ locked = false }: { locked?: boolean }) {
                 <p className="t-small">Manage your coupons.</p>
               </div>
               <div className="tk-dcard-actions">
-                <Link href="/u/account/coupons/" className="tk-btn tk-btn-outline-gold">Open coupons</Link>
+                <Link href="/u/account/coupons/" className="tk-btn tk-btn-outline-primary">Open coupons</Link>
               </div>
             </div>
             <div className="tk-dcard" data-tk="tile" data-tile="settings">
@@ -135,7 +135,7 @@ export function Dashboard({ locked = false }: { locked?: boolean }) {
                 <p className="t-small">Manage your personal info.</p>
               </div>
               <div className="tk-dcard-actions">
-                <Link href="/u/account/edit-account/" className="tk-btn tk-btn-outline-gold">Open settings</Link>
+                <Link href="/u/account/edit-account/" className="tk-btn tk-btn-outline-primary">Open settings</Link>
               </div>
             </div>
           </div>

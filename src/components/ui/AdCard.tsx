@@ -9,6 +9,7 @@ import { PriceTag } from "../search/PriceTag";
 import { formatPrice } from "../search/price";
 import { PhotoSwipe } from "./PhotoSwipe";
 import { SaveButton } from "./SaveButton";
+import { viewsLabel } from "@/components/ad/counts-format";
 import { api, friendlyError } from "@/lib/ui/api";
 import { adPath } from "@/lib/urls";
 import { useUrlPaths } from "../UrlPaths";
@@ -26,7 +27,7 @@ export function UiTextProvider({ texts, children }: { texts?: UiTextMap; childre
   return <TextContext.Provider value={texts}>{children}</TextContext.Provider>;
 }
 
-function useT(): TextFn {
+export function useT(): TextFn {
   const texts = useContext(TextContext);
   return useMemo(() => makeT(texts), [texts]);
 }
@@ -226,7 +227,7 @@ export function AdCard({
         <div className="tk-circles">
           {seller && !seller.people ? (
             <button type="button" className="tk-circle" aria-label={seller.callsAllowed === false ? `${t("card.contact.call")}: the seller is away` : t("card.contact.call")} data-tk="call" disabled={seller.callsAllowed === false} onClick={() => reveal("phone")}>
-              <Phone size={16} color="#8A6416" />
+              <Phone size={16} color="#A8124F" />
             </button>
           ) : null}
           <button type="button" className="tk-circle" aria-label={t("card.contact.whatsapp")} data-tk="whatsapp" onClick={() => reveal("whatsapp")}>
@@ -240,7 +241,7 @@ export function AdCard({
         <div className="tkp-owner" data-tk="owner-card">
           <div className="tkp-owner-row">
             <span className="tkp-owner-status" style={{ background: owner.bg, color: owner.fg }}>{owner.label}</span>
-            <span className="tkp-owner-counts">{owner.views} views · {owner.clicks} clicks</span>
+            <span className="tkp-owner-counts">{owner.views} {viewsLabel(owner.views)} · {owner.clicks} clicks</span>
           </div>
           {owner.actions ? <div className="tkp-owner-actions">{owner.actions}</div> : null}
         </div>

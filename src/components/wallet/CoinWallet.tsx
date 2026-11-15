@@ -55,7 +55,7 @@ function Balance({ balance, coinValueInr }: { balance: number; coinValueInr: num
         borderRadius: 16,
         padding: "20px 18px",
         color: "#2b2110",
-        background: "linear-gradient(135deg, #f7e7a6 0%, #e2c268 45%, #b8892a 100%)",
+        background: "linear-gradient(135deg, #fdf0f7 0%, #f5b5d6 45%, #e91e8c 100%)",
         boxShadow: "0 8px 24px rgba(138, 100, 22, 0.18)",
       }}
     >
@@ -112,8 +112,8 @@ function BuyTab({ data }: { data: CoinsResponse }) {
                 cursor: "pointer",
                 background: "var(--card, #fff)",
                 color: "var(--text)",
-                border: on ? "2px solid var(--gold)" : "1px solid var(--border)",
-                boxShadow: on ? "0 0 0 3px rgba(212, 175, 55, 0.25)" : "none",
+                border: on ? "2px solid var(--rose)" : "1px solid var(--border)",
+                boxShadow: on ? "0 0 0 3px rgba(233, 30, 140, 0.25)" : "none",
               }}
             >
               <span style={{ display: "block", fontSize: 22, fontWeight: 800 }}>{item.coins} coins</span>
@@ -123,7 +123,7 @@ function BuyTab({ data }: { data: CoinsResponse }) {
           );
         })}
       </div>
-      <button type="button" className="tk-btn tk-btn-gold" disabled={!pack || busy} onClick={buy} style={{ width: "100%" }}>
+      <button type="button" className="tk-btn tk-btn-cta" disabled={!pack || busy} onClick={buy} style={{ width: "100%" }}>
         {pack ? `Buy ${pack.coins} coins for ${inr(pack.price)}` : "Choose a pack"}
       </button>
       <div aria-live="polite" className="t-small" style={{ minHeight: 18, color: message === HELD ? "var(--muted)" : "var(--danger, #a12626)" }}>
@@ -223,7 +223,7 @@ export function CoinWallet() {
             type="button"
             aria-pressed={tab === item.key}
             onClick={() => setTab(item.key)}
-            className={tab === item.key ? "tk-btn tk-btn-gold" : "tk-btn tk-btn-outline-primary"}
+            className={tab === item.key ? "tk-btn tk-btn-cta" : "tk-btn tk-btn-outline-primary"}
             style={{ flex: "1 0 auto" }}
           >
             {item.label}

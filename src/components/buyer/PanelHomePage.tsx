@@ -1,11 +1,20 @@
 import { cookies } from "next/headers";
 import { UserPanelHome } from "./UserPanelHome";
 import { SESSION_COOKIE } from "@/server/auth/http";
-import { loadPacks, loadPanelSummary, loadPickers } from "@/server/notifications/summary";
+import { listOwnCards } from "@/server/listings/owner-cards";
+import { loadPacks, loadPanelSummary, type PackRow } from "@/server/notifications/summary";
 
-/** H7.6: loads everything the user panel home needs, on the server. Used by /u/account/ and /u/account/dashboard/. */
+function homePacks(packs: PackRow[]): PackRow[] {
+  const popular = packs.find((pack) => /popular/i.test(pack.tag ?? ""));
+  if (!popular) return packs.slice(0, 4);
+  const others = packs.filter((pack) => pack !== popular).slice(0, 3);
+  return [others[0], popular, others[1], others[2]].filter((pack): pack is PackRow => Boolean(pack));
+}
+
+/** H7.6, H7.17: loads everything the user panel home needs, on the server. Used by /u/account/ and /u/account/dashboard/. */
 export async function PanelHomePage() {
   const token = (await cookies()).get(SESSION_COOKIE)?.value;
-  const [summary, packs, pickers] = await Promise.all([loadPanelSummary(token), loadPacks(), loadPickers()]);
-  return <UserPanelHome summary={summary} packs={packs} categories={pickers.categories} cities={pickers.cities} />;
+  const [summary, packs] = await Promise.all([loadPanelSummary(token), loadPacks()]);
+  const ads = summary.signedIn && summary.adCount > 0 ? await listOwnCards(summary.userId, { page: 1, pageSize: 6 }) : null;
+  return <UserPanelHome summary={summary} ads={ads} packs={homePacks(packs)} />;
 }

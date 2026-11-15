@@ -31,5 +31,5 @@ export function statusTone(status: string): { color: string; background: string 
   if (status === "failed" || status === "rejected" || status === "refunded" || status === "refund_blocked") {
     return { color: "var(--danger, #a12626)", background: "var(--danger-bg, #fbe9e9)" };
   }
-  return { color: "var(--accent)", background: "var(--gold-soft, #f3d98b)" };
+  return { color: "var(--accent)", background: "var(--rose-soft, #fdf0f7)" };
 }

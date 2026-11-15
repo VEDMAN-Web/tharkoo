@@ -3,17 +3,20 @@
 import Link from "next/link";
 import dynamic from "next/dynamic";
 import { usePathname } from "next/navigation";
-import { Menu } from "lucide-react";
+import { ChevronDown, Menu } from "lucide-react";
 import { useEffect, useState } from "react";
 import { HeaderCountry } from "./HeaderCountry";
 import type { CountryOption } from "@/server/locations/country-scope";
 import { HeaderDrawer } from "./HeaderDrawer";
+import { isProbablySignedIn, openSignInFromLink } from "./auth/SignInSheet";
 import { useUrlPaths } from "./UrlPaths";
 import { safeHref } from "@/lib/sanitize";
 import type { UiTextMap } from "@/lib/ui/text";
 import { UtilityStrip } from "./new/UtilityStrip";
 import { applyPrefixes, loginPath, postAdPath } from "@/lib/urls";
 import type { ShellConfig } from "@/server/site-links/shell-config-rules";
+import { api } from "@/lib/ui/api";
+import { accountName } from "@/lib/account-name";
 
 // The search pop-up loads only when a visitor opens it, as in the old header.
 const SearchModal = dynamic(() => import("./SearchModal").then((mod) => mod.SearchModal), { ssr: false });
@@ -46,6 +49,8 @@ export function HeaderNew({
   const paths = useUrlPaths();
   const [menuOpen, setMenuOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
+  const [account, setAccount] = useState<{ name: string; balance: number | null } | null>(null);
+  const [accountOpen, setAccountOpen] = useState(false);
   const links = shell.header.navLinks.filter((item) => item.visible && safeHref(item.href));
 
   useEffect(() => {
@@ -54,6 +59,18 @@ export function HeaderNew({
     }
     window.addEventListener("tk-open-search", open);
     return () => window.removeEventListener("tk-open-search", open);
+  }, []);
+
+  useEffect(() => {
+    if (!isProbablySignedIn()) return;
+    let live = true;
+    Promise.all([api<{ user: { displayName?: string; email?: string } }>("/api/auth/me"), api<{ balance: number }>("/api/wallet")]).then(([who, wallet]) => {
+      if (!live || !who.ok) return;
+      setAccount({ name: accountName(who.data.user.displayName, who.data.user.email || ""), balance: wallet.ok ? wallet.data.balance : null });
+    });
+    return () => {
+      live = false;
+    };
   }, []);
 
   // The drawer and search sit outside the header: the header has a backdrop filter, which would trap a fixed layer inside it.
@@ -82,8 +99,50 @@ export function HeaderNew({
         </nav>
         <div className="tkn-header-actions">
           <HeaderCountry countries={countries} />
-          <Link href={loginPath(paths)} className="tkn-btn tkn-btn-ghost tkn-hide-sm">{shell.header.loginLabel}</Link>
-          <Link href={postAdPath(paths)} className="tkn-btn tkn-btn-primary" data-tk="post-ad" prefetch={false}>
+          {account ? (
+            <>
+              {account.balance !== null ? (
+                <Link href="/u/account/credits/" className="tkn-coin-chip" data-tk="header-coins">{account.balance} coins</Link>
+              ) : null}
+              <div className="tkn-account">
+                <button
+                  type="button"
+                  className="tkn-avatar"
+                  aria-label={`Account menu for ${account.name}`}
+                  aria-haspopup="menu"
+                  aria-expanded={accountOpen}
+                  data-tk="header-avatar"
+                  onClick={() => setAccountOpen((open) => !open)}
+                >
+                  {account.name.slice(0, 1).toUpperCase()}
+                  <ChevronDown size={14} aria-hidden="true" focusable="false" />
+                </button>
+                {accountOpen ? (
+                  <div className="tkn-account-menu" role="menu">
+                    {account.balance !== null ? (
+                      <Link role="menuitem" href="/u/account/credits/" className="tkn-account-coins" onClick={() => setAccountOpen(false)}>{account.balance} coins</Link>
+                    ) : null}
+                    <Link role="menuitem" href="/u/account/dashboard/" onClick={() => setAccountOpen(false)}>My account</Link>
+                    <Link role="menuitem" href="/u/account/saved/" onClick={() => setAccountOpen(false)}>Saved ads</Link>
+                    <Link role="menuitem" href="/u/account/messages/" onClick={() => setAccountOpen(false)}>Chats</Link>
+                    <Link role="menuitem" href="/u/account/edit-account/" onClick={() => setAccountOpen(false)}>Settings</Link>
+                    <Link role="menuitem" href="/u/logout/" onClick={() => setAccountOpen(false)}>Log out</Link>
+                  </div>
+                ) : null}
+              </div>
+            </>
+          ) : (
+            <Link href={loginPath(paths)} className="tkn-login-link tkn-hide-sm" onClick={(event) => openSignInFromLink(event)}>{shell.header.loginLabel}</Link>
+          )}
+          <Link
+            href={postAdPath(paths)}
+            className="tkn-btn tkn-btn-primary"
+            data-tk="post-ad"
+            prefetch={false}
+            onClick={(event) => {
+              if (!isProbablySignedIn()) openSignInFromLink(event, postAdPath(paths));
+            }}
+          >
             <span className="tkn-post-long">{shell.header.postLabel}</span>
           </Link>
           <button

@@ -19,10 +19,10 @@ export default async function Page({ searchParams }: { searchParams: Promise<{ l
   return (
     <>
       <div className="tk-container" style={{ paddingTop: 12 }}>
-        <Link href="/u/account/messages/" className="tk-btn tk-btn-outline-gold" data-tk="messages-link">
+        <Link href="/u/account/messages/" className="tk-btn tk-btn-outline-primary" data-tk="messages-link">
           Messages <UnreadBadge />
         </Link>{" "}
-        <Link href="/u/account/support/" className="tk-btn tk-btn-outline-gold" data-tk="support-link">
+        <Link href="/u/account/support/" className="tk-btn tk-btn-outline-primary" data-tk="support-link">
           Support
         </Link>
         <div style={{ marginTop: 12 }}>

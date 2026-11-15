@@ -50,28 +50,31 @@ export function TicketThread({ ticketId }: { ticketId: string }) {
     <div style={{ display: "grid", gap: 16 }}>
       <header style={{ display: "grid", gap: 6 }}>
         <div style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center", justifyContent: "space-between" }}>
-          <h1 className="t-h2" style={{ margin: 0, overflowWrap: "anywhere" }}>#{ticket.number} {ticket.subject}</h1>
+          <h2 className="up-thread-title">#{ticket.number} {ticket.subject}</h2>
           <StatusChip status={ticket.status} label={ticket.statusLabel} />
         </div>
         <p className="t-small text-muted" style={{ margin: 0 }}>{ticket.topicLabel}</p>
       </header>
 
       <ol aria-label="Messages" style={{ listStyle: "none", padding: 0, margin: 0, display: "grid", gap: 10 }}>
-        {messages.map((message) => (
-          <li key={message.id} data-tk="ticket-message" data-author={message.authorType} style={{ display: "grid", gap: 6, padding: 12, borderRadius: 10, border: "1px solid var(--border)", background: message.authorType === "staff" ? "var(--card)" : "transparent", justifySelf: "stretch" }}>
-            <span className="t-small text-muted">
-              <strong>{message.authorType === "staff" ? "Tharkoo support" : "You"}</strong> · {formatWhen(message.createdAt)}
-            </span>
-            {message.body ? <p className="t-body" style={{ margin: 0, whiteSpace: "pre-wrap", overflowWrap: "anywhere" }}>{message.body}</p> : null}
-            {message.attachments.length ? <Screenshots ids={message.attachments} /> : null}
-          </li>
-        ))}
+        {messages.map((message) => {
+          const mine = message.authorType !== "staff";
+          return (
+            <li key={message.id} data-tk="ticket-message" data-author={message.authorType} className={mine ? "up-bubble-row up-bubble-row-mine" : "up-bubble-row"}>
+              {message.body ? <p className={mine ? "up-bubble up-bubble-mine" : "up-bubble"}>{message.body}</p> : null}
+              {message.attachments.length ? <Screenshots ids={message.attachments} /> : null}
+              <span className="up-bubble-meta">
+                {mine ? "You" : "Tharkoo support"} · {formatWhen(message.createdAt)}
+              </span>
+            </li>
+          );
+        })}
       </ol>
 
       {closed ? (
         <section aria-label="Ticket closed" style={{ display: "grid", gap: 10, padding: 12, borderRadius: 10, border: "1px solid var(--border)" }}>
           <p className="t-body" style={{ margin: 0 }}>This ticket is closed. You can read it, but you cannot reply.</p>
-          <Link href="/u/account/support/new/" className="tk-btn tk-btn-outline-gold" style={{ justifySelf: "start" }}>Open a new ticket</Link>
+          <Link href="/u/account/support/new/" className="tk-btn tk-btn-outline-primary" style={{ justifySelf: "start" }}>Open a new ticket</Link>
         </section>
       ) : (
         <Reply ticketId={ticketId} onSent={load} />
@@ -122,13 +125,13 @@ function Reply({ ticketId, onSent }: { ticketId: string; onSent: () => Promise<v
   return (
     <form onSubmit={send} aria-label="Reply" style={{ display: "grid", gap: 10 }}>
       <label htmlFor="ticket-reply" className="t-small"><strong>Reply</strong></label>
-      <textarea id="ticket-reply" rows={4} maxLength={4000} value={body} onChange={(event) => setBody(event.target.value)} className="tk-field" style={{ padding: "8px 12px" }} />
+      <textarea id="ticket-reply" rows={4} maxLength={4000} value={body} onChange={(event) => setBody(event.target.value)} className="up-input" />
       <label htmlFor="ticket-reply-shots" className="t-small">Add screenshots (optional)</label>
       <input id="ticket-reply-shots" type="file" multiple accept={SCREENSHOT_ACCEPT} onChange={(event) => setFiles(Array.from(event.target.files ?? []))} aria-describedby="ticket-reply-shots-help" />
       <span id="ticket-reply-shots-help" className="t-small text-muted">{SCREENSHOT_LIMIT_TEXT}</span>
       {error ? <p role="alert" className="t-small" style={{ color: "var(--danger, #b42318)", margin: 0 }}>{error}</p> : null}
       <div>
-        <button type="submit" className="tk-btn tk-btn-primary" disabled={busy}>{busy ? "Sending..." : "Send reply"}</button>
+        <button type="submit" className="up-btn" disabled={busy}>{busy ? "Sending..." : "Send reply"}</button>
       </div>
     </form>
   );

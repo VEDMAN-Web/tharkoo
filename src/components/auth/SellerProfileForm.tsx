@@ -61,8 +61,8 @@ export function SellerProfileForm({ next, initial, askDateOfBirth, initialLiveCh
   return (
     <form className="tk-sp" onSubmit={save} noValidate aria-labelledby="tk-sp-title">
       <style>{PROFILE_CSS}</style>
-      <p className="tk-sp-eyebrow">Seller profile</p>
-      <h1 id="tk-sp-title" className="tk-sp-title">Your seller profile</h1>
+      <p className="tk-sp-eyebrow">About you</p>
+      <h1 id="tk-sp-title" className="tk-sp-title">About you</h1>
       <p className="tk-sp-help">This is what people see on your ads. You can change it any time.</p>
 
       <label className="tk-sp-label">

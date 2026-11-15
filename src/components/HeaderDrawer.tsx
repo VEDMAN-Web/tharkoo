@@ -12,6 +12,7 @@ import { safeHref } from "@/lib/sanitize";
 import { applyPrefixes, loginPath, postAdPath } from "@/lib/urls";
 import type { ShellLink } from "@/server/site-links/shell-config-rules";
 import type { UrlPaths } from "@/lib/urls";
+import { isProbablySignedIn, openSignInFromLink } from "./auth/SignInSheet";
 
 
 /**
@@ -68,8 +69,27 @@ export function HeaderDrawer({
           {countryOpen ? <CountryList countries={countries} onPick={onClose} /> : null}
         </nav>
         <div className="tkn-drawer-foot">
-          <Link href={loginPath(paths)} className="tkn-btn tkn-btn-ghost" onClick={onClose}>{loginLabel}</Link>
-          <Link href={postAdPath(paths)} className="tkn-btn tkn-btn-primary" prefetch={false} onClick={onClose}>{postLabel}</Link>
+          <Link
+            href={loginPath(paths)}
+            className="tkn-btn tkn-btn-ghost"
+            onClick={(event) => {
+              onClose();
+              openSignInFromLink(event);
+            }}
+          >
+            {loginLabel}
+          </Link>
+          <Link
+            href={postAdPath(paths)}
+            className="tkn-btn tkn-btn-primary"
+            prefetch={false}
+            onClick={(event) => {
+              onClose();
+              if (!isProbablySignedIn()) openSignInFromLink(event, postAdPath(paths));
+            }}
+          >
+            {postLabel}
+          </Link>
         </div>
       </aside>
     </div>

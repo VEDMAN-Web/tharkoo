@@ -33,7 +33,7 @@ describe("panel labels and badges", () => {
   });
 
   it("shows counts only for signed-in users and only where they apply", () => {
-    const summary = { signedIn: true as const, userId: "u", email: "a@b.co", displayName: "A", balance: 4, unreadChat: 2, unreadSupport: 1 };
+    const summary = { signedIn: true as const, userId: "u", email: "a@b.co", displayName: "A", balance: 4, unreadChat: 2, unreadSupport: 1, adCount: 0, memberSince: "Nov 2026" };
     expect(badgeFor("chats", summary)).toBe(2);
     expect(badgeFor("support", summary)).toBe(1);
     expect(badgeFor("notifications", summary)).toBe(3);

@@ -22,7 +22,7 @@ export function IdCheckFirst({ screen, postPath }: { screen: Exclude<IdCheckScre
       <h1 className="tk-page-h1" data-tk="step-title">Verify your ID first</h1>
       <p style={{ textAlign: "center" }}>Before you post an ad, we need an approved ID check. Upload a photo of your ID and a selfie.</p>
       <p style={{ textAlign: "center" }}>
-        <Link className="tk-btn tk-btn-gold" href="/u/account/kyc/" data-tk="verify-id">Verify ID</Link>
+        <Link className="tk-btn tk-btn-cta" href="/u/account/kyc/" data-tk="verify-id">Verify ID</Link>
       </p>
       <p className="t-small" style={{ textAlign: "center" }}>
         Once it is approved, come back to <Link href={postPath}>post an ad</Link>.

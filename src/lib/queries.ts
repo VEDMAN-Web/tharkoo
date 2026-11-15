@@ -18,7 +18,7 @@ import { cities, districts, loadLocations, locationBySlug, siblingCities, states
 import type { ListingDoc } from "@/lib/models";
 import { readContent } from "@/lib/ui/site-content";
 
-const PAGE_SIZE = 25;
+const PAGE_SIZE = 20;
 const THIN = 3;
 
 export async function getSite() {

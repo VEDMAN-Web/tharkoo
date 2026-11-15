@@ -1,39 +1,39 @@
 :root {
   color-scheme: light;
   /* Ivory and gold. Page and surfaces. */
-  --bg: #fffcf5;
-  --bg-soft: #fbf5e4;
+  --bg: #fdf6fb;
+  --bg-soft: #fdf0f7;
   --card: #ffffff;
-  --tint: #fbf5e4;
-  --tint-strong: #f6ebcb;
-  --chip: #f6ebcb;
-  --bar: #fbf5e4;
-  --letterbox: #f3ecd8;
-  --bg-pack: #fbf5e4;
-  --bg-form: #fffcf5;
-  --border: #eadfc4;
-  --border-2: #e2d5b3;
-  --border-strong: #cdbb8a;
+  --tint: #fdf0f7;
+  --tint-strong: #fce4f0;
+  --chip: #fce4f0;
+  --bar: #fdf6fb;
+  --letterbox: #f5f0ff;
+  --bg-pack: #fdf0f7;
+  --bg-form: #fdf6fb;
+  --border: #ead8f0;
+  --border-2: #e0cdea;
+  --border-strong: #c9a9da;
   /* Text */
-  --text: #1f1a12;
-  --body: #3d362b;
-  --muted: #6b6255;
-  --ink: #1f1a12;
+  --text: #1e0b38;
+  --body: #3b1f55;
+  --muted: #6b4a8a;
+  --ink: #1e0b38;
   /* Deep gold: links, icons, outline buttons, active states (5.2:1 on the page) */
-  --primary: #8a6416;
-  --primary-hover: #6f4f10;
-  --primary-press: #5a400d;
+  --primary: #a8124f;
+  --primary-hover: #8e1046;
+  --primary-press: #6f0c35;
   --on-primary: #ffffff;
-  --accent: #8a6416;
-  --accent-hover: #6f4f10;
-  --accent-press: #5a400d;
+  --accent: #c2185b;
+  --accent-hover: #8e1046;
+  --accent-press: #6f0c35;
   --on-accent: #ffffff;
   /* Gold: primary button fill (ink text), stars, badges, thin accents */
-  --gold: #d4af37;
-  --gold-light: #e2c268;
-  --gold-soft: #f3d98b;
-  --metal: #d4af37;
-  --metal-soft: #e2c268;
+  --rose: #d1137a;
+  --rose-light: #e91e8c;
+  --rose-soft: #fdf0f7;
+  --rose-metal: #e91e8c;
+  --rose-metal-soft: #f5b5d6;
   /* Messaging and status */
   --wa: #177a42;
   --wa-hover: #116333;
@@ -44,10 +44,10 @@
   --warn-bg: #fff1d6;
   --danger: #b42318;
   --danger-bg: #fdecea;
-  --focus: #8a6416;
+  --focus: #7c3aed;
   /* Hero and the post-your-ad band only; text on them is white */
-  --grad-hero: linear-gradient(100deg, #2a2316 0%, #5c4a22 100%);
-  --grad-promo: linear-gradient(100deg, #2a2316 0%, #5c4a22 100%);
+  --grad-hero: linear-gradient(100deg, #2d1248 0%, #7c3aed 100%);
+  --grad-promo: linear-gradient(100deg, #2d1248 0%, #7c3aed 100%);
   /* Shape and depth */
   --r-xs: 4px;
   --r-sm: 6px;

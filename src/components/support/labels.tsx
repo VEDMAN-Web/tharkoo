@@ -6,10 +6,10 @@ export const SCREENSHOT_LIMIT_TEXT = `Up to ${SCREENSHOT_MAX_COUNT} screenshots,
 export const TOPIC_OPTIONS = SUPPORT_TOPICS.map((value) => ({ value, label: TOPIC_LABELS[value] }));
 
 const TONE: Record<SupportStatus, { bg: string; color: string }> = {
-  open: { bg: "var(--chip)", color: "var(--text)" },
-  waiting_for_user: { bg: "var(--warn-bg)", color: "var(--warn)" },
-  waiting_for_support: { bg: "var(--ok-bg)", color: "var(--ok)" },
-  closed: { bg: "var(--chip)", color: "var(--muted)" },
+  open: { bg: "#F5F0FF", color: "#5B21B6" },
+  waiting_for_user: { bg: "#FDF0F7", color: "#A8124F" },
+  waiting_for_support: { bg: "#F5F0FF", color: "#5B21B6" },
+  closed: { bg: "#F3F4F6", color: "#374151" },
 };
 
 export function StatusChip({ status, label }: { status: SupportStatus; label: string }) {

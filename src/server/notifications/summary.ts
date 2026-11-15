@@ -4,6 +4,8 @@ import { unreadCount } from "@/server/chat/service";
 import { getCategories, getCities, getCreditPacks } from "@/lib/queries";
 import { unreadForOwner } from "@/server/support/tickets";
 import { connectDb } from "@/lib/db";
+import { Listing } from "@/server/models/listing";
+import { accountName } from "@/lib/account-name";
 
 /**
  * H7.6: what the user panel shell shows: coins, unread counts and the first name for the greeting.
@@ -20,6 +22,8 @@ export type PanelSummary =
       balance: number;
       unreadChat: number;
       unreadSupport: number;
+      adCount: number;
+      memberSince: string;
     };
 
 export async function loadPanelSummary(token: string | undefined): Promise<PanelSummary> {
@@ -27,20 +31,23 @@ export async function loadPanelSummary(token: string | undefined): Promise<Panel
   const session = await userFromToken(token).catch(() => null);
   if (!session) return { signedIn: false };
   const userId = session.user.id;
-  const [balance, unreadChat, unreadSupport] = await Promise.all([
+  const [balance, unreadChat, unreadSupport, adCount] = await Promise.all([
     walletBalance(userId),
     unreadCount(userId),
     unreadForOwner(userId),
+    Listing.countDocuments({ ownerId: userId }),
   ]);
   const email = session.user.email ?? "";
   return {
     signedIn: true,
     userId,
     email,
-    displayName: session.user.displayName || email.split("@")[0] || "there",
+    displayName: accountName(session.user.displayName, email),
     balance,
     unreadChat,
     unreadSupport,
+    adCount,
+    memberSince: new Date(parseInt(userId.slice(0, 8), 16) * 1000).toLocaleDateString("en-GB", { month: "short", year: "numeric" }),
   };
 }
 

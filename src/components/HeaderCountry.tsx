@@ -9,7 +9,7 @@ import { SITE_COUNTRY_EVENT, useChosenCountry, useSiteCountrySlug } from "@/comp
 import { ISO_COUNTRIES, flagSrc } from "@/lib/countries";
 import type { CountryOption } from "@/server/locations/country-scope";
 
-/** A country the admin has enabled, with its live ad count (0 shows "No ads yet"). */
+/** A country the admin has enabled, with its live ad count. */
 export type MenuCountry = CountryOption & { ads?: number };
 
 /** One row of the menu: an enabled country (Popular) or any other ISO country (All countries A to Z). */
@@ -43,7 +43,7 @@ function allRows(countries: MenuCountry[]): Row[] {
 
 /**
  * H7.4c / H7.10: the country list. A search box, "Popular" (the countries the admin enabled, India first), then
- * "All countries A to Z" (every other country). The chosen country has a tick. A country with no ads shows "No ads yet".
+ * "All countries A to Z" (every other country). The chosen country has a tick. Each row shows only the flag and the name.
  * Picking a country sets the site country cookie. An enabled country refreshes the page; any other goes to the home page.
  */
 export function CountryList({ countries, onPick }: { countries: MenuCountry[]; onPick?: () => void }) {
@@ -85,7 +85,6 @@ export function CountryList({ countries, onPick }: { countries: MenuCountry[]; o
                 <img className="tkn-flag" src={flagSrc(row.code)} alt="" width={16} height={12} loading="lazy" decoding="async" />
                 <span className="tkn-citylist-name">{row.name}</span>
                 {chosen ? <Check size={16} aria-hidden="true" focusable="false" className="tkn-citylist-tick" /> : null}
-                {!chosen && row.ads === 0 ? <span className="tkn-citylist-none">No ads yet</span> : null}
               </button>
             </li>
           );
@@ -96,6 +95,7 @@ export function CountryList({ countries, onPick }: { countries: MenuCountry[]; o
 
   return (
     <div className="tkn-countrylist-wrap">
+      {/* The search box scrolls with the list (Opus #103). */}
       <label className="tkn-country-search">
         <Search size={16} aria-hidden="true" focusable="false" />
         <span className="tkn-sr">Search a country</span>

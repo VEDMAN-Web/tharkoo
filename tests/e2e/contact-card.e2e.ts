@@ -1,23 +1,50 @@
+import { createHmac, randomInt } from "node:crypto";
 import AxeBuilder from "@axe-core/playwright";
 import type { Page } from "@playwright/test";
 import { ObjectId } from "mongodb";
-import { expect, firstAdPath, hasHorizontalScroll, isPhone, newUserApi, originHeaders, test, USER_PASSWORD, withLocalDb } from "./helpers";
+import { expect, firstAdPath, hasHorizontalScroll, isPhone, newUserApi, originHeaders, test, withLocalDb } from "./helpers";
+
+const E2E_SESSION_SECRET = "local-only-session-secret-not-real-0001";
+
+async function deliverCode(email: string, code: string) {
+  const codeHash = createHmac("sha256", E2E_SESSION_SECRET).update(`email-otp:${email}:${code}`).digest("hex");
+  const stored = await withLocalDb(async (db) => {
+    await db.collection("email_login_challenges").insertOne({
+      email,
+      codeHash,
+      attempts: 0,
+      expiresAt: new Date(Date.now() + 10 * 60 * 1000),
+      consumedAt: null,
+      createdAt: new Date(),
+    });
+    return true;
+  });
+  expect(stored, "E2E_MONGO_URI_FILE must point at the in-memory database").toBe(true);
+}
 
 /**
- * Signs in through the password form. The login page has two LOG IN buttons (password and phone code),
- * so the button is scoped to the form that holds the password field.
+ * Signs in through the current login card (H7.12): the email address, a code from a mocked send, then the six boxes.
+ * The code is stored the way the mail provider would have delivered it. Ends on the user panel.
  */
 async function signInUi(page: Page, email: string) {
+  const code = String(randomInt(100000, 1000000));
+  await page.route("**/api/auth/email/otp/send", (route) =>
+    route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({ ok: true, data: { sent: true } }) }),
+  );
   await page.goto("/u/login/");
-  await page.locator("#email").fill(email);
-  await page.locator("#password").fill(USER_PASSWORD);
-  await page.locator("form", { has: page.locator("#password") }).getByRole("button", { name: "LOG IN", exact: true }).click();
-  await page.waitForURL(/\/u\/account\/dashboard\//);
+  await page.getByLabel("Email", { exact: true }).fill(email);
+  await page.getByRole("button", { name: "Send me a code" }).click();
+  await expect(page.getByRole("group", { name: "6-digit code" })).toBeVisible();
+  await deliverCode(email, code);
+  for (const [index, digit] of [...code].entries()) {
+    await page.getByLabel(`Digit ${index + 1} of 6`).fill(digit);
+  }
+  await page.waitForURL(/\/u\/account\//);
+  await page.goto("/u/account/dashboard/");
 }
 
 // H6.8: the ad page contact card (desktop sidebar) and the mobile sticky bar.
 // Dating ad (people category): Call, WhatsApp, Chat online now.
-// Property ad with live tours on: the same three, then "Video call and verify, N coins".
 // The tour switch is turned on in the in-memory test database for this file only, and put back afterwards.
 // The seed data, production and the people guard are not touched.
 
@@ -27,7 +54,9 @@ const TOUR_COINS = 2;
 const BASE_LABELS = ["Call", "WhatsApp", "Chat online now"];
 // H7.5 (relay #69): a people ad has no video call. Call, WhatsApp and chat stay.
 const PEOPLE_LABELS = ["Call", "WhatsApp", "Chat online now"];
-const TOUR_LABEL = `Video call and verify, ${TOUR_COINS} coins`;
+const TOUR_LABEL = `Video call and verify · ${TOUR_COINS} coins`;
+const PHONE_PEOPLE_LABELS = ["Call", "WhatsApp", "Chat"];
+const PHONE_TOUR_LABELS = ["WhatsApp", "Chat", `Video · ${TOUR_COINS} coins`];
 
 /** The first ad on a city feed. (firstAdPath needs a super-top card, which the property feed may not have.) */
 async function anyAdPath(page: Page, feed: string) {
@@ -87,7 +116,7 @@ test.describe("H6.8 contact card on a dating ad (people, no tour)", () => {
   test("people ad: Call, WhatsApp and Chat online now, and no video call", async ({ page }) => {
     await page.goto(await firstAdPath(page, DATING_FEED));
     await expect(page.locator("h1")).toHaveCount(1);
-    expect(await buttonLabels(page)).toEqual(PEOPLE_LABELS);
+    expect(await buttonLabels(page)).toEqual(isPhone(page) ? PHONE_PEOPLE_LABELS : PEOPLE_LABELS);
     await expect(contactScope(page).locator("[data-tk=tour]")).toHaveCount(0);
     expect(await hasHorizontalScroll(page)).toBe(false);
   });
@@ -111,10 +140,10 @@ test.describe("H6.8 contact card on a property ad with live tours on", () => {
     if (original) await writePropertyTourSwitch(original);
   });
 
-  test("four contact buttons in order, the video call last", async ({ page }) => {
+  test("contact buttons in order, the video call last", async ({ page }) => {
     await page.goto(await anyAdPath(page, PROPERTY_FEED));
     await expect(page.locator("h1")).toHaveCount(1);
-    expect(await buttonLabels(page)).toEqual([...BASE_LABELS, TOUR_LABEL]);
+    expect(await buttonLabels(page)).toEqual(isPhone(page) ? PHONE_TOUR_LABELS : [...BASE_LABELS, TOUR_LABEL]);
     expect(await hasHorizontalScroll(page)).toBe(false);
     const boxes = await expectTapTargets(page);
     // The buttons sit side by side in the bar on a phone and never overlap.
@@ -136,7 +165,8 @@ test.describe("H6.8 contact card on a property ad with live tours on", () => {
     await page.locator("[data-tk=tour]:visible").click();
     const note = page.getByRole("status").filter({ hasText: "Sign in to request a live video tour." });
     await expect(note).toBeVisible();
-    await expect(note.getByRole("link", { name: "Sign in" })).toHaveAttribute("href", /^\/u\/login\/\?next=/);
+    await expect(note.getByRole("link", { name: "Sign in" })).toHaveCount(0);
+    await expect(page.locator("[data-tk=ad-popup] form")).toBeVisible();
   });
 
   test("a signed-in visitor without coins is told by the server, and no request is sent", async ({ page, baseURL }) => {

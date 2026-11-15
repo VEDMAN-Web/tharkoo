@@ -34,6 +34,11 @@ export async function saveHomepageForAdmin(content: SiteContent) {
   }
 }
 
+export async function saveLoginImageForAdmin(loginImage: string) {
+  const content = await loadHomepageForAdmin();
+  return saveHomepageForAdmin({ ...content, loginImage });
+}
+
 export async function resetHomepageForAdmin() {
   const identity = await getStaffFromHeaders();
   try {

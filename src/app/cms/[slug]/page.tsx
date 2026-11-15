@@ -1,17 +1,27 @@
 import type { Metadata } from "next";
 import { StaticPage } from "@/components/StaticPage";
 import { EmptyState } from "@/components/ui/EmptyState";
+import { LegalView } from "@/components/new/LegalView";
+import { bodyParagraphs, publicParagraphs, readingMinutes, toSections } from "@/components/new/legal-copy";
 import { JsonLd } from "@/lib/jsonld";
 import { getPage } from "@/lib/queries";
 import { aboutPageNode } from "@/lib/seo/schema";
-import { cmsPath, helpPath } from "@/lib/urls";
+import { cmsPath, contactPath, helpPath } from "@/lib/urls";
 import { withUrlSeo, urlHeading } from "@/lib/seo/override";
 import { getPaths } from "@/server/urls/service";
+import { newDesignOn } from "@/server/site-links/new-design";
 
 export const revalidate = 300;
 
+const UNPUBLISHED_TEXT = "The editorial team has not published this page yet. The help centre is available in the meantime.";
+
 function labelOf(slug: string) {
   return slug.replace(/-/g, " ").replace(/\b\w/g, (char) => char.toUpperCase());
+}
+
+function updatedLabel(date: Date | undefined) {
+  if (!date) return "November 2026";
+  return date.toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric", timeZone: "Asia/Kolkata" });
 }
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
@@ -34,8 +44,31 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
 
 export default async function CmsPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
-  const [page, paths] = await Promise.all([getPage(slug), getPaths()]);
+  const [page, paths, newDesign] = await Promise.all([getPage(slug), getPaths(), newDesignOn()]);
   const heading = await urlHeading(cmsPath(paths, page?.slug || slug), page?.title || labelOf(slug));
+  const aboutData = page?.slug === "about" ? <JsonLd data={aboutPageNode(page.title || "About", cmsPath(paths, "about"))} /> : null;
+  if (newDesign) {
+    const paragraphs = bodyParagraphs(page?.body);
+    const summary = paragraphs.find((paragraph) => paragraph.startsWith("In short:"));
+    const body = paragraphs.filter((paragraph) => paragraph !== summary);
+    const built = page ? toSections(body, slug) : [];
+    const sections = built.length ? built : [{ id: "intro", paragraphs: [UNPUBLISHED_TEXT] }];
+    return (
+      <>
+        {aboutData}
+        <LegalView
+          crumbs={[{ label: "Tharkoo India", href: "/" }, { label: heading }]}
+          title={heading}
+          updated={updatedLabel(page?.updatedAt)}
+          minutes={readingMinutes(paragraphs)}
+          summary={summary?.replace(/^In short:\s*/, "")}
+          sections={sections}
+          askHref={contactPath(paths)}
+          askLabel="Questions about this page?"
+        />
+      </>
+    );
+  }
   if (!page) {
     return (
       <StaticPage title={heading}>
@@ -49,8 +82,8 @@ export default async function CmsPage({ params }: { params: Promise<{ slug: stri
   }
   return (
     <StaticPage title={heading}>
-      {page.slug === "about" ? <JsonLd data={aboutPageNode(page.title || "About", cmsPath(paths, "about"))} /> : null}
-      <div className="whitespace-pre-wrap">{page.body}</div>
+      {aboutData}
+      <div className="whitespace-pre-wrap">{publicParagraphs(bodyParagraphs(page.body), slug).join("\n\n")}</div>
     </StaticPage>
   );
 }

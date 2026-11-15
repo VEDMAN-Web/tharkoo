@@ -140,24 +140,24 @@
     object-position: var(--tkh-focus-phone, 50% 50%);
   }
 }
-/* P1: one soft gradient behind the text, no box, no blur. Left to right on a computer, top to bottom on a phone. */
-.tkh-banner::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-  background: linear-gradient(90deg, rgba(253, 246, 251, 0.94) 0%, rgba(253, 246, 251, 0.8) 38%, rgba(253, 246, 251, 0) 66%);
-}
 .tkh-banner-empty {
   display: block;
   background: linear-gradient(120deg, #fce4f0 0%, #ede9ff 45%, #e0f2fe 80%, #fff5e6 100%);
 }
+/* Opus #103: the heading and sub line sit in one light frosted glass card, so the photo shows through. No fade behind the text. */
 .tkh-banner-copy {
   position: absolute;
   z-index: 1;
   left: 48px;
   top: 48px;
-  max-width: 520px;
+  max-width: 560px;
+  padding: 24px 28px;
+  border-radius: 20px;
+  background: rgba(255, 255, 255, 0.3);
+  -webkit-backdrop-filter: blur(12px) saturate(160%);
+  backdrop-filter: blur(12px) saturate(160%);
+  border: 1px solid rgba(255, 255, 255, 0.55);
+  box-shadow: 0 8px 30px rgba(45, 18, 72, 0.1);
 }
 .tkh-banner-copy h1 {
   margin: 0 0 12px;
@@ -496,7 +496,7 @@
 }
 .tkh-ad-badge {
   left: 10px;
-  background: linear-gradient(135deg, #b45309, #92400e);
+  background: linear-gradient(135deg, #d1137a, #a8124f);
 }
 .tkh-ad-status {
   right: 10px;
@@ -638,7 +638,7 @@
 .tkh-step:nth-child(3n + 2) { background: linear-gradient(160deg, #f5f0ff, #ffffff); }
 .tkh-step:nth-child(3n + 3) { background: linear-gradient(160deg, #fff8ec, #ffffff); }
 .tkh-step:nth-child(3n + 2) .tkh-step-n { background: linear-gradient(135deg, #7c3aed, #5b21b6); }
-.tkh-step:nth-child(3n + 3) .tkh-step-n { background: linear-gradient(135deg, #b45309, #92400e); }
+.tkh-step:nth-child(3n + 3) .tkh-step-n { background: linear-gradient(135deg, #E91E8C, #A8124F); }
 .tkh-step-n {
   width: 48px;
   height: 48px;
@@ -709,13 +709,11 @@
   .tkh-banner {
     height: 300px;
   }
-  .tkh-banner::after {
-    background: linear-gradient(180deg, rgba(253, 246, 251, 0.95) 0%, rgba(253, 246, 251, 0.78) 45%, rgba(253, 246, 251, 0) 78%);
-  }
   .tkh-banner-copy {
-    left: 20px;
-    top: 24px;
-    right: 20px;
+    left: 16px;
+    top: 20px;
+    right: 16px;
+    padding: 18px 20px;
   }
   .tkh-search {
     margin: -46px 12px 0;

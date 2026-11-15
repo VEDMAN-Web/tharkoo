@@ -35,10 +35,10 @@ function blurbOf(cat: Cat) {
   return text.length > BLURB_MAX ? `${text.slice(0, BLURB_MAX - 1)}…` : text;
 }
 
-/** H7.4c / P1: the focus point of each banner picture as CSS variables (default centre, 50% 50%). A phone picture that is not set uses the computer one. */
+/** H7.4c / H7.10: the focus point of each banner picture as CSS variables (default 50% 25%). A phone picture that is not set uses the computer one. */
 function bannerFocus(hero: Hero): CSSProperties {
-  const desktop = `${hero.focusX ?? 50}% ${hero.focusY ?? 50}%`;
-  const phone = hero.photoPhone ? `${hero.phoneFocusX ?? 50}% ${hero.phoneFocusY ?? 50}%` : desktop;
+  const desktop = `${hero.focusX ?? 50}% ${hero.focusY ?? 25}%`;
+  const phone = hero.photoPhone ? `${hero.phoneFocusX ?? 50}% ${hero.phoneFocusY ?? 25}%` : desktop;
   return { "--tkh-focus": desktop, "--tkh-focus-phone": phone } as CSSProperties;
 }
 
@@ -121,6 +121,7 @@ export function NewHome({
     away: t("home.ads.away"),
     watermark: t("home.ads.watermark"),
     views: t("home.ads.views"),
+    viewOne: t("home.ads.viewOne"),
   };
   const searchLabels = {
     state: t("home.search.state"),
@@ -248,7 +249,7 @@ export function NewHome({
       </NewAdsGate>
 
       <section className="tkh-page tkh-section" aria-labelledby="home-how">
-        <SectionHead id="home-how" eyebrow={t("home.steps.eyebrow")} tone="peach" title={t("home.steps.title")} />
+        <SectionHead id="home-how" eyebrow={t("home.steps.eyebrow")} tone="rose" title={t("home.steps.title")} />
         <ol className="tkh-steps">
           {shell.home.steps.slice(0, 3).map((step, index) => (
             <li className="tkh-step" key={step.title}>
