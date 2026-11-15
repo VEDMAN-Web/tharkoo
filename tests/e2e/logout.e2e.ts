@@ -15,10 +15,10 @@ test.describe("H7.24 logout", () => {
     const { email } = await newUserApi(baseURL!, "logout");
     await loginUi(page, email);
     await page.goto("/u/account/dashboard/");
-    await expect(page.getByText("Member since")).toBeVisible();
+    await expect(page.getByText(/Hello /)).toBeVisible();
     await logOutFromHeader(page);
     await page.goBack();
-    await expect(page.getByText("Member since")).toHaveCount(0);
+    await expect(page.getByText(/Hello /)).toHaveCount(0);
     await page.goto("/u/account/");
     await expect(page).toHaveURL(/\/u\/login\//);
   });
