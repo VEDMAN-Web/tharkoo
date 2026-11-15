@@ -2,7 +2,7 @@ import Link from "next/link";
 import { notFound, permanentRedirect } from "next/navigation";
 import type { Metadata } from "next";
 import { MapPin } from "lucide-react";
-import { getCategory, getCities, getFeed, getSeoFor, getSite, getStarListings, getStates, listingCountsByCategoryCity } from "@/lib/queries";
+import { getCategories, getCategory, getCities, getFeed, getSeoFor, getSite, getStarListings, getStates, listingCountsByCategoryCity } from "@/lib/queries";
 import { getPaths } from "@/server/urls/service";
 import { adPath, categoryPath, placePath, searchPath } from "@/lib/urls";
 import { fillTemplate } from "@/lib/seo";
@@ -24,13 +24,13 @@ import { hourSeed, orderFeed } from "@/components/feedOrder";
 import { fallbackLanding, mergeLanding, type LandingCopy } from "@/lib/seo/landing";
 import { SubcategoryChips } from "./SubcategoryChips";
 import { loadCardWidth } from "@/server/listings/card-width";
-import { listingRobots, parseFieldFilters, type ListingParams } from "@/server/search/filter-seo";
+import { listingRobots, type ListingParams } from "@/server/search/filter-seo";
 import { newDesignOn } from "@/server/site-links/new-design";
 import { readShellConfig } from "@/server/site-links/shell-config";
 import { bandImageFor } from "@/components/new/band-image";
 import { ListingFrame } from "@/components/new/ListingFrame";
-import { listingFrameProps } from "@/components/new/listing-frame-props";
-import { hasFieldPicks } from "@/components/new/listing-filters";
+import { listingFrameProps, listingLabels, placeSelects } from "@/components/new/listing-frame-props";
+import { attributePicks, hasFieldPicks, type ListingToggles } from "@/components/new/listing-filters";
 
 type Props = { params: Promise<{ category: string }>; searchParams: Promise<ListingParams> };
 
@@ -56,15 +56,16 @@ export default async function CategoryHub({ params, searchParams }: Props) {
   if (cat.slug && cat.slug !== category) permanentRedirect(categoryPath(cat.slug));
   const sp = await searchParams;
   // H7.4b: the filter panel's field picks and quick toggles narrow the feed the same way they do on a city page.
-  const selected = parseFieldFilters(sp);
-  const toggles = { verified: sp.verified === "1", photos: sp.photos === "1" };
+  const picks = attributePicks(sp, cat.fields);
+  const toggles: ListingToggles = { verified: sp.verified === "1", photos: sp.photos === "1", video: sp.video === "1" };
   const narrow = {
     categorySlug: category,
-    ...(hasFieldPicks(selected) ? { attributes: selected } : {}),
+    ...(hasFieldPicks(picks) ? { attributes: picks } : {}),
     ...(toggles.verified ? { verified: true } : {}),
     ...(toggles.photos ? { photos: { $exists: true, $ne: [] } } : {}),
+    ...(toggles.video ? { video: true } : {}),
   };
-  const [seo, site, cities, states, counts, feed, stars, paths, heading, cardWidth, newDesign] = await Promise.all([
+  const [seo, site, cities, states, counts, feed, stars, paths, heading, cardWidth, newDesign, allCategories] = await Promise.all([
     getSeoFor("category", category),
     getSite(),
     getCities(),
@@ -76,6 +77,7 @@ export default async function CategoryHub({ params, searchParams }: Props) {
     urlHeading(categoryPath(cat.slug || category), `${cat.name} in India`),
     loadCardWidth(),
     newDesignOn(),
+    getCategories().catch(() => []),
   ]);
   const shell = newDesign ? await readShellConfig() : null;
   const texts = await textOverrides();
@@ -138,6 +140,15 @@ export default async function CategoryHub({ params, searchParams }: Props) {
   });
   // H7.4b: New design. The title band and the filter panel frame the list.
   const introTemplate = String(headerBlock?.props.introTemplate ?? "");
+  const labels = listingLabels(t);
+  const places = placeSelects({
+    categorySlug: cat.slug || category,
+    categories: allCategories,
+    states,
+    cities,
+    districts: [],
+    labels,
+  });
   const frame = shell
     ? listingFrameProps({
         crumbs: [
@@ -149,15 +160,14 @@ export default async function CategoryHub({ params, searchParams }: Props) {
         image: bandImageFor(shell, cat.slug || category),
         categorySlug: cat.slug || category,
         searchAction: searchPath(paths),
-        searchPlaceholder: `Search ${cat.name}`,
+        searchPlaceholder: t("listing.band.searchCategory", { category: cat.name }),
         chips: <SubcategoryChips variant="band" category={cat.slug || category} />,
         fields: cat.fields,
-        selected,
-        verified: toggles.verified,
-        photos: toggles.photos,
+        picks,
+        toggles,
         panelPath: categoryPath(cat.slug || category),
-        verifiedLabel: t("listing.filters.verified"),
-        photosLabel: t("listing.filters.photos"),
+        labels,
+        places,
       })
     : null;
 
@@ -185,6 +195,7 @@ export default async function CategoryHub({ params, searchParams }: Props) {
         <div data-card-width={cardWidth}>
           <ListingFrame
             bandStyle={frame.bandStyle}
+            labels={labels}
             head={frame.head}
             chips={frame.chips}
             searchForm={frame.searchForm}

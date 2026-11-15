@@ -14,12 +14,13 @@ export async function SubcategoryChips({ category, city, heading, variant }: { c
   const chips = await subcategoryChips(category, city).catch(() => []);
   if (chips.length === 0) return null;
   if (variant === "band") {
-    const label = heading ?? makeT(await textOverrides())("listing.hub.browseBySub");
+    const t = makeT(await textOverrides());
+    const label = heading ?? t("listing.hub.browseBySub");
     const base = city ? placePath(category, city) : categoryPath(category);
     return (
       <nav aria-label={label} style={{ display: "contents" }}>
         <Link href={base} aria-current="page" prefetch={false}>
-          All
+          {t("listing.band.all")}
         </Link>
         {chips.map((chip) => (
           <Link key={chip.slug} href={placePath(category, chip.citySlug, chip.slug)} prefetch={false}>

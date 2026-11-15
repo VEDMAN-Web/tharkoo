@@ -7,6 +7,8 @@ import { textOverrides } from "@/app/admin/ui-text/store";
 import {
   getCategories,
   getCategory,
+  getCities,
+  getStates,
   getDistricts,
   getFeed,
   getLocationBySlug,
@@ -36,9 +38,10 @@ import { readShellConfig } from "@/server/site-links/shell-config";
 import { bandImageFor } from "@/components/new/band-image";
 import { ListingFrame } from "@/components/new/ListingFrame";
 import { listingFrameProps } from "@/components/new/listing-frame-props";
-import { hasFieldPicks, listingFilterQuery } from "@/components/new/listing-filters";
+import { attributePicks, hasFieldPicks, listingFilterQuery, type ListingToggles } from "@/components/new/listing-filters";
+import { listingLabels, placeSelects } from "@/components/new/listing-frame-props";
 import { listingHeading } from "@/lib/layout/listing";
-import { parseFieldFilters, type ListingParams } from "@/server/search/filter-seo";
+import { type ListingParams } from "@/server/search/filter-seo";
 
 type Props = {
   params: Promise<{ category: string; location: string }>;
@@ -125,13 +128,14 @@ export default async function LocationPage({ params, searchParams }: Props) {
       : { categorySlug: category, citySlug: location };
   if (sp.photos) Object.assign(filter, { photos: { $exists: true, $ne: [] } });
   if (sp.verified) Object.assign(filter, { verified: true });
-  // H7.4b: the field filters from the filter panel (f.<key>=<option>), applied by the listing query.
-  const selected = parseFieldFilters(sp);
-  const attributes = hasFieldPicks(selected) ? { attributes: selected } : {};
+  if (sp.video === "1") Object.assign(filter, { video: true });
+  // H7.4b: the field picks from the filter panel (choices, number ranges, yes/no), applied by the listing query.
+  const picks = attributePicks(sp, cat.fields);
+  const attributes = hasFieldPicks(picks) ? { attributes: picks } : {};
   Object.assign(filter, attributes);
 
   const canonicalPath = placePath(cat.slug || category, loc.slug || location);
-  const [seo, site, stars, feed, siblings, districts, paths, tags, heading, counts, categories, cardWidth] = await Promise.all([
+  const [seo, site, stars, feed, siblings, districts, paths, tags, heading, counts, categories, cardWidth, states, cities] = await Promise.all([
     getSeoFor("location", category),
     getSite(),
     getStarListings(loc.kind === "city" ? { categorySlug: category, citySlug: location, ...attributes } : filter),
@@ -144,6 +148,8 @@ export default async function LocationPage({ params, searchParams }: Props) {
     listingCountsByCategoryCity().catch(() => []),
     getCategories().catch(() => []),
     loadCardWidth(),
+    getStates().catch(() => []),
+    getCities().catch(() => []),
   ]);
   if (sp.page && Number(sp.page) > feed.pages) notFound();
 
@@ -201,8 +207,8 @@ export default async function LocationPage({ params, searchParams }: Props) {
     { name: `${loc.name} ${cat.name}`, path: canonicalPath },
   ];
   const h1 = heading || visibleHeading(fillTemplate(seo?.h1 || "", vars), copy.h1);
-  const toggles = { verified: sp.verified === "1", photos: sp.photos === "1" };
-  const filterQs = listingFilterQuery(selected, toggles);
+  const toggles: ListingToggles = { verified: sp.verified === "1", photos: sp.photos === "1", video: sp.video === "1" };
+  const filterQs = listingFilterQuery(picks, toggles);
   const listing = (
     <ListingPageView
       frame={Boolean(shell)}
@@ -243,6 +249,17 @@ export default async function LocationPage({ params, searchParams }: Props) {
   }
   // H7.4b: New design. The title band and the filter panel frame the list; the ads and the blocks below go in the list column.
   const introTemplate = String(layout.blocks.find((block) => block.type === "listingHeader")?.props.introTemplate ?? "");
+  const labels = listingLabels(t);
+  const places = placeSelects({
+    categorySlug,
+    categories,
+    states,
+    cities,
+    districts,
+    stateSlug: loc.kind === "city" ? loc.stateSlug || undefined : loc.kind === "state" ? loc.slug || location : undefined,
+    citySlug: loc.kind === "city" ? citySlug : undefined,
+    labels,
+  });
   const frame = listingFrameProps({
     crumbs,
     h1,
@@ -251,20 +268,20 @@ export default async function LocationPage({ params, searchParams }: Props) {
     categorySlug,
     citySlug: loc.kind === "city" ? citySlug : undefined,
     searchAction: searchPath(paths),
-    searchPlaceholder: `Search ${cat.name} in ${loc.name}`,
+    searchPlaceholder: t("listing.band.searchPlaceholder", { category: cat.name, place: loc.name }),
     chips: loc.kind === "city" ? <SubcategoryChips variant="band" category={categorySlug} city={citySlug} /> : null,
     fields: cat.fields,
-    selected,
-    verified: toggles.verified,
-    photos: toggles.photos,
+    picks,
+    toggles,
     panelPath: canonicalPath,
-    verifiedLabel: t("listing.filters.verified"),
-    photosLabel: t("listing.filters.photos"),
+    labels,
+    places,
   });
   return (
     <div data-card-width={cardWidth}>
       <ListingFrame
         bandStyle={frame.bandStyle}
+        labels={labels}
         head={frame.head}
         chips={frame.chips}
         searchForm={frame.searchForm}

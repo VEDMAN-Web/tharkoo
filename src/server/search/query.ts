@@ -63,7 +63,10 @@ export interface ListingQuery {
   badge?: string;
   photos?: boolean;
   tag?: string;
-  attributes?: Record<string, string | number | boolean | string[]>;
+  /** Field picks: a list for pick-one and pick-many, a min and max for a number range (H7.4b). */
+  attributes?: Record<string, string | number | boolean | string[] | { min?: number; max?: number }>;
+  /** H7.4b: only ads with a verified video tour. */
+  video?: boolean;
   sort?: "ranked" | "fresh";
   page?: number;
   pageSize?: number;
@@ -397,6 +400,7 @@ export async function buildFilter(input: ListingQuery): Promise<QueryFilter<List
   if (badges.length === 1) filter.badges = badges[0];
   if (badges.length > 1) filter.badges = { $all: badges };
   if (input.photos) filter["mediaIds.0"] = { $exists: true };
+  if (input.video) filter.videoVerifiedUntil = { $gt: new Date() };
   if (input.tag && /^[a-z0-9-]{1,40}$/.test(input.tag)) filter["attributes.tag"] = input.tag;
   if (input.slug) filter.slug = input.slug;
   else {
@@ -414,10 +418,25 @@ export async function buildFilter(input: ListingQuery): Promise<QueryFilter<List
             .map((field) => field.key),
         )
       : null;
+    const types = new Map((category?.fields ?? []).map((field) => [field.key, String(field.type)]));
     for (const [key, value] of Object.entries(input.attributes)) {
       if (!/^[a-z0-9-]{1,40}$/.test(key)) continue;
       if (allowed && !allowed.has(key)) continue;
       const path = `attributes.${key}`;
+      if (typeof value === "object" && !Array.isArray(value)) {
+        // A number range: min and max, either optional.
+        const bounds: Record<string, number> = {};
+        if (typeof value.min === "number" && Number.isFinite(value.min)) bounds.$gte = value.min;
+        if (typeof value.max === "number" && Number.isFinite(value.max)) bounds.$lte = value.max;
+        if (Object.keys(bounds).length > 0) filter[path] = bounds;
+        continue;
+      }
+      // A yes/no field: the chip "1" means the ad has it set.
+      const type = types.get(key);
+      if (type === "boolean" || type === "bool") {
+        if (Array.isArray(value) && value.includes("1")) filter[path] = true;
+        continue;
+      }
       if (Array.isArray(value)) filter[path] = { $in: value.map(String) };
       else filter[path] = value;
     }

@@ -3,6 +3,7 @@
 import type { CSSProperties, ReactNode } from "react";
 import { useEffect, useState } from "react";
 import "./listing-spec.css";
+import type { ListingLabels } from "./listing-filters";
 
 /**
  * H7.4b: the frame of a category or city listing (New design). It draws the title band (breadcrumb, H1, intro,
@@ -12,6 +13,7 @@ import "./listing-spec.css";
  */
 export function ListingFrame({
   bandStyle,
+  labels,
   head,
   chips,
   searchForm,
@@ -21,6 +23,7 @@ export function ListingFrame({
 }: {
   /** The band image as CSS variables (see bandStyleFor). */
   bandStyle: Record<string, string>;
+  labels: Pick<ListingLabels, "filters" | "close">;
   head: ReactNode;
   chips?: ReactNode;
   searchForm: ReactNode;
@@ -46,22 +49,16 @@ export function ListingFrame({
         {chips ? <div className="tkn-ls-chips">{chips}</div> : null}
         <div className="tkn-ls-searchrow">
           {searchForm}
-          <button
-            type="button"
-            className="tkn-ls-filter-btn"
-            aria-expanded={open}
-            aria-controls="tkn-ls-aside"
-            onClick={() => setOpen(true)}
-          >
-            Filters · {activeCount}
+          <button type="button" className="tkn-ls-filter-btn" aria-expanded={open} aria-controls="tkn-ls-aside" onClick={() => setOpen(true)}>
+            {`${labels.filters} · ${activeCount}`}
           </button>
         </div>
       </section>
       <div className="tkn-ls-grid">
-        <button type="button" className="tkn-ls-scrim" data-open={open ? "true" : "false"} aria-label="Close filters" tabIndex={open ? 0 : -1} onClick={() => setOpen(false)} />
-        <aside id="tkn-ls-aside" className="tkn-ls-aside" data-open={open ? "true" : "false"} aria-label="Search and filters">
+        <button type="button" className="tkn-ls-scrim" data-open={open ? "true" : "false"} aria-label={labels.close} tabIndex={open ? 0 : -1} onClick={() => setOpen(false)} />
+        <aside id="tkn-ls-aside" className="tkn-ls-aside" data-open={open ? "true" : "false"}>
           <button type="button" className="tkn-ls-sheet-close" onClick={() => setOpen(false)}>
-            Close filters
+            {labels.close}
           </button>
           {filters}
         </aside>

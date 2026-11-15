@@ -2567,7 +2567,10 @@
         "src/components/new/band-image.ts",
         "src/lib/queries.ts",
         "tests/server/listing/**",
-        "docs/ownership.json"
+        "docs/ownership.json",
+        "src/components/new/ListingPlaceSelects.tsx",
+        "src/lib/ui/text.ts",
+        "src/server/search/query.ts"
       ]
     }
   }

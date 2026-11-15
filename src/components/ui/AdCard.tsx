@@ -146,7 +146,7 @@ export function AdCard({
           </div>
           <div className="tkn-ls-foot">
             {priceText ? <span className="tkn-ls-price" data-tk="card-price">{priceText}</span> : <span />}
-            <AdCountsLabel counts={counts} />
+            <AdCountsLabel counts={counts ?? { views: 0, clicks: 0 }} />
           </div>
         </div>
       </article>
