@@ -2624,7 +2624,14 @@
         "src/components/new/ad-spec.css",
         "src/components/new/new-design.css",
         "src/lib/ui/text.ts",
-        "docs/ownership.json"
+        "docs/ownership.json",
+        "src/components/ad/tourLabels.ts",
+        "src/lib/ad-details.ts",
+        "src/lib/format.ts",
+        "tests/e2e/contact-card.e2e.ts",
+        "tests/e2e/new-live-pages.e2e.ts",
+        "tests/server/ad/ad-details.test.ts",
+        "tests/server/tours/tour-labels.test.ts"
       ]
     }
   }
