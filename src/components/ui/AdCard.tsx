@@ -14,6 +14,8 @@ import { makeT, type TextFn, type UiTextMap } from "@/lib/ui/text";
 import { videoVerifiedLabel } from "../ad/tourLabels";
 import { recordAdClick, useShownCounts, watchAdCard } from "../ad/adCountStore";
 import { AdCountsLabel } from "../ad/AdCountsLabel";
+import { useSellerStatus } from "../availability/sellerStatus";
+import { AvailabilityBadge } from "../availability/AvailabilityBadge";
 
 const TextContext = createContext<UiTextMap | undefined>(undefined);
 
@@ -71,6 +73,8 @@ export function AdCard({
   const cardRef = useRef<HTMLElement>(null);
   const counts = useShownCounts(ad.slug || "");
   const isOwner = Boolean(owner);
+  // H7.5: the seller's Online now or Away, and whether calls are allowed. The owner view does not show it.
+  const seller = useSellerStatus(isOwner ? undefined : ad.slug);
 
   useEffect(() => {
     const el = cardRef.current;
@@ -108,6 +112,11 @@ export function AdCard({
       data-contact={superTop ? "1" : undefined}
       onClickCapture={onCardClick}
     >
+      {seller ? (
+        <span className="tkp-card-avail">
+          <AvailabilityBadge status={seller.status} />
+        </span>
+      ) : null}
       <div className="tk-card-photo">
         <PhotoSwipe
           photos={photos}
@@ -164,7 +173,7 @@ export function AdCard({
       </a>
       {superTop ? (
         <div className="tk-circles">
-          <button type="button" className="tk-circle" aria-label={t("card.contact.call")} data-tk="call" onClick={() => reveal("phone")}>
+          <button type="button" className="tk-circle" aria-label={seller?.callsAllowed === false ? `${t("card.contact.call")}: the seller is away` : t("card.contact.call")} data-tk="call" disabled={seller?.callsAllowed === false} onClick={() => reveal("phone")}>
             <Phone size={16} color="#8A6416" />
           </button>
           <button type="button" className="tk-circle" aria-label={t("card.contact.whatsapp")} data-tk="whatsapp" onClick={() => reveal("whatsapp")}>

@@ -4,6 +4,7 @@ import { json, readJson, segmentsOf } from "@/server/billing/http";
 import { NotFoundError, handle, parseInput, requestIdFrom } from "@/server/http";
 import { availabilityBodySchema, publicStatus, readOwnPresence, setOwnAvailable, touchOwnPresence } from "@/server/availability/service";
 import { idSchema } from "@/server/shared/schemas/common";
+import { presenceForSlugs, slugsFromQuery } from "@/server/availability/listings";
 
 /**
  * H7.5: the seller's "Available now" switch and activity ping (signed in), and the public status of one seller
@@ -23,6 +24,11 @@ async function dispatch(request: Request) {
   if (request.method === "GET" && segments[0] === "status" && segments.length === 2) {
     const id = parseInput(idSchema, segments[1]);
     return json(await publicStatus(id), requestId);
+  }
+  // Badges on the cards and the ad page: GET /api/availability/listings?slugs=a,b (public, status only).
+  if (request.method === "GET" && path === "listings") {
+    const slugs = slugsFromQuery(new URL(request.url).searchParams.get("slugs"));
+    return json({ items: await presenceForSlugs(slugs) }, requestId);
   }
 
   const user = await requireUser(readCookie(request, SESSION_COOKIE));

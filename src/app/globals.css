@@ -2242,3 +2242,10 @@ input, select, textarea { font-size: 16px; }
   .tkp-step { transition: none !important; }
   .tkp-tile:hover { transform: none; }
 }
+
+/* H7.5: Online now / Away on the cards and the ad page. The badge sits over the photo; the call button is disabled while Away. */
+.tkp-card-avail { position: absolute; left: 10px; top: 10px; z-index: 3; }
+.tkn-contact-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; }
+.tkn-contact-head h2 { margin: 0; }
+.tk-circle:disabled { opacity: 0.45; cursor: not-allowed; }
+.tk-btn:disabled[data-tk="call"] { opacity: 0.6; cursor: not-allowed; }

@@ -4,7 +4,7 @@ import type { ListingDoc } from "@/lib/models";
 import { displayTitle, listingDateLabel, prettyPlace } from "@/lib/format";
 import { listingPhotos, listingTagSections } from "@/lib/media";
 import { CitySync } from "@/components/CityContext";
-import { ContactButtons, ContactProvider } from "@/components/ContactButtons";
+import { ContactAvailability, ContactButtons, ContactProvider } from "@/components/ContactButtons";
 import { SaveButton } from "@/components/ui/SaveButton";
 import { AdCard } from "@/components/ui/AdCard";
 import { TrackView } from "@/components/ui/RecentlyViewed";
@@ -141,7 +141,10 @@ export function NewAdDetail({
           </div>
           <aside className="tkn-ad-side" aria-label="Contact">
             <div className="tkn-contact-panel" data-tk="contact-card">
-              <h2>Contact</h2>
+              <div className="tkn-contact-head">
+                <h2>Contact</h2>
+                <ContactAvailability />
+              </div>
               <ContactButtons />
             </div>
           </aside>
