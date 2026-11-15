@@ -15,15 +15,27 @@ export const metadata = pageMetadata({
   path: "/how-it-works/",
 });
 
-const FIRST_ANSWER = "Yes. Posting, chatting and calling the seller are free. Only video calls and optional boosts use coins.";
-const ANSWER_PLACEHOLDER = "Answer to be added.";
-
-const QUESTIONS = [
-  "Is posting really free?",
-  "Do I need a password?",
-  "How does the video call work?",
-  "How long does my ad stay live?",
-  "How do I report a fake ad?",
+const FAQS = [
+  {
+    q: "Is posting really free?",
+    a: "Yes. Posting, chatting and calling the seller are free. Only video calls and optional boosts use coins.",
+  },
+  {
+    q: "Do I need a password?",
+    a: "No. Enter your email and we send you a 6-digit code. Type it in and you are logged in. Nothing to remember.",
+  },
+  {
+    q: "How does the video call work?",
+    a: "Tap Video call on an ad. It uses coins and connects you live with the person who posted, so you can see the item, place or person is real before you meet or pay.",
+  },
+  {
+    q: "How long does my ad stay live?",
+    a: "72 hours from the time it goes live. After that it ends on its own; you can renew it from My ads in one tap.",
+  },
+  {
+    q: "How do I report a fake ad?",
+    a: "Open the ad and tap Report. Pick the reason and send. Our team checks every report and removes ads that break the rules.",
+  },
 ];
 
 function packsText(prices: number[]) {
@@ -34,6 +46,5 @@ function packsText(prices: number[]) {
 export default async function HowItWorksPage() {
   const [packs, paths] = await Promise.all([getCreditPacks().catch(() => []), getPaths()]);
   const prices = packs.map((pack) => pack.price).filter((price): price is number => typeof price === "number" && Number.isFinite(price) && price > 0);
-  const faqs = QUESTIONS.map((q, index) => ({ q, a: index === 0 ? FIRST_ANSWER : ANSWER_PLACEHOLDER }));
-  return <HowItWorksView postAdHref={postAdPath(paths)} faqs={faqs} packsText={packsText(prices)} />;
+  return <HowItWorksView postAdHref={postAdPath(paths)} faqs={FAQS} packsText={packsText(prices)} />;
 }
