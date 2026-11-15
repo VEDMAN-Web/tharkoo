@@ -54,20 +54,11 @@ test.describe("H7.1 shell: visitor", () => {
     await expect(drawer).toHaveCount(0);
   });
 
-  test("at 390 the header search button sits by the burger and opens the search pop-up", async ({ page }) => {
+  test("the header has no search button (P1, as the mockup); the burger still shows on a phone", async ({ page }) => {
     test.skip(!isPhone(page), "The phone placement is checked at 390 px");
     await page.goto("/");
-    const search = page.locator('header [data-tk="header-search"]');
-    const burger = page.getByRole("button", { name: "Open menu" });
-    await expect(search).toBeVisible();
-    const [searchBox, burgerBox] = await Promise.all([search.boundingBox(), burger.boundingBox()]);
-    expect(searchBox && burgerBox && searchBox.x < burgerBox.x).toBe(true);
-    await search.click();
-    const modal = page.locator('[data-tk="search-modal"]');
-    await expect(modal).toBeVisible();
-    await modal.locator('[data-tk="search-text"]').fill("coffee");
-    await modal.locator('[data-tk="search-submit"]').click();
-    await expect(page).toHaveURL(/\/search\/\?.*q=coffee/);
+    await expect(page.locator('header [data-tk="header-search"]')).toHaveCount(0);
+    await expect(page.getByRole("button", { name: "Open menu" })).toBeVisible();
     expect(await hasHorizontalScroll(page)).toBe(false);
   });
 

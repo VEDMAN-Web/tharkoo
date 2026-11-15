@@ -1,50 +1,205 @@
-/* H7.4c: footer alignment and one spacing rhythm (12px between items, 16px under headings). Columns with no items are
-   not rendered (see FooterNew.tsx). When the "Get in touch" column is empty the grid has three columns. */
+/* P1: the footer as the mockup. Four columns 1.4fr / 1.2fr / .9fr / 1.2fr, gap 28, on the 1280 px page width.
+   Two columns at 900 px and below, one column at 600 px and below. Columns with no items are not rendered (FooterNew.tsx). */
+.tkn-footer {
+  margin-top: 88px;
+}
 .tkn-foot-grid {
+  grid-template-columns: 1.4fr 1.2fr 0.9fr 1.2fr;
+  gap: 28px;
   align-items: start;
+  padding-top: 34px;
+  padding-bottom: 22px;
+}
+.tkn-foot-grid.is-three {
+  grid-template-columns: 1.4fr 1.2fr 0.9fr;
 }
 .tkn-foot-title {
-  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 0 0 12px;
+  color: #110520;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.16em;
 }
-.tkn-foot-about {
-  line-height: 1.55;
+/* The pink bar before each heading: 18 x 2 px */
+.tkn-foot-dot {
+  width: 18px;
+  height: 2px;
+  border-radius: 0;
+  background: #e91e8c;
 }
-/* H7.4d: brand column spacing at every width. 12px from the logo row to the text, 16px from the text to the chips. */
-.tkn-foot-brand {
+.tkn-foot-col {
+  min-width: 0;
+}
+
+/* Brand block: 46 px logo, name 19/800, tagline 10 px in violet */
+.tkn-foot-brand .tkn-brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 0;
+}
+.tkn-foot-brand .tkn-mark {
+  width: 46px;
+  height: 46px;
+  border-radius: 14px;
+  font-size: 22px;
+  box-shadow: 0 8px 20px rgba(209, 19, 122, 0.3);
+}
+.tkn-foot-brand .tkn-brand-text {
   display: flex;
   flex-direction: column;
 }
-.tkn-foot-brand > .tkn-brand {
-  margin-bottom: 12px;
+.tkn-foot-brand .tkn-brand-name {
+  font-size: 19px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  color: #110520;
+}
+.tkn-foot-tagline {
+  display: block;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  color: #6d28d9;
 }
 .tkn-foot-brand > .tkn-foot-about {
-  margin: 0;
+  margin: 12px 0;
+  font-size: 13px;
+  line-height: 1.55;
+  color: #4a2870;
 }
 .tkn-foot-brand > .tkn-pills {
-  margin: 16px 0 0;
+  margin: 0 0 12px;
+  gap: 6px;
 }
+.tkn-foot-brand .tkn-pill {
+  min-height: 0;
+  padding: 6px 12px;
+  background: #fff;
+  border: 1px solid #ead8f0;
+  font-size: 12px;
+  font-weight: 600;
+  color: #1e0b38;
+}
+
+/* Socials: six 34 px squares, radius 10 */
+.tkn-socials {
+  gap: 8px;
+}
+.tkn-social {
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.9);
+  background: var(--sb, #f3f4f6);
+  color: var(--sf, #4a2870);
+  font-size: 12px;
+  font-weight: 800;
+}
+
+/* Links: 2 columns (quick links) or 1 column (top categories), 9 px and 16 px gaps, 14 px text */
 .tkn-foot-links {
-  gap: 12px 16px;
+  gap: 9px 16px;
+  font-size: 14px;
 }
+.tkn-foot-links-1 {
+  grid-template-columns: 1fr;
+}
+.tkn-foot-links a,
+.tkn-foot-links span {
+  min-height: 24px;
+  font-size: 14px;
+  color: #4a2870;
+}
+
+/* Get in touch: glass rows, 30 px colour tile, "Label: value" and the arrow */
 .tkn-contacts {
-  gap: 12px;
+  gap: 8px;
 }
-.tkn-foot-grid.is-three {
-  grid-template-columns: 1.4fr 1.2fr 1.2fr;
+.tkn-contact {
+  min-height: 44px;
+  padding: 7px 10px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.75);
+  border: 1px solid rgba(234, 216, 240, 0.9);
+  font-size: 13px;
+  color: #110520;
 }
-@media (max-width: 1023px) {
+.tkn-contact-tile {
+  width: 30px;
+  height: 30px;
+  flex: none;
+  border-radius: 9px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--sb);
+  color: var(--sf);
+  font-size: 12px;
+  font-weight: 800;
+}
+.tkn-contact-text {
+  flex: 1;
+  min-width: 0;
+  font-size: 13px;
+  font-weight: 700;
+  color: #110520;
+}
+.tkn-contact-label {
+  color: #6d28d9;
+}
+.tkn-contact-value {
+  color: #110520;
+  font-weight: 700;
+}
+.tkn-contact-arrow {
+  color: #6d28d9;
+  flex: none;
+}
+
+/* Legal row: copy on the left, pills on the right */
+.tkn-bar {
+  border-top: 1px solid rgba(234, 216, 240, 0.9);
+}
+.tkn-bar-row {
+  padding: 14px 24px;
+  max-width: 1280px;
+  margin: 0 auto;
+}
+.tkn-copy {
+  font-size: 13px;
+  font-weight: 600;
+  color: #4a2870;
+}
+.tkn-adult {
+  color: #4a2870;
+  font-weight: 600;
+}
+.tkn-legal .tkn-pill {
+  min-height: 32px;
+  padding: 6px 14px;
+  border: 1px solid #f5b5d6;
+  background: #fff;
+  font-size: 13px;
+  font-weight: 600;
+  color: #1e0b38;
+}
+
+@media (max-width: 900px) {
+  .tkn-foot-grid,
   .tkn-foot-grid.is-three {
-    grid-template-columns: 1fr 1fr;
-  }
-  .tkn-foot-grid.is-three .tkn-foot-brand {
-    grid-column: 1 / -1;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
 @media (max-width: 600px) {
+  .tkn-foot-grid,
   .tkn-foot-grid.is-three {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
   }
-  .tkn-foot-grid.is-three .tkn-foot-brand {
-    grid-column: auto;
+  .tkn-footer {
+    margin-top: 88px;
   }
 }

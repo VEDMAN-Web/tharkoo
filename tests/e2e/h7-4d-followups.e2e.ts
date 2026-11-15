@@ -25,11 +25,11 @@ test.describe("H7.4d: flags and footer", () => {
     await page.goto("/");
     const pill = page.locator("header.tkn-header .tkn-city").first();
     await expect(pill).toBeVisible();
-    await expect(pill.locator("svg.tkn-flag")).toHaveCount(1);
+    await expect(pill.locator('img.tkn-flag[src$=".svg"]')).toHaveCount(1);
     expect(await pill.textContent()).not.toMatch(/[\u{1F1E6}-\u{1F1FF}]/u);
   });
 
-  test("the footer brand: 12px from the logo row to the text, 16px from the text to the chips", async ({ page }) => {
+  test("the footer brand: 12px from the logo row to the text, 12px from the text to the chips (P1, as the mockup)", async ({ page }) => {
     await page.goto("/");
     const footer = page.locator("footer.tkn-footer");
     await footer.scrollIntoViewIfNeeded();
@@ -39,7 +39,7 @@ test.describe("H7.4d: flags and footer", () => {
       const pills = brand.querySelector(".tkn-pills")!.getBoundingClientRect();
       return { logoToAbout: Math.round(about.top - logo.bottom), aboutToPills: Math.round(pills.top - about.bottom) };
     });
-    expect(gaps).toEqual({ logoToAbout: 12, aboutToPills: 16 });
+    expect(gaps).toEqual({ logoToAbout: 12, aboutToPills: 12 });
   });
 });
 
@@ -125,13 +125,14 @@ test.describe("H7.4d: menus close on an outside click and on Escape", () => {
 
   test("the search modal closes on Escape and on a click on the backdrop", async ({ page }) => {
     await page.goto("/");
-    const open = page.locator('[data-tk=header-search]:visible').first();
-    await open.click();
+    // P1: the home header has no search button, so the pop-up opens through the same event the listing pages use.
+    const open = () => page.evaluate(() => window.dispatchEvent(new Event("tk-open-search")));
+    await open();
     const modal = page.locator('[data-tk=search-modal]');
     await expect(modal).toBeVisible();
     await page.keyboard.press("Escape");
     await expect(modal).toHaveCount(0);
-    await open.click();
+    await open();
     await expect(modal).toBeVisible();
     await page.locator(".tk-modal-back").click({ position: { x: 4, y: 4 } });
     await expect(modal).toHaveCount(0);

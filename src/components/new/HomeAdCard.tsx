@@ -45,7 +45,11 @@ export function HomeAdCard({
     <article ref={cardRef} className="tkh-ad" data-tk="home-ad">
       <div className="tkh-ad-photo">
         {ad.photo ? (
-          <img src={ad.photo} alt="" width={400} height={260} loading="lazy" />
+          <>
+            {/* P1: the whole picture shows (contain). The same photo, blurred and cropped, fills the rest of the frame. */}
+            <img className="tkh-ad-blur" src={ad.photo} alt="" aria-hidden="true" loading="lazy" />
+            <img className="tkh-ad-main" src={ad.photo} alt="" width={400} height={260} loading="lazy" />
+          </>
         ) : (
           <span className="tkh-ad-empty" aria-hidden />
         )}
@@ -56,7 +60,7 @@ export function HomeAdCard({
             {seller.status === "online" ? labels.online : labels.away}
           </span>
         ) : null}
-        {ad.photo ? null : <span className="tkh-ad-watermark" aria-hidden>{labels.watermark}</span>}
+        <span className="tkh-ad-watermark" aria-hidden>{labels.watermark}</span>
       </div>
       <div className="tkh-ad-body">
         <h3 className="tkh-ad-title">
