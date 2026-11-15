@@ -2764,7 +2764,8 @@
         "src/server/auth/service.ts",
         "src/server/auth/otp.ts",
         "src/server/auth/email-code.ts",
-        "tests/server/auth/cookie-life.test.ts"
+        "tests/server/auth/cookie-life.test.ts",
+        "tests/e2e/contact-card.e2e.ts"
       ]
     }
   }
