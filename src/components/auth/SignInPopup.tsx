@@ -10,7 +10,7 @@ interface Request {
   next: string;
 }
 
-export function SignInPopup({ landing, showMobile }: { landing: LandingPaths; showMobile: boolean }) {
+export function SignInPopup({ landing, showMobile, image }: { landing: LandingPaths; showMobile: boolean; image: string }) {
   const [request, setRequest] = useState<Request | null>(null);
 
   useEffect(() => {
@@ -47,6 +47,7 @@ export function SignInPopup({ landing, showMobile }: { landing: LandingPaths; sh
             initialNext={request.next}
             landing={landing}
             showMobile={showMobile}
+            image={image}
             onClose={() => setRequest(null)}
           />
         </div>

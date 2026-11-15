@@ -2770,6 +2770,22 @@
         "tests/e2e/contact-card.e2e.ts"
       ]
     },
+    "H7.16": {
+      "branchPrefix": "haiku/h7.16",
+      "globs": [
+        "docs/ownership.json",
+        "src/app/admin/content-actions.ts",
+        "src/app/admin/homepage/LoginImageField.tsx",
+        "src/app/admin/homepage/page.tsx",
+        "src/app/u/login/page.tsx",
+        "src/components/PathChrome.tsx",
+        "src/components/SiteShell.tsx",
+        "src/components/auth/SignInPopup.tsx",
+        "src/components/auth/SignInSheet.tsx",
+        "src/components/auth/sign-in-css.ts",
+        "src/lib/ui/site-content.ts"
+      ]
+    },
     "H7.11": {
       "branchPrefix": "haiku/h7.11",
       "globs": [
