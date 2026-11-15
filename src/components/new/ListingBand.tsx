@@ -3,6 +3,7 @@ import { bandStyleFor, type BandPhoto } from "./band-image";
 import { ListingHead } from "./ListingHead";
 import { ListingSearchForm } from "./ListingSearchForm";
 import type { ListingLabels } from "./listing-filters";
+import "./listing-spec.css";
 import "./listing-page.css";
 
 /**
