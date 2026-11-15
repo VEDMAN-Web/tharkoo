@@ -12,10 +12,8 @@
 @media (max-width:600px) {
   .h714-pad { padding-left:16px !important; padding-right:16px !important; }
 }
-.h714-catimg { aspect-ratio:3/2; }
-@media (max-width:640px) {
-  .h714-catimg { aspect-ratio:4/5; }
-}
+.h714-catimg { aspect-ratio:4/3; }
+.h714-photo { object-fit:cover; object-position:50% 20%; }
 .h714 a { color:#C2185B; }
 .h714 a:hover { color:#8E1046; }
 .h714-card { transition:transform .28s,box-shadow .28s,border-color .28s; }
