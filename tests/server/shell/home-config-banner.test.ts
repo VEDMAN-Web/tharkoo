@@ -2,15 +2,15 @@ import { describe, expect, it } from "vitest";
 import { defaultSiteContent, sanitizeSiteContent } from "@/lib/ui/site-content";
 
 describe("home banner settings", () => {
-  it("defaults to no phone picture, the text plate on for every screen, and the focus at centre, 20% down", () => {
+  it("defaults to no phone picture, the text plate on for every screen, and the focus at centre, 25% down", () => {
     // H7.4c (#80): the frosted plate is on by default on computers and phones; the admin can switch it off.
     const hero = defaultSiteContent().hero;
     expect(hero.photoPhone).toBe("");
     expect(hero.plate).toBe("on");
     expect(hero.focusX).toBe(50);
-    expect(hero.focusY).toBe(20);
+    expect(hero.focusY).toBe(25);
     expect(hero.phoneFocusX).toBe(50);
-    expect(hero.phoneFocusY).toBe(20);
+    expect(hero.phoneFocusY).toBe(25);
   });
 
   it("keeps a safe phone picture and the chosen plate", () => {
@@ -47,6 +47,6 @@ describe("home banner settings", () => {
     expect(result.content.hero.desktop).toBe("Old headline");
     expect(result.content.hero.photoPhone).toBe("");
     expect(result.content.hero.plate).toBe("on");
-    expect(result.content.hero.focusY).toBe(20);
+    expect(result.content.hero.focusY).toBe(25);
   });
 });
