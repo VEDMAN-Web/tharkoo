@@ -1,8 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { RESEND_SECONDS, digitsOnly, normalizeIdentifier } from "@/components/auth/SignInSheet";
-import { DEFAULT_LANDING, landingFor } from "@/components/auth/landing";
-
-const paths = DEFAULT_LANDING;
+import { ACCOUNT_PATH, landingFor } from "@/components/auth/landing";
 
 describe("sign-in sheet helpers", () => {
   it("keeps only digits in the code box and stops at six", () => {
@@ -20,32 +18,21 @@ describe("sign-in sheet helpers", () => {
   });
 });
 
-describe("landing after a code sign-in (H7.2b)", () => {
-  const base = { roles: ["user"], hasSellerProfile: false, role: "user" as const, next: null, paths };
+describe("landing after a code sign-in", () => {
+  it("sends everyone to the account page", () => {
+    expect(ACCOUNT_PATH).toBe("/u/account/");
+    expect(landingFor({ roles: ["user"], next: null })).toBe("/u/account/");
+    expect(landingFor({ roles: undefined, next: null })).toBe("/u/account/");
+  });
 
   it("sends staff to the admin area, unless a return address is set", () => {
-    expect(landingFor({ ...base, roles: ["superadmin"] })).toBe("/admin/");
-    expect(landingFor({ ...base, roles: ["superadmin"], next: "/admin/ads/" })).toBe("/admin/ads/");
+    expect(landingFor({ roles: ["superadmin"], next: null })).toBe("/admin/");
+    expect(landingFor({ roles: ["superadmin"], next: "/admin/ads/" })).toBe("/admin/ads/");
   });
 
-  it("sends a user to the user panel and a returning seller to the seller panel", () => {
-    expect(landingFor(base)).toBe(paths.user);
-    expect(landingFor({ ...base, hasSellerProfile: true })).toBe(paths.seller);
-  });
-
-  it("sends a new seller through the seller profile once, then on to the ad form", () => {
-    expect(landingFor({ ...base, role: "seller" })).toBe(`${paths.sellerProfile}?next=${encodeURIComponent(paths.postAd)}`);
-    expect(landingFor({ ...base, role: "seller", next: "/u/post-insert?draft=abc" })).toBe(
-      `${paths.sellerProfile}?next=${encodeURIComponent("/u/post-insert?draft=abc")}`,
-    );
-  });
-
-  it("does not repeat the profile step for a seller who already has one", () => {
-    expect(landingFor({ ...base, role: "seller", hasSellerProfile: true })).toBe(paths.seller);
-  });
-
-  it("ignores a return address that is not same-origin", () => {
-    expect(landingFor({ ...base, next: "https://evil.example/x" })).toBe(paths.user);
-    expect(landingFor({ ...base, next: "//evil.example" })).toBe(paths.user);
+  it("returns to a same-origin address and ignores anything else", () => {
+    expect(landingFor({ roles: ["user"], next: "/u/post-insert/" })).toBe("/u/post-insert/");
+    expect(landingFor({ roles: ["user"], next: "https://evil.example/x" })).toBe("/u/account/");
+    expect(landingFor({ roles: ["user"], next: "//evil.example" })).toBe("/u/account/");
   });
 });

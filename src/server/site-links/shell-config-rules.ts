@@ -112,7 +112,7 @@ export function defaultShellConfig(): ShellConfig {
         { label: "Chat online now", tone: "green" },
         { label: "Video call and verify", tone: "violet" },
         { label: "Photo verified badges", tone: "sky" },
-        { label: "Ads live for 72 hours", tone: "amber" },
+        { label: "Ads live for 72 hours", tone: "pink" },
       ],
       steps: [
         { title: "Post for free", text: "Add photos and videos, pick a category and city." },

@@ -222,7 +222,7 @@ function NoticeLine({ notice, sticky }: { notice: Notice | null; sticky?: boolea
       {notice.signIn ? (
         <>
           {" "}
-          <a href={signInHref()} style={{ color: "var(--accent)", textDecoration: "underline" }} onClick={(event) => openSignInFromLink(event, "user")}>
+          <a href={signInHref()} style={{ color: "var(--accent)", textDecoration: "underline" }} onClick={(event) => openSignInFromLink(event)}>
             Sign in
           </a>
         </>

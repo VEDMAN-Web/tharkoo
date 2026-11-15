@@ -638,7 +638,7 @@
 .tkh-step:nth-child(3n + 2) { background: linear-gradient(160deg, #f5f0ff, #ffffff); }
 .tkh-step:nth-child(3n + 3) { background: linear-gradient(160deg, #fff8ec, #ffffff); }
 .tkh-step:nth-child(3n + 2) .tkh-step-n { background: linear-gradient(135deg, #7c3aed, #5b21b6); }
-.tkh-step:nth-child(3n + 3) .tkh-step-n { background: linear-gradient(135deg, #b45309, #92400e); }
+.tkh-step:nth-child(3n + 3) .tkh-step-n { background: linear-gradient(135deg, #E91E8C, #A8124F); }
 .tkh-step-n {
   width: 48px;
   height: 48px;

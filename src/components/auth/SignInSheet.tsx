@@ -3,25 +3,19 @@
 import { type FormEvent, type MouseEvent, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { CodeBoxes } from "@/components/auth/CodeBoxes";
-import { SellerSetup, type SellerValues } from "@/components/auth/SellerSetup";
 import { SIGN_IN_CSS } from "@/components/auth/sign-in-css";
 import { CODE_LENGTH, formatCountdown, indiaPhone } from "@/components/auth/sign-in-input";
-import { DEFAULT_LANDING, landingFor, type LandingPaths, type SignInRole } from "@/components/auth/landing";
+import { landingFor } from "@/components/auth/landing";
 import { useUrlPaths } from "@/components/UrlPaths";
-import { api, fieldErrors, friendlyError, isStaffRole, safeNext } from "@/lib/ui/api";
-import { applyPrefixes } from "@/lib/urls";
 import { useFocusTrap } from "@/components/ui/useFocusTrap";
+import { api, friendlyError, safeNext } from "@/lib/ui/api";
+import { applyPrefixes } from "@/lib/urls";
 
-export type { SignInRole } from "@/components/auth/landing";
-export { landingFor, DEFAULT_LANDING } from "@/components/auth/landing";
-
-type Step = "identify" | "code" | "seller";
+type Step = "identify" | "code";
 type Channel = "phone" | "email";
 
 interface VerifiedUser {
   roles?: string[];
-  seller?: unknown | null;
-  dateOfBirth?: string | null;
 }
 
 export const SIGN_IN_EVENT = "tk:open-sign-in";
@@ -30,20 +24,19 @@ export const SIGN_IN_HOST_ATTR = "data-signin-host";
 const SIGN_IN_HINT = "tk-in";
 
 export interface SignInEventDetail {
-  role?: SignInRole;
   next?: string | null;
 }
 
-export function openSignIn(role: SignInRole = "user", next?: string | null): boolean {
+export function openSignIn(next?: string | null): boolean {
   if (typeof document === "undefined" || !document.querySelector(`[${SIGN_IN_HOST_ATTR}]`)) return false;
-  const detail: SignInEventDetail = { role, next: next ?? null };
+  const detail: SignInEventDetail = { next: next ?? null };
   window.dispatchEvent(new CustomEvent<SignInEventDetail>(SIGN_IN_EVENT, { detail }));
   return true;
 }
 
-export function openSignInFromLink(event: MouseEvent<HTMLElement>, role: SignInRole = "user", next?: string) {
+export function openSignInFromLink(event: MouseEvent<HTMLElement>, next?: string) {
   if (event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
-  if (openSignIn(role, next)) event.preventDefault();
+  if (openSignIn(next)) event.preventDefault();
 }
 
 export function isProbablySignedIn(): boolean {
@@ -51,48 +44,39 @@ export function isProbablySignedIn(): boolean {
   return document.cookie.split(";").some((part) => part.trim().startsWith(`${SIGN_IN_HINT}=`));
 }
 
-/** Keeps only digits, so a pasted code with spaces still works. */
 export function digitsOnly(value: string, max: number) {
   return value.replace(/\D/g, "").slice(0, max);
 }
 
-/** Phone numbers stay as typed. Email is trimmed and lower-cased, as the server does. */
 export function normalizeIdentifier(channel: Channel, raw: string) {
   return channel === "email" ? raw.trim().toLowerCase() : raw.trim();
 }
 
 const COPY: Record<Step, { title: string; help: string }> = {
-  identify: { title: "Log in or sign up", help: "Enter your mobile number or email and we send you a 6-digit code. No password, ever." },
+  identify: { title: "Welcome to Tharkoo", help: "Log in or create your account with a one-time code. No password." },
   code: { title: "Enter your code", help: "We sent a 6-digit code. It is valid for 10 minutes." },
-  seller: { title: "Your seller profile", help: "This is what people see on your ads. You can change it any time." },
 };
 
 export interface SignInSheetProps {
   mode: "page" | "popup";
-  initialRole?: SignInRole;
   initialNext?: string | null;
-  /** Where each kind of person lands. The server passes the real paths. */
-  landing?: LandingPaths;
   showMobile?: boolean;
   image?: string;
   onClose?: () => void;
 }
 
-export function SignInSheet({ mode, initialRole = "user", initialNext = null, landing = DEFAULT_LANDING, showMobile = false, image = "", onClose }: SignInSheetProps) {
+export function SignInSheet({ mode, initialNext = null, showMobile = false, image = "", onClose }: SignInSheetProps) {
   const router = useRouter();
   const paths = useUrlPaths();
   const popup = mode === "popup";
-  const [role, setRole] = useState<SignInRole>(initialRole);
-  const [channel, setChannel] = useState<Channel>(showMobile ? "phone" : "email");
+  const [channel, setChannel] = useState<Channel>("email");
   const [identifier, setIdentifier] = useState("");
   const [sentTo, setSentTo] = useState("");
   const [step, setStep] = useState<Step>("identify");
   const [code, setCode] = useState("");
   const [keepIn, setKeepIn] = useState(true);
-  const [askDob, setAskDob] = useState(false);
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState("");
-  const [sellerErrors, setSellerErrors] = useState<Record<string, string[]>>({});
   const [resendIn, setResendIn] = useState(0);
   const rootRef = useFocusTrap<HTMLDivElement>(popup, () => onClose?.());
   const skipFirstFocus = useRef(true);
@@ -149,40 +133,12 @@ export function SignInSheet({ mode, initialRole = "user", initialNext = null, la
       rootRef.current?.querySelector<HTMLElement>("[data-focus]")?.focus();
       return;
     }
-    const user = res.data.user;
-    if (role === "seller" && !user.seller && !isStaffRole(user.roles)) {
-      setAskDob(!user.dateOfBirth);
-      setStep("seller");
-      return;
-    }
-    finish(user.roles, Boolean(user.seller), false);
+    finish(res.data.user.roles);
   }
 
-  async function saveSeller(values: SellerValues) {
-    setBusy(true);
-    setMessage("");
-    setSellerErrors({});
-    const body = {
-      name: values.name.trim(),
-      city: values.city.trim(),
-      whatsapp: "",
-      availableNow: false,
-      ...(askDob ? { dateOfBirth: values.dateOfBirth, adultConfirmed: values.adultConfirmed } : {}),
-    };
-    const res = await api<{ seller: unknown }>("/api/auth/seller-profile", { method: "PUT", body: JSON.stringify(body) });
-    setBusy(false);
-    if (!res.ok) {
-      setSellerErrors(fieldErrors(res.error));
-      setMessage(friendlyError(res.error));
-      return;
-    }
-    finish(undefined, true, true);
-  }
-
-  function finish(roles: string[] | undefined, hasSellerProfile: boolean, newSeller: boolean) {
+  function finish(roles: string[] | undefined) {
     const current = window.location.pathname + window.location.search;
-    const returnTo = popup ? (next ?? current) : (next ?? (newSeller ? landing.postAd : null));
-    const destination = landingFor({ roles, hasSellerProfile, role, next: returnTo, paths: landing });
+    const destination = landingFor({ roles, next: popup ? (next ?? current) : next });
     if (popup) {
       onClose?.();
       if (destination !== current) router.push(destination);
@@ -227,24 +183,14 @@ export function SignInSheet({ mode, initialRole = "user", initialNext = null, la
                 void sendCode();
               }}
             >
-              <div role="radiogroup" aria-label="I am here to" className="tk-si-roles">
-                {(["user", "seller"] as SignInRole[]).map((value) => (
-                  <button key={value} type="button" role="radio" aria-checked={role === value} className={`tk-si-role tk-si-focus ${role === value ? "is-on" : ""}`} onClick={() => setRole(value)}>
-                    <span className="tk-si-role-name">{value === "user" ? "I am a user" : "I am a seller"}</span>
-                    <span className="tk-si-role-sub">{value === "user" ? "Browse, save and chat" : "Post ads and get calls"}</span>
-                  </button>
-                ))}
-              </div>
-
               <div role="tablist" aria-label="Send the code by" className="tk-si-tabs">
-                <button type="button" role="tab" aria-selected={channel === "phone"} disabled={!showMobile} className="tk-si-tab tk-si-focus" onClick={() => setChannel("phone")}>
-                  Mobile number
-                </button>
                 <button type="button" role="tab" aria-selected={channel === "email"} className="tk-si-tab tk-si-focus" onClick={() => setChannel("email")}>
                   Email
                 </button>
+                <button type="button" role="tab" aria-selected={channel === "phone"} disabled={!showMobile} className="tk-si-tab tk-si-focus" onClick={() => setChannel("phone")}>
+                  Mobile <span className="tk-si-tag">Soon</span>
+                </button>
               </div>
-              {!showMobile ? <p className="tk-si-soon">Text message codes are coming soon. Use email for now.</p> : null}
 
               {channel === "phone" ? (
                 <div>
@@ -256,7 +202,7 @@ export function SignInSheet({ mode, initialRole = "user", initialNext = null, la
                 </div>
               ) : (
                 <div>
-                  <label className="tk-si-lab" htmlFor="tk-si-email">Email address</label>
+                  <label className="tk-si-lab" htmlFor="tk-si-email">Email</label>
                   <input id="tk-si-email" data-focus="" className="tk-si-in tk-si-focus" name="email" type="email" inputMode="email" autoComplete="email" placeholder="you@example.com" value={identifier} onChange={(event) => setIdentifier(event.target.value)} aria-describedby={describedBy} />
                 </div>
               )}
@@ -268,6 +214,7 @@ export function SignInSheet({ mode, initialRole = "user", initialNext = null, la
               <button type="submit" className="tk-si-primary tk-si-focus" disabled={busy}>
                 {busy ? "Sending" : "Send me a code"}
               </button>
+              <div className="tk-si-box"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M5 12l4 4 10-10" /></svg><span>One account does everything: save ads, chat, and post your own ads for free.</span></div>
               <p className="tk-si-terms">
                 By continuing you agree to the <a href={applyPrefixes("/terms/", paths)}>Terms</a> and <a href={applyPrefixes("/privacy/", paths)}>Privacy Policy</a>.
               </p>
@@ -314,8 +261,6 @@ export function SignInSheet({ mode, initialRole = "user", initialNext = null, la
               </div>
             </form>
           ) : null}
-
-          {step === "seller" ? <SellerSetup askDateOfBirth={askDob} busy={busy} errors={sellerErrors} onSubmit={(values) => void saveSeller(values)} /> : null}
 
           <p id="tk-si-msg" className="tk-si-error" aria-live="polite">{message}</p>
         </section>

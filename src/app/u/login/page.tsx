@@ -5,7 +5,6 @@ import { withUrlSeo } from "@/lib/seo/override";
 import { smsDeliverable } from "@/server/auth/otp";
 import { getSite } from "@/lib/queries";
 import { readContent } from "@/lib/ui/site-content";
-import { landingPathsFor } from "@/server/auth/landing-paths";
 import { newDesignOn } from "@/server/site-links/new-design";
 import { getPaths } from "@/server/urls/service";
 
@@ -24,14 +23,11 @@ export default async function Page({ searchParams }: { searchParams: Promise<Rec
   if (!(await newDesignOn())) return <AuthForm mode="login" />;
   const site = await getSite();
   const params = await searchParams;
-  const role = params.role === "seller" ? "seller" : "user";
   const next = typeof params.next === "string" ? params.next : null;
   return (
     <SignInSheet
       mode="page"
-      initialRole={role}
       initialNext={next}
-      landing={landingPathsFor(await getPaths())}
       showMobile={smsDeliverable()}
       image={readContent((site as { homepage?: unknown } | null)?.homepage).loginImage}
     />
