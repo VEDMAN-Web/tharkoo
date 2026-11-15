@@ -114,7 +114,7 @@ export function HeaderNew({
                   data-tk="header-avatar"
                   onClick={() => setAccountOpen((open) => !open)}
                 >
-                  {account.name.slice(0, 1).toUpperCase()}
+                  <span className="tkn-avatar-circle">{account.name.slice(0, 1).toUpperCase()}</span>
                   <ChevronDown size={14} aria-hidden="true" focusable="false" />
                 </button>
                 {accountOpen ? (
