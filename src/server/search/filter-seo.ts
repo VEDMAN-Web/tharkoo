@@ -9,7 +9,8 @@ export type ListingParams = Record<string, string | string[] | undefined>;
 const TRACKING_PARAM = /^(utm_[a-z]+|gclid|fbclid|msclkid)$/i;
 /** Pagination is not a filter: page 2 of an unfiltered listing keeps its own canonical. */
 const NOT_FILTER_PARAM = new Set(["page"]);
-const FIELD_PARAM = /^f\.([a-z][a-z0-9_]{0,40})$/;
+/** Field keys: lower case letters, digits, hyphens and underscores (admin-made keys can contain underscores). */
+const FIELD_PARAM = /^f\.([a-z0-9][a-z0-9_-]{0,40})$/;
 export const MAX_PICKS_PER_FILTER = 20;
 const MAX_VALUE_LENGTH = 200;
 

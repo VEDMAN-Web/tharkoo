@@ -32,7 +32,7 @@ type OwnPage = {
   counts: { all: number; live: number; review: number; ended: number };
   totals: { views: number; clicks: number };
 };
-type Presence = { available: boolean; status: PresenceStatus; callsAllowed: boolean; awayAfterHours: number };
+type Presence = { available: boolean; status: PresenceStatus; callsAllowed: boolean; awayAfterHours: number; liveChat: boolean };
 type Tab = "all" | "live" | "review" | "ended";
 
 const PAGE_SIZE = 12;
@@ -118,6 +118,16 @@ export function NewVendorPanel({ initialTab = "all" }: { initialTab?: Tab }) {
     } else setNote(friendlyError(res.error));
   }
 
+  /** H7.4c: the Live chat switch. On shows the badge and the chat button on this seller's ads. */
+  async function toggleLiveChat() {
+    if (!presence) return;
+    const res = await api<Presence>("/api/availability/live-chat", { method: "PATCH", body: JSON.stringify({ liveChat: !presence.liveChat }) });
+    if (res.ok) {
+      setPresence(res.data);
+      setNote(res.data.liveChat ? "Live chat is on. Your ads show Online now or Away, and a Chat online now button." : "Live chat is off. Your ads have no badge and no chat button.");
+    } else setNote(friendlyError(res.error));
+  }
+
   /** After an owner action: say what happened and reload the first page of this tab (counts come back with it). */
   async function reloadAfterAction(message: string) {
     setNote(message);
@@ -190,6 +200,15 @@ export function NewVendorPanel({ initialTab = "all" }: { initialTab?: Tab }) {
                         : "Away (auto): no activity for a while. Any action brings you back online."
                       : "Away: you switched it off. Turn it on to show Online now."}
                   </span>
+                </span>
+                <span className="tkv-switch" aria-hidden><i /></span>
+              </button>
+            ) : null}
+            {presence ? (
+              <button type="button" className={`tkv-avail ${presence.liveChat ? "is-on" : ""}`} aria-pressed={presence.liveChat} onClick={toggleLiveChat}>
+                <span className="tkv-avail-text">
+                  <span className="tkv-avail-title">Live chat</span>
+                  <span className="tkv-avail-help">{presence.liveChat ? "On: your ads show Online now or Away, and a chat button." : "Off: no badge and no chat button on your ads."}</span>
                 </span>
                 <span className="tkv-switch" aria-hidden><i /></span>
               </button>

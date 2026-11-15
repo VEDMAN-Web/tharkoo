@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { api } from "@/lib/ui/api";
+import { FocalPicker } from "@/components/admin/FocalPicker";
 import { resetHomepageForAdmin, saveHomepageForAdmin } from "@/app/admin/content-actions";
 import type { HeroPlate, NavLink, SiteContent } from "@/lib/ui/site-content";
 
@@ -160,7 +161,7 @@ export function SiteContentForm({
       return;
     }
     setContent(result.content);
-    setMsg("Saved. Open the home page to see it.");
+    setMsg("Saved. Live on the site in about a minute.");
   }
 
   async function reset() {
@@ -198,21 +199,36 @@ export function SiteContentForm({
                 <p className="font-semibold">Banner images</p>
                 <p className="t-small text-muted">Computer 1920 x 700 px, phone 900 x 1200 px. Up to 8 MB each, JPG, PNG or WEBP. The phone picture is shown below 600 px wide; if it is empty, the computer picture is used on phones too.</p>
                 <PhotoField label="Computer picture" value={content.hero.photo} onChange={(photo) => patch({ ...content, hero: { ...content.hero, photo } })} />
+                <FocalPicker
+                  label="Computer picture: focus point"
+                  aspect="1920 / 700"
+                  src={content.hero.photo}
+                  x={content.hero.focusX}
+                  y={content.hero.focusY}
+                  onChange={(next) => patch({ ...content, hero: { ...content.hero, focusX: next.x, focusY: next.y } })}
+                />
                 <PhotoField
                   label="Phone picture (optional)"
                   value={content.hero.photoPhone}
                   onChange={(photoPhone) => patch({ ...content, hero: { ...content.hero, photoPhone } })}
                   onRemove={() => patch({ ...content, hero: { ...content.hero, photoPhone: "" } })}
                 />
+                <FocalPicker
+                  label="Phone picture: focus point"
+                  aspect="3 / 4"
+                  src={content.hero.photoPhone}
+                  x={content.hero.phoneFocusX}
+                  y={content.hero.phoneFocusY}
+                  onChange={(next) => patch({ ...content, hero: { ...content.hero, phoneFocusX: next.x, phoneFocusY: next.y } })}
+                />
               </div>
               <label className="tk-field">
                 Text box behind the headline
                 <select value={content.hero.plate} onChange={(event) => patch({ ...content, hero: { ...content.hero, plate: event.target.value as HeroPlate } })}>
-                  <option value="auto">Automatic: on phones only</option>
-                  <option value="on">Always on</option>
-                  <option value="off">Never</option>
+                  <option value="on">On (recommended): on phones and computers</option>
+                  <option value="off">Off: no frosted box</option>
                 </select>
-                <span className="t-small text-muted">A frosted white box behind the headline, so the words read on any photo. Shown on phones by default, off on computers.</span>
+                <span className="t-small text-muted">A frosted white box behind the headline, so the words read on any photo.</span>
               </label>
               <label className="tk-field">
                 Search box text
@@ -404,7 +420,12 @@ export function SiteContentForm({
       <div className="flex flex-wrap items-center gap-3">
         <button type="button" className="tk-btn tk-btn-gold" disabled={busy} onClick={save}>Save</button>
         <button type="button" className="tk-btn tk-btn-outline-gold" disabled={busy} onClick={reset}>Reset to default</button>
-        {msg ? <span className="text-[13px] text-[var(--success)]">{msg}</span> : null}
+        {msg ? (
+          <span className="flex items-center gap-2 text-[13px] text-[var(--success)]">
+            {msg}
+            {msg.startsWith("Saved") ? <a className="font-semibold underline" href="/" target="_blank" rel="noopener">View on site</a> : null}
+          </span>
+        ) : null}
         {err ? <span className="t-small text-danger">{err}</span> : null}
       </div>
     </div>

@@ -6,14 +6,15 @@ import { textOverrides } from "@/app/admin/ui-text/store";
 import { readContent } from "@/lib/ui/site-content";
 import { pickTexts } from "@/lib/ui/text";
 import { newDesignOn } from "@/server/site-links/new-design";
+import { countryChoices } from "@/server/locations/site-country";
 import { readShellConfig } from "@/server/site-links/shell-config";
 import { normaliseShellConfig, type ShellConfig, type ShellLink } from "@/server/site-links/shell-config-rules";
 import { MotionInit } from "./ui/MotionInit";
 import { PathChrome, type ChromeData } from "./PathChrome";
 
 export async function loadShell() {
-  const [site, categories, cities, newDesign, shell, texts] = await Promise.all([getSite(), getCategories(), getCities(), newDesignOn(), readShellConfig(), textOverrides()]);
-  return { site, categories, cities, user: null as { email: string; roles: string[] } | null, newDesign, shell, texts };
+  const [site, categories, cities, newDesign, shell, countries, texts] = await Promise.all([getSite(), getCategories(), getCities(), newDesignOn(), readShellConfig(), countryChoices(), textOverrides()]);
+  return { site, categories, cities, countries, user: null as { email: string; roles: string[] } | null, newDesign, shell, texts };
 }
 
 type Shell = Awaited<ReturnType<typeof loadShell>>;
@@ -63,7 +64,7 @@ function shellWithFallbacks(config: ShellConfig, legacy: { whatsapp: string; tel
 
 function chromeData(shell: Shell): ChromeData {
   const site = shell.site as SiteFields;
-  const { categories, cities, user } = shell;
+  const { categories, cities, countries, user } = shell;
   const { hero, header, socials, support, footer, age, cookies } = readContent(site.homepage);
   const legacySocials: ShellLink[] = (socials.length ? socials : navLinks(site.socialLinks)).map((item) => ({
     label: item.label,
@@ -86,6 +87,7 @@ function chromeData(shell: Shell): ChromeData {
     categories: plain(categories.map((c) => ({ slug: c.slug || "", name: c.name || "" }))),
     cities: plain(cities.map((c) => ({ slug: c.slug || "", name: c.name || "", stateSlug: c.stateSlug }))),
     cityCount: cities.length,
+    countries: plain(countries),
     user,
     newDesign: shell.newDesign,
     // H7.8: the header and live chat words from the UI-text store (only those keys reach the client).

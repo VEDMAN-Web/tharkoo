@@ -20,8 +20,8 @@ export type HomeGroup = {
   showAll: boolean;
 };
 
-/** H7.4: the frosted text box behind the banner heading. Automatic means on phones only. */
-export type HeroPlate = "auto" | "on" | "off";
+/** H7.4c: the frosted text box behind the banner heading. On by default on every screen; the admin can switch it off. */
+export type HeroPlate = "on" | "off";
 
 export type SiteContent = {
   hero: {
@@ -31,6 +31,12 @@ export type SiteContent = {
     photo: string;
     /** H7.4: optional phone banner image. Empty means the computer image is used on phones too. */
     photoPhone: string;
+    /** H7.4c: where the computer picture keeps its focus, in percent from the left and from the top. Default: centre, 20% down. */
+    focusX: number;
+    focusY: number;
+    /** H7.4c: the same for the phone picture. */
+    phoneFocusX: number;
+    phoneFocusY: number;
     photoAlt: string;
     searchPlaceholder: string;
     postLabel: string;
@@ -111,11 +117,15 @@ export function defaultSiteContent(): SiteContent {
       mobileLines: ["Find anything", "near you"],
       photo: "/placeholders/buy-and-sell/01.webp",
       photoPhone: "",
+      focusX: FOCUS_DEFAULT_X,
+      focusY: FOCUS_DEFAULT_Y,
+      phoneFocusX: FOCUS_DEFAULT_X,
+      phoneFocusY: FOCUS_DEFAULT_Y,
       photoAlt: "Local listings on Tharkoo",
       searchPlaceholder: "Search By City, Category...",
       postLabel: "POST YOUR AD",
       postHref: POST,
-      plate: "auto",
+      plate: "on",
     },
     cardsHeading: "Latest listings in your city",
     cardsIntro: "Find your favourite listings on Tharkoo",
@@ -232,11 +242,19 @@ function imagePath(value: unknown, fallback: string) {
   return "";
 }
 
-/** H7.4: anything other than "on" or "off" is the automatic setting. */
+/** H7.4c: only "off" turns the text box off. Anything else, including the old "auto" value, shows it. */
 function heroPlate(value: unknown): HeroPlate {
-  if (value === "on") return "on";
-  if (value === "off") return "off";
-  return "auto";
+  return value === "off" ? "off" : "on";
+}
+
+/** H7.4c: the default focus of a banner picture: centre across, 20% down (keeps heads in portrait crops). */
+export const FOCUS_DEFAULT_X = 50;
+export const FOCUS_DEFAULT_Y = 20;
+
+/** A focus value in percent: a whole number from 0 to 100, or the default when the value is missing or wrong. */
+function focusPercent(value: unknown, fallback: number): number {
+  if (typeof value !== "number" || !Number.isFinite(value)) return fallback;
+  return Math.min(100, Math.max(0, Math.round(value)));
 }
 
 function hrefOr(value: unknown, fallback: string) {
@@ -393,6 +411,10 @@ export function sanitizeSiteContent(
         mobileLines: lines(heroIn.mobileLines, base.hero.mobileLines),
         photo: photo || base.hero.photo,
         photoPhone: imagePath(heroIn.photoPhone, ""),
+        focusX: focusPercent(heroIn.focusX, FOCUS_DEFAULT_X),
+        focusY: focusPercent(heroIn.focusY, FOCUS_DEFAULT_Y),
+        phoneFocusX: focusPercent(heroIn.phoneFocusX, FOCUS_DEFAULT_X),
+        phoneFocusY: focusPercent(heroIn.phoneFocusY, FOCUS_DEFAULT_Y),
         photoAlt: text(heroIn.photoAlt, 80, base.hero.photoAlt),
         searchPlaceholder: text(heroIn.searchPlaceholder, 80, base.hero.searchPlaceholder),
         postLabel: text(heroIn.postLabel, 40, base.hero.postLabel),

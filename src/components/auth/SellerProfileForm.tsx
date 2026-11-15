@@ -11,15 +11,18 @@ interface Props {
   initial: SellerView | null;
   /** True while the account has no date of birth yet. Asked once, then never again. */
   askDateOfBirth: boolean;
+  /** H7.4c: the Live chat switch as it is saved now. Off for existing sellers. */
+  initialLiveChat?: boolean;
 }
 
 /** H7.2b: the seller profile, shown once before the first ad. Name and city show on ads. Date of birth never shows. */
-export function SellerProfileForm({ next, initial, askDateOfBirth }: Props) {
+export function SellerProfileForm({ next, initial, askDateOfBirth, initialLiveChat = false }: Props) {
   const router = useRouter();
   const [name, setName] = useState(initial?.name ?? "");
   const [city, setCity] = useState(initial?.city ?? "");
   const [whatsapp, setWhatsapp] = useState(initial?.whatsapp ?? "");
   const [availableNow, setAvailableNow] = useState(initial?.availableNow ?? false);
+  const [liveChat, setLiveChat] = useState(initialLiveChat);
   const [dateOfBirth, setDateOfBirth] = useState("");
   const [adultConfirmed, setAdultConfirmed] = useState(false);
   const [busy, setBusy] = useState(false);
@@ -36,6 +39,7 @@ export function SellerProfileForm({ next, initial, askDateOfBirth }: Props) {
       city: city.trim(),
       whatsapp: whatsapp.trim(),
       availableNow,
+      liveChat,
       ...(askDateOfBirth ? { dateOfBirth, adultConfirmed } : {}),
     };
     const res = await api<{ seller: SellerView }>("/api/auth/seller-profile", { method: "PUT", body: JSON.stringify(body) });
@@ -83,6 +87,12 @@ export function SellerProfileForm({ next, initial, askDateOfBirth }: Props) {
         <input type="checkbox" checked={availableNow} onChange={(event) => setAvailableNow(event.target.checked)} />
         <span>Available now (buyers see Online now)</span>
       </label>
+
+      <label className="tk-sp-check">
+        <input type="checkbox" checked={liveChat} onChange={(event) => setLiveChat(event.target.checked)} />
+        <span>Turn on live chat?</span>
+      </label>
+      <p className="tk-sp-help">Buyers can chat with you on Tharkoo. Your ads then show Online now or Away, and get a Chat online now button.</p>
 
       {askDateOfBirth ? (
         <fieldset className="tk-sp-fieldset">

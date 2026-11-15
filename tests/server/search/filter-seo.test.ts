@@ -36,6 +36,10 @@ describe("indexable listing pages", () => {
 });
 
 describe("field filters", () => {
+  it("reads a hyphenated field key such as looking-for", () => {
+    expect(parseFieldFilters({ "f.looking-for": ["Dating"] })["looking-for"]).toEqual(["Dating"]);
+  });
+
   it("keeps valid field keys, drops other keys, and caps the picks per field", () => {
     const many = Array.from({ length: MAX_PICKS_PER_FILTER + 5 }, (_, index) => `Option ${index}`);
     const parsed = parseFieldFilters({ "f.hair": many, "f.Bad-Key": "x", "f.age": "", q: "gym", "f.looking": ["Dating", "  "] });

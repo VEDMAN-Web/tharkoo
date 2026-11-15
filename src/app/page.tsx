@@ -4,7 +4,7 @@ import Link from "next/link";
 import { HeroSearch } from "@/components/HeroSearch";
 import { HomeLayout } from "@/components/blocks/HomeLayout";
 import { HomeBlocks, SkeletonGrid } from "@/components/HomeBlocks";
-import { getCategories, getCities, getFeed, getHomepageContent } from "@/lib/queries";
+import { getCategories, getFeed, getHomepageContent } from "@/lib/queries";
 import { getPageBlocks } from "@/lib/layout/read";
 import { postAdPath } from "@/lib/urls";
 import { textOverrides } from "@/app/admin/ui-text/store";
@@ -16,6 +16,7 @@ import { plain } from "@/lib/plain";
 import { newDesignOn } from "@/server/site-links/new-design";
 import { readShellConfig } from "@/server/site-links/shell-config";
 import { NewHome } from "@/components/new/NewHome";
+import { countryPlaces } from "@/server/locations/site-country";
 
 export const revalidate = 60;
 
@@ -40,11 +41,11 @@ async function publishedHome() {
 
 /** H7.4: the New design home, as in the Home mockup. Used only while the New design switch is on. */
 async function newHome(texts: ReturnType<typeof pickTexts>) {
-  const [content, paths, categories, cities, feed, shell] = await Promise.all([
+  const [content, paths, categories, countries, feed, shell] = await Promise.all([
     getHomepageContent(),
     getPaths(),
     getCategories(),
-    getCities(),
+    countryPlaces(),
     getFeed({}, 1),
     readShellConfig(),
   ]);
@@ -56,7 +57,7 @@ async function newHome(texts: ReturnType<typeof pickTexts>) {
         ads={plain(feed.items)}
         shell={shell}
         paths={paths}
-        cities={plain(cities).map((city) => ({ slug: city.slug, name: city.name }))}
+        countries={plain(countries)}
         texts={texts}
       />
     </UiTextProvider>

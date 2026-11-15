@@ -12,6 +12,8 @@ export interface SellerStatus {
   callsAllowed: boolean;
   /** A people category: no video call and verify button. Call, WhatsApp and chat stay. */
   people: boolean;
+  /** H7.4c: the seller has Live chat on. Only then the badge and the chat button show. */
+  chatOn: boolean;
 }
 
 const STATUS_PATH = "/api/availability/listings";

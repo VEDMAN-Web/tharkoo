@@ -6,6 +6,7 @@ import { loginPath, postAdPath } from "@/lib/urls";
 import { withUrlSeo } from "@/lib/seo/override";
 import { SESSION_COOKIE } from "@/server/auth/http";
 import { userFromToken } from "@/server/auth/service";
+import { readOwnPresence } from "@/server/availability/service";
 import { newDesignOn } from "@/server/site-links/new-design";
 import { getPaths } from "@/server/urls/service";
 
@@ -33,11 +34,13 @@ export default async function Page({ searchParams }: { searchParams: Promise<Rec
     redirect(`${loginPath(paths)}?role=seller&next=${encodeURIComponent(next)}`);
   }
   const user = session.user;
+  const presence = await readOwnPresence(user.id);
   return (
     <SellerProfileForm
       next={next}
       initial={user.seller}
       askDateOfBirth={!user.dateOfBirth}
+      initialLiveChat={presence.liveChat}
     />
   );
 }

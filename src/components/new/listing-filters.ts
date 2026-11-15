@@ -4,11 +4,7 @@
  * that is marked "Use as filter": pick-one and pick-many fields as chips, number ranges as Min and Max, yes/no as one chip.
  * Short text fields are never filters.
  */
-import type { ListingParams } from "@/server/search/filter-seo";
-
-/** Most picks kept for one field, and the longest value, as in filter-seo.ts. */
-const MAX_PICKS = 20;
-const MAX_VALUE = 200;
+import { parseFieldFilters, type ListingParams } from "@/server/search/filter-seo";
 
 export type FilterField = {
   key: string;
@@ -45,21 +41,6 @@ export function filterableFields(fields: readonly FilterField[] | undefined): Fi
     .sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
 }
 
-/** The trimmed, non-empty values of one parameter, at most MAX_PICKS of them and each at most MAX_VALUE long. */
-function valuesOf(raw: string | string[] | undefined): string[] {
-  const list = Array.isArray(raw) ? raw : [raw];
-  return list
-    .filter((value): value is string => typeof value === "string")
-    .map((value) => value.trim())
-    .filter((value) => value !== "" && value.length <= MAX_VALUE)
-    .slice(0, MAX_PICKS);
-}
-
-function firstValue(raw: string | string[] | undefined): string {
-  const value = Array.isArray(raw) ? raw[0] : raw;
-  return typeof value === "string" ? value.trim() : "";
-}
-
 function toNumber(text: string): number | undefined {
   if (text === "") return undefined;
   const value = Number(text);
@@ -71,15 +52,16 @@ function toNumber(text: string): number | undefined {
  * so a URL cannot filter by a field the category does not offer. Ranges read `f.<key>_min` and `f.<key>_max`.
  */
 export function attributePicks(params: ListingParams, fields: readonly FilterField[] | undefined): AttributePicks {
+  // Every f.<key> goes through the shared parser in filter-seo.ts, so hyphenated keys are read like any other key.
+  // Only keys of this category's filter fields are kept, so a URL cannot filter by a field the category does not offer.
+  const parsed = parseFieldFilters(params);
   const out: AttributePicks = {};
   for (const field of filterableFields(fields)) {
     const type = String(field.type);
-    // Each field reads its own f.<key> parameter. Keys such as "looking-for" are read as they are, which the shared
-    // parser does not accept, and only keys of this category's filter fields are read at all.
-    const values = valuesOf(params[`f.${field.key}`]);
+    const values = parsed[field.key] ?? [];
     if (RANGE_TYPES.has(type)) {
-      const min = toNumber(firstValue(params[`f.${field.key}_min`]));
-      const max = toNumber(firstValue(params[`f.${field.key}_max`]));
+      const min = toNumber(parsed[field.key + "_min"]?.[0] ?? "");
+      const max = toNumber(parsed[field.key + "_max"]?.[0] ?? "");
       if (min !== undefined || max !== undefined) out[field.key] = { ...(min !== undefined ? { min } : {}), ...(max !== undefined ? { max } : {}) };
     } else if (BOOLEAN_TYPES.has(type)) {
       if (values.includes("1")) out[field.key] = ["1"];

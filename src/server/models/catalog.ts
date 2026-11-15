@@ -46,6 +46,8 @@ export interface CategoryDoc {
   parentId?: Types.ObjectId | null;
   enabled?: boolean;
   kind?: CategoryKind;
+  /** H7.4c: the line icon shown when the category has no photo. Empty means the default for its kind. */
+  icon?: string;
   /** Live video tour switch (H6.5). Off by default. */
   videoTourEnabled?: boolean;
   videoTourCoins?: number;
@@ -140,6 +142,7 @@ const categorySchema = new Schema<CategoryDoc>(
     enabled: { type: Boolean, default: true },
     /** No default: a category without a kind fails closed for tours until an admin sets one (H6.5, relay #40). */
     kind: { type: String, enum: CATEGORY_KINDS },
+    icon: { type: String, default: "" },
     videoTourEnabled: { type: Boolean, default: false },
     videoTourCoins: { type: Number, default: 1, min: 1, max: 100 },
     order: { type: Number, default: 0 },
