@@ -2628,7 +2628,9 @@
         "tests/server/search/filter-seo.test.ts",
         "tests/server/search/hero-search-href.test.ts",
         "tests/server/shell/shell-render.test.ts",
-        "tests/server/locations/country-scope.test.ts"
+        "tests/server/locations/country-scope.test.ts",
+        "docs/ownership.json",
+        "tests/server/shell/home-config-banner.test.ts"
       ]
     }
   }
