@@ -2740,6 +2740,27 @@
         "tests/e2e/shell.e2e.ts",
         "docs/ownership.json"
       ]
+    },
+    "H7.15": {
+      "branchPrefix": "haiku/h7.15",
+      "globs": [
+        "src/components/new/p10-p13.css",
+        "src/components/new/PageParts.tsx",
+        "src/components/new/ContactForm.tsx",
+        "src/components/new/ContactView.tsx",
+        "src/components/new/legal-copy.ts",
+        "src/components/new/LegalView.tsx",
+        "src/components/new/TrustLegalPage.tsx",
+        "src/components/new/BlogView.tsx",
+        "src/components/new/NotFoundView.tsx",
+        "src/app/contact/**",
+        "src/app/privacy/**",
+        "src/app/terms/**",
+        "src/app/cookies/**",
+        "src/app/cms/**",
+        "src/app/blog/**",
+        "src/app/not-found.tsx"
+      ]
     }
   }
 }

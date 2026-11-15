@@ -1,9 +1,11 @@
 import Link from "next/link";
 import { getBlogPosts } from "@/lib/queries";
 import { Container } from "@/components/ui/Container";
+import { BlogList } from "@/components/new/BlogView";
 import { blogPath } from "@/lib/urls";
 import { withUrlSeo } from "@/lib/seo/override";
 import { getPaths } from "@/server/urls/service";
+import { newDesignOn } from "@/server/site-links/new-design";
 
 export const revalidate = 300;
 
@@ -17,7 +19,20 @@ export async function generateMetadata() {
 }
 
 export default async function Blog() {
-  const [posts, paths] = await Promise.all([getBlogPosts(), getPaths()]);
+  const [posts, paths, newDesign] = await Promise.all([getBlogPosts(), getPaths(), newDesignOn()]);
+  if (newDesign) {
+    return (
+      <BlogList
+        posts={posts.map((post) => ({
+          slug: post.slug || "",
+          title: post.title || "Untitled",
+          date: post.date || "",
+          body: post.body || "",
+          href: blogPath(paths, post.slug),
+        }))}
+      />
+    );
+  }
   return (
     <Container className="py-8">
       <h1 className="t-h1">Tharkoo Blog</h1>

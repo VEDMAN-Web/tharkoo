@@ -1,4 +1,4 @@
-import { StaticPage } from "@/components/StaticPage";
+import { TrustLegalPage } from "@/components/new/TrustLegalPage";
 import { TRUST } from "@/content/trust";
 import { pageMetadata } from "@/lib/ui/meta";
 
@@ -11,11 +11,5 @@ export const metadata = pageMetadata({
 });
 
 export default function Page() {
-  return (
-    <StaticPage title={copy.title}>
-      {copy.paragraphs.map((paragraph) => (
-        <p key={paragraph.slice(0, 40)}>{paragraph}</p>
-      ))}
-    </StaticPage>
-  );
+  return <TrustLegalPage trustKey="terms" />;
 }
