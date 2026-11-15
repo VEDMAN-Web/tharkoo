@@ -12,6 +12,7 @@ import type { PresenceStatus } from "@/server/availability/status";
 import { OwnerActions } from "./OwnerActions";
 import { SectionHelp } from "@/components/help/SectionHelp";
 import { TourInbox } from "./TourInbox";
+import { LogoutButton } from "@/components/auth/LogoutButton";
 
 /** H7.5: the New design seller panel (the mockup's VendorPanel). Same data as the old panel, new look. */
 
@@ -173,7 +174,7 @@ export function NewVendorPanel({ initialTab = "all" }: { initialTab?: Tab }) {
         <Link href="/u/account/wallet/" className="tkv-navlink">Wallet</Link>
         <Link href="/u/account/saved/" className="tkv-navlink">Saved</Link>
         <Link href="/u/account/edit-account/" className="tkv-navlink">Settings</Link>
-        <Link href="/u/logout/" className="tkv-navlink">Log out</Link>
+        <LogoutButton className="tkv-navlink">Log out</LogoutButton>
       </nav>
 
       <main className="tkv-main">
