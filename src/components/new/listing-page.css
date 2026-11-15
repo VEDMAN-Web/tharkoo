@@ -1,0 +1,11 @@
+/* H7.32: the shared page frame for New design pages with a title band and no filter panel (ListingBand,
+   NewListingPage). Plain CSS, scoped under .tkn-lp. Breakpoints: 900 px (wider gaps). */
+.tkn-ls.tkn-lp { display: block; width: 100%; min-width: 0; }
+.tkn-lp-body {
+  box-sizing: border-box; max-width: 1280px; margin: 0 auto; padding: 0 24px 72px;
+  display: grid; gap: 32px; min-width: 0;
+}
+@media (min-width: 900px) { .tkn-lp-body { gap: 48px; } }
+.tkn-lp-body h2 { margin: 0 0 14px; font-size: 22px; line-height: 1.25; font-weight: 800; color: #1e0b38; }
+.tkn-lp-body .tk-feed { max-width: 880px; }
+.tkn-lp-body .tk-seo-foot, .tkn-lp-body .tk-browse-city { max-width: 880px; }

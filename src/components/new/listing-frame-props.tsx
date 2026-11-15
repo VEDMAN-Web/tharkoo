@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import type { ShellImage } from "@/server/site-links/shell-config-rules";
+import type { BandPhoto } from "./band-image";
 import { categoryPath, placePath } from "@/lib/urls";
 import type { TextFn } from "@/lib/ui/text";
 import { bandStyleFor } from "./band-image";
@@ -100,7 +100,7 @@ export function listingFrameProps(input: {
   crumbs: { name: string; path: string }[];
   h1: string;
   intro?: string;
-  image: ShellImage | null;
+  photo: BandPhoto | null;
   categorySlug: string;
   citySlug?: string;
   searchAction: string;
@@ -117,7 +117,7 @@ export function listingFrameProps(input: {
   const rows = panelRows(input.fields, input.picks);
   const activeCount = activeFilterCount(rows, input.toggles);
   return {
-    bandStyle: bandStyleFor(input.image),
+    bandStyle: bandStyleFor(input.photo),
     head: <ListingHead crumbs={input.crumbs} h1={input.h1} intro={input.intro} labels={input.labels} />,
     chips: input.chips,
     searchForm: (
