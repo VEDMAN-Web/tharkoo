@@ -2980,6 +2980,15 @@
         "tests/e2e/user-panel.e2e.ts",
         "tests/e2e/account.e2e.ts"
       ]
+    },
+    "H7.23": {
+      "branchPrefix": "haiku/h7.23",
+      "globs": [
+        "src/app/page.tsx",
+        "src/components/new/HomeAdCard.tsx",
+        "src/components/new/home-spec.css",
+        "docs/ownership.json"
+      ]
     }
   }
 }
