@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { api } from "@/lib/ui/api";
 import { resetHomepageForAdmin, saveHomepageForAdmin } from "@/app/admin/content-actions";
-import type { NavLink, SiteContent } from "@/lib/ui/site-content";
+import type { HeroPlate, NavLink, SiteContent } from "@/lib/ui/site-content";
 
 type Part = "home" | "menus";
 
@@ -42,28 +42,49 @@ async function uploadPhoto(file: File) {
   return payload.secure_url;
 }
 
-function PhotoField({ label, value, onChange }: { label: string; value: string; onChange: (value: string) => void }) {
+function PhotoField({
+  label,
+  value,
+  onChange,
+  help,
+  onRemove,
+}: {
+  label: string;
+  value: string;
+  onChange: (value: string) => void;
+  help?: string;
+  /** When set, a Remove button clears the picture (the form saves only when Save is pressed). */
+  onRemove?: () => void;
+}) {
   const [note, setNote] = useState("");
   return (
-    <label className="tk-field">
-      <span>{label}</span>
-      <input value={value} onChange={(event) => onChange(event.target.value)} />
-      <input
-        type="file"
-        accept="image/jpeg,image/png,image/webp"
-        onChange={async (event) => {
-          const file = event.target.files?.[0];
-          if (!file) return;
-          setNote("");
-          try {
-            onChange(await uploadPhoto(file));
-          } catch (error) {
-            setNote(error instanceof Error ? error.message : "Upload is unavailable. Paste a path such as /placeholders/hero.webp.");
-          }
-        }}
-      />
-      {note ? <span className="tk-error">{note}</span> : null}
-    </label>
+    <div className="grid gap-1">
+      <label className="tk-field">
+        <span>{label}</span>
+        <input value={value} onChange={(event) => onChange(event.target.value)} />
+        <input
+          type="file"
+          accept="image/jpeg,image/png,image/webp"
+          onChange={async (event) => {
+            const file = event.target.files?.[0];
+            if (!file) return;
+            setNote("");
+            try {
+              onChange(await uploadPhoto(file));
+            } catch (error) {
+              setNote(error instanceof Error ? error.message : "Upload is unavailable. Paste a path such as /placeholders/hero.webp.");
+            }
+          }}
+        />
+        {help ? <span className="t-small text-muted">{help}</span> : null}
+        {note ? <span className="tk-error">{note}</span> : null}
+      </label>
+      {onRemove && value ? (
+        <button type="button" className="adm-btn w-fit" onClick={onRemove}>
+          Remove this picture
+        </button>
+      ) : null}
+    </div>
   );
 }
 
@@ -173,7 +194,26 @@ export function SiteContentForm({
                 Mobile headline, one line per row
                 <textarea rows={4} value={content.hero.mobileLines.join("\n")} onChange={(event) => patch({ ...content, hero: { ...content.hero, mobileLines: event.target.value.split("\n") } })} />
               </label>
-              <PhotoField label="Hero photo" value={content.hero.photo} onChange={(photo) => patch({ ...content, hero: { ...content.hero, photo } })} />
+              <div className="grid gap-3 rounded-lg border border-line p-3">
+                <p className="font-semibold">Banner images</p>
+                <p className="t-small text-muted">Computer 1920 x 700 px, phone 900 x 1200 px. Up to 8 MB each, JPG, PNG or WEBP. The phone picture is shown below 600 px wide; if it is empty, the computer picture is used on phones too.</p>
+                <PhotoField label="Computer picture" value={content.hero.photo} onChange={(photo) => patch({ ...content, hero: { ...content.hero, photo } })} />
+                <PhotoField
+                  label="Phone picture (optional)"
+                  value={content.hero.photoPhone}
+                  onChange={(photoPhone) => patch({ ...content, hero: { ...content.hero, photoPhone } })}
+                  onRemove={() => patch({ ...content, hero: { ...content.hero, photoPhone: "" } })}
+                />
+              </div>
+              <label className="tk-field">
+                Text box behind the headline
+                <select value={content.hero.plate} onChange={(event) => patch({ ...content, hero: { ...content.hero, plate: event.target.value as HeroPlate } })}>
+                  <option value="auto">Automatic: on phones only</option>
+                  <option value="on">Always on</option>
+                  <option value="off">Never</option>
+                </select>
+                <span className="t-small text-muted">A frosted white box behind the headline, so the words read on any photo. Shown on phones by default, off on computers.</span>
+              </label>
               <label className="tk-field">
                 Search box text
                 <input value={content.hero.searchPlaceholder} onChange={(event) => patch({ ...content, hero: { ...content.hero, searchPlaceholder: event.target.value } })} />

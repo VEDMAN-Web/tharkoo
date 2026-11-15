@@ -20,15 +20,22 @@ export type HomeGroup = {
   showAll: boolean;
 };
 
+/** H7.4: the frosted text box behind the banner heading. Automatic means on phones only. */
+export type HeroPlate = "auto" | "on" | "off";
+
 export type SiteContent = {
   hero: {
     desktop: string;
     mobileLines: string[];
+    /** The computer banner image (below 600 px the phone image is used when one is set). */
     photo: string;
+    /** H7.4: optional phone banner image. Empty means the computer image is used on phones too. */
+    photoPhone: string;
     photoAlt: string;
     searchPlaceholder: string;
     postLabel: string;
     postHref: string;
+    plate: HeroPlate;
   };
   cardsHeading: string;
   cardsIntro: string;
@@ -103,10 +110,12 @@ export function defaultSiteContent(): SiteContent {
       desktop: "Find anything near you",
       mobileLines: ["Find anything", "near you"],
       photo: "/placeholders/buy-and-sell/01.webp",
+      photoPhone: "",
       photoAlt: "Local listings on Tharkoo",
       searchPlaceholder: "Search By City, Category...",
       postLabel: "POST YOUR AD",
       postHref: POST,
+      plate: "auto",
     },
     cardsHeading: "Latest listings in your city",
     cardsIntro: "Find your favourite listings on Tharkoo",
@@ -221,6 +230,13 @@ function imagePath(value: unknown, fallback: string) {
   if (href.startsWith("/") && !href.includes("..")) return href;
   if (href.startsWith("https://")) return href;
   return "";
+}
+
+/** H7.4: anything other than "on" or "off" is the automatic setting. */
+function heroPlate(value: unknown): HeroPlate {
+  if (value === "on") return "on";
+  if (value === "off") return "off";
+  return "auto";
 }
 
 function hrefOr(value: unknown, fallback: string) {
@@ -376,10 +392,12 @@ export function sanitizeSiteContent(
         desktop: text(heroIn.desktop, 160, base.hero.desktop),
         mobileLines: lines(heroIn.mobileLines, base.hero.mobileLines),
         photo: photo || base.hero.photo,
+        photoPhone: imagePath(heroIn.photoPhone, ""),
         photoAlt: text(heroIn.photoAlt, 80, base.hero.photoAlt),
         searchPlaceholder: text(heroIn.searchPlaceholder, 80, base.hero.searchPlaceholder),
         postLabel: text(heroIn.postLabel, 40, base.hero.postLabel),
         postHref: heroPost || POST,
+        plate: heroPlate(heroIn.plate),
       },
       cardsHeading: text(source.cardsHeading, 80, base.cardsHeading),
       cardsIntro: text(source.cardsIntro, 160, base.cardsIntro),

@@ -68,19 +68,31 @@
   background: linear-gradient(90deg, #fff0f7, #fff8ec, #f5f0ff);
   border-bottom: 1px solid rgba(234, 216, 240, 0.8);
 }
+/* One row. On a narrow screen the row scrolls sideways inside itself; the page itself never scrolls sideways. */
 .tkh-utility-in {
   max-width: 1280px;
   margin: 0 auto;
   padding: 7px 24px;
   display: flex;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
   gap: 10px;
   align-items: center;
+  overflow-x: auto;
+  scrollbar-width: none;
   list-style: none;
   font-size: 12px;
   font-weight: 600;
 }
+.tkh-utility-in::-webkit-scrollbar {
+  display: none;
+}
+.tkh-utility-in:focus-visible {
+  outline: 3px solid #7c3aed;
+  outline-offset: 2px;
+}
 .tkh-util {
+  flex: none;
+  white-space: nowrap;
   display: inline-flex;
   align-items: center;
   gap: 6px;
@@ -150,6 +162,42 @@
   font-size: 17px;
   line-height: 1.55;
   color: var(--muted);
+}
+
+.tkh-banner picture {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+/* Text plate: a frosted white box behind the heading block. It is not a colour overlay on the image.
+   Admin "on" plates always; "auto" (the default) plates on phones only, below 600 px.
+   On a plate the heading span uses a deeper rose so it keeps 4.5:1 contrast. */
+.tkh-banner[data-plate="on"] .tkh-banner-copy {
+  background: rgba(255, 255, 255, 0.72);
+  -webkit-backdrop-filter: blur(16px);
+  backdrop-filter: blur(16px);
+  border-radius: 16px;
+  padding: 16px 20px;
+}
+.tkh-banner[data-plate="on"] .tkh-grad {
+  background: linear-gradient(135deg, #a8124f, #8e1046);
+  -webkit-background-clip: text;
+  background-clip: text;
+}
+@media (max-width: 599px) {
+  .tkh-banner[data-plate="auto"] .tkh-banner-copy {
+    background: rgba(255, 255, 255, 0.72);
+    -webkit-backdrop-filter: blur(16px);
+    backdrop-filter: blur(16px);
+    border-radius: 16px;
+    padding: 16px 20px;
+  }
+  .tkh-banner[data-plate="auto"] .tkh-grad {
+    background: linear-gradient(135deg, #a8124f, #8e1046);
+    -webkit-background-clip: text;
+    background-clip: text;
+  }
 }
 
 /* 4. Search card: overlaps the banner by 46 px, glass */
@@ -520,6 +568,12 @@
   font-size: 14px;
   font-weight: 800;
   color: var(--rose-text);
+}
+.tkh-ad-meta {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 10px;
 }
 .tkh-ad-views {
   font-size: 12px;
