@@ -72,7 +72,7 @@ export function MediaLibrary({ rows, filter, truncated }: { rows: LibraryRow[]; 
             key={item.key}
             href={item.href}
             aria-current={filter === item.key ? "page" : undefined}
-            className={filter === item.key ? "tk-btn tk-btn-gold" : "tk-btn tk-btn-outline-gold"}
+            className={filter === item.key ? "tk-btn tk-btn-cta" : "tk-btn tk-btn-outline-primary"}
             data-tk="media-filter"
           >
             {item.label}

@@ -36,7 +36,7 @@ const H2 = { fontSize: 18, margin: 0 } as const;
 
 function Stat({ label, value }: { label: string; value: string }) {
   return (
-    <div style={{ background: "var(--card, #fff)", borderRadius: 10, padding: "12px 14px", border: "1px solid var(--border)", boxShadow: "inset 0 3px 0 var(--gold)" }}>
+    <div style={{ background: "var(--card, #fff)", borderRadius: 10, padding: "12px 14px", border: "1px solid var(--border)", boxShadow: "inset 0 3px 0 var(--rose)" }}>
       <p className="t-small" style={{ color: "var(--muted)", margin: 0 }}>{label}</p>
       <p style={{ margin: "4px 0 0", fontSize: 20, fontWeight: 700 }}>{value}</p>
     </div>
@@ -88,7 +88,7 @@ function WithdrawForm({ summary, onDone }: { summary: PayoutSummary; onDone: () 
       <div aria-live="polite" className="t-small" style={{ minHeight: 18, color: message.startsWith("Request sent") ? "var(--ok, #1f7a3a)" : "var(--danger, #a12626)" }}>
         {message}
       </div>
-      <button type="submit" className="tk-btn tk-btn-gold" disabled={busy || Boolean(waiting) || !Number.isInteger(amount) || amount < summary.minWithdrawCoins || amount > summary.availableCoins} style={{ width: "100%" }}>
+      <button type="submit" className="tk-btn tk-btn-cta" disabled={busy || Boolean(waiting) || !Number.isInteger(amount) || amount < summary.minWithdrawCoins || amount > summary.availableCoins} style={{ width: "100%" }}>
         {busy ? "Sending" : "Request withdrawal"}
       </button>
     </form>

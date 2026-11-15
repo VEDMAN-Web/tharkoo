@@ -91,7 +91,7 @@ export function KycForm({ onSaved }: { onSaved: (kyc: MaskedKyc) => void }) {
             type="button"
             role="radio"
             aria-checked={method === option}
-            className={method === option ? "tk-btn tk-btn-gold" : "tk-btn tk-btn-outline-primary"}
+            className={method === option ? "tk-btn tk-btn-cta" : "tk-btn tk-btn-outline-primary"}
             onClick={() => setMethod(option)}
             style={{ flex: 1 }}
           >
@@ -116,7 +116,7 @@ export function KycForm({ onSaved }: { onSaved: (kyc: MaskedKyc) => void }) {
       <div aria-live="polite" className="t-small" style={{ color: "var(--danger, #a12626)", minHeight: 18 }}>
         {message}
       </div>
-      <button type="submit" className="tk-btn tk-btn-gold" disabled={busy} style={{ width: "100%" }}>
+      <button type="submit" className="tk-btn tk-btn-cta" disabled={busy} style={{ width: "100%" }}>
         {busy ? "Saving" : "Save payout details"}
       </button>
     </form>

@@ -7,9 +7,12 @@ import { canonical } from "@/lib/seo";
 import { blogPostingNode } from "@/lib/seo/schema";
 import { Container } from "@/components/ui/Container";
 import { Prose } from "@/components/ui/Prose";
-import { blogPath } from "@/lib/urls";
+import { LegalView } from "@/components/new/LegalView";
+import { bodyParagraphs, readingMinutes, toSections } from "@/components/new/legal-copy";
+import { blogPath, contactPath } from "@/lib/urls";
 import { withUrlSeo, urlHeading } from "@/lib/seo/override";
 import { getPaths } from "@/server/urls/service";
+import { newDesignOn } from "@/server/site-links/new-design";
 
 export const revalidate = 300;
 
@@ -33,21 +36,43 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
 
 export default async function BlogPostPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
-  const [post, paths] = await Promise.all([getBlog(slug), getPaths()]);
+  const [post, paths, newDesign] = await Promise.all([getBlog(slug), getPaths(), newDesignOn()]);
   if (!post) notFound();
   const path = blogPath(paths, post.slug || slug);
   const heading = await urlHeading(path, post.title || "Blog");
+  const jsonLd = (
+    <JsonLd
+      data={blogPostingNode({
+        headline: heading,
+        datePublished: post.date,
+        dateModified: post.date,
+        author: post.author,
+        url: canonical(path),
+      })}
+    />
+  );
+  if (newDesign) {
+    const paragraphs = bodyParagraphs(post.body);
+    return (
+      <>
+        {jsonLd}
+        <LegalView
+          crumbs={[{ label: "Tharkoo India", href: "/" }, { label: "Blog", href: blogPath(paths) }, { label: heading }]}
+          title={heading}
+          updated={post.date || ""}
+          updatedPrefix="Published"
+          minutes={readingMinutes(paragraphs)}
+          author={post.author || undefined}
+          sections={toSections(paragraphs, slug)}
+          askHref={contactPath(paths)}
+          askLabel="Questions about this article?"
+        />
+      </>
+    );
+  }
   return (
     <Container className="py-8">
-      <JsonLd
-        data={blogPostingNode({
-          headline: heading,
-          datePublished: post.date,
-          dateModified: post.date,
-          author: post.author,
-          url: canonical(path),
-        })}
-      />
+      {jsonLd}
       <p className="t-small">
         <Link href={blogPath(paths)} className="text-accent">Tharkoo Blog</Link> · {post.date} · {post.author}
       </p>

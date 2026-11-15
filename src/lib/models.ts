@@ -159,6 +159,7 @@ export interface BlogPostDoc extends BaseDoc {
   body: string;
   date: string;
   author: string;
+  category?: string;
   status: string;
 }
 

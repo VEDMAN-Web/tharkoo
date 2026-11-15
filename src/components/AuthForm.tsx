@@ -163,7 +163,7 @@ function AuthFormInner({ mode }: { mode: Mode }) {
       >
         <div aria-live="polite" className="t-small" style={{ color: "var(--danger)", minHeight: 20 }}>{message}</div>
         {mode === "verify" ? (
-          <button type="button" className="tk-btn tk-btn-gold" disabled={busy} onClick={onVerify} style={{ width: "100%" }}>
+          <button type="button" className="tk-btn tk-btn-cta" disabled={busy} onClick={onVerify} style={{ width: "100%" }}>
             Confirm email
           </button>
         ) : null}
@@ -235,7 +235,7 @@ function AuthFormInner({ mode }: { mode: Mode }) {
           </>
         ) : null}
         {mode !== "verify" && mode !== "expired" ? (
-          <button className="tk-btn tk-btn-gold" type="submit" disabled={busy} style={{ width: "100%", marginTop: 8 }}>
+          <button className="tk-btn tk-btn-cta" type="submit" disabled={busy} style={{ width: "100%", marginTop: 8 }}>
             {busy ? "…" : mode === "login" ? "LOG IN" : mode === "register" ? "CREATE ACCOUNT" : mode === "forgot" ? "SEND LINK" : "SAVE PASSWORD"}
           </button>
         ) : null}

@@ -37,7 +37,7 @@ export function ChatPanel({ conversationId, onClose }: { conversationId: string;
     >
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "6px 12px" }}>
         <span className="t-small" style={{ fontWeight: 700 }}>Chat</span>
-        <button type="button" className="tk-btn tk-btn-outline-gold" style={{ minHeight: 32, padding: "2px 12px" }} onClick={onClose} aria-label="Close chat">
+        <button type="button" className="tk-btn tk-btn-outline-primary" style={{ minHeight: 32, padding: "2px 12px" }} onClick={onClose} aria-label="Close chat">
           Close
         </button>
       </div>

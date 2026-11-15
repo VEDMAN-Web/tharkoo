@@ -61,10 +61,10 @@ export function MediaTile(props: MediaTileProps) {
       {reason ? <p className="t-caption" style={{ color: "var(--warn)", margin: 0 }}>{reason}</p> : null}
       {!uploading ? (
         <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
-          {props.onMakeCover && !isCover ? <button type="button" className="tk-btn tk-btn-outline-gold" style={BUTTON} disabled={busy} onClick={props.onMakeCover}>Make cover</button> : null}
-          {props.onMoveLeft ? <button type="button" className="tk-btn tk-btn-outline-gold" style={BUTTON} disabled={busy} aria-label={`Move ${label} left`} onClick={props.onMoveLeft}>Move left</button> : null}
-          {props.onMoveRight ? <button type="button" className="tk-btn tk-btn-outline-gold" style={BUTTON} disabled={busy} aria-label={`Move ${label} right`} onClick={props.onMoveRight}>Move right</button> : null}
-          {props.onRemove ? <button type="button" className="tk-btn tk-btn-outline-gold" style={BUTTON} disabled={busy} aria-label={`Remove ${label}`} onClick={props.onRemove}>Remove</button> : null}
+          {props.onMakeCover && !isCover ? <button type="button" className="tk-btn tk-btn-outline-primary" style={BUTTON} disabled={busy} onClick={props.onMakeCover}>Make cover</button> : null}
+          {props.onMoveLeft ? <button type="button" className="tk-btn tk-btn-outline-primary" style={BUTTON} disabled={busy} aria-label={`Move ${label} left`} onClick={props.onMoveLeft}>Move left</button> : null}
+          {props.onMoveRight ? <button type="button" className="tk-btn tk-btn-outline-primary" style={BUTTON} disabled={busy} aria-label={`Move ${label} right`} onClick={props.onMoveRight}>Move right</button> : null}
+          {props.onRemove ? <button type="button" className="tk-btn tk-btn-outline-primary" style={BUTTON} disabled={busy} aria-label={`Remove ${label}`} onClick={props.onRemove}>Remove</button> : null}
         </div>
       ) : null}
     </li>

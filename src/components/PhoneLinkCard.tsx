@@ -49,7 +49,7 @@ export function PhoneLinkCard() {
             <span>Code</span>
             <input name="code" inputMode="numeric" autoComplete="one-time-code" maxLength={6} value={code} onChange={(event) => setCode(event.target.value.replace(/\D/g, ""))} required />
           </label>
-          <button className="tk-btn tk-btn-gold" type="submit" disabled={busy || code.length !== 6}>
+          <button className="tk-btn tk-btn-cta" type="submit" disabled={busy || code.length !== 6}>
             {busy ? "Checking" : "Confirm number"}
           </button>
         </form>

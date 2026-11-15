@@ -168,7 +168,7 @@ export function PhotoStep({ listingId, copy, onBack, onNext }: { listingId: stri
           }}
         >
           <p>Drag photos here or</p>
-          <label className="tk-btn tk-btn-outline-gold" aria-disabled={busy}>
+          <label className="tk-btn tk-btn-outline-primary" aria-disabled={busy}>
             ADD PHOTOS
             <input
               type="file"
@@ -223,7 +223,7 @@ export function PhotoStep({ listingId, copy, onBack, onNext }: { listingId: stri
             </ul>
           </InfoPopover>
         </div>
-        <label className="tk-btn tk-btn-outline-gold" aria-disabled={busy || atLimit}>
+        <label className="tk-btn tk-btn-outline-primary" aria-disabled={busy || atLimit}>
           ADD VIDEO
           <input
             type="file"
@@ -261,8 +261,8 @@ export function PhotoStep({ listingId, copy, onBack, onNext }: { listingId: stri
         ) : null}
       </div>
       <div style={{ display: "flex", justifyContent: "space-between", marginTop: 16 }}>
-        <button type="button" className="tk-btn tk-btn-outline-gold" onClick={onBack}>{steps.photos.backLabel}</button>
-        <button type="button" className="tk-btn tk-btn-gold" data-tk="go-on" disabled={busy} onClick={onNext}>{steps.photos.nextLabel}</button>
+        <button type="button" className="tk-btn tk-btn-outline-primary" onClick={onBack}>{steps.photos.backLabel}</button>
+        <button type="button" className="tk-btn tk-btn-cta" data-tk="go-on" disabled={busy} onClick={onNext}>{steps.photos.nextLabel}</button>
       </div>
     </>
   );

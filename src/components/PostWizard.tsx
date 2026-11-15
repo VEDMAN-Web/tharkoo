@@ -407,7 +407,7 @@ export function PostWizard({
           {renderContactFields()}
           {renderConsents()}
           <p style={{ textAlign: "right", marginTop: 24 }}>
-            <button type="button" className="tk-btn tk-btn-gold" data-tk="go-on" disabled={busy} onClick={goOn}>{steps.basics.nextLabel}</button>
+            <button type="button" className="tk-btn tk-btn-cta" data-tk="go-on" disabled={busy} onClick={goOn}>{steps.basics.nextLabel}</button>
           </p>
         </>
       ) : null}
@@ -433,8 +433,8 @@ export function PostWizard({
             </div>
           )}
           <p style={{ textAlign: "right", marginTop: 16 }}>
-            <button type="button" className="tk-btn tk-btn-outline-gold" onClick={() => setStep(2)}>{steps.review.backLabel}</button>{" "}
-            <button type="button" className="tk-btn tk-btn-gold" data-tk="go-on" disabled={busy || !hydrated || !title.trim()} onClick={publish}>{steps.review.nextLabel}</button>
+            <button type="button" className="tk-btn tk-btn-outline-primary" onClick={() => setStep(2)}>{steps.review.backLabel}</button>{" "}
+            <button type="button" className="tk-btn tk-btn-cta" data-tk="go-on" disabled={busy || !hydrated || !title.trim()} onClick={publish}>{steps.review.nextLabel}</button>
           </p>
         </>
       ) : null}

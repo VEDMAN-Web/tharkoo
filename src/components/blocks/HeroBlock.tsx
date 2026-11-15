@@ -149,7 +149,7 @@ export function HeroBlock(props: Props) {
         </Link>
       ) : null}
       {secondaryCta && secondary ? (
-        <Link href={secondary} className="tk-btn tk-btn-outline-gold tk-home-post" prefetch={false}>
+        <Link href={secondary} className="tk-btn tk-btn-outline-primary tk-home-post" prefetch={false}>
           {secondaryCta.label}
         </Link>
       ) : null}
