@@ -1,7 +1,9 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useId, useState } from "react";
 import { listMediaAction } from "@/app/admin/media/actions";
+import { InfoPopover } from "@/components/upload/InfoPopover";
+import { fileProblem, type UploadRule } from "@/components/upload/rules";
 import { TextField } from "./TextField";
 
 /** The shape blocks store for an image (see `image` in src/server/layout/blocks.ts). */
@@ -21,8 +23,10 @@ const toRef = (row: Row): ImageRef => ({ assetId: row.id, src: row.url, alt: row
  * Chooses an image from the media library or uploads a new one (alt text is required).
  * Block editors use it for every image field. `banner` (H6.13) names the buttons for a hero banner:
  * choose / replace from the library, upload a new banner, remove the banner.
+ * H7.8: `rule` puts the size help under the label with an (i) button, and refuses a file that is too big or the wrong type.
  */
-export function ImagePicker({ label, value, onChange, banner = false }: { label: string; value?: ImageRef | null; onChange: (next: ImageRef | null) => void; banner?: boolean }) {
+export function ImagePicker({ label, value, onChange, banner = false, rule }: { label: string; value?: ImageRef | null; onChange: (next: ImageRef | null) => void; banner?: boolean; rule?: UploadRule }) {
+  const uid = useId();
   const [open, setOpen] = useState(false);
   const [tab, setTab] = useState<"library" | "upload">("library");
   const [q, setQ] = useState("");
@@ -59,6 +63,11 @@ export function ImagePicker({ label, value, onChange, banner = false }: { label:
 
   async function upload() {
     if (!file) return;
+    const problem = rule ? fileProblem(file, rule) : null;
+    if (problem) {
+      setError(problem);
+      return;
+    }
     setBusy(true);
     setError("");
     const form = new FormData();
@@ -82,7 +91,20 @@ export function ImagePicker({ label, value, onChange, banner = false }: { label:
 
   return (
     <div className="adm-field">
-      <span className="adm-field-label">{label}</span>
+      <span className="adm-field-label" id={`${uid}-label`}>{label}</span>
+      {rule ? (
+        <>
+          <p className="adm-field-help" id={`${uid}-line`}>{rule.line}</p>
+          <InfoPopover id={`${uid}-info`} label={label}>
+            <strong>{label}</strong>
+            <ul>
+              {rule.details.map((row) => (
+                <li key={row}>{row}</li>
+              ))}
+            </ul>
+          </InfoPopover>
+        </>
+      ) : null}
       {value ? (
         <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
           {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -147,7 +169,14 @@ export function ImagePicker({ label, value, onChange, banner = false }: { label:
               </>
             ) : (
               <>
-                <input className="adm-input" type="file" accept="image/jpeg,image/png,image/webp" onChange={(event) => setFile(event.target.files?.[0] ?? null)} />
+                <input
+                  className="adm-input"
+                  type="file"
+                  accept={rule ? rule.accept.join(",") : "image/jpeg,image/png,image/webp"}
+                  aria-labelledby={`${uid}-label`}
+                  aria-describedby={rule ? `${uid}-line ${uid}-info-pop` : undefined}
+                  onChange={(event) => setFile(event.target.files?.[0] ?? null)}
+                />
                 <TextField label="Alt text" value={alt} onChange={setAlt} min={3} max={125} required />
                 <div className="adm-dialog-actions">
                   <button type="button" className="adm-btn" disabled={busy || !file || alt.trim().length < 3} onClick={upload}>

@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { SectionHelp } from "@/components/help/SectionHelp";
 import { api, friendlyError } from "@/lib/ui/api";
 import type { SavedSearchRow } from "@/server/alerts/saved-searches";
 import styles from "./UserPanel.module.css";
@@ -66,6 +67,7 @@ export function AlertsPanel({
     <div className={styles.stack}>
       <section aria-labelledby="alerts-list" className={`${styles.panel} ${styles.glass}`}>
         <h2 id="alerts-list" className={styles.h2}>Your alerts</h2>
+        <SectionHelp textKey="help.section.alerts" />
         {rows.length === 0 ? (
           <div className={styles.empty}>
             <p className={styles.emptyTitle}>No saved searches yet</p>

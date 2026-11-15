@@ -1,6 +1,7 @@
 "use client";
 
 import { useId, useState } from "react";
+import { UPLOAD_RULES } from "@/components/upload/rules";
 import { ImagePicker, type ImageRef } from "../ui/ImagePicker";
 import { reorder } from "../ui/SortableList";
 import { TextField } from "../ui/TextField";
@@ -50,7 +51,7 @@ function FieldInput({ field, value, props, onChange }: { field: Field; value: un
     case "image":
       return (
         <div className="lay-image">
-          <ImagePicker label={field.label} value={(value as ImageRef | null | undefined) ?? null} onChange={onChange} banner={field.banner} />
+          <ImagePicker label={field.label} value={(value as ImageRef | null | undefined) ?? null} onChange={onChange} banner={field.banner} rule={UPLOAD_RULES.blockImage} />
           {field.help ? <p className="adm-field-help">{field.help}</p> : null}
         </div>
       );
