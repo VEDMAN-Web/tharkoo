@@ -11,7 +11,7 @@ export type NotFoundAds = {
   title: string;
   seeAll: string;
   seeAllHref: string;
-  labels: { view: string; online: string; away: string; watermark: string; views: string };
+  labels: { view: string; online: string; away: string; watermark: string; views: string; viewOne: string };
   cards: (HomeAdCardData & { badge: string })[];
 };
 

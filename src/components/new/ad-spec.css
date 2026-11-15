@@ -32,7 +32,7 @@
 .tkn .tkn-gal-badge, .tkn .tkn-gal-new, .tkn .tkn-gal-live {
   font-size: 11px; font-weight: 700; color: #fff; border-radius: 999px; padding: 5px 11px;
 }
-.tkn .tkn-gal-badge { background: linear-gradient(135deg, #b45309, #92400e); }
+.tkn .tkn-gal-badge { background: linear-gradient(135deg, #d1137a, #a8124f); }
 .tkn .tkn-gal-new { background: linear-gradient(135deg, #d1137a, #a8124f); }
 .tkn .tkn-gal-live { background: #047857; }
 .tkn .tkn-gal-wm {

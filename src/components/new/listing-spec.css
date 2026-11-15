@@ -14,7 +14,7 @@
   --muted: #4a2870;
   --muted-2: #6b4a8a;
   --btn: linear-gradient(135deg, #d1137a, #a8124f);
-  --top-badge: linear-gradient(135deg, #b45309, #92400e);
+  --top-badge: linear-gradient(135deg, #d1137a, #a8124f);
   font-family: var(--font-jakarta), system-ui, -apple-system, "Segoe UI", sans-serif;
   color: var(--ink);
 }
