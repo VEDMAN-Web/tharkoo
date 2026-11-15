@@ -2561,6 +2561,7 @@
         "src/components/new/ListingSearchForm.tsx",
         "src/components/new/ListingFilterPanel.tsx",
         "src/components/new/listing-filters.ts",
+        "src/components/new/ListingBand.tsx",
         "src/components/new/listing-frame-props.tsx",
         "src/components/new/listing-spec.css",
         "src/components/new/band-image.ts",
