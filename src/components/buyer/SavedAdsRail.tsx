@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { AdCard } from "../ui/AdCard";
+import { SectionHelp } from "@/components/help/SectionHelp";
 import { readSaved, type SavedItem } from "../ui/SaveButton";
 import { displayTitle } from "@/lib/format";
 import type { ListingDoc } from "@/lib/models";
@@ -23,6 +24,7 @@ export function SavedAdsRail() {
     <section aria-labelledby="saved-heading" className={`${styles.panel} ${styles.glass}`}>
       <div className={styles.panelHead}>
         <h2 id="saved-heading" className={styles.h2}>Saved ads</h2>
+        <SectionHelp textKey="help.section.saved" />
         {count > 0 ? <Link href="/u/account/saved/" className={styles.link}>See all {count}</Link> : null}
       </div>
       {items === null ? (

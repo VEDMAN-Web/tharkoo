@@ -17,6 +17,7 @@ import { Header } from "./Header";
 import { HeaderNew } from "./HeaderNew";
 import { MainInner } from "./MainInner";
 import { UrlPathProvider } from "./UrlPaths";
+import { UiTextProvider } from "./help/UiTextProvider";
 import { SupportChat } from "./chat/SupportChat";
 
 type City = { slug: string; name: string; stateSlug?: string };
@@ -64,6 +65,7 @@ export function PathChrome({ shell, paths, children }: { shell: ChromeData; path
   const siteName = site.logoText || site.name || "Tharkoo";
   return (
     <UrlPathProvider paths={paths}>
+    <UiTextProvider texts={texts}>
     <CityProvider cities={cities}>
       {path.startsWith(`/${paths.ad.replace(/^\/|\/$/g, "")}/`) ? null : (
         <JsonLd
@@ -138,6 +140,7 @@ export function PathChrome({ shell, paths, children }: { shell: ChromeData; path
       />
       )}
     </CityProvider>
+    </UiTextProvider>
     </UrlPathProvider>
   );
 }

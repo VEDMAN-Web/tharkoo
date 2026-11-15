@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { DiscoverFeed } from "./DiscoverFeed";
 import { SavedAdsRail } from "./SavedAdsRail";
+import { SectionHelp } from "@/components/help/SectionHelp";
 import { SignedOutPanel, UserPanelShell } from "./UserPanelShell";
 import type { PackRow, PanelSummary } from "@/server/notifications/summary";
 import styles from "./UserPanel.module.css";
@@ -77,6 +78,7 @@ export function UserPanelHome({
           </section>
           <section aria-labelledby="support-heading" className={`${styles.panel} ${styles.glass}`}>
             <h2 id="support-heading" className={styles.h2}>Help and support</h2>
+            <SectionHelp textKey="help.section.support" />
             {summary.signedIn && summary.unreadSupport > 0 ? (
               <p className={styles.statRow}>
                 <span>New reply on a ticket</span>

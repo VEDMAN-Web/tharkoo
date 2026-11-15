@@ -89,7 +89,7 @@ function chromeData(shell: Shell): ChromeData {
     user,
     newDesign: shell.newDesign,
     // H7.8: the header and live chat words from the UI-text store (only those keys reach the client).
-    texts: pickTexts(shell.texts, "header.", "chat."),
+    texts: pickTexts(shell.texts, "header.", "chat.", "help."),
     shell: plain(
       shellWithFallbacks(normaliseShellConfig(shell.shell), {
         whatsapp: support.whatsapp || "",
