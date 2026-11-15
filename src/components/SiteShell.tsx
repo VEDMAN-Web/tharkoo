@@ -92,7 +92,7 @@ function chromeData(shell: Shell, signIn: ChromeData["signIn"]): ChromeData {
     user,
     newDesign: shell.newDesign,
     // H7.8: the header and live chat words from the UI-text store (only those keys reach the client).
-    texts: pickTexts(shell.texts, "header.", "chat.", "help."),
+    texts: pickTexts(shell.texts, "header.", "chat.", "help.", "home.utility."),
     signIn,
     shell: plain(
       shellWithFallbacks(normaliseShellConfig(shell.shell), {

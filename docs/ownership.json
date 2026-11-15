@@ -3068,6 +3068,13 @@
         "src/server/auth/service.ts",
         "tests/server/auth/cookie-life.test.ts"
       ]
+    },
+    "H7.41": {
+      "branchPrefix": "haiku/h7.41",
+      "globs": [
+        "docs/ownership.json",
+        "src/components/SiteShell.tsx"
+      ]
     }
   }
 }
