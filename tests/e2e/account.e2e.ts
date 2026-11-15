@@ -29,7 +29,7 @@ test.describe("3 Account", () => {
 
     // Settings (the profile screen): shows the email, password change sends a reset email.
     await page.goto("/u/account/edit-account/");
-    await expect(page.getByText(email, { exact: false })).toBeVisible();
+    await expect(page.getByRole("region", { name: "Settings" }).getByText(email, { exact: false })).toBeVisible();
     await page.getByRole("button", { name: "Change password" }).click();
     await expect(page.getByRole("button", { name: "Email sent" })).toBeVisible();
 
@@ -46,7 +46,7 @@ test.describe("3 Account", () => {
     const me = await page.request.get("/api/auth/me");
     expect(me.status()).toBe(401);
     await page.goto("/u/account/dashboard/");
-    await expect(page.getByText(/sign in|log in/i).first()).toBeVisible();
+    await expect(page.getByRole("heading", { name: /log in/i }).first()).toBeVisible();
 
     // And the same credentials work again.
     await loginUi(page, email);
