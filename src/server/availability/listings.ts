@@ -45,7 +45,7 @@ export async function presenceForSlugs(slugs: string[], now: Date = new Date()):
   for (const row of rows) {
     if (!row.slug) continue;
     const own = byOwner.get(String(row.ownerId ?? ""));
-    const status = presenceStatus({ available: own?.available === true, lastActivityAt: own?.lastActivityAt ?? null }, now.getTime(), hours);
+    const status = presenceStatus({ available: own?.available !== false, lastActivityAt: own?.lastActivityAt ?? null }, now.getTime(), hours);
     items[row.slug] = { status, callsAllowed: callsAllowed(status), people: people.has(String(row.categoryId ?? "")) };
   }
   return items;

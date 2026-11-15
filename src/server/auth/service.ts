@@ -4,6 +4,7 @@ import { Schema, Types } from "mongoose";
 import { AuditRepository } from "@/server/audit";
 import { hashToken, SESSION_MS, siteOrigin } from "@/server/auth/http";
 import { connectDb } from "@/lib/db";
+import { touchOwnPresence } from "@/server/availability/service";
 import {
   ConflictError,
   ForbiddenError,
@@ -257,6 +258,8 @@ export async function createSession(
   input: { userAgent?: string | null; ip?: string; existingToken?: string },
 ) {
   await connectDb();
+  // H7.5: a login is activity; it brings an auto-away seller back to Online (a manual Off stays Off).
+  await touchOwnPresence(String(user._id));
   if (input.existingToken) {
     await Session.updateOne(
       { tokenHash: hashToken(input.existingToken), revokedAt: null },

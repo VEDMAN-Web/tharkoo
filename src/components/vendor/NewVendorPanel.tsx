@@ -185,8 +185,8 @@ export function NewVendorPanel({ initialTab = "all" }: { initialTab?: Tab }) {
                     {presence.available
                       ? presence.status === "online"
                         ? "Buyers see Online now and can call or chat."
-                        : "You are away: no activity for a while. Any action brings you back."
-                      : "Buyers see Away. Calls are paused."}
+                        : "Away (auto): no activity for a while. Any action brings you back online."
+                      : "Away: you switched it off. Turn it on to show Online now."}
                   </span>
                 </span>
                 <span className="tkv-switch" aria-hidden><i /></span>

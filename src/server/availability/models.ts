@@ -24,7 +24,7 @@ export interface AvailabilitySettingsDoc {
 const presenceSchema = new Schema<VendorPresenceDoc>(
   {
     userId: { type: String, required: true, unique: true, maxlength: 64 },
-    available: { type: Boolean, default: false },
+    available: { type: Boolean, default: true },
     lastActivityAt: { type: Date, default: null },
   },
   { timestamps: { createdAt: false, updatedAt: true }, collection: "vendor_presence" },

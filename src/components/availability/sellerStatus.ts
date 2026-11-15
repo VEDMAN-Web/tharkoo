@@ -10,7 +10,7 @@ import { api } from "@/lib/ui/api";
 export interface SellerStatus {
   status: "online" | "away";
   callsAllowed: boolean;
-  /** A people category: the Call button is never shown (chat stays). */
+  /** A people category: no video call and verify button. Call, WhatsApp and chat stay. */
   people: boolean;
 }
 
