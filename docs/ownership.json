@@ -2568,6 +2568,7 @@
         "src/components/SiteShell.tsx",
         "src/lib/ui/text.ts",
         "tests/server/upload/**",
+        "tests/e2e/h78-uploader.e2e.ts",
         "docs/ownership.json"
       ]
     }
