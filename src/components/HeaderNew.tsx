@@ -8,6 +8,7 @@ import { useEffect, useState } from "react";
 import { HeaderCountry } from "./HeaderCountry";
 import type { CountryOption } from "@/server/locations/country-scope";
 import { HeaderDrawer } from "./HeaderDrawer";
+import { isProbablySignedIn, openSignInFromLink } from "./auth/SignInSheet";
 import { useUrlPaths } from "./UrlPaths";
 import { safeHref } from "@/lib/sanitize";
 import type { UiTextMap } from "@/lib/ui/text";
@@ -82,8 +83,16 @@ export function HeaderNew({
         </nav>
         <div className="tkn-header-actions">
           <HeaderCountry countries={countries} />
-          <Link href={loginPath(paths)} className="tkn-btn tkn-btn-ghost tkn-hide-sm">{shell.header.loginLabel}</Link>
-          <Link href={postAdPath(paths)} className="tkn-btn tkn-btn-primary" data-tk="post-ad" prefetch={false}>
+          <Link href={loginPath(paths)} className="tkn-btn tkn-btn-ghost tkn-hide-sm" onClick={(event) => openSignInFromLink(event, "user")}>{shell.header.loginLabel}</Link>
+          <Link
+            href={postAdPath(paths)}
+            className="tkn-btn tkn-btn-primary"
+            data-tk="post-ad"
+            prefetch={false}
+            onClick={(event) => {
+              if (!isProbablySignedIn()) openSignInFromLink(event, "seller", postAdPath(paths));
+            }}
+          >
             <span className="tkn-post-long">{shell.header.postLabel}</span>
           </Link>
           <button

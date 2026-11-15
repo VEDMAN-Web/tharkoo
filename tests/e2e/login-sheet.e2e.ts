@@ -39,7 +39,6 @@ async function mockSendOk(page: Page) {
   );
 }
 
-/** The sheet itself, so buttons with the same name elsewhere on the page are not matched. */
 function sheet(page: Page) {
   return page.locator(".tk-si");
 }
@@ -49,12 +48,16 @@ async function openSheet(page: Page, role: "user" | "seller" = "user") {
   await expect(page.getByRole("heading", { name: "Log in or sign up" })).toBeVisible();
 }
 
-/** Role step, then the address step, then the code step once the mock provider has sent a code. */
 async function sendCodeTo(page: Page, email: string) {
-  await sheet(page).getByRole("button", { name: "Continue" }).click();
   await sheet(page).getByLabel("Email address").fill(email);
-  await sheet(page).getByRole("button", { name: "Send code" }).click();
-  await expect(sheet(page).getByLabel("6-digit code")).toBeVisible();
+  await sheet(page).getByRole("button", { name: "Send me a code" }).click();
+  await expect(sheet(page).getByRole("group", { name: "6-digit code" })).toBeVisible();
+}
+
+async function typeCode(page: Page, code: string) {
+  for (const [index, digit] of [...code].entries()) {
+    await sheet(page).getByLabel(`Digit ${index + 1} of 6`).fill(digit);
+  }
 }
 
 async function seriousAxeViolations(page: Page) {
@@ -64,8 +67,8 @@ async function seriousAxeViolations(page: Page) {
     .map((item) => `${item.id} (${item.impact}) x${item.nodes.length}: ${item.nodes[0]?.target.join(" ")}`);
 }
 
-test.describe("sign-in sheet (H7.2b): runs at 390 and 1440", () => {
-  test("shows the sheet on the login page with no password field", async ({ page }) => {
+test.describe("sign-in card (H7.2b, H7.12): runs at 390 and 1440", () => {
+  test("shows the card on the login page with no password field", async ({ page }) => {
     await openSheet(page);
     await expect(page.getByRole("radiogroup", { name: "I am here to" })).toBeVisible();
     await expect(page.locator('input[type="password"]')).toHaveCount(0);
@@ -82,33 +85,30 @@ test.describe("sign-in sheet (H7.2b): runs at 390 and 1440", () => {
       }),
     );
     await openSheet(page);
-    await sheet(page).getByRole("button", { name: "Continue" }).click();
     await sheet(page).getByLabel("Email address").fill(uniqueEmail("no-mail"));
-    await sheet(page).getByRole("button", { name: "Send code" }).click();
+    await sheet(page).getByRole("button", { name: "Send me a code" }).click();
     await expect(page.getByText("Login codes cannot be sent")).toBeVisible();
-    await expect(sheet(page).getByLabel("6-digit code")).toHaveCount(0);
+    await expect(sheet(page).getByRole("group", { name: "6-digit code" })).toHaveCount(0);
   });
 
-  test("a new seller signs up with a code, does the profile once, then reaches the ad form", async ({ page }) => {
+  test("a new seller signs up with a code, does the profile once in the same card, then reaches the ad form", async ({ page }) => {
     const email = uniqueEmail("seller-signup");
     const code = freshCode();
     await mockSendOk(page);
     await openSheet(page, "seller");
     await sendCodeTo(page, email);
     await deliverCode(email, code);
-    await sheet(page).getByLabel("6-digit code").fill(code);
-    await sheet(page).getByRole("button", { name: "Log in" }).click();
+    await typeCode(page, code);
 
-    await page.waitForURL(/\/u\/seller-profile\//);
-    await expect(page.getByRole("heading", { name: "Your seller profile" })).toBeVisible();
+    await expect(sheet(page).getByRole("heading", { name: "Your seller profile" })).toBeVisible();
     await expect(page.locator('input[type="password"]')).toHaveCount(0);
     expect(await hasHorizontalScroll(page)).toBe(false);
 
-    await page.getByLabel("Name shown on your ads").fill("Asha Traders");
-    await page.getByLabel("City").fill("Surat");
-    await page.getByLabel("Date of birth").fill("1990-05-01");
-    await page.getByRole("checkbox", { name: /I am 18 or older/ }).check();
-    await page.getByRole("button", { name: "Continue to post your ad" }).click();
+    await sheet(page).getByLabel("Name shown on your ads").fill("Asha Traders");
+    await sheet(page).getByLabel("City").fill("Surat");
+    await sheet(page).getByLabel("Date of birth").fill("1990-05-01");
+    await sheet(page).getByRole("checkbox", { name: /I am 18 or older/ }).check();
+    await sheet(page).getByRole("button", { name: "Continue to post your ad" }).click();
 
     await page.waitForURL(/\/u\/post-insert/);
     expect(await seriousAxeViolations(page)).toEqual([]);
@@ -121,8 +121,7 @@ test.describe("sign-in sheet (H7.2b): runs at 390 and 1440", () => {
     await openSheet(page);
     await sendCodeTo(page, email);
     await deliverCode(email, code);
-    await sheet(page).getByLabel("6-digit code").fill(code);
-    await sheet(page).getByRole("button", { name: "Log in" }).click();
+    await typeCode(page, code);
     await page.waitForURL(/\/u\/account\/saved\//);
   });
 
@@ -136,12 +135,10 @@ test.describe("sign-in sheet (H7.2b): runs at 390 and 1440", () => {
     await deliverCode(email, code);
 
     for (let attempt = 0; attempt < WRONG_LIMIT; attempt += 1) {
-      await sheet(page).getByLabel("6-digit code").fill(wrong);
-      await sheet(page).getByRole("button", { name: "Log in" }).click();
+      await typeCode(page, wrong);
       await expect(page.getByText("That code is not valid. Check it, or ask for a new one.")).toBeVisible();
     }
-    await sheet(page).getByLabel("6-digit code").fill(code);
-    await sheet(page).getByRole("button", { name: "Log in" }).click();
+    await typeCode(page, code);
     await expect(page.getByText("That code is not valid. Check it, or ask for a new one.")).toBeVisible();
     await expect(page).toHaveURL(/\/u\/login\//);
   });

@@ -2,7 +2,7 @@ import { randomInt } from "node:crypto";
 import { Schema, Types } from "mongoose";
 import { connectDb } from "@/lib/db";
 import { AuditRepository } from "@/server/audit";
-import { hashToken } from "@/server/auth/http";
+import { hashToken, type CookieLife } from "@/server/auth/http";
 import { OTP_MAX_ATTEMPTS, OTP_SENDS_PER_WINDOW, OTP_WINDOW_MS } from "@/server/auth/phone";
 import { consumeRateLimit } from "@/server/auth/rate-limit";
 import { createCodeAccount, createSession } from "@/server/auth/service";
@@ -96,6 +96,7 @@ export async function verifyEmailLoginCode(input: {
   ip?: string;
   existingToken?: string;
   requestId: string;
+  life?: CookieLife;
 }) {
   await connectDb();
   const email = normalizeEmail(input.email);
@@ -149,7 +150,7 @@ export async function verifyEmailLoginCode(input: {
     requestId: input.requestId,
     ipHash: hashIp(input.ip),
   });
-  return createSession(user, { userAgent: input.userAgent, ip: input.ip, existingToken: input.existingToken });
+  return createSession(user, { userAgent: input.userAgent, ip: input.ip, existingToken: input.existingToken, life: input.life });
 }
 
 /** The account for a proven address. A new address gets a new account with no password. Two codes racing is handled. */

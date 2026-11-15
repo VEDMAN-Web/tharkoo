@@ -2,7 +2,7 @@ import bcrypt from "bcryptjs";
 import { randomInt } from "node:crypto";
 import { Schema, Types } from "mongoose";
 import { AuditRepository } from "@/server/audit";
-import { hashToken, SESSION_MS, siteOrigin } from "@/server/auth/http";
+import { hashToken, SESSION_MS, SESSION_REMEMBER_MS, siteOrigin, type CookieLife } from "@/server/auth/http";
 import { connectDb } from "@/lib/db";
 import { touchOwnPresence } from "@/server/availability/service";
 import {
@@ -255,7 +255,7 @@ export async function loginUser(input: {
 /** Starts a session for an active account. An older session from the same browser is revoked. */
 export async function createSession(
   user: UserDoc & { _id: Types.ObjectId },
-  input: { userAgent?: string | null; ip?: string; existingToken?: string },
+  input: { userAgent?: string | null; ip?: string; existingToken?: string; life?: CookieLife },
 ) {
   await connectDb();
   // H7.5: a login is activity; it brings an auto-away seller back to Online (a manual Off stays Off).
@@ -272,7 +272,7 @@ export async function createSession(
     tokenHash: hashToken(token),
     userAgent: input.userAgent?.slice(0, 200),
     ipHash: hashIp(input.ip),
-    expiresAt: new Date(Date.now() + SESSION_MS),
+    expiresAt: new Date(Date.now() + (input.life === "remembered" ? SESSION_REMEMBER_MS : SESSION_MS)),
   });
   return { token, sessionId: session._id.toString(), user: publicUser(user) };
 }
