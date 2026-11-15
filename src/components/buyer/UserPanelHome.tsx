@@ -1,28 +1,26 @@
 import Link from "next/link";
-import { DiscoverFeed } from "./DiscoverFeed";
+import { FreshAds } from "./FreshAds";
+import { PackPicker } from "./PackPicker";
 import { MyAdsList } from "./MyAdsList";
 import { SavedAdsRail } from "./SavedAdsRail";
 import { SectionHelp } from "@/components/help/SectionHelp";
 import { SignedOutPanel, UserPanelShell } from "./UserPanelShell";
 import { howItWorksPath } from "@/lib/urls";
 import type { listOwnCards } from "@/server/listings/owner-cards";
-import type { PanelSummary } from "@/server/notifications/summary";
+import type { PackRow, PanelSummary } from "@/server/notifications/summary";
 
 /** H7.6, H7.17: the user panel home (New design). Every number here comes from the server. */
 
-type Option = { slug: string; name: string };
 type Ads = Awaited<ReturnType<typeof listOwnCards>>;
 
 export function UserPanelHome({
   summary,
   ads,
-  categories,
-  cities,
+  packs,
 }: {
   summary: PanelSummary;
   ads: Ads | null;
-  categories: Option[];
-  cities: Option[];
+  packs: PackRow[];
 }) {
   const aside = (
     <>
@@ -54,7 +52,7 @@ export function UserPanelHome({
     </>
   );
   return (
-    <UserPanelShell active="home" summary={summary} aside={aside}>
+    <UserPanelShell active="home" summary={summary} aside={aside} below={<FreshAds />}>
       {summary.signedIn ? null : (
         <SignedOutPanel next="/u/account/dashboard/" title="Log in to see your panel" body="Your saved ads, chats and coins show here after you log in." />
       )}
@@ -103,8 +101,16 @@ export function UserPanelHome({
         </>
       )}
 
+      {packs.length > 0 ? (
+        <section aria-labelledby="buy-heading" className="up-glass up-panel">
+          <div className="up-panel-head">
+            <h2 id="buy-heading" className="up-h2">Buy coins</h2>
+            <Link href="/u/account/credits/" className="up-link">See all packs</Link>
+          </div>
+          <PackPicker packs={packs} />
+        </section>
+      ) : null}
       <SavedAdsRail />
-      <DiscoverFeed categories={categories} cities={cities} />
     </UserPanelShell>
   );
 }

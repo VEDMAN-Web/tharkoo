@@ -11,7 +11,7 @@ test.describe("H7.6 user panel: visitor", () => {
     await page.goto("/u/account/dashboard/");
     await expect(page.getByRole("navigation", { name: "My account" })).toBeVisible();
     await expect(page.getByRole("heading", { level: 1 })).toHaveCount(1);
-    await expect(page.getByRole("heading", { name: "Discover ads" })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Fresh ads for you" })).toBeVisible();
     expect(await hasHorizontalScroll(page)).toBe(false);
   });
 

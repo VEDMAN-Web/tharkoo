@@ -47,7 +47,7 @@ export function badgeFor(key: PanelKey, summary: PanelSummary): number {
   return 0;
 }
 
-export function UserPanelShell({ active, summary, aside, children }: { active: PanelKey; summary: PanelSummary; aside?: ReactNode; children: ReactNode }) {
+export function UserPanelShell({ active, summary, aside, below, children }: { active: PanelKey; summary: PanelSummary; aside?: ReactNode; below?: ReactNode; children: ReactNode }) {
   return (
     <div className="up-wrap">
       <div className="up-page">
@@ -59,7 +59,7 @@ export function UserPanelShell({ active, summary, aside, children }: { active: P
               </div>
               <div>
                 <p className="up-name">{summary.signedIn ? summary.displayName : "Welcome"}</p>
-                <p className="up-sub">{summary.signedIn ? summary.email : "Log in to see your account"}</p>
+                <p className="up-sub">{summary.signedIn ? `Member since ${summary.memberSince}` : "Log in to see your account"}</p>
               </div>
             </div>
             <ul className="up-nav-list">
@@ -77,6 +77,7 @@ export function UserPanelShell({ active, summary, aside, children }: { active: P
           <div className="up-main">{children}</div>
           {aside ? <div className="up-aside">{aside}</div> : null}
         </div>
+        {below ? <div className="up-below">{below}</div> : null}
       </div>
     </div>
   );

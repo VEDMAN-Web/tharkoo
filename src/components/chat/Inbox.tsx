@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useState } from "react";
 import { api, friendlyError } from "@/lib/ui/api";
 import { ChatThread } from "./ChatThread";
@@ -37,7 +38,14 @@ export function Inbox() {
     <div style={{ display: "grid", gap: 16, gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 320px), 1fr))", alignItems: "start" }}>
       <section aria-label="Conversations">
         {error ? <p role="alert">{error}</p> : null}
-        {!error && rows.length === 0 ? <p className="t-body">No messages yet. When someone taps Chat now on your ad, it appears here.</p> : null}
+        {!error && rows.length === 0 ? (
+          <div className="up-empty">
+            <div className="up-empty-box" aria-hidden="true" />
+            <p className="up-empty-title">No chats yet</p>
+            <p className="up-empty-body">When someone taps Chat now on your ad, it appears here.</p>
+            <Link href="/search/" className="up-btn">Browse ads</Link>
+          </div>
+        ) : null}
         <ul style={{ listStyle: "none", padding: 0, margin: 0, display: "grid", gap: 8 }}>
           {rows.map((row) => (
             <li key={row.id}>

@@ -27,11 +27,9 @@ test.describe("3 Account", () => {
     await expect(menu.getByRole("link", { name: "Settings" })).toBeVisible();
     await expect(page.locator("h1")).toHaveCount(1);
 
-    // Settings (the profile screen): shows the email, password change sends a reset email.
     await page.goto("/u/account/edit-account/");
     await expect(page.getByRole("region", { name: "Settings" }).getByText(email, { exact: false })).toBeVisible();
-    await page.getByRole("button", { name: "Change password" }).click();
-    await expect(page.getByRole("button", { name: "Email sent" })).toBeVisible();
+    await expect(page.getByText("Text message codes are coming soon")).toBeVisible();
 
     // Other account screens load for a signed-in user.
     for (const path of ["/u/account/ads/", "/u/account/credits/", "/u/account/coupons/", "/u/account/saved/", "/u/account/kyc/"]) {

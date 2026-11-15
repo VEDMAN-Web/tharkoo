@@ -234,3 +234,9 @@
   display: inline-flex; align-items: center; min-height: 46px; padding: 0 20px; border-radius: 999px; border: 1.5px solid rgba(255, 255, 255, 0.5);
   color: #fff; font-weight: 700; font-size: 15px; text-decoration: none; box-sizing: border-box;
 }
+.up-cards3 { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; margin: 0; padding: 0; list-style: none; }
+.up-below { margin-top: 24px; display: flex; flex-direction: column; gap: 22px; }
+@media (max-width: 820px) { .up-cards3 { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 600px) { .up-cards3 { grid-template-columns: minmax(0, 1fr); } }
+.up-disabled-box { padding: 16px; border-radius: 14px; border: 1px dashed #ead8f0; background: #fdf6fb; }
+.up-phone-title { margin: 0 0 4px; font-weight: 600; font-size: 15px; color: #1e0b38; }
