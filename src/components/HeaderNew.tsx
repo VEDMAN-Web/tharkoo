@@ -132,7 +132,7 @@ export function HeaderNew({
               </div>
             </>
           ) : (
-            <Link href={loginPath(paths)} className="tkn-login-text tkn-hide-sm" onClick={(event) => openSignInFromLink(event, "user")}>{shell.header.loginLabel}</Link>
+            <Link href={loginPath(paths)} className="tkn-login-link tkn-hide-sm" onClick={(event) => openSignInFromLink(event)}>{shell.header.loginLabel}</Link>
           )}
           <Link
             href={postAdPath(paths)}
@@ -140,7 +140,7 @@ export function HeaderNew({
             data-tk="post-ad"
             prefetch={false}
             onClick={(event) => {
-              if (!isProbablySignedIn()) openSignInFromLink(event, "seller", postAdPath(paths));
+              if (!isProbablySignedIn()) openSignInFromLink(event, postAdPath(paths));
             }}
           >
             <span className="tkn-post-long">{shell.header.postLabel}</span>

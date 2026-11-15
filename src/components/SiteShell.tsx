@@ -6,9 +6,7 @@ import { textOverrides } from "@/app/admin/ui-text/store";
 import { readContent } from "@/lib/ui/site-content";
 import { pickTexts } from "@/lib/ui/text";
 import { newDesignOn } from "@/server/site-links/new-design";
-import { landingPathsFor } from "@/server/auth/landing-paths";
 import { smsDeliverable } from "@/server/auth/otp";
-import { getPaths } from "@/server/urls/service";
 import { countryChoices } from "@/server/locations/site-country";
 import { readShellConfig } from "@/server/site-links/shell-config";
 import { normaliseShellConfig, type ShellConfig, type ShellLink } from "@/server/site-links/shell-config-rules";
@@ -116,7 +114,7 @@ export async function SiteShell({
   admin?: boolean;
 }) {
   const paths = readPaths((shell.site as { paths?: unknown } | null)?.paths);
-  const signIn = { landing: landingPathsFor(await getPaths()), showMobile: smsDeliverable(), image: readContent((shell.site as { homepage?: unknown } | null)?.homepage).loginImage };
+  const signIn = { showMobile: smsDeliverable(), image: readContent((shell.site as { homepage?: unknown } | null)?.homepage).loginImage };
   return (
     <>
       <PathChrome shell={chromeData(shell, signIn)} paths={paths}>{children}</PathChrome>

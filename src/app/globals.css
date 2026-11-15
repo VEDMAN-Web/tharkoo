@@ -1707,7 +1707,6 @@ input, select, textarea { font-size: 16px; }
   display: inline-flex; align-items: center; min-height: 40px; padding: 0 14px; border-radius: 999px; white-space: nowrap;
   background: #fdf0f7; border: 1px solid #ead8f0; color: #a8124f; font-weight: 700; font-size: 14px; text-decoration: none;
 }
-.tkn-login-text { display: inline-flex; align-items: center; min-height: 44px; padding: 0 10px; color: #4a2870; font-weight: 700; text-decoration: none; white-space: nowrap; }
 .tkn-account { position: relative; }
 .tkn-avatar {
   display: inline-flex; align-items: center; gap: 2px; height: 40px; padding: 0 8px 0 0; border-radius: 999px; border: 0; cursor: pointer; flex: none;
@@ -1774,6 +1773,7 @@ input, select, textarea { font-size: 16px; }
 .tkn-btn-sm { min-height: 40px; padding: 0 14px; font-size: 13px; }
 .tkn-btn-primary { background: linear-gradient(135deg, #d1137a, #a8124f); color: #fff; box-shadow: 0 8px 24px rgba(209, 19, 122, 0.3); }
 .tkn-btn-ghost { background: rgba(255, 255, 255, 0.75); border-color: var(--tkn-line); color: var(--tkn-muted); }
+.tkn-login-link { display: inline-flex; align-items: center; min-height: 44px; padding: 0 10px; font-size: 14px; font-weight: 700; color: #2d1248; }
 .tkn-btn-block { width: 100%; }
 .tkn-icon-btn {
   width: 44px; height: 44px; border-radius: 12px; border: 1.5px solid var(--tkn-line); background: rgba(255, 255, 255, 0.75);

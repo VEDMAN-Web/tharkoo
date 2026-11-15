@@ -232,7 +232,7 @@ export function NewVendorPanel({ initialTab = "all" }: { initialTab?: Tab }) {
             <p className="tkv-stat-value">{totals ? totals.clicks.toLocaleString("en-IN") : "-"}</p>
             <p className="tkv-stat-foot">All time</p>
           </div>
-          <div className="tkv-stat tkv-stat-amber">
+          <div className="tkv-stat tkv-stat-rose">
             <p className="tkv-stat-label">Coins</p>
             <p className="tkv-stat-value">{balance ?? "-"}</p>
           </div>
