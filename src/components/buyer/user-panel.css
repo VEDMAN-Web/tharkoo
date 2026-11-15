@@ -213,3 +213,24 @@
   .up-skeleton { animation: none; }
   .up-nav-link, .up-pack, .up-ticket { transition: none; }
 }
+.up-sec { margin: 14px 8px 6px; font-size: 11px; font-weight: 800; letter-spacing: 0.14em; text-transform: uppercase; color: #8a6aa6; list-style: none; }
+.up-stats { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; }
+.up-stat { padding: 16px; border-radius: 16px; background: #fff; border: 1px solid #f3e8f7; min-width: 0; }
+.up-stat-num { display: block; font-size: 26px; font-weight: 800; letter-spacing: -0.02em; color: #1e0b38; }
+.up-stat-label { font-size: 13px; color: #6b4a8a; }
+.up-promo {
+  position: relative; overflow: hidden; border-radius: 20px; padding: 28px; display: flex; flex-direction: column; gap: 10px;
+  background: linear-gradient(135deg, #2a0b4f 0%, #6d1b7b 55%, #c2185b 100%); color: #fff; box-shadow: 0 18px 44px rgba(109, 27, 123, 0.28);
+}
+.up-promo-kicker { margin: 0; font-size: 12px; font-weight: 800; letter-spacing: 0.14em; opacity: 0.85; }
+.up-promo-title { margin: 0; font-size: 26px; letter-spacing: -0.02em; line-height: 1.2; font-weight: 800; }
+.up-promo-text { margin: 0 0 8px; font-size: 15px; line-height: 1.55; color: rgba(255, 255, 255, 0.86); }
+.up-promo-row { display: flex; gap: 10px; flex-wrap: wrap; }
+.up-btn-white {
+  display: inline-flex; align-items: center; min-height: 46px; padding: 0 22px; border-radius: 999px; background: #fff; color: #a8124f;
+  font-weight: 800; font-size: 15px; text-decoration: none; box-sizing: border-box;
+}
+.up-btn-outline {
+  display: inline-flex; align-items: center; min-height: 46px; padding: 0 20px; border-radius: 999px; border: 1.5px solid rgba(255, 255, 255, 0.5);
+  color: #fff; font-weight: 700; font-size: 15px; text-decoration: none; box-sizing: border-box;
+}

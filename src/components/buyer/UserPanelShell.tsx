@@ -1,6 +1,6 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
-import { Bell, Heart, House, LifeBuoy, MessageSquare, Search, Settings, Wallet } from "lucide-react";
+import { Bell, ChartColumn, Heart, House, LifeBuoy, Megaphone, MessageSquare, Search, Settings, Wallet } from "lucide-react";
 import type { PanelSummary } from "@/server/notifications/summary";
 import "./user-panel.css";
 
@@ -18,6 +18,25 @@ const LINKS: { key: PanelKey; label: string; href: string; icon: typeof House }[
   { key: "support", label: "Help and support", href: "/u/account/support/", icon: LifeBuoy },
   { key: "settings", label: "Settings", href: "/u/account/edit-account/", icon: Settings },
 ];
+
+const ADS_LINKS: { key: "ads" | "stats"; label: string; href: string; icon: typeof House }[] = [
+  { key: "ads", label: "My ads", href: "/u/account/ads/", icon: Megaphone },
+  { key: "stats", label: "Stats", href: "/u/account/analytics/", icon: ChartColumn },
+];
+
+function renderLink(item: { key: string; label: string; href: string; icon: typeof House }, count: number, active: PanelKey) {
+  const Icon = item.icon;
+  const on = item.key === active;
+  return (
+    <li key={item.key}>
+      <Link href={item.href} className={on ? "up-nav-link up-nav-link-on" : "up-nav-link"} aria-current={on ? "page" : undefined}>
+        <Icon size={18} aria-hidden="true" focusable="false" />
+        {item.label}
+        {count > 0 ? <span className="up-nav-badge">{count}</span> : null}
+      </Link>
+    </li>
+  );
+}
 
 /** Pure: the count shown beside a menu item. Zero shows nothing. */
 export function badgeFor(key: PanelKey, summary: PanelSummary): number {
@@ -44,20 +63,15 @@ export function UserPanelShell({ active, summary, aside, children }: { active: P
               </div>
             </div>
             <ul className="up-nav-list">
-              {LINKS.map((item) => {
-                const badge = badgeFor(item.key, summary);
-                const on = item.key === active;
-                const Icon = item.icon;
-                return (
-                  <li key={item.key}>
-                    <Link href={item.href} className={on ? "up-nav-link up-nav-link-on" : "up-nav-link"} aria-current={on ? "page" : undefined}>
-                      <Icon size={18} aria-hidden="true" focusable="false" />
-                      {item.label}
-                      {badge > 0 ? <span className="up-nav-badge">{badge}</span> : null}
-                    </Link>
-                  </li>
-                );
-              })}
+              {LINKS.slice(0, 3).map((item) => renderLink(item, badgeFor(item.key, summary), active))}
+              {summary.signedIn && summary.adCount > 0 ? (
+                <>
+                  <li className="up-sec">Your ads</li>
+                  {ADS_LINKS.map((item) => renderLink(item, item.key === "ads" ? summary.adCount : 0, active))}
+                </>
+              ) : null}
+              <li className="up-sec">Account</li>
+              {LINKS.slice(3).map((item) => renderLink(item, badgeFor(item.key, summary), active))}
             </ul>
           </nav>
           <div className="up-main">{children}</div>

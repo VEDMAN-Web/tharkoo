@@ -4,6 +4,7 @@ import { unreadCount } from "@/server/chat/service";
 import { getCategories, getCities, getCreditPacks } from "@/lib/queries";
 import { unreadForOwner } from "@/server/support/tickets";
 import { connectDb } from "@/lib/db";
+import { Listing } from "@/server/models/listing";
 import { accountName } from "@/lib/account-name";
 
 /**
@@ -21,6 +22,7 @@ export type PanelSummary =
       balance: number;
       unreadChat: number;
       unreadSupport: number;
+      adCount: number;
     };
 
 export async function loadPanelSummary(token: string | undefined): Promise<PanelSummary> {
@@ -28,10 +30,11 @@ export async function loadPanelSummary(token: string | undefined): Promise<Panel
   const session = await userFromToken(token).catch(() => null);
   if (!session) return { signedIn: false };
   const userId = session.user.id;
-  const [balance, unreadChat, unreadSupport] = await Promise.all([
+  const [balance, unreadChat, unreadSupport, adCount] = await Promise.all([
     walletBalance(userId),
     unreadCount(userId),
     unreadForOwner(userId),
+    Listing.countDocuments({ ownerId: userId }),
   ]);
   const email = session.user.email ?? "";
   return {
@@ -42,6 +45,7 @@ export async function loadPanelSummary(token: string | undefined): Promise<Panel
     balance,
     unreadChat,
     unreadSupport,
+    adCount,
   };
 }
 
