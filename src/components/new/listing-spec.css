@@ -27,16 +27,19 @@
   position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0;
 }
 
-/* Title band */
+/* Title band: the text panel is always the pastel glass; the photo (when set) is a separate layer, so text never sits on it.
+   Desktop (900 px and up): the panel is 55% and the photo is the right 45%. Below 900 px: photo strip on top, panel below. */
 .tkn-ls-band {
-  box-sizing: border-box; margin: 22px auto 0; max-width: 1280px; padding: 30px 32px; border-radius: 20px;
-  background: var(--band-desk, linear-gradient(120deg, rgba(255, 240, 247, 0.9), rgba(245, 240, 255, 0.9) 55%, rgba(255, 248, 236, 0.9))) center / cover no-repeat;
+  --band-pad-x: 32px; --band-pad-y: 30px;
+  position: relative; overflow: hidden; box-sizing: border-box; margin: 22px auto 0; max-width: 1280px;
+  padding: var(--band-pad-y) var(--band-pad-x); border-radius: 20px;
+  background: linear-gradient(120deg, rgba(255, 240, 247, 0.9), rgba(245, 240, 255, 0.9) 55%, rgba(255, 248, 236, 0.9));
   border: 1px solid rgba(255, 255, 255, 0.95); box-shadow: 0 8px 32px rgba(45, 18, 72, 0.07);
 }
-.tkn-ls-crumbs { font-size: 13px; color: var(--muted-2); margin: 0 0 10px; }
-.tkn-ls-crumbs a { color: var(--muted-2); text-decoration: none; }
+.tkn-ls-crumbs { font-size: 13px; color: #1e0b38; margin: 0 0 10px; }
+.tkn-ls-crumbs a { color: #1e0b38; text-decoration: none; display: inline-flex; align-items: center; min-height: 24px; }
 .tkn-ls-crumbs a:hover { text-decoration: underline; }
-.tkn-ls-h1 { margin: 0 0 6px; font-size: 38px; line-height: 1.15; font-weight: 800; letter-spacing: -0.03em; color: var(--ink-strong); }
+.tkn-ls-h1 { margin: 0 0 6px; font-size: 38px; line-height: 1.15; font-weight: 800; letter-spacing: -0.03em; color: #a8124f; }
 .tkn-ls-intro { margin: 0; font-size: 15px; line-height: 1.6; color: var(--muted); }
 .tkn-ls-chips { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 18px; }
 .tkn-ls-chips a {
@@ -178,10 +181,7 @@
   .tkn-ls-h1 { font-size: 30px; }
 }
 @media (max-width: 599px) {
-  .tkn-ls-band {
-    margin-top: 16px; padding: 20px 16px; border-radius: 20px;
-    background: var(--band-phone, var(--band-desk, linear-gradient(120deg, rgba(255, 240, 247, 0.9), rgba(245, 240, 255, 0.9) 55%, rgba(255, 248, 236, 0.9)))) center / cover no-repeat;
-  }
+  .tkn-ls-band { margin-top: 16px; --band-pad-x: 16px; --band-pad-y: 20px; }
   .tkn-ls-grid { padding: 0 16px; margin-top: 16px; }
   .tkn-ls-filter-btn { display: inline-flex; align-items: center; }
   .tkn-ls-scrim {
@@ -201,6 +201,23 @@
   .tkn-ls .tkn-ls-card { flex-direction: column; }
   .tkn-ls-photo { width: 100%; aspect-ratio: 4 / 3; }
   .tkn-ls-body { padding: 16px; }
+}
+/* Band photo (only when an image is set; data-photo is set by ListingFrame). Text never sits on the photo. */
+@media (min-width: 900px) {
+  .tkn-ls-band[data-photo="true"] { min-height: 300px; }
+  .tkn-ls-band[data-photo="true"]::before {
+    content: ""; position: absolute; top: 12px; right: 12px; bottom: 12px; width: calc(45% - 12px); box-sizing: border-box; border-radius: 16px;
+    background: var(--band-desk, var(--band-phone)) 50% 18% / cover no-repeat;
+    -webkit-mask-image: linear-gradient(to right, transparent 0, #000 22%); mask-image: linear-gradient(to right, transparent 0, #000 22%);
+  }
+  .tkn-ls-band[data-photo="true"] > * { position: relative; max-width: calc(55% - 56px); }
+}
+@media (max-width: 899px) {
+  .tkn-ls-band[data-photo="true"]::before {
+    content: ""; display: block; box-sizing: border-box; aspect-ratio: 16 / 9;
+    margin: calc(-1 * var(--band-pad-y)) calc(-1 * var(--band-pad-x)) var(--band-pad-y);
+    background: var(--band-phone, var(--band-desk)) 50% 15% / cover no-repeat;
+  }
 }
 @media (prefers-reduced-motion: reduce) {
   .tkn-ls .tkn-ls-card, .tkn-ls-aside, .tkn-ls-scrim, .tkn-ls-chev { transition: none; }
