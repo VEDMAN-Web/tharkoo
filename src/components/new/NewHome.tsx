@@ -249,7 +249,7 @@ export function NewHome({
       </NewAdsGate>
 
       <section className="tkh-page tkh-section" aria-labelledby="home-how">
-        <SectionHead id="home-how" eyebrow={t("home.steps.eyebrow")} tone="peach" title={t("home.steps.title")} />
+        <SectionHead id="home-how" eyebrow={t("home.steps.eyebrow")} tone="rose" title={t("home.steps.title")} />
         <ol className="tkh-steps">
           {shell.home.steps.slice(0, 3).map((step, index) => (
             <li className="tkh-step" key={step.title}>

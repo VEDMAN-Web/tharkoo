@@ -74,7 +74,7 @@ export function HeaderDrawer({
             className="tkn-btn tkn-btn-ghost"
             onClick={(event) => {
               onClose();
-              openSignInFromLink(event, "user");
+              openSignInFromLink(event);
             }}
           >
             {loginLabel}
@@ -85,7 +85,7 @@ export function HeaderDrawer({
             prefetch={false}
             onClick={(event) => {
               onClose();
-              if (!isProbablySignedIn()) openSignInFromLink(event, "seller", postAdPath(paths));
+              if (!isProbablySignedIn()) openSignInFromLink(event, postAdPath(paths));
             }}
           >
             {postLabel}

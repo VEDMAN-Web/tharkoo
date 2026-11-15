@@ -32,7 +32,7 @@ async function signInUi(page: Page, email: string) {
     route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({ ok: true, data: { sent: true } }) }),
   );
   await page.goto("/u/login/");
-  await page.getByLabel("Email address").fill(email);
+  await page.getByLabel("Email", { exact: true }).fill(email);
   await page.getByRole("button", { name: "Send me a code" }).click();
   await expect(page.getByRole("group", { name: "6-digit code" })).toBeVisible();
   await deliverCode(email, code);

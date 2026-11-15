@@ -83,14 +83,14 @@ export function HeaderNew({
         </nav>
         <div className="tkn-header-actions">
           <HeaderCountry countries={countries} />
-          <Link href={loginPath(paths)} className="tkn-btn tkn-btn-ghost tkn-hide-sm" onClick={(event) => openSignInFromLink(event, "user")}>{shell.header.loginLabel}</Link>
+          <Link href={loginPath(paths)} className="tkn-login-link tkn-hide-sm" onClick={(event) => openSignInFromLink(event)}>{shell.header.loginLabel}</Link>
           <Link
             href={postAdPath(paths)}
             className="tkn-btn tkn-btn-primary"
             data-tk="post-ad"
             prefetch={false}
             onClick={(event) => {
-              if (!isProbablySignedIn()) openSignInFromLink(event, "seller", postAdPath(paths));
+              if (!isProbablySignedIn()) openSignInFromLink(event, postAdPath(paths));
             }}
           >
             <span className="tkn-post-long">{shell.header.postLabel}</span>
