@@ -18,7 +18,7 @@ import "./ad-spec.css";
 
 const PERSONAL = new Set(["dating", "friendship", "meetups", "personal-ads"]);
 const GOLD_TIERS = new Set(["supertop", "top"]);
-const WEEK_MS = 7 * 24 * 60 * 60 * 1000;
+const DAY_MS = 24 * 60 * 60 * 1000;
 
 function tierOf(ad: ListingDoc, categoryName: string) {
   if (ad.variant === "supertop" || ad.variant === "star") return { key: "supertop", label: "SUPER Top" };
@@ -28,7 +28,7 @@ function tierOf(ad: ListingDoc, categoryName: string) {
 }
 
 function isRecent(ad: ListingDoc) {
-  return Date.now() - new Date(ad.publishedAt || ad.createdAt || 0).getTime() < WEEK_MS;
+  return Date.now() - new Date(ad.publishedAt || ad.createdAt || 0).getTime() < DAY_MS;
 }
 
 function placeOf(ad: ListingDoc) {
@@ -66,6 +66,7 @@ export function NewAdDetail({
   paymentsLive = false,
   alternatives = [],
   sellerName = "",
+  priceUnit = "",
   texts,
 }: {
   ad: ListingDoc;
@@ -80,6 +81,7 @@ export function NewAdDetail({
   paymentsLive?: boolean;
   alternatives?: AdPopupAlt[];
   sellerName?: string;
+  priceUnit?: string;
   texts?: UiTextMap;
 }) {
   const t = makeT(texts);
@@ -137,7 +139,7 @@ export function NewAdDetail({
             </div>
             <aside className="tkn-ad-side" aria-label="Contact">
               <div className="tkn-contact-panel" data-tk="contact-card">
-                <p className="tkn-ad-price">{price || "Price on request"}</p>
+                <p className="tkn-ad-price">{price ? `${price}${priceUnit ? ` / ${priceUnit}` : ""}` : "Price on request"}</p>
                 <AdSellerRow name={seller} />
                 <ContactButtons />
               </div>

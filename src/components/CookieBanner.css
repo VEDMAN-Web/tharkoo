@@ -1,5 +1,5 @@
 .tkc-banner {
-  position: fixed; left: 16px; bottom: 16px; z-index: 40; box-sizing: border-box; max-width: 360px; padding: 16px 18px; border-radius: 16px;
+  position: fixed; right: 96px; bottom: 16px; z-index: 40; box-sizing: border-box; max-width: 360px; padding: 16px 18px; border-radius: 16px;
   background: rgba(255, 255, 255, 0.92); -webkit-backdrop-filter: blur(18px) saturate(170%); backdrop-filter: blur(18px) saturate(170%);
   border: 1px solid rgba(255, 255, 255, 0.95); box-shadow: 0 8px 32px rgba(45, 18, 72, 0.14);
   color: #1e0b38; font-size: 13px; line-height: 1.5;

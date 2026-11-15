@@ -169,6 +169,7 @@ export default async function AdPage({ params }: Props) {
         <NewAdDetail
           ad={adView}
           sellerName={owner?.displayName?.trim() || ""}
+          priceUnit={cat?.fields?.find((field) => ["price", "rent", "salary"].includes(field.key))?.unit || ""}
           categoryName={catName}
           related={plain(related)}
           listingId={listingId}
