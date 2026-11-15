@@ -236,7 +236,7 @@ function AuthFormInner({ mode }: { mode: Mode }) {
         ) : null}
         {mode !== "verify" && mode !== "expired" ? (
           <button className="tk-btn tk-btn-cta" type="submit" disabled={busy} style={{ width: "100%", marginTop: 8 }}>
-            {busy ? "…" : mode === "login" ? "LOG IN" : mode === "register" ? "CREATE ACCOUNT" : mode === "forgot" ? "SEND LINK" : "SAVE PASSWORD"}
+            {busy ? "…" : mode === "login" ? "LOG IN" : mode === "register" ? "CREATE ACCOUNT" : mode === "forgot" ? "Send link" : "Save password"}
           </button>
         ) : null}
       </form>
