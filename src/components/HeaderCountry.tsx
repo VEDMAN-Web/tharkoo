@@ -101,15 +101,18 @@ export function CountryList({ countries, onPick }: { countries: MenuCountry[]; o
         <span className="tkn-sr">Search a country</span>
         <input type="search" placeholder="Search a country" value={query} onChange={(event) => setQuery(event.target.value)} autoComplete="off" />
       </label>
-      {popular.length ? (
-        <>
-          <p className="tkn-country-group">Popular</p>
-          {renderRows(popular)}
-        </>
-      ) : null}
-      <p className="tkn-country-group">All countries A to Z</p>
-      {all.length ? renderRows(all) : <p className="tkn-country-empty">No country matches.</p>}
-      {error ? <p role="alert" className="tkn-countrylist-error">{error}</p> : null}
+      {/* The search box stays put; only this list scrolls, so no row ever passes above the box. */}
+      <div className="tkn-countrylist-scroll">
+        {popular.length ? (
+          <>
+            <p className="tkn-country-group">Popular</p>
+            {renderRows(popular)}
+          </>
+        ) : null}
+        <p className="tkn-country-group">All countries A to Z</p>
+        {all.length ? renderRows(all) : <p className="tkn-country-empty">No country matches.</p>}
+        {error ? <p role="alert" className="tkn-countrylist-error">{error}</p> : null}
+      </div>
     </div>
   );
 }
