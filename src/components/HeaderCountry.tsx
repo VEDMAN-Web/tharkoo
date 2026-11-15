@@ -5,62 +5,87 @@ import { useRouter } from "next/navigation";
 import { Check, ChevronDown, MapPin, Search } from "lucide-react";
 import { setSiteCountry } from "@/app/actions/site-country";
 import { useDismiss } from "@/components/ui/useDismiss";
-import { SITE_COUNTRY_EVENT, useSiteCountry } from "@/components/SiteCountry";
-import { CountryFlag } from "@/components/ui/CountryFlag";
+import { SITE_COUNTRY_EVENT, useChosenCountry, useSiteCountrySlug } from "@/components/SiteCountry";
+import { ISO_COUNTRIES, flagSrc } from "@/lib/countries";
 import type { CountryOption } from "@/server/locations/country-scope";
 
-/** A country for the menu. `ads` is the live ad count; 0 shows "No ads yet" (the country can still be chosen). */
+/** A country the admin has enabled, with its live ad count (0 shows "No ads yet"). */
 export type MenuCountry = CountryOption & { ads?: number };
 
-/** How many countries (in admin order) sit under "Popular". */
-const POPULAR_COUNT = 7;
+/** One row of the menu: an enabled country (Popular) or any other ISO country (All countries A to Z). */
+type Row = { slug: string; name: string; code: string; ads: number; enabled: boolean };
 
-function byName(a: MenuCountry, b: MenuCountry) {
-  return a.name.localeCompare(b.name);
+/** H7.10: India leads the Popular list; the rest keep the admin order. */
+const LEAD_CODE = "IN";
+
+function popularRows(countries: MenuCountry[]): Row[] {
+  const rows = countries.map((country) => ({
+    slug: country.slug,
+    name: country.name,
+    code: country.code,
+    ads: country.ads ?? 0,
+    enabled: true,
+  }));
+  return rows.sort((a, b) => Number(b.code === LEAD_CODE) - Number(a.code === LEAD_CODE));
+}
+
+/** Every ISO country except the enabled ones (they are in Popular). ISO_COUNTRIES is sorted A to Z already. */
+function allRows(countries: MenuCountry[]): Row[] {
+  const enabled = new Set(countries.map((country) => country.code.toUpperCase()).filter(Boolean));
+  return ISO_COUNTRIES.filter((country) => !enabled.has(country.code)).map((country) => ({
+    slug: country.slug,
+    name: country.name,
+    code: country.code,
+    ads: 0,
+    enabled: false,
+  }));
 }
 
 /**
- * H7.4c / P1: the country list. A search box, "Popular" (the first countries in admin order), then every country A to Z.
- * The chosen country has a tick on its row. Picking a country sets the site country cookie and refreshes the page.
+ * H7.4c / H7.10: the country list. A search box, "Popular" (the countries the admin enabled, India first), then
+ * "All countries A to Z" (every other country). The chosen country has a tick. A country with no ads shows "No ads yet".
+ * Picking a country sets the site country cookie. An enabled country refreshes the page; any other goes to the home page.
  */
 export function CountryList({ countries, onPick }: { countries: MenuCountry[]; onPick?: () => void }) {
   const router = useRouter();
-  const current = useSiteCountry(countries);
+  const selected = useSiteCountrySlug();
   const [query, setQuery] = useState("");
   const [error, setError] = useState("");
   const [pending, startTransition] = useTransition();
 
   const needle = query.trim().toLowerCase();
-  const matches = (country: MenuCountry) => !needle || country.name.toLowerCase().includes(needle);
-  const popular = countries.slice(0, POPULAR_COUNT).filter(matches);
-  const all = [...countries].sort(byName).filter(matches);
+  const matches = (row: Row) => !needle || row.name.toLowerCase().includes(needle);
+  const popular = popularRows(countries).filter(matches);
+  const all = allRows(countries).filter(matches);
 
-  function pick(slug: string) {
+  function pick(row: Row) {
     setError("");
     startTransition(async () => {
-      const res = await setSiteCountry(slug);
+      const res = await setSiteCountry(row.slug);
       if (!res.ok) {
         setError(res.message);
         return;
       }
       window.dispatchEvent(new CustomEvent(SITE_COUNTRY_EVENT));
       onPick?.();
-      router.refresh();
+      if (row.enabled) router.refresh();
+      else router.push("/");
     });
   }
 
-  function renderRows(list: MenuCountry[]) {
+  function renderRows(list: Row[]) {
     return (
       <ul className="tkn-citylist">
-        {list.map((country) => {
-          const chosen = current?.slug === country.slug;
+        {list.map((row) => {
+          const chosen = selected === row.slug;
           return (
-            <li key={country.slug}>
-              <button type="button" aria-pressed={chosen} className="tkn-citylist-row" disabled={pending} onClick={() => pick(country.slug)}>
-                <CountryFlag code={country.code} />
-                <span className="tkn-citylist-name">{country.name}</span>
+            <li key={row.slug}>
+              <button type="button" aria-pressed={chosen} className="tkn-citylist-row" disabled={pending} onClick={() => pick(row)}>
+                {/* The flag is an SVG file, loaded only when its row is on screen (lazy). */}
+                <img className="tkn-flag" src={flagSrc(row.code)} alt="" width={16} height={12} loading="lazy" decoding="async" />
+                <span className="tkn-citylist-name">{row.name}</span>
                 {chosen ? <Check size={16} aria-hidden="true" focusable="false" className="tkn-citylist-tick" /> : null}
-                {!chosen && country.ads === 0 ? <span className="tkn-citylist-none">No ads yet</span> : null}
+                {!chosen && row.ads === 0 ? <span className="tkn-citylist-none">No ads yet</span> : null}
               </button>
             </li>
           );
@@ -89,17 +114,21 @@ export function CountryList({ countries, onPick }: { countries: MenuCountry[]; o
   );
 }
 
-/** H7.4c / P1: the country pill in the header: flag, name and a small down arrow. A click opens the country list. */
+/** H7.4c / H7.10: the country pill in the header: flag, name and a small down arrow. A click opens the country list. */
 export function HeaderCountry({ countries }: { countries: MenuCountry[] }) {
-  const current = useSiteCountry(countries);
+  const current = useChosenCountry(countries);
   const [open, setOpen] = useState(false);
   const wrap = useRef<HTMLDivElement>(null);
   useDismiss(open, wrap, () => setOpen(false));
   return (
     <div className="tkn-city-wrap" ref={wrap}>
       <button type="button" className="tkn-city" aria-haspopup="true" aria-expanded={open} onClick={() => setOpen((v) => !v)}>
-        {current ? <CountryFlag code={current.code} /> : <MapPin size={16} strokeWidth={2.2} aria-hidden="true" focusable="false" />}
-        <span>{current?.name ?? "Country"}</span>
+        {current.code ? (
+          <img className="tkn-flag" src={flagSrc(current.code)} alt="" width={16} height={12} decoding="async" />
+        ) : (
+          <MapPin size={16} strokeWidth={2.2} aria-hidden="true" focusable="false" />
+        )}
+        <span>{current.name}</span>
         <ChevronDown size={14} strokeWidth={2.2} aria-hidden="true" focusable="false" className="tkn-city-arrow" />
       </button>
       {open ? (

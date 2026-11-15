@@ -1720,10 +1720,15 @@ input, select, textarea { font-size: 16px; }
 /* P1: country menu (mockup 00-CountryMenu): search on top, Popular, All countries A to Z, tick or "No ads yet" on the right */
 .tkn-city-arrow { color: var(--tkn-muted); margin-left: 2px; }
 .tkn-pop-country { width: 342px; max-height: min(560px, 70vh); padding: 12px; }
+/* H7.10: the search box stays at the top while the list scrolls; the flags are SVG files from public/flags */
 .tkn-country-search {
-  display: flex; align-items: center; gap: 10px; min-height: 44px; padding: 0 14px; margin-bottom: 8px; border-radius: 12px;
+  position: sticky; top: 0; z-index: 1; display: flex; align-items: center; gap: 10px; min-height: 44px; padding: 0 14px; margin-bottom: 8px; border-radius: 12px;
   border: 1.5px solid var(--tkn-line); background: #fff; color: var(--tkn-muted-2, #6b4a8a); box-sizing: border-box;
 }
+.tkn-flag {
+  display: inline-block; width: 16px; height: 12px; flex: none; border-radius: 2px; object-fit: cover; box-shadow: 0 0 0 1px rgba(30, 11, 56, 0.08);
+}
+.tkn-citylist-none { color: #6b4a8a; }
 .tkn-country-search input {
   flex: 1; min-width: 0; border: 0; outline: none; background: transparent; font: inherit; font-size: 14px; color: var(--tkn-ink);
 }

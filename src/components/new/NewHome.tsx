@@ -5,7 +5,8 @@ import { ArrowRight } from "lucide-react";
 import type { ListingDoc } from "@/lib/models";
 import { displayTitle, prettyPlace } from "@/lib/format";
 import { listingPhotos, safePhoto } from "@/lib/media";
-import { adPath, applyPrefixes, categoryPath, type UrlPaths } from "@/lib/urls";
+import { adPath, applyPrefixes, categoryPath, postAdPath, type UrlPaths } from "@/lib/urls";
+import { NewAdsGate } from "./NewAdsGate";
 import { makeT, type UiTextMap } from "@/lib/ui/text";
 import type { ShellConfig } from "@/server/site-links/shell-config-rules";
 import { HomeAdCard } from "./HomeAdCard";
@@ -211,6 +212,7 @@ export function NewHome({
         </ul>
       </section>
 
+      <NewAdsGate enabledSlugs={countries.map((country) => country.slug)} postHref={postAdPath(paths)}>
       {shown.length ? (
         <section className="tkh-page tkh-section" aria-labelledby="home-fresh">
           <SectionHead
@@ -243,6 +245,7 @@ export function NewHome({
           </div>
         </section>
       ) : null}
+      </NewAdsGate>
 
       <section className="tkh-page tkh-section" aria-labelledby="home-how">
         <SectionHead id="home-how" eyebrow={t("home.steps.eyebrow")} tone="peach" title={t("home.steps.title")} />

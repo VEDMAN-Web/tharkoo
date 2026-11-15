@@ -25,7 +25,7 @@ test.describe("H7.4d: flags and footer", () => {
     await page.goto("/");
     const pill = page.locator("header.tkn-header .tkn-city").first();
     await expect(pill).toBeVisible();
-    await expect(pill.locator("svg.tkn-flag")).toHaveCount(1);
+    await expect(pill.locator('img.tkn-flag[src$=".svg"]')).toHaveCount(1);
     expect(await pill.textContent()).not.toMatch(/[\u{1F1E6}-\u{1F1FF}]/u);
   });
 
