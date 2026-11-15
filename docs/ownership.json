@@ -2717,6 +2717,15 @@
         "src/app/globals.css"
       ]
     },
+    "H7.27": {
+      "branchPrefix": "haiku/h7.27",
+      "globs": [
+        "src/app/categories/page.tsx",
+        "src/app/cities/page.tsx",
+        "src/components/h714/**",
+        "docs/ownership.json"
+      ]
+    },
     "H7.14": {
       "branchPrefix": "haiku/h7.14",
       "globs": [
