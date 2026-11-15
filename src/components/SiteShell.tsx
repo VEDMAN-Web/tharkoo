@@ -116,7 +116,7 @@ export async function SiteShell({
   admin?: boolean;
 }) {
   const paths = readPaths((shell.site as { paths?: unknown } | null)?.paths);
-  const signIn = { landing: landingPathsFor(await getPaths()), showMobile: smsDeliverable() };
+  const signIn = { landing: landingPathsFor(await getPaths()), showMobile: smsDeliverable(), image: readContent((shell.site as { homepage?: unknown } | null)?.homepage).loginImage };
   return (
     <>
       <PathChrome shell={chromeData(shell, signIn)} paths={paths}>{children}</PathChrome>
