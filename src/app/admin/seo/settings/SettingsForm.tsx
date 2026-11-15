@@ -3,6 +3,7 @@
 import { useState, useTransition } from "react";
 import { Notice, SaveBar, TextField } from "@/components/admin/ui";
 import { ImagePicker, type ImageRef } from "@/components/admin/ui/ImagePicker";
+import { UPLOAD_RULES } from "@/components/upload/rules";
 import type { AdSchemaMapping } from "@/lib/seo/schema";
 import { checkAdSchemaAction, saveSeoSettingsAction } from "./actions";
 import { LLMS_LIMITS, MAX_LLMS_SECTIONS, type SeoSettings } from "./rules";
@@ -97,7 +98,7 @@ export function SettingsForm({ initial, categories, isSuperadmin }: Props) {
       <section className="adm-card" style={{ display: "grid", gap: 12 }}>
         <h2 style={{ margin: 0, fontSize: 18 }}>Organization (structured data)</h2>
         <TextField label="Name" value={org.name} onChange={(next) => setOrg({ name: next })} placeholder="Tharkoo" error={err("organization.name")} />
-        <ImagePicker label="Logo" value={asImage(org.logo)} onChange={(next) => setOrg({ logo: next?.src ?? "" })} />
+        <ImagePicker label="Logo" value={asImage(org.logo)} onChange={(next) => setOrg({ logo: next?.src ?? "" })} rule={UPLOAD_RULES.logo} />
         {err("organization.logo") ? <p className="adm-field-error">{err("organization.logo")}</p> : null}
         <TextField label="Support email" value={org.email} onChange={(next) => setOrg({ email: next })} error={err("organization.email")} />
         <TextField label="Support phone" value={org.phone} onChange={(next) => setOrg({ phone: next })} />

@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useRef, useState } from "react";
+import { moveItem } from "@/components/upload/rules";
 import { refusalFor, uploadAdMedia, type MediaKind } from "./ad-upload";
 
 export interface MediaItem {
@@ -8,16 +9,10 @@ export interface MediaItem {
   name: string;
   previewUrl: string;
   state: "uploading" | "ready" | "failed";
+  /** 0 to 1 while the file is sent. */
+  progress?: number;
   mediaId: string;
   error: string;
-}
-
-function moved<T>(items: readonly T[], from: number, to: number): T[] {
-  if (to < 0 || to >= items.length) return [...items];
-  const next = [...items];
-  const [item] = next.splice(from, 1);
-  next.splice(to, 0, item);
-  return next;
 }
 
 /**
@@ -43,7 +38,8 @@ export function useAdMedia(kind: MediaKind, limit: number, ownerEmail: string) {
       setNote(files.length > room ? `Only ${room} more fit. The limit is ${limit}.` : "");
       const fresh = files.slice(0, room).map((file) => {
         counter.current += 1;
-        return { file, item: { key: `${Date.now()}-${counter.current}`, name: file.name, previewUrl: kind === "image" ? URL.createObjectURL(file) : "", state: "uploading" as const, mediaId: "", error: "" } };
+        // H7.8: both kinds get a preview; a video shows its first frame in the box.
+        return { file, item: { key: `${Date.now()}-${counter.current}`, name: file.name, previewUrl: URL.createObjectURL(file), state: "uploading" as const, progress: 0, mediaId: "", error: "" } };
       });
       setItems((current) => [...current, ...fresh.map((entry) => entry.item)]);
       for (const entry of fresh) {
@@ -52,7 +48,7 @@ export function useAdMedia(kind: MediaKind, limit: number, ownerEmail: string) {
           patch(entry.item.key, { state: "failed", error: refusal });
           continue;
         }
-        const result = await uploadAdMedia(entry.file, kind, ownerEmail);
+        const result = await uploadAdMedia(entry.file, kind, ownerEmail, (ratio) => patch(entry.item.key, { progress: ratio }));
         patch(entry.item.key, result.ok ? { state: "ready", mediaId: result.mediaId } : { state: "failed", error: result.error });
       }
     },
@@ -71,14 +67,14 @@ export function useAdMedia(kind: MediaKind, limit: number, ownerEmail: string) {
   const move = useCallback((key: string, step: number) => {
     setItems((current) => {
       const from = current.findIndex((item) => item.key === key);
-      return from < 0 ? current : moved(current, from, from + step);
+      return from < 0 ? current : moveItem(current, from, step);
     });
   }, []);
 
   const makeCover = useCallback((key: string) => {
     setItems((current) => {
       const from = current.findIndex((item) => item.key === key);
-      return from <= 0 ? current : moved(current, from, 0);
+      return from <= 0 ? current : moveItem(current, from, -from);
     });
   }, []);
 
