@@ -3075,6 +3075,14 @@
         "docs/ownership.json",
         "src/components/SiteShell.tsx"
       ]
+    },
+    "H7.42": {
+      "branchPrefix": "haiku/h7.42",
+      "globs": [
+        "docs/ownership.json",
+        "src/components/FooterNew.tsx",
+        "tests/**"
+      ]
     }
   }
 }
