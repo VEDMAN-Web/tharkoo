@@ -24,6 +24,10 @@ import { plain } from "@/lib/plain";
 import { getPaths } from "@/server/urls/service";
 import { videoTourOffer } from "@/server/tours/offer";
 import { listingIsPeople } from "@/server/availability/people";
+import { coinProviderName } from "@/server/wallet/provider";
+import { textOverrides } from "@/app/admin/ui-text/store";
+import { pickTexts } from "@/lib/ui/text";
+import { popupAlternatives } from "@/components/new/NewAdDetail";
 
 type Props = { params: Promise<{ slug: string }> };
 
@@ -157,7 +161,20 @@ export default async function AdPage({ params }: Props) {
     <>
       <JsonLd data={structured ? [breadcrumbJsonLd(crumbs), structured] : [breadcrumbJsonLd(crumbs)]} />
       {newDesign ? (
-        <NewAdDetail ad={plain(ad)} categoryName={catName} related={plain(related)} listingId={listingId} crumbs={crumbs} shareUrl={shareUrl} heading={heading} tour={tour} peopleAd={peopleAd} />
+        <NewAdDetail
+          ad={plain(ad)}
+          categoryName={catName}
+          related={plain(related)}
+          listingId={listingId}
+          crumbs={crumbs}
+          shareUrl={shareUrl}
+          heading={heading}
+          tour={tour}
+          peopleAd={peopleAd}
+          paymentsLive={coinProviderName() !== "mock"}
+          alternatives={popupAlternatives(plain(ad), plain(related), paths)}
+          texts={pickTexts(await textOverrides(), "ad.", "card.")}
+        />
       ) : (
         <AdDetail ad={plain(ad)} categoryName={catName} related={plain(related)} listingId={listingId} crumbs={crumbs} shareUrl={shareUrl} heading={heading} tour={tour} peopleAd={peopleAd} />
       )}

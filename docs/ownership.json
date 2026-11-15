@@ -2575,6 +2575,22 @@
         "src/lib/ui/text.ts",
         "src/server/search/query.ts"
       ]
+    },
+    "H7.9": {
+      "branchPrefix": "haiku/h7.9",
+      "globs": [
+        "src/app/ad/[slug]/page.tsx",
+        "src/components/ContactButtons.tsx",
+        "src/components/ui/AdCard.tsx",
+        "src/components/new/NewAdDetail.tsx",
+        "src/components/new/NewGallery.tsx",
+        "src/components/new/AdPopup.tsx",
+        "src/components/new/AdLiveBits.tsx",
+        "src/components/new/ad-spec.css",
+        "src/components/new/new-design.css",
+        "src/lib/ui/text.ts",
+        "docs/ownership.json"
+      ]
     }
   }
 }
