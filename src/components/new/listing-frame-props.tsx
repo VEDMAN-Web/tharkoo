@@ -55,8 +55,8 @@ export function listingLabels(t: TextFn): ListingLabels {
 export function placeSelects(input: {
   categorySlug: string;
   categories: { slug?: string | null; name?: string | null }[];
-  states: { slug?: string | null; name?: string | null }[];
-  cities: { slug?: string | null; name?: string | null }[];
+  states: { slug?: string | null; name?: string | null; countrySlug?: string | null }[];
+  cities: { slug?: string | null; name?: string | null; countrySlug?: string | null }[];
   districts: { slug?: string | null; name?: string | null }[];
   stateSlug?: string;
   citySlug?: string;
@@ -65,10 +65,13 @@ export function placeSelects(input: {
 }): PlaceSelects {
   const cat = input.categorySlug;
   const place = input.citySlug || input.stateSlug || "";
-  const named = <T extends { slug?: string | null; name?: string | null }>(rows: T[], href: (slug: string) => string): PlaceOption[] =>
+  const named = <T extends { slug?: string | null; name?: string | null; countrySlug?: string | null }>(
+    rows: T[],
+    href: (slug: string) => string,
+  ): PlaceOption[] =>
     rows
       .filter((row): row is T & { slug: string } => Boolean(row.slug))
-      .map((row) => ({ value: row.slug, label: row.name || row.slug, href: href(row.slug) }));
+      .map((row) => ({ value: row.slug, label: row.name || row.slug, href: href(row.slug), country: row.countrySlug || undefined }));
   return {
     categories: named(input.categories, (slug) => (place ? placePath(slug, place) : categoryPath(slug))),
     categoryValue: cat,

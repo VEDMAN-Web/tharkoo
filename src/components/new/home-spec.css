@@ -733,3 +733,29 @@
     mask-image: linear-gradient(90deg, #000 calc(100% - 36px), transparent);
   }
 }
+
+/* H7.4d: on a phone the five trust chips are one row that scrolls sideways (no visible scrollbar, snap to each chip).
+   Each chip stays on one line. The right padding lets the last chip scroll clear of the chat bubble. */
+@media (max-width: 600px) {
+  .tkh-trust {
+    display: flex;
+    grid-template-columns: none;
+    gap: 10px;
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+    scroll-snap-type: x mandatory;
+    scroll-padding-inline: 16px;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+    padding: 4px 96px 4px 0;
+    -webkit-overflow-scrolling: touch;
+  }
+  .tkh-trust::-webkit-scrollbar {
+    display: none;
+  }
+  .tkh-trust li {
+    flex: 0 0 auto;
+    white-space: nowrap;
+    scroll-snap-align: start;
+  }
+}

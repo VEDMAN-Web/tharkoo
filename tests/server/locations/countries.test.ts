@@ -50,7 +50,7 @@ describe("buildCountryDirectory", () => {
   });
 
   it("footerCountries shows at most 12, busiest first", () => {
-    const many = Array.from({ length: 15 }, (_, i) => ({ slug: `c${i}`, name: `C${i}`, flag: "", count: i, cities: [] }));
+    const many = Array.from({ length: 15 }, (_, i) => ({ slug: `c${i}`, name: `C${i}`, flag: "", code: "", count: i, cities: [] }));
     const shown = footerCountries(many);
     expect(shown).toHaveLength(12);
     expect(shown[0].slug).toBe("c14");

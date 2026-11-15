@@ -2,7 +2,7 @@ import { Types } from "mongoose";
 import { cached } from "@/lib/cache";
 import { connectDb } from "@/lib/db";
 import { Listing } from "@/server/models";
-import { flagFromCode } from "@/server/locations/flag";
+import { codeOf, flagFromCode } from "@/server/locations/flag";
 import { loadLocations, type LocationRow } from "@/server/locations/service";
 
 export { flagFromCode };
@@ -18,6 +18,8 @@ export interface DirectoryCountry {
   slug: string;
   name: string;
   flag: string;
+  /** Two-letter ISO code (upper case) or "". The UI draws the SVG flag from it (H7.4d). */
+  code: string;
   count: number;
   cities: DirectoryCity[];
 }
@@ -53,8 +55,15 @@ export function buildCountryDirectory(
   const countryOf = (row: LocationRow) => ancestorOfType(row, index, "country");
   const tree = new Map<string, DirectoryCountry>();
   for (const country of live.filter((row) => row.type === "country").sort(byOrder)) {
-    const flag = flagFromCode((country as { countryCode?: string }).countryCode);
-    tree.set(String(country._id), { slug: country.slug, name: country.name, flag, count: 0, cities: [] });
+    const countryCode = (country as { countryCode?: string }).countryCode;
+    tree.set(String(country._id), {
+      slug: country.slug,
+      name: country.name,
+      flag: flagFromCode(countryCode),
+      code: codeOf(countryCode),
+      count: 0,
+      cities: [],
+    });
   }
   for (const city of live.filter((row) => row.type === "city").sort(byOrder)) {
     const country = countryOf(city);
@@ -120,6 +129,7 @@ export interface DirectoryCountryPage {
   slug: string;
   name: string;
   flag: string;
+  code: string;
   count: number;
   states: DirectoryState[];
   /** Cities that sit directly under the country, with no state between them. */
@@ -163,6 +173,7 @@ export function buildCountryPage(
     slug: country.slug,
     name: country.name,
     flag: flagFromCode((country as { countryCode?: string }).countryCode),
+    code: codeOf((country as { countryCode?: string }).countryCode),
     count: total,
     states: [...states.values()],
     cities: loose,

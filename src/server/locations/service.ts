@@ -29,6 +29,8 @@ export interface PublicLocation {
   stateSlug: string;
   citySlug: string;
   parentSlug: string;
+  /** The country the place sits in ("" when it has none). H7.4d: the place selects scope by it. */
+  countrySlug: string;
   isTop: boolean;
   sortOrder: number;
 }
@@ -68,6 +70,7 @@ export function presentLocation(doc: LocationRow, index = byId([doc])): PublicLo
   const parents = ancestors(doc, index);
   const state = parents.find((row) => row.type === "state") ?? (doc.type === "state" ? doc : undefined);
   const city = parents.find((row) => row.type === "city") ?? (doc.type === "city" ? doc : undefined);
+  const country = parents.find((row) => row.type === "country") ?? (doc.type === "country" ? doc : undefined);
   const top = TOP_CITY_SLUGS as readonly string[];
   return {
     id: String(doc._id),
@@ -80,6 +83,7 @@ export function presentLocation(doc: LocationRow, index = byId([doc])): PublicLo
     stateSlug: state?.slug ?? "",
     citySlug: doc.type === "city" ? doc.slug : (city?.slug ?? ""),
     parentSlug: parents[0]?.slug ?? "",
+    countrySlug: country?.slug ?? "",
     isTop: doc.type === "city" && top.includes(doc.slug),
     sortOrder: doc.order ?? 999,
   };
