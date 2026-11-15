@@ -3012,6 +3012,15 @@
         "tests/e2e/logout.e2e.ts",
         "tests/server/auth/auth.test.ts"
       ]
+    },
+    "H7.31": {
+      "branchPrefix": "haiku/h7.31",
+      "globs": [
+        "src/components/new/listing-spec.css",
+        "src/components/new/ListingFrame.tsx",
+        "docs/ownership.json",
+        "progress/H7.31.md"
+      ]
     }
   }
 }
