@@ -2667,6 +2667,36 @@
         "docs/ownership.json",
         "tests/server/shell/home-config-banner.test.ts"
       ]
+    },
+    "H7.4d": {
+      "branchPrefix": "haiku/h7.4d",
+      "globs": [
+        "progress/H7.4d.md",
+        "src/components/ui/CountryFlag.tsx",
+        "src/components/ui/CountryFlag.css",
+        "src/components/FooterCountries.tsx",
+        "src/components/FooterNew.css",
+        "src/components/Header.tsx",
+        "src/components/HeaderCountry.tsx",
+        "src/components/ListingPage.tsx",
+        "src/components/SiteCountry.ts",
+        "src/components/new/ListingPlaceSelects.tsx",
+        "src/components/new/home-spec.css",
+        "src/components/new/listing-filters.ts",
+        "src/components/new/listing-frame-props.tsx",
+        "src/app/countries/page.tsx",
+        "src/app/countries/[country]/page.tsx",
+        "src/server/locations/countries.ts",
+        "src/server/locations/country-scope.ts",
+        "src/server/locations/flag.ts",
+        "src/server/locations/service.ts",
+        "tests/server/locations/countries.test.ts",
+        "tests/server/shell/shell-render.test.ts",
+        "tests/server/ui/country-flag.test.ts",
+        "tests/e2e/h7-4d-followups.e2e.ts",
+        "docs/ownership.json",
+        "src/app/globals.css"
+      ]
     }
   }
 }

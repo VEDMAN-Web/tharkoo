@@ -4,6 +4,7 @@ import { getCategories } from "@/lib/queries";
 import { countryPath, placePath } from "@/lib/urls";
 import { withUrlSeo } from "@/lib/seo/override";
 import { loadCountryDirectory } from "@/server/locations/countries";
+import { CountryFlag } from "@/components/ui/CountryFlag";
 
 export const revalidate = 300;
 
@@ -33,7 +34,7 @@ export default async function CountriesPage() {
         {countries.map((country) => (
           <div className="tk-panel" key={country.slug}>
             <div className="tk-panel-head">
-              <span aria-hidden>{country.flag || "🌐"}</span> {country.name} ({country.count})
+              <CountryFlag code={country.code} /> {country.name} ({country.count})
             </div>
             <Link href={countryPath(country.slug)} className="tk-dir-state" prefetch={false}>
               {country.name}

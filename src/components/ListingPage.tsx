@@ -2,9 +2,10 @@
 
 import { withPins } from "@/lib/ui/pins";
 import Link from "next/link";
-import { useState } from "react";
+import { useCallback, useRef, useState } from "react";
 import { MapPin, Search } from "lucide-react";
 import { AdCard, UiTextProvider } from "./ui/AdCard";
+import { useDismiss } from "./ui/useDismiss";
 import { EmptyState } from "./ui/EmptyState";
 import { JsonLd, breadcrumbJsonLd } from "@/lib/jsonld";
 import { faqPage } from "@/lib/seo/schema";
@@ -104,6 +105,10 @@ export function ListingPageView({
   frame?: boolean;
 }) {
   const [open, setOpen] = useState(false);
+  // H7.4d: the breadcrumb place menu closes on an outside click or tap, and on Escape.
+  const crumbRef = useRef<HTMLDivElement>(null);
+  const closeCrumbs = useCallback(() => setOpen(false), []);
+  useDismiss(open, crumbRef, closeCrumbs);
   const t = makeT(texts);
   const paths = useUrlPaths();
   const clear = path.split("?")[0];
@@ -174,6 +179,7 @@ export function ListingPageView({
     const introText = listingHeading(String(block.props.introTemplate ?? ""), "", vars);
     return (
       <>
+        <div className="tk-crumb-wrap" ref={crumbRef}>
         <nav className="tk-crumbs tk-crumbs-full" aria-label={t("listing.crumb.label")}>
           {crumbs.map((crumb, index) => {
             const last = index === crumbs.length - 1;
@@ -218,6 +224,7 @@ export function ListingPageView({
             ) : null}
           </nav>
         ) : null}
+        </div>
         <h1 className="tk-listing-h1">{heading}</h1>
         {updated && block.props.showUpdated !== false ? <p className="tk-listing-updated">{t("listing.updated", { date: updated })}</p> : null}
         {introText ? <p className="tk-listing-intro">{introText}</p> : null}

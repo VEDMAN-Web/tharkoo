@@ -6,6 +6,7 @@ import { Check, MapPin } from "lucide-react";
 import { setSiteCountry } from "@/app/actions/site-country";
 import { useDismiss } from "@/components/ui/useDismiss";
 import { SITE_COUNTRY_EVENT, useSiteCountry } from "@/components/SiteCountry";
+import { CountryFlag } from "@/components/ui/CountryFlag";
 import type { CountryOption } from "@/server/locations/country-scope";
 
 /**
@@ -40,7 +41,7 @@ export function CountryList({ countries, onPick }: { countries: CountryOption[];
           return (
             <li key={country.slug}>
               <button type="button" aria-pressed={chosen} className="tkn-citylist-row" disabled={pending} onClick={() => pick(country.slug)}>
-                <span aria-hidden="true">{country.flag}</span> <span>{country.name}</span>
+                <CountryFlag code={country.code} /> <span>{country.name}</span>
                 {chosen ? <Check size={16} aria-hidden="true" focusable="false" /> : null}
               </button>
             </li>
@@ -61,7 +62,7 @@ export function HeaderCountry({ countries }: { countries: CountryOption[] }) {
   return (
     <div className="tkn-city-wrap" ref={wrap}>
       <button type="button" className="tkn-city" aria-haspopup="true" aria-expanded={open} onClick={() => setOpen((v) => !v)}>
-        {current ? <span aria-hidden="true">{current.flag}</span> : <MapPin size={16} strokeWidth={2.2} aria-hidden="true" focusable="false" />}
+        {current ? <CountryFlag code={current.code} /> : <MapPin size={16} strokeWidth={2.2} aria-hidden="true" focusable="false" />}
         <span>{current?.name ?? "Country"}</span>
       </button>
       {open ? (

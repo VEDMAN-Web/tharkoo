@@ -5,6 +5,7 @@ import { getCategories } from "@/lib/queries";
 import { countryPath, placePath } from "@/lib/urls";
 import { withUrlSeo } from "@/lib/seo/override";
 import { loadCountryPage } from "@/server/locations/countries";
+import { CountryFlag } from "@/components/ui/CountryFlag";
 
 export const revalidate = 300;
 
@@ -33,7 +34,7 @@ export default async function CountryPage({ params }: Props) {
       <div className="tk-banner" data-tk="country-banner">
         <div className="tk-container">
           <h1>
-            <span aria-hidden>{place.flag || "🌐"}</span> {place.name}
+            <CountryFlag code={place.code} /> {place.name}
           </h1>
         </div>
         <Globe className="tk-banner-pins tk-icon-lg" size={116} color="#fff" aria-hidden />

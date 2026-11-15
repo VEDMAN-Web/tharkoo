@@ -163,7 +163,13 @@ export type ListingLabels = {
 };
 
 /** One entry of a place select. `href` is the clean SEO URL it navigates to. */
-export type PlaceOption = { value: string; label: string; href: string };
+export type PlaceOption = {
+  value: string;
+  label: string;
+  href: string;
+  /** The country slug of a state or city (H7.4d). Absent for categories and "All" entries: they are always shown. */
+  country?: string;
+};
 
 /** The four place selects of the filter panel. An empty areas list means the select is disabled. */
 export type PlaceSelects = {

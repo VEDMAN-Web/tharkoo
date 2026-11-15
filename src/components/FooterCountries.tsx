@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import { getFooterCountries } from "@/server/locations/footer-action";
 import type { DirectoryCountry } from "@/server/locations/countries";
 import { useUrlPaths } from "./UrlPaths";
+import { CountryFlag } from "@/components/ui/CountryFlag";
 import { applyPrefixes, countryPath, placePath } from "@/lib/urls";
 
 const countStyle = { color: "var(--muted)", fontSize: 12, marginLeft: "auto", paddingLeft: 8 } as const;
@@ -35,7 +36,7 @@ export function FooterCountries({ title, allLabel, categorySlug }: { title?: str
         {rows.map((country) => (
           <details key={country.slug} style={{ borderBottom: "1px solid var(--border)" }}>
             <summary style={{ ...rowStyle, cursor: "pointer", listStyle: "none" }}>
-              <span aria-hidden>{country.flag || "🌐"}</span>
+              <CountryFlag code={country.code} />
               <span style={{ fontWeight: 600 }}>{country.name}</span>
               <span style={countStyle}>{country.count}</span>
             </summary>

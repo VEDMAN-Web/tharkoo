@@ -1,13 +1,14 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { usePathname } from "next/navigation";
 import { LayoutDashboard, List, LogOut, Menu, Search, Settings, ShieldCheck, User, Wallet, X, MessageCircle, CircleHelp } from "lucide-react";
 import dynamic from "next/dynamic";
 import { Logo } from "./Logo";
 import { useCity } from "./CityContext";
 import { useFocusTrap } from "./ui/useFocusTrap";
+import { useDismiss } from "./ui/useDismiss";
 import { api, hasSessionHint, isStaffRole } from "@/lib/ui/api";
 import { safeHref } from "@/lib/sanitize";
 import { applyPrefixes, blogPath, helpPath, loginPath, postAdPath, registerPath } from "@/lib/urls";
@@ -60,22 +61,9 @@ export function Header({
   const homeLike = path === "/" || path.startsWith(`/${paths.cities}`);
   const showCity = Boolean(city) && (path.startsWith(`/${paths.ad}/`) || categories.some((cat) => path.startsWith(`/${cat.slug}`)));
   const drawerRef = useFocusTrap(menu, () => setMenu(false));
-
-  useEffect(() => {
-    if (!account) return;
-    function onDown(event: MouseEvent) {
-      if (!accountRef.current?.contains(event.target as Node)) setAccount(false);
-    }
-    function onKey(event: KeyboardEvent) {
-      if (event.key === "Escape") setAccount(false);
-    }
-    document.addEventListener("mousedown", onDown);
-    document.addEventListener("keydown", onKey);
-    return () => {
-      document.removeEventListener("mousedown", onDown);
-      document.removeEventListener("keydown", onKey);
-    };
-  }, [account]);
+  // H7.4d: the account menu closes on an outside click or tap, and on Escape (the shared hook).
+  const closeAccount = useCallback(() => setAccount(false), []);
+  useDismiss(account, accountRef, closeAccount);
 
   useEffect(() => {
     function open() {

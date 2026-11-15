@@ -3,7 +3,7 @@
  * country's places. Pure: no database, so the rules are unit tested. The cookie is read by the pages (see site-country.ts).
  */
 import type { LocationRow } from "@/server/locations/service";
-import { flagFromCode } from "@/server/locations/flag";
+import { codeOf, flagFromCode } from "@/server/locations/flag";
 
 /** The cookie that holds the chosen country slug. */
 export const SITE_COUNTRY_COOKIE = "tk_country";
@@ -13,7 +13,10 @@ export const DEFAULT_COUNTRY_SLUG = "india";
 export interface CountryOption {
   slug: string;
   name: string;
+  /** Emoji flag (kept for old callers). The UI draws the SVG flag from `code` (H7.4d). */
   flag: string;
+  /** Two-letter ISO code in upper case, or "" when none is set. */
+  code: string;
 }
 
 export interface ScopedPlace {
@@ -34,7 +37,7 @@ export function countryOptionsFrom(rows: RowWithCode[]): CountryOption[] {
   return rows
     .filter((row) => row.type === "country" && row.enabled !== false)
     .sort(byOrder)
-    .map((row) => ({ slug: row.slug, name: row.name, flag: flagFromCode(row.countryCode) }));
+    .map((row) => ({ slug: row.slug, name: row.name, flag: flagFromCode(row.countryCode), code: codeOf(row.countryCode) }));
 }
 
 /** The country on show: the cookie's country when it is enabled, else India, else the first country. */

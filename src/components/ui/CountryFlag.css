@@ -1,0 +1,21 @@
+/* H7.4d: inline SVG country flags (see CountryFlag.tsx). Fixed 16 x 12 so every row lines up. */
+.tkn-flag {
+  display: inline-block;
+  flex: none;
+  width: 16px;
+  height: 12px;
+  vertical-align: -1px;
+  border-radius: 2px;
+}
+.tkn-flag-none {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 12px;
+  vertical-align: -1px;
+  border-radius: 2px;
+  background: var(--line-soft, #eee);
+  color: var(--muted, #666);
+}
