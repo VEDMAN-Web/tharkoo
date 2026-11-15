@@ -2409,7 +2409,9 @@
         "tests/server/seo/**",
         "tests/server/ui/seo-schema.test.ts",
         "progress/H7.3b.md",
-        "docs/ownership.json"
+        "docs/ownership.json",
+        "src/server/categories/public.ts",
+        "tests/server/categories/subcategories.test.ts"
       ]
     },
     "H7.4": {
