@@ -39,7 +39,6 @@ export const TEXT_DEFAULTS = {
   "listing.filters.photos": "With photos",
   "listing.filters.video": "With video",
   "listing.filters.online": "Online now",
-  "listing.filters.soon": "Soon",
   "listing.filters.min": "Min",
   "listing.filters.max": "Max",
   "listing.band.keyword": "Search keyword",
@@ -159,6 +158,34 @@ export const TEXT_DEFAULTS = {
   "ad.chat.signIn": "Log in to chat with {name}.",
   "ad.seller.name": "The seller",
   "ad.safe.fine": "Tharkoo does not intervene in relationships between users and advertisers. People arrange meetings on their own.",
+  // H7.8: the header's short button label (under 420 px) and the live chat (bubble, panel and guest form)
+  "header.postShort": "Post ad",
+  "chat.open": "Open live chat",
+  "chat.close": "Close live chat",
+  "chat.closePanel": "Close chat",
+  "chat.backToTop": "Back to top",
+  "chat.topicsLabel": "What do you need help with?",
+  "chat.guest.name": "Your name",
+  "chat.guest.contact": "Email or phone",
+  "chat.guest.continue": "Continue",
+  "chat.guest.needName": "Add your name.",
+  "chat.guest.needContact": "Add an email address or a phone number.",
+  "chat.guest.replyEmail": "Thanks. Support will reply to the email address you gave.",
+  "chat.guest.replyPhone": "Thanks. Support will contact you on the phone number you gave.",
+  "chat.composer.label": "Message",
+  "chat.composer.placeholder": "Type a message",
+  "chat.composer.send": "Send",
+  "chat.composer.minLength": "Write at least {count} characters.",
+  "chat.reply.first": "Thanks. Support answers in this chat and in your support tickets.",
+  // H7.8: "How to use this section" in the seller and user panels (2 to 4 plain sentences each)
+  "help.label": "How to use this section",
+  "help.section.myAds": "Your ads are listed here. Use the filters to see live, in-review or ended ads. From each row you can edit, renew, promote or post again.",
+  "help.section.availableNow": "Turn this on when you can take calls, and buyers see Online now. After the idle hours with no activity you show as Away. Calls pause; chat still works.",
+  "help.section.wallet": "Coins are earned from your ads. One coin is worth ₹100 when you withdraw. Withdraw once you reach the minimum, and see past payouts in History.",
+  "help.section.support": "Raise a ticket for anything you need help with. Only Tharkoo support can close a ticket. A closed ticket can be replaced with a new one.",
+  "help.section.saved": "Ads you save appear here. Save an ad from its card, and remove it from here when you no longer need it.",
+  "help.section.alerts": "Save a search to get alerts for new ads that match it. Turn an alert off here at any time.",
+  "help.section.notifications": "Account messages and updates appear here. Open one to read it in full.",
 } as const;
 
 export type UiTextKey = keyof typeof TEXT_DEFAULTS;
@@ -172,6 +199,9 @@ export const TEXT_GROUPS: { id: string; label: string; prefix: string }[] = [
   { id: "listing", label: "Listing pages", prefix: "listing." },
   { id: "card", label: "Ad card", prefix: "card." },
   { id: "ad", label: "Ad page", prefix: "ad." },
+  { id: "header", label: "Header", prefix: "header." },
+  { id: "chat", label: "Live chat", prefix: "chat." },
+  { id: "help", label: "Help texts", prefix: "help." },
 ];
 
 export const TEXT_KEYS = Object.keys(TEXT_DEFAULTS) as UiTextKey[];

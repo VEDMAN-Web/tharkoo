@@ -5,6 +5,7 @@ import { JsonLd } from "@/lib/jsonld";
 import { canonical } from "@/lib/seo";
 import { safeHref } from "@/lib/sanitize";
 import type { SiteContent } from "@/lib/ui/site-content";
+import type { UiTextMap } from "@/lib/ui/text";
 import type { UrlPaths } from "@/lib/urls";
 import type { ShellConfig } from "@/server/site-links/shell-config-rules";
 import { AgeGate } from "./AgeGate";
@@ -16,6 +17,7 @@ import { Header } from "./Header";
 import { HeaderNew } from "./HeaderNew";
 import { MainInner } from "./MainInner";
 import { UrlPathProvider } from "./UrlPaths";
+import { UiTextProvider } from "./help/UiTextProvider";
 import { SupportChat } from "./chat/SupportChat";
 
 type City = { slug: string; name: string; stateSlug?: string };
@@ -42,6 +44,8 @@ export type ChromeData = {
   /** H7.1: the New design switch. Off shows the old header, footer and no chat. */
   newDesign: boolean;
   shell: ShellConfig;
+  /** H7.8: the UI-text overrides for the header and the live chat. */
+  texts?: UiTextMap;
 };
 
 export function PathChrome({ shell, paths, children }: { shell: ChromeData; paths: UrlPaths; children: React.ReactNode }) {
@@ -55,12 +59,13 @@ export function PathChrome({ shell, paths, children }: { shell: ChromeData; path
       </UrlPathProvider>
     );
   }
-  const { site, categories, cities, cityCount, user, content, footerLinks, socialLinks, newDesign, shell: config } = shell;
+  const { site, categories, cities, cityCount, user, content, footerLinks, socialLinks, newDesign, shell: config, texts } = shell;
   // Style guides are tool pages: no age gate and no cookie banner.
   const toolPage = path.startsWith("/styleguide");
   const siteName = site.logoText || site.name || "Tharkoo";
   return (
     <UrlPathProvider paths={paths}>
+    <UiTextProvider texts={texts}>
     <CityProvider cities={cities}>
       {path.startsWith(`/${paths.ad.replace(/^\/|\/$/g, "")}/`) ? null : (
         <JsonLd
@@ -75,10 +80,10 @@ export function PathChrome({ shell, paths, children }: { shell: ChromeData; path
       )}
       {newDesign ? (
         <div className="tkn" data-design="new">
-          <HeaderNew siteName={siteName} shell={config} cities={cities} categories={categories} />
+          <HeaderNew siteName={siteName} shell={config} cities={cities} categories={categories} texts={texts} />
           <MainInner>{children}</MainInner>
           <FooterNew siteName={siteName} shell={config} categories={categories} />
-          <SupportChat chat={config.chat} />
+          <SupportChat chat={config.chat} texts={texts} />
         </div>
       ) : (
         <>
@@ -135,6 +140,7 @@ export function PathChrome({ shell, paths, children }: { shell: ChromeData; path
       />
       )}
     </CityProvider>
+    </UiTextProvider>
     </UrlPathProvider>
   );
 }

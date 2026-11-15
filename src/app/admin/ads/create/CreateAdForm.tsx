@@ -157,8 +157,9 @@ export function CreateAdForm({ options, canPublish }: { options: AdFormOptions; 
   const photos = useAdMedia("image", photoLimit, ownerKey);
   const videos = useAdMedia("video", AD_MEDIA_MAX, ownerKey);
   // Each picker takes only what is left after the other kind.
-  const mediaRoom = AD_MEDIA_MAX - photos.items.length - videos.items.length;
-  const mediaTotal = `Photos and videos together: ${photos.items.length + videos.items.length} of ${AD_MEDIA_MAX}`;
+  // H7.8: a refused file does not count toward the limit.
+  const mediaRoom = AD_MEDIA_MAX - photos.counted - videos.counted;
+  const mediaTotal = `Photos and videos together: ${photos.counted + videos.counted} of ${AD_MEDIA_MAX}`;
 
   function change(next: Partial<FormState>) {
     setForm((current) => ({ ...current, ...next }));

@@ -1,0 +1,51 @@
+/* H7.8: "How to use this section" disclosure in the seller and user panels. Own file; globals.css is not touched. */
+
+.sec-help {
+  margin: 8px 0 0;
+  font-size: 13px;
+  color: var(--muted, #5f5870);
+}
+
+.sec-help summary {
+  display: inline-flex;
+  align-items: center;
+  min-height: 32px;
+  padding: 4px 12px;
+  border-radius: 999px;
+  border: 1px solid var(--line-strong, #c9bfd9);
+  background: var(--surface, #fff);
+  color: var(--ink-strong, #1f1530);
+  font-weight: 700;
+  cursor: pointer;
+  list-style: none;
+}
+
+.sec-help summary::-webkit-details-marker {
+  display: none;
+}
+
+.sec-help summary:focus-visible {
+  outline: 2px solid var(--focus, #1d4ed8);
+  outline-offset: 2px;
+}
+
+.sec-help[open] summary {
+  margin-bottom: 8px;
+}
+
+.sec-help p {
+  margin: 0;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+}
+
+/* On a dark card (the seller wallet): light text and a light outline. */
+.sec-help-dark {
+  color: rgba(255, 255, 255, 0.85);
+}
+
+.sec-help-dark summary {
+  border-color: rgba(255, 255, 255, 0.5);
+  background: transparent;
+  color: #fff;
+}

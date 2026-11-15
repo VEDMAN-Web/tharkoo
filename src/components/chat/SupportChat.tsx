@@ -1,9 +1,10 @@
 "use client";
 
 import { ArrowUp, MessageCircle, Phone, Send, X } from "lucide-react";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { safeHref } from "@/lib/sanitize";
 import { api, friendlyError, hasSessionHint } from "@/lib/ui/api";
+import { makeT, type UiTextMap } from "@/lib/ui/text";
 import type { ShellConfig } from "@/server/site-links/shell-config-rules";
 import type { SupportTopic } from "@/server/support/constants";
 
@@ -23,7 +24,9 @@ function callLink(value: string) {
 }
 
 /** H7.1: the live chat bubble, bottom right, closed by default. Each chat opens or continues an H6.21 support ticket. */
-export function SupportChat({ chat }: { chat: Chat }) {
+export function SupportChat({ chat, texts }: { chat: Chat; texts?: UiTextMap }) {
+  // H7.8: every visible word in the chat comes from the UI-text store (defaults in src/lib/ui/text.ts).
+  const t = useMemo(() => makeT(texts), [texts]);
   const [open, setOpen] = useState(false);
   const [session, setSession] = useState<Session>("unknown");
   const [topic, setTopic] = useState<SupportTopic>("something_else");
@@ -87,8 +90,8 @@ export function SupportChat({ chat }: { chat: Chat }) {
     event.preventDefault();
     const name = guest.name.trim();
     const contact = guest.contact.trim();
-    if (name.length < 2) return setGuestError("Add your name.");
-    if (!EMAIL.test(contact) && !PHONE.test(contact)) return setGuestError("Add an email address or a phone number.");
+    if (name.length < 2) return setGuestError(t("chat.guest.needName"));
+    if (!EMAIL.test(contact) && !PHONE.test(contact)) return setGuestError(t("chat.guest.needContact"));
     setGuestError("");
     setGuestDone(true);
   }
@@ -109,9 +112,7 @@ export function SupportChat({ chat }: { chat: Chat }) {
     add("you", text);
     add(
       "support",
-      res.data.replyVia === "email"
-        ? "Thanks. Support will reply to the email address you gave."
-        : "Thanks. Support will contact you on the phone number you gave.",
+      res.data.replyVia === "email" ? t("chat.guest.replyEmail") : t("chat.guest.replyPhone"),
     );
     setDraft("");
   }
@@ -119,7 +120,7 @@ export function SupportChat({ chat }: { chat: Chat }) {
   async function send(event: React.FormEvent) {
     event.preventDefault();
     const text = draft.trim();
-    if (text.length < BODY_MIN) return setError(`Write at least ${BODY_MIN} characters.`);
+    if (text.length < BODY_MIN) return setError(t("chat.composer.minLength", { count: BODY_MIN }));
     if (session === "guest") return sendAsGuest(text);
     setBusy(true);
     setError("");
@@ -133,7 +134,7 @@ export function SupportChat({ chat }: { chat: Chat }) {
     if (!res.ok) return setError(friendlyError(res.error));
     if (!ticketId && res.data && typeof res.data === "object" && "id" in res.data) setTicketId(String(res.data.id));
     add("you", text);
-    add("support", "Thanks. Support answers in this chat and in your support tickets.");
+    add("support", t("chat.reply.first"));
     setDraft("");
   }
 
@@ -159,7 +160,7 @@ export function SupportChat({ chat }: { chat: Chat }) {
               <strong>{chat.title}</strong>
               <span className="tkn-chat-status"><span className="tkn-dot" aria-hidden="true" />{chat.status}</span>
             </div>
-            <button type="button" className="tkn-icon-btn" aria-label="Close chat" onClick={() => setOpen(false)}>
+            <button type="button" className="tkn-icon-btn" aria-label={t("chat.closePanel")} onClick={() => setOpen(false)}>
               <X size={18} aria-hidden="true" focusable="false" />
             </button>
           </div>
@@ -175,7 +176,7 @@ export function SupportChat({ chat }: { chat: Chat }) {
           ) : null}
           <div className="tkn-chat-body" aria-live="polite">
             <p className="tkn-bubble tkn-bubble-in">{chat.welcome}</p>
-            <div className="tkn-topics" role="group" aria-label="What do you need help with?">
+            <div className="tkn-topics" role="group" aria-label={t("chat.topicsLabel")}>
               {chat.topics.map((item) => (
                 <button
                   key={item.label}
@@ -192,15 +193,15 @@ export function SupportChat({ chat }: { chat: Chat }) {
               <form className="tkn-guest" onSubmit={submitGuest} noValidate>
                 <p className="t-small">{chat.guestHint}</p>
                 <label className="tkn-field">
-                  <span>Your name</span>
+                  <span>{t("chat.guest.name")}</span>
                   <input value={guest.name} autoComplete="name" maxLength={80} onChange={(e) => setGuest({ ...guest, name: e.target.value })} />
                 </label>
                 <label className="tkn-field">
-                  <span>Email or phone</span>
+                  <span>{t("chat.guest.contact")}</span>
                   <input value={guest.contact} autoComplete="email" maxLength={120} onChange={(e) => setGuest({ ...guest, contact: e.target.value })} />
                 </label>
                 {guestError ? <p className="tkn-error" role="alert">{guestError}</p> : null}
-                <button type="submit" className="tkn-btn tkn-btn-primary tkn-btn-block">Continue</button>
+                <button type="submit" className="tkn-btn tkn-btn-primary tkn-btn-block">{t("chat.guest.continue")}</button>
               </form>
             ) : null}
             {lines.map((line) => (
@@ -210,9 +211,9 @@ export function SupportChat({ chat }: { chat: Chat }) {
           </div>
           {canWrite ? (
             <form className="tkn-composer" onSubmit={send}>
-              <label className="tkn-sr" htmlFor="tkn-chat-input">Message</label>
-              <input id="tkn-chat-input" value={draft} placeholder="Type a message" maxLength={4000} onChange={(e) => setDraft(e.target.value)} />
-              <button type="submit" className="tkn-send" aria-label="Send" disabled={busy}>
+              <label className="tkn-sr" htmlFor="tkn-chat-input">{t("chat.composer.label")}</label>
+              <input id="tkn-chat-input" value={draft} placeholder={t("chat.composer.placeholder")} maxLength={4000} onChange={(e) => setDraft(e.target.value)} />
+              <button type="submit" className="tkn-send" aria-label={t("chat.composer.send")} disabled={busy}>
                 <Send size={18} aria-hidden="true" focusable="false" />
               </button>
             </form>
@@ -220,7 +221,7 @@ export function SupportChat({ chat }: { chat: Chat }) {
         </section>
       ) : null}
       {showTop ? (
-        <button type="button" className="tkn-top" aria-label="Back to top" onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}>
+        <button type="button" className="tkn-top" aria-label={t("chat.backToTop")} onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}>
           <ArrowUp size={18} aria-hidden="true" focusable="false" />
         </button>
       ) : null}
@@ -230,7 +231,7 @@ export function SupportChat({ chat }: { chat: Chat }) {
         className="tkn-chat-bubble"
         aria-expanded={open}
         aria-controls={open ? "tkn-chat-panel" : undefined}
-        aria-label={open ? "Close live chat" : "Open live chat"}
+        aria-label={open ? t("chat.close") : t("chat.open")}
         onClick={() => setOpen((value) => !value)}
       >
         <MessageCircle size={26} aria-hidden="true" focusable="false" />

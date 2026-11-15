@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { SectionHelp } from "@/components/help/SectionHelp";
 import { SignedOutPanel } from "./UserPanelShell";
 import type { NotificationItem } from "@/server/notifications/feed";
 import styles from "./UserPanel.module.css";
@@ -14,6 +15,7 @@ export function NotificationsPanel({ items }: { items: NotificationItem[] | null
   return (
     <section aria-labelledby="notif-heading" className={`${styles.panel} ${styles.glass}`}>
       <h2 id="notif-heading" className={styles.h2}>Notifications</h2>
+      <SectionHelp textKey="help.section.notifications" />
       {items.length === 0 ? (
         <div className={styles.empty}>
           <p className={styles.emptyTitle}>No notifications yet</p>

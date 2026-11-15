@@ -5,6 +5,8 @@ import { api, friendlyError } from "@/lib/ui/api";
 import type { DraftMedia } from "@/server/media/mine";
 import type { PostCopy } from "./copy";
 import { listDraftMediaAction, removeMyMediaAction } from "./mediaActions";
+import { InfoPopover } from "@/components/upload/InfoPopover";
+import { UPLOAD_RULES } from "@/components/upload/rules";
 import { MediaTile } from "./MediaTile";
 import { AD_MEDIA_MAX, checkPhoto, checkVideo, uploadMedia } from "./mediaUpload";
 
@@ -146,7 +148,17 @@ export function PhotoStep({ listingId, copy, onBack, onNext }: { listingId: stri
   return (
     <>
       <div className="tk-form-panel">
-        <h2 className="t-h3">Your photos</h2>
+        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+          <h2 className="t-h3">Your photos</h2>
+          <InfoPopover id="post-photos" label="Your photos">
+            <strong>Your photos</strong>
+            <ul>
+              {UPLOAD_RULES.adPhotos.details.map((row) => (
+                <li key={row}>{row}</li>
+              ))}
+            </ul>
+          </InfoPopover>
+        </div>
         <div
           className="tk-drop"
           onDragOver={(event) => event.preventDefault()}
@@ -200,7 +212,17 @@ export function PhotoStep({ listingId, copy, onBack, onNext }: { listingId: stri
             <MediaTile key={upload.key} kind="image" label="New photo" state="uploading" url={upload.previewUrl} progress={upload.progress} />
           ))}
         </ul>
-        <h3 className="t-h3" style={{ marginTop: 16 }}>Your videos</h3>
+        <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 16 }}>
+          <h3 className="t-h3">Your videos</h3>
+          <InfoPopover id="post-videos" label="Your videos">
+            <strong>Your videos</strong>
+            <ul>
+              {UPLOAD_RULES.adVideos.details.map((row) => (
+                <li key={row}>{row}</li>
+              ))}
+            </ul>
+          </InfoPopover>
+        </div>
         <label className="tk-btn tk-btn-outline-gold" aria-disabled={busy || atLimit}>
           ADD VIDEO
           <input
