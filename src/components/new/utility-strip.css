@@ -123,7 +123,7 @@
 
 @media (max-width: 900px) {
   .tkh-ub-ticker {
-    max-width: 200px;
+    display: none;
   }
 }
 
