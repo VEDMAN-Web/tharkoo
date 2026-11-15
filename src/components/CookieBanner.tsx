@@ -2,8 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
-import { useUrlPaths } from "./UrlPaths";
+import "./CookieBanner.css";
 
 export function CookieBanner({
   body,
@@ -18,8 +17,6 @@ export function CookieBanner({
   notice?: string;
   noticeHref?: string;
 }) {
-  const path = usePathname() || "/";
-  const paths = useUrlPaths();
   const [open, setOpen] = useState(false);
   useEffect(() => {
     function maybe() {
@@ -34,17 +31,16 @@ export function CookieBanner({
     };
   }, []);
   if (!open) return null;
-  const onAd = path.startsWith(`/${paths.ad}/`);
   return (
-    <div className={`tk-cookie ${onAd ? "on-ad" : ""}`}>
+    <div className="tkc-banner">
       <p>
         {body || "We use cookies to keep the site reliable and remember your choices."}{" "}
         <Link href={noticeHref}>{notice}</Link>
       </p>
-      <div style={{ display: "flex", gap: 8, marginTop: 12 }}>
+      <div className="tkc-actions">
         <button
           type="button"
-          className="tk-btn tk-btn-cta tk-btn-sm"
+          className="tkc-accept"
           onClick={() => {
             localStorage.setItem("nl-cookies", "all");
             setOpen(false);
@@ -54,7 +50,7 @@ export function CookieBanner({
         </button>
         <button
           type="button"
-          className="tk-btn tk-btn-outline-primary"
+          className="tkc-necessary"
           onClick={() => {
             localStorage.setItem("nl-cookies", "necessary");
             setOpen(false);

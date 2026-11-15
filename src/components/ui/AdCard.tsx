@@ -26,7 +26,7 @@ export function UiTextProvider({ texts, children }: { texts?: UiTextMap; childre
   return <TextContext.Provider value={texts}>{children}</TextContext.Provider>;
 }
 
-function useT(): TextFn {
+export function useT(): TextFn {
   const texts = useContext(TextContext);
   return useMemo(() => makeT(texts), [texts]);
 }

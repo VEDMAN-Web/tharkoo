@@ -2770,6 +2770,52 @@
         "tests/e2e/contact-card.e2e.ts"
       ]
     },
+    "H7.16": {
+      "branchPrefix": "haiku/h7.16",
+      "globs": [
+        "docs/ownership.json",
+        "src/app/admin/content-actions.ts",
+        "src/app/admin/homepage/LoginImageField.tsx",
+        "src/app/admin/homepage/page.tsx",
+        "src/app/u/login/page.tsx",
+        "src/components/PathChrome.tsx",
+        "src/components/SiteShell.tsx",
+        "src/components/auth/SignInPopup.tsx",
+        "src/components/auth/SignInSheet.tsx",
+        "src/components/auth/sign-in-css.ts",
+        "src/lib/ui/site-content.ts"
+      ]
+    },
+    "H7.11": {
+      "branchPrefix": "haiku/h7.11",
+      "globs": [
+        "src/app/ad/[slug]/page.tsx",
+        "src/components/ContactButtons.tsx",
+        "src/components/ad/tourLabels.ts",
+        "src/components/new/AdLiveBits.tsx",
+        "src/components/new/AdPopup.tsx",
+        "src/components/new/NewAdDetail.tsx",
+        "src/components/new/NewGallery.tsx",
+        "src/components/new/ad-spec.css",
+        "src/components/new/new-design.css",
+        "src/components/ui/AdCard.tsx",
+        "src/lib/ad-details.ts",
+        "src/lib/format.ts",
+        "src/lib/ui/text.ts",
+        "tests/e2e/contact-card.e2e.ts",
+        "tests/e2e/new-live-pages.e2e.ts",
+        "tests/server/ad/ad-details.test.ts",
+        "tests/server/tours/tour-labels.test.ts",
+        "src/components/new/listing-spec.css",
+        "docs/ownership.json",
+        "src/app/[category]/page.tsx",
+        "src/components/CookieBanner.tsx",
+        "src/components/ListingPage.tsx",
+        "src/lib/queries.ts",
+        "src/components/CookieBanner.css",
+        "src/components/new/ListingMore.tsx"
+      ]
+    },
     "H7.15": {
       "branchPrefix": "haiku/h7.15",
       "globs": [

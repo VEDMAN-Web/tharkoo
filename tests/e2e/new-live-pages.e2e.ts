@@ -58,7 +58,7 @@ test.describe("H7.4 ad page (New design)", () => {
       const bar = page.locator('.tkn-ad-bar[data-tk="bottom-bar"]');
       await expect(bar).toBeVisible();
       await expect(bar.getByRole("button", { name: /whatsapp/i })).toBeVisible();
-      await expect(bar.getByRole("button", { name: /chat online now/i })).toBeVisible();
+      await expect(bar.getByRole("button", { name: /^chat$/i })).toBeVisible();
     } else {
       await expect(page.locator('[data-tk="contact-card"]')).toBeVisible();
     }

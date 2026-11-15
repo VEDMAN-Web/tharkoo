@@ -6,6 +6,7 @@ import { canonical } from "@/lib/seo";
 import { isAdminRole } from "@/lib/ui/site-content";
 import { typesForPage } from "@/server/layout/blocks";
 import { HomeSeoSection } from "./HomeSeoSection";
+import { LoginImageField } from "./LoginImageField";
 
 export const dynamic = "force-dynamic";
 
@@ -26,6 +27,7 @@ export default async function HomepageAdminPage() {
           initial={{ seoTitle: content.seoTitle, seoDescription: content.seoDescription }}
           siteLabel={canonical("/").replace(/^https?:\/\//, "")}
         />
+        <LoginImageField initial={content.loginImage} />
       </div>
       <p className="mb-4 t-small text-muted">
         Build the home page from blocks: add, reorder, hide or schedule them and change every word and photo. Save a draft, preview it, then publish.
