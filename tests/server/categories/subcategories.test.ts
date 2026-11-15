@@ -189,17 +189,17 @@ describe("sub-category pages and chips", () => {
     expect(feed.pages).toBe(1);
   });
 
-  it("is indexable only on page one with five or more real ads", () => {
-    expect(isSubcategoryIndexable(4)).toBe(false);
-    expect(isSubcategoryIndexable(5)).toBe(true);
+  it("is indexable only on page one with three or more real ads", () => {
+    expect(isSubcategoryIndexable(2)).toBe(false);
+    expect(isSubcategoryIndexable(3)).toBe(true);
     expect(isSubcategoryIndexable(50, 2)).toBe(false);
   });
 
-  it("puts only pages with five or more active ads in the sitemap list", async () => {
+  it("puts only pages with three or more active ads in the sitemap list", async () => {
     const { categoryId, plumbers, tutors, mumbaiId } = await setup();
-    for (let index = 0; index < 5; index += 1) await ad(categoryId, mumbaiId, plumbers);
-    for (let index = 0; index < 4; index += 1) await ad(categoryId, mumbaiId, tutors);
-    expect(await indexableSubcategoryHubs()).toEqual([{ category: "services", city: "mumbai", sub: "plumbers", count: 5 }]);
+    for (let index = 0; index < 3; index += 1) await ad(categoryId, mumbaiId, plumbers);
+    for (let index = 0; index < 2; index += 1) await ad(categoryId, mumbaiId, tutors);
+    expect(await indexableSubcategoryHubs()).toEqual([{ category: "services", city: "mumbai", sub: "plumbers", count: 3 }]);
   });
 
   it("matches a typed name or slug for the CSV import", async () => {

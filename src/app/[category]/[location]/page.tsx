@@ -20,8 +20,9 @@ import {
 } from "@/lib/queries";
 import { prettyPlace } from "@/lib/format";
 import { getIndexing, hubMinimum } from "@/server/seo/indexing";
-import { fillTemplate } from "@/lib/seo";
+import { canonical, fillTemplate } from "@/lib/seo";
 import { placePath, tagPath } from "@/lib/urls";
+import { activeFilterKeys, listingCanonicalSuffix } from "@/server/search/filter-seo";
 import { withUrlSeo, urlHeading } from "@/lib/seo/override";
 import { hubCopy } from "@/lib/seo-site";
 import { withSeoDefaults } from "@/lib/ui/meta-defaults";
@@ -85,20 +86,18 @@ export async function generateMetadata({ params, searchParams }: Props): Promise
   const title = fillTemplate(seo?.title || copy.title, vars);
   const description = fillTemplate(seo?.description || copy.description, vars);
   const pageNo = Math.max(1, Number(sp.page) || 1);
-  const filtered = Boolean(sp.photos || sp.verified);
+  const filtered = activeFilterKeys(sp).length > 0;
   const thin = isThin(feed.total, hubMin);
-  const query = new URLSearchParams();
-  if (sp.photos) query.set("photos", "1");
-  if (sp.verified) query.set("verified", "1");
-  if (pageNo > 1) query.set("page", String(pageNo));
-  const suffix = query.toString();
-  const path = `${placePath(cat.slug || category, loc.slug || location)}${suffix ? `?${suffix}` : ""}`;
+  const clean = placePath(cat.slug || category, loc.slug || location);
+  const suffix = listingCanonicalSuffix(sp, pageNo);
+  // Filter URLs are noindex, follow, and their canonical is the clean page (see filter-seo.ts).
   return withSeoDefaults(
-    await withUrlSeo(placePath(cat.slug || category, loc.slug || location), {
+    await withUrlSeo(clean, {
       title,
       description,
-      path,
-      index: !thin && pageNo === 1 && !(filtered && feed.total === 0),
+      path: `${clean}${suffix}`,
+      canonicalUrl: canonical(`${clean}${suffix}`),
+      index: !thin && pageNo === 1 && !filtered,
       follow: true,
     }),
   );

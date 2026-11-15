@@ -210,7 +210,6 @@ export function ListingPageView({
           </nav>
         ) : null}
         <h1 className="tk-listing-h1">{heading}</h1>
-        {block.props.showCount ? <p className="tk-listing-updated">{t("listing.count", { count: total })}</p> : null}
         {updated && block.props.showUpdated !== false ? <p className="tk-listing-updated">{t("listing.updated", { date: updated })}</p> : null}
         {introText ? <p className="tk-listing-intro">{introText}</p> : null}
       </>

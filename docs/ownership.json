@@ -2382,6 +2382,7 @@
         "src/server/listings/admin-create.ts",
         "src/server/listings/import.ts",
         "src/server/search/query.ts",
+        "src/server/search/filter-seo.ts",
         "src/app/api/categories/**",
         "src/components/ListingPage.tsx",
         "src/components/listing/**",
@@ -2406,8 +2407,11 @@
         "tests/server/fields/**",
         "tests/server/listings/**",
         "tests/server/seo/**",
+        "tests/server/ui/seo-schema.test.ts",
         "progress/H7.3b.md",
-        "docs/ownership.json"
+        "docs/ownership.json",
+        "src/server/categories/public.ts",
+        "tests/server/categories/subcategories.test.ts"
       ]
     },
     "H7.4": {

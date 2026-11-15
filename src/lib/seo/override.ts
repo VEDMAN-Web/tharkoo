@@ -13,7 +13,7 @@ export async function withUrlSeo(path: string, opts: PageMeta): Promise<Metadata
     description: over?.description?.trim() || opts.description,
     index: over?.noindex ? false : opts.index,
     image: over?.ogImage?.trim() || opts.image,
-    canonicalUrl: canonicalOverride || undefined,
+    canonicalUrl: canonicalOverride || opts.canonicalUrl || undefined,
   }));
 }
 

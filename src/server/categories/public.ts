@@ -4,8 +4,8 @@ import { Category, Listing, Location } from "@/server/models";
 import { Subcategory, type SubcategoryDoc } from "@/server/models/subcategory";
 import { presentRows } from "@/server/search/query";
 
-/** A sub-category page is indexable only with at least this many real active ads. */
-export const SUBCATEGORY_HUB_MINIMUM = 5;
+/** A sub-category page is indexable only with at least this many real active ads (3, same thin-page rule at every level). */
+export const SUBCATEGORY_HUB_MINIMUM = 3;
 export const SUBCATEGORY_PAGE_SIZE = 20;
 
 export interface SubcategoryView {
