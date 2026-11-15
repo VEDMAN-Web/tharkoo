@@ -2725,6 +2725,7 @@
         "src/app/how-it-works/**",
         "src/app/help/**",
         "src/components/h714/**",
+        "src/components/CookieBanner.tsx",
         "docs/ownership.json"
       ]
     },

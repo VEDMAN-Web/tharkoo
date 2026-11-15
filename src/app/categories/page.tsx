@@ -5,6 +5,8 @@ import { getCategories, listingCountsByCategoryCity } from "@/lib/queries";
 import { categoriesPath, categoryPath, postAdPath, searchPath } from "@/lib/urls";
 import { pageMetadata } from "@/lib/ui/meta";
 import { getPaths } from "@/server/urls/service";
+import { readShellConfig } from "@/server/site-links/shell-config";
+import { bandImageFor } from "@/components/new/band-image";
 import { CategoriesView, type CategoryCard } from "@/components/h714/CategoriesView";
 
 export const revalidate = 300;
@@ -16,10 +18,11 @@ export const metadata = pageMetadata({
 });
 
 export default async function CategoriesPage() {
-  const [categories, counts, paths] = await Promise.all([
+  const [categories, counts, paths, shell] = await Promise.all([
     getCategories().catch(() => []),
     listingCountsByCategoryCity().catch(() => []),
     getPaths(),
+    readShellConfig(),
   ]);
   const adsByCategory = new Map<string, number>();
   for (const row of counts) {
@@ -31,7 +34,8 @@ export default async function CategoriesPage() {
       const slug = cat.slug as string;
       const blurb = (cat.homeBlurb || cat.description || "").replace(/\s+/g, " ").trim();
       const ads = `${(adsByCategory.get(slug) ?? 0).toLocaleString("en-IN")} ads`;
-      return { slug, name: cat.name || slug, summary: [blurb, ads].filter(Boolean).join(" · "), href: categoryPath(slug) };
+      const image = bandImageFor(shell, slug);
+      return { slug, name: cat.name || slug, summary: [blurb, ads].filter(Boolean).join(" · "), href: categoryPath(slug), photo: image?.band || image?.bandPhone || "" };
     });
   const crumbs = [
     { name: "Tharkoo India", path: "/" },

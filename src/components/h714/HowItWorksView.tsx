@@ -45,7 +45,7 @@ export function HowItWorksView({
               <p style={{ margin: "0", fontSize: "15px", lineHeight: "1.6", color: "#4A2870" }}>Message the seller on Tharkoo or WhatsApp. Ask for more photos.</p>
             </div>
             <div style={{ padding: "26px", borderRadius: "20px", background: "linear-gradient(160deg, #FFF8EC, #FFFFFF)", backdropFilter: "blur(18px) saturate(170%)", WebkitBackdropFilter: "blur(18px) saturate(170%)", border: "1px solid rgba(255,255,255,.95)", boxShadow: "0 8px 32px rgba(45,18,72,.08)" }}>
-              <span style={{ display: "flex", width: "48px", height: "48px", borderRadius: "14px", alignItems: "center", justifyContent: "center", fontSize: "20px", fontWeight: "800", color: "#fff", background: "linear-gradient(135deg, #B45309, #92400E)" }}>3</span>
+              <span style={{ display: "flex", width: "48px", height: "48px", borderRadius: "14px", alignItems: "center", justifyContent: "center", fontSize: "20px", fontWeight: "800", color: "#fff", background: "linear-gradient(135deg, #D1137A, #A8124F)" }}>3</span>
               <h3 style={{ margin: "18px 0 8px", fontSize: "19px", color: "#110520" }}>Verify on video</h3>
               <p style={{ margin: "0", fontSize: "15px", lineHeight: "1.6", color: "#4A2870" }}>A short live video call shows the item or place is real.</p>
             </div>

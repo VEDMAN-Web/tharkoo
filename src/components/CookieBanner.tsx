@@ -44,7 +44,7 @@ export function CookieBanner({
       <div style={{ display: "flex", gap: 8, marginTop: 12 }}>
         <button
           type="button"
-          className="tk-btn tk-btn-gold tk-btn-sm"
+          className="tkn-btn tkn-btn-sm tkn-btn-primary"
           onClick={() => {
             localStorage.setItem("nl-cookies", "all");
             setOpen(false);
@@ -54,7 +54,7 @@ export function CookieBanner({
         </button>
         <button
           type="button"
-          className="tk-btn tk-btn-outline-gold"
+          className="tkn-btn tkn-btn-sm tkn-btn-ghost"
           onClick={() => {
             localStorage.setItem("nl-cookies", "necessary");
             setOpen(false);

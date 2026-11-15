@@ -6,6 +6,8 @@ import { withSeoDefaults } from "@/lib/ui/meta-defaults";
 import { JsonLd } from "@/lib/jsonld";
 import { faqPage } from "@/lib/seo/schema";
 import { getPaths } from "@/server/urls/service";
+import { readShellConfig } from "@/server/site-links/shell-config";
+import { bandImageFor } from "@/components/new/band-image";
 import { CitiesView, type CityCard, type StateCard, type StateLetter } from "@/components/h714/CitiesView";
 
 export const revalidate = 300;
@@ -27,12 +29,13 @@ export async function generateMetadata() {
 
 export default async function CitiesPage() {
   const paths = await getPaths();
-  const [states, cities, categories, counts, hub] = await Promise.all([
+  const [states, cities, categories, counts, hub, shell] = await Promise.all([
     getStates(),
     getCities(),
     getCategories().catch(() => []),
     listingCountsByCategoryCity().catch(() => []),
     hubCopy(citiesPath(paths), { intro: "", faqs: [] }),
+    readShellConfig(),
   ]);
   const first = categories[0]?.slug || "dating";
   const cityHref = (slug?: string) => joinPath(citiesPath(paths), slug || "");
@@ -45,7 +48,8 @@ export default async function CitiesPage() {
   const cityCard = (city: (typeof cities)[number]): CityCard => {
     const ads = (adsByCity.get(city.slug || "") ?? 0).toLocaleString("en-IN");
     const area = stateName.get(city.stateSlug || "") || "";
-    return { slug: city.slug || "", name: city.name || "", summary: [area, `${ads} ads`].filter(Boolean).join(" · "), href: cityHref(city.slug) };
+    const image = bandImageFor(shell, "", city.slug || "");
+    return { slug: city.slug || "", name: city.name || "", summary: [area, `${ads} ads`].filter(Boolean).join(" · "), href: cityHref(city.slug), photo: image?.band || image?.bandPhone || "" };
   };
 
   const topRows = cities.filter((city) => city.isTop);
@@ -60,9 +64,9 @@ export default async function CitiesPage() {
       name: state.name || "",
       anchor: `state-${state.slug || ""}`,
       adsLabel: `${total.toLocaleString("en-IN")} ads`,
-      allLabel: `All ${inState.length} ${inState.length === 1 ? "city" : "cities"}`,
+      allLabel: inState.length === 1 ? "1 city" : `All ${inState.length} cities`,
       href: placePath(first, state.slug || ""),
-      cities: inState.slice(0, STATE_CITY_LINKS).map((city) => ({ slug: city.slug || "", name: city.name || "", summary: "", href: cityHref(city.slug) })),
+      cities: inState.slice(0, STATE_CITY_LINKS).map((city) => ({ slug: city.slug || "", name: city.name || "", summary: "", href: cityHref(city.slug), photo: "" })),
     };
   });
 

@@ -64,12 +64,12 @@ export function HelpView({
                   <span style={{ width: "44px", height: "44px", flex: "none", borderRadius: "12px", background: "#FDF0F7", display: "flex", alignItems: "center", justifyContent: "center" }}>
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#C2185B" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                       <path d="M4 20h4L19 9l-4-4L4 16zM14 6l4 4"></path>
-                    </svg>{card.title}</span>
+                    </svg></span>
                   <span>
-                    <span style={{ display: "block", fontSize: "16px", fontWeight: "700", color: "#110520" }}>{card.desc}</span>
-                    <span style={{ display: "block", fontSize: "13px", color: "#4A2870", marginTop: "4px" }}>{card.count}</span>
+                    <span style={{ display: "block", fontSize: "16px", fontWeight: "700", color: "#110520" }}>{card.title}</span>
+                    <span style={{ display: "block", fontSize: "13px", color: "#4A2870", marginTop: "4px" }}>{card.desc}</span>
                   </span>
-                  <span style={{ fontSize: "13px", fontWeight: "700", color: "#C2185B" }}>8 articles</span>
+                  <span style={{ fontSize: "13px", fontWeight: "700", color: "#C2185B" }}>{card.count}</span>
                 </Link>
               ))}
             </div>

@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { H714Page } from "./H714Page";
 
-export type CategoryCard = { slug: string; name: string; summary: string; href: string };
+export type CategoryCard = { slug: string; name: string; summary: string; href: string; photo: string };
 
 export function CategoriesView({
   categories,
@@ -50,8 +50,8 @@ export function CategoriesView({
               {categories.map((cat) => (
                 <Link key={cat.slug} href={cat.href} className="h714-cat" style={{ display: "flex", flexDirection: "column", borderRadius: "16px", overflow: "hidden", background: "#fff", border: "1px solid #EAD8F0", textDecoration: "none", boxShadow: "0 2px 14px rgba(45,18,72,.07)" }}>
                   {" "}
-                  <span className="h714-catimg" style={{ position: "relative", display: "block", background: "linear-gradient(145deg, #FCE4F0, #EDE9FF)" }}>
-                    <span style={{ position: "absolute", left: "50%", top: "50%", transform: "translate(-50%, -50%)", fontSize: "11px", fontWeight: "600", color: "rgba(30,11,56,.4)", whiteSpace: "nowrap" }}>Category photo</span>
+                  <span className="h714-catimg" style={{ ...(cat.photo ? { backgroundImage: `url("${cat.photo}")`, backgroundSize: "cover", backgroundPosition: "center" } : {}), position: "relative", display: "block", background: "linear-gradient(145deg, #FCE4F0, #EDE9FF)" }}>
+                    <span style={{ position: "absolute", left: "50%", top: "50%", transform: "translate(-50%, -50%)", fontSize: "11px", fontWeight: "600", color: "rgba(30,11,56,.4)", whiteSpace: "nowrap" }}>{cat.photo ? "" : "Category photo"}</span>
                   </span>
                   {" "}
                   <span style={{ display: "flex", alignItems: "center", gap: "12px", padding: "14px 16px", background: "linear-gradient(135deg, #FFF0F7, #FFFFFF)" }}>

@@ -2,7 +2,7 @@ import Link from "next/link";
 import type { CSSProperties, ReactNode } from "react";
 import { H714Page } from "./H714Page";
 
-export type CityCard = { slug: string; name: string; summary: string; href: string };
+export type CityCard = { slug: string; name: string; summary: string; href: string; photo: string };
 export type StateCard = { slug: string; name: string; anchor: string; adsLabel: string; allLabel: string; href: string; cities: CityCard[] };
 export type StateLetter = { letter: string; href: string };
 
@@ -76,8 +76,8 @@ export function CitiesView({
               {topCities.map((city) => (
                 <Link key={city.slug} href={city.href} className="h714-cat" style={{ display: "flex", flexDirection: "column", borderRadius: "16px", overflow: "hidden", background: "#fff", border: "1px solid #EAD8F0", textDecoration: "none", boxShadow: "0 2px 14px rgba(45,18,72,.07)" }}>
                   {" "}
-                  <span className="h714-catimg" style={{ position: "relative", display: "block", background: "linear-gradient(145deg, #ECFDF5, #E0F2FE)" }}>
-                    <span style={{ position: "absolute", left: "50%", top: "50%", transform: "translate(-50%, -50%)", fontSize: "11px", fontWeight: "600", color: "rgba(30,11,56,.4)", whiteSpace: "nowrap" }}>City photo</span>
+                  <span className="h714-catimg" style={{ ...(city.photo ? { backgroundImage: `url("${city.photo}")`, backgroundSize: "cover", backgroundPosition: "center" } : {}), position: "relative", display: "block", background: "linear-gradient(145deg, #ECFDF5, #E0F2FE)" }}>
+                    <span style={{ position: "absolute", left: "50%", top: "50%", transform: "translate(-50%, -50%)", fontSize: "11px", fontWeight: "600", color: "rgba(30,11,56,.4)", whiteSpace: "nowrap" }}>{city.photo ? "" : "City photo"}</span>
                   </span>
                   {" "}
                   <span style={{ display: "flex", alignItems: "center", gap: "12px", padding: "14px 16px", background: "linear-gradient(135deg, #F0FDF4, #FFFFFF)" }}>
@@ -99,7 +99,7 @@ export function CitiesView({
         <section className="h714-pad" style={{ maxWidth: "1280px", margin: "0 auto", padding: "64px 24px 0", boxSizing: "border-box" }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "end", gap: "16px", flexWrap: "wrap", marginBottom: "26px" }}>
             <div>
-              <p style={{ display: "inline-block", margin: "0 0 10px", fontSize: "12px", fontWeight: "700", letterSpacing: ".12em", textTransform: "uppercase", color: "#92400E", background: "#FFF5E6", borderRadius: "999px", padding: "6px 14px" }}>Browse by state</p>
+              <p style={{ display: "inline-block", margin: "0 0 10px", fontSize: "12px", fontWeight: "700", letterSpacing: ".12em", textTransform: "uppercase", color: "#5B21B6", background: "#F5F0FF", borderRadius: "999px", padding: "6px 14px" }}>Browse by state</p>
               <h2 className="h714-h2" style={{ margin: "0", fontSize: "40px", letterSpacing: "-.035em", lineHeight: "1.1", color: "#110520" }}>All states A to Z</h2>
             </div>
           </div>
