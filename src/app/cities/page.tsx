@@ -7,7 +7,7 @@ import { JsonLd } from "@/lib/jsonld";
 import { faqPage } from "@/lib/seo/schema";
 import { getPaths } from "@/server/urls/service";
 import { readShellConfig } from "@/server/site-links/shell-config";
-import { bandImageFor } from "@/components/new/band-image";
+import { photoOf } from "@/components/h714/photo";
 import { CitiesView, type CityCard, type StateCard, type StateLetter } from "@/components/h714/CitiesView";
 
 export const revalidate = 300;
@@ -48,8 +48,7 @@ export default async function CitiesPage() {
   const cityCard = (city: (typeof cities)[number]): CityCard => {
     const ads = (adsByCity.get(city.slug || "") ?? 0).toLocaleString("en-IN");
     const area = stateName.get(city.stateSlug || "") || "";
-    const image = bandImageFor(shell, "", city.slug || "");
-    return { slug: city.slug || "", name: city.name || "", summary: [area, `${ads} ads`].filter(Boolean).join(" · "), href: cityHref(city.slug), photo: image?.band || image?.bandPhone || "" };
+    return { slug: city.slug || "", name: city.name || "", summary: [area, `${ads} ads`].filter(Boolean).join(" · "), href: cityHref(city.slug), photo: photoOf(shell, "city", city.slug || "") };
   };
 
   const topRows = cities.filter((city) => city.isTop);

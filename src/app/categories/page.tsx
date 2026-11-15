@@ -6,7 +6,7 @@ import { categoriesPath, categoryPath, postAdPath, searchPath } from "@/lib/urls
 import { pageMetadata } from "@/lib/ui/meta";
 import { getPaths } from "@/server/urls/service";
 import { readShellConfig } from "@/server/site-links/shell-config";
-import { bandImageFor } from "@/components/new/band-image";
+import { photoOf } from "@/components/h714/photo";
 import { CategoriesView, type CategoryCard } from "@/components/h714/CategoriesView";
 
 export const revalidate = 300;
@@ -34,8 +34,7 @@ export default async function CategoriesPage() {
       const slug = cat.slug as string;
       const blurb = (cat.homeBlurb || cat.description || "").replace(/\s+/g, " ").trim();
       const ads = `${(adsByCategory.get(slug) ?? 0).toLocaleString("en-IN")} ads`;
-      const image = bandImageFor(shell, slug);
-      return { slug, name: cat.name || slug, summary: [blurb, ads].filter(Boolean).join(" · "), href: categoryPath(slug), photo: image?.band || image?.bandPhone || "" };
+      return { slug, name: cat.name || slug, summary: [blurb, ads].filter(Boolean).join(" · "), href: categoryPath(slug), photo: photoOf(shell, "category", slug) };
     });
   const crumbs = [
     { name: "Tharkoo India", path: "/" },
