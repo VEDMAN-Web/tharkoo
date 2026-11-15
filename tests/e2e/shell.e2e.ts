@@ -12,7 +12,8 @@ test.describe("H7.1 shell: visitor", () => {
     await expect(page.locator('[data-design="new"]')).toHaveCount(1);
     const header = page.locator("header.tkn-header");
     await expect(header).toBeVisible();
-    await expect(header.getByRole("link", { name: /post your ad/i })).toBeVisible();
+    // Review #77: below 420 px the button reads "Post ad".
+    await expect(header.getByRole("link", { name: /post (your )?ad/i })).toBeVisible();
     await expect(header.getByRole("link", { name: /saved|favourite|favorite/i })).toHaveCount(0);
     if (isPhone(page)) {
       await expect(header.getByRole("button", { name: "Open menu" })).toBeVisible();
