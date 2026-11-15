@@ -214,7 +214,7 @@ export function SignInSheet({ mode, initialNext = null, showMobile = false, imag
               <button type="submit" className="tk-si-primary tk-si-focus" disabled={busy}>
                 {busy ? "Sending" : "Send me a code"}
               </button>
-              <p className="tk-si-box">One account does everything: save ads, chat, and post your own ads for free.</p>
+              <div className="tk-si-box"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M5 12l4 4 10-10" /></svg><span>One account does everything: save ads, chat, and post your own ads for free.</span></div>
               <p className="tk-si-terms">
                 By continuing you agree to the <a href={applyPrefixes("/terms/", paths)}>Terms</a> and <a href={applyPrefixes("/privacy/", paths)}>Privacy Policy</a>.
               </p>

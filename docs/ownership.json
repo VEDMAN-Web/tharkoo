@@ -2928,7 +2928,9 @@
         "tests/e2e/contact-card.e2e.ts",
         "tests/e2e/login-sheet.e2e.ts",
         "tests/server/auth/sign-in-sheet.test.ts",
-        "src/components/auth/SellerSetup.tsx"
+        "src/components/auth/SellerSetup.tsx",
+        "src/components/auth/SellerProfileForm.tsx",
+        "src/app/u/seller-profile/page.tsx"
       ]
     }
   }

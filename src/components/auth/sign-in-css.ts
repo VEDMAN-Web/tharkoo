@@ -34,7 +34,8 @@ export const SIGN_IN_CSS = `
 .tk-si-codes{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:8px}
 .tk-si-code{width:100%;min-width:0;min-height:56px;text-align:center;font-size:22px;font-weight:800;padding:0}
 .tk-si-tag{margin-left:6px;padding:2px 8px;border-radius:999px;background:#FFF0F7;color:#A8124F;font-size:11px;font-weight:700}
-.tk-si-box{margin:0;padding:14px;border-radius:14px;background:linear-gradient(135deg,#F5F0FF,#FFF0F7);font-size:13px;line-height:1.5;color:#4A2870}
+.tk-si-box{display:flex;gap:10px;align-items:flex-start;margin:0;padding:14px;border-radius:14px;background:linear-gradient(135deg,#F5F0FF,#FFF0F7);font-size:13px;line-height:1.5;color:#4A2870}
+.tk-si-box svg{flex:none;width:20px;height:20px;color:#A8124F}
 .tk-si-error{min-height:20px;margin:0;font-size:14px;color:#A8124F}
 .tk-si-focus:focus-visible,.tk-si-in:focus-visible,.tk-si-role:focus-visible,.tk-si-tab:focus-visible,.tk-si-primary:focus-visible,.tk-si-link:focus-visible,.tk-si-close:focus-visible,.tk-si-check input:focus-visible{outline:3px solid #7C3AED;outline-offset:2px}
 @media (max-width:820px){
