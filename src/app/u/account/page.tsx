@@ -1,4 +1,5 @@
 import { cookies } from "next/headers";
+import { redirect } from "next/navigation";
 import { Dashboard } from "@/components/vendor/VendorScreens";
 import { NewVendorPanel } from "@/components/vendor/NewVendorPanel";
 import { PanelHomePage } from "@/components/buyer/PanelHomePage";
@@ -23,6 +24,7 @@ export const metadata = pageMetadata({
 export default async function Page() {
   if (!(await newDesignOn())) return <Dashboard />;
   const session = await userFromToken((await cookies()).get(SESSION_COOKIE)?.value);
-  if (session?.user.seller) return <NewVendorPanel />;
+  if (!session) redirect("/u/login/?next=/u/account/");
+  if (session.user.seller) return <NewVendorPanel />;
   return <PanelHomePage />;
 }

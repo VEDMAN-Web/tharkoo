@@ -280,12 +280,7 @@ export async function createSession(
 export async function logoutSession(token: string | undefined) {
   await connectDb();
   await ready();
-  if (!token) throw new UnauthorizedError("Sign in required");
-  const updated = await Session.updateOne(
-    { tokenHash: hashToken(token), revokedAt: null },
-    { $set: { revokedAt: new Date() } },
-  );
-  if (updated.matchedCount === 0) throw new UnauthorizedError("Sign in required");
+  if (token) await Session.updateOne({ tokenHash: hashToken(token), revokedAt: null }, { $set: { revokedAt: new Date() } });
   return { ok: true as const };
 }
 

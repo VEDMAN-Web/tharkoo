@@ -2997,6 +2997,21 @@
         "src/components/HeaderNew.tsx",
         "src/app/globals.css"
       ]
+    },
+    "H7.24": {
+      "branchPrefix": "haiku/h7.24",
+      "globs": [
+        "docs/ownership.json",
+        "src/app/u/logout/**",
+        "src/app/u/account/page.tsx",
+        "src/server/auth/service.ts",
+        "src/components/vendor/NewVendorPanel.tsx",
+        "src/components/auth/ResetCard.tsx",
+        "src/components/auth/reset-card.css",
+        "next.config.ts",
+        "tests/e2e/logout.e2e.ts",
+        "tests/server/auth/auth.test.ts"
+      ]
     }
   }
 }
