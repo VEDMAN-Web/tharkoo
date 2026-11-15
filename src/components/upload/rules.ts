@@ -76,7 +76,8 @@ export type UploadRuleId = keyof typeof UPLOAD_RULES;
 /** "8 MB", "1.5 MB": the size word used in messages. */
 export function megabytes(bytes: number): string {
   const value = bytes / MB;
-  return `${value >= 10 || Number.isInteger(value) ? Math.round(value) : value.toFixed(1)} MB`;
+  const shown = value >= 10 ? Math.round(value) : Math.round(value * 10) / 10;
+  return `${shown} MB`;
 }
 
 /** The reason one file cannot be uploaded to this box, or null when the type and size are fine. Length is checked by `videoProblem`. */

@@ -39,6 +39,8 @@ describe("upload rules (H7.8)", () => {
   it("formats sizes with one decimal only when needed", () => {
     expect(megabytes(8 * MB)).toBe("8 MB");
     expect(megabytes(1.5 * MB)).toBe("1.5 MB");
+    expect(megabytes(9.0001 * MB)).toBe("9 MB");
+    expect(megabytes(12.4 * MB)).toBe("12 MB");
   });
 
   it("moves an item and clamps at the ends", () => {
