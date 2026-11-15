@@ -492,6 +492,7 @@ async function saveOverrideText(actor: SeoActor, path: string, text: TitleText) 
 
 /** Saves the title and description. Any SEO editor; the home page needs an admin. Audited, refuses bad text. */
 export async function savePageTitle(actor: SeoActor, target: PageTitleTarget, input: { title?: unknown; description?: unknown }): Promise<TitleText> {
+  await connectDb();
   assertSeoEditor(actor);
   const text = checkPageTitle(input);
   if (target.kind === "home") {
@@ -506,6 +507,7 @@ export async function savePageTitle(actor: SeoActor, target: PageTitleTarget, in
 
 /** The editors on the Listing pages and Post-ad pages: admins only, otherwise the same rules as savePageTitle. */
 export async function savePageTitleForEditor(actor: SeoActor, target: PageTitleTarget, input: { title?: unknown; description?: unknown }) {
+  await connectDb();
   if (!isAdminRole(actor.roles)) throw new ForbiddenError("Only an admin can change the page title here");
   return savePageTitle(actor, target, input);
 }
@@ -541,6 +543,7 @@ async function resetOverride(actor: SeoActor, path: string) {
 
 /** Clears the saved title and description, so the page falls back to its template or built-in copy. */
 export async function resetPageTitle(actor: SeoActor, target: PageTitleTarget): Promise<PageTitleValues> {
+  await connectDb();
   assertSeoEditor(actor);
   if (target.kind === "home") {
     const built = defaultSiteContent();

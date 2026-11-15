@@ -2,6 +2,7 @@ import mongoose, { type Types } from "mongoose";
 import { NotFoundError } from "@/server/http";
 import { SupportCounter, type SupportTicketDoc, type TicketMessageDoc } from "@/server/models/support";
 import { STATUS_LABELS, TOPIC_LABELS, type SupportStatus, type SupportTopic } from "@/server/support/constants";
+import { connectDb } from "@/lib/db";
 
 export type TicketRow = SupportTicketDoc & { _id: Types.ObjectId };
 export type MessageRow = TicketMessageDoc & { _id: Types.ObjectId };
@@ -62,6 +63,7 @@ export function messageView(row: MessageRow): MessageView {
 
 /** Ticket numbers come from one counter document, so they never repeat. */
 export async function nextTicketNumber(): Promise<number> {
+  await connectDb();
   const row = await SupportCounter.findByIdAndUpdate(
     "support_ticket",
     { $inc: { seq: 1 } },

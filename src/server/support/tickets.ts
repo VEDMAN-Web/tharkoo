@@ -98,6 +98,7 @@ export async function listMyTickets(userId: string) {
 
 /** The owner's thread without internal notes. Opening it clears the unread mark. */
 export async function myThread(userId: string, ticketId: string) {
+  await connectDb();
   const ticket = await ownTicket(userId, ticketId);
   const rows = (await TicketMessage.find({ ticketId: ticket._id, internal: false })
     .sort({ createdAt: 1, _id: 1 })
@@ -115,6 +116,7 @@ export async function replyAsOwner(
   requestId: string,
   now = new Date(),
 ) {
+  await connectDb();
   const ticket = await ownTicket(userId, ticketId);
   if (isClosed(ticket)) throw new ConflictError("This ticket is closed. Open a new ticket if you still need help.");
   if (!input.body && screenshots.length === 0) {

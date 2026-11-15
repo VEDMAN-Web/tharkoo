@@ -4,6 +4,7 @@ import mongoose from "mongoose";
 import { PolicyViolationError } from "@/server/http";
 import { uploadToCloudinary } from "@/server/media/client";
 import { CLOUDINARY_FOLDER, UPLOAD_NEEDS_CLOUDINARY, onVercel, optionalCloudinary } from "@/server/media/config";
+import { connectDb } from "@/lib/db";
 
 export const CHAT_IMAGE_MAX_BYTES = 5 * 1024 * 1024;
 const RULE = "Photos in chat must be jpeg, png or webp, up to 5 MB";
@@ -23,6 +24,7 @@ export function imageMatchesType(data: Buffer, type: string) {
  * otherwise public/uploads (names are 24 hex characters, served by /uploads/[file]).
  */
 export async function storeChatImage(file: { type: string; data: Buffer }): Promise<string> {
+  await connectDb();
   const ext = EXT[file.type];
   if (!ext || file.data.length === 0 || file.data.length > CHAT_IMAGE_MAX_BYTES || !imageMatchesType(file.data, file.type)) {
     throw new PolicyViolationError(RULE);

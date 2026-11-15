@@ -97,11 +97,13 @@ async function record(actor: Actor, action: string, targetType: string, id: stri
 }
 
 /** Ads in every state count, so a category or sub-category with any ad cannot be removed. */
-export function categoryAdCount(categoryId: Types.ObjectId) {
+export async function categoryAdCount(categoryId: Types.ObjectId) {
+  await connectDb();
   return Listing.countDocuments({ categoryId });
 }
 
-export function subcategoryAdCount(subcategoryId: Types.ObjectId) {
+export async function subcategoryAdCount(subcategoryId: Types.ObjectId) {
+  await connectDb();
   return Listing.countDocuments({ subcategoryId });
 }
 

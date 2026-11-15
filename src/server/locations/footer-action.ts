@@ -1,9 +1,11 @@
 "use server";
 
 import { footerCountries, loadCountryDirectory, type DirectoryCountry } from "@/server/locations/countries";
+import { connectDb } from "@/lib/db";
 
 /** Public data for the footer "Countries" block: only places with at least one active ad, at most 12 countries. */
 export async function getFooterCountries(): Promise<DirectoryCountry[]> {
+  await connectDb();
   try {
     return footerCountries(await loadCountryDirectory());
   } catch (error) {

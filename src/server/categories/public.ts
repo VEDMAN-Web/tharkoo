@@ -158,6 +158,7 @@ export async function indexableSubcategoryHubs(minimum = SUBCATEGORY_HUB_MINIMUM
  * Returns the id, or null when the category has none or nothing matches.
  */
 export async function resolveSubcategory(categoryId: string, value: string) {
+  await connectDb();
   const wanted = value.trim().toLowerCase();
   if (!wanted) return null;
   const subs = await listSubcategories(categoryId, { includeHidden: true });
@@ -166,5 +167,6 @@ export async function resolveSubcategory(categoryId: string, value: string) {
 
 /** True when the post form must ask for a sub-category in this category. */
 export async function categoryNeedsSubcategory(categoryId: string) {
+  await connectDb();
   return (await listSubcategories(categoryId)).length > 0;
 }

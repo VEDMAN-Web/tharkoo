@@ -2,6 +2,7 @@
 
 import { getStaffFromHeaders } from "@/lib/admin-auth";
 import { createPlace, deletePlace, updatePlace, type PlaceInput } from "@/server/locations/manage";
+import { connectDb } from "@/lib/db";
 
 async function actor() {
   const who = await getStaffFromHeaders();
@@ -13,6 +14,7 @@ function failed(error: unknown) {
 }
 
 export async function createPlaceAction(input: PlaceInput) {
+  await connectDb();
   try {
     return { ok: true as const, ...(await createPlace(await actor(), input)) };
   } catch (error) {
@@ -21,6 +23,7 @@ export async function createPlaceAction(input: PlaceInput) {
 }
 
 export async function updatePlaceAction(id: string, input: PlaceInput) {
+  await connectDb();
   try {
     return await updatePlace(await actor(), id, input);
   } catch (error) {
@@ -29,6 +32,7 @@ export async function updatePlaceAction(id: string, input: PlaceInput) {
 }
 
 export async function deletePlaceAction(id: string) {
+  await connectDb();
   try {
     return await deletePlace(await actor(), id);
   } catch (error) {

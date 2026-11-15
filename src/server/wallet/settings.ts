@@ -50,6 +50,7 @@ export async function updateFinanceSettings(input: {
   values: z.infer<typeof financeSettingsBodySchema>;
   requestId: string;
 }) {
+  await connectDb();
   assertFinanceStaff(input.roles);
   const before = await getFinanceSettings();
   await FinanceSettings.updateOne({ key: KEY }, { $set: input.values, $setOnInsert: { key: KEY } }, { upsert: true });

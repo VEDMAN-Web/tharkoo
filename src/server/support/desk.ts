@@ -95,6 +95,7 @@ export async function deskStaff() {
 
 /** Full thread for staff, internal notes included. Opening it clears the staff unread mark and is audited. */
 export async function deskThread(actor: DeskActor | null, ticketId: string, requestId: string) {
+  await connectDb();
   assertDeskActor(actor);
   const ticket = await loadTicket(ticketId);
   const rows = (await TicketMessage.find({ ticketId: ticket._id }).sort({ createdAt: 1, _id: 1 }).limit(500).lean()) as MessageRow[];
@@ -139,6 +140,7 @@ export async function deskReply(
   requestId: string,
   now = new Date(),
 ) {
+  await connectDb();
   assertDeskActor(actor);
   const ticket = await loadTicket(ticketId);
   if (!input.internal && isClosed(ticket)) throw new ConflictError("Reopen this ticket before replying to the customer.");
@@ -187,6 +189,7 @@ export async function deskSetStatus(
   status: Exclude<SupportStatus, "closed">,
   requestId: string,
 ) {
+  await connectDb();
   assertDeskActor(actor);
   const ticket = await loadTicket(ticketId);
   if (isClosed(ticket)) throw new ConflictError("Reopen this ticket before changing its status.");
@@ -215,6 +218,7 @@ async function assigneeFor(actor: DeskActor, assigneeId: string): Promise<Types.
 }
 
 export async function deskAssign(actor: DeskActor | null, ticketId: string, assigneeId: string, requestId: string) {
+  await connectDb();
   assertDeskActor(actor);
   const ticket = await loadTicket(ticketId);
   const next = await assigneeFor(actor, assigneeId);
@@ -233,6 +237,7 @@ export async function deskAssign(actor: DeskActor | null, ticketId: string, assi
 }
 
 export async function deskClose(actor: DeskActor | null, ticketId: string, requestId: string, now = new Date()) {
+  await connectDb();
   assertDeskActor(actor);
   const ticket = await loadTicket(ticketId);
   if (isClosed(ticket)) throw new ConflictError("This ticket is already closed.");
@@ -254,6 +259,7 @@ export async function deskClose(actor: DeskActor | null, ticketId: string, reque
 }
 
 export async function deskReopen(actor: DeskActor | null, ticketId: string, requestId: string) {
+  await connectDb();
   assertDeskActor(actor);
   const ticket = await loadTicket(ticketId);
   if (!isClosed(ticket)) throw new ConflictError("Only a closed ticket can be reopened.");

@@ -44,6 +44,7 @@ export async function readShellConfig(): Promise<ShellConfig> {
 
 /** Admin or superadmin. Validates, rejects unsafe links, stores, audits and refreshes the public cache. */
 export async function saveShellConfig(input: { actorId: string; roles: readonly string[]; config: unknown; requestId: string }) {
+  await connectDb();
   if (!input.roles.some((role) => role === "admin" || role === "superadmin")) {
     throw new ForbiddenError("Only an admin can change the header, footer or chat text");
   }

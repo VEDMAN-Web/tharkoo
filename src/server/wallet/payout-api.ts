@@ -15,6 +15,7 @@ import {
   requestWithdrawal,
   WITHDRAWAL_STATUSES,
 } from "@/server/wallet/withdrawals";
+import { connectDb } from "@/lib/db";
 
 interface Actor {
   id: string;
@@ -33,6 +34,7 @@ const statusQuerySchema = z.object({ status: z.enum(WITHDRAWAL_STATUSES).optiona
  * Vendor routes act on the signed-in user only. Admin routes need a finance or superadmin role (checked in the service).
  */
 export async function handlePayoutRequest(request: Request, requestId: string, actor: Actor, segments: string[], ip: string): Promise<Response | null> {
+  await connectDb();
   const method = request.method;
   const path = segments.join("/");
   const query = () => Object.fromEntries(new URL(request.url).searchParams);

@@ -27,6 +27,7 @@ export async function shownCountsFor(slugs: string[]): Promise<Record<string, Sh
 
 /** The same as shownCountsFor, cached for 15 seconds per slug list. Keeps the 30 second live refresh light. */
 export async function cachedShownCounts(slugs: string[]): Promise<Record<string, ShownCounts>> {
+  await connectDb();
   const key = [...slugs].sort().join(",");
   const now = Date.now();
   const hit = cache.get(key);

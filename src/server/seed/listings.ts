@@ -5,6 +5,7 @@ import { Category, Listing, Location, MediaAsset, PromotionOrder, PromotionProdu
 import { textDenied } from "@/server/shared/policy";
 import { adLifetimeMs } from "@/server/listings/lifetime";
 import { demoListings, SEED_USER_EMAIL, type DemoListing } from "@/server/seed/data";
+import { connectDb } from "@/lib/db";
 
 function demoWhen(index: number) {
   const daysAgo = 1 + (index % 30);
@@ -32,6 +33,7 @@ function photoFiles(category: string) {
 }
 
 export async function seedDemoListings(dryRun: boolean): Promise<{ inserted: string[]; skipped: string[] }> {
+  await connectDb();
   const specs = demoListings();
   for (const spec of specs) {
     if (textDenied(`${spec.title} ${spec.description}`).denied) {

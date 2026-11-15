@@ -180,6 +180,7 @@ export async function openImportJob(actor: ImportActor): Promise<JobSummary | nu
 }
 
 export async function getImportJob(actor: ImportActor, jobId: string): Promise<JobSummary> {
+  await connectDb();
   const job = await loadOwnedJob(actor, jobId);
   return summarise(job, uploadedFor(job));
 }
@@ -235,6 +236,7 @@ export async function recordImportPhoto(
   file: { name: string; type: string; data: Buffer },
   requestId: string,
 ): Promise<{ status: "cleared" | "exists"; name: string }> {
+  await connectDb();
   const job = await loadOwnedJob(actor, jobId);
   if (job.state === "done") throw new ConflictError("This import has already finished");
   const wanted = job.filesToUpload.find((name) => name.toLowerCase() === file.name.trim().toLowerCase());
@@ -284,6 +286,7 @@ export async function recordImportVideo(
   file: { name: string; type: string; data: Buffer },
   requestId: string,
 ): Promise<{ status: "cleared" | "exists"; name: string }> {
+  await connectDb();
   const job = await loadOwnedJob(actor, jobId);
   if (job.state === "done") throw new ConflictError("This import has already finished");
   const wanted = job.videosToUpload.find((name) => name.toLowerCase() === file.name.trim().toLowerCase());
@@ -337,6 +340,7 @@ async function claim(jobId: Types.ObjectId) {
 
 /** Step 2c: imports the next block of rows and saves progress. The page calls this again until `state` is done. */
 export async function runImportChunk(actor: ImportActor, jobId: string, requestId: string, chunkRows = IMPORT_CHUNK_ROWS): Promise<JobSummary> {
+  await connectDb();
   const job = await loadOwnedJob(actor, jobId);
   if (job.state === "done") return summarise(job, uploadedFor(job));
   assertPublishRight(actor, job.publishStatus);

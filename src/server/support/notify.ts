@@ -1,12 +1,14 @@
 import { siteOrigin } from "@/server/auth/http";
 import { mailerFromEnv } from "@/server/mailer";
 import { User } from "@/server/models";
+import { connectDb } from "@/lib/db";
 
 /**
  * Tells the owner that support replied. The in-app badge is the main signal. Email is sent only when
  * a mail provider is configured (BREVO_API_KEY). The email carries no ticket text, only a link.
  */
 export async function notifyOwnerOfReply(input: { ownerId: string; ticketId: string; number: number }) {
+  await connectDb();
   if (!process.env.BREVO_API_KEY?.trim()) return;
   const owner = await User.findById(input.ownerId).select("email").lean();
   if (!owner?.email) return;

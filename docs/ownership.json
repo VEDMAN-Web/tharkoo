@@ -2533,6 +2533,14 @@
         "docs/ownership.json",
         "progress/H6.8.md"
       ]
+    },
+    "H7.0": {
+      "branchPrefix": "haiku/h7.0",
+      "globs": [
+        "src/server/**",
+        "tests/server/db/**",
+        "docs/ownership.json"
+      ]
     }
   }
 }

@@ -4,6 +4,7 @@ import { ForbiddenError } from "@/server/http";
 import { adLifetimeMs } from "@/server/listings/lifetime";
 import { Listing, User } from "@/server/models";
 import { SEED_USER_EMAIL } from "@/server/seed/data";
+import { connectDb } from "@/lib/db";
 
 const audit = new AuditRepository();
 
@@ -12,6 +13,7 @@ const audit = new AuditRepository();
  * Superadmin only, and only while SITE_NOINDEX=true. Real ads, owned by real users, are never touched.
  */
 export async function refreshDemoAds(input: { actorId: string; roles: readonly string[]; requestId: string }) {
+  await connectDb();
   if (!input.roles.includes("superadmin")) throw new ForbiddenError("Only a superadmin refreshes demo ads");
   if (process.env.SITE_NOINDEX !== "true") throw new ForbiddenError("Demo ads can only be refreshed on the staging site");
   const seed = await User.findOne({ email: SEED_USER_EMAIL }).select("_id").lean<{ _id: Types.ObjectId }>();

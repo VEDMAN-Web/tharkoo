@@ -140,6 +140,7 @@ export function rowsForStorage(result: CrawlResult): SeoAuditRowDoc[] {
 }
 
 export async function pruneRuns(keep = KEEP_RUNS) {
+  await connectDb();
   const old = await SeoAuditRun.find().sort({ startedAt: -1 }).skip(keep).select("_id").lean();
   if (old.length === 0) return 0;
   await SeoAuditRun.deleteMany({ _id: { $in: old.map((row) => row._id) } });
