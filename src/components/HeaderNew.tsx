@@ -115,7 +115,7 @@ export function HeaderNew({
                   onClick={() => setAccountOpen((open) => !open)}
                 >
                   <span className="tkn-avatar-circle">{account.name.slice(0, 1).toUpperCase()}</span>
-                  <ChevronDown size={14} aria-hidden="true" focusable="false" />
+                  <ChevronDown size={12} aria-hidden="true" focusable="false" />
                 </button>
                 {accountOpen ? (
                   <div className="tkn-account-menu" role="menu">
