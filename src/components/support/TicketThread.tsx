@@ -71,7 +71,7 @@ export function TicketThread({ ticketId }: { ticketId: string }) {
       {closed ? (
         <section aria-label="Ticket closed" style={{ display: "grid", gap: 10, padding: 12, borderRadius: 10, border: "1px solid var(--border)" }}>
           <p className="t-body" style={{ margin: 0 }}>This ticket is closed. You can read it, but you cannot reply.</p>
-          <Link href="/u/account/support/new/" className="tk-btn tk-btn-outline-gold" style={{ justifySelf: "start" }}>Open a new ticket</Link>
+          <Link href="/u/account/support/new/" className="tk-btn tk-btn-outline-primary" style={{ justifySelf: "start" }}>Open a new ticket</Link>
         </section>
       ) : (
         <Reply ticketId={ticketId} onSent={load} />

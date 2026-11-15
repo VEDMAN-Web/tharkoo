@@ -27,7 +27,7 @@ export function HelpCard() {
       <p>
         For <strong>information</strong> or <strong>technical support</strong>, click the button below.
       </p>
-      <Link href="/contact/" className="tk-btn tk-btn-outline-gold" style={{ width: "100%" }}>
+      <Link href="/contact/" className="tk-btn tk-btn-outline-primary" style={{ width: "100%" }}>
         <Mail size={14} /> CONTACT US
       </Link>
       {wa || facts.tg ? (
@@ -36,8 +36,8 @@ export function HelpCard() {
             We are also available on <strong>WhatsApp</strong> or <strong>Telegram</strong> Monday through Friday, excluding holidays, from {facts.hours}.
           </p>
           <div className="tk-help-actions">
-            {wa ? <a className="tk-btn tk-btn-outline-gold" href={`https://wa.me/${wa}`}>WhatsApp</a> : null}
-            {facts.tg ? <a className="tk-btn tk-btn-outline-gold" href={`https://t.me/${facts.tg.replace(/^@/, "")}`}>Telegram</a> : null}
+            {wa ? <a className="tk-btn tk-btn-outline-primary" href={`https://wa.me/${wa}`}>WhatsApp</a> : null}
+            {facts.tg ? <a className="tk-btn tk-btn-outline-primary" href={`https://t.me/${facts.tg.replace(/^@/, "")}`}>Telegram</a> : null}
           </div>
         </>
       ) : (

@@ -80,7 +80,7 @@ export function ReportForm({ ad }: { ad: string }) {
         </p>
       ) : null}
       <div>
-        <button type="submit" className="tk-btn tk-btn-gold" disabled={busy}>
+        <button type="submit" className="tk-btn tk-btn-cta" disabled={busy}>
           {busy ? "Sending…" : "Send report"}
         </button>
       </div>

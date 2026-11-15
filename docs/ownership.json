@@ -2759,7 +2759,8 @@
         "src/app/cookies/**",
         "src/app/cms/**",
         "src/app/blog/**",
-        "src/app/not-found.tsx"
+        "src/app/not-found.tsx",
+        "docs/ownership.json"
       ]
     }
   }

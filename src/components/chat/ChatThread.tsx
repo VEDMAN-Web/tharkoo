@@ -100,10 +100,10 @@ export function ChatThread({ conversationId }: { conversationId: string }) {
     <div data-tk="chat-thread" style={{ display: "grid", gridTemplateRows: "auto 1fr auto", minHeight: 0, height: "100%" }}>
       <div style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center", padding: "8px 12px", borderBottom: "1px solid var(--border)" }}>
         <strong style={{ flex: 1, minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{info?.listingTitle || "Chat"}</strong>
-        <button type="button" className="tk-btn tk-btn-outline-gold" style={buttonStyle} onClick={() => void report()} disabled={info?.reported}>
+        <button type="button" className="tk-btn tk-btn-outline-primary" style={buttonStyle} onClick={() => void report()} disabled={info?.reported}>
           {info?.reported ? "Reported" : "Report"}
         </button>
-        <button type="button" className="tk-btn tk-btn-outline-gold" style={buttonStyle} onClick={() => void block()} disabled={closed}>
+        <button type="button" className="tk-btn tk-btn-outline-primary" style={buttonStyle} onClick={() => void block()} disabled={closed}>
           {closed ? "Blocked" : "Block"}
         </button>
       </div>
@@ -153,11 +153,11 @@ export function ChatThread({ conversationId }: { conversationId: string }) {
           style={{ fontSize: 16 }}
         />
         <div style={{ display: "flex", gap: 8 }}>
-          <label className="tk-btn tk-btn-outline-gold" style={{ ...buttonStyle, cursor: "pointer" }} aria-disabled={closed || busy}>
+          <label className="tk-btn tk-btn-outline-primary" style={{ ...buttonStyle, cursor: "pointer" }} aria-disabled={closed || busy}>
             Photo
             <input type="file" accept="image/jpeg,image/png,image/webp" hidden disabled={closed || busy} onChange={(event) => { pick(event.target.files?.[0]); event.target.value = ""; }} />
           </label>
-          <button type="submit" className="tk-btn tk-btn-gold" style={{ ...buttonStyle, marginLeft: "auto" }} disabled={closed || busy || !text.trim()}>
+          <button type="submit" className="tk-btn tk-btn-cta" style={{ ...buttonStyle, marginLeft: "auto" }} disabled={closed || busy || !text.trim()}>
             Send
           </button>
         </div>

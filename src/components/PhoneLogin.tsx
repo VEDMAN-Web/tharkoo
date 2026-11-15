@@ -66,7 +66,7 @@ export function PhoneLogin({ next }: { next: string | null }) {
             <span>6-digit code</span>
             <input name="code" inputMode="numeric" autoComplete="one-time-code" maxLength={6} value={code} onChange={(event) => setCode(event.target.value.replace(/\D/g, ""))} required />
           </label>
-          <button className="tk-btn tk-btn-gold" type="submit" disabled={busy || code.length !== 6} style={{ width: "100%" }}>
+          <button className="tk-btn tk-btn-cta" type="submit" disabled={busy || code.length !== 6} style={{ width: "100%" }}>
             {busy ? "Checking" : "LOG IN WITH CODE"}
           </button>
           <button type="button" onClick={() => setStep("phone")} style={{ background: "none", border: 0, color: "var(--accent)", cursor: "pointer" }}>

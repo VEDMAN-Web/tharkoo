@@ -83,7 +83,7 @@ export function TourInbox() {
                     <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
                       <button
                         type="button"
-                        className="tk-btn tk-btn-gold"
+                        className="tk-btn tk-btn-cta"
                         disabled={busyId === tour.id}
                         aria-label={`Accept the tour request from ${when}`}
                         onClick={() => act(tour, "accept")}
@@ -92,7 +92,7 @@ export function TourInbox() {
                       </button>
                       <button
                         type="button"
-                        className="tk-btn tk-btn-outline-gold"
+                        className="tk-btn tk-btn-outline-primary"
                         disabled={busyId === tour.id}
                         aria-label={`Decline the tour request from ${when}`}
                         onClick={() => act(tour, "decline")}

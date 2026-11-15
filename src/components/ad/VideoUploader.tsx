@@ -95,7 +95,7 @@ export function VideoUploader({ listingId }: { listingId: string }) {
   return (
     <div data-tk="video-upload" style={{ marginTop: 16 }}>
       <h3 className="t-h3">Your videos</h3>
-      <label className="tk-btn tk-btn-outline-gold" aria-disabled={busy || videos.length >= MAX_VIDEOS}>
+      <label className="tk-btn tk-btn-outline-primary" aria-disabled={busy || videos.length >= MAX_VIDEOS}>
         {busy ? "UPLOADING..." : "ADD VIDEO"}
         <input
           type="file"
@@ -116,7 +116,7 @@ export function VideoUploader({ listingId }: { listingId: string }) {
           {videos.map((video, index) => (
             <li key={video.id} style={{ display: "grid", gap: 4, width: 140 }}>
               <video src={video.url} poster={video.posterUrl || undefined} muted playsInline preload="metadata" aria-label={`Video ${index + 1}`} style={{ width: 140, height: 200, objectFit: "cover", background: "#000", borderRadius: 8 }} />
-              <button type="button" className="tk-btn tk-btn-outline-gold" onClick={() => void remove(video.id)}>
+              <button type="button" className="tk-btn tk-btn-outline-primary" onClick={() => void remove(video.id)}>
                 Remove
               </button>
             </li>

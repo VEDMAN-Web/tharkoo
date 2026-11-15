@@ -187,14 +187,14 @@ export function ContactButtons({
     if (hit?.value) {
       const href = hit.href || (channel === "phone" ? `tel:${hit.value}` : channel === "whatsapp" ? `https://wa.me/${hit.value.replace(/\D/g, "")}` : undefined);
       return (
-        <a key={channel} className={channel === "whatsapp" ? "tk-btn tk-btn-whatsapp" : "tk-btn tk-btn-gold"} data-tk={channel === "phone" ? "call" : "whatsapp"} href={href}>
+        <a key={channel} className={channel === "whatsapp" ? "tk-btn tk-btn-whatsapp" : "tk-btn tk-btn-cta"} data-tk={channel === "phone" ? "call" : "whatsapp"} href={href}>
           {hit.value}
         </a>
       );
     }
     const label = channel === "phone" ? "Call" : channel === "whatsapp" ? "WhatsApp" : "Telegram";
     return (
-      <button key={channel} type="button" className={channel === "whatsapp" ? "tk-btn tk-btn-whatsapp" : "tk-btn tk-btn-gold"} data-tk={channel === "phone" ? "call" : channel === "whatsapp" ? "whatsapp" : undefined} onClick={() => open(channel)} disabled={busy === channel || (channel === "phone" && callsPaused)} aria-describedby={channel === "phone" && callsPaused ? "tk-calls-paused" : undefined}>
+      <button key={channel} type="button" className={channel === "whatsapp" ? "tk-btn tk-btn-whatsapp" : "tk-btn tk-btn-cta"} data-tk={channel === "phone" ? "call" : channel === "whatsapp" ? "whatsapp" : undefined} onClick={() => open(channel)} disabled={busy === channel || (channel === "phone" && callsPaused)} aria-describedby={channel === "phone" && callsPaused ? "tk-calls-paused" : undefined}>
         {channel === "phone" ? <Phone size={16} aria-hidden /> : channel === "whatsapp" ? <Wa /> : null}
         {busy === channel ? "…" : label}
       </button>
@@ -203,12 +203,12 @@ export function ContactButtons({
   const buttons = [
     ...channelButtons,
     chatOn ? (
-      <button key="chat" type="button" className="tk-btn tk-btn-gold" data-tk="chat" onClick={() => void openChat()} disabled={busy === "chat"}>
+      <button key="chat" type="button" className="tk-btn tk-btn-cta" data-tk="chat" onClick={() => void openChat()} disabled={busy === "chat"}>
         <MessageCircle size={16} aria-hidden /> {busy === "chat" ? "…" : "Chat online now"}
       </button>
     ) : null,
     tour && !people ? (
-      <button key="tour" type="button" className="tk-btn tk-btn-gold" data-tk="tour" onClick={() => void requestTour()} disabled={busy === "tour" || tourRequested} aria-busy={busy === "tour"}>
+      <button key="tour" type="button" className="tk-btn tk-btn-cta" data-tk="tour" onClick={() => void requestTour()} disabled={busy === "tour" || tourRequested} aria-busy={busy === "tour"}>
         <Video size={16} aria-hidden /> {busy === "tour" ? "…" : tourRequestLabel(tour.coins)}
       </button>
     ) : null,

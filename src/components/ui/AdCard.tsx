@@ -226,7 +226,7 @@ export function AdCard({
         <div className="tk-circles">
           {seller && !seller.people ? (
             <button type="button" className="tk-circle" aria-label={seller.callsAllowed === false ? `${t("card.contact.call")}: the seller is away` : t("card.contact.call")} data-tk="call" disabled={seller.callsAllowed === false} onClick={() => reveal("phone")}>
-              <Phone size={16} color="#8A6416" />
+              <Phone size={16} color="#A8124F" />
             </button>
           ) : null}
           <button type="button" className="tk-circle" aria-label={t("card.contact.whatsapp")} data-tk="whatsapp" onClick={() => reveal("whatsapp")}>

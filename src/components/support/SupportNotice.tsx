@@ -32,7 +32,7 @@ export function SupportNotice() {
       <span className="t-body">
         Tharkoo support has replied to {unread === 1 ? "one of your tickets" : `${unread} of your tickets`}.
       </span>
-      <Link href="/u/account/support/" className="tk-btn tk-btn-outline-gold tk-btn-sm">Open support</Link>
+      <Link href="/u/account/support/" className="tk-btn tk-btn-outline-primary tk-btn-sm">Open support</Link>
     </div>
   );
 }

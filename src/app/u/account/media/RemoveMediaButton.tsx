@@ -26,7 +26,7 @@ export function RemoveMediaButton({ id, kind }: { id: string; kind: "image" | "v
 
   return (
     <div style={{ display: "grid", gap: 4, justifyItems: "start" }}>
-      <button type="button" className="tk-btn tk-btn-outline-gold" data-tk="media-remove" disabled={busy} onClick={remove}>
+      <button type="button" className="tk-btn tk-btn-outline-primary" data-tk="media-remove" disabled={busy} onClick={remove}>
         {busy ? "Removing…" : "Remove"}
       </button>
       {error ? <span role="alert" className="t-caption" data-tk="media-error" style={{ color: "var(--danger)" }}>{error}</span> : null}

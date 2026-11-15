@@ -29,12 +29,12 @@ const ICONS: Record<string, LucideIcon> = {
 };
 
 const PALETTES = [
-  ["#D4AF37", "#8A6416", "#F3D98B"],
-  ["#E2C268", "#8A6416", "#FBF5E4"],
-  ["#8A6416", "#D4AF37", "#F6EBCB"],
-  ["#5C4A22", "#D4AF37", "#F3D98B"],
-  ["#C9A24A", "#6F4F10", "#FBF5E4"],
-  ["#2A2316", "#E2C268", "#F6EBCB"],
+  ["#E91E8C", "#A8124F", "#FCE4F0"],
+  ["#C2185B", "#A8124F", "#FDF0F7"],
+  ["#A8124F", "#E91E8C", "#FCE4F0"],
+  ["#5B21B6", "#E91E8C", "#F5F0FF"],
+  ["#C2185B", "#7C3AED", "#FDF0F7"],
+  ["#2D1248", "#E91E8C", "#FCE4F0"],
 ];
 
 function hash(seed: string) {
@@ -80,7 +80,7 @@ export function PlaceholderArt({
             </radialGradient>
           ))}
           <pattern id={`grain-${n}`} width="6" height="6" patternUnits="userSpaceOnUse">
-            <circle cx="1" cy="1" r="0.6" fill="#8A6416" opacity="0.08" />
+            <circle cx="1" cy="1" r="0.6" fill="#A8124F" opacity="0.08" />
           </pattern>
         </defs>
         <rect width="800" height="1000" fill="#F3EDE6" />
