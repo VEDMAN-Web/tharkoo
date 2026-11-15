@@ -3059,6 +3059,15 @@
         "tests/e2e/logout.e2e.ts",
         "tests/e2e/account.e2e.ts"
       ]
+    },
+    "H7.40": {
+      "branchPrefix": "haiku/h7.40",
+      "globs": [
+        "docs/ownership.json",
+        "src/app/api/auth/[[...slug]]/route.ts",
+        "src/server/auth/service.ts",
+        "tests/server/auth/cookie-life.test.ts"
+      ]
     }
   }
 }
