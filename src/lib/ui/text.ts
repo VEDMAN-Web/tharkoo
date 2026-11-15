@@ -25,6 +25,7 @@ export const TEXT_DEFAULTS = {
   "home.ads.eyebrow": "Fresh today",
   "home.ads.title": "Latest ads in {city}",
   "home.ads.titleAll": "Latest ads",
+  "home.ads.defaultPlace": "India",
   "home.ads.all": "See all ads",
   "home.ads.view": "View details",
   "home.ads.views": "{count} views",
