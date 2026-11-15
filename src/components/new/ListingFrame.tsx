@@ -44,7 +44,7 @@ export function ListingFrame({
 
   return (
     <div className="tkn-ls">
-      <section className="tkn-ls-band" data-tk="listing-band" style={bandStyle as CSSProperties}>
+      <section className="tkn-ls-band m-enter" data-tk="listing-band" style={bandStyle as CSSProperties}>
         {head}
         {chips ? <div className="tkn-ls-chips">{chips}</div> : null}
         <div className="tkn-ls-searchrow">
