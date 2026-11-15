@@ -1,6 +1,6 @@
 import { randomInt } from "node:crypto";
 import { connectDb } from "@/lib/db";
-import { hashToken } from "@/server/auth/http";
+import { hashToken, type CookieLife } from "@/server/auth/http";
 import { PhoneIdentity, PhoneLoginChallenge, OTP_MAX_ATTEMPTS, OTP_SENDS_PER_WINDOW, OTP_WINDOW_MS, normalizePhone } from "@/server/auth/phone";
 import { consumeRateLimit } from "@/server/auth/rate-limit";
 import { createSession } from "@/server/auth/service";
@@ -95,6 +95,7 @@ export async function verifyLoginCode(input: {
   userAgent?: string | null;
   ip?: string;
   existingToken?: string;
+  life?: CookieLife;
 }) {
   await connectDb();
   const phone = normalizePhone(input.phone);
@@ -113,5 +114,5 @@ export async function verifyLoginCode(input: {
   const identity = await PhoneIdentity.findOne({ phone }).lean();
   const user = identity ? await User.findById(identity.userId) : null;
   if (!user || user.status !== "active") throw invalidCode();
-  return createSession(user, { userAgent: input.userAgent, ip: input.ip, existingToken: input.existingToken });
+  return createSession(user, { userAgent: input.userAgent, ip: input.ip, existingToken: input.existingToken, life: input.life });
 }

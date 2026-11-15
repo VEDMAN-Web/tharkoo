@@ -3,8 +3,10 @@ import {
   LOGIN_MAX,
   RATE_WINDOW_MS,
   SESSION_COOKIE,
+  type CookieLife,
   assertOrigin,
   clearSessionCookieHeader,
+  cookieSecure,
   clearSessionHintCookie,
   readCookie,
   sessionCookieHeader,
@@ -52,11 +54,17 @@ const emailOtpSendBodySchema = z.object({
 const emailOtpVerifyBodySchema = z.object({
   email: z.string().trim().min(3).max(254),
   code: z.string().trim().regex(/^\d{6}$/),
+  remember: z.boolean().optional(),
 });
+
+function codeLife(remember: boolean | undefined): CookieLife {
+  return remember ? "remembered" : "browser";
+}
 
 const otpVerifyBodySchema = z.object({
   phone: z.string().trim().min(8).max(20),
   code: z.string().trim().regex(/^\d{6}$/),
+  remember: z.boolean().optional(),
 });
 
 export const runtime = "nodejs";
@@ -185,8 +193,9 @@ async function dispatch(request: Request) {
       userAgent: request.headers.get("user-agent"),
       ip,
       existingToken: token,
+      life: codeLife(body.remember),
     });
-    return json({ user: result.user }, requestId, 200, [sessionCookieHeader(result.token), sessionHintCookie()]);
+    return json({ user: result.user }, requestId, 200, [sessionCookieHeader(result.token, cookieSecure(), codeLife(body.remember)), sessionHintCookie(cookieSecure(), codeLife(body.remember))]);
   }
   if (request.method === "POST" && path === "email/otp/send") {
     const body = parseInput(emailOtpSendBodySchema, await readBody(request));
@@ -210,8 +219,9 @@ async function dispatch(request: Request) {
       ip,
       existingToken: token,
       requestId,
+      life: codeLife(body.remember),
     });
-    return json({ user: result.user }, requestId, 200, [sessionCookieHeader(result.token), sessionHintCookie()]);
+    return json({ user: result.user }, requestId, 200, [sessionCookieHeader(result.token, cookieSecure(), codeLife(body.remember)), sessionHintCookie(cookieSecure(), codeLife(body.remember))]);
   }
   if (path === "code-only-login" && request.method === "GET") {
     const found = await requireUser(token);

@@ -7,6 +7,7 @@ import { api, friendlyError, hasSessionHint } from "@/lib/ui/api";
 import { tourRequestLabel } from "@/components/ad/tourLabels";
 import { useSellerStatus, type SellerStatus } from "@/components/availability/sellerStatus";
 import { AvailabilityBadge } from "@/components/availability/AvailabilityBadge";
+import { openSignInFromLink } from "@/components/auth/SignInSheet";
 
 // The chat panel code loads only when a visitor opens the chat.
 const ChatPanel = dynamic(() => import("@/components/chat/ChatPanel").then((mod) => mod.ChatPanel), { ssr: false });
@@ -158,7 +159,7 @@ function NoticeLine({ notice, sticky }: { notice: Notice | null; sticky?: boolea
       {notice.signIn ? (
         <>
           {" "}
-          <a href={signInHref()} style={{ color: "var(--accent)", textDecoration: "underline" }}>
+          <a href={signInHref()} style={{ color: "var(--accent)", textDecoration: "underline" }} onClick={(event) => openSignInFromLink(event, "user")}>
             Sign in
           </a>
         </>
