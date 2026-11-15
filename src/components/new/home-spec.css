@@ -86,6 +86,10 @@
 .tkh-utility-in::-webkit-scrollbar {
   display: none;
 }
+.tkh-utility-in:focus-visible {
+  outline: 3px solid #7c3aed;
+  outline-offset: 2px;
+}
 .tkh-util {
   flex: none;
   white-space: nowrap;

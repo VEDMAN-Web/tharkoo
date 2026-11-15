@@ -115,7 +115,8 @@ export function NewHome({
   return (
     <div className="tkh-home">
       <div className="tkh-utility">
-        <ul className="tkh-utility-in">
+        {/* Focusable so a keyboard user can scroll the row sideways on a narrow screen. */}
+        <ul className="tkh-utility-in" tabIndex={0}>
           <li className="tkh-util tkh-util-mint">
             <i aria-hidden="true" />
             {t("home.utility.online")}
