@@ -22,7 +22,7 @@ export function Icon({ name, size = 20, color = "currentColor", width = 2 }: { n
   );
 }
 
-export function PageBand({ crumbs, title, children }: { crumbs: { label: string; href?: string }[]; title: string; children?: ReactNode }) {
+export function PageBand({ crumbs, title, strong, children }: { crumbs: { label: string; href?: string }[]; title: string; strong?: boolean; children?: ReactNode }) {
   return (
     <section className="tkp-section tkp-band-section">
       <div className="tkp-band">
@@ -39,7 +39,7 @@ export function PageBand({ crumbs, title, children }: { crumbs: { label: string;
             </span>
           ))}
         </nav>
-        <h1 className="tkp-h1">{title}</h1>
+        <h1 className={strong ? "tkp-h1 tkp-h1-strong" : "tkp-h1"}>{title}</h1>
         {children}
       </div>
     </section>

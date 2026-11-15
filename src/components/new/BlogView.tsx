@@ -52,7 +52,7 @@ export function BlogList({
   const [feature, ...rest] = cards;
   return (
     <>
-      <PageBand crumbs={[{ label: "Tharkoo India", href: "/" }, { label: "Blog" }]} title="Tips, guides and city news">
+      <PageBand crumbs={[{ label: "Tharkoo India", href: "/" }, { label: "Blog" }]} title="Tips, guides and city news" strong>
         <p className="tkp-lede">Short reads to help you buy, sell and meet safely.</p>
         <nav aria-label="Categories" className="tkp-chips tkp-chips-scroll" style={{ marginTop: 18 }}>
           <Link href={hrefOf("")} className="tkp-chip" aria-current={active ? undefined : "page"}>

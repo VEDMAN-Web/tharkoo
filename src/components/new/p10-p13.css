@@ -7,6 +7,7 @@
 }
 .tkn .tkp-crumbs { font-size: 13px; color: #6b4a8a; margin-bottom: 10px; overflow-wrap: anywhere; }
 .tkn .tkp-crumbs a { color: inherit; text-decoration: none; }
+.tkn .tkp-h1-strong { font-weight: 800; letter-spacing: -0.02em; }
 .tkn .tkp-h1 { font-family: inherit; margin: 0 0 6px; font-size: 38px; letter-spacing: -0.03em; color: #110520; overflow-wrap: anywhere; }
 .tkn .tkp-h2 { font-family: inherit; margin: 0; font-size: 24px; letter-spacing: -0.02em; color: #110520; }
 .tkn .tkp-lede { margin: 0; font-size: 15px; line-height: 1.55; color: #4a2870; max-width: 640px; }
@@ -28,6 +29,7 @@
   border: 1.5px solid #ead8f0; background: rgba(255, 255, 255, 0.85); color: #4a2870; font-weight: 700; font-size: 15px; text-decoration: none; box-sizing: border-box;
 }
 .tkn .tkp-chips { display: flex; gap: 8px; flex-wrap: wrap; }
+.tkn .tkp-chip[aria-current="page"] { background: #a8124f; border-color: #a8124f; color: #fff; font-weight: 700; }
 .tkn .tkp-chip {
   min-height: 38px; display: inline-flex; align-items: center; padding: 0 16px; border-radius: 999px; box-sizing: border-box;
   background: rgba(255, 255, 255, 0.8); border: 1px solid #ead8f0; color: #4a2870; font-size: 13px; font-weight: 600; text-decoration: none; white-space: nowrap;
@@ -110,7 +112,7 @@
   font-size: 120px; line-height: 1; font-weight: 800; letter-spacing: -0.06em; color: transparent;
   background: linear-gradient(135deg, #e91e8c, #c2185b 45%, #b5007a 75%, #d97706); -webkit-background-clip: text; background-clip: text;
 }
-.tkn .tkp-404 h1 { margin: 14px 0 8px; font-size: 34px; letter-spacing: -0.03em; color: #110520; font-family: inherit; }
+.tkn .tkp-404 h1 { margin: 14px 0 8px; font-size: 34px; font-weight: 800; letter-spacing: -0.02em; color: #110520; font-family: inherit; }
 .tkn .tkp-404 p { margin: 0 auto 22px; max-width: 480px; font-size: 16px; line-height: 1.6; color: #4a2870; }
 .tkn .tkp-404-actions { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; }
 .tkn .tkp-404-chips { margin-top: 22px; justify-content: center; }
@@ -123,7 +125,7 @@
 .tkn .tkp-page-link[aria-current="page"] { background: #a8124f; border-color: #a8124f; color: #fff; }
 .tkn .tkp-eyebrow { display: inline-block; margin: 0 0 10px; font-size: 12px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: #5b21b6; background: #f5f0ff; border-radius: 999px; padding: 6px 14px; }
 .tkn .tkp-ads-head { display: flex; justify-content: space-between; align-items: flex-end; gap: 16px; flex-wrap: wrap; margin-bottom: 26px; }
-.tkn .tkp-ads-head .tkp-h2 { font-size: 40px; letter-spacing: -0.035em; line-height: 1.1; }
+.tkn .tkp-ads-head .tkp-h2 { font-size: 40px; font-weight: 800; letter-spacing: -0.02em; line-height: 1.1; }
 .tkn .tkp-more-link { font-size: 14px; font-weight: 700; color: #c2185b; text-decoration: none; min-height: 44px; display: inline-flex; align-items: center; }
 
 @media (max-width: 1024px) {

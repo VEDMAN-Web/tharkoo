@@ -30,7 +30,7 @@ export function LegalView({
   const withHeadings = sections.filter((section) => section.heading);
   return (
     <>
-      <PageBand crumbs={crumbs} title={title}>
+      <PageBand crumbs={crumbs} title={title} strong>
         <div className="tkp-pills">
           {updated ? <span className="tkp-pill">{updatedPrefix} {updated}</span> : null}
           <span className="tkp-pill">{minutes} min read</span>

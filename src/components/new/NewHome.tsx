@@ -121,6 +121,7 @@ export function NewHome({
     away: t("home.ads.away"),
     watermark: t("home.ads.watermark"),
     views: t("home.ads.views"),
+    viewOne: t("home.ads.viewOne"),
   };
   const searchLabels = {
     state: t("home.search.state"),

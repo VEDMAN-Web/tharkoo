@@ -47,7 +47,7 @@ export function SaveButton({
       type="button"
       aria-pressed={on}
       aria-label={on ? "Remove saved ad" : "Save ad"}
-      className={cn("inline-flex min-h-11 min-w-11 items-center justify-center gap-1 rounded-full bg-black/50 px-2 text-text", className)}
+      className={cn("inline-flex min-h-11 min-w-11 items-center justify-center gap-1 rounded-full bg-white px-2 text-[#c2185b] shadow-[0_2px_8px_rgba(45,18,72,0.12)]", className)}
       onClick={() => {
         const next = readSaved().filter((row) => row.id !== item.id);
         if (!on) next.unshift({ ...item, at: Date.now() });

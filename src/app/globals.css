@@ -844,7 +844,7 @@ input, select, textarea { font-size: 16px; }
   color: var(--ink);
 }
 .tk-badge-promo[data-tier="star"], .tk-badge-promo[data-tier="supertop"] { background: var(--rose); color: #fff; }
-.tk-badge-promo[data-tier="top"] { background: linear-gradient(135deg, #b45309, #92400e); color: #fff; border: 0; }
+.tk-badge-promo[data-tier="top"] { background: linear-gradient(135deg, #d1137a, #a8124f); color: #fff; border: 0; }
 .tk-circles {
   position: absolute;
   right: 16px;
@@ -915,7 +915,7 @@ input, select, textarea { font-size: 16px; }
 .tk-summary-side { display: flex; align-items: center; gap: 8px; flex: none; }
 .tk-summary-top .tk-badge-promo { position: static; white-space: nowrap; flex: none; }
 .tk-badge-promo[data-tier="supertop"] { background: var(--rose); color: #fff; }
-.tk-badge-promo[data-tier="top"] { background: linear-gradient(135deg, #b45309, #92400e); color: #fff; border: 0; }
+.tk-badge-promo[data-tier="top"] { background: linear-gradient(135deg, #d1137a, #a8124f); color: #fff; border: 0; }
 .tk-nick { color: var(--muted); font-size: 14px; font-weight: 500; margin: 4px 0 0; }
 .tk-summary h1 {
   font-family: var(--font-display), "Cormorant Garamond", serif;
