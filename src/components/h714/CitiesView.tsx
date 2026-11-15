@@ -78,7 +78,7 @@ export function CitiesView({
                 <Link key={city.slug} href={city.href} className="h714-cat" style={{ display: "flex", flexDirection: "column", borderRadius: "16px", overflow: "hidden", background: "#fff", border: "1px solid #EAD8F0", textDecoration: "none", boxShadow: "0 2px 14px rgba(45,18,72,.07)" }}>
                   {" "}
                   <span className="h714-catimg" style={{ position: "relative", display: "block", background: "linear-gradient(145deg, #ECFDF5, #E0F2FE)" }}>
-                    {city.photo ? <Image src={city.photo} alt="" fill sizes="(max-width: 600px) 50vw, 25vw" unoptimized className="h714-photo" /> : <span style={{ position: "absolute", left: "50%", top: "50%", transform: "translate(-50%, -50%)", fontSize: "11px", fontWeight: "600", color: "rgba(30,11,56,.4)", whiteSpace: "nowrap" }}>City photo</span>}
+                    {city.photo ? <Image src={city.photo} alt="" fill sizes="(max-width: 600px) 50vw, 25vw" unoptimized className="h714-photo" /> : null}
                   </span>
                   {" "}
                   <span style={{ display: "flex", alignItems: "center", gap: "12px", padding: "14px 16px", background: "linear-gradient(135deg, #F0FDF4, #FFFFFF)" }}>
