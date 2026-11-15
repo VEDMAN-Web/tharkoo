@@ -1717,6 +1717,28 @@ input, select, textarea { font-size: 16px; }
 }
 .tkn-citylist-row[aria-pressed="true"] { background: rgba(233, 30, 140, 0.1); color: var(--tkn-deep); font-weight: 700; }
 .tkn-citylist-row > svg { margin-left: auto; flex: none; }
+/* P1: country menu (mockup 00-CountryMenu): search on top, Popular, All countries A to Z, tick or "No ads yet" on the right */
+.tkn-city-arrow { color: var(--tkn-muted); margin-left: 2px; }
+.tkn-pop-country { width: 342px; max-height: min(560px, 70vh); padding: 12px; }
+/* H7.10: the search box stays at the top while the list scrolls; the flags are SVG files from public/flags */
+.tkn-country-search {
+  position: sticky; top: 0; z-index: 1; display: flex; align-items: center; gap: 10px; min-height: 44px; padding: 0 14px; margin-bottom: 8px; border-radius: 12px;
+  border: 1.5px solid var(--tkn-line); background: #fff; color: var(--tkn-muted-2, #6b4a8a); box-sizing: border-box;
+}
+.tkn-flag {
+  display: inline-block; width: 16px; height: 12px; flex: none; border-radius: 2px; object-fit: cover; box-shadow: 0 0 0 1px rgba(30, 11, 56, 0.08);
+}
+.tkn-citylist-none { color: #6b4a8a; }
+.tkn-country-search input {
+  flex: 1; min-width: 0; border: 0; outline: none; background: transparent; font: inherit; font-size: 14px; color: var(--tkn-ink);
+}
+.tkn-country-group {
+  margin: 12px 0 4px; padding: 0 12px; font-size: 11px; font-weight: 800; letter-spacing: 0.12em; text-transform: uppercase; color: #5b21b6;
+}
+.tkn-citylist-name { flex: 1; min-width: 0; }
+.tkn-citylist-tick { color: var(--tkn-rose-text, #c2185b); margin-left: auto; flex: none; }
+.tkn-citylist-none { margin-left: auto; flex: none; font-size: 12px; color: #6b4a8a; white-space: nowrap; }
+.tkn-country-empty { margin: 8px 12px; font-size: 13px; color: #6b4a8a; }
 .tkn-btn {
   display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 48px; padding: 0 20px; border-radius: 12px;
   border: 1.5px solid transparent; font: inherit; font-size: 14px; font-weight: 700; text-decoration: none; cursor: pointer; box-sizing: border-box;
@@ -1862,10 +1884,9 @@ body:has([role="dialog"]) .tkn-float { display: none; }
 body:has([data-tk="bottom-bar"]) .tkn-float { bottom: 96px; }
 @media (min-width: 600px) { body:has([data-tk="bottom-bar"]) .tkn-float { bottom: 24px; } }
 @media (max-width: 599px) { .tkn-footer { padding-bottom: 96px; } }
+/* P1: the full "Post your ad" label on every phone (no short label). */
 @media (max-width: 419px) {
-  .tkn-post-long { display: none; }
-  .tkn-post-short { display: inline; }
-  .tkn-header-actions .tkn-btn-primary { height: 40px; min-height: 40px; }
+  .tkn-header-actions .tkn-btn-primary { padding: 0 14px; }
 }
 
 /* Search pop-up (shared with the hero search): glass panel inside the New design. */

@@ -3,7 +3,7 @@
 import Link from "next/link";
 import dynamic from "next/dynamic";
 import { usePathname } from "next/navigation";
-import { Menu, Search } from "lucide-react";
+import { Menu } from "lucide-react";
 import { useEffect, useState } from "react";
 import { HeaderCountry } from "./HeaderCountry";
 import type { CountryOption } from "@/server/locations/country-scope";
@@ -11,7 +11,8 @@ import { HeaderDrawer } from "./HeaderDrawer";
 import { isProbablySignedIn, openSignInFromLink } from "./auth/SignInSheet";
 import { useUrlPaths } from "./UrlPaths";
 import { safeHref } from "@/lib/sanitize";
-import { makeT, type UiTextMap } from "@/lib/ui/text";
+import type { UiTextMap } from "@/lib/ui/text";
+import { UtilityStrip } from "./new/UtilityStrip";
 import { applyPrefixes, loginPath, postAdPath } from "@/lib/urls";
 import type { ShellConfig } from "@/server/site-links/shell-config-rules";
 
@@ -23,9 +24,9 @@ type Cat = { slug: string; name: string };
 
 /**
  * H7.1: the header on every public page when the New design is on.
- * Logo, pill navigation, city picker, search, Log in, Post your ad. No saved or heart icon.
+ * Logo, pill navigation, country pill, Log in, Post your ad. No search button, no saved or heart icon (P1, as the mockup).
  * Under 1024 px the pill navigation becomes a burger that opens the drawer.
- * Search opens the same pop-up as the hero search (the "tk-open-search" event) and the header button.
+ * The search pop-up still opens from the listing pages and the hero (the "tk-open-search" event).
  */
 export function HeaderNew({
   siteName,
@@ -42,7 +43,6 @@ export function HeaderNew({
   categories: Cat[];
   texts?: UiTextMap;
 }) {
-  const t = makeT(texts);
   const path = usePathname() || "/";
   const paths = useUrlPaths();
   const [menuOpen, setMenuOpen] = useState(false);
@@ -60,12 +60,13 @@ export function HeaderNew({
   // The drawer and search sit outside the header: the header has a backdrop filter, which would trap a fixed layer inside it.
   return (
     <>
+    {path === "/" ? <UtilityStrip texts={texts} /> : null}
     <header className="tkn-header" data-tk="header">
       <div className="tkn-wrap tkn-header-row">
         <Link href="/" className="tkn-brand">
           <span className="tkn-mark" aria-hidden="true">t</span>
           <span className="tkn-brand-text">
-            <span className="tkn-brand-name">{siteName}</span>
+            <span className="tkn-brand-name">{siteName.toLowerCase()}</span>
             <span className="tkn-brand-tag">Free classifieds</span>
           </span>
         </Link>
@@ -82,16 +83,6 @@ export function HeaderNew({
         </nav>
         <div className="tkn-header-actions">
           <HeaderCountry countries={countries} />
-          <button
-            type="button"
-            className="tkn-icon-btn tkn-search-btn"
-            aria-label="Search"
-            aria-haspopup="dialog"
-            data-tk="header-search"
-            onClick={() => setSearchOpen(true)}
-          >
-            <Search size={20} aria-hidden="true" focusable="false" />
-          </button>
           {/* H7.12: Log in and Post your ad (signed out) open the sign-in card over this page; the links are the fallback. */}
           <Link href={loginPath(paths)} className="tkn-btn tkn-btn-ghost tkn-hide-sm" onClick={(event) => openSignInFromLink(event, "user")}>{shell.header.loginLabel}</Link>
           <Link
@@ -104,7 +95,6 @@ export function HeaderNew({
             }}
           >
             <span className="tkn-post-long">{shell.header.postLabel}</span>
-            <span className="tkn-post-short">{t("header.postShort")}</span>
           </Link>
           <button
             type="button"

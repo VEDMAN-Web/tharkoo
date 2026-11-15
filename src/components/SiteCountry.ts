@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { DEFAULT_COUNTRY_SLUG, SITE_COUNTRY_COOKIE } from "@/server/locations/country-scope";
+import { isoCountryBySlug } from "@/lib/countries";
 
 /** H7.4c: sent after the country cookie is set, so every picker on the page reads the new country. */
 export const SITE_COUNTRY_EVENT = "tk-country";
@@ -31,6 +32,20 @@ export function useSiteCountrySlug(): string {
  * The country on show for this visitor, read from the cookie after the page loads. Before that (and on the server) it is
  * India, or the first country when India is not enabled. Pass the enabled countries, in admin order.
  */
+/**
+ * H7.10: the country on show as a name and code. A chosen country the admin has not enabled is still shown (from the ISO
+ * list), so the header pill names the country the visitor picked.
+ */
+export function useChosenCountry(options: readonly { slug: string; name: string; code: string }[]): { slug: string; name: string; code: string } {
+  const slug = useSiteCountrySlug();
+  const enabled = options.find((option) => option.slug === slug);
+  if (enabled) return { slug: enabled.slug, name: enabled.name, code: enabled.code };
+  const iso = isoCountryBySlug(slug);
+  if (iso) return { slug: iso.slug, name: iso.name, code: iso.code };
+  const fallback = options.find((option) => option.slug === DEFAULT_COUNTRY_SLUG) ?? options[0];
+  return fallback ? { slug: fallback.slug, name: fallback.name, code: fallback.code } : { slug: DEFAULT_COUNTRY_SLUG, name: "India", code: "IN" };
+}
+
 export function useSiteCountry<T extends { slug: string }>(options: readonly T[]): T | undefined {
   const [slug, setSlug] = useState<string | undefined>(undefined);
   useEffect(() => {

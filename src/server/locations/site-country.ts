@@ -1,6 +1,7 @@
 import { connectDb } from "@/lib/db";
 import { loadLocations } from "@/server/locations/service";
 import { countryOptionsFrom, placesOfCountry, type CountryOption, type ScopedPlace } from "@/server/locations/country-scope";
+import { loadCountryDirectory } from "@/server/locations/countries";
 
 /** Every enabled country with its own states and cities. Static (no cookie read), so the pages stay cacheable. */
 export interface CountryPlaces extends CountryOption {
@@ -14,8 +15,15 @@ export async function countryPlaces(): Promise<CountryPlaces[]> {
   return countryOptionsFrom(rows).map((option) => ({ ...option, ...placesOfCountry(rows, option.slug) }));
 }
 
-/** The enabled countries only, for the header list. */
-export async function countryChoices(): Promise<CountryOption[]> {
+/** An enabled country with its live ad count, for the header country menu ("No ads yet" when 0). */
+export interface CountryChoice extends CountryOption {
+  ads: number;
+}
+
+/** The enabled countries in admin order, each with its live ad count. */
+export async function countryChoices(): Promise<CountryChoice[]> {
   await connectDb();
-  return countryOptionsFrom(await loadLocations());
+  const [rows, directory] = await Promise.all([loadLocations(), loadCountryDirectory()]);
+  const counts = new Map(directory.map((country) => [country.slug, country.count]));
+  return countryOptionsFrom(rows).map((option) => ({ ...option, ads: counts.get(option.slug) ?? 0 }));
 }
