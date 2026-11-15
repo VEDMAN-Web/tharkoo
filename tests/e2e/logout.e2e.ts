@@ -31,6 +31,9 @@ test.describe("H7.24 logout", () => {
     await expect(page.getByRole("navigation", { name: "Panel" })).toBeVisible();
     await logOutFromHeader(page);
     await page.goBack();
+    await expect(page.getByText(/Hello /)).toHaveCount(0);
+    await expect(page.getByRole("navigation", { name: "Panel" })).toHaveCount(0);
+    await page.goto("/u/account/");
     await expect(page).toHaveURL(/\/u\/login\//);
   });
   test("hovering and focusing Log out in the avatar menu does not sign out; clicking does", async ({ page, baseURL }) => {
