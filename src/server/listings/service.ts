@@ -252,6 +252,7 @@ function fieldDefs(category: CategoryDoc): FieldDefinition[] {
 }
 
 export async function promoted(listing: ListingRow) {
+  await connectDb();
   if (listing.badges?.some((badge) => badge && badge !== "free")) return true;
   return Boolean(
     await PromotionOrder.exists({
@@ -392,6 +393,7 @@ export async function listOwn(userId: string, query: { status?: ListingStatus; p
 }
 
 export async function readOwned(id: string, userId: string, roles: string[]) {
+  await connectDb();
   const listing = await load(id);
   if (listing.ownerId.toString() !== userId && !isStaffRole(roles)) throw new ForbiddenError("Forbidden");
   return ownerView(listing);
@@ -494,6 +496,7 @@ export async function patchListing(
     | { stage: "photos"; mediaIds: string[]; coverMediaId?: string },
   requestId: string,
 ) {
+  await connectDb();
   const listing = await owned(id, userId);
   if (listing.status === "removed" || listing.status === "deleted") throw new ConflictError("Listing is removed");
   let sensitive = false;
@@ -528,6 +531,7 @@ export async function submitListing(
   attestations: { adult: true; accurate: true; rights: true },
   requestId: string,
 ) {
+  await connectDb();
   const listing = await owned(id, userId);
   assertTransition(listing.status, "active");
   if (!listing.title.trim() || !listing.description.trim() || !listing.cityId) {
@@ -616,10 +620,12 @@ async function move(id: string, userId: string, to: ListingStatus, action: strin
 }
 
 export async function pauseListing(id: string, userId: string, requestId: string) {
+  await connectDb();
   return ownerView(await move(id, userId, "paused", "listing.pause", requestId));
 }
 
 export async function resumeListing(id: string, userId: string, requestId: string) {
+  await connectDb();
   const listing = await owned(id, userId);
   assertTransition(listing.status, "active");
   if (listing.expiresAt && listing.expiresAt.getTime() <= Date.now()) {
@@ -633,6 +639,7 @@ export async function resumeListing(id: string, userId: string, requestId: strin
 }
 
 export async function renewListing(id: string, userId: string, requestId: string) {
+  await connectDb();
   const listing = await owned(id, userId);
   if (listing.status === "expired") assertTransition("expired", "active");
   else if (listing.status !== "active" && listing.status !== "paused") {
@@ -650,6 +657,7 @@ export async function renewListing(id: string, userId: string, requestId: string
 }
 
 export async function duplicateListing(id: string, userId: string, requestId: string) {
+  await connectDb();
   const listing = await owned(id, userId);
   const copy = await Listing.create({
     ownerId: listing.ownerId,
@@ -675,11 +683,13 @@ export async function duplicateListing(id: string, userId: string, requestId: st
 }
 
 export async function removeListing(id: string, userId: string, requestId: string) {
+  await connectDb();
   await move(id, userId, "removed", "listing.remove", requestId);
   return { status: "removed" as const };
 }
 
 export async function listVersions(id: string, userId: string, roles: string[]) {
+  await connectDb();
   const listing = await load(id);
   if (listing.ownerId.toString() !== userId && !isStaffRole(roles)) throw new ForbiddenError("Forbidden");
   const versions = await ListingVersion.find({ listingId: listing._id }).sort({ version: 1 });
@@ -701,6 +711,7 @@ export async function revealContact(
   requestId: string,
   ip: string,
 ) {
+  await connectDb();
   const listing = await load(id);
   if (listing.status === "removed" || listing.status === "deleted") throw new GoneError();
   if (listing.status !== "active") throw new NotFoundError("Not found");

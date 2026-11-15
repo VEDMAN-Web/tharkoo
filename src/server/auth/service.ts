@@ -145,6 +145,7 @@ function publicUser(user: UserDoc & { _id: Types.ObjectId }): PublicUser {
  * once, before the first ad. A duplicate (two codes at once) throws the duplicate-key error for the caller to handle.
  */
 export async function createCodeAccount(email: string) {
+  await connectDb();
   return User.create({
     email,
     displayName: "Member",
@@ -170,6 +171,7 @@ export function stagingAutoVerifyDecision(): "on" | "off" {
 }
 
 export async function registerUser(input: RegisterInput) {
+  await connectDb();
   await ready();
   if (await codeOnlyLoginEnabled()) throw new ForbiddenError("Passwords are off. Sign up with a one-time code.");
   const dateOfBirth = parseDateOnly(input.dateOfBirth);
@@ -211,6 +213,7 @@ export async function registerUser(input: RegisterInput) {
 }
 
 export async function verifyEmail(token: string) {
+  await connectDb();
   await ready();
   const doc = await EmailVerificationToken.findOne({
     tokenHash: sha256(token),
@@ -231,6 +234,7 @@ export async function loginUser(input: {
   ip?: string;
   existingToken?: string;
 }) {
+  await connectDb();
   await ready();
   await bootstrapAdmin();
   const email = input.email.toLowerCase();
@@ -252,6 +256,7 @@ export async function createSession(
   user: UserDoc & { _id: Types.ObjectId },
   input: { userAgent?: string | null; ip?: string; existingToken?: string },
 ) {
+  await connectDb();
   if (input.existingToken) {
     await Session.updateOne(
       { tokenHash: hashToken(input.existingToken), revokedAt: null },
@@ -270,6 +275,7 @@ export async function createSession(
 }
 
 export async function logoutSession(token: string | undefined) {
+  await connectDb();
   await ready();
   if (!token) throw new UnauthorizedError("Sign in required");
   const updated = await Session.updateOne(
@@ -281,6 +287,7 @@ export async function logoutSession(token: string | undefined) {
 }
 
 export async function userFromToken(token: string | undefined) {
+  await connectDb();
   if (!token) return null;
   await ready();
   const session = await Session.findOne({
@@ -295,12 +302,14 @@ export async function userFromToken(token: string | undefined) {
 }
 
 export async function requireUser(token: string | undefined) {
+  await connectDb();
   const found = await userFromToken(token);
   if (!found) throw new UnauthorizedError("Sign in required");
   return found;
 }
 
 export async function forgotPassword(email: string) {
+  await connectDb();
   await ready();
   const user = await User.findOne({ email: email.toLowerCase(), status: "active" });
   if (user && (isStaffRole(user.roles) || !(await codeOnlyLoginEnabled()))) {
@@ -320,6 +329,7 @@ export async function forgotPassword(email: string) {
 }
 
 export async function resetPassword(token: string, password: string) {
+  await connectDb();
   await ready();
   const doc = await PasswordResetToken.findOne({
     tokenHash: sha256(token),
@@ -339,6 +349,7 @@ export async function resetPassword(token: string, password: string) {
 }
 
 export async function listSessions(userId: string, currentSessionId: string) {
+  await connectDb();
   await ready();
   const sessions = await Session.find({ userId, revokedAt: null, expiresAt: { $gt: new Date() } })
     .sort({ createdAt: -1 })
@@ -355,6 +366,7 @@ export async function listSessions(userId: string, currentSessionId: string) {
 }
 
 export async function revokeOwnedSession(userId: string, sessionId: string) {
+  await connectDb();
   await ready();
   if (!Types.ObjectId.isValid(sessionId)) throw new NotFoundError("Session not found");
   const updated = await Session.updateOne(
@@ -372,6 +384,7 @@ async function phoneEnabled() {
 }
 
 export async function startPhone(userId: string, rawPhone: string) {
+  await connectDb();
   await ready();
   if (!(await phoneEnabled())) throw new ForbiddenError("Phone verification is not available");
   const phone = normalizePhone(rawPhone);
@@ -394,6 +407,7 @@ export async function startPhone(userId: string, rawPhone: string) {
 }
 
 export async function confirmPhone(userId: string, challengeId: string, code: string) {
+  await connectDb();
   await ready();
   if (!Types.ObjectId.isValid(challengeId)) throw new UnauthorizedError("Code is invalid or expired");
   const doc = await PhoneChallenge.findOne({
@@ -419,6 +433,7 @@ export async function confirmPhone(userId: string, challengeId: string, code: st
 
 /** Creates one superadmin when both env vars are set and that email is absent. */
 export async function bootstrapAdmin(): Promise<"created" | "skipped"> {
+  await connectDb();
   const email = process.env.ADMIN_BOOTSTRAP_EMAIL?.trim().toLowerCase();
   const password = process.env.ADMIN_BOOTSTRAP_PASSWORD ?? "";
   if (!email || password.length < 8 || !process.env.MONGODB_URI) return "skipped";

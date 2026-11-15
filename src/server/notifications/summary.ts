@@ -3,6 +3,7 @@ import { walletBalance } from "@/server/billing";
 import { unreadCount } from "@/server/chat/service";
 import { getCategories, getCities, getCreditPacks } from "@/lib/queries";
 import { unreadForOwner } from "@/server/support/tickets";
+import { connectDb } from "@/lib/db";
 
 /**
  * H7.6: what the user panel shell shows: coins, unread counts and the first name for the greeting.
@@ -22,6 +23,7 @@ export type PanelSummary =
     };
 
 export async function loadPanelSummary(token: string | undefined): Promise<PanelSummary> {
+  await connectDb();
   const session = await userFromToken(token).catch(() => null);
   if (!session) return { signedIn: false };
   const userId = session.user.id;

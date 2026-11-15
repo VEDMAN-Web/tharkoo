@@ -30,6 +30,7 @@ import {
 import { boostFitsBeforeExpiry } from "@/server/billing/boost-window";
 import { productCodeDenied } from "@/server/shared/policy";
 import { randomToken, sha256 } from "@/server/shared/crypto";
+import { connectDb } from "@/lib/db";
 
 const audit = new AuditRepository();
 
@@ -59,6 +60,7 @@ async function starCount(cityId: Types.ObjectId, productId: Types.ObjectId) {
 }
 
 export async function listProducts() {
+  await connectDb();
   await readyBilling();
   const rows = await PromotionProduct.find({ enabled: { $ne: false } }).sort({ amount: 1 }).lean();
   const products = [];
@@ -85,6 +87,7 @@ export async function listProducts() {
 }
 
 export async function listOrders(userId: string, page: number, pageSize: number) {
+  await connectDb();
   await readyBilling();
   const id = objectId(userId, "userId");
   const filter = { userId: id };
@@ -118,6 +121,7 @@ export async function checkoutPack(input: {
   requestId: string;
   ip?: string;
 }) {
+  await connectDb();
   await readyBilling();
   const userId = objectId(input.userId, "userId");
   const packId = objectId(input.packId, "packId");
@@ -207,6 +211,7 @@ export async function applyWebhook(
   },
   requestId: string,
 ) {
+  await connectDb();
   await readyBilling();
   const payment = body.providerRef
     ? await Payment.findOne({ providerRef: body.providerRef })
@@ -315,6 +320,7 @@ export async function purchasePromotion(input: {
   requestId: string;
   ip?: string;
 }) {
+  await connectDb();
   await readyBilling();
   const userId = objectId(input.userId, "userId");
   const listingId = objectId(input.listingId, "listingId");
@@ -452,6 +458,7 @@ export async function refundPayment(input: {
   requestId: string;
   ip?: string;
 }) {
+  await connectDb();
   await readyBilling();
   if (!input.roles.includes("superadmin") && !input.roles.includes("finance")) {
     throw new ForbiddenError("Forbidden");
@@ -492,6 +499,7 @@ export async function refundPayment(input: {
 }
 
 export async function runBoostCron(requestId: string, now = new Date()) {
+  await connectDb();
   await readyBilling();
   const ended = await PromotionOrder.find({ status: "active", endsAt: { $lte: now } });
   let expired = 0;
@@ -549,6 +557,7 @@ export async function runBoostCron(requestId: string, now = new Date()) {
 }
 
 export async function renewDuePromotions(requestId: string) {
+  await connectDb();
   await readyBilling();
   const due = await PromotionOrder.find({ status: "active", autoRenew: true, endsAt: { $lte: new Date() } }).limit(40);
   let renewed = 0;

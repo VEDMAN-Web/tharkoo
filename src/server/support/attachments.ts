@@ -5,6 +5,7 @@ import { SupportTicket, TicketMessage } from "@/server/models/support";
 import { SupportAttachment } from "@/server/models/support-attachment";
 import { canWorkDesk } from "@/server/support/access";
 import { SCREENSHOT_MAX_BYTES, SCREENSHOT_MAX_COUNT, SCREENSHOT_TYPES } from "@/server/support/constants";
+import { connectDb } from "@/lib/db";
 
 export interface Screenshot {
   contentType: (typeof SCREENSHOT_TYPES)[number];
@@ -38,6 +39,7 @@ export async function screenshotsFrom(form: FormData | null): Promise<Screenshot
 }
 
 export async function storeScreenshots(ticketId: Types.ObjectId, uploadedBy: string, shots: Screenshot[]): Promise<Types.ObjectId[]> {
+  await connectDb();
   if (shots.length === 0) return [];
   const docs = await SupportAttachment.insertMany(
     shots.map((shot) => ({
@@ -53,6 +55,7 @@ export async function storeScreenshots(ticketId: Types.ObjectId, uploadedBy: str
 
 /** An owner may see a screenshot only on a ticket they opened, and never on an internal note. */
 export async function ownerCanSeeAttachment(userId: string, attachmentId: string): Promise<boolean> {
+  await connectDb();
   if (!mongoose.isValidObjectId(attachmentId)) return false;
   const message = await TicketMessage.findOne({ attachments: new Types.ObjectId(attachmentId), internal: false })
     .select("ticketId")
@@ -63,6 +66,7 @@ export async function ownerCanSeeAttachment(userId: string, attachmentId: string
 
 /** The screenshot when the viewer may see it, otherwise null. Staff on the desk may see any screenshot. */
 export async function attachmentFor(viewer: { id: string; roles: readonly string[] }, attachmentId: string) {
+  await connectDb();
   if (!mongoose.isValidObjectId(attachmentId)) return null;
   const allowed = canWorkDesk(viewer.roles) || (await ownerCanSeeAttachment(viewer.id, attachmentId));
   if (!allowed) return null;

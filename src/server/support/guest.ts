@@ -74,6 +74,7 @@ export function guestLink(token: string): string {
 
 /** Stores a new link for the ticket (replacing any older one) and returns the token to send. */
 export async function issueGuestLink(ticketId: string, now: Date): Promise<string> {
+  await connectDb();
   const token = newGuestLinkToken();
   await SupportTicket.updateOne(
     { _id: ticketId },
@@ -84,6 +85,7 @@ export async function issueGuestLink(ticketId: string, now: Date): Promise<strin
 
 /** Emails a fresh link to the guest. Returns false when no mail provider is set. */
 export async function sendGuestLink(input: { ticketId: string; number: number; email: string; now: Date }): Promise<boolean> {
+  await connectDb();
   if (!process.env.BREVO_API_KEY?.trim()) return false;
   const token = await issueGuestLink(input.ticketId, input.now);
   await mailerFromEnv().send({
@@ -96,6 +98,7 @@ export async function sendGuestLink(input: { ticketId: string; number: number; e
 
 /** Called by the desk when staff reply to a guest ticket that has an email address. */
 export async function notifyGuestOfReply(input: { ticketId: string; number: number; email: string; now?: Date }) {
+  await connectDb();
   await sendGuestLink({ ticketId: input.ticketId, number: input.number, email: input.email, now: input.now ?? new Date() });
 }
 
@@ -168,6 +171,7 @@ async function loadByToken(raw: unknown, now: Date): Promise<TicketRow> {
 
 /** The guest's own ticket, without internal notes. Only the ticket the link belongs to. */
 export async function guestThread(raw: unknown, now = new Date()) {
+  await connectDb();
   const ticket = await loadByToken(raw, now);
   const rows = (await TicketMessage.find({ ticketId: ticket._id, internal: false })
     .sort({ createdAt: 1, _id: 1 })
@@ -178,6 +182,7 @@ export async function guestThread(raw: unknown, now = new Date()) {
 
 /** The guest answers through the link. The reply goes to the desk like any customer reply. */
 export async function guestReply(raw: unknown, requestId: string, now = new Date()) {
+  await connectDb();
   const input = parseInput(guestReplySchema, raw);
   const ticket = await loadByToken({ t: input.t }, now);
   if (isClosed(ticket)) throw new ConflictError("This ticket is closed. Open a new ticket if you still need help.");

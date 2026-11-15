@@ -497,6 +497,7 @@ export async function prepareImport(
   files: UploadedFiles,
   videos: ChosenVideos = new Map(),
 ): Promise<Prepared> {
+  await connectDb();
   assertStaff(actor);
   const { headers, body } = readTable(csv);
   const partner = await findPartner(partnerEmail);
@@ -590,6 +591,7 @@ export async function dryRunImport(
   fileNames: readonly string[] = [],
   videoFiles: readonly ChosenVideo[] = [],
 ): Promise<DryRunReport> {
+  await connectDb();
   return toReport(await prepareImport(actor, partnerEmail, csv, uploadedFromNames(fileNames), chosenVideos(videoFiles)));
 }
 
@@ -604,6 +606,7 @@ async function uniqueSlug(title: string, id: Types.ObjectId) {
 }
 
 export async function finalise(id: string, status: ImportStatus, actor: ImportActor) {
+  await connectDb();
   const listing = await Listing.findById(id);
   if (!listing) throw new NotFoundError("Not found");
   listing.status = status;
@@ -647,6 +650,7 @@ export function photoIdsFor(photos: RowPhoto[], files: UploadedFiles): string[] 
  * so this skips the plan limit of the normal photo step, which would refuse a superadmin's category maximum.
  */
 export async function attachPhotos(listingId: string, mediaIds: string[]) {
+  await connectDb();
   await Listing.updateOne(
     { _id: listingId },
     { $set: { mediaIds: mediaIds.map((id) => new Types.ObjectId(id)), coverMediaId: new Types.ObjectId(mediaIds[0]) } },
@@ -665,6 +669,7 @@ export function videoIdsFor(names: readonly string[], videos: ChosenVideos): str
 
 /** Puts the videos on the ad. Like photos, they belong to the listing; the ad page shows them. */
 export async function attachVideos(listingId: string, mediaIds: string[]) {
+  await connectDb();
   await MediaAsset.updateMany({ _id: { $in: mediaIds } }, { $set: { listingId: new Types.ObjectId(listingId) } });
 }
 
@@ -724,6 +729,7 @@ export async function runImport(
   status: ImportStatus,
   requestId: string,
 ): Promise<ImportReport> {
+  await connectDb();
   assertStaff(actor);
   assertPublishRight(actor, status);
   const prepared = await prepareImport(actor, partnerEmail, csv, uploadedFromNames([]));
@@ -749,6 +755,7 @@ export async function importPlanRange(
   status: ImportStatus,
   requestId: string,
 ): Promise<{ imported: number; failed: number; videos: number }> {
+  await connectDb();
   let imported = 0;
   let failed = 0;
   let videos = 0;

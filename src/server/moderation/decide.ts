@@ -50,6 +50,7 @@ async function record(email: string, id: string, action: string, after: Record<s
 
 /** pending -> active: the same fields normal publishing sets (slug, publish date, expiry, indexable). */
 export async function approveListing(input: { id: string; roles: string[]; email: string }) {
+  await connectDb();
   const listing = await pendingListing(input.id, input.roles);
   listing.status = "active";
   listing.seoNoindex = false;
@@ -68,6 +69,7 @@ export async function approveListing(input: { id: string; roles: string[]; email
 
 /** pending -> rejected, with a reason that is kept in the audit log. */
 export async function rejectListing(input: { id: string; roles: string[]; email: string; reason: string }) {
+  await connectDb();
   const reason = input.reason.trim();
   if (reason.length < 1 || reason.length > 500) throw new ValidationError("Give a reason of 1 to 500 characters");
   const listing = await pendingListing(input.id, input.roles);

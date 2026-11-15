@@ -65,6 +65,7 @@ export async function saveLocalMedia(
   file: { type: string; data: Buffer },
   requestId: string,
 ) {
+  await connectDb();
   const asset = await loadOwned(mediaId, userId);
   if (asset.kind === "video") return saveLocalVideo(userId, asset, file, requestId);
   if (!ALLOWED.has(file.type) || file.data.length > MAX_BYTES) {
@@ -242,6 +243,7 @@ export async function signMedia(
 }
 
 export async function completeMedia(userId: string, mediaId: string, requestId: string) {
+  await connectDb();
   const asset = await loadOwned(mediaId, userId);
   if (asset.objectKey.startsWith("/uploads/") || asset.objectKey.startsWith("private:")) {
     return { status: asset.status === "cleared" ? ("cleared" as const) : ("scanning" as const) };
@@ -275,6 +277,7 @@ export async function completeMedia(userId: string, mediaId: string, requestId: 
 }
 
 export async function getMedia(userId: string, roles: string[], mediaId: string) {
+  await connectDb();
   const asset = await loadOwned(mediaId);
   if (asset.ownerId.toString() !== userId && !isStaffRole(roles)) throw new ForbiddenError("Not allowed");
   return {
@@ -288,6 +291,7 @@ export async function getMedia(userId: string, roles: string[], mediaId: string)
 }
 
 export async function signedIdDocumentUrl(userId: string, roles: string[], mediaId: string) {
+  await connectDb();
   const asset = await loadOwned(mediaId);
   if (asset.kind !== "id_document") throw new ForbiddenError("Not an identity document");
   if (asset.ownerId.toString() !== userId && !isStaffRole(roles)) throw new ForbiddenError("Not allowed");
@@ -308,6 +312,7 @@ export async function signedIdDocumentUrl(userId: string, roles: string[], media
 }
 
 export async function deleteMedia(userId: string, mediaId: string, requestId: string) {
+  await connectDb();
   const asset = await loadOwned(mediaId);
   if (asset.ownerId.toString() !== userId) throw new ForbiddenError("Not allowed");
   const stored = localFile(asset.objectKey);

@@ -1,10 +1,12 @@
 import { AuditRepository } from "@/server/audit";
 import { User } from "@/server/models";
+import { connectDb } from "@/lib/db";
 
 const audit = new AuditRepository();
 
 /** Writes an audit entry for a staff request that the role allowlist refused. */
 export async function auditAdminDenial(actor: { email: string; roles: readonly string[] }, model: string, op: string) {
+  await connectDb();
   try {
     const user = actor.email ? await User.findOne({ email: actor.email }).select("_id") : null;
     await audit.append({

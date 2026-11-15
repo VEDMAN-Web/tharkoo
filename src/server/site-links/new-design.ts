@@ -36,6 +36,7 @@ export async function newDesignOn(): Promise<boolean> {
 
 /** Superadmin only. Writes the switch and an audit entry with the value before and after. */
 export async function setNewDesign(input: { actorId: string; roles: readonly string[]; on: unknown; requestId: string }) {
+  await connectDb();
   if (!input.roles.includes("superadmin")) throw new ForbiddenError("Only a superadmin can change this setting");
   const { on } = parseInput(newDesignBodySchema, { on: input.on });
   const before = await newDesignOn();

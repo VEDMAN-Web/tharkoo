@@ -57,6 +57,7 @@ export function isAdFolder(folder: string) {
 
 /** The incoming transformation for an upload into this folder, or null when no mark applies. */
 export async function watermarkTransformationFor(folder: string): Promise<string | null> {
+  await connectDb();
   if (!isAdFolder(folder)) return null;
   const settings = await readWatermarkSettings();
   return settings.enabled ? cloudinaryWatermarkTransformation(settings) : null;
@@ -132,6 +133,7 @@ export const LOCAL_VIDEO_WATERMARK_MESSAGE =
   "Videos need Cloudinary on this server while the watermark is on. Turn the watermark off in Settings, or add the Cloudinary settings.";
 
 export async function assertLocalVideoAllowed() {
+  await connectDb();
   const settings = await readWatermarkSettings();
   if (settings.enabled) throw new PolicyViolationError(LOCAL_VIDEO_WATERMARK_MESSAGE);
 }
@@ -144,6 +146,7 @@ export async function prepareLocalAdFile(
   kind: "image" | "video",
   file: { type: string; data: Buffer },
 ): Promise<{ data: Buffer; watermarked: boolean }> {
+  await connectDb();
   const settings = await readWatermarkSettings();
   if (!settings.enabled) return { data: file.data, watermarked: false };
   if (kind === "video") {

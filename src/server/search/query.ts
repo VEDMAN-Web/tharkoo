@@ -337,6 +337,7 @@ function detailRows(attributes?: Record<string, unknown>) {
 }
 
 export async function buildFilter(input: ListingQuery): Promise<QueryFilter<ListingDoc> | null> {
+  await connectDb();
   const [categories, locations] = await Promise.all([loadCategories(), loadLocations()]);
   const filter: Record<string, unknown> = { status: "active" };
   if (input.categorySlug) {
@@ -460,6 +461,7 @@ function trustMarks(status: string | undefined, adult: Date | undefined, verifie
 }
 
 export async function presentRows(docs: Row[], promotions: Map<string, RankPromotion[]>, now: Date) {
+  await connectDb();
   const ownerIds = [...new Set(docs.map((doc) => (doc.ownerId ? String(doc.ownerId) : "")).filter(Boolean))];
   const [categories, locations, photos, people] = await Promise.all([
     loadCategories(),
@@ -633,6 +635,7 @@ async function loadPickLimits() {
 
 /** The categories for the public site. Each field carries its pick limit (maxPicks), or null when none is set. */
 export async function publicCategories() {
+  await connectDb();
   const [rows, limits] = await Promise.all([loadCategories(), loadPickLimits()]);
   return rows
     .filter((row) => row.enabled !== false && !row.deletedAt)
@@ -648,6 +651,7 @@ export async function publicCategories() {
 }
 
 export async function categoryBySlug(slug: string) {
+  await connectDb();
   const rows = await loadCategories();
   const doc = rows.find((row) => row.enabled !== false && !row.deletedAt && matchSlug(row, slug));
   return doc ? presentCategory(doc) : null;

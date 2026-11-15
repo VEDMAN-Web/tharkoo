@@ -88,6 +88,7 @@ export async function touchOwnPresence(userId: string, now: Date = new Date()): 
 
 /** What buyers may see about a seller: the status only, never the switch or the times. */
 export async function publicStatus(userId: string, now: Date = new Date()): Promise<{ status: PresenceStatus; callsAllowed: boolean }> {
+  await connectDb();
   const own = await readOwnPresence(userId, now);
   return { status: own.status, callsAllowed: own.callsAllowed };
 }

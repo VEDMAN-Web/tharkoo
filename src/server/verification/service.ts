@@ -34,6 +34,7 @@ export async function uploadUrl(
   input: { contentType: "image/jpeg" | "image/png" | "image/webp"; byteSize: number },
   requestId: string,
 ) {
+  await connectDb();
   assertManual();
   const signed = await signMedia(userId, { ...input, kind: "id_document" }, requestId);
   return { uploadUrl: signed.uploadUrl, assetId: signed.mediaId };

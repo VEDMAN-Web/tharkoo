@@ -37,6 +37,7 @@ export function objectId(value: string, field: string) {
 }
 
 export async function walletBalance(userId: string) {
+  await connectDb();
   await readyBilling();
   return sumBalance(objectId(userId, "userId"));
 }
@@ -141,6 +142,7 @@ export async function creditWallet(input: {
   auditReason?: string;
   ip?: string;
 }) {
+  await connectDb();
   if (!Number.isInteger(input.amount) || input.amount < 1) {
     throw new ValidationError("Invalid request", { amount: ["Invalid amount"] });
   }
@@ -168,6 +170,7 @@ export async function debitWallet(input: {
   actorId?: string;
   ip?: string;
 }) {
+  await connectDb();
   if (!Number.isInteger(input.amount) || input.amount < 0) {
     throw new ValidationError("Invalid request", { amount: ["Invalid amount"] });
   }
@@ -186,6 +189,7 @@ export async function debitWallet(input: {
 }
 
 export async function listEntries(userId: string, page: number, pageSize: number) {
+  await connectDb();
   await readyBilling();
   const id = objectId(userId, "userId");
   const filter = { userId: id };

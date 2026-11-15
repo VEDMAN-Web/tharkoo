@@ -101,6 +101,7 @@ export async function listNotFound(days = 7, now = new Date()): Promise<NotFound
 }
 
 export async function total404Hits(days = 7, now = new Date()) {
+  await connectDb();
   const rows = await listNotFound(days, now);
   return rows.reduce((sum, row) => sum + row.hits, 0);
 }

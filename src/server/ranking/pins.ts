@@ -1,6 +1,7 @@
 
 /** One model for pins: defined in src/server/models/layout.ts (collection `listingpins`). */
 import { ListingPin, type ListingPinDoc } from "@/server/models/layout";
+import { connectDb } from "@/lib/db";
 export { ListingPin, type ListingPinDoc };
 
 export type PinWindow = Pick<ListingPinDoc, "listingId" | "position" | "startsAt" | "endsAt">;
@@ -63,6 +64,7 @@ export function pinScopeOf(input: ScopeInput): string | null {
 }
 
 export async function loadActivePins(scope: string, now: Date): Promise<PinWindow[]> {
+  await connectDb();
   const pins = await ListingPin.find({ scope }).lean();
   return pins.filter((pin) => isPinActive(pin, now));
 }

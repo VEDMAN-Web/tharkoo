@@ -1,5 +1,6 @@
 import type { Types } from "mongoose";
 import { AuditEvent } from "@/server/models/trust";
+import { connectDb } from "@/lib/db";
 
 export interface AuditInput {
   actorId?: Types.ObjectId | string | null;
@@ -24,6 +25,7 @@ export interface AuditQuery {
 /** Insert and read only. Updates and deletes are not part of this API. */
 export class AuditRepository {
   async append(event: AuditInput) {
+    await connectDb();
     return AuditEvent.create({
       actorId: event.actorId ?? null,
       actorType: event.actorType,
@@ -39,6 +41,7 @@ export class AuditRepository {
   }
 
   async list(filter: AuditQuery = {}) {
+    await connectDb();
     const query: Record<string, unknown> = {};
     if (filter.actorId) query.actorId = filter.actorId;
     if (filter.action) query.action = filter.action;

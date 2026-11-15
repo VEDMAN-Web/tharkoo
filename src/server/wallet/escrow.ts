@@ -1,6 +1,7 @@
 import { postTransaction } from "@/server/ledger/service";
 import { assertVideoTourAllowed } from "@/server/wallet/listing-guard";
 import { assertSpendAllowed } from "@/server/wallet/guards";
+import { connectDb } from "@/lib/db";
 
 interface EscrowRef {
   userId: string;
@@ -20,6 +21,7 @@ const escrowOwner = (bookingId: string) => `booking:${bookingId}`;
  * if a registered spend guard says no, or if the wallet is short.
  */
 export async function holdInEscrow(input: EscrowRef & { listingId: string }) {
+  await connectDb();
   await assertVideoTourAllowed(input.listingId);
   await assertSpendAllowed({
     userId: input.userId,
@@ -45,7 +47,8 @@ export async function holdInEscrow(input: EscrowRef & { listingId: string }) {
 }
 
 /** A declined or cancelled booking: the whole hold goes back to the user's wallet. */
-export function refundEscrow(input: EscrowRef) {
+export async function refundEscrow(input: EscrowRef) {
+  await connectDb();
   return postTransaction({
     idempotencyKey: `escrow-refund:${input.bookingId}`,
     kind: "escrow_refund",
@@ -62,7 +65,8 @@ export function refundEscrow(input: EscrowRef) {
 }
 
 /** A completed booking: the vendor's share moves to vendor_earnings. The platform fee, if any, is platform_revenue. */
-export function releaseEscrow(input: EscrowRef & { platformFee?: number }) {
+export async function releaseEscrow(input: EscrowRef & { platformFee?: number }) {
+  await connectDb();
   const fee = input.platformFee ?? 0;
   return postTransaction({
     idempotencyKey: `escrow-release:${input.bookingId}`,

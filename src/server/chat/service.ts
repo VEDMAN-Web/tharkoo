@@ -112,6 +112,7 @@ export async function sendMessage(
   input: { text?: unknown; image?: { type: string; data: Buffer } | null },
   now = new Date(),
 ) {
+  await connectDb();
   const conv = await participantConversation(userId, conversationId);
   if (conv.blocked) throw new ForbiddenError("You can no longer message in this conversation");
   const text = cleanChatText(input.text);
@@ -125,6 +126,7 @@ export async function sendMessage(
 
 /** Messages in a conversation, oldest first. Reading marks the other side's messages as read. */
 export async function listMessages(userId: string, conversationId: string, options: { after?: string } = {}) {
+  await connectDb();
   const conv = await participantConversation(userId, conversationId);
   await ChatMessage.updateMany(
     { conversationId: conv._id, senderId: { $ne: userId }, readAt: { $exists: false } },
@@ -193,6 +195,7 @@ export async function unreadCount(userId: string) {
 
 /** Either side can block. Nobody can send in a blocked conversation. */
 export async function blockConversation(userId: string, conversationId: string, requestId: string = randomUUID()) {
+  await connectDb();
   const conv = await participantConversation(userId, conversationId);
   await Conversation.updateOne({ _id: conv._id }, { $set: { blocked: true, blockedBy: userId, blockedAt: new Date() } });
   await audit.append({ actorId: userId, actorType: "user", action: "chat.block", targetType: "conversation", targetId: conv._id.toString(), requestId });
@@ -206,6 +209,7 @@ export async function reportConversation(
   input: { reason?: unknown },
   requestId: string = randomUUID(),
 ) {
+  await connectDb();
   const conv = await participantConversation(userId, conversationId);
   const reason = cleanChatText(input.reason).slice(0, 300) || "Reported";
   if (conv.reportedAt) throw new ConflictError("This conversation is already reported");

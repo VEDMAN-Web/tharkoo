@@ -14,6 +14,7 @@ import {
   SEED_BATCH,
   STATES,
 } from "@/server/seed/data";
+import { connectDb } from "@/lib/db";
 
 export { SEED_BATCH } from "@/server/seed/data";
 
@@ -424,6 +425,7 @@ async function snapshot(): Promise<{ backupId: string }> {
 
 /** Read-only plan. Does not write seed rows or seed_backups. */
 export async function dryRunSeed(): Promise<SeedPlan> {
+  await connectDb();
   assertSeedAllowed();
   const [locations, categories, products, packs, flags, listings] = await Promise.all([
     walkLocations(true),
@@ -451,6 +453,7 @@ export function formatDryRun(plan: SeedPlan): string {
 
 /** Insert-only. Snapshots first and inserts nothing if that write fails. */
 export async function runSeed(): Promise<SeedResult> {
+  await connectDb();
   assertSeedAllowed();
   const backup = await snapshot();
   const [locations, categories, products, packs, flags] = await Promise.all([
@@ -520,6 +523,7 @@ function removedIds(current: { _id: Types.ObjectId }[], snapshotRows: PlainDoc[]
  * points at a row that would disappear.
  */
 export async function rollbackSeed(batch = SEED_BATCH): Promise<RollbackResult | RollbackRefusal> {
+  await connectDb();
   if (!/^seed-\d{4}-\d{2}-\d{2}$/.test(batch)) throw new Error("Pass --batch seed-YYYY-MM-DD");
   const backup = await SeedBackup.findOne({ batch }).sort({ takenAt: -1, _id: -1 });
   if (!backup) throw new Error(`No seed backup for ${batch}`);
