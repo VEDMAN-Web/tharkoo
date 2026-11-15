@@ -2550,6 +2550,26 @@
         "tests/server/db/**",
         "docs/ownership.json"
       ]
+    },
+    "H7.8": {
+      "branchPrefix": "haiku/h7.8",
+      "globs": [
+        "src/components/upload/**",
+        "src/components/admin/ui/ImagePicker.tsx",
+        "src/components/admin/layout-editor/FieldControls.tsx",
+        "src/app/admin/ads/create/AdMediaPicker.tsx",
+        "src/app/admin/ads/create/ad-upload.ts",
+        "src/app/admin/ads/create/useAdMedia.ts",
+        "src/app/admin/seo/settings/SettingsForm.tsx",
+        "src/components/post/PhotoStep.tsx",
+        "src/components/chat/SupportChat.tsx",
+        "src/components/HeaderNew.tsx",
+        "src/components/PathChrome.tsx",
+        "src/components/SiteShell.tsx",
+        "src/lib/ui/text.ts",
+        "tests/server/upload/**",
+        "docs/ownership.json"
+      ]
     }
   }
 }
