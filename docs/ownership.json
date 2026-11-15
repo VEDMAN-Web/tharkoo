@@ -2569,7 +2569,21 @@
         "src/lib/ui/text.ts",
         "tests/server/upload/**",
         "tests/e2e/h78-uploader.e2e.ts",
-        "docs/ownership.json"
+        "docs/ownership.json",
+        "src/components/help/**",
+        "src/components/vendor/NewVendorPanel.tsx",
+        "src/components/buyer/SavedAdsRail.tsx",
+        "src/components/buyer/AlertsPanel.tsx",
+        "src/components/buyer/NotificationsPanel.tsx",
+        "src/components/buyer/UserPanelHome.tsx",
+        "src/server/availability/listings.ts",
+        "src/server/search/query.ts",
+        "src/components/new/listing-filters.ts",
+        "src/components/new/ListingFilterPanel.tsx",
+        "src/components/new/listing-frame-props.tsx",
+        "src/app/[category]/page.tsx",
+        "src/app/[category]/[location]/page.tsx",
+        "src/app/admin/ads/create/CreateAdForm.tsx"
       ]
     },
     "H7.4b": {
