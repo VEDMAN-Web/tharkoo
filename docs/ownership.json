@@ -2733,12 +2733,41 @@
         "src/components/new/home-spec.css",
         "src/lib/countries.ts",
         "src/lib/ui/text.ts",
+        "src/lib/ui/site-content.ts",
         "src/server/locations/site-country.ts",
         "src/app/globals.css",
         "public/flags/**",
+        "tests/server/shell/home-config-banner.test.ts",
         "tests/e2e/h7-4d-followups.e2e.ts",
         "tests/e2e/shell.e2e.ts",
         "docs/ownership.json"
+      ]
+    },
+    "H7.12": {
+      "branchPrefix": "haiku/h7.12",
+      "globs": [
+        "docs/ownership.json",
+        "src/app/u/login/page.tsx",
+        "src/components/ContactButtons.tsx",
+        "src/components/HeaderDrawer.tsx",
+        "src/components/HeaderNew.tsx",
+        "src/components/PathChrome.tsx",
+        "src/components/SiteShell.tsx",
+        "src/components/auth/CodeBoxes.tsx",
+        "src/components/auth/SellerSetup.tsx",
+        "src/components/auth/SignInPopup.tsx",
+        "src/components/auth/SignInSheet.tsx",
+        "src/components/auth/sign-in-css.ts",
+        "src/components/auth/sign-in-input.ts",
+        "tests/e2e/login-sheet.e2e.ts",
+        "tests/server/auth/sign-in-input.test.ts",
+        "src/app/api/auth/[[...slug]]/route.ts",
+        "src/server/auth/http.ts",
+        "src/server/auth/service.ts",
+        "src/server/auth/otp.ts",
+        "src/server/auth/email-code.ts",
+        "tests/server/auth/cookie-life.test.ts",
+        "tests/e2e/contact-card.e2e.ts"
       ]
     },
     "H7.15": {
