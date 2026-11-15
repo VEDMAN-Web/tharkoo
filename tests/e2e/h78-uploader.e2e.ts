@@ -1,3 +1,4 @@
+import AxeBuilder from "@axe-core/playwright";
 import { expect, hasHorizontalScroll, PNG, signInAdminContext, test } from "./helpers";
 
 /** H7.8: the shared upload box on the create-ad screen, and the (i) help on the logo field. */
@@ -57,5 +58,19 @@ test.describe("H7.8 shared uploader", () => {
     await page.keyboard.press("Escape");
     await expect(info).toHaveAttribute("aria-expanded", "false");
     expect(await hasHorizontalScroll(page)).toBe(false);
+  });
+
+  test("axe: the create-ad and logo screens have no serious or critical issues", async ({ page, context, baseURL }) => {
+    await signInAdminContext(context, baseURL!);
+    for (const path of ["/admin/ads/create/", "/admin/seo/settings/"]) {
+      await page.goto(path);
+      await expect(page.locator("h1")).toHaveCount(1);
+      const result = await new AxeBuilder({ page }).analyze();
+      const serious = result.violations.filter((item) => item.impact === "serious" || item.impact === "critical");
+      expect(
+        serious.map((item) => `${item.id}: ${item.nodes.map((node) => node.target.join(" ")).join(" | ")}`),
+        path,
+      ).toEqual([]);
+    }
   });
 });
