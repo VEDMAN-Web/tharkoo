@@ -1725,10 +1725,11 @@ input, select, textarea { font-size: 16px; }
   position: absolute; right: 0; top: calc(100% + 8px); z-index: 50; min-width: 200px; padding: 8px; border-radius: 16px;
   display: flex; flex-direction: column; gap: 2px; background: #fff; border: 1px solid #ead8f0; box-shadow: 0 12px 32px rgba(45, 18, 72, 0.14);
 }
-.tkn-account-menu a {
+.tkn-account-menu a, .tkn-account-menu button {
   display: flex; align-items: center; min-height: 44px; padding: 0 12px; border-radius: 12px; color: #4a2870; font-weight: 600; font-size: 14px; text-decoration: none;
 }
-.tkn-account-menu a:hover { background: #fdf0f7; }
+.tkn-account-menu a:hover, .tkn-account-menu button:hover { background: #fdf0f7; }
+.logout-btn { appearance: none; background: none; border: 0; padding: 0; margin: 0; font: inherit; color: inherit; cursor: pointer; text-align: inherit; }
 .tkn-account-menu .tkn-account-coins { display: none; }
 @media (max-width: 600px) {
   .tkn-coin-chip { display: none; }

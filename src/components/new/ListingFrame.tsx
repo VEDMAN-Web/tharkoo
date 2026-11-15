@@ -32,6 +32,7 @@ export function ListingFrame({
   children: ReactNode;
 }) {
   const [open, setOpen] = useState(false);
+  const hasPhoto = Boolean(bandStyle["--band-desk"] || bandStyle["--band-phone"]);
 
   useEffect(() => {
     if (!open) return;
@@ -44,7 +45,7 @@ export function ListingFrame({
 
   return (
     <div className="tkn-ls">
-      <section className="tkn-ls-band m-enter" data-tk="listing-band" style={bandStyle as CSSProperties}>
+      <section className="tkn-ls-band m-enter" data-tk="listing-band" data-photo={hasPhoto ? "true" : "false"} style={bandStyle as CSSProperties}>
         {head}
         {chips ? <div className="tkn-ls-chips">{chips}</div> : null}
         <div className="tkn-ls-searchrow">
