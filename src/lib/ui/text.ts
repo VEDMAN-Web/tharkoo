@@ -112,7 +112,7 @@ export const TEXT_DEFAULTS = {
   // H7.8: "How to use this section" in the seller and user panels (2 to 4 plain sentences each)
   "help.label": "How to use this section",
   "help.section.myAds": "Your ads are listed here. Use the filters to see live, in-review or ended ads. From each row you can edit, renew, promote or post again.",
-  "help.section.availableNow": "Turn Available now on when you can take calls. Buyers then see Online now. After the idle hours set on the site with no activity, you show as Away: calls pause and chat still works.",
+  "help.section.availableNow": "Turn this on when you can take calls, and buyers see Online now. After the idle hours with no activity you show as Away. Calls pause; chat still works.",
   "help.section.wallet": "Coins are earned from your ads. One coin is worth ₹100 when you withdraw. Withdraw once you reach the minimum, and see past payouts in History.",
   "help.section.support": "Raise a ticket for anything you need help with. Only Tharkoo support can close a ticket. A closed ticket can be replaced with a new one.",
   "help.section.saved": "Ads you save appear here. Save an ad from its card, and remove it from here when you no longer need it.",
