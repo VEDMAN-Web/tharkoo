@@ -24,7 +24,8 @@ export type FilterField = {
 export type RangePick = { min?: number; max?: number };
 /** The picks on a listing URL, per field key: chips as a list of options, a range as its bounds, yes/no as ["1"]. */
 export type AttributePicks = Record<string, string[] | RangePick>;
-export type ListingToggles = { verified: boolean; photos: boolean; video: boolean };
+/** The quick toggles on a listing URL. `online` (H7.8) is "Online now": sellers who are online at the moment. */
+export type ListingToggles = { verified: boolean; photos: boolean; video: boolean; online?: boolean };
 
 export type IconKind = "list" | "range" | "toggle";
 export type PanelRow =
@@ -124,7 +125,7 @@ export function panelRows(fields: readonly FilterField[] | undefined, picks: Att
 /** The number on the "Filters · N" button and the "N active" pill: every pick plus each quick toggle that is on. */
 export function activeFilterCount(rows: readonly PanelRow[], toggles: ListingToggles): number {
   const picks = rows.reduce((sum, row) => sum + row.picked, 0);
-  return picks + (toggles.verified ? 1 : 0) + (toggles.photos ? 1 : 0) + (toggles.video ? 1 : 0);
+  return picks + (toggles.verified ? 1 : 0) + (toggles.photos ? 1 : 0) + (toggles.video ? 1 : 0) + (toggles.online ? 1 : 0);
 }
 
 /** The query string for the filters that are on, so pagination and the panel keep them. Empty when nothing is on. */
@@ -141,6 +142,7 @@ export function listingFilterQuery(picks: AttributePicks, toggles: ListingToggle
   if (toggles.verified) params.set("verified", "1");
   if (toggles.photos) params.set("photos", "1");
   if (toggles.video) params.set("video", "1");
+  if (toggles.online) params.set("online", "1");
   return params.toString();
 }
 
@@ -174,7 +176,6 @@ export type ListingLabels = {
   photos: string;
   video: string;
   online: string;
-  soon: string;
   min: string;
   max: string;
 };
