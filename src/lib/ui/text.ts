@@ -65,6 +65,25 @@ export const TEXT_DEFAULTS = {
   "card.contact.call": "Call",
   "card.contact.whatsapp": "WhatsApp",
   "card.contact.none": "No number shared",
+  // H7.8: the header's short button label (under 420 px) and the live chat (bubble, panel and guest form)
+  "header.postShort": "Post ad",
+  "chat.open": "Open live chat",
+  "chat.close": "Close live chat",
+  "chat.closePanel": "Close chat",
+  "chat.backToTop": "Back to top",
+  "chat.topicsLabel": "What do you need help with?",
+  "chat.guest.name": "Your name",
+  "chat.guest.contact": "Email or phone",
+  "chat.guest.continue": "Continue",
+  "chat.guest.needName": "Add your name.",
+  "chat.guest.needContact": "Add an email address or a phone number.",
+  "chat.guest.replyEmail": "Thanks. Support will reply to the email address you gave.",
+  "chat.guest.replyPhone": "Thanks. Support will contact you on the phone number you gave.",
+  "chat.composer.label": "Message",
+  "chat.composer.placeholder": "Type a message",
+  "chat.composer.send": "Send",
+  "chat.composer.minLength": "Write at least {count} characters.",
+  "chat.reply.first": "Thanks. Support answers in this chat and in your support tickets.",
 } as const;
 
 export type UiTextKey = keyof typeof TEXT_DEFAULTS;
@@ -77,6 +96,8 @@ export const TEXT_GROUPS: { id: string; label: string; prefix: string }[] = [
   { id: "home", label: "Home page", prefix: "home." },
   { id: "listing", label: "Listing pages", prefix: "listing." },
   { id: "card", label: "Ad card", prefix: "card." },
+  { id: "header", label: "Header", prefix: "header." },
+  { id: "chat", label: "Live chat", prefix: "chat." },
 ];
 
 export const TEXT_KEYS = Object.keys(TEXT_DEFAULTS) as UiTextKey[];
