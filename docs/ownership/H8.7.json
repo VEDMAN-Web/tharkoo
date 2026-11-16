@@ -1,0 +1,21 @@
+{
+  "branchPrefix": "haiku/h8.7",
+  "globs": [
+    "docs/ownership/H8.7.json",
+    "progress/H8.7.md",
+    "src/server/admin/counts.ts",
+    "src/app/api/admin/counts/route.ts",
+    "src/lib/admin/count-sum.ts",
+    "src/lib/admin/role-words.ts",
+    "src/lib/admin/forbidden.ts",
+    "src/components/admin/AdminShell.tsx",
+    "src/components/admin/AdminLoginForm.tsx",
+    "src/components/admin/MockPaymentsBanner.tsx",
+    "src/app/admin/layout.tsx",
+    "src/proxy.ts",
+    "src/styles/admin.css",
+    "tests/server/admin/a7-counts.test.ts",
+    "tests/e2e/a7-shell.e2e.ts",
+    "tests/e2e/h7-102-money.e2e.ts"
+  ]
+}
