@@ -120,7 +120,7 @@ export default async function CityAreasPage({ params, searchParams }: Props) {
   const frame = listingFrameProps({
     crumbs,
     h1: t("search.heading.place", { place: data.name }),
-    intro: `Free classifieds across ${data.name}. Pick a category or an area.`,
+    intro: `Classifieds across ${data.name}. Pick a category or an area.`,
     photo: band,
     categorySlug: "",
     citySlug: city,

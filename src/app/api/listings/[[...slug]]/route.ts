@@ -2,6 +2,7 @@ import { clientKey } from "@/lib/rate-limit";
 import { SESSION_COOKIE, assertOrigin, readCookie } from "@/server/auth/http";
 import { requireUser, userFromToken } from "@/server/auth/service";
 import { NotFoundError, failure, handle, parseInput, requestIdFrom, success } from "@/server/http";
+import { InsufficientCreditsError, insufficientCreditsMessage } from "@/server/billing/posting-fee";
 import { listOwnCards } from "@/server/listings/owner-cards";
 import {
   FreeLimitError,
@@ -68,6 +69,17 @@ async function dispatch(request: Request) {
   } catch (error) {
     if (error instanceof FreeLimitError) {
       return limitResponse(requestId, 429, "FREE_LIMIT", "Weekly free ad limit reached", error.retryAfter);
+    }
+    if (error instanceof InsufficientCreditsError) {
+      return Response.json(
+        {
+          ok: false,
+          data: null,
+          meta: { requestId },
+          error: { code: "INSUFFICIENT_CREDITS", message: insufficientCreditsMessage(error.short), need: error.need, balance: error.balance, fee: error.fee, short: error.short },
+        },
+        { status: 402, headers: { "x-request-id": requestId, "cache-control": "no-store" } },
+      );
     }
     if (error instanceof RevealLimitError) {
       return Response.json(failure({ code: "RATE_LIMITED", message: "Too many requests" }, requestId), {

@@ -113,11 +113,11 @@ export function UserPanelHome({
           {summary.signedIn && summary.seller ? <AvailabilityControls /> : null}
           {summary.signedIn ? (
             <section aria-labelledby="promo-heading" className="up-promo">
-              <p className="up-promo-kicker">FREE TO POST</p>
+              <p className="up-promo-kicker">POST AN AD</p>
               <h2 id="promo-heading" className="up-promo-title">Have something to offer?</h2>
-              <p className="up-promo-text">Post a free ad in 2 minutes. People in your city see it today, and they reach you by chat or video call.</p>
+              <p className="up-promo-text">Post your ad in 2 minutes. People in your city see it today, and they reach you by chat or video call.</p>
               <div className="up-promo-row">
-                <Link href="/u/post-insert/" className="up-btn-white">Post a free ad</Link>
+                <Link href="/u/post-insert/" className="up-btn-white">Post your ad</Link>
                 <Link href={howItWorksPath()} className="up-btn-outline">How it works</Link>
               </div>
             </section>

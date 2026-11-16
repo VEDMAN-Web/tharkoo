@@ -21,7 +21,7 @@ export async function generateMetadata() {
   return withSeoDefaults(
     await withUrlSeo(citiesPath(paths), {
       title: "Cities across India: browse classifieds by city | Tharkoo",
-      description: "Pick your city to browse free classifieds across India. See ads, photos and how to contact each poster.",
+      description: "Pick your city to browse classifieds across India. See ads, photos and how to contact each poster.",
       path: citiesPath(paths),
     }),
   );
