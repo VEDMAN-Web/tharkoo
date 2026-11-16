@@ -113,6 +113,7 @@ export default async function TagPage({ params, searchParams }: Props) {
     picks,
     toggles,
     panelPath: path,
+    total: feed.total,
     labels,
     places: placeSelects({ categorySlug: cat.slug || category, categories, states, cities, districts: [], labels }),
   });
