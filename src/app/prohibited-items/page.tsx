@@ -1,4 +1,5 @@
 import { StaticPage } from "@/components/StaticPage";
+import { publicParagraphs } from "@/components/new/legal-copy";
 import { TRUST } from "@/content/trust";
 import { pageMetadata } from "@/lib/ui/meta";
 
@@ -13,7 +14,7 @@ export const metadata = pageMetadata({
 export default function Page() {
   return (
     <StaticPage title={copy.title}>
-      {copy.paragraphs.map((paragraph) => (
+      {publicParagraphs(copy.paragraphs, "prohibited-items").map((paragraph) => (
         <p key={paragraph.slice(0, 40)}>{paragraph}</p>
       ))}
     </StaticPage>

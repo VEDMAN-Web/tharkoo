@@ -66,8 +66,6 @@ export async function shardEntries(shard: SitemapShard): Promise<SitemapEntry[]>
       [blogPath(paths), now],
       [helpPath(paths), now],
       [contactPath(paths), now],
-      [cmsPath(paths, "about"), now],
-      [cmsPath(paths, "grievance"), now],
       ["/terms/", now],
       ["/privacy/", now],
       ["/cookies/", now],
