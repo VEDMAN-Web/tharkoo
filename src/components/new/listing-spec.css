@@ -145,7 +145,7 @@
 @media (min-width: 1024px) { .tkn-ls-bottom { display: none; } }
 
 /* Ad rows */
-.tkn-ls-main { min-width: 0; max-width: 880px; }
+.tkn-ls-main { min-width: 0; max-width: 904px; }
 .tkn-ls-main .tk-feed { display: flex; flex-direction: column; gap: 16px; max-width: 880px; }
 .tkn-ls .tkn-ls-card {
   position: relative; display: flex; background: rgba(255, 255, 255, 0.88); border: 1px solid var(--line); border-radius: 16px;

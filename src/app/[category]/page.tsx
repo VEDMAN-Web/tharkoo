@@ -132,11 +132,21 @@ export default async function CategoryHub({ params, searchParams }: Props) {
   const fallbackNode = own ? <FallbackAds sections={fallback} layout="row" lead={emptyLead} /> : null;
   const feedAndText = (
     <>
-      <div className="tk-feed" data-tk="category-feed">
-        {ads.map((ad, index) => (
-          <AdCard key={ad.publicId || ad.slug || index} ad={ad} featured={page === 1 && index < stars.length} priority={index === 0} layout={shell ? "row" : undefined} />
-        ))}
-      </div>
+      {shell ? (
+        <ListingGrid label={t("listing.feed.label")}>
+          {ads.map((ad, index) => (
+            <li key={ad.publicId || ad.slug || index}>
+              <ListingCard ad={ad} order={index} texts={texts} />
+            </li>
+          ))}
+        </ListingGrid>
+      ) : (
+        <div className="tk-feed" data-tk="category-feed">
+          {ads.map((ad, index) => (
+            <AdCard key={ad.publicId || ad.slug || index} ad={ad} featured={page === 1 && index < stars.length} priority={index === 0} />
+          ))}
+        </div>
+      )}
       <ListingPager base={pageBase(categoryPath(cat.slug || category), sp)} page={page} pages={feed.pages} total={feed.total} size={feed.pageSize} labels={pagerLabels(t)} />
       {fallbackNode}
       <section className="tk-browse-city" data-tk="browse-by-city">

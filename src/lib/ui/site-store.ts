@@ -110,6 +110,15 @@ export async function applyHomepageChange(input: {
   return writeContent(parsed.content, input.email, "site.homepage.update", before);
 }
 
+/** H7.104: the "Show photo band on listing pages" switch. Off by default. Same role check, audit entry and cache refresh as the homepage save. */
+export async function applyListingBandSwitch(input: { roles: string[]; email: string; on: boolean }) {
+  if (!isAdminRole(input.roles)) throw new ForbiddenError("Only an admin can edit the homepage");
+  await connectDb();
+  const current = await Site.findOne({ key: "default" }).lean();
+  const content = { ...readContent(current?.homepage), showListingBand: input.on === true };
+  return applyHomepageChange({ roles: input.roles, email: input.email, content });
+}
+
 /**
  * Saves the home page title and description from the Home page editor (H6.10).
  * It writes the same stored fields the public page reads (Site.homepage.content.seoTitle and seoDescription),
