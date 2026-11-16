@@ -34,9 +34,10 @@ export const RAIL_LABELS: Record<BaseStep, string> = {
 
 export type RailItem = { key: NewPostStep; label: string; num: number; state: "done" | "current" | "todo"; clickable: boolean };
 
-export function PostRail({ items, progressLabel, onGo, children }: { items: RailItem[]; progressLabel: string; onGo: (num: number) => void; children?: React.ReactNode }) {
+export function PostRail({ items, progressLabel, onGo, head, children }: { items: RailItem[]; progressLabel: string; onGo: (num: number) => void; head?: React.ReactNode; children?: React.ReactNode }) {
   return (
     <nav aria-label={progressLabel} className="tkp-rail">
+      {head}
       <p className="tkp-kicker tkp-kicker-plain">{progressLabel}</p>
       <ol className="tkp-steps">
         {items.map((item) => (
