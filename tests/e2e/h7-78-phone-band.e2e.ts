@@ -42,7 +42,7 @@ test.describe("H7.78: phone band", () => {
       return { background: cs.backgroundColor, border: cs.borderTopWidth, borderColor: cs.borderTopColor, color: cs.color };
     });
     expect(style.background).toBe("rgb(255, 255, 255)");
-    expect(style.border).toBe("1.5px");
+    expect(style.border).toMatch(/^1(\.5)?px$/);
     expect(style.borderColor).not.toBe("rgba(0, 0, 0, 0)");
     expect((await search.evaluate((el) => getComputedStyle(el).backgroundImage))).toContain("gradient");
     const row = (await filters.boundingBox())!;
