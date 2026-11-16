@@ -1,0 +1,10 @@
+{
+  "branchPrefix": "haiku/h7.62",
+  "globs": [
+    "docs/ownership/H7.62.json",
+    "progress/H7.62.md",
+    "src/components/CookieBanner.css",
+    "src/components/new/home-spec.css",
+    "tests/e2e/h7-62-hero-phone.e2e.ts"
+  ]
+}

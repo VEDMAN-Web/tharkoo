@@ -21,7 +21,7 @@ type Banner = { kind: "error" | "info"; text: string };
 type Section = "menus" | "chat";
 
 const MAX_LINKS = 12;
-const KIND_LABEL: Record<ContactKind, string> = { email: "Email", phone: "Phone", whatsapp: "WhatsApp", hours: "Hours", address: "Address" };
+const KIND_LABEL: Record<ContactKind, string> = { email: "Email", phone: "Phone", whatsapp: "WhatsApp", telegram: "Telegram", hours: "Hours", address: "Address" };
 
 function move<T>(items: T[], index: number, step: number): T[] {
   const target = index + step;

@@ -29,13 +29,19 @@
 .tkn-nav-link[aria-current="page"] {
   background: none;
 }
+.tkn-nav-link[aria-current="page"]:not(.is-under) {
+  color: #4a2d5e;
+}
 .tkn-nav-link.is-under {
   color: #fff;
 }
 
 @media (prefers-reduced-motion: no-preference) {
   .tkn-nav::before {
-    transition: transform var(--m-base) var(--m-ease), opacity var(--m-fast) ease;
+    transition: transform var(--m-base) var(--m-ease), width var(--m-base) var(--m-ease), opacity var(--m-fast) ease;
+  }
+  .tkn-nav-link {
+    transition: color var(--m-base) ease;
   }
 
   .m-enter {
