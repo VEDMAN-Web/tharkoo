@@ -3,7 +3,7 @@ import { searchPlaceSelects } from "@/components/new/listing-frame-props";
 import { narrowFromParams } from "@/components/new/listing-narrow";
 import type { ListingLabels } from "@/components/new/listing-filters";
 
-const labels = { all: "All", allStates: "All states", allCities: "All cities", allAreas: "All areas" } as ListingLabels;
+const labels = { all: "All", allCategories: "All categories", allStates: "All states", allCities: "All cities", allAreas: "All areas" } as ListingLabels;
 const lists = {
   searchPath: "/search/",
   categories: [{ slug: "dating", name: "Dating" }],

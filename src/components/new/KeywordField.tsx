@@ -91,11 +91,13 @@ export function KeywordField({
 
   return (
     <div className="tkn-kw" ref={box}>
-      <label className="tkn-kw-label" htmlFor={`${listId}-input`}>
-        {label}
-      </label>
+      <svg className="tkn-kw-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#A8124F" strokeWidth="2.4" strokeLinecap="round" aria-hidden="true">
+        <circle cx="11" cy="11" r="7" />
+        <path d="M20 20l-4-4" />
+      </svg>
       <input
         id={`${listId}-input`}
+        aria-label={label}
         type="search"
         name="q"
         value={text}

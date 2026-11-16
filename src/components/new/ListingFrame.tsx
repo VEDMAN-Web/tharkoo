@@ -31,7 +31,7 @@ export function ListingFrame({
   searchForm?: ReactNode;
   filters: ReactNode;
   activeCount: number;
-  header?: ReactNode;
+  header?: { top: ReactNode; bar: ReactNode; chips: ReactNode };
   children: ReactNode;
 }) {
   const [open, setOpen] = useState(false);
@@ -46,34 +46,43 @@ export function ListingFrame({
     return () => window.removeEventListener("keydown", onKey);
   }, [open]);
 
+  const filtersButton = (
+    <button type="button" className="tkn-ls-filter-btn" aria-expanded={open} aria-controls="tkn-ls-aside" onClick={() => setOpen(true)}>
+      <SlidersHorizontal size={16} aria-hidden="true" />
+      {`${labels.filters} · ${activeCount}`}
+    </button>
+  );
+
   return (
     <div className="tkn-ls">
       {header ? (
-        <section className="tkn-sr-head m-enter" data-tk="results-header">
-          {header}
-          <button type="button" className="tkn-ls-filter-btn" aria-expanded={open} aria-controls="tkn-ls-aside" onClick={() => setOpen(true)}>
-            <SlidersHorizontal size={16} aria-hidden="true" />
-            {`${labels.filters} · ${activeCount}`}
-          </button>
-        </section>
-      ) : (
-      <section className="tkn-ls-band m-enter" data-tk="listing-band" data-photo={hasPhoto ? "true" : "false"} style={(bandStyle ?? {}) as CSSProperties}>
-        <div className="tkn-ls-band-card">
-          {head}
-          {chips ? <div className="tkn-ls-chips">{chips}</div> : null}
-          <div className="tkn-ls-searchrow">
-            {searchForm}
-            <button type="button" className="tkn-ls-filter-btn" aria-expanded={open} aria-controls="tkn-ls-aside" onClick={() => setOpen(true)}>
-              <SlidersHorizontal size={16} aria-hidden="true" />
-              {`${labels.filters} · ${activeCount}`}
-            </button>
+        <>
+          <section className="tkn-sr-head m-enter" data-tk="results-header">
+            {header.top}
+          </section>
+          <div className="tkn-sr-bar" data-tk="results-bar">
+            {header.bar}
+            {filtersButton}
           </div>
-        </div>
-      </section>
+          {header.chips}
+        </>
+      ) : (
+        <>
+          <section className="tkn-ls-band m-enter" data-tk="listing-band" data-photo={hasPhoto ? "true" : "false"} style={(bandStyle ?? {}) as CSSProperties}>
+            <div className="tkn-ls-band-card">
+              {head}
+              {chips ? <div className="tkn-ls-chips">{chips}</div> : null}
+              <div className="tkn-ls-searchrow">{searchForm}</div>
+            </div>
+          </section>
+          <div className="tkn-sr-bar tkn-sr-bar-solo" data-tk="results-bar">
+            {filtersButton}
+          </div>
+        </>
       )}
       <div className="tkn-ls-grid">
         <button type="button" className="tkn-ls-scrim" data-open={open ? "true" : "false"} aria-label={labels.close} tabIndex={open ? 0 : -1} onClick={() => setOpen(false)} />
-        <aside id="tkn-ls-aside" className="tkn-ls-aside" data-open={open ? "true" : "false"}>
+        <aside id="tkn-ls-aside" className="tkn-ls-aside" data-open={open ? "true" : "false"} onClick={(event) => ((event.target as HTMLElement).closest("[data-sheet-close]") ? setOpen(false) : undefined)}>
           <button type="button" className="tkn-ls-sheet-close" onClick={() => setOpen(false)}>
             {labels.close}
           </button>

@@ -198,6 +198,7 @@ export default async function DistrictPage({ params, searchParams }: Props) {
     picks,
     toggles,
     panelPath: canonicalPath,
+    total: feed.total,
     labels,
     places: placeSelects({
       categorySlug: cat.slug || category,

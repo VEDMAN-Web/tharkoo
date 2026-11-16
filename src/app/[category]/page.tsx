@@ -199,6 +199,7 @@ export default async function CategoryHub({ params, searchParams }: Props) {
         picks,
         toggles,
         panelPath: categoryPath(cat.slug || category),
+        total: feed.total,
         labels,
         places,
       })

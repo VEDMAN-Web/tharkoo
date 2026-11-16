@@ -37,6 +37,7 @@ test.describe("H7.61 my ads and support form", () => {
     const id = await sellerWithDraft(page, baseURL!, "draftcard");
     const card = page.locator("article.tk-card", { has: page.locator('[data-tk="owner-card"]') }).first();
     await expect(card).toBeVisible();
+    await expect(card.locator(".tkp-owner-counts")).toContainText(/views? . \d+ clicks/);
 
     const link = card.locator("a.tk-card-link");
     await expect(link).toHaveAttribute("href", `/u/post-insert/?draft=${id}&step=2`);
