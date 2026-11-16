@@ -280,6 +280,7 @@ export default async function LocationPage({ params, searchParams }: Props) {
     picks,
     toggles,
     panelPath: canonicalPath,
+    total: feed.total,
     labels,
     places,
   });

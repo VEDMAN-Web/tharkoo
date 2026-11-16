@@ -3,7 +3,7 @@ import { notFound } from "next/navigation";
 import { ListingPageView } from "@/components/ListingPage";
 import { FallbackAds } from "@/components/FallbackAds";
 import { ListingFrame } from "@/components/new/ListingFrame";
-import { SearchHeader } from "@/components/new/SearchHeader";
+import { SearchBar, SearchChips, SearchTop } from "@/components/new/SearchHeader";
 import { searchChips, searchHeading, searchHref, sortFrom } from "@/components/new/search-header";
 import { listingFrameProps, listingLabels, searchPlaceSelects } from "@/components/new/listing-frame-props";
 import { attributePicks, hasFieldPicks, type ListingToggles } from "@/components/new/listing-filters";
@@ -146,6 +146,7 @@ export default async function SearchPage({ searchParams }: { searchParams: Promi
     { value: "online", label: t("search.sort.online"), href: searchHref(base, { ...allParams, sort: "online" }) },
     { value: "verified", label: t("search.sort.verified"), href: searchHref(base, { ...allParams, sort: "verified" }) },
   ];
+  const chipList = searchChips(base, allParams, searchState, labels, t);
   const frame = listingFrameProps({
     crumbs,
     h1: "",
@@ -171,6 +172,8 @@ export default async function SearchPage({ searchParams }: { searchParams: Promi
       listLabel: t("search.keyword.suggestions"),
     },
     labels,
+    total: feed.total,
+    activeCount: chipList.length,
     places: searchPlaceSelects({ searchPath: base, params: { ...params }, categories, states, cities, districts, labels }),
   });
   return (
@@ -179,19 +182,11 @@ export default async function SearchPage({ searchParams }: { searchParams: Promi
         labels={labels}
         filters={frame.filters}
         activeCount={frame.activeCount}
-        header={
-          <SearchHeader
-            crumbs={crumbs}
-            breadcrumbLabel={labels.breadcrumb}
-            heading={searchHeading(searchState, t)}
-            total={feed.total}
-            sortValue={sortValue}
-            sortOptions={sortOptions}
-            chips={searchChips(base, allParams, searchState, labels, t)}
-            clearHref={base}
-            t={t}
-          />
-        }
+        header={{
+          top: <SearchTop crumbs={crumbs} breadcrumbLabel={labels.breadcrumb} heading={searchHeading(searchState, t)} />,
+          bar: <SearchBar total={feed.total} place={placeName} nearby={own} sortValue={sortValue} sortOptions={sortOptions} t={t} />,
+          chips: <SearchChips chips={chipList} clearHref={base} t={t} />,
+        }}
       >
         <ListingPageView
           texts={texts}

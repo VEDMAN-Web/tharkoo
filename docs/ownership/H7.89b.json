@@ -1,0 +1,15 @@
+{
+  "branchPrefix": "haiku/h7.89b",
+  "globs": [
+    "docs/ownership/H7.89b.json",
+    "src/components/ContactButtons.tsx",
+    "src/app/u/seller-profile/page.tsx",
+    "src/components/auth/SellerProfileForm.tsx",
+    "src/components/vendor/TourInbox.tsx",
+    "src/app/u/account/wallet/page.tsx",
+    "src/data/help.ts",
+    "src/lib/seo.ts",
+    "src/server/site-links/shell-config-rules.ts",
+    "tests/**"
+  ]
+}

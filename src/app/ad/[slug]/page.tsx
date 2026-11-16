@@ -175,6 +175,7 @@ export default async function AdPage({ params }: Props) {
           categoryName={catName}
           related={plain(related)}
           listingId={listingId}
+          videos={videos}
           crumbs={crumbs}
           shareUrl={shareUrl}
           heading={heading}
@@ -187,12 +188,8 @@ export default async function AdPage({ params }: Props) {
       ) : (
         <AdDetail ad={adView} categoryName={catName} related={plain(related)} listingId={listingId} crumbs={crumbs} shareUrl={shareUrl} heading={heading} tour={tour} peopleAd={peopleAd} />
       )}
-      {newDesign ? null : (
-        <div className="tk-container">
-          <AdCountsBar slug={ad.slug || slug} />
-        </div>
-      )}
-      <AdVideos videos={videos} title={displayTitle(ad.title) || "Listing"} />
+      <AdCountsBar slug={ad.slug || slug} />
+      {newDesign ? null : <AdVideos videos={videos} title={displayTitle(ad.title) || "Listing"} />}
     </>
   );
 }

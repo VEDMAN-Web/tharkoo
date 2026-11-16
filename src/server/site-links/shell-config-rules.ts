@@ -134,7 +134,7 @@ export function defaultShellConfig(): ShellConfig {
       ],
       steps: [
         { title: "Post for free", text: "Add photos and videos, pick a category and city." },
-        { title: "Chat online", text: "Buyers message you on Tharkoo or WhatsApp and can ask for more photos." },
+        { title: "Chat online", text: "People message you on Tharkoo or WhatsApp and can ask for more photos." },
         { title: "Verify on video", text: "A short live video call shows the item or place is real before anyone meets." },
       ],
     },

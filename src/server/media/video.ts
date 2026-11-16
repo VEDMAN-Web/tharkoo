@@ -76,6 +76,27 @@ export async function listAdVideos(listingId: string): Promise<AdVideo[]> {
     .filter((video): video is AdVideo => video !== null);
 }
 
+/** The first video a visitor may see for each of these ads, in one query. Ads with none are left out. */
+export async function firstAdVideos(listingIds: string[]): Promise<Map<string, AdVideo>> {
+  const ids = listingIds.filter((id) => mongoose.isValidObjectId(id));
+  const found = new Map<string, AdVideo>();
+  if (ids.length === 0) return found;
+  await connectDb();
+  const assets = await MediaAsset.find({ listingId: { $in: ids }, kind: "video", status: "cleared" })
+    .sort({ createdAt: 1 })
+    .select("listingId objectKey contentType")
+    .lean();
+  if (assets.length === 0) return found;
+  const count = await openReportCounts(ids.map((id) => new mongoose.Types.ObjectId(id)));
+  for (const asset of assets) {
+    const listing = asset.listingId?.toString() ?? "";
+    if (!listing || found.has(listing) || count(listing, asset._id.toString()) >= VIDEO_HIDE_REPORTS) continue;
+    const video = shape(asset);
+    if (video) found.set(listing, video);
+  }
+  return found;
+}
+
 /** The advertiser's own videos for an ad (shown in the post and edit forms), hidden ones included. */
 export async function listOwnAdVideos(userId: string, listingId: string): Promise<AdVideo[]> {
   if (!mongoose.isValidObjectId(listingId)) return [];
