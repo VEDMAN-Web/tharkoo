@@ -1,4 +1,5 @@
 import { notFound, permanentRedirect } from "next/navigation";
+import { withPagination } from "@/lib/seo/pagination";
 import type { Metadata } from "next";
 import { resolveListingLayout } from "@/components/blocks/ListingLayout";
 import { ListingPageView } from "@/components/ListingPage";
@@ -6,7 +7,7 @@ import { NewListingPage } from "@/components/new/ListingBand";
 import { bandChoice, heroBandFrom } from "@/components/new/band-image";
 import { listingLabels } from "@/components/new/listing-frame-props";
 import { FallbackAds } from "@/components/FallbackAds";
-import { FALLBACK_OWN_MINIMUM, loadFallbackSections } from "@/lib/fallback-ads";
+import { loadFallbackSections, showFallback } from "@/lib/fallback-ads";
 import { readShellConfig } from "@/server/site-links/shell-config";
 import { getPaths } from "@/server/urls/service";
 import { makeT } from "@/lib/ui/text";
@@ -68,13 +69,14 @@ export async function subHubMetadata(params: SubHubParams, page: number): Promis
     indexable: isSubcategoryIndexable(feed.total),
   });
   const path = placePath(hub.cat.slug || params.category, hub.city.slug || params.location, hub.sub.slug);
-  return withUrlSeo(path, {
+  const meta = await withUrlSeo(path, {
     title: copy.title,
     description: copy.description,
     path: page > 1 ? `${path}?page=${page}` : path,
     index: isSubcategoryIndexable(feed.total, page),
     follow: true,
   });
+  return withPagination(meta, path, page, feed.pages);
 }
 
 export async function SubHub({ params, page }: { params: SubHubParams; page: number }) {
@@ -116,7 +118,7 @@ export async function SubHub({ params, page }: { params: SubHubParams; page: num
     { name: `${hub.sub.name} ${hub.city.name}`, path: canonicalPath },
   ];
   const h1 = heading || copy.h1;
-  const own = feed.total < FALLBACK_OWN_MINIMUM;
+  const own = showFallback(feed);
   const fallback = own
     ? await loadFallbackSections({
         scope: { categorySlug: hub.cat.slug || catSlug, categoryName: hub.cat.name || undefined, stateSlug: hub.city.stateSlug || undefined, placeName: hub.city.name },
