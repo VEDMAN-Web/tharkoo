@@ -41,7 +41,7 @@ import { parsePrice } from "@/server/listings/price";
 import { attributeDenied, categoryDenied, textDenied } from "@/server/shared/policy";
 import { adLifetimeMs } from "@/server/listings/lifetime";
 import { evaluatePublishGate } from "@/server/shared/publish-gate";
-import { readMoneySettings } from "@/server/billing/money-settings";
+import { effectivePostingFee, readMoneySettings } from "@/server/billing/money-settings";
 import { chargePostingFee, refundPostingFee } from "@/server/billing/posting-fee";
 import { idCheckRequired } from "@/server/settings/id-check";
 import { toSlug } from "@/server/shared/slug";
@@ -592,7 +592,7 @@ export async function submitListing(
   });
   const site = await Site.findOne({ key: "default" }).select("freeAdsPerWeek").lean<{ freeAdsPerWeek?: number }>();
   const limit = typeof site?.freeAdsPerWeek === "number" ? site.freeAdsPerWeek : intEnv("FREE_ADS_PER_WEEK", 3);
-  const fee = (await readMoneySettings()).postingFeeCredits;
+  const fee = effectivePostingFee(await readMoneySettings());
   if (!already && used >= limit && fee <= 0) {
     const retryAfter = Math.max(1, Math.ceil((weekStart().getTime() + 7 * 24 * 60 * 60 * 1000 - Date.now()) / 1000));
     throw new FreeLimitError(retryAfter);

@@ -7,7 +7,6 @@ export default defineConfig({
     fileParallelism: false,
     hookTimeout: 120_000,
     testTimeout: 120_000,
-    env: { MONEY_DEFAULT_POSTING_FEE: "0" },
   },
   resolve: {
     alias: {

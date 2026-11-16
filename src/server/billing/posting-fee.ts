@@ -2,7 +2,7 @@ import { connectDb } from "@/lib/db";
 import { insufficientCreditsLine } from "@/lib/ui/publish-errors";
 import { PaymentRequiredError } from "@/server/http";
 import { creditWallet, debitWallet, readyBilling, walletBalance } from "@/server/billing/ledger";
-import { readMoneySettings } from "@/server/billing/money-settings";
+import { effectivePostingFee, readMoneySettings } from "@/server/billing/money-settings";
 import { WalletEntry } from "@/server/models";
 
 export const FEE_REF = "listing_fee";
@@ -29,12 +29,14 @@ export function insufficientCreditsMessage(short: number): string {
 }
 
 export async function postingFeeStatus(userId: string) {
+  await connectDb();
   const [money, balance] = await Promise.all([readMoneySettings(), walletBalance(userId)]);
-  const short = Math.max(0, money.postingFeeCredits - balance);
+  const fee = effectivePostingFee(money);
+  const short = Math.max(0, fee - balance);
   return {
-    fee: money.postingFeeCredits,
+    fee,
     balance,
-    after: Math.max(0, balance - money.postingFeeCredits),
+    after: Math.max(0, balance - fee),
     short,
     enough: short === 0,
     creditPriceInr: money.creditPriceInr,
@@ -62,7 +64,7 @@ export type PostingCharge = { charged: number; balance: number; refId: string | 
 
 export async function chargePostingFee(input: { userId: string; listingId: string; requestId: string }): Promise<PostingCharge> {
   await connectDb();
-  const { postingFeeCredits: fee } = await readMoneySettings();
+  const fee = effectivePostingFee(await readMoneySettings());
   const { debits, refunds } = await feeRows(input.listingId);
   if (fee <= 0 || debits > refunds) return { charged: 0, balance: await walletBalance(input.userId), refId: null };
   const balance = await walletBalance(input.userId);

@@ -9,23 +9,19 @@ import { Site } from "@/server/models";
 const SITE_KEY = "default";
 const audit = new AuditRepository();
 
-export const MONEY_DEFAULTS = { postingFeeCredits: 30, creditPriceInr: 10, mockPaymentsOn: true } as const;
+export const MONEY_DEFAULTS = { postingFeeCredits: 30, creditPriceInr: 10, mockPaymentsOn: true, paidPostingOn: false } as const;
 
-export type MoneySettings = { postingFeeCredits: number; creditPriceInr: number; mockPaymentsOn: boolean };
+export type MoneySettings = { postingFeeCredits: number; creditPriceInr: number; mockPaymentsOn: boolean; paidPostingOn: boolean };
 
 export const moneySettingsBodySchema = z
   .object({
     postingFeeCredits: z.number().int().min(0).max(100_000),
     creditPriceInr: z.number().int().min(1).max(100_000),
     mockPaymentsOn: z.boolean(),
+    paidPostingOn: z.boolean(),
   })
   .partial()
   .strict();
-
-function defaultFee(env: Record<string, string | undefined> = process.env): number {
-  const value = Number(env.MONEY_DEFAULT_POSTING_FEE);
-  return env.MONEY_DEFAULT_POSTING_FEE !== undefined && Number.isInteger(value) && value >= 0 ? value : MONEY_DEFAULTS.postingFeeCredits;
-}
 
 function whole(value: unknown, fallback: number, min: number): number {
   return typeof value === "number" && Number.isInteger(value) && value >= min ? value : fallback;
@@ -34,13 +30,18 @@ function whole(value: unknown, fallback: number, min: number): number {
 export async function readMoneySettings(): Promise<MoneySettings> {
   await connectDb();
   const site = await Site.findOne({ key: SITE_KEY })
-    .select("postingFeeCredits creditPriceInr mockPaymentsOn")
+    .select("postingFeeCredits creditPriceInr mockPaymentsOn paidPostingOn")
     .lean<Partial<MoneySettings> | null>();
   return {
-    postingFeeCredits: whole(site?.postingFeeCredits, defaultFee(), 0),
+    postingFeeCredits: whole(site?.postingFeeCredits, MONEY_DEFAULTS.postingFeeCredits, 0),
     creditPriceInr: whole(site?.creditPriceInr, MONEY_DEFAULTS.creditPriceInr, 1),
     mockPaymentsOn: typeof site?.mockPaymentsOn === "boolean" ? site.mockPaymentsOn : MONEY_DEFAULTS.mockPaymentsOn,
+    paidPostingOn: typeof site?.paidPostingOn === "boolean" ? site.paidPostingOn : MONEY_DEFAULTS.paidPostingOn,
   };
+}
+
+export function effectivePostingFee(settings: MoneySettings): number {
+  return settings.paidPostingOn ? settings.postingFeeCredits : 0;
 }
 
 export async function setMoneySettings(input: { actorId: string; roles: readonly string[]; values: unknown; requestId: string }) {

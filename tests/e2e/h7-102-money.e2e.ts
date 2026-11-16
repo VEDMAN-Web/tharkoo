@@ -21,15 +21,16 @@ test.describe("H7.102 money settings and wording", () => {
     const section = page.locator('[data-tk="money-settings"]');
     await expect(section).toBeVisible();
     await expect(page.locator('[data-tk="mock-payments-banner"]')).toHaveText(BANNER);
-    await expect(section.getByLabel("Ad posting fee (credits)")).toHaveValue("0");
+    await expect(section.getByLabel("Ad posting fee (credits)")).toHaveValue("30");
+    await expect(section.getByRole("switch", { name: "Paid posting: On" })).toHaveAttribute("aria-checked", "false");
     await expect(section.getByLabel("Credit price (Rs)")).toHaveValue("10");
     await shot(page, "money-settings-1536x674");
 
-    await section.getByLabel("Ad posting fee (credits)").fill("30");
+    await section.getByLabel("Ad posting fee (credits)").fill("40");
     await section.getByRole("button", { name: "Save" }).click();
     await expect(section.getByText("Saved.")).toBeVisible();
     await page.reload();
-    await expect(page.locator('[data-tk="money-settings"]').getByLabel("Ad posting fee (credits)")).toHaveValue("30");
+    await expect(page.locator('[data-tk="money-settings"]').getByLabel("Ad posting fee (credits)")).toHaveValue("40");
 
     await page.locator('[data-tk="money-settings"]').getByRole("switch", { name: "Mock payments: On" }).click();
     await expect(page.getByText("Saved. Test payments are off.")).toBeVisible();
@@ -37,7 +38,7 @@ test.describe("H7.102 money settings and wording", () => {
     await expect(page.locator('[data-tk="mock-payments-banner"]')).toHaveCount(0);
     await page.locator('[data-tk="money-settings"]').getByRole("switch", { name: "Mock payments: On" }).click();
     await expect(page.getByText("Saved. Test payments are on.")).toBeVisible();
-    await page.locator('[data-tk="money-settings"]').getByLabel("Ad posting fee (credits)").fill("0");
+    await page.locator('[data-tk="money-settings"]').getByLabel("Ad posting fee (credits)").fill("30");
     await page.locator('[data-tk="money-settings"]').getByRole("button", { name: "Save" }).click();
     await expect(page.getByText("Saved.", { exact: true })).toBeVisible();
     await page.goto("/admin/");

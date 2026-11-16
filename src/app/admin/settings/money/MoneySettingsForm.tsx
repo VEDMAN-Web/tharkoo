@@ -55,7 +55,15 @@ export function MoneySettingsForm({ initial }: { initial: MoneySettings }) {
           </button>
         </div>
       </div>
-      <h3 className="t-h4">Mock payments</h3>
+      <h3 className="t-h4">Paid posting</h3>
+      <p className="t-small text-muted">While off, posting an ad stays free and nobody is charged. Turn it on only when recharge works.</p>
+      <Toggle
+        checked={saved.paidPostingOn}
+        onChange={(on) => void save({ paidPostingOn: on }, on ? "Saved. Posting now costs the fee above." : "Saved. Posting is free again.")}
+        label="Paid posting: On"
+        disabled={busy}
+      />
+      <h3 className="t-h4" style={{ marginTop: 16 }}>Mock payments</h3>
       <p className="t-small text-muted">While on, anyone can add credits without paying (test payments). Turn this off before launch.</p>
       <Toggle
         checked={saved.mockPaymentsOn}
