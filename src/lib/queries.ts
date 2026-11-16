@@ -258,6 +258,8 @@ export async function searchListings(opts: {
   video?: boolean;
   online?: boolean;
   attributes?: ListingQuery["attributes"];
+  sort?: "ranked" | "fresh";
+  prefer?: "verified" | "online";
   page?: number;
 }) {
   const safePage = Math.max(1, Number(opts.page) || 1);
@@ -279,7 +281,8 @@ export async function searchListings(opts: {
         page: safePage,
         pageSize: PAGE_SIZE,
         // H7.32: without a search term the page lists every live ad, newest first.
-        sort: opts.q ? "ranked" : "fresh",
+        sort: opts.sort ?? (opts.q ? "ranked" : "fresh"),
+        prefer: opts.prefer,
       });
       return {
         items: result.legacy,

@@ -20,20 +20,22 @@ export function ListingFrame({
   searchForm,
   filters,
   activeCount,
+  header,
   children,
 }: {
   /** The band image as CSS variables (see bandStyleFor). */
-  bandStyle: Record<string, string>;
+  bandStyle?: Record<string, string>;
   labels: Pick<ListingLabels, "filters" | "close">;
-  head: ReactNode;
+  head?: ReactNode;
   chips?: ReactNode;
-  searchForm: ReactNode;
+  searchForm?: ReactNode;
   filters: ReactNode;
   activeCount: number;
+  header?: ReactNode;
   children: ReactNode;
 }) {
   const [open, setOpen] = useState(false);
-  const hasPhoto = Boolean(bandStyle["--band-desk"] || bandStyle["--band-phone"]);
+  const hasPhoto = Boolean(bandStyle?.["--band-desk"] || bandStyle?.["--band-phone"]);
 
   useEffect(() => {
     if (!open) return;
@@ -46,7 +48,16 @@ export function ListingFrame({
 
   return (
     <div className="tkn-ls">
-      <section className="tkn-ls-band m-enter" data-tk="listing-band" data-photo={hasPhoto ? "true" : "false"} style={bandStyle as CSSProperties}>
+      {header ? (
+        <section className="tkn-sr-head m-enter" data-tk="results-header">
+          {header}
+          <button type="button" className="tkn-ls-filter-btn" aria-expanded={open} aria-controls="tkn-ls-aside" onClick={() => setOpen(true)}>
+            <SlidersHorizontal size={16} aria-hidden="true" />
+            {`${labels.filters} · ${activeCount}`}
+          </button>
+        </section>
+      ) : (
+      <section className="tkn-ls-band m-enter" data-tk="listing-band" data-photo={hasPhoto ? "true" : "false"} style={(bandStyle ?? {}) as CSSProperties}>
         <div className="tkn-ls-band-card">
           {head}
           {chips ? <div className="tkn-ls-chips">{chips}</div> : null}
@@ -59,6 +70,7 @@ export function ListingFrame({
           </div>
         </div>
       </section>
+      )}
       <div className="tkn-ls-grid">
         <button type="button" className="tkn-ls-scrim" data-open={open ? "true" : "false"} aria-label={labels.close} tabIndex={open ? 0 : -1} onClick={() => setOpen(false)} />
         <aside id="tkn-ls-aside" className="tkn-ls-aside" data-open={open ? "true" : "false"}>
