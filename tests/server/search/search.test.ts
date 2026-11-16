@@ -496,3 +496,31 @@ describe("suggestSearch", () => {
     expect(await suggestSearch("zzzz")).toEqual([]);
   });
 });
+
+describe("queryListings page slice", () => {
+  it("presents only the requested page, keeps the whole total and the facets, and fills every card field", async () => {
+    const { category, other, state, city, elsewhere } = await place();
+    for (let n = 0; n < 7; n += 1) {
+      await listing({ categoryId: category._id, stateId: state._id, cityId: city._id, title: `Job ${n}`, slug: `job-${n}`, publishedAt: new Date(`2026-06-0${n + 1}T00:00:00.000Z`) });
+    }
+    await listing({ categoryId: other._id, stateId: state._id, cityId: elsewhere._id, title: "Bike", slug: "bike", publishedAt: new Date("2026-06-09T00:00:00.000Z") });
+    const first = await queryListings({ sort: "fresh", page: 1, pageSize: 3 });
+    const second = await queryListings({ sort: "fresh", page: 2, pageSize: 3 });
+    const last = await queryListings({ sort: "fresh", page: 3, pageSize: 3 });
+    expect(first.total).toBe(8);
+    expect(first.legacy.map((item) => item.slug)).toEqual(["bike", "job-6", "job-5"]);
+    expect(second.legacy.map((item) => item.slug)).toEqual(["job-4", "job-3", "job-2"]);
+    expect(last.legacy.map((item) => item.slug)).toEqual(["job-1", "job-0"]);
+    expect(first.hits).toHaveLength(3);
+    expect(first.facets.categories).toEqual([
+      { slug: "jobs", count: 7 },
+      { slug: "vehicles", count: 1 },
+    ]);
+    expect(first.facets.cities).toEqual([
+      { slug: "pune", count: 7 },
+      { slug: "mumbai", count: 1 },
+    ]);
+    expect(first.legacy[0]).toMatchObject({ slug: "bike", categorySlug: "vehicles", citySlug: "mumbai", title: "Bike", place: "Mumbai" });
+    expect((await queryListings({ sort: "fresh", page: 9, pageSize: 3 })).legacy).toEqual([]);
+  });
+});

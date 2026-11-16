@@ -54,7 +54,7 @@ export default async function SearchPage({ searchParams }: { searchParams: Promi
   const categories = await getCategories();
   const category = categories.find((cat) => cat.slug === categorySlug);
   const picks = attributePicks(sp, category?.fields);
-  const feed = await searchListings({
+  const feedPromise = searchListings({
     q,
     category: categorySlug,
     location: city,
@@ -85,8 +85,8 @@ export default async function SearchPage({ searchParams }: { searchParams: Promi
   const paths = await getPaths();
   const base = searchPath(paths);
   const path = qs.toString() ? `${base}?${qs.toString()}` : base;
-  if (pageOutOfRange(rawPage, feed.pages)) notFound();
-  const [loc, states, cities, districts, texts, cardWidth] = await Promise.all([
+  const [feed, loc, states, cities, districts, texts, cardWidth] = await Promise.all([
+    feedPromise,
     city ? getLocationBySlug(city) : Promise.resolve(null),
     getStates(),
     getCities(),
@@ -94,6 +94,7 @@ export default async function SearchPage({ searchParams }: { searchParams: Promi
     textOverrides(),
     loadCardWidth(),
   ]);
+  if (pageOutOfRange(rawPage, feed.pages)) notFound();
   const t = makeT(texts);
   const labels = listingLabels(t);
   const own = showFallback(feed);
