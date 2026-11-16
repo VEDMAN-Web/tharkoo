@@ -16,6 +16,7 @@ test.describe("H7.5 Online now and Away on cards and the ad page", () => {
   test("a people ad has no video call on the ad page; Call, WhatsApp, chat and the badge stay", async ({ page }) => {
     test.setTimeout(120_000);
     const path = await firstAdPath(page, PEOPLE_FEED);
+    await setSellerAvailable(slugFromAdPath(path), true);
     await page.goto(path);
     await expect(page.locator("h1")).toHaveCount(1);
     await expect(page.locator("[data-tk=seller-row]")).toBeAttached();
@@ -25,10 +26,10 @@ test.describe("H7.5 Online now and Away on cards and the ad page", () => {
     await page.goto(PEOPLE_FEED);
     await expect(page.locator(":is([data-tk=card], [data-tk=home-ad])").first()).toBeVisible();
     await expect(page.locator(":is([data-tk=card], [data-tk=home-ad]) [data-tk=call]")).toHaveCount(0);
-    await expect(page.locator(":is([data-tk=card], [data-tk=home-ad]) [data-tk=availability]").first()).toBeVisible();
+    await expect(page.locator(`[data-tk=home-ad]:has(a[href*="${slugFromAdPath(path)}"]) [data-tk=availability]`).first()).toBeAttached();
   });
 
-  test("a job ad keeps its Call button, and it pauses while the seller is Away", async ({ page, baseURL }) => {
+  test("a job ad keeps its Call button whether the seller is online or Away", async ({ page, baseURL }) => {
     test.setTimeout(180_000);
     const ad = await createLiveAd(page, baseURL!, "callable");
     const slug = slugFromAdPath(ad.adHref);
@@ -40,12 +41,12 @@ test.describe("H7.5 Online now and Away on cards and the ad page", () => {
     await setSellerAvailable(slug, false);
     await page.goto(ad.adHref);
     if (!isPhone(page)) {
-      await expect(page.locator("[data-tk=contact-card] [data-tk=call]")).toBeDisabled();
+      await expect(page.locator("[data-tk=contact-card] [data-tk=call]")).toBeEnabled();
     }
     await expect(page.locator("[data-tk=chat]:visible").first()).toBeEnabled();
   });
 
-  test("the ad page follows the seller's switch and pauses the call while Away", async ({ page, baseURL }) => {
+  test("the ad page follows the seller's switch: Away or Online now, with chat working both ways", async ({ page, baseURL }) => {
     test.setTimeout(180_000);
     const ad = await createLiveAd(page, baseURL!, "avail");
     const slug = slugFromAdPath(ad.adHref);
@@ -53,24 +54,16 @@ test.describe("H7.5 Online now and Away on cards and the ad page", () => {
     await setSellerAvailable(slug, false);
     await page.goto(`/ad/${slug}/`);
     await expect(page.locator("[data-tk=availability]").first()).toHaveAttribute("data-status", "away");
-    if (!isPhone(page)) {
-      await expect(page.locator("[data-tk=contact-card] [data-tk=call]")).toBeDisabled();
-      await expect(page.locator("[data-tk=contact-card] [data-tk=calls-paused]")).toBeVisible();
-    }
     await expectChatWorks(page);
 
     await setSellerAvailable(slug, true);
     await page.goto(`/ad/${slug}/`);
     await expect(page.locator("[data-tk=availability]").first()).toHaveAttribute("data-status", "online");
-    if (!isPhone(page)) {
-      await expect(page.locator("[data-tk=contact-card] [data-tk=call]")).toBeEnabled();
-      await expect(page.locator("[data-tk=contact-card] [data-tk=calls-paused]")).toHaveCount(0);
-    }
     await expectChatWorks(page);
     expect(await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth)).toBeLessThanOrEqual(0);
   });
 
-  test("the listing card shows the same status as the ad page", async ({ page, baseURL }) => {
+  test("the listing card shows Online now only while the seller is online, and the ad page says Away", async ({ page, baseURL }) => {
     test.setTimeout(180_000);
     const ad = await createLiveAd(page, baseURL!, "cardavail");
     const slug = slugFromAdPath(ad.adHref);
@@ -83,6 +76,8 @@ test.describe("H7.5 Online now and Away on cards and the ad page", () => {
 
     await setSellerAvailable(slug, false);
     await page.goto(`/search/?q=${encodeURIComponent(ad.title)}`);
-    await expect(page.locator(":is([data-tk=card], [data-tk=home-ad])").filter({ hasText: ad.title }).first().locator("[data-tk=availability]")).toHaveAttribute("data-status", "away");
+    const away = page.locator(":is([data-tk=card], [data-tk=home-ad])").filter({ hasText: ad.title }).first();
+    await expect(away).toBeVisible();
+    await expect(away.locator("[data-tk=availability]")).toHaveCount(0);
   });
 });

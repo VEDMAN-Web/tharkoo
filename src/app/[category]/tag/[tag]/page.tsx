@@ -46,7 +46,7 @@ export async function generateMetadata({ params, searchParams }: Props): Promise
   const pageNo = Math.max(1, Number(sp.page) || 1);
   const suffix = pageNo > 1 ? `?page=${pageNo}` : "";
   const result = await withUrlSeo(path, {
-    title: `${meta.label} ${cat.name} ads | Tharkoo`,
+    title: `${cat.name}: ${meta.label} ads | Tharkoo`,
     description: `Browse ${cat.name} ads tagged ${meta.label} on Tharkoo. Open a listing to see the details, photos, and how to get in touch.`,
     path: `${path}${suffix}`,
     canonicalUrl: canonical(`${path}${suffix}`),
@@ -71,7 +71,7 @@ export default async function TagPage({ params, searchParams }: Props) {
     getSite(),
     getFeed({ categorySlug: category, tag, ...narrow }, page),
     publicTags(),
-    urlHeading(path, `${meta.label} ${cat.name}`),
+    urlHeading(path, `${cat.name}: ${meta.label}`),
     readShellConfig(),
     getHomepageContent().then(heroBandFrom),
     textOverrides(),
@@ -96,7 +96,7 @@ export default async function TagPage({ params, searchParams }: Props) {
   ];
   const lead =
     feed.total === 0
-      ? { text: `No ${meta.label} ${cat.name} ads yet. Here are ads close by.`, button: `Post the first ad in ${cat.name}`, href: postAdPath(paths) }
+      ? { text: `No ${cat.name}: ${meta.label} ads yet. Here are ads close by.`, button: `Post the first ad in ${cat.name}`, href: postAdPath(paths) }
       : undefined;
   const labels = listingLabels(t);
   const filterQs = listingFilterQuery(picks, toggles);
