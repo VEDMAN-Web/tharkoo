@@ -1,0 +1,11 @@
+{
+  "branchPrefix": "haiku/h7.126",
+  "globs": [
+    "docs/ownership/H7.126.json",
+    "src/app/safety/page.tsx",
+    "src/app/prohibited-items/page.tsx",
+    "src/lib/seo/sitemaps.ts",
+    "tests/server/seo/no-placeholder-text.test.ts",
+    "tests/e2e/h7-126-no-placeholder.e2e.ts"
+  ]
+}
