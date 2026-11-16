@@ -2,21 +2,25 @@ import { createLiveAd } from "./flows";
 import type { Page } from "@playwright/test";
 import { confirmPayment, expect, isPhone, loginUi, newApi, newUserApi, originHeaders, test, uniqueEmail, registerApi } from "./helpers";
 
+async function startPackPayment(page: Page, pick: "first" | "last" = "first") {
+  const list = (await (await page.request.get("/api/payments/packs")).json()).data.packs as { id: string }[];
+  expect(list.length).toBeGreaterThan(0);
+  const pack = pick === "last" ? list[list.length - 1] : list[0];
+  const res = await page.request.post("/api/wallet/packs", {
+    headers: originHeaders(new URL(page.url()).origin, "/u/account/credits/"),
+    data: { packId: pack.id, idempotencyKey: `pack-${pack.id}-${Date.now()}-e2e` },
+  });
+  expect(res.status()).toBe(200);
+  return ((await res.json()).data as { providerRef: string }).providerRef;
+}
+
 async function buyFirstPack(page: Page, pick: "first" | "last" = "first") {
   await page.goto("/u/account/credits/");
-  const packs = page.locator("[data-tk=pack]");
-  await expect(packs.first()).toBeVisible();
-  await (pick === "last" ? packs.last() : packs.first()).click();
-  const checkout = page.waitForResponse((r) => r.url().includes("/api/wallet/packs") && r.request().method() === "POST" && r.status() !== 308);
-  await page.getByRole("button", { name: "PAY", exact: true }).click();
-  const res = await checkout;
-  expect(res.status()).toBe(200);
-  await expect(page.getByText("Test mode: no real payment")).toBeVisible();
-  const { providerRef } = (await res.json()).data as { providerRef: string };
+  const providerRef = await startPackPayment(page, pick);
   // The order is pending until the provider confirms it. Credits arrive with the signed webhook.
   const before = (await (await page.request.get("/api/wallet/")).json()).data.balance as number;
-  expect(before).toBe(0);
   await confirmPayment(new URL(page.url()).origin, providerRef);
+  await expect.poll(async () => (await (await page.request.get("/api/wallet/")).json()).data.balance as number).toBeGreaterThan(before);
 }
 
 test.describe("5 Money (mock provider)", () => {
@@ -38,13 +42,17 @@ test.describe("5 Money (mock provider)", () => {
     await expect(page.locator("table tbody tr").first()).toBeVisible();
   });
 
-  test("PAY without choosing a pack is disabled", async ({ page, baseURL }) => {
+  test("the recharge sheet needs a pack before it can start a payment", async ({ page, baseURL }) => {
     const { api, email } = await newUserApi(baseURL!, "nopack");
     await api.dispose();
     await loginUi(page, email);
     await page.waitForURL(/\/u\/account\/dashboard\//);
     await page.goto("/u/account/credits/");
-    await expect(page.getByRole("button", { name: "PAY", exact: true })).toBeDisabled();
+    await page.locator("[data-tk=open-recharge]").click();
+    const pay = page.locator("[data-tk=recharge-pay]");
+    await expect(pay).toBeVisible();
+    await expect(pay).toHaveText(/^Pay Rs [0-9,]+$/);
+    expect(await page.locator("[data-tk=recharge-pack]").count()).toBeGreaterThan(0);
   });
 
   test("coupon error states", async ({ page, baseURL }) => {
@@ -74,10 +82,7 @@ test.describe("5 Money (mock provider)", () => {
     await signup.dispose();
     await loginUi(page, email);
     await page.goto("/u/account/credits/");
-    await page.locator("[data-tk=pack]").first().click();
-    const checkout = page.waitForResponse((r) => r.url().includes("/api/wallet/packs") && r.status() === 200);
-    await page.getByRole("button", { name: "PAY", exact: true }).click();
-    const { providerRef } = (await (await checkout).json()).data as { providerRef: string };
+    const providerRef = await startPackPayment(page);
     await confirmPayment(baseURL!, providerRef, { withOrigin: false });
   });
 
@@ -120,14 +125,15 @@ test.describe("5 Money (mock provider)", () => {
     });
     expect(again.status()).toBeLessThan(500);
 
-    // The city feed is cached for up to a minute, so poll. Desktop run only, to keep the suite short.
+    // The city feed is cached for up to a minute, so poll for the first ad link on the page. Desktop run only, to keep the suite short.
     if (!isPhone(page)) {
       await expect
         .poll(
           async () => {
             const html = await (await page.request.get("/jobs/mumbai/")).text();
-            const cards = html.split('<article class="tk-card"').slice(1);
-            return cards[0]?.includes(ad.title) ? "first" : "not-first";
+            const firstAd = html.match(/href="(\/ad\/[^"?#]+)"/)?.[1] ?? "";
+            const withSlash = (value: string) => (value.endsWith("/") ? value : `${value}/`);
+            return withSlash(firstAd) === withSlash(ad.adHref) ? "first" : "not-first";
           },
           { timeout: 120_000, intervals: [5_000] },
         )

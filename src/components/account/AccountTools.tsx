@@ -7,7 +7,7 @@ import { VendorShell } from "../vendor/VendorShell";
 import { EmptyState } from "../ui/EmptyState";
 import { HelpCard } from "../ui/HelpCard";
 
-export function WalletHistory() {
+export function WalletHistory({ purchases }: { purchases?: React.ReactNode }) {
   const [items, setItems] = useState<{ id: string; delta: number; reason: string; createdAt: string | null }[] | null>(null);
   const [signedOut, setSignedOut] = useState(false);
   useEffect(() => {
@@ -26,6 +26,7 @@ export function WalletHistory() {
   return (
     <VendorShell>
       <h1 className="tk-page-h1">Transaction History</h1>
+      {purchases}
       {signedOut ? (
         <EmptyState title="Sign in to see history" body="Transactions appear after you log in." action={{ href: "/u/login/?next=/u/account/credits/history/", label: "Log in" }} />
       ) : items && items.length === 0 ? (

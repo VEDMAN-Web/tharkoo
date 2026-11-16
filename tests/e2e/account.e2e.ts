@@ -16,7 +16,7 @@ test.describe("3 Account", () => {
 
     await page.goto("/u/account/edit-account/");
     await expect(page.getByRole("region", { name: "Settings" }).getByText(email, { exact: false })).toBeVisible();
-    await expect(page.getByText("Text message codes are coming soon")).toBeVisible();
+    await expect(page.getByText(/coming soon/i)).toHaveCount(0);
 
     // Other account screens load for a signed-in user.
     for (const path of ["/u/account/ads/", "/u/account/credits/", "/u/account/coupons/", "/u/account/saved/", "/u/account/kyc/"]) {
