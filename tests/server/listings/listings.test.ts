@@ -11,6 +11,7 @@ import { DELETE, GET, PATCH, POST } from "@/app/api/listings/[[...slug]]/route";
 import { hashToken } from "@/server/auth/http";
 import { AuditEvent, BannedWord, Category, Listing, Location, MediaAsset, Session, Site, User } from "@/server/models";
 import { randomToken } from "@/server/shared/crypto";
+import { queryListings } from "@/server/search/query";
 import { clearMemoryMongo, connectMemoryMongo, disconnectMemoryMongo } from "../../setup/mongo";
 
 const origin = "http://127.0.0.1:4317";
@@ -148,6 +149,81 @@ describe("listing routes", () => {
     expect((await again.json()).data.charged).toBe(0);
   });
 
+  it("keeps a live ad live and indexed while its owner edits it: the new title shows after one step", async () => {
+    const owner = await account("edit-stays-live@example.com");
+    const { category, city, media } = await catalogue(owner.user._id);
+    const id = await draftFor(owner.cookie, category._id.toString(), city._id.toString(), media._id.toString(), "Live cycle");
+    expect((await call("POST", `${id}/submit`, { attestations }, owner.cookie)).status).toBe(200);
+    const slug = (await Listing.findById(id))?.slug ?? "";
+    const changed = await call("PATCH", id, { stage: "basics", title: "Live cycle with a new title" }, owner.cookie);
+    expect(changed.status).toBe(200);
+    const after = await Listing.findById(id);
+    expect(after?.status).toBe("active");
+    expect(after?.seoNoindex).toBe(false);
+    expect(after?.slug).toBe(slug);
+    const publicView = await call("GET", slug);
+    expect(publicView.status).toBe(200);
+    expect((await publicView.json()).data.title).toBe("Live cycle with a new title");
+  });
+
+  it("refuses an edit with a forbidden word on a live ad and leaves it unchanged and live", async () => {
+    const owner = await account("edit-forbidden@example.com");
+    const { category, city, media } = await catalogue(owner.user._id);
+    const id = await draftFor(owner.cookie, category._id.toString(), city._id.toString(), media._id.toString(), "Clean cycle");
+    expect((await call("POST", `${id}/submit`, { attestations }, owner.cookie)).status).toBe(200);
+    await BannedWord.create({ text: "zzzliveword", matchType: "contains" });
+    const refused = await call("PATCH", id, { stage: "basics", title: "Cycle zzzliveword here" }, owner.cookie);
+    expect(refused.status).toBeGreaterThanOrEqual(400);
+    expect(refused.status).toBeLessThan(500);
+    const text = JSON.stringify(await refused.json());
+    expect(text).toContain("Listing text is not allowed");
+    const after = await Listing.findById(id);
+    expect(after?.title).toBe("Clean cycle");
+    expect(after?.status).toBe("active");
+    expect(after?.seoNoindex).toBe(false);
+    const details = await call("PATCH", id, { stage: "details", contact: { phone, whatsapp: "zzzliveword", acceptForm: false } }, owner.cookie);
+    expect(details.status).toBeGreaterThanOrEqual(400);
+    expect((await Listing.findById(id).select("+contact"))?.contact?.whatsapp).toBe(whatsapp);
+  });
+
+  it("refuses a contact change that leaves a live ad with no way to reach it", async () => {
+    const owner = await account("edit-nocontact@example.com");
+    const { category, city, media } = await catalogue(owner.user._id);
+    const id = await draftFor(owner.cookie, category._id.toString(), city._id.toString(), media._id.toString(), "Reachable cycle");
+    expect((await call("POST", `${id}/submit`, { attestations }, owner.cookie)).status).toBe(200);
+    const none = await call("PATCH", id, { stage: "details", contact: { acceptForm: false } }, owner.cookie);
+    expect(none.status).toBeGreaterThanOrEqual(400);
+    expect(none.status).toBeLessThan(500);
+    const after = await Listing.findById(id).select("+contact");
+    expect(after?.status).toBe("active");
+    expect(after?.contact?.phone).toBe(phone);
+  });
+
+  it("shows a new photo on a live ad only once it is cleared", async () => {
+    const owner = await account("edit-photos@example.com");
+    const { category, city, media } = await catalogue(owner.user._id);
+    const id = await draftFor(owner.cookie, category._id.toString(), city._id.toString(), media._id.toString(), "Photo cycle");
+    expect((await call("POST", `${id}/submit`, { attestations }, owner.cookie)).status).toBe(200);
+    await MediaAsset.updateOne({ _id: media._id }, { $set: { objectKey: "/uploads/first-cleared.jpg" } });
+    const scanning = await MediaAsset.create({
+      ownerId: owner.user._id,
+      kind: "image",
+      objectKey: "/uploads/scanning-new.jpg",
+      status: "scanning",
+      contentType: "image/jpeg",
+    });
+    const attach = await call("PATCH", id, { stage: "photos", mediaIds: [media._id.toString(), scanning._id.toString()] }, owner.cookie);
+    expect(attach.status).toBe(200);
+    expect((await Listing.findById(id))?.status).toBe("active");
+    const listing = await Listing.findById(id);
+    const found = (await queryListings({ pageSize: 20 })).hits.find((row) => row.slug === listing?.slug);
+    expect(found).toBeTruthy();
+    expect(found?.photos).toEqual(["/uploads/first-cleared.jpg"]);
+    await MediaAsset.updateOne({ _id: scanning._id }, { $set: { status: "cleared", clearedAt: new Date() } });
+    const later = (await queryListings({ pageSize: 20 })).hits.find((row) => row.slug === listing?.slug);
+    expect(later?.photos).toEqual(["/uploads/first-cleared.jpg", "/uploads/scanning-new.jpg"]);
+  });
+
   it("keeps a paused ad paused when its edits are saved, with no fee", async () => {
     const owner = await account("edit-paused@example.com");
     const { category, city, media } = await catalogue(owner.user._id);
@@ -197,7 +273,7 @@ describe("listing routes", () => {
     expect(revalidated.paths).toEqual(expect.arrayContaining(["/", "/cycles/", "/cycles/pune/", `/ad/${slug}/`]));
   });
 
-  it("sends an active listing back to pending after a sensitive edit", async () => {
+  it("keeps an active listing active after a sensitive edit and records a version", async () => {
     const owner = await account("edit@example.com");
     const { category, city, media } = await catalogue(owner.user._id);
     const id = await draftFor(owner.cookie, category._id.toString(), city._id.toString(), media._id.toString());
@@ -205,7 +281,7 @@ describe("listing routes", () => {
     await Listing.updateOne({ _id: id }, { $set: { status: "active", publishedAt: new Date() } });
     const edited = await call("PATCH", id, { stage: "basics", title: "Updated cycle" }, owner.cookie);
     expect(edited.status).toBe(200);
-    expect((await edited.json()).data.status).toBe("pending");
+    expect((await edited.json()).data.status).toBe("active");
     const versions = await call("GET", `${id}/versions`, undefined, owner.cookie);
     expect((await versions.json()).data.versions.length).toBeGreaterThan(1);
   });
