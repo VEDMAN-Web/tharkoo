@@ -1,0 +1,11 @@
+{
+  "branchPrefix": "haiku/h7.129",
+  "globs": [
+    "docs/ownership/H7.129.json",
+    "src/app/admin/ads/[id]/actions.ts",
+    "src/app/admin/ads/home-actions.ts",
+    "src/server/verification/service.ts",
+    "src/app/api/admin/verifications/[[...slug]]/route.ts",
+    "tests/server/admin/role-checks-h7129.test.ts"
+  ]
+}
