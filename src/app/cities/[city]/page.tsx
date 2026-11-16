@@ -96,7 +96,7 @@ export default async function CityAreasPage({ params, searchParams }: Props) {
   ];
   // H7.32: the band photo: the city, then the state, then the home hero.
   const band = bandChoice(shell, hero, { city, state: data.stateSlug || undefined });
-  const photos = new Map(shell.media.images.filter((image) => image.scope === "category" && image.photo).map((image) => [image.slug, image.photo]));
+  const photos = new Map(shell.media.images.filter((image) => image.scope === "category" && image.photo).map((image) => [image.slug, { src: image.photo, focus: `${image.focusX ?? 50}% ${image.focusY ?? 18}%` }]));
 
   // H7.32 (FIX B): few own ads keep their place, and fallback ads go below them. With none, one line and a post button.
   const own = showFallback(latest);
@@ -188,7 +188,7 @@ export default async function CityAreasPage({ params, searchParams }: Props) {
                   <li key={slug}>
                     <Link className="tkn-city-cat" href={placePath(slug, city)} prefetch={false}>
                       {photo ? (
-                        <img className="tkn-city-cat-photo" src={photo} alt="" width={480} height={360} loading="lazy" />
+                        <img className="tkn-city-cat-photo" src={photo.src} alt="" width={480} height={360} loading="lazy" style={{ objectPosition: photo.focus }} />
                       ) : (
                         <span className="tkn-city-cat-photo" aria-hidden="true" />
                       )}

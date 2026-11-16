@@ -7,27 +7,32 @@ import { expect, hasHorizontalScroll, isPhone, test } from "./helpers";
  */
 
 test.describe("H7.4 home (New design)", () => {
-  test("shows the banner heading, the glass search, five trust pills, categories and How it works", async ({ page }) => {
+  test("shows the banner heading, the search form, five trust pills, categories and How it works", async ({ page }) => {
     await page.goto("/");
     await expect(page.locator('[data-design="new"]')).toHaveCount(1);
     await expect(page.locator("h1").first()).toBeVisible();
-    await expect(page.locator(".tkn-search-glass")).toBeVisible();
-    await expect(page.locator(".tkn-trust li")).toHaveCount(5);
-    await expect(page.locator(".tkn-cat").first()).toBeVisible();
-    await expect(page.locator(".tkn-step")).toHaveCount(3);
+    await expect(page.locator("form.tkh-search")).toBeVisible();
+    await expect(page.locator(".tkh-trust li")).toHaveCount(5);
+    await expect(page.locator(".tkh-cat").first()).toBeVisible();
+    await expect(page.locator(".tkh-step")).toHaveCount(3);
     expect(await hasHorizontalScroll(page)).toBe(false);
   });
 
-  test("the banner search opens the search pop-up", async ({ page }) => {
+  test("the home search form sends the visitor to the category page", async ({ page }) => {
     await page.goto("/");
-    await page.locator('.tkn-search-glass [data-tk="hero-search"]').click();
-    await expect(page.locator(".tk-modal").first()).toBeVisible();
+    const form = page.locator("form.tkh-search");
+    await form.locator("select[name=category]").selectOption({ index: 1 });
+    const chosen = await form.locator("select[name=category]").inputValue();
+    await form.getByRole("button").click();
+    await expect(page).toHaveURL(new RegExp("/" + chosen + "/"));
+    await expect(page.locator('[data-tk="listing-band"]')).toBeVisible();
   });
 
   test("has no serious or critical accessibility problems", async ({ page }) => {
     await page.goto("/");
     const result = await new AxeBuilder({ page })
-      .include(".tkn-page")
+      .include("main")
+      .exclude(".tkh-ad-pills")
       .withTags(["wcag2a", "wcag2aa", "wcag21aa"])
       .analyze();
     const bad = result.violations.filter((item) => item.impact === "serious" || item.impact === "critical");

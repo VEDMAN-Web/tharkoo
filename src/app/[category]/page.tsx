@@ -33,7 +33,7 @@ import { ListingFrame } from "@/components/new/ListingFrame";
 import { withPagination } from "@/lib/seo/pagination";
 import { ListingPager } from "@/components/new/ListingPager";
 import { pageBase, pagerLabels } from "@/components/new/listing-pager";
-import { listingFrameProps, listingLabels, placeSelects } from "@/components/new/listing-frame-props";
+import { introCategory, listingFrameProps, listingLabels, placeSelects } from "@/components/new/listing-frame-props";
 import { attributePicks, hasFieldPicks, type ListingToggles } from "@/components/new/listing-filters";
 
 type Props = { params: Promise<{ category: string }>; searchParams: Promise<ListingParams> };
@@ -189,7 +189,7 @@ export default async function CategoryHub({ params, searchParams }: Props) {
           { name: cat.name || category, path: categoryPath(cat.slug || category) },
         ],
         h1: h1Text,
-        intro: listingHeading(introTemplate, "", { ...layout.vars, h1: h1Text }) || t("listing.band.introIndia", { category: cat.name }),
+        intro: listingHeading(introTemplate, "", { ...layout.vars, h1: h1Text }) || t("listing.band.introIndia", { category: introCategory(cat.name) }),
         photo: bandChoice(shell, hero, { category: cat.slug || category }),
         categorySlug: cat.slug || category,
         searchAction: searchPath(paths),

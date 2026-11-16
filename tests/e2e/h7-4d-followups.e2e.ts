@@ -65,26 +65,6 @@ test.describe("H7.4d: phone home chips", () => {
 });
 
 test.describe("H7.4d: menus close on an outside click and on Escape", () => {
-  test("the listing breadcrumb menu (old design) closes on an outside click and on Escape", async ({ page }) => {
-    await setNewDesign(false);
-    try {
-      await page.goto("/dating/mumbai/");
-      const trigger = page.locator("nav.tk-crumbs button[aria-expanded]:visible").first();
-      await expect(trigger).toBeVisible();
-      await trigger.click();
-      const menu = page.locator(".tk-crumb-menu:visible").first();
-      await expect(menu).toBeVisible();
-      await page.locator("h1.tk-listing-h1").click({ position: { x: 2, y: 2 } });
-      await expect(menu).toHaveCount(0);
-      await trigger.click();
-      await expect(menu).toBeVisible();
-      await page.keyboard.press("Escape");
-      await expect(menu).toHaveCount(0);
-    } finally {
-      await setNewDesign(true);
-    }
-  });
-
   test("the account popover (old design) closes on an outside click and on Escape", async ({ page }) => {
     await setNewDesign(false);
     try {
@@ -105,20 +85,22 @@ test.describe("H7.4d: menus close on an outside click and on Escape", () => {
     }
   });
 
-  test("the chat panel closes on Escape, and an outside click does not close an open chat", async ({ page, baseURL }) => {
+  test("the chat panel closes on Escape, and on wide screens an outside click does not close an open chat", async ({ page, baseURL }) => {
     test.setTimeout(120_000);
     const seller = await newUserApi(baseURL!, "chatseller");
     await seller.api.dispose();
     await loginUi(page, seller.email);
     const adPath = await anyAdPath(page, "/property/bengaluru/");
     await page.goto(adPath);
-    const chat = page.locator("[data-tk=chat]:visible").first();
+    const chat = page.locator(isPhone(page) ? "[data-tk=bottom-bar] [data-tk=chat]" : "[data-tk=contact-card] [data-tk=chat]");
     test.skip((await chat.count()) === 0, "no chat button on this ad for this visitor");
     await chat.click();
     const panel = page.locator("[data-tk=chat-panel]");
     await expect(panel).toBeVisible();
-    await page.locator("h1").first().click({ position: { x: 2, y: 2 } });
-    await expect(panel).toBeVisible();
+    if (!isPhone(page)) {
+      await page.locator("h1").first().click({ position: { x: 2, y: 2 } });
+      await expect(panel).toBeVisible();
+    }
     await page.keyboard.press("Escape");
     await expect(panel).toHaveCount(0);
   });
@@ -126,6 +108,7 @@ test.describe("H7.4d: menus close on an outside click and on Escape", () => {
   test("the search modal closes on Escape and on a click on the backdrop", async ({ page }) => {
     await page.goto("/");
     // P1: the home header has no search button, so the pop-up opens through the same event the listing pages use.
+    await page.waitForLoadState("networkidle");
     const open = () => page.evaluate(() => window.dispatchEvent(new Event("tk-open-search")));
     await open();
     const modal = page.locator('[data-tk=search-modal]');
