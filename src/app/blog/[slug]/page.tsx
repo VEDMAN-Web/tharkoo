@@ -8,7 +8,8 @@ import { blogPostingNode } from "@/lib/seo/schema";
 import { Container } from "@/components/ui/Container";
 import { Prose } from "@/components/ui/Prose";
 import { LegalView } from "@/components/new/LegalView";
-import { bodyParagraphs, readingMinutes, toSections } from "@/components/new/legal-copy";
+import { BlogCover } from "@/components/new/BlogCover";
+import { bodyParagraphs, readingMinutes, stripDevNotes, toSections } from "@/components/new/legal-copy";
 import { blogPath, contactPath } from "@/lib/urls";
 import { withUrlSeo, urlHeading } from "@/lib/seo/override";
 import { getPaths } from "@/server/urls/service";
@@ -25,7 +26,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   const postTitle = post.title || "Blog";
   const brandTitle = /\|\s*Tharkoo$/.test(postTitle) ? postTitle : `${postTitle} | Tharkoo`;
   const seoTitle = brandTitle.length < 30 ? `Blog: ${brandTitle}` : brandTitle;
-  const body = post.body || "";
+  const body = stripDevNotes(post.body || "");
   const seoDescription = body.length >= 70 ? body : `${postTitle} on the Tharkoo blog. Read the full article for practical tips on posting and staying safe.`;
   return withUrlSeo(path, {
     title: seoTitle,
@@ -64,6 +65,7 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
           minutes={readingMinutes(paragraphs)}
           author={post.author || undefined}
           sections={toSections(paragraphs, slug)}
+          cover={<BlogCover />}
           askHref={contactPath(paths)}
           askLabel="Questions about this article?"
         />

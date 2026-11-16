@@ -290,7 +290,6 @@ export function ShellEditor({ initial, section }: { initial: ShellConfig; sectio
         <section aria-labelledby="chat-edit">
           <h2 className="t-h3" id="chat-edit">Support chat</h2>
           <Text label="Panel title" value={chat.title} onChange={(v) => setDraft({ ...draft, chat: { ...chat, title: v } })} />
-          <Text label="Status line" value={chat.status} onChange={(v) => setDraft({ ...draft, chat: { ...chat, status: v } })} />
           <Text label="Welcome message" value={chat.welcome} multiline onChange={(v) => setDraft({ ...draft, chat: { ...chat, welcome: v } })} />
           <Text label="Guest hint (name and contact first)" value={chat.guestHint} multiline onChange={(v) => setDraft({ ...draft, chat: { ...chat, guestHint: v } })} />
           <Text label="WhatsApp link (wa.me/...)" value={chat.whatsapp} max={2048} onChange={(v) => setDraft({ ...draft, chat: { ...chat, whatsapp: v } })} />

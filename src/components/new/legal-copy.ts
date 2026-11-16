@@ -7,16 +7,25 @@ export function hasPlaceholder(text: string): boolean {
   return text.toLowerCase().includes(PLACEHOLDER_MARK);
 }
 
+const DEV_NOTE = /draft for review|\bis a draft\b|\bdemo\b|placeholder|if you want the page indexed|lawyer should|not for publication/i;
+
+export function stripDevNotes(text: string): string {
+  const sentences = text.split(/(?<=[.!?])\s+/);
+  const kept = sentences.filter((sentence) => !DEV_NOTE.test(sentence));
+  return kept.length === sentences.length ? text : kept.join(" ");
+}
+
 export function bodyParagraphs(body: string | null | undefined): string[] {
   if (!body) return [];
   return body
     .split(/\r?\n\s*\r?\n/)
-    .map((block) => block.trim())
+    .map((block) => stripDevNotes(block.trim()))
     .filter(Boolean);
 }
 
 export function publicParagraphs(paragraphs: string[], page: string): string[] {
-  return paragraphs.filter((paragraph) => {
+  return paragraphs.map(stripDevNotes).filter((paragraph) => {
+    if (!paragraph) return false;
     if (!hasPlaceholder(paragraph)) return true;
     console.warn(`[legal-copy] hidden paragraph on "${page}": the text still has a [placeholder. Fix it in admin.`);
     return false;
