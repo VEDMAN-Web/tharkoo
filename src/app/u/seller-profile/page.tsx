@@ -15,7 +15,7 @@ export const dynamic = "force-dynamic";
 export async function generateMetadata() {
   return withUrlSeo("/u/seller-profile/", {
     title: "About you | Tharkoo",
-    description: "Set up your seller profile before you post your first ad.",
+    description: "Set up your advertiser profile before you post your first ad.",
     path: "/u/seller-profile/",
     index: false,
     follow: false,

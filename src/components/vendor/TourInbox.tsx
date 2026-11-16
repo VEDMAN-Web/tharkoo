@@ -79,7 +79,7 @@ export function TourInbox() {
                 </p>
                 {tour.status === "requested" ? (
                   <>
-                    <p className="t-small">Accept within 30 minutes, or the buyer is refunded.</p>
+                    <p className="t-small">Accept within 30 minutes, or the caller is refunded.</p>
                     <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
                       <button
                         type="button"

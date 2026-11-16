@@ -85,14 +85,14 @@ export function SellerProfileForm({ next, initial, askDateOfBirth, initialLiveCh
 
       <label className="tk-sp-check">
         <input type="checkbox" checked={availableNow} onChange={(event) => setAvailableNow(event.target.checked)} />
-        <span>Available now (buyers see Online now)</span>
+        <span>Available now (people see Online now)</span>
       </label>
 
       <label className="tk-sp-check">
         <input type="checkbox" checked={liveChat} onChange={(event) => setLiveChat(event.target.checked)} />
         <span>Turn on live chat?</span>
       </label>
-      <p className="tk-sp-help">Buyers can chat with you on Tharkoo. Your ads then show Online now or Away, and get a Chat online now button.</p>
+      <p className="tk-sp-help">People can chat with you on Tharkoo. Your ads then show Online now or Away, and get a Chat online now button.</p>
 
       {askDateOfBirth ? (
         <fieldset className="tk-sp-fieldset">
