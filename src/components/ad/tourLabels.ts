@@ -34,6 +34,6 @@ export function tourStatusLabel(status: string): string {
 
 /** The join line for an accepted tour: a link when the room exists, otherwise a plain note. */
 export function roomLine(joinUrl: string | null | undefined): { kind: "link"; href: string } | { kind: "note"; text: string } {
-  if (joinUrl && /^https:\/\//.test(joinUrl)) return { kind: "link", href: joinUrl };
+  if (joinUrl && /^(https:\/\/|\/u\/account\/tours\/)/.test(joinUrl)) return { kind: "link", href: joinUrl };
   return { kind: "note", text: "Room is not set up yet" };
 }
