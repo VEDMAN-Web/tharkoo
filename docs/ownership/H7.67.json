@@ -11,6 +11,7 @@
     "src/components/new/listing-page.css",
     "src/components/new/listing-spec.css",
     "tests/e2e/h7-67-listing-band.e2e.ts",
-    "tests/server/listing/band-choice.test.ts"
+    "tests/server/listing/band-choice.test.ts",
+    "tests/server/listing/listing-filters.test.ts"
   ]
 }
