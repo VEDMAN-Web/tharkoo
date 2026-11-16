@@ -38,8 +38,6 @@ const CONTACT_ROWS: {
   { label: "Email", text: "@", bg: "#FCE7F3", fg: "#BE185D", placeholder: "[YOUR SUPPORT EMAIL]", match: (c) => c.kind === "email" },
 ];
 
-const ADDRESS_PLACEHOLDER = "[YOUR OFFICE ADDRESS]";
-
 function LinkColumn({ title, items, columns }: { title: string; items: ShellLink[]; columns: 1 | 2 }) {
   const paths = useUrlPaths();
   const shown = items.filter((item) => item.visible && item.label);
@@ -72,7 +70,6 @@ export function FooterNew({ siteName, shell, categories }: { siteName: string; s
     ? f.topCategories
     : categories.slice(0, 6).map((cat) => ({ label: cat.name, href: categoryPath(cat.slug), visible: true, icon: "tag" as const }));
   const adminLink = (name: string) => f.socials.find((item) => item.visible && item.label.trim().toLowerCase() === name.toLowerCase());
-  const address = f.contacts.find((item) => item.kind === "address" && item.visible && item.value)?.value || ADDRESS_PLACEHOLDER;
   return (
     <footer className="tkn-footer" data-tk="footer">
       <div className="tkn-wrap tkn-foot-grid">
@@ -142,7 +139,6 @@ export function FooterNew({ siteName, shell, categories }: { siteName: string; s
           <p className="tkn-copy">
             {f.copyright}
             {f.adultNotice ? <span className="tkn-adult"> · {f.adultNotice}</span> : null}
-            <span> · {address}</span>
           </p>
           <nav aria-label="Legal">
             <ul className="tkn-legal">

@@ -58,7 +58,7 @@ const emailOtpVerifyBodySchema = z.object({
 });
 
 function codeLife(remember: boolean | undefined): CookieLife {
-  return remember ? "remembered" : "browser";
+  return remember === false ? "browser" : "remembered";
 }
 
 const otpVerifyBodySchema = z.object({
@@ -130,8 +130,9 @@ async function dispatch(request: Request) {
       userAgent: request.headers.get("user-agent"),
       ip,
       existingToken: token,
+      life: "remembered",
     });
-    return json({ user: result.user }, requestId, 200, [sessionCookieHeader(result.token), sessionHintCookie()]);
+    return json({ user: result.user }, requestId, 200, [sessionCookieHeader(result.token, cookieSecure(), "remembered"), sessionHintCookie(cookieSecure(), "remembered")]);
   }
   if (request.method === "POST" && path === "logout") {
     await logoutSession(token);

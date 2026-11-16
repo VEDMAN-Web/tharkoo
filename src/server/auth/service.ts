@@ -234,6 +234,7 @@ export async function loginUser(input: {
   userAgent?: string | null;
   ip?: string;
   existingToken?: string;
+  life?: CookieLife;
 }) {
   await connectDb();
   await ready();
