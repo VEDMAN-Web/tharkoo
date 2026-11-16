@@ -1,5 +1,6 @@
 "use client";
 
+import { ComingSoon, useLaunchSwitches } from "@/components/LaunchSwitches";
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { api, friendlyError, hasSessionHint, idempotencyKey } from "@/lib/ui/api";
@@ -67,6 +68,7 @@ function Balance({ balance, coinValueInr }: { balance: number; coinValueInr: num
 }
 
 function BuyTab({ data }: { data: CoinsResponse }) {
+  const { creditPurchasesOn } = useLaunchSwitches();
   const [selected, setSelected] = useState<string>("");
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState("");
@@ -123,9 +125,13 @@ function BuyTab({ data }: { data: CoinsResponse }) {
           );
         })}
       </div>
-      <button type="button" className="tk-btn tk-btn-cta" disabled={!pack || busy} onClick={buy} style={{ width: "100%" }}>
-        {pack ? `Buy ${pack.coins} credits for ${inr(pack.price)}` : "Choose a pack"}
-      </button>
+      {creditPurchasesOn ? (
+        <button type="button" className="tk-btn tk-btn-cta" disabled={!pack || busy} onClick={buy} style={{ width: "100%" }}>
+          {pack ? `Buy ${pack.coins} credits for ${inr(pack.price)}` : "Choose a pack"}
+        </button>
+      ) : (
+        <ComingSoon />
+      )}
       <div aria-live="polite" className="t-small" style={{ minHeight: 18, color: message === HELD ? "var(--muted)" : "var(--danger, #a12626)" }}>
         {message}
       </div>

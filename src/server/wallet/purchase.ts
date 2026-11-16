@@ -1,3 +1,4 @@
+import { assertCreditPurchasesOn } from "@/server/wallet/launch-switches";
 import mongoose from "mongoose";
 import { connectDb } from "@/lib/db";
 import { AuditRepository } from "@/server/audit";
@@ -69,6 +70,7 @@ export async function startCoinPurchase(input: {
   requestId: string;
   ip?: string;
 }) {
+  await assertCreditPurchasesOn();
   await connectDb();
   await CoinPurchase.init();
   const userId = objectId(input.userId, "userId");

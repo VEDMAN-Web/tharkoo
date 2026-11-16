@@ -1,3 +1,4 @@
+import { assertCreditPurchasesOn } from "@/server/wallet/launch-switches";
 import type { Types } from "mongoose";
 import { AuditRepository } from "@/server/audit";
 import { STAR_SLOT_CAP, boostsDue, promotionRule } from "@/server/billing/catalog";
@@ -121,6 +122,7 @@ export async function checkoutPack(input: {
   requestId: string;
   ip?: string;
 }) {
+  await assertCreditPurchasesOn();
   await connectDb();
   await readyBilling();
   const userId = objectId(input.userId, "userId");

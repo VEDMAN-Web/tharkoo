@@ -5,6 +5,7 @@ export default defineConfig({
   test: {
     include: ["tests/setup/**/*.test.ts", "tests/server/**/*.test.ts"],
     fileParallelism: false,
+    env: { LAUNCH_SWITCHES_DEFAULT: "on" },
     hookTimeout: 120_000,
     testTimeout: 120_000,
   },

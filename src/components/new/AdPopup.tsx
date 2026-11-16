@@ -1,5 +1,6 @@
 "use client";
 
+import { useLaunchSwitches } from "@/components/LaunchSwitches";
 import { useEffect, useRef, useState, type ClipboardEvent, type FormEvent, type KeyboardEvent } from "react";
 import { X } from "lucide-react";
 import { api, friendlyError } from "@/lib/ui/api";
@@ -39,6 +40,7 @@ function firstStep(props: Pick<AdPopupProps, "kind" | "signedIn" | "seller">): S
 }
 
 export function AdPopup(props: AdPopupProps) {
+  const { creditPurchasesOn } = useLaunchSwitches();
   const t = useT();
   const { kind, name, seller, onClose } = props;
   const ref = useFocusTrap<HTMLDivElement>(true, onClose);
@@ -203,7 +205,7 @@ export function AdPopup(props: AdPopupProps) {
                   {t("ad.buy.more")}
                 </button>
               ) : null}
-              {props.paymentsLive ? (
+              {props.paymentsLive && creditPurchasesOn ? (
                 <button type="button" className="tkn-pop-btn" disabled={busy || packs.length === 0} onClick={() => void pay()}>
                   {t("ad.buy.pay", { amount: `₹${(packs[pick]?.price ?? 0).toLocaleString("en-IN")}` })}
                 </button>

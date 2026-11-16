@@ -1,0 +1,21 @@
+{
+  "branchPrefix": "haiku/h7.95",
+  "globs": [
+    "docs/ownership/H7.95.json",
+    "src/server/wallet/launch-switches.ts",
+    "src/server/billing/service.ts",
+    "src/server/wallet/purchase.ts",
+    "src/server/tours/service.ts",
+    "src/components/LaunchSwitches.tsx",
+    "src/components/PathChrome.tsx",
+    "src/components/SiteShell.tsx",
+    "src/components/buyer/PackPicker.tsx",
+    "src/components/wallet/CoinWallet.tsx",
+    "src/components/new/AdPopup.tsx",
+    "src/components/ContactButtons.tsx",
+    "src/app/admin/settings/**",
+    "src/app/globals.css",
+    "vitest.config.ts",
+    "tests/**"
+  ]
+}

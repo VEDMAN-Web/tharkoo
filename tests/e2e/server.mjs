@@ -34,6 +34,7 @@ const env = {
   PAYMENT_WEBHOOK_SECRET: "e2e-webhook-secret-not-real",
   ADMIN_BOOTSTRAP_EMAIL: process.env.ADMIN_BOOTSTRAP_EMAIL || "homepage-admin@example.test",
   ADMIN_BOOTSTRAP_PASSWORD: process.env.ADMIN_BOOTSTRAP_PASSWORD || "HomepageAdmin1!",
+  LAUNCH_SWITCHES_DEFAULT: "on",
   NODE_ENV: "production",
 };
 

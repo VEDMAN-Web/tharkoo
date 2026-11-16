@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { api, friendlyError, idempotencyKey } from "@/lib/ui/api";
+import { ComingSoon, useLaunchSwitches } from "@/components/LaunchSwitches";
 import type { PackRow } from "@/server/notifications/summary";
 
 /** H7.17: the coin pack choice and the Pay button, shared by the home and the coins page. */
@@ -15,6 +16,7 @@ function tagText(tag: string) {
 }
 
 export function PackPicker({ packs, onPaid }: { packs: PackRow[]; onPaid?: (balance: number) => void }) {
+  const { creditPurchasesOn } = useLaunchSwitches();
   const [selected, setSelected] = useState("");
   const [message, setMessage] = useState("");
   const chosen = packs.find((pack) => pack.id === selected);
@@ -53,9 +55,13 @@ export function PackPicker({ packs, onPaid }: { packs: PackRow[]; onPaid?: (bala
       </div>
       <div className="up-pay-row">
         <p aria-live="polite" className="up-muted">{message}</p>
-        <button type="button" className="up-btn" disabled={!chosen} onClick={pay}>
-          {chosen ? `Pay ${inr(chosen.price)}` : "Choose a pack"}
-        </button>
+        {creditPurchasesOn ? (
+          <button type="button" className="up-btn" disabled={!chosen} onClick={pay}>
+            {chosen ? `Pay ${inr(chosen.price)}` : "Choose a pack"}
+          </button>
+        ) : (
+          <ComingSoon />
+        )}
       </div>
     </>
   );

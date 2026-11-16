@@ -1,3 +1,4 @@
+import { assertVideoCallsOn } from "@/server/wallet/launch-switches";
 import mongoose from "mongoose";
 import { connectDb } from "@/lib/db";
 import { AuditRepository } from "@/server/audit";
@@ -123,6 +124,7 @@ async function notifyBuyer(userId: string, tourId: string) {
 
 /** A buyer asks for a tour. The coin moves into escrow now and is paid out or refunded later. */
 export async function requestTour(input: { userId: string; listingId: string } & Escrow) {
+  await assertVideoCallsOn();
   await connectDb();
   await VideoTour.init();
   const listingId = objectId(input.listingId, "listingId");
@@ -414,6 +416,7 @@ export async function listTours(userId: string) {
 
 /** The call page for one side of an accepted tour: who they are, and a fresh link into the room. */
 export async function tourCallFor(input: { userId: string; tourId: string }) {
+  await assertVideoCallsOn();
   await connectDb();
   const tour = await VideoTour.findById(objectId(input.tourId, "tourId")).lean();
   const isAdvertiser = tour ? String(tour.ownerId) === input.userId : false;

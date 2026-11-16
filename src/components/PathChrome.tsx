@@ -23,6 +23,7 @@ import { SupportChat } from "./chat/SupportChat";
 import { SUPPORT_PHONE, SUPPORT_TELEGRAM } from "@/lib/support";
 import { SignInPopup } from "./auth/SignInPopup";
 import { AccountProvider } from "./account/AccountContext";
+import { LaunchSwitchProvider, type LaunchState } from "./LaunchSwitches";
 
 type City = { slug: string; name: string; stateSlug?: string };
 type Cat = { slug: string; name: string };
@@ -53,6 +54,7 @@ export type ChromeData = {
   /** H7.8: the UI-text overrides for the header and the live chat. */
   texts?: UiTextMap;
   signIn: { showMobile: boolean; image: string; imageFocus?: string };
+  launch: LaunchState;
 };
 
 export function PathChrome({ shell, paths, children }: { shell: ChromeData; paths: UrlPaths; children: React.ReactNode }) {
@@ -75,6 +77,7 @@ export function PathChrome({ shell, paths, children }: { shell: ChromeData; path
     <UiTextProvider texts={texts}>
     <CityProvider cities={cities}>
     <AccountProvider>
+    <LaunchSwitchProvider value={shell.launch}>
       {path.startsWith(`/${paths.ad.replace(/^\/|\/$/g, "")}/`) ? null : (
         <JsonLd
           data={{
@@ -148,6 +151,7 @@ export function PathChrome({ shell, paths, children }: { shell: ChromeData; path
         noticeHref={safeHref(content.cookies.noticeHref) || "/cookies/"}
       />
       )}
+    </LaunchSwitchProvider>
     </AccountProvider>
     </CityProvider>
     </UiTextProvider>

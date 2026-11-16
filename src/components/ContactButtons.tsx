@@ -1,5 +1,6 @@
 "use client";
 
+import { ComingSoon, useLaunchSwitches } from "@/components/LaunchSwitches";
 import { createContext, useContext, useState } from "react";
 import dynamic from "next/dynamic";
 import { MessageCircle, Phone, Video } from "lucide-react";
@@ -239,6 +240,7 @@ export function ContactButtons({
   channels?: Channel[];
 }) {
   const { shown, notice, busy, tour, tourRequested, open, openChatFlow, openCall, seller, people } = useContact();
+  const { videoCallsOn } = useLaunchSwitches();
   const t = useT();
   const channelButtons = channels.map((channel) => {
     const hit = shown[channel];
@@ -264,7 +266,11 @@ export function ContactButtons({
       {seller ? <span className="tkn-dot" data-status={seller.status} aria-hidden /> : null}
       <MessageCircle size={16} aria-hidden /> {busy === "chat" ? "…" : t(sticky ? "ad.bar.chat" : "ad.chat")}
     </button>,
-    tour && !people ? (
+    tour && !people && !videoCallsOn ? (
+      <button key="tour" type="button" className="tk-btn" data-tk="tour" disabled aria-disabled="true">
+        <Video size={16} aria-hidden /> {sticky ? "Video" : "Video call and verify"} <ComingSoon />
+      </button>
+    ) : tour && !people ? (
       <button key="tour" type="button" className="tk-btn" data-tk="tour" onClick={() => openCall()} disabled={busy === "tour" || tourRequested} aria-busy={busy === "tour"}>
         <Video size={16} aria-hidden /> {busy === "tour" ? "…" : tourRequested ? "Request sent" : sticky ? barVideoLabel(t, tour.coins) : tourRequestLabel(tour.coins)}
       </button>
