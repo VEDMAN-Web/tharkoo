@@ -12,6 +12,7 @@ import { isSupportOpen, openingLabel, parseSupportHours } from "@/lib/support-ho
 import { makeT, type UiTextMap } from "@/lib/ui/text";
 import type { ShellConfig } from "@/server/site-links/shell-config-rules";
 import { SUBJECT_MAX, TOPIC_LABELS, type SupportTopic } from "@/server/support/constants";
+import { SUPPORT_EVENT } from "@/components/recharge/openRecharge";
 import { ArticleCards, GuestForm, type ChatArticle, type ChatLine } from "./SupportChatParts";
 
 type Chat = ShellConfig["chat"];
@@ -76,6 +77,16 @@ export function SupportChat({ chat, texts, hours = "" }: { chat: Chat; texts?: U
   }, []);
 
   const closePanel = useCallback(() => setOpen(false), []);
+
+  useEffect(() => {
+    const onOpen = (event: Event) => {
+      const message = (event as CustomEvent<{ message?: string }>).detail?.message;
+      if (message) setDraft(message);
+      setOpen(true);
+    };
+    window.addEventListener(SUPPORT_EVENT, onOpen);
+    return () => window.removeEventListener(SUPPORT_EVENT, onOpen);
+  }, []);
   useDismiss(open, float, closePanel);
 
   useEffect(() => {
