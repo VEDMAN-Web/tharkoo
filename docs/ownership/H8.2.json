@@ -1,0 +1,23 @@
+{
+  "branchPrefix": "haiku/h8.2",
+  "globs": [
+    "docs/ownership/H8.2.json",
+    "src/components/admin/ui/Button.tsx",
+    "src/components/admin/ui/Badge.tsx",
+    "src/components/admin/ui/Tabs.tsx",
+    "src/components/admin/ui/PageHeader.tsx",
+    "src/components/admin/ui/Drawer.tsx",
+    "src/components/admin/ui/Toast.tsx",
+    "src/components/admin/ui/UndoToast.tsx",
+    "src/components/admin/ui/ReasonDialog.tsx",
+    "src/components/admin/ui/LockBadge.tsx",
+    "src/components/admin/ui/BottomBar.tsx",
+    "src/components/admin/ui/MoveButtons.tsx",
+    "src/components/admin/ui/kit-helpers.ts",
+    "src/components/admin/ui/index.ts",
+    "src/styles/admin-kit.css",
+    "src/app/admin/kit/**",
+    "tests/server/ui/a2-*.test.ts",
+    "tests/e2e/a2-kit.e2e.ts"
+  ]
+}
