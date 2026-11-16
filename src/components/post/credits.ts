@@ -2,12 +2,15 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { api, type ApiError } from "@/lib/ui/api";
+import { openRecharge } from "@/components/recharge/openRecharge";
+
+/** H7.112: the same recharge sheet as the header and the credits page opens on a short balance. */
+export { openRecharge };
 
 export const POST_FEE_DEFAULT = 0;
 export const POSTING_FEE_PATH = "/api/wallet/posting-fee";
 export const CREDIT_RUPEES = 10;
 export const CREDITS_ADDED_EVENT = "tk:credits-added";
-export const RECHARGE_PATH = "/u/account/credits/";
 
 export function creditsText(count: number): string {
   return `${count} ${count === 1 ? "credit" : "credits"}`;
@@ -35,10 +38,6 @@ export function insufficientFrom(error: ApiError | undefined, fee: number): { ne
   return { need, balance };
 }
 
-export function openRecharge({ shortfall }: { shortfall: number }) {
-  const query = shortfall > 0 ? `?shortfall=${shortfall}` : "";
-  window.location.href = `${RECHARGE_PATH}${query}`;
-}
 
 export function usePostingMoney() {
   const [fee, setFee] = useState(POST_FEE_DEFAULT);

@@ -1,14 +1,18 @@
-import { WalletHistory } from "@/components/account/AccountTools";
-import { PurchaseHistory } from "@/components/recharge/PurchaseHistory";
+import { CreditsHistory } from "@/components/buyer/CreditsHistory";
+import { PanelPage } from "@/components/buyer/PanelPage";
 import { pageMetadata } from "@/lib/ui/meta";
 
 export const metadata = pageMetadata({
-  title: "Credit history | Tharkoo",
-  description: "Credit transactions on your Tharkoo account.",
+  title: "Credits history | Tharkoo",
+  description: "Your credit purchases and the credits you used.",
   path: "/u/account/credits/history/",
   index: false,
 });
 
 export default function Page() {
-  return <WalletHistory purchases={<PurchaseHistory />} />;
+  return (
+    <PanelPage active="coins" next="/u/account/credits/history/" title="Log in to see your credits history" body="Your purchases and receipts are kept on your account.">
+      <CreditsHistory />
+    </PanelPage>
+  );
 }

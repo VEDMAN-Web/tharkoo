@@ -307,3 +307,28 @@
 .up-table th { text-align: left; font-size: 12px; font-weight: 700; color: #6b4a8a; padding: 8px 10px; border-bottom: 1px solid #ead8f0; }
 .up-table td { padding: 12px 10px; border-bottom: 1px solid #f3e8f7; }
 .up-table td:nth-child(n+3), .up-table th:nth-child(n+3) { text-align: right; }
+
+/* H7.112: credits history. Table on desktop, one card per row on phones. */
+.up-hist-tabs { margin-bottom: 14px; }
+.up-hist-body { min-width: 0; }
+.up-hist-sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+.up-hist td:nth-child(n+3), .up-hist th:nth-child(n+3) { text-align: left; }
+.up-hist-method { display: inline-flex; align-items: center; gap: 8px; }
+.up-hist-pill { display: inline-block; font-size: 12px; font-weight: 700; line-height: 1.4; border-radius: 999px; padding: 3px 10px; white-space: nowrap; }
+.up-hist-paid { background: #e8f7ee; color: #14633a; }
+.up-hist-pending { background: #fff4de; color: #8a5a00; }
+.up-hist-cancelled, .up-hist-expired, .up-hist-failed { background: #f3f4f6; color: #374151; }
+.up-hist-receipt { display: grid; gap: 10px; margin: 0; }
+.up-hist-receipt div { display: flex; justify-content: space-between; gap: 12px; padding: 10px 0; border-bottom: 1px solid #f3e8f7; }
+.up-hist-receipt dt { color: #6b4a8a; font-size: 14px; }
+.up-hist-receipt dd { margin: 0; font-weight: 700; text-align: right; overflow-wrap: anywhere; }
+@media (max-width: 640px) {
+  .up-hist thead { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+  .up-hist, .up-hist tbody, .up-hist tr, .up-hist td { display: block; }
+  .up-hist tr { border: 1px solid #ead8f0; border-radius: 16px; padding: 6px 14px; margin-bottom: 10px; background: #fff; }
+  .up-hist td { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 8px 0; border-bottom: 1px solid #f3e8f7; text-align: right !important; }
+  .up-hist td::before { content: attr(data-label); font-size: 12px; font-weight: 700; color: #6b4a8a; text-align: left; }
+  .up-hist td:last-child { border-bottom: 0; }
+  .up-hist td.up-hist-last { justify-content: flex-end; }
+  .up-hist td.up-hist-last::before { content: none; }
+}

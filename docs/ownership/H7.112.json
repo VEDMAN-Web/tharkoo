@@ -1,0 +1,17 @@
+{
+  "branchPrefix": "haiku/h7.112",
+  "globs": [
+    "docs/ownership/H7.112.json",
+    "src/app/u/account/credits/history/page.tsx",
+    "src/app/u/account/credits/receipt/**",
+    "src/components/buyer/CreditsHistory.tsx",
+    "src/components/buyer/user-panel.css",
+    "src/components/recharge/PurchaseHistory.tsx",
+    "src/components/account/AccountTools.tsx",
+    "src/components/post/credits.ts",
+    "src/lib/ui/text.ts",
+    "tests/e2e/h7-112-history.e2e.ts",
+    "tests/e2e/h7-112-recharge-flow.e2e.ts",
+    "tests/e2e/post-step-5.e2e.ts"
+  ]
+}

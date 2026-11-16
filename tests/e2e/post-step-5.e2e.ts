@@ -415,8 +415,10 @@ test.describe("H7.86 post an ad, step 5 and the success screen", () => {
     await shot(page, `${prefix}-B-amber`);
 
     await recharge.click();
-    await page.waitForURL(/\/u\/account\/credits\/\?shortfall=30/);
-    await page.goBack();
+    const sheet = page.locator("[data-tk=recharge-sheet]");
+    await expect(sheet.locator("[data-tk=recharge-short]")).toContainText("You need 30 more credits");
+    await page.keyboard.press("Escape");
+    await expect(sheet).toHaveCount(0);
     await stepOf(page, 5);
     await expect(page.locator("[data-tk=pay-card]")).toHaveAttribute("data-state", "low");
 
