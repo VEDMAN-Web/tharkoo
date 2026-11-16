@@ -383,6 +383,11 @@ test.describe("H7.86 post an ad, step 5 and the success screen", () => {
     test.setTimeout(240_000);
     const prefix = `paid${info.project.name === "phone-390" ? "390" : "1440"}`;
     await stubPostingFee(page);
+    await page.route("**/api/listings/*/submit", async (route) => {
+      const real = await route.fetch();
+      const body = (await real.json()) as { data?: Record<string, unknown> };
+      await route.fulfill({ response: real, json: { ...body, data: { ...(body.data ?? {}), charged: 30, balance: 70 } } });
+    });
     await newPoster(page, baseURL!, "paid", true, 0);
     await expect(page.locator("[data-tk=step-help]")).toHaveText("Pick a category. Posting an ad costs 30 credits.");
     if ((page.viewportSize()?.width ?? 0) >= 1024) {
