@@ -35,7 +35,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   const seoTitle = brandTitle.length < 30 ? `${title}: official page | Tharkoo` : brandTitle;
   const plain = stripDevNotes(page.body || "").replace(/<[^>]+>/g, " ").replace(/[#*_>\[\]()`]/g, " ").replace(/\s+/g, " ").trim();
   const clipped = plain.length > 160 ? `${plain.slice(0, 157).replace(/\s+\S*$/, "")}…` : plain;
-  const seoDescription = clipped.length >= 70 ? clipped : `${title} on Tharkoo. Read the full page for details about free classifieds across India.`;
+  const seoDescription = clipped.length >= 70 ? clipped : `${title} on Tharkoo. Read the full page for details about classifieds across India.`;
   return withUrlSeo(path, {
     title: seoTitle,
     description: seoDescription,

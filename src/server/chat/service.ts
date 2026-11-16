@@ -13,7 +13,8 @@ import {
   isDuplicateKey,
 } from "@/server/http";
 import { storeChatImage } from "@/server/chat/image";
-import { Listing, User } from "@/server/models";
+import { Listing, MediaAsset, User } from "@/server/models";
+import { previewUrlOf } from "@/server/media/mine";
 import { Conversation, type ConversationDoc } from "@/server/models/conversation";
 import { ChatMessage, type ChatMessageDoc } from "@/server/models/message-chat";
 
@@ -45,6 +46,10 @@ export interface ConversationView {
   lastMessageAt: string;
   unread: number;
   blocked: boolean;
+  peerName: string;
+  cover: string | null;
+  adSlug: string | null;
+  adLive: boolean;
 }
 
 export function cleanChatText(value: unknown) {
@@ -172,6 +177,8 @@ export async function listInbox(userId: string): Promise<ConversationView[]> {
     { $group: { _id: "$conversationId", count: { $sum: 1 } } },
   ]);
   const counts = new Map(unread.map((row) => [row._id.toString(), row.count]));
+  const peers = await peerNames(rows, userId);
+  const ads = await adSummaries(rows.map((row) => row.listingId));
   return rows.map((row) => ({
     id: row._id.toString(),
     listingId: row.listingId.toString(),
@@ -181,7 +188,39 @@ export async function listInbox(userId: string): Promise<ConversationView[]> {
     lastMessageAt: row.lastMessageAt.toISOString(),
     unread: counts.get(row._id.toString()) ?? 0,
     blocked: row.blocked,
+    peerName: peers.get((row.sellerId.toString() === userId ? row.buyerId : row.sellerId).toString()) ?? "Member",
+    cover: ads.get(row.listingId.toString())?.cover ?? null,
+    adSlug: ads.get(row.listingId.toString())?.slug ?? null,
+    adLive: ads.get(row.listingId.toString())?.live ?? false,
   }));
+}
+
+async function peerNames(rows: Conv[], userId: string) {
+  const ids = rows.map((row) => (row.sellerId.toString() === userId ? row.buyerId : row.sellerId));
+  const users = (await User.find({ _id: { $in: ids } })
+    .select("displayName sellerProfile.name")
+    .lean()) as { _id: Types.ObjectId; displayName?: string; sellerProfile?: { name?: string } | null }[];
+  return new Map(
+    users.map((user) => {
+      const named = (user.sellerProfile?.name || user.displayName || "").trim();
+      return [user._id.toString(), named && !named.includes("@") ? named : "Member"] as const;
+    }),
+  );
+}
+
+async function adSummaries(listingIds: Types.ObjectId[]) {
+  const listings = (await Listing.find({ _id: { $in: listingIds } })
+    .select("slug status coverMediaId mediaIds")
+    .lean()) as { _id: Types.ObjectId; slug?: string; status: string; coverMediaId?: Types.ObjectId; mediaIds?: Types.ObjectId[] }[];
+  const coverIds = listings.map((listing) => listing.coverMediaId ?? listing.mediaIds?.[0]).filter((id): id is Types.ObjectId => Boolean(id));
+  const assets = coverIds.length ? await MediaAsset.find({ _id: { $in: coverIds }, kind: "image" }).select("kind objectKey").lean() : [];
+  const urls = new Map(assets.map((asset) => [asset._id.toString(), previewUrlOf(asset).url] as const));
+  return new Map(
+    listings.map((listing) => {
+      const coverId = listing.coverMediaId ?? listing.mediaIds?.[0];
+      return [listing._id.toString(), { slug: listing.slug ?? null, live: listing.status === "active", cover: coverId ? urls.get(coverId.toString()) ?? null : null }] as const;
+    }),
+  );
 }
 
 export async function unreadCount(userId: string) {

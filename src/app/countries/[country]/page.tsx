@@ -18,7 +18,7 @@ export async function generateMetadata({ params }: Props) {
   const path = countryPath(place.slug);
   return withUrlSeo(path, {
     title: `${place.name} classifieds: browse by state and city | Tharkoo`,
-    description: `Browse free classifieds across ${place.name}, by state and city, with the number of live ads in each place.`,
+    description: `Browse classifieds across ${place.name}, by state and city, with the number of live ads in each place.`,
     path,
   });
 }

@@ -1,6 +1,6 @@
 "use client";
 
-import { ArrowLeft, ArrowRight, RotateCw, Star, Trash2 } from "lucide-react";
+import { ArrowLeft, ArrowRight, CircleAlert, ImageOff, RotateCw, Star, Trash2, VideoOff } from "lucide-react";
 
 export type TileState = "uploading" | "live" | "checking" | "refused" | "failed";
 
@@ -23,7 +23,15 @@ export interface MediaTileProps {
 
 const STATE_TEXT: Record<TileState, string> = { uploading: "Uploading", live: "Live", checking: "Being checked", refused: "Refused", failed: "Not saved" };
 
-function Frame({ kind, url, posterUrl, label }: Pick<MediaTileProps, "kind" | "url" | "posterUrl" | "label">) {
+function Frame({ kind, url, posterUrl, label, failed }: Pick<MediaTileProps, "kind" | "url" | "posterUrl" | "label"> & { failed?: boolean }) {
+  if (failed) {
+    const Icon = kind === "video" ? VideoOff : ImageOff;
+    return (
+      <div className="tkp-media-empty tkp-media-failed" data-tk="media-failed">
+        <Icon size={28} aria-hidden="true" focusable="false" />
+      </div>
+    );
+  }
   if (!url) return <div className="tkp-media-empty">{kind === "video" ? "Video" : "Photo"}</div>;
   if (kind === "video") {
     return <video src={url} poster={posterUrl || undefined} controls muted playsInline preload="metadata" aria-label={label} />;
@@ -43,7 +51,7 @@ export function MediaTile(props: MediaTileProps) {
           // eslint-disable-next-line @next/next/no-img-element
           <img src={url} alt={label} style={{ opacity: 0.5 }} />
         ) : (
-          <Frame kind={kind} url={url} posterUrl={posterUrl} label={label} />
+          <Frame kind={kind} url={url} posterUrl={posterUrl} label={label} failed={state === "failed"} />
         )}
         {isCover ? <span className="tkp-media-cover" data-tk="photo-cover">Cover</span> : null}
         {state !== "live" && !uploading ? <span className="tkp-media-state" data-tk="photo-state">{STATE_TEXT[state]}</span> : null}
@@ -54,7 +62,12 @@ export function MediaTile(props: MediaTileProps) {
           </div>
         ) : null}
       </div>
-      {reason ? <p className="tkp-media-reason" data-tk="media-reason" role={state === "failed" ? "alert" : undefined}>{reason}</p> : null}
+      {reason ? (
+        <p className="tkp-media-reason" data-tk="media-reason" role={state === "failed" ? "alert" : undefined}>
+          <CircleAlert size={14} aria-hidden="true" focusable="false" />
+          <span>{reason}</span>
+        </p>
+      ) : null}
       {!uploading ? (
         <div className="tkp-media-actions">
           {props.onRetry ? (
@@ -64,9 +77,9 @@ export function MediaTile(props: MediaTileProps) {
             </button>
           ) : null}
           {props.onMakeCover && !isCover ? (
-            <button type="button" className="tkp-mini tkp-mini-wide" disabled={busy} onClick={props.onMakeCover}>
+            <button type="button" className="tkp-mini tkp-mini-wide" title="Make cover" disabled={busy} onClick={props.onMakeCover}>
               <Star size={16} aria-hidden="true" focusable="false" />
-              Make cover
+              <span className="tkp-mini-text">Make cover</span>
             </button>
           ) : null}
           {props.onMoveLeft ? (

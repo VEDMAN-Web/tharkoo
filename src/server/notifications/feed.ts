@@ -32,9 +32,11 @@ export function mergeNotifications(items: readonly NotificationItem[], limit = L
 }
 
 /** Pure: the coin line for one wallet entry. Zero entries are skipped by the caller. */
-export function coinLine(delta: number, reason: string): { title: string; body: string } {
+export function coinLine(delta: number, reason: string, refType?: string): { title: string; body: string } {
   const amount = Math.abs(delta);
   const unit = amount === 1 ? "credit" : "credits";
+  if (delta > 0 && refType === "listing_fee_refund") return { title: `${amount} ${unit} returned`, body: "Your ad was not approved, so the posting fee was returned to your wallet." };
+  if (delta < 0 && refType === "listing_fee") return { title: `${amount} ${unit} used`, body: "Posting fee for your ad." };
   if (delta > 0) return { title: `${amount} ${unit} added`, body: reason || "Credits were added to your wallet." };
   return { title: `${amount} ${unit} used`, body: reason || "Credits were used." };
 }
@@ -76,7 +78,7 @@ export async function loadNotifications(userId: string): Promise<NotificationIte
     .map((entry) => ({
       id: `coins-${entry.id}`,
       kind: "coins" as const,
-      ...coinLine(entry.delta, entry.reason),
+      ...coinLine(entry.delta, entry.reason, entry.refType),
       href: "/u/account/credits/history/",
       at: entry.createdAt ? new Date(entry.createdAt).toISOString() : null,
     }));

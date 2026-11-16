@@ -9,11 +9,11 @@ const POSTAL = "Postal address: [placeholder: Ved to confirm the full registered
 export const TRUST: Record<string, TrustCopy> = {
   terms: {
     title: "Terms of use",
-    description: "The rules for posting and browsing free classifieds on Tharkoo in India, including ID checks, promotions, and how we handle reports.",
+    description: "The rules for posting and browsing classifieds on Tharkoo in India, including ID checks, promotions, and how we handle reports.",
     paragraphs: [
-      "Tharkoo is a free classifieds board for people in India. These terms cover browsing, posting, promoting, and contacting someone through an ad. By using the site you agree to post only what you have the right to offer, and to treat other people the way you would want to be treated in a public marketplace.",
+      "Tharkoo is a classifieds board for people in India. These terms cover browsing, posting, promoting, and contacting someone through an ad. By using the site you agree to post only what you have the right to offer, and to treat other people the way you would want to be treated in a public marketplace.",
       "You must be 18 or older to create an account or to post an ad. We ask for a date of birth at registration and we may ask for an ID check before a listing goes live. An ID check confirms the account holder. It does not mean Tharkoo has inspected the item, the job, or the person in the photos.",
-      "A free ad stays within the weekly limit shown in your account. Paid options, such as a star, a bump, or a longer highlight, change where the ad sits and for how long. They do not change these terms, and they do not promise a reply. Prices for those options are shown before you pay.",
+      "Posting an ad costs a posting fee in credits, shown before you publish. Paid options, such as a star, a bump, or a longer highlight, change where the ad sits and for how long. They do not change these terms, and they do not promise a reply. Prices for those options are shown before you pay.",
       "You keep ownership of the words and photos you upload. You give Tharkoo permission to display them on the listing, in search, and in the places the site uses to describe a public ad. Do not upload a photo of someone else unless you have their permission, and do not copy another person’s listing.",
       "We can refuse, pause, or remove an ad that breaks these terms, that we cannot verify, or that a report gives us reason to review. We can also close an account that repeats the same problem. If we remove an ad, the public URL stops working. You can write to us through the contact page if you think that was a mistake.",
       POSTAL,
@@ -74,7 +74,7 @@ export const TRUST: Record<string, TrustCopy> = {
   },
   "how-it-works": {
     title: "How Tharkoo works",
-    description: "How to browse city pages, post a free classified, pass an ID check, and use a promotion on Tharkoo.",
+    description: "How to browse city pages, post a classified, pass an ID check, and use a promotion on Tharkoo.",
     paragraphs: [
       "Start on the home page or open a category and a city. Each city page lists the ads posted for that category, with promoted ads first while their paid time is running. A district page is the same list narrowed to one area. Search is there when you already know a word in the title.",
       "Posting starts at the post button. If you are not signed in, we ask you to log in or to register, and then we bring you back to the form. You choose a category, a city, a title, photos you have the right to use, and how you want to be contacted. A free weekly limit applies.",

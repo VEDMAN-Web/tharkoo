@@ -91,6 +91,22 @@ describe("starting a chat", () => {
   });
 });
 
+describe("the inbox rows", () => {
+  it("name the other person and the ad, never an email, and say whether the ad can be opened", async () => {
+    const { seller, buyer, listingId } = await chat();
+    await User.updateOne({ _id: seller.id }, { $set: { sellerProfile: { name: "Asha", city: "Mumbai", availableNow: false, completedAt: new Date() } } });
+    await Listing.updateOne({ _id: listingId }, { $set: { slug: "wooden-desk-1" } });
+    const asBuyer = await listInbox(buyer.id);
+    expect(asBuyer[0]).toMatchObject({ peerName: "Asha", adSlug: "wooden-desk-1", adLive: true, cover: null });
+    const asSeller = await listInbox(seller.id);
+    expect(asSeller[0].peerName).toBe("Ada");
+    await User.updateOne({ _id: buyer.id }, { $set: { displayName: "buyer@example.com" } });
+    expect((await listInbox(seller.id))[0].peerName).toBe("Member");
+    await Listing.updateOne({ _id: listingId }, { $set: { status: "paused" } });
+    expect((await listInbox(buyer.id))[0].adLive).toBe(false);
+  });
+});
+
 describe("messages", () => {
   it("delivers text both ways, counts unread, and marks read when opened", async () => {
     const { seller, buyer, conversationId } = await chat();

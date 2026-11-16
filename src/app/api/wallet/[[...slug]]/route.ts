@@ -3,6 +3,7 @@ import { SESSION_COOKIE, assertOrigin, readCookie } from "@/server/auth/http";
 import { requireUser } from "@/server/auth/service";
 import { json, readJson, segmentsOf } from "@/server/billing/http";
 import { checkoutPack, listEntries, walletBalance } from "@/server/billing";
+import { postingFeeStatus } from "@/server/billing/posting-fee";
 import { NotFoundError, handle, parseInput, requestIdFrom } from "@/server/http";
 import { idSchema } from "@/server/shared/schemas/common";
 import { walletPackBodySchema, walletQuerySchema } from "@/server/shared/schemas/commerce";
@@ -34,6 +35,9 @@ async function dispatch(request: Request) {
   const user = await requireUser(readCookie(request, SESSION_COOKIE));
   if (request.method === "GET" && path === "") {
     return json({ balance: await walletBalance(user.user.id) }, requestId);
+  }
+  if (request.method === "GET" && path === "posting-fee") {
+    return json(await postingFeeStatus(user.user.id), requestId);
   }
   if (request.method === "GET" && path === "entries") {
     const query = parseInput(walletQuerySchema, Object.fromEntries(new URL(request.url).searchParams));

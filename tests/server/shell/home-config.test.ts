@@ -16,7 +16,7 @@ describe("H7.4 home config defaults", () => {
 
   it("fills the home fields from the defaults when nothing is stored", () => {
     const config = normaliseShellConfig({});
-    expect(config.home.trust.map((pill) => pill.label)).toContain("Free to post");
+    expect(config.home.trust.map((pill) => pill.label)).toContain("Across India");
     expect(config.home.steps[2].title).toBe("Verify on video");
   });
 
