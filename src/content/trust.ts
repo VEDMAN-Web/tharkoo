@@ -17,7 +17,6 @@ export const TRUST: Record<string, TrustCopy> = {
       "You keep ownership of the words and photos you upload. You give Tharkoo permission to display them on the listing, in search, and in the places the site uses to describe a public ad. Do not upload a photo of someone else unless you have their permission, and do not copy another person’s listing.",
       "We can refuse, pause, or remove an ad that breaks these terms, that we cannot verify, or that a report gives us reason to review. We can also close an account that repeats the same problem. If we remove an ad, the public URL stops working. You can write to us through the contact page if you think that was a mistake.",
       POSTAL,
-      "These terms are a draft for review. They are not a substitute for advice from a lawyer, and the wording can change before the site is opened to search engines. The version on this page is the one that applies on the day you read it.",
     ],
   },
   privacy: {
@@ -30,7 +29,6 @@ export const TRUST: Record<string, TrustCopy> = {
       "Staff can see account and listing records in the admin tools so they can review reports, ID checks, and promotions. Access is limited to people with an admin role. We keep a short audit note when an admin changes the homepage or a public URL.",
       "You can ask what we hold about your account by writing through the contact page. We will reply to the email on the account. If the law requires us to keep a record, for example a payment or a report, we keep that record even after the ad is gone.",
       POSTAL,
-      "This privacy note is a draft for review. It describes the product as it works today and will be updated if the data we collect changes. Read it with the terms and the cookies page.",
     ],
   },
   cookies: {
@@ -44,7 +42,6 @@ export const TRUST: Record<string, TrustCopy> = {
       "The cookie note at the bottom of the page is there so you can see this explanation before you continue. Choosing OK stores that choice. It does not change the terms or the privacy page.",
       "If you use more than one browser, each one keeps its own choice. A public computer should be signed out when you leave, because the session cookie lasts until you log out or the browser clears it. We do not use the cookie to build a profile of the cities you open.",
       POSTAL,
-      "This cookies note is a draft for review. It covers the cookies the site sets today. A lawyer should read it before the site is indexed.",
     ],
   },
   contact: {
@@ -57,7 +54,6 @@ export const TRUST: Record<string, TrustCopy> = {
       "We read messages on business days. A promotion question includes the ad link and the option you paid for. A privacy question can ask what we store, or ask us to close the account. Closing an account removes the public ads.",
       "Please do not send copies of bank cards, one-time passwords, or identity documents in the first email. Tell us the account email and the page you were on. If the matter is a listing, the report form on the ad is still the fastest way for the review queue to see it. A short note is enough. We do not need a long story to find the right account.",
       POSTAL,
-      "This contact page is a draft for review. The postal line above is a placeholder until the registered office address is confirmed. Until then, email is the way to reach the team.",
     ],
   },
   safety: {
