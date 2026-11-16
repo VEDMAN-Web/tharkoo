@@ -41,7 +41,7 @@ async function similarGapToFooter(page: Page) {
 }
 
 test.describe("H7.99b ad page content", () => {
-  test("one content card: no views or clicks, pills, plain three-column details, wide container", async ({ page }, testInfo) => {
+  test("one content card: no views or clicks, pills, plain four-column details, wide container", async ({ page }, testInfo) => {
     const href = await adAt(page, "/property/bengaluru/");
     await page.goto(href);
     const card = page.locator('[data-tk="ad-summary"]');
@@ -53,6 +53,15 @@ test.describe("H7.99b ad page content", () => {
     await expect(card.locator(".tkn-ad-meta")).toContainText("Posted");
     await expect(card.getByRole("heading", { name: "About this ad", level: 2 })).toBeVisible();
     await expect(card.locator(".tkn-ad-pills li").first()).toBeVisible();
+    if (!isPhone(page)) {
+      await expect(card).toHaveCSS("padding-top", "20px");
+      await expect(card.locator("h1")).toHaveCSS("font-size", "28px");
+      const meta = (await card.locator(".tkn-ad-meta").boundingBox())!;
+      const pill = (await card.locator(".tkn-ad-pills li").first().boundingBox())!;
+      expect(Math.abs(meta.y + meta.height / 2 - (pill.y + pill.height / 2))).toBeLessThanOrEqual(6);
+      await expect(card.locator("h2").first()).toHaveCSS("text-transform", "uppercase");
+      await expect(card.locator("h2").first()).toHaveCSS("font-size", "13px");
+    }
     const items = card.locator(".tkn-det-item");
     if ((await items.count()) > 0) {
       await expect(items.first().locator("dd")).toHaveCSS("font-weight", "600");
@@ -60,7 +69,7 @@ test.describe("H7.99b ad page content", () => {
       for (const text of await items.locator("dd").allInnerTexts()) expect(text).not.toMatch(/^[0-9]{5,}$/);
       if (!isPhone(page)) {
         const columns = await card.locator(".tkn-det").evaluate((node) => getComputedStyle(node).gridTemplateColumns.split(" ").length);
-        expect(columns).toBe(3);
+        expect(columns).toBe(4);
       }
     }
     if (testInfo.project.name === "desktop-1440") {
@@ -132,25 +141,45 @@ test.describe("H7.99b ad page content", () => {
     await expect(page.locator('[data-tk="security-tips"]').getByRole("link", { name: "More safety tips" })).toBeVisible();
   });
 
-  test("similar ads use the Home ad card, at most 8, and end 48 px above the footer", async ({ page }, testInfo) => {
-    const href = await adAt(page, "/property/bengaluru/");
-    await page.goto(href);
+  test("similar ads are a compact row of Home cards, at most 12, and end 48 px above the footer", async ({ page }, testInfo) => {
+    await page.goto(await adAt(page, "/property/bengaluru/"));
     const section = page.locator('[data-tk="similar-ads"]');
     await expect(section.getByRole("heading", { level: 2 })).toHaveText("Similar ads near you");
+    await expect(section.getByRole("heading", { level: 2 })).toHaveCSS("font-size", "22px");
     await expect(section.getByRole("link", { name: /^See all in/ })).toBeVisible();
     const cards = section.locator('[data-tk="home-ad"]');
     const count = await cards.count();
     expect(count).toBeGreaterThan(0);
-    expect(count).toBeLessThanOrEqual(8);
+    expect(count).toBeLessThanOrEqual(12);
     await expect(section.locator(".tkh-heart").first()).toBeVisible();
     await expect(section.locator(".tkh-pill").first()).toBeVisible();
     await expect(section).not.toContainText(/views|clicks/i);
-    const tops = await cards.evaluateAll((els) => els.map((el) => Math.round(el.getBoundingClientRect().top)));
-    const firstRow = tops.filter((top) => top === tops[0]).length;
-    if (testInfo.project.name === "desktop-1440") expect(firstRow).toBe(Math.min(4, count));
-    else {
-      const scroller = section.locator(".tkn-similar-grid");
+    await expect(section.locator(".tkh-ad-title").first()).toHaveCSS("font-size", "14px");
+    await expect(section.locator(".tkh-heart").first()).toHaveCSS("width", "32px");
+    const rowBox = (await section.locator('[data-tk="similar-row"]').boundingBox())!;
+    const firstRow = (await cards.evaluateAll((els) => els.map((el) => el.getBoundingClientRect().right))).filter((right) => right <= rowBox.x + rowBox.width + 4).length;
+    const first = (await cards.first().boundingBox())!;
+    if (testInfo.project.name === "desktop-1440") {
+      expect(first.width).toBeLessThanOrEqual(200);
+      expect(first.width).toBeGreaterThanOrEqual(170);
+      expect(firstRow).toBe(Math.min(6, count));
+      const photo = (await cards.first().locator(".tkh-ad-photo").boundingBox())!;
+      expect(Math.round(photo.height)).toBeGreaterThanOrEqual(210);
+      if (count > 6) {
+        const next = section.locator('[data-tk="similar-next"]');
+        await expect(next).toBeVisible();
+        const before = await section.locator('[data-tk="similar-row"]').evaluate((node) => node.scrollLeft);
+        await next.click();
+        await expect.poll(() => section.locator('[data-tk="similar-row"]').evaluate((node) => node.scrollLeft)).toBeGreaterThan(before);
+      } else {
+        await expect(section.locator('[data-tk="similar-next"]')).toHaveCount(0);
+      }
+    } else {
+      const scroller = section.locator('[data-tk="similar-row"]');
       expect(await scroller.evaluate((node) => node.scrollWidth > node.clientWidth)).toBe(true);
+      const share = first.width / (await scroller.evaluate((node) => node.clientWidth));
+      expect(share).toBeGreaterThan(0.38);
+      expect(share).toBeLessThan(0.48);
     }
     await section.scrollIntoViewIfNeeded();
     await page.evaluate(() => window.scrollTo(0, document.documentElement.scrollHeight));
@@ -158,6 +187,85 @@ test.describe("H7.99b ad page content", () => {
     expect(gap).toBeGreaterThanOrEqual(0);
     expect(gap).toBeLessThanOrEqual(GAP_MAX);
     expect(await hasHorizontalScroll(page)).toBe(false);
+  });
+
+  test("the picture is as tall as the right column: its bottom lines up with the Stay safe box", async ({ page }, testInfo) => {
+    test.skip(testInfo.project.name !== "desktop-1440", "the laptop sizes");
+    const people = await adAt(page, "/dating/bengaluru/");
+    const item = await adAt(page, "/property/bengaluru/");
+    for (const [kind, href] of [
+      ["people", people],
+      ["item", item],
+    ] as const) {
+      for (const [width, height] of [
+        [1536, 674],
+        [1366, 768],
+        [1536, 730],
+        [1440, 900],
+      ] as const) {
+        await page.setViewportSize({ width, height });
+        await page.goto(href);
+        await expect(page.locator('[data-tk="security-tips"]')).toBeVisible();
+        await expect
+          .poll(
+            async () => {
+              const picture = (await page.locator(".tkn-gal").boundingBox())!;
+              const safe = (await page.locator('[data-tk="security-tips"]').boundingBox())!;
+              return Math.abs(picture.y + picture.height - (safe.y + safe.height));
+            },
+            { message: kind + " " + width + "x" + height },
+          )
+          .toBeLessThanOrEqual(4);
+        const picture = (await page.locator(".tkn-gal").boundingBox())!;
+        expect(picture.height).toBeGreaterThanOrEqual(340);
+        expect(picture.height).toBeLessThanOrEqual(500);
+        await shot(page, "aligned-" + kind + "-" + width + "x" + height);
+      }
+    }
+  });
+
+  test("the thumbnails are centred under the picture at 85 by 61", async ({ page }, testInfo) => {
+    test.skip(testInfo.project.name !== "desktop-1440", "the wide layout");
+    await page.goto(await adAt(page, "/dating/bengaluru/"));
+    const thumbs = page.locator('[data-tk="gallery-thumbs"]');
+    await expect(thumbs).toHaveCSS("justify-content", "safe center");
+    const items = thumbs.locator("li");
+    const first = (await items.first().boundingBox())!;
+    const last = (await items.last().boundingBox())!;
+    const figure = (await page.locator(".tkn-gal").boundingBox())!;
+    const middle = (first.x + last.x + last.width) / 2;
+    expect(Math.abs(middle - (figure.x + figure.width / 2))).toBeLessThanOrEqual(3);
+    const size = (await page.locator(".tkn-thumb").first().boundingBox())!;
+    expect(Math.round(size.width)).toBe(85);
+    expect(Math.round(size.height)).toBe(61);
+  });
+
+  test("a long About text is clamped to five lines with Read more", async ({ page }, testInfo) => {
+    test.skip(testInfo.project.name !== "desktop-1440", "one run is enough");
+    const href = await adAt(page, "/property/bengaluru/", 13);
+    const slug = slugFromAdPath(href);
+    const text = Array.from({ length: 40 }, (_, index) => "Line " + index + " of a long description for this flat").join(" ");
+    await withLocalDb((db) => db.collection("listings").updateOne({ slug }, { $set: { description: text } }));
+    await page.goto(href);
+    const body = page.locator('[data-tk="ad-text"]');
+    const more = page.locator('[data-tk="read-more"]');
+    await expect(more).toBeVisible();
+    await expect(more).toHaveText("Read more");
+    const lines = await body.evaluate((node) => node.getBoundingClientRect().height / parseFloat(getComputedStyle(node).lineHeight));
+    expect(Math.round(lines)).toBe(5);
+    await more.click();
+    await expect(more).toHaveAttribute("aria-expanded", "true");
+    const open = await body.evaluate((node) => node.getBoundingClientRect().height / parseFloat(getComputedStyle(node).lineHeight));
+    expect(Math.round(open)).toBeGreaterThan(5);
+  });
+
+  test("a single-photo ad has no thumbnails, no counter and no arrows", async ({ page }) => {
+    await page.goto("/ad/demo-7920/");
+    await expect(page.locator(".tkn-gal")).toBeVisible();
+    await expect(page.locator('[data-tk="gallery-thumbs"]')).toHaveCount(0);
+    await expect(page.locator('[data-tk="gallery-counter"]')).toHaveCount(0);
+    await expect(page.locator('[data-tk="gallery-prev"]')).toHaveCount(0);
+    await expect(page.locator('[data-tk="gallery-next"]')).toHaveCount(0);
   });
 
   test("below 1024 px: a 64 px bottom bar, a 24 px title with the price under it, Save and Report as icons", async ({ page }, testInfo) => {
@@ -233,7 +341,7 @@ test.describe("H7.99b ad page content", () => {
     expect(featured).toBeGreaterThan(0);
   });
 
-  test("on a phone the breadcrumb is one line with the last two crumbs", async ({ page }, testInfo) => {
+  test("on a phone the breadcrumb is one line with the category and the city", async ({ page }, testInfo) => {
     test.skip(testInfo.project.name !== "phone-390", "the phone layout");
     for (const width of [390, 360]) {
       await page.setViewportSize({ width, height: 740 });
@@ -243,6 +351,8 @@ test.describe("H7.99b ad page content", () => {
       await expect(nav).toHaveCSS("row-gap", "4px");
       const shown = await nav.locator(":scope > span").evaluateAll((els) => els.filter((el) => getComputedStyle(el).display !== "none").length);
       expect(shown).toBe(2);
+      const crumbText = (await nav.innerText()).split(String.fromCharCode(10)).join(" ").split(/ +/).join(" ").trim();
+      expect(crumbText).toBe("Dating / Bengaluru Dating");
       const box = (await nav.boundingBox())!;
       expect(box.height).toBeLessThanOrEqual(32);
       await expect(nav.locator("a:visible").first()).toBeVisible();
@@ -275,6 +385,31 @@ test.describe("H7.99b ad page content", () => {
       checked += 1;
     }
     expect(checked).toBeGreaterThan(0);
+  });
+
+  test("a dating ad shows no price even when the stored category has no kind", async ({ page }, testInfo) => {
+    test.skip(testInfo.project.name !== "desktop-1440", "one run is enough");
+    const href = await adAt(page, "/dating/bengaluru/", 11);
+    await withLocalDb((db) => db.collection("categories").updateOne({ slug: "dating" }, { $unset: { kind: "" } }));
+    try {
+      await page.goto(href);
+      await expect(page.locator(".tkn-contact-panel")).toBeAttached();
+      await expect(page.locator(".tkn-ad-price")).toHaveCount(0);
+      await expect(page.locator(".tkn-ad-phoneprice")).toHaveCount(0);
+      await expect(page.getByText("Price on request")).toHaveCount(0);
+    } finally {
+      await withLocalDb((db) => db.collection("categories").updateOne({ slug: "dating" }, { $set: { kind: "people" } }));
+    }
+  });
+
+  test("a wellness ad keeps its price row while a dating ad has none", async ({ page }, testInfo) => {
+    test.skip(testInfo.project.name !== "desktop-1440", "one run is enough");
+    const wellness = await adAt(page, "/wellness/", 2);
+    await page.goto(wellness);
+    await expect(page.locator(".tkn-contact-panel .tkn-ad-price")).toBeVisible();
+    const dating = await adAt(page, "/dating/bengaluru/", 3);
+    await page.goto(dating);
+    await expect(page.locator(".tkn-ad-price")).toHaveCount(0);
   });
 
   test("an item without a price says Price on request at 20 px muted", async ({ page }, testInfo) => {

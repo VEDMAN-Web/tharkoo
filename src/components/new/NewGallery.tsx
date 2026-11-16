@@ -82,7 +82,7 @@ export function NewGallery({ photos, videos = [], title, badge, isNew = false }:
           {badge ? <span className="tkn-gal-badge">{badge}</span> : null}
           {seller?.chatOn && seller.status === "online" ? <span className="tkn-gal-live">{t("ad.seller.online")}</span> : null}
         </span>
-        <span className="tkn-gal-counter" data-tk="gallery-counter" aria-live="polite">{t("ad.gallery.counter", { index: at + 1, count })}</span>
+        {count > 1 ? <span className="tkn-gal-counter" data-tk="gallery-counter" aria-live="polite">{t("ad.gallery.counter", { index: at + 1, count })}</span> : null}
         <button type="button" className="tkn-gal-expand" aria-label={t("ad.gallery.fullscreen")} data-tk="gallery-expand" onClick={() => setViewing(true)}>
           <Maximize2 size={18} aria-hidden />
         </button>
