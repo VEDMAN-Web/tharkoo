@@ -52,10 +52,15 @@ async function fillAdInformation(page: Page, title: string) {
   await page.locator("[data-tk=go-on]").click();
   await page.locator("#city").selectOption({ label: "Mumbai" });
   await page.locator("#nickname").fill("Asha");
-  await page.locator("#role").fill("Office assistant");
+  const roleHere = (await page.locator("#role").count()) > 0;
+  if (roleHere) await page.locator("#role").fill("Office assistant");
   await page.locator("#title").fill(title);
   await page.locator("#text").fill("A weekday office role with a clear description of the work and the hours.");
   await page.locator("[data-tk=go-on]").click();
+  if (!roleHere) {
+    await page.locator("#role").fill("Office assistant");
+    await page.locator("[data-tk=go-on]").click();
+  }
 }
 
 test.describe("H6.2 categories and sub-category chips", () => {
