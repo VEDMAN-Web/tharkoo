@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { api, fieldErrors, friendlyError } from "@/lib/ui/api";
+import { PUBLISH_MESSAGES } from "@/lib/ui/publish-errors";
 import { loadPostSubcategories, type PostSubcategory } from "@/server/categories/actions";
 import { PhotoStep } from "@/components/post/PhotoStep";
 import { PickGroup } from "@/components/post/PickGroup";
@@ -472,7 +473,7 @@ export function PostWizard({
       const verification = me.ok ? me.data.verification?.status || me.data.user?.verificationStatus : "";
       if (needsIdCheck(verification)) {
         setBusy(false);
-        setBanner("Your ID needs a quick check before this ad can go live.");
+        setBanner(PUBLISH_MESSAGES.VERIFICATION_REQUIRED);
         return;
       }
     }
@@ -489,7 +490,7 @@ export function PostWizard({
         return;
       }
       if (res.error.code === "VERIFICATION_REQUIRED") {
-        setBanner("Your ID needs a quick check before this ad can go live.");
+        setBanner(PUBLISH_MESSAGES.VERIFICATION_REQUIRED);
         return;
       }
       setBanner(friendlyError(res.error));
@@ -602,7 +603,7 @@ export function PostWizard({
       <div aria-live="polite" className="t-small" style={{ color: "var(--danger)", margin: "12px 0" }}>
         {banner}{" "}
         {banner.startsWith("Sign in") ? <Link href={`${loginPath(paths)}?next=${encodeURIComponent(postAdPath(paths))}`}>Log in</Link> : null}
-        {/ID needs a quick check/i.test(banner) ? <Link href="/u/account/kyc/" data-tk="verify-id">Verify ID</Link> : null}
+        {banner === PUBLISH_MESSAGES.VERIFICATION_REQUIRED ? <Link href="/u/account/kyc/" data-tk="verify-id">Verify ID</Link> : null}
       </div>
       {step === 1 ? (
         <>
@@ -872,7 +873,7 @@ export function PostWizard({
               <div aria-live="polite" className="tkp-banner">
                 {banner}{" "}
                 {banner.startsWith("Sign in") ? <Link href={`${loginPath(paths)}?next=${encodeURIComponent(postAdPath(paths))}`}>Log in</Link> : null}
-                {/ID needs a quick check/i.test(banner) ? <Link href="/u/account/kyc/" data-tk="verify-id">Verify ID</Link> : null}
+                {banner === PUBLISH_MESSAGES.VERIFICATION_REQUIRED ? <Link href="/u/account/kyc/" data-tk="verify-id">Verify ID</Link> : null}
               </div>
             </div>
             <div className="tkp-scroll" onKeyDown={moveOnEnter}>

@@ -5,7 +5,7 @@ import { AuditRepository } from "@/server/audit";
 import { NotFoundError, PolicyViolationError } from "@/server/http";
 import { Listing, MediaAsset, type MediaAssetDoc, type MediaStatus } from "@/server/models";
 import { deleteMedia } from "@/server/media/service";
-import { AD_MEDIA_MAX, optionalCloudinary, VIDEO_RULE_MESSAGE } from "@/server/media/config";
+import { AD_MEDIA_MAX, optionalCloudinary, AD_VIDEO_RULE_MESSAGE } from "@/server/media/config";
 import { videoUrls } from "@/server/media/video";
 
 /** The owner's own photos and videos for their ads. ID documents never reach these queries. */
@@ -41,7 +41,7 @@ export function mediaStateOf(asset: Pick<MediaAssetDoc, "kind" | "status">): { s
   if (asset.status === "cleared") return { state: "live", reason: null };
   if (asset.status === "uploaded" || CHECKING_STATUSES.has(asset.status)) return { state: "checking", reason: null };
   if (asset.status === "rejected_policy") {
-    return { state: "refused", reason: asset.kind === "video" ? VIDEO_RULE_MESSAGE : PHOTO_RULE_MESSAGE };
+    return { state: "refused", reason: asset.kind === "video" ? AD_VIDEO_RULE_MESSAGE : PHOTO_RULE_MESSAGE };
   }
   if (asset.status === "rejected_csam") return { state: "refused", reason: "This upload was rejected." };
   return { state: "refused", reason: "The upload failed. Try again." };

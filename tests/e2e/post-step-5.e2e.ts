@@ -452,6 +452,32 @@ test.describe("H7.86 post an ad, step 5 and the success screen", () => {
     await expect(page.locator("[data-tk=credits-card]")).toContainText("no charge");
   });
 
+  test("a photo that cannot be added keeps a red tile with its reason on it and a neutral placeholder, not a broken image", async ({ page, baseURL }, info) => {
+    test.setTimeout(180_000);
+    await newPoster(page, baseURL!, "failtile");
+    await chooseDating(page, "failtile");
+    await fillDetails(page, `Failed tile ${Date.now()}`, "failtile");
+    await page.locator("[data-tk=photo-input]").waitFor({ state: "attached" });
+    await page.locator("[data-tk=photo-input]").setInputFiles({ name: "notes.pdf", mimeType: "application/pdf", buffer: Buffer.from("not a photo") });
+    const tile = page.locator("[data-tk=photo-tile][data-state=failed]");
+    await expect(tile).toHaveCount(1);
+    await expect(tile.locator("[data-tk=media-failed]")).toBeVisible();
+    await expect(tile.locator("img")).toHaveCount(0);
+    await expect(page.locator('img[alt="New photo"]')).toHaveCount(0);
+    const reason = tile.locator("[data-tk=media-reason]");
+    await expect(reason).toBeVisible();
+    expect((await reason.innerText()).trim().length).toBeGreaterThan(10);
+    expect(await reason.innerText()).not.toMatch(/^[A-Z_]{6,}$/);
+    expect(await tile.evaluate((node) => getComputedStyle(node).borderTopColor)).toBe("rgb(220, 38, 38)");
+    const box = (await tile.boundingBox())!;
+    const reasonBox = (await reason.boundingBox())!;
+    expect(reasonBox.y).toBeGreaterThanOrEqual(box.y);
+    expect(reasonBox.y + reasonBox.height).toBeLessThanOrEqual(box.y + box.height + 1);
+    await shot(page, `failtile-${info.project.name === "phone-390" ? "390" : "1440"}`);
+    await tile.getByRole("button", { name: "Remove New photo" }).click();
+    await expect(page.locator("[data-tk=photo-tile][data-state=failed]")).toHaveCount(0);
+  });
+
   test("steps 4 and 5 and the success screen fit every common size, keep the bar clear of the last field, and pass axe", async ({ page, baseURL }) => {
     test.setTimeout(420_000);
     await newPoster(page, baseURL!, "sizes5");

@@ -41,6 +41,15 @@ export const UPLOAD_RULES = {
     line: "MP4, MOV or WEBM, up to 10 MB and 30 seconds.",
     details: ["Formats: MP4, MOV or WEBM.", "Up to 10 MB per video.", "Up to 30 seconds per video.", "Videos count toward the 10 photos and videos."],
   },
+  postVideos: {
+    noun: "video",
+    accept: VIDEO_TYPES,
+    formats: "MP4, MOV or WEBM",
+    maxBytes: 100 * MB,
+    maxSeconds: 60,
+    line: "MP4, MOV or WEBM, up to 100 MB and 60 seconds.",
+    details: ["Formats: MP4, MOV or WEBM.", "Up to 100 MB per video.", "Up to 60 seconds per video.", "Videos count toward the 10 photos and videos."],
+  },
   categoryBand: {
     ...PHOTO_BASE,
     line: "1600 x 500 px for computers, 800 x 1000 px for phones, up to 8 MB.",
