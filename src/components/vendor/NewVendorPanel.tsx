@@ -13,10 +13,10 @@ import { OwnerActions } from "./OwnerActions";
 import { SectionHelp } from "@/components/help/SectionHelp";
 import { TourInbox } from "./TourInbox";
 import { LogoutButton } from "@/components/auth/LogoutButton";
+import { useAccount } from "@/components/account/AccountContext";
 
 /** H7.5: the New design seller panel (the mockup's VendorPanel). Same data as the old panel, new look. */
 
-type Me = { user: { displayName?: string; email?: string; verificationStatus?: string } };
 type OwnItem = {
   id: string;
   title?: string;
@@ -51,10 +51,9 @@ function countFor(counts: OwnPage["counts"] | null, tab: Tab) {
 }
 
 export function NewVendorPanel({ initialTab = "all" }: { initialTab?: Tab }) {
-  const [me, setMe] = useState<Me["user"] | null>(null);
-  const [signedOut, setSignedOut] = useState(false);
+  const { phase, user: me, balance, balanceReady } = useAccount();
+  const signedOut = phase === "out";
   const [presence, setPresence] = useState<Presence | null>(null);
-  const [balance, setBalance] = useState<number | null>(null);
   const [tab, setTab] = useState<Tab>(initialTab);
   const [page, setPage] = useState(1);
   const [pageData, setPageData] = useState<OwnPage | null>(null);
@@ -77,19 +76,9 @@ export function NewVendorPanel({ initialTab = "all" }: { initialTab?: Tab }) {
 
   useEffect(() => {
     const id = window.setTimeout(() => {
-      if (!hasSessionHint()) {
-        setSignedOut(true);
-        return;
-      }
-      api<Me>("/api/auth/me").then((res) => {
-        if (!res.ok) setSignedOut(true);
-        else setMe(res.data.user);
-      });
+      if (!hasSessionHint()) return;
       api<Presence>("/api/availability").then((res) => {
         if (res.ok) setPresence(res.data);
-      });
-      api<{ balance: number }>("/api/wallet").then((res) => {
-        if (res.ok) setBalance(res.data.balance);
       });
     }, 0);
     return () => window.clearTimeout(id);
@@ -157,14 +146,15 @@ export function NewVendorPanel({ initialTab = "all" }: { initialTab?: Tab }) {
   const doneSteps = profileSteps.filter((step) => step.done).length;
   const percent = Math.round((doneSteps / profileSteps.length) * 100);
   const hasMore = pageData ? items.length < pageData.total : false;
+  const profileReady = Boolean(me && counts);
 
   return (
     <div className="tkv-page" onPointerDown={onActivity} onKeyDown={onActivity}>
       <nav className="tkv-nav tkv-glass" aria-label="Panel">
         <div className="tkv-who">
-          <span className="tkv-avatar" aria-hidden>{(name || "T").charAt(0).toUpperCase()}</span>
+          {me ? <span className="tkv-avatar" aria-hidden>{(name || "T").charAt(0).toUpperCase()}</span> : <span className="tkv-avatar tkn-skel" aria-hidden />}
           <div>
-            <p className="tkv-who-name">{name || "Your account"}</p>
+            <p className="tkv-who-name">{me ? name || "Your account" : <span className="tkn-skel" style={{ width: 120, height: 16, verticalAlign: "middle" }} aria-hidden="true" />}</p>
             {presence ? <AvailabilityBadge status={presence.status} /> : null}
           </div>
         </div>
@@ -182,7 +172,7 @@ export function NewVendorPanel({ initialTab = "all" }: { initialTab?: Tab }) {
           <div>
             <p className="tkv-kicker">Your panel</p>
             <h1 id="tkv-welcome" className="tkv-h1">{name ? `Welcome back, ${name.split(" ")[0]}` : "Welcome back"}</h1>
-            <p className="tkv-lead">{counts ? `${counts.live} ${counts.live === 1 ? "ad is" : "ads are"} live.` : "Loading your ads."}</p>
+            <p className="tkv-lead">{counts ? `${counts.live} ${counts.live === 1 ? "ad is" : "ads are"} live.` : <span className="tkn-skel" style={{ width: 150, height: 16, verticalAlign: "middle" }} aria-hidden="true" />}</p>
             <SectionHelp textKey="help.section.availableNow" />
           </div>
           <div className="tkv-hero-actions">
@@ -222,21 +212,21 @@ export function NewVendorPanel({ initialTab = "all" }: { initialTab?: Tab }) {
         <section className="tkv-stats" aria-label="Your numbers">
           <div className="tkv-stat tkv-stat-rose">
             <p className="tkv-stat-label">Live ads</p>
-            <p className="tkv-stat-value" data-count-up>{counts ? counts.live : "-"}</p>
+            <p className="tkv-stat-value" data-count-up>{counts ? counts.live : <span className="tkn-skel" style={{ width: 48, height: 30 }} aria-hidden="true" />}</p>
           </div>
           <div className="tkv-stat tkv-stat-violet">
             <p className="tkv-stat-label">Views</p>
-            <p className="tkv-stat-value" data-count-up>{totals ? totals.views.toLocaleString("en-IN") : "-"}</p>
+            <p className="tkv-stat-value" data-count-up>{totals ? totals.views.toLocaleString("en-IN") : <span className="tkn-skel" style={{ width: 48, height: 30 }} aria-hidden="true" />}</p>
             <p className="tkv-stat-foot">All time</p>
           </div>
           <div className="tkv-stat tkv-stat-sky">
             <p className="tkv-stat-label">Clicks</p>
-            <p className="tkv-stat-value" data-count-up>{totals ? totals.clicks.toLocaleString("en-IN") : "-"}</p>
+            <p className="tkv-stat-value" data-count-up>{totals ? totals.clicks.toLocaleString("en-IN") : <span className="tkn-skel" style={{ width: 48, height: 30 }} aria-hidden="true" />}</p>
             <p className="tkv-stat-foot">All time</p>
           </div>
           <div className="tkv-stat tkv-stat-rose">
             <p className="tkv-stat-label">Coins</p>
-            <p className="tkv-stat-value" data-count-up>{balance ?? "-"}</p>
+            <p className="tkv-stat-value" data-count-up>{balanceReady ? balance ?? "-" : <span className="tkn-skel" style={{ width: 48, height: 30 }} aria-hidden="true" />}</p>
           </div>
         </section>
 
@@ -301,7 +291,7 @@ export function NewVendorPanel({ initialTab = "all" }: { initialTab?: Tab }) {
       <aside className="tkv-aside">
         <section className="tkv-wallet" aria-labelledby="tkv-wallet-title">
           <p id="tkv-wallet-title" className="tkv-wallet-kicker">Wallet</p>
-          <p className="tkv-wallet-value">{balance ?? "-"} coins</p>
+          <p className="tkv-wallet-value">{balanceReady ? `${balance ?? "-"} coins` : <span className="tkn-skel" style={{ width: 96, height: 34 }} aria-hidden="true" />}</p>
           <p className="tkv-wallet-help">Coins buy promotions and video calls.</p>
           <SectionHelp textKey="help.section.wallet" tone="dark" />
           <div className="tkv-wallet-actions">
@@ -311,18 +301,30 @@ export function NewVendorPanel({ initialTab = "all" }: { initialTab?: Tab }) {
         </section>
         <section className="tkv-card tkv-glass" aria-labelledby="tkv-profile-title">
           <h2 id="tkv-profile-title" className="tkv-h3">Your profile</h2>
-          <p className="tkv-lead-small">{percent}% complete{percent < 100 ? ". Finish the steps below." : "."}</p>
-          <div className="tkv-bar" role="progressbar" aria-label="Profile complete" aria-valuemin={0} aria-valuemax={100} aria-valuenow={percent}>
-            <i style={{ width: `${percent}%` }} />
-          </div>
-          <ul className="tkv-checklist">
-            {profileSteps.map((step) => (
-              <li key={step.label}>
-                <span className={step.done ? "tkv-check is-done" : "tkv-check"} aria-hidden />
-                {step.done ? <span>{step.label}</span> : <Link href={step.href}>{step.label}</Link>}
-              </li>
-            ))}
-          </ul>
+          {profileReady ? (
+            <>
+              <p className="tkv-lead-small">{percent}% complete{percent < 100 ? ". Finish the steps below." : "."}</p>
+              <div className="tkv-bar" role="progressbar" aria-label="Profile complete" aria-valuemin={0} aria-valuemax={100} aria-valuenow={percent}>
+                <i style={{ width: `${percent}%` }} />
+              </div>
+              <ul className="tkv-checklist">
+                {profileSteps.map((step) => (
+                  <li key={step.label}>
+                    <span className={step.done ? "tkv-check is-done" : "tkv-check"} aria-hidden />
+                    {step.done ? <span>{step.label}</span> : <Link href={step.href}>{step.label}</Link>}
+                  </li>
+                ))}
+              </ul>
+            </>
+          ) : (
+            <div className="tkn-skel-stack" aria-busy="true">
+              <span className="tkn-skel" style={{ width: 150, height: 16 }} aria-hidden="true" />
+              <span className="tkn-skel" style={{ width: "100%", height: 10 }} aria-hidden="true" />
+              <span className="tkn-skel" style={{ width: "80%", height: 16 }} aria-hidden="true" />
+              <span className="tkn-skel" style={{ width: "70%", height: 16 }} aria-hidden="true" />
+              <span className="tkn-skel" style={{ width: "60%", height: 16 }} aria-hidden="true" />
+            </div>
+          )}
         </section>
         <p className="tkv-security">
           Scammers may pretend to be the Tharkoo team. Never send money or personal details to unofficial contacts. <Link href="/help/">Help Center</Link>

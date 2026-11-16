@@ -191,12 +191,13 @@
   .up-layout-home > .up-aside { grid-column: auto; }
   .up-nav { padding: 8px; }
   .up-nav-head { display: none; }
-  .up-nav-list { flex-direction: row; overflow-x: auto; gap: 8px; padding-bottom: 4px; }
+  .up-nav-list { flex-direction: row; overflow-x: auto; gap: 8px; padding-bottom: 4px; scrollbar-width: none; }
+  .up-nav-list::-webkit-scrollbar { display: none; }
   .up-nav-list > li { flex: none; }
   .up-nav-link {
     min-height: 44px; border-radius: 999px; border: 1.5px solid #ead8f0; background: #fff; white-space: nowrap; padding: 0 16px;
   }
-  .up-nav-link-on, .up-nav-link-on:hover { border-color: transparent; }
+  .up-nav-link-on, .up-nav-link-on:hover { border-color: transparent; background: linear-gradient(135deg, #d1137a, #a8124f); color: #fff; }
   .up-h1 { font-size: 24px; }
   .up-hero { padding: 22px; }
   .up-cards { grid-template-columns: repeat(2, minmax(0, 1fr)); }

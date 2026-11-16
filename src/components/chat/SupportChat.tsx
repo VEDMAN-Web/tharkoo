@@ -2,6 +2,8 @@
 
 import { ArrowUp, MessageCircle, Phone, Send, X } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
+import { usePathname } from "next/navigation";
+import { useUrlPaths } from "@/components/UrlPaths";
 import { safeHref } from "@/lib/sanitize";
 import { useDismiss } from "@/components/ui/useDismiss";
 import { api, friendlyError, hasSessionHint } from "@/lib/ui/api";
@@ -28,6 +30,10 @@ function callLink(value: string) {
 export function SupportChat({ chat, texts }: { chat: Chat; texts?: UiTextMap }) {
   // H7.8: every visible word in the chat comes from the UI-text store (defaults in src/lib/ui/text.ts).
   const t = useMemo(() => makeT(texts), [texts]);
+  const path = usePathname() || "/";
+  const paths = useUrlPaths();
+  const section = path.split("/")[1];
+  const pageBars = section === "u" || section === paths.ad;
   const [open, setOpen] = useState(false);
   const [session, setSession] = useState<Session>("unknown");
   const [topic, setTopic] = useState<SupportTopic>("something_else");
@@ -156,7 +162,7 @@ export function SupportChat({ chat, texts }: { chat: Chat; texts?: UiTextMap }) 
   const showGuest = session === "guest" && !guestDone;
 
   return (
-    <div className="tkn-float" ref={float}>
+    <div className={pageBars ? "tkn-float tkn-float-pagebars" : "tkn-float"} ref={float}>
       {open ? (
         <section aria-label={chat.title} className="tkn-chatbox" id="tkn-chat-panel">
           <div className="tkn-chat-head">

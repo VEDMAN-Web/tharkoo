@@ -1,0 +1,16 @@
+{
+  "branchPrefix": "haiku/h7.60",
+  "globs": [
+    "docs/ownership/H7.60.json",
+    "src/app/globals.css",
+    "src/components/HeaderDrawer.tsx",
+    "src/components/HeaderNew.tsx",
+    "src/components/PathChrome.tsx",
+    "src/components/account/AccountContext.tsx",
+    "src/components/buyer/user-panel.css",
+    "src/components/chat/SupportChat.tsx",
+    "src/components/vendor/NewVendorPanel.tsx",
+    "src/components/vendor/VendorScreens.tsx",
+    "tests/e2e/phone-header.e2e.ts"
+  ]
+}

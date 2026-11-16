@@ -13,6 +13,7 @@ import { applyPrefixes, loginPath, postAdPath } from "@/lib/urls";
 import type { ShellLink } from "@/server/site-links/shell-config-rules";
 import type { UrlPaths } from "@/lib/urls";
 import { isProbablySignedIn, openSignInFromLink } from "./auth/SignInSheet";
+import { LogoutButton } from "./auth/LogoutButton";
 
 
 /**
@@ -24,6 +25,7 @@ export function HeaderDrawer({
   countries,
   loginLabel,
   postLabel,
+  signedIn,
   paths,
   onClose,
 }: {
@@ -31,6 +33,7 @@ export function HeaderDrawer({
   countries: CountryOption[];
   loginLabel: string;
   postLabel: string;
+  signedIn: boolean;
   paths: UrlPaths;
   onClose: () => void;
 }) {
@@ -69,16 +72,25 @@ export function HeaderDrawer({
           {countryOpen ? <CountryList countries={countries} onPick={onClose} /> : null}
         </nav>
         <div className="tkn-drawer-foot">
-          <Link
-            href={loginPath(paths)}
-            className="tkn-btn tkn-btn-ghost"
-            onClick={(event) => {
-              onClose();
-              openSignInFromLink(event);
-            }}
-          >
-            {loginLabel}
-          </Link>
+          {signedIn ? (
+            <>
+              <Link href="/u/account/" className="tkn-btn tkn-btn-ghost" data-tk="drawer-account" onClick={onClose}>
+                My account
+              </Link>
+              <LogoutButton className="tkn-btn tkn-btn-ghost" onClick={onClose}>Log out</LogoutButton>
+            </>
+          ) : (
+            <Link
+              href={loginPath(paths)}
+              className="tkn-btn tkn-btn-ghost"
+              onClick={(event) => {
+                onClose();
+                openSignInFromLink(event);
+              }}
+            >
+              {loginLabel}
+            </Link>
+          )}
           <Link
             href={postAdPath(paths)}
             className="tkn-btn tkn-btn-primary"
