@@ -323,7 +323,8 @@ test.describe("H7.86 post an ad, step 5 and the success screen", () => {
       if (width >= 1280) {
         expect(fit.perRow, `${width} tiles a row`).toBe(4);
         expect(fit.rows, `${width} rows`).toBe(3);
-        expect(fit.tallest, `${width} tile height`).toBeLessThanOrEqual(66);
+        if (height < 860) expect(fit.tallest, `${width} tile height`).toBeLessThanOrEqual(66);
+        else expect(fit.tallest, `${width}x${height} tile height`).toBeGreaterThanOrEqual(100);
       }
       if (height < 820) expect(fit.tipShown, `${width}x${height} tip hidden when short`).toBe(false);
       await shot(page, `3-3-step1-${width}x${height}`);
@@ -370,8 +371,9 @@ test.describe("H7.86 post an ad, step 5 and the success screen", () => {
         return { inner: scroll.scrollHeight - scroll.clientHeight, page: document.documentElement.scrollHeight - window.innerHeight, frames: frames.map((box) => [Math.round(box.width), Math.round(box.height), Math.round(box.top)]), navBottom: nav.bottom };
       });
       expect(fit.frames.length).toBe(4);
-      expect(fit.frames.map((box) => box[0]), `${width} tile widths`).toEqual([96, 96, 96, 96]);
-      expect(fit.frames.map((box) => box[1]), `${width} tile heights`).toEqual([96, 96, 96, 96]);
+      const side = height >= 860 ? 120 : 96;
+      expect(fit.frames.map((box) => box[0]), `${width} tile widths`).toEqual([side, side, side, side]);
+      expect(fit.frames.map((box) => box[1]), `${width} tile heights`).toEqual([side, side, side, side]);
       expect(new Set(fit.frames.map((box) => box[2])).size, `${width} one row`).toBe(1);
       expect(fit.inner, `${width}x${height} no inner scroll`).toBeLessThanOrEqual(0);
       expect(fit.page, `${width}x${height} no page scroll`).toBeLessThanOrEqual(0);

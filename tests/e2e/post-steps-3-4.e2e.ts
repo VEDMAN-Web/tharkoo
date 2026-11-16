@@ -218,7 +218,7 @@ test.describe("H7.85 desktop fit", () => {
         const last = (await page.locator(".tkp-tile").last().boundingBox())!;
         const nav = (await page.locator(".tkp-nav").boundingBox())!;
         expect(last.y + last.height, `${width} last tile above the bar`).toBeLessThanOrEqual(nav.y + 1);
-        if (width >= 1366) expect(last.height, "tile height").toBeLessThanOrEqual(80);
+        if (width >= 1366 && height < 860) expect(last.height, "tile height").toBeLessThanOrEqual(80);
       } else {
         await expect(preview, `${width} preview button`).toBeVisible();
       }

@@ -1,0 +1,12 @@
+{
+  "branchPrefix": "haiku/h7.123",
+  "globs": [
+    "docs/ownership/H7.123.json",
+    "src/components/PostWizard.tsx",
+    "src/components/post/NewPostParts.tsx",
+    "src/components/post/post-wizard.css",
+    "tests/e2e/h7-123-post-desktop.e2e.ts",
+    "tests/e2e/post-step-5.e2e.ts",
+    "tests/e2e/post-steps-3-4.e2e.ts"
+  ]
+}

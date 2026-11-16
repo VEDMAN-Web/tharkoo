@@ -841,20 +841,24 @@ export function PostWizard({
     const priceField = <TextField id="price" label="Price (₹)" value={price} error={err("price")} onBlur={blur("price")} inputMode="numeric" placeholder="18,000" onChange={setPrice} />;
     return (
       <div className="tkp-post" data-design="post-new">
-        <div className="tkp-top">
-          <p className="tkp-top-title">Post an ad</p>
-          <div className="tkp-top-actions">
-            <span className="tkp-saved" data-state={saveState} data-tk="draft-saved" role="status">
-              {saveState === "saving" ? "Saving…" : "Saved"}
-            </span>
-            <Link href="/u/account/ads/" className="tkp-exit" data-tk="exit-post">Exit</Link>
-          </div>
-        </div>
-        <div className="tkp-progress" aria-hidden><i style={{ width: `${(step / flow.length) * 100}%` }} /></div>
         <div className="tkp-grid">
           <PostRail
             items={railItems}
             progressLabel="Your progress"
+            head={
+              <>
+              <div className="tkp-top">
+                <p className="tkp-top-title">Post an ad</p>
+                <div className="tkp-top-actions">
+                  <span className="tkp-saved" data-state={saveState} data-tk="draft-saved" role="status">
+                    {saveState === "saving" ? "Saving…" : "Saved"}
+                  </span>
+                  <Link href="/u/account/ads/" className="tkp-exit" data-tk="exit-post">Exit</Link>
+                </div>
+              </div>
+              <div className="tkp-progress" aria-hidden><i style={{ width: `${(step / flow.length) * 100}%` }} /></div>
+              </>
+            }
             onGo={(num) => {
               if (num === step) return;
               if (draftId) remember(draftId, num);
