@@ -10,6 +10,8 @@
     "src/components/new/home-spec.css",
     "src/components/new/NewHome.tsx",
     "src/components/new/NotFoundView.tsx",
+    "src/components/new/NewGallery.tsx",
+    "src/components/new/ad-spec.css",
     "src/app/not-found.tsx",
     "src/lib/ui/text.ts",
     "tests/**"
