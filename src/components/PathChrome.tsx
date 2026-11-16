@@ -90,7 +90,7 @@ export function PathChrome({ shell, paths, children }: { shell: ChromeData; path
           <HeaderNew siteName={siteName} shell={config} cities={cities} countries={countries} categories={categories} texts={texts} />
           <MainInner>{children}</MainInner>
           <FooterNew siteName={siteName} shell={config} categories={categories} />
-          <SupportChat chat={config.chat} texts={texts} />
+          <SupportChat chat={config.chat} texts={texts} hours={content.support.hours || site.supportHours || ""} />
           <SignInPopup showMobile={signIn.showMobile} image={signIn.image} />
         </div>
       ) : (
