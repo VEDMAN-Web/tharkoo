@@ -1,0 +1,32 @@
+{
+  "branchPrefix": "haiku/h7.73",
+  "globs": [
+    "docs/ownership/H7.73.json",
+    "src/app/u/account/ads/page.tsx",
+    "src/app/u/account/page.tsx",
+    "src/app/u/account/wallet/page.tsx",
+    "src/components/HeaderNew.tsx",
+    "src/components/SiteShell.tsx",
+    "src/components/buyer/CoinsPanel.tsx",
+    "src/components/buyer/MyAdsPage.tsx",
+    "src/components/buyer/SavedPanel.tsx",
+    "src/components/buyer/SupportPanel.tsx",
+    "src/components/buyer/UserPanelHome.tsx",
+    "src/components/buyer/UserPanelShell.tsx",
+    "src/components/buyer/user-panel.css",
+    "src/components/chat/Inbox.tsx",
+    "src/components/vendor/AvailabilityControls.tsx",
+    "src/components/vendor/MyAdsBoard.tsx",
+    "src/components/vendor/NewVendorPanel.tsx",
+    "src/components/wallet/CoinWallet.tsx",
+    "src/lib/ui/text.ts",
+    "src/server/listings/owner-cards.ts",
+    "src/server/notifications/summary.ts",
+    "tests/e2e/account-home.e2e.ts",
+    "tests/e2e/logout.e2e.ts",
+    "tests/e2e/phone-header.e2e.ts",
+    "tests/e2e/vendor-panel.e2e.ts",
+    "tests/server/listings/owner-tab-counts.test.ts",
+    "tests/server/notifications/feed.test.ts"
+  ]
+}

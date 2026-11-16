@@ -3,6 +3,8 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { api, friendlyError } from "@/lib/ui/api";
+import { MessageSquare } from "lucide-react";
+import { EmptyIcon } from "@/components/buyer/UserPanelShell";
 import { ChatThread } from "./ChatThread";
 
 type Row = { id: string; listingTitle: string; role: "buyer" | "seller"; lastText: string; lastMessageAt: string; unread: number; blocked: boolean };
@@ -40,9 +42,9 @@ export function Inbox() {
         {error ? <p role="alert">{error}</p> : null}
         {!error && rows.length === 0 ? (
           <div className="up-empty">
-            <div className="up-empty-box" aria-hidden="true" />
+            <EmptyIcon icon={MessageSquare} />
             <p className="up-empty-title">No chats yet</p>
-            <p className="up-empty-body">When someone taps Chat now on your ad, it appears here.</p>
+            <p className="up-empty-body">Chats you start with advertisers, and people who message you, show here.</p>
             <Link href="/search/" className="up-btn">Browse ads</Link>
           </div>
         ) : null}

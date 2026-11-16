@@ -16,6 +16,7 @@ export interface OwnTotals {
   live: number;
   review: number;
   ended: number;
+  draft: number;
 }
 
 /**
@@ -60,5 +61,6 @@ export function ownTabCounts(statuses: readonly string[]): OwnTotals {
     live: count(["active"]),
     review: count(["pending"]),
     ended: count(["expired", "archived"]),
+    draft: count(["draft"]),
   };
 }

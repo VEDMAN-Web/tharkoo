@@ -8,10 +8,11 @@ describe("vendor panel tab counts (H6.19)", () => {
       live: 2,
       review: 1,
       ended: 2,
+      draft: 1,
     });
   });
 
   it("returns zeros for an owner with no ads", () => {
-    expect(ownTabCounts([])).toEqual({ all: 0, live: 0, review: 0, ended: 0 });
+    expect(ownTabCounts([])).toEqual({ all: 0, live: 0, review: 0, ended: 0, draft: 0 });
   });
 });

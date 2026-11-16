@@ -8,7 +8,8 @@ import { readSaved, type SavedItem } from "../ui/SaveButton";
 import { displayTitle } from "@/lib/format";
 import type { ListingDoc } from "@/lib/models";
 import type { PanelSummary } from "@/server/notifications/summary";
-import { UserPanelShell } from "./UserPanelShell";
+import { Heart } from "lucide-react";
+import { EmptyIcon, UserPanelShell } from "./UserPanelShell";
 
 /** H7.17: saved ads and recently viewed ads on the user panel. Both live on this device, so no login is needed. */
 
@@ -34,7 +35,7 @@ export function SavedPanel({ summary }: { summary: PanelSummary }) {
           <div className="up-skeleton" aria-hidden="true" />
         ) : saved.length === 0 ? (
           <div className="up-empty">
-            <div className="up-empty-box" aria-hidden="true" />
+            <EmptyIcon icon={Heart} />
             <p className="up-empty-title">Nothing saved yet</p>
             <p className="up-empty-body">Tap the heart on an ad to keep it here.</p>
             <Link href="/" className="up-btn">Browse ads</Link>

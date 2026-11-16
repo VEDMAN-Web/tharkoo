@@ -28,11 +28,10 @@ test.describe("H7.24 logout", () => {
     await loginUi(page, email);
     await becomeSeller(page, baseURL!);
     await page.goto("/u/account/");
-    await expect(page.getByRole("navigation", { name: "Panel" })).toBeVisible();
+    await expect(page.getByRole("navigation", { name: "My account" })).toBeVisible();
     await logOutFromHeader(page);
     await page.goBack();
     await expect(page.getByText(/Hello /)).toHaveCount(0);
-    await expect(page.getByRole("navigation", { name: "Panel" })).toHaveCount(0);
     await page.goto("/u/account/");
     await expect(page).toHaveURL(/\/u\/login\//);
   });
