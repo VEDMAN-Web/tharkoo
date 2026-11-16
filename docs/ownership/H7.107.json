@@ -1,0 +1,10 @@
+{
+  "branchPrefix": "haiku/h7.107",
+  "globs": [
+    "docs/ownership/H7.107.json",
+    "src/server/billing/ledger.ts",
+    "src/server/billing/posting-fee.ts",
+    "src/server/models/billing.ts",
+    "tests/**"
+  ]
+}

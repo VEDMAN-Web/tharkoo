@@ -67,6 +67,7 @@ interface AppendInput {
   auditAction: string;
   auditReason?: string;
   ip?: string;
+  once?: boolean;
 }
 
 /**
@@ -102,6 +103,7 @@ async function appendEntry(input: AppendInput) {
         refId: input.refId,
         balanceAfter: balance + input.delta,
         idempotencyKey: `chain:${input.userId.toString()}:${parent}`,
+        ...(input.once ? { refKey: `${input.userId.toString()}:${input.refType}:${input.refId}` } : {}),
       });
       const next = balance + input.delta;
       await audit.append({
@@ -141,6 +143,7 @@ export async function creditWallet(input: {
   auditAction?: string;
   auditReason?: string;
   ip?: string;
+  once?: boolean;
 }) {
   await connectDb();
   if (!Number.isInteger(input.amount) || input.amount < 1) {
@@ -158,6 +161,7 @@ export async function creditWallet(input: {
     auditAction: input.auditAction ?? "wallet.credit",
     auditReason: input.auditReason,
     ip: input.ip,
+    once: input.once,
   });
 }
 
@@ -169,6 +173,7 @@ export async function debitWallet(input: {
   requestId: string;
   actorId?: string;
   ip?: string;
+  once?: boolean;
 }) {
   await connectDb();
   if (!Number.isInteger(input.amount) || input.amount < 0) {
@@ -185,6 +190,7 @@ export async function debitWallet(input: {
     actorType: "user",
     auditAction: "wallet.debit",
     ip: input.ip,
+    once: input.once,
   });
 }
 

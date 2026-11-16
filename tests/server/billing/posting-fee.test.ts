@@ -5,7 +5,7 @@ import { POST as listingsPost } from "@/app/api/listings/[[...slug]]/route";
 import { hashToken } from "@/server/auth/http";
 import { creditWallet, walletBalance } from "@/server/billing/ledger";
 import { MONEY_DEFAULTS, readMoneySettings, setMoneySettings } from "@/server/billing/money-settings";
-import { InsufficientCreditsError, chargePostingFee, isPostingFeePaid, postingFeeStatus } from "@/server/billing/posting-fee";
+import { InsufficientCreditsError, chargePostingFee, isPostingFeePaid, postingFeeStatus, refundPostingFee } from "@/server/billing/posting-fee";
 import { rejectListing } from "@/server/moderation/decide";
 import { submitListing } from "@/server/listings/service";
 import { AuditEvent, Category, Listing, Session, User, WalletEntry } from "@/server/models";
@@ -115,18 +115,41 @@ describe("the posting fee at publish", () => {
     expect(await isPostingFeePaid(draft.id)).toBe(true);
   });
 
-  it("is charged once when two requests arrive together", async () => {
+  it("is charged once when two requests arrive together, 50 times in a row", async () => {
+    await WalletEntry.init();
+    await fee(30);
+    const user = await member();
+    await topUp(user.id, 3000);
+    let expected = 3000;
+    for (let round = 0; round < 50; round += 1) {
+      const draft = await draftFor(user.id);
+      const results = await Promise.all([
+        chargePostingFee({ userId: user.id, listingId: draft.id, requestId: `a${round}` }),
+        chargePostingFee({ userId: user.id, listingId: draft.id, requestId: `b${round}` }),
+      ]);
+      expect(results.map((row) => row.charged).sort((x, y) => x - y), `round ${round}`).toEqual([0, 30]);
+      expected -= 30;
+      expect(await WalletEntry.countDocuments({ userId: user.id, refType: "listing_fee", refId: new RegExp(`^${draft.id}:`) }), `round ${round}`).toBe(1);
+    }
+    expect(await walletBalance(user.id)).toBe(expected);
+  });
+
+  it("returns the fee once even when two refunds arrive together", async () => {
+    await WalletEntry.init();
     await fee(30);
     const user = await member();
     await topUp(user.id, 100);
-    const draft = await draftFor(user.id);
-    const results = await Promise.all([
-      chargePostingFee({ userId: user.id, listingId: draft.id, requestId: "a" }),
-      chargePostingFee({ userId: user.id, listingId: draft.id, requestId: "b" }),
-    ]);
-    expect(results.map((row) => row.charged).sort()).toEqual([0, 30]);
-    expect(await walletBalance(user.id)).toBe(70);
-    expect(await WalletEntry.countDocuments({ userId: user.id, refType: "listing_fee" })).toBe(1);
+    for (let round = 0; round < 20; round += 1) {
+      const draft = await draftFor(user.id);
+      await chargePostingFee({ userId: user.id, listingId: draft.id, requestId: "c" });
+      const refunds = await Promise.all([
+        refundPostingFee({ userId: user.id, listingId: draft.id, requestId: "r1" }),
+        refundPostingFee({ userId: user.id, listingId: draft.id, requestId: "r2" }),
+      ]);
+      expect(refunds.sort((x, y) => x - y), `round ${round}`).toEqual([0, 30]);
+      expect(await WalletEntry.countDocuments({ refType: "listing_fee_refund", refId: new RegExp(`^${draft.id}:`) })).toBe(1);
+    }
+    expect(await walletBalance(user.id)).toBe(100);
   });
 
   it("blocks a publish without enough credits, charges nothing and leaves the draft", async () => {

@@ -71,7 +71,7 @@ export async function chargePostingFee(input: { userId: string; listingId: strin
   if (balance < fee) throw new InsufficientCreditsError(fee, balance);
   const refId = `${input.listingId}:${debits}`;
   try {
-    const result = await debitWallet({ userId: input.userId, amount: fee, refType: FEE_REF, refId, requestId: input.requestId });
+    const result = await debitWallet({ userId: input.userId, amount: fee, refType: FEE_REF, refId, requestId: input.requestId, once: true });
     return { charged: result.created ? fee : 0, balance: result.balance, refId: result.created ? refId : null };
   } catch (error) {
     if (error instanceof PaymentRequiredError) throw new InsufficientCreditsError(fee, await walletBalance(input.userId));
@@ -95,6 +95,7 @@ export async function refundPostingFee(input: { userId: string; listingId: strin
     actorType: "system",
     reason: "refund",
     auditAction: "wallet.posting_fee.refund",
+    once: true,
   });
   return result.created ? amount : 0;
 }
