@@ -21,7 +21,7 @@ import { ReviewStep, type ReviewRow } from "./post/ReviewStep";
 import { PostSuccess, type UpsellPlan } from "./post/PostSuccess";
 import { openPromote } from "./promote/openPromote";
 import { CreditsCard, PayCard } from "./post/PayParts";
-import { creditsText, insufficientFrom, openRecharge, shortfallOf, usePostingMoney } from "./post/credits";
+import { CREDITS_ADDED_EVENT, creditsText, insufficientFrom, openRecharge, shortfallOf, usePostingMoney } from "./post/credits";
 import { NEW_POST_TIPS, PostRail, PostTip, RAIL_LABELS, RAIL_MORE_LABEL, type RailItem } from "./post/NewPostParts";
 import { CategoryTiles } from "./post/CategoryTiles";
 import { hintsFor, photoHelp } from "./post/placeholders";
@@ -502,6 +502,7 @@ export function PostWizard({
     }
     const outcome = (res.data ?? {}) as { status?: string; charged?: number; balance?: number };
     setPublishedStatus(String(outcome.status ?? "active"));
+    window.dispatchEvent(new CustomEvent(CREDITS_ADDED_EVENT, { detail: { added: 0 } }));
     if (newDesign) {
       const charged = typeof outcome.charged === "number" ? outcome.charged : alreadyPaid ? 0 : money.fee;
       const left = typeof outcome.balance === "number" ? outcome.balance : Math.max(0, (money.balance ?? 0) - charged);
@@ -667,7 +668,7 @@ export function PostWizard({
               {copy.promotion.title ? <p className="t-small" style={{ fontWeight: 600 }}>{copy.promotion.title}</p> : null}
               {steps.promote.help ? <p className="t-small">{steps.promote.help}</p> : null}
               {visiblePlans.length ? visiblePlans.map((plan) => (
-                <p key={plan.id} className="t-small">{plan.name}{plan.amount !== undefined ? ` · Rs ${plan.amount}` : ""}</p>
+                <p key={plan.id} className="t-small">{plan.name}{plan.amount !== undefined ? ` · ₹${plan.amount}` : ""}</p>
               )) : (
                 <p className="t-small">{copy.promotion.note} <Link href="/u/account/credits/" style={{ color: "var(--accent)" }}>Boost visibility</Link></p>
               )}
@@ -810,7 +811,7 @@ export function PostWizard({
 
   /** H7.83: the New design. Five steps, a step rail, the live preview (the real ad card) and the tip. Logic is shared with the three-step form. */
   function renderNewDesign() {
-    const stepCopy = newStepCopy(current, copy, Boolean(about), people, money.fee, editing);
+    const stepCopy = newStepCopy(current, copy, Boolean(about), people, money.fee, editing, contactMode);
     const railItems: RailItem[] = flow.map((key, index) => ({
       key,
       label: key === "more" ? RAIL_MORE_LABEL : RAIL_LABELS[key],
@@ -977,7 +978,7 @@ export function PostWizard({
                   ad={adPreview}
                   hasPhoto={Boolean(coverUrl)}
                   byline={byline}
-                  note="Your ad goes live as soon as you publish it. You can edit, pause or renew it from My ads."
+                  note={editing ? (draftStatus === "paused" ? "Your ad stays paused until you resume it." : "Your changes show on your ad as soon as you save.") : "Your ad goes live as soon as you publish it. You can edit, pause or renew it from My ads."}
                   pay={alreadyPaid || !chargesFee ? undefined : <PayCard fee={money.fee} balance={shownBalance} short={short} onRecharge={() => openRecharge({ shortfall: short })} />}
                   terms={terms}
                   adult={adult}

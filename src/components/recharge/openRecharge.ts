@@ -16,7 +16,7 @@ export function openSupportWith(message: string) {
 export function rechargeLine(parts: { pack?: string; amount?: number; method?: string }): string {
   const bits: string[] = [];
   if (parts.pack) bits.push(`Pack: ${parts.pack}`);
-  if (typeof parts.amount === "number") bits.push(`Amount: Rs ${parts.amount.toLocaleString("en-IN")}`);
+  if (typeof parts.amount === "number") bits.push(`Amount: ₹${parts.amount.toLocaleString("en-IN")}`);
   if (parts.method) bits.push(`Method: ${parts.method}`);
   return `I need help with a credit recharge. ${bits.join(". ")}`.trim();
 }
