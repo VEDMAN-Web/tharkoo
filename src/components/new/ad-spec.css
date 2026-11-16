@@ -232,6 +232,7 @@ body:has(.tkn-ad) .tkn-footer { margin-top: 48px; }
   }
   .tkn .tkn-ad-bar.has-video { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1.5fr); }
   .tkn .tkn-ad-bar.has-call { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .tkn .tkn-ad-bar.has-one { grid-template-columns: minmax(0, 1fr); }
   .tkn .tkn-ad-bar > * { min-width: 0; }
   .tkn .tkn-ad-bar .tk-btn { height: 48px; min-height: 48px; gap: 6px; font-size: 14px; padding: 0 6px; border-radius: 12px; }
   .tkn .tkn-ad-bar .tk-bar-note { grid-column: 1 / -1; }

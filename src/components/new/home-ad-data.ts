@@ -1,13 +1,13 @@
 import type { ListingDoc } from "@/lib/models";
 import { displayTitle, prettyPlace } from "@/lib/format";
-import { listingPhotos, safePhoto } from "@/lib/media";
+import { safePhoto } from "@/lib/media";
 import { adPath, applyPrefixes, categoryPath, placePath, type UrlPaths } from "@/lib/urls";
 import type { HomeAdCardData } from "./HomeAdCard";
 
 const HOME_AD_PHOTOS_MAX = 6;
 
 export function homeAdCardData(ad: ListingDoc, categoryNames: Map<string, string>, paths: UrlPaths, fallbackTitle: string): HomeAdCardData {
-  const photos = listingPhotos(ad.categorySlug, ad.publicId || ad.slug || "", ad.photos || [])
+  const photos = (ad.photos || [])
     .map((src) => safePhoto(src))
     .filter((src): src is string => Boolean(src))
     .slice(0, HOME_AD_PHOTOS_MAX);

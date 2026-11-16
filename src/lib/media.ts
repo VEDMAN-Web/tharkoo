@@ -19,13 +19,13 @@ export function peoplePortraits(category: string | undefined, id: string): strin
   });
 }
 
-/** Real uploads win. People listings without one show the portrait set. */
-export function listingPhotos(category: string | undefined, id: string, photos: (string | null | undefined)[]) {
+export function listingPhotos(category: string | undefined, id: string, photos: (string | null | undefined)[], demo = false) {
   const list = photos.filter((photo): photo is string => Boolean(photo));
   const portraits = peoplePortraits(category, id);
   if (!portraits) return list;
   const own = list.filter((photo) => !photo.startsWith("/placeholders/"));
-  return own.length ? own : portraits;
+  if (own.length) return own;
+  return demo ? portraits : [];
 }
 
 export function safePhoto(src?: string | null): string | null {

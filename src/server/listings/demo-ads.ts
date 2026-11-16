@@ -10,6 +10,10 @@ import { SEED_USER_EMAIL } from "@/server/seed/data";
 const audit = new AuditRepository();
 
 export const DEMO_SLUG = /^demo-[0-9]{1,6}$/;
+export function isDemoAd(ownerEmail: string | undefined, slug: string | undefined): boolean {
+  return ownerEmail === SEED_USER_EMAIL && DEMO_SLUG.test(slug ?? "");
+}
+
 export const DEMO_END_STATUS = "expired";
 const SAMPLE = 20;
 

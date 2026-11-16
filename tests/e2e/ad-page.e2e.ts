@@ -11,7 +11,7 @@ async function adPathIn(page: Page, feed: string) {
 }
 
 test.describe("H7.66 ad page", () => {
-  test("an ad card shows Age verified once, not doubled", async ({ page, baseURL }) => {
+  test("an ad card of an account that verified nothing shows no verification badge (H7.119)", async ({ page, baseURL }) => {
     const { api, email } = await newUserApi(baseURL!, "agebadge");
     const categories = (await (await api.get("/api/categories")).json()).data.categories as { _id: string }[];
     const cities = (await (await api.get("/api/locations?type=city")).json()).data.locations as { id: string; name: string }[];
@@ -30,11 +30,9 @@ test.describe("H7.66 ad page", () => {
     });
     expect(profile.status(), await profile.text()).toBe(200);
     await page.goto("/u/account/ads/");
-    const chips = page.locator(".tk-chk");
-    await expect(chips.first()).toBeVisible();
-    const texts = await chips.allInnerTexts();
-    expect(texts.some((text) => text.trim() === "Age verified")).toBe(true);
-    expect(texts.every((text) => !/Age\s+Age/.test(text))).toBe(true);
+    await expect(page.locator("[data-tk=card]").first()).toBeVisible();
+    const texts = await page.locator("[data-tk=card] .tk-chk").allInnerTexts();
+    expect(texts.filter((text) => /verified/i.test(text))).toEqual([]);
     await api.dispose();
   });
 

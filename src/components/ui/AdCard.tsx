@@ -4,7 +4,6 @@ import { createContext, useContext, useEffect, useMemo, useRef, useState, type R
 import { ArrowUp, Calendar, Camera, Check, MapPin, Phone } from "lucide-react";
 import type { ListingDoc } from "@/lib/models";
 import { displayTitle, prettyPlace } from "@/lib/format";
-import { listingPhotos } from "@/lib/media";
 import { isCityAlias } from "@/lib/seo/district-alias";
 import { PriceTag } from "../search/PriceTag";
 import { formatPrice } from "../search/price";
@@ -70,7 +69,7 @@ export function AdCard({
   const title = displayTitle(ad.title) || t("card.fallbackTitle");
   const publicHref = adPath(useUrlPaths(), ad.slug || "");
   const href = owner?.href ?? publicHref;
-  const photos = listingPhotos(ad.categorySlug, ad.publicId || ad.slug || "", ad.photos || []);
+  const photos = ad.photos || [];
   const superTop = variant === "supertop" || variant === "star";
   const [shown, setShown] = useState("");
   const [note, setNote] = useState("");
