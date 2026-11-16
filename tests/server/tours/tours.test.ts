@@ -1,5 +1,5 @@
 import mongoose from "mongoose";
-import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
+import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 import { POST as tourWebhook } from "@/app/api/tours/webhook/route";
 import { creditWallet, walletBalance } from "@/server/billing/ledger";
 import { accountBalance, trialBalance } from "@/server/ledger";
@@ -16,6 +16,7 @@ import {
   expireDueTours,
   requestTour,
   reverseTour,
+  tourCallFor,
   updateVideoTourSettings,
 } from "@/server/tours/service";
 import { VideoTour } from "@/server/tours/model";
@@ -307,5 +308,76 @@ describe("the provider webhook", () => {
     expect((await signedEvent(payload)).status).toBe(200);
     expect((await signedEvent(payload)).status).toBe(200);
     expect(await accountBalance("vendor_earnings", a.ownerId)).toBe(1);
+  });
+});
+
+describe("Daily rooms through the service", () => {
+  const sent: { url: string; method: string }[] = [];
+
+  beforeEach(() => {
+    sent.length = 0;
+    process.env.VIDEO_TOUR_PROVIDER = "daily";
+    process.env.DAILY_API_KEY = "test-key-not-real";
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async (url: string, init?: RequestInit) => {
+        sent.push({ url, method: String(init?.method) });
+        const sentBody = init?.body ? (JSON.parse(String(init.body)) as { name?: string }) : {};
+        const body = url.endsWith("/meeting-tokens") ? { token: "tok" } : { name: sentBody.name };
+        return new Response(JSON.stringify(body), { status: 200, headers: { "content-type": "application/json" } });
+      }),
+    );
+  });
+
+  afterEach(() => {
+    vi.unstubAllGlobals();
+    delete process.env.VIDEO_TOUR_PROVIDER;
+    delete process.env.DAILY_API_KEY;
+  });
+
+  it("creates a room on accept, gives a call page path, and deletes the room when the call ends", async () => {
+    const a = await ad();
+    const user = await buyer(1);
+    const tour = await request(user, a.listingId);
+    const accepted = await acceptTour({ ownerId: a.ownerId, tourId: tour.id, requestId: req });
+    expect(accepted.joinUrl).toBe(`/u/account/tours/${tour.id}/`);
+    expect(sent.map((call) => `${call.method} ${call.url}`)).toEqual(["POST https://api.daily.co/v1/rooms"]);
+
+    await endTour({ tourId: tour.id, eventId: "daily-end", outcome: "ended", durationSeconds: 300, requestId: req });
+    expect(sent.at(-1)).toEqual({ url: `https://api.daily.co/v1/rooms/tour-${tour.id}`, method: "DELETE" });
+  });
+
+  it("gives each side a fresh link, refuses a stranger, and gives no link once the tour is over", async () => {
+    const a = await ad();
+    const user = await buyer(1);
+    const tour = await request(user, a.listingId);
+    await acceptTour({ ownerId: a.ownerId, tourId: tour.id, requestId: req });
+    const buyerCall = await tourCallFor({ userId: user, tourId: tour.id });
+    expect(buyerCall.role).toBe("buyer");
+    expect(buyerCall.joinUrl).toBe(`https://tharkoo.daily.co/tour-${tour.id}?t=tok`);
+    expect((await tourCallFor({ userId: a.ownerId, tourId: tour.id })).role).toBe("advertiser");
+    await expect(tourCallFor({ userId: uid(), tourId: tour.id })).rejects.toThrow("Not found");
+    await endTour({ tourId: tour.id, eventId: "daily-end-2", outcome: "ended", durationSeconds: 300, requestId: req });
+    expect((await tourCallFor({ userId: user, tourId: tour.id })).joinUrl).toBeNull();
+  });
+
+  it("deletes the room when an accepted tour that never ended is closed", async () => {
+    const a = await ad();
+    const user = await buyer(1);
+    const tour = await request(user, a.listingId);
+    await acceptTour({ ownerId: a.ownerId, tourId: tour.id, requestId: req });
+    await VideoTour.updateOne({ _id: tour.id }, { $set: { acceptedAt: new Date(Date.now() - TOUR_CALL_TIMEOUT_MS - 1000) } });
+    await expireDueTours(req);
+    expect(sent.at(-1)?.method).toBe("DELETE");
+  });
+
+  it("does not accept the tour when Daily refuses the room", async () => {
+    vi.stubGlobal("fetch", vi.fn(async () => new Response("{}", { status: 500 })));
+    vi.spyOn(console, "error").mockImplementation(() => undefined);
+    const a = await ad();
+    const user = await buyer(1);
+    const tour = await request(user, a.listingId);
+    await expect(acceptTour({ ownerId: a.ownerId, tourId: tour.id, requestId: req })).rejects.toThrow("Video call could not start, please try again");
+    expect((await VideoTour.findById(tour.id))?.status).toBe("requested");
   });
 });
