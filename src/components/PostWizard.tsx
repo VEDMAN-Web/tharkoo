@@ -7,13 +7,21 @@ import { PUBLISH_MESSAGES } from "@/lib/ui/publish-errors";
 import { loadPostSubcategories, type PostSubcategory } from "@/server/categories/actions";
 import { PhotoStep } from "@/components/post/PhotoStep";
 import { PickGroup } from "@/components/post/PickGroup";
-import { NEW_POST_STEPS, cleanAttrs, DEFAULT_PICK_LIMIT, draftToForm, errorsForStep, needsIdCheck, picksOf, textOf, validatePost, type NewPostStep, type PostAttrs, type SavedDraft } from "@/lib/ui/post-form";
+import { cleanAttrs, isChipField, LONG_LIST, needsMoreStep, stepFromUrl, stepsFor, urlStepOf, DEFAULT_PICK_LIMIT, draftToForm, errorsForStep, needsIdCheck, picksOf, telegramHandle, textOf, validateAbout, validateContact, validatePost, type NewPostStep, type PostAttrs, type SavedDraft } from "@/lib/ui/post-form";
 import { loginPath, postAdPath } from "@/lib/urls";
 import { useUrlPaths } from "./UrlPaths";
 import { HelpCard } from "./ui/HelpCard";
 import { AdCard } from "./ui/AdCard";
-import { POST_COPY_DEFAULTS, wizardFields, type CtaCopy, type PostCopy, type PostStepKey } from "./post/copy";
-import { NEW_POST_TIPS, PostRail, PostTip, RAIL_LABELS, type RailItem } from "./post/NewPostParts";
+import { POST_COPY_DEFAULTS, wizardFields, type CtaCopy, type PostCopy } from "./post/copy";
+import { newStepCopy, newSuccessCopy } from "./post/newCopy";
+import { SelectField, Switch, TextField } from "./post/FormFields";
+import { ContactFields } from "./post/ContactFields";
+import { AboutYou } from "./post/AboutYou";
+import { ReviewStep, type ReviewRow } from "./post/ReviewStep";
+import { PostSuccess, type UpsellPlan } from "./post/PostSuccess";
+import { CreditsCard, PayCard } from "./post/PayParts";
+import { creditsText, insufficientFrom, openRecharge, shortfallOf, usePostingMoney } from "./post/credits";
+import { NEW_POST_TIPS, PostRail, PostTip, RAIL_LABELS, RAIL_MORE_LABEL, type RailItem } from "./post/NewPostParts";
 import { CategoryTiles } from "./post/CategoryTiles";
 import { hintsFor, photoHelp } from "./post/placeholders";
 import { listDraftMediaAction } from "./post/mediaActions";
@@ -25,20 +33,8 @@ import type { ListingDoc } from "@/lib/models";
 type Cat = { _id: string; name: string; slug: string; people?: boolean; kind?: string; fields?: Record<string, unknown>[] };
 type Place = { id: string; name: string; slug: string; parentId?: string | null };
 
-/** H7.5: the New design step that reads each step's wording from the post-ad copy (see copy.ts). */
-const NEW_STEP_COPY: Record<NewPostStep, PostStepKey> = {
-  category: "basics",
-  details: "details",
-  photos: "photos",
-  contact: "contact",
-  review: "review",
-};
-
 /** Step number of the photo step in each design. `?step=photos` in the URL means this step. */
 const OLD_PHOTO_STEP = 2;
-const NEW_PHOTO_STEP = 3;
-const NEW_CONTACT_STEP = 4;
-const NEW_REVIEW_STEP = 5;
 
 function tidy(value: string) {
   return value.replace(/[\s-]/g, "");
@@ -63,6 +59,9 @@ export function PostWizard({
   initialCategories,
   initialCities,
   defaultCityId = "",
+  defaultName = "",
+  maskedEmail = "",
+  about = null,
 }: {
   copy?: PostCopy;
   requireIdCheck?: boolean;
@@ -71,11 +70,14 @@ export function PostWizard({
   initialCategories?: Cat[];
   initialCities?: Place[];
   defaultCityId?: string;
+  defaultName?: string;
+  maskedEmail?: string;
+  about?: { askDateOfBirth: boolean } | null;
 }) {
   const paths = useUrlPaths();
-  const lastStep = newDesign ? NEW_POST_STEPS.length : 3;
-  const photoStep = newDesign ? NEW_PHOTO_STEP : OLD_PHOTO_STEP;
   const [step, setStep] = useState(1);
+  const pendingStep = useRef<string | null>(null);
+  const [startReady, setStartReady] = useState(false);
   const [categories, setCategories] = useState<Cat[]>(initialCategories ?? []);
   const [cities, setCities] = useState<Place[]>(initialCities ?? []);
   const [districts, setDistricts] = useState<Place[]>([]);
@@ -88,13 +90,15 @@ export function PostWizard({
   const [postal, setPostal] = useState("");
   const [area, setArea] = useState("");
   const [age, setAge] = useState("");
-  const [nickname, setNickname] = useState("");
+  const [nickname, setNickname] = useState(defaultName.slice(0, 20));
   const [title, setTitle] = useState("");
   const [text, setText] = useState("");
   const [price, setPrice] = useState("");
   const [contactMode, setContactMode] = useState("both");
   const [phone, setPhone] = useState("");
   const [whatsapp, setWhatsapp] = useState(false);
+  const [whatsappSame, setWhatsappSame] = useState(true);
+  const [whatsappNumber, setWhatsappNumber] = useState("");
   const [telegramOn, setTelegramOn] = useState(false);
   const [telegram, setTelegram] = useState("");
   const [terms, setTerms] = useState(false);
@@ -113,6 +117,21 @@ export function PostWizard({
   const [previewOpen, setPreviewOpen] = useState(false);
   const [coverUrl, setCoverUrl] = useState<string | null>(null);
   const [photoBusy, setPhotoBusy] = useState(false);
+  const [photoCount, setPhotoCount] = useState<number | null>(null);
+  const [dateOfBirth, setDateOfBirth] = useState("");
+  const [ageConfirmed, setAgeConfirmed] = useState(false);
+  const [publishedStatus, setPublishedStatus] = useState("");
+  const [serverShort, setServerShort] = useState<{ need: number; balance: number } | null>(null);
+  const [adSlug, setAdSlug] = useState("");
+  const [receipt, setReceipt] = useState("");
+  const [afterBalance, setAfterBalance] = useState<number | null>(null);
+  const [planNote, setPlanNote] = useState("");
+  const [draftStatus, setDraftStatus] = useState("");
+  const money = usePostingMoney();
+  const alreadyPaid = draftStatus !== "" && draftStatus !== "draft";
+  const chargesFee = money.paid;
+  const shownBalance = serverShort ? serverShort.balance : money.balance;
+  const short = alreadyPaid ? 0 : serverShort ? shortfallOf(serverShort.need, serverShort.balance) : shortfallOf(money.fee, money.balance);
   const draftRef = useRef("");
   const queueRef = useRef<Promise<unknown>>(Promise.resolve());
 
@@ -122,6 +141,11 @@ export function PostWizard({
   const fields = useMemo(() => wizardFields(category?.fields), [category]);
   const ageField = fields.find((field) => field.key === "age" || field.type === "number" && /age/i.test(field.label));
   const extra = fields.filter((field) => field.key !== "age" && !/age/i.test(field.label));
+  const split = newDesign && needsMoreStep(extra);
+  const moreKeys = useMemo(() => (split ? extra.map((field) => field.key) : []), [split, extra]);
+  const flow = useMemo(() => stepsFor(split), [split]);
+  const current: NewPostStep = newDesign ? (flow[step - 1] ?? "category") : "category";
+  const no = (name: NewPostStep) => flow.indexOf(name) + 1;
   const { steps } = copy;
   const stepTitles = [steps.basics.title, steps.photos.title, steps.review.title];
   const visiblePlans = copy.promotion.products.length
@@ -134,16 +158,21 @@ export function PostWizard({
   useEffect(() => {
     const sp = new URLSearchParams(window.location.search);
     const raw = sp.get("step") || "1";
-    const next = raw === "photos" ? photoStep : Number(raw);
     const draft = sp.get("draft") || "";
     const id = window.setTimeout(() => {
-      if (next >= 1 && next <= lastStep) setStep(next);
+      if (newDesign) pendingStep.current = raw;
+      else {
+        const next = raw === "photos" ? OLD_PHOTO_STEP : Number(raw);
+        if (next >= 1 && next <= 3) setStep(next);
+      }
+      if (!draft) setStartReady(true);
       if (draft) {
         setDraftId(draft);
         setHydrated(false);
         api<SavedDraft>(`/api/listings/by-id/${draft}`).then((res) => {
           if (res.ok && res.data) {
             const form = draftToForm(res.data);
+            setDraftStatus(String(res.data.status ?? ""));
             setCategoryId(form.categoryId);
             setSubcategoryId(form.subcategoryId);
             setCityId(form.cityId);
@@ -158,6 +187,9 @@ export function PostWizard({
             setPrice(form.price);
             setPhone(form.phone);
             setWhatsapp(form.whatsapp);
+            setWhatsappNumber(form.whatsappNumber);
+            setWhatsappSame(!form.whatsappNumber || form.whatsappNumber === form.phone);
+            setContactMode(form.contactMode);
             setTelegram(form.telegram);
             setTelegramOn(Boolean(form.telegram));
             setAttrs(form.attrs);
@@ -165,9 +197,11 @@ export function PostWizard({
             setAdult(true);
           } else setBanner("This draft could not be loaded. Go back and save it again.");
           setHydrated(true);
+          setStartReady(true);
         }).catch(() => {
           setBanner("This draft could not be loaded. Go back and save it again.");
           setHydrated(true);
+          setStartReady(true);
         });
       }
     }, 0);
@@ -188,7 +222,15 @@ export function PostWizard({
       });
     }
     return () => window.clearTimeout(id);
-  }, [lastStep, photoStep, initialCategories, initialCities]);
+  }, [newDesign, initialCategories, initialCities]);
+
+  useEffect(() => {
+    if (!startReady || !pendingStep.current) return;
+    if (categoryId && !category) return;
+    const name = stepFromUrl(pendingStep.current);
+    pendingStep.current = null;
+    if (name && flow.indexOf(name) >= 0) setStep(flow.indexOf(name) + 1);
+  }, [startReady, categoryId, category, flow]);
 
   useEffect(() => {
     if (!cityId) {
@@ -220,16 +262,28 @@ export function PostWizard({
     });
     if (phone && contactMode !== "email" && !/^\+91[6-9]\d{9}$/.test(normalPhone(phone))) next.phone = "Use +91 and 10 digits";
     if (newDesign && price.trim() && !/^\d{1,9}$/.test(priceDigits)) next.price = "Use whole rupees, numbers only";
+    if (newDesign) Object.assign(next, validateContact({ mode: contactMode, whatsappOn: whatsapp, whatsappSame, whatsappNumber, telegramOn, telegram }));
+    if (about) Object.assign(next, validateAbout({ askDateOfBirth: about.askDateOfBirth, dateOfBirth, ageConfirmed }));
     return next;
   }
+
+  useEffect(() => {
+    if (done) window.scrollTo(0, 0);
+  }, [done]);
+
+  useEffect(() => {
+    const id = window.setTimeout(() => setServerShort(null), 0);
+    return () => window.clearTimeout(id);
+  }, [money.balance]);
 
   const handleMedia = useCallback((media: DraftMedia) => {
     const cover = media.photos.find((photo) => photo.id === media.coverId) ?? media.photos[0];
     setCoverUrl(cover?.url ?? null);
+    setPhotoCount(media.photos.length);
   }, []);
 
   useEffect(() => {
-    if (!newDesign || !draftId || step === 3) return;
+    if (!newDesign || !draftId || current === "photos") return;
     let live = true;
     void listDraftMediaAction(draftId).then((media) => {
       if (live && media) handleMedia(media);
@@ -237,12 +291,12 @@ export function PostWizard({
     return () => {
       live = false;
     };
-  }, [newDesign, draftId, step, handleMedia]);
+  }, [newDesign, draftId, current, handleMedia]);
 
   function remember(id: string, nextStep: number) {
     setTouched({});
     setShowAll(false);
-    const url = `${postAdPath(paths)}?step=${nextStep}&draft=${id}`;
+    const url = `${postAdPath(paths)}?step=${newDesign ? urlStepOf(flow[nextStep - 1] ?? "category") : nextStep}&draft=${id}`;
     window.history.replaceState(null, "", url);
     setStep(nextStep);
   }
@@ -260,6 +314,8 @@ export function PostWizard({
    * the save failed (the banner then says why). The contact is sent only when `includeContact` is set, so a save from
    * an earlier step never clears a phone number that was saved later.
    */
+  const whatsappValue = !whatsapp || (newDesign && contactMode === "email") ? "" : normalPhone(newDesign && !whatsappSame ? whatsappNumber : phone);
+
   function saveAll(includeContact: boolean, quiet = false): Promise<string> {
     const task = queueRef.current.then(() => doSave(includeContact, quiet));
     queueRef.current = task.catch(() => "");
@@ -269,6 +325,7 @@ export function PostWizard({
   async function doSave(includeContact: boolean, quiet: boolean): Promise<string> {
     if (!quiet) setBusy(true);
     else setSaveState("saving");
+    const emailOnly = newDesign && contactMode === "email";
     const basics = {
       categoryId,
       title: title.trim(),
@@ -294,9 +351,10 @@ export function PostWizard({
     draftRef.current = id;
     setDraftId(id);
     const contact = {
-      ...(phone ? { phone: normalPhone(phone) } : {}),
-      ...(whatsapp && phone ? { whatsapp: normalPhone(phone) } : {}),
-      ...(telegramOn && telegram ? { telegram } : {}),
+      ...(phone && !emailOnly ? { phone: normalPhone(phone) } : {}),
+      ...(whatsappValue ? { whatsapp: whatsappValue } : {}),
+      ...(telegramOn && telegram ? { telegram: newDesign ? `@${telegramHandle(telegram)}` : telegram } : {}),
+      ...(newDesign && contactMode !== "phone" ? { acceptForm: true } : {}),
     };
     const details = await api(`/api/listings/${id}`, {
       method: "PATCH",
@@ -332,9 +390,9 @@ export function PostWizard({
   useEffect(() => {
     saveLatest.current = () => {
       const valid = Boolean(categoryId) && (subOptions.length === 0 || Boolean(subcategoryId)) && title.trim().length >= 5 && text.trim().length >= 20 && Boolean(cityId);
-      if (!newDesign || !hydrated || step > 2 || !valid || done) return;
+      if (!newDesign || !hydrated || !["category", "details", "more"].includes(current) || !valid || done) return;
       void saveAll(false, true).then((id) => {
-        if (id) window.history.replaceState(null, "", `${postAdPath(paths)}?step=${step}&draft=${id}`);
+        if (id) window.history.replaceState(null, "", `${postAdPath(paths)}?step=${urlStepOf(current)}&draft=${id}`);
       });
     };
   });
@@ -369,18 +427,46 @@ export function PostWizard({
   }
 
   /** The five-step form (New design on): each step checks only its own fields and saves what it owns. */
+  async function saveAbout(): Promise<boolean> {
+    if (!about) return true;
+    setBusy(true);
+    const res = await api("/api/auth/seller-profile", {
+      method: "PUT",
+      body: JSON.stringify({
+        name: nickname.trim(),
+        city: cityName,
+        whatsapp: whatsappValue,
+        availableNow: false,
+        ...(about.askDateOfBirth ? { dateOfBirth, adultConfirmed: ageConfirmed } : {}),
+      }),
+    });
+    setBusy(false);
+    if (res.ok) return true;
+    const keyOf: Record<string, string> = { name: "nickname", city: "city", dateOfBirth: "dob", whatsapp: "phone" };
+    const found: Record<string, string> = {};
+    for (const [key, messages] of Object.entries(fieldErrors(res.error))) {
+      const message = Array.isArray(messages) ? messages[0] : String(messages || "");
+      if (message) found[keyOf[key] ?? key] = message;
+    }
+    if (Object.keys(found).length) showErrors(found);
+    else setBanner(res.error.code === "UNAUTHORIZED" ? "Sign in to save this draft." : friendlyError(res.error));
+    return false;
+  }
+
   async function continueFrom(from: NewPostStep) {
-    if (!showErrors(errorsForStep(validate(), from))) return;
-    if (from === "category") return setStep(2);
-    if (from === "photos") return remember(draftId, NEW_CONTACT_STEP);
+    if (!showErrors(errorsForStep(validate(), from, Boolean(about), moreKeys))) return;
+    if (from === "category") return setStep(no("details"));
+    if (from === "photos") return remember(draftId, no("contact"));
+    if (from === "contact" && !(await saveAbout())) return;
     const id = await saveAll(from === "contact");
-    if (id) remember(id, from === "details" ? NEW_PHOTO_STEP : NEW_REVIEW_STEP);
+    if (id) remember(id, step + 1);
   }
 
   async function publish() {
     if (!hydrated) return setBanner("The draft is still loading.");
     if (!draftId || !title.trim()) return setBanner("Save a draft before submitting.");
     if (newDesign && !showErrors(errorsForStep(validate(), "review"))) return;
+    if (newDesign && short > 0) return openRecharge({ shortfall: short });
     setBusy(true);
     setBanner("");
     // H6.14: the ID check is asked for only when the switch is on. Off, the submit goes straight to the server.
@@ -399,6 +485,12 @@ export function PostWizard({
     });
     setBusy(false);
     if (!res.ok) {
+      const lack = insufficientFrom(res.error, money.fee);
+      if (lack) {
+        setServerShort(lack);
+        void money.refresh();
+        return;
+      }
       if (res.error.code === "VERIFICATION_REQUIRED") {
         setBanner(PUBLISH_MESSAGES.VERIFICATION_REQUIRED);
         return;
@@ -406,13 +498,69 @@ export function PostWizard({
       setBanner(friendlyError(res.error));
       return;
     }
+    const outcome = (res.data ?? {}) as { status?: string; charged?: number; balance?: number };
+    setPublishedStatus(String(outcome.status ?? "active"));
+    if (newDesign) {
+      const charged = typeof outcome.charged === "number" ? outcome.charged : alreadyPaid ? 0 : money.fee;
+      const left = typeof outcome.balance === "number" ? outcome.balance : Math.max(0, (money.balance ?? 0) - charged);
+      setAfterBalance(left);
+      setReceipt(!chargesFee ? "" : charged > 0 ? `${creditsText(charged)} paid · Balance ${creditsText(left)}` : `No charge for changes · Balance ${creditsText(left)}`);
+      void api<{ slug?: string }>(`/api/listings/by-id/${draftId}`).then((found) => {
+        if (found.ok && found.data?.slug) setAdSlug(found.data.slug);
+      });
+    }
+    window.history.replaceState(null, "", postAdPath(paths));
     setDone(true);
+  }
+
+  async function buyPlan(plan: UpsellPlan) {
+    setPlanNote("");
+    const price = plan.amount ?? 0;
+    const have = afterBalance ?? money.balance ?? 0;
+    if (price > have) return openRecharge({ shortfall: price - have });
+    const res = await api("/api/promotions", { method: "POST", body: JSON.stringify({ listingId: draftId, productId: plan.id }) });
+    if (!res.ok) return setPlanNote(friendlyError(res.error));
+    setAfterBalance(have - price);
+    setPlanNote(`${plan.name} added to your ad.`);
+    void money.refresh();
   }
 
   const preview = useMemo(
     () => ({ slug: "preview", title, description: text, variant: "free", publicId: "preview" }),
     [title, text],
   );
+
+  const shownDistrict = districtName.toLowerCase() === `${cityName} city`.toLowerCase() ? "" : districtName;
+  const adPreview = previewAd({
+    title: title.trim(),
+    description: text.trim(),
+    categorySlug: category?.slug ?? "",
+    citySlug: cities.find((item) => item.id === cityId)?.slug ?? "",
+    districtName: shownDistrict,
+    price: people || !priceDigits ? null : Number(priceDigits),
+    cover: coverUrl,
+  });
+  const byline = people ? [nickname.trim(), age.trim()].filter(Boolean).join(", ") : "";
+
+  if (done && newDesign) {
+    const isLive = publishedStatus === "active";
+    return (
+      <PostSuccess
+        copy={newSuccessCopy(copy, isLive)}
+        live={isLive}
+        where={[cityName, category?.name].filter(Boolean).join(" ")}
+        ad={adPreview}
+        hasPhoto={Boolean(coverUrl)}
+        byline={byline}
+        anotherHref={copy.success.secondaryCta?.href || postAdPath(paths)}
+        adHref={adSlug ? `/ad/${adSlug}/` : ""}
+        receipt={receipt}
+        plans={visiblePlans.filter((plan) => (plan.amount ?? 0) > 0).slice(0, 2)}
+        planNote={planNote}
+        onPlan={(plan) => void buyPlan(plan)}
+      />
+    );
+  }
 
   if (done) {
     return (
@@ -564,7 +712,62 @@ export function PostWizard({
         )}
       </>
     );
-    return newDesign ? <div className="tkp-group">{rows}</div> : <Group title="About You">{rows}</Group>;
+    return <Group title="About You">{rows}</Group>;
+  }
+
+  function renderNewExtras(err: (key: string) => string | undefined, blur: (key: string) => () => void) {
+    const change = (key: string, value: string | string[]) => setAttrs((prev) => ({ ...prev, [key]: value }));
+    const cells = extra.filter((field) => !isChipField(field));
+    const chips = extra.filter(isChipField);
+    const rows: (typeof extra)[] = [];
+    for (let index = 0; index < cells.length; index += 2) rows.push(cells.slice(index, index + 2));
+    const cell = (field: (typeof extra)[number]) =>
+      field.type === "select" && field.options.length > LONG_LIST ? (
+        <SelectField key={field.key} id={field.key} label={field.label} required={field.required} value={textOf(attrs[field.key])} error={err(field.key)} onBlur={blur(field.key)} onChange={(value) => change(field.key, value)}>
+          <option value="">Select</option>
+          {field.options.map((option) => (
+            <option key={option} value={option}>{option}</option>
+          ))}
+        </SelectField>
+      ) : (
+        <TextField
+          key={field.key}
+          id={field.key}
+          label={field.label}
+          required={field.required}
+          type={field.type === "date" ? "date" : "text"}
+          inputMode={field.type === "number" ? "numeric" : undefined}
+          placeholder={field.placeholder}
+          error={err(field.key)}
+          onBlur={blur(field.key)}
+          value={textOf(attrs[field.key])}
+          onChange={(value) => change(field.key, value)}
+        />
+      );
+    return (
+      <>
+        {rows.map((pair) => (
+          <div key={pair.map((field) => field.key).join("|")} className="tkp-two tkp-two-keep">
+            {pair.map(cell)}
+            {pair.length === 1 ? <span /> : null}
+          </div>
+        ))}
+        {chips.map((field) => (
+          <PickGroup
+            key={field.key}
+            label={field.label}
+            help={field.help}
+            required={field.required}
+            options={field.options}
+            mode={field.type === "multiselect" ? "many" : "one"}
+            max={field.maxPicks ?? DEFAULT_PICK_LIMIT}
+            selected={picksOf(attrs[field.key])}
+            error={err(field.key)}
+            onChange={(next) => change(field.key, field.type === "multiselect" ? next : (next[0] ?? ""))}
+          />
+        ))}
+      </>
+    );
   }
 
   function renderContactFields() {
@@ -611,35 +814,35 @@ export function PostWizard({
 
   /** H7.83: the New design. Five steps, a step rail, the live preview (the real ad card) and the tip. Logic is shared with the three-step form. */
   function renderNewDesign() {
-    const current = NEW_POST_STEPS[step - 1] ?? "category";
-    const stepCopy = steps[NEW_STEP_COPY[current]];
-    const railItems: RailItem[] = NEW_POST_STEPS.map((key, index) => ({
+    const stepCopy = newStepCopy(current, copy, Boolean(about), people, money.fee);
+    const railItems: RailItem[] = flow.map((key, index) => ({
       key,
-      label: RAIL_LABELS[key],
+      label: key === "more" ? RAIL_MORE_LABEL : RAIL_LABELS[key],
       num: index + 1,
       state: index + 1 < step ? "done" : index + 1 === step ? "current" : "todo",
       clickable: index + 1 < step ? true : index + 1 === step,
     }));
-    const shownDistrict = districtName.toLowerCase() === `${cityName} city`.toLowerCase() ? "" : districtName;
     const placeParts = [cityName, shownDistrict].filter(Boolean).join(" / ");
     const photoHelpLine = steps.photos.help === POST_COPY_DEFAULTS.steps.photos.help || !steps.photos.help ? photoHelp(people) : steps.photos.help;
     const headHelp = current === "photos" ? photoHelpLine : stepCopy.help;
     const previewPrice = priceDigits ? `₹${Number(priceDigits).toLocaleString("en-IN")}` : "";
     const hints = hintsFor(category?.slug);
-    const adPreview = previewAd({
-      title: title.trim(),
-      description: text.trim(),
-      categorySlug: category?.slug ?? "",
-      citySlug: cities.find((item) => item.id === cityId)?.slug ?? "",
-      districtName: shownDistrict,
-      price: people || !priceDigits ? null : Number(priceDigits),
-      cover: coverUrl,
-    });
-    const byline = people ? [nickname.trim(), age.trim()].filter(Boolean).join(", ") : "";
+    const subName = subOptions.find((sub) => sub.id === subcategoryId)?.name;
+    const contactSummary = contactMode === "email" ? "Email only" : phone ? `${normalPhone(phone)}${contactMode === "both" ? " and email" : ""}` : "Not set";
+    const reviewRows: ReviewRow[] = [
+      { key: "category", label: "Category", value: [category?.name, subName].filter(Boolean).join(" › ") || "Not chosen", step: 1 },
+      { key: "title", label: "Title", value: title.trim() || "No title yet", step: no("details") },
+      ...(people ? [] : [{ key: "price", label: "Price", value: previewPrice || "Not set", step: no("details") }]),
+      { key: "place", label: "Place", value: placeParts || "Not set", step: no("details") },
+      { key: "name", label: "Name on your ads", value: byline || nickname.trim() || "Not set", step: about ? no("contact") : no("details") },
+      { key: "photos", label: "Photos", value: photoCount === null ? (draftId ? "Checking" : "No photos yet") : photoCount ? `${photoCount} ${photoCount === 1 ? "photo" : "photos"}` : "No photos yet", step: no("photos") },
+      { key: "contact", label: "Contact", value: contactSummary, step: no("contact") },
+    ];
     const categoryReady = Boolean(categoryId) && (subOptions.length === 0 || Boolean(subcategoryId));
-    const live = errorsForStep(validate(), current);
+    const live = errorsForStep(validate(), current, Boolean(about), moreKeys);
     const err = (key: string) => (showAll || touched[key] ? live[key] : undefined) ?? errors[key];
     const blur = (key: string) => () => setTouched((prev) => ({ ...prev, [key]: true }));
+    const priceField = <TextField id="price" label="Price (₹)" value={price} error={err("price")} onBlur={blur("price")} inputMode="numeric" placeholder="18,000" onChange={setPrice} />;
     return (
       <div className="tkp-post" data-design="post-new">
         <div className="tkp-top">
@@ -651,7 +854,7 @@ export function PostWizard({
             <Link href="/u/account/ads/" className="tkp-exit" data-tk="exit-post">Exit</Link>
           </div>
         </div>
-        <div className="tkp-progress" aria-hidden><i style={{ width: `${(step / NEW_POST_STEPS.length) * 100}%` }} /></div>
+        <div className="tkp-progress" aria-hidden><i style={{ width: `${(step / flow.length) * 100}%` }} /></div>
         <div className="tkp-grid">
           <PostRail
             items={railItems}
@@ -661,10 +864,12 @@ export function PostWizard({
               if (draftId) remember(draftId, num);
               else setStep(num);
             }}
-          />
-          <section className="tkp-main" aria-labelledby="post-step-title" onFocusCapture={keepFocusedFieldVisible}>
+          >
+            {chargesFee ? <CreditsCard fee={alreadyPaid ? 0 : money.fee} price={money.price} balance={shownBalance} ready={money.ready} onTopUp={() => openRecharge({ shortfall: short })} /> : null}
+          </PostRail>
+          <section className="tkp-main" data-step={current} aria-labelledby="post-step-title" onFocusCapture={keepFocusedFieldVisible}>
             <div className="tkp-head">
-              <p className="tkp-kicker" data-tk="step-of">Step {step} of {NEW_POST_STEPS.length}</p>
+              <p className="tkp-kicker" data-tk="step-of">Step {step} of {flow.length}</p>
               <h1 id="post-step-title" className="tkp-h1" data-tk="step-title">{stepCopy.title}</h1>
               {headHelp ? <p className="tkp-help" data-tk="step-help">{headHelp}</p> : null}
               <div aria-live="polite" className="tkp-banner">
@@ -715,14 +920,16 @@ export function PostWizard({
                   </div>
                   <div className="tkp-two tkp-two-keep">
                     <TextField id="nickname" label="Nickname" required value={nickname} error={err("nickname")} onBlur={blur("nickname")} placeholder="Your name or nickname" onChange={(value) => setNickname(value.slice(0, 20))} />
-                    {ageField ? <TextField id="age" label="Age" required={ageField.required} value={age} error={err("age")} onBlur={blur("age")} inputMode="numeric" placeholder="18 to 99" onChange={(value) => setAge(value.replace(/\D/g, "").slice(0, 2))} /> : <span />}
+                    {ageField ? <TextField id="age" label="Age" required={ageField.required} value={age} error={err("age")} onBlur={blur("age")} inputMode="numeric" placeholder="18 to 99" onChange={(value) => setAge(value.replace(/\D/g, "").slice(0, 2))} /> : people ? <span /> : priceField}
                   </div>
                   <TextField id="title" label="Ad title" required value={title} error={err("title")} onBlur={blur("title")} note={`${title.length} / 70`} placeholder={hints.title} onChange={(value) => setTitle(value.slice(0, 70))} />
                   <TextField id="text" label="Description" required area rows={4} value={text} error={err("text")} onBlur={blur("text")} note="20 characters or more" placeholder={hints.text} onChange={setText} />
-                  {people ? null : <TextField id="price" label="Price (₹)" value={price} error={err("price")} onBlur={blur("price")} inputMode="numeric" placeholder="18,000" onChange={setPrice} />}
-                  {renderExtraFields()}
+                  {people || !ageField ? null : priceField}
+                  {split ? null : renderNewExtras(err, blur)}
                 </div>
               ) : null}
+
+              {current === "more" ? <div className="tkp-fields">{renderNewExtras(err, blur)}</div> : null}
 
               {current === "photos" ? (
                 <PhotoStep listingId={draftId} copy={copy} onMedia={handleMedia} onBusy={setPhotoBusy} />
@@ -730,37 +937,60 @@ export function PostWizard({
 
               {current === "contact" ? (
                 <div className="tkp-fields">
-                  <p className="tkp-sub-title" style={{ margin: 0 }}>How would you like to be contacted?</p>
-                  <div className="tkp-chips" role="group" aria-label="How people reach you">
-                    {[
-                      ["phone", "Only Phone"],
-                      ["email", "Only Email"],
-                      ["both", "Email and Phone"],
-                    ].map(([id, label]) => (
-                      <button key={id} type="button" className={`tkp-chip ${contactMode === id ? "on" : ""}`} aria-pressed={contactMode === id} onClick={() => setContactMode(id)}>
-                        {label}
-                      </button>
-                    ))}
-                  </div>
-                  <TextField id="phone" label="Phone number" required={contactMode !== "email"} value={phone} error={err("phone")} onBlur={blur("phone")} inputMode="tel" placeholder="+91 81234 56789" onChange={setPhone} />
-                  <div className="tkp-toggle-row"><span>WhatsApp</span><Switch on={whatsapp} onClick={() => setWhatsapp((v) => !v)} label="WhatsApp" /></div>
-                  <div className="tkp-toggle-row"><span>Telegram</span><Switch on={telegramOn} onClick={() => setTelegramOn((v) => !v)} label="Telegram" /></div>
-                  {telegramOn ? <TextField id="telegram" label="Telegram" value={telegram} onChange={setTelegram} /> : null}
+                  {about ? (
+                    <AboutYou
+                      nickname={nickname}
+                      cityId={cityId}
+                      cities={cities}
+                      askDateOfBirth={about.askDateOfBirth}
+                      dateOfBirth={dateOfBirth}
+                      ageConfirmed={ageConfirmed}
+                      error={err}
+                      onBlur={blur}
+                      onNickname={setNickname}
+                      onCity={(value) => { setCityId(value); setDistrictId(""); }}
+                      onDateOfBirth={setDateOfBirth}
+                      onAgeConfirmed={() => setAgeConfirmed((v) => !v)}
+                    />
+                  ) : null}
+                  <ContactFields
+                    mode={contactMode}
+                    maskedEmail={maskedEmail}
+                    phone={phone}
+                    whatsapp={whatsapp}
+                    whatsappSame={whatsappSame}
+                    whatsappNumber={whatsappNumber}
+                    telegramOn={telegramOn}
+                    telegram={telegram}
+                    error={err}
+                    onBlur={blur}
+                    onMode={setContactMode}
+                    onPhone={setPhone}
+                    onWhatsapp={() => setWhatsapp((v) => !v)}
+                    onWhatsappSame={() => setWhatsappSame((v) => !v)}
+                    onWhatsappNumber={setWhatsappNumber}
+                    onTelegramOn={() => setTelegramOn((v) => !v)}
+                    onTelegram={setTelegram}
+                  />
                 </div>
               ) : null}
 
               {current === "review" ? (
-                <div className="tkp-fields">
-                  <dl className="tkp-summary">
-                    <div><dt>Category</dt><dd>{[category?.name, subOptions.find((sub) => sub.id === subcategoryId)?.name].filter(Boolean).join(" › ") || "Not chosen"}</dd></div>
-                    <div><dt>Title</dt><dd>{title.trim() || "No title yet"}</dd></div>
-                    {people ? null : <div><dt>Price</dt><dd>{previewPrice || "Not set"}</dd></div>}
-                    <div><dt>Place</dt><dd>{placeParts || "Not set"}</dd></div>
-                    <div><dt>Contact</dt><dd>{contactMode === "email" ? "Email only" : phone ? normalPhone(phone) : "Not set"}</dd></div>
-                  </dl>
-                  <p className="tkp-note">Your ad stays live for 72 hours after it is approved. You can renew it from your panel.</p>
-                  {renderConsents()}
-                </div>
+                <ReviewStep
+                  rows={reviewRows}
+                  ad={adPreview}
+                  hasPhoto={Boolean(coverUrl)}
+                  byline={byline}
+                  note="Your ad goes live as soon as you publish it. You can edit, pause or renew it from My ads."
+                  pay={alreadyPaid || !chargesFee ? undefined : <PayCard fee={money.fee} balance={shownBalance} short={short} onRecharge={() => openRecharge({ shortfall: short })} />}
+                  terms={terms}
+                  adult={adult}
+                  termsError={errors.terms}
+                  adultError={errors.adult}
+                  onEdit={(target) => (draftId ? remember(draftId, target) : setStep(target))}
+                  onTerms={() => setTerms((v) => !v)}
+                  onAdult={() => setAdult((v) => !v)}
+                />
               ) : null}
             </div>
 
@@ -771,10 +1001,15 @@ export function PostWizard({
                   </button>
                 ) : <span />}
                 <div className="tkp-nav-right">
-                  <button type="button" className="tkp-btn tkp-btn-preview" data-tk="open-preview" onClick={() => setPreviewOpen(true)}>Preview</button>
-                  {current === "review" ? (
+                  {current === "review" ? null : <button type="button" className="tkp-btn tkp-btn-preview" data-tk="open-preview" onClick={() => setPreviewOpen(true)}>Preview</button>}
+                  {current === "review" && short > 0 ? (
+                    <>
+                      <button type="button" className="tkp-btn" data-tk="publish-blocked" disabled aria-describedby="pay-reason">Publish</button>
+                      <button type="button" className="tkp-btn tkp-btn-primary" data-tk="go-on" onClick={() => openRecharge({ shortfall: short })}>Recharge now</button>
+                    </>
+                  ) : current === "review" ? (
                     <button type="button" className="tkp-btn tkp-btn-primary" data-tk="go-on" disabled={busy || !hydrated || !title.trim()} onClick={publish}>
-                      {stepCopy.nextLabel || "Publish ad"}
+                      {!stepCopy.nextLabel || stepCopy.nextLabel === "Publish ad" ? (alreadyPaid || !chargesFee ? "Publish ad" : `Publish for ${creditsText(money.fee)}`) : stepCopy.nextLabel}
                     </button>
                   ) : (
                     <button type="button" className="tkp-btn tkp-btn-primary" data-tk="go-on" disabled={busy || (current === "category" && !categoryReady) || (current === "photos" && photoBusy)} onClick={() => continueFrom(current)}>
@@ -788,9 +1023,10 @@ export function PostWizard({
             <p className="tkp-aside-label">Live preview</p>
             <PostPreviewCard ad={adPreview} label="Live preview" hasPhoto={Boolean(coverUrl)} byline={byline} />
             <p className="tkp-preview-line">This is how your ad will look.</p>
-            <PostTip text={NEW_POST_TIPS[current]} />
+            <PostTip text={NEW_POST_TIPS[current === "more" ? "details" : current]} />
           </aside>
         </div>
+        {money.added ? <div className="tkp-toast" role="status" data-tk="credits-toast">{creditsText(money.added)} added</div> : null}
         {previewOpen ? <PreviewSheet ad={adPreview} hasPhoto={Boolean(coverUrl)} byline={byline} onClose={() => setPreviewOpen(false)} /> : null}
       </div>
     );
@@ -813,101 +1049,5 @@ function Group({ title, help, children }: { title: string; help?: string; childr
         {children}
       </div>
     </section>
-  );
-}
-
-function SelectField({
-  id,
-  label,
-  required,
-  value,
-  error,
-  disabled,
-  help,
-  onBlur,
-  onChange,
-  children,
-}: {
-  id: string;
-  label: string;
-  required?: boolean;
-  value: string;
-  error?: string;
-  disabled?: boolean;
-  help?: string;
-  onBlur?: () => void;
-  onChange: (value: string) => void;
-  children: React.ReactNode;
-}) {
-  return (
-    <label className={`tk-field ${error ? "is-bad" : ""}`} htmlFor={id}>
-      <span>{required ? "* " : ""}{label}</span>
-      <select id={id} value={value} disabled={disabled} onBlur={onBlur} onChange={(event) => onChange(event.target.value)}>{children}</select>
-      {help ? <span className="t-caption" style={{ color: "var(--muted)" }}>{help}</span> : null}
-      {error ? <span className="tk-error" data-tk="field-error">{error}</span> : null}
-    </label>
-  );
-}
-
-function TextField({
-  id,
-  label,
-  required,
-  value,
-  error,
-  note,
-  placeholder,
-  area,
-  rows,
-  inputMode,
-  onBlur,
-  onChange,
-}: {
-  id: string;
-  label: string;
-  required?: boolean;
-  value: string;
-  error?: string;
-  note?: string;
-  placeholder?: string;
-  area?: boolean;
-  rows?: number;
-  inputMode?: "numeric" | "tel" | "text";
-  onBlur?: () => void;
-  onChange: (value: string) => void;
-}) {
-  return (
-    <label className={`tk-field ${error ? "is-bad" : ""}`} htmlFor={id}>
-      <span style={{ display: "flex", justifyContent: "space-between" }}>
-        <span>{required ? "* " : ""}{label}</span>
-        {note ? <span style={{ fontWeight: 500, color: "var(--muted)" }}>{note}</span> : null}
-      </span>
-      {area ? (
-        <textarea
-          id={id}
-          rows={rows || 2}
-          value={value}
-          placeholder={placeholder}
-          onBlur={onBlur}
-          ref={(node) => {
-            if (!node) return;
-            node.style.height = "auto";
-            node.style.height = `${Math.min(node.scrollHeight + 2, 200)}px`;
-          }}
-          onChange={(event) => onChange(event.target.value)}
-        />
-      ) : (
-        <input id={id} value={value} placeholder={placeholder} inputMode={inputMode} onBlur={onBlur} onChange={(event) => onChange(event.target.value)} />
-      )}
-      {error ? <span className="tk-error" data-tk="field-error">{error}</span> : null}
-    </label>
-  );
-}
-
-function Switch({ on, onClick, label }: { on: boolean; onClick: () => void; label: string }) {
-  return (
-    <button type="button" role="switch" aria-checked={on} aria-label={label} className={`tk-switch ${on ? "on" : ""}`} onClick={onClick}>
-      <i />
-    </button>
   );
 }

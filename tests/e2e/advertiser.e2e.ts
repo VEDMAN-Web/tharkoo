@@ -72,7 +72,9 @@ test.describe("4 Advertiser", () => {
     // The edit form does not bring the nickname back (BUG 4 in lane-d-bugs), so enter it again.
     if (!(await page.locator("#nickname").inputValue())) await page.locator("#nickname").fill("Asha");
     await page.locator("#title").fill(edited);
-    await page.locator("[data-tk=go-on]").click(); // details -> photos
+    await page.locator("[data-tk=go-on]").click(); // details -> more or photos
+    await expect(page.locator("[data-tk=step-of]")).toContainText("Step 3 of");
+    if (/Step 3 of 6/.test(await page.locator("[data-tk=step-of]").innerText())) await page.locator("[data-tk=go-on]").click(); // more -> photos
     await page.locator("[data-tk=photo-input]").waitFor({ state: "attached" });
     await page.locator("[data-tk=go-on]").click(); // photos -> contact
     await page.locator("[data-tk=go-on]").click(); // contact -> review

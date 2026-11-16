@@ -53,6 +53,9 @@ function fields(rows: FieldRow[]): SeedField[] {
   }));
 }
 
+const VEHICLE_MAKES = ["Maruti Suzuki", "Hyundai", "Tata", "Mahindra", "Honda", "Toyota", "Kia", "Ford", "Renault", "Volkswagen", "Skoda", "Bajaj", "TVS", "Hero", "Royal Enfield", "Yamaha", "Other"];
+const VEHICLE_BODY_TYPES = ["Hatchback", "Sedan", "SUV", "MUV", "Coupe", "Pickup", "Scooter", "Motorcycle", "Other"];
+
 /** Neutral allow-list. Administrators can add more later; this seed does not. */
 export const CATEGORIES: SeedCategory[] = [
   {
@@ -140,7 +143,8 @@ export const CATEGORIES: SeedCategory[] = [
     order: 7,
     enabled: true,
     fields: fields([
-      ["make", "Make", "text", { required: true }],
+      ["make", "Make", "select", { required: true, options: VEHICLE_MAKES }],
+      ["body-type", "Body type", "select", { options: VEHICLE_BODY_TYPES }],
       ["year", "Year", "number", { required: true, min: 1900, max: 2100 }],
       ["km", "Distance", "number", { min: 0, unit: "km" }],
     ]),
@@ -439,9 +443,9 @@ const DEMO_LINES: Record<string, ReadonlyArray<readonly [string, string, Record<
     ["Plot for sale in {city}", "Residential plot for sale near {city}.", { kind: "Plot", purpose: "Sale" }],
   ],
   vehicles: [
-    ["Used hatchback in {city}", "A used hatchback kept in a covered garage in {city}.", { make: "Hatchback", year: 2018, km: 42000 }],
-    ["City bike in {city}", "A commuter bike with workshop records in {city}.", { make: "Commuter", year: 2020, km: 12000 }],
-    ["Family car in {city}", "Family car with a full workshop history in {city}.", { make: "Sedan", year: 2016, km: 61000 }],
+    ["Used hatchback in {city}", "A used hatchback kept in a covered garage in {city}.", { make: "Maruti Suzuki", "body-type": "Hatchback", year: 2018, km: 42000 }],
+    ["City bike in {city}", "A commuter bike with workshop records in {city}.", { make: "Bajaj", "body-type": "Motorcycle", year: 2020, km: 12000 }],
+    ["Family car in {city}", "Family car with a full workshop history in {city}.", { make: "Honda", "body-type": "Sedan", year: 2016, km: 61000 }],
   ],
   "buy-and-sell": [
     ["Wooden desk in {city}", "A used wooden desk for sale in {city}.", { condition: "Used" }],

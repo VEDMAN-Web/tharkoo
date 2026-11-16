@@ -130,6 +130,8 @@ export interface SiteDoc extends BaseDoc {
   searchPlaceholder: string;
   postCta: string;
   logoText: string;
+  logoUrl?: string;
+  logoDarkUrl?: string;
   theme: unknown;
   footerLinks: unknown;
   socialLinks: unknown;

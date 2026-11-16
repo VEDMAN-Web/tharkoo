@@ -2,6 +2,8 @@
 
 import Link from "next/link";
 import dynamic from "next/dynamic";
+import { BrandLogo } from "./BrandLogo";
+import { LOGO_LIGHT_DEFAULT } from "@/lib/brand";
 import { usePathname } from "next/navigation";
 import { ChevronDown, Menu } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
@@ -34,6 +36,7 @@ type Cat = { slug: string; name: string };
  */
 export function HeaderNew({
   siteName,
+  logo = LOGO_LIGHT_DEFAULT,
   shell,
   cities,
   countries,
@@ -41,6 +44,7 @@ export function HeaderNew({
   texts,
 }: {
   siteName: string;
+  logo?: string;
   shell: ShellConfig;
   cities: City[];
   countries: CountryOption[];
@@ -86,13 +90,7 @@ export function HeaderNew({
     {path === "/" ? <UtilityStrip texts={texts} /> : null}
     <header className="tkn-header" data-tk="header">
       <div className="tkn-wrap tkn-header-row">
-        <Link href="/" className="tkn-brand">
-          <span className="tkn-mark" aria-hidden="true">t</span>
-          <span className="tkn-brand-text">
-            <span className="tkn-brand-name">{siteName.toLowerCase()}</span>
-            <span className="tkn-brand-tag">India classifieds</span>
-          </span>
-        </Link>
+        <BrandLogo src={logo} name={siteName} height={40} priority />
         <nav
           aria-label="Main"
           className="tkn-nav"

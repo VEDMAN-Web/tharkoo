@@ -168,7 +168,10 @@ describe("v2 seed", () => {
     expect(wellness?.fields?.map((field) => field.key)).toEqual(["kind"]);
     expect(wellness?.fields?.[0]?.options).toEqual(["Spa", "Massage", "Yoga", "Fitness"]);
     const vehicles = await Category.findOne({ slug: "vehicles" }).lean();
-    expect(vehicles?.fields?.map((field) => field.key)).toEqual(["make", "year", "km"]);
+    expect(vehicles?.fields?.map((field) => field.key)).toEqual(["make", "body-type", "year", "km"]);
+    expect(vehicles?.fields?.find((field) => field.key === "make")?.options).toContain("Maruti Suzuki");
+    expect(vehicles?.fields?.find((field) => field.key === "make")?.options).not.toContain("Hatchback");
+    expect(vehicles?.fields?.find((field) => field.key === "body-type")?.options).toContain("Hatchback");
 
     expect(PRODUCTS.map((product) => product.code)).toEqual([
       "free",

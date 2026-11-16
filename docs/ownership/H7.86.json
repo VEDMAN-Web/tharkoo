@@ -1,0 +1,33 @@
+{
+  "branchPrefix": "haiku/h7.86",
+  "globs": [
+    "docs/ownership/H7.86.json",
+    "src/components/PostWizard.tsx",
+    "src/app/u/post-insert/page.tsx",
+    "src/lib/ui/post-form.ts",
+    "src/components/post/FormFields.tsx",
+    "src/components/post/AboutYou.tsx",
+    "src/components/post/ContactFields.tsx",
+    "src/components/post/ReviewStep.tsx",
+    "src/components/post/PostSuccess.tsx",
+    "src/components/post/PhotoStep.tsx",
+    "src/components/post/MediaTile.tsx",
+    "src/components/post/newCopy.ts",
+    "src/components/post/post-wizard.css",
+    "tests/server/ui/post-step-5.test.ts",
+    "tests/e2e/post-step-5.e2e.ts",
+    "tests/e2e/post-steps-1-2.e2e.ts",
+    "tests/e2e/post-steps-3-4.e2e.ts",
+    "src/components/post/NewPostParts.tsx",
+    "src/server/seed/data.ts",
+    "tests/server/seed/seed.test.ts",
+    "tests/e2e/post-fit.e2e.ts",
+    "tests/e2e/flows.ts",
+    "tests/e2e/h6-features.e2e.ts",
+    "tests/e2e/advertiser.e2e.ts",
+    "src/components/post/credits.ts",
+    "src/components/post/PayParts.tsx",
+    "tests/e2e/helpers.ts",
+    "tests/e2e/post-new-design.e2e.ts"
+  ]
+}
