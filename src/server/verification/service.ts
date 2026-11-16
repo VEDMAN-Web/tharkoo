@@ -122,12 +122,14 @@ export async function listPending(page: number, pageSize: number) {
 
 export async function decideVerification(
   actorId: string,
+  roles: string[],
   verificationId: string,
   decision: "approved" | "rejected",
   reason: string,
   requestId: string,
 ) {
   assertManual();
+  if (!canReviewVerification(roles)) throw new ForbiddenError("Not allowed");
   await connectDb();
   if (!mongoose.isValidObjectId(verificationId)) throw new NotFoundError("Verification not found");
   const row = await IdentityVerification.findById(verificationId);
