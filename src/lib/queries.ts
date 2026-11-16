@@ -18,6 +18,7 @@ import { cities, districts, loadLocations, locationBySlug, siblingCities, states
 import type { ListingDoc } from "@/lib/models";
 import { readContent } from "@/lib/ui/site-content";
 import { LISTING_PAGE_SIZE } from "@/lib/listing-page-size";
+import { composeHomeAds, HOME_ADS_LIMIT } from "@/lib/home-ads";
 
 const PAGE_SIZE = LISTING_PAGE_SIZE;
 const THIN = 3;
@@ -156,6 +157,27 @@ export async function getFeed(filter: Record<string, unknown>, page = 1) {
         pageSize: PAGE_SIZE,
         pages: Math.max(1, Math.ceil(result.total / PAGE_SIZE)),
       };
+    },
+    ["feed", "listings"],
+    true,
+  );
+}
+
+export async function getHomeAds(limit = HOME_ADS_LIMIT) {
+  return cached(
+    `home-ads:${limit}`,
+    60_000,
+    async () => {
+      await connectDb();
+      const order = await Listing.find({ homeShow: true, status: "active", feedHidden: { $ne: true } })
+        .sort({ homeOrder: 1, updatedAt: -1 })
+        .limit(limit)
+        .select("slug")
+        .lean<{ slug?: string }[]>();
+      const chosenSlugs = order.map((row) => row.slug || "").filter(Boolean);
+      const chosen = chosenSlugs.length ? (await queryListings({ homeChosen: true, page: 1, pageSize: limit, sort: "fresh" })).legacy : [];
+      const fill = (await queryListings({ page: 1, pageSize: limit, sort: "fresh" })).legacy;
+      return composeHomeAds(chosenSlugs, chosen, fill, limit);
     },
     ["feed", "listings"],
     true,
