@@ -1,0 +1,16 @@
+{
+  "branchPrefix": "haiku/h6.4",
+  "globs": [
+    "src/app/u/**",
+    "src/app/api/chat/**",
+    "src/server/chat/**",
+    "src/server/models/conversation*.ts",
+    "src/server/models/message*.ts",
+    "src/components/chat/**",
+    "src/app/ad/**",
+    "tests/server/chat/**",
+    "tests/e2e/**",
+    "docs/ownership/H6.4.json",
+    "progress/H6.4.md"
+  ]
+}

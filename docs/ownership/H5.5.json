@@ -1,0 +1,8 @@
+{
+  "branchPrefix": "haiku/h5.5",
+  "globs": [
+    "vercel.json",
+    "docs/ownership/H5.5.json",
+    "progress/H5.5.md"
+  ]
+}

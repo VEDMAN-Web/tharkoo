@@ -1,0 +1,8 @@
+{
+  "branchPrefix": "haiku/h7.42",
+  "globs": [
+    "docs/ownership/H7.42.json",
+    "src/components/FooterNew.tsx",
+    "tests/**"
+  ]
+}

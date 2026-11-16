@@ -1,0 +1,20 @@
+{
+  "branchPrefix": "haiku/h7.3",
+  "globs": [
+    "src/app/admin/categories/**",
+    "src/server/categories/**",
+    "src/server/fields/**",
+    "src/components/admin/category-fields/**",
+    "src/app/admin/options/**",
+    "src/server/search/**",
+    "src/app/[category]/**",
+    "src/server/seo/**",
+    "src/app/landing/**",
+    "src/app/sitemap/**",
+    "tests/server/categories/**",
+    "tests/server/search/**",
+    "tests/server/fields/**",
+    "progress/H7.3.md",
+    "docs/ownership/H7.3.json"
+  ]
+}

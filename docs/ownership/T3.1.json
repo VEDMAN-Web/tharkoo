@@ -1,0 +1,9 @@
+{
+  "branchPrefix": "cursor/t3.1",
+  "globs": [
+    "src/server/listings/**",
+    "src/app/api/listings/**",
+    "src/app/api/cron/expire/**",
+    "tests/server/listings/**"
+  ]
+}

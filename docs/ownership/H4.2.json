@@ -1,0 +1,16 @@
+{
+  "branchPrefix": "haiku/h4.2",
+  "globs": [
+    "src/app/admin/seo/**",
+    "src/server/seo/explain.ts",
+    "tests/server/seo/explain.test.ts",
+    "scripts/seo-check.mjs",
+    "scripts/seo-check.ts",
+    "src/app/api/cron/seo-audit/route.ts",
+    "src/server/models/index.ts",
+    "src/server/models/seo.ts",
+    "src/server/seo/**",
+    "tests/server/seo/**",
+    "docs/ownership/H4.2.json"
+  ]
+}

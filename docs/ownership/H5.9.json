@@ -1,0 +1,32 @@
+{
+  "branchPrefix": "haiku/h5.9",
+  "globs": [
+    "src/app/ad/**",
+    "src/lib/seo.ts",
+    "src/lib/ui/site-content.ts",
+    "src/app/admin/ads/page.tsx",
+    "src/app/admin/cms/page.tsx",
+    "src/app/admin/settings/page.tsx",
+    "src/components/admin/CollectionEditor.tsx",
+    "src/components/StaticPage.tsx",
+    "src/components/vendor/VendorScreens.tsx",
+    "src/content/trust.ts",
+    "src/lib/queries.ts",
+    "src/server/content/**",
+    "src/server/seo/templates.ts",
+    "src/server/seed/run.ts",
+    "src/app/admin/urls/override-actions.ts",
+    "src/app/api/admin/mutate/route.ts",
+    "src/app/api/admin/repair/**",
+    "scripts/seo-check.ts",
+    ".github/forbidden-terms.txt",
+    "tests/server/content/**",
+    "docs/ownership/H5.9.json",
+    "progress/H5.9.md",
+    "src/app/api/cron/expire/route.ts",
+    "src/app/admin/seo/tools/**",
+    "src/app/admin/seo/SeoTabs.tsx",
+    "src/components/admin/nav.ts",
+    "progress/H5.9b.md"
+  ]
+}

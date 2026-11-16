@@ -1,0 +1,26 @@
+{
+  "branchPrefix": "cursor/t5.1",
+  "globs": [
+    "src/server/search/**",
+    "src/server/locations/**",
+    "src/server/models/names.ts",
+    "src/lib/models.ts",
+    "src/lib/queries.ts",
+    "src/lib/cache.ts",
+    "src/app/api/search/**",
+    "src/app/api/locations/**",
+    "src/app/api/categories/**",
+    "src/app/api/catalog/**",
+    "tests/server/search/**",
+    "tests/server/locations/**",
+    "src/server/seed/**",
+    "scripts/seed.ts",
+    "scripts/seed-v2.ts",
+    "scripts/patch-photos.ts",
+    "scripts/search-p95.ts",
+    "tests/server/seed/**",
+    "tests/server/models/models.test.ts",
+    "tests/setup/db.test.ts",
+    "docs/ownership/T5.1.json"
+  ]
+}

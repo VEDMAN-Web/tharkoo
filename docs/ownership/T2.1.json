@@ -1,0 +1,12 @@
+{
+  "branchPrefix": "cursor/t2.1",
+  "globs": [
+    "src/server/auth/**",
+    "src/server/mailer/**",
+    "src/app/api/auth/**",
+    "src/lib/admin-auth.ts",
+    "src/proxy.ts",
+    "cursor/**",
+    "tests/server/auth/**"
+  ]
+}

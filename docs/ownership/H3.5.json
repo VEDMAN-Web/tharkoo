@@ -1,0 +1,21 @@
+{
+  "branchPrefix": "haiku/h3.5",
+  "globs": [
+    "src/app/[category]/page.tsx",
+    "src/app/[category]/[location]/page.tsx",
+    "src/app/[category]/[location]/[district]/page.tsx",
+    "src/components/ListingPage.tsx",
+    "src/components/blocks/**",
+    "src/server/layout/defaults/listing.ts",
+    "src/server/seed/layouts.ts",
+    "src/app/admin/listing-pages/**",
+    "tests/server/layout/listing.test.ts",
+    "docs/ownership/H3.5.json",
+    "progress/H3.5.md",
+    "src/server/layout/defaults/**",
+    "src/lib/layout/**",
+    "src/components/admin/nav.ts",
+    "src/app/admin/layout-actions.ts",
+    "tests/server/layout/**"
+  ]
+}

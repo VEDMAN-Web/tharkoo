@@ -1,0 +1,28 @@
+{
+  "branchPrefix": "haiku/h7.4",
+  "globs": [
+    "src/app/page.tsx",
+    "src/components/home/**",
+    "src/components/listing/**",
+    "src/components/AdCard*.tsx",
+    "src/app/[category]/**",
+    "src/app/ad/**",
+    "src/components/ad/**",
+    "src/server/listings/**",
+    "src/server/home/**",
+    "tests/e2e/home*.e2e.ts",
+    "tests/e2e/listing*.e2e.ts",
+    "tests/e2e/ad*.e2e.ts",
+    "src/components/new/**",
+    "src/components/ContactButtons.tsx",
+    "src/server/site-links/shell-config-rules.ts",
+    "tests/e2e/new-live*.e2e.ts",
+    "tests/server/shell/home-config*.test.ts",
+    "src/app/admin/menus/ShellEditor.tsx",
+    "src/lib/ui/text.ts",
+    "src/lib/ui/site-content.ts",
+    "src/components/admin/SiteContentForm.tsx",
+    "progress/H7.4.md",
+    "docs/ownership/H7.4.json"
+  ]
+}

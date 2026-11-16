@@ -1,0 +1,19 @@
+{
+  "branchPrefix": "haiku/h6.2",
+  "globs": [
+    "src/app/admin/categories/**",
+    "src/app/[category]/**",
+    "src/app/cities/**",
+    "src/server/categories/**",
+    "src/server/models/category*.ts",
+    "src/server/models/subcategor*.ts",
+    "src/components/PostWizard.tsx",
+    "src/lib/ui/post-form.ts",
+    "src/server/shared/schemas/**",
+    "tests/server/categories/**",
+    "tests/server/listings/**",
+    "tests/e2e/**",
+    "docs/ownership/H6.2.json",
+    "progress/H6.2.md"
+  ]
+}

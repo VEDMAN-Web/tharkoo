@@ -1,0 +1,9 @@
+{
+  "branchPrefix": "haiku/h5.1",
+  "globs": [
+    "tests/e2e/**",
+    "playwright.config.ts",
+    "docs/ownership/H5.1.json",
+    "progress/H5.1.md"
+  ]
+}

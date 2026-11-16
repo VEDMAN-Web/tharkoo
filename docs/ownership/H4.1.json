@@ -1,0 +1,17 @@
+{
+  "branchPrefix": "haiku/h4.1",
+  "globs": [
+    "src/server/seo/audit-rules.ts",
+    "src/server/seo/audit-run.ts",
+    "src/server/models/seo.ts",
+    "src/server/models/index.ts",
+    "scripts/seo-check.mjs",
+    "scripts/seo-check.ts",
+    "package.json",
+    "src/app/api/cron/seo-audit/**",
+    "tests/server/seo/**",
+    "src/server/seo/crawl.ts",
+    "src/server/seo/**",
+    "docs/ownership/H4.1.json"
+  ]
+}

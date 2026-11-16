@@ -1,0 +1,26 @@
+{
+  "branchPrefix": "haiku/h6.12",
+  "globs": [
+    "src/app/admin/media/**",
+    "src/components/admin/media/**",
+    "src/app/admin/import/**",
+    "src/components/admin/import/**",
+    "src/server/media/**",
+    "src/server/listings/import.ts",
+    "src/server/import/**",
+    "src/app/api/admin/import/**",
+    "src/app/api/admin/media/**",
+    "tests/server/media/**",
+    "tests/server/import/**",
+    "tests/e2e/bulk-upload.e2e.ts",
+    "docs/ownership/H6.12.json",
+    "progress/H6.12.md",
+    "src/server/layout/media.ts",
+    "src/server/models/layout.ts",
+    "src/server/models/catalog.ts",
+    "tests/server/layout/media.test.ts",
+    "tests/server/listings/import.test.ts",
+    "progress/H6.12-videos.md",
+    "src/components/post/mediaUpload.ts"
+  ]
+}

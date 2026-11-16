@@ -1,0 +1,13 @@
+{
+  "branchPrefix": "haiku/h1.4",
+  "globs": [
+    "src/lib/seo/district-alias.ts",
+    "src/lib/seo/sitemaps.ts",
+    "src/lib/queries.ts",
+    "src/app/[category]/[location]/[district]/page.tsx",
+    "src/app/[category]/[location]/page.tsx",
+    "src/components/ListingPage.tsx",
+    "tests/server/seo/**",
+    "docs/ownership/H1.4.json"
+  ]
+}

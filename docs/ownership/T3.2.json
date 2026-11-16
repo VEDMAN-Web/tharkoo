@@ -1,0 +1,10 @@
+{
+  "branchPrefix": "codex/t3.2",
+  "globs": [
+    "src/components/PostWizard.tsx",
+    "src/components/post/**",
+    "src/app/u/post-insert/**",
+    "src/app/u/account/ads/**",
+    "src/app/u/account/media/**"
+  ]
+}

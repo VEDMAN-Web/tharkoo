@@ -1,0 +1,6 @@
+{
+  "branchPrefix": "cursor/t10.1",
+  "globs": [
+    "deploy/**"
+  ]
+}

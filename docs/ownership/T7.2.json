@@ -1,0 +1,11 @@
+{
+  "branchPrefix": "codex/t7.2",
+  "globs": [
+    "src/app/admin/**",
+    "src/components/admin/**",
+    "src/app/scam-report/**",
+    "src/app/submit-report/**",
+    "src/app/grievance/**",
+    "src/app/contact/**"
+  ]
+}

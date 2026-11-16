@@ -1,0 +1,14 @@
+{
+  "branchPrefix": "cursor/t7.1",
+  "globs": [
+    "src/server/moderation/**",
+    "src/server/reports/**",
+    "src/server/admin/**",
+    "src/app/api/admin/**",
+    "src/app/api/reports/**",
+    "tests/server/admin/**"
+  ],
+  "exclude": [
+    "src/app/api/admin/verifications/**"
+  ]
+}

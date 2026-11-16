@@ -1,0 +1,7 @@
+{
+  "branchPrefix": "cursor/t6.2",
+  "globs": [
+    "src/server/seed/seo-content/**",
+    "tests/server/seed/seo-content/**"
+  ]
+}

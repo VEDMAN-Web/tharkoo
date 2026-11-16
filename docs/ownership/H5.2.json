@@ -1,0 +1,12 @@
+{
+  "branchPrefix": "haiku/h5.2",
+  "globs": [
+    "src/app/admin/listing-pages/**",
+    "src/app/admin/moderation/**",
+    "src/server/moderation/**",
+    "src/components/admin/nav.ts",
+    "tests/server/moderation/**",
+    "docs/ownership/H5.2.json",
+    "progress/H5.2.md"
+  ]
+}
