@@ -6,7 +6,7 @@ import { NewListingPage } from "@/components/new/ListingBand";
 import { bandChoice, heroBandFrom } from "@/components/new/band-image";
 import { listingLabels } from "@/components/new/listing-frame-props";
 import { FallbackAds } from "@/components/FallbackAds";
-import { FALLBACK_OWN_MINIMUM, loadFallbackSections } from "@/lib/fallback-ads";
+import { loadFallbackSections, showFallback } from "@/lib/fallback-ads";
 import { readShellConfig } from "@/server/site-links/shell-config";
 import { makeT } from "@/lib/ui/text";
 import { textOverrides } from "@/app/admin/ui-text/store";
@@ -31,6 +31,7 @@ import { activeFilterKeys, listingCanonicalSuffix } from "@/server/search/filter
 import { withUrlSeo, urlHeading } from "@/lib/seo/override";
 import { fallbackLanding, visibleHeading } from "@/lib/seo/landing";
 import { getPaths, publicTags } from "@/server/urls/service";
+import { withPagination } from "@/lib/seo/pagination";
 import { SubHub, subHubMetadata } from "./sub-hub";
 
 type Props = {
@@ -82,7 +83,7 @@ export async function generateMetadata({ params, searchParams }: Props): Promise
   );
   const path = placePath(cat.slug || category, city.slug || location, dist.slug || district);
   const suffix = listingCanonicalSuffix(sp, pageNo);
-  return withUrlSeo(path, {
+  const meta = await withUrlSeo(path, {
     title,
     description,
     path: `${path}${suffix}`,
@@ -90,6 +91,7 @@ export async function generateMetadata({ params, searchParams }: Props): Promise
     index: pageNo === 1 && !filtered && !isThin(feed.total, distMin),
     follow: true,
   });
+  return filtered ? meta : withPagination(meta, path, pageNo, feed.pages);
 }
 
 export default async function DistrictPage({ params, searchParams }: Props) {
@@ -152,7 +154,7 @@ export default async function DistrictPage({ params, searchParams }: Props) {
   const texts = await textOverrides();
   const t = makeT(texts);
   const h1 = heading || visibleHeading(fillTemplate(seo?.h1 || "", vars), districtCopy.h1);
-  const own = feed.total < FALLBACK_OWN_MINIMUM;
+  const own = showFallback(feed);
   const fallback = own
     ? await loadFallbackSections({
         scope: { categorySlug: cat.slug || category, categoryName: cat.name || undefined, stateSlug: city.stateSlug || undefined, placeName: city.name },

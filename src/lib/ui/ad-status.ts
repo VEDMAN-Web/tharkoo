@@ -26,6 +26,14 @@ const LOOK: Record<OwnAdLabel, { bg: string; fg: string }> = {
   Rejected: { bg: "#FEF2F2", fg: "#991B1B" },
 };
 
+export function isDraftStatus(status: string | null | undefined): boolean {
+  return ownAdStatus(status, null).label === "Draft";
+}
+
+export function draftPath(id: string, step = 2): string {
+  return `/u/post-insert/?draft=${id}&step=${step}`;
+}
+
 export function ownAdStatus(status: string | null | undefined, expiresAt: string | null | undefined, now: number = Date.now()): OwnAdStatus {
   const label = labelFor(status, expiresAt, now);
   return { label, ...LOOK[label] };

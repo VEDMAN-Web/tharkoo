@@ -17,10 +17,9 @@ import { loadCategories, categoryBySlug, countMatching, publicCategories, queryL
 import { cities, districts, loadLocations, locationBySlug, siblingCities, states, topCities } from "@/server/locations";
 import type { ListingDoc } from "@/lib/models";
 import { readContent } from "@/lib/ui/site-content";
+import { LISTING_PAGE_SIZE } from "@/lib/listing-page-size";
 
-const PAGE_SIZE = 20;
-/** H7.32: the city page lists 24 ads to a page. */
-const CITY_LATEST_SIZE = 24;
+const PAGE_SIZE = LISTING_PAGE_SIZE;
 const THIN = 3;
 
 export async function getSite() {
@@ -285,20 +284,20 @@ export async function searchListings(opts: {
   );
 }
 
-/** H7.32: every live ad in a city, newest first, 24 to a page (the city page list). */
+/** H7.32: every live ad in a city, newest first (the city page list). */
 export async function getCityLatest(citySlug: string, page = 1) {
   const safePage = Math.max(1, Number(page) || 1);
   return cached(
     `city-latest:${citySlug}:${safePage}`,
     60_000,
     async () => {
-      const result = await queryListings({ citySlug, page: safePage, pageSize: CITY_LATEST_SIZE, sort: "fresh" });
+      const result = await queryListings({ citySlug, page: safePage, pageSize: PAGE_SIZE, sort: "fresh" });
       return {
         items: result.legacy,
         total: result.total,
         page: safePage,
-        pageSize: CITY_LATEST_SIZE,
-        pages: Math.max(1, Math.ceil(result.total / CITY_LATEST_SIZE)),
+        pageSize: PAGE_SIZE,
+        pages: Math.max(1, Math.ceil(result.total / PAGE_SIZE)),
       };
     },
     ["feed", "listings"],

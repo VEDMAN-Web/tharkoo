@@ -5,11 +5,13 @@ import { NewListingPage } from "@/components/new/ListingBand";
 import { bandChoice, heroBandFrom } from "@/components/new/band-image";
 import { listingLabels } from "@/components/new/listing-frame-props";
 import { FallbackAds } from "@/components/FallbackAds";
-import { getCategory, getFeed, getHomepageContent, getSite } from "@/lib/queries";
+import { getCategory, getFeed, getHomepageContent, getSite, pageOutOfRange } from "@/lib/queries";
+import { canonical } from "@/lib/seo";
+import { withPagination } from "@/lib/seo/pagination";
 import { makeT } from "@/lib/ui/text";
 import { textOverrides } from "@/app/admin/ui-text/store";
 import { readShellConfig } from "@/server/site-links/shell-config";
-import { FALLBACK_OWN_MINIMUM, loadFallbackSections } from "@/lib/fallback-ads";
+import { loadFallbackSections, showFallback } from "@/lib/fallback-ads";
 import { postAdPath, searchPath, tagPath } from "@/lib/urls";
 import { withUrlSeo, urlHeading } from "@/lib/seo/override";
 import { getPaths, publicTags } from "@/server/urls/service";
@@ -21,8 +23,11 @@ async function tagLabel(tag: string) {
   return tags.find((item) => item.slug === tag) || null;
 }
 
-export async function generateMetadata({ params }: { params: Promise<{ category: string; tag: string }> }): Promise<Metadata> {
+type Props = { params: Promise<{ category: string; tag: string }>; searchParams: Promise<{ page?: string }> };
+
+export async function generateMetadata({ params, searchParams }: Props): Promise<Metadata> {
   const { category, tag } = await params;
+  const sp = await searchParams;
   const [meta, cat, paths] = await Promise.all([tagLabel(tag), getCategory(category), getPaths()]);
   const path = tagPath(paths, cat?.slug || category, tag);
   if (!cat || !meta) {
@@ -34,32 +39,39 @@ export async function generateMetadata({ params }: { params: Promise<{ category:
       follow: false,
     });
   }
-  // Tag pages are not one of the three indexable listing types (see filter-seo.ts).
-  return withUrlSeo(path, {
+  const pageNo = Math.max(1, Number(sp.page) || 1);
+  const suffix = pageNo > 1 ? `?page=${pageNo}` : "";
+  const result = await withUrlSeo(path, {
     title: `${meta.label} ${cat.name} ads | Tharkoo`,
     description: `Browse ${cat.name} ads tagged ${meta.label} on Tharkoo. Open a listing to see the details, photos, and how to get in touch.`,
-    path,
+    path: `${path}${suffix}`,
+    canonicalUrl: canonical(`${path}${suffix}`),
     index: false,
     follow: true,
   });
+  const feed = await getFeed({ categorySlug: category, tag }, 1);
+  return withPagination(result, path, pageNo, feed.pages);
 }
 
-export default async function TagPage({ params }: { params: Promise<{ category: string; tag: string }> }) {
+export default async function TagPage({ params, searchParams }: Props) {
   const { category, tag } = await params;
+  const sp = await searchParams;
+  const page = Math.max(1, Number(sp.page) || 1);
   const [meta, cat, paths] = await Promise.all([tagLabel(tag), getCategory(category), getPaths()]);
   if (!cat || !meta) notFound();
   const path = tagPath(paths, cat.slug || category, tag);
   const [site, feed, tags, heading, shell, hero, texts] = await Promise.all([
     getSite(),
-    getFeed({ categorySlug: category, tag }, 1),
+    getFeed({ categorySlug: category, tag }, page),
     publicTags(),
     urlHeading(path, `${meta.label} ${cat.name}`),
     readShellConfig(),
     getHomepageContent().then(heroBandFrom),
     textOverrides(),
   ]);
+  if (pageOutOfRange(sp.page, feed.pages)) notFound();
   const t = makeT(texts);
-  const own = feed.total < FALLBACK_OWN_MINIMUM;
+  const own = showFallback(feed);
   const fallback = own
     ? await loadFallbackSections({
         scope: { categorySlug: cat.slug || category, categoryName: cat.name || undefined },
@@ -97,7 +109,7 @@ export default async function TagPage({ params }: { params: Promise<{ category: 
         path={path}
         stars={[]}
         items={feed.items}
-        page={1}
+        page={page}
         pages={feed.pages}
         total={feed.total}
         noindex={feed.total < 1}

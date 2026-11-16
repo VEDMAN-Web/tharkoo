@@ -41,6 +41,7 @@ export function SupportChat({ chat, texts, hours = "" }: { chat: Chat; texts?: U
   const paths = useUrlPaths();
   const section = path.split("/")[1];
   const pageBars = section === "u" || section === paths.ad;
+  const floatClass = ["tkn-float", pageBars ? "tkn-float-pagebars" : "", section === "u" ? "tkn-float-panel" : ""].filter(Boolean).join(" ");
   const [open, setOpen] = useState(false);
   const [online, setOnline] = useState(false);
   const [session, setSession] = useState<Session>("unknown");

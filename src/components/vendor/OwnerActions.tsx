@@ -1,10 +1,14 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { api, friendlyError } from "@/lib/ui/api";
+import { draftPath, isDraftStatus } from "@/lib/ui/ad-status";
 
 type Action = "pause" | "resume" | "renew" | "duplicate" | "delete";
+
+const CONFIRM_MS = 4000;
+const FINISH_STEP = 5;
 
 /**
  * H7.5: the owner buttons under an ad in the vendor panel. Which ones show depends on the ad's status:
@@ -22,6 +26,11 @@ export function OwnerActions({
   onDone: (message: string) => void | Promise<void>;
 }) {
   const [busy, setBusy] = useState(false);
+  const [confirming, setConfirming] = useState(false);
+  const timer = useRef(0);
+  const draft = isDraftStatus(status);
+
+  useEffect(() => () => window.clearTimeout(timer.current), []);
   const actions: Action[] = [];
   if (status === "active") actions.push("pause");
   if (status === "paused") actions.push("resume");
@@ -30,7 +39,6 @@ export function OwnerActions({
   actions.push("delete");
 
   async function run(action: Action) {
-    if (action === "delete" && !window.confirm("Delete this ad?")) return;
     setBusy(true);
     const res = action === "delete"
       ? await api(`/api/listings/${id}`, { method: "DELETE" })
@@ -39,14 +47,33 @@ export function OwnerActions({
     await onDone(res.ok ? LABEL_DONE[action] : friendlyError(res.error));
   }
 
+  function tapDelete() {
+    if (!confirming) {
+      setConfirming(true);
+      timer.current = window.setTimeout(() => setConfirming(false), CONFIRM_MS);
+      return;
+    }
+    window.clearTimeout(timer.current);
+    setConfirming(false);
+    void run("delete");
+  }
+
   return (
     <div className="tkv-owner-buttons">
-      <Link href={`/u/post-insert/?draft=${id}&step=2`} className="tkv-mini">Edit</Link>
-      {actions.map((action) => (
-        <button key={action} type="button" className={`tkv-mini ${action === "delete" ? "tkv-mini-quiet" : "tkv-mini-strong"}`} disabled={busy} onClick={() => run(action)}>
-          {LABEL[action]}
-        </button>
-      ))}
+      {draft ? <p className="tkv-owner-note">Not live yet. Finish the steps to send it for review.</p> : null}
+      {draft ? <Link href={draftPath(id, FINISH_STEP)} className="tkv-mini tkv-mini-primary">Finish your ad</Link> : null}
+      <Link href={draftPath(id)} className="tkv-mini">Edit</Link>
+      {actions.map((action) =>
+        action === "delete" ? (
+          <button key={action} type="button" className={`tkv-mini ${confirming ? "tkv-mini-confirm" : "tkv-mini-quiet"}`} disabled={busy} onClick={tapDelete}>
+            {confirming ? "Tap again to delete" : LABEL[action]}
+          </button>
+        ) : (
+          <button key={action} type="button" className="tkv-mini tkv-mini-strong" disabled={busy} onClick={() => run(action)}>
+            {LABEL[action]}
+          </button>
+        ),
+      )}
     </div>
   );
 }

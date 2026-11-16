@@ -78,7 +78,7 @@ export function NewTicketForm() {
       </div>
       <div style={{ display: "grid", gap: 6 }}>
         <label htmlFor="support-screenshots" className="t-small"><strong>Screenshots (optional)</strong></label>
-        <input id="support-screenshots" type="file" multiple accept={SCREENSHOT_ACCEPT} onChange={(event) => pickFiles(event.target.files)} aria-describedby="support-shots-help" />
+        <input id="support-screenshots" className="tk-file" type="file" multiple accept={SCREENSHOT_ACCEPT} onChange={(event) => pickFiles(event.target.files)} aria-describedby="support-shots-help" />
         <span id="support-shots-help" className="t-small text-muted">{SCREENSHOT_LIMIT_TEXT}</span>
         {files.length ? <span className="t-small">{files.length} screenshot{files.length === 1 ? "" : "s"} ready to send</span> : null}
       </div>
