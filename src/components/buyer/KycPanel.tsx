@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { BadgeCheck, Clock3, ShieldAlert, ShieldQuestion } from "lucide-react";
 import { api, friendlyError } from "@/lib/ui/api";
 import { storeId } from "@/components/account/AccountTools";
+import { UploadBox } from "./UploadBox";
 
 type Look = { word: string; line: string; tone: "ok" | "wait" | "bad" | "none"; icon: typeof BadgeCheck };
 
@@ -72,14 +73,8 @@ export function KycPanel() {
       )}
       {look && status !== "approved" && status !== "pending_review" ? (
         <form onSubmit={submit} className="up-form" data-tk="kyc-form">
-          <label className="up-label" htmlFor="front-id">
-            Photo of your ID
-            <input id="front-id" name="front" type="file" accept="image/jpeg,image/png,image/webp" required className="up-file" />
-          </label>
-          <label className="up-label" htmlFor="selfie-id">
-            Photo of you holding it
-            <input id="selfie-id" name="selfie" type="file" accept="image/jpeg,image/png,image/webp" required className="up-file" />
-          </label>
+          <UploadBox id="front-id" name="front" title="Add photo of your ID" hint="A clear photo of the front, all four corners visible" />
+          <UploadBox id="selfie-id" name="selfie" title="Add a photo of you holding it" hint="Your face and the ID in the same photo" />
           <p className="up-muted">Your photos are only seen by our team and are never shown on your ads.</p>
           <button type="submit" className="up-btn" data-tk="kyc-submit" disabled={busy}>{busy ? "Sending..." : "Send for checking"}</button>
         </form>

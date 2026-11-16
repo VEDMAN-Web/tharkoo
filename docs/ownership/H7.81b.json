@@ -1,0 +1,10 @@
+{
+  "branchPrefix": "haiku/h7.81b",
+  "globs": [
+    "docs/ownership/H7.81b.json",
+    "src/components/buyer/UploadBox.tsx",
+    "src/components/buyer/KycPanel.tsx",
+    "src/components/buyer/user-panel.css",
+    "tests/e2e/account-pages.e2e.ts"
+  ]
+}
