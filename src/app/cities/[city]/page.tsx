@@ -111,10 +111,48 @@ export default async function CityAreasPage({ params, searchParams }: Props) {
       ? { text: `No ads in ${data.name} yet. Here are ads close by.`, button: `Post the first ad in ${data.name}`, href: postAdPath(paths) }
       : undefined;
 
+  const aside = (
+    <>
+      <div className="tkn-ls-panelhead">
+        <h2 className="tkn-ls-panelhead-title">{data.name}</h2>
+      </div>
+      <p className="tkn-ls-label">Categories</p>
+      <ul className="tkn-city-nav" data-tk="city-nav-categories">
+        {data.categories.map((cat) => {
+          const n = data.cityCounts.get(cat.slug ?? "") ?? 0;
+          return (
+            <li key={cat.slug}>
+              <Link href={placePath(cat.slug ?? "", city)} prefetch={false}>
+                <span>{cat.name}</span>
+                <span className="tkn-city-nav-n">{n > 0 ? n : "New"}</span>
+              </Link>
+            </li>
+          );
+        })}
+      </ul>
+      {data.areas.length > 0 ? (
+        <>
+          <p className="tkn-ls-label">Areas</p>
+          <ul className="tkn-city-nav" data-tk="city-nav-areas">
+            {data.areas.map((area, index) => (
+              <li key={area.slug}>
+                <Link href={placePath(data.categories[0]?.slug ?? "", city, area.slug ?? "")} prefetch={false}>
+                  <span>{area.name}</span>
+                  <span className="tkn-city-nav-n">{perArea[index] ? perArea[index] : "New"}</span>
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </>
+      ) : null}
+    </>
+  );
+
   return (
     <UiTextProvider texts={pickTexts(texts, "card.")}>
       <NewListingPage
         tk="city-areas"
+        aside={aside}
         band={{
           crumbs,
           h1: data.name,

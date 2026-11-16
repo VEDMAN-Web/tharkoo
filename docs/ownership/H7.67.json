@@ -1,0 +1,18 @@
+{
+  "branchPrefix": "haiku/h7.67",
+  "globs": [
+    "docs/ownership/H7.67.json",
+    "progress/H7.67.md",
+    "src/app/cities/[city]/city-page.css",
+    "src/app/cities/[city]/page.tsx",
+    "src/app/countries/countries-page.css",
+    "src/components/new/ListingBand.tsx",
+    "src/components/new/ListingFrame.tsx",
+    "src/components/new/band-image.ts",
+    "src/components/new/listing-page.css",
+    "src/components/new/listing-spec.css",
+    "tests/e2e/h7-67-listing-band.e2e.ts",
+    "tests/server/listing/band-choice.test.ts",
+    "tests/server/listing/listing-filters.test.ts"
+  ]
+}

@@ -35,20 +35,39 @@ export function ListingBand({
   const hasPhoto = Boolean(style["--band-desk"] || style["--band-phone"]);
   return (
     <section className="tkn-ls-band" data-tk="listing-band" data-photo={hasPhoto ? "true" : "false"} style={style as CSSProperties}>
-      <ListingHead crumbs={crumbs} h1={h1} intro={intro} labels={labels} />
-      <div className="tkn-ls-searchrow">
-        <ListingSearchForm action={searchAction} categorySlug={categorySlug ?? ""} citySlug={citySlug} placeholder={placeholder} labels={labels} />
+      <div className="tkn-ls-band-card">
+        <ListingHead crumbs={crumbs} h1={h1} intro={intro} labels={labels} />
+        <div className="tkn-ls-searchrow">
+          <ListingSearchForm action={searchAction} categorySlug={categorySlug ?? ""} citySlug={citySlug} placeholder={placeholder} labels={labels} />
+        </div>
       </div>
     </section>
   );
 }
 
 /** A New design page with the title band above its body. The body is drawn by the page. */
-export function NewListingPage({ band, children, tk }: { band: React.ComponentProps<typeof ListingBand>; children: ReactNode; tk?: string }) {
+export function NewListingPage({
+  band,
+  children,
+  tk,
+  aside,
+}: {
+  band: React.ComponentProps<typeof ListingBand>;
+  children: ReactNode;
+  tk?: string;
+  aside?: ReactNode;
+}) {
   return (
     <div className="tkn-ls tkn-lp" data-tk={tk}>
       <ListingBand {...band} />
-      <div className="tkn-lp-body">{children}</div>
+      {aside ? (
+        <div className="tkn-ls-grid tkn-ls-grid-aside">
+          <aside className="tkn-ls-aside tkn-ls-aside-nav">{aside}</aside>
+          <div className="tkn-ls-main">{children}</div>
+        </div>
+      ) : (
+        <div className="tkn-lp-body">{children}</div>
+      )}
     </div>
   );
 }
