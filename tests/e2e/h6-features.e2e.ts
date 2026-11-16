@@ -16,6 +16,11 @@ import {
   WEBHOOK_SECRET,
 } from "./helpers";
 
+function chatButton(page: Page) {
+  const scope = (page.viewportSize()?.width ?? 1440) < 768 ? "[data-tk=bottom-bar]" : "[data-tk=contact-card]";
+  return page.locator(scope + " [data-tk=chat]");
+}
+
 /** Coin balance of the signed-in client (GET /api/wallet/). */
 async function coinBalance(api: APIRequestContext) {
   const res = await api.get("/api/wallet/");
@@ -95,13 +100,10 @@ test.describe("H6.3 video rule on the post form", () => {
 test.describe("H6.4 Chat now sign-in gate", () => {
   test("a signed-out visitor is asked to sign in", async ({ page }) => {
     await page.goto(await firstAdPath(page));
-    // The contact card and the mobile bar each have a chat button; only one is visible at a time.
-    const chat = page.locator("[data-tk=chat]:visible");
-    await chat.waitFor();
-    await chat.click();
-    const note = page.getByRole("status").filter({ hasText: "Sign in to chat with the advertiser." });
-    await expect(note).toBeVisible();
-    await expect(note.getByRole("link", { name: "Sign in" })).toHaveAttribute("href", /^\/u\/login\/\?next=/);
+    await chatButton(page).click();
+    const popup = page.locator("[data-tk=ad-popup]");
+    await expect(popup).toBeVisible();
+    await expect(popup).toHaveAttribute("data-step", "login");
     await expect(page.locator("[data-tk=chat-panel]")).toHaveCount(0);
   });
 
@@ -111,7 +113,7 @@ test.describe("H6.4 Chat now sign-in gate", () => {
     await loginUi(page, email);
     await page.waitForURL(/\/u\/account\/dashboard\//);
     await page.goto(await firstAdPath(page));
-    await page.locator("[data-tk=chat]:visible").click();
+    await chatButton(page).click();
     await expect(page.locator("[data-tk=chat-panel]")).toBeVisible();
   });
 
