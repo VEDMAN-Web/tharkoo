@@ -1,5 +1,6 @@
 import { BadgeCheck, Circle, Image as ImageIcon, ListFilter, SlidersHorizontal, ToggleRight, Video } from "lucide-react";
 import { ListingPlaceSelects } from "./ListingPlaceSelects";
+import { KeywordField } from "./KeywordField";
 import type { IconKind, ListingLabels, ListingToggles, PanelRow, PlaceSelects } from "./listing-filters";
 
 /**
@@ -7,6 +8,8 @@ import type { IconKind, ListingLabels, ListingToggles, PanelRow, PlaceSelects } 
  * With video, Online now) and one row per category filter field. A plain GET form, so the filters work without
  * JavaScript; only the place selects need JavaScript to navigate.
  */
+export type KeywordProps = React.ComponentProps<typeof KeywordField>;
+
 export function ListingFilterPanel({
   action,
   clearHref,
@@ -17,6 +20,7 @@ export function ListingFilterPanel({
   places,
   hidden = [],
   placesOnly = false,
+  keyword,
 }: {
   action: string;
   clearHref: string;
@@ -27,6 +31,7 @@ export function ListingFilterPanel({
   places: PlaceSelects;
   hidden?: { name: string; value: string }[];
   placesOnly?: boolean;
+  keyword?: KeywordProps;
 }) {
   return (
     <form method="get" action={action} className="tkn-ls-form" aria-label={labels.panelTitle}>
@@ -40,6 +45,7 @@ export function ListingFilterPanel({
         </p>
         <span className="tkn-ls-pill">{labels.activeTemplate.replace("{count}", String(activeCount))}</span>
       </div>
+      {keyword ? <KeywordField {...keyword} /> : null}
       <ListingPlaceSelects selects={places} labels={labels} />
       {placesOnly ? null : <FilterRows rows={rows} toggles={toggles} labels={labels} hasCategory={Boolean(places.categoryValue)} />}
       {placesOnly ? null : (

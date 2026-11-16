@@ -3,7 +3,8 @@ import { notFound } from "next/navigation";
 import { ListingPageView } from "@/components/ListingPage";
 import { FallbackAds } from "@/components/FallbackAds";
 import { ListingFrame } from "@/components/new/ListingFrame";
-import { bandChoice, heroBandFrom } from "@/components/new/band-image";
+import { SearchHeader } from "@/components/new/SearchHeader";
+import { searchChips, searchHeading, searchHref, sortFrom } from "@/components/new/search-header";
 import { listingFrameProps, listingLabels, searchPlaceSelects } from "@/components/new/listing-frame-props";
 import { attributePicks, hasFieldPicks, type ListingToggles } from "@/components/new/listing-filters";
 import {
@@ -11,7 +12,6 @@ import {
   getCategories,
   getCities,
   getDistricts,
-  getHomepageContent,
   getLocationBySlug,
   getStates,
   pageOutOfRange,
@@ -22,7 +22,6 @@ import { getPaths } from "@/server/urls/service";
 import { prettyPlace } from "@/lib/format";
 import { makeT } from "@/lib/ui/text";
 import { textOverrides } from "@/app/admin/ui-text/store";
-import { readShellConfig } from "@/server/site-links/shell-config";
 import { loadFallbackSections, showFallback } from "@/lib/fallback-ads";
 import { loadCardWidth } from "@/server/listings/card-width";
 import type { ListingParams } from "@/server/search/filter-seo";
@@ -50,6 +49,7 @@ export default async function SearchPage({ searchParams }: { searchParams: Promi
   const city = one(sp.city) || one(sp.location);
   const state = one(sp.state);
   const area = one(sp.area);
+  const sort = sortFrom(one(sp.sort));
   const toggles: ListingToggles = { verified: one(sp.verified) === "1", photos: one(sp.photos) === "1", video: one(sp.video) === "1", online: one(sp.online) === "1" };
   const categories = await getCategories();
   const category = categories.find((cat) => cat.slug === categorySlug);
@@ -65,6 +65,8 @@ export default async function SearchPage({ searchParams }: { searchParams: Promi
     video: toggles.video,
     online: toggles.online,
     ...(category && hasFieldPicks(picks) ? { attributes: picks } : {}),
+    ...(sort === "newest" ? { sort: "fresh" as const } : {}),
+    ...(sort === "online" || sort === "verified" ? { prefer: sort } : {}),
     page: Number(rawPage) || 1,
   });
   const params: Record<string, string> = {};
@@ -73,6 +75,7 @@ export default async function SearchPage({ searchParams }: { searchParams: Promi
   if (city) params.city = city;
   if (state) params.state = state;
   if (area) params.area = area;
+  if (sort) params.sort = sort;
   const qs = new URLSearchParams(params);
   for (const key of ["photos", "verified", "video", "online"] as const) if (toggles[key]) qs.set(key, "1");
   for (const [key, value] of Object.entries(sp)) {
@@ -82,14 +85,12 @@ export default async function SearchPage({ searchParams }: { searchParams: Promi
   const paths = await getPaths();
   const base = searchPath(paths);
   const path = qs.toString() ? `${base}?${qs.toString()}` : base;
-  const [feed, loc, states, cities, districts, shell, hero, texts, cardWidth] = await Promise.all([
+  const [feed, loc, states, cities, districts, texts, cardWidth] = await Promise.all([
     feedPromise,
     city ? getLocationBySlug(city) : Promise.resolve(null),
     getStates(),
     getCities(),
     city ? getDistricts(city) : Promise.resolve([]),
-    readShellConfig(),
-    getHomepageContent().then(heroBandFrom),
     textOverrides(),
     loadCardWidth(),
   ]);
@@ -118,39 +119,79 @@ export default async function SearchPage({ searchParams }: { searchParams: Promi
       }
     : undefined;
   const pills = q && empty ? categories.slice(0, 6) : [];
-  const h1 = q ? `Results for “${q}”` : "Search results";
   const crumbs = [
     { name: "India", path: "/" },
     { name: "Search", path: base },
   ];
+  const named = (rows: { slug?: string | null; name?: string | null }[], slug: string | undefined) => {
+    const row = slug ? rows.find((item) => item.slug === slug) : undefined;
+    return slug ? { slug, name: row?.name || prettyPlace(slug) } : undefined;
+  };
+  const searchState = {
+    q,
+    category: category?.slug ? { slug: category.slug, name: category.name || category.slug } : undefined,
+    state: named(states, state),
+    city: city ? { slug: city, name: loc?.name || prettyPlace(city) } : undefined,
+    area: named(districts, area),
+    toggles,
+    picks,
+    fields: category?.fields,
+  };
+  const allParams: Record<string, string | string[] | undefined> = {};
+  for (const [key, value] of qs.entries()) allParams[key] = [...([allParams[key]].flat().filter(Boolean) as string[]), value];
+  const sortValue = sort || (q ? "best" : "newest");
+  const sortOptions = [
+    ...(q ? [{ value: "best", label: t("search.sort.best"), href: searchHref(base, allParams, ["sort"]) }] : []),
+    { value: "newest", label: t("search.sort.newest"), href: q ? searchHref(base, { ...allParams, sort: "newest" }) : searchHref(base, allParams, ["sort"]) },
+    { value: "online", label: t("search.sort.online"), href: searchHref(base, { ...allParams, sort: "online" }) },
+    { value: "verified", label: t("search.sort.verified"), href: searchHref(base, { ...allParams, sort: "verified" }) },
+  ];
   const frame = listingFrameProps({
     crumbs,
-    h1,
-    intro: q && empty ? "Try another word, or open a popular category." : q ? `Matches for “${q}” across titles, descriptions, categories, and cities.` : "Try a category if nothing matches yet.",
-    photo: bandChoice(shell, hero, { category: category?.slug || undefined }),
+    h1: "",
+    photo: null,
     categorySlug: category?.slug || "",
     citySlug: city,
     searchAction: base,
-    searchPlaceholder: category ? t("listing.band.searchCategory", { category: category.name }) : "Search ads",
+    searchPlaceholder: "",
     chips: null,
     fields: category?.fields,
     picks,
     toggles,
     panelPath: base,
-    panelHidden: Object.entries(params).map(([name, value]) => ({ name, value })),
+    panelHidden: Object.entries(params)
+      .filter(([name]) => name !== "q")
+      .map(([name, value]) => ({ name, value })),
+    keyword: {
+      base,
+      params,
+      defaultValue: q || "",
+      label: t("search.keyword.label"),
+      placeholder: t("search.keyword.placeholder"),
+      listLabel: t("search.keyword.suggestions"),
+    },
     labels,
     places: searchPlaceSelects({ searchPath: base, params: { ...params }, categories, states, cities, districts, labels }),
   });
   return (
     <div data-card-width={cardWidth}>
       <ListingFrame
-        bandStyle={frame.bandStyle}
         labels={labels}
-        head={frame.head}
-        chips={frame.chips}
-        searchForm={frame.searchForm}
         filters={frame.filters}
         activeCount={frame.activeCount}
+        header={
+          <SearchHeader
+            crumbs={crumbs}
+            breadcrumbLabel={labels.breadcrumb}
+            heading={searchHeading(searchState, t)}
+            total={feed.total}
+            sortValue={sortValue}
+            sortOptions={sortOptions}
+            chips={searchChips(base, allParams, searchState, labels, t)}
+            clearHref={base}
+            t={t}
+          />
+        }
       >
         <ListingPageView
           texts={texts}

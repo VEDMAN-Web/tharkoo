@@ -72,6 +72,8 @@ export interface ListingQuery {
   /** H7.8: only ads whose seller is Online now (see onlineOwnerIds). */
   online?: boolean;
   sort?: "ranked" | "fresh";
+  /** Ads of verified, or of online, sellers come first inside the chosen order. */
+  prefer?: "verified" | "online";
   page?: number;
   pageSize?: number;
   excludeStar?: boolean;
@@ -205,7 +207,7 @@ export function expandSearchTerms(q: string) {
     });
 }
 
-function escapeRegExp(value: string) {
+export function escapeRegExp(value: string) {
   return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }
 
@@ -446,7 +448,7 @@ export async function buildFilter(input: ListingQuery): Promise<QueryFilter<List
   return filter as QueryFilter<ListingDoc>;
 }
 
-const RANK_FIELDS = "slug badges bumpedAt publishedAt mediaIds categoryId cityId";
+const RANK_FIELDS = "slug badges bumpedAt publishedAt mediaIds categoryId cityId ownerId";
 
 async function findRows(filter: QueryFilter<ListingDoc>, q?: string): Promise<Row[]> {
   const text = q ? cleanQuery(q) : "";
@@ -619,6 +621,11 @@ export async function queryListings(input: ListingQuery): Promise<SearchResult> 
     }
     return compareRank(a.score, b.score, settings) || (a.doc.slug ?? "").localeCompare(b.doc.slug ?? "");
   });
+  if (input.prefer) {
+    const onlineIds = input.prefer === "online" ? new Set(await onlineOwnerIds()) : null;
+    const preferred = (doc: Row) => (onlineIds ? Boolean(doc.ownerId && onlineIds.has(String(doc.ownerId))) : doc.badges?.includes("verified") === true);
+    ranked.sort((a, b) => Number(preferred(b.doc)) - Number(preferred(a.doc)));
+  }
   const scope = (input.sort ?? "ranked") === "ranked" ? pinScopeOf(input) : null;
   const pins = scope ? await loadActivePins(scope, now) : [];
   const ordered = applyPins(ranked.map((row) => row.doc), pins, (doc) => String(doc._id), now);

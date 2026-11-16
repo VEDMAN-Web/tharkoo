@@ -24,7 +24,7 @@ test.describe("H7.75: every search and listing page has the shared body", () => 
       await page.setViewportSize({ width: 1440, height: 900 });
       const response = await page.goto(path);
       expect(response?.status()).toBe(200);
-      await expect(page.locator('[data-tk="listing-band"]')).toBeVisible();
+      await expect(page.locator(path.startsWith("/search/") ? '[data-tk="results-header"]' : '[data-tk="listing-band"]')).toBeVisible();
       const aside = (await page.locator(".tkn-ls-aside").first().boundingBox())!;
       const main = (await page.locator(".tkn-ls-main").first().boundingBox())!;
       expect(Math.round(aside.width)).toBe(260);

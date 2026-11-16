@@ -5,6 +5,8 @@ import { GET as searchGet } from "@/app/api/search/route";
 import { cached, invalidateTags } from "@/lib/cache";
 import { Category, Listing, Location, PromotionOrder, PromotionProduct } from "@/server/models";
 import { queryListings } from "@/server/search";
+import { suggestSearch } from "@/server/search/suggest";
+import { VendorPresence } from "@/server/availability/models";
 import { getCities, getFeed, isThin, listingCountsByCategoryCity, searchListings } from "@/lib/queries";
 import { clearMemoryMongo, connectMemoryMongo, disconnectMemoryMongo } from "../../setup/mongo";
 
@@ -452,6 +454,46 @@ describe("search hit price", () => {
     const bySlug = new Map(out.hits.map((hit) => [hit.slug, hit]));
     expect(bySlug.get("priced-desk")?.price).toBe(12500);
     expect(bySlug.get("free-desk")?.price).toBeNull();
+  });
+});
+
+describe("verified and online first", () => {
+  it("puts ads of verified sellers first and keeps the newest order inside each group", async () => {
+    const { category, state, city } = await place();
+    await listing({ categoryId: category._id, stateId: state._id, cityId: city._id, title: "Old verified", slug: "old-verified", badges: ["verified"], publishedAt: new Date("2026-06-01T00:00:00.000Z") });
+    await listing({ categoryId: category._id, stateId: state._id, cityId: city._id, title: "New plain", slug: "new-plain", publishedAt: new Date("2026-06-05T00:00:00.000Z") });
+    await listing({ categoryId: category._id, stateId: state._id, cityId: city._id, title: "Mid plain", slug: "mid-plain", publishedAt: new Date("2026-06-03T00:00:00.000Z") });
+    const plain = await queryListings({ sort: "fresh", pageSize: 10 });
+    expect(plain.legacy.map((item) => item.slug)).toEqual(["new-plain", "mid-plain", "old-verified"]);
+    const verified = await queryListings({ sort: "fresh", prefer: "verified", pageSize: 10 });
+    expect(verified.legacy.map((item) => item.slug)).toEqual(["old-verified", "new-plain", "mid-plain"]);
+  });
+
+  it("puts ads of sellers who are online now first", async () => {
+    const { category, state, city } = await place();
+    await listing({ categoryId: category._id, stateId: state._id, cityId: city._id, title: "New away", slug: "new-away", publishedAt: new Date("2026-06-05T00:00:00.000Z") });
+    const online = await listing({ categoryId: category._id, stateId: state._id, cityId: city._id, title: "Old online", slug: "old-online", publishedAt: new Date("2026-06-01T00:00:00.000Z") });
+    await VendorPresence.create({ userId: String(online.ownerId), available: true, lastActivityAt: new Date() });
+    const result = await queryListings({ sort: "fresh", prefer: "online", pageSize: 10 });
+    expect(result.legacy.map((item) => item.slug)).toEqual(["old-online", "new-away"]);
+  });
+});
+
+describe("suggestSearch", () => {
+  it("offers categories, cities and ad titles, at most six, without repeats", async () => {
+    const { category, state, city } = await place();
+    for (let n = 0; n < 8; n += 1) {
+      await listing({ categoryId: category._id, stateId: state._id, cityId: city._id, title: n % 2 ? "Pune yoga class" : `Pune yoga batch ${n}`, slug: `yoga-${n}` });
+    }
+    expect(await suggestSearch("p")).toEqual([]);
+    const pune = await suggestSearch("pune");
+    expect(pune[0]).toEqual({ kind: "city", label: "Pune", value: "pune" });
+    expect(pune.length).toBeLessThanOrEqual(6);
+    const labels = pune.map((item) => item.label.toLowerCase());
+    expect(new Set(labels).size).toBe(labels.length);
+    const jobs = await suggestSearch("job");
+    expect(jobs.some((item) => item.kind === "category" && item.value === "jobs")).toBe(true);
+    expect(await suggestSearch("zzzz")).toEqual([]);
   });
 });
 
