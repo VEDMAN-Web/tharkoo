@@ -18,6 +18,7 @@ export const ABOUT_YOU_HELP = "This shows on your ads. We ask only once, next ti
 const CONTACT_DEFAULT_TITLE = "Your contacts";
 const CONTACT_TITLE = "Contact";
 const CONTACT_HELP = "Add the phone number people can reach you on.";
+const CONTACT_HELP_EMAIL = "People will write to you by email. No phone number is needed.";
 const REVIEW_DEFAULT_TITLE = "Publish";
 const REVIEW_TITLE = "Review and publish";
 const REVIEW_HELP = "Look it over. Use Edit to change anything before it goes live.";
@@ -26,7 +27,7 @@ const PUBLISH_LABEL = "Publish ad";
 
 const DEFAULT_BASICS_HELP = "Pick a category. This helps the right people find your ad.";
 
-export function newStepCopy(step: NewPostStep, copy: PostCopy, aboutYou: boolean, people = false, fee = 0): StepCopy {
+export function newStepCopy(step: NewPostStep, copy: PostCopy, aboutYou: boolean, people = false, fee = 0, contactMode = "both"): StepCopy {
   const base = copy.steps[STEP_KEYS[step]];
   if (step === "more") return { ...base, title: people ? MORE_PEOPLE_TITLE : MORE_TITLE, help: "", nextLabel: "", backLabel: "" };
   if (step === "category" && fee > 0 && (!base.help || base.help === DEFAULT_BASICS_HELP)) {
@@ -37,7 +38,7 @@ export function newStepCopy(step: NewPostStep, copy: PostCopy, aboutYou: boolean
     if (aboutYou) {
       return { ...base, title: edited ? base.title : ABOUT_YOU_TITLE, help: base.help || ABOUT_YOU_HELP };
     }
-    return { ...base, title: edited ? base.title : CONTACT_TITLE, help: base.help || CONTACT_HELP };
+    return { ...base, title: edited ? base.title : CONTACT_TITLE, help: base.help || (contactMode === "email" ? CONTACT_HELP_EMAIL : CONTACT_HELP) };
   }
   if (step === "review") {
     const edited = base.title !== REVIEW_DEFAULT_TITLE && base.title !== "";

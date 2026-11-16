@@ -9,6 +9,8 @@ export type AccountPhase = "unknown" | "out" | "loading" | "ready";
 export type AccountState = { phase: AccountPhase; user: AccountUser | null; balance: number | null; balanceReady: boolean };
 
 export const SESSION_EVENT = "tk:session-changed";
+/** Same name as CREDITS_ADDED_EVENT in post/credits.ts: sent after a recharge, a publish or a promotion. */
+export const CREDITS_CHANGED_EVENT = "tk:credits-added";
 
 const IDLE: AccountState = { phase: "unknown", user: null, balance: null, balanceReady: false };
 
@@ -58,6 +60,19 @@ export function AccountProvider({ children }: { children: ReactNode }) {
     window.addEventListener(SESSION_EVENT, onSessionChange);
     return () => window.removeEventListener(SESSION_EVENT, onSessionChange);
   }, [load]);
+
+  useEffect(() => {
+    // H7.120: after a publish, a promotion or a recharge the pill shows the real balance without a page change.
+    function onCredits() {
+      if (!hasSessionHint()) return;
+      api<{ balance: number }>("/api/wallet").then((res) => {
+        if (!mounted.current || !res.ok) return;
+        setState((prev) => ({ ...prev, balance: res.data.balance, balanceReady: true }));
+      });
+    }
+    window.addEventListener(CREDITS_CHANGED_EVENT, onCredits);
+    return () => window.removeEventListener(CREDITS_CHANGED_EVENT, onCredits);
+  }, []);
 
   return <AccountContext.Provider value={state}>{children}</AccountContext.Provider>;
 }

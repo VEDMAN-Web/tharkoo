@@ -134,8 +134,8 @@ describe("paid posting helpers (H7.86)", () => {
   it("says credits in singular and plural, and the rupee price at 1 credit = Rs 10", () => {
     expect(creditsText(1)).toBe("1 credit");
     expect(creditsText(30)).toBe("30 credits");
-    expect(rupeesText(30)).toBe("Rs 300");
-    expect(rupeesText(100)).toBe("Rs 1,000");
+    expect(rupeesText(30)).toBe("₹300");
+    expect(rupeesText(100)).toBe("₹1,000");
   });
 
   it("works out how many credits are missing", () => {
