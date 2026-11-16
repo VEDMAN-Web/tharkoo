@@ -1,11 +1,13 @@
 import Link from "next/link";
 import { Icon, PageBand, type IconName } from "./PageParts";
 import { ContactForm } from "./ContactForm";
+import { telHref, telegramHref, whatsappHref } from "@/lib/support";
 
 export type ContactInfo = {
   email: string;
   phone: string;
   whatsapp: string;
+  telegram: string;
   hours: string;
   office: string;
 };
@@ -25,7 +27,8 @@ export function ContactView({
   helpHref: string;
   homeHref: string;
 }) {
-  const whatsapp = info.whatsapp.replace(/\D/g, "");
+  const whatsapp = whatsappHref(info.whatsapp);
+  const telegram = telegramHref(info.telegram);
   const cards: Card[] = [
     { icon: "chat", color: "#C2185B", tint: "#FDF0F7", title: "Live chat", sub: "Fastest, about 10 minutes", href: "#contact-form", action: "Send a message" },
     {
@@ -34,7 +37,7 @@ export function ContactView({
       tint: "#F5F0FF",
       title: "WhatsApp",
       sub: info.whatsapp || "Message us for quick help",
-      href: whatsapp ? `https://wa.me/${whatsapp}` : undefined,
+      href: whatsapp || undefined,
       action: "Open WhatsApp",
     },
     {
@@ -52,7 +55,7 @@ export function ContactView({
       tint: "#ECFDF5",
       title: "Phone",
       sub: info.hours || "Mon to Sat, 9 am to 9 pm",
-      href: info.phone ? `tel:${info.phone.replace(/[^\d+]/g, "")}` : undefined,
+      href: telHref(info.phone) || undefined,
       action: "Call us",
     },
   ];
@@ -102,6 +105,23 @@ export function ContactView({
                 </div>
               </div>
             </div>
+            {telegram ? (
+              <div className="tkp-glass tkp-side-card">
+                <div className="tkp-side-row">
+                  <span className="tkp-side-icon" style={{ background: "#F0F9FF" }}>
+                    <Icon name="chat" color="#0369A1" />
+                  </span>
+                  <div>
+                    <h3>Telegram</h3>
+                    <p>
+                      <a className="tkp-link" href={telegram}>
+                        {info.telegram.replace(/^@?/, "@")}
+                      </a>
+                    </p>
+                  </div>
+                </div>
+              </div>
+            ) : null}
             <div className="tkp-glass tkp-side-card">
               <div className="tkp-side-row">
                 <span className="tkp-side-icon" style={{ background: "#ECFDF5" }}>

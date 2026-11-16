@@ -14,6 +14,7 @@ export function HelpView({
   helpHref,
   chatHref,
   whatsappHref,
+  telegramHref,
   contactHref,
 }: {
   cards: HelpCard[];
@@ -24,6 +25,7 @@ export function HelpView({
   helpHref: string;
   chatHref: string;
   whatsappHref: string;
+  telegramHref: string;
   contactHref: string;
 }) {
   return (
@@ -108,6 +110,7 @@ export function HelpView({
                     Chat with us
                   </Link>
                   <Link href={whatsappHref} style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: "8px", minHeight: "48px", borderRadius: "999px", background: "linear-gradient(135deg, #F0FDF4, #DCFCE7)", color: "#15803D", fontSize: "15px", fontWeight: "700", textDecoration: "none" }}>WhatsApp</Link>
+                  <Link href={telegramHref} style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: "8px", minHeight: "48px", borderRadius: "999px", background: "linear-gradient(135deg, #F0F9FF, #E0F2FE)", color: "#0369A1", fontSize: "15px", fontWeight: "700", textDecoration: "none" }}>Telegram</Link>
                   <Link href={contactHref} style={{ textAlign: "center", fontSize: "14px", fontWeight: "700", paddingTop: "4px" }}>Send us a message</Link>
                 </div>
               </div>

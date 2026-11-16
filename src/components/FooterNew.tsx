@@ -6,24 +6,25 @@ import { ArrowRight } from "lucide-react";
 import { safeHref } from "@/lib/sanitize";
 import { applyPrefixes, categoryPath } from "@/lib/urls";
 import { useUrlPaths } from "./UrlPaths";
+import { SUPPORT_PHONE, SUPPORT_TELEGRAM, telegramHref, whatsappHref } from "@/lib/support";
 import "./FooterNew.css";
 import type { ShellConfig, ShellContact, ShellLink } from "@/server/site-links/shell-config-rules";
 
 type Cat = { slug: string; name: string };
 
 /** P1 / H7.10: the six social squares, always shown in this order. The admin link is used when it has one, else "#". */
-const SOCIALS: { name: string; text: string; bg: string; fg: string }[] = [
-  { name: "WhatsApp", text: "WA", bg: "#DCFCE7", fg: "#15803D" },
+const SOCIALS: { name: string; text: string; bg: string; fg: string; fallback?: string }[] = [
+  { name: "WhatsApp", text: "WA", bg: "#DCFCE7", fg: "#15803D", fallback: whatsappHref(SUPPORT_PHONE) },
   { name: "X", text: "X", bg: "#F3F4F6", fg: "#111827" },
   { name: "LinkedIn", text: "in", bg: "#DBEAFE", fg: "#1D4ED8" },
   { name: "Instagram", text: "IG", bg: "#FCE7F3", fg: "#BE185D" },
   { name: "Pinterest", text: "P", bg: "#FEE2E2", fg: "#B91C1C" },
-  { name: "Telegram", text: "TG", bg: "#E0F2FE", fg: "#0369A1" },
+  { name: "Telegram", text: "TG", bg: "#E0F2FE", fg: "#0369A1", fallback: telegramHref(SUPPORT_TELEGRAM) },
 ];
 
 /**
  * P1 / H7.10: the three get-in-touch rows, always shown. The admin value is used when set; an empty value shows the
- * mockup placeholder and links to "#". Telegram has no contact kind, so the admin row is matched by its label.
+ * mockup placeholder and links to "#". A Telegram row is matched by its kind or, for older rows, by its label.
  */
 const CONTACT_ROWS: {
   label: string;
@@ -31,11 +32,12 @@ const CONTACT_ROWS: {
   bg: string;
   fg: string;
   placeholder: string;
+  hrefFor: (value: string) => string;
   match: (contact: ShellContact) => boolean;
 }[] = [
-  { label: "WhatsApp", text: "WA", bg: "#DCFCE7", fg: "#15803D", placeholder: "[YOUR WHATSAPP NUMBER]", match: (c) => c.kind === "whatsapp" },
-  { label: "Telegram", text: "TG", bg: "#E0F2FE", fg: "#0369A1", placeholder: "[YOUR TELEGRAM]", match: (c) => /telegram/i.test(c.label) },
-  { label: "Email", text: "@", bg: "#FCE7F3", fg: "#BE185D", placeholder: "[YOUR SUPPORT EMAIL]", match: (c) => c.kind === "email" },
+  { label: "WhatsApp", text: "WA", bg: "#DCFCE7", fg: "#15803D", placeholder: SUPPORT_PHONE, hrefFor: whatsappHref, match: (c) => c.kind === "whatsapp" },
+  { label: "Telegram", text: "TG", bg: "#E0F2FE", fg: "#0369A1", placeholder: SUPPORT_TELEGRAM, hrefFor: telegramHref, match: (c) => c.kind === "telegram" || /telegram/i.test(c.label) },
+  { label: "Email", text: "@", bg: "#FCE7F3", fg: "#BE185D", placeholder: "[YOUR SUPPORT EMAIL]", hrefFor: () => "", match: (c) => c.kind === "email" },
 ];
 
 function LinkColumn({ title, items, columns }: { title: string; items: ShellLink[]; columns: 1 | 2 }) {
@@ -90,7 +92,7 @@ export function FooterNew({ siteName, shell, categories }: { siteName: string; s
           <ul className="tkn-socials" aria-label="Social links">
             {SOCIALS.map((social) => {
               const link = adminLink(social.name);
-              const href = (link && safeHref(link.href)) || "#";
+              const href = (link && safeHref(link.href)) || social.fallback || "#";
               return (
                 <li key={social.name}>
                   <a
@@ -116,7 +118,7 @@ export function FooterNew({ siteName, shell, categories }: { siteName: string; s
             {CONTACT_ROWS.map((row) => {
               const contact = f.contacts.find((item) => item.visible && item.value && row.match(item));
               const value = contact?.value || row.placeholder;
-              const href = (contact && safeHref(contact.href)) || "#";
+              const href = (contact && safeHref(contact.href)) || row.hrefFor(value) || "#";
               return (
                 <li key={row.label}>
                   <a href={href} className="tkn-contact">
