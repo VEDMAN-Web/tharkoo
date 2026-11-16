@@ -1,7 +1,7 @@
 const DEFAULT_OPEN_HOUR = 9;
 const DEFAULT_CLOSE_HOUR = 21;
 const SUPPORT_ZONE = "Asia/Kolkata";
-const RANGE = /(\d{1,2})(?::(\d{2}))?\s*(am|pm)\s*(?:to|-|–|until)\s*(\d{1,2})(?::(\d{2}))?\s*(am|pm)/i;
+const RANGE = /(\d{1,2})(?::(\d{2}))?\s*(am|pm)\s*(?:to|-|until)\s*(\d{1,2})(?::(\d{2}))?\s*(am|pm)/i;
 
 export type SupportHours = { openMinutes: number; closeMinutes: number };
 
