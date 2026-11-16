@@ -201,7 +201,7 @@ describe("buying coins", () => {
     const shop = (await (await call("GET", "/api/wallet/coins", user.cookie)).json()) as {
       data: { coinValueInr: number; packs: Array<{ coins: number; price: number }> };
     };
-    expect(shop.data.coinValueInr).toBe(100);
+    expect(shop.data.coinValueInr).toBe(10);
     expect(shop.data.packs.map((row) => row.coins)).toEqual([1, 11]);
     const purchase = await buy(user, String(pack._id));
     const row = await CoinPurchase.findById(purchase.id).lean();

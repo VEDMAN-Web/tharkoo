@@ -4,6 +4,7 @@ import { POST as walletPost, PUT as walletPut, GET as walletGet } from "@/app/ap
 import { hashToken } from "@/server/auth/http";
 import { accountBalance, postTransaction, trialBalance } from "@/server/ledger";
 import { ConflictError, ForbiddenError, PaymentRequiredError, ValidationError } from "@/server/http";
+import { setMoneySettings } from "@/server/billing/money-settings";
 import { Session, User } from "@/server/models";
 import { FinanceSettings } from "@/server/wallet/models";
 import { decryptField, encryptField, maskTail, maskUpi } from "@/server/wallet/payout-crypto";
@@ -180,6 +181,38 @@ describe("payout KYC", () => {
   it("masks helpers keep only the tail", () => {
     expect(maskTail("123456789012")).toBe("********9012");
     expect(maskUpi("ab@okaxis")).toBe("ab*@okaxis");
+  });
+});
+
+describe("the one credit price (H7.114)", () => {
+  const admin = { actorId: "000000000000000000000001", roles: ["admin"], requestId: "req" };
+
+  it("makes a payout and the earnings figure follow the Money setting, with no change to any stored data", async () => {
+    const vendor = await person("price@example.com");
+    await withKyc(vendor.id);
+    await earn(vendor.id, 50);
+    await FinanceSettings.updateOne({ key: "finance" }, { $set: { coinValueInr: 100 } }, { upsert: true });
+    expect(await payoutSummary(vendor.id)).toMatchObject({ coinValueInr: 10, availableCoins: 50 });
+    const first = await requestWithdrawal({ userId: vendor.id, coins: 5, requestId: req, ip });
+    expect(first).toMatchObject({ coinValueInr: 10, amountInr: 50 });
+    await setMoneySettings({ ...admin, values: { creditPriceInr: 20 } });
+    expect(await payoutSummary(vendor.id)).toMatchObject({ coinValueInr: 20 });
+    await Withdrawal.updateMany({}, { $set: { requestedAt: new Date(Date.now() - 10 * 24 * 60 * 60 * 1000) } });
+    await FinanceSettings.updateOne({ key: "finance" }, { $set: { withdrawCooldownDays: 0 } });
+    const second = await requestWithdrawal({ userId: vendor.id, coins: 5, requestId: req, ip });
+    expect(second).toMatchObject({ coinValueInr: 20, amountInr: 100 });
+    expect(await Withdrawal.findOne({ _id: first.id }).lean()).toMatchObject({ coinValueInr: 10, amountInr: 50 });
+    const row = await FinanceSettings.findOne({ key: "finance" }).lean();
+    expect(row?.coinValueInr).toBe(100);
+  });
+
+  it("no longer lets the Finance settings change the value of a credit", async () => {
+    const finance = await person("fin@example.com", ["finance"]);
+    const bad = await call("PUT", "/api/wallet/admin/settings", finance.cookie, { coinValueInr: 50 });
+    expect(bad.status).toBe(400);
+    const ok = await call("PUT", "/api/wallet/admin/settings", finance.cookie, { tdsPercent: 2 });
+    expect(ok.status).toBe(200);
+    expect(((await ok.json()) as { data: { coinValueInr: number } }).data.coinValueInr).toBe(10);
   });
 });
 
