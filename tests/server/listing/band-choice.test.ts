@@ -61,3 +61,29 @@ describe("bandStyleFor focus (H7.67)", () => {
     expect(bandStyleFor(null)).toEqual({});
   });
 });
+
+describe("band and card focus points (H7.70)", () => {
+  const withFocus = shellWith([
+    { scope: "city", slug: "surat", band: "https://cdn.example/s.jpg", bandPhone: "https://cdn.example/s-phone.jpg", bandFocusX: 60, bandFocusY: 15, bandPhoneFocusX: 40 },
+    { scope: "category", slug: "dating", band: "https://cdn.example/d.jpg", bandPhone: "" },
+  ]);
+
+  it("carries the admin focus points into the band style", () => {
+    const style = bandStyleFor(bandChoice(withFocus, HERO, { city: "surat" }));
+    expect(style["--band-focus"]).toBe("60% 15%");
+    expect(style["--band-focus-phone"]).toBe("40% 12%");
+  });
+
+  it("uses the computer focus for the phone when there is no phone photo, and no variable when nothing is set", () => {
+    const style = bandStyleFor(bandChoice(withFocus, HERO, { category: "dating" }));
+    expect(style["--band-focus"]).toBeUndefined();
+    expect(style["--band-focus-phone"]).toBe("72% 22%");
+  });
+
+  it("takes the home hero focus points for the default band", () => {
+    const hero = heroBandFrom({ hero: { photo: "https://cdn.example/h.jpg", photoPhone: "https://cdn.example/h-phone.jpg", focusX: 72, focusY: 12, phoneFocusX: 50, phoneFocusY: 8 } });
+    const style = bandStyleFor(bandChoice(withFocus, hero, { city: "jaipur" }));
+    expect(style["--band-focus"]).toBe("72% 12%");
+    expect(style["--band-focus-phone"]).toBe("50% 8%");
+  });
+});

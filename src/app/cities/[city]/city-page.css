@@ -12,7 +12,7 @@
 .tkn-city-cat:hover { transform: translateY(-3px); box-shadow: 0 14px 36px rgba(233, 30, 140, 0.13); }
 .tkn-city-cat:focus-visible { outline: 3px solid #7c3aed; outline-offset: 2px; }
 .tkn-city-cat-photo {
-  display: block; width: 100%; aspect-ratio: 4 / 3; object-fit: cover; object-position: 50% 20%;
+  display: block; width: 100%; aspect-ratio: 4 / 3; object-fit: cover; object-position: 50% 18%;
   background: linear-gradient(135deg, #fff0f7, #ede9ff);
 }
 .tkn-city-cat-body { display: flex; flex-direction: column; gap: 2px; padding: 12px 14px 14px; }
@@ -48,4 +48,7 @@
 @media (max-width: 819px) {
   .tkn-ls-aside-nav { display: none; }
   .tkn-ls-grid-aside .tkn-ls-main { gap: 32px; }
+}
+@media (min-width: 820px) {
+  [data-tk="city-categories"] { display: none; }
 }

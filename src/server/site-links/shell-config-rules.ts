@@ -21,7 +21,24 @@ export type TrustTone = (typeof TRUST_TONES)[number];
 export type TrustPill = { label: string; tone: TrustTone };
 export type HowStep = { title: string; text: string };
 /** H7.4: a band image for a listing page title band (desktop and phone), or a category card photo (`photo`). */
-export type ShellImage = { scope: "category" | "city" | "state"; slug: string; photo: string; band: string; bandPhone: string };
+export type ShellImage = {
+  scope: "category" | "city" | "state";
+  slug: string;
+  photo: string;
+  band: string;
+  bandPhone: string;
+  focusX?: number;
+  focusY?: number;
+  bandFocusX?: number;
+  bandFocusY?: number;
+  bandPhoneFocusX?: number;
+  bandPhoneFocusY?: number;
+};
+
+export function focusValue(value: unknown): number | undefined {
+  const n = typeof value === "number" ? value : typeof value === "string" && value.trim() !== "" ? Number(value) : Number.NaN;
+  return Number.isFinite(n) ? Math.min(100, Math.max(0, Math.round(n))) : undefined;
+}
 
 export type ShellConfig = {
   header: { navLinks: ShellLink[]; loginLabel: string; postLabel: string };
@@ -164,6 +181,12 @@ const imageSchema = z.object({
   photo: z.string().max(2048),
   band: z.string().max(2048),
   bandPhone: z.string().max(2048),
+  focusX: z.number().min(0).max(100).optional(),
+  focusY: z.number().min(0).max(100).optional(),
+  bandFocusX: z.number().min(0).max(100).optional(),
+  bandFocusY: z.number().min(0).max(100).optional(),
+  bandPhoneFocusX: z.number().min(0).max(100).optional(),
+  bandPhoneFocusY: z.number().min(0).max(100).optional(),
 });
 
 /** The shape an admin saves. Every text field is cleaned before it is stored. */
@@ -303,6 +326,12 @@ function pickImages(value: unknown): ShellImage[] {
       photo: safeImage(item.photo),
       band: safeImage(item.band),
       bandPhone: safeImage(item.bandPhone),
+      focusX: focusValue(item.focusX),
+      focusY: focusValue(item.focusY),
+      bandFocusX: focusValue(item.bandFocusX),
+      bandFocusY: focusValue(item.bandFocusY),
+      bandPhoneFocusX: focusValue(item.bandPhoneFocusX),
+      bandPhoneFocusY: focusValue(item.bandPhoneFocusY),
     }))
     .filter((item) => item.slug !== "" && (item.photo || item.band || item.bandPhone));
 }

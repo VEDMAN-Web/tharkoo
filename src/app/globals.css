@@ -726,7 +726,7 @@ input, select, textarea { font-size: 16px; }
 .tk-cc-track.is-instant { transition: none !important; }
 .tk-cc-slide { position: relative; height: 100%; flex: none; }
 .tk-cc-slide > div { position: absolute; inset: 0; width: 100% !important; height: 100% !important; aspect-ratio: auto !important; }
-.tk-cc-slide img, .tk-cc-slide .tk-ph { width: 100%; height: 100%; object-fit: cover; object-position: center 20%; }
+.tk-cc-slide img, .tk-cc-slide .tk-ph { width: 100%; height: 100%; object-fit: cover; object-position: 50% 18%; }
 .tk-card-hit { position: absolute; inset: 0; z-index: 1; }
 .tk-cc-arrow {
   position: absolute;
@@ -1013,7 +1013,7 @@ input, select, textarea { font-size: 16px; }
   overflow: hidden;
 }
 .tk-tile > div { position: absolute; inset: 0; width: 100% !important; height: 100% !important; aspect-ratio: auto !important; }
-.tk-tile img { width: 100%; height: 100%; object-fit: cover; object-position: center 20%; }
+.tk-tile img { width: 100%; height: 100%; object-fit: cover; object-position: 50% 18%; }
 @media (max-width: 767px) {
   .tk-strip { --tw: 88%; }
   .tk-strip .tk-gal-nav { display: none; }

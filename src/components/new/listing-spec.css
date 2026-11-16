@@ -303,3 +303,7 @@
   font-size: 15px; line-height: 1.65; color: #1e0b38;
 }
 .tkn-ls-seo p { margin: 0 0 12px; }
+@media (max-width: 599px) {
+  .tkn-ls-crumbs > span:not(:nth-last-child(-n + 2)) { display: none; }
+  .tkn-ls-crumbs > span:nth-last-child(2) > [aria-hidden="true"] { display: none; }
+}

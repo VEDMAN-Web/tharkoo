@@ -52,7 +52,7 @@ export type ChromeData = {
   shell: ShellConfig;
   /** H7.8: the UI-text overrides for the header and the live chat. */
   texts?: UiTextMap;
-  signIn: { showMobile: boolean; image: string };
+  signIn: { showMobile: boolean; image: string; imageFocus?: string };
 };
 
 export function PathChrome({ shell, paths, children }: { shell: ChromeData; paths: UrlPaths; children: React.ReactNode }) {
@@ -92,7 +92,7 @@ export function PathChrome({ shell, paths, children }: { shell: ChromeData; path
           <MainInner>{children}</MainInner>
           <FooterNew siteName={siteName} shell={config} categories={categories} />
           <SupportChat chat={config.chat} texts={texts} hours={content.support.hours || site.supportHours || ""} />
-          <SignInPopup showMobile={signIn.showMobile} image={signIn.image} />
+          <SignInPopup showMobile={signIn.showMobile} image={signIn.image} imageFocus={signIn.imageFocus} />
         </div>
       ) : (
         <>

@@ -1,5 +1,6 @@
 "use client";
 
+import { FocalPicker } from "@/components/admin/FocalPicker";
 import { useState } from "react";
 import { Notice } from "@/components/admin/ui";
 import { SUPPORT_TOPICS, TOPIC_LABELS } from "@/server/support/constants";
@@ -206,6 +207,36 @@ function ImageRows({ items, onChange }: { items: ShellImage[]; onChange: (next: 
             Band image, phone (optional)
             <input className="adm-input" value={item.bandPhone} maxLength={2048} onChange={(e) => update(index, { bandPhone: e.target.value })} />
           </label>
+          {item.photo ? (
+            <FocalPicker
+              label="Card photo focus point"
+              aspect="4 / 3"
+              src={item.photo}
+              x={item.focusX ?? 50}
+              y={item.focusY ?? 18}
+              onChange={(next) => update(index, { focusX: next.x, focusY: next.y })}
+            />
+          ) : null}
+          {item.band ? (
+            <FocalPicker
+              label="Band focus point, desktop"
+              aspect="1232 / 400"
+              src={item.band}
+              x={item.bandFocusX ?? 72}
+              y={item.bandFocusY ?? 22}
+              onChange={(next) => update(index, { bandFocusX: next.x, bandFocusY: next.y })}
+            />
+          ) : null}
+          {item.bandPhone ? (
+            <FocalPicker
+              label="Band focus point, phone"
+              aspect="358 / 260"
+              src={item.bandPhone}
+              x={item.bandPhoneFocusX ?? 50}
+              y={item.bandPhoneFocusY ?? 12}
+              onChange={(next) => update(index, { bandPhoneFocusX: next.x, bandPhoneFocusY: next.y })}
+            />
+          ) : null}
         </div>
       ))}
       {items.length < 40 ? (

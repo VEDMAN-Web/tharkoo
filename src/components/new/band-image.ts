@@ -1,23 +1,51 @@
 import type { ShellConfig, ShellImage } from "@/server/site-links/shell-config-rules";
 
 /** A band photo: the computer image and the phone image (phone falls back to the computer image). */
-export type BandPhoto = { band: string; bandPhone: string };
+export type BandPhoto = { band: string; bandPhone: string; focus?: string; phoneFocus?: string };
 
 /** The places a page can take its band from, most specific first. Only the levels a page allows are passed. */
 export type BandLevels = { city?: string; state?: string; category?: string };
 
 /** The home hero photo, the default band. Read from the saved homepage content; null when none is set. */
-export function heroBandFrom(content: { hero?: { photo?: string; photoPhone?: string } } | null | undefined): BandPhoto | null {
-  const photo = content?.hero?.photo?.trim() || "";
+export function heroBandFrom(
+  content: { hero?: { photo?: string; photoPhone?: string; focusX?: number; focusY?: number; phoneFocusX?: number; phoneFocusY?: number } } | null | undefined,
+): BandPhoto | null {
+  const hero = content?.hero;
+  const photo = hero?.photo?.trim() || "";
   if (!photo) return null;
-  return { band: photo, bandPhone: content?.hero?.photoPhone?.trim() || photo };
+  const phone = hero?.photoPhone?.trim() || "";
+  return {
+    band: photo,
+    bandPhone: phone || photo,
+    ...(focusText(hero?.focusX, hero?.focusY, DEFAULT_BAND_FOCUS_X, DEFAULT_BAND_FOCUS_Y) ? { focus: focusText(hero?.focusX, hero?.focusY, DEFAULT_BAND_FOCUS_X, DEFAULT_BAND_FOCUS_Y) } : {}),
+    ...(phone && focusText(hero?.phoneFocusX, hero?.phoneFocusY, DEFAULT_PHONE_FOCUS_X, DEFAULT_PHONE_FOCUS_Y)
+      ? { phoneFocus: focusText(hero?.phoneFocusX, hero?.phoneFocusY, DEFAULT_PHONE_FOCUS_X, DEFAULT_PHONE_FOCUS_Y) }
+      : {}),
+  };
+}
+
+const DEFAULT_BAND_FOCUS_X = 72;
+const DEFAULT_BAND_FOCUS_Y = 22;
+const DEFAULT_PHONE_FOCUS_X = 50;
+const DEFAULT_PHONE_FOCUS_Y = 12;
+
+function focusText(x: number | undefined, y: number | undefined, defaultX: number, defaultY: number): string | undefined {
+  if (x === undefined && y === undefined) return undefined;
+  return `${x ?? defaultX}% ${y ?? defaultY}%`;
 }
 
 function imageFor(shell: ShellConfig, scope: ShellImage["scope"], slug: string | undefined): BandPhoto | null {
   if (!slug) return null;
   const image = shell.media.images.find((item) => item.scope === scope && item.slug === slug);
   if (!image || !(image.band || image.bandPhone)) return null;
-  return { band: image.band || image.bandPhone, bandPhone: image.bandPhone || image.band };
+  const focus = focusText(image.bandFocusX, image.bandFocusY, DEFAULT_BAND_FOCUS_X, DEFAULT_BAND_FOCUS_Y);
+  const phoneFocus = focusText(image.bandPhoneFocusX, image.bandPhoneFocusY, DEFAULT_PHONE_FOCUS_X, DEFAULT_PHONE_FOCUS_Y);
+  return {
+    band: image.band || image.bandPhone,
+    bandPhone: image.bandPhone || image.band,
+    ...(focus ? { focus } : {}),
+    ...(phoneFocus ? { phoneFocus } : {}),
+  };
 }
 
 /**
@@ -49,17 +77,20 @@ export function cityBandImageFor(shell: ShellConfig, citySlug: string): ShellIma
   return city && (city.band || city.bandPhone) ? city : null;
 }
 
-const DEFAULT_BAND_FOCUS = "72% 22%";
+const DEFAULT_BAND_FOCUS = `${DEFAULT_BAND_FOCUS_X}% ${DEFAULT_BAND_FOCUS_Y}%`;
 
 /**
- * The CSS variables for the band: the computer image and the phone image. The URLs were checked when they were saved.
- * With no photo the band keeps its gradient (see listing-spec.css).
+ * The CSS variables for the band: the computer image, the phone image and their focus points. The URLs were checked
+ * when they were saved. With no photo the band keeps its gradient (see listing-spec.css).
  */
 export function bandStyleFor(image: Partial<BandPhoto> | null): Record<string, string> {
   const style: Record<string, string> = {};
   if (image?.band) style["--band-desk"] = `url("${image.band}")`;
   const phone = image?.bandPhone || image?.band;
   if (phone) style["--band-phone"] = `url("${phone}")`;
-  if (image?.band && (!image.bandPhone || image.bandPhone === image.band)) style["--band-focus-phone"] = DEFAULT_BAND_FOCUS;
+  if (image?.focus) style["--band-focus"] = image.focus;
+  const samePhoto = Boolean(image?.band) && (!image?.bandPhone || image.bandPhone === image.band);
+  if (samePhoto) style["--band-focus-phone"] = image?.focus || DEFAULT_BAND_FOCUS;
+  else if (image?.phoneFocus) style["--band-focus-phone"] = image.phoneFocus;
   return style;
 }

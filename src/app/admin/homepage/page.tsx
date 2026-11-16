@@ -27,7 +27,7 @@ export default async function HomepageAdminPage() {
           initial={{ seoTitle: content.seoTitle, seoDescription: content.seoDescription }}
           siteLabel={canonical("/").replace(/^https?:\/\//, "")}
         />
-        <LoginImageField initial={content.loginImage} />
+        <LoginImageField initial={content.loginImage} focus={{ x: content.loginImageFocusX, y: content.loginImageFocusY }} />
       </div>
       <p className="mb-4 t-small text-muted">
         Build the home page from blocks: add, reorder, hide or schedule them and change every word and photo. Save a draft, preview it, then publish.
