@@ -7,8 +7,10 @@ import { readAwayHours } from "@/server/availability/service";
 import { idCheckRequired } from "@/server/settings/id-check";
 import { readWatermarkSettings } from "@/server/settings/watermark";
 import { newDesignOn } from "@/server/site-links/new-design";
+import { readLogos } from "@/server/settings/logo";
 import { AwayHoursSetting } from "./AwayHoursSetting";
 import { IdCheckSwitch } from "./IdCheckSwitch";
+import { LogoSettings } from "./LogoSettings";
 import { NewDesignSwitch } from "./NewDesignSwitch";
 import { WatermarkSettings } from "./WatermarkSettings";
 
@@ -26,6 +28,7 @@ export default async function Page() {
       {isSuperadmin ? <NewDesignSwitch initial={await newDesignOn()} /> : null}
       {isSuperadmin ? <IdCheckSwitch initial={await idCheckRequired()} /> : null}
       {isSuperadmin ? <WatermarkSettings initial={await readWatermarkSettings()} /> : null}
+      {isAdmin ? <LogoSettings {...(({ light, dark }) => ({ light, dark }))(await readLogos())} /> : null}
       {isAdmin ? <AwayHoursSetting initial={await readAwayHours()} /> : null}
       <p className="mb-3 t-small text-muted">Age gate, cookies, hours and brand. Also on the CMS homepage editor.</p>
       <p className="mb-3 t-small">

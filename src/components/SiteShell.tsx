@@ -4,6 +4,7 @@ import { plain } from "@/lib/plain";
 import { safeHref } from "@/lib/sanitize";
 import { textOverrides } from "@/app/admin/ui-text/store";
 import { readContent } from "@/lib/ui/site-content";
+import { siteLogos } from "@/lib/brand";
 import { pickTexts } from "@/lib/ui/text";
 import { newDesignOn } from "@/server/site-links/new-design";
 import { smsDeliverable } from "@/server/auth/otp";
@@ -40,6 +41,8 @@ type SiteFields = {
   countryName?: string;
   supportHours?: string;
   logoText?: string;
+  logoUrl?: string;
+  logoDarkUrl?: string;
   homepage?: unknown;
   footerLinks?: unknown;
   socialLinks?: unknown;
@@ -83,6 +86,7 @@ function chromeData(shell: Shell, signIn: ChromeData["signIn"]): ChromeData {
       countryName: site.countryName,
       supportHours: site.supportHours,
       logoText: site.logoText,
+      logos: siteLogos(site),
     },
     content: { hero, header, socials, support, footer, age, cookies },
     footerLinks: plain(navLinks(site.footerLinks)),

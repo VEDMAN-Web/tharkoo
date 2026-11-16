@@ -2214,3 +2214,7 @@ body:has([data-tk="bottom-bar"]) .tkn-float { bottom: 104px; }
 @media (max-width: 767px) { .tkn-chatp { right: 0; left: 0; bottom: 0; width: 100%; height: min(86vh, 640px); border-radius: 22px 22px 0 0; } }
 
 @media (max-width: 380px) { .tkn-header-row { gap: 8px; } .tkn-header-actions { gap: 6px; } .tkn-header-actions .tkn-btn { padding: 0 12px; } .tkn-brand-name { font-size: 17px; } }
+.tkn-logo-link { display: inline-flex; align-items: center; flex: none; min-height: 44px; text-decoration: none; }
+.tkn-logo { display: block; height: 40px; width: auto; max-width: none; }
+@media (max-width: 389px) { .tkn-logo { height: 32px; } }
+.tkn-foot-brand .tkn-logo-link { min-height: 40px; }

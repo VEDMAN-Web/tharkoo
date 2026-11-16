@@ -28,7 +28,7 @@ export async function HomeLayout({ blocks }: { blocks: BlockBase[] }) {
       <JsonLd
         data={[
           await siteOrganizationNode(site.name || "Tharkoo", {
-            logo: canonical("/brand/logo-mark.svg"),
+            logo: canonical("/brand/logo-mark-512.png"),
             sameAs: content.socials.map((item) => item.href),
           }),
           websiteNode(site.name || "Tharkoo", searchPath(paths)),
