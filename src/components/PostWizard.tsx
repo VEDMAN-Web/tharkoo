@@ -129,6 +129,8 @@ export function PostWizard({
   const [draftStatus, setDraftStatus] = useState("");
   const money = usePostingMoney();
   const alreadyPaid = draftStatus !== "" && draftStatus !== "draft";
+  /** H7.118: the ad is already posted, so this is an edit: same ad, no fee, "Save changes". */
+  const editing = alreadyPaid;
   const chargesFee = money.paid;
   const shownBalance = serverShort ? serverShort.balance : money.balance;
   const short = alreadyPaid ? 0 : serverShort ? shortfallOf(serverShort.need, serverShort.balance) : shortfallOf(money.fee, money.balance);
@@ -535,10 +537,10 @@ export function PostWizard({
   const byline = people ? [nickname.trim(), age.trim()].filter(Boolean).join(", ") : "";
 
   if (done && newDesign) {
-    const isLive = publishedStatus === "active";
+    const isLive = publishedStatus === "active" || (editing && publishedStatus === "paused");
     return (
       <PostSuccess
-        copy={newSuccessCopy(copy, isLive)}
+        copy={newSuccessCopy(copy, isLive || editing, editing)}
         live={isLive}
         where={[cityName, category?.name].filter(Boolean).join(" ")}
         ad={adPreview}
@@ -550,6 +552,8 @@ export function PostWizard({
         plans={visiblePlans.filter((plan) => (plan.amount ?? 0) > 0).slice(0, 2)}
         planNote={planNote}
         onPlan={buyPlan}
+        saved={editing}
+        paused={publishedStatus === "paused"}
       />
     );
   }
@@ -806,7 +810,7 @@ export function PostWizard({
 
   /** H7.83: the New design. Five steps, a step rail, the live preview (the real ad card) and the tip. Logic is shared with the three-step form. */
   function renderNewDesign() {
-    const stepCopy = newStepCopy(current, copy, Boolean(about), people, money.fee);
+    const stepCopy = newStepCopy(current, copy, Boolean(about), people, money.fee, editing);
     const railItems: RailItem[] = flow.map((key, index) => ({
       key,
       label: key === "more" ? RAIL_MORE_LABEL : RAIL_LABELS[key],
@@ -873,7 +877,7 @@ export function PostWizard({
             <div className="tkp-scroll" onKeyDown={moveOnEnter}>
               {current === "category" ? (
                 <>
-                  <CategoryTiles categories={categories} selectedId={categoryId} onPick={(id) => { setCategoryId(id); setSubcategoryId(""); }} />
+                  <CategoryTiles categories={categories} selectedId={categoryId} locked={editing} onPick={(id) => { setCategoryId(id); setSubcategoryId(""); }} />
                   {errors.category ? <p className="tk-error" data-tk="field-error">{errors.category}</p> : null}
                   {subOptions.length > 0 ? (
                     <>

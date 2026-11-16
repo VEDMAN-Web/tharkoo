@@ -78,8 +78,8 @@ test.describe("4 Advertiser", () => {
     await page.locator("[data-tk=photo-input]").waitFor({ state: "attached" });
     await page.locator("[data-tk=go-on]").click(); // photos -> contact
     await page.locator("[data-tk=go-on]").click(); // contact -> review
-    await page.locator(".tkp-nav button", { hasText: "PUBLISH" }).click();
-    await page.locator("[data-tk=step-title]").filter({ hasText: /live|review|pending/i }).waitFor();
+    await page.locator(".tkp-nav button", { hasText: /PUBLISH|Save changes/i }).click();
+    await page.locator("[data-tk=step-title]").filter({ hasText: /live|review|pending|saved/i }).waitFor();
 
     // Pause and resume from My ads. A paused ad is no longer public, then it is live again.
     await page.goto("/u/account/ads/");

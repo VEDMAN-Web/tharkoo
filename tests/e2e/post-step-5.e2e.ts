@@ -76,10 +76,10 @@ async function reachAbout(page: Page, title: string, prefix: string) {
 async function consentAndPublish(page: Page) {
   await page.locator("#consent-terms").check();
   await page.locator("#consent-adult").check();
-  const publish = page.getByRole("button", { name: /^Publish( ad| for \d+ credits)$/ });
+  const publish = page.getByRole("button", { name: /^(Publish( ad| for \d+ credits)|Save changes)$/ });
   expect(await publish.evaluate((node) => getComputedStyle(node).textTransform)).toBe("none");
   await publish.click();
-  await expect(page.locator("[data-tk=step-title]")).toHaveText("Your ad is live");
+  await expect(page.locator("[data-tk=step-title]")).toHaveText(/^(Your ad is live|Changes saved)$/);
 }
 
 async function seen(page: Page, path: string, text: string) {
@@ -172,8 +172,9 @@ test.describe("H7.86 post an ad, step 5 and the success screen", () => {
       await page.locator("[data-tk=go-on]").click();
       await stepOf(page, step);
     }
-    await expect(page.locator("[data-tk=step-title]")).toHaveText("Review and publish");
+    await expect(page.locator("[data-tk=step-title]")).toHaveText("Review your changes");
     await consentAndPublish(page);
+    await expect(page.locator("[data-tk=step-title]")).toHaveText("Changes saved");
     await page.goto("/u/account/ads/");
     await expect(page.locator("[data-tk=card]").filter({ hasText: final }).first()).toBeVisible();
     const finalHref = await page.locator("[data-tk=card]").filter({ hasText: final }).first().locator('a[href*="/ad/"]').first().getAttribute("href");
@@ -496,7 +497,7 @@ test.describe("H7.86 post an ad, step 5 and the success screen", () => {
     await expect(page.locator(".tkp-nav [data-tk=go-on]")).toHaveText("Recharge now");
   });
 
-  test("a live ad can be edited without a fee: no pay card and a plain Publish ad button", async ({ page, baseURL }) => {
+  test("a live ad can be edited without a fee: no pay card, no top up, and a Save changes button", async ({ page, baseURL }) => {
     test.setTimeout(240_000);
     await stubPostingFee(page);
     await newPoster(page, baseURL!, "freeedit", true, 100);
@@ -509,8 +510,9 @@ test.describe("H7.86 post an ad, step 5 and the success screen", () => {
     await page.goto(`/u/post-insert/?draft=${draft}&step=5`);
     await stepOf(page, 5);
     await expect(page.locator("[data-tk=pay-card]")).toHaveCount(0);
-    await expect(page.locator(".tkp-nav [data-tk=go-on]")).toHaveText("Publish ad");
+    await expect(page.locator(".tkp-nav [data-tk=go-on]")).toHaveText("Save changes");
     await expect(page.locator("[data-tk=credits-card]")).toContainText("no charge");
+    await expect(page.locator("[data-tk=credits-topup]")).toHaveCount(0);
   });
 
   test("a photo that cannot be added keeps a red tile with its reason on it and a neutral placeholder, not a broken image", async ({ page, baseURL }, info) => {
