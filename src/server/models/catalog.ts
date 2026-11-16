@@ -38,6 +38,20 @@ export interface CategoryFieldDoc {
 export const CATEGORY_KINDS = ["goods", "property", "vehicle", "job", "service", "people"] as const;
 export type CategoryKind = (typeof CATEGORY_KINDS)[number];
 
+export interface CatalogPhotoDoc {
+  mediaId: Types.ObjectId;
+  focusX: number;
+  focusY: number;
+  alt?: string;
+}
+
+export interface CatalogBandDoc {
+  mediaId: Types.ObjectId;
+  phoneMediaId?: Types.ObjectId;
+  focusX: number;
+  focusY: number;
+}
+
 export interface CategoryDoc {
   _id?: Types.ObjectId;
   slug: string;
@@ -68,6 +82,8 @@ export interface CategoryDoc {
   minListingsLocality?: number;
   /** Photos per ad for a superadmin partner import (H6.12). Null means the default of 10. */
   importMaxPhotos?: number | null;
+  photo?: CatalogPhotoDoc;
+  band?: CatalogBandDoc;
   seedBatch?: string;
   createdAt?: Date;
   updatedAt?: Date;
@@ -93,10 +109,22 @@ export interface LocationDoc {
   faqs?: FaqDoc[];
   noindex?: boolean;
   canonicalOverride?: string;
+  photo?: CatalogPhotoDoc;
+  band?: CatalogBandDoc;
   seedBatch?: string;
   createdAt?: Date;
   updatedAt?: Date;
 }
+
+const focusPoint = { type: Number, min: 0, max: 100, default: 50 };
+const catalogPhotoSchema = new Schema<CatalogPhotoDoc>(
+  { mediaId: { type: Schema.Types.ObjectId, required: true }, focusX: focusPoint, focusY: focusPoint, alt: { type: String } },
+  { _id: false },
+);
+const catalogBandSchema = new Schema<CatalogBandDoc>(
+  { mediaId: { type: Schema.Types.ObjectId, required: true }, phoneMediaId: { type: Schema.Types.ObjectId }, focusX: focusPoint, focusY: focusPoint },
+  { _id: false },
+);
 
 const fieldDefinitionSchema = new Schema<CategoryFieldDoc>(
   {
@@ -161,6 +189,8 @@ const categorySchema = new Schema<CategoryDoc>(
     minListingsIndex: { type: Number, default: 3 },
     minListingsLocality: { type: Number, default: 10 },
     importMaxPhotos: { type: Number, default: null, min: 1, max: 30 },
+    photo: { type: catalogPhotoSchema, default: undefined },
+    band: { type: catalogBandSchema, default: undefined },
     seedBatch: { type: String },
   },
   { timestamps: true, collection: collectionName("categories", "Category") },
@@ -190,6 +220,8 @@ const locationSchema = new Schema<LocationDoc>(
     faqs: { type: [{ q: { type: String }, a: { type: String } }], default: [] },
     noindex: { type: Boolean, default: false },
     canonicalOverride: { type: String, default: "" },
+    photo: { type: catalogPhotoSchema, default: undefined },
+    band: { type: catalogBandSchema, default: undefined },
     seedBatch: { type: String },
   },
   { timestamps: true, collection: collectionName("locations", "Location") },

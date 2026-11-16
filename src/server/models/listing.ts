@@ -49,6 +49,7 @@ export interface ListingDoc {
   /** "Video verified" badge (H6.5): set for 90 days after a completed live tour. */
   videoVerifiedUntil?: Date | null;
   lastModerationAt?: Date;
+  demoEndedBatch?: string;
   seoNoindex?: boolean;
   /** Admin only: the ad stays reachable by URL but is skipped in feeds. */
   feedHidden?: boolean;
@@ -179,6 +180,7 @@ const listingSchema = new Schema<ListingDoc>(
     expiresAt: { type: Date },
     videoVerifiedUntil: { type: Date, default: null },
     lastModerationAt: { type: Date },
+    demoEndedBatch: { type: String },
     seoNoindex: { type: Boolean, default: true },
     feedHidden: { type: Boolean, default: false },
     homeShow: { type: Boolean, default: false },
@@ -193,6 +195,7 @@ listingSchema.index({ status: 1, stateId: 1, publishedAt: -1 });
 listingSchema.index({ status: 1, cityId: 1, publishedAt: -1 });
 listingSchema.index({ status: 1, publishedAt: -1 });
 listingSchema.index({ ownerId: 1, status: 1 });
+listingSchema.index({ status: 1, lastModerationAt: 1, publishedAt: -1 });
 listingSchema.index({ title: "text", description: "text" });
 
 const listingVersionSchema = new Schema<ListingVersionDoc>(
@@ -207,6 +210,7 @@ const listingVersionSchema = new Schema<ListingVersionDoc>(
     collection: collectionName("listing_versions", "ListingVersion"),
   },
 );
+listingVersionSchema.index({ listingId: 1, version: -1 });
 appendOnlyPlugin(listingVersionSchema, collectionName("listing_versions", "ListingVersion"));
 
 const mediaAssetSchema = new Schema<MediaAssetDoc>(
