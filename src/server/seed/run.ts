@@ -502,7 +502,8 @@ async function seedEditorial() {
     await Page.updateOne({ slug: page.slug }, { $setOnInsert: { ...page, status: "published" } }, { upsert: true });
   }
   for (const guide of publishedGuides()) {
-    const update = { $setOnInsert: { slug: guide.slug, title: guide.title, body: guide.body, status: guide.status, date: "November 2026", author: "Tharkoo" } };
+    const cover = "cover" in guide && guide.cover ? { cover: guide.cover, coverAlt: guide.coverAlt, coverFocus: guide.coverFocus } : {};
+    const update = { $setOnInsert: { slug: guide.slug, title: guide.title, body: guide.body, status: guide.status, date: "November 2026", author: "Tharkoo", ...cover } };
     if (guide.kind === "help") await HelpArticle.updateOne({ slug: guide.slug }, update, { upsert: true });
     else await BlogPost.updateOne({ slug: guide.slug }, update, { upsert: true });
   }

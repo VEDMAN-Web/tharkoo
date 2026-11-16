@@ -1,5 +1,6 @@
 "use client";
 
+import { Suspense } from "react";
 import { usePathname } from "next/navigation";
 import { JsonLd } from "@/lib/jsonld";
 import { canonical } from "@/lib/seo";
@@ -21,6 +22,7 @@ import { MainInner } from "./MainInner";
 import { UrlPathProvider } from "./UrlPaths";
 import { UiTextProvider } from "./help/UiTextProvider";
 import { SupportChat } from "./chat/SupportChat";
+import { RechargeHost } from "./recharge/RechargeHost";
 import { SUPPORT_PHONE, SUPPORT_TELEGRAM } from "@/lib/support";
 import { SignInPopup } from "./auth/SignInPopup";
 import { AccountProvider } from "./account/AccountContext";
@@ -95,6 +97,9 @@ export function PathChrome({ shell, paths, children }: { shell: ChromeData; path
           <MainInner>{children}</MainInner>
           <FooterNew siteName={siteName} logo={logos.light} shell={config} categories={categories} />
           <SupportChat chat={config.chat} texts={texts} hours={content.support.hours || site.supportHours || ""} />
+          <Suspense fallback={null}>
+            <RechargeHost />
+          </Suspense>
           <SignInPopup showMobile={signIn.showMobile} image={signIn.image} imageFocus={signIn.imageFocus} />
         </div>
       ) : (
@@ -137,7 +142,7 @@ export function PathChrome({ shell, paths, children }: { shell: ChromeData; path
         lead={content.age.lead}
         rest={content.age.rest}
         terms={content.age.terms}
-        yes={content.age.yes === "ACCEPT" ? "Accept" : content.age.yes}
+        yes={content.age.yes === "ACCEPT" || content.age.yes === "Accept" ? "I am 18 or older, enter" : content.age.yes}
         no={content.age.no}
         noHref={safeHref(content.age.noHref) || "https://www.google.com"}
       />

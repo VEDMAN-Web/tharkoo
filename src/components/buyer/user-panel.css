@@ -303,3 +303,10 @@
 .up-tour-line { display: flex; align-items: center; flex-wrap: wrap; gap: 6px; margin: 0; padding: 4px 2px; font-size: 14px; color: #4a2870; }
 .up-tour-line svg { color: #a8124f; flex: none; }
 .up-tour-line strong { color: #1e0b38; }
+.up-check { display: flex; align-items: center; gap: 10px; min-height: 44px; font-size: 14px; font-weight: 600; color: #1e0b38; }
+.up-check input { width: 22px; height: 22px; accent-color: #c2185b; flex: none; }
+.up-table-wrap { overflow-x: auto; }
+.up-table { width: 100%; border-collapse: collapse; font-size: 14px; color: #1e0b38; }
+.up-table th { text-align: left; font-size: 12px; font-weight: 700; color: #6b4a8a; padding: 8px 10px; border-bottom: 1px solid #ead8f0; }
+.up-table td { padding: 12px 10px; border-bottom: 1px solid #f3e8f7; }
+.up-table td:nth-child(n+3), .up-table th:nth-child(n+3) { text-align: right; }

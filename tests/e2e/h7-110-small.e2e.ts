@@ -94,13 +94,13 @@ test.describe("H7.110 small fixes (4-4)", () => {
     await api.dispose();
   });
 
-  test("the age gate button reads Accept, in sentence case", async ({ browser, baseURL }) => {
+  test("the age gate button reads I am 18 or older, enter, in sentence case", async ({ browser, baseURL }) => {
     const context = await browser.newContext({ baseURL });
     const page = await context.newPage();
     await page.goto("/");
     const button = page.locator("[data-tk=age-accept]");
     await expect(button).toBeVisible();
-    await expect(button).toHaveText("Accept");
+    await expect(button).toHaveText("I am 18 or older, enter");
     expect(await button.evaluate((node) => getComputedStyle(node).textTransform)).toBe("none");
     await context.close();
   });

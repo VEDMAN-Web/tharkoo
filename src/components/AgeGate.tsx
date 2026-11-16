@@ -10,7 +10,7 @@ export function AgeGate({
   lead = "I am over 18 years old",
   rest = "and I accept the terms of use of this site.",
   terms = "Terms and Conditions",
-  yes = "Accept",
+  yes = "I am 18 or older, enter",
   no = "Decline",
   noHref = "https://www.google.com",
 }: {

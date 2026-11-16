@@ -9,6 +9,7 @@ import { CreditPack } from "@/server/models";
 import { randomToken } from "@/server/shared/crypto";
 import { CoinPurchase } from "@/server/wallet/models";
 import { coinProvider, providerEventSchema, type ProviderEvent } from "@/server/wallet/provider";
+import { readMoneySettings } from "@/server/billing/money-settings";
 import { getFinanceSettings } from "@/server/wallet/settings";
 
 const audit = new AuditRepository();
@@ -40,11 +41,12 @@ function present(row: {
 /** The coin packs a user can buy. These are the existing credit packs: credits are coins. */
 export async function listCoinPacks() {
   await connectDb();
-  const [rows, settings] = await Promise.all([
+  const [rows, settings, money] = await Promise.all([
     CreditPack.find({ $or: [{ status: "active" }, { status: { $exists: false } }] })
       .sort({ order: 1, credits: 1 })
       .lean(),
     getFinanceSettings(),
+    readMoneySettings(),
   ]);
   return {
     coinValueInr: settings.coinValueInr,
@@ -55,7 +57,7 @@ export async function listCoinPacks() {
       .map((row) => ({
         id: String(row._id),
         coins: (row.credits ?? 0) + (row.bonus ?? 0),
-        price: Math.round(row.price ?? (row.credits ?? 0) * settings.coinValueInr),
+        price: Math.round(row.price ?? (row.credits ?? 0) * money.creditPriceInr),
         tag: row.tag ?? null,
       })),
   };
@@ -83,7 +85,7 @@ export async function startCoinPurchase(input: {
   if (!pack || (pack.status && pack.status !== "active")) throw new NotFoundError("Not found");
   const coins = (pack.credits ?? 0) + (pack.bonus ?? 0);
   const settings = await getFinanceSettings();
-  const amount = Math.round(pack.price ?? (pack.credits ?? 0) * settings.coinValueInr);
+  const amount = Math.round(pack.price ?? (pack.credits ?? 0) * (await readMoneySettings()).creditPriceInr);
   if (!Number.isInteger(coins) || coins < 1 || amount < 1) throw new NotFoundError("Not found");
   const provider = coinProvider();
   const purchaseId = String(new mongoose.Types.ObjectId());

@@ -8,6 +8,7 @@ import { TrackView } from "@/components/ui/RecentlyViewed";
 import { adPath, type UrlPaths } from "@/lib/urls";
 import { isCityAlias } from "@/lib/seo/district-alias";
 import { makeT, type UiTextMap } from "@/lib/ui/text";
+import { PostStrip } from "@/components/ui/PostStrip";
 import { formatPrice } from "@/components/search/price";
 import { CitySync } from "@/components/CityContext";
 import { BadgeCheck, ShieldCheck } from "lucide-react";
@@ -231,6 +232,7 @@ export function NewAdDetail({
               labels={cardLabels}
             />
           ) : null}
+          <PostStrip text={t("post.strip.text")} button={t("post.strip.button")} feeText={t("post.strip.fee")} />
           <div className={`tkn-ad-bar${peopleAd ? " has-call" : tour ? " has-video" : ""}`} data-tk="bottom-bar">
             <ContactButtons sticky channels={peopleAd ? ["phone", "whatsapp"] : ["whatsapp"]} />
           </div>
