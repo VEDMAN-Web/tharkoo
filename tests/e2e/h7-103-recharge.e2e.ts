@@ -133,6 +133,7 @@ test.describe("H7.103 recharge sheet and mock checkout", () => {
     await expect.poll(async () => page.locator("#tkn-chat-input").inputValue()).toContain("credit recharge");
     await page.reload();
     await page.locator('[data-tk="open-recharge"]').click();
+    await expect(page.locator('[data-tk="recharge-pack"]').first()).toBeVisible();
     await page.locator('[data-tk="recharge-support"]').click();
     await expect.poll(async () => page.locator("#tkn-chat-input").inputValue()).toMatch(/Pack: .* credits\. Amount: Rs .*Method: Card/);
   });
