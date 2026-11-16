@@ -67,7 +67,7 @@
     transform: scale(1.04);
   }
 
-  .tk-rv:not(.is-in) {
+  .tk-motion .tk-rv:not(.is-in) {
     opacity: 0;
     transform: translate3d(0, 16px, 0);
   }

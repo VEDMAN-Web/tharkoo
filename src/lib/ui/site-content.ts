@@ -201,7 +201,7 @@ export function defaultSiteContent(): SiteContent {
       lead: "I am over 18 years old",
       rest: "and I accept the terms of use of this site.",
       terms: "Terms and Conditions",
-      yes: "ACCEPT",
+      yes: "Accept",
       no: "Decline",
       noHref: "https://www.google.com/",
     },

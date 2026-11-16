@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import { Video } from "lucide-react";
 import { api, friendlyError, hasSessionHint } from "@/lib/ui/api";
 import { roomLine, tourStatusLabel } from "../ad/tourLabels";
@@ -52,6 +53,14 @@ export function TourInbox() {
 
   const mine = (rows ?? []).filter((row) => row.role === "advertiser");
 
+  if (rows && mine.length === 0 && !error) {
+    return (
+      <p className="up-tour-line" data-tk="tour-inbox" data-empty="yes">
+        <Video size={18} aria-hidden /> <strong>Live video tours:</strong> no requests yet. <Link href="/how-it-works/" className="up-link">How video tours work</Link>
+      </p>
+    );
+  }
+
   return (
     <section className="tk-dcard" aria-labelledby="tour-inbox-title" data-tk="tour-inbox" style={{ marginTop: 16 }}>
       <h2 id="tour-inbox-title">
@@ -63,7 +72,6 @@ export function TourInbox() {
         </p>
       ) : null}
       {rows === null ? <p className="t-small">Loading tour requests…</p> : null}
-      {rows && mine.length === 0 ? <p className="t-small">No live video tour requests yet.</p> : null}
       {mine.length ? (
         <ul style={{ listStyle: "none", padding: 0, margin: 0, display: "grid", gap: 12 }}>
           {mine.map((tour) => {

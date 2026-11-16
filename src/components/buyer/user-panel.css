@@ -300,3 +300,6 @@
 .up-note { margin: 0; padding: 10px 14px; border-radius: 12px; background: #fdf0f7; font-size: 14px; color: #4a2870; }
 .up-list { margin: 0; padding-left: 20px; display: grid; gap: 6px; font-size: 14px; line-height: 1.5; color: #4a2870; }
 .up-actions { display: flex; flex-wrap: wrap; gap: 10px; }
+.up-tour-line { display: flex; align-items: center; flex-wrap: wrap; gap: 6px; margin: 0; padding: 4px 2px; font-size: 14px; color: #4a2870; }
+.up-tour-line svg { color: #a8124f; flex: none; }
+.up-tour-line strong { color: #1e0b38; }
