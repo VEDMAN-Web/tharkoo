@@ -110,9 +110,9 @@ body:has(.tkn-ad) .tkn-footer { margin-top: 48px; }
 .tkn .tkn-similar .tkh-ad-body { padding: 10px 12px 12px; }
 .tkn .tkn-similar .tkh-ad-title { font-size: 14px; line-height: 1.35; }
 .tkn .tkn-similar .tkh-ad-pills { margin-top: 8px; gap: 6px; }
-.tkn .tkn-similar .tkh-pill { padding: 3px 9px; font-size: 11px; }
+.tkn .tkn-similar .tkh-pill { padding: 2px 9px; font-size: 12px; }
 .tkn .tkn-similar .tkh-heart { top: 8px !important; right: 8px !important; width: 32px !important; min-width: 32px !important; height: 32px !important; min-height: 32px !important; }
-.tkn .tkn-similar .tkh-ad-watermark { right: 8px; bottom: 8px; font-size: 10px; }
+.tkn .tkn-similar .tkh-ad-watermark { right: 8px; bottom: 8px; font-size: 12px; }
 
 .tkn .tkn-ad-bar { display: none; }
 

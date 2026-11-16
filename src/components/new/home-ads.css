@@ -239,6 +239,8 @@
 .tkh-ad-link {
   color: inherit;
   text-decoration: none;
+  /* H7.127: a tap target of at least 24 px high, without changing the layout of the line. */
+  padding-block: 4px;
 }
 .tkh-ad-link::after {
   content: "";
@@ -260,6 +262,10 @@
 }
 .tkh-pill {
   position: relative;
+  display: inline-flex;
+  align-items: center;
+  min-height: 24px;
+  box-sizing: border-box;
   padding: 5px 12px;
   border-radius: 999px;
   font-size: 13px;
@@ -467,4 +473,16 @@
   height: 100%;
   object-fit: cover;
   object-position: 50% 18%;
+}
+
+/* H7.127: on a phone a card title may take two lines instead of one cut line. */
+@media (max-width: 639px) {
+  .tkh-ad-title {
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+    line-clamp: 2;
+    white-space: normal;
+    overflow: hidden;
+  }
 }
