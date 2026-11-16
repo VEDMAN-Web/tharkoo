@@ -27,6 +27,7 @@ interface BaseDoc {
 export interface PageLayoutDoc extends BaseDoc {
   key: PageKey;
   scope: string;
+  format?: 1 | 2;
   draft: BlockBase[];
   published: BlockBase[];
   version: number;
@@ -38,6 +39,7 @@ export interface PageLayoutDoc extends BaseDoc {
 export interface PageLayoutRevisionDoc extends BaseDoc {
   key: PageKey;
   scope: string;
+  format?: 1 | 2;
   version: number;
   blocks: BlockBase[];
   publishedBy: string;
@@ -63,6 +65,11 @@ export interface SiteMediaDoc extends BaseDoc {
   uploadedBy: string;
   /** True when the alt text was filled from the file name and no one has checked it yet (H6.12). */
   altAuto?: boolean;
+  trashedAt?: Date | null;
+  purgeAfter?: Date | null;
+  phoneVariantId?: Types.ObjectId | null;
+  focusX?: number;
+  focusY?: number;
 }
 
 export interface ListingPinDoc extends BaseDoc {
@@ -78,6 +85,7 @@ const pageLayoutSchema = new Schema<PageLayoutDoc>(
   {
     key: { type: String, enum: PAGE_KEYS, required: true },
     scope: { type: String, required: true, default: "default" },
+    format: { type: Number, enum: [1, 2], default: 1 },
     draft: { type: Schema.Types.Mixed, default: [] },
     published: { type: Schema.Types.Mixed, default: [] },
     version: { type: Number, default: 0 },
@@ -94,6 +102,7 @@ const pageLayoutRevisionSchema = new Schema<PageLayoutRevisionDoc>(
   {
     key: { type: String, enum: PAGE_KEYS, required: true },
     scope: { type: String, required: true },
+    format: { type: Number, enum: [1, 2], default: 1 },
     version: { type: Number, required: true },
     blocks: { type: Schema.Types.Mixed, default: [] },
     publishedBy: { type: String, default: "" },
@@ -126,6 +135,11 @@ const siteMediaSchema = new Schema<SiteMediaDoc>(
     tags: { type: [String], default: [] },
     uploadedBy: { type: String, default: "" },
     altAuto: { type: Boolean, default: false },
+    trashedAt: { type: Date, default: null },
+    purgeAfter: { type: Date, default: null },
+    phoneVariantId: { type: Schema.Types.ObjectId, default: null },
+    focusX: { type: Number, min: 0, max: 100, default: 50 },
+    focusY: { type: Number, min: 0, max: 100, default: 50 },
   },
   { timestamps: { createdAt: true, updatedAt: false }, collection: collectionName("site_media", "SiteMedia") },
 );
