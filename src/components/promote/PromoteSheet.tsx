@@ -34,6 +34,8 @@ export function PromoteSheet({ options, onClose }: { options: PromoteOptions; on
   const [error, setError] = useState("");
   const [done, setDone] = useState<Done | null>(null);
   const panel = useRef<HTMLDivElement>(null);
+  const inFlight = useRef(false);
+  const keyRef = useRef<{ plan: string; key: string } | null>(null);
 
   useEffect(() => {
     if (!signedIn) return;
@@ -76,15 +78,21 @@ export function PromoteSheet({ options, onClose }: { options: PromoteOptions; on
   }, [onClose, short]);
 
   const promote = useCallback(async () => {
-    if (!chosen || busy) return;
+    if (!chosen || busy || inFlight.current) return;
+    inFlight.current = true;
     setBusy(true);
     setError("");
+    // One key per sheet open and plan, reused for every click, so a repeated click can never be a second purchase.
+    if (keyRef.current?.plan !== chosen.id) keyRef.current = { plan: chosen.id, key: idempotencyKey(`promote-${options.listingId}-${chosen.id}`) };
+    const key = keyRef.current.key;
     const res = await api<{ endsAt: string | null; balance: number }>("/api/promotions", {
       method: "POST",
-      body: JSON.stringify({ listingId: options.listingId, productId: chosen.id, idempotencyKey: idempotencyKey(`promote-${options.listingId}-${chosen.id}`) }),
+      body: JSON.stringify({ listingId: options.listingId, productId: chosen.id, idempotencyKey: key }),
     });
+    inFlight.current = false;
     setBusy(false);
     if (!res.ok) {
+      keyRef.current = null;
       if (res.status === 402) {
         const wallet = await api<{ balance: number }>("/api/wallet/");
         return setBalance(wallet.ok ? Number(wallet.data.balance) || 0 : 0);

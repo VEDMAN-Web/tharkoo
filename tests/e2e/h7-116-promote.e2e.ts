@@ -106,6 +106,49 @@ test.describe("H7.116 Promote an ad", () => {
     await expect(sheet).toHaveCount(0);
   });
 
+  test("two clicks back to back on Promote for N credits charge once and make one promotion", async ({ page, baseURL }) => {
+    test.setTimeout(240_000);
+    const ad = await createLiveAd(page, baseURL!, "promodouble");
+    await withLocalDb((db) => db.collection("listings").updateOne({ _id: new ObjectId(ad.listingId) }, { $set: { expiresAt: new Date(Date.now() + 60 * 86_400_000) } }));
+    await grantCredits(page, 2000);
+    const before = await walletBalance(page);
+    await page.goto("/u/account/ads/");
+    const card = page.locator("[data-tk=card]").filter({ hasText: ad.title }).first();
+    await card.locator("[data-tk=promote-open]").click();
+    const sheet = page.locator("[data-tk=promote-sheet]");
+    await sheet.locator("[data-tk=promote-plan][data-code=top]").click();
+    const pay = sheet.locator("[data-tk=promote-pay]");
+    await expect(pay).toHaveText("Promote for 499 credits");
+    await pay.evaluate((node) => {
+      (node as HTMLButtonElement).click();
+      (node as HTMLButtonElement).click();
+    });
+    await expect(sheet.locator("[data-tk=promote-done]")).toContainText("TOP is now on your ad.");
+    expect(await walletBalance(page)).toBe(before - 499);
+    const orders = ((await (await page.request.get("/api/promotions/orders")).json()).data?.items ?? []) as { listingId: string }[];
+    expect(orders.filter((order) => order.listingId === ad.listingId)).toHaveLength(1);
+    const spent = await withLocalDb((db) => db.collection("wallet_entries").countDocuments({ refType: "promotion", delta: -499 }));
+    expect(spent).toBeGreaterThanOrEqual(1);
+  });
+
+  test("the server treats the same idempotency key as one purchase", async ({ page, baseURL }) => {
+    test.setTimeout(240_000);
+    const ad = await createLiveAd(page, baseURL!, "promokey");
+    await withLocalDb((db) => db.collection("listings").updateOne({ _id: new ObjectId(ad.listingId) }, { $set: { expiresAt: new Date(Date.now() + 60 * 86_400_000) } }));
+    await grantCredits(page, 2000);
+    const before = await walletBalance(page);
+    const products = ((await (await page.request.get("/api/promotions/products")).json()).data.products ?? []) as { id: string; code: string }[];
+    const top = products.find((item) => item.code === "top")!;
+    const body = { listingId: ad.listingId, productId: top.id, idempotencyKey: `e2e-same-key-${Date.now()}` };
+    const first = await page.request.post("/api/promotions", { headers: originHeaders(baseURL!, "/u/account/ads/"), data: body });
+    expect(first.status(), await first.text()).toBe(200);
+    const second = await page.request.post("/api/promotions", { headers: originHeaders(baseURL!, "/u/account/ads/"), data: body });
+    expect(second.status(), await second.text()).toBe(200);
+    expect(await walletBalance(page)).toBe(before - 499);
+    const orders = ((await (await page.request.get("/api/promotions/orders")).json()).data?.items ?? []) as { listingId: string }[];
+    expect(orders.filter((order) => order.listingId === ad.listingId)).toHaveLength(1);
+  });
+
   test("an ad that is not live has no Promote button", async ({ page, baseURL }) => {
     test.setTimeout(240_000);
     const ad = await createLiveAd(page, baseURL!, "promopause");
