@@ -76,7 +76,7 @@ test("support ticket: create, reply, staff reply and note, close, reopen", async
   await expect(page.getByText("Secret internal note")).toHaveCount(0);
 
   // 4. The agent opens the desk, sees the note, and closes the ticket.
-  const agentContext = await browser.newContext({ viewport: page.viewportSize() ?? { width: 1440, height: 900 } });
+  const agentContext = await browser.newContext({ viewport: { width: 1440, height: 900 } });
   await agentContext.addInitScript(() => {
     localStorage.setItem("nl-age", "ok");
     localStorage.setItem("nl-cookies", "necessary");
