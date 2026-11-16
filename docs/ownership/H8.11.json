@@ -12,6 +12,7 @@
     "src/components/admin/ui/PageHeader.tsx",
     "src/styles/admin-kit.css",
     "tests/server/admin/a11-*.test.ts",
+    "tests/server/admin/a3-write.test.ts",
     "tests/e2e/a11-ban.e2e.ts"
   ]
 }
