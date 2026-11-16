@@ -25,7 +25,7 @@ test.describe("H7.4 home (New design)", () => {
     const chosen = await form.locator("select[name=category]").inputValue();
     await form.getByRole("button").click();
     await expect(page).toHaveURL(new RegExp("/" + chosen + "/"));
-    await expect(page.locator('[data-tk="listing-band"]')).toBeVisible();
+    await expect(page.locator('[data-tk="results-header"] h1')).toBeVisible();
   });
 
   test("has no serious or critical accessibility problems", async ({ page }) => {
@@ -40,15 +40,15 @@ test.describe("H7.4 home (New design)", () => {
   });
 });
 
-test.describe("H7.4 listing title band (New design)", () => {
-  test("the band shows the category and city with the search bar, and the cards stay within 880 px", async ({ page }) => {
+test.describe("H7.4 listing header (New design)", () => {
+  test("the listing page has the compact header with the count and sort, no photo band, and the cards stay within 904 px", async ({ page }) => {
     await page.goto("/dating/bengaluru/");
-    const band = page.locator('[data-tk="listing-band"]');
-    await expect(band).toBeVisible();
-    await expect(band.locator(".tkn-search-glass")).toBeVisible();
+    await expect(page.locator('[data-tk="results-header"] h1')).toBeVisible();
+    await expect(page.locator('[data-tk="results-count"]')).toBeVisible();
+    await expect(page.locator('[data-tk="listing-band"]')).toHaveCount(0);
     expect(await hasHorizontalScroll(page)).toBe(false);
-    const width = await page.locator(".tk-feed").first().evaluate((el) => el.getBoundingClientRect().width).catch(() => 0);
-    expect(width).toBeLessThanOrEqual(881);
+    const width = await page.locator('[data-tk="listing-grid"]').first().evaluate((el) => el.getBoundingClientRect().width).catch(() => 0);
+    expect(width).toBeLessThanOrEqual(905);
   });
 });
 

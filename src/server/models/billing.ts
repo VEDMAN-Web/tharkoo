@@ -63,6 +63,7 @@ export interface WalletEntryDoc {
   refId: string;
   balanceAfter: number;
   idempotencyKey: string;
+  refKey?: string;
   createdAt?: Date;
 }
 
@@ -128,10 +129,12 @@ const walletEntrySchema = new Schema<WalletEntryDoc>(
     refId: { type: String, required: true },
     balanceAfter: { type: Number, required: true },
     idempotencyKey: { type: String, required: true, unique: true },
+    refKey: { type: String },
   },
   { timestamps: { createdAt: true, updatedAt: false }, collection: walletCollection },
 );
 walletEntrySchema.index({ userId: 1, createdAt: -1 });
+walletEntrySchema.index({ refKey: 1 }, { unique: true, partialFilterExpression: { refKey: { $type: "string" } } });
 appendOnlyPlugin(walletEntrySchema, walletCollection);
 
 export const PromotionProduct = registerModel<PromotionProductDoc>(

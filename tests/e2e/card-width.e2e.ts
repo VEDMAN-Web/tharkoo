@@ -8,10 +8,10 @@ const SHOTS = join(process.cwd(), ".shots", "H6.17");
 const FEED = "/dating/bengaluru/";
 
 test.describe("H6.17 card width", () => {
-  test("the ad card list is at most 880 px wide on desktop, and fits a phone with no sideways scroll", async ({ page }, testInfo) => {
+  test("the ad card grid is at most 904 px wide on desktop, and fits a phone with no sideways scroll", async ({ page }, testInfo) => {
     mkdirSync(SHOTS, { recursive: true });
     await page.goto(FEED);
-    const feed = page.locator(".tk-feed").first();
+    const feed = page.locator('[data-tk="listing-grid"]').first();
     await feed.waitFor({ state: "attached" });
     await expect(page.locator("[data-card-width]").first()).toHaveAttribute("data-card-width", /^(narrow|medium|full)$/);
     const box = await feed.boundingBox();
@@ -20,7 +20,7 @@ test.describe("H6.17 card width", () => {
       expect(box!.width).toBeLessThanOrEqual(page.viewportSize()!.width);
       expect(await hasHorizontalScroll(page)).toBe(false);
     } else {
-      expect(box!.width).toBeLessThanOrEqual(880.5);
+      expect(box!.width).toBeLessThanOrEqual(904.5);
     }
     await page.screenshot({ path: join(SHOTS, `card-width-${testInfo.project.name}.png`), fullPage: false });
   });
@@ -34,7 +34,7 @@ test.describe("H6.17 card width", () => {
     await expect(page.getByText(/^Saved\. Category and city pages/)).toBeVisible();
 
     await page.goto(FEED);
-    const feed = page.locator(".tk-feed").first();
+    const feed = page.locator('[data-tk="listing-grid"]').first();
     await feed.waitFor({ state: "attached" });
     await expect(page.locator("[data-card-width]").first()).toHaveAttribute("data-card-width", "narrow");
     const box = await feed.boundingBox();

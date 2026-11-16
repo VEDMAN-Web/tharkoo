@@ -129,6 +129,7 @@ export const TEXT_DEFAULTS = {
   "search.count.one": "1 ad",
   "search.count.nonePlace": "0 ads in {place} \u00b7 showing ads close by",
   "search.count.none": "0 ads \u00b7 showing ads close by",
+  "listing.feed.label": "Ads",
   "search.sort.label": "Sort",
   "search.sort.best": "Best match",
   "search.sort.newest": "Newest",

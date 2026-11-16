@@ -13,7 +13,7 @@ test.describe("H7.90: compact search results page", () => {
     await expect(header.locator("h1")).toHaveText("All ads in India");
     await expect(page.locator('[data-tk="results-count"]')).toHaveText(/^[\d,]+ ads$/);
     expect((await header.boundingBox())!.height).toBeLessThanOrEqual(140);
-    const firstCard = (await page.locator('[data-tk="card"]').first().boundingBox())!;
+    const firstCard = (await page.locator(':is([data-tk=card], [data-tk=home-ad])').first().boundingBox())!;
     expect(firstCard.y).toBeLessThan(768);
     expect(await hasHorizontalScroll(page)).toBe(false);
   });
@@ -52,7 +52,7 @@ test.describe("H7.90: compact search results page", () => {
     await page.locator(".tkn-sr-sort select").selectOption("verified");
     await expect(page).toHaveURL(/category=dating&sort=verified$/);
     await expect(page.locator(".tkn-sr-sort select")).toHaveValue("verified");
-    await expect(page.locator('[data-tk="card"]').first()).toBeVisible();
+    await expect(page.locator(':is([data-tk=card], [data-tk=home-ad])').first()).toBeVisible();
   });
 
   test("keyword suggestions are at most six and work with the keyboard", async ({ page }) => {
@@ -70,11 +70,11 @@ test.describe("H7.90: compact search results page", () => {
     await expect(page).toHaveURL(/\/search\/\?(category|city|q)=/);
   });
 
-  test("landing pages keep their photo band", async ({ page }) => {
+  test("landing pages use the same compact header and have no photo band", async ({ page }) => {
     await page.setViewportSize({ width: 1440, height: 900 });
     await page.goto("/dating/surat/");
-    await expect(page.locator('[data-tk="listing-band"]')).toBeVisible();
-    await expect(page.locator('[data-tk="results-header"]')).toHaveCount(0);
+    await expect(page.locator('[data-tk="results-header"]')).toBeVisible();
+    await expect(page.locator('[data-tk="listing-band"]')).toHaveCount(0);
   });
 
   test("on a phone the header is short and the Filters button opens the filter sheet", async ({ page }) => {

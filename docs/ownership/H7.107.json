@@ -1,0 +1,12 @@
+{
+  "branchPrefix": "haiku/h7.107",
+  "globs": [
+    "docs/ownership/H7.107.json",
+    "progress/H7.107.md",
+    "scripts/ensure-wallet-index.mjs",
+    "src/server/billing/ledger.ts",
+    "src/server/billing/posting-fee.ts",
+    "src/server/models/billing.ts",
+    "tests/**"
+  ]
+}

@@ -2,7 +2,7 @@
 
 import { refreshPublicCache } from "@/lib/cache";
 import { getStaffFromHeaders } from "@/lib/admin-auth";
-import { applyHomeBanner, applyHomeCategoriesCount, applyHomepageChange, applyHomeSeoChange, ensureHomepageDocument } from "@/lib/ui/site-store";
+import { applyHomeBanner, applyHomeCategoriesCount, applyHomepageChange, applyListingBandSwitch, applyHomeSeoChange, ensureHomepageDocument } from "@/lib/ui/site-store";
 import { readContent, type SiteContent } from "@/lib/ui/site-content";
 import { connectDb } from "@/lib/db";
 import { HttpError } from "@/server/http";
@@ -56,6 +56,17 @@ export async function resetHomepageForAdmin() {
     return { ok: true as const, content: saved };
   } catch (error) {
     return { ok: false as const, message: error instanceof Error ? error.message : "Reset failed" };
+  }
+}
+
+/** Turns the photo band on listing pages on or off. Admins only. */
+export async function saveListingBandForAdmin(on: boolean) {
+  const identity = await getStaffFromHeaders();
+  try {
+    const saved = await applyListingBandSwitch({ roles: identity.roles, email: identity.email, on });
+    return { ok: true as const, on: saved.showListingBand };
+  } catch (error) {
+    return { ok: false as const, message: error instanceof Error ? error.message : "Save failed" };
   }
 }
 

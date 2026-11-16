@@ -1,8 +1,10 @@
 "use client";
 
+import { Fragment } from "react";
 import { withPins } from "@/lib/ui/pins";
 import Link from "next/link";
-import { AdCard, UiTextProvider } from "./ui/AdCard";
+import { UiTextProvider } from "./ui/AdCard";
+import { ListingCard, ListingGrid } from "./new/ListingCards";
 import { EmptyState } from "./ui/EmptyState";
 import { JsonLd, breadcrumbJsonLd } from "@/lib/jsonld";
 import { faqPage } from "@/lib/seo/schema";
@@ -100,26 +102,32 @@ export function ListingPageView({
     const emptyText = typeof feedProps.emptyText === "string" ? feedProps.emptyText.trim() : "";
     return (
       <>
-        <div className="tk-feed">
-          {feed.map((ad, index) => (
-            <span key={ad.publicId || ad.slug || index} style={{ display: "contents" }}>
-              <AdCard ad={ad} featured={stars.some((star) => star.slug && star.slug === ad.slug)} priority={index === 0} layout="row" />
-              {inFeedEvery > 0 && (index + 1) % inFeedEvery === 0 ? (
-                inFeedId && nodes[inFeedId] ? (
-                  nodes[inFeedId]
-                ) : (
-                  <Link href={postAdPath(paths)} className="tk-promo" data-tk="promo-band" prefetch={false}>
-                    <span>
-                      <h2>{t("listing.promo.title")}</h2>
-                      <p>{t("listing.promo.text")}</p>
-                    </span>
-                    <span className="tk-btn" data-tk="post-ad">{t("listing.promo.button")}</span>
-                  </Link>
-                )
-              ) : null}
-            </span>
-          ))}
-        </div>
+        {feed.length ? (
+          <ListingGrid label={t("listing.feed.label")}>
+            {feed.map((ad, index) => (
+              <Fragment key={ad.publicId || ad.slug || index}>
+                <li>
+                  <ListingCard ad={ad} order={index} texts={texts} />
+                </li>
+                {inFeedEvery > 0 && (index + 1) % inFeedEvery === 0 ? (
+                  <li className="tkn-grid-wide">
+                    {inFeedId && nodes[inFeedId] ? (
+                      nodes[inFeedId]
+                    ) : (
+                      <Link href={postAdPath(paths)} className="tk-promo" data-tk="promo-band" prefetch={false}>
+                        <span>
+                          <h2>{t("listing.promo.title")}</h2>
+                          <p>{t("listing.promo.text")}</p>
+                        </span>
+                        <span className="tk-btn" data-tk="post-ad">{t("listing.promo.button")}</span>
+                      </Link>
+                    )}
+                  </li>
+                ) : null}
+              </Fragment>
+            ))}
+          </ListingGrid>
+        ) : null}
         {!feed.length && !hideEmpty ? (
           query ? (
             <div className="tk-empty">

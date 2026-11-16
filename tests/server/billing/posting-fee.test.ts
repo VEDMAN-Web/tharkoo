@@ -5,10 +5,11 @@ import { POST as listingsPost } from "@/app/api/listings/[[...slug]]/route";
 import { hashToken } from "@/server/auth/http";
 import { creditWallet, walletBalance } from "@/server/billing/ledger";
 import { MONEY_DEFAULTS, readMoneySettings, setMoneySettings } from "@/server/billing/money-settings";
-import { InsufficientCreditsError, chargePostingFee, isPostingFeePaid, postingFeeStatus } from "@/server/billing/posting-fee";
+import { InsufficientCreditsError, chargePostingFee, isPostingFeePaid, postingFeeStatus, refundPostingFee } from "@/server/billing/posting-fee";
 import { rejectListing } from "@/server/moderation/decide";
 import { submitListing } from "@/server/listings/service";
 import { AuditEvent, Category, Listing, Session, User, WalletEntry } from "@/server/models";
+import { ensureWalletRefKeyIndex } from "../../../scripts/ensure-wallet-index.mjs";
 import { clearMemoryMongo, connectMemoryMongo, disconnectMemoryMongo } from "../../setup/mongo";
 
 const admin = { actorId: "000000000000000000000001", roles: ["admin"], requestId: "req" };
@@ -115,18 +116,41 @@ describe("the posting fee at publish", () => {
     expect(await isPostingFeePaid(draft.id)).toBe(true);
   });
 
-  it("is charged once when two requests arrive together", async () => {
+  it("is charged once when two requests arrive together, 50 times in a row", async () => {
+    await WalletEntry.init();
+    await fee(30);
+    const user = await member();
+    await topUp(user.id, 3000);
+    let expected = 3000;
+    for (let round = 0; round < 50; round += 1) {
+      const draft = await draftFor(user.id);
+      const results = await Promise.all([
+        chargePostingFee({ userId: user.id, listingId: draft.id, requestId: `a${round}` }),
+        chargePostingFee({ userId: user.id, listingId: draft.id, requestId: `b${round}` }),
+      ]);
+      expect(results.map((row) => row.charged).sort((x, y) => x - y), `round ${round}`).toEqual([0, 30]);
+      expected -= 30;
+      expect(await WalletEntry.countDocuments({ userId: user.id, refType: "listing_fee", refId: new RegExp(`^${draft.id}:`) }), `round ${round}`).toBe(1);
+    }
+    expect(await walletBalance(user.id)).toBe(expected);
+  });
+
+  it("returns the fee once even when two refunds arrive together", async () => {
+    await WalletEntry.init();
     await fee(30);
     const user = await member();
     await topUp(user.id, 100);
-    const draft = await draftFor(user.id);
-    const results = await Promise.all([
-      chargePostingFee({ userId: user.id, listingId: draft.id, requestId: "a" }),
-      chargePostingFee({ userId: user.id, listingId: draft.id, requestId: "b" }),
-    ]);
-    expect(results.map((row) => row.charged).sort()).toEqual([0, 30]);
-    expect(await walletBalance(user.id)).toBe(70);
-    expect(await WalletEntry.countDocuments({ userId: user.id, refType: "listing_fee" })).toBe(1);
+    for (let round = 0; round < 20; round += 1) {
+      const draft = await draftFor(user.id);
+      await chargePostingFee({ userId: user.id, listingId: draft.id, requestId: "c" });
+      const refunds = await Promise.all([
+        refundPostingFee({ userId: user.id, listingId: draft.id, requestId: "r1" }),
+        refundPostingFee({ userId: user.id, listingId: draft.id, requestId: "r2" }),
+      ]);
+      expect(refunds.sort((x, y) => x - y), `round ${round}`).toEqual([0, 30]);
+      expect(await WalletEntry.countDocuments({ refType: "listing_fee_refund", refId: new RegExp(`^${draft.id}:`) })).toBe(1);
+    }
+    expect(await walletBalance(user.id)).toBe(100);
   });
 
   it("blocks a publish without enough credits, charges nothing and leaves the draft", async () => {
@@ -166,6 +190,25 @@ describe("the posting fee at publish", () => {
     expect(await isPostingFeePaid(draft.id)).toBe(false);
     await Listing.updateOne({ _id: draft._id }, { $set: { status: "draft" } });
     expect(await submitListing(draft.id, user.id, attest, "r3")).toMatchObject({ charged: 30, balance: 70 });
+  });
+
+  it("returns the fee once when two moderators reject the same ad at the same moment", async () => {
+    await WalletEntry.init();
+    await fee(30);
+    const user = await member();
+    await topUp(user.id, 300);
+    for (let round = 0; round < 10; round += 1) {
+      const draft = await draftFor(user.id);
+      await submitListing(draft.id, user.id, attest, `s${round}`);
+      await Listing.updateOne({ _id: draft._id }, { $set: { status: "pending" } });
+      const results = await Promise.allSettled([
+        rejectListing({ id: draft.id, roles: ["moderator"], email: "a@example.com", reason: "No" }),
+        rejectListing({ id: draft.id, roles: ["moderator"], email: "b@example.com", reason: "No" }),
+      ]);
+      expect(results.some((row) => row.status === "fulfilled"), `round ${round}`).toBe(true);
+      expect(await WalletEntry.countDocuments({ refType: "listing_fee_refund", refId: new RegExp(`^${draft.id}:`) }), `round ${round}`).toBe(1);
+    }
+    expect(await walletBalance(user.id)).toBe(300);
   });
 
   it("does not apply the weekly free limit while a fee is on", async () => {
@@ -212,5 +255,22 @@ describe("the routes", () => {
     expect(res.status).toBe(402);
     const body = (await res.json()) as { ok: boolean; error: Record<string, unknown> };
     expect(body.error).toEqual({ code: "INSUFFICIENT_CREDITS", message: "You need 18 more credits to publish.", need: 30, balance: 12, fee: 30, short: 18 });
+  });
+});
+
+describe("the wallet index script", () => {
+  it("lists the indexes without writing, and builds the unique refKey index only with apply", async () => {
+    const db = mongoose.connection.db!;
+    await db.collection("wallet_entries").dropIndex("refKey_1").catch(() => undefined);
+    const dry = await ensureWalletRefKeyIndex(db, { apply: false });
+    expect(dry).toMatchObject({ apply: false, present: false, created: false });
+    expect(dry.indexes).not.toContain("refKey_1");
+    const built = await ensureWalletRefKeyIndex(db, { apply: true });
+    expect(built).toMatchObject({ present: false, created: true });
+    expect(built.indexes).toContain("refKey_1");
+    const again = await ensureWalletRefKeyIndex(db, { apply: true });
+    expect(again).toMatchObject({ present: true, created: false });
+    const indexes = await db.collection("wallet_entries").indexes();
+    expect(indexes.find((index) => index.name === "refKey_1")).toMatchObject({ unique: true });
   });
 });
