@@ -41,7 +41,6 @@ export function SupportChat({ chat, texts, hours = "" }: { chat: Chat; texts?: U
   const paths = useUrlPaths();
   const section = path.split("/")[1];
   const pageBars = section === "u" || section === paths.ad;
-  const floatClass = ["tkn-float", pageBars ? "tkn-float-pagebars" : "", section === "u" ? "tkn-float-panel" : ""].filter(Boolean).join(" ");
   const [open, setOpen] = useState(false);
   const [online, setOnline] = useState(false);
   const [session, setSession] = useState<Session>("unknown");
@@ -213,7 +212,7 @@ export function SupportChat({ chat, texts, hours = "" }: { chat: Chat; texts?: U
   const guestLocked = session !== "member" && sent;
   const canTalk = !sent && !contactOpen;
   const status = online ? t("chat.status.online") : t("chat.status.offline", { time: openingLabel(supportHours) });
-  const floatClass = ["tkn-float", pageBars ? "tkn-float-pagebars" : "", open ? "tkn-float-open" : ""].filter(Boolean).join(" ");
+  const floatClass = ["tkn-float", pageBars ? "tkn-float-pagebars" : "", section === "u" ? "tkn-float-panel" : "", open ? "tkn-float-open" : ""].filter(Boolean).join(" ");
 
   return (
     <div className={floatClass} ref={float}>
