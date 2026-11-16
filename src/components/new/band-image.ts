@@ -34,9 +34,13 @@ function focusText(x: number | undefined, y: number | undefined, defaultX: numbe
   return `${x ?? defaultX}% ${y ?? defaultY}%`;
 }
 
+export function sameSlug(a: string | undefined, b: string | undefined): boolean {
+  return Boolean(a) && Boolean(b) && a!.trim().toLowerCase() === b!.trim().toLowerCase();
+}
+
 function imageFor(shell: ShellConfig, scope: ShellImage["scope"], slug: string | undefined): BandPhoto | null {
   if (!slug) return null;
-  const image = shell.media.images.find((item) => item.scope === scope && item.slug === slug);
+  const image = shell.media.images.find((item) => item.scope === scope && sameSlug(item.slug, slug));
   if (!image || !(image.band || image.bandPhone)) return null;
   const focus = focusText(image.bandFocusX, image.bandFocusY, DEFAULT_BAND_FOCUS_X, DEFAULT_BAND_FOCUS_Y);
   const phoneFocus = focusText(image.bandPhoneFocusX, image.bandPhoneFocusY, DEFAULT_PHONE_FOCUS_X, DEFAULT_PHONE_FOCUS_Y);
@@ -67,13 +71,13 @@ export function bandImageFor(shell: ShellConfig, categorySlug: string, citySlug?
   const images = shell.media.images;
   const city = citySlug ? cityBandImageFor(shell, citySlug) : null;
   if (city) return city;
-  const category = images.find((image) => image.scope === "category" && image.slug === categorySlug);
+  const category = images.find((image) => image.scope === "category" && sameSlug(image.slug, categorySlug));
   return category && (category.band || category.bandPhone) ? category : null;
 }
 
 /** H7.32: the image the admin set for a city, or null. */
 export function cityBandImageFor(shell: ShellConfig, citySlug: string): ShellImage | null {
-  const city = shell.media.images.find((image) => image.scope === "city" && image.slug === citySlug);
+  const city = shell.media.images.find((image) => image.scope === "city" && sameSlug(image.slug, citySlug));
   return city && (city.band || city.bandPhone) ? city : null;
 }
 
