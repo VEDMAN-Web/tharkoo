@@ -17,6 +17,8 @@ export function homeAdCardData(ad: ListingDoc, categoryNames: Map<string, string
     slug: ad.slug || "",
     title: displayTitle(ad.title) || fallbackTitle,
     photos,
+    videoUrl: ad.videoUrl || null,
+    videoPoster: ad.videoPoster || null,
     description: (ad.description || "").replace(/\s+/g, " ").trim(),
     age: typeof ad.age === "number" && ad.age > 0 ? ad.age : null,
     categoryName: categoryNames.get(categorySlug) || prettyPlace(ad.categorySlug),

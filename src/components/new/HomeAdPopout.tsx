@@ -1,12 +1,13 @@
 "use client";
 
-import { useLayoutEffect, useRef, useState } from "react";
+import { useLayoutEffect, useRef, useState, type MutableRefObject } from "react";
 import { createPortal } from "react-dom";
 import Link from "next/link";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { SaveButton } from "@/components/ui/SaveButton";
 import { fillText } from "@/lib/ui/text";
 import type { HomeAdCardData, HomeAdLabels } from "./HomeAdCard";
+import type { CardSlide } from "./card-slides";
 
 const SIDE_GROW_PX = 34;
 const TOP_GROW_PX = 28;
@@ -17,6 +18,10 @@ export function HomeAdPopout({
   labels,
   anchor,
   online,
+  slides,
+  index,
+  onIndex,
+  videoRef,
   onEnter,
   onLeave,
 }: {
@@ -24,16 +29,20 @@ export function HomeAdPopout({
   labels: HomeAdLabels;
   anchor: DOMRect;
   online: boolean;
+  slides: CardSlide[];
+  index: number;
+  onIndex: (position: number) => void;
+  videoRef: MutableRefObject<HTMLVideoElement | null>;
   onEnter: () => void;
   onLeave: () => void;
 }) {
   const ref = useRef<HTMLDivElement>(null);
-  const [index, setIndex] = useState(0);
   const [top, setTop] = useState(anchor.top - TOP_GROW_PX);
   const width = anchor.width + SIDE_GROW_PX * 2;
   const left = Math.min(Math.max(anchor.left - SIDE_GROW_PX, EDGE_PX), window.innerWidth - width - EDGE_PX);
   const photos = ad.photos;
-  const current = photos[index] ?? null;
+  const current = slides[index] ?? null;
+  const posterOf = (slide: CardSlide) => (slide.kind === "video" ? slide.poster : slide.src);
 
   useLayoutEffect(() => {
     const el = ref.current;
@@ -55,25 +64,31 @@ export function HomeAdPopout({
       onPointerLeave={onLeave}
     >
       <div className="tkh-pop-photo">
-        {current ? <img src={current} alt="" draggable={false} /> : <span className="tkh-ad-empty" />}
-        {photos.length > 1 ? (
-          <span className="tkh-ad-count" aria-hidden="true">{index + 1}/{photos.length}</span>
+        {current?.kind === "video" ? (
+          <video ref={videoRef} src={current.src} poster={current.poster ?? undefined} muted playsInline preload="none" data-tk="popout-video" />
+        ) : current ? (
+          <img src={current.src} alt="" draggable={false} />
+        ) : (
+          <span className="tkh-ad-empty" />
+        )}
+        {slides.length > 1 ? (
+          <span className="tkh-ad-count" aria-hidden="true">{index + 1}/{slides.length}</span>
         ) : null}
         {ad.slug ? (
           <SaveButton item={{ id: ad.slug, slug: ad.slug, title: ad.title, place: ad.city, photo: photos[0] ?? null, at: 0 }} className="tkh-heart" />
         ) : null}
-        {photos.length > 1 ? (
+        {slides.length > 1 ? (
           <>
-            <button type="button" className="tkh-photo-arrow is-prev is-shown" aria-label={labels.photoPrev} disabled={index === 0} onClick={() => setIndex((value) => Math.max(0, value - 1))}>
+            <button type="button" className="tkh-photo-arrow is-prev is-shown" aria-label={labels.photoPrev} onClick={() => onIndex((index - 1 + slides.length) % slides.length)}>
               <ChevronLeft size={16} aria-hidden />
             </button>
-            <button type="button" className="tkh-photo-arrow is-next is-shown" aria-label={labels.photoNext} disabled={index >= photos.length - 1} onClick={() => setIndex((value) => Math.min(photos.length - 1, value + 1))}>
+            <button type="button" className="tkh-photo-arrow is-next is-shown" aria-label={labels.photoNext} onClick={() => onIndex((index + 1) % slides.length)}>
               <ChevronRight size={16} aria-hidden />
             </button>
             <div className="tkh-pop-thumbs">
-              {photos.slice(0, 5).map((src, position) => (
-                <button key={src + position} type="button" className={position === index ? "is-on" : undefined} aria-label={`${position + 1}`} onClick={() => setIndex(position)}>
-                  <img src={src} alt="" draggable={false} />
+              {slides.slice(0, 5).map((slide, position) => (
+                <button key={slide.src + position} type="button" className={position === index ? "is-on" : undefined} aria-label={`${position + 1}`} onClick={() => onIndex(position)}>
+                  {posterOf(slide) ? <img src={posterOf(slide) ?? ""} alt="" draggable={false} /> : null}
                 </button>
               ))}
             </div>
