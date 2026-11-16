@@ -147,8 +147,13 @@ export async function grantCredits(page: Page, credits = 100) {
 export async function stubPostingFee(page: Page, fee = 30) {
   await page.route("**/api/wallet/posting-fee", async (route) => {
     if (fee === 404) return route.fulfill({ status: 404, contentType: "application/json", body: JSON.stringify({ ok: false, error: { code: "NOT_FOUND", message: "Not found" } }) });
-    const own = await route.fetch({ url: new URL("/api/wallet", route.request().url()).toString() });
-    const balance = (((await own.json()) as { data?: { balance?: number } }).data?.balance ?? 0) as number;
+    let balance = 0;
+    try {
+      const own = await page.request.get("/api/wallet/");
+      balance = (JSON.parse(await own.text()) as { data?: { balance?: number } }).data?.balance ?? 0;
+    } catch {
+      balance = 0;
+    }
     const short = Math.max(0, fee - balance);
     const data = { fee, balance, after: Math.max(0, balance - fee), short, enough: short === 0, creditPriceInr: 10, mockPaymentsOn: true };
     return route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({ ok: true, data }) });

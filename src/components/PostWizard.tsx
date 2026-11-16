@@ -130,6 +130,7 @@ export function PostWizard({
   const money = usePostingMoney();
   const alreadyPaid = draftStatus !== "" && draftStatus !== "draft";
   const chargesFee = money.paid;
+  const shownBalance = serverShort ? serverShort.balance : money.balance;
   const short = alreadyPaid ? 0 : serverShort ? shortfallOf(serverShort.need, serverShort.balance) : shortfallOf(money.fee, money.balance);
   const draftRef = useRef("");
   const queueRef = useRef<Promise<unknown>>(Promise.resolve());
@@ -864,7 +865,7 @@ export function PostWizard({
               else setStep(num);
             }}
           >
-            {chargesFee ? <CreditsCard fee={alreadyPaid ? 0 : money.fee} price={money.price} balance={money.balance} ready={money.ready} onTopUp={() => openRecharge({ shortfall: short })} /> : null}
+            {chargesFee ? <CreditsCard fee={alreadyPaid ? 0 : money.fee} price={money.price} balance={shownBalance} ready={money.ready} onTopUp={() => openRecharge({ shortfall: short })} /> : null}
           </PostRail>
           <section className="tkp-main" data-step={current} aria-labelledby="post-step-title" onFocusCapture={keepFocusedFieldVisible}>
             <div className="tkp-head">
@@ -981,7 +982,7 @@ export function PostWizard({
                   hasPhoto={Boolean(coverUrl)}
                   byline={byline}
                   note="Your ad goes live as soon as you publish it. You can edit, pause or renew it from My ads."
-                  pay={alreadyPaid || !chargesFee ? undefined : <PayCard fee={money.fee} balance={money.balance} short={short} onRecharge={() => openRecharge({ shortfall: short })} />}
+                  pay={alreadyPaid || !chargesFee ? undefined : <PayCard fee={money.fee} balance={shownBalance} short={short} onRecharge={() => openRecharge({ shortfall: short })} />}
                   terms={terms}
                   adult={adult}
                   termsError={errors.terms}
