@@ -85,7 +85,7 @@ export const TEXT_DEFAULTS = {
   "listing.pager.prev": "Previous",
   "listing.pager.prevShort": "Prev",
   "listing.pager.next": "Next",
-  "listing.pager.showing": "Showing {from}–{to} of {total} ads",
+  "listing.pager.showing": "Showing {from}-{to} of {total} ads",
   "listing.pager.status": "Page {page} of {pages}",
   "listing.pager.page": "Page {page}",
   "listing.links.popular": "Popular searches",
