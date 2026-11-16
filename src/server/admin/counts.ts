@@ -77,5 +77,6 @@ async function load(ids: CountId[]): Promise<AdminCounts> {
 export async function getAdminCounts(roles: readonly string[] | undefined): Promise<AdminCounts> {
   const ids = countsForRoles(roles);
   if (ids.length === 0) return {};
+  await connectDb();
   return cached(`admin-counts:${ids.join(",")}`, COUNT_TTL_MS, () => load(ids));
 }
