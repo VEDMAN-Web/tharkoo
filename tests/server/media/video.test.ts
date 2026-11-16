@@ -110,21 +110,22 @@ describe("video upload rules", () => {
     expect(await listOwnAdVideos(userId, listingId)).toHaveLength(1);
   });
 
-  it("rejects a clip longer than 30 seconds", async () => {
+  it("rejects a clip longer than 60 seconds", async () => {
     const userId = await owner();
     const listingId = await ad(userId);
-    const data = mp4(31);
+    const data = mp4(61);
     const signed = await signMedia(userId, { listingId, contentType: "video/mp4", byteSize: data.length, kind: "video" }, "req");
     created.push(signed.mediaId);
-    await expect(saveLocalMedia(userId, signed.mediaId, { type: "video/mp4", data }, "req")).rejects.toThrow(/30 seconds/);
+    await expect(saveLocalMedia(userId, signed.mediaId, { type: "video/mp4", data }, "req")).rejects.toThrow(/longer than 60 seconds/);
     expect(await listAdVideos(listingId)).toHaveLength(0);
   });
 
-  it("rejects wrong types and clips over 10 MB at the signing step", async () => {
+  it("rejects wrong types and clips over 100 MB at the signing step", async () => {
     const userId = await owner();
     const listingId = await ad(userId);
     await expect(signMedia(userId, { listingId, contentType: "video/x-msvideo", byteSize: 1000, kind: "video" }, "r")).rejects.toThrow();
-    await expect(signMedia(userId, { listingId, contentType: "video/mp4", byteSize: 10 * 1024 * 1024 + 1, kind: "video" }, "r")).rejects.toThrow();
+    await expect(signMedia(userId, { listingId, contentType: "video/mp4", byteSize: 100 * 1024 * 1024 + 1, kind: "video" }, "r")).rejects.toThrow(/too big \(max 100 MB\)/);
+    await expect(signMedia(userId, { listingId, contentType: "video/mp4", byteSize: 40 * 1024 * 1024, kind: "video" }, "r")).resolves.toBeTruthy();
   });
 
   it("rejects an oversized body even if the signed size was small", async () => {
@@ -132,7 +133,7 @@ describe("video upload rules", () => {
     const listingId = await ad(userId);
     const signed = await signMedia(userId, { listingId, contentType: "video/mp4", byteSize: 1000, kind: "video" }, "r");
     created.push(signed.mediaId);
-    await expect(saveLocalMedia(userId, signed.mediaId, { type: "video/mp4", data: mp4(5, 10 * 1024 * 1024) }, "r")).rejects.toThrow();
+    await expect(saveLocalMedia(userId, signed.mediaId, { type: "video/mp4", data: mp4(5, 100 * 1024 * 1024 + 1) }, "r")).rejects.toThrow(/too big/);
   });
 
   it("allows up to 10 photos and videos per ad (H6.18) and only for the ad owner", async () => {
@@ -181,7 +182,9 @@ describe("Cloudinary video path", () => {
       } satisfies CloudinaryClient);
       const good = await signMedia(userId, { listingId, contentType: "video/mp4", byteSize: 1000, kind: "video" }, "r");
       expect(good.uploadUrl).toContain("/video/upload");
-      expect(good.params).not.toHaveProperty("eager");
+      const goodParams = good.params as Record<string, string>;
+      expect(goodParams.eager).toBe("c_limit,h_720,w_1280,f_mp4,q_auto");
+      expect(goodParams.eager_async).toBe("true");
       const goodAsset = await MediaAsset.findById(good.mediaId);
       remote.set(goodAsset!.objectKey, { bytes: 1000, format: "mp4", duration: 12 });
       expect((await completeMedia(userId, good.mediaId, "r")).status).toBe("cleared");
@@ -189,8 +192,8 @@ describe("Cloudinary video path", () => {
 
       const bad = await signMedia(userId, { listingId, contentType: "video/mp4", byteSize: 1000, kind: "video" }, "r");
       const badAsset = await MediaAsset.findById(bad.mediaId);
-      remote.set(badAsset!.objectKey, { bytes: 1000, format: "mp4", duration: 45 });
-      await expect(completeMedia(userId, bad.mediaId, "r")).rejects.toThrow(/30 seconds/);
+      remote.set(badAsset!.objectKey, { bytes: 1000, format: "mp4", duration: 75 });
+      await expect(completeMedia(userId, bad.mediaId, "r")).rejects.toThrow(/longer than 60 seconds/);
       expect(destroyed).toContain(badAsset!.objectKey);
     } finally {
       delete process.env.CLOUDINARY_CLOUD_NAME;

@@ -191,8 +191,10 @@ describe("media routes", () => {
 
     const done = await call("POST", "complete", { mediaId }, owner.cookie);
     expect(done.status).toBe(200);
-    expect((await dataOf(done)).data).toEqual({ status: "scanning" });
-    expect((await MediaAsset.findById(mediaId))?.status).toBe("scanning");
+    expect((await dataOf(done)).data).toEqual({ status: "cleared" });
+    const cleared = await MediaAsset.findById(mediaId);
+    expect(cleared?.status).toBe("cleared");
+    expect(cleared?.clearedAt).toBeInstanceOf(Date);
     expect(await AuditEvent.countDocuments({ action: "media.complete", targetId: mediaId })).toBe(1);
 
     const stolen = await call("POST", "complete", { mediaId }, other.cookie);
