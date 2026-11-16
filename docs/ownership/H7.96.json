@@ -1,0 +1,13 @@
+{
+  "branchPrefix": "haiku/h7.96",
+  "globs": [
+    "docs/ownership/H7.96.json",
+    "src/app/admin/ads/DemoAds.tsx",
+    "src/app/admin/ads/demo-actions.ts",
+    "src/app/admin/ads/page.tsx",
+    "src/server/listings/demo-ads.ts",
+    "tests/**",
+    "tests/e2e/h7-96-demo-ads.e2e.ts",
+    "tests/server/listings/demo-ads.test.ts"
+  ]
+}
