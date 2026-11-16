@@ -43,6 +43,7 @@ import { adLifetimeMs } from "@/server/listings/lifetime";
 import { evaluatePublishGate } from "@/server/shared/publish-gate";
 import { effectivePostingFee, readMoneySettings } from "@/server/billing/money-settings";
 import { chargePostingFee, refundPostingFee } from "@/server/billing/posting-fee";
+import { walletBalance } from "@/server/billing/ledger";
 import { idCheckRequired } from "@/server/settings/id-check";
 import { toSlug } from "@/server/shared/slug";
 
@@ -191,7 +192,7 @@ async function load(id: string) {
 
 async function owned(id: string, userId: string) {
   const listing = await load(id);
-  if (listing.ownerId.toString() !== userId) throw new ForbiddenError("Forbidden");
+  if (listing.ownerId.toString() !== userId) throw new NotFoundError("Not found");
   return listing;
 }
 
@@ -397,7 +398,7 @@ export async function listOwn(userId: string, query: { status?: ListingStatus; p
 export async function readOwned(id: string, userId: string, roles: string[]) {
   await connectDb();
   const listing = await load(id);
-  if (listing.ownerId.toString() !== userId && !isStaffRole(roles)) throw new ForbiddenError("Forbidden");
+  if (listing.ownerId.toString() !== userId && !isStaffRole(roles)) throw new NotFoundError("Not found");
   return ownerView(listing);
 }
 
@@ -535,7 +536,11 @@ export async function submitListing(
 ) {
   await connectDb();
   const listing = await owned(id, userId);
-  assertTransition(listing.status, "active");
+  // H7.118: saving an edit on an ad that was already published is not a new posting: same ad, same slug, no fee, no free-ad limit.
+  const wasPaused = listing.status === "paused";
+  const wasLive = listing.status === "active";
+  const isEdit = Boolean(listing.publishedAt) && (wasLive || wasPaused || listing.status === "pending");
+  if (!wasLive && !wasPaused) assertTransition(listing.status, "active");
   if (!listing.title.trim() || !listing.description.trim() || !listing.cityId) {
     throw new ValidationError("Invalid request", { listing: ["Title, description, and city are required"] });
   }
@@ -593,29 +598,31 @@ export async function submitListing(
   const site = await Site.findOne({ key: "default" }).select("freeAdsPerWeek").lean<{ freeAdsPerWeek?: number }>();
   const limit = typeof site?.freeAdsPerWeek === "number" ? site.freeAdsPerWeek : intEnv("FREE_ADS_PER_WEEK", 3);
   const fee = effectivePostingFee(await readMoneySettings());
-  if (!already && used >= limit && fee <= 0) {
+  if (!isEdit && !already && used >= limit && fee <= 0) {
     const retryAfter = Math.max(1, Math.ceil((weekStart().getTime() + 7 * 24 * 60 * 60 * 1000 - Date.now()) / 1000));
     throw new FreeLimitError(retryAfter);
   }
-  const charge = await chargePostingFee({ userId, listingId: listing._id.toString(), requestId });
+  const charge = isEdit
+    ? { charged: 0, balance: await walletBalance(userId), refId: null }
+    : await chargePostingFee({ userId, listingId: listing._id.toString(), requestId });
   try {
-    listing.status = "active";
-    listing.seoNoindex = false;
+    listing.status = wasPaused ? "paused" : "active";
+    if (!wasPaused) listing.seoNoindex = false;
     if (!listing.publishedAt) listing.publishedAt = new Date();
-    listing.expiresAt = new Date(Date.now() + (await adLifetimeMs()));
+    if (!isEdit || !listing.expiresAt) listing.expiresAt = new Date(Date.now() + (await adLifetimeMs()));
     listing.attestations = { ...attestations, submittedAt: new Date().toISOString() };
     listing.markModified("attestations");
-    await assignSlug(listing);
+    if (!listing.slug) await assignSlug(listing);
     await listing.save();
     await writeVersion(listing, userId);
   } catch (error) {
     if (charge.charged > 0) await refundPostingFee({ userId, listingId: listing._id.toString(), requestId }).catch(() => 0);
     throw error;
   }
-  await record(userId, "user", "listing.submit", listing._id.toString(), requestId, { status: "active" });
+  await record(userId, "user", "listing.submit", listing._id.toString(), requestId, { status: listing.status, edit: isEdit });
   await revalidateListingPages(listing, category.slug);
-  if (listing.slug) notifyIndexNow([`/ad/${listing.slug}/`]);
-  return { status: "active" as const, charged: charge.charged, balance: charge.balance };
+  if (listing.slug && !wasPaused) notifyIndexNow([`/ad/${listing.slug}/`]);
+  return { status: listing.status, charged: charge.charged, balance: charge.balance };
 }
 
 async function move(id: string, userId: string, to: ListingStatus, action: string, requestId: string) {
