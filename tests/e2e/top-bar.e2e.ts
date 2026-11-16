@@ -68,7 +68,7 @@ test.describe("H7.51 island nav", () => {
     const nav = page.getByRole("navigation", { name: "Main" });
     await expect.poll(() => linkColor(page, "Home")).toBe(WHITE);
 
-    for (const name of ["Categories", "Cities", "How it works", "Help"]) {
+    for (const name of ["Categories", "Cities", "How it works", "Blog"]) {
       await nav.getByRole("link", { name, exact: true }).hover();
       await expect.poll(() => linkColor(page, name)).toBe(WHITE);
       await expect.poll(() => linkColor(page, "Home")).toBe(INK);
@@ -82,7 +82,7 @@ test.describe("H7.51 island nav", () => {
 
     await page.mouse.move(10, 400);
     await expect.poll(() => linkColor(page, "Home")).toBe(WHITE);
-    await expect.poll(() => linkColor(page, "Help")).toBe(INK);
+    await expect.poll(() => linkColor(page, "Blog")).toBe(INK);
   });
 });
 
