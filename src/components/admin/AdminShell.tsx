@@ -155,7 +155,8 @@ function PhoneBar({ counts, onSearch, onMore }: { counts: AdminCounts; onSearch:
   );
 }
 
-export function AdminShell({ title, children }: { title: string; children: React.ReactNode }) {
+/** `hasHeader`: the page draws its own H1 (PageHeader), so the top bar prints the title as plain text. One H1 per page. */
+export function AdminShell({ title, hasHeader = false, children }: { title: string; hasHeader?: boolean; children: React.ReactNode }) {
   const { name, roles, counts: initial, banner } = useContext(ViewerContext);
   const counts = useLiveCounts(initial);
   const [sheet, setSheet] = useState(false);
@@ -205,7 +206,7 @@ export function AdminShell({ title, children }: { title: string; children: React
             <button type="button" className="adm-menu-btn" aria-expanded={sheet} aria-controls="adm-sheet" aria-label="Menu" onClick={() => setSheet(true)}>
               <Menu aria-hidden="true" focusable="false" size={20} />
             </button>
-            <h1 className="adm-title">{title}</h1>
+            {hasHeader ? <p className="adm-title" data-tk="shell-title">{title}</p> : <h1 className="adm-title">{title}</h1>}
             <label className={`adm-search ${searching ? "is-open" : ""}`}>
               <span className="adm-sr">Find an ad, user, page</span>
               <Search aria-hidden="true" focusable="false" size={16} className="adm-search-icon" />
