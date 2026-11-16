@@ -41,6 +41,8 @@ import { parsePrice } from "@/server/listings/price";
 import { attributeDenied, categoryDenied, textDenied } from "@/server/shared/policy";
 import { adLifetimeMs } from "@/server/listings/lifetime";
 import { evaluatePublishGate } from "@/server/shared/publish-gate";
+import { readMoneySettings } from "@/server/billing/money-settings";
+import { chargePostingFee, refundPostingFee } from "@/server/billing/posting-fee";
 import { idCheckRequired } from "@/server/settings/id-check";
 import { toSlug } from "@/server/shared/slug";
 
@@ -590,23 +592,30 @@ export async function submitListing(
   });
   const site = await Site.findOne({ key: "default" }).select("freeAdsPerWeek").lean<{ freeAdsPerWeek?: number }>();
   const limit = typeof site?.freeAdsPerWeek === "number" ? site.freeAdsPerWeek : intEnv("FREE_ADS_PER_WEEK", 3);
-  if (!already && used >= limit) {
+  const fee = (await readMoneySettings()).postingFeeCredits;
+  if (!already && used >= limit && fee <= 0) {
     const retryAfter = Math.max(1, Math.ceil((weekStart().getTime() + 7 * 24 * 60 * 60 * 1000 - Date.now()) / 1000));
     throw new FreeLimitError(retryAfter);
   }
-  listing.status = "active";
-  listing.seoNoindex = false;
-  if (!listing.publishedAt) listing.publishedAt = new Date();
-  listing.expiresAt = new Date(Date.now() + (await adLifetimeMs()));
-  listing.attestations = { ...attestations, submittedAt: new Date().toISOString() };
-  listing.markModified("attestations");
-  await assignSlug(listing);
-  await listing.save();
-  await writeVersion(listing, userId);
+  const charge = await chargePostingFee({ userId, listingId: listing._id.toString(), requestId });
+  try {
+    listing.status = "active";
+    listing.seoNoindex = false;
+    if (!listing.publishedAt) listing.publishedAt = new Date();
+    listing.expiresAt = new Date(Date.now() + (await adLifetimeMs()));
+    listing.attestations = { ...attestations, submittedAt: new Date().toISOString() };
+    listing.markModified("attestations");
+    await assignSlug(listing);
+    await listing.save();
+    await writeVersion(listing, userId);
+  } catch (error) {
+    if (charge.charged > 0) await refundPostingFee({ userId, listingId: listing._id.toString(), requestId }).catch(() => 0);
+    throw error;
+  }
   await record(userId, "user", "listing.submit", listing._id.toString(), requestId, { status: "active" });
   await revalidateListingPages(listing, category.slug);
   if (listing.slug) notifyIndexNow([`/ad/${listing.slug}/`]);
-  return { status: "active" as const };
+  return { status: "active" as const, charged: charge.charged, balance: charge.balance };
 }
 
 async function move(id: string, userId: string, to: ListingStatus, action: string, requestId: string) {

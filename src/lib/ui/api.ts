@@ -5,6 +5,10 @@ export type ApiError = {
   message?: string;
   fields?: Record<string, string[]>;
   details?: Record<string, string[]>;
+  need?: number;
+  balance?: number;
+  fee?: number;
+  short?: number;
 };
 
 export type ApiResult<T> = { ok: true; data: T; status: number } | { ok: false; error: ApiError; status: number };
@@ -46,6 +50,8 @@ export function friendlyError(error: ApiError) {
       return "Too many requests, try again later";
     case "VERIFICATION_REQUIRED":
       return PUBLISH_MESSAGES.VERIFICATION_REQUIRED;
+    case "INSUFFICIENT_CREDITS":
+      return error.message || "You need more credits to publish.";
     case "FREE_LIMIT":
       return "You have reached the free ad limit for this week.";
     case "POLICY_VIOLATION":
