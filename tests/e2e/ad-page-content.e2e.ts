@@ -257,13 +257,33 @@ test.describe("H7.99b ad page content", () => {
     expect(result.violations.map((item) => `${item.id}: ${item.nodes[0]?.target.join(" ")}`)).toEqual([]);
   });
 
-  test("a people ad has no price in the card, the safety line stays, and no views or clicks show", async ({ page }) => {
-    await page.goto(await adAt(page, "/dating/bengaluru/"));
-    await expect(page.locator(".tkn-ad-price")).toHaveCount(0);
-    await expect(page.locator(".tkn-ad-phoneprice")).toHaveCount(0);
-    await expect(page.locator('[data-tk="security-tips"]')).toContainText("Meet in a public place");
-    await expect(page.locator('[data-tk="ad-summary"]')).not.toContainText(/clicks/i);
-    expect(await hasHorizontalScroll(page)).toBe(false);
+  test("people categories show no price line at all, and items keep Price on request at 20 px muted", async ({ page }) => {
+    let checked = 0;
+    for (const feed of ["/dating/bengaluru/", "/friendship/bengaluru/", "/meetups/bengaluru/", "/personal-ads/bengaluru/"]) {
+      await page.goto(feed);
+      const link = page.locator('[data-tk=card] a[href*="/ad/"]').first();
+      if (!(await link.count())) continue;
+      await page.goto((await link.getAttribute("href"))!);
+      await expect(page.locator(".tkn-contact-panel")).toBeAttached();
+      await expect(page.locator(".tkn-ad-price")).toHaveCount(0);
+      await expect(page.locator(".tkn-ad-phoneprice")).toHaveCount(0);
+      await expect(page.getByText("Price on request")).toHaveCount(0);
+      await expect(page.locator(".tkn-contact-panel > :first-child")).toHaveAttribute("data-tk", "seller-row");
+      await expect(page.locator('[data-tk="security-tips"]')).toContainText("Meet in a public place");
+      await expect(page.locator('[data-tk="ad-summary"]')).not.toContainText(/clicks/i);
+      expect(await hasHorizontalScroll(page)).toBe(false);
+      checked += 1;
+    }
+    expect(checked).toBeGreaterThan(0);
+  });
+
+  test("an item without a price says Price on request at 20 px muted", async ({ page }, testInfo) => {
+    test.skip(testInfo.project.name !== "desktop-1440", "the card is a wide-screen part");
+    await page.goto("/ad/demo-7920/");
+    const price = page.locator(".tkn-contact-panel .tkn-ad-price");
+    await expect(price).toHaveText("Price on request");
+    await expect(price).toHaveCSS("font-size", "20px");
+    await expect(price).toHaveCSS("font-weight", "600");
   });
 
   test("proof shots of the demo ad and a dating ad at the required sizes", async ({ page }, testInfo) => {

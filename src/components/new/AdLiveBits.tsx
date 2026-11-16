@@ -23,7 +23,7 @@ export function AdSellerRow({ name, verified = false, since = "" }: { name: stri
               </span>
             ) : null}
             {live ? (
-              <span className="tkn-seller-status" data-status={live}>
+              <span className="tkn-seller-status" data-tk="availability" data-status={live}>
                 <span className="tkn-dot" data-status={live} aria-hidden />
                 {live === "online" ? t("ad.seller.onlineShort") : t("ad.seller.awayShort")}
               </span>
