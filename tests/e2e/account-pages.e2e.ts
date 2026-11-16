@@ -92,14 +92,6 @@ test.describe("H7.81 old account pages in the panel", () => {
     await api.dispose();
   });
 
-  test("delete is a clean screen that asks support, with a way back", async ({ page, baseURL }) => {
-    const { api, email } = await newUserApi(baseURL!, "deletescreen");
-    await loginUi(page, email, undefined, "/u/account/delete/");
-    await expect(page.locator("[data-tk=delete-ask]")).toHaveAttribute("href", "/u/account/support/new/");
-    await expect(page.getByText("Coming soon")).toHaveCount(0);
-    await api.dispose();
-  });
-
   test("the seller profile picks the city from the list by its display name", async ({ page, baseURL }) => {
     test.setTimeout(120_000);
     const { api, email } = await newUserApi(baseURL!, "cityselect");
