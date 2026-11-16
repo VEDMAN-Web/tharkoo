@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { SUPPORT_PHONE, SUPPORT_TELEGRAM, phoneDigits, telHref, telegramHref, whatsappHref } from "@/lib/support";
+import { SUPPORT_EMAIL, SUPPORT_PHONE, SUPPORT_TELEGRAM, mailtoHref, phoneDigits, telHref, telegramHref, whatsappHref } from "@/lib/support";
 import { TEXT_DEFAULTS } from "@/lib/ui/text";
 
 describe("support links", () => {
@@ -28,6 +28,12 @@ describe("support links", () => {
     expect(telHref(SUPPORT_PHONE)).toBe("tel:+91912345678");
     expect(whatsappHref(SUPPORT_PHONE)).toBe("https://wa.me/91912345678");
     expect(telegramHref(SUPPORT_TELEGRAM)).toBe("https://t.me/tharkoo_support");
+  });
+
+  it("builds the mailto link from the support email and rejects text that is not an address", () => {
+    expect(mailtoHref(SUPPORT_EMAIL)).toBe("mailto:support@tharkoo.com");
+    expect(mailtoHref("[YOUR SUPPORT EMAIL]")).toBe("");
+    expect(mailtoHref("")).toBe("");
   });
 
   it("keeps the corrected top bar words and no placeholder text", () => {

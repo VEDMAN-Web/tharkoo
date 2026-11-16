@@ -90,8 +90,8 @@ test.describe("H7.51 support number", () => {
   test("the footer and the contact page use the support number and the Telegram name", async ({ page }) => {
     await page.goto("/");
     const footer = page.locator('[data-tk="footer"]');
-    await expect(footer.getByRole("link", { name: /WhatsApp:/ })).toHaveAttribute("href", "https://wa.me/91912345678");
-    await expect(footer.getByRole("link", { name: /Telegram:/ })).toHaveAttribute("href", "https://t.me/tharkoo_support");
+    await expect(footer.getByRole("link", { name: /^WhatsApp *[+]91/ })).toHaveAttribute("href", "https://wa.me/91912345678");
+    await expect(footer.getByRole("link", { name: /^Telegram *@/ })).toHaveAttribute("href", "https://t.me/tharkoo_support");
     await expect(footer).toContainText("+91 912345678");
     await expect(footer).toContainText("@tharkoo_support");
     await expect(footer).not.toContainText(/[[]YOUR (PHONE|WHATSAPP|TELEGRAM)/);
