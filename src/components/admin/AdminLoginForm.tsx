@@ -4,8 +4,6 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { friendlyError } from "@/lib/ui/api";
 import { loginRequest } from "@/components/AuthForm";
-import { Button } from "@/components/ui/Button";
-import { Field, Input } from "@/components/ui/Input";
 
 export function AdminLoginForm() {
   const router = useRouter();
@@ -28,21 +26,29 @@ export function AdminLoginForm() {
   }
 
   return (
-    <form onSubmit={onSubmit} className="mx-auto grid max-w-md gap-4 p-6">
-      <h1 className="t-h1">Staff sign in</h1>
-      <p className="t-small text-muted">Use the email and password for your staff account.</p>
-      <div aria-live="polite" className="t-small" style={{ color: "var(--accent)" }}>
-        {message}
-      </div>
-      <Field id="email" label="Email">
-        <Input id="email" name="email" type="email" autoComplete="username" required />
-      </Field>
-      <Field id="password" label="Password">
-        <Input id="password" name="password" type="password" autoComplete="current-password" required />
-      </Field>
-      <Button type="submit" loading={busy}>
-        Sign in
-      </Button>
-    </form>
+    <div className="adm adm-login">
+      <main className="adm-login-card">
+        <div className="adm-login-brand">
+          <img className="adm-brand-img" src="/brand/logo-mark-512.png" alt="" width={36} height={36} />
+          <span>Tharkoo staff</span>
+        </div>
+        <form onSubmit={onSubmit} className="adm-login-form" aria-labelledby="adm-login-title">
+          <h1 id="adm-login-title" className="adm-login-title">Staff sign in</h1>
+          <p className="adm-login-lead">Use the email and password for your staff account.</p>
+          <p className="adm-login-error" role="alert" aria-live="assertive" data-tk="login-error">{message}</p>
+          <label className="adm-field" htmlFor="email">
+            <span className="adm-field-label">Email</span>
+            <input className="adm-input" id="email" name="email" type="email" autoComplete="username" required />
+          </label>
+          <label className="adm-field" htmlFor="password">
+            <span className="adm-field-label">Password</span>
+            <input className="adm-input" id="password" name="password" type="password" autoComplete="current-password" required />
+          </label>
+          <button type="submit" className="adm-btn adm-login-submit" disabled={busy} aria-busy={busy}>
+            {busy ? "Signing in..." : "Sign in"}
+          </button>
+        </form>
+      </main>
+    </div>
   );
 }

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { canOpenAdminPath } from "@/lib/admin-gate";
+import { forbiddenHtml } from "@/lib/admin/forbidden";
 import { allowRequest, clientKey, limitBucket, type LimitBucket } from "@/lib/rate-limit";
 import { originAllowed, SESSION_COOKIE } from "@/server/auth/http";
 import { consumeRateLimit } from "@/server/auth/rate-limit";
@@ -66,9 +67,8 @@ function skipRedirect(path: string) {
 }
 
 /** A 403 page for a staff screen the viewer's role does not open. Marked noindex like every admin page. */
-function adminForbidden() {
-  const html = '<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="robots" content="noindex, nofollow"><title>403 | Tharkoo staff</title></head><body><h1>403</h1><p>Your staff role does not open this screen.</p></body></html>';
-  return new NextResponse(html, { status: 403, headers: { "content-type": "text/html; charset=utf-8" } });
+function adminForbidden(path: string) {
+  return new NextResponse(forbiddenHtml(path), { status: 403, headers: { "content-type": "text/html; charset=utf-8" } });
 }
 
 /**
@@ -83,12 +83,12 @@ async function adminGate(req: NextRequest): Promise<NextResponse | null> {
     const found = await userFromToken(req.cookies.get(SESSION_COOKIE)?.value);
     if (!found) {
       if (req.method === "GET" || req.method === "HEAD") return NextResponse.redirect(new URL("/admin/login/", req.url), 307);
-      return adminForbidden();
+      return adminForbidden(path);
     }
-    return canOpenAdminPath(found.user.roles, path) ? null : adminForbidden();
+    return canOpenAdminPath(found.user.roles, path) ? null : adminForbidden(path);
   } catch (error) {
     console.error("admin gate could not read the session; refusing the staff screen", error);
-    return adminForbidden();
+    return adminForbidden(path);
   }
 }
 

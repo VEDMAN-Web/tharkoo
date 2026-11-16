@@ -3,7 +3,7 @@ import type { Page } from "@playwright/test";
 import { expect, hasHorizontalScroll, signInAdminContext, test } from "./helpers";
 
 const SHOTS = process.env.MONEY_SHOTS_DIR || "";
-const BANNER = "Test payments are ON: anyone can add credits without paying. Turn OFF before launch.";
+const BANNER = "Test payments are ON: anyone can add credits without paying. Turn off in Prices & plans";
 const FREE_CLAIM = /post free|free to post|posting is free|free classifieds|post(?:ing)? (?:your ad )?for free|post a free ad/i;
 
 async function shot(page: Page, name: string) {
