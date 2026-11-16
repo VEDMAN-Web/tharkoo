@@ -1,0 +1,12 @@
+{
+  "branchPrefix": "haiku/h7.115",
+  "globs": [
+    "docs/ownership/H7.115.json",
+    "progress/H7.115.md",
+    "src/components/h714/CitiesView.tsx",
+    "src/components/h714/CategoriesView.tsx",
+    "src/components/h714/photo.ts",
+    "src/components/new/band-image.ts",
+    "tests/server/shell/band-slug-case.test.ts"
+  ]
+}
