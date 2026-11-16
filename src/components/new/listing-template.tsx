@@ -16,6 +16,8 @@ export type TemplateInput = {
   placeName?: string;
   /** The address of this page without filters, used for "Best match" in the sort. */
   pagePath: string;
+  /** Chips for page filters that /search/ does not have, such as a tag. */
+  extraChips?: SearchChip[];
   t: TextFn;
 };
 
@@ -50,7 +52,7 @@ export type TemplateHeader = { top: ReactNode; bar: ReactNode; chips: ReactNode 
 export function templateHeader(input: TemplateInput, labels: ListingLabels): { header: TemplateHeader; chips: SearchChip[]; params: Record<string, string | string[]> } {
   const { state, t } = input;
   const params = templateParams(state);
-  const chips = searchChips(SEARCH_BASE, params, state, labels, t);
+  const chips = [...searchChips(SEARCH_BASE, params, state, labels, t), ...(input.extraChips ?? [])];
   const sortOptions = [
     { value: "best", label: t("search.sort.best"), href: input.pagePath },
     { value: "newest", label: t("search.sort.newest"), href: searchHref(SEARCH_BASE, { ...params, sort: "newest" }) },

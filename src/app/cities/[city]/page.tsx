@@ -2,7 +2,7 @@ import "./city-page.css";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
-import { countListings, getCategories, getCityBySlug, getCityLatest, getDistricts, getHomepageContent, listingCountsByCategoryCity, pageOutOfRange } from "@/lib/queries";
+import { countListings, getCategories, getCities, getCityBySlug, getCityLatest, getDistricts, getHomepageContent, getStates, listingCountsByCategoryCity, pageOutOfRange } from "@/lib/queries";
 import { isCityAlias } from "@/lib/seo/district-alias";
 import { citiesPath, joinPath, placePath, postAdPath, searchPath } from "@/lib/urls";
 import { withUrlSeo } from "@/lib/seo/override";
@@ -12,13 +12,15 @@ import { getPaths } from "@/server/urls/service";
 import { readShellConfig } from "@/server/site-links/shell-config";
 import { textOverrides } from "@/app/admin/ui-text/store";
 import { makeT, pickTexts } from "@/lib/ui/text";
-import { AdCard, UiTextProvider } from "@/components/ui/AdCard";
+import { UiTextProvider } from "@/components/ui/AdCard";
+import { ListingCard, ListingGrid } from "@/components/new/ListingCards";
+import { ListingFrame } from "@/components/new/ListingFrame";
 import { canonical } from "@/lib/seo";
 import { withPagination } from "@/lib/seo/pagination";
 import { ListingPager } from "@/components/new/ListingPager";
 import { pagerLabels } from "@/components/new/listing-pager";
-import { NewListingPage } from "@/components/new/ListingBand";
-import { listingLabels } from "@/components/new/listing-frame-props";
+import { listingFrameProps, listingLabels, searchPlaceSelects } from "@/components/new/listing-frame-props";
+import { SEARCH_BASE } from "@/components/new/listing-template";
 import { bandChoice, heroBandFrom } from "@/components/new/band-image";
 import { FallbackAds } from "@/components/FallbackAds";
 import { loadFallbackSections, showFallback } from "@/lib/fallback-ads";
@@ -76,15 +78,18 @@ export default async function CityAreasPage({ params, searchParams }: Props) {
   const data = await cityAreas(city);
   if (!data) notFound();
   const page = Math.max(1, Number(sp.page) || 1);
-  const [latest, paths, shell, texts, perArea, hero] = await Promise.all([
+  const [latest, paths, shell, texts, perArea, hero, states, cities] = await Promise.all([
     getCityLatest(city, page),
     getPaths(),
     readShellConfig(),
     textOverrides(),
     Promise.all(data.areas.map((area) => countListings({ citySlug: city, districtSlug: area.slug ?? "" }).catch(() => null))),
     getHomepageContent().then(heroBandFrom),
+    getStates(),
+    getCities(),
   ]);
   if (pageOutOfRange(sp.page, latest.pages)) notFound();
+  const homeContent = await getHomepageContent();
 
   const t = makeT(texts);
   const labels = listingLabels(t);
@@ -111,68 +116,70 @@ export default async function CityAreasPage({ params, searchParams }: Props) {
       ? { text: `No ads in ${data.name} yet. Here are ads close by.`, button: `Post the first ad in ${data.name}`, href: postAdPath(paths) }
       : undefined;
 
-  const aside = (
-    <>
-      <div className="tkn-ls-panelhead">
-        <h2 className="tkn-ls-panelhead-title">{data.name}</h2>
-      </div>
-      <p className="tkn-ls-label">Categories</p>
-      <ul className="tkn-city-nav" data-tk="city-nav-categories">
-        {data.categories.map((cat) => {
-          const n = data.cityCounts.get(cat.slug ?? "") ?? 0;
-          return (
-            <li key={cat.slug}>
-              <Link href={placePath(cat.slug ?? "", city)} prefetch={false}>
-                <span>{cat.name}</span>
-                <span className="tkn-city-nav-n">{n > 0 ? n : "New"}</span>
-              </Link>
-            </li>
-          );
-        })}
-      </ul>
-      {data.areas.length > 0 ? (
-        <>
-          <p className="tkn-ls-label">Areas</p>
-          <ul className="tkn-city-nav" data-tk="city-nav-areas">
-            {data.areas.map((area, index) => (
-              <li key={area.slug}>
-                <Link href={placePath(data.categories[0]?.slug ?? "", city, area.slug ?? "")} prefetch={false}>
-                  <span>{area.name}</span>
-                  <span className="tkn-city-nav-n">{perArea[index] ? perArea[index] : "New"}</span>
-                </Link>
-              </li>
-            ))}
-          </ul>
-        </>
-      ) : null}
-    </>
-  );
+  const toggles = { verified: false, photos: false, video: false, online: false };
+  const frame = listingFrameProps({
+    crumbs,
+    h1: t("search.heading.place", { place: data.name }),
+    intro: `Free classifieds across ${data.name}. Pick a category or an area.`,
+    photo: band,
+    categorySlug: "",
+    citySlug: city,
+    searchAction: searchPath(paths),
+    searchPlaceholder: `Search ads in ${data.name}`,
+    chips: null,
+    fields: undefined,
+    picks: {},
+    toggles,
+    panelPath: SEARCH_BASE,
+    panelHidden: [{ name: "city", value: city }, ...(data.stateSlug ? [{ name: "state", value: data.stateSlug }] : [])],
+    total: latest.total,
+    labels,
+    places: searchPlaceSelects({
+      searchPath: SEARCH_BASE,
+      params: { city, ...(data.stateSlug ? { state: data.stateSlug } : {}) },
+      categories: data.categories,
+      states,
+      cities,
+      districts: data.areas,
+      labels,
+    }),
+    showBand: homeContent.showListingBand,
+    template: {
+      state: { city: { slug: city, name: data.name }, toggles, picks: {} },
+      crumbs,
+      h1: t("search.heading.place", { place: data.name }),
+      total: latest.total,
+      nearby: own,
+      placeName: data.name,
+      pagePath: joinPath(hub, city),
+      t,
+    },
+  });
 
   return (
     <UiTextProvider texts={pickTexts(texts, "card.")}>
-      <NewListingPage
-        tk="city-areas"
-        aside={aside}
-        band={{
-          crumbs,
-          h1: data.name,
-          intro: `Free classifieds across ${data.name}. Pick a category or an area.`,
-          photo: band,
-          searchAction: searchPath(paths),
-          citySlug: city,
-          placeholder: `Search ads in ${data.name}`,
-          labels,
-        }}
+      <div data-tk="city-areas">
+      <ListingFrame
+        header={frame.header}
+        bandStyle={frame.bandStyle}
+        labels={labels}
+        head={frame.head}
+        chips={frame.chips}
+        searchForm={frame.searchForm}
+        filters={frame.filters}
+        activeCount={frame.activeCount}
       >
         <JsonLd data={breadcrumbJsonLd(crumbs)} />
           {latest.total > 0 ? (
             <section data-tk="city-latest">
               <h2>Latest ads in {data.name}</h2>
-              <div className="tk-feed tkn-city-ads">
+              <ListingGrid label={t("listing.feed.label")}>
                 {latest.items.map((ad, index) => (
-                  <AdCard key={ad.publicId || ad.slug || index} ad={ad} priority={index === 0} layout="row" />
+                  <li key={ad.publicId || ad.slug || index}>
+                    <ListingCard ad={ad} order={index} texts={texts} />
+                  </li>
                 ))}
-              </div>
+              </ListingGrid>
               <ListingPager base={joinPath(hub, city)} page={latest.page} pages={latest.pages} total={latest.total} size={latest.pageSize} labels={pagerLabels(t)} />
             </section>
           ) : null}
@@ -227,7 +234,8 @@ export default async function CityAreasPage({ params, searchParams }: Props) {
               </ul>
             )}
           </section>
-      </NewListingPage>
+      </ListingFrame>
+      </div>
     </UiTextProvider>
   );
 }
