@@ -1,0 +1,17 @@
+{
+  "branchPrefix": "haiku/a1",
+  "globs": [
+    "docs/ownership/A1.json",
+    "progress/A1.md",
+    "src/server/models/listing.ts",
+    "src/server/models/catalog.ts",
+    "src/server/models/layout.ts",
+    "src/server/models/identity.ts",
+    "src/server/models/cms.ts",
+    "src/server/models/billing.ts",
+    "src/server/models/content.ts",
+    "src/server/models/index.ts",
+    "scripts/sync-admin-indexes.mjs",
+    "tests/server/models/a1-*.test.ts"
+  ]
+}

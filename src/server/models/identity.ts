@@ -11,6 +11,7 @@ export const STAFF_ROLE_NAMES: ReadonlySet<string> = new Set([
   "support",
   "seo_editor",
   "finance",
+  "blog_editor",
 ]);
 
 /** The seller profile, asked once before the first ad (H7.2b). Name and city show on ads. Date of birth never shows. */
@@ -119,6 +120,7 @@ const userSchema = new Schema<UserDoc>(
   },
   { timestamps: true, collection: collectionName("users", "User") },
 );
+userSchema.index({ status: 1, createdAt: -1 });
 
 const sessionSchema = new Schema<SessionDoc>(
   {
@@ -132,6 +134,7 @@ const sessionSchema = new Schema<SessionDoc>(
   { timestamps: { createdAt: true, updatedAt: false }, collection: collectionName("sessions", "Session") },
 );
 sessionSchema.index({ expiresAt: 1 }, { expireAfterSeconds: 0 });
+sessionSchema.index({ userId: 1, revokedAt: 1 });
 
 function expiringTokenSchema(collection: string) {
   const schema = new Schema<TokenDoc>(
@@ -173,6 +176,7 @@ const identityVerificationSchema = new Schema<IdentityVerificationDoc>(
     collection: collectionName("identity_verifications", "IdentityVerification"),
   },
 );
+identityVerificationSchema.index({ status: 1, createdAt: -1 });
 
 export const User = registerModel<UserDoc>(modelName("User"), userSchema);
 export const Session = registerModel<SessionDoc>(modelName("Session"), sessionSchema);

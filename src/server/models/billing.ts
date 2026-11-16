@@ -118,6 +118,7 @@ const paymentSchema = new Schema<PaymentDoc>(
   { timestamps: true, collection: collectionName("payments", "Payment") },
 );
 paymentSchema.index({ providerEventId: 1 }, { unique: true, sparse: true });
+paymentSchema.index({ status: 1, createdAt: -1 });
 
 const walletCollection = collectionName("wallet_entries", "WalletEntry");
 const walletEntrySchema = new Schema<WalletEntryDoc>(
@@ -134,6 +135,7 @@ const walletEntrySchema = new Schema<WalletEntryDoc>(
   { timestamps: { createdAt: true, updatedAt: false }, collection: walletCollection },
 );
 walletEntrySchema.index({ userId: 1, createdAt: -1 });
+walletEntrySchema.index({ refType: 1, createdAt: -1 });
 walletEntrySchema.index({ refKey: 1 }, { unique: true, partialFilterExpression: { refKey: { $type: "string" } } });
 appendOnlyPlugin(walletEntrySchema, walletCollection);
 
