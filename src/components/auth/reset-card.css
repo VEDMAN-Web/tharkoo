@@ -5,4 +5,5 @@
   border: 1px solid rgba(255, 255, 255, 0.95); box-shadow: 0 24px 64px rgba(45, 18, 72, 0.14);
 }
 .reset-card h1 { font-family: inherit; margin: 0 0 16px; font-size: 26px; font-weight: 800; letter-spacing: -0.02em; color: #110520; }
+.reset-card .tk-auth { width: 100%; margin: 0; padding: 0; background: transparent; border-radius: 0; box-shadow: none; }
 .reset-card .tk-btn { width: 100%; border-radius: 12px; }

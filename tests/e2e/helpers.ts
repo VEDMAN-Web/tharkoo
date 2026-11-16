@@ -269,7 +269,7 @@ export async function setSellerAvailable(slug: string, available: boolean) {
     expect(listing, "the ad exists").toBeTruthy();
     await db.collection("vendor_presence").updateOne(
       { userId: String(listing!.ownerId) },
-      { $set: { available, lastActivityAt: new Date() } },
+      { $set: { available, lastActivityAt: new Date(), liveChat: true } },
       { upsert: true },
     );
     return true;
