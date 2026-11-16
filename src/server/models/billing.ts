@@ -42,6 +42,13 @@ export interface PaymentDoc {
   amount: number;
   currency: string;
   status: "pending" | "paid" | "failed";
+  method?: "card" | "crypto";
+  coin?: string;
+  network?: string;
+  credits?: number;
+  returnTo?: string;
+  expiresAt?: Date;
+  outcome?: "paid" | "cancelled" | "expired" | "failed";
   createdAt?: Date;
   updatedAt?: Date;
 }
@@ -100,6 +107,13 @@ const paymentSchema = new Schema<PaymentDoc>(
     amount: { type: Number, required: true },
     currency: { type: String, required: true },
     status: { type: String, enum: ["pending", "paid", "failed"], default: "pending" },
+    method: { type: String, enum: ["card", "crypto"] },
+    coin: { type: String },
+    network: { type: String },
+    credits: { type: Number },
+    returnTo: { type: String },
+    expiresAt: { type: Date },
+    outcome: { type: String, enum: ["paid", "cancelled", "expired", "failed"] },
   },
   { timestamps: true, collection: collectionName("payments", "Payment") },
 );
