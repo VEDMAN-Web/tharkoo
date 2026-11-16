@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { saveLoginImageForAdmin } from "@/app/admin/content-actions";
+import { FocalPicker } from "@/components/admin/FocalPicker";
 import { ImagePicker, type ImageRef } from "@/components/admin/ui/ImagePicker";
 import { UPLOAD_RULES, type UploadRule } from "@/components/upload/rules";
 
@@ -11,13 +12,14 @@ const LOGIN_IMAGE_RULE: UploadRule = {
   details: ["Formats: JPG, PNG or WEBP.", "Up to 8 MB.", "Best size: 800 x 1000 px (tall)."],
 };
 
-export function LoginImageField({ initial }: { initial: string }) {
+export function LoginImageField({ initial, focus: initialFocus }: { initial: string; focus: { x: number; y: number } }) {
   const [src, setSrc] = useState(initial);
+  const [focus, setFocus] = useState(initialFocus);
   const [message, setMessage] = useState("");
 
   async function change(next: ImageRef | null) {
     const value = next?.src ?? "";
-    const result = await saveLoginImageForAdmin(value);
+    const result = await saveLoginImageForAdmin(value, focus);
     if (!result.ok) {
       setMessage(result.message);
       return;
@@ -33,6 +35,18 @@ export function LoginImageField({ initial }: { initial: string }) {
         value={src ? { assetId: "", src, alt: "Login image", width: 0, height: 0 } : null}
         onChange={change}
         rule={LOGIN_IMAGE_RULE}
+      />
+      <FocalPicker
+        label="Login image focus point"
+        aspect="4 / 5"
+        src={src}
+        x={focus.x}
+        y={focus.y}
+        onChange={async (next) => {
+          setFocus(next);
+          const result = await saveLoginImageForAdmin(src, next);
+          setMessage(result.ok ? "Saved." : result.message);
+        }}
       />
       {message ? <p className="adm-field-help">{message}</p> : null}
     </div>

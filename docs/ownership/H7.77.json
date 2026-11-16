@@ -1,0 +1,15 @@
+{
+  "branchPrefix": "haiku/h7.77",
+  "globs": [
+    "docs/ownership/H7.77.json",
+    "src/app/u/account/tours/[id]/page.tsx",
+    "src/components/ad/tourLabels.ts",
+    "src/components/buyer/TourCallPanel.tsx",
+    "src/components/buyer/user-panel.css",
+    "src/server/tours/room.ts",
+    "src/server/tours/service.ts",
+    "tests/e2e/tour-call.e2e.ts",
+    "tests/server/tours/room.test.ts",
+    "tests/server/tours/tours.test.ts"
+  ]
+}

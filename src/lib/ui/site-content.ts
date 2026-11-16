@@ -51,6 +51,8 @@ export type SiteContent = {
   seoDescription: string;
   seoIntro: string;
   loginImage: string;
+  loginImageFocusX: number;
+  loginImageFocusY: number;
   header: {
     postLabel: string;
     postHref: string;
@@ -154,6 +156,8 @@ export function defaultSiteContent(): SiteContent {
     seoDescription: "Tharkoo is a free classifieds site for India. Browse dating, friendship, jobs, homes, and vehicles, then contact the poster in the app after an ID check.",
     seoIntro: "",
     loginImage: "",
+    loginImageFocusX: 50,
+    loginImageFocusY: 20,
     header: {
       postLabel: "POST YOUR AD",
       postHref: POST,
@@ -431,6 +435,8 @@ export function sanitizeSiteContent(
       seoDescription: text(source.seoDescription, 240, base.seoDescription),
       seoIntro: intro,
       loginImage: imagePath(source.loginImage, ""),
+      loginImageFocusX: focusPercent(source.loginImageFocusX, 50),
+      loginImageFocusY: focusPercent(source.loginImageFocusY, 20),
       header: {
         postLabel: text(headerIn.postLabel, 40, base.header.postLabel),
         postHref: headerPost || POST,

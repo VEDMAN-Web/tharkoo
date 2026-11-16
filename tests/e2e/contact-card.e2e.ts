@@ -162,7 +162,7 @@ test.describe("H6.8 contact card on a property ad with live tours on", () => {
 
   test("a signed-out visitor who taps the video call is asked to sign in", async ({ page }) => {
     await page.goto(await anyAdPath(page, PROPERTY_FEED));
-    await page.locator("[data-tk=tour]:visible").click();
+    await contactScope(page).locator("[data-tk=tour]").click();
     const note = page.getByRole("status").filter({ hasText: "Sign in to request a live video tour." });
     await expect(note).toBeVisible();
     await expect(note.getByRole("link", { name: "Sign in" })).toHaveCount(0);
@@ -175,11 +175,18 @@ test.describe("H6.8 contact card on a property ad with live tours on", () => {
     await signInUi(page, email);
     await page.waitForURL(/\/u\/account\/dashboard\//);
     await page.goto(await anyAdPath(page, PROPERTY_FEED));
-    const asked = page.waitForResponse((r) => r.url().includes("/api/tours/request") && r.request().method() === "POST");
-    await page.locator("[data-tk=tour]:visible").click();
-    expect((await asked).status()).toBeGreaterThanOrEqual(400);
+    const requests: string[] = [];
+    page.on("request", (request) => {
+      if (request.url().includes("/api/tours/request") && request.method() === "POST") requests.push(request.url());
+    });
+    await contactScope(page).locator("[data-tk=tour]").click();
+    const popup = page.locator("[data-tk=ad-popup]");
+    await expect(popup).toBeVisible();
+    await expect(popup).toHaveAttribute("data-step", "call");
+    await popup.locator(".tkn-pop-btn").click();
+    await expect(popup).toHaveAttribute("data-step", "buy");
     await expect(page.getByRole("status").filter({ hasText: "Request sent" })).toHaveCount(0);
-    await expect(page.locator("[data-tk=tour]:visible")).toBeEnabled();
+    expect(requests).toEqual([]);
   });
 
   test("chat round trip: a buyer's message reaches the advertiser, and the reply comes back", async ({ page, baseURL }) => {
@@ -206,7 +213,7 @@ test.describe("H6.8 contact card on a property ad with live tours on", () => {
       await signInUi(page, buyerEmail);
       await page.waitForURL(/\/u\/account\/dashboard\//);
       await page.goto(adPath);
-      await page.locator("[data-tk=chat]:visible").click();
+      await contactScope(page).locator("[data-tk=chat]").click();
       const panel = page.locator("[data-tk=chat-panel]");
       await expect(panel).toBeVisible();
 
@@ -252,7 +259,7 @@ test.describe("H6.8 contact card on a property ad with live tours on", () => {
 test.describe("H6.8 contact card at tablet width (768 px)", () => {
   test.use({ viewport: { width: 768, height: 1024 } });
 
-  test("the contact card shows the four buttons in two columns, with no horizontal scroll", async ({ page }) => {
+  test("the contact card shows the four buttons stacked at full width, with no horizontal scroll", async ({ page }) => {
     const original = await readPropertyTourSwitch();
     await writePropertyTourSwitch({ enabled: true, coins: TOUR_COINS });
     try {
@@ -263,7 +270,7 @@ test.describe("H6.8 contact card at tablet width (768 px)", () => {
       expect(await hasHorizontalScroll(page)).toBe(false);
       const boxes = await expectTapTargets(page);
       const tops = new Set(boxes.map((box) => Math.round(box.y)));
-      expect(tops.size).toBe(2);
+      expect(tops.size).toBe(boxes.length);
     } finally {
       await writePropertyTourSwitch(original);
     }
