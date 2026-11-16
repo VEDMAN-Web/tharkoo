@@ -5,6 +5,7 @@ import { ArrowUp, Calendar, Camera, Check, MapPin, Phone } from "lucide-react";
 import type { ListingDoc } from "@/lib/models";
 import { displayTitle, prettyPlace } from "@/lib/format";
 import { listingPhotos } from "@/lib/media";
+import { isCityAlias } from "@/lib/seo/district-alias";
 import { PriceTag } from "../search/PriceTag";
 import { formatPrice } from "../search/price";
 import { PhotoSwipe } from "./PhotoSwipe";
@@ -71,7 +72,7 @@ export function AdCard({
   const [shown, setShown] = useState("");
   const [note, setNote] = useState("");
   const city = prettyPlace(ad.citySlug);
-  const area = ad.place && ad.place !== city ? ad.place : "";
+  const area = ad.place && !isCityAlias(city, ad.place) ? ad.place : "";
   const place = `${city}${area ? `/ ${area}` : ""}`.slice(0, 22);
   const tier = variant in TIER_KEYS ? t(TIER_KEYS[variant as keyof typeof TIER_KEYS]) : "";
   const videoVerified = videoVerifiedLabel(ad.videoVerifiedUntil);

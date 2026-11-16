@@ -21,7 +21,7 @@ export type TrustTone = (typeof TRUST_TONES)[number];
 export type TrustPill = { label: string; tone: TrustTone };
 export type HowStep = { title: string; text: string };
 /** H7.4: a band image for a listing page title band (desktop and phone), or a category card photo (`photo`). */
-export type ShellImage = { scope: "category" | "city"; slug: string; photo: string; band: string; bandPhone: string };
+export type ShellImage = { scope: "category" | "city" | "state"; slug: string; photo: string; band: string; bandPhone: string };
 
 export type ShellConfig = {
   header: { navLinks: ShellLink[]; loginLabel: string; postLabel: string };
@@ -159,7 +159,7 @@ const topicSchema = z.object({ label: z.string().max(MAX_TEXT), topic: z.enum(SU
 const trustSchema = z.object({ label: z.string().max(MAX_TEXT), tone: z.enum(TRUST_TONES).catch("pink") });
 const stepSchema = z.object({ title: z.string().max(MAX_TEXT), text: z.string().max(MAX_ABOUT) });
 const imageSchema = z.object({
-  scope: z.enum(["category", "city"]),
+  scope: z.enum(["category", "city", "state"]),
   slug: z.string().max(120),
   photo: z.string().max(2048),
   band: z.string().max(2048),
@@ -298,7 +298,7 @@ function safeImage(value: unknown): string {
 function pickImages(value: unknown): ShellImage[] {
   return rows(value)
     .map((item) => ({
-      scope: item.scope === "city" ? ("city" as const) : ("category" as const),
+      scope: item.scope === "city" ? ("city" as const) : item.scope === "state" ? ("state" as const) : ("category" as const),
       slug: cleanShellText(item.slug, 120),
       photo: safeImage(item.photo),
       band: safeImage(item.band),

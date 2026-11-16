@@ -1,0 +1,33 @@
+{
+  "branchPrefix": "haiku/h7.32",
+  "globs": [
+    "src/app/[category]/[location]/[district]/page.tsx",
+    "src/app/[category]/[location]/[district]/sub-hub.tsx",
+    "src/app/[category]/[location]/page.tsx",
+    "src/app/[category]/page.tsx",
+    "src/app/[category]/tag/[tag]/page.tsx",
+    "src/app/cities/[city]/city-page.css",
+    "src/app/cities/[city]/page.tsx",
+    "src/app/search/page.tsx",
+    "src/components/FallbackAds.tsx",
+    "src/components/ListingPage.tsx",
+    "src/components/ui/AdCard.tsx",
+    "src/components/fallback-ads.css",
+    "src/components/new/ListingBand.tsx",
+    "src/components/new/band-image.ts",
+    "src/components/new/hero-search-href.ts",
+    "src/components/new/listing-frame-props.tsx",
+    "src/components/new/listing-page.css",
+    "src/lib/fallback-ads.ts",
+    "src/lib/queries.ts",
+    "src/lib/seo/landing.ts",
+    "src/server/site-links/shell-config-rules.ts",
+    "tests/server/listing/band-choice.test.ts",
+    "tests/server/listing/city-resolve.test.ts",
+    "tests/server/listing/district-copy.test.ts",
+    "tests/server/search/fallback-ads.test.ts",
+    "tests/server/search/hero-search-href.test.ts",
+    "docs/ownership/H7.32.json",
+    "progress/H7.32.md"
+  ]
+}
