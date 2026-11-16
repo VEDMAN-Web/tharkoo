@@ -3,17 +3,19 @@
  * This file is client-safe (no server imports). The admin can override any key; the code keeps these defaults so a page is never blank.
  * Placeholders such as {count} are filled with `fillText`.
  */
+import { SUPPORT_PHONE } from "@/lib/support";
+
 export const TEXT_DEFAULTS = {
   // Home
   "home.card.alt": "{title} classifieds",
   // H7.4: the New design home page (utility strip, banner, search, sections, ad cards)
-  "home.utility.live": "Live now · 24/7 available",
-  "home.utility.verified": "100% verified profiles",
+  "home.utility.live": "Sellers online now",
+  "home.utility.verified": "Photo verified badges",
   "home.utility.private": "Private & safe",
-  "home.utility.ticker1": "Quick booking · replies in about 2 minutes",
-  "home.utility.ticker2": "New ads every hour",
+  "home.utility.ticker1": "Chat with sellers for free",
+  "home.utility.ticker2": "Fresh ads, live for 72 hours",
   "home.utility.ticker3": "Free to post across India",
-  "home.utility.phone": "[YOUR PHONE NUMBER]",
+  "home.utility.phone": SUPPORT_PHONE,
   "home.banner.sub": "Free ads across India. Chat with sellers online and verify on a video call.",
   "home.search.keyword": "What are you looking for?",
   "home.search.state": "State",

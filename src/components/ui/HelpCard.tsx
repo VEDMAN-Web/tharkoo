@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { Headset, Mail } from "lucide-react";
+import { telegramHref, whatsappHref } from "@/lib/support";
 
 export function HelpCard() {
   const [facts, setFacts] = useState({ hours: "Monday through Friday", wa: "", tg: "" });
@@ -18,7 +19,8 @@ export function HelpCard() {
     }, 0);
     return () => window.clearTimeout(id);
   }, []);
-  const wa = facts.wa.replace(/\D/g, "");
+  const wa = whatsappHref(facts.wa);
+  const tg = telegramHref(facts.tg);
   return (
     <section className="tk-help" data-tk="help-card">
       <h2>
@@ -30,14 +32,14 @@ export function HelpCard() {
       <Link href="/contact/" className="tk-btn tk-btn-outline-primary" style={{ width: "100%" }}>
         <Mail size={14} /> CONTACT US
       </Link>
-      {wa || facts.tg ? (
+      {wa || tg ? (
         <>
           <p>
             We are also available on <strong>WhatsApp</strong> or <strong>Telegram</strong> Monday through Friday, excluding holidays, from {facts.hours}.
           </p>
           <div className="tk-help-actions">
-            {wa ? <a className="tk-btn tk-btn-outline-primary" href={`https://wa.me/${wa}`}>WhatsApp</a> : null}
-            {facts.tg ? <a className="tk-btn tk-btn-outline-primary" href={`https://t.me/${facts.tg.replace(/^@/, "")}`}>Telegram</a> : null}
+            {wa ? <a className="tk-btn tk-btn-outline-primary" href={wa}>WhatsApp</a> : null}
+            {tg ? <a className="tk-btn tk-btn-outline-primary" href={tg}>Telegram</a> : null}
           </div>
         </>
       ) : (
