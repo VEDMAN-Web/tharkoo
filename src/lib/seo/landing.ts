@@ -73,7 +73,7 @@ function fitIntro(seed: string, opening: string, detail: string) {
 export function fallbackLanding(input: LandingInput): LandingCopy {
   const site = input.site || "Tharkoo";
   const place = input.district ? `${input.district}, ${input.city}` : input.city || "India";
-  const h1 = input.city ? `${input.category} in ${input.district || input.city}` : `${input.category} in India`;
+  const h1 = input.city ? `${input.category} in ${place}` : `${input.category} in India`;
   const count = input.count ?? 0;
   const opener = OPENERS[hash(`${input.category}|${place}`) % OPENERS.length] || OPENERS[0];
   const introLine = opener.replaceAll("{place}", place).replaceAll("{category}", input.category.toLowerCase()).replaceAll("{site}", site);
