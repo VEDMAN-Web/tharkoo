@@ -6,6 +6,7 @@ import { CodeBoxes } from "@/components/auth/CodeBoxes";
 import { SIGN_IN_CSS } from "@/components/auth/sign-in-css";
 import { CODE_LENGTH, formatCountdown, indiaPhone } from "@/components/auth/sign-in-input";
 import { landingFor } from "@/components/auth/landing";
+import { SESSION_EVENT } from "@/components/account/AccountContext";
 import { useUrlPaths } from "@/components/UrlPaths";
 import { useFocusTrap } from "@/components/ui/useFocusTrap";
 import { api, friendlyError, safeNext } from "@/lib/ui/api";
@@ -137,6 +138,7 @@ export function SignInSheet({ mode, initialNext = null, showMobile = false, imag
   }
 
   function finish(roles: string[] | undefined) {
+    window.dispatchEvent(new Event(SESSION_EVENT));
     const current = window.location.pathname + window.location.search;
     const destination = landingFor({ roles, next: popup ? (next ?? current) : next });
     if (popup) {
