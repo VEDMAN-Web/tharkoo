@@ -2,6 +2,7 @@
 
 import type { CSSProperties, ReactNode } from "react";
 import { useEffect, useState } from "react";
+import { SlidersHorizontal } from "lucide-react";
 import "./listing-spec.css";
 import type { ListingLabels } from "./listing-filters";
 
@@ -52,6 +53,7 @@ export function ListingFrame({
           <div className="tkn-ls-searchrow">
             {searchForm}
             <button type="button" className="tkn-ls-filter-btn" aria-expanded={open} aria-controls="tkn-ls-aside" onClick={() => setOpen(true)}>
+              <SlidersHorizontal size={16} aria-hidden="true" />
               {`${labels.filters} · ${activeCount}`}
             </button>
           </div>
