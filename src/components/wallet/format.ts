@@ -1,6 +1,6 @@
 /** Rupees with Indian digit grouping. Amounts are whole rupees from the server, shown with two decimals. */
 export function inr(value: number) {
-  return `Rs ${value.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+  return `₹${value.toLocaleString("en-IN", { maximumFractionDigits: 2 })}`;
 }
 
 export function dateTime(iso: string | null | undefined) {

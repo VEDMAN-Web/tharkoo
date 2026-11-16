@@ -17,6 +17,8 @@ function tagText(tag: string) {
 export function PackPicker({ packs, onPaid }: { packs: PackRow[]; onPaid?: (balance: number) => void }) {
   const [selected, setSelected] = useState("");
   const [message, setMessage] = useState("");
+  const [couponOpen, setCouponOpen] = useState(false);
+  const [coupon, setCoupon] = useState("");
   const chosen = packs.find((pack) => pack.id === selected);
 
   async function pay() {
@@ -24,7 +26,7 @@ export function PackPicker({ packs, onPaid }: { packs: PackRow[]; onPaid?: (bala
     setMessage("");
     const res = await api<{ balance: number; providerRef?: string; provider?: string }>("/api/wallet/packs", {
       method: "POST",
-      body: JSON.stringify({ packId: chosen.id, idempotencyKey: idempotencyKey(chosen.id) }),
+      body: JSON.stringify({ packId: chosen.id, idempotencyKey: idempotencyKey(chosen.id), ...(coupon.trim() ? { couponCode: coupon.trim() } : {}) }),
     });
     if (!res.ok) {
       if (res.error.code === "PAYMENT_REQUIRED") return setMessage("Payment is required before coins can be added.");
@@ -51,6 +53,14 @@ export function PackPicker({ packs, onPaid }: { packs: PackRow[]; onPaid?: (bala
           );
         })}
       </div>
+      {couponOpen ? (
+        <div className="up-coupon-form">
+          <label htmlFor="pack-coupon" className="up-muted">Coupon code</label>
+          <input id="pack-coupon" className="up-input" autoComplete="off" value={coupon} onChange={(event) => setCoupon(event.target.value)} />
+        </div>
+      ) : (
+        <button type="button" className="up-coupon-toggle" onClick={() => setCouponOpen(true)}>Have a coupon?</button>
+      )}
       <div className="up-pay-row">
         <p aria-live="polite" className="up-muted">{message}</p>
         <button type="button" className="up-btn" disabled={!chosen} onClick={pay}>

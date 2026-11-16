@@ -1,4 +1,4 @@
-import { ComingSoon } from "@/components/account/AccountTools";
+import { PanelComingSoon, PanelPage } from "@/components/buyer/PanelPage";
 import { pageMetadata } from "@/lib/ui/meta";
 
 export const metadata = pageMetadata({
@@ -9,5 +9,9 @@ export const metadata = pageMetadata({
 });
 
 export default function Page() {
-  return <ComingSoon title="Subscription" body="Subscriptions are not on sale yet." href="/u/account/dashboard/" label="Back to dashboard" />;
+  return (
+    <PanelPage active="settings" next="/u/account/subscription/" title="Log in to see your subscription" body="Your subscription shows here after you log in.">
+      <PanelComingSoon title="Subscription" body="Subscriptions are not on sale yet." href="/u/account/" label="Back to my account" />
+    </PanelPage>
+  );
 }

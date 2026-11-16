@@ -1,4 +1,5 @@
 import { WalletHistory } from "@/components/account/AccountTools";
+import { PanelPage } from "@/components/buyer/PanelPage";
 import { pageMetadata } from "@/lib/ui/meta";
 
 export const metadata = pageMetadata({
@@ -9,5 +10,9 @@ export const metadata = pageMetadata({
 });
 
 export default function Page() {
-  return <WalletHistory />;
+  return (
+    <PanelPage active="coins" next="/u/account/credits/history/" title="Log in to see your history" body="Purchases and spends show here after you log in.">
+      <WalletHistory />
+    </PanelPage>
+  );
 }

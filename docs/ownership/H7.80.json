@@ -1,0 +1,21 @@
+{
+  "branchPrefix": "haiku/h7.80",
+  "globs": [
+    "docs/ownership/H7.80.json",
+    "src/app/u/account/analytics/page.tsx",
+    "src/app/u/account/coupons/page.tsx",
+    "src/app/u/account/credits/bank/page.tsx",
+    "src/app/u/account/credits/history/page.tsx",
+    "src/app/u/account/packs/page.tsx",
+    "src/app/u/account/subscription/page.tsx",
+    "src/app/u/account/wallet/page.tsx",
+    "src/components/account/AccountTools.tsx",
+    "src/components/buyer/PackPicker.tsx",
+    "src/components/buyer/PanelPage.tsx",
+    "src/components/buyer/user-panel.css",
+    "src/components/wallet/CoinWallet.tsx",
+    "src/components/wallet/format.ts",
+    "tests/e2e/money.e2e.ts",
+    "tests/e2e/panel-pages.e2e.ts"
+  ]
+}

@@ -113,6 +113,17 @@
 
 .up-coins-card .up-promo-row { margin-top: 14px; }
 
+.up-table-wrap { overflow-x: auto; margin-top: 14px; }
+.up-table { width: 100%; border-collapse: collapse; font-size: 14px; color: #1e0b38; }
+.up-table th { text-align: left; font-size: 12px; font-weight: 700; color: #6b4a8a; padding: 8px 10px; border-bottom: 1px solid #ead8f0; }
+.up-table td { padding: 12px 10px; border-bottom: 1px solid #f3e8f7; }
+.up-pos { color: #047857; font-weight: 700; }
+.up-neg { color: #9f1239; font-weight: 700; }
+.up-coupon-form { display: grid; gap: 10px; margin: 14px 0; max-width: 460px; }
+.up-coupon-row { display: flex; gap: 10px; flex-wrap: wrap; }
+.up-coupon-row .up-input { flex: 1 1 200px; min-height: 48px; }
+.up-coupon-toggle { align-self: flex-start; min-height: 44px; padding: 0; border: 0; background: none; color: #a8124f; font: inherit; font-weight: 700; font-size: 14px; text-decoration: underline; cursor: pointer; }
+
 .up-cards { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 16px; }
 .up-cards-fill { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 14px; }
 .up-filter-btn {

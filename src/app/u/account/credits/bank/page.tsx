@@ -1,4 +1,4 @@
-import { ComingSoon } from "@/components/account/AccountTools";
+import { PanelComingSoon, PanelPage } from "@/components/buyer/PanelPage";
 import { pageMetadata } from "@/lib/ui/meta";
 
 export const metadata = pageMetadata({
@@ -9,5 +9,9 @@ export const metadata = pageMetadata({
 });
 
 export default function Page() {
-  return <ComingSoon title="Bank transfer" body="Bank transfers are coming soon. Buy credits in the wallet if a pack is listed." href="/u/account/credits/" label="Open wallet" />;
+  return (
+    <PanelPage active="coins" next="/u/account/credits/bank/" title="Log in to see bank transfer" body="Payment options show here after you log in.">
+      <PanelComingSoon title="Bank transfer" body="Bank transfers will open soon. You can buy coins by card from the coins page when a pack is listed." href="/u/account/credits/" label="Open coins and payments" />
+    </PanelPage>
+  );
 }

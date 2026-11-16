@@ -1,96 +1,79 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
-import { Ticket } from "lucide-react";
+import { useEffect, useState } from "react";
+import Link from "next/link";
+import { Wallet } from "lucide-react";
+import { EmptyIcon } from "../buyer/UserPanelShell";
 import { api, friendlyError, hasSessionHint } from "@/lib/ui/api";
 import { VendorShell } from "../vendor/VendorShell";
 import { EmptyState } from "../ui/EmptyState";
 import { HelpCard } from "../ui/HelpCard";
 
+type Movement = { id: string; delta: number; reason: string; createdAt: string | null };
+
 export function WalletHistory() {
-  const [items, setItems] = useState<{ id: string; delta: number; reason: string; createdAt: string | null }[] | null>(null);
-  const [signedOut, setSignedOut] = useState(false);
+  const [items, setItems] = useState<Movement[] | null>(null);
   useEffect(() => {
     const id = window.setTimeout(() => {
-      if (!hasSessionHint()) {
-        setSignedOut(true);
-        return;
-      }
-      api<{ items: { id: string; delta: number; reason: string; createdAt: string | null }[] }>("/api/wallet/entries").then((res) => {
-        if (!res.ok) setSignedOut(true);
-        else setItems(res.data.items || []);
-      });
+      api<{ items: Movement[] }>("/api/wallet/entries").then((res) => setItems(res.ok ? res.data.items || [] : []));
     }, 0);
     return () => window.clearTimeout(id);
   }, []);
   return (
-    <VendorShell>
-      <h1 className="tk-page-h1">Transaction History</h1>
-      {signedOut ? (
-        <EmptyState title="Sign in to see history" body="Transactions appear after you log in." action={{ href: "/u/login/?next=/u/account/credits/history/", label: "Log in" }} />
-      ) : items && items.length === 0 ? (
-        <EmptyState title="No transactions yet" body="Purchases and spends will show up here." action={{ href: "/u/account/credits/", label: "Open wallet" }} />
+    <section className="up-glass up-panel" aria-labelledby="history-title">
+      <h1 id="history-title" className="up-h2">Transaction history</h1>
+      {items === null ? (
+        <div className="up-skeleton" aria-hidden="true" style={{ marginTop: 16 }} />
+      ) : items.length === 0 ? (
+        <div className="up-empty">
+          <EmptyIcon icon={Wallet} />
+          <p className="up-empty-title">No transactions yet</p>
+          <p className="up-empty-body">Purchases and spends will show up here.</p>
+          <Link href="/u/account/credits/" className="up-btn">Open coins and payments</Link>
+        </div>
       ) : (
-        <div style={{ overflowX: "auto" }}>
-          <table className="w-full text-left t-small">
+        <div className="up-table-wrap">
+          <table className="up-table">
             <thead>
-              <tr><th>When</th><th>Reason</th><th>Credits</th></tr>
+              <tr><th scope="col">When</th><th scope="col">Reason</th><th scope="col">Amount</th></tr>
             </thead>
             <tbody>
-              {(items || []).map((row) => (
+              {items.map((row) => (
                 <tr key={row.id}>
-                  <td>{row.createdAt ? new Date(row.createdAt).toLocaleDateString("en-IN") : ""}</td>
+                  <td>{row.createdAt ? new Date(row.createdAt).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" }) : ""}</td>
                   <td>{row.reason}</td>
-                  <td>{row.delta}</td>
+                  <td className={row.delta < 0 ? "up-neg" : "up-pos"}>{row.delta > 0 ? `+${row.delta}` : row.delta}</td>
                 </tr>
               ))}
             </tbody>
           </table>
         </div>
       )}
-      <HelpCard />
-    </VendorShell>
+    </section>
   );
 }
 
 export function CouponRedeem() {
   const [code, setCode] = useState("");
   const [message, setMessage] = useState("");
-  const [open, setOpen] = useState("");
   async function redeem(event: React.FormEvent) {
     event.preventDefault();
     const res = await api("/api/coupons/redeem", { method: "POST", body: JSON.stringify({ code }) });
     setMessage(res.ok ? "Coupon applied." : friendlyError(res.error));
   }
-  const faqs = useMemo(
-    () => [
-      ["How to use a coupon?", "Use the coupon box on this page or on the Buy Credits page."],
-      ["Where do I see my coupons?", "Coupon credit appears in the wallet history."],
-    ],
-    [],
-  );
   return (
-    <VendorShell>
-      <h1 className="tk-page-h1">Coupons</h1>
-      <form onSubmit={redeem}>
-        <p className="t-small"><Ticket size={14} /> Do you have a Coupon?</p>
-        <div style={{ display: "flex", gap: 8 }}>
-          <input aria-label="Insert coupon code" placeholder="Insert coupon code" value={code} onChange={(event) => setCode(event.target.value)} style={{ flex: 1, height: 32, border: "1px solid var(--border)", borderRadius: 4, padding: "0 8px" }} />
-          <button type="submit" className="tk-btn tk-btn-outline-primary" data-tk="apply-coupon">APPLY</button>
+    <section className="up-glass up-panel" aria-labelledby="coupon-title">
+      <h1 id="coupon-title" className="up-h2">Coupons</h1>
+      <form onSubmit={redeem} className="up-coupon-form">
+        <label htmlFor="coupon-code" className="up-muted">Have a coupon? Enter the code.</label>
+        <div className="up-coupon-row">
+          <input id="coupon-code" className="up-input" placeholder="Coupon code" autoComplete="off" value={code} onChange={(event) => setCode(event.target.value)} />
+          <button type="submit" className="up-btn" data-tk="apply-coupon">Apply</button>
         </div>
-        <p aria-live="polite" className="t-small">{message}</p>
+        <p aria-live="polite" className="up-muted">{message}</p>
       </form>
-      <p style={{ textAlign: "center", marginTop: 50, color: "var(--muted)" }}>Frequently asked questions</p>
-      {faqs.map(([q, a]) => (
-        <div key={q}>
-          <button type="button" className="tk-acc" aria-expanded={open === q} onClick={() => setOpen(open === q ? "" : q)}>
-            {q} <span>{open === q ? "▴" : "▾"}</span>
-          </button>
-          {open === q ? <p className="t-small">{a}</p> : null}
-        </div>
-      ))}
-      <HelpCard />
-    </VendorShell>
+      <p className="up-muted">Coupon credit shows in your <Link href="/u/account/credits/history/" className="up-link">transaction history</Link>. You can also enter a coupon when you buy coins.</p>
+    </section>
   );
 }
 

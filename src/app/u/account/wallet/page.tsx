@@ -1,4 +1,5 @@
 import { CoinWallet } from "@/components/wallet/CoinWallet";
+import { PanelPage } from "@/components/buyer/PanelPage";
 import { pageMetadata } from "@/lib/ui/meta";
 
 export const metadata = pageMetadata({
@@ -11,8 +12,8 @@ export const metadata = pageMetadata({
 export default async function Page({ searchParams }: { searchParams: Promise<{ tab?: string }> }) {
   const { tab } = await searchParams;
   return (
-    <div className="tk-container" style={{ paddingLeft: 16, paddingRight: 16, maxWidth: 720, margin: "0 auto" }}>
+    <PanelPage active="coins" next="/u/account/wallet/" title="Log in to see your wallet" body="Your coin balance and earnings load after you log in.">
       <CoinWallet initialTab={tab === "earnings" ? "earnings" : "buy"} />
-    </div>
+    </PanelPage>
   );
 }

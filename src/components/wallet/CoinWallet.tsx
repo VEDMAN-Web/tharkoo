@@ -6,6 +6,7 @@ import { api, friendlyError, hasSessionHint, idempotencyKey } from "@/lib/ui/api
 import { EmptyState } from "@/components/ui/EmptyState";
 import { VendorEarnings } from "@/components/wallet/VendorEarnings";
 import { dateTime, inr, STATUS_LABEL, statusTone } from "@/components/wallet/format";
+import { makeT } from "@/lib/ui/text";
 
 interface Pack {
   id: string;
@@ -39,8 +40,10 @@ interface Movement {
 }
 
 type Tab = "buy" | "earnings" | "history";
+const t = makeT();
+
 const TABS: { key: Tab; label: string }[] = [
-  { key: "buy", label: "Buy coins" },
+  { key: "buy", label: t("panel.coins.buy") },
   { key: "earnings", label: "Earnings" },
   { key: "history", label: "History" },
 ];
@@ -49,19 +52,10 @@ const HELD = "The payment provider is not connected yet. No money was taken and 
 
 function Balance({ balance, coinValueInr }: { balance: number; coinValueInr: number }) {
   return (
-    <section
-      aria-label="Coin balance"
-      style={{
-        borderRadius: 16,
-        padding: "20px 18px",
-        color: "#2b2110",
-        background: "linear-gradient(135deg, #fdf0f7 0%, #f5b5d6 45%, #e91e8c 100%)",
-        boxShadow: "0 8px 24px rgba(138, 100, 22, 0.18)",
-      }}
-    >
-      <p className="t-small" style={{ margin: 0, opacity: 0.8 }}>Coin balance</p>
-      <p style={{ margin: "4px 0 0", fontSize: 36, fontWeight: 800, lineHeight: 1.1 }}>{balance} coins</p>
-      <p className="t-small" style={{ margin: "6px 0 0" }}>About {inr(balance * coinValueInr)} in value</p>
+    <section aria-labelledby="wallet-balance" className="up-coins-card">
+      <h2 id="wallet-balance" className="up-coins-label">{t("panel.coins.title")}</h2>
+      <p className="up-coins-value" data-tk="coin-balance">{t("panel.coins.balance", { count: balance })}</p>
+      <p className="up-coins-worth" style={{ marginBottom: 0 }}>About {inr(balance * coinValueInr)} in value</p>
     </section>
   );
 }
@@ -90,11 +84,11 @@ function BuyTab({ data }: { data: CoinsResponse }) {
   }
 
   if (data.packs.length === 0) {
-    return <p className="t-small" style={{ color: "var(--muted)" }}>No coin packs are on sale right now.</p>;
+    return <p className="up-muted">No coin packs are on sale right now.</p>;
   }
   return (
     <div style={{ display: "grid", gap: 14 }}>
-      <div role="radiogroup" aria-label="Coin packs" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(150px, 1fr))", gap: 10 }}>
+      <div role="radiogroup" aria-label="Coin packs" className="up-packs">
         {data.packs.map((item) => {
           const on = item.id === selected;
           return (
@@ -104,30 +98,21 @@ function BuyTab({ data }: { data: CoinsResponse }) {
               role="radio"
               aria-checked={on}
               onClick={() => setSelected(item.id)}
-              style={{
-                textAlign: "left",
-                minHeight: 88,
-                padding: 14,
-                borderRadius: 12,
-                cursor: "pointer",
-                background: "var(--card, #fff)",
-                color: "var(--text)",
-                border: on ? "2px solid var(--rose)" : "1px solid var(--border)",
-                boxShadow: on ? "0 0 0 3px rgba(233, 30, 140, 0.25)" : "none",
-              }}
+              className={on ? "up-pack up-pack-on" : "up-pack"}
             >
-              <span style={{ display: "block", fontSize: 22, fontWeight: 800 }}>{item.coins} coins</span>
-              <span className="t-small" style={{ display: "block", color: "var(--muted)" }}>{inr(item.price)}</span>
-              {item.tag ? <span className="t-small" style={{ color: "var(--accent)" }}>{item.tag}</span> : null}
+              {item.tag ? <span className="up-pack-tag">{item.tag.replace(/extra credits/i, "Extra coins")}</span> : null}
+              <span className="up-pack-coins">{item.coins}</span>
+              <span className="up-pack-unit">coins</span>
+              <span className="up-pack-price">{inr(item.price)}</span>
             </button>
           );
         })}
       </div>
-      <button type="button" className="tk-btn tk-btn-cta" disabled={!pack || busy} onClick={buy} style={{ width: "100%" }}>
-        {pack ? `Buy ${pack.coins} coins for ${inr(pack.price)}` : "Choose a pack"}
-      </button>
-      <div aria-live="polite" className="t-small" style={{ minHeight: 18, color: message === HELD ? "var(--muted)" : "var(--danger, #a12626)" }}>
-        {message}
+      <div className="up-pay-row">
+        <p aria-live="polite" className="up-muted" style={{ color: message === HELD ? undefined : "#9f1239" }}>{message}</p>
+        <button type="button" className="up-btn" disabled={!pack || busy} onClick={buy}>
+          {pack ? `Pay ${inr(pack.price)}` : "Choose a pack"}
+        </button>
       </div>
     </div>
   );
@@ -145,7 +130,7 @@ function HistoryTab() {
     return () => window.clearTimeout(id);
   }, []);
 
-  if (!purchases || !movements) return <p className="t-small" style={{ color: "var(--muted)" }}>Loading history</p>;
+  if (!purchases || !movements) return <div className="up-skeleton" aria-hidden="true" />;
   return (
     <div style={{ display: "grid", gap: 22 }}>
       <section aria-label="Purchases" style={{ display: "grid", gap: 10 }}>
@@ -212,19 +197,18 @@ export function CoinWallet({ initialTab = "buy" }: { initialTab?: Tab }) {
     );
   }
   return (
-    <div style={{ display: "grid", gap: 18, padding: "8px 0 40px" }}>
-      <h1 className="tk-page-h1" style={{ margin: 0 }}>Wallet</h1>
-      {error ? <p className="t-small" role="alert" style={{ color: "var(--danger, #a12626)" }}>{error}</p> : null}
-      {data ? <Balance balance={data.balance} coinValueInr={data.coinValueInr} /> : <p className="t-small" style={{ color: "var(--muted)" }}>Loading balance</p>}
-      <nav aria-label="Wallet sections" style={{ display: "flex", gap: 6, overflowX: "auto" }}>
+    <div style={{ display: "grid", gap: 18 }}>
+      <h1 className="up-h2">Wallet</h1>
+      {error ? <p className="up-error" role="alert">{error}</p> : null}
+      {data ? <Balance balance={data.balance} coinValueInr={data.coinValueInr} /> : <div className="up-skeleton" aria-hidden="true" style={{ minHeight: 120 }} />}
+      <nav aria-label="Wallet sections" style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
         {TABS.map((item) => (
           <button
             key={item.key}
             type="button"
             aria-pressed={tab === item.key}
             onClick={() => setTab(item.key)}
-            className={tab === item.key ? "tk-btn tk-btn-cta" : "tk-btn tk-btn-outline-primary"}
-            style={{ flex: "1 0 auto" }}
+            className={tab === item.key ? "up-filter-btn up-filter-on" : "up-filter-btn"}
           >
             {item.label}
           </button>
@@ -233,8 +217,8 @@ export function CoinWallet({ initialTab = "buy" }: { initialTab?: Tab }) {
       {tab === "buy" && data ? <BuyTab data={data} /> : null}
       {tab === "earnings" ? <VendorEarnings onSignedOut={signOut} /> : null}
       {tab === "history" ? <HistoryTab /> : null}
-      <p className="t-small" style={{ color: "var(--muted)", margin: 0 }}>
-        Need help with a payment? <Link href="/u/account/credits/history/" style={{ color: "var(--accent)" }}>See older transactions</Link>
+      <p className="up-muted">
+        Need help with a payment? <Link href="/u/account/credits/history/" className="up-link">See older transactions</Link>
       </p>
     </div>
   );
