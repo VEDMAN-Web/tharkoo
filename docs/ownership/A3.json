@@ -1,0 +1,17 @@
+{
+  "branchPrefix": "haiku/a3",
+  "globs": [
+    "docs/ownership/A3.json",
+    "progress/A3.md",
+    "src/lib/admin/perms.ts",
+    "src/server/admin/context.ts",
+    "src/server/admin/write.ts",
+    "src/server/admin/undo/core.ts",
+    "src/server/admin/undo/registry.ts",
+    "src/server/admin/undo/handlers/*.ts",
+    "src/app/admin/undo-actions.ts",
+    "src/server/models/trust.ts",
+    "src/server/audit/repository.ts",
+    "tests/server/admin/a3-*.test.ts"
+  ]
+}
