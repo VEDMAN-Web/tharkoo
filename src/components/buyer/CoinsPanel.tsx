@@ -10,7 +10,7 @@ const t = makeT();
 
 /** H7.17: coins and payments on the user panel: the pack grid, the coin balance and a link to the history. */
 
-export function CoinsPanel({ summary, packs }: { summary: PanelSummary; packs: PackRow[] }) {
+export function CoinsPanel({ summary, packs, creditPriceInr = 10 }: { summary: PanelSummary; packs: PackRow[]; creditPriceInr?: number }) {
   const balance = summary.signedIn ? summary.balance : 0;
 
   if (!summary.signedIn) {
@@ -40,7 +40,7 @@ export function CoinsPanel({ summary, packs }: { summary: PanelSummary; packs: P
           <p className="up-muted">No credit packs are on sale right now.</p>
         ) : (
           <>
-            <p className="up-muted">{t("recharge.rate", { price: 10 })}</p>
+            <p className="up-muted">{t("recharge.rate", { price: creditPriceInr })}</p>
             <button type="button" className="up-btn" data-tk="open-recharge" onClick={() => openRecharge({})}>{t("recharge.recharge")}</button>
           </>
         )}

@@ -125,14 +125,15 @@ test.describe("5 Money (mock provider)", () => {
     });
     expect(again.status()).toBeLessThan(500);
 
-    // The city feed is cached for up to a minute, so poll. Desktop run only, to keep the suite short.
+    // The city feed is cached for up to a minute, so poll for the first ad link on the page. Desktop run only, to keep the suite short.
     if (!isPhone(page)) {
       await expect
         .poll(
           async () => {
             const html = await (await page.request.get("/jobs/mumbai/")).text();
-            const cards = html.split('<article class="tk-card"').slice(1);
-            return cards[0]?.includes(ad.title) ? "first" : "not-first";
+            const firstAd = html.match(/href="(\/ad\/[^"?#]+)"/)?.[1] ?? "";
+            const withSlash = (value: string) => (value.endsWith("/") ? value : `${value}/`);
+            return withSlash(firstAd) === withSlash(ad.adHref) ? "first" : "not-first";
           },
           { timeout: 120_000, intervals: [5_000] },
         )
