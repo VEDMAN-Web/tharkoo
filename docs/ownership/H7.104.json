@@ -3,6 +3,9 @@
   "globs": [
     "docs/ownership/H7.104.json",
     "progress/H7.104.md",
+    "src/app/admin/content-actions.ts",
+    "src/app/admin/homepage/HomeCategoriesCountField.tsx",
+    "src/app/admin/homepage/page.tsx",
     "src/app/page.tsx",
     "src/components/admin/SiteContentForm.tsx",
     "src/components/new/HomeAdCard.tsx",
@@ -14,6 +17,7 @@
     "src/components/new/home-ad-data.ts",
     "src/components/new/home-ads.css",
     "src/lib/ui/site-content.ts",
+    "src/lib/ui/site-store.ts",
     "tests/e2e/h7-104-home.e2e.ts",
     "tests/e2e/home-ad-cards.e2e.ts",
     "tests/server/ui/card-slides.test.ts"
