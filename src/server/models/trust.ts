@@ -28,6 +28,10 @@ export interface ReportDoc {
   slaDecisionDueAt?: Date;
   assigneeId?: Types.ObjectId;
   note?: string;
+  source?: string;
+  ackAt?: Date;
+  resolvedAt?: Date;
+  decidedBy?: Types.ObjectId;
   createdAt?: Date;
   updatedAt?: Date;
 }
@@ -67,6 +71,13 @@ export interface AuditEventDoc {
   reason?: string;
   requestId: string;
   ipHash?: string;
+  actorRole?: string;
+  summary?: string;
+  targetLabel?: string;
+  undo?: { kind: string; until: Date; data?: unknown };
+  lock?: "money_sent" | "message_sent" | "purged" | "legal_record" | "account_deleted";
+  undoOf?: Types.ObjectId;
+  batchId?: string;
   createdAt?: Date;
 }
 
@@ -96,6 +107,10 @@ const reportSchema = new Schema<ReportDoc>(
     slaDecisionDueAt: { type: Date },
     assigneeId: { type: Schema.Types.ObjectId },
     note: { type: String },
+    source: { type: String },
+    ackAt: { type: Date },
+    resolvedAt: { type: Date },
+    decidedBy: { type: Schema.Types.ObjectId },
   },
   { timestamps: true, collection: collectionName("reports", "Report") },
 );
@@ -145,12 +160,24 @@ const auditEventSchema = new Schema<AuditEventDoc>(
     reason: { type: String },
     requestId: { type: String, required: true },
     ipHash: { type: String },
+    actorRole: { type: String },
+    summary: { type: String, maxlength: 200 },
+    targetLabel: { type: String },
+    undo: {
+      type: new Schema({ kind: { type: String, required: true }, until: { type: Date, required: true }, data: { type: Schema.Types.Mixed } }, { _id: false }),
+    },
+    lock: { type: String, enum: ["money_sent", "message_sent", "purged", "legal_record", "account_deleted"] },
+    undoOf: { type: Schema.Types.ObjectId },
+    batchId: { type: String },
   },
   { timestamps: { createdAt: true, updatedAt: false }, collection: auditCollection },
 );
 auditEventSchema.index({ actorId: 1, createdAt: -1 });
 auditEventSchema.index({ targetType: 1, targetId: 1, createdAt: -1 });
 auditEventSchema.index({ action: 1, createdAt: -1 });
+auditEventSchema.index({ undoOf: 1 }, { sparse: true });
+auditEventSchema.index({ batchId: 1 }, { sparse: true });
+auditEventSchema.index({ "undo.until": 1 }, { partialFilterExpression: { "undo.until": { $exists: true } } });
 appendOnlyPlugin(auditEventSchema, auditCollection);
 
 export const Report = registerModel<ReportDoc>(modelName("Report"), reportSchema);
