@@ -231,7 +231,7 @@ export function PhotoStep({
           </InfoPopover>
         </p>
         <p className="tkp-drop-rule" data-tk="video-rule">
-          {VIDEO_RULE_LINE}
+          <span>{VIDEO_RULE_LINE}</span>
           <InfoPopover id="post-videos" label="Video rules">
             <strong>Your videos</strong>
             <ul>
