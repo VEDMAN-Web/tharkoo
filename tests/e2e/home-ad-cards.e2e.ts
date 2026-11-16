@@ -1,6 +1,6 @@
 import AxeBuilder from "@axe-core/playwright";
-import type { Page } from "@playwright/test";
-import { expect, hasHorizontalScroll, isPhone, test } from "./helpers";
+import type { Locator, Page } from "@playwright/test";
+import { expect, hasHorizontalScroll, isPhone, test, withLocalDb } from "./helpers";
 
 const ROW = '[data-tk="ads-row"]';
 const CARD = '[data-tk="home-ad"]';
@@ -12,6 +12,40 @@ async function openHome(page: Page) {
   await row.scrollIntoViewIfNeeded();
   await expect(row.locator(CARD).first()).toBeVisible();
   return row;
+}
+
+const PHOTO_WAIT = 90_000;
+
+/**
+ * Home shows the eight newest ads, so ads that other specs post without photos can push every card with 2+ photos
+ * off the row. When none is shown, pin one seeded ad with 2+ photos to Home (the feed is cached for a minute) and
+ * give it back at the end.
+ */
+async function openHomeWithPhotoCard(page: Page, pick: (row: Locator) => Locator) {
+  let row = await openHome(page);
+  if (await pick(row).count()) return { row, restore: async () => undefined };
+  const pinned = await withLocalDb(async (db) => {
+    const ad = await db.collection("listings").findOne({ status: "active", "mediaIds.1": { $exists: true } }, { projection: { homeShow: 1, homeOrder: 1 } });
+    if (!ad) return null;
+    await db.collection("listings").updateOne({ _id: ad._id }, { $set: { homeShow: true, homeOrder: -1_000_000 } });
+    return { id: ad._id, homeShow: ad.homeShow === true, homeOrder: typeof ad.homeOrder === "number" ? ad.homeOrder : 0 };
+  });
+  const restore = async () => {
+    if (!pinned) return;
+    await withLocalDb((db) => db.collection("listings").updateOne({ _id: pinned.id }, { $set: { homeShow: pinned.homeShow, homeOrder: pinned.homeOrder } }));
+  };
+  await expect
+    .poll(
+      async () => {
+        await page.reload();
+        await page.waitForLoadState("networkidle");
+        row = page.locator(ROW);
+        return pick(row).count();
+      },
+      { timeout: PHOTO_WAIT, intervals: [3000] },
+    )
+    .toBeGreaterThan(0);
+  return { row, restore };
 }
 
 test.describe("H7.84 home ad cards", () => {
@@ -60,19 +94,24 @@ test.describe("H7.84 home ad cards", () => {
   });
 
   test("the photo carousel has arrows and dots, and the arrow moves to the next picture", async ({ page }) => {
-    const row = await openHome(page);
-    const card = row.locator(CARD).filter({ has: page.locator(".tkh-ad-dots") }).first();
-    await expect(card).toBeVisible();
-    await card.hover();
-    const next = card.getByRole("button", { name: "Next photo" });
-    await expect(next).toBeVisible();
-    const count = card.locator(".tkh-ad-count");
-    const before = Number(((await count.innerText()).match(/^(\d+)\//) || [])[1]);
-    await next.click();
-    await expect(count).toHaveText(new RegExp(`^${before + 1}/`));
-    await expect(card.locator(".tkh-ad-dots i.is-on")).toHaveCount(1);
-    const position = await card.locator(".tkh-ad-slide img").first().evaluate((node) => getComputedStyle(node).objectPosition);
-    expect(position).toBe("50% 18%");
+    test.setTimeout(PHOTO_WAIT + 60_000);
+    const { row, restore } = await openHomeWithPhotoCard(page, (list) => list.locator(CARD).filter({ has: page.locator(".tkh-ad-dots") }));
+    try {
+      const card = row.locator(CARD).filter({ has: page.locator(".tkh-ad-dots") }).first();
+      await expect(card).toBeVisible();
+      await card.hover();
+      const next = card.getByRole("button", { name: "Next photo" });
+      await expect(next).toBeVisible();
+      const count = card.locator(".tkh-ad-count");
+      const before = Number(((await count.innerText()).match(/^(\d+)\//) || [])[1]);
+      await next.click();
+      await expect(count).toHaveText(new RegExp(`^${before + 1}/`));
+      await expect(card.locator(".tkh-ad-dots i.is-on")).toHaveCount(1);
+      const position = await card.locator(".tkh-ad-slide img").first().evaluate((node) => getComputedStyle(node).objectPosition);
+      expect(position).toBe("50% 18%");
+    } finally {
+      await restore();
+    }
   });
 
   test("a click on the card (not the heart, arrows or pills) opens the ad", async ({ page }) => {
@@ -112,21 +151,26 @@ test.describe("H7.84 home ad cards", () => {
   });
 
   test("a touch screen never shows the pop-out", async ({ browser, baseURL }) => {
+    test.setTimeout(PHOTO_WAIT + 60_000);
     const context = await browser.newContext({ viewport: { width: 390, height: 844 }, hasTouch: true, isMobile: true, baseURL });
     await context.addInitScript(() => {
       localStorage.setItem("nl-age", "ok");
       localStorage.setItem("nl-cookies", "necessary");
     });
     const page = await context.newPage();
-    const row = await openHome(page);
-    const withPhotos = row.locator(CARD).filter({ has: page.getByRole("button", { name: "Next photo" }) }).first();
-    await expect(withPhotos).toBeVisible();
-    await withPhotos.hover();
-    await page.waitForTimeout(800);
-    await expect(page.locator('[data-tk="home-ad-popout"]')).toHaveCount(0);
-    await expect(withPhotos.getByRole("button", { name: "Next photo" })).toBeVisible();
-    expect(await hasHorizontalScroll(page)).toBe(false);
-    await context.close();
+    const { row, restore } = await openHomeWithPhotoCard(page, (list) => list.locator(CARD).filter({ has: page.getByRole("button", { name: "Next photo" }) }));
+    try {
+      const withPhotos = row.locator(CARD).filter({ has: page.getByRole("button", { name: "Next photo" }) }).first();
+      await expect(withPhotos).toBeVisible();
+      await withPhotos.hover();
+      await page.waitForTimeout(800);
+      await expect(page.locator('[data-tk="home-ad-popout"]')).toHaveCount(0);
+      await expect(withPhotos.getByRole("button", { name: "Next photo" })).toBeVisible();
+      expect(await hasHorizontalScroll(page)).toBe(false);
+    } finally {
+      await restore();
+      await context.close();
+    }
   });
 
   test("the ads block passes axe with no serious or critical issues", async ({ page }) => {

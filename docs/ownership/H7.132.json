@@ -1,0 +1,7 @@
+{
+  "branchPrefix": "haiku/h7.132",
+  "globs": [
+    "docs/ownership/H7.132.json",
+    "tests/e2e/home-ad-cards.e2e.ts"
+  ]
+}
