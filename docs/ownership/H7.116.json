@@ -1,0 +1,16 @@
+{
+  "branchPrefix": "haiku/h7.116",
+  "globs": [
+    "docs/ownership/H7.116.json",
+    "src/components/promote/**",
+    "src/components/vendor/OwnerActions.tsx",
+    "src/components/vendor/MyAdsBoard.tsx",
+    "src/components/buyer/MyAdsList.tsx",
+    "src/components/PostWizard.tsx",
+    "src/components/PathChrome.tsx",
+    "src/components/recharge/openRecharge.ts",
+    "src/components/recharge/RechargeSheet.tsx",
+    "src/lib/ui/text.ts",
+    "tests/e2e/h7-116-promote.e2e.ts"
+  ]
+}

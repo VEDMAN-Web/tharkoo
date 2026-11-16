@@ -108,7 +108,7 @@ export function RechargeSheet({ options, onClose }: { options: RechargeOptions; 
           <p className="tkr-note">{t("recharge.empty")}</p>
         ) : (
           <>
-            {shortfall > 0 ? <p className="tkr-short" data-tk="recharge-short">{t("recharge.short", { count: shortfall })}</p> : null}
+            {shortfall > 0 ? <p className="tkr-short" data-tk="recharge-short">{t(options.shortKey ?? "recharge.short", { count: shortfall })}</p> : null}
             <div role="radiogroup" aria-label={t("recharge.packs")} className="tkr-packs">
               {data.packs.map((pack) => (
                 <button key={pack.id} type="button" role="radio" aria-checked={pack.id === selected} className="tkr-pack" data-tk="recharge-pack" onClick={() => setSelected(pack.id)}>

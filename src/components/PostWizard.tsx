@@ -19,6 +19,7 @@ import { ContactFields } from "./post/ContactFields";
 import { AboutYou } from "./post/AboutYou";
 import { ReviewStep, type ReviewRow } from "./post/ReviewStep";
 import { PostSuccess, type UpsellPlan } from "./post/PostSuccess";
+import { openPromote } from "./promote/openPromote";
 import { CreditsCard, PayCard } from "./post/PayParts";
 import { creditsText, insufficientFrom, openRecharge, shortfallOf, usePostingMoney } from "./post/credits";
 import { NEW_POST_TIPS, PostRail, PostTip, RAIL_LABELS, RAIL_MORE_LABEL, type RailItem } from "./post/NewPostParts";
@@ -124,7 +125,6 @@ export function PostWizard({
   const [serverShort, setServerShort] = useState<{ need: number; balance: number } | null>(null);
   const [adSlug, setAdSlug] = useState("");
   const [receipt, setReceipt] = useState("");
-  const [afterBalance, setAfterBalance] = useState<number | null>(null);
   const [planNote, setPlanNote] = useState("");
   const [draftStatus, setDraftStatus] = useState("");
   const money = usePostingMoney();
@@ -503,7 +503,6 @@ export function PostWizard({
     if (newDesign) {
       const charged = typeof outcome.charged === "number" ? outcome.charged : alreadyPaid ? 0 : money.fee;
       const left = typeof outcome.balance === "number" ? outcome.balance : Math.max(0, (money.balance ?? 0) - charged);
-      setAfterBalance(left);
       setReceipt(!chargesFee ? "" : charged > 0 ? `${creditsText(charged)} paid · Balance ${creditsText(left)}` : `No charge for changes · Balance ${creditsText(left)}`);
       void api<{ slug?: string }>(`/api/listings/by-id/${draftId}`).then((found) => {
         if (found.ok && found.data?.slug) setAdSlug(found.data.slug);
@@ -513,16 +512,9 @@ export function PostWizard({
     setDone(true);
   }
 
-  async function buyPlan(plan: UpsellPlan) {
+  function buyPlan(plan: UpsellPlan) {
     setPlanNote("");
-    const price = plan.amount ?? 0;
-    const have = afterBalance ?? money.balance ?? 0;
-    if (price > have) return openRecharge({ shortfall: price - have });
-    const res = await api("/api/promotions", { method: "POST", body: JSON.stringify({ listingId: draftId, productId: plan.id }) });
-    if (!res.ok) return setPlanNote(friendlyError(res.error));
-    setAfterBalance(have - price);
-    setPlanNote(`${plan.name} added to your ad.`);
-    void money.refresh();
+    openPromote({ listingId: draftId, title: title.trim(), planId: plan.id });
   }
 
   const preview = useMemo(
@@ -557,7 +549,7 @@ export function PostWizard({
         receipt={receipt}
         plans={visiblePlans.filter((plan) => (plan.amount ?? 0) > 0).slice(0, 2)}
         planNote={planNote}
-        onPlan={(plan) => void buyPlan(plan)}
+        onPlan={buyPlan}
       />
     );
   }

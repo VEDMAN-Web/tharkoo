@@ -1,7 +1,7 @@
 export const RECHARGE_EVENT = "tk-recharge-open";
 export const SUPPORT_EVENT = "tk-support-open";
 
-export type RechargeOptions = { shortfall?: number; returnTo?: string };
+export type RechargeOptions = { shortfall?: number; returnTo?: string; shortKey?: "recharge.short" | "recharge.short.promote" };
 
 export function openRecharge(options: RechargeOptions = {}) {
   if (typeof window === "undefined") return;

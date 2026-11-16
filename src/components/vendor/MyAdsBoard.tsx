@@ -120,7 +120,7 @@ export function MyAdsBoard({ initialTab = "all" }: { initialTab?: Tab }) {
                 views: item.shown?.views ?? 0,
                 clicks: item.shown?.clicks ?? 0,
                 href: item.slug ? undefined : draftPath(item.id),
-                actions: <OwnerActions id={item.id} status={item.status} endsSoon={status.label === "Ending soon"} onDone={reloadAfterAction} />,
+                actions: <OwnerActions id={item.id} title={ad.title} status={item.status} endsSoon={status.label === "Ending soon"} onDone={reloadAfterAction} />,
               }}
             />
           );
