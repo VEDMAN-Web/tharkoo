@@ -2218,3 +2218,8 @@ body:has([data-tk="bottom-bar"]) .tkn-float { bottom: 104px; }
 .tkn-logo { display: block; height: 40px; width: auto; max-width: none; }
 @media (max-width: 389px) { .tkn-logo { height: 32px; } }
 .tkn-foot-brand .tkn-logo-link { min-height: 40px; }
+
+/* H7.131: unread chat count on the header avatar and in the account menu. */
+.tkn-account { position: relative; }
+.tkn-avatar-dot { position: absolute; top: -4px; right: -4px; pointer-events: none; min-width: 18px; height: 18px; padding: 0 5px; box-sizing: border-box; border-radius: 9px; background: #c2185b; color: #fff; font-size: 12px; font-weight: 800; line-height: 18px; text-align: center; }
+.tkn-menu-badge { margin-left: 8px; min-width: 20px; padding: 0 6px; border-radius: 10px; background: #c2185b; color: #fff; font-size: 12px; font-weight: 800; line-height: 20px; text-align: center; display: inline-block; }

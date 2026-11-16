@@ -20,6 +20,7 @@ type Session = "unknown" | "guest" | "member";
 type LineInput = { kind: "text"; from: "you" | "support"; text: string } | { kind: "articles"; articles: ChatArticle[]; loading: boolean };
 
 const BODY_MIN = 10;
+const REPLY_POLL_MS = 8000;
 const BACK_TO_TOP_AFTER = 300;
 const SWIPE_CLOSE_PX = 60;
 const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -58,6 +59,7 @@ export function SupportChat({ chat, texts, hours = "" }: { chat: Chat; texts?: U
   const [contactOpen, setContactOpen] = useState(false);
   const [sent, setSent] = useState(false);
   const nextLine = useRef(0);
+  const seenReplies = useRef(new Set<string>());
   const swipeStart = useRef<number | null>(null);
   const bubble = useRef<HTMLButtonElement>(null);
   const bodyRef = useRef<HTMLDivElement>(null);
@@ -82,11 +84,12 @@ export function SupportChat({ chat, texts, hours = "" }: { chat: Chat; texts?: U
     const onOpen = (event: Event) => {
       const message = (event as CustomEvent<{ message?: string }>).detail?.message;
       if (message) setDraft(message);
+      setOnline(isSupportOpen(supportHours, new Date()));
       setOpen(true);
     };
     window.addEventListener(SUPPORT_EVENT, onOpen);
     return () => window.removeEventListener(SUPPORT_EVENT, onOpen);
-  }, []);
+  }, [supportHours]);
   useDismiss(open, float, closePanel);
 
   useEffect(() => {
@@ -111,6 +114,30 @@ export function SupportChat({ chat, texts, hours = "" }: { chat: Chat; texts?: U
     return () => {
       cancelled = true;
     };
+  }, [open, session, ticketId]);
+
+  // H7.131: a member sees the support team's replies in the chat while it is open, without reloading.
+  useEffect(() => {
+    if (!open || session !== "member" || !ticketId) return;
+    let live = true;
+    const read = async () => {
+      const res = await api<{ messages: { id: string; authorType: string; body: string }[] }>(`/api/support/tickets/${ticketId}`);
+      if (!live || !res.ok) return;
+      const fresh = (res.data.messages ?? []).filter((row) => row.authorType !== "user" && row.body && !seenReplies.current.has(row.id));
+      if (fresh.length === 0) return;
+      for (const row of fresh) seenReplies.current.add(row.id);
+      for (const row of fresh) add({ kind: "text", from: "support", text: row.body });
+    };
+    const first = window.setTimeout(() => void read(), 0);
+    const timer = window.setInterval(() => {
+      if (document.visibilityState === "visible") void read();
+    }, REPLY_POLL_MS);
+    return () => {
+      live = false;
+      window.clearTimeout(first);
+      window.clearInterval(timer);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, session, ticketId]);
 
   useEffect(() => {

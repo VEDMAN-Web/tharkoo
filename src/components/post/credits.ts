@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { api, type ApiError } from "@/lib/ui/api";
+import { api, hasSessionHint, type ApiError } from "@/lib/ui/api";
 import { openRecharge } from "@/components/recharge/openRecharge";
 
 /** H7.112: the same recharge sheet as the header and the credits page opens on a short balance. */
@@ -47,6 +47,11 @@ export function usePostingMoney() {
   const [added, setAdded] = useState<number | null>(null);
 
   const refresh = useCallback(async () => {
+    // H7.131: a visitor who is not signed in has no balance to ask for; asking would only log a 401 on every page that shows the post strip.
+    if (!hasSessionHint()) {
+      setReady(true);
+      return;
+    }
     const res = await api<{ fee: number; balance: number; creditPriceInr?: number }>(POSTING_FEE_PATH);
     const charged = res.ok && Number(res.data?.fee) > 0;
     setFee(charged ? Number(res.data.fee) : 0);
