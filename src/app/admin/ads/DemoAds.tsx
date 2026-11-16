@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useState } from "react";
 import { Notice } from "@/components/admin/ui";
 import { endDemoAdsAction } from "./demo-actions";
@@ -31,7 +32,7 @@ export function DemoAds({ total, active }: { total: number; active: number }) {
         {total} demo {total === 1 ? "ad" : "ads"}, {left} still live. Demo ads stay until you end them here.
       </p>
       <p className="t-small" style={{ margin: "8px 0" }}>
-        <a href="/admin/ads/?kind=demo" data-tk="filter-demo">Show only demo ads</a> · <a href="/admin/ads/?kind=real" data-tk="filter-real">Show only real ads</a> · <a href="/admin/ads/">Show all</a>
+        <Link href="/admin/ads/?kind=demo" data-tk="filter-demo">Show only demo ads</Link> · <Link href="/admin/ads/?kind=real" data-tk="filter-real">Show only real ads</Link> · <Link href="/admin/ads/">Show all</Link>
       </p>
       <div style={{ display: "flex", gap: 8, alignItems: "flex-end", flexWrap: "wrap", margin: "12px 0 6px" }}>
         <label className="adm-field-label" htmlFor="demo-confirm" style={{ minWidth: 260 }}>
