@@ -23,13 +23,15 @@ export default async function Page({ searchParams }: { searchParams: Promise<Rec
   if (!(await newDesignOn())) return <AuthForm mode="login" />;
   const site = await getSite();
   const params = await searchParams;
+  const login = readContent((site as { homepage?: unknown } | null)?.homepage);
   const next = typeof params.next === "string" ? params.next : null;
   return (
     <SignInSheet
       mode="page"
       initialNext={next}
       showMobile={smsDeliverable()}
-      image={readContent((site as { homepage?: unknown } | null)?.homepage).loginImage}
+      image={login.loginImage}
+      imageFocus={`${login.loginImageFocusX}% ${login.loginImageFocusY}%`}
     />
   );
 }

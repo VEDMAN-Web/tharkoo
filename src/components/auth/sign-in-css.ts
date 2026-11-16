@@ -6,7 +6,7 @@ export const SIGN_IN_CSS = `
 .tk-si-card{display:grid;grid-template-columns:340px minmax(0,1fr);max-height:560px;border-radius:20px;overflow:hidden;background:rgba(255,255,255,.75);backdrop-filter:blur(22px) saturate(180%);-webkit-backdrop-filter:blur(22px) saturate(180%);border:1px solid rgba(255,255,255,.95);box-shadow:0 24px 64px rgba(45,18,72,.14)}
 .tk-si-popup .tk-si-card{background:rgba(255,255,255,.98);backdrop-filter:none;-webkit-backdrop-filter:none;max-height:calc(100vh - 48px);overflow:auto}
 .tk-si-side{position:relative;background:linear-gradient(160deg,#FFE4F1 0%,#F3E8FF 50%,#FFF1DE 100%)}
-.tk-si-side img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.tk-si-side img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:50% 20%}
 .tk-si-main{position:relative;padding:28px 32px;display:flex;flex-direction:column;gap:12px;min-width:0}
 .tk-si-close{position:absolute;top:12px;right:12px;min-width:44px;min-height:44px;border:0;background:none;font:inherit;font-size:26px;line-height:1;color:#4A2870;cursor:pointer;border-radius:12px}
 .tk-si-title{margin:0 0 6px;font-size:24px;letter-spacing:-.02em;color:#110520;font-weight:800;line-height:1.2}

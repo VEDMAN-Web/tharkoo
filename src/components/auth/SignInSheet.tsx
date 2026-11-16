@@ -63,10 +63,11 @@ export interface SignInSheetProps {
   initialNext?: string | null;
   showMobile?: boolean;
   image?: string;
+  imageFocus?: string;
   onClose?: () => void;
 }
 
-export function SignInSheet({ mode, initialNext = null, showMobile = false, image = "", onClose }: SignInSheetProps) {
+export function SignInSheet({ mode, initialNext = null, showMobile = false, image = "", imageFocus, onClose }: SignInSheetProps) {
   const router = useRouter();
   const paths = useUrlPaths();
   const popup = mode === "popup";
@@ -158,7 +159,7 @@ export function SignInSheet({ mode, initialNext = null, showMobile = false, imag
     <div ref={rootRef} className={`tk-si ${popup ? "tk-si-popup" : "tk-si-page"}`} role={popup ? "dialog" : undefined} aria-modal={popup ? true : undefined} aria-labelledby="tk-si-title">
       <style>{SIGN_IN_CSS}</style>
       <div className="tk-si-card">
-        <aside className="tk-si-side">{image ? <img src={image} alt="" /> : null}</aside>
+        <aside className="tk-si-side">{image ? <img src={image} alt="" style={imageFocus ? { objectPosition: imageFocus } : undefined} /> : null}</aside>
 
         <section className="tk-si-main">
           {popup ? (
