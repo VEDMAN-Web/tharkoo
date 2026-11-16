@@ -200,7 +200,7 @@ export function blogPostingNode(input: { headline: string; datePublished?: strin
     datePublished: input.datePublished || input.dateModified,
     dateModified: input.dateModified || input.datePublished,
     author: { "@type": input.author && input.author !== "Tharkoo" ? "Person" : "Organization", name: input.author || "Tharkoo" },
-    publisher: { "@type": "Organization", name: "Tharkoo", logo: canonical("/brand/logo-mark.svg") },
+    publisher: { "@type": "Organization", name: "Tharkoo", logo: canonical("/brand/logo-mark-512.png") },
     mainEntityOfPage: input.url,
     url: input.url,
     ...(input.image ? { image: [input.image] } : {}),
