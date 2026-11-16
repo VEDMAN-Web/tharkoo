@@ -1,0 +1,37 @@
+/* H7.32: the city page cards (/cities/[city]/). Plain CSS. The frame and the headings come from listing-page.css. */
+
+/* Browse by category: 2 columns on a phone, 3 on a tablet, 4 on a desktop. */
+.tkn-city-cats { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
+@media (min-width: 600px) { .tkn-city-cats { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+@media (min-width: 1100px) { .tkn-city-cats { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
+.tkn-city-cat {
+  display: flex; flex-direction: column; height: 100%; box-sizing: border-box; overflow: hidden; border-radius: 16px;
+  background: #fff; border: 1px solid #ead8f0; box-shadow: 0 2px 14px rgba(45, 18, 72, 0.07); color: #1e0b38; text-decoration: none;
+  transition: transform 0.25s, box-shadow 0.25s;
+}
+.tkn-city-cat:hover { transform: translateY(-3px); box-shadow: 0 14px 36px rgba(233, 30, 140, 0.13); }
+.tkn-city-cat:focus-visible { outline: 3px solid #7c3aed; outline-offset: 2px; }
+.tkn-city-cat-photo {
+  display: block; width: 100%; aspect-ratio: 4 / 3; object-fit: cover; object-position: 50% 20%;
+  background: linear-gradient(135deg, #fff0f7, #ede9ff);
+}
+.tkn-city-cat-body { display: flex; flex-direction: column; gap: 2px; padding: 12px 14px 14px; }
+.tkn-city-cat-name { font-size: 16px; font-weight: 800; }
+.tkn-city-cat-count { font-size: 13px; color: #6b4a8a; }
+.tkn-city-cat-count.is-new { color: #a8124f; font-weight: 700; }
+
+/* Areas: 1 column on a phone, 2 on a tablet, 3 on a desktop. */
+.tkn-city-areas { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: minmax(0, 1fr); gap: 16px; }
+@media (min-width: 600px) { .tkn-city-areas { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (min-width: 1100px) { .tkn-city-areas { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+.tkn-city-area {
+  display: flex; flex-direction: column; gap: 8px; box-sizing: border-box; padding: 16px 18px; border-radius: 16px;
+  background: #fff; border: 1px solid #ead8f0; box-shadow: 0 2px 14px rgba(45, 18, 72, 0.07);
+}
+.tkn-city-area-name { margin: 0; font-size: 18px; font-weight: 800; color: #1e0b38; }
+.tkn-city-area-count { margin: 0; font-size: 13px; color: #6b4a8a; }
+.tkn-city-chips { margin: 0; display: flex; flex-wrap: wrap; gap: 8px; }
+.tkn-city-empty {
+  margin: 0; padding: 18px 20px; box-sizing: border-box; border-radius: 16px; font-size: 16px; color: #4a2870;
+  background: rgba(255, 255, 255, 0.88); border: 1px solid #ead8f0;
+}

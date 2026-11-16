@@ -2,9 +2,9 @@ import Link from "next/link";
 import { notFound, permanentRedirect } from "next/navigation";
 import type { Metadata } from "next";
 import { MapPin } from "lucide-react";
-import { getCategories, getCategory, getCities, getFeed, getSeoFor, getSite, getStarListings, getStates, listingCountsByCategoryCity } from "@/lib/queries";
+import { getCategories, getCategory, getCities, getFeed, getHomepageContent, getSeoFor, getSite, getStarListings, getStates, listingCountsByCategoryCity } from "@/lib/queries";
 import { getPaths } from "@/server/urls/service";
-import { adPath, categoryPath, placePath, searchPath } from "@/lib/urls";
+import { adPath, categoryPath, placePath, postAdPath, searchPath } from "@/lib/urls";
 import { fillTemplate } from "@/lib/seo";
 import { getIndexing, isCategoryOn } from "@/server/seo/indexing";
 import { withUrlSeo, urlHeading } from "@/lib/seo/override";
@@ -25,9 +25,10 @@ import { fallbackLanding, mergeLanding, type LandingCopy } from "@/lib/seo/landi
 import { SubcategoryChips } from "./SubcategoryChips";
 import { loadCardWidth } from "@/server/listings/card-width";
 import { listingRobots, type ListingParams } from "@/server/search/filter-seo";
-import { newDesignOn } from "@/server/site-links/new-design";
 import { readShellConfig } from "@/server/site-links/shell-config";
-import { bandImageFor } from "@/components/new/band-image";
+import { bandChoice, heroBandFrom } from "@/components/new/band-image";
+import { FallbackAds } from "@/components/FallbackAds";
+import { FALLBACK_OWN_MINIMUM, loadFallbackSections } from "@/lib/fallback-ads";
 import { ListingFrame } from "@/components/new/ListingFrame";
 import { ListingMore } from "@/components/new/ListingMore";
 import { listingFrameProps, listingLabels, placeSelects } from "@/components/new/listing-frame-props";
@@ -68,7 +69,7 @@ export default async function CategoryHub({ params, searchParams }: Props) {
     ...(toggles.video ? { video: true } : {}),
     ...(toggles.online ? { online: true } : {}),
   };
-  const [seo, site, cities, states, counts, feed, stars, paths, heading, cardWidth, newDesign, allCategories] = await Promise.all([
+  const [seo, site, cities, states, counts, feed, stars, paths, heading, cardWidth, allCategories, hero] = await Promise.all([
     getSeoFor("category", category),
     getSite(),
     getCities(),
@@ -79,10 +80,11 @@ export default async function CategoryHub({ params, searchParams }: Props) {
     getPaths(),
     urlHeading(categoryPath(cat.slug || category), `${cat.name} in India`),
     loadCardWidth(),
-    newDesignOn(),
     getCategories().catch(() => []),
+    getHomepageContent().then(heroBandFrom),
   ]);
-  const shell = newDesign ? await readShellConfig() : null;
+  // H7.32: the New design band on every category page, always.
+  const shell = await readShellConfig();
   const texts = await textOverrides();
   const t = makeT(texts);
   const vars = { category: cat.name, site: site.name, year: new Date().getFullYear() };
@@ -104,6 +106,19 @@ export default async function CategoryHub({ params, searchParams }: Props) {
     const cls = deviceClass(devices);
     return cls ? <div key={id} className={cls}>{content}</div> : <span key={id} style={{ display: "contents" }}>{content}</span>;
   };
+  // H7.32 (FIX B): few own ads keep their place, and fallback ads go below them. Nothing is empty.
+  const own = feed.total < FALLBACK_OWN_MINIMUM;
+  const fallback = own
+    ? await loadFallbackSections({
+        scope: { categorySlug: cat.slug || category, categoryName: cat.name || undefined },
+        ownSlugs: ads.map((ad) => ad.slug || "").filter(Boolean),
+      })
+    : [];
+  const emptyLead =
+    feed.total === 0
+      ? { text: `No ${cat.name} ads in India yet. Here are ads close by.`, button: "Post the first ad in India", href: postAdPath(paths) }
+      : undefined;
+  const fallbackNode = own ? <FallbackAds sections={fallback} layout="row" lead={emptyLead} /> : null;
   const feedAndText = (
     <>
       <div className="tk-feed" data-tk="category-feed">
@@ -111,6 +126,7 @@ export default async function CategoryHub({ params, searchParams }: Props) {
           <AdCard key={ad.publicId || ad.slug || index} ad={ad} featured={page === 1 && index < stars.length} priority={index === 0} layout={shell ? "row" : undefined} />
         ))}
       </div>
+      {fallbackNode}
       <ListingMore page={page} pages={feed.pages} params={sp} label={t("listing.more")} />
       <section className="tk-browse-city" data-tk="browse-by-city">
         <h2>{t("listing.hub.browseByCity")}</h2>
@@ -163,7 +179,7 @@ export default async function CategoryHub({ params, searchParams }: Props) {
         ],
         h1: h1Text,
         intro: listingHeading(introTemplate, "", { ...layout.vars, h1: h1Text }) || undefined,
-        image: bandImageFor(shell, cat.slug || category),
+        photo: bandChoice(shell, hero, { category: cat.slug || category }),
         categorySlug: cat.slug || category,
         searchAction: searchPath(paths),
         searchPlaceholder: t("listing.band.searchCategory", { category: cat.name }),

@@ -19,6 +19,8 @@ import type { ListingDoc } from "@/lib/models";
 import { readContent } from "@/lib/ui/site-content";
 
 const PAGE_SIZE = 20;
+/** H7.32: the city page lists 24 ads to a page. */
+const CITY_LATEST_SIZE = 24;
 const THIN = 3;
 
 export async function getSite() {
@@ -62,6 +64,13 @@ export async function getLocationBySlug(slug: string) {
 
 export async function getCities(limit?: number) {
   return cached(`cities:${limit || "all"}`, 60_000, async () => cities(limit), ["locations"], true);
+}
+
+export async function getCityBySlug(slug: string) {
+  const loc = await getLocationBySlug(slug);
+  if (loc?.kind === "city") return loc;
+  const rows = await getCities();
+  return rows.find((row) => row.slug === slug) ?? null;
 }
 
 export async function getTopCities() {
@@ -241,6 +250,8 @@ export async function searchListings(opts: {
   q?: string;
   category?: string;
   location?: string;
+  /** H7.32: a state slug (the hero search for a state alone). */
+  state?: string;
   photos?: boolean;
   verified?: boolean;
   page?: number;
@@ -254,11 +265,13 @@ export async function searchListings(opts: {
         q: opts.q,
         categorySlug: opts.category,
         placeSlug: opts.location,
+        stateSlug: opts.state,
         photos: opts.photos,
         verified: opts.verified,
         page: safePage,
         pageSize: PAGE_SIZE,
-        sort: "ranked",
+        // H7.32: without a search term the page lists every live ad, newest first.
+        sort: opts.q ? "ranked" : "fresh",
       });
       return {
         items: result.legacy,
@@ -269,6 +282,27 @@ export async function searchListings(opts: {
       };
     },
     ["feed", "listings"],
+  );
+}
+
+/** H7.32: every live ad in a city, newest first, 24 to a page (the city page list). */
+export async function getCityLatest(citySlug: string, page = 1) {
+  const safePage = Math.max(1, Number(page) || 1);
+  return cached(
+    `city-latest:${citySlug}:${safePage}`,
+    60_000,
+    async () => {
+      const result = await queryListings({ citySlug, page: safePage, pageSize: CITY_LATEST_SIZE, sort: "fresh" });
+      return {
+        items: result.legacy,
+        total: result.total,
+        page: safePage,
+        pageSize: CITY_LATEST_SIZE,
+        pages: Math.max(1, Math.ceil(result.total / CITY_LATEST_SIZE)),
+      };
+    },
+    ["feed", "listings"],
+    true,
   );
 }
 
