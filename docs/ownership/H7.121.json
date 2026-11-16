@@ -1,0 +1,10 @@
+{
+  "branchPrefix": "haiku/h7.121",
+  "globs": [
+    "docs/ownership/H7.121.json",
+    "src/server/listings/service.ts",
+    "src/server/search/query.ts",
+    "tests/server/listings/listings.test.ts",
+    "tests/e2e/h7-121-live-edit.e2e.ts"
+  ]
+}

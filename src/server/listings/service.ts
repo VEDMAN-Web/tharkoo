@@ -515,17 +515,44 @@ export async function patchListing(
         : undefined;
     sensitive = true;
   }
-  if (sensitive && listing.status === "active") {
-    assertTransition(listing.status, "pending");
-    listing.status = "pending";
-    listing.seoNoindex = true;
+  if (listing.status === "active") {
+    // H7.121: a live ad stays live and indexed while its owner edits it. Every save runs the checks a publish runs, and a failure refuses the save.
+    await assertLiveEdit(listing);
     await listing.save();
-    await writeVersion(listing, userId);
+    if (sensitive) await writeVersion(listing, userId);
+    const category = await requireCategory(listing.categoryId.toString());
+    await revalidateListingPages(listing, category.slug);
   } else {
     await listing.save();
   }
   await record(userId, "user", "listing.update", listing._id.toString(), requestId, { status: listing.status, stage: input.stage });
   return ownerView(listing);
+}
+
+function assertContentPresent(listing: ListingRow) {
+  if (!listing.title.trim() || !listing.description.trim() || !listing.cityId) {
+    throw new ValidationError("Invalid request", { listing: ["Title, description, and city are required"] });
+  }
+  const contact = listing.contact ?? {};
+  if (!contact.phone && !contact.whatsapp && !contact.telegram && !contact.acceptForm) {
+    throw new ValidationError("Invalid request", { contact: ["Add a contact method"] });
+  }
+}
+
+/** The checks a publish runs on the words and the contact of an ad, for a save on an ad that is already live. Nothing is saved when one fails. */
+async function assertLiveEdit(listing: ListingRow) {
+  assertContentPresent(listing);
+  const contact = listing.contact ?? {};
+  const category = await requireCategory(listing.categoryId.toString());
+  const attributes = parseListingAttributes(await withPickLimits(category.slug, fieldDefs(category)), listing.attributes ?? {});
+  await assertCleanText([
+    listing.title,
+    listing.description,
+    contact.phone,
+    contact.whatsapp,
+    contact.telegram,
+    ...Object.values(attributes).filter((value): value is string => typeof value === "string"),
+  ]);
 }
 
 export async function submitListing(

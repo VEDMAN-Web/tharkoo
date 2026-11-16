@@ -303,7 +303,7 @@ async function photoMap(docs: Row[]) {
   const ids = docs.flatMap((doc) => doc.mediaIds ?? []);
   const map = new Map<string, string[]>();
   if (ids.length === 0) return map;
-  const assets = await MediaAsset.find({ _id: { $in: ids } }).select("objectKey").lean();
+  const assets = await MediaAsset.find({ _id: { $in: ids }, status: "cleared" }).select("objectKey").lean();
   const url = new Map(assets.map((asset) => [String(asset._id), asset.objectKey]));
   for (const doc of docs) {
     const photos = (doc.mediaIds ?? [])
