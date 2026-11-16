@@ -4,6 +4,10 @@ import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { api, friendlyError } from "@/lib/ui/api";
 import { draftPath, isDraftStatus } from "@/lib/ui/ad-status";
+import { openPromote } from "@/components/promote/openPromote";
+import { makeT } from "@/lib/ui/text";
+
+const t = makeT();
 
 type Action = "pause" | "resume" | "renew" | "duplicate" | "delete";
 
@@ -18,11 +22,13 @@ export function OwnerActions({
   id,
   status,
   endsSoon,
+  title,
   onDone,
 }: {
   id: string;
   status?: string;
   endsSoon: boolean;
+  title?: string;
   onDone: (message: string) => void | Promise<void>;
 }) {
   const [busy, setBusy] = useState(false);
@@ -62,6 +68,11 @@ export function OwnerActions({
     <div className="tkv-owner-buttons">
       {draft ? <p className="tkv-owner-note">Not live yet. Finish the steps to send it for review.</p> : null}
       {draft ? <Link href={draftPath(id, FINISH_STEP)} className="tkv-mini tkv-mini-primary">Finish your ad</Link> : null}
+      {status === "active" ? (
+        <button type="button" className="tkv-mini tkv-mini-primary" data-tk="promote-open" onClick={() => openPromote({ listingId: id, title })}>
+          {t("promote.button")}
+        </button>
+      ) : null}
       <Link href={draftPath(id)} className="tkv-mini">Edit</Link>
       {actions.map((action) =>
         action === "delete" ? (

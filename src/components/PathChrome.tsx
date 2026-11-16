@@ -23,6 +23,7 @@ import { UrlPathProvider } from "./UrlPaths";
 import { UiTextProvider } from "./help/UiTextProvider";
 import { SupportChat } from "./chat/SupportChat";
 import { RechargeHost } from "./recharge/RechargeHost";
+import { PromoteHost } from "./promote/PromoteHost";
 import { SUPPORT_PHONE, SUPPORT_TELEGRAM } from "@/lib/support";
 import { SignInPopup } from "./auth/SignInPopup";
 import { AccountProvider } from "./account/AccountContext";
@@ -100,6 +101,7 @@ export function PathChrome({ shell, paths, children }: { shell: ChromeData; path
           <Suspense fallback={null}>
             <RechargeHost />
           </Suspense>
+          <PromoteHost />
           <SignInPopup showMobile={signIn.showMobile} image={signIn.image} imageFocus={signIn.imageFocus} />
         </div>
       ) : (
