@@ -11,7 +11,7 @@ import { countryChoices } from "@/server/locations/site-country";
 import { readShellConfig } from "@/server/site-links/shell-config";
 import { normaliseShellConfig, type ShellConfig, type ShellLink } from "@/server/site-links/shell-config-rules";
 import { MotionInit } from "./ui/MotionInit";
-import { launchSwitches } from "@/server/wallet/launch-switches";
+import { readLaunchSwitches } from "@/server/wallet/launch-switches";
 import { SUPPORT_PHONE, SUPPORT_TELEGRAM, telegramHref, whatsappHref } from "@/lib/support";
 import { PathChrome, type ChromeData } from "./PathChrome";
 
@@ -120,7 +120,7 @@ export async function SiteShell({
   const paths = readPaths((shell.site as { paths?: unknown } | null)?.paths);
   const login = readContent((shell.site as { homepage?: unknown } | null)?.homepage);
   const signIn = { showMobile: smsDeliverable(), image: login.loginImage, imageFocus: `${login.loginImageFocusX}% ${login.loginImageFocusY}%` };
-  const launch = await launchSwitches().catch(() => ({ creditPurchasesOn: false, videoCallsOn: false }));
+  const launch = await readLaunchSwitches().catch(() => ({ creditPurchasesOn: false, videoCallsOn: false }));
   return (
     <>
       <PathChrome shell={chromeData(shell, signIn, launch)} paths={paths}>{children}</PathChrome>

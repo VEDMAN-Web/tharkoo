@@ -1,13 +1,12 @@
 import { z } from "zod";
 import { connectDb } from "@/lib/db";
-import { cached, refreshPublicCache } from "@/lib/cache";
+import { refreshPublicCache } from "@/lib/cache";
 import { isAdminRole } from "@/lib/ui/site-content";
 import { AuditRepository } from "@/server/audit";
 import { ConflictError, ForbiddenError, parseInput } from "@/server/http";
 import { Site } from "@/server/models";
 
 const SITE_KEY = "default";
-const CACHE_MS = 15_000;
 const audit = new AuditRepository();
 
 export const LAUNCH_SWITCHES = ["creditPurchasesOn", "videoCallsOn"] as const;
@@ -33,10 +32,6 @@ export async function readLaunchSwitches(): Promise<LaunchSwitches> {
     creditPurchasesOn: typeof site?.creditPurchasesOn === "boolean" ? site.creditPurchasesOn : fallback,
     videoCallsOn: typeof site?.videoCallsOn === "boolean" ? site.videoCallsOn : fallback,
   };
-}
-
-export async function launchSwitches(): Promise<LaunchSwitches> {
-  return cached("launch-switches", CACHE_MS, readLaunchSwitches, ["site"]);
 }
 
 export async function assertCreditPurchasesOn() {

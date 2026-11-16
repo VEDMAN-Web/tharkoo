@@ -9,10 +9,10 @@ async function setCategoryTour(enabled: boolean) {
 }
 
 async function toggle(page: Page, label: RegExp, on: boolean) {
-  const box = page.locator('[data-tk="launch-switches"]').getByRole("checkbox", { name: label });
+  const box = page.locator('[data-tk="launch-switches"]').getByRole("switch", { name: label });
   await box.scrollIntoViewIfNeeded();
-  if ((await box.isChecked()) !== on) {
-    await box.setChecked(on);
+  if ((await box.getAttribute("aria-checked")) !== String(on)) {
+    await box.click();
     await expect(page.locator('[data-tk="launch-switches"]').getByText(/^Saved/)).toBeVisible();
   }
 }
