@@ -129,6 +129,7 @@ export function PostWizard({
   const [draftStatus, setDraftStatus] = useState("");
   const money = usePostingMoney();
   const alreadyPaid = draftStatus !== "" && draftStatus !== "draft";
+  const chargesFee = money.paid;
   const short = alreadyPaid ? 0 : serverShort ? shortfallOf(serverShort.need, serverShort.balance) : shortfallOf(money.fee, money.balance);
   const draftRef = useRef("");
   const queueRef = useRef<Promise<unknown>>(Promise.resolve());
@@ -502,7 +503,7 @@ export function PostWizard({
       const charged = typeof outcome.charged === "number" ? outcome.charged : alreadyPaid ? 0 : money.fee;
       const left = typeof outcome.balance === "number" ? outcome.balance : Math.max(0, (money.balance ?? 0) - charged);
       setAfterBalance(left);
-      setReceipt(charged > 0 ? `${creditsText(charged)} paid · Balance ${creditsText(left)}` : `No charge for changes · Balance ${creditsText(left)}`);
+      setReceipt(!chargesFee ? "" : charged > 0 ? `${creditsText(charged)} paid · Balance ${creditsText(left)}` : `No charge for changes · Balance ${creditsText(left)}`);
       void api<{ slug?: string }>(`/api/listings/by-id/${draftId}`).then((found) => {
         if (found.ok && found.data?.slug) setAdSlug(found.data.slug);
       });
@@ -863,7 +864,7 @@ export function PostWizard({
               else setStep(num);
             }}
           >
-            <CreditsCard fee={alreadyPaid ? 0 : money.fee} balance={money.balance} ready={money.ready} onTopUp={() => openRecharge({ shortfall: short })} />
+            {chargesFee ? <CreditsCard fee={alreadyPaid ? 0 : money.fee} price={money.price} balance={money.balance} ready={money.ready} onTopUp={() => openRecharge({ shortfall: short })} /> : null}
           </PostRail>
           <section className="tkp-main" data-step={current} aria-labelledby="post-step-title" onFocusCapture={keepFocusedFieldVisible}>
             <div className="tkp-head">
@@ -980,7 +981,7 @@ export function PostWizard({
                   hasPhoto={Boolean(coverUrl)}
                   byline={byline}
                   note="Your ad goes live as soon as you publish it. You can edit, pause or renew it from My ads."
-                  pay={alreadyPaid ? undefined : <PayCard fee={money.fee} balance={money.balance} short={short} onRecharge={() => openRecharge({ shortfall: short })} />}
+                  pay={alreadyPaid || !chargesFee ? undefined : <PayCard fee={money.fee} balance={money.balance} short={short} onRecharge={() => openRecharge({ shortfall: short })} />}
                   terms={terms}
                   adult={adult}
                   termsError={errors.terms}
@@ -1007,7 +1008,7 @@ export function PostWizard({
                     </>
                   ) : current === "review" ? (
                     <button type="button" className="tkp-btn tkp-btn-primary" data-tk="go-on" disabled={busy || !hydrated || !title.trim()} onClick={publish}>
-                      {!stepCopy.nextLabel || stepCopy.nextLabel === "Publish ad" ? (alreadyPaid ? "Publish ad" : `Publish for ${creditsText(money.fee)}`) : stepCopy.nextLabel}
+                      {!stepCopy.nextLabel || stepCopy.nextLabel === "Publish ad" ? (alreadyPaid || !chargesFee ? "Publish ad" : `Publish for ${creditsText(money.fee)}`) : stepCopy.nextLabel}
                     </button>
                   ) : (
                     <button type="button" className="tkp-btn tkp-btn-primary" data-tk="go-on" disabled={busy || (current === "category" && !categoryReady) || (current === "photos" && photoBusy)} onClick={() => continueFrom(current)}>

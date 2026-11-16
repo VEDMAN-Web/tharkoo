@@ -3,7 +3,8 @@
 import { useCallback, useEffect, useState } from "react";
 import { api, type ApiError } from "@/lib/ui/api";
 
-export const POST_FEE_DEFAULT = 30;
+export const POST_FEE_DEFAULT = 0;
+export const POSTING_FEE_PATH = "/api/wallet/posting-fee";
 export const CREDIT_RUPEES = 10;
 export const CREDITS_ADDED_EVENT = "tk:credits-added";
 export const RECHARGE_PATH = "/u/account/credits/";
@@ -12,8 +13,8 @@ export function creditsText(count: number): string {
   return `${count} ${count === 1 ? "credit" : "credits"}`;
 }
 
-export function rupeesText(credits: number): string {
-  return `Rs ${(credits * CREDIT_RUPEES).toLocaleString("en-IN")}`;
+export function rupeesText(credits: number, price = CREDIT_RUPEES): string {
+  return `Rs ${(credits * price).toLocaleString("en-IN")}`;
 }
 
 export function shortfallOf(fee: number, balance: number | null): number {
@@ -22,7 +23,7 @@ export function shortfallOf(fee: number, balance: number | null): number {
 
 export function insufficientFrom(error: ApiError | undefined, fee: number): { need: number; balance: number } | null {
   if (!error || error.code !== "INSUFFICIENT_CREDITS") return null;
-  const raw = (error.details ?? error.fields ?? {}) as Record<string, unknown>;
+  const raw = { ...(error.details ?? error.fields ?? {}), ...(error as Record<string, unknown>) } as Record<string, unknown>;
   const pick = (key: string) => {
     const value = raw[key];
     const first = Array.isArray(value) ? value[0] : value;
@@ -40,14 +41,18 @@ export function openRecharge({ shortfall }: { shortfall: number }) {
 }
 
 export function usePostingMoney() {
-  const [fee] = useState(POST_FEE_DEFAULT);
+  const [fee, setFee] = useState(POST_FEE_DEFAULT);
+  const [price, setPrice] = useState(CREDIT_RUPEES);
   const [balance, setBalance] = useState<number | null>(null);
   const [ready, setReady] = useState(false);
   const [added, setAdded] = useState<number | null>(null);
 
   const refresh = useCallback(async () => {
-    const res = await api<{ balance: number }>("/api/wallet");
-    setBalance(res.ok ? res.data.balance : null);
+    const res = await api<{ fee: number; balance: number; creditPriceInr?: number }>(POSTING_FEE_PATH);
+    const charged = res.ok && Number(res.data?.fee) > 0;
+    setFee(charged ? Number(res.data.fee) : 0);
+    setBalance(charged ? Number(res.data.balance) : null);
+    if (charged && typeof res.data.creditPriceInr === "number") setPrice(res.data.creditPriceInr);
     setReady(true);
   }, []);
 
@@ -72,5 +77,5 @@ export function usePostingMoney() {
     return () => window.clearTimeout(id);
   }, [added]);
 
-  return { fee, balance, ready, added, refresh };
+  return { fee, price, paid: fee > 0, balance, ready, added, refresh };
 }

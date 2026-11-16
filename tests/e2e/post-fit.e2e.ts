@@ -1,5 +1,5 @@
 import type { Page } from "@playwright/test";
-import { expect, grantCredits, newUserApi, originHeaders, test, USER_PASSWORD } from "./helpers";
+import { expect, grantCredits, newUserApi, originHeaders, stubPostingFee, test, USER_PASSWORD } from "./helpers";
 
 const SHOTS = process.env.POST_SHOTS ?? "";
 const SIZES: [number, number][] = [[1536, 674], [1366, 768], [1536, 730], [1440, 900]];
@@ -84,6 +84,7 @@ test.describe("H7.86 no scrolling on desktop", () => {
   test("step 5 with no credits (the amber card) fits at the four laptop sizes", async ({ page, baseURL }, info) => {
     test.skip(info.project.name !== "desktop-1440", "desktop sizes only");
     test.setTimeout(120_000);
+    await stubPostingFee(page);
     const id = await draftFor(page, baseURL!, "dating", true, 0);
     for (const [width, height] of SIZES) {
       await page.setViewportSize({ width, height });

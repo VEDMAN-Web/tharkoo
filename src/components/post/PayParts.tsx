@@ -1,12 +1,12 @@
 import { creditsText, rupeesText } from "./credits";
 
-type CardProps = { fee: number; balance: number | null; ready: boolean; onTopUp: () => void };
+type CardProps = { fee: number; price?: number; balance: number | null; ready: boolean; onTopUp: () => void };
 
-export function CreditsCard({ fee, balance, ready, onTopUp }: CardProps) {
+export function CreditsCard({ fee, price, balance, ready, onTopUp }: CardProps) {
   if (ready && balance === null) {
     return (
       <div className="tkp-credits" data-tk="credits-card">
-        <p className="tkp-credits-line">Posting an ad costs {creditsText(fee)} ({rupeesText(fee)})</p>
+        <p className="tkp-credits-line">Posting an ad costs {creditsText(fee)} ({rupeesText(fee, price)})</p>
       </div>
     );
   }

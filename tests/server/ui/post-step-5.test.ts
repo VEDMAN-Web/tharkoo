@@ -149,8 +149,13 @@ describe("paid posting helpers (H7.86)", () => {
     expect(insufficientFrom({ code: "INSUFFICIENT_CREDITS", details: { need: 30, balance: 12 } as never }, 30)).toEqual({ need: 30, balance: 12 });
     expect(insufficientFrom({ code: "INSUFFICIENT_CREDITS", details: { need: ["30"], balance: ["0"] } }, 30)).toEqual({ need: 30, balance: 0 });
     expect(insufficientFrom({ code: "INSUFFICIENT_CREDITS" }, 30)).toEqual({ need: 30, balance: 0 });
+    expect(insufficientFrom({ code: "INSUFFICIENT_CREDITS", need: 30, balance: 12, fee: 30, short: 18 } as never, 30)).toEqual({ need: 30, balance: 12 });
     expect(insufficientFrom({ code: "VERIFICATION_REQUIRED" }, 30)).toBeNull();
     expect(insufficientFrom(undefined, 30)).toBeNull();
+  });
+
+  it("has no fee in the first step line when the fee is 0, so free posting shows nothing about credits", () => {
+    expect(newStepCopy("category", POST_COPY_DEFAULTS, false, false, 0).help).toBe("Pick a category. This helps the right people find your ad.");
   });
 
   it("puts the price in the first step line, and keeps a help line an admin wrote", () => {

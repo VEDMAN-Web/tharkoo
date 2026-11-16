@@ -143,6 +143,18 @@ export async function grantCredits(page: Page, credits = 100) {
   );
 }
 
+/** Answers GET /api/wallet/posting-fee the way the paid-posting server does, with the account's real balance. A fee of 0 or a missing endpoint means posting is free. */
+export async function stubPostingFee(page: Page, fee = 30) {
+  await page.route("**/api/wallet/posting-fee", async (route) => {
+    if (fee === 404) return route.fulfill({ status: 404, contentType: "application/json", body: JSON.stringify({ ok: false, error: { code: "NOT_FOUND", message: "Not found" } }) });
+    const own = await route.fetch({ url: new URL("/api/wallet", route.request().url()).toString() });
+    const balance = (((await own.json()) as { data?: { balance?: number } }).data?.balance ?? 0) as number;
+    const short = Math.max(0, fee - balance);
+    const data = { fee, balance, after: Math.max(0, balance - fee), short, enough: short === 0, creditPriceInr: 10, mockPaymentsOn: true };
+    return route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({ ok: true, data }) });
+  });
+}
+
 /** Saves a seller profile for the signed-in page (H7.2b). Needed before the post-ad form opens in the New design. */
 export async function becomeSeller(page: Page, base: string, name = "E2E Seller", city = "Mumbai") {
   const res = await page.request.put("/api/auth/seller-profile", {
