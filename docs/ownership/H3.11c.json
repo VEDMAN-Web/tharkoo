@@ -1,0 +1,14 @@
+{
+  "branchPrefix": "haiku/h3.11c",
+  "globs": [
+    "src/server/media/**",
+    "src/app/admin/media/**",
+    "src/components/admin/ui/ImagePicker.tsx",
+    "src/server/layout/media.ts",
+    "tests/server/media/**",
+    "tests/server/layout/media.test.ts",
+    ".env.example",
+    "docs/ownership/H3.11c.json",
+    "progress/H3.11c.md"
+  ]
+}

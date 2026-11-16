@@ -1,0 +1,27 @@
+{
+  "branchPrefix": "codex/t5.2",
+  "globs": [
+    "src/app/page.tsx",
+    "src/app/[category]/**",
+    "src/app/ad/**",
+    "src/app/search/**",
+    "src/app/cities/**",
+    "src/app/blog/**",
+    "src/app/help/**",
+    "src/app/cms/**",
+    "src/components/AdCard.tsx",
+    "src/components/AdDetail.tsx",
+    "src/components/ListingPage.tsx",
+    "src/components/HomeBlocks.tsx",
+    "src/components/Header.tsx",
+    "src/components/Footer.tsx",
+    "src/components/SiteShell.tsx",
+    "src/components/Breadcrumbs.tsx",
+    "src/components/CityPicker.tsx",
+    "src/components/SearchModal.tsx",
+    "src/components/ContactButtons.tsx",
+    "src/components/HeroBand.tsx",
+    "src/components/MainInner.tsx",
+    "src/components/Logo.tsx"
+  ]
+}

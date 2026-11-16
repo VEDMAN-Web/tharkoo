@@ -1,0 +1,7 @@
+{
+  "branchPrefix": "haiku/h7.41",
+  "globs": [
+    "docs/ownership/H7.41.json",
+    "src/components/SiteShell.tsx"
+  ]
+}

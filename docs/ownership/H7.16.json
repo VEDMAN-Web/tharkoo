@@ -1,0 +1,16 @@
+{
+  "branchPrefix": "haiku/h7.16",
+  "globs": [
+    "docs/ownership/H7.16.json",
+    "src/app/admin/content-actions.ts",
+    "src/app/admin/homepage/LoginImageField.tsx",
+    "src/app/admin/homepage/page.tsx",
+    "src/app/u/login/page.tsx",
+    "src/components/PathChrome.tsx",
+    "src/components/SiteShell.tsx",
+    "src/components/auth/SignInPopup.tsx",
+    "src/components/auth/SignInSheet.tsx",
+    "src/components/auth/sign-in-css.ts",
+    "src/lib/ui/site-content.ts"
+  ]
+}

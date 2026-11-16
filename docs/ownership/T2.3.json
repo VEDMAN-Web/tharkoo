@@ -1,0 +1,9 @@
+{
+  "branchPrefix": "cursor/t2.3",
+  "globs": [
+    "src/server/verification/**",
+    "src/app/api/verification/**",
+    "src/app/api/admin/verifications/**",
+    "tests/server/verification/**"
+  ]
+}

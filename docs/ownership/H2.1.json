@@ -1,0 +1,6 @@
+{
+  "branchPrefix": "haiku/h2.1",
+  "globs": [
+    "docs/claude/reports/**"
+  ]
+}

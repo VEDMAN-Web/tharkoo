@@ -1,0 +1,10 @@
+{
+  "branchPrefix": "haiku/h3.11d",
+  "globs": [
+    "src/app/admin/listing-order/**",
+    "src/server/ranking/**",
+    "tests/server/ranking/**",
+    "docs/ownership/H3.11d.json",
+    "progress/H3.11d.md"
+  ]
+}

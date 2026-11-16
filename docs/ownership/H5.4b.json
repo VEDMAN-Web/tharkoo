@@ -1,0 +1,16 @@
+{
+  "branchPrefix": "haiku/h5.4b",
+  "globs": [
+    "src/components/SiteShell.tsx",
+    "src/app/layout.tsx",
+    "src/components/AdDetail.tsx",
+    "src/components/ui/Gallery.tsx",
+    "src/app/globals.css",
+    "src/app/ad/**",
+    "src/components/blocks/blocks.css",
+    "tests/server/ui/**",
+    "tests/e2e/quality.e2e.ts",
+    "docs/ownership/H5.4b.json",
+    "progress/H5.4b.md"
+  ]
+}

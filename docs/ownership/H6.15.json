@@ -1,0 +1,21 @@
+{
+  "branchPrefix": "haiku/h6.15",
+  "globs": [
+    "src/app/admin/ads/**",
+    "src/app/admin/import/**",
+    "src/app/admin/locations/**",
+    "src/app/admin/categories/**",
+    "src/app/admin/settings/**",
+    "src/components/admin/nav.ts",
+    "src/components/admin/CreateAd*.tsx",
+    "src/server/listings/**",
+    "src/server/locations/**",
+    "src/server/categories/**",
+    "src/app/post/**",
+    "tests/server/listings/**",
+    "tests/server/admin/**",
+    "tests/e2e/admin-create-ad.e2e.ts",
+    "docs/ownership/H6.15.json",
+    "progress/H6.15.md"
+  ]
+}

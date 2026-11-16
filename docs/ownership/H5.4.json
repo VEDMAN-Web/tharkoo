@@ -1,0 +1,15 @@
+{
+  "branchPrefix": "haiku/h5.4",
+  "globs": [
+    "src/components/blocks/**",
+    "src/components/ListingPage.tsx",
+    "src/app/ad/**",
+    "src/app/[category]/**",
+    "src/styles/**",
+    "next.config.ts",
+    "tests/e2e/**",
+    "tests/server/ui/**",
+    "docs/ownership/H5.4.json",
+    "progress/H5.4.md"
+  ]
+}

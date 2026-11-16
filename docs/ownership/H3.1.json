@@ -1,0 +1,15 @@
+{
+  "branchPrefix": "haiku/h3.1",
+  "globs": [
+    "src/styles/admin.css",
+    "src/components/admin/AdminShell.tsx",
+    "src/components/admin/ui/**",
+    "src/components/admin/nav.ts",
+    "src/app/admin/layout.tsx",
+    "src/app/styleguide/admin/**",
+    "tests/server/ui/admin-nav.test.ts",
+    "src/app/admin/coming/**",
+    "docs/ownership/H3.1.json",
+    "progress/H3.1.md"
+  ]
+}

@@ -1,0 +1,9 @@
+{
+  "branchPrefix": "cursor/t2.2",
+  "globs": [
+    "src/server/media/**",
+    "src/app/api/media/**",
+    "scripts/media-orphan-sweep.ts",
+    "tests/server/media/**"
+  ]
+}

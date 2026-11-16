@@ -1,0 +1,16 @@
+{
+  "branchPrefix": "cursor/t2.3b",
+  "globs": [
+    "src/server/verification/**",
+    "src/app/api/verification/**",
+    "src/app/api/admin/verifications/**",
+    "tests/server/verification/**",
+    "src/server/models/identity.ts",
+    "src/server/shared/schemas/listings.ts",
+    "src/server/audit/repository.ts",
+    "docs/contracts/API.md",
+    "docs/contracts/DATA_MODEL.md",
+    "tests/server/models/**",
+    "progress/t1.1.md"
+  ]
+}

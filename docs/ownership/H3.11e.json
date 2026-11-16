@@ -1,0 +1,11 @@
+{
+  "branchPrefix": "haiku/h3.11e",
+  "globs": [
+    "src/server/indexnow/**",
+    "src/server/listings/import.ts",
+    "src/app/admin/import/**",
+    "tests/server/listings/import.test.ts",
+    "docs/ownership/H3.11e.json",
+    "progress/H3.11e.md"
+  ]
+}

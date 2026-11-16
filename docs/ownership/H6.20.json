@@ -1,0 +1,15 @@
+{
+  "branchPrefix": "haiku/h6.20",
+  "globs": [
+    "src/app/u/account/**",
+    "src/components/buyer/**",
+    "src/components/header/**",
+    "src/app/u/**",
+    "src/server/wallet/**",
+    "src/server/billing/**",
+    "tests/server/wallet/**",
+    "tests/e2e/user-panel*.e2e.ts",
+    "progress/H6.20.md",
+    "docs/ownership/H6.20.json"
+  ]
+}

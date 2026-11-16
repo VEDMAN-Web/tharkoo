@@ -1,0 +1,19 @@
+{
+  "branchPrefix": "cursor/t0.1",
+  "globs": [
+    ".github/**",
+    "docs/ownership/T0.1.json",
+    "docs/WORKFLOW.md",
+    "docs/MASTER_PLAN.md",
+    "docs/CODE_MAP.md",
+    "PROGRESS.md",
+    "progress/**",
+    "AGENTS.md",
+    ".agents/**",
+    ".env.example",
+    "CODEOWNERS",
+    "docs/HANDOFF.md",
+    ".gitignore",
+    "package.json"
+  ]
+}

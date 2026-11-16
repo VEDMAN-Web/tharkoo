@@ -1,0 +1,8 @@
+{
+  "branchPrefix": "cursor/t1.2",
+  "globs": [
+    "src/server/seed/**",
+    "scripts/seed*.ts",
+    "tests/server/seed/**"
+  ]
+}

@@ -1,0 +1,16 @@
+{
+  "branchPrefix": "haiku/h6.19",
+  "globs": [
+    "src/app/u/post-insert/**",
+    "src/components/post/**",
+    "src/components/PostWizard.tsx",
+    "src/app/u/account/**",
+    "src/components/vendor/**",
+    "src/components/ui/**",
+    "src/app/globals.css",
+    "tests/e2e/post-*.e2e.ts",
+    "tests/e2e/vendor*.e2e.ts",
+    "progress/H6.19.md",
+    "docs/ownership/H6.19.json"
+  ]
+}

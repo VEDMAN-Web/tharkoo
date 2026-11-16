@@ -1,0 +1,8 @@
+{
+  "branchPrefix": "haiku/h7.0",
+  "globs": [
+    "src/server/**",
+    "tests/server/db/**",
+    "docs/ownership/H7.0.json"
+  ]
+}
