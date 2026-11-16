@@ -3,7 +3,7 @@ import { Cormorant_Garamond, Manrope } from "next/font/google";
 export const display = Cormorant_Garamond({
   subsets: ["latin"],
   weight: ["600"],
-  variable: "--font-display",
+  variable: "--font-display-src",
   display: "swap",
   preload: true,
 });
@@ -11,7 +11,7 @@ export const display = Cormorant_Garamond({
 export const sans = Manrope({
   subsets: ["latin"],
   weight: ["400", "500", "600", "700", "800"],
-  variable: "--font-sans",
+  variable: "--font-sans-src",
   display: "swap",
   preload: false,
 });

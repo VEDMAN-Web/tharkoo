@@ -1,0 +1,10 @@
+{
+  "branchPrefix": "haiku/h7.135",
+  "globs": [
+    "docs/ownership/H7.135.json",
+    "src/app/globals.css",
+    "src/styles/fonts.ts",
+    "tests/server/ui/h7-135-font-vars.test.ts",
+    "tests/e2e/h7-135-fonts.e2e.ts"
+  ]
+}
