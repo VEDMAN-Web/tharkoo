@@ -2,6 +2,8 @@
 
 import type { CSSProperties, ReactNode } from "react";
 import Link from "next/link";
+import { BrandLogo } from "./BrandLogo";
+import { LOGO_LIGHT_DEFAULT } from "@/lib/brand";
 import { ArrowRight, BadgeCheck, ChevronRight, Lock, Mail, Sparkles } from "lucide-react";
 import { safeHref } from "@/lib/sanitize";
 import { applyPrefixes, categoriesPath, categoryPath } from "@/lib/urls";
@@ -101,7 +103,7 @@ function LinkColumn({ title, items, className, extra }: { title: string; items: 
   );
 }
 
-export function FooterNew({ siteName, shell, categories }: { siteName: string; shell: ShellConfig; categories: Cat[] }) {
+export function FooterNew({ siteName, logo = LOGO_LIGHT_DEFAULT, shell, categories }: { siteName: string; logo?: string; shell: ShellConfig; categories: Cat[] }) {
   const paths = useUrlPaths();
   const f = shell.footer;
   const topCategories: ShellLink[] = f.topCategories.length
@@ -113,13 +115,7 @@ export function FooterNew({ siteName, shell, categories }: { siteName: string; s
     <footer className="tkn-footer" data-tk="footer">
       <div className="tkn-wrap tkn-foot-grid">
         <div className="tkn-foot-brand">
-          <div className="tkn-brand">
-            <span className="tkn-mark" aria-hidden="true">t</span>
-            <span className="tkn-brand-text">
-              <span className="tkn-brand-name">{siteName.toLowerCase()}</span>
-              <span className="tkn-foot-tagline">FREE CLASSIFIEDS &amp; DATING</span>
-            </span>
-          </div>
+          <BrandLogo src={logo} name={siteName} height={40} />
           <p className="tkn-foot-about">{f.about}</p>
           {f.trust.length ? (
             <ul className="tkn-pills" aria-label="Trust">

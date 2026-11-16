@@ -233,3 +233,4 @@ textarea.adm-input { min-height: 96px; resize: vertical; }
   .adm-kpi, .adm-stat { padding: var(--adm-s3) var(--adm-s3); }
   .adm-kpi-value, .adm-stat-value { font-size: 22px; }
 }
+.adm-brand-img { display: block; width: 32px; height: 32px; border-radius: 10px; }

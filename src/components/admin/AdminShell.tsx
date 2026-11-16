@@ -67,7 +67,7 @@ export function AdminShell({ title, children }: { title: string; children: React
       <div className="adm-shell">
         <aside className="adm-side" aria-label="Admin menu">
           <Link href="/admin/" className="adm-brand">
-            <span className="adm-brand-mark" aria-hidden>T</span>
+            <img className="adm-brand-img" src="/brand/logo-mark-512.png" alt="" width={32} height={32} />
             <span className="adm-link-label">Tharkoo admin</span>
           </Link>
           <NavLinks />
