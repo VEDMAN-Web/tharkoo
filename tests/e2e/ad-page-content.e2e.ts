@@ -34,7 +34,8 @@ async function setTour(enabled: boolean) {
 
 async function similarGapToFooter(page: Page) {
   return page.evaluate(() => {
-    const similar = document.querySelector(".tkn-similar")!.getBoundingClientRect();
+    const strip = document.querySelector('[data-tk="post-strip"]');
+    const similar = (strip ?? document.querySelector(".tkn-similar")!).getBoundingClientRect();
     const footer = document.querySelector('footer[data-tk="footer"]')!.getBoundingClientRect();
     return footer.top - similar.bottom;
   });
