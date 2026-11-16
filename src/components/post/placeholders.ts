@@ -19,6 +19,12 @@ const HINTS: Record<string, FieldHints> = {
   education: { title: "Maths tuition for classes 8 to 10", text: "Describe the classes, the timings and your experience" },
 };
 
+export function photoHelp(people: boolean): string {
+  return people
+    ? "Add clear photos of yourself. Your face should be in the frame. The first photo is your cover."
+    : "Add photos of the item or place. Bright daylight photos look best. The first photo is your cover.";
+}
+
 export function hintsFor(slug: string | undefined): FieldHints {
   return (slug && HINTS[slug]) || DEFAULT_HINTS;
 }
