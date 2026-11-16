@@ -53,7 +53,7 @@ export function friendlyError(error: ApiError) {
     case "INSUFFICIENT_CREDITS":
       return error.message || "You need more credits to publish.";
     case "FREE_LIMIT":
-      return "You have reached the free ad limit for this week.";
+      return "You have reached the ad limit for this week.";
     case "POLICY_VIOLATION":
       return publishMessage(error.message) || error.message || "This listing does not meet the content rules.";
     case "VALIDATION_ERROR":

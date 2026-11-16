@@ -121,7 +121,7 @@ export function HowItWorksView({
               <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
                 <div style={{ display: "flex", gap: "10px", alignItems: "center", fontSize: "15px", fontWeight: "600", color: "#1E0B38" }}>
                   <span style={{ width: "24px", height: "24px", borderRadius: "50%", background: "#ECFDF5", color: "#047857", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "13px", fontWeight: "800" }}>✓</span>
-                  Posting and chat stay free
+                  Chat with advertisers stays free
                 </div>
                 <div style={{ display: "flex", gap: "10px", alignItems: "center", fontSize: "15px", fontWeight: "600", color: "#1E0B38" }}>
                   <span style={{ width: "24px", height: "24px", borderRadius: "50%", background: "#ECFDF5", color: "#047857", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "13px", fontWeight: "800" }}>✓</span>
@@ -148,7 +148,7 @@ export function HowItWorksView({
           <div style={{ borderRadius: "22px", padding: "30px 32px", background: "linear-gradient(120deg, #FFF0F7, #F5F0FF 55%, #FFF8EC)", border: "1px solid rgba(255,255,255,.95)", boxShadow: "0 8px 32px rgba(45,18,72,.07)", display: "flex", justifyContent: "space-between", alignItems: "center", gap: "18px", flexWrap: "wrap" }}>
             <div>
               <h2 className="h714-h2" style={{ margin: "0 0 6px", fontSize: "30px", letterSpacing: "-.03em", color: "#110520" }}>Ready to start?</h2>
-              <p style={{ margin: "0", fontSize: "15px", color: "#4A2870" }}>Browse ads near you or post your own for free.</p>
+              <p style={{ margin: "0", fontSize: "15px", color: "#4A2870" }}>Browse ads near you or post your own.</p>
             </div>
             <div style={{ display: "flex", gap: "10px", flexWrap: "wrap" }}>
               <Link href={postAdHref} className="h714-b" style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", gap: "8px", minHeight: "48px", padding: "0 24px", borderRadius: "999px", background: "linear-gradient(135deg, #D1137A, #A8124F)", color: "#fff", fontWeight: "700", textDecoration: "none", boxShadow: "0 8px 24px rgba(209,19,122,.3)", fontSize: "15px" }}>Post your ad</Link>

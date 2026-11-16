@@ -43,7 +43,7 @@ function hash(value: string) {
 const EXTRAS = [
   [
     "Each card names the district when the poster added one, so you can skip areas that are too far.",
-    "A basic ad stays free within the weekly limit, and paid promotion only changes the order for a set number of days.",
+    "Posting an ad costs a posting fee in credits, and paid promotion only changes the order for a set number of days.",
     "If a page is still short, the nearby city links lead to the same category where people have already posted.",
   ],
   [
@@ -102,7 +102,7 @@ export function fallbackLanding(input: LandingInput): LandingCopy {
       },
       {
         q: `How do I post a ${input.category.toLowerCase()} ad in ${place}?`,
-        a: `Create an account, add a photo, and submit the ${input.category.toLowerCase()} ad for ${place}. An admin reviews your ID before the first ad goes live. A basic ad is free within the weekly limit.`,
+        a: `Create an account, add a photo, and submit the ${input.category.toLowerCase()} ad for ${place}. An admin reviews your ID before the first ad goes live. The posting fee is shown before you publish.`,
       },
       {
         q: `Which ${input.category.toLowerCase()} ads in ${place} appear first?`,

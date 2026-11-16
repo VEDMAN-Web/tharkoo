@@ -12,7 +12,7 @@ const TITLES: Record<TrustLegalKey, string> = { privacy: "Privacy policy", terms
 
 const TRUST_HEADINGS: Record<TrustLegalKey, Record<number, string>> = {
   privacy: { 0: "1. What we store", 1: "2. What a public ad shows", 2: "3. Cookies", 3: "4. Staff access", 4: "5. Your requests", 6: "6. About this note" },
-  terms: { 0: "1. Using Tharkoo", 1: "2. Age and ID checks", 2: "3. Free ads and paid options", 3: "4. Your content", 4: "5. Removing ads", 6: "6. Status of these terms" },
+  terms: { 0: "1. Using Tharkoo", 1: "2. Age and ID checks", 2: "3. Posting fee and paid options", 3: "4. Your content", 4: "5. Removing ads", 6: "6. Status of these terms" },
   cookies: { 0: "1. Cookies we use", 1: "2. Choices saved in your browser", 2: "3. Other websites", 3: "4. Blocking cookies", 4: "5. The cookie note", 5: "6. More than one browser", 7: "7. Status of this note" },
 };
 

@@ -20,7 +20,7 @@ export async function GET() {
   const lines = [
     "# Tharkoo",
     "",
-    extra.intro ?? "Tharkoo is a free classifieds site for India. People post dating notes, friendship notes, jobs, homes, vehicles, and local services. Contact stays on the ad.",
+    extra.intro ?? "Tharkoo is a classifieds site for India. People post dating notes, friendship notes, jobs, homes, vehicles, and local services. Contact stays on the ad.",
     "",
     "## Public pages",
     `- Home: /`,
