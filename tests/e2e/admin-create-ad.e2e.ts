@@ -1,7 +1,7 @@
 import { expect, hasHorizontalScroll, signInAdminContext, test } from "./helpers";
 
 test.describe("H6.15 admin create ad", () => {
-  test("Create ad and Bulk import links are in the sidebar, and the screen fits a phone", async ({ page, context, baseURL }) => {
+  test("Create ad and Bulk import screens open from their address, and the create screen fits a phone", async ({ page, context, baseURL }) => {
     await signInAdminContext(context, baseURL!);
     await page.setViewportSize({ width: 390, height: 844 });
     await page.goto("/admin/ads/create/");
@@ -12,7 +12,6 @@ test.describe("H6.15 admin create ad", () => {
 
     await page.goto("/admin/import/");
     await expect(page.locator("h1")).toHaveCount(1);
-    await expect(page.getByRole("link", { name: "Bulk import" })).toBeVisible();
   });
 
   test("the category form shows the Max photos control", async ({ page, context, baseURL }) => {

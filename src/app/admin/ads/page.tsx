@@ -2,6 +2,9 @@ import Link from "next/link";
 import type { Types } from "mongoose";
 import { AdminShell } from "@/components/admin/AdminShell";
 import { CollectionEditor } from "@/components/admin/CollectionEditor";
+import { EmptyState } from "@/components/admin/ui/EmptyState";
+import { getStaffFromHeaders } from "@/lib/admin-auth";
+import { isAdminRole } from "@/lib/ui/site-content";
 import { formatIndianCount } from "@/components/ad/counts-format";
 import { connectDb } from "@/lib/db";
 import { shownFrom } from "@/server/analytics/shown";
@@ -42,6 +45,14 @@ async function recentCounts(kind: "all" | "demo" | "real") {
 }
 
 export default async function Page({ searchParams }: { searchParams: Promise<{ kind?: string }> }) {
+  const identity = await getStaffFromHeaders();
+  if (!isAdminRole(identity.roles)) {
+    return (
+      <AdminShell title="All ads">
+        <EmptyState title="Coming" why="The new ad list is planned and not built yet. The old list still works." action={{ label: "Open the ad list", href: "/admin/listings/" }} />
+      </AdminShell>
+    );
+  }
   const { kind: rawKind } = await searchParams;
   const kind = rawKind === "demo" || rawKind === "real" ? rawKind : "all";
   const [rows, picker, demoCounts] = await Promise.all([recentCounts(kind), homePickerData(), demoAdCounts()]);
