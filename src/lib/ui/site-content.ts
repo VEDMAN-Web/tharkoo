@@ -42,6 +42,11 @@ export type SiteContent = {
     postLabel: string;
     postHref: string;
     plate: HeroPlate;
+    /** H7.105: the headline and sub line are already in the picture. The H1 stays in the page for search engines and screen readers. */
+    textInImage: boolean;
+    /** H7.105: the picture's own size, so the banner takes its shape. 0 means not known. */
+    photoWidth: number;
+    photoHeight: number;
   };
   cardsHeading: string;
   cardsIntro: string;
@@ -131,6 +136,9 @@ export function defaultSiteContent(): SiteContent {
       postLabel: "POST YOUR AD",
       postHref: POST,
       plate: "on",
+      textInImage: false,
+      photoWidth: 0,
+      photoHeight: 0,
     },
     cardsHeading: "Latest listings in your city",
     cardsIntro: "Find your favourite listings on Tharkoo",
@@ -294,6 +302,11 @@ function navList(value: unknown, fallback: NavLink[], max = 8): NavLink[] | null
   return links;
 }
 
+function pixels(value: unknown): number {
+  const n = Math.round(Number(value));
+  return Number.isFinite(n) && n >= 100 && n <= 10000 ? n : 0;
+}
+
 function asRecord(value: unknown) {
   return value && typeof value === "object" && !Array.isArray(value) ? (value as Record<string, unknown>) : null;
 }
@@ -424,11 +437,14 @@ export function sanitizeSiteContent(
         focusY: focusPercent(heroIn.focusY, FOCUS_DEFAULT_Y),
         phoneFocusX: focusPercent(heroIn.phoneFocusX, FOCUS_DEFAULT_X),
         phoneFocusY: focusPercent(heroIn.phoneFocusY, FOCUS_DEFAULT_Y),
-        photoAlt: text(heroIn.photoAlt, 80, base.hero.photoAlt),
+        photoAlt: text(heroIn.photoAlt, 200, base.hero.photoAlt),
         searchPlaceholder: text(heroIn.searchPlaceholder, 80, base.hero.searchPlaceholder),
         postLabel: text(heroIn.postLabel, 40, base.hero.postLabel),
         postHref: heroPost || POST,
         plate: heroPlate(heroIn.plate),
+        textInImage: heroIn.textInImage === true,
+        photoWidth: pixels(heroIn.photoWidth),
+        photoHeight: pixels(heroIn.photoHeight),
       },
       cardsHeading: text(source.cardsHeading, 80, base.cardsHeading),
       cardsIntro: text(source.cardsIntro, 160, base.cardsIntro),
