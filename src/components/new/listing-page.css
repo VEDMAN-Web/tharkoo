@@ -2,7 +2,7 @@
    NewListingPage). Plain CSS, scoped under .tkn-lp. Breakpoints: 900 px (wider gaps). */
 .tkn-ls.tkn-lp { display: block; width: 100%; min-width: 0; }
 .tkn-lp-body {
-  box-sizing: border-box; max-width: 1280px; margin: 0 auto; padding: 0 24px 72px;
+  box-sizing: border-box; max-width: 1280px; margin: 24px auto 0; padding: 0 var(--gutter) 72px;
   display: grid; gap: 32px; min-width: 0;
 }
 @media (min-width: 900px) { .tkn-lp-body { gap: 48px; } }

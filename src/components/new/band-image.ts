@@ -49,6 +49,8 @@ export function cityBandImageFor(shell: ShellConfig, citySlug: string): ShellIma
   return city && (city.band || city.bandPhone) ? city : null;
 }
 
+const DEFAULT_BAND_FOCUS = "72% 22%";
+
 /**
  * The CSS variables for the band: the computer image and the phone image. The URLs were checked when they were saved.
  * With no photo the band keeps its gradient (see listing-spec.css).
@@ -58,5 +60,6 @@ export function bandStyleFor(image: Partial<BandPhoto> | null): Record<string, s
   if (image?.band) style["--band-desk"] = `url("${image.band}")`;
   const phone = image?.bandPhone || image?.band;
   if (phone) style["--band-phone"] = `url("${phone}")`;
+  if (image?.band && (!image.bandPhone || image.bandPhone === image.band)) style["--band-focus-phone"] = DEFAULT_BAND_FOCUS;
   return style;
 }
