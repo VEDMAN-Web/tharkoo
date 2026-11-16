@@ -22,7 +22,7 @@ export function ReasonDialog({
   requireReason = false,
   textLabel,
   requireText = false,
-  giveBack,
+  paidAd,
   typedConfirm,
   confirmLabel,
   danger = false,
@@ -39,8 +39,11 @@ export function ReasonDialog({
   /** Label for the free text box, for example "Tell the advertiser why". Leave out for no text box. */
   textLabel?: string;
   requireText?: boolean;
-  /** The optional refund box: label such as "Give back the 30 credits to Riya". */
-  giveBack?: { label: string; help?: string };
+  /**
+   * Set ONLY when the dialog rejects or removes a PAID ad. It adds the box "Give back the N credits to {name}" (off by default,
+   * saved in History). Never set it for a ban, a delete or any other dialog.
+   */
+  paidAd?: { name: string; credits: number };
   /** The exact text to type, for bulk changes that remove many records: "END DEMO". */
   typedConfirm?: string;
   /** A verb: "Remove ad", "Ban user". Never "OK" or "Yes". */
@@ -108,7 +111,7 @@ export function ReasonDialog({
   function submit() {
     setTried(true);
     if (!check.ok) return;
-    onConfirm({ reason: picked, text: text.trim(), giveBack: refund });
+    onConfirm({ reason: picked, text: text.trim(), giveBack: Boolean(paidAd) && refund });
   }
 
   return (
@@ -152,12 +155,12 @@ export function ReasonDialog({
               {errors.text ? <p className="adm-k-err" id={`${id}-te`}>{errors.text}</p> : null}
             </div>
           ) : null}
-          {giveBack ? (
+          {paidAd ? (
             <label className="adm-k-opt" data-tk="give-back">
               <input type="checkbox" checked={refund} onChange={(event) => setRefund(event.target.checked)} />
               <span>
-                <strong>{giveBack.label}</strong>
-                {giveBack.help ? <span className="adm-k-help" style={{ display: "block" }}>{giveBack.help}</span> : null}
+                <strong>Give back the {paidAd.credits.toLocaleString("en-IN")} credits to {paidAd.name}</strong>
+                <span className="adm-k-help" style={{ display: "block" }}>Off by default. Saved in History.</span>
               </span>
             </label>
           ) : null}
