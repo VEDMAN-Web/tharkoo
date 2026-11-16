@@ -34,9 +34,13 @@ export async function saveHomepageForAdmin(content: SiteContent) {
   }
 }
 
-export async function saveLoginImageForAdmin(loginImage: string) {
+export async function saveLoginImageForAdmin(loginImage: string, focus?: { x: number; y: number }) {
   const content = await loadHomepageForAdmin();
-  return saveHomepageForAdmin({ ...content, loginImage });
+  return saveHomepageForAdmin({
+    ...content,
+    loginImage,
+    ...(focus ? { loginImageFocusX: focus.x, loginImageFocusY: focus.y } : {}),
+  });
 }
 
 export async function resetHomepageForAdmin() {

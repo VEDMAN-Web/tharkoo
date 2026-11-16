@@ -39,7 +39,7 @@ import { bandChoice, heroBandFrom } from "@/components/new/band-image";
 import { FallbackAds } from "@/components/FallbackAds";
 import { loadFallbackSections, showFallback } from "@/lib/fallback-ads";
 import { ListingFrame } from "@/components/new/ListingFrame";
-import { listingFrameProps } from "@/components/new/listing-frame-props";
+import { introCategory, listingFrameProps } from "@/components/new/listing-frame-props";
 import { attributePicks, hasFieldPicks, listingFilterQuery, type ListingToggles } from "@/components/new/listing-filters";
 import { withPagination } from "@/lib/seo/pagination";
 import { listingLabels, placeSelects } from "@/components/new/listing-frame-props";
@@ -269,7 +269,7 @@ export default async function LocationPage({ params, searchParams }: Props) {
   const frame = listingFrameProps({
     crumbs,
     h1,
-    intro: listingHeading(introTemplate, "", { ...layout.vars, h1 }) || t("listing.band.introPlace", { category: cat.name, place: loc.name }),
+    intro: listingHeading(introTemplate, "", { ...layout.vars, h1 }) || t("listing.band.introPlace", { category: introCategory(cat.name), place: loc.name }),
     photo: bandChoice(shell, hero, { city: loc.kind === "city" ? citySlug : undefined, category: categorySlug }),
     categorySlug,
     citySlug: loc.kind === "city" ? citySlug : undefined,
