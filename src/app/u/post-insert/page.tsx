@@ -44,9 +44,8 @@ export default async function PostInsertPage({
   }
   const dest = query.size ? `${postAdPath(paths)}?${query.toString()}` : postAdPath(paths);
   if (!session) redirect(`${loginPath(paths)}?role=seller&next=${encodeURIComponent(dest)}`);
-  // H7.2b (New design): a seller profile is asked once, before the first ad. A returning seller skips it.
   const newDesign = await newDesignOn();
-  if (!session.user.seller && newDesign) redirect(`/u/seller-profile/?next=${encodeURIComponent(dest)}`);
+  const about = newDesign && !session.user.seller ? { askDateOfBirth: !session.user.dateOfBirth } : null;
   // H6.14: with the ID-check switch on, the ID check comes first, before step 1. Off, the form always opens.
   const requireIdCheck = await idCheckRequired();
   const screen = idCheckScreen(requireIdCheck, session.user.verificationStatus);
@@ -75,5 +74,5 @@ export default async function PostInsertPage({
   const cities = plain(cityRows.map((row) => ({ id: row.id, name: row.name, slug: row.slug })).sort((a, b) => a.name.localeCompare(b.name)));
   const home = (session.user.seller?.city ?? "").trim().toLowerCase();
   const defaultCityId = home ? (cities.find((item) => item.slug.toLowerCase() === home || item.name.toLowerCase() === home)?.id ?? "") : "";
-  return <PostWizard copy={buildPostCopy(blocks)} requireIdCheck={requireIdCheck} newDesign={newDesign} initialCategories={categories} initialCities={cities} defaultCityId={defaultCityId} />;
+  return <PostWizard copy={buildPostCopy(blocks)} requireIdCheck={requireIdCheck} newDesign={newDesign} initialCategories={categories} initialCities={cities} defaultCityId={defaultCityId} defaultName={session.user.seller?.name ?? ""} about={about} />;
 }

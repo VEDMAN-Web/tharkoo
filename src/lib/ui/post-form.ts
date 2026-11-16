@@ -1,3 +1,5 @@
+import { isAtLeast18, parseDateOnly } from "@/server/shared/age";
+
 export type PostField = { key: string; label: string; required?: boolean };
 
 /** Chip answers: one value for a pick-one field, a list for a pick-many field. */
@@ -124,16 +126,31 @@ export type NewPostStep = (typeof NEW_POST_STEPS)[number];
 /** The step a validation key belongs to. Any key not listed is a detail (title, text, city, a category field...). */
 export function stepOfError(key: string): NewPostStep {
   if (key === "category" || key === "subcategory") return "category";
-  if (key === "phone") return "contact";
+  if (key === "phone" || key === "dob" || key === "ageConfirmed") return "contact";
   if (key === "terms" || key === "adult") return "review";
   return "details";
 }
 
+const ABOUT_KEYS = ["nickname", "city"];
+
 /** The errors one step is responsible for. Continue on a step checks only these, so a later step cannot block an earlier one. */
-export function errorsForStep(errors: Record<string, string>, step: NewPostStep): Record<string, string> {
+export function errorsForStep(errors: Record<string, string>, step: NewPostStep, about = false): Record<string, string> {
   const out: Record<string, string> = {};
   for (const [key, message] of Object.entries(errors)) {
-    if (stepOfError(key) === step) out[key] = message;
+    if (stepOfError(key) === step || (about && step === "contact" && ABOUT_KEYS.includes(key))) out[key] = message;
   }
+  return out;
+}
+
+export type AboutInput = { askDateOfBirth: boolean; dateOfBirth: string; ageConfirmed: boolean };
+
+export function validateAbout(input: AboutInput, now = new Date()): Record<string, string> {
+  const out: Record<string, string> = {};
+  if (!input.askDateOfBirth) return out;
+  const born = parseDateOnly(input.dateOfBirth);
+  if (!input.dateOfBirth) out.dob = "Enter your date of birth";
+  else if (!born) out.dob = "Enter a valid date";
+  else if (!isAtLeast18(born, now)) out.dob = "You must be 18 or older to post an ad";
+  if (!input.ageConfirmed) out.ageConfirmed = "Tick this box to go on";
   return out;
 }
