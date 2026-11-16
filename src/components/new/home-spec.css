@@ -573,3 +573,39 @@
     height: 460px;
   }
 }
+
+/* H7.105: the headline is in the picture. The banner takes the picture's own shape and nothing is cut. */
+.tkh-banner[data-text-in-image="true"] {
+  height: auto !important;
+  aspect-ratio: var(--tkh-ratio, 2400 / 1029);
+  overflow: hidden;
+  border-radius: 20px;
+  background: none;
+}
+.tkh-banner[data-text-in-image="true"] picture,
+.tkh-banner[data-text-in-image="true"] > .tkh-banner-img {
+  height: 100% !important;
+  width: 100%;
+  border-radius: 0;
+}
+.tkh-banner[data-text-in-image="true"] .tkh-banner-img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  object-position: center;
+}
+.tkh-banner[data-text-in-image="true"] + .tkh-search {
+  margin-top: 16px;
+}
+@media (max-width: 599px) {
+  .tkh-banner[data-text-in-image="true"] {
+    border-radius: 16px;
+  }
+  .tkh-banner[data-text-in-image="true"][data-phone-photo="true"] {
+    aspect-ratio: auto;
+  }
+  .tkh-banner[data-text-in-image="true"][data-phone-photo="true"] picture,
+  .tkh-banner[data-text-in-image="true"][data-phone-photo="true"] .tkh-banner-img {
+    height: auto !important;
+  }
+}

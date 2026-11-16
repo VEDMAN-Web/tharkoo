@@ -2,7 +2,7 @@
 
 import { refreshPublicCache } from "@/lib/cache";
 import { getStaffFromHeaders } from "@/lib/admin-auth";
-import { applyHomeCategoriesCount, applyHomepageChange, applyListingBandSwitch, applyHomeSeoChange, ensureHomepageDocument } from "@/lib/ui/site-store";
+import { applyHomeBanner, applyHomeCategoriesCount, applyHomepageChange, applyListingBandSwitch, applyHomeSeoChange, ensureHomepageDocument } from "@/lib/ui/site-store";
 import { readContent, type SiteContent } from "@/lib/ui/site-content";
 import { connectDb } from "@/lib/db";
 import { HttpError } from "@/server/http";
@@ -65,6 +65,17 @@ export async function saveListingBandForAdmin(on: boolean) {
   try {
     const saved = await applyListingBandSwitch({ roles: identity.roles, email: identity.email, on });
     return { ok: true as const, on: saved.showListingBand };
+  } catch (error) {
+    return { ok: false as const, message: error instanceof Error ? error.message : "Save failed" };
+  }
+}
+
+/** Saves the Home banner picture and the "headline is already in the picture" switch. Admins only. */
+export async function saveHomeBannerForAdmin(input: { photo: string; photoWidth: number; photoHeight: number; photoPhone: string; photoAlt: string; textInImage: boolean }) {
+  const identity = await getStaffFromHeaders();
+  try {
+    const saved = await applyHomeBanner({ roles: identity.roles, email: identity.email, ...input });
+    return { ok: true as const, hero: saved.hero };
   } catch (error) {
     return { ok: false as const, message: error instanceof Error ? error.message : "Save failed" };
   }

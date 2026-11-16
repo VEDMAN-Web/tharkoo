@@ -131,6 +131,33 @@ export async function applyHomeCategoriesCount(input: { roles: string[]; email: 
   return applyHomepageChange({ roles: input.roles, email: input.email, content });
 }
 
+/** H7.105: the Home banner picture, its alt text and the "headline is already in the picture" switch. Same role check, audit entry and cache refresh as the homepage save. */
+export async function applyHomeBanner(input: {
+  roles: string[];
+  email: string;
+  photo: string;
+  photoWidth: number;
+  photoHeight: number;
+  photoPhone: string;
+  photoAlt: string;
+  textInImage: boolean;
+}) {
+  if (!isAdminRole(input.roles)) throw new ForbiddenError("Only an admin can edit the homepage");
+  await connectDb();
+  const current = await Site.findOne({ key: "default" }).lean();
+  const base = readContent(current?.homepage);
+  const hero = {
+    ...base.hero,
+    photo: input.photo || base.hero.photo,
+    photoWidth: input.photo ? input.photoWidth : base.hero.photoWidth,
+    photoHeight: input.photo ? input.photoHeight : base.hero.photoHeight,
+    photoPhone: input.photoPhone,
+    photoAlt: input.photoAlt.trim() || base.hero.photoAlt,
+    textInImage: input.textInImage === true,
+  };
+  return applyHomepageChange({ roles: input.roles, email: input.email, content: { ...base, hero } });
+}
+
 /**
  * Saves the home page title and description from the Home page editor (H6.10).
  * It writes the same stored fields the public page reads (Site.homepage.content.seoTitle and seoDescription),

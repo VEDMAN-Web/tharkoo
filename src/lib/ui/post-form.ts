@@ -1,3 +1,5 @@
+import { isAtLeast18, parseDateOnly } from "@/server/shared/age";
+
 export type PostField = { key: string; label: string; required?: boolean };
 
 /** Chip answers: one value for a pick-one field, a list for a pick-many field. */
@@ -67,6 +69,7 @@ export function validatePost(input: PostDraftInput) {
 }
 
 export type SavedDraft = {
+  status?: string | null;
   title?: string | null;
   description?: string | null;
   categoryId?: string | null;
@@ -76,9 +79,16 @@ export type SavedDraft = {
   attributes?: Record<string, unknown> | null;
   price?: number | null;
   nickname?: string | null;
-  contact?: { phone?: string | null; whatsapp?: string | null; telegram?: string | null } | null;
+  contact?: { phone?: string | null; whatsapp?: string | null; telegram?: string | null; acceptForm?: boolean | null } | null;
   mediaIds?: string[] | null;
 };
+
+function contactModeOf(contact: SavedDraft["contact"]) {
+  if (!contact) return "both";
+  const phone = Boolean(contact.phone);
+  if (contact.acceptForm) return phone ? "both" : "email";
+  return phone ? "phone" : "both";
+}
 
 export function draftToForm(row: SavedDraft) {
   const attributes = row.attributes || {};
@@ -102,7 +112,9 @@ export function draftToForm(row: SavedDraft) {
     area: typeof attributes.area === "string" ? attributes.area : "",
     phone: row.contact?.phone || "",
     whatsapp: Boolean(row.contact?.whatsapp),
+    whatsappNumber: row.contact?.whatsapp || "",
     telegram: row.contact?.telegram || "",
+    contactMode: contactModeOf(row.contact),
     lookingFor: textOf(attrs["looking-for"]),
     attrs,
     photos: row.mediaIds || [],
@@ -119,21 +131,104 @@ export function needsIdCheck(status?: string | null) {
  * Photos have no form errors (the photo step checks its own uploads). Contact: phone. Review: the two consents.
  */
 export const NEW_POST_STEPS = ["category", "details", "photos", "contact", "review"] as const;
-export type NewPostStep = (typeof NEW_POST_STEPS)[number];
+export type NewPostStep = (typeof NEW_POST_STEPS)[number] | "more";
+
+export function stepsFor(split: boolean): NewPostStep[] {
+  return split ? ["category", "details", "more", "photos", "contact", "review"] : [...NEW_POST_STEPS];
+}
+
+export function urlStepOf(step: NewPostStep): string {
+  return step === "more" ? "more" : String(NEW_POST_STEPS.indexOf(step) + 1);
+}
+
+export function stepFromUrl(raw: string): NewPostStep | null {
+  if (raw === "more" || raw === "photos") return raw;
+  const index = Number(raw);
+  return Number.isInteger(index) && index >= 1 && index <= NEW_POST_STEPS.length ? NEW_POST_STEPS[index - 1] : null;
+}
+
+export type ExtraShape = { type: string; options: string[] };
+
+export const LONG_LIST = 8;
+const MORE_STEP_ABOVE = 118;
+const CELL_ROW = 70;
+const CHIP_BASE = 26;
+const CHIP_ROW = 48;
+const CHIPS_PER_ROW = 5;
+
+export function isChipField(field: ExtraShape): boolean {
+  if (!field.options.length) return false;
+  if (field.type === "multiselect") return true;
+  return field.type === "select" && field.options.length <= LONG_LIST;
+}
+
+export function needsMoreStep(extras: ExtraShape[]): boolean {
+  const chips = extras.filter(isChipField);
+  const cells = extras.length - chips.length;
+  const height = Math.ceil(cells / 2) * CELL_ROW + chips.reduce((sum, field) => sum + CHIP_BASE + Math.ceil(field.options.length / CHIPS_PER_ROW) * CHIP_ROW, 0);
+  return height > MORE_STEP_ABOVE;
+}
 
 /** The step a validation key belongs to. Any key not listed is a detail (title, text, city, a category field...). */
 export function stepOfError(key: string): NewPostStep {
   if (key === "category" || key === "subcategory") return "category";
-  if (key === "phone") return "contact";
+  if (key === "phone" || key === "whatsapp" || key === "telegram" || key === "dob" || key === "ageConfirmed") return "contact";
   if (key === "terms" || key === "adult") return "review";
   return "details";
 }
 
+const ABOUT_KEYS = ["nickname", "city"];
+
 /** The errors one step is responsible for. Continue on a step checks only these, so a later step cannot block an earlier one. */
-export function errorsForStep(errors: Record<string, string>, step: NewPostStep): Record<string, string> {
+export function errorsForStep(errors: Record<string, string>, step: NewPostStep, about = false, moreKeys: readonly string[] = []): Record<string, string> {
   const out: Record<string, string> = {};
   for (const [key, message] of Object.entries(errors)) {
-    if (stepOfError(key) === step) out[key] = message;
+    const owner: NewPostStep = moreKeys.includes(key) ? "more" : stepOfError(key);
+    if (owner === step || (about && step === "contact" && ABOUT_KEYS.includes(key))) out[key] = message;
   }
   return out;
+}
+
+export type AboutInput = { askDateOfBirth: boolean; dateOfBirth: string; ageConfirmed: boolean };
+
+export function validateAbout(input: AboutInput, now = new Date()): Record<string, string> {
+  const out: Record<string, string> = {};
+  if (!input.askDateOfBirth) return out;
+  const born = parseDateOnly(input.dateOfBirth);
+  if (!input.dateOfBirth) out.dob = "Enter your date of birth";
+  else if (!born) out.dob = "Enter a valid date";
+  else if (!isAtLeast18(born, now)) out.dob = "You must be 18 or older to post an ad";
+  if (!input.ageConfirmed) out.ageConfirmed = "Tick this box to go on";
+  return out;
+}
+
+const TELEGRAM_PATTERN = /^[A-Za-z0-9_]{5,32}$/;
+
+export function telegramHandle(raw: string) {
+  return raw.trim().replace(/^@/, "");
+}
+
+export function isIndianMobile(raw: string) {
+  return /^(91)?[6-9]\d{9}$/.test(raw.replace(/\D/g, ""));
+}
+
+export type ContactChoices = { mode: string; whatsappOn: boolean; whatsappSame: boolean; whatsappNumber: string; telegramOn: boolean; telegram: string };
+
+export function validateContact(input: ContactChoices): Record<string, string> {
+  const out: Record<string, string> = {};
+  if (input.mode !== "email" && input.whatsappOn && !input.whatsappSame && !isIndianMobile(input.whatsappNumber)) {
+    out.whatsapp = "Use +91 and 10 digits";
+  }
+  if (input.telegramOn) {
+    const handle = telegramHandle(input.telegram);
+    if (!handle) out.telegram = "Enter your Telegram username";
+    else if (!TELEGRAM_PATTERN.test(handle)) out.telegram = "Use 5 to 32 letters, digits or underscores";
+  }
+  return out;
+}
+
+export function maskEmail(email: string) {
+  const at = email.lastIndexOf("@");
+  if (at < 1) return "";
+  return `${email.slice(0, 1)}••••${email.slice(at)}`;
 }

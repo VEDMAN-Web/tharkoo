@@ -1,5 +1,7 @@
 import type { NewPostStep } from "@/lib/ui/post-form";
 
+type BaseStep = Exclude<NewPostStep, "more">;
+
 /** H7.5: the New design post-ad pieces that do not hold form state: the step rail, the live preview and the tip. */
 
 /** Pastel tiles for the category grid, cycled by position. Colours from the mockup. */
@@ -12,7 +14,7 @@ export const CATEGORY_TINTS = [
 ] as const;
 
 /** Default tips shown beside each step. The wording is a code default; it is not a published block. */
-export const NEW_POST_TIPS: Record<NewPostStep, string> = {
+export const NEW_POST_TIPS: Record<BaseStep, string> = {
   category: "Pick the category that fits best. It puts your ad on the pages people search.",
   details: "Short titles work best. Put the most important word first.",
   photos: "Bright photos taken in daylight look best on the listing page.",
@@ -20,7 +22,9 @@ export const NEW_POST_TIPS: Record<NewPostStep, string> = {
   review: "You can edit your ad any time from your panel.",
 };
 
-export const RAIL_LABELS: Record<NewPostStep, string> = {
+export const RAIL_MORE_LABEL = "More";
+
+export const RAIL_LABELS: Record<BaseStep, string> = {
   category: "Category",
   details: "Details",
   photos: "Photos",
@@ -30,7 +34,7 @@ export const RAIL_LABELS: Record<NewPostStep, string> = {
 
 export type RailItem = { key: NewPostStep; label: string; num: number; state: "done" | "current" | "todo"; clickable: boolean };
 
-export function PostRail({ items, progressLabel, onGo }: { items: RailItem[]; progressLabel: string; onGo: (num: number) => void }) {
+export function PostRail({ items, progressLabel, onGo, children }: { items: RailItem[]; progressLabel: string; onGo: (num: number) => void; children?: React.ReactNode }) {
   return (
     <nav aria-label={progressLabel} className="tkp-rail">
       <p className="tkp-kicker tkp-kicker-plain">{progressLabel}</p>
@@ -58,6 +62,7 @@ export function PostRail({ items, progressLabel, onGo }: { items: RailItem[]; pr
           </li>
         ))}
       </ol>
+      {children}
     </nav>
   );
 }
