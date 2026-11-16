@@ -13,13 +13,17 @@ interface Props {
   askDateOfBirth: boolean;
   /** H7.4c: the Live chat switch as it is saved now. Off for existing sellers. */
   initialLiveChat?: boolean;
+  /** The cities of the post-ad form. The city is picked from this list by its display name. */
+  cities?: { id: string; name: string; slug: string }[];
 }
 
 /** H7.2b: the seller profile, shown once before the first ad. Name and city show on ads. Date of birth never shows. */
-export function SellerProfileForm({ next, initial, askDateOfBirth, initialLiveChat = false }: Props) {
+export function SellerProfileForm({ next, initial, askDateOfBirth, initialLiveChat = false, cities = [] }: Props) {
   const router = useRouter();
   const [name, setName] = useState(initial?.name ?? "");
-  const [city, setCity] = useState(initial?.city ?? "");
+  const saved = (initial?.city ?? "").trim();
+  const known = cities.find((item) => item.slug.toLowerCase() === saved.toLowerCase() || item.name.toLowerCase() === saved.toLowerCase());
+  const [city, setCity] = useState(known?.name ?? saved);
   const [whatsapp, setWhatsapp] = useState(initial?.whatsapp ?? "");
   const [availableNow, setAvailableNow] = useState(initial?.availableNow ?? false);
   const [liveChat, setLiveChat] = useState(initialLiveChat);
@@ -73,7 +77,17 @@ export function SellerProfileForm({ next, initial, askDateOfBirth, initialLiveCh
 
       <label className="tk-sp-label">
         <span>City</span>
-        <input className="tk-sp-input" name="city" autoComplete="address-level2" value={city} onChange={(event) => setCity(event.target.value)} aria-invalid={Boolean(cityError)} aria-describedby={cityError ? "tk-sp-city-err" : undefined} required />
+        {cities.length ? (
+          <select className="tk-sp-input" name="city" autoComplete="address-level2" value={city} onChange={(event) => setCity(event.target.value)} aria-invalid={Boolean(cityError)} aria-describedby={cityError ? "tk-sp-city-err" : undefined} required>
+            <option value="">Select city</option>
+            {!known && saved ? <option value={saved}>{saved}</option> : null}
+            {cities.map((item) => (
+              <option key={item.id} value={item.name}>{item.name}</option>
+            ))}
+          </select>
+        ) : (
+          <input className="tk-sp-input" name="city" autoComplete="address-level2" value={city} onChange={(event) => setCity(event.target.value)} aria-invalid={Boolean(cityError)} aria-describedby={cityError ? "tk-sp-city-err" : undefined} required />
+        )}
         {cityError ? <span id="tk-sp-city-err" className="tk-sp-error">{cityError}</span> : null}
       </label>
 
