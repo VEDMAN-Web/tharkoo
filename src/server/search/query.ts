@@ -28,6 +28,7 @@ import {
 } from "@/server/ranking";
 import { publicView } from "@/server/listings/service";
 import { pickLimitsByCategory } from "@/server/fields/service";
+import { kindFor } from "@/server/categories/kind";
 import { TOP_CITY_SLUGS } from "@/server/seed/data";
 
 const TIER: Record<string, number> = {
@@ -479,10 +480,10 @@ function facetsFrom(hits: PublicHit[]): SearchFacets {
   return { categories: pack(categories), cities: pack(cities) };
 }
 
-function trustMarks(status: string | undefined, adult: Date | undefined, verified: boolean, photos: number) {
+export function trustMarks(status: string | undefined, adult: Date | undefined, verified: boolean, photos: number, people: boolean) {
   const marks: string[] = [];
   if (status === "approved" || verified) marks.push("ID verified");
-  if (adult || status === "approved" || verified) marks.push("Age verified");
+  if (people && (adult || status === "approved" || verified)) marks.push("Age verified");
   if (photos > 0 && marks.includes("ID verified")) marks.push("Photo verified");
   return marks;
 }
@@ -516,7 +517,9 @@ export async function presentRows(docs: Row[], promotions: Map<string, RankPromo
     const bumped = doc.bumpedAt ? new Date(doc.bumpedAt) : doc.publishedAt;
     const publicId = publicIdOf(doc.slug, id);
     const photoList = listingPhotos(categorySlug, publicId, photos.get(id) ?? []);
-    const trust = trustMarks(person?.verificationStatus, person?.attestedAdultAt, verified, photoList.length);
+    const category = categories.find((row) => String(row._id) === String(doc.categoryId));
+    const people = category?.kind === "people" || kindFor(categorySlug, category?.fields) === "people";
+    const trust = trustMarks(person?.verificationStatus, person?.attestedAdultAt, verified, photoList.length, people);
     const age = ageOf(doc.attributes);
     const price = cleanPrice(doc.price);
     hits.push({

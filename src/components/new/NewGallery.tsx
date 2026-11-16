@@ -5,7 +5,7 @@ import { ChevronLeft, ChevronRight } from "lucide-react";
 import { useContact } from "@/components/ContactButtons";
 import { useT } from "@/components/ui/AdCard";
 
-const THUMB_SLOTS = 8;
+const THUMB_LIMIT = 8;
 
 export function NewGallery({ photos, title, badge, isNew = false }: { photos: string[]; title: string; badge?: string | null; isNew?: boolean }) {
   const t = useT();
@@ -42,22 +42,17 @@ export function NewGallery({ photos, title, badge, isNew = false }: { photos: st
           </>
         ) : null}
       </figure>
-      <ul className="tkn-thumbs">
-        {Array.from({ length: THUMB_SLOTS }, (_, i) => {
-          const src = photos[i];
-          return (
-            <li key={i}>
-              {src ? (
-                <button type="button" className="tkn-thumb" aria-label={t("ad.gallery.show", { index: i + 1 })} aria-pressed={i === index} onClick={() => setIndex(i)}>
-                  <img src={src} alt="" loading="lazy" />
-                </button>
-              ) : (
-                <span className="tkn-thumb tkn-thumb-empty" aria-hidden="true" />
-              )}
+      {count > 1 ? (
+        <ul className="tkn-thumbs">
+          {photos.slice(0, THUMB_LIMIT).map((src, i) => (
+            <li key={src + i}>
+              <button type="button" className="tkn-thumb" aria-label={t("ad.gallery.show", { index: i + 1 })} aria-pressed={i === index} onClick={() => setIndex(i)}>
+                <img src={src} alt="" loading="lazy" />
+              </button>
             </li>
-          );
-        })}
-      </ul>
+          ))}
+        </ul>
+      ) : null}
     </div>
   );
 }
