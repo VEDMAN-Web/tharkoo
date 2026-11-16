@@ -8,10 +8,11 @@ export const metadata = pageMetadata({
   index: false,
 });
 
-export default function Page() {
+export default async function Page({ searchParams }: { searchParams: Promise<{ tab?: string }> }) {
+  const { tab } = await searchParams;
   return (
     <div className="tk-container" style={{ paddingLeft: 16, paddingRight: 16, maxWidth: 720, margin: "0 auto" }}>
-      <CoinWallet />
+      <CoinWallet initialTab={tab === "earnings" ? "earnings" : "buy"} />
     </div>
   );
 }

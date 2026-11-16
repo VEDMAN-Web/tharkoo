@@ -5,7 +5,8 @@ import { useState } from "react";
 import { SupportList } from "@/components/support/SupportList";
 import { TicketThread } from "@/components/support/TicketThread";
 import type { PanelSummary } from "@/server/notifications/summary";
-import { SignedOutPanel, UserPanelShell } from "./UserPanelShell";
+import { LifeBuoy } from "lucide-react";
+import { EmptyIcon, SignedOutPanel, UserPanelShell } from "./UserPanelShell";
 
 /** H7.17: help and support on the user panel: the ticket list on the left, the thread on the right. */
 export function SupportPanel({ summary, initialId = null }: { summary: PanelSummary; initialId?: string | null }) {
@@ -40,7 +41,7 @@ export function SupportPanel({ summary, initialId = null }: { summary: PanelSumm
             </div>
           ) : (
             <div className="up-empty">
-              <div className="up-empty-box" aria-hidden="true" />
+              <EmptyIcon icon={LifeBuoy} />
               <p className="up-empty-title">Choose a ticket</p>
               <p className="up-empty-body">Pick a ticket on the left to read it and reply.</p>
             </div>
