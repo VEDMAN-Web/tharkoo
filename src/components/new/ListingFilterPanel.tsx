@@ -1,13 +1,14 @@
-import { BadgeCheck, Circle, Image as ImageIcon, ListFilter, SlidersHorizontal, ToggleRight, Video } from "lucide-react";
+import { BadgeCheck, Circle, Image as ImageIcon, ToggleRight, Video } from "lucide-react";
 import { ListingPlaceSelects } from "./ListingPlaceSelects";
 import { KeywordField } from "./KeywordField";
 import { InstantForm } from "./InstantForm";
-import type { IconKind, ListingLabels, ListingToggles, PanelRow, PlaceSelects } from "./listing-filters";
+import { FilterAccordions } from "./FilterAccordions";
+import type { ListingLabels, ListingToggles, PanelRow, PlaceSelects } from "./listing-filters";
 
 /**
- * H7.4b: the filter panel of a listing. It always renders: the place selects, the fixed rows (Verified, With photos,
- * With video, Online now) and one row per category filter field. A plain GET form, so the filters work without
- * JavaScript; only the place selects need JavaScript to navigate.
+ * H7.4b: the filter panel of a listing. It always renders: the place selects, the toggles (Verified, With photos,
+ * With video, Online now) and one accordion per category filter field. H7.91: a fixed, compact column that never
+ * scrolls; filters apply at once. Only the place selects and the accordions need JavaScript.
  */
 export type KeywordProps = React.ComponentProps<typeof KeywordField>;
 
@@ -43,19 +44,20 @@ export function ListingFilterPanel({
       ))}
       <div className="tkn-ls-panelhead">
         <p className="tkn-ls-panelhead-title">
-          <SearchIcon />
-          {labels.panelTitle}
+          {labels.filtersLabel}
+          <span className="tkn-ls-pill" data-tk="filter-count">{activeCount}</span>
         </p>
-        <span className="tkn-ls-pill">{labels.activeTemplate.replace("{count}", String(activeCount))}</span>
+        {activeCount > 0 ? (
+          <a href={clearHref} className="tkn-ls-clear-link">
+            {labels.clear}
+          </a>
+        ) : null}
       </div>
       {keyword ? <KeywordField {...keyword} /> : null}
       <ListingPlaceSelects selects={places} labels={labels} />
       {placesOnly ? null : <FilterRows rows={rows} toggles={toggles} labels={labels} hasCategory={Boolean(places.categoryValue)} />}
       {placesOnly ? null : (
         <div className="tkn-ls-bottom">
-          <a href={clearHref} className="tkn-ls-clear">
-            {labels.clear}
-          </a>
           <button type="submit" className="tkn-ls-go" data-sheet-close="" data-tk="show-count">
             {total === undefined ? labels.apply : total === 1 ? labels.showOne : labels.show.replace("{count}", total.toLocaleString("en-IN"))}
           </button>
@@ -66,52 +68,20 @@ export function ListingFilterPanel({
 }
 
 function FilterRows({ rows, toggles, labels, hasCategory }: { rows: PanelRow[]; toggles: ListingToggles; labels: ListingLabels; hasCategory: boolean }) {
+  const picks = rows.filter((row): row is Exclude<PanelRow, { kind: "boolean" }> => row.kind !== "boolean");
   return (
     <>
-      <p className="tkn-ls-label">{labels.filtersLabel}</p>
       <div className="tkn-ls-fixed">
         <ChipLine icon="verified" name="verified" label={labels.verified} checked={toggles.verified} />
         <ChipLine icon="photos" name="photos" label={labels.photos} checked={toggles.photos} />
         <ChipLine icon="video" name="video" label={labels.video} checked={toggles.video} />
         <ChipLine icon="online" name="online" label={labels.online} checked={Boolean(toggles.online)} />
+        {rows.map((row) =>
+          row.kind === "boolean" ? <ChipLine key={row.key} icon="toggle" name={`f.${row.key}`} value="1" label={row.label} checked={row.checked} /> : null,
+        )}
       </div>
       {rows.length === 0 && hasCategory ? <p className="tkn-ls-empty">{labels.noFilters}</p> : null}
-      {rows.map((row) => {
-        if (row.kind === "boolean") {
-          return <ChipLine key={row.key} icon="toggle" name={`f.${row.key}`} value="1" label={row.label} checked={row.checked} />;
-        }
-        return (
-          <details key={row.key} className="tkn-ls-row" open={row.picked > 0}>
-            <summary>
-              <FilterIcon kind={row.icon} />
-              <span className="tkn-ls-row-label">{row.label}</span>
-              {row.picked > 0 ? <span className="tkn-ls-badge">{row.picked}</span> : null}
-              <ChevronIcon />
-            </summary>
-            {row.kind === "choice" ? (
-              <div className="tkn-ls-opts">
-                {row.options.map((option) => (
-                  <label key={option.value} className="tkn-ls-opt">
-                    <input type="checkbox" name={`f.${row.key}`} value={option.value} defaultChecked={option.picked} />
-                    <span>{option.label}</span>
-                  </label>
-                ))}
-              </div>
-            ) : (
-              <div className="tkn-ls-range">
-                <label>
-                  <span>{labels.min}</span>
-                  <input type="number" inputMode="numeric" min={0} name={`f.${row.key}_min`} defaultValue={row.min} />
-                </label>
-                <label>
-                  <span>{labels.max}</span>
-                  <input type="number" inputMode="numeric" min={0} name={`f.${row.key}_max`} defaultValue={row.max} />
-                </label>
-              </div>
-            )}
-          </details>
-        );
-      })}
+      {picks.length > 0 ? <FilterAccordions rows={picks} labels={labels} /> : null}
     </>
   );
 }
@@ -120,7 +90,7 @@ function ChipLine({ icon, name, value, label, checked }: { icon: "verified" | "p
   return (
     <label className="tkn-ls-chipline">
       <input type="checkbox" name={name} value={value ?? "1"} defaultChecked={checked} />
-      {icon === "toggle" ? <FilterIcon kind="toggle" /> : <FixedIcon icon={icon} />}
+      {icon === "toggle" ? <ToggleRight size={16} aria-hidden="true" /> : <FixedIcon icon={icon} />}
       <span>{label}</span>
     </label>
   );
@@ -132,28 +102,4 @@ function FixedIcon({ icon }: { icon: "verified" | "photos" | "video" | "online" 
   if (icon === "photos") return <ImageIcon {...common} />;
   if (icon === "video") return <Video {...common} />;
   return <Circle {...common} />;
-}
-
-function FilterIcon({ kind }: { kind: IconKind }) {
-  const common = { size: 16, "aria-hidden": true as const };
-  if (kind === "range") return <SlidersHorizontal {...common} />;
-  if (kind === "toggle") return <ToggleRight {...common} />;
-  return <ListFilter {...common} />;
-}
-
-function SearchIcon() {
-  return (
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#A8124F" strokeWidth="2.2" aria-hidden="true">
-      <circle cx="11" cy="11" r="7" />
-      <path d="M20 20l-4-4" />
-    </svg>
-  );
-}
-
-function ChevronIcon() {
-  return (
-    <svg className="tkn-ls-chev" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#C2185B" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-      <path d="M9 6l6 6-6 6" />
-    </svg>
-  );
 }

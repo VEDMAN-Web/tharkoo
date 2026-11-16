@@ -22,8 +22,9 @@ test.describe("H7.90: compact search results page", () => {
     await page.setViewportSize({ width: 1440, height: 900 });
     await page.goto("/search/?q=coffee");
     const aside = page.locator(".tkn-ls-aside");
-    await expect(aside.locator(".tkn-kw label")).toHaveText("Keyword (optional)");
-    await expect(aside.locator(".tkn-kw input")).toHaveAttribute("placeholder", "e.g. yoga, bike, flat");
+    await expect(aside.locator(".tkn-kw label")).toHaveCount(0);
+    await expect(aside.locator(".tkn-kw input")).toHaveAttribute("aria-label", "Keyword");
+    await expect(aside.locator(".tkn-kw input")).toHaveAttribute("placeholder", "Search keyword");
     await expect(aside.locator(".tkn-kw input")).toHaveValue("coffee");
     await expect(page.locator('[data-tk="results-header"] h1')).toHaveText("Results for \u201ccoffee\u201d");
   });

@@ -51,7 +51,7 @@ test.describe("H6.17 views and clicks", () => {
     const start = (await countsOf(request, slug)).clicks;
 
     await page.goto(FEED);
-    const link = page.locator(`a.tk-card-link[href="${adPath}"]`).first();
+    const link = page.locator(`a.tkn-ls-stretch[href="${adPath}"]`).first();
     await link.waitFor({ state: "attached" });
     await link.click();
     await page.waitForURL(`**${adPath}`);
@@ -59,7 +59,7 @@ test.describe("H6.17 views and clicks", () => {
 
     await page.goBack();
     await page.waitForURL(`**${FEED}`);
-    const again = page.locator(`a.tk-card-link[href="${adPath}"]`).first();
+    const again = page.locator(`a.tkn-ls-stretch[href="${adPath}"]`).first();
     await again.waitFor({ state: "attached" });
     await again.click();
     await page.waitForURL(`**${adPath}`);
@@ -67,7 +67,7 @@ test.describe("H6.17 views and clicks", () => {
     expect((await countsOf(request, slug)).clicks).toBe(start + 1);
   });
 
-  test("an admin sets the shown views and clicks, and the set number is what visitors see", async ({ page, context, baseURL }, testInfo) => {
+  test("an admin sets the shown views and clicks, and the counts feed returns the set number", async ({ page, context, baseURL }, testInfo) => {
     test.skip(testInfo.project.name !== "desktop-1440", "the admin form runs once, at desktop width");
     await signInAdminContext(context, baseURL!);
     await page.goto("/admin/ads/");

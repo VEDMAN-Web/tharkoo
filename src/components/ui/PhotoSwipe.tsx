@@ -15,6 +15,7 @@ export function PhotoSwipe({
   category,
   priority,
   overlay,
+  href,
 }: {
   photos: string[];
   title: string;
@@ -22,6 +23,7 @@ export function PhotoSwipe({
   category?: string;
   priority?: boolean;
   overlay?: ReactNode;
+  href?: string;
 }) {
   const count = photos.length;
   const [started, setStarted] = useState(false);
@@ -106,6 +108,7 @@ export function PhotoSwipe({
         ))}
       </div>
       {overlay}
+      {href ? <a className="tk-cc-link" href={href} tabIndex={-1} aria-hidden="true" /> : null}
       {count > 1 ? (
         <>
           <button type="button" className="tk-cc-arrow prev" aria-label="Previous photo" onClick={() => go(-1)}>

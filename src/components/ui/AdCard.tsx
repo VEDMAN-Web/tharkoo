@@ -9,6 +9,7 @@ import { isCityAlias } from "@/lib/seo/district-alias";
 import { PriceTag } from "../search/PriceTag";
 import { formatPrice } from "../search/price";
 import { PhotoSwipe } from "./PhotoSwipe";
+import { CardVideo } from "./CardVideo";
 import { SaveButton } from "./SaveButton";
 import { viewsLabel } from "@/components/ad/counts-format";
 import { api, friendlyError } from "@/lib/ui/api";
@@ -116,7 +117,8 @@ export function AdCard({
     return (
       <article ref={cardRef} className="tk-card tkn-ls-card m-lift" data-tk="card" data-reveal data-variant={variant} onClickCapture={onCardClick}>
         <div className="tkn-ls-photo">
-          <PhotoSwipe photos={photos} title={title} seed={ad.slug || title} category={ad.categorySlug} priority={priority} />
+          <PhotoSwipe photos={photos} title={title} seed={ad.slug || title} category={ad.categorySlug} priority={priority} href={href} />
+          {ad.videoUrl ? <CardVideo url={ad.videoUrl} poster={ad.videoPoster} card={cardRef} /> : null}
           {tier ? (
             <span className="tkn-ls-tier" data-tier={variant}>
               {tier}

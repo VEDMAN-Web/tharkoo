@@ -38,17 +38,12 @@ test.describe("H7.66 ad page", () => {
     await api.dispose();
   });
 
-  test("the Area filter says Pick a city first and is grey until a city is chosen", async ({ page }) => {
+  test("the Area filter shows only once a city is chosen", async ({ page }) => {
     await page.goto("/dating/");
-    const area = page.locator(".tkn-ls-select select:disabled").first();
-    await expect(area).toBeAttached();
-    await expect(area.locator("option")).toHaveText(["Pick a city first"]);
-    const look = await area.evaluate((node) => {
-      const css = getComputedStyle(node);
-      return { background: css.backgroundColor, border: css.borderTopColor };
-    });
-    expect(look.background).toBe("rgb(243, 243, 245)");
-    expect(look.border).toBe("rgb(217, 217, 224)");
+    await expect(page.locator('.tkn-ls-aside select[aria-label="Area"]')).toHaveCount(0);
+    await expect(page.locator(".tkn-ls-aside select:disabled")).toHaveCount(0);
+    await page.goto("/dating/surat/");
+    await expect(page.locator('.tkn-ls-aside select[aria-label="Area"]')).toBeVisible();
   });
 
   test("the main ad has a Report this ad link and a Save heart", async ({ page }) => {

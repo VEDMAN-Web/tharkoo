@@ -33,6 +33,7 @@ export function listingLabels(t: TextFn): ListingLabels {
     state: t("listing.panel.state"),
     city: t("listing.panel.city"),
     area: t("listing.panel.area"),
+    allCategories: t("listing.panel.allCategories"),
     allStates: t("listing.panel.allStates"),
     allCities: t("listing.panel.allCities"),
     allAreas: t("listing.panel.allAreas"),
@@ -120,7 +121,7 @@ export function searchPlaceSelects(input: {
   const citySlug = input.params.city || "";
   const cities = stateSlug ? input.cities.filter((city) => !city.stateSlug || city.stateSlug === stateSlug) : input.cities;
   return {
-    categories: [{ value: "", label: input.labels.all, href: hrefFor({ category: "" }) }, ...options(input.categories, "category")],
+    categories: [{ value: "", label: input.labels.allCategories, href: hrefFor({ category: "" }) }, ...options(input.categories, "category")],
     categoryValue: input.params.category || "",
     states: [{ value: "", label: input.labels.allStates, href: hrefFor({ state: "", city: "", area: "" }) }, ...options(input.states, "state", { city: "", area: "" })],
     stateValue: stateSlug,
