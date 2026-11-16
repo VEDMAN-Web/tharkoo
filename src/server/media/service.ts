@@ -8,7 +8,7 @@ import { ForbiddenError, NotFoundError, PolicyViolationError, ValidationError } 
 import { Listing, MediaAsset, type MediaAssetDoc } from "@/server/models";
 import { cloudinaryClient, type Delivery } from "@/server/media/client";
 import { csamScannerFromEnv, type CsamScanner } from "@/server/media/csam";
-import { AD_MEDIA_LIMIT_MESSAGE, AD_MEDIA_MAX, EAGER, ID_URL_TTL_SECONDS, VIDEO_FORMAT_MIME, VIDEO_MAX_BYTES, VIDEO_MAX_SECONDS, VIDEO_RULE_MESSAGE, VIDEO_TYPES, UPLOAD_NEEDS_CLOUDINARY, onVercel, MAX_BYTES, ORPHAN_AGE_MS, STRIP_EXIF, cloudinaryEnv, optionalCloudinary } from "@/server/media/config";
+import { AD_MEDIA_LIMIT_MESSAGE, AD_MEDIA_MAX, EAGER, ID_URL_TTL_SECONDS, AD_VIDEO_BAD_TYPE, AD_VIDEO_EAGER, AD_VIDEO_MAX_BYTES, AD_VIDEO_MAX_SECONDS, AD_VIDEO_NEEDS_DRAFT, AD_VIDEO_TOO_BIG, AD_VIDEO_TOO_LONG, AD_VIDEO_UNREADABLE, VIDEO_FORMAT_MIME, VIDEO_TYPES, UPLOAD_NEEDS_CLOUDINARY, onVercel, MAX_BYTES, ORPHAN_AGE_MS, STRIP_EXIF, cloudinaryEnv, optionalCloudinary } from "@/server/media/config";
 import { adVideoCount, assertAdMediaRoom } from "@/server/media/limit";
 import { assertLocalVideoAllowed, markWatermarked, prepareLocalAdFile, watermarkTransformationFor } from "@/server/media/watermark";
 import { signUploadParams } from "@/server/media/sign";
@@ -112,10 +112,11 @@ async function saveLocalVideo(
   requestId: string,
 ) {
   const seconds = (VIDEO_TYPES as readonly string[]).includes(file.type) ? videoSeconds(file.data, file.type) : null;
-  if (!(VIDEO_TYPES as readonly string[]).includes(file.type) || file.data.length > VIDEO_MAX_BYTES || seconds === null || seconds > VIDEO_MAX_SECONDS) {
+  const problem = videoProblem(file.type, file.data.length, seconds);
+  if (problem) {
     asset.status = "rejected_policy";
     await asset.save();
-    throw new PolicyViolationError(VIDEO_RULE_MESSAGE);
+    throw new PolicyViolationError(problem);
   }
   await assertLocalVideoAllowed();
   const ext = file.type === "video/webm" ? "webm" : file.type === "video/quicktime" ? "mov" : "mp4";
@@ -132,10 +133,19 @@ async function saveLocalVideo(
   return { status: "cleared" as const, url: asset.objectKey };
 }
 
+/** The plain sentence for a video that breaks the member rules, or null when it is fine. `seconds` null means unreadable. */
+function videoProblem(contentType: string, bytes: number, seconds: number | null | undefined) {
+  if (!(VIDEO_TYPES as readonly string[]).includes(contentType)) return AD_VIDEO_BAD_TYPE;
+  if (bytes > AD_VIDEO_MAX_BYTES) return AD_VIDEO_TOO_BIG;
+  if (seconds === undefined) return null;
+  if (seconds === null || !(seconds > 0)) return AD_VIDEO_UNREADABLE;
+  return seconds > AD_VIDEO_MAX_SECONDS ? AD_VIDEO_TOO_LONG : null;
+}
+
 async function assertVideoAllowed(userId: string, input: { listingId?: string; contentType: string; byteSize: number }) {
-  if (!(VIDEO_TYPES as readonly string[]).includes(input.contentType) || input.byteSize > VIDEO_MAX_BYTES || !input.listingId) {
-    throw new PolicyViolationError(VIDEO_RULE_MESSAGE);
-  }
+  const problem = videoProblem(input.contentType, input.byteSize, undefined);
+  if (problem) throw new PolicyViolationError(problem);
+  if (!input.listingId) throw new PolicyViolationError(AD_VIDEO_NEEDS_DRAFT);
   const listing = await ownedListing(input.listingId, userId);
   await assertAdMediaRoom(listing._id);
 }
@@ -145,11 +155,12 @@ async function completeVideo(userId: string, asset: InstanceType<typeof MediaAss
   const remote = await client.resource(asset.objectKey, "upload", "video");
   if (!remote) throw new NotFoundError("Upload was not found");
   const mime = VIDEO_FORMAT_MIME[remote.format];
-  if (!mime || remote.bytes > VIDEO_MAX_BYTES || !remote.duration || remote.duration > VIDEO_MAX_SECONDS) {
+  const problem = videoProblem(mime ?? "", remote.bytes, remote.duration || null);
+  if (problem) {
     await client.destroy(asset.objectKey, "upload", "video").catch(() => undefined);
     asset.status = "rejected_policy";
     await asset.save();
-    throw new PolicyViolationError(VIDEO_RULE_MESSAGE);
+    throw new PolicyViolationError(problem);
   }
   const scan = await (scannerOverride ?? csamScannerFromEnv()).scan({ objectKey: asset.objectKey, contentType: mime, bytes: remote.bytes });
   asset.contentType = mime;
@@ -228,6 +239,10 @@ export async function signMedia(
   };
   if (input.kind === "id_document") params.type = "authenticated";
   else if (input.kind === "image") params.eager = EAGER;
+  else {
+    params.eager = AD_VIDEO_EAGER;
+    params.eager_async = "true";
+  }
   if (watermark) await markWatermarked(created.objectKey);
   await record(userId, "media.sign", "media", publicId, requestId, { kind: input.kind, folder });
   return {
@@ -270,10 +285,17 @@ export async function completeMedia(userId: string, mediaId: string, requestId: 
     await asset.save();
     throw new PolicyViolationError("Upload was rejected");
   }
-  asset.status = "scanning";
+  if (asset.kind === "id_document") {
+    asset.status = "scanning";
+    await asset.save();
+    await record(userId, "media.complete", "media", asset._id.toString(), requestId, { status: "scanning" });
+    return { status: "scanning" as const };
+  }
+  asset.status = "cleared";
+  asset.clearedAt = new Date();
   await asset.save();
-  await record(userId, "media.complete", "media", asset._id.toString(), requestId, { status: "scanning" });
-  return { status: "scanning" as const };
+  await record(userId, "media.complete", "media", asset._id.toString(), requestId, { status: "cleared" });
+  return { status: "cleared" as const };
 }
 
 export async function getMedia(userId: string, roles: string[], mediaId: string) {

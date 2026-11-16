@@ -1,3 +1,5 @@
+import { PUBLISH_MESSAGES, publishMessage } from "./publish-errors";
+
 export type ApiError = {
   code?: string;
   message?: string;
@@ -43,11 +45,11 @@ export function friendlyError(error: ApiError) {
     case "RATE_LIMITED":
       return "Too many requests, try again later";
     case "VERIFICATION_REQUIRED":
-      return "Your ID needs a quick check before this ad can go live.";
+      return PUBLISH_MESSAGES.VERIFICATION_REQUIRED;
     case "FREE_LIMIT":
       return "You have reached the free ad limit for this week.";
     case "POLICY_VIOLATION":
-      return error.message || "This listing does not meet the content rules.";
+      return publishMessage(error.message) || error.message || "This listing does not meet the content rules.";
     case "VALIDATION_ERROR":
       return "Please check the highlighted fields.";
     default:

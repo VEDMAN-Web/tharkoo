@@ -1,8 +1,8 @@
 "use client";
 
-import { ArrowLeft, ArrowRight, Star, Trash2 } from "lucide-react";
+import { ArrowLeft, ArrowRight, RotateCw, Star, Trash2 } from "lucide-react";
 
-export type TileState = "uploading" | "live" | "checking" | "refused";
+export type TileState = "uploading" | "live" | "checking" | "refused" | "failed";
 
 export interface MediaTileProps {
   kind: "image" | "video";
@@ -18,9 +18,10 @@ export interface MediaTileProps {
   onMoveLeft?: () => void;
   onMoveRight?: () => void;
   onRemove?: () => void;
+  onRetry?: () => void;
 }
 
-const STATE_TEXT: Record<TileState, string> = { uploading: "Uploading", live: "Live", checking: "Being checked", refused: "Refused" };
+const STATE_TEXT: Record<TileState, string> = { uploading: "Uploading", live: "Live", checking: "Being checked", refused: "Refused", failed: "Not saved" };
 
 function Frame({ kind, url, posterUrl, label }: Pick<MediaTileProps, "kind" | "url" | "posterUrl" | "label">) {
   if (!url) return <div className="tkp-media-empty">{kind === "video" ? "Video" : "Photo"}</div>;
@@ -53,9 +54,15 @@ export function MediaTile(props: MediaTileProps) {
           </div>
         ) : null}
       </div>
-      {reason ? <p className="tkp-media-reason">{reason}</p> : null}
+      {reason ? <p className="tkp-media-reason" data-tk="media-reason" role={state === "failed" ? "alert" : undefined}>{reason}</p> : null}
       {!uploading ? (
         <div className="tkp-media-actions">
+          {props.onRetry ? (
+            <button type="button" className="tkp-mini tkp-mini-wide" data-tk="retry-upload" disabled={busy} onClick={props.onRetry}>
+              <RotateCw size={16} aria-hidden="true" focusable="false" />
+              Tap to retry
+            </button>
+          ) : null}
           {props.onMakeCover && !isCover ? (
             <button type="button" className="tkp-mini tkp-mini-wide" disabled={busy} onClick={props.onMakeCover}>
               <Star size={16} aria-hidden="true" focusable="false" />

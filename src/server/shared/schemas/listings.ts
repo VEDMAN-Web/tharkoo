@@ -70,9 +70,14 @@ export const contactRevealBodySchema = z.object({
 
 export const mediaSignBodySchema = z.object({
   listingId: idSchema.optional(),
-  contentType: z.enum(["image/jpeg", "image/png", "image/webp"]),
-  byteSize: z.number().int().positive().max(8 * 1024 * 1024),
+  contentType: z.enum(["image/jpeg", "image/png", "image/webp", "video/mp4", "video/webm", "video/quicktime"]),
+  byteSize: z.number().int().positive().max(100 * 1024 * 1024),
   kind: z.enum(["image", "video", "id_document"]),
+}).superRefine((body, context) => {
+  const isVideoType = body.contentType.startsWith("video/");
+  if (body.kind === "video" && !isVideoType) context.addIssue({ code: "custom", path: ["contentType"], message: "Use an mp4, webm or mov video." });
+  if (body.kind !== "video" && isVideoType) context.addIssue({ code: "custom", path: ["contentType"], message: "Use a JPG, PNG or WebP photo." });
+  if (body.kind !== "video" && body.byteSize > 8 * 1024 * 1024) context.addIssue({ code: "custom", path: ["byteSize"], message: "This photo is too big (max 8 MB)." });
 });
 
 export const mediaCompleteBodySchema = z.object({
