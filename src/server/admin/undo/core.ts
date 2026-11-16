@@ -2,7 +2,7 @@ import { Types } from "mongoose";
 import { connectDb } from "@/lib/db";
 import { AuditRepository, redact } from "@/server/audit";
 import type { AdminCtx } from "@/server/admin/context";
-import { isUndoKind, loadUndoHandler, UndoNotBuiltError, type LockReason, type UndoSource } from "@/server/admin/undo/registry";
+import { isUndoKind, loadUndoHandler, safeUndoData, undoSourceOf, UndoDataMissingError, UndoNotBuiltError, type LockReason, type UndoSource } from "@/server/admin/undo/registry";
 import { AuditEvent } from "@/server/models";
 
 const audit = new AuditRepository();
@@ -37,18 +37,18 @@ async function isUndone(id: Types.ObjectId, depth = 0): Promise<boolean> {
 }
 
 function sourceOf(row: EventRow): UndoSource {
-  return {
-    id: String(row._id),
-    action: row.action,
-    targetType: row.targetType,
-    targetId: row.targetId,
-    actorId: row.actorId ? String(row.actorId) : null,
-    before: row.before ?? null,
-    after: row.after ?? null,
-    data: row.undo?.data,
-    undoOf: row.undoOf ? String(row.undoOf) : null,
-    createdAt: row.createdAt ?? new Date(0),
-  };
+  return undoSourceOf(
+    {
+      id: String(row._id),
+      action: row.action,
+      targetType: row.targetType,
+      targetId: row.targetId,
+      actorId: row.actorId ? String(row.actorId) : null,
+      undoOf: row.undoOf ? String(row.undoOf) : null,
+      createdAt: row.createdAt ?? new Date(0),
+    },
+    row.undo?.data,
+  );
 }
 
 export async function eventIsUndone(eventId: string): Promise<boolean> {
@@ -87,7 +87,7 @@ export async function undoEvent(ctx: AdminCtx, eventId: string): Promise<UndoOut
       before: redact(row.after),
       after: redact(ran.after),
       summary: ran.summary.slice(0, 200),
-      undo: { kind: row.undo.kind, until, ...(ran.undoData === undefined ? {} : { data: ran.undoData }) },
+      undo: { kind: row.undo.kind, until, ...(ran.undoData === undefined ? {} : { data: safeUndoData(ran.undoData) }) },
       undoOf: row._id,
       requestId: ctx.requestId,
       ipHash: ctx.ipHash,
@@ -95,6 +95,7 @@ export async function undoEvent(ctx: AdminCtx, eventId: string): Promise<UndoOut
     return { ok: true, eventId: String(written._id), undoUntil: until.toISOString() };
   } catch (error) {
     if (error instanceof UndoNotBuiltError) return { ok: false, reason: "not_built", message: error.message };
+    if (error instanceof UndoDataMissingError) return { ok: false, reason: "not_undoable", message: "This change cannot be undone any more" };
     throw error;
   }
 }

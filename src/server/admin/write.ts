@@ -1,7 +1,7 @@
 import { can, STAFF_ROLES, type Perm } from "@/lib/admin/perms";
 import { AuditRepository, redact } from "@/server/audit";
 import type { AdminCtx } from "@/server/admin/context";
-import { undoWindowDays, type LockReason, type UndoKind, type UndoWindowKey } from "@/server/admin/undo/registry";
+import { safeUndoData, undoWindowDays, type LockReason, type UndoKind, type UndoWindowKey } from "@/server/admin/undo/registry";
 import { ForbiddenError, ValidationError } from "@/server/http";
 import { textDenied } from "@/server/shared/policy";
 
@@ -75,7 +75,7 @@ export async function adminWrite<T>(ctx: AdminCtx, spec: AdminWriteSpec<T>): Pro
   if (undoSpec && "lock" in undoSpec) lock = undoSpec.lock;
   else if (undoSpec) {
     const days = await undoWindowDays(undoSpec.windowKey);
-    undo = { kind: undoSpec.kind, until: new Date(now + days * DAY_MS), ...(applied.undoData === undefined ? {} : { data: applied.undoData }) };
+    undo = { kind: undoSpec.kind, until: new Date(now + days * DAY_MS), ...(applied.undoData === undefined ? {} : { data: safeUndoData(applied.undoData) }) };
   }
   try {
     const row = await audit.append({

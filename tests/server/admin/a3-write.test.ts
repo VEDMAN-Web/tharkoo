@@ -8,11 +8,11 @@ vi.mock("@/server/shared/policy", async (importOriginal) => ({
 
 import type { AdminCtx } from "@/server/admin/context";
 import { undoEvent } from "@/server/admin/undo/core";
-import { loadUndoHandler, overrideUndoHandler, UNDO_KINDS, type UndoHandler } from "@/server/admin/undo/registry";
+import { loadUndoHandler, overrideUndoHandler, undoSourceOf, UNDO_KINDS, type UndoHandler } from "@/server/admin/undo/registry";
 import { adminWrite } from "@/server/admin/write";
 import { AppendOnlyError } from "@/server/audit";
 import { ForbiddenError, ValidationError } from "@/server/http";
-import { AuditEvent, Site } from "@/server/models";
+import { AuditEvent, IdentityVerification, Listing, Site } from "@/server/models";
 import { clearMemoryMongo, connectMemoryMongo, disconnectMemoryMongo } from "../../setup/mongo";
 
 const admin: AdminCtx = { actorId: "000000000000000000000001", email: "admin@example.com", roles: ["admin"], requestId: "req-1" };
@@ -23,14 +23,14 @@ const record = { value: "one", version: 1, changedBy: null as string | null };
 const handler: UndoHandler = {
   canUndo: (ctx) => ctx.roles.includes("admin"),
   conflict: async (event) => {
-    const expected = (event.after as { value: string } | null)?.value;
-    return record.value === expected ? null : { changedBy: record.changedBy, at: "2026-01-01T00:00:00.000Z" };
+    return record.value === event.take("expect") ? null : { changedBy: record.changedBy, at: "2026-01-01T00:00:00.000Z" };
   },
   run: async (_ctx, event) => {
-    const back = event.before as { value: string; version: number };
-    record.value = back.value;
+    const was = record.value;
+    const back = event.take<string>("value");
+    record.value = back;
     record.version += 1;
-    return { after: { value: record.value, version: record.version }, summary: `Restored ${back.value}` };
+    return { after: { value: record.value, version: record.version }, summary: `Restored ${back}`, undoData: { value: was, expect: back } };
   },
 };
 
@@ -62,9 +62,10 @@ function change(ctx: AdminCtx, next: string, extra: Partial<Spec> = {}) {
     undo: { kind: "record.restore", windowKey: "settings" },
     before: async () => ({ value: record.value, version: record.version }),
     apply: async () => {
+      const was = record.value;
       record.value = next;
       record.version += 1;
-      return { after: { value: record.value, version: record.version }, result: next, summary: `Changed to ${next}` };
+      return { after: { value: record.value, version: record.version }, result: next, summary: `Changed to ${next}`, undoData: { value: was, expect: next } };
     },
     ...extra,
   });
@@ -211,12 +212,105 @@ describe("undoEvent", () => {
 
   it("has a loadable stub for every kind", async () => {
     expect(UNDO_KINDS).toHaveLength(11);
-    const event = { id: "1", action: "a", targetType: "t", targetId: "1", actorId: null, before: null, after: null, data: null, undoOf: null, createdAt: new Date() };
+    const event = undoSourceOf({ id: "1", action: "a", targetType: "t", targetId: "1", actorId: null, undoOf: null, createdAt: new Date() }, {});
     for (const kind of UNDO_KINDS) {
       overrideUndoHandler(kind, null);
       const loaded = await loadUndoHandler(kind);
       await expect(loaded.run(admin, event)).rejects.toThrow("not built yet");
     }
+  });
+});
+
+describe("undo restores only from the saved undo data", () => {
+  it("keeps the current contact of the ad when a staff edit is undone, and the audit row shows it redacted", async () => {
+    const ad = await Listing.create({
+      ownerId: new mongoose.Types.ObjectId(),
+      categoryId: new mongoose.Types.ObjectId(),
+      cityId: new mongoose.Types.ObjectId(),
+      title: "Old title",
+      description: "A description",
+      status: "active",
+      contact: { phone: "+91 90000 00001" },
+    });
+    overrideUndoHandler("listing.edit", {
+      canUndo: () => true,
+      conflict: async () => null,
+      run: async (_ctx, event) => {
+        await Listing.updateOne({ _id: ad._id }, { $set: { title: event.take<string>("title") } });
+        return { after: { title: event.take<string>("title") }, summary: "Title restored" };
+      },
+    });
+    const done = await adminWrite(admin, {
+      perm: "ads.edit",
+      action: "listing.edit",
+      target: { type: "listing", id: String(ad._id) },
+      undo: { kind: "listing.edit", windowKey: "edits" },
+      before: async () => ({ title: "Old title", contact: { phone: "+91 90000 00001" } }),
+      apply: async () => {
+        await Listing.updateOne({ _id: ad._id }, { $set: { title: "Staff title" } });
+        return { after: { title: "Staff title", contact: { phone: "+91 90000 00001" } }, result: true, summary: "Edited title", undoData: { title: "Old title", contact: { phone: "+91 90000 00001" } } };
+      },
+    });
+    const saved = await AuditEvent.findById(done.eventId).lean();
+    expect(saved?.before?.contact).toBe("[redacted]");
+    expect(saved?.undo?.data).toEqual({ title: "Old title" });
+    await Listing.updateOne({ _id: ad._id }, { $set: { contact: { phone: "+91 90000 00002" } } });
+    expect(await undoEvent(admin, done.eventId)).toMatchObject({ ok: true });
+    const after = await Listing.findById(ad._id).select("+contact").lean();
+    expect(after?.title).toBe("Old title");
+    expect(after?.contact).toEqual({ phone: "+91 90000 00002" });
+    overrideUndoHandler("listing.edit", null);
+  });
+
+  it("reopening an ID check changes the status and leaves the documents alone", async () => {
+    const check = await IdentityVerification.create({
+      userId: new mongoose.Types.ObjectId(),
+      status: "approved",
+      dateOfBirthAsserted: new Date("1995-04-02"),
+      documentRef: "front-ref",
+      documents: { front: "front-ref", back: "back-ref", selfie: "selfie-ref" },
+    });
+    overrideUndoHandler("id.decision", {
+      canUndo: () => true,
+      conflict: async () => null,
+      run: async (_ctx, event) => {
+        await IdentityVerification.updateOne({ _id: check._id }, { $set: { status: event.take<string>("status") } });
+        return { after: { status: event.take<string>("status") }, summary: "Check reopened" };
+      },
+    });
+    const done = await adminWrite(admin, {
+      perm: "id.decide",
+      action: "verification.decision",
+      target: { type: "identity_verification", id: String(check._id) },
+      undo: { kind: "id.decision", windowKey: "decisions" },
+      before: async () => ({ status: "pending_review", documents: { front: "front-ref" } }),
+      apply: async () => ({ after: { status: "approved" }, result: true, summary: "Approved", undoData: { status: "pending_review", documents: { front: "front-ref" }, documentRef: "front-ref" } }),
+    });
+    expect((await AuditEvent.findById(done.eventId).lean())?.undo?.data).toEqual({ status: "pending_review", documents: { front: "front-ref" } });
+    expect(await undoEvent(admin, done.eventId)).toMatchObject({ ok: true });
+    const row = await IdentityVerification.findById(check._id).lean();
+    expect(row?.status).toBe("pending_review");
+    expect(row?.documentRef).toBe("front-ref");
+    expect(row?.documents).toMatchObject({ front: "front-ref", back: "back-ref", selfie: "selfie-ref" });
+    overrideUndoHandler("id.decision", null);
+  });
+
+  it("refuses to restore a key that is not in the saved data", async () => {
+    overrideUndoHandler("record.restore", {
+      canUndo: () => true,
+      conflict: async () => null,
+      run: async (_ctx, event) => ({ after: { title: event.take<string>("title") }, summary: "x" }),
+    });
+    const done = await change(admin, "two");
+    expect(await undoEvent(admin, done.eventId)).toMatchObject({ ok: false, reason: "not_undoable" });
+    expect(await AuditEvent.countDocuments({ undoOf: { $exists: true } })).toBe(0);
+  });
+
+  it("never stores secret keys in the undo data", async () => {
+    const done = await change(admin, "two", {
+      apply: async () => ({ after: { value: "two" }, result: "two", summary: "x", undoData: { value: "one", contact: { phone: "1" }, token: "t", selfie: "s" } }),
+    });
+    expect((await AuditEvent.findById(done.eventId).lean())?.undo?.data).toEqual({ value: "one" });
   });
 });
 

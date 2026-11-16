@@ -65,20 +65,22 @@ export class AuditRepository {
   }
 }
 
+export const SECRET_KEYS: ReadonlySet<string> = new Set([
+  "passwordHash",
+  "tokenHash",
+  "contact",
+  "documentRef",
+  "front",
+  "back",
+  "selfie",
+  "password",
+  "token",
+  "hashes",
+]);
+
 export function redact(value: unknown): Record<string, unknown> | undefined {
   if (!value || typeof value !== "object") return undefined;
-  const secretKeys = new Set([
-    "passwordHash",
-    "tokenHash",
-    "contact",
-    "documentRef",
-    "front",
-    "back",
-    "selfie",
-    "password",
-    "token",
-    "hashes",
-  ]);
+  const secretKeys = SECRET_KEYS;
   const output: Record<string, unknown> = {};
   for (const [key, nested] of Object.entries(value as Record<string, unknown>)) {
     output[key] = secretKeys.has(key) ? "[redacted]" : nested;

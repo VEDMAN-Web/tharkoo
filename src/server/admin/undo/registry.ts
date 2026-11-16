@@ -1,4 +1,5 @@
 import { connectDb } from "@/lib/db";
+import { SECRET_KEYS } from "@/server/audit";
 import { Site } from "@/server/models";
 import type { AdminCtx } from "@/server/admin/context";
 
@@ -24,17 +25,44 @@ export type UndoWindowKey = keyof typeof UNDO_WINDOW_DEFAULTS;
 
 export type LockReason = "money_sent" | "message_sent" | "purged" | "legal_record" | "account_deleted";
 
+export function safeUndoData(data: unknown): unknown {
+  if (!data || typeof data !== "object" || Array.isArray(data)) return data;
+  return Object.fromEntries(Object.entries(data as Record<string, unknown>).filter(([key]) => !SECRET_KEYS.has(key)));
+}
+
+export class UndoDataMissingError extends Error {
+  constructor(key: string) {
+    super(`The saved undo data has no "${key}"`);
+    this.name = "UndoDataMissingError";
+  }
+}
+
 export interface UndoSource {
   id: string;
   action: string;
   targetType: string;
   targetId: string;
   actorId: string | null;
-  before: Record<string, unknown> | null;
-  after: Record<string, unknown> | null;
-  data: unknown;
   undoOf: string | null;
   createdAt: Date;
+  has(key: string): boolean;
+  take<T = unknown>(key: string): T;
+}
+
+export function undoSourceOf(
+  base: { id: string; action: string; targetType: string; targetId: string; actorId: string | null; undoOf: string | null; createdAt: Date },
+  data: unknown,
+): UndoSource {
+  const saved: Record<string, unknown> = data && typeof data === "object" && !Array.isArray(data) ? (data as Record<string, unknown>) : {};
+  const has = (key: string) => Object.prototype.hasOwnProperty.call(saved, key);
+  return {
+    ...base,
+    has,
+    take<T = unknown>(key: string): T {
+      if (!has(key)) throw new UndoDataMissingError(key);
+      return saved[key] as T;
+    },
+  };
 }
 
 export interface UndoRun {
