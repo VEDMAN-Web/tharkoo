@@ -1911,7 +1911,7 @@ input.tk-field:focus-visible, select.tk-field:focus-visible, textarea.tk-field:f
 .tkn-art-text span { font-size: 12px; color: var(--tkn-muted); }
 .tkn-chat-talk { min-height: 44px; justify-self: start; }
 .tkn-chat-quick { display: flex; gap: 8px; flex-wrap: wrap; padding: 12px 14px; border-bottom: 1px solid var(--tkn-line); }
-.tkn-chat-quick .tkn-btn { flex: 1 1 0; min-width: 0; }
+.tkn-chat-quick .tkn-btn { flex: 1 1 0; min-width: 0; padding: 0 8px; gap: 5px; white-space: nowrap; }
 .tkn-chat-body { flex: 1; min-height: 160px; overflow: auto; padding: 14px; display: grid; gap: 10px; align-content: start; }
 .tkn-bubble { margin: 0; max-width: 85%; padding: 10px 14px; border-radius: 16px; font-size: 14px; line-height: 1.5; }
 .tkn-bubble-in { background: #fff; border: 1px solid var(--tkn-line); color: var(--tkn-ink); justify-self: start; }
