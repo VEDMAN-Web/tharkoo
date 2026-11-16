@@ -11,7 +11,7 @@ import { HeaderDrawer } from "./HeaderDrawer";
 import { isProbablySignedIn, openSignInFromLink } from "./auth/SignInSheet";
 import { useUrlPaths } from "./UrlPaths";
 import { safeHref } from "@/lib/sanitize";
-import type { UiTextMap } from "@/lib/ui/text";
+import { makeT, type UiTextMap } from "@/lib/ui/text";
 import { UtilityStrip } from "./new/UtilityStrip";
 import { applyPrefixes, loginPath, postAdPath } from "@/lib/urls";
 import type { ShellConfig } from "@/server/site-links/shell-config-rules";
@@ -47,6 +47,7 @@ export function HeaderNew({
   texts?: UiTextMap;
 }) {
   const path = usePathname() || "/";
+  const t = makeT(texts);
   const paths = useUrlPaths();
   const [menuOpen, setMenuOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
@@ -120,7 +121,7 @@ export function HeaderNew({
           {signedIn ? (
             <>
               {balanceReady ? (
-                balance !== null ? <Link href="/u/account/credits/" className="tkn-coin-chip" data-tk="header-coins">{balance} coins</Link> : null
+                balance !== null ? <Link href="/u/account/credits/" className="tkn-coin-chip" data-tk="header-coins">{t("panel.coins.balance", { count: balance })}</Link> : null
               ) : (
                 <span className="tkn-coin-chip tkn-skel" data-tk="header-coins-wait" aria-hidden="true" />
               )}
@@ -140,11 +141,14 @@ export function HeaderNew({
                 {accountOpen ? (
                   <div className="tkn-account-menu" role="menu">
                     {balance !== null ? (
-                      <Link role="menuitem" href="/u/account/credits/" className="tkn-account-coins" onClick={() => setAccountOpen(false)}>{balance} coins</Link>
+                      <Link role="menuitem" href="/u/account/credits/" className="tkn-account-coins" onClick={() => setAccountOpen(false)}>{t("panel.coins.balance", { count: balance })}</Link>
                     ) : null}
-                    <Link role="menuitem" href="/u/account/dashboard/" onClick={() => setAccountOpen(false)}>My account</Link>
-                    <Link role="menuitem" href="/u/account/saved/" onClick={() => setAccountOpen(false)}>Saved ads</Link>
+                    <Link role="menuitem" href="/u/account/" onClick={() => setAccountOpen(false)}>My account</Link>
+                    <Link role="menuitem" href="/u/account/ads/" onClick={() => setAccountOpen(false)}>My ads</Link>
                     <Link role="menuitem" href="/u/account/messages/" onClick={() => setAccountOpen(false)}>Chats</Link>
+                    <Link role="menuitem" href="/u/account/saved/" onClick={() => setAccountOpen(false)}>Saved ads</Link>
+                    <Link role="menuitem" href="/u/account/credits/" onClick={() => setAccountOpen(false)}>{t("panel.menu.coins")}</Link>
+                    <Link role="menuitem" href="/u/account/support/" onClick={() => setAccountOpen(false)}>Help and support</Link>
                     <Link role="menuitem" href="/u/account/edit-account/" onClick={() => setAccountOpen(false)}>Settings</Link>
                     <LogoutButton role="menuitem" onClick={() => setAccountOpen(false)}>Log out</LogoutButton>
                   </div>

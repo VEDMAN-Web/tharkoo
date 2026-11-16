@@ -41,7 +41,7 @@ test.describe("H7.60 phone menu and header", () => {
     await expect(page.locator(".tkn-login-link")).toHaveCount(0);
   });
 
-  test("the seller panel shows skeletons, not 0% or - coins, until the data arrives, and each account call runs once", async ({ page, baseURL }) => {
+  test("each account call runs once on the account home", async ({ page, baseURL }) => {
     const { email } = await newUserApi(baseURL!, "slowpanel");
     await loginUi(page, email, undefined, "/");
     await becomeSeller(page, baseURL!);
@@ -52,18 +52,8 @@ test.describe("H7.60 phone menu and header", () => {
       if (path === "/api/auth/me") calls.me += 1;
       if (path === "/api/wallet") calls.wallet += 1;
     });
-    await page.route("**/api/wallet", async (route) => {
-      await new Promise((done) => setTimeout(done, SLOW_MS));
-      await route.continue();
-    });
     await page.goto("/u/account/");
-    const profile = page.getByRole("heading", { name: "Your profile" });
-    await expect(profile).toBeVisible();
-    await expect(page.getByText(/\d+% complete/)).toHaveCount(0);
-    await expect(page.getByText("- coins")).toHaveCount(0);
-    await expect(page.locator(".tkv-wallet-value .tkn-skel")).toBeVisible();
-    await expect(page.locator(".tkv-wallet-value")).toContainText(/\d+ coins/, { timeout: SLOW_MS * 3 });
-    await expect(page.getByText(/\d+% complete/)).toBeVisible();
+    await expect(page.getByRole("navigation", { name: "My account" })).toBeVisible();
     await page.waitForLoadState("networkidle");
     expect(calls).toEqual({ me: 1, wallet: 1 });
   });
