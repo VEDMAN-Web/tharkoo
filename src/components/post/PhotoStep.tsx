@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import { Camera, ImagePlus } from "lucide-react";
 import { api, friendlyError } from "@/lib/ui/api";
 import type { DraftMedia } from "@/server/media/mine";
 import type { PostCopy } from "./copy";
@@ -11,7 +12,6 @@ import { MediaTile } from "./MediaTile";
 import { AD_MEDIA_MAX, checkPhoto, checkVideo, uploadMedia } from "./mediaUpload";
 
 const VIDEO_RULE_LINE = "Videos: max 10 MB and 30 seconds each. Photos and videos: up to 10 in total.";
-const GRID = { display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(150px, 1fr))", gap: 16, padding: 0, margin: 0 } as const;
 
 type Upload = { key: string; kind: "image" | "video"; previewUrl: string | null; progress: number };
 
@@ -23,7 +23,21 @@ function newKey() {
  * Post-ad step 2: several photos at once, a thumbnail grid with upload progress, remove, make cover and reorder,
  * with "N of M photos" against the ad's limit. Videos get a preview frame, play and remove.
  */
-export function PhotoStep({ listingId, copy, onBack, onNext }: { listingId: string; copy: PostCopy; onBack: () => void; onNext: () => void }) {
+export function PhotoStep({
+  listingId,
+  copy,
+  onBack,
+  onNext,
+  onMedia,
+  onBusy,
+}: {
+  listingId: string;
+  copy: PostCopy;
+  onBack?: () => void;
+  onNext?: () => void;
+  onMedia?: (media: DraftMedia) => void;
+  onBusy?: (busy: boolean) => void;
+}) {
   const [draft, setDraft] = useState<DraftMedia | null>(null);
   const [uploads, setUploads] = useState<Upload[]>([]);
   const [note, setNote] = useState("");
@@ -38,8 +52,9 @@ export function PhotoStep({ listingId, copy, onBack, onNext }: { listingId: stri
     if (next) {
       draftRef.current = next;
       setDraft(next);
+      onMedia?.(next);
     }
-  }, [listingId]);
+  }, [listingId, onMedia]);
 
   useEffect(() => {
     const id = window.setTimeout(() => void refresh(), 0);
@@ -53,6 +68,10 @@ export function PhotoStep({ listingId, copy, onBack, onNext }: { listingId: stri
   const shown = photos.length + videos.length;
   const atLimit = shown + uploads.length >= limit;
   const busy = uploads.length > 0 || busyId !== "";
+
+  useEffect(() => {
+    onBusy?.(busy);
+  }, [busy, onBusy]);
 
   function patchUpload(key: string, progress: number) {
     setUploads((prev) => prev.map((upload) => (upload.key === key ? { ...upload, progress } : upload)));
@@ -146,34 +165,17 @@ export function PhotoStep({ listingId, copy, onBack, onNext }: { listingId: stri
   }
 
   return (
-    <>
-      <div className="tk-form-panel">
-        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-          <h2 className="t-h3">Your photos</h2>
-          <InfoPopover id="post-photos" label="Your photos">
-            <strong>Your photos</strong>
-            <ul>
-              {UPLOAD_RULES.adPhotos.details.map((row) => (
-                <li key={row}>{row}</li>
-              ))}
-            </ul>
-          </InfoPopover>
-        </div>
-        <div
-          className="tk-drop"
-          onDragOver={(event) => event.preventDefault()}
-          onDrop={(event) => {
-            event.preventDefault();
-            if (!busy) void addPhotos(Array.from(event.dataTransfer.files));
-          }}
-        >
-          <p>Drag photos here or</p>
-          <label className="tk-btn tk-btn-outline-primary" aria-disabled={busy}>
-            ADD PHOTOS
+    <div className="tkp-photos">
+      <div className="tkp-drop" onDragOver={(event) => event.preventDefault()} onDrop={(event) => { event.preventDefault(); if (!busy) void addPhotos(Array.from(event.dataTransfer.files)); }}>
+        <ImagePlus size={28} aria-hidden="true" focusable="false" />
+        <p className="tkp-drop-line">Drag photos here, or choose them from your phone or computer.</p>
+        <div className="tkp-drop-buttons">
+          <label className="tkp-btn tkp-btn-primary" aria-disabled={busy}>
+            Add photos
             <input
               type="file"
               multiple
-              accept="image/jpeg,image/png,image/webp"
+              accept="image/*"
               data-tk="photo-input"
               hidden
               disabled={busy}
@@ -184,47 +186,71 @@ export function PhotoStep({ listingId, copy, onBack, onNext }: { listingId: stri
               }}
             />
           </label>
-          {copy.photoRules.title ? <p className="t-small" style={{ fontWeight: 600 }}>{copy.photoRules.title}</p> : null}
-          {copy.photoRules.items.map((rule) => (
-            <p key={rule} className="t-small">{rule}</p>
-          ))}
-        </div>
-        <p className="t-small" data-tk="photo-count">{shown} of {limit} photos and videos</p>
-        {note ? <p data-tk="photo-note" role="status">{note}</p> : steps.photos.help ? <p className="t-small">{steps.photos.help}</p> : null}
-        <ul data-tk="photo-grid" style={GRID}>
-          {photos.map((photo, index) => (
-            <MediaTile
-              key={photo.id}
-              kind="image"
-              label={`Photo ${index + 1}`}
-              state={photo.state}
-              url={photo.url}
-              reason={photo.reason}
-              isCover={photo.id === draft?.coverId}
-              busy={busy}
-              onMakeCover={() => makeCover(index)}
-              onMoveLeft={index > 0 ? () => moveBy(index, -1) : undefined}
-              onMoveRight={index < photos.length - 1 ? () => moveBy(index, 1) : undefined}
-              onRemove={() => void removeItem(photo.id)}
+          <label className="tkp-btn tkp-btn-camera" aria-disabled={busy}>
+            <Camera size={18} aria-hidden="true" focusable="false" />
+            Take a photo
+            <input
+              type="file"
+              accept="image/*"
+              capture="environment"
+              data-tk="camera-input"
+              hidden
+              disabled={busy}
+              onChange={(event) => {
+                const files = Array.from(event.target.files ?? []);
+                event.target.value = "";
+                if (files.length) void addPhotos(files);
+              }}
             />
-          ))}
-          {uploads.filter((upload) => upload.kind === "image").map((upload) => (
-            <MediaTile key={upload.key} kind="image" label="New photo" state="uploading" url={upload.previewUrl} progress={upload.progress} />
-          ))}
-        </ul>
-        <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 16 }}>
-          <h3 className="t-h3">Your videos</h3>
-          <InfoPopover id="post-videos" label="Your videos">
-            <strong>Your videos</strong>
+          </label>
+        </div>
+        <p className="tkp-drop-rule">
+          {copy.photoRules.items[0] ?? "JPG, PNG or WebP, 8 MB each."}
+          <InfoPopover id="post-photos" label="Photo rules">
+            <strong>Your photos</strong>
             <ul>
-              {UPLOAD_RULES.adVideos.details.map((row) => (
+              {UPLOAD_RULES.adPhotos.details.map((row) => (
                 <li key={row}>{row}</li>
               ))}
             </ul>
           </InfoPopover>
-        </div>
-        <label className="tk-btn tk-btn-outline-primary" aria-disabled={busy || atLimit}>
-          ADD VIDEO
+        </p>
+      </div>
+      <p className="tkp-count" data-tk="photo-count">{shown} of {limit} photos and videos</p>
+      <p className="tkp-photo-note" data-tk="photo-note" role="status">{note}</p>
+      <ul className="tkp-media-grid" data-tk="photo-grid">
+        {photos.map((photo, index) => (
+          <MediaTile
+            key={photo.id}
+            kind="image"
+            label={`Photo ${index + 1}`}
+            state={photo.state}
+            url={photo.url}
+            reason={photo.reason}
+            isCover={photo.id === draft?.coverId}
+            busy={busy}
+            onMakeCover={() => makeCover(index)}
+            onMoveLeft={index > 0 ? () => moveBy(index, -1) : undefined}
+            onMoveRight={index < photos.length - 1 ? () => moveBy(index, 1) : undefined}
+            onRemove={() => void removeItem(photo.id)}
+          />
+        ))}
+        {uploads.filter((upload) => upload.kind === "image").map((upload) => (
+          <MediaTile key={upload.key} kind="image" label="New photo" state="uploading" url={upload.previewUrl} progress={upload.progress} />
+        ))}
+      </ul>
+      <div className="tkp-videos">
+        <h2 className="tkp-sub-title" style={{ margin: 0 }}>Videos</h2>
+        <InfoPopover id="post-videos" label="Video rules">
+          <strong>Your videos</strong>
+          <ul>
+            {UPLOAD_RULES.adVideos.details.map((row) => (
+              <li key={row}>{row}</li>
+            ))}
+          </ul>
+        </InfoPopover>
+        <label className="tkp-btn" aria-disabled={busy || atLimit}>
+          Add video
           <input
             type="file"
             accept="video/mp4,video/webm,video/quicktime"
@@ -238,32 +264,34 @@ export function PhotoStep({ listingId, copy, onBack, onNext }: { listingId: stri
             }}
           />
         </label>
-        <p className="t-small">{VIDEO_RULE_LINE}</p>
-        {videos.length || uploads.some((upload) => upload.kind === "video") ? (
-          <ul data-tk="video-grid" style={GRID}>
-            {videos.map((video, index) => (
-              <MediaTile
-                key={video.id}
-                kind="video"
-                label={`Video ${index + 1}`}
-                state={video.state}
-                url={video.url}
-                posterUrl={video.posterUrl}
-                reason={video.reason}
-                busy={busy}
-                onRemove={() => void removeItem(video.id)}
-              />
-            ))}
-            {uploads.filter((upload) => upload.kind === "video").map((upload) => (
-              <MediaTile key={upload.key} kind="video" label="New video" state="uploading" progress={upload.progress} />
-            ))}
-          </ul>
-        ) : null}
       </div>
-      <div style={{ display: "flex", justifyContent: "space-between", marginTop: 16 }}>
-        <button type="button" className="tk-btn tk-btn-outline-primary" onClick={onBack}>{steps.photos.backLabel}</button>
-        <button type="button" className="tk-btn tk-btn-cta" data-tk="go-on" disabled={busy} onClick={onNext}>{steps.photos.nextLabel}</button>
-      </div>
-    </>
+      <p className="tkp-drop-rule">{VIDEO_RULE_LINE}</p>
+      {videos.length || uploads.some((upload) => upload.kind === "video") ? (
+        <ul className="tkp-media-grid" data-tk="video-grid">
+          {videos.map((video, index) => (
+            <MediaTile
+              key={video.id}
+              kind="video"
+              label={`Video ${index + 1}`}
+              state={video.state}
+              url={video.url}
+              posterUrl={video.posterUrl}
+              reason={video.reason}
+              busy={busy}
+              onRemove={() => void removeItem(video.id)}
+            />
+          ))}
+          {uploads.filter((upload) => upload.kind === "video").map((upload) => (
+            <MediaTile key={upload.key} kind="video" label="New video" state="uploading" progress={upload.progress} />
+          ))}
+        </ul>
+      ) : null}
+      {onBack && onNext ? (
+        <div className="tkp-photo-nav">
+          <button type="button" className="tkp-btn" onClick={onBack}>{steps.photos.backLabel || "Back"}</button>
+          <button type="button" className="tkp-btn tkp-btn-primary" data-tk="go-on" disabled={busy} onClick={onNext}>{steps.photos.nextLabel || "Continue"}</button>
+        </div>
+      ) : null}
+    </div>
   );
 }

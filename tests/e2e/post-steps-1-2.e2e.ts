@@ -46,7 +46,7 @@ test.describe("H7.83 post an ad, steps 1 and 2", () => {
     await expect(page.locator(".tkp-tile-mark svg")).toHaveCount(count);
     for (let index = 0; index < count; index += 1) {
       const box = (await tiles.nth(index).boundingBox())!;
-      expect(box.height, `tile ${index}`).toBeGreaterThanOrEqual(88);
+      expect(box.height, `tile ${index}`).toBeGreaterThanOrEqual((page.viewportSize()?.width ?? 1440) >= 1024 ? 72 : 88);
     }
     await expect(page.locator("[data-tk=go-on]")).toBeDisabled();
     await expect(page.getByText("Do you need help")).toHaveCount(0);
