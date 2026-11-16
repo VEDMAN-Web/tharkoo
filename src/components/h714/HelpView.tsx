@@ -2,7 +2,7 @@ import Link from "next/link";
 import { Send } from "lucide-react";
 import { SUPPORT_HOURS } from "@/lib/support";
 import { H714Page } from "./H714Page";
-import { WhatsAppMark } from "./WhatsAppMark";
+import { BrandMark } from "@/components/BrandMarks";
 
 export type HelpCard = { title: string; desc: string; count: string; href: string };
 export type HelpRow = { title: string; href: string };
@@ -107,7 +107,7 @@ export function HelpView({
                   Chat with us
                 </Link>
                 <Link href={whatsappHref} className="h714-btn h714-btn-wa">
-                  <WhatsAppMark />
+                  <BrandMark name="whatsapp" size={20} />
                   WhatsApp
                 </Link>
                 <Link href={telegramHref} className="h714-btn h714-btn-tg">
