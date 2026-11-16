@@ -13,6 +13,13 @@ export interface AuditInput {
   reason?: string;
   requestId: string;
   ipHash?: string;
+  actorRole?: string;
+  summary?: string;
+  targetLabel?: string;
+  undo?: { kind: string; until: Date; data?: unknown };
+  lock?: "money_sent" | "message_sent" | "purged" | "legal_record" | "account_deleted";
+  undoOf?: Types.ObjectId | string;
+  batchId?: string;
 }
 
 export interface AuditQuery {
@@ -37,6 +44,13 @@ export class AuditRepository {
       reason: event.reason,
       requestId: event.requestId,
       ipHash: event.ipHash,
+      actorRole: event.actorRole,
+      summary: event.summary,
+      targetLabel: event.targetLabel,
+      undo: event.undo,
+      lock: event.lock,
+      undoOf: event.undoOf,
+      batchId: event.batchId,
     });
   }
 
@@ -51,20 +65,22 @@ export class AuditRepository {
   }
 }
 
+export const SECRET_KEYS: ReadonlySet<string> = new Set([
+  "passwordHash",
+  "tokenHash",
+  "contact",
+  "documentRef",
+  "front",
+  "back",
+  "selfie",
+  "password",
+  "token",
+  "hashes",
+]);
+
 export function redact(value: unknown): Record<string, unknown> | undefined {
   if (!value || typeof value !== "object") return undefined;
-  const secretKeys = new Set([
-    "passwordHash",
-    "tokenHash",
-    "contact",
-    "documentRef",
-    "front",
-    "back",
-    "selfie",
-    "password",
-    "token",
-    "hashes",
-  ]);
+  const secretKeys = SECRET_KEYS;
   const output: Record<string, unknown> = {};
   for (const [key, nested] of Object.entries(value as Record<string, unknown>)) {
     output[key] = secretKeys.has(key) ? "[redacted]" : nested;

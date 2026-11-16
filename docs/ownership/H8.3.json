@@ -1,0 +1,18 @@
+{
+  "branchPrefix": "haiku/h8.3",
+  "globs": [
+    "docs/ownership/H8.3.json",
+    "progress/H8.3.md",
+    "src/lib/admin/perms.ts",
+    "src/server/admin/context.ts",
+    "src/server/admin/write.ts",
+    "src/server/admin/undo/core.ts",
+    "src/server/admin/undo/registry.ts",
+    "src/server/admin/undo/handlers/*.ts",
+    "src/app/admin/undo-actions.ts",
+    "src/server/models/trust.ts",
+    "src/server/audit/repository.ts",
+    "src/server/audit/index.ts",
+    "tests/server/admin/a3-*.test.ts"
+  ]
+}
