@@ -65,6 +65,8 @@ async function addCardVideos(page: Page, slugs: string[]) {
   };
 }
 
+const SEARCH_CACHE_MS = 10_500;
+
 const playingCount = (page: Page) =>
   page.evaluate(() => [...document.querySelectorAll<HTMLVideoElement>('[data-tk="card-video"]')].filter((video) => !video.paused).length);
 
@@ -323,6 +325,7 @@ test.describe("H7.91: sticky, instant filter column and phone sheet", () => {
     const slug = (await page.locator('[data-tk="card"] a.tkn-ls-stretch').first().getAttribute("href"))!.replace(/^\/ad\//, "").replace(/\/$/, "");
     const cleanup = await addCardVideos(page, [slug]);
     try {
+      await page.waitForTimeout(SEARCH_CACHE_MS);
       await page.goto("/search/?category=dating&sort=newest&verified=0");
       const card = page.locator('[data-tk="card"]', { has: page.locator('a.tkn-ls-stretch[href="/ad/' + slug + '/"]') });
       await expect(card.locator('[data-tk="video-badge"]')).toBeVisible();
@@ -351,6 +354,7 @@ test.describe("H7.91: sticky, instant filter column and phone sheet", () => {
     const phone = await browser.newContext({ baseURL, viewport: { width: 390, height: 844 }, hasTouch: true, isMobile: true });
     const reduced = await browser.newContext({ baseURL, viewport: { width: 390, height: 844 }, hasTouch: true, isMobile: true, reducedMotion: "reduce" });
     try {
+      await page.waitForTimeout(SEARCH_CACHE_MS);
       const view = await phone.newPage();
       await view.goto("/search/?category=dating&sort=newest&online=0");
       await expect.poll(() => playingCount(view), { timeout: 15_000 }).toBe(1);

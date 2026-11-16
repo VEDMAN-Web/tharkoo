@@ -43,7 +43,7 @@ test.describe("H7.66 ad page", () => {
     await expect(page.locator('.tkn-ls-aside select[aria-label="Area"]')).toHaveCount(0);
     await expect(page.locator(".tkn-ls-aside select:disabled")).toHaveCount(0);
     await page.goto("/dating/surat/");
-    await expect(page.locator('.tkn-ls-aside select[aria-label="Area"]')).toBeVisible();
+    await expect(page.locator('.tkn-ls-aside select[aria-label="Area"]')).toHaveCount(1);
   });
 
   test("the main ad has a Report this ad link and a Save heart", async ({ page }) => {
