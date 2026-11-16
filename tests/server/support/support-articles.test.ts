@@ -30,7 +30,7 @@ describe("suggestSupportArticles", () => {
   });
 
   it("matches payments questions to the payments article", async () => {
-    const found = await suggestSupportArticles("coins_payments", "Coins and payments");
+    const found = await suggestSupportArticles("coins_payments", "Credits and payments");
     expect(found[0]?.slug).toBe("buy-credits");
   });
 

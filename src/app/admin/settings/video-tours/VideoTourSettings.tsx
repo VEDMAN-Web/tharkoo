@@ -101,7 +101,7 @@ export function VideoTourSettings() {
               <tr>
                 <th scope="col">Category</th>
                 <th scope="col">Live video tours</th>
-                <th scope="col">Coin price</th>
+                <th scope="col">Credit price</th>
                 <th scope="col">
                   <span className="sr-only">Save</span>
                 </th>
@@ -152,7 +152,7 @@ export function VideoTourSettings() {
                         </span>
                       ) : null}
                     </td>
-                    <td data-label="Coin price">
+                    <td data-label="Credit price">
                       <input
                         type="number"
                         className="adm-input"
@@ -160,7 +160,7 @@ export function VideoTourSettings() {
                         min={COIN_MIN}
                         max={COIN_MAX}
                         step={1}
-                        aria-label={`Coin price for ${row.name}`}
+                        aria-label={`Credit price for ${row.name}`}
                         aria-invalid={!coinsValid}
                         aria-describedby={`coins-note-${row.id}`}
                         value={draft.coins}
@@ -169,7 +169,7 @@ export function VideoTourSettings() {
                         style={{ width: 96 }}
                       />
                       <span id={`coins-note-${row.id}`} className={coinsValid ? "adm-field-help" : "adm-field-error"} style={{ display: "block" }}>
-                        {coinsValid ? `${COIN_MIN} to ${COIN_MAX} coins` : `Enter a whole number from ${COIN_MIN} to ${COIN_MAX}`}
+                        {coinsValid ? `${COIN_MIN} to ${COIN_MAX} credits` : `Enter a whole number from ${COIN_MIN} to ${COIN_MAX}`}
                       </span>
                     </td>
                     <td data-label="Save">

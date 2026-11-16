@@ -11,8 +11,8 @@ export const revalidate = 300;
 const PLACEHOLDER_CARDS = [
   ["Posting an ad", "Create, edit, renew and delete", "8 articles"],
   ["Log in and account", "Codes, profile, delete account", "6 articles"],
-  ["Coins and payments", "Buy coins, refunds, invoices", "7 articles"],
-  ["Video calls", "How calls work, coins back", "5 articles"],
+  ["Credits and payments", "Buy credits, refunds, invoices", "7 articles"],
+  ["Video calls", "How calls work, credits back", "5 articles"],
   ["Safety and scams", "Spot fake ads, stay safe", "9 articles"],
   ["Photos and videos", "Sizes, watermark, rules", "5 articles"],
   ["Top and Featured", "Boost your ad", "4 articles"],
@@ -21,11 +21,11 @@ const PLACEHOLDER_CARDS = [
 const PLACEHOLDER_ROWS = [
   "How do I edit or delete my ad?",
   "I did not get my log-in code",
-  "My video call failed. Do I get my coins back?",
+  "My video call failed. Do I get my credits back?",
   "Why was my ad not approved?",
   "How do I report a fake ad?",
 ];
-const QUICK_TOPICS = ["Edit my ad", "Log-in code", "Coins back", "Report an ad"];
+const QUICK_TOPICS = ["Edit my ad", "Log-in code", "Credits back", "Report an ad"];
 const POPULAR_COUNT = 5;
 
 export async function generateMetadata() {

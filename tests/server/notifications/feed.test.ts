@@ -19,8 +19,8 @@ describe("notifications feed", () => {
   });
 
   it("writes the coin line for added and used coins", () => {
-    expect(coinLine(5, "Pack purchase")).toEqual({ title: "5 coins added", body: "Pack purchase" });
-    expect(coinLine(-1, "")).toEqual({ title: "1 coin used", body: "Coins were used." });
+    expect(coinLine(5, "Pack purchase")).toEqual({ title: "5 credits added", body: "Pack purchase" });
+    expect(coinLine(-1, "")).toEqual({ title: "1 credit used", body: "Credits were used." });
   });
 });
 

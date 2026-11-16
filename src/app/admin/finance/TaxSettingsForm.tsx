@@ -79,8 +79,8 @@ export function TaxSettingsForm({ initial }: { initial: FinanceValues }) {
       </p>
       {field("tdsPercent", "TDS %", "Recorded on each record.")}
       {field("gstPercent", "GST %", "Recorded on each record.")}
-      {field("coinValueInr", "Value of one coin (INR)", "Used to show prices and payout amounts.")}
-      {field("minWithdrawCoins", "Minimum withdrawal (coins)", "Vendors cannot withdraw less.")}
+      {field("coinValueInr", "Value of one credit (INR)", "Used to show prices and payout amounts.")}
+      {field("minWithdrawCoins", "Minimum withdrawal (credits)", "Vendors cannot withdraw less.")}
       {field("withdrawCooldownDays", "Days between withdrawals", "One withdrawal per vendor per this many days.")}
       <div style={{ display: "flex", gap: 10, alignItems: "center", flexWrap: "wrap" }}>
         <button type="submit" className="adm-btn" disabled={!dirty || busy}>

@@ -17,7 +17,7 @@ export function CoinsPanel({ summary, packs }: { summary: PanelSummary; packs: P
   if (!summary.signedIn) {
     return (
       <UserPanelShell active="coins" summary={summary}>
-        <SignedOutPanel next="/u/account/credits/" title="Log in to buy coins" body="Your coin balance and purchases are kept on your account." />
+        <SignedOutPanel next="/u/account/credits/" title="Log in to buy credits" body="Your credit balance and purchases are kept on your account." />
       </UserPanelShell>
     );
   }
@@ -37,7 +37,7 @@ export function CoinsPanel({ summary, packs }: { summary: PanelSummary; packs: P
           <h1 id="buy-heading" className="up-h2">{t("panel.coins.buy")}</h1>
           <p className="up-muted">Choose a pack</p>
         </div>
-        {packs.length === 0 ? <p className="up-muted">No coin packs are on sale right now.</p> : <PackPicker packs={packs} onPaid={setBalance} />}
+        {packs.length === 0 ? <p className="up-muted">No credit packs are on sale right now.</p> : <PackPicker packs={packs} onPaid={setBalance} />}
       </section>
     </UserPanelShell>
   );

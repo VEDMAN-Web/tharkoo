@@ -120,7 +120,7 @@ export function defaultShellConfig(): ShellConfig {
       phone: "",
       topics: [
         { label: "Help with my ad", topic: "my_ads" },
-        { label: "Coins and payments", topic: "coins_payments" },
+        { label: "Credits and payments", topic: "coins_payments" },
         { label: "Report a problem", topic: "report_problem" },
       ],
     },

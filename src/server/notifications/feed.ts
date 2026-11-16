@@ -34,9 +34,9 @@ export function mergeNotifications(items: readonly NotificationItem[], limit = L
 /** Pure: the coin line for one wallet entry. Zero entries are skipped by the caller. */
 export function coinLine(delta: number, reason: string): { title: string; body: string } {
   const amount = Math.abs(delta);
-  const unit = amount === 1 ? "coin" : "coins";
-  if (delta > 0) return { title: `${amount} ${unit} added`, body: reason || "Coins were added to your wallet." };
-  return { title: `${amount} ${unit} used`, body: reason || "Coins were used." };
+  const unit = amount === 1 ? "credit" : "credits";
+  if (delta > 0) return { title: `${amount} ${unit} added`, body: reason || "Credits were added to your wallet." };
+  return { title: `${amount} ${unit} used`, body: reason || "Credits were used." };
 }
 
 export async function loadNotifications(userId: string): Promise<NotificationItem[]> {

@@ -21,7 +21,7 @@ function whenLabel(value: string | null) {
 }
 
 function coinsLabel(coins: number) {
-  return `${coins} ${coins === 1 ? "coin" : "coins"}`;
+  return `${coins} ${coins === 1 ? "credit" : "credits"}`;
 }
 
 /** The advertiser's inbox for live video tours: accept or decline requests, then join the room. */

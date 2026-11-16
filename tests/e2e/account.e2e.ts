@@ -10,7 +10,7 @@ test.describe("3 Account", () => {
 
     // Dashboard menu: the user panel links to coins and settings.
     const menu = page.getByRole("navigation", { name: "My account" });
-    await expect(menu.getByRole("link", { name: "Coins and payments" })).toBeVisible();
+    await expect(menu.getByRole("link", { name: "Credits and payments" })).toBeVisible();
     await expect(menu.getByRole("link", { name: "Settings" })).toBeVisible();
     await expect(page.locator("h1")).toHaveCount(1);
 

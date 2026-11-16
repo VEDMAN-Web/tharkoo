@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { categoriesPath, categoryPath } from "@/lib/urls";
-import { HomeAdCard, type HomeAdCardData } from "./HomeAdCard";
+import { HomeAdCard, type HomeAdCardData, type HomeAdLabels } from "./HomeAdCard";
 import "./home-spec.css";
 import "./p10-p13.css";
 
@@ -11,8 +11,8 @@ export type NotFoundAds = {
   title: string;
   seeAll: string;
   seeAllHref: string;
-  labels: { view: string; online: string; away: string; watermark: string; views: string; viewOne: string };
-  cards: (HomeAdCardData & { badge: string })[];
+  labels: HomeAdLabels;
+  cards: HomeAdCardData[];
 };
 
 export function NotFoundView({ categories, ads }: { categories: NotFoundCategory[]; ads: NotFoundAds | null }) {
@@ -58,11 +58,13 @@ export function NotFoundView({ categories, ads }: { categories: NotFoundCategory
               {ads.seeAll}
             </Link>
           </div>
-          <div className="tkh-ads">
+          <ul className="tkh-ads" aria-label={ads.title}>
             {ads.cards.map((ad) => (
-              <HomeAdCard key={ad.slug} ad={ad} badge={ad.badge} labels={ads.labels} />
+              <li key={ad.slug}>
+                <HomeAdCard ad={ad} labels={ads.labels} />
+              </li>
             ))}
-          </div>
+          </ul>
         </section>
       ) : null}
     </>

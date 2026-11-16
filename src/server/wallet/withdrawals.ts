@@ -106,7 +106,7 @@ export async function requestWithdrawal(input: { userId: string; coins: number; 
   const [kyc, settings] = await Promise.all([PayoutKyc.findOne({ userId }).select("method").lean(), getFinanceSettings()]);
   if (!kyc) throw new VerificationRequiredError("Add your payout details before you withdraw");
   if (!Number.isInteger(input.coins) || input.coins < settings.minWithdrawCoins) {
-    throw new ValidationError("Invalid request", { coins: [`The minimum withdrawal is ${settings.minWithdrawCoins} coins`] });
+    throw new ValidationError("Invalid request", { coins: [`The minimum withdrawal is ${settings.minWithdrawCoins} credits`] });
   }
   if ((await accountBalance("vendor_earnings", input.userId)) < input.coins) {
     throw new PaymentRequiredError("Not enough earnings for that withdrawal");

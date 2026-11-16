@@ -56,7 +56,7 @@ const COLUMNS: Column<PayoutRow>[] = [
   { key: "requestedAt", label: "Requested", sortable: true },
   { key: "userId", label: "Vendor" },
   { key: "status", label: "Status", sortable: true },
-  { key: "coins", label: "Coins", sortable: true },
+  { key: "coins", label: "Credits", sortable: true },
   { key: "amountInr", label: "Amount (INR)", sortable: true },
   { key: "tdsPercent", label: "TDS %" },
   { key: "gstPercent", label: "GST %" },
@@ -169,7 +169,7 @@ export function PayoutsQueue({ rows }: { rows: PayoutRow[] }) {
       {selected ? (
         <section className="adm-card" aria-label="Selected payout" style={{ display: "grid", gap: 12, padding: 16 }}>
           <p className="t-small">
-            <strong>{selected.coins} coins</strong> for {selected.payout?.legalName ?? "vendor"} · status {selected.status}
+            <strong>{selected.coins} credits</strong> for {selected.payout?.legalName ?? "vendor"} · status {selected.status}
           </p>
           {actions.some((action) => action.needs === "reason") ? (
             <TextField label="Reason (shown to the vendor)" value={reason} onChange={setReason} min={3} max={300} />

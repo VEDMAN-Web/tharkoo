@@ -3,7 +3,7 @@
 const DATE_FORMAT = new Intl.DateTimeFormat("en-IN", { day: "numeric", month: "short", year: "numeric", timeZone: "Asia/Kolkata" });
 
 export function tourRequestLabel(coins: number): string {
-  const unit = coins === 1 ? "coin" : "coins";
+  const unit = coins === 1 ? "credit" : "credits";
   return `Video call and verify · ${coins} ${unit}`;
 }
 

@@ -16,7 +16,7 @@ export default async function VideoToursPage() {
   return (
     <AdminShell title="Video tours">
       <p className="mb-3 t-small text-muted">
-        Live video tours are paid in coins. Switch them on per category and set the coin price. Tours are never available for people listings.
+        Live video tours are paid in credits. Switch them on per category and set the credit price. Tours are never available for people listings.
       </p>
       <VideoTourSettings />
     </AdminShell>

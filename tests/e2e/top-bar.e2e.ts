@@ -21,7 +21,7 @@ test.describe("H7.51 top bar", () => {
     await page.goto("/");
     const bar = page.locator('[data-tk="top-bar"]');
     await expect(bar).toBeVisible();
-    await expect(bar.getByText("Sellers online now")).toBeVisible();
+    await expect(bar.getByText("Advertisers online now")).toBeVisible();
     await expect(bar.locator('[data-tk="top-bar-phone"]')).toHaveAttribute("href", "tel:+91912345678");
     expect(await hasHorizontalScroll(page)).toBe(false);
   });

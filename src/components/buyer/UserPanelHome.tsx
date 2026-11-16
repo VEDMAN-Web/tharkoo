@@ -71,7 +71,7 @@ export function UserPanelHome({
   return (
     <UserPanelShell active="home" summary={summary} aside={aside} below={<FreshAds />}>
       {summary.signedIn ? null : (
-        <SignedOutPanel next="/u/account/dashboard/" title="Log in to see your panel" body="Your saved ads, chats and coins show here after you log in." />
+        <SignedOutPanel next="/u/account/dashboard/" title="Log in to see your panel" body="Your saved ads, chats and credits show here after you log in." />
       )}
       {summary.signedIn && ads && headline ? (
         <>

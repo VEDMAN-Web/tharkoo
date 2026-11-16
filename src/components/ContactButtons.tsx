@@ -22,7 +22,7 @@ type Notice = { text: string; signIn?: boolean };
 export type AdTour = { listingId: string; coins: number };
 
 /** Shown instead of a coin purchase until a real coin provider is set in production. */
-export const COIN_PURCHASE_SOON = "Coin purchases open soon. No coins were used.";
+export const COIN_PURCHASE_SOON = "Credit purchases open soon. No credits were used.";
 
 export type ContactPopupInfo = {
   sellerName: string;

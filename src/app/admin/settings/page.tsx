@@ -29,7 +29,7 @@ export default async function Page() {
       {isAdmin ? <AwayHoursSetting initial={await readAwayHours()} /> : null}
       <p className="mb-3 t-small text-muted">Age gate, cookies, hours and brand. Also on the CMS homepage editor.</p>
       <p className="mb-3 t-small">
-        Live video tours: <Link href="/admin/settings/video-tours/">switch on per category and set the coin price</Link>.
+        Live video tours: <Link href="/admin/settings/video-tours/">switch on per category and set the credit price</Link>.
       </p>
       <p className="mb-3 t-small">
         Support chat text and buttons: <Link href="/admin/settings/chat/">edit the live chat</Link>. Header and footer: <Link href="/admin/menus/">menus and footer</Link>.

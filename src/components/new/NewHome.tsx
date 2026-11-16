@@ -3,16 +3,17 @@ import Image from "next/image";
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 import type { ListingDoc } from "@/lib/models";
-import { displayTitle, prettyPlace } from "@/lib/format";
-import { listingPhotos, safePhoto } from "@/lib/media";
-import { adPath, applyPrefixes, categoryPath, postAdPath, type UrlPaths } from "@/lib/urls";
+import { prettyPlace } from "@/lib/format";
+import { applyPrefixes, categoryPath, postAdPath, type UrlPaths } from "@/lib/urls";
 import { NewAdsGate } from "./NewAdsGate";
 import { makeT, type UiTextMap } from "@/lib/ui/text";
 import type { ShellConfig } from "@/server/site-links/shell-config-rules";
 import { HomeAdCard } from "./HomeAdCard";
+import { HomeAdsSection } from "./HomeAdsSection";
+import { homeAdCardData } from "./home-ad-data";
 import { HomeSearchForm } from "./HomeSearchForm";
 import type { CountryPlaces } from "@/server/locations/site-country";
-import { commonCity, splitHeadline, tierKeyOf } from "./home-copy";
+import { commonCity, splitHeadline } from "./home-copy";
 import "./home-spec.css";
 
 type Cat = { slug?: string; name?: string; homeBlurb?: string; description?: string; icon?: string; kind?: string };
@@ -29,6 +30,7 @@ type Hero = {
 };
 
 const BLURB_MAX = 70;
+const HOME_ADS_SHOWN = 8;
 
 function blurbOf(cat: Cat) {
   const text = (cat.homeBlurb || cat.description || "").replace(/\s+/g, " ").trim();
@@ -40,12 +42,6 @@ function bannerFocus(hero: Hero): CSSProperties {
   const desktop = `${hero.focusX ?? 50}% ${hero.focusY ?? 25}%`;
   const phone = hero.photoPhone ? `${hero.phoneFocusX ?? 50}% ${hero.phoneFocusY ?? 25}%` : desktop;
   return { "--tkh-focus": desktop, "--tkh-focus-phone": phone } as CSSProperties;
-}
-
-function placeOf(ad: ListingDoc) {
-  const city = prettyPlace(ad.citySlug);
-  const area = ad.place && ad.place !== city ? ad.place : "";
-  return area ? `${city} / ${area}` : city;
 }
 
 /** The heading of a section: eyebrow pill, H2, and an optional link on the right, aligned to the bottom. */
@@ -105,23 +101,20 @@ export function NewHome({
   const photos = new Map(shell.media.images.filter((image) => image.scope === "category" && image.photo).map((image) => [image.slug, { src: image.photo, focus: `${image.focusX ?? 50}% ${image.focusY ?? 18}%` }]));
   const cats = categories.filter((cat) => cat.slug && cat.name).slice(0, 8);
   const categoryNames = new Map(categories.map((cat) => [cat.slug || "", cat.name || ""]));
-  const shown = ads.slice(0, 4);
+  const shown = ads.slice(0, HOME_ADS_SHOWN);
   const city = commonCity(shown);
   // P1: "Latest ads in {city}", or "Latest ads in India" when no city is chosen.
   const adsTitle = t("home.ads.title", { city: city ? prettyPlace(city) : t("home.ads.defaultPlace") });
   const { lead, accent } = splitHeadline(hero.desktop);
   const localPhoto = hero.photo.startsWith("/");
-  const badgeLabel = (variant?: string) => {
-    const key = tierKeyOf(variant);
-    return key ? t(key) : "";
-  };
   const cardLabels = {
-    view: t("home.ads.view"),
     online: t("home.ads.online"),
-    away: t("home.ads.away"),
     watermark: t("home.ads.watermark"),
-    views: t("home.ads.views"),
-    viewOne: t("home.ads.viewOne"),
+    photoPrev: t("home.ads.photoPrev"),
+    photoNext: t("home.ads.photoNext"),
+    chat: t("home.ads.chat"),
+    viewAd: t("home.ads.viewAd"),
+    age: t("home.ads.age"),
   };
   const searchLabels = {
     state: t("home.search.state"),
@@ -215,36 +208,22 @@ export function NewHome({
 
       <NewAdsGate enabledSlugs={countries.map((country) => country.slug)} postHref={postAdPath(paths)}>
       {shown.length ? (
-        <section className="tkh-page tkh-section" aria-labelledby="home-fresh">
-          <SectionHead
-            id="home-fresh"
-            eyebrow={t("home.ads.eyebrow")}
-            tone="lavender"
-            title={adsTitle}
-            link={{ href: applyPrefixes("/search/", paths), text: t("home.ads.all") }}
-          />
-          <div className="tkh-ads">
-            {shown.map((ad) => {
-              const photo = safePhoto(listingPhotos(ad.categorySlug, ad.publicId || ad.slug || "", ad.photos || [])[0]);
-              return (
-                <HomeAdCard
-                  key={ad.slug}
-                  ad={{
-                    slug: ad.slug || "",
-                    title: displayTitle(ad.title) || t("card.fallbackTitle"),
-                    price: ad.price,
-                    photo,
-                    categoryName: categoryNames.get(ad.categorySlug || "") || prettyPlace(ad.categorySlug),
-                    place: placeOf(ad),
-                    href: adPath(paths, ad.slug || ""),
-                  }}
-                  badge={badgeLabel(ad.variant)}
-                  labels={cardLabels}
-                />
-              );
-            })}
-          </div>
-        </section>
+        <HomeAdsSection
+          id="home-fresh"
+          eyebrow={t("home.ads.eyebrow")}
+          title={adsTitle}
+          listLabel={t("home.ads.list")}
+          moreHref={applyPrefixes("/search/", paths)}
+          moreText={t("home.ads.all")}
+          prevLabel={t("home.ads.prev")}
+          nextLabel={t("home.ads.next")}
+        >
+          {shown.map((ad) => (
+            <li key={ad.slug}>
+              <HomeAdCard ad={homeAdCardData(ad, categoryNames, paths, t("card.fallbackTitle"))} labels={cardLabels} />
+            </li>
+          ))}
+        </HomeAdsSection>
       ) : null}
       </NewAdsGate>
 
