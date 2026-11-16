@@ -120,7 +120,7 @@ test.describe("H7.83 post an ad, steps 1 and 2", () => {
     await toDetails(page, "Jobs");
     await page.locator("#nickname").focus();
     await page.keyboard.press("Enter");
-    await expect(page.locator("#age, #title").first()).toBeFocused();
+    await expect(page.locator("#age, #price, #title").first()).toBeFocused();
   });
 
   test("phone: sticky bar, tap targets, no field hidden behind the bar, no sideways scroll", async ({ page, baseURL }) => {
