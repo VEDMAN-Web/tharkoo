@@ -1,0 +1,8 @@
+{
+  "branchPrefix": "haiku/h7.117",
+  "globs": [
+    "docs/ownership/H7.117.json",
+    "src/server/billing/service.ts",
+    "tests/server/billing/billing.test.ts"
+  ]
+}

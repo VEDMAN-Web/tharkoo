@@ -327,6 +327,25 @@ describe("billing", () => {
     expect(await walletBalance(user.id)).toBe(45);
   });
 
+  it("charges and creates one order when two requests share a key", async () => {
+    const user = await account("twin@example.com");
+    const listingId = await listingFor(user.id, new mongoose.Types.ObjectId());
+    const productId = await product("top", 40, 2);
+    await creditWallet({ userId: user.id, amount: 40, refType: "seed", refId: "twin-seed", requestId: "seed", actorId: user.id });
+    const send = () => post("/api/promotions", { listingId, productId, idempotencyKey: "twin-key-123" }, user.cookie);
+    const [first, second] = await Promise.all([send(), send()]);
+    const [a, b] = [await bodyOf(first), await bodyOf(second)];
+    expect([first.status, second.status]).toEqual([200, 200]);
+    expect(a.ok && b.ok).toBe(true);
+    expect(a.data?.orderId).toBe(b.data?.orderId);
+    expect(a.data?.paymentId).toBe(b.data?.paymentId);
+    expect(await PromotionOrder.countDocuments({})).toBe(1);
+    expect(await PromotionOrder.countDocuments({ status: "active" })).toBe(1);
+    expect(await Payment.countDocuments({ idempotencyKey: "twin-key-123", status: "paid" })).toBe(1);
+    expect(await WalletEntry.countDocuments({ userId: user.id, refType: "promotion" })).toBe(1);
+    expect(await walletBalance(user.id)).toBe(0);
+  });
+
   it("refuses a non-owner and a full star city", async () => {
     const owner = await account("owner@example.com");
     const stranger = await account("stranger@example.com");
