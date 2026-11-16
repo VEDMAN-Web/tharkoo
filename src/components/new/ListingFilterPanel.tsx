@@ -15,6 +15,8 @@ export function ListingFilterPanel({
   toggles,
   labels,
   places,
+  hidden = [],
+  placesOnly = false,
 }: {
   action: string;
   clearHref: string;
@@ -23,9 +25,14 @@ export function ListingFilterPanel({
   toggles: ListingToggles;
   labels: ListingLabels;
   places: PlaceSelects;
+  hidden?: { name: string; value: string }[];
+  placesOnly?: boolean;
 }) {
   return (
     <form method="get" action={action} className="tkn-ls-form" aria-label={labels.panelTitle}>
+      {hidden.map((field) => (
+        <input key={`${field.name}-${field.value}`} type="hidden" name={field.name} value={field.value} />
+      ))}
       <div className="tkn-ls-panelhead">
         <p className="tkn-ls-panelhead-title">
           <SearchIcon />
@@ -34,6 +41,24 @@ export function ListingFilterPanel({
         <span className="tkn-ls-pill">{labels.activeTemplate.replace("{count}", String(activeCount))}</span>
       </div>
       <ListingPlaceSelects selects={places} labels={labels} />
+      {placesOnly ? null : <FilterRows rows={rows} toggles={toggles} labels={labels} />}
+      {placesOnly ? null : (
+        <div className="tkn-ls-bottom">
+          <a href={clearHref} className="tkn-ls-clear">
+            {labels.clear}
+          </a>
+          <button type="submit" className="tkn-ls-go">
+            {labels.apply}
+          </button>
+        </div>
+      )}
+    </form>
+  );
+}
+
+function FilterRows({ rows, toggles, labels }: { rows: PanelRow[]; toggles: ListingToggles; labels: ListingLabels }) {
+  return (
+    <>
       <p className="tkn-ls-label">{labels.filtersLabel}</p>
       <div className="tkn-ls-fixed">
         <ChipLine icon="verified" name="verified" label={labels.verified} checked={toggles.verified} />
@@ -78,15 +103,7 @@ export function ListingFilterPanel({
           </details>
         );
       })}
-      <div className="tkn-ls-bottom">
-        <a href={clearHref} className="tkn-ls-clear">
-          {labels.clear}
-        </a>
-        <button type="submit" className="tkn-ls-go">
-          {labels.apply}
-        </button>
-      </div>
-    </form>
+    </>
   );
 }
 

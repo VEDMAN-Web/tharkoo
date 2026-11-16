@@ -1,11 +1,15 @@
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import { ListingPageView } from "@/components/ListingPage";
-import { NewListingPage } from "@/components/new/ListingBand";
+import { ListingFrame } from "@/components/new/ListingFrame";
 import { bandChoice, heroBandFrom } from "@/components/new/band-image";
-import { listingLabels } from "@/components/new/listing-frame-props";
+import { listingFrameProps, listingLabels, placeSelects } from "@/components/new/listing-frame-props";
+import { listingFilterQuery } from "@/components/new/listing-filters";
+import { narrowFromParams } from "@/components/new/listing-narrow";
+import { loadCardWidth } from "@/server/listings/card-width";
+import type { ListingParams } from "@/server/search/filter-seo";
 import { FallbackAds } from "@/components/FallbackAds";
-import { getCategory, getFeed, getHomepageContent, getSite, pageOutOfRange } from "@/lib/queries";
+import { getCategories, getCategory, getCities, getFeed, getHomepageContent, getSite, getStates, pageOutOfRange } from "@/lib/queries";
 import { canonical } from "@/lib/seo";
 import { withPagination } from "@/lib/seo/pagination";
 import { makeT } from "@/lib/ui/text";
@@ -23,7 +27,7 @@ async function tagLabel(tag: string) {
   return tags.find((item) => item.slug === tag) || null;
 }
 
-type Props = { params: Promise<{ category: string; tag: string }>; searchParams: Promise<{ page?: string }> };
+type Props = { params: Promise<{ category: string; tag: string }>; searchParams: Promise<ListingParams> };
 
 export async function generateMetadata({ params, searchParams }: Props): Promise<Metadata> {
   const { category, tag } = await params;
@@ -56,20 +60,27 @@ export async function generateMetadata({ params, searchParams }: Props): Promise
 export default async function TagPage({ params, searchParams }: Props) {
   const { category, tag } = await params;
   const sp = await searchParams;
-  const page = Math.max(1, Number(sp.page) || 1);
+  const rawPage = typeof sp.page === "string" ? sp.page : undefined;
+  if (sp.page !== undefined && rawPage === undefined) notFound();
+  const page = Math.max(1, Number(rawPage) || 1);
   const [meta, cat, paths] = await Promise.all([tagLabel(tag), getCategory(category), getPaths()]);
   if (!cat || !meta) notFound();
+  const { picks, toggles, filter: narrow } = narrowFromParams(sp, cat.fields);
   const path = tagPath(paths, cat.slug || category, tag);
-  const [site, feed, tags, heading, shell, hero, texts] = await Promise.all([
+  const [site, feed, tags, heading, shell, hero, texts, categories, states, cities, cardWidth] = await Promise.all([
     getSite(),
-    getFeed({ categorySlug: category, tag }, page),
+    getFeed({ categorySlug: category, tag, ...narrow }, page),
     publicTags(),
     urlHeading(path, `${meta.label} ${cat.name}`),
     readShellConfig(),
     getHomepageContent().then(heroBandFrom),
     textOverrides(),
+    getCategories(),
+    getStates(),
+    getCities(),
+    loadCardWidth(),
   ]);
-  if (pageOutOfRange(sp.page, feed.pages)) notFound();
+  if (pageOutOfRange(rawPage, feed.pages)) notFound();
   const t = makeT(texts);
   const own = showFallback(feed);
   const fallback = own
@@ -87,26 +98,39 @@ export default async function TagPage({ params, searchParams }: Props) {
     feed.total === 0
       ? { text: `No ${meta.label} ${cat.name} ads yet. Here are ads close by.`, button: `Post the first ad in ${cat.name}`, href: postAdPath(paths) }
       : undefined;
+  const labels = listingLabels(t);
+  const filterQs = listingFilterQuery(picks, toggles);
+  const frame = listingFrameProps({
+    crumbs,
+    h1: heading,
+    intro: `${site.name} lists ${cat.name} ads tagged ${meta.label}. ${feed.total} ads match this search.`,
+    photo: bandChoice(shell, hero, { category: cat.slug || category }),
+    categorySlug: cat.slug || category,
+    searchAction: searchPath(paths),
+    searchPlaceholder: `Search ${cat.name} ads`,
+    chips: null,
+    fields: cat.fields,
+    picks,
+    toggles,
+    panelPath: path,
+    labels,
+    places: placeSelects({ categorySlug: cat.slug || category, categories, states, cities, districts: [], labels }),
+  });
   return (
-    <NewListingPage
-      tk="tag"
-      band={{
-        crumbs,
-        h1: heading,
-        intro: `${site.name} lists ${cat.name} ads tagged ${meta.label}. ${feed.total} ads match this search.`,
-        photo: bandChoice(shell, hero, { category: cat.slug || category }),
-        categorySlug: cat.slug || category,
-        searchAction: searchPath(paths),
-        placeholder: `Search ${cat.name} ads`,
-        labels: listingLabels(t),
-      }}
+    <div data-card-width={cardWidth}>
+    <ListingFrame
+      bandStyle={frame.bandStyle}
+      labels={labels}
+      head={frame.head}
+      chips={frame.chips}
+      searchForm={frame.searchForm}
+      filters={frame.filters}
+      activeCount={frame.activeCount}
     >
       <ListingPageView
-        frame
         texts={texts}
-        h1={heading}
         crumbs={crumbs}
-        path={path}
+        path={`${path}${filterQs ? `?${filterQs}` : ""}`}
         stars={[]}
         items={feed.items}
         page={page}
@@ -119,6 +143,7 @@ export default async function TagPage({ params, searchParams }: Props) {
         hideEmpty={feed.total === 0}
         fallback={own ? <FallbackAds sections={fallback} lead={lead} layout="row" /> : undefined}
       />
-    </NewListingPage>
+    </ListingFrame>
+    </div>
   );
 }
