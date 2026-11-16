@@ -6,6 +6,9 @@ import { canonical } from "@/lib/seo";
 import { isAdminRole } from "@/lib/ui/site-content";
 import { typesForPage } from "@/server/layout/blocks";
 import { HomeSeoSection } from "./HomeSeoSection";
+import { HomeBannerSection } from "./HomeBannerSection";
+import { HomeCategoriesCountField } from "./HomeCategoriesCountField";
+import { ListingBandSwitch } from "./ListingBandSwitch";
 import { LoginImageField } from "./LoginImageField";
 
 export const dynamic = "force-dynamic";
@@ -27,6 +30,18 @@ export default async function HomepageAdminPage() {
           initial={{ seoTitle: content.seoTitle, seoDescription: content.seoDescription }}
           siteLabel={canonical("/").replace(/^https?:\/\//, "")}
         />
+        <HomeBannerSection
+          initial={{
+            photo: content.hero.photo,
+            photoWidth: content.hero.photoWidth,
+            photoHeight: content.hero.photoHeight,
+            photoPhone: content.hero.photoPhone,
+            photoAlt: content.hero.photoAlt,
+            textInImage: content.hero.textInImage,
+          }}
+        />
+        <HomeCategoriesCountField initial={content.homeCategoriesCount} />
+        <ListingBandSwitch initial={content.showListingBand} />
         <LoginImageField initial={content.loginImage} focus={{ x: content.loginImageFocusX, y: content.loginImageFocusY }} />
       </div>
       <p className="mb-4 t-small text-muted">

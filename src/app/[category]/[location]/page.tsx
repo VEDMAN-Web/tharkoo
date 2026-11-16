@@ -266,6 +266,7 @@ export default async function LocationPage({ params, searchParams }: Props) {
     citySlug: loc.kind === "city" ? citySlug : undefined,
     labels,
   });
+  const homeContent = await getHomepageContent();
   const frame = listingFrameProps({
     crumbs,
     h1,
@@ -280,12 +281,31 @@ export default async function LocationPage({ params, searchParams }: Props) {
     picks,
     toggles,
     panelPath: canonicalPath,
+    total: feed.total,
     labels,
     places,
+    showBand: homeContent.showListingBand,
+    template: {
+      state: {
+        category: { slug: categorySlug, name: cat.name || categorySlug },
+        ...(loc.kind === "city" ? { city: { slug: citySlug, name: loc.name || citySlug } } : { state: { slug: loc.slug || location, name: loc.name || location } }),
+        toggles,
+        picks,
+        fields: cat.fields,
+      },
+      crumbs,
+      h1,
+      total: feed.total,
+      nearby: own,
+      placeName: loc.name || undefined,
+      pagePath: canonicalPath,
+      t,
+    },
   });
   return (
     <div data-card-width={cardWidth}>
       <ListingFrame
+        header={frame.header}
         bandStyle={frame.bandStyle}
         labels={labels}
         head={frame.head}

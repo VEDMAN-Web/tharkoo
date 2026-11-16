@@ -198,10 +198,10 @@ test.describe("H7.85 preview and city", () => {
 });
 
 test.describe("H7.85 desktop fit", () => {
-  test("step 1 shows all 11 tiles with no inner scroll and no page scroll at 1366x768 and 1536x730, and Preview shows only under 1024 px", async ({ page, baseURL }) => {
+  test("step 1 shows all 11 tiles with no inner scroll and no page scroll at 1366x768, 1536x730 and 1536x674, and Preview shows only under 1024 px", async ({ page, baseURL }) => {
     test.setTimeout(120_000);
     const api = await startAd(page, baseURL!, "fit", "Mumbai");
-    const cases: [number, number][] = [[1366, 768], [1536, 730], [1024, 768], [768, 1024]];
+    const cases: [number, number][] = [[1366, 768], [1536, 730], [1536, 674], [1440, 900], [1024, 768], [768, 1024]];
     for (const [width, height] of cases) {
       await page.setViewportSize({ width, height });
       await page.goto("/u/post-insert/");

@@ -2,7 +2,7 @@ import { createHmac } from "node:crypto";
 import { existsSync, mkdirSync, readFileSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import { expect, request, test as base, type APIRequestContext, type Page } from "@playwright/test";
-import { MongoClient, type Db } from "mongodb";
+import { MongoClient, ObjectId, type Db } from "mongodb";
 
 export const ADMIN_EMAIL = process.env.ADMIN_BOOTSTRAP_EMAIL || "homepage-admin@example.test";
 export const ADMIN_PASSWORD = process.env.ADMIN_BOOTSTRAP_PASSWORD || "HomepageAdmin1!";
@@ -124,6 +124,42 @@ export async function loginUi(page: Page, email: string, password = USER_PASSWOR
   await page.goto(next || "/u/account/dashboard/");
 }
 
+/** Puts credits in the signed-in account's wallet in the in-memory test database. Posting an ad costs credits. */
+export async function grantCredits(page: Page, credits = 100) {
+  const me = await page.request.get("/api/auth/me");
+  const id = ((await me.json()).data?.user?.id ?? "") as string;
+  expect(id, "signed-in account id").toBeTruthy();
+  await withLocalDb((db) =>
+    db.collection("wallet_entries").insertOne({
+      userId: new ObjectId(id),
+      delta: credits,
+      reason: "e2e grant",
+      refType: "e2e",
+      refId: `e2e-${Date.now()}`,
+      balanceAfter: credits,
+      idempotencyKey: `e2e-${id}-${Date.now()}-${Math.random()}`,
+      createdAt: new Date(),
+    }),
+  );
+}
+
+/** Answers GET /api/wallet/posting-fee the way the paid-posting server does, with the account's real balance. A fee of 0 or a missing endpoint means posting is free. */
+export async function stubPostingFee(page: Page, fee = 30) {
+  await page.route("**/api/wallet/posting-fee", async (route) => {
+    if (fee === 404) return route.fulfill({ status: 404, contentType: "application/json", body: JSON.stringify({ ok: false, error: { code: "NOT_FOUND", message: "Not found" } }) });
+    let balance = 0;
+    try {
+      const own = await page.request.get("/api/wallet/");
+      balance = (JSON.parse(await own.text()) as { data?: { balance?: number } }).data?.balance ?? 0;
+    } catch {
+      balance = 0;
+    }
+    const short = Math.max(0, fee - balance);
+    const data = { fee, balance, after: Math.max(0, balance - fee), short, enough: short === 0, creditPriceInr: 10, mockPaymentsOn: true };
+    return route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({ ok: true, data }) });
+  });
+}
+
 /** Saves a seller profile for the signed-in page (H7.2b). Needed before the post-ad form opens in the New design. */
 export async function becomeSeller(page: Page, base: string, name = "E2E Seller", city = "Mumbai") {
   const res = await page.request.put("/api/auth/seller-profile", {
@@ -131,6 +167,7 @@ export async function becomeSeller(page: Page, base: string, name = "E2E Seller"
     data: { name, city, whatsapp: "", availableNow: false },
   });
   expect(res.status(), await res.text()).toBe(200);
+  await grantCredits(page);
 }
 
 /** Visible-or-not safe text of the page, scripts and styles removed. */
@@ -187,7 +224,7 @@ export function isPhone(page: Page) {
 /** The first listing path (one that has a contact method) found on a city feed, e.g. /ad/demo-0352/. */
 export async function firstAdPath(page: Page, feed = "/dating/bengaluru/") {
   await page.goto(feed);
-  const link = page.locator("[data-tk=card] a[href*=\"/ad/\"]").first();
+  const link = page.locator(":is([data-tk=card], [data-tk=home-ad]) a[href*=\"/ad/\"]").first();
   await link.waitFor({ state: "attached" });
   return (await link.getAttribute("href")) as string;
 }

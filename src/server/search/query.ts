@@ -4,6 +4,7 @@ import { connectDb } from "@/lib/db";
 import type { ListingDoc as LegacyListing } from "@/lib/models";
 import { listingPhotos } from "@/lib/media";
 import { onlineOwnerIds } from "@/server/availability/listings";
+import { firstAdVideos } from "@/server/media/video";
 import {
   Category,
   Listing,
@@ -502,13 +503,14 @@ export function trustMarks(status: string | undefined, adult: Date | undefined, 
 export async function presentRows(docs: Row[], promotions: Map<string, RankPromotion[]>, now: Date) {
   await connectDb();
   const ownerIds = [...new Set(docs.map((doc) => (doc.ownerId ? String(doc.ownerId) : "")).filter(Boolean))];
-  const [categories, locations, photos, people] = await Promise.all([
+  const [categories, locations, photos, people, videos] = await Promise.all([
     loadCategories(),
     loadLocations(),
     photoMap(docs),
     ownerIds.length
       ? User.find({ _id: { $in: ownerIds } }).select("verificationStatus attestedAdultAt").lean<{ _id: Types.ObjectId; verificationStatus?: string; attestedAdultAt?: Date }[]>()
       : Promise.resolve([]),
+    firstAdVideos(docs.map((doc) => String(doc._id))).catch(() => new Map<string, never>()),
   ]);
   const peopleById = new Map(people.map((person) => [String(person._id), person]));
   const categoryById = new Map(categories.map((row) => [String(row._id), row]));
@@ -538,6 +540,7 @@ export async function presentRows(docs: Row[], promotions: Map<string, RankPromo
     const trust = trustMarks(person?.verificationStatus, person?.attestedAdultAt, verified, photoList.length, people);
     const age = ageOf(doc.attributes);
     const price = cleanPrice(doc.price);
+    const video = videos.get(id);
     hits.push({
       ...view,
       price,
@@ -574,6 +577,7 @@ export async function presentRows(docs: Row[], promotions: Map<string, RankPromo
       lastBumpedAt: bumped ? new Date(bumped) : undefined,
       publishedAt: doc.publishedAt,
       videoVerifiedUntil: doc.videoVerifiedUntil ?? null,
+      ...(video ? { videoUrl: video.url, ...(video.posterUrl ? { videoPoster: video.posterUrl } : {}) } : {}),
       status: "live",
     });
   }

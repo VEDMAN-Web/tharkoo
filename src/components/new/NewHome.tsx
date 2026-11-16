@@ -27,10 +27,15 @@ type Hero = {
   focusY?: number;
   phoneFocusX?: number;
   phoneFocusY?: number;
+  textInImage?: boolean;
+  photoWidth?: number;
+  photoHeight?: number;
 };
 
 const BLURB_MAX = 70;
 const HOME_ADS_SHOWN = 8;
+const TEXT_IMAGE_W = 2400;
+const TEXT_IMAGE_H = 1029;
 
 function blurbOf(cat: Cat) {
   const text = (cat.homeBlurb || cat.description || "").replace(/\s+/g, " ").trim();
@@ -41,7 +46,9 @@ function blurbOf(cat: Cat) {
 function bannerFocus(hero: Hero): CSSProperties {
   const desktop = `${hero.focusX ?? 50}% ${hero.focusY ?? 25}%`;
   const phone = hero.photoPhone ? `${hero.phoneFocusX ?? 50}% ${hero.phoneFocusY ?? 25}%` : desktop;
-  return { "--tkh-focus": desktop, "--tkh-focus-phone": phone } as CSSProperties;
+  const w = hero.photoWidth && hero.photoHeight ? hero.photoWidth : TEXT_IMAGE_W;
+  const h = hero.photoWidth && hero.photoHeight ? hero.photoHeight : TEXT_IMAGE_H;
+  return { "--tkh-focus": desktop, "--tkh-focus-phone": phone, ...(hero.textInImage ? { "--tkh-ratio": `${w} / ${h}` } : {}) } as CSSProperties;
 }
 
 /** The heading of a section: eyebrow pill, H2, and an optional link on the right, aligned to the bottom. */
@@ -88,6 +95,7 @@ export function NewHome({
   paths,
   countries,
   texts,
+  categoriesCount = 4,
 }: {
   hero: Hero;
   categories: Cat[];
@@ -96,10 +104,11 @@ export function NewHome({
   paths: UrlPaths;
   countries: CountryPlaces[];
   texts: UiTextMap;
+  categoriesCount?: number;
 }) {
   const t = makeT(texts);
   const photos = new Map(shell.media.images.filter((image) => image.scope === "category" && image.photo).map((image) => [image.slug, { src: image.photo, focus: `${image.focusX ?? 50}% ${image.focusY ?? 18}%` }]));
-  const cats = categories.filter((cat) => cat.slug && cat.name).slice(0, 8);
+  const cats = categories.filter((cat) => cat.slug && cat.name).slice(0, Math.min(8, Math.max(1, categoriesCount)));
   const categoryNames = new Map(categories.map((cat) => [cat.slug || "", cat.name || ""]));
   const shown = ads.slice(0, HOME_ADS_SHOWN);
   const city = commonCity(shown);
@@ -107,6 +116,9 @@ export function NewHome({
   const adsTitle = t("home.ads.title", { city: city ? prettyPlace(city) : t("home.ads.defaultPlace") });
   const { lead, accent } = splitHeadline(hero.desktop);
   const localPhoto = hero.photo.startsWith("/");
+  const inImage = hero.textInImage === true && Boolean(hero.photo);
+  const bannerW = inImage && hero.photoWidth && hero.photoHeight ? hero.photoWidth : inImage ? TEXT_IMAGE_W : 1280;
+  const bannerH = inImage && hero.photoWidth && hero.photoHeight ? hero.photoHeight : inImage ? TEXT_IMAGE_H : 420;
   const cardLabels = {
     online: t("home.ads.online"),
     watermark: t("home.ads.watermark"),
@@ -129,28 +141,32 @@ export function NewHome({
   return (
     <div className="tkh-home">
       <section className="tkh-page" aria-label="Banner">
-        <div className="tkh-banner" style={bannerFocus(hero)}>
+        <div className="tkh-banner" style={bannerFocus(hero)} data-text-in-image={inImage ? "true" : undefined} data-phone-photo={inImage && hero.photoPhone ? "true" : undefined}>
           {hero.photo && hero.photoPhone ? (
             <picture>
               <source media="(max-width: 599px)" srcSet={hero.photoPhone} />
-              <img className="tkh-banner-img" src={hero.photo} alt={hero.photoAlt} width={1280} height={420} fetchPriority="high" />
+              <img className="tkh-banner-img" src={hero.photo} alt={hero.photoAlt} width={bannerW} height={bannerH} fetchPriority="high" />
             </picture>
           ) : hero.photo ? (
             localPhoto ? (
-              <Image className="tkh-banner-img" src={hero.photo} alt={hero.photoAlt} width={1280} height={420} priority sizes="(max-width: 1280px) 100vw, 1280px" />
+              <Image className="tkh-banner-img" src={hero.photo} alt={hero.photoAlt} width={bannerW} height={bannerH} priority sizes="(max-width: 1280px) 100vw, 1280px" />
             ) : (
-              <img className="tkh-banner-img" src={hero.photo} alt={hero.photoAlt} width={1280} height={420} />
+              <img className="tkh-banner-img" src={hero.photo} alt={hero.photoAlt} width={bannerW} height={bannerH} />
             )
           ) : (
             <span className="tkh-banner-img tkh-banner-empty" aria-hidden="true" />
           )}
-          <div className="tkh-banner-copy m-enter">
-            <h1>
-              {lead ? `${lead} ` : ""}
-              <span className="tkh-grad">{accent}</span>
-            </h1>
-            <p>{t("home.banner.sub")}</p>
-          </div>
+          {inImage ? (
+            <h1 className="tkh-sr">{hero.desktop}</h1>
+          ) : (
+            <div className="tkh-banner-copy m-enter">
+              <h1>
+                {lead ? `${lead} ` : ""}
+                <span className="tkh-grad">{accent}</span>
+              </h1>
+              <p>{t("home.banner.sub")}</p>
+            </div>
+          )}
         </div>
 
         <HomeSearchForm
@@ -215,12 +231,10 @@ export function NewHome({
           listLabel={t("home.ads.list")}
           moreHref={applyPrefixes("/search/", paths)}
           moreText={t("home.ads.all")}
-          prevLabel={t("home.ads.prev")}
-          nextLabel={t("home.ads.next")}
         >
-          {shown.map((ad) => (
+          {shown.map((ad, position) => (
             <li key={ad.slug}>
-              <HomeAdCard ad={homeAdCardData(ad, categoryNames, paths, t("card.fallbackTitle"))} labels={cardLabels} />
+              <HomeAdCard ad={homeAdCardData(ad, categoryNames, paths, t("card.fallbackTitle"))} labels={cardLabels} order={position} />
             </li>
           ))}
         </HomeAdsSection>

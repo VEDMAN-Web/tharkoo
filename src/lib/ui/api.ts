@@ -1,8 +1,14 @@
+import { PUBLISH_MESSAGES, publishMessage } from "./publish-errors";
+
 export type ApiError = {
   code?: string;
   message?: string;
   fields?: Record<string, string[]>;
   details?: Record<string, string[]>;
+  need?: number;
+  balance?: number;
+  fee?: number;
+  short?: number;
 };
 
 export type ApiResult<T> = { ok: true; data: T; status: number } | { ok: false; error: ApiError; status: number };
@@ -43,11 +49,13 @@ export function friendlyError(error: ApiError) {
     case "RATE_LIMITED":
       return "Too many requests, try again later";
     case "VERIFICATION_REQUIRED":
-      return "Your ID needs a quick check before this ad can go live.";
+      return PUBLISH_MESSAGES.VERIFICATION_REQUIRED;
+    case "INSUFFICIENT_CREDITS":
+      return error.message || "You need more credits to publish.";
     case "FREE_LIMIT":
-      return "You have reached the free ad limit for this week.";
+      return "You have reached the ad limit for this week.";
     case "POLICY_VIOLATION":
-      return error.message || "This listing does not meet the content rules.";
+      return publishMessage(error.message) || error.message || "This listing does not meet the content rules.";
     case "VALIDATION_ERROR":
       return "Please check the highlighted fields.";
     default:

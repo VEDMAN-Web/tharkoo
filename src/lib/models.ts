@@ -86,6 +86,8 @@ export interface ListingDoc extends BaseDoc {
   verified?: boolean;
   /** "Video verified" badge end (H6.5). A date string once it has passed through plain(). */
   videoVerifiedUntil?: Date | string | null;
+  videoUrl?: string;
+  videoPoster?: string;
   trust?: string[];
   subscriber?: boolean;
   lastBumpedAt?: Date;
@@ -128,6 +130,8 @@ export interface SiteDoc extends BaseDoc {
   searchPlaceholder: string;
   postCta: string;
   logoText: string;
+  logoUrl?: string;
+  logoDarkUrl?: string;
   theme: unknown;
   footerLinks: unknown;
   socialLinks: unknown;

@@ -3,27 +3,7 @@ import type { TextFn } from "@/lib/ui/text";
 import { SortSelect, type SortOption } from "./SortSelect";
 import type { SearchChip } from "./search-header";
 
-export function SearchHeader({
-  crumbs,
-  breadcrumbLabel,
-  heading,
-  total,
-  sortValue,
-  sortOptions,
-  chips,
-  clearHref,
-  t,
-}: {
-  crumbs: { name: string; path: string }[];
-  breadcrumbLabel: string;
-  heading: string;
-  total: number;
-  sortValue: string;
-  sortOptions: SortOption[];
-  chips: SearchChip[];
-  clearHref: string;
-  t: TextFn;
-}) {
+export function SearchTop({ crumbs, breadcrumbLabel, heading }: { crumbs: { name: string; path: string }[]; breadcrumbLabel: string; heading: string }) {
   return (
     <>
       <nav className="tkn-ls-crumbs" aria-label={breadcrumbLabel}>
@@ -44,31 +24,64 @@ export function SearchHeader({
         })}
       </nav>
       <h1 className="tkn-sr-h1">{heading}</h1>
-      <div className="tkn-sr-meta">
-        <p className="tkn-sr-count" data-tk="results-count">
-          {total === 1 ? t("search.count.one") : t("search.count.many", { count: total.toLocaleString("en-IN") })}
-        </p>
-        <SortSelect label={t("search.sort.label")} value={sortValue} options={sortOptions} />
-      </div>
-      {chips.length > 0 ? (
-        <ul className="tkn-sr-chips" aria-label={t("search.chips.label")} data-tk="active-chips">
-          {chips.map((chip) => (
-            <li key={chip.key}>
-              <Link className="tkn-sr-chip" href={chip.href} prefetch={false} aria-label={chip.removeLabel} data-chip={chip.key}>
-                <span>{chip.label}</span>
-                <span aria-hidden="true" className="tkn-sr-x">
-                  ×
-                </span>
-              </Link>
-            </li>
-          ))}
-          <li>
-            <Link className="tkn-sr-clear" href={clearHref} prefetch={false}>
-              {t("search.chip.clear")}
+    </>
+  );
+}
+
+export function SearchBar({
+  total,
+  place,
+  nearby,
+  sortValue,
+  sortOptions,
+  t,
+}: {
+  total: number;
+  place?: string;
+  nearby?: boolean;
+  sortValue: string;
+  sortOptions: SortOption[];
+  t: TextFn;
+}) {
+  const text =
+    total === 0 && nearby
+      ? place
+        ? t("search.count.nonePlace", { place })
+        : t("search.count.none")
+      : total === 1
+        ? t("search.count.one")
+        : t("search.count.many", { count: total.toLocaleString("en-IN") });
+  return (
+    <div className="tkn-sr-meta">
+      <p className="tkn-sr-count" data-tk="results-count">
+        {text}
+      </p>
+      <SortSelect label={t("search.sort.label")} value={sortValue} options={sortOptions} />
+    </div>
+  );
+}
+
+export function SearchChips({ chips, clearHref, t }: { chips: SearchChip[]; clearHref: string; t: TextFn }) {
+  if (chips.length === 0) return null;
+  return (
+    <div className="tkn-sr-chipswrap">
+      <ul className="tkn-sr-chips" aria-label={t("search.chips.label")} data-tk="active-chips">
+        {chips.map((chip) => (
+          <li key={chip.key}>
+            <Link className="tkn-sr-chip" href={chip.href} prefetch={false} aria-label={chip.removeLabel} data-chip={chip.key}>
+              <span>{chip.label}</span>
+              <span aria-hidden="true" className="tkn-sr-x">
+                ×
+              </span>
             </Link>
           </li>
-        </ul>
-      ) : null}
-    </>
+        ))}
+        <li>
+          <Link className="tkn-sr-clear" href={clearHref} prefetch={false}>
+            {t("search.chip.clear")}
+          </Link>
+        </li>
+      </ul>
+    </div>
   );
 }

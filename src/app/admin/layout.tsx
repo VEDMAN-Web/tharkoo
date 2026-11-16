@@ -1,6 +1,7 @@
 import { getStaffFromHeaders, isStaff } from "@/lib/admin-auth";
 import { AdminLoginForm } from "@/components/admin/AdminLoginForm";
 import { AdminViewerProvider } from "@/components/admin/AdminShell";
+import { MockPaymentsBanner } from "@/components/admin/MockPaymentsBanner";
 import { pageMetadata } from "@/lib/ui/meta";
 import "@/styles/admin.css";
 
@@ -19,6 +20,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
   if (!isStaff(identity)) return <AdminLoginForm />;
   return (
     <AdminViewerProvider name={identity.name} roles={identity.roles}>
+      <MockPaymentsBanner />
       {children}
     </AdminViewerProvider>
   );

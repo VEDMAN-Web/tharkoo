@@ -48,10 +48,10 @@ export function GalleryViewer({ items, index, title, onIndex, onClose }: { items
       {count > 1 ? (
         <>
           <button type="button" className="tkn-gal-nav is-prev" aria-label={t("ad.gallery.prev")} onClick={() => onIndex(wrapIndex(index - 1, count))}>
-            <ChevronLeft size={22} aria-hidden />
+            <ChevronLeft size={28} aria-hidden />
           </button>
           <button type="button" className="tkn-gal-nav is-next" aria-label={t("ad.gallery.next")} onClick={() => onIndex(wrapIndex(index + 1, count))}>
-            <ChevronRight size={22} aria-hidden />
+            <ChevronRight size={28} aria-hidden />
           </button>
         </>
       ) : null}

@@ -22,12 +22,12 @@ export function fillTemplate(template: string, vars: SeoVars) {
 export const DEFAULT_SEO = {
   home: {
     pageType: "home",
-    title: "Free classified ads in India | Tharkoo",
-    description: "Tharkoo is a classifieds board for Indian cities: dating, friendship, meetups, jobs, homes, vehicles, pets, and local services. Post a basic ad for free.",
+    title: "Classified ads in India | Tharkoo",
+    description: "Tharkoo is a classifieds board for Indian cities: dating, friendship, meetups, jobs, homes, vehicles, pets, and local services. Post your ad in 2 minutes.",
     h1: "Classifieds in your city",
     h2: "People, work, homes, and local services",
-    intro: "Tharkoo lists classifieds across Indian cities. Choose a category, open a city, and contact the person who posted. A basic ad is free within the weekly limit.",
-    footer: "New cities open over time. Posting is free within weekly limits; paid bumps move an ad to the top of the feed.",
+    intro: "Tharkoo lists classifieds across Indian cities. Choose a category, open a city, and contact the person who posted. Post your ad in 2 minutes.",
+    footer: "New cities open over time. Paid bumps move an ad to the top of the feed.",
   },
   category: {
     pageType: "category",

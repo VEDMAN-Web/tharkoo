@@ -110,6 +110,54 @@ export async function applyHomepageChange(input: {
   return writeContent(parsed.content, input.email, "site.homepage.update", before);
 }
 
+/** H7.104: the "Show photo band on listing pages" switch. Off by default. Same role check, audit entry and cache refresh as the homepage save. */
+export async function applyListingBandSwitch(input: { roles: string[]; email: string; on: boolean }) {
+  if (!isAdminRole(input.roles)) throw new ForbiddenError("Only an admin can edit the homepage");
+  await connectDb();
+  const current = await Site.findOne({ key: "default" }).lean();
+  const content = { ...readContent(current?.homepage), showListingBand: input.on === true };
+  return applyHomepageChange({ roles: input.roles, email: input.email, content });
+}
+
+/** H7.104: how many categories the Home categories block shows (1 to 8, default 4). Same role check, audit entry and cache refresh as the homepage save. */
+export async function applyHomeCategoriesCount(input: { roles: string[]; email: string; count: number }) {
+  if (!isAdminRole(input.roles)) throw new ForbiddenError("Only an admin can edit the homepage");
+  if (!Number.isInteger(input.count) || input.count < 1 || input.count > 8) {
+    throw new ValidationError("Enter a number from 1 to 8", { count: ["Enter a number from 1 to 8"] });
+  }
+  await connectDb();
+  const current = await Site.findOne({ key: "default" }).lean();
+  const content = { ...readContent(current?.homepage), homeCategoriesCount: input.count };
+  return applyHomepageChange({ roles: input.roles, email: input.email, content });
+}
+
+/** H7.105: the Home banner picture, its alt text and the "headline is already in the picture" switch. Same role check, audit entry and cache refresh as the homepage save. */
+export async function applyHomeBanner(input: {
+  roles: string[];
+  email: string;
+  photo: string;
+  photoWidth: number;
+  photoHeight: number;
+  photoPhone: string;
+  photoAlt: string;
+  textInImage: boolean;
+}) {
+  if (!isAdminRole(input.roles)) throw new ForbiddenError("Only an admin can edit the homepage");
+  await connectDb();
+  const current = await Site.findOne({ key: "default" }).lean();
+  const base = readContent(current?.homepage);
+  const hero = {
+    ...base.hero,
+    photo: input.photo || base.hero.photo,
+    photoWidth: input.photo ? input.photoWidth : base.hero.photoWidth,
+    photoHeight: input.photo ? input.photoHeight : base.hero.photoHeight,
+    photoPhone: input.photoPhone,
+    photoAlt: input.photoAlt.trim() || base.hero.photoAlt,
+    textInImage: input.textInImage === true,
+  };
+  return applyHomepageChange({ roles: input.roles, email: input.email, content: { ...base, hero } });
+}
+
 /**
  * Saves the home page title and description from the Home page editor (H6.10).
  * It writes the same stored fields the public page reads (Site.homepage.content.seoTitle and seoDescription),

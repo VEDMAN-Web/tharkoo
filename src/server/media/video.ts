@@ -8,7 +8,7 @@ import { isStaffRole } from "@/server/auth/service";
 import { ForbiddenError, NotFoundError } from "@/server/http";
 import { MediaAsset, User } from "@/server/models";
 import { cloudinaryClient } from "@/server/media/client";
-import { VIDEO_HIDE_REPORTS, optionalCloudinary } from "@/server/media/config";
+import { AD_VIDEO_EAGER, VIDEO_HIDE_REPORTS, optionalCloudinary } from "@/server/media/config";
 import { VideoReport } from "@/server/reports/video-report";
 
 const audit = new AuditRepository();
@@ -35,7 +35,7 @@ export function videoUrls(objectKey: string): { url: string; posterUrl: string |
   const env = optionalCloudinary();
   if (!env) return { url: "", posterUrl: null };
   const base = `https://res.cloudinary.com/${env.cloudName}/video/upload`;
-  return { url: `${base}/f_auto,q_auto/${objectKey}`, posterUrl: `${base}/so_0,f_jpg,c_limit,w_960,q_auto/${objectKey}.jpg` };
+  return { url: `${base}/${AD_VIDEO_EAGER}/${objectKey}`, posterUrl: `${base}/so_0,f_jpg,c_limit,w_960,q_auto/${objectKey}.jpg` };
 }
 
 function shape(asset: { _id: mongoose.Types.ObjectId; objectKey: string; contentType?: string }): AdVideo | null {
@@ -74,6 +74,27 @@ export async function listAdVideos(listingId: string): Promise<AdVideo[]> {
     .filter((asset) => count(listingId, asset._id.toString()) < VIDEO_HIDE_REPORTS)
     .map(shape)
     .filter((video): video is AdVideo => video !== null);
+}
+
+/** The first video a visitor may see for each of these ads, in one query. Ads with none are left out. */
+export async function firstAdVideos(listingIds: string[]): Promise<Map<string, AdVideo>> {
+  const ids = listingIds.filter((id) => mongoose.isValidObjectId(id));
+  const found = new Map<string, AdVideo>();
+  if (ids.length === 0) return found;
+  await connectDb();
+  const assets = await MediaAsset.find({ listingId: { $in: ids }, kind: "video", status: "cleared" })
+    .sort({ createdAt: 1 })
+    .select("listingId objectKey contentType")
+    .lean();
+  if (assets.length === 0) return found;
+  const count = await openReportCounts(ids.map((id) => new mongoose.Types.ObjectId(id)));
+  for (const asset of assets) {
+    const listing = asset.listingId?.toString() ?? "";
+    if (!listing || found.has(listing) || count(listing, asset._id.toString()) >= VIDEO_HIDE_REPORTS) continue;
+    const video = shape(asset);
+    if (video) found.set(listing, video);
+  }
+  return found;
 }
 
 /** The advertiser's own videos for an ad (shown in the post and edit forms), hidden ones included. */

@@ -6,6 +6,7 @@ import { bandStyleFor } from "./band-image";
 import { ListingHead } from "./ListingHead";
 import { ListingSearchForm } from "./ListingSearchForm";
 import { ListingFilterPanel, type KeywordProps } from "./ListingFilterPanel";
+import { SEARCH_BASE, templateHeader, type TemplateInput } from "./listing-template";
 import {
   activeFilterCount,
   panelRows,
@@ -33,12 +34,15 @@ export function listingLabels(t: TextFn): ListingLabels {
     state: t("listing.panel.state"),
     city: t("listing.panel.city"),
     area: t("listing.panel.area"),
+    allCategories: t("listing.panel.allCategories"),
     allStates: t("listing.panel.allStates"),
     allCities: t("listing.panel.allCities"),
     allAreas: t("listing.panel.allAreas"),
     pickCity: t("listing.panel.pickCity"),
     clear: t("listing.panel.clear"),
     apply: t("listing.panel.apply"),
+    show: t("listing.panel.show"),
+    showOne: t("listing.panel.showOne"),
     noFilters: t("listing.panel.noFilters"),
     verified: t("listing.filters.verified"),
     photos: t("listing.filters.photos"),
@@ -118,7 +122,7 @@ export function searchPlaceSelects(input: {
   const citySlug = input.params.city || "";
   const cities = stateSlug ? input.cities.filter((city) => !city.stateSlug || city.stateSlug === stateSlug) : input.cities;
   return {
-    categories: [{ value: "", label: input.labels.all, href: hrefFor({ category: "" }) }, ...options(input.categories, "category")],
+    categories: [{ value: "", label: input.labels.allCategories, href: hrefFor({ category: "" }) }, ...options(input.categories, "category")],
     categoryValue: input.params.category || "",
     states: [{ value: "", label: input.labels.allStates, href: hrefFor({ state: "", city: "", area: "" }) }, ...options(input.states, "state", { city: "", area: "" })],
     stateValue: stateSlug,
@@ -153,10 +157,29 @@ export function listingFrameProps(input: {
   panelHidden?: { name: string; value: string }[];
   placesOnly?: boolean;
   keyword?: KeywordProps;
+  total?: number;
+  activeCount?: number;
+  /** H7.104: the shared listing header. With it, and without the photo band, the page gets the /search/ header and the page's own filters are counted. */
+  template?: TemplateInput;
+  showBand?: boolean;
 }) {
   const rows = panelRows(input.fields, input.picks);
-  const activeCount = activeFilterCount(rows, input.toggles);
+  const useTemplate = Boolean(input.template) && !input.showBand;
+  const made = input.template && useTemplate ? templateHeader(input.template, input.labels) : null;
+  const activeCount = made ? made.chips.length : (input.activeCount ?? activeFilterCount(rows, input.toggles));
+  const keyword: KeywordProps | undefined =
+    made && input.template
+      ? {
+          base: SEARCH_BASE,
+          params: Object.fromEntries(Object.entries(made.params).map(([key, value]) => [key, [value].flat().join(",")])),
+          defaultValue: "",
+          label: input.template.t("search.keyword.label"),
+          placeholder: input.template.t("search.keyword.placeholder"),
+          listLabel: input.template.t("search.keyword.suggestions"),
+        }
+      : input.keyword;
   return {
+    header: made?.header,
     bandStyle: bandStyleFor(input.photo),
     head: <ListingHead crumbs={input.crumbs} h1={input.h1} intro={input.intro} labels={input.labels} />,
     chips: input.chips,
@@ -172,7 +195,7 @@ export function listingFrameProps(input: {
     filters: (
       <ListingFilterPanel
         action={input.panelPath}
-        clearHref={input.panelPath}
+        clearHref={made ? SEARCH_BASE : input.panelPath}
         rows={rows}
         activeCount={activeCount}
         toggles={input.toggles}
@@ -180,7 +203,8 @@ export function listingFrameProps(input: {
         places={input.places}
         hidden={input.panelHidden}
         placesOnly={input.placesOnly}
-        keyword={input.keyword}
+        keyword={keyword}
+        total={input.total}
       />
     ),
     activeCount,

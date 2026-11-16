@@ -86,8 +86,8 @@ export function defaultShellConfig(): ShellConfig {
       postLabel: "Post your ad",
     },
     footer: {
-      about: "Post free ads, chat online and verify on a video call before you meet. Across India and more countries.",
-      trust: ["Photo verified", "Private chat", "Free to post"],
+      about: "Post your ad in 2 minutes, chat online and verify on a video call before you meet. Across India and more countries.",
+      trust: ["Photo verified", "Private chat", "Across India"],
       quickLinks: [
         link("Home", "/", "home"),
         link("Browse ads", "/search/", "grid"),
@@ -126,14 +126,14 @@ export function defaultShellConfig(): ShellConfig {
     },
     home: {
       trust: [
-        { label: "Free to post", tone: "pink" },
+        { label: "Across India", tone: "pink" },
         { label: "Chat online now", tone: "green" },
         { label: "Video call and verify", tone: "violet" },
         { label: "Photo verified badges", tone: "sky" },
         { label: "Ads live for 72 hours", tone: "pink" },
       ],
       steps: [
-        { title: "Post for free", text: "Add photos and videos, pick a category and city." },
+        { title: "Post your ad", text: "Add photos and videos, pick a category and city." },
         { title: "Chat online", text: "People message you on Tharkoo or WhatsApp and can ask for more photos." },
         { title: "Verify on video", text: "A short live video call shows the item or place is real before anyone meets." },
       ],

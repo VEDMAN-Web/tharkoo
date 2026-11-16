@@ -38,6 +38,8 @@ export interface SiteDoc extends BaseDoc {
   searchPlaceholder?: string;
   postCta?: string;
   logoText?: string;
+  logoUrl?: string;
+  logoDarkUrl?: string;
   theme?: unknown;
   footerLinks?: unknown;
   socialLinks?: unknown;
@@ -186,6 +188,8 @@ const siteSchema = new Schema<SiteDoc>(
     searchPlaceholder: String,
     postCta: String,
     logoText: String,
+    logoUrl: String,
+    logoDarkUrl: String,
     theme: Schema.Types.Mixed,
     footerLinks: Schema.Types.Mixed,
     socialLinks: Schema.Types.Mixed,

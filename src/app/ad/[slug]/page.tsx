@@ -122,7 +122,7 @@ export default async function AdPage({ params }: Props) {
   const listingId = row?._id ? String(row._id) : undefined;
   const [cat, related, videos, tourOffer, newDesign, peopleAd] = await Promise.all([
     getCategory(ad.categorySlug || ""),
-    getRelated(ad, 6),
+    getRelated(ad, 12),
     listingId ? listAdVideos(listingId).catch(() => []) : Promise.resolve([]),
     listingId ? videoTourOffer(listingId) : Promise.resolve(null),
     newDesignOn(),
@@ -130,7 +130,7 @@ export default async function AdPage({ params }: Props) {
     listingId ? listingIsPeople(listingId) : Promise.resolve(true),
   ]);
   const tour = listingId && tourOffer ? { listingId, coins: tourOffer.coins } : null;
-  const owner = row?.ownerId ? ((await User.findById(row.ownerId).select("displayName").lean()) as { displayName?: string } | null) : null;
+  const owner = row?.ownerId ? ((await User.findById(row.ownerId).select("displayName createdAt").lean()) as { displayName?: string; createdAt?: Date } | null) : null;
   const adView = { ...plain(ad), details: adDetailRows(row?.attributes, cat?.fields) };
   const cover = safePhoto(ad.photos?.[0]);
   const paths = await getPaths();
@@ -176,6 +176,8 @@ export default async function AdPage({ params }: Props) {
           related={plain(related)}
           listingId={listingId}
           videos={videos}
+          paths={paths}
+          memberSince={owner?.createdAt ? new Date(owner.createdAt).toISOString() : ""}
           crumbs={crumbs}
           shareUrl={shareUrl}
           heading={heading}
@@ -183,16 +185,12 @@ export default async function AdPage({ params }: Props) {
           peopleAd={peopleAd}
           paymentsLive={coinProviderName() !== "mock"}
           alternatives={popupAlternatives(plain(ad), plain(related), paths)}
-          texts={pickTexts(await textOverrides(), "ad.", "card.")}
+          texts={pickTexts(await textOverrides(), "ad.", "card.", "home.ads.")}
         />
       ) : (
         <AdDetail ad={adView} categoryName={catName} related={plain(related)} listingId={listingId} crumbs={crumbs} shareUrl={shareUrl} heading={heading} tour={tour} peopleAd={peopleAd} />
       )}
-      {newDesign ? null : (
-        <div className="tk-container">
-          <AdCountsBar slug={ad.slug || slug} />
-        </div>
-      )}
+      <AdCountsBar slug={ad.slug || slug} />
       {newDesign ? null : <AdVideos videos={videos} title={displayTitle(ad.title) || "Listing"} />}
     </>
   );

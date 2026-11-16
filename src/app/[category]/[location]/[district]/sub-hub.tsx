@@ -136,6 +136,7 @@ export async function SubHub({ params, page }: { params: SubHubParams; page: num
       ? { text: `No ads in ${hub.city.name} yet. Here are ads close by.`, button: `Post the first ad in ${hub.city.name}`, href: postAdPath(paths) }
       : undefined;
   const labels = listingLabels(t);
+  const homeContent = await getHomepageContent();
   const frame = listingFrameProps({
     crumbs,
     h1,
@@ -152,6 +153,23 @@ export async function SubHub({ params, page }: { params: SubHubParams; page: num
     panelPath: canonicalPath,
     labels,
     placesOnly: true,
+    showBand: homeContent.showListingBand,
+    template: {
+      state: {
+        category: { slug: catSlug, name: hub.cat.name || catSlug },
+        city: { slug: citySlug, name: hub.city.name || citySlug },
+        toggles: { verified: false, photos: false, video: false, online: false },
+        picks: {},
+      },
+      crumbs,
+      h1,
+      total: feed.total,
+      nearby: own,
+      placeName: hub.city.name || undefined,
+      pagePath: canonicalPath,
+      extraChips: [{ key: "sub", label: `${hub.sub.name}`, removeLabel: `Remove ${hub.sub.name}`, href: placePath(catSlug, citySlug) }],
+      t,
+    },
     places: placeSelects({
       categorySlug: catSlug,
       categories,
@@ -166,6 +184,7 @@ export async function SubHub({ params, page }: { params: SubHubParams; page: num
   return (
     <div data-card-width={cardWidth}>
     <ListingFrame
+      header={frame.header}
       bandStyle={frame.bandStyle}
       labels={labels}
       head={frame.head}

@@ -22,7 +22,7 @@ export async function generateMetadata() {
   return withSeoDefaults(
     await withUrlSeo(PATH, {
       title: "All countries: browse classifieds by country | Tharkoo",
-      description: "Every country and city on Tharkoo with the number of live ads. Pick a place to browse free classifieds.",
+      description: "Every country and city on Tharkoo with the number of live ads. Pick a place to browse classifieds.",
       path: PATH,
     }),
   );
@@ -54,7 +54,7 @@ export default async function CountriesPage() {
       band={{
         crumbs,
         h1: "All countries",
-        intro: "Pick a country to browse free classifieds. Every country lists its cities with the number of live ads.",
+        intro: "Pick a country to browse classifieds. Every country lists its cities with the number of live ads.",
         photo: bandChoice(shell, hero, {}),
         searchAction: searchPath(paths),
         placeholder: "Search ads",

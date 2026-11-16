@@ -9,6 +9,7 @@ import { isCityAlias } from "@/lib/seo/district-alias";
 import { PriceTag } from "../search/PriceTag";
 import { formatPrice } from "../search/price";
 import { PhotoSwipe } from "./PhotoSwipe";
+import { CardVideo } from "./CardVideo";
 import { SaveButton } from "./SaveButton";
 import { viewsLabel } from "@/components/ad/counts-format";
 import { api, friendlyError } from "@/lib/ui/api";
@@ -16,8 +17,7 @@ import { adPath } from "@/lib/urls";
 import { useUrlPaths } from "../UrlPaths";
 import { makeT, type TextFn, type UiTextMap } from "@/lib/ui/text";
 import { videoVerifiedLabel } from "../ad/tourLabels";
-import { recordAdClick, useShownCounts, watchAdCard } from "../ad/adCountStore";
-import { AdCountsLabel } from "../ad/AdCountsLabel";
+import { recordAdClick, watchAdCard } from "../ad/adCountStore";
 import { useSellerStatus } from "../availability/sellerStatus";
 import { AvailabilityBadge } from "../availability/AvailabilityBadge";
 
@@ -80,7 +80,6 @@ export function AdCard({
   const tier = variant in TIER_KEYS ? t(TIER_KEYS[variant as keyof typeof TIER_KEYS]) : "";
   const videoVerified = videoVerifiedLabel(ad.videoVerifiedUntil);
   const cardRef = useRef<HTMLElement>(null);
-  const counts = useShownCounts(ad.slug || "");
   const isOwner = Boolean(owner);
   // H7.5: the seller's Online now or Away, and whether calls are allowed. The owner view does not show it.
   const seller = useSellerStatus(isOwner ? undefined : ad.slug);
@@ -118,7 +117,8 @@ export function AdCard({
     return (
       <article ref={cardRef} className="tk-card tkn-ls-card m-lift" data-tk="card" data-reveal data-variant={variant} onClickCapture={onCardClick}>
         <div className="tkn-ls-photo">
-          <PhotoSwipe photos={photos} title={title} seed={ad.slug || title} category={ad.categorySlug} priority={priority} />
+          <PhotoSwipe photos={photos} title={title} seed={ad.slug || title} category={ad.categorySlug} priority={priority} href={href} />
+          {ad.videoUrl ? <CardVideo url={ad.videoUrl} poster={ad.videoPoster} card={cardRef} /> : null}
           {tier ? (
             <span className="tkn-ls-tier" data-tier={variant}>
               {tier}
@@ -150,10 +150,11 @@ export function AdCard({
             {ad.categorySlug ? <span className="tkn-ls-pill-cat">{prettyPlace(ad.categorySlug)}</span> : null}
             {placeText ? <span className="tkn-ls-pill-place">{placeText}</span> : null}
           </div>
-          <div className="tkn-ls-foot">
-            {priceText ? <span className="tkn-ls-price" data-tk="card-price">{priceText}</span> : <span />}
-            <AdCountsLabel counts={counts ?? { views: 0, clicks: 0 }} />
-          </div>
+          {priceText ? (
+            <div className="tkn-ls-foot">
+              <span className="tkn-ls-price" data-tk="card-price">{priceText}</span>
+            </div>
+          ) : null}
         </div>
       </article>
     );
@@ -249,9 +250,7 @@ export function AdCard({
           </div>
           {owner.actions ? <div className="tkp-owner-actions">{owner.actions}</div> : null}
         </div>
-      ) : (
-        <AdCountsLabel counts={counts} />
-      )}
+      ) : null}
     </article>
   );
 }

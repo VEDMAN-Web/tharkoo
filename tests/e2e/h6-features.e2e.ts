@@ -52,10 +52,15 @@ async function fillAdInformation(page: Page, title: string) {
   await page.locator("[data-tk=go-on]").click();
   await page.locator("#city").selectOption({ label: "Mumbai" });
   await page.locator("#nickname").fill("Asha");
-  await page.locator("#role").fill("Office assistant");
+  const roleHere = (await page.locator("#role").count()) > 0;
+  if (roleHere) await page.locator("#role").fill("Office assistant");
   await page.locator("#title").fill(title);
   await page.locator("#text").fill("A weekday office role with a clear description of the work and the hours.");
   await page.locator("[data-tk=go-on]").click();
+  if (!roleHere) {
+    await page.locator("#role").fill("Office assistant");
+    await page.locator("[data-tk=go-on]").click();
+  }
 }
 
 test.describe("H6.2 categories and sub-category chips", () => {
@@ -93,7 +98,7 @@ test.describe("H6.3 video rule on the post form", () => {
     await fillAdInformation(page, `E2E video rule ${Date.now()}`);
     await page.locator("[data-tk=photo-input]").waitFor({ state: "attached" });
     // H6.18 wording: one limit of 10 for photos and videos together.
-    await expect(page.getByText("Videos: max 10 MB and 30 seconds each. Photos and videos: up to 10 in total.", { exact: true })).toBeVisible();
+    await expect(page.getByText("Videos: max 100 MB and 60 seconds each. Photos and videos: up to 10 in total.", { exact: true })).toBeVisible();
   });
 });
 

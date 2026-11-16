@@ -5,6 +5,7 @@ import { JsonLd } from "@/lib/jsonld";
 import { canonical } from "@/lib/seo";
 import { safeHref } from "@/lib/sanitize";
 import type { SiteContent } from "@/lib/ui/site-content";
+import { LOGO_DARK_DEFAULT, LOGO_LIGHT_DEFAULT, type SiteLogos } from "@/lib/brand";
 import type { UiTextMap } from "@/lib/ui/text";
 import type { UrlPaths } from "@/lib/urls";
 import type { ShellConfig } from "@/server/site-links/shell-config-rules";
@@ -37,6 +38,7 @@ export type ChromeData = {
     countryName?: string;
     supportHours?: string;
     logoText?: string;
+    logos?: SiteLogos;
   };
   content: Pick<SiteContent, "hero" | "header" | "socials" | "support" | "footer" | "age" | "cookies">;
   footerLinks: NavLink[];
@@ -70,6 +72,7 @@ export function PathChrome({ shell, paths, children }: { shell: ChromeData; path
   // Style guides are tool pages: no age gate and no cookie banner.
   const toolPage = path.startsWith("/styleguide");
   const siteName = site.logoText || site.name || "Tharkoo";
+  const logos = site.logos ?? { light: LOGO_LIGHT_DEFAULT, dark: LOGO_DARK_DEFAULT };
   return (
     <UrlPathProvider paths={paths}>
     <UiTextProvider texts={texts}>
@@ -88,9 +91,9 @@ export function PathChrome({ shell, paths, children }: { shell: ChromeData; path
       )}
       {newDesign ? (
         <div className="tkn" data-design="new">
-          <HeaderNew siteName={siteName} shell={config} cities={cities} countries={countries} categories={categories} texts={texts} />
+          <HeaderNew siteName={siteName} logo={logos.light} shell={config} cities={cities} countries={countries} categories={categories} texts={texts} />
           <MainInner>{children}</MainInner>
-          <FooterNew siteName={siteName} shell={config} categories={categories} />
+          <FooterNew siteName={siteName} logo={logos.light} shell={config} categories={categories} />
           <SupportChat chat={config.chat} texts={texts} hours={content.support.hours || site.supportHours || ""} />
           <SignInPopup showMobile={signIn.showMobile} image={signIn.image} imageFocus={signIn.imageFocus} />
         </div>

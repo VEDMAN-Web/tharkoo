@@ -1,0 +1,17 @@
+{
+  "branchPrefix": "haiku/h7.81",
+  "globs": [
+    "docs/ownership/H7.81.json",
+    "src/app/u/account/kyc/page.tsx",
+    "src/app/u/account/media/page.tsx",
+    "src/app/u/account/delete/page.tsx",
+    "src/app/u/seller-profile/page.tsx",
+    "src/components/buyer/PanelPage.tsx",
+    "src/components/buyer/KycPanel.tsx",
+    "src/components/buyer/SettingsPanel.tsx",
+    "src/components/buyer/user-panel.css",
+    "src/components/account/AccountTools.tsx",
+    "src/components/auth/SellerProfileForm.tsx",
+    "tests/e2e/account-pages.e2e.ts"
+  ]
+}

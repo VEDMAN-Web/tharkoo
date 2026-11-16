@@ -61,7 +61,7 @@ const PHONE_TOUR_LABELS = ["WhatsApp", "Chat", `Video · ${TOUR_COINS} credits`]
 /** The first ad on a city feed. (firstAdPath needs a super-top card, which the property feed may not have.) */
 async function anyAdPath(page: Page, feed: string) {
   await page.goto(feed);
-  const link = page.locator("[data-tk=card] a[href*=\"/ad/\"]").first();
+  const link = page.locator(":is([data-tk=card], [data-tk=home-ad]) a[href*=\"/ad/\"]").first();
   await link.waitFor({ state: "attached" });
   return (await link.getAttribute("href")) as string;
 }
@@ -256,21 +256,28 @@ test.describe("H6.8 contact card on a property ad with live tours on", () => {
   });
 });
 
-test.describe("H6.8 contact card at tablet width (768 px)", () => {
+test.describe("H7.99b contact bar at tablet width (768 px)", () => {
   test.use({ viewport: { width: 768, height: 1024 } });
 
-  test("the contact card shows the four buttons stacked at full width, with no horizontal scroll", async ({ page }) => {
+  test("below 1024 px the contact card gives way to a bottom bar with the buttons side by side and no horizontal scroll", async ({ page }) => {
     const original = await readPropertyTourSwitch();
     await writePropertyTourSwitch({ enabled: true, coins: TOUR_COINS });
     try {
       await page.goto(await anyAdPath(page, PROPERTY_FEED));
       await expect(page.locator("h1")).toHaveCount(1);
-      await expect(page.locator("[data-tk=contact-card]")).toBeVisible();
-      expect(await buttonLabels(page)).toEqual([...BASE_LABELS, TOUR_LABEL]);
+      const bar = page.locator("[data-tk=bottom-bar]");
+      await expect(bar).toBeVisible();
+      await expect(page.locator("[data-tk=contact-card] [data-tk=call]")).toBeHidden();
       expect(await hasHorizontalScroll(page)).toBe(false);
-      const boxes = await expectTapTargets(page);
-      const tops = new Set(boxes.map((box) => Math.round(box.y)));
-      expect(tops.size).toBe(boxes.length);
+      const boxes = await bar.locator(".tk-btn").evaluateAll((els) =>
+        els.map((el) => {
+          const r = el.getBoundingClientRect();
+          return { x: r.x, y: r.y, width: r.width, height: r.height };
+        }),
+      );
+      expect(boxes.length).toBeGreaterThanOrEqual(2);
+      for (const box of boxes) expect(box.height).toBeGreaterThanOrEqual(44);
+      expect(new Set(boxes.map((box) => Math.round(box.y))).size).toBe(1);
     } finally {
       await writePropertyTourSwitch(original);
     }

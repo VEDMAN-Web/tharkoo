@@ -11,9 +11,9 @@ test.describe("H7.90: compact search results page", () => {
     await expect(page.locator('[data-tk="listing-band"]')).toHaveCount(0);
     const header = page.locator('[data-tk="results-header"]');
     await expect(header.locator("h1")).toHaveText("All ads in India");
-    await expect(header.locator('[data-tk="results-count"]')).toHaveText(/^[\d,]+ ads$/);
+    await expect(page.locator('[data-tk="results-count"]')).toHaveText(/^[\d,]+ ads$/);
     expect((await header.boundingBox())!.height).toBeLessThanOrEqual(140);
-    const firstCard = (await page.locator('[data-tk="card"]').first().boundingBox())!;
+    const firstCard = (await page.locator(':is([data-tk=card], [data-tk=home-ad])').first().boundingBox())!;
     expect(firstCard.y).toBeLessThan(768);
     expect(await hasHorizontalScroll(page)).toBe(false);
   });
@@ -22,8 +22,9 @@ test.describe("H7.90: compact search results page", () => {
     await page.setViewportSize({ width: 1440, height: 900 });
     await page.goto("/search/?q=coffee");
     const aside = page.locator(".tkn-ls-aside");
-    await expect(aside.locator(".tkn-kw label")).toHaveText("Keyword (optional)");
-    await expect(aside.locator(".tkn-kw input")).toHaveAttribute("placeholder", "e.g. yoga, bike, flat in Adajan");
+    await expect(aside.locator(".tkn-kw label")).toHaveCount(0);
+    await expect(aside.locator(".tkn-kw input")).toHaveAttribute("aria-label", "Keyword");
+    await expect(aside.locator(".tkn-kw input")).toHaveAttribute("placeholder", "Search keyword");
     await expect(aside.locator(".tkn-kw input")).toHaveValue("coffee");
     await expect(page.locator('[data-tk="results-header"] h1')).toHaveText("Results for \u201ccoffee\u201d");
   });
@@ -33,16 +34,16 @@ test.describe("H7.90: compact search results page", () => {
     await page.goto("/search/?category=dating&city=surat&verified=1");
     const header = page.locator('[data-tk="results-header"]');
     await expect(header.locator("h1")).toHaveText("Dating ads in Surat");
-    const chips = header.locator('[data-tk="active-chips"] .tkn-sr-chip');
+    const chips = page.locator('[data-tk="active-chips"] .tkn-sr-chip');
     await expect(chips).toHaveText([/Category: Dating/, /City: Surat/, /Verified/]);
-    await header.locator('[data-chip="verified"]').click();
+    await page.locator('[data-chip="verified"]').click();
     await expect(page).toHaveURL(/\/search\/\?category=dating&city=surat$/);
-    await expect(header.locator('[data-chip="verified"]')).toHaveCount(0);
-    await header.locator('[data-chip="city"]').click();
+    await expect(page.locator('[data-chip="verified"]')).toHaveCount(0);
+    await page.locator('[data-chip="city"]').click();
     await expect(page).toHaveURL(/\/search\/\?category=dating$/);
-    await header.getByRole("link", { name: "Clear all" }).click();
+    await page.locator('[data-tk="active-chips"]').getByRole("link", { name: "Clear all" }).click();
     await expect(page).toHaveURL(/\/search\/$/);
-    await expect(header.locator('[data-tk="active-chips"]')).toHaveCount(0);
+    await expect(page.locator('[data-tk="active-chips"]')).toHaveCount(0);
   });
 
   test("the sort select keeps the filters and shows Verified first", async ({ page }) => {
@@ -51,7 +52,7 @@ test.describe("H7.90: compact search results page", () => {
     await page.locator(".tkn-sr-sort select").selectOption("verified");
     await expect(page).toHaveURL(/category=dating&sort=verified$/);
     await expect(page.locator(".tkn-sr-sort select")).toHaveValue("verified");
-    await expect(page.locator('[data-tk="card"]').first()).toBeVisible();
+    await expect(page.locator(':is([data-tk=card], [data-tk=home-ad])').first()).toBeVisible();
   });
 
   test("keyword suggestions are at most six and work with the keyboard", async ({ page }) => {
@@ -69,11 +70,11 @@ test.describe("H7.90: compact search results page", () => {
     await expect(page).toHaveURL(/\/search\/\?(category|city|q)=/);
   });
 
-  test("landing pages keep their photo band", async ({ page }) => {
+  test("landing pages use the same compact header and have no photo band", async ({ page }) => {
     await page.setViewportSize({ width: 1440, height: 900 });
     await page.goto("/dating/surat/");
-    await expect(page.locator('[data-tk="listing-band"]')).toBeVisible();
-    await expect(page.locator('[data-tk="results-header"]')).toHaveCount(0);
+    await expect(page.locator('[data-tk="results-header"]')).toBeVisible();
+    await expect(page.locator('[data-tk="listing-band"]')).toHaveCount(0);
   });
 
   test("on a phone the header is short and the Filters button opens the filter sheet", async ({ page }) => {

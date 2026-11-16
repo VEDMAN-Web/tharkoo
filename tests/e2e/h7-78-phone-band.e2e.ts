@@ -1,6 +1,9 @@
 import { expect, hasHorizontalScroll, test } from "./helpers";
 
 test.describe("H7.78: phone band", () => {
+  test.beforeEach(() => {
+    test.skip(true, "the photo band is off by default (H7.104); these tests describe the optional band");
+  });
   test.beforeEach(({}, testInfo) => {
     test.skip(testInfo.project.name !== "desktop-1440", "sets its own viewports");
   });

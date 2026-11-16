@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { AdCard } from "@/components/ui/AdCard";
+import { ListingCard, ListingGrid } from "@/components/new/ListingCards";
 import type { FallbackSection } from "@/lib/fallback-ads";
 import type { ListingDoc } from "@/lib/models";
 import "./fallback-ads.css";
@@ -32,11 +33,21 @@ export function FallbackAds({
       {sections.map((section) => (
         <section key={section.key} className="tkn-fb-sec" data-tk={`fallback-${section.key}`}>
           <h2 className="tkn-fb-title">{section.title}</h2>
-          <div className="tk-feed">
-            {section.items.map((ad, index) => (
-              <AdCard key={ad.publicId || ad.slug || index} ad={ad} layout={layout} />
-            ))}
-          </div>
+          {layout === "row" ? (
+            <ListingGrid label={section.title}>
+              {section.items.map((ad, index) => (
+                <li key={ad.publicId || ad.slug || index}>
+                  <ListingCard ad={ad} order={index} />
+                </li>
+              ))}
+            </ListingGrid>
+          ) : (
+            <div className="tk-feed">
+              {section.items.map((ad, index) => (
+                <AdCard key={ad.publicId || ad.slug || index} ad={ad} layout={layout} />
+              ))}
+            </div>
+          )}
         </section>
       ))}
     </div>

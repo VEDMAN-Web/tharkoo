@@ -11,9 +11,9 @@ import { UPLOAD_RULES } from "@/components/upload/rules";
 import { MediaTile } from "./MediaTile";
 import { AD_MEDIA_MAX, checkPhoto, checkVideo, uploadMedia } from "./mediaUpload";
 
-const VIDEO_RULE_LINE = "Videos: max 10 MB and 30 seconds each. Photos and videos: up to 10 in total.";
+const VIDEO_RULE_LINE = "Videos: max 100 MB and 60 seconds each. Photos and videos: up to 10 in total.";
 
-type Upload = { key: string; kind: "image" | "video"; previewUrl: string | null; progress: number };
+type Upload = { key: string; kind: "image" | "video"; previewUrl: string | null; progress: number; file: File; error?: string; retry?: boolean };
 
 function newKey() {
   return `up-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
@@ -66,8 +66,9 @@ export function PhotoStep({
   // H6.18: one limit for photos and videos together. Uploads still in progress count too.
   const limit = draft?.limit ?? AD_MEDIA_MAX;
   const shown = photos.length + videos.length;
-  const atLimit = shown + uploads.length >= limit;
-  const busy = uploads.length > 0 || busyId !== "";
+  const sending = uploads.filter((upload) => !upload.error).length;
+  const atLimit = shown + sending >= limit;
+  const busy = sending > 0 || busyId !== "";
 
   useEffect(() => {
     onBusy?.(busy);
@@ -80,6 +81,15 @@ export function PhotoStep({
   function finishUpload(upload: Upload) {
     if (upload.previewUrl) URL.revokeObjectURL(upload.previewUrl);
     setUploads((prev) => prev.filter((item) => item.key !== upload.key));
+  }
+
+  function failUpload(key: string, error: string, retry: boolean) {
+    setUploads((prev) => prev.map((upload) => (upload.key === key ? { ...upload, error, retry, progress: 0 } : upload)));
+  }
+
+  function addFailedTile(file: File, kind: "image" | "video", error: string) {
+    const entry: Upload = { key: newKey(), kind, previewUrl: kind === "image" ? URL.createObjectURL(file) : null, progress: 0, file, error, retry: false };
+    setUploads((prev) => [...prev, entry]);
   }
 
   /** Saves the photo order and cover. Returns a message to show, or null on success. */
@@ -98,25 +108,48 @@ export function PhotoStep({
     return saveOrder(ids, cover);
   }
 
-  async function sendOne(file: File, kind: "image" | "video"): Promise<string | null> {
-    const entry: Upload = { key: newKey(), kind, previewUrl: kind === "image" ? URL.createObjectURL(file) : null, progress: 0 };
-    setUploads((prev) => [...prev, entry]);
-    const result = await uploadMedia({ listingId, file, kind, onProgress: (ratio) => patchUpload(entry.key, ratio) });
+  async function runUpload(entry: Upload): Promise<string | null> {
+    setUploads((prev) => prev.map((upload) => (upload.key === entry.key ? { ...upload, error: undefined, retry: false, progress: 0 } : upload)));
+    const result = await uploadMedia({ listingId, file: entry.file, kind: entry.kind, onProgress: (ratio) => patchUpload(entry.key, ratio) });
     let error = result.ok ? null : result.error;
-    if (result.ok && kind === "image") error = await attachPhoto(result.mediaId);
+    let retry = !result.ok && Boolean(result.retry);
+    if (result.ok && entry.kind === "image") {
+      error = await attachPhoto(result.mediaId);
+      retry = false;
+    }
     await refresh();
-    finishUpload(entry);
+    if (error) failUpload(entry.key, error, retry);
+    else finishUpload(entry);
     return error;
+  }
+
+  async function sendOne(file: File, kind: "image" | "video"): Promise<string | null> {
+    const entry: Upload = { key: newKey(), kind, previewUrl: kind === "image" ? URL.createObjectURL(file) : null, progress: 0, file };
+    setUploads((prev) => [...prev, entry]);
+    return runUpload(entry);
+  }
+
+  async function retryUpload(key: string) {
+    const entry = uploads.find((upload) => upload.key === key);
+    if (!entry) return;
+    const error = await runUpload(entry);
+    setNote(error ?? (entry.kind === "video" ? "Video saved." : "Photo saved."));
+  }
+
+  function dismissUpload(key: string) {
+    const entry = uploads.find((upload) => upload.key === key);
+    if (entry) finishUpload(entry);
   }
 
   async function addPhotos(files: File[]) {
     if (!listingId) return setNote("Save the ad details before adding a photo.");
-    const room = limit - shown - uploads.length;
+    const room = limit - shown - sending;
     if (room <= 0) return setNote(`Your ad allows ${limit} photos and videos in total. Remove one to add another.`);
     let problem = files.length > room ? `Only ${room} more ${room === 1 ? "item fits" : "items fit"} within your limit of ${limit} photos and videos.` : "";
     let saved = 0;
     for (const file of files.slice(0, room)) {
       const rule = checkPhoto(file);
+      if (rule) addFailedTile(file, "image", rule);
       const error = rule ?? (await sendOne(file, "image"));
       if (error) problem = error;
       else saved += 1;
@@ -126,10 +159,13 @@ export function PhotoStep({
   }
 
   async function addVideo(file: File) {
-    if (!listingId) return setNote("Save the ad details before adding a video.");
+    if (!listingId) return setNote("Save the ad details first, then add the video.");
     if (atLimit) return setNote(`Your ad allows ${limit} photos and videos in total. Remove one first.`);
     const rule = await checkVideo(file);
-    if (rule) return setNote(rule);
+    if (rule) {
+      addFailedTile(file, "video", rule);
+      return setNote(rule);
+    }
     const error = await sendOne(file, "video");
     setNote(error ?? "Video saved.");
   }
@@ -203,6 +239,21 @@ export function PhotoStep({
               }}
             />
           </label>
+          <label className="tkp-btn" aria-disabled={busy || atLimit}>
+            Add video
+            <input
+              type="file"
+              accept="video/mp4,video/webm,video/quicktime"
+              data-tk="video-input"
+              hidden
+              disabled={busy || atLimit}
+              onChange={(event) => {
+                const file = event.target.files?.[0];
+                event.target.value = "";
+                if (file) void addVideo(file);
+              }}
+            />
+          </label>
         </div>
         <p className="tkp-drop-rule">
           {copy.photoRules.items[0] ?? "JPG, PNG or WebP, 8 MB each."}
@@ -215,9 +266,22 @@ export function PhotoStep({
             </ul>
           </InfoPopover>
         </p>
+        <p className="tkp-drop-rule" data-tk="video-rule">
+          <span>{VIDEO_RULE_LINE}</span>
+          <InfoPopover id="post-videos" label="Video rules">
+            <strong>Your videos</strong>
+            <ul>
+              {UPLOAD_RULES.postVideos.details.map((row) => (
+                <li key={row}>{row}</li>
+              ))}
+            </ul>
+          </InfoPopover>
+        </p>
       </div>
+      <div className="tkp-count-row">
       <p className="tkp-count" data-tk="photo-count">{shown} of {limit} photos and videos</p>
       <p className="tkp-photo-note" data-tk="photo-note" role="status">{note}</p>
+      </div>
       <ul className="tkp-media-grid" data-tk="photo-grid">
         {photos.map((photo, index) => (
           <MediaTile
@@ -236,36 +300,19 @@ export function PhotoStep({
           />
         ))}
         {uploads.filter((upload) => upload.kind === "image").map((upload) => (
-          <MediaTile key={upload.key} kind="image" label="New photo" state="uploading" url={upload.previewUrl} progress={upload.progress} />
+          <MediaTile
+            key={upload.key}
+            kind="image"
+            label="New photo"
+            state={upload.error ? "failed" : "uploading"}
+            url={upload.previewUrl}
+            progress={upload.progress}
+            reason={upload.error}
+            onRetry={upload.error && upload.retry ? () => void retryUpload(upload.key) : undefined}
+            onRemove={upload.error ? () => dismissUpload(upload.key) : undefined}
+          />
         ))}
       </ul>
-      <div className="tkp-videos">
-        <h2 className="tkp-sub-title" style={{ margin: 0 }}>Videos</h2>
-        <InfoPopover id="post-videos" label="Video rules">
-          <strong>Your videos</strong>
-          <ul>
-            {UPLOAD_RULES.adVideos.details.map((row) => (
-              <li key={row}>{row}</li>
-            ))}
-          </ul>
-        </InfoPopover>
-        <label className="tkp-btn" aria-disabled={busy || atLimit}>
-          Add video
-          <input
-            type="file"
-            accept="video/mp4,video/webm,video/quicktime"
-            data-tk="video-input"
-            hidden
-            disabled={busy || atLimit}
-            onChange={(event) => {
-              const file = event.target.files?.[0];
-              event.target.value = "";
-              if (file) void addVideo(file);
-            }}
-          />
-        </label>
-      </div>
-      <p className="tkp-drop-rule">{VIDEO_RULE_LINE}</p>
       {videos.length || uploads.some((upload) => upload.kind === "video") ? (
         <ul className="tkp-media-grid" data-tk="video-grid">
           {videos.map((video, index) => (
@@ -282,7 +329,16 @@ export function PhotoStep({
             />
           ))}
           {uploads.filter((upload) => upload.kind === "video").map((upload) => (
-            <MediaTile key={upload.key} kind="video" label="New video" state="uploading" progress={upload.progress} />
+            <MediaTile
+              key={upload.key}
+              kind="video"
+              label="New video"
+              state={upload.error ? "failed" : "uploading"}
+              progress={upload.progress}
+              reason={upload.error}
+              onRetry={upload.error && upload.retry ? () => void retryUpload(upload.key) : undefined}
+              onRemove={upload.error ? () => dismissUpload(upload.key) : undefined}
+            />
           ))}
         </ul>
       ) : null}

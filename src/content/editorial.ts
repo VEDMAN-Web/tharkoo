@@ -1,7 +1,7 @@
 import { BLOG_POSTS, HELP_ARTICLES } from "@/data/help";
 
 export const ABOUT_BODY = [
-  "Tharkoo is a free classifieds site for India. People use it to post dating and friendship notes, jobs, homes, vehicles, pets, classes, and local wellness such as yoga or a fitness studio. Each ad belongs to a category and a city, so you can open a page that is already narrowed to the place you care about.",
+  "Tharkoo is a classifieds site for India. People use it to post dating and friendship notes, jobs, homes, vehicles, pets, classes, and local wellness such as yoga or a fitness studio. Each ad belongs to a category and a city, so you can open a page that is already narrowed to the place you care about.",
   "You can browse without an account. Posting needs an email, a confirmation that you are 18 or older, and sometimes an ID check before the ad is public. The check is there to make accounts harder to spin up in bulk. It does not mean we have met the poster or inspected what they are offering.",
   "Contact stays on the ad. You choose a method when you post, and the reader uses that method. We do not print a private phone number in the page markup, and we do not arrange the meeting. Read the safety page before you agree to meet or to pay anyone.",
   "City pages, category pages, and the guide pages are the public face of the site. Account pages, the post form, and the admin tools are not meant for search engines. A listing that the poster removes, or that has been expired for more than 30 days, stops answering as a normal page.",
