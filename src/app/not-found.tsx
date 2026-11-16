@@ -2,11 +2,11 @@ import type { Metadata } from "next";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { NotFoundBeacon } from "@/app/admin/urls/NotFoundBeacon";
 import { NotFoundView, type NotFoundAds } from "@/components/new/NotFoundView";
-import { commonCity, tierKeyOf } from "@/components/new/home-copy";
-import { displayTitle, prettyPlace } from "@/lib/format";
-import { listingPhotos, safePhoto } from "@/lib/media";
+import { commonCity } from "@/components/new/home-copy";
+import { homeAdCardData } from "@/components/new/home-ad-data";
+import { prettyPlace } from "@/lib/format";
 import { getCategories, getFeed } from "@/lib/queries";
-import { adPath, searchPath } from "@/lib/urls";
+import { searchPath } from "@/lib/urls";
 import { makeT, pickTexts } from "@/lib/ui/text";
 import { textOverrides } from "@/app/admin/ui-text/store";
 import { getPaths } from "@/server/urls/service";
@@ -31,27 +31,15 @@ async function latestAds(categoryNames: Map<string, string>): Promise<NotFoundAd
     seeAll: t("home.ads.all"),
     seeAllHref: searchPath(paths),
     labels: {
-      view: t("home.ads.view"),
-      online: t("home.ads.online"),
-      away: t("home.ads.away"),
-      watermark: t("home.ads.watermark"),
-      views: t("home.ads.views"),
-      viewOne: t("home.ads.viewOne"),
-    },
-    cards: shown.map((ad) => {
-      const place = prettyPlace(ad.citySlug);
-      const tier = tierKeyOf(ad.variant);
-      return {
-        slug: ad.slug || "",
-        title: displayTitle(ad.title) || t("card.fallbackTitle"),
-        price: ad.price,
-        photo: safePhoto(listingPhotos(ad.categorySlug, ad.publicId || ad.slug || "", ad.photos || [])[0]),
-        categoryName: categoryNames.get(ad.categorySlug || "") || prettyPlace(ad.categorySlug),
-        place: ad.place && ad.place !== place ? `${place} / ${ad.place}` : place,
-        href: adPath(paths, ad.slug || ""),
-        badge: tier ? t(tier) : "",
-      };
-    }),
+    online: t("home.ads.online"),
+    watermark: t("home.ads.watermark"),
+    photoPrev: t("home.ads.photoPrev"),
+    photoNext: t("home.ads.photoNext"),
+    chat: t("home.ads.chat"),
+    viewAd: t("home.ads.viewAd"),
+    age: t("home.ads.age"),
+  },
+    cards: shown.map((ad) => homeAdCardData(ad, categoryNames, paths, t("card.fallbackTitle"))),
   };
 }
 
