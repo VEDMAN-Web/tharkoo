@@ -59,6 +59,7 @@ async function newHome(texts: ReturnType<typeof pickTexts>) {
         paths={paths}
         countries={plain(countries)}
         texts={texts}
+        categoriesCount={content.homeCategoriesCount}
       />
     </UiTextProvider>
   );

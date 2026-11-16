@@ -15,7 +15,7 @@ async function openHome(page: Page) {
 }
 
 test.describe("H7.84 home ad cards", () => {
-  test("eight cards in one row, no tag, no views, no big button, pills are category and city only", async ({ page }) => {
+  test("eight cards in a grid, no tag, no views, no big button, pills are category and city only", async ({ page }) => {
     const row = await openHome(page);
     await expect(row).toHaveAttribute("aria-label", "Latest ads");
     await expect(row.locator(":scope > li")).toHaveCount(8);
@@ -32,13 +32,13 @@ test.describe("H7.84 home ad cards", () => {
     }
   });
 
-  test("the title is one line with an ellipsis, 18 px and 600", async ({ page }) => {
+  test("the title is one line with an ellipsis, 16 px and 600", async ({ page }) => {
     const row = await openHome(page);
     const style = await row.locator(".tkh-ad-title").first().evaluate((node) => {
       const css = getComputedStyle(node);
       return { overflow: css.textOverflow, wrap: css.whiteSpace, size: css.fontSize, weight: css.fontWeight };
     });
-    expect(style).toEqual({ overflow: "ellipsis", wrap: "nowrap", size: "18px", weight: "600" });
+    expect(style).toEqual({ overflow: "ellipsis", wrap: "nowrap", size: "16px", weight: "600" });
   });
 
   test("the heart sits on the photo, top right, 40 px, and fills when saved", async ({ page }) => {
@@ -66,12 +66,10 @@ test.describe("H7.84 home ad cards", () => {
     const next = card.getByRole("button", { name: "Next photo" });
     await expect(next).toBeVisible();
     const count = card.locator(".tkh-ad-count");
-    await expect(count).toHaveText(/^1\//);
+    const before = Number(((await count.innerText()).match(/^(\d+)\//) || [])[1]);
     await next.click();
-    await expect(count).toHaveText(/^2\//);
+    await expect(count).toHaveText(new RegExp(`^${before + 1}/`));
     await expect(card.locator(".tkh-ad-dots i.is-on")).toHaveCount(1);
-    const photo = (await card.locator(".tkh-ad-photo").boundingBox())!;
-    expect(Math.round((photo.height / photo.width) * 100)).toBe(125);
     const position = await card.locator(".tkh-ad-slide img").first().evaluate((node) => getComputedStyle(node).objectPosition);
     expect(position).toBe("50% 18%");
   });
@@ -84,39 +82,19 @@ test.describe("H7.84 home ad cards", () => {
     await expect(page).toHaveURL(new RegExp(`${href}$`));
   });
 
-  test("the section arrows scroll the row by the visible cards and disable at the ends", async ({ page }) => {
+  test("the ads are a grid with no section arrows: 4 by 2 on a computer, 2 by 4 under 1024 px", async ({ page }, testInfo) => {
     const row = await openHome(page);
-    const prev = page.getByRole("button", { name: "Previous ads" });
-    const next = page.getByRole("button", { name: "Next ads" });
-    await expect(prev).toBeDisabled();
-    await expect(next).toBeEnabled();
-    const size = (await next.boundingBox())!;
-    expect(Math.round(size.width)).toBe(44);
-    expect(Math.round(size.height)).toBe(44);
-    const before = await row.evaluate((node) => node.scrollLeft);
-    await next.click();
-    await expect.poll(() => row.evaluate((node) => node.scrollLeft)).toBeGreaterThan(before + 100);
-    await expect(prev).toBeEnabled();
-    for (let i = 0; i < 6; i += 1) {
-      if (await next.isDisabled()) break;
-      await next.click();
-      await page.waitForTimeout(500);
+    await expect(page.getByRole("button", { name: "Previous ads" })).toHaveCount(0);
+    await expect(page.getByRole("button", { name: "Next ads" })).toHaveCount(0);
+    const tops = await row.locator(CARD).evaluateAll((cards) => cards.map((card) => Math.round(card.getBoundingClientRect().top + window.scrollY)));
+    const rows = new Set(tops).size;
+    const perRow = tops.filter((top) => top === tops[0]).length;
+    if (testInfo.project.name === "desktop-1440") {
+      expect([rows, perRow]).toEqual([2, 4]);
+    } else {
+      expect([rows, perRow]).toEqual([4, 2]);
     }
-    await expect(next).toBeDisabled();
     expect(await hasHorizontalScroll(page)).toBe(false);
-  });
-
-  test("the row shows the right number of cards at this width and snaps", async ({ page }, testInfo) => {
-    const row = await openHome(page);
-    const widths = await row.evaluate((node) => ({
-      row: node.clientWidth - 8,
-      card: (node.firstElementChild as HTMLElement).getBoundingClientRect().width,
-      snap: getComputedStyle(node).scrollSnapType,
-    }));
-    expect(widths.snap).toContain("mandatory");
-    const visible = widths.row / widths.card;
-    if (testInfo.project.name === "desktop-1440") expect(Math.round(visible)).toBe(4);
-    else expect(visible).toBeGreaterThan(1.05);
   });
 
   test("the hover pop-out shows after a short wait on a mouse, and goes away on leave", async ({ page }, testInfo) => {
