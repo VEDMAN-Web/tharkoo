@@ -9,6 +9,7 @@ import { Container } from "@/components/ui/Container";
 import { Prose } from "@/components/ui/Prose";
 import { LegalView } from "@/components/new/LegalView";
 import { BlogCover } from "@/components/new/BlogCover";
+import { coverOf } from "@/components/new/blog-cover-data";
 import { bodyParagraphs, readingMinutes, stripDevNotes, toSections } from "@/components/new/legal-copy";
 import { blogPath, contactPath } from "@/lib/urls";
 import { withUrlSeo, urlHeading } from "@/lib/seo/override";
@@ -65,7 +66,7 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
           minutes={readingMinutes(paragraphs)}
           author={post.author || undefined}
           sections={toSections(paragraphs, slug)}
-          cover={<BlogCover />}
+          cover={<BlogCover cover={coverOf(post)} />}
           askHref={contactPath(paths)}
           askLabel="Questions about this article?"
         />

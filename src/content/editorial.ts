@@ -40,6 +40,9 @@ export function publishedGuides() {
       title: post.title,
       body: `${post.body}\n\nRead the safety page before you reply, and open a city hub such as jobs in Bengaluru when you want a live list.`,
       status: "published",
+      cover: "cover" in post ? post.cover : undefined,
+      coverAlt: "coverAlt" in post ? post.coverAlt : undefined,
+      coverFocus: "coverFocus" in post ? post.coverFocus : undefined,
     })),
     ...DRAFT_POSTS.map(([title, slug]) => ({
       kind: "blog" as const,
