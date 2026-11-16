@@ -1,0 +1,27 @@
+/* H8.8: parts that belong to the Users screen only. The shared kit stays in src/styles/admin-kit.css. */
+.adm-u-flat { padding: 0; overflow: clip; margin-bottom: 16px; }
+.adm-u-flat .adm-k-tablewrap { border: 0; border-radius: 0; box-shadow: none; }
+.adm-u-pane { padding: 16px; display: grid; gap: 14px; }
+.adm-u-stats { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+.adm-u-stat { padding: 10px 12px; border: 1px solid var(--adm-line2); border-radius: 10px; background: #fafbfd; display: grid; gap: 2px; }
+.adm-u-stat span { font-size: 12px; font-weight: 700; color: var(--adm-kmuted); }
+.adm-u-stat strong { font-size: 22px; font-weight: 800; }
+.adm-u-kvs { margin: 0; display: grid; gap: 0; }
+.adm-u-kv { display: grid; grid-template-columns: 120px minmax(0, 1fr); gap: 12px; padding: 9px 0; border-bottom: 1px solid var(--adm-line2); font-size: 13.5px; }
+.adm-u-kv dt { color: var(--adm-kmuted); }
+.adm-u-kv dd { margin: 0; min-width: 0; font-weight: 600; overflow-wrap: anywhere; display: flex; gap: 6px; flex-wrap: wrap; align-items: center; }
+.adm-u-rows { margin: 0; padding: 0; list-style: none; }
+.adm-u-rows li { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 12px 0; border-bottom: 1px solid var(--adm-line2); }
+.adm-u-rows li > span { display: grid; gap: 2px; min-width: 0; }
+.adm-u-rows strong { overflow-wrap: anywhere; }
+.adm-u-rows small { color: var(--adm-kmuted); font-size: 12.5px; }
+.adm-u-state { display: grid; justify-items: center; text-align: center; gap: 8px; padding: 40px 20px; }
+.adm-u-state-icon { width: 52px; height: 52px; border-radius: 50%; display: grid; place-items: center; background: var(--adm-line2); color: var(--adm-kmuted); }
+.adm-u-state-icon svg { width: 24px; height: 24px; }
+.adm-u-state h3 { margin: 4px 0 0; font-size: 16px; }
+.adm-u-state p { margin: 0; color: var(--adm-kmuted); max-width: 44ch; }
+@media (max-width: 767px) {
+  .adm-u-kv { grid-template-columns: 100px minmax(0, 1fr); }
+}
+.adm-k-db:has([data-tk="user-drawer"]) { grid-template-columns: minmax(0, 1fr); }
+.adm-u-pane { grid-template-columns: minmax(0, 1fr); }
