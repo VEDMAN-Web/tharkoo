@@ -203,6 +203,21 @@ export function PhotoStep({
               }}
             />
           </label>
+          <label className="tkp-btn" aria-disabled={busy || atLimit}>
+            Add video
+            <input
+              type="file"
+              accept="video/mp4,video/webm,video/quicktime"
+              data-tk="video-input"
+              hidden
+              disabled={busy || atLimit}
+              onChange={(event) => {
+                const file = event.target.files?.[0];
+                event.target.value = "";
+                if (file) void addVideo(file);
+              }}
+            />
+          </label>
         </div>
         <p className="tkp-drop-rule">
           {copy.photoRules.items[0] ?? "JPG, PNG or WebP, 8 MB each."}
@@ -215,9 +230,22 @@ export function PhotoStep({
             </ul>
           </InfoPopover>
         </p>
+        <p className="tkp-drop-rule" data-tk="video-rule">
+          {VIDEO_RULE_LINE}
+          <InfoPopover id="post-videos" label="Video rules">
+            <strong>Your videos</strong>
+            <ul>
+              {UPLOAD_RULES.adVideos.details.map((row) => (
+                <li key={row}>{row}</li>
+              ))}
+            </ul>
+          </InfoPopover>
+        </p>
       </div>
+      <div className="tkp-count-row">
       <p className="tkp-count" data-tk="photo-count">{shown} of {limit} photos and videos</p>
       <p className="tkp-photo-note" data-tk="photo-note" role="status">{note}</p>
+      </div>
       <ul className="tkp-media-grid" data-tk="photo-grid">
         {photos.map((photo, index) => (
           <MediaTile
@@ -239,33 +267,6 @@ export function PhotoStep({
           <MediaTile key={upload.key} kind="image" label="New photo" state="uploading" url={upload.previewUrl} progress={upload.progress} />
         ))}
       </ul>
-      <div className="tkp-videos">
-        <h2 className="tkp-sub-title" style={{ margin: 0 }}>Videos</h2>
-        <InfoPopover id="post-videos" label="Video rules">
-          <strong>Your videos</strong>
-          <ul>
-            {UPLOAD_RULES.adVideos.details.map((row) => (
-              <li key={row}>{row}</li>
-            ))}
-          </ul>
-        </InfoPopover>
-        <label className="tkp-btn" aria-disabled={busy || atLimit}>
-          Add video
-          <input
-            type="file"
-            accept="video/mp4,video/webm,video/quicktime"
-            data-tk="video-input"
-            hidden
-            disabled={busy || atLimit}
-            onChange={(event) => {
-              const file = event.target.files?.[0];
-              event.target.value = "";
-              if (file) void addVideo(file);
-            }}
-          />
-        </label>
-      </div>
-      <p className="tkp-drop-rule">{VIDEO_RULE_LINE}</p>
       {videos.length || uploads.some((upload) => upload.kind === "video") ? (
         <ul className="tkp-media-grid" data-tk="video-grid">
           {videos.map((video, index) => (

@@ -57,9 +57,9 @@ export function MediaTile(props: MediaTileProps) {
       {!uploading ? (
         <div className="tkp-media-actions">
           {props.onMakeCover && !isCover ? (
-            <button type="button" className="tkp-mini tkp-mini-wide" disabled={busy} onClick={props.onMakeCover}>
+            <button type="button" className="tkp-mini tkp-mini-wide" title="Make cover" disabled={busy} onClick={props.onMakeCover}>
               <Star size={16} aria-hidden="true" focusable="false" />
-              Make cover
+              <span className="tkp-mini-text">Make cover</span>
             </button>
           ) : null}
           {props.onMoveLeft ? (

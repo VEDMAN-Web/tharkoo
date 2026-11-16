@@ -7,11 +7,16 @@
     "src/lib/ui/post-form.ts",
     "src/components/post/FormFields.tsx",
     "src/components/post/AboutYou.tsx",
+    "src/components/post/ContactFields.tsx",
     "src/components/post/ReviewStep.tsx",
     "src/components/post/PostSuccess.tsx",
+    "src/components/post/PhotoStep.tsx",
+    "src/components/post/MediaTile.tsx",
     "src/components/post/newCopy.ts",
     "src/components/post/post-wizard.css",
     "tests/server/ui/post-step-5.test.ts",
-    "tests/e2e/post-step-5.e2e.ts"
+    "tests/e2e/post-step-5.e2e.ts",
+    "tests/e2e/post-steps-1-2.e2e.ts",
+    "tests/e2e/post-steps-3-4.e2e.ts"
   ]
 }

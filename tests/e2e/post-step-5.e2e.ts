@@ -7,7 +7,7 @@ const SHOTS = process.env.POST_SHOTS ?? "";
 async function shot(page: Page, name: string) {
   await page.evaluate(async () => {
     const img = document.querySelector<HTMLImageElement>(".tkn-ls-photo img");
-    if (img) await img.decode().catch(() => undefined);
+    if (img) await Promise.race([img.decode().catch(() => undefined), new Promise((resolve) => setTimeout(resolve, 1500))]);
   });
   if (SHOTS) await page.screenshot({ path: `${SHOTS}/${name}.png` });
 }
@@ -175,8 +175,11 @@ test.describe("H7.86 post an ad, step 5 and the success screen", () => {
     await consentAndPublish(page);
     await page.goto("/u/account/ads/");
     await expect(page.locator("[data-tk=card]").filter({ hasText: final }).first()).toBeVisible();
-    expect((await page.request.get(adHref!)).status()).toBe(200);
-    expect(await (await page.request.get(adHref!)).text()).toContain(final);
+    const finalHref = await page.locator("[data-tk=card]").filter({ hasText: final }).first().locator('a[href*="/ad/"]').first().getAttribute("href");
+    expect(finalHref).toBeTruthy();
+    const finalPage = await page.request.get(finalHref!);
+    expect(finalPage.status()).toBe(200);
+    expect(await finalPage.text()).toContain(final);
     await seen(page, "/dating/mumbai/", final);
   });
 
@@ -245,6 +248,7 @@ test.describe("H7.86 post an ad, step 5 and the success screen", () => {
     await page.locator("#whatsapp-same").uncheck();
     await expect(page.locator("#whatsapp-number")).toBeVisible();
     await page.locator("#whatsapp-number").fill("123");
+    await page.locator("#whatsapp-number").blur();
     await page.getByRole("switch", { name: "Telegram" }).click();
     await expect(page.locator("#telegram")).toHaveAttribute("placeholder", "@yourname");
     await expect(page.getByText("Telegram username", { exact: true })).toBeVisible();
@@ -283,6 +287,47 @@ test.describe("H7.86 post an ad, step 5 and the success screen", () => {
     await consentAndPublish(page);
   });
 
+  test("desktop: step 1 fits at every laptop size with no inner scroll, four tiles a row, and the Tip is hidden when it does not fit", async ({ page, baseURL }, info) => {
+    test.skip(info.project.name !== "desktop-1440", "desktop sizes only");
+    test.setTimeout(120_000);
+    await newPoster(page, baseURL!, "fit1");
+    for (const [width, height] of [[1366, 768], [1536, 730], [1536, 674]] as [number, number][]) {
+      await page.setViewportSize({ width, height });
+      await page.goto("/u/post-insert/");
+      await expect(page.locator(".tkp-tile")).toHaveCount(11);
+      const fit = await page.evaluate(() => {
+        const scroll = document.querySelector(".tkp-scroll") as HTMLElement;
+        const tiles = Array.from(document.querySelectorAll<HTMLElement>(".tkp-tile")).map((node) => node.getBoundingClientRect());
+        const nav = (document.querySelector(".tkp-nav") as HTMLElement).getBoundingClientRect();
+        const tip = document.querySelector(".tkp-tip") as HTMLElement | null;
+        const aside = document.querySelector(".tkp-aside") as HTMLElement;
+        return {
+          inner: scroll.scrollHeight - scroll.clientHeight,
+          page: document.documentElement.scrollHeight - window.innerHeight,
+          rows: new Set(tiles.map((box) => Math.round(box.top))).size,
+          perRow: tiles.filter((box) => Math.round(box.top) === Math.round(tiles[0].top)).length,
+          tallest: Math.max(...tiles.map((box) => box.height)),
+          navBottom: nav.bottom,
+          tipShown: tip ? getComputedStyle(tip).display !== "none" : false,
+          asideCut: aside.scrollHeight - aside.clientHeight,
+          asideBottom: aside.getBoundingClientRect().bottom,
+        };
+      });
+      expect(fit.inner, `${width}x${height} inner scroll`).toBeLessThanOrEqual(0);
+      expect(fit.page, `${width}x${height} page scroll`).toBeLessThanOrEqual(0);
+      expect(fit.navBottom, `${width}x${height} buttons in view`).toBeLessThanOrEqual(height);
+      expect(fit.asideCut, `${width}x${height} preview column cut`).toBeLessThanOrEqual(0);
+      expect(fit.asideBottom, `${width}x${height} preview column in view`).toBeLessThanOrEqual(height);
+      if (width >= 1280) {
+        expect(fit.perRow, `${width} tiles a row`).toBe(4);
+        expect(fit.rows, `${width} rows`).toBe(3);
+        expect(fit.tallest, `${width} tile height`).toBeLessThanOrEqual(66);
+      }
+      if (height < 820) expect(fit.tipShown, `${width}x${height} tip hidden when short`).toBe(false);
+      await shot(page, `3-3-step1-${width}x${height}`);
+    }
+  });
+
   test("desktop: step 2 shows the whole preview column and step 3 fits four photos with no inner scroll", async ({ page, baseURL }, info) => {
     test.skip(info.project.name !== "desktop-1440", "desktop sizes only");
     test.setTimeout(240_000);
@@ -294,7 +339,7 @@ test.describe("H7.86 post an ad, step 5 and the success screen", () => {
     await page.locator("#title").fill("A long title that wraps in the preview card");
     await page.locator("#text").fill("Looking to meet for coffee and a long walk by the sea on weekends, then dinner somewhere quiet and a chat about books, music and travel.");
     await page.getByRole("button", { name: "Coffee", exact: true }).click();
-    const sizes: [number, number][] = [[1366, 768], [1536, 730]];
+    const sizes: [number, number][] = [[1366, 768], [1536, 730], [1536, 674]];
     for (const [width, height] of sizes) {
       await page.setViewportSize({ width, height });
       await expect(page.locator(".tkp-aside")).toBeVisible();
@@ -337,7 +382,7 @@ test.describe("H7.86 post an ad, step 5 and the success screen", () => {
     test.setTimeout(420_000);
     await newPoster(page, baseURL!, "sizes5");
     const id = await reachAbout(page, `Size check ${Date.now()}`, "sizes5");
-    const sizes: [number, number][] = [[360, 740], [390, 844], [768, 1024], [1366, 768], [1536, 730]];
+    const sizes: [number, number][] = [[360, 740], [390, 844], [768, 1024], [1366, 768], [1536, 730], [1536, 674]];
     const checkSize = async (width: number, height: number, label: string) => {
       expect(await overflow(page), `${label} ${width}: sideways scroll`).toBeLessThanOrEqual(0);
       const nav = (await page.locator(".tkp-nav").boundingBox())!;
