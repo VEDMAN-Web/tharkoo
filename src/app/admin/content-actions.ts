@@ -2,11 +2,7 @@
 
 import { refreshPublicCache } from "@/lib/cache";
 import { getStaffFromHeaders } from "@/lib/admin-auth";
-<<<<<<< HEAD
 import { applyHomeCategoriesCount, applyHomepageChange, applyListingBandSwitch, applyHomeSeoChange, ensureHomepageDocument } from "@/lib/ui/site-store";
-=======
-import { applyHomeCategoriesCount, applyHomepageChange, applyHomeSeoChange, ensureHomepageDocument } from "@/lib/ui/site-store";
->>>>>>> github/main
 import { readContent, type SiteContent } from "@/lib/ui/site-content";
 import { connectDb } from "@/lib/db";
 import { HttpError } from "@/server/http";
@@ -63,7 +59,6 @@ export async function resetHomepageForAdmin() {
   }
 }
 
-<<<<<<< HEAD
 /** Turns the photo band on listing pages on or off. Admins only. */
 export async function saveListingBandForAdmin(on: boolean) {
   const identity = await getStaffFromHeaders();
@@ -75,8 +70,6 @@ export async function saveListingBandForAdmin(on: boolean) {
   }
 }
 
-=======
->>>>>>> github/main
 /** Saves how many categories the Home page shows (1 to 8). Admins only; the cache refresh runs in the save. */
 export async function saveHomeCategoriesCountForAdmin(count: number) {
   const identity = await getStaffFromHeaders();

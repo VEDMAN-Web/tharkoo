@@ -49,11 +49,8 @@ export type SiteContent = {
   groups: HomeGroup[];
   /** H7.104: how many categories the Home categories block shows, first by admin order (1 to 8). Default 4. */
   homeCategoriesCount: number;
-<<<<<<< HEAD
   /** H7.104: show the photo band on category, city and tag pages. Off by default: every listing page uses the compact search header. */
   showListingBand: boolean;
-=======
->>>>>>> github/main
   seoTitle: string;
   seoDescription: string;
   seoIntro: string;
@@ -160,10 +157,7 @@ export function defaultSiteContent(): SiteContent {
       { id: "more", kind: "categories", slug: "", title: "More categories", visible: true, cities: [], showAll: false },
     ],
     homeCategoriesCount: 4,
-<<<<<<< HEAD
     showListingBand: false,
-=======
->>>>>>> github/main
     seoTitle: "Tharkoo | Free classifieds in India",
     seoDescription: "Tharkoo is a free classifieds site for India. Browse dating, friendship, jobs, homes, and vehicles, then contact the poster in the app after an ID check.",
     seoIntro: "",
@@ -443,10 +437,7 @@ export function sanitizeSiteContent(
       cardsIntro: text(source.cardsIntro, 160, base.cardsIntro),
       cards,
       groups,
-<<<<<<< HEAD
       showListingBand: source.showListingBand === true,
-=======
->>>>>>> github/main
       homeCategoriesCount: Math.min(8, Math.max(1, Math.round(Number(source.homeCategoriesCount)) || base.homeCategoriesCount)),
       seoTitle: text(source.seoTitle, 120, base.seoTitle),
       seoDescription: text(source.seoDescription, 240, base.seoDescription),
