@@ -95,9 +95,15 @@ export function HeaderNew({
           aria-label="Main"
           className="tkn-nav"
           ref={navRef}
-          onPointerOver={(event) => placePill(event.target instanceof Element ? event.target.closest(".tkn-nav-link") : null)}
+          onPointerOver={(event) => {
+            const link = event.target instanceof Element ? event.target.closest(".tkn-nav-link") : null;
+            if (link) placePill(link);
+          }}
           onPointerLeave={() => placePill(null)}
           onFocus={(event) => placePill(event.target instanceof Element ? event.target.closest(".tkn-nav-link") : null)}
+          onBlur={(event) => {
+            if (!event.currentTarget.contains(event.relatedTarget as Node | null)) placePill(null);
+          }}
         >
           {links.map((item) => {
             const href = applyPrefixes(safeHref(item.href), paths);

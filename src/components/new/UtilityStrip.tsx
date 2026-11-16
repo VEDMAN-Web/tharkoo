@@ -1,32 +1,34 @@
 "use client";
 
 import { Check, Lock, Phone, Sparkles } from "lucide-react";
-import { useEffect, useState } from "react";
+import type { CSSProperties } from "react";
 import { makeT, type UiTextMap } from "@/lib/ui/text";
+import { SUPPORT_PHONE, telHref } from "@/lib/support";
 import "./utility-strip.css";
 
 const TICKER_KEYS = ["home.utility.ticker1", "home.utility.ticker2", "home.utility.ticker3"] as const;
-const TICKER_STEP_MS = 3500;
-const PHONE_PLACEHOLDER_HREF = "tel:+910000000000";
+const CRAWL_PX_PER_SECOND = 40;
+const CRAWL_CHAR_PX = 7;
+const CRAWL_ITEM_PX = 48;
+const CRAWL_MIN_SET_PX = 1400;
+
+function crawlPlan(lines: string[]) {
+  const setPx = lines.reduce((sum, line) => sum + line.length * CRAWL_CHAR_PX + CRAWL_ITEM_PX, 0);
+  const repeats = Math.max(1, Math.ceil(CRAWL_MIN_SET_PX / Math.max(setPx, 1)));
+  return { sets: repeats * 2, seconds: Math.round((setPx * repeats) / CRAWL_PX_PER_SECOND) };
+}
 
 export function UtilityStrip({ texts }: { texts?: UiTextMap }) {
   const t = makeT(texts);
   const lines = TICKER_KEYS.map((key) => (texts && key in texts ? texts[key].trim() : t(key))).filter(Boolean);
-  const [step, setStep] = useState(0);
-
-  useEffect(() => {
-    if (lines.length < 2 || window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
-    const timer = window.setInterval(() => setStep((s) => s + 1), TICKER_STEP_MS);
-    return () => window.clearInterval(timer);
-  }, [lines.length]);
-
-  const index = lines.length ? step % lines.length : 0;
-  const current = lines[index] ?? "";
+  const plan = crawlPlan(lines);
+  const phone = t("home.utility.phone");
+  const phoneHref = telHref(phone) || telHref(SUPPORT_PHONE);
 
   return (
     <div className="tkh-utility" data-tk="top-bar">
-      <div className="tkh-utility-in">
-        <ul className="tkh-ub-pills" tabIndex={0} aria-label="Site highlights">
+      <div className="tkn-wrap tkh-utility-in">
+        <ul className="tkh-ub-pills" aria-label="Site highlights">
           <li className="tkh-ub-pill tkh-ub-live">
             <i className="tkh-ub-dot" aria-hidden="true" />
             {t("home.utility.live")}
@@ -40,20 +42,28 @@ export function UtilityStrip({ texts }: { texts?: UiTextMap }) {
             {t("home.utility.private")}
           </li>
         </ul>
-        <div className="tkh-ub-right">
-          {current ? (
-            <p className="tkh-ub-ticker">
-              <Sparkles className="tkh-ub-spark" size={14} strokeWidth={2} aria-hidden="true" focusable="false" />
-              <span key={step} className="tkh-ub-line">
-                {current}
-              </span>
-            </p>
-          ) : null}
-          <a className="tkh-ub-phone" href={PHONE_PLACEHOLDER_HREF}>
-            <Phone size={13} strokeWidth={2.2} aria-hidden="true" focusable="false" />
-            {t("home.utility.phone")}
-          </a>
-        </div>
+        {lines.length ? (
+          <div className="tkh-ub-crawl" data-tk="top-bar-crawl" role="group" aria-label="Site news" tabIndex={0}>
+            <div className="tkh-ub-track" style={{ "--ub-seconds": `${plan.seconds}s` } as CSSProperties}>
+              {Array.from({ length: plan.sets }, (_, set) => (
+                <ul key={set} className="tkh-ub-set" aria-hidden={set > 0 ? "true" : undefined}>
+                  {lines.map((line, index) => (
+                    <li key={index} className="tkh-ub-item">
+                      <Sparkles className="tkh-ub-spark" size={14} strokeWidth={2} aria-hidden="true" focusable="false" />
+                      {line}
+                    </li>
+                  ))}
+                </ul>
+              ))}
+            </div>
+          </div>
+        ) : (
+          <span className="tkh-ub-crawl" aria-hidden="true" />
+        )}
+        <a className="tkh-ub-phone" data-tk="top-bar-phone" href={phoneHref}>
+          <Phone size={13} strokeWidth={2.2} aria-hidden="true" focusable="false" />
+          {phone}
+        </a>
       </div>
     </div>
   );

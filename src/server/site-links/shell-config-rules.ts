@@ -10,7 +10,7 @@ import { SUPPORT_TOPICS, type SupportTopic } from "@/server/support/constants";
 export const SHELL_ICONS = ["home", "grid", "pin", "book", "help", "mail", "info", "shield", "user", "tag"] as const;
 export type ShellIcon = (typeof SHELL_ICONS)[number];
 
-export const CONTACT_KINDS = ["email", "phone", "whatsapp", "hours", "address"] as const;
+export const CONTACT_KINDS = ["email", "phone", "whatsapp", "telegram", "hours", "address"] as const;
 export type ContactKind = (typeof CONTACT_KINDS)[number];
 
 export type ShellLink = { label: string; href: string; visible: boolean; icon: ShellIcon };
