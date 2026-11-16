@@ -31,4 +31,12 @@ test.describe("H7.70: band crumbs and city cards", () => {
     await expect(page.locator('[data-tk="city-categories"]')).toBeHidden();
     await expect(page.locator('[data-tk="city-nav-categories"] a').first()).toBeVisible();
   });
+
+  test("the band intro uses the category name in lower case", async ({ page }) => {
+    await page.setViewportSize({ width: 1440, height: 900 });
+    await page.goto("/friendship/");
+    await expect(page.locator(".tkn-ls-intro")).toHaveText("Free friendship ads across India.");
+    await page.goto("/personal-ads/surat/");
+    await expect(page.locator(".tkn-ls-intro")).toHaveText("Free personal ads in Surat.");
+  });
 });
