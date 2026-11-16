@@ -329,6 +329,7 @@ async function undoClaim(paymentId: Types.ObjectId, before: { status: string; pr
 }
 
 export async function purchasePromotion(input: Parameters<typeof placePromotion>[0]) {
+  await connectDb();
   try {
     return await placePromotion(input);
   } catch (error) {
