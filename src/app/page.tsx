@@ -4,9 +4,13 @@ import Link from "next/link";
 import { HeroSearch } from "@/components/HeroSearch";
 import { HomeLayout } from "@/components/blocks/HomeLayout";
 import { HomeBlocks, SkeletonGrid } from "@/components/HomeBlocks";
-import { getCategories, getHomeAds, getHomepageContent } from "@/lib/queries";
+import { getCategories, getHomeAds, getHomepageContent, getSite } from "@/lib/queries";
+import { JsonLd } from "@/lib/jsonld";
+import { canonical } from "@/lib/seo";
+import { homeSiteNodes } from "@/lib/seo/home-blog";
+import { siteOrganizationNode } from "@/lib/seo-site";
 import { getPageBlocks } from "@/lib/layout/read";
-import { postAdPath } from "@/lib/urls";
+import { postAdPath, searchPath } from "@/lib/urls";
 import { textOverrides } from "@/app/admin/ui-text/store";
 import { pickTexts } from "@/lib/ui/text";
 import { UiTextProvider } from "@/components/ui/AdCard";
@@ -41,16 +45,27 @@ async function publishedHome() {
 
 /** H7.4: the New design home, as in the Home mockup. Used only while the New design switch is on. */
 async function newHome(texts: ReturnType<typeof pickTexts>) {
-  const [content, paths, categories, countries, feed, shell] = await Promise.all([
+  const [content, paths, categories, countries, feed, shell, site] = await Promise.all([
     getHomepageContent(),
     getPaths(),
     getCategories(),
     countryPlaces(),
     getHomeAds(),
     readShellConfig(),
+    getSite(),
   ]);
   return (
     <UiTextProvider texts={texts}>
+      <JsonLd
+        data={homeSiteNodes(
+          await siteOrganizationNode(site.name || "Tharkoo", {
+            logo: canonical("/brand/logo-mark-512.png"),
+            sameAs: content.socials.map((item) => item.href),
+          }),
+          site.name || "Tharkoo",
+          searchPath(paths),
+        )}
+      />
       <NewHome
         hero={plain(content.hero)}
         categories={plain(categories)}
