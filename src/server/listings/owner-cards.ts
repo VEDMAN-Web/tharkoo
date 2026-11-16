@@ -37,7 +37,7 @@ export async function listOwnCards(userId: string, query: { status?: string; gro
     Listing.countDocuments(filter),
     Listing.find(base).select("status slug").limit(TOTALS_LIMIT).lean<{ status: string; slug?: string }[]>(),
   ]);
-  const { legacy } = await presentRows(rows.map((row) => row.toObject()) as unknown as PresentInput, new Map(), new Date());
+  const { legacy } = await presentRows(rows.map((row) => row.toObject()) as unknown as PresentInput, new Map(), new Date(), { ownerView: true });
   const byAd = await shownCountsFor(owned.flatMap((row) => (row.slug ? [row.slug] : [])));
   // H7.5: each ad's own shown views and clicks (the owner's own visits are not counted, see the ad counters).
   const items = rows.map((row, index) => {

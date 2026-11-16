@@ -1,0 +1,22 @@
+{
+  "branchPrefix": "haiku/h7.119",
+  "globs": [
+    "docs/ownership/H7.119.json",
+    "src/app/ad/[slug]/page.tsx",
+    "src/components/AdDetail.tsx",
+    "src/components/new/NewAdDetail.tsx",
+    "src/components/new/ad-spec.css",
+    "src/components/new/home-ad-data.ts",
+    "src/components/ui/AdCard.tsx",
+    "src/lib/media.ts",
+    "src/server/listings/contact-channels.ts",
+    "src/server/listings/demo-ads.ts",
+    "src/server/listings/owner-cards.ts",
+    "src/server/media/photo-url.ts",
+    "src/server/search/query.ts",
+    "tests/e2e/ad-page.e2e.ts",
+    "tests/e2e/h7-119-real-photos.e2e.ts",
+    "tests/server/search/real-ad-photos.test.ts",
+    "tests/server/search/trust-marks.test.ts"
+  ]
+}

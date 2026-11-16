@@ -32,6 +32,7 @@ import { pickTexts } from "@/lib/ui/text";
 import { popupAlternatives } from "@/components/new/NewAdDetail";
 import { adDetailRows } from "@/lib/ad-details";
 import { User } from "@/server/models";
+import { contactChannelsOf } from "@/server/listings/contact-channels";
 
 type Props = { params: Promise<{ slug: string }> };
 
@@ -112,7 +113,8 @@ export default async function AdPage({ params }: Props) {
   }
   const ad = await getListingBySlug(slug);
   if (!ad) notFound();
-  const row = (await Listing.findOne({ slug: ad.slug }).select("_id attributes publishedAt expiresAt ownerId").lean()) as {
+  const row = (await Listing.findOne({ slug: ad.slug }).select("_id attributes publishedAt expiresAt ownerId +contact").lean()) as {
+    contact?: { phone?: string; whatsapp?: string };
     _id?: unknown;
     ownerId?: unknown;
     attributes?: unknown;
@@ -183,6 +185,7 @@ export default async function AdPage({ params }: Props) {
           heading={heading}
           tour={tour}
           peopleAd={peopleAd}
+          contactChannels={row ? contactChannelsOf(row.contact) : undefined}
           paymentsLive={coinProviderName() !== "mock"}
           alternatives={popupAlternatives(plain(ad), plain(related), paths)}
           texts={pickTexts(await textOverrides(), "ad.", "card.", "home.ads.")}

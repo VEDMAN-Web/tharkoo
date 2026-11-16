@@ -1,7 +1,7 @@
 import Link from "next/link";
 import type { ListingDoc } from "@/lib/models";
 import { displayTitle, prettyPlace, shortDateLabel } from "@/lib/format";
-import { listingPhotos } from "@/lib/media";
+import type { AdChannel } from "@/server/listings/contact-channels";
 import { ContactButtons, ContactProvider, type ContactPopupInfo } from "@/components/ContactButtons";
 import { UiTextProvider } from "@/components/ui/AdCard";
 import { TrackView } from "@/components/ui/RecentlyViewed";
@@ -42,6 +42,16 @@ function memberSinceLabel(value: string) {
   return new Intl.DateTimeFormat("en-IN", { month: "short", year: "numeric", timeZone: "UTC" }).format(date);
 }
 
+function channelsFor(wanted: AdChannel[], available?: AdChannel[]) {
+  return available ? wanted.filter((channel) => available.includes(channel)) : wanted;
+}
+
+function barClassOf(buttons: number, peopleAd: boolean) {
+  if (buttons === 1) return " has-one";
+  if (buttons === 3) return peopleAd ? " has-call" : " has-video";
+  return "";
+}
+
 function isRecent(ad: ListingDoc) {
   return Date.now() - new Date(ad.publishedAt || ad.createdAt || 0).getTime() < DAY_MS;
 }
@@ -64,7 +74,7 @@ export function popupAlternatives(ad: ListingDoc, related: ListingDoc[], paths: 
         title: displayTitle(item.title) || "Listing",
         place: district ? `${city} / ${district}` : city,
         price: formatPrice(item.price),
-        photo: listingPhotos(item.categorySlug, item.publicId || item.slug || "", item.photos || [])[0] ?? null,
+        photo: item.photos?.[0] ?? null,
       };
     });
 }
@@ -81,6 +91,7 @@ export function NewAdDetail({
   heading,
   tour,
   peopleAd = false,
+  contactChannels,
   paymentsLive = false,
   alternatives = [],
   sellerName = "",
@@ -99,6 +110,7 @@ export function NewAdDetail({
   heading?: string;
   tour?: { listingId: string; coins: number } | null;
   peopleAd?: boolean;
+  contactChannels?: AdChannel[];
   paymentsLive?: boolean;
   alternatives?: AdPopupAlt[];
   sellerName?: string;
@@ -113,7 +125,7 @@ export function NewAdDetail({
   const date = shortDateLabel(ad.publishedAt || ad.createdAt);
   const listHref = `/${ad.categorySlug}/${ad.citySlug}/`;
   const tier = tierOf(ad, categoryName);
-  const photos = listingPhotos(ad.categorySlug, ad.publicId || ad.slug || "", ad.photos || []);
+  const photos = ad.photos || [];
   const seller = sellerName?.trim() || t("ad.seller.name");
   const price = formatPrice(ad.price);
   const similar = related.filter((item) => item.slug !== ad.slug).slice(0, SIMILAR_ADS_MAX);
@@ -131,6 +143,8 @@ export function NewAdDetail({
   };
   const categoryCrumb = crumbs[1]?.path;
   const cityCrumb = crumbs.find((crumb) => crumb.name === `${city} ${categoryName}`)?.path;
+  const barChannels = channelsFor(peopleAd ? ["phone", "whatsapp"] : ["whatsapp"], contactChannels);
+  const barClass = barClassOf(barChannels.length + 1 + (tour && !peopleAd ? 1 : 0), peopleAd);
   const showPrice = !peopleAd || PRICED_PEOPLE.has(ad.categorySlug || "");
   const actionProps = { slug: ad.slug || "", publicId: ad.publicId || "", title, place: placeText };
 
@@ -200,7 +214,7 @@ export function NewAdDetail({
                 <div className="tkn-contact-panel" data-tk="contact-card">
                   {!showPrice ? null : <p className={priceText ? "tkn-ad-price" : "tkn-ad-price is-request"}>{priceText || t("ad.price.request")}</p>}
                   <AdSellerRow name={seller} verified={Boolean(ad.verified)} since={since} />
-                  <ContactButtons />
+                  <ContactButtons channels={channelsFor(["phone", "whatsapp"], contactChannels)} />
                   <AdActions {...actionProps} />
                 </div>
                 <section className="tkn-safe" data-tk="security-tips">
@@ -233,8 +247,8 @@ export function NewAdDetail({
             />
           ) : null}
           <PostStrip text={t("post.strip.text")} button={t("post.strip.button")} feeText={t("post.strip.fee")} />
-          <div className={`tkn-ad-bar${peopleAd ? " has-call" : tour ? " has-video" : ""}`} data-tk="bottom-bar">
-            <ContactButtons sticky channels={peopleAd ? ["phone", "whatsapp"] : ["whatsapp"]} />
+          <div className={`tkn-ad-bar${barClass}`} data-tk="bottom-bar">
+            <ContactButtons sticky channels={barChannels} />
           </div>
         </div>
       </ContactProvider>
