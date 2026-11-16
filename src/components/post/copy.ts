@@ -33,9 +33,9 @@ export const POST_COPY_DEFAULTS: PostCopy = {
   steps: {
     basics: { title: "What are you posting?", help: "Pick a category. This helps the right people find your ad.", nextLabel: "Continue", backLabel: "" },
     details: { title: "Describe your ad", help: "", nextLabel: "", backLabel: "" },
-    photos: { title: "Photos", help: "Add a photo of the item or place. People ads can use a portrait.", nextLabel: "Continue", backLabel: "BACK" },
+    photos: { title: "Photos", help: "Add a photo of the item or place. People ads can use a portrait.", nextLabel: "Continue", backLabel: "Back" },
     contact: { title: "Your contacts", help: "", nextLabel: "", backLabel: "" },
-    review: { title: "Publish", help: "", nextLabel: "PUBLISH", backLabel: "BACK" },
+    review: { title: "Publish", help: "", nextLabel: "PUBLISH", backLabel: "Back" },
     promote: { title: "Plan", help: "", nextLabel: "", backLabel: "" },
   },
   promoteHidden: false,
@@ -49,6 +49,7 @@ export const POST_COPY_DEFAULTS: PostCopy = {
   },
 };
 
+const LEGACY_BACK_LABEL = "BACK";
 const LEGACY_TITLES: Partial<Record<PostStepKey, string>> = { basics: "Information", details: "Your data" };
 
 type Props = Record<string, unknown>;
@@ -94,7 +95,7 @@ export function buildPostCopy(blocks: readonly BlockBase[] | null | undefined): 
         title: !str(props.title) || str(props.title) === LEGACY_TITLES[key] ? base.title : str(props.title),
         help: str(props.help) || (key === "basics" ? base.help : ""),
         nextLabel: str(props.nextLabel) || base.nextLabel,
-        backLabel: str(props.backLabel) || base.backLabel,
+        backLabel: !str(props.backLabel) || str(props.backLabel) === LEGACY_BACK_LABEL ? base.backLabel : str(props.backLabel),
       };
     } else if (block.type === "postIntro") {
       copy.intro = { title: str(props.title), text: str(props.text), image: image(props.image) };
