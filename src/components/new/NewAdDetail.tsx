@@ -6,6 +6,7 @@ import { ContactButtons, ContactProvider, type ContactPopupInfo } from "@/compon
 import { AdCard, UiTextProvider } from "@/components/ui/AdCard";
 import { TrackView } from "@/components/ui/RecentlyViewed";
 import { adPath, type UrlPaths } from "@/lib/urls";
+import { isCityAlias } from "@/lib/seo/district-alias";
 import { makeT, type UiTextMap } from "@/lib/ui/text";
 import { formatPrice } from "@/components/search/price";
 import { CitySync } from "@/components/CityContext";
@@ -34,8 +35,8 @@ function isRecent(ad: ListingDoc) {
 
 function placeOf(ad: ListingDoc) {
   const city = prettyPlace(ad.citySlug);
-  const district = ad.place && ad.place !== city ? ad.place : prettyPlace(ad.districtSlug);
-  return { city, district };
+  const named = ad.place && ad.place !== city ? ad.place : prettyPlace(ad.districtSlug);
+  return { city, district: named && !isCityAlias(city, named) ? named : "" };
 }
 
 export function popupAlternatives(ad: ListingDoc, related: ListingDoc[], paths: UrlPaths): AdPopupAlt[] {

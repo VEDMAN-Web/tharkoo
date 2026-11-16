@@ -39,7 +39,7 @@ describe("support links", () => {
   it("keeps the corrected top bar words and no placeholder text", () => {
     expect(TEXT_DEFAULTS["home.utility.live"]).toBe("Advertisers online now");
     expect(TEXT_DEFAULTS["home.utility.verified"]).toBe("Photo verified badges");
-    expect(TEXT_DEFAULTS["home.utility.ticker1"]).toBe("Chat with sellers for free");
+    expect(TEXT_DEFAULTS["home.utility.ticker1"]).toBe("Chat with advertisers for free");
     expect(TEXT_DEFAULTS["home.utility.ticker2"]).toBe("Fresh ads, live for 72 hours");
     expect(Object.values(TEXT_DEFAULTS).join(" ")).not.toMatch(/\[YOUR (PHONE|WHATSAPP|TELEGRAM)/);
   });
