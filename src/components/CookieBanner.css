@@ -12,6 +12,12 @@
 }
 .tkc-accept { border: 0; background: linear-gradient(135deg, #d1137a, #a8124f); color: #fff; }
 .tkc-necessary { border: 1.5px solid #ead8f0; background: #fff; color: #4a2870; }
-@media (max-width: 600px) {
-  .tkc-banner { left: 16px; right: 16px; max-width: none; bottom: 92px; }
+@media (max-width: 767px) {
+  .tkc-banner {
+    left: 0; right: 0; bottom: 0; max-width: none; max-height: 30vh; overflow-y: auto; border-radius: 16px 16px 0 0; border-bottom: 0;
+    padding: 12px 88px calc(12px + env(safe-area-inset-bottom, 0px)) 16px;
+  }
+  .tkc-banner p { line-height: 1.4; }
+  .tkc-actions { margin-top: 8px; }
+  .tkc-accept, .tkc-necessary { min-height: 44px; padding: 0 14px; }
 }
