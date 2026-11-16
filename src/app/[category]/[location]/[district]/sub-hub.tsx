@@ -139,6 +139,7 @@ export async function SubHub({ params, page }: { params: SubHubParams; page: num
   const frame = listingFrameProps({
     crumbs,
     h1,
+    intro: t("listing.band.introPlace", { category: hub.sub.name, place: hub.city.name }),
     photo: bandChoice(shell, hero, { city: citySlug, category: catSlug }),
     categorySlug: catSlug,
     citySlug,

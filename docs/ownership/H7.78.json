@@ -1,0 +1,15 @@
+{
+  "branchPrefix": "haiku/h7.78",
+  "globs": [
+    "docs/ownership/H7.78.json",
+    "progress/H7.78.md",
+    "src/app/[category]/[location]/[district]/page.tsx",
+    "src/app/[category]/[location]/[district]/sub-hub.tsx",
+    "src/app/[category]/[location]/page.tsx",
+    "src/app/[category]/page.tsx",
+    "src/components/new/ListingFrame.tsx",
+    "src/components/new/listing-spec.css",
+    "src/lib/ui/text.ts",
+    "tests/e2e/h7-78-phone-band.e2e.ts"
+  ]
+}
