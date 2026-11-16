@@ -2,6 +2,7 @@ import type { CtaCopy, PostCopy, StepCopy } from "./copy";
 import type { NewPostStep } from "@/lib/ui/post-form";
 
 const STEP_KEYS: Record<NewPostStep, keyof PostCopy["steps"]> = {
+  more: "details",
   category: "basics",
   details: "details",
   photos: "photos",
@@ -9,6 +10,8 @@ const STEP_KEYS: Record<NewPostStep, keyof PostCopy["steps"]> = {
   review: "review",
 };
 
+export const MORE_PEOPLE_TITLE = "More about you";
+export const MORE_TITLE = "More details";
 export const ABOUT_YOU_TITLE = "About you";
 export const ABOUT_YOU_HELP = "This shows on your ads. We ask only once, next time it is filled in for you.";
 
@@ -21,8 +24,9 @@ const REVIEW_HELP = "Look it over. Use Edit to change anything before it goes li
 const LEGACY_PUBLISH = "PUBLISH";
 const PUBLISH_LABEL = "Publish ad";
 
-export function newStepCopy(step: NewPostStep, copy: PostCopy, aboutYou: boolean): StepCopy {
+export function newStepCopy(step: NewPostStep, copy: PostCopy, aboutYou: boolean, people = false): StepCopy {
   const base = copy.steps[STEP_KEYS[step]];
+  if (step === "more") return { ...base, title: people ? MORE_PEOPLE_TITLE : MORE_TITLE, help: "", nextLabel: "", backLabel: "" };
   if (step === "contact") {
     const edited = base.title !== CONTACT_DEFAULT_TITLE && base.title !== "";
     if (aboutYou) {

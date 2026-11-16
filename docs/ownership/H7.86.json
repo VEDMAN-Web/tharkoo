@@ -17,6 +17,10 @@
     "tests/server/ui/post-step-5.test.ts",
     "tests/e2e/post-step-5.e2e.ts",
     "tests/e2e/post-steps-1-2.e2e.ts",
-    "tests/e2e/post-steps-3-4.e2e.ts"
+    "tests/e2e/post-steps-3-4.e2e.ts",
+    "src/components/post/NewPostParts.tsx",
+    "src/server/seed/data.ts",
+    "tests/server/seed/seed.test.ts",
+    "tests/e2e/post-fit.e2e.ts"
   ]
 }

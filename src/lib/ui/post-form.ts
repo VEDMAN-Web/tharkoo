@@ -130,7 +130,43 @@ export function needsIdCheck(status?: string | null) {
  * Photos have no form errors (the photo step checks its own uploads). Contact: phone. Review: the two consents.
  */
 export const NEW_POST_STEPS = ["category", "details", "photos", "contact", "review"] as const;
-export type NewPostStep = (typeof NEW_POST_STEPS)[number];
+export type NewPostStep = (typeof NEW_POST_STEPS)[number] | "more";
+
+export function stepsFor(split: boolean): NewPostStep[] {
+  return split ? ["category", "details", "more", "photos", "contact", "review"] : [...NEW_POST_STEPS];
+}
+
+export function urlStepOf(step: NewPostStep): string {
+  return step === "more" ? "more" : String(NEW_POST_STEPS.indexOf(step) + 1);
+}
+
+export function stepFromUrl(raw: string): NewPostStep | null {
+  if (raw === "more" || raw === "photos") return raw;
+  const index = Number(raw);
+  return Number.isInteger(index) && index >= 1 && index <= NEW_POST_STEPS.length ? NEW_POST_STEPS[index - 1] : null;
+}
+
+export type ExtraShape = { type: string; options: string[] };
+
+export const LONG_LIST = 8;
+const MORE_STEP_ABOVE = 118;
+const CELL_ROW = 70;
+const CHIP_BASE = 26;
+const CHIP_ROW = 48;
+const CHIPS_PER_ROW = 5;
+
+export function isChipField(field: ExtraShape): boolean {
+  if (!field.options.length) return false;
+  if (field.type === "multiselect") return true;
+  return field.type === "select" && field.options.length <= LONG_LIST;
+}
+
+export function needsMoreStep(extras: ExtraShape[]): boolean {
+  const chips = extras.filter(isChipField);
+  const cells = extras.length - chips.length;
+  const height = Math.ceil(cells / 2) * CELL_ROW + chips.reduce((sum, field) => sum + CHIP_BASE + Math.ceil(field.options.length / CHIPS_PER_ROW) * CHIP_ROW, 0);
+  return height > MORE_STEP_ABOVE;
+}
 
 /** The step a validation key belongs to. Any key not listed is a detail (title, text, city, a category field...). */
 export function stepOfError(key: string): NewPostStep {
@@ -143,10 +179,11 @@ export function stepOfError(key: string): NewPostStep {
 const ABOUT_KEYS = ["nickname", "city"];
 
 /** The errors one step is responsible for. Continue on a step checks only these, so a later step cannot block an earlier one. */
-export function errorsForStep(errors: Record<string, string>, step: NewPostStep, about = false): Record<string, string> {
+export function errorsForStep(errors: Record<string, string>, step: NewPostStep, about = false, moreKeys: readonly string[] = []): Record<string, string> {
   const out: Record<string, string> = {};
   for (const [key, message] of Object.entries(errors)) {
-    if (stepOfError(key) === step || (about && step === "contact" && ABOUT_KEYS.includes(key))) out[key] = message;
+    const owner: NewPostStep = moreKeys.includes(key) ? "more" : stepOfError(key);
+    if (owner === step || (about && step === "contact" && ABOUT_KEYS.includes(key))) out[key] = message;
   }
   return out;
 }

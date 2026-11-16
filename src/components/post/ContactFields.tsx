@@ -42,25 +42,35 @@ export function ContactFields(props: Props) {
       {mode !== "phone" && maskedEmail ? <p className="tkp-quiet" data-tk="account-email">We will use your account email: {maskedEmail}</p> : null}
       {showPhone ? (
         <>
-          <TextField id="phone" label="Phone number" required value={phone} error={error("phone")} onBlur={onBlur("phone")} inputMode="tel" placeholder="+91 81234 56789" onChange={props.onPhone} />
-          <div className="tkp-toggle-row"><span>WhatsApp</span><Switch on={whatsapp} onClick={props.onWhatsapp} label="WhatsApp" /></div>
-          {whatsapp ? (
-            <div className="tkp-sub-fields" data-tk="whatsapp-options">
-              <div className="tkp-consent">
-                <input id="whatsapp-same" type="checkbox" className="tk-check" checked={whatsappSame} onChange={props.onWhatsappSame} />
-                <label htmlFor="whatsapp-same">Same as phone number</label>
-              </div>
-              {whatsappSame ? null : (
-                <TextField id="whatsapp-number" label="WhatsApp number" required value={whatsappNumber} error={error("whatsapp")} onBlur={onBlur("whatsapp")} inputMode="tel" placeholder="+91 81234 56789" onChange={props.onWhatsappNumber} />
-              )}
+          <div className="tkp-two tkp-two-keep tkp-end">
+            <TextField id="phone" label="Phone number" required value={phone} error={error("phone")} onBlur={onBlur("phone")} inputMode="tel" placeholder="+91 81234 56789" onChange={props.onPhone} />
+            <div className="tkp-toggle-row tkp-wrap" data-tk="whatsapp-options">
+              <span>WhatsApp</span>
+              <Switch on={whatsapp} onClick={props.onWhatsapp} label="WhatsApp" />
+              {whatsapp ? (
+                <span className="tkp-same">
+                  <input id="whatsapp-same" type="checkbox" className="tk-check" checked={whatsappSame} onChange={props.onWhatsappSame} />
+                  <label htmlFor="whatsapp-same">Same as phone number</label>
+                </span>
+              ) : null}
+            </div>
+          </div>
+          {whatsapp && !whatsappSame ? (
+            <div className="tkp-two tkp-two-keep">
+              <TextField id="whatsapp-number" label="WhatsApp number" required value={whatsappNumber} error={error("whatsapp")} onBlur={onBlur("whatsapp")} inputMode="tel" placeholder="+91 81234 56789" onChange={props.onWhatsappNumber} />
+              <span />
             </div>
           ) : null}
         </>
       ) : null}
-      <div className="tkp-toggle-row"><span>Telegram</span><Switch on={telegramOn} onClick={props.onTelegramOn} label="Telegram" /></div>
-      {telegramOn ? (
-        <TextField id="telegram" label="Telegram username" required value={telegram} error={error("telegram")} onBlur={onBlur("telegram")} placeholder="@yourname" onChange={props.onTelegram} />
-      ) : null}
+      <div className="tkp-two tkp-two-keep tkp-end">
+        <div className="tkp-toggle-row"><span>Telegram</span><Switch on={telegramOn} onClick={props.onTelegramOn} label="Telegram" /></div>
+        {telegramOn ? (
+          <TextField id="telegram" label="Telegram username" required value={telegram} error={error("telegram")} onBlur={onBlur("telegram")} placeholder="@yourname" onChange={props.onTelegram} />
+        ) : (
+          <span />
+        )}
+      </div>
     </>
   );
 }

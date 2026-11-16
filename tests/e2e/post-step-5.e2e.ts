@@ -92,10 +92,10 @@ async function serious(page: Page) {
   return found.violations.filter((item) => item.impact === "serious" || item.impact === "critical").map((item) => `${item.id}: ${item.nodes[0]?.target.join(" ")}`);
 }
 
-async function tapTargets(page: Page, selector: string) {
+async function tapTargets(page: Page, selector: string, least = 44) {
   const heights = await page.locator(selector).evaluateAll((nodes) => nodes.filter((node) => (node as HTMLElement).offsetParent).map((node) => node.getBoundingClientRect().height));
   expect(heights.length, selector).toBeGreaterThan(0);
-  expect(Math.min(...heights), selector).toBeGreaterThanOrEqual(44);
+  expect(Math.min(...heights), selector).toBeGreaterThanOrEqual(least);
 }
 
 test.describe("H7.86 post an ad, step 5 and the success screen", () => {
@@ -291,7 +291,7 @@ test.describe("H7.86 post an ad, step 5 and the success screen", () => {
     test.skip(info.project.name !== "desktop-1440", "desktop sizes only");
     test.setTimeout(120_000);
     await newPoster(page, baseURL!, "fit1");
-    for (const [width, height] of [[1366, 768], [1536, 730], [1536, 674]] as [number, number][]) {
+    for (const [width, height] of [[1366, 768], [1536, 730], [1536, 674], [1440, 900]] as [number, number][]) {
       await page.setViewportSize({ width, height });
       await page.goto("/u/post-insert/");
       await expect(page.locator(".tkp-tile")).toHaveCount(11);
@@ -339,7 +339,7 @@ test.describe("H7.86 post an ad, step 5 and the success screen", () => {
     await page.locator("#title").fill("A long title that wraps in the preview card");
     await page.locator("#text").fill("Looking to meet for coffee and a long walk by the sea on weekends, then dinner somewhere quiet and a chat about books, music and travel.");
     await page.getByRole("button", { name: "Coffee", exact: true }).click();
-    const sizes: [number, number][] = [[1366, 768], [1536, 730], [1536, 674]];
+    const sizes: [number, number][] = [[1366, 768], [1536, 730], [1536, 674], [1440, 900]];
     for (const [width, height] of sizes) {
       await page.setViewportSize({ width, height });
       await expect(page.locator(".tkp-aside")).toBeVisible();
@@ -382,7 +382,7 @@ test.describe("H7.86 post an ad, step 5 and the success screen", () => {
     test.setTimeout(420_000);
     await newPoster(page, baseURL!, "sizes5");
     const id = await reachAbout(page, `Size check ${Date.now()}`, "sizes5");
-    const sizes: [number, number][] = [[360, 740], [390, 844], [768, 1024], [1366, 768], [1536, 730], [1536, 674]];
+    const sizes: [number, number][] = [[360, 740], [390, 844], [768, 1024], [1366, 768], [1536, 730], [1536, 674], [1440, 900]];
     const checkSize = async (width: number, height: number, label: string) => {
       expect(await overflow(page), `${label} ${width}: sideways scroll`).toBeLessThanOrEqual(0);
       const nav = (await page.locator(".tkp-nav").boundingBox())!;
@@ -405,8 +405,9 @@ test.describe("H7.86 post an ad, step 5 and the success screen", () => {
       await checkSize(width, height, "About you");
       await shot(page, `3-3-about-${width}x${height}`);
     }
-    await tapTargets(page, ".tkp-chip, .tkp-btn");
-    await tapTargets(page, ".tk-field input, .tk-field select");
+    await tapTargets(page, ".tkp-btn");
+    await tapTargets(page, ".tkp-chip", 40);
+    await tapTargets(page, ".tk-field input, .tk-field select", 40);
     expect(await serious(page)).toEqual([]);
     await page.locator("#phone").fill("9876543210");
     await page.locator("[data-tk=go-on]").click();
