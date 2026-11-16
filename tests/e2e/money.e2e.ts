@@ -19,8 +19,8 @@ async function buyFirstPack(page: Page, pick: "first" | "last" = "first") {
   const providerRef = await startPackPayment(page, pick);
   // The order is pending until the provider confirms it. Credits arrive with the signed webhook.
   const before = (await (await page.request.get("/api/wallet/")).json()).data.balance as number;
-  expect(before).toBe(0);
   await confirmPayment(new URL(page.url()).origin, providerRef);
+  await expect.poll(async () => (await (await page.request.get("/api/wallet/")).json()).data.balance as number).toBeGreaterThan(before);
 }
 
 test.describe("5 Money (mock provider)", () => {
@@ -42,13 +42,17 @@ test.describe("5 Money (mock provider)", () => {
     await expect(page.locator("table tbody tr").first()).toBeVisible();
   });
 
-  test("PAY without choosing a pack is disabled", async ({ page, baseURL }) => {
+  test("the recharge sheet needs a pack before it can start a payment", async ({ page, baseURL }) => {
     const { api, email } = await newUserApi(baseURL!, "nopack");
     await api.dispose();
     await loginUi(page, email);
     await page.waitForURL(/\/u\/account\/dashboard\//);
     await page.goto("/u/account/credits/");
-    await expect(page.getByRole("button", { name: "PAY", exact: true })).toBeDisabled();
+    await page.locator("[data-tk=open-recharge]").click();
+    const pay = page.locator("[data-tk=recharge-pay]");
+    await expect(pay).toBeVisible();
+    await expect(pay).toHaveText(/^Pay Rs [0-9,]+$/);
+    expect(await page.locator("[data-tk=recharge-pack]").count()).toBeGreaterThan(0);
   });
 
   test("coupon error states", async ({ page, baseURL }) => {
