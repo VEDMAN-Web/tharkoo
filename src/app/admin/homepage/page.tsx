@@ -7,7 +7,10 @@ import { isAdminRole } from "@/lib/ui/site-content";
 import { typesForPage } from "@/server/layout/blocks";
 import { HomeSeoSection } from "./HomeSeoSection";
 import { HomeCategoriesCountField } from "./HomeCategoriesCountField";
+<<<<<<< HEAD
 import { ListingBandSwitch } from "./ListingBandSwitch";
+=======
+>>>>>>> github/main
 import { LoginImageField } from "./LoginImageField";
 
 export const dynamic = "force-dynamic";
@@ -30,7 +33,10 @@ export default async function HomepageAdminPage() {
           siteLabel={canonical("/").replace(/^https?:\/\//, "")}
         />
         <HomeCategoriesCountField initial={content.homeCategoriesCount} />
+<<<<<<< HEAD
         <ListingBandSwitch initial={content.showListingBand} />
+=======
+>>>>>>> github/main
         <LoginImageField initial={content.loginImage} focus={{ x: content.loginImageFocusX, y: content.loginImageFocusY }} />
       </div>
       <p className="mb-4 t-small text-muted">
