@@ -40,7 +40,7 @@ export const POST_COPY_DEFAULTS: PostCopy = {
   },
   promoteHidden: false,
   photoRules: { title: "", items: ["JPG, PNG or WebP, 8 MB each."] },
-  promotion: { title: "", products: [], defaultCode: "", note: "Free: your ad is published once it passes our checks." },
+  promotion: { title: "", products: [], defaultCode: "", note: "Your ad is published once it passes our checks." },
   success: {
     title: "Your ad is live",
     text: "",

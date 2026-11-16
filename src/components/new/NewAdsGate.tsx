@@ -24,7 +24,7 @@ export function NewAdsGate({ enabledSlugs, postHref, children }: { enabledSlugs:
           <MapPin size={28} strokeWidth={2} />
         </span>
         <h2 id="home-empty" className="tkh-empty-title">No ads in {chosen.name} yet</h2>
-        <p className="tkh-empty-text">Be the first to post here. It is free.</p>
+        <p className="tkh-empty-text">Be the first to post here.</p>
         <Link className="tkn-btn tkn-btn-primary" href={postHref} prefetch={false}>
           Post your ad
         </Link>

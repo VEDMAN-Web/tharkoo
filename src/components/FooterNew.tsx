@@ -117,7 +117,7 @@ export function FooterNew({ siteName, shell, categories }: { siteName: string; s
             <span className="tkn-mark" aria-hidden="true">t</span>
             <span className="tkn-brand-text">
               <span className="tkn-brand-name">{siteName.toLowerCase()}</span>
-              <span className="tkn-foot-tagline">FREE CLASSIFIEDS &amp; DATING</span>
+              <span className="tkn-foot-tagline">CLASSIFIEDS &amp; DATING</span>
             </span>
           </div>
           <p className="tkn-foot-about">{f.about}</p>

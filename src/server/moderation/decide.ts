@@ -6,6 +6,7 @@ import { ConflictError, ForbiddenError, NotFoundError, ValidationError } from "@
 import { adLifetimeMs } from "@/server/listings/lifetime";
 import { revalidateListingPages } from "@/server/listings/revalidate";
 import { Category, Listing, ListingVersion, User } from "@/server/models";
+import { refundPostingFee } from "@/server/billing/posting-fee";
 import { toSlug } from "@/server/shared/slug";
 
 const audit = new AuditRepository();
@@ -75,6 +76,7 @@ export async function rejectListing(input: { id: string; roles: string[]; email:
   const listing = await pendingListing(input.id, input.roles);
   listing.status = "rejected";
   await listing.save();
-  await record(input.email, input.id, "listing.reject", { status: "rejected" }, reason);
-  return { status: "rejected" as const };
+  const refunded = await refundPostingFee({ userId: listing.ownerId.toString(), listingId: listing._id.toString(), requestId: crypto.randomUUID() });
+  await record(input.email, input.id, "listing.reject", { status: "rejected", refundedCredits: refunded }, reason);
+  return { status: "rejected" as const, refunded };
 }

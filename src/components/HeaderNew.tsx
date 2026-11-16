@@ -89,7 +89,7 @@ export function HeaderNew({
           <span className="tkn-mark" aria-hidden="true">t</span>
           <span className="tkn-brand-text">
             <span className="tkn-brand-name">{siteName.toLowerCase()}</span>
-            <span className="tkn-brand-tag">Free classifieds</span>
+            <span className="tkn-brand-tag">India classifieds</span>
           </span>
         </Link>
         <nav
