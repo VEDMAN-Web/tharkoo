@@ -323,8 +323,7 @@ test.describe("H7.86 post an ad, step 5 and the success screen", () => {
       if (width >= 1280) {
         expect(fit.perRow, `${width} tiles a row`).toBe(4);
         expect(fit.rows, `${width} rows`).toBe(3);
-        if (height < 860) expect(fit.tallest, `${width} tile height`).toBeLessThanOrEqual(66);
-        else expect(fit.tallest, `${width}x${height} tile height`).toBeGreaterThanOrEqual(100);
+        expect(fit.tallest, `${width}x${height} tile height`).toBeGreaterThanOrEqual(height < 860 ? 80 : 100);
       }
       if (height < 820) expect(fit.tipShown, `${width}x${height} tip hidden when short`).toBe(false);
       await shot(page, `3-3-step1-${width}x${height}`);
