@@ -1,0 +1,28 @@
+{
+  "branchPrefix": "haiku/h7.100",
+  "globs": [
+    "docs/ownership/H7.100.json",
+    "progress/H7.100.md",
+    "scripts/backfill-cleared-media.mjs",
+    "src/components/PostWizard.tsx",
+    "src/components/ad/VideoUploader.tsx",
+    "src/components/post/MediaTile.tsx",
+    "src/components/post/PhotoStep.tsx",
+    "src/components/post/mediaUpload.ts",
+    "src/components/upload/rules.ts",
+    "src/lib/ui/api.ts",
+    "src/lib/ui/publish-errors.ts",
+    "src/server/media/config.ts",
+    "src/server/media/mine.ts",
+    "src/server/media/service.ts",
+    "src/server/media/video.ts",
+    "src/server/shared/schemas/listings.ts",
+    "tests/e2e/h6-features.e2e.ts",
+    "tests/e2e/h7-100-posting.e2e.ts",
+    "tests/server/media/clear-photos.test.ts",
+    "tests/server/media/media.test.ts",
+    "tests/server/media/sign-schema.test.ts",
+    "tests/server/media/video.test.ts",
+    "tests/server/ui/publish-errors.test.ts"
+  ]
+}

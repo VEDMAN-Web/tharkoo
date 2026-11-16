@@ -1,0 +1,20 @@
+import type { PublishBlockReason } from "@/server/shared/publish-gate";
+
+/**
+ * Plain sentences for every reason the server can refuse to publish an ad (PublishBlockReason). The server sends the
+ * code as the message; a person never sees the code.
+ */
+export const PUBLISH_MESSAGES: Record<PublishBlockReason, string> = {
+  UNDERAGE: "You must be 18 or older to post an ad.",
+  ADULT_ATTESTATION_REQUIRED: "Please confirm that you are 18 or older before you post.",
+  ACCOUNT_NOT_ACTIVE: "Your account cannot post right now. Please contact support.",
+  VERIFICATION_REQUIRED: "Verify your ID to publish.",
+  MEDIA_NOT_CLEARED: "Your photos are still being checked. Try again in a minute.",
+  CATEGORY_DENIED: "This category is not allowed on Tharkoo. Pick another category.",
+  CATEGORY_DISABLED: "This category is switched off for now. Pick another category.",
+  ATTRIBUTE_DENIED: "One of the details is not allowed. Change it and try again.",
+};
+
+export function publishMessage(code: string | undefined | null): string | null {
+  return code && code in PUBLISH_MESSAGES ? PUBLISH_MESSAGES[code as PublishBlockReason] : null;
+}
