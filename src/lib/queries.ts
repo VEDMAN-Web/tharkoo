@@ -19,6 +19,7 @@ import type { ListingDoc } from "@/lib/models";
 import { readContent } from "@/lib/ui/site-content";
 import { LISTING_PAGE_SIZE } from "@/lib/listing-page-size";
 import { composeHomeAds, HOME_ADS_LIMIT } from "@/lib/home-ads";
+import { newestFirst } from "@/lib/seo/home-blog";
 
 const PAGE_SIZE = LISTING_PAGE_SIZE;
 const THIN = 3;
@@ -397,7 +398,7 @@ export async function getHelp(slug: string) {
 
 export async function getBlogPosts() {
   await connectDb();
-  return BlogPost.find({ status: "published" }).lean();
+  return newestFirst(await BlogPost.find({ status: "published" }).lean());
 }
 
 export async function getBlog(slug: string) {

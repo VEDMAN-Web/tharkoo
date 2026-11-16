@@ -1,0 +1,12 @@
+{
+  "branchPrefix": "haiku/h7.128",
+  "globs": [
+    "docs/ownership/H7.128.json",
+    "src/lib/seo/home-blog.ts",
+    "src/lib/queries.ts",
+    "src/app/page.tsx",
+    "src/app/blog/page.tsx",
+    "src/app/blog/[slug]/page.tsx",
+    "tests/server/seo/home-blog-seo.test.ts"
+  ]
+}

@@ -29,7 +29,7 @@ async function dispatch(request: Request) {
   const file = /^([^/]+)\/file$/.exec(path);
   if (request.method === "POST" && decision) {
     const body = parseInput(verificationDecisionBodySchema, await request.json().catch(() => undefined));
-    data = await decideVerification(user.id, decision[1], body.decision, body.reason, requestId);
+    data = await decideVerification(user.id, user.roles, decision[1], body.decision, body.reason, requestId);
   } else if (request.method === "GET" && file) {
     data = await verificationFile(user.id, user.roles, file[1], requestId);
   } else throw new NotFoundError("Not found");

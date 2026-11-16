@@ -897,7 +897,7 @@ input, select, textarea { font-size: 16px; }
 .tk-more { display: flex; justify-content: center; margin: 24px 0; }
 .tk-more a { min-width: 180px; border-radius: 20px; }
 .tk-seo-foot { font-size: 12px; color: var(--muted); margin: 32px 0; }
-.tk-seo-foot a { color: var(--accent); margin-right: 10px; }
+.tk-seo-foot a { color: var(--accent); margin-right: 10px; display: inline-block; padding-block: 5px; }
 
 .tk-back { color: var(--accent); font-size: 13px; background: none; border: 0; padding: 10px 0; }
 .tk-hair { border-top: 1px solid var(--border); }

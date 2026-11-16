@@ -60,6 +60,29 @@ export interface SiteDoc extends BaseDoc {
   requireIdCheckToPost?: boolean;
   /** Listing card width on category and city pages (H6.17): narrow 760, medium 880 (default), full. Missing means medium. */
   listingCardWidth?: "narrow" | "medium" | "full";
+  /** Emergency switches. Every switch is off unless an admin turns it on. */
+  emergency?: {
+    holdNewAds?: boolean;
+    pauseNewAccounts24h?: boolean;
+    pausePurchases?: boolean;
+    pauseVideoCalls?: boolean;
+    pausePaidPosting?: boolean;
+  };
+  /** How many days each kind of change can be undone. */
+  undoWindows?: { edits?: number; decisions?: number; credits?: number; demo?: number; settings?: number };
+  /** Ads published after this date show in "Live, not checked". Missing means none do. */
+  postModerationSince?: Date | null;
+  /** True: the home page is drawn from the page builder layout (format 2). Missing means false. */
+  homeFromLayout?: boolean;
+  /** Where listing page headings and intros come from. Missing means "legacy". */
+  listingCopySource?: "legacy" | "content";
+  /** Manual ticks on the launch checklist: who ticked and when. */
+  launchChecklist?: { junkAdsChecked?: LaunchTick | null; bannerChecked?: LaunchTick | null; paidPostingDecided?: LaunchTick | null };
+}
+
+export interface LaunchTick {
+  at: Date;
+  by: string;
 }
 
 export interface PageDoc extends BaseDoc {
@@ -206,6 +229,46 @@ const siteSchema = new Schema<SiteDoc>(
     },
     requireIdCheckToPost: { type: Boolean },
     listingCardWidth: { type: String, enum: ["narrow", "medium", "full"] },
+    emergency: {
+      type: new Schema(
+        {
+          holdNewAds: { type: Boolean, default: false },
+          pauseNewAccounts24h: { type: Boolean, default: false },
+          pausePurchases: { type: Boolean, default: false },
+          pauseVideoCalls: { type: Boolean, default: false },
+          pausePaidPosting: { type: Boolean, default: false },
+        },
+        { _id: false },
+      ),
+      default: () => ({}),
+    },
+    undoWindows: {
+      type: new Schema(
+        {
+          edits: { type: Number, default: 30, min: 1, max: 365 },
+          decisions: { type: Number, default: 7, min: 1, max: 365 },
+          credits: { type: Number, default: 7, min: 1, max: 365 },
+          demo: { type: Number, default: 7, min: 1, max: 365 },
+          settings: { type: Number, default: 30, min: 1, max: 365 },
+        },
+        { _id: false },
+      ),
+      default: () => ({}),
+    },
+    postModerationSince: { type: Date, default: null },
+    homeFromLayout: { type: Boolean, default: false },
+    listingCopySource: { type: String, enum: ["legacy", "content"], default: "legacy" },
+    launchChecklist: {
+      type: new Schema(
+        {
+          junkAdsChecked: { type: new Schema({ at: Date, by: String }, { _id: false }), default: null },
+          bannerChecked: { type: new Schema({ at: Date, by: String }, { _id: false }), default: null },
+          paidPostingDecided: { type: new Schema({ at: Date, by: String }, { _id: false }), default: null },
+        },
+        { _id: false },
+      ),
+      default: () => ({}),
+    },
   },
   { timestamps: true, collection: collectionName("sites", "Site") },
 );

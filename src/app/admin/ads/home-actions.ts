@@ -4,6 +4,7 @@ import { randomUUID } from "node:crypto";
 import { cookies } from "next/headers";
 import { SESSION_COOKIE } from "@/server/auth/http";
 import { userFromToken } from "@/server/auth/service";
+import { isAdminRole } from "@/lib/ui/site-content";
 import { homePickerData, setHomeSelectionBatch, type HomeSelectionRow } from "@/server/listings/home-selection";
 
 async function actor() {
@@ -19,6 +20,7 @@ export async function searchHomeAdsAction(query: string): Promise<{ ok: true; re
   try {
     const who = await actor();
     if (!who) return { ok: false, message: "Sign in again to search." };
+    if (!isAdminRole(who.roles)) return { ok: false, message: "Only an admin can search the ads for Home" };
     const data = await homePickerData(query);
     return { ok: true, results: data.results };
   } catch (error) {

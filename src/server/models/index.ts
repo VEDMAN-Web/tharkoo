@@ -35,7 +35,7 @@ export {
 export type { UserDoc, SessionDoc, TokenDoc, IdentityVerificationDoc } from "@/server/models/identity";
 
 export { Category, Location } from "@/server/models/catalog";
-export type { CategoryDoc, CategoryFieldDoc, FaqDoc, LocationDoc, LocationLevel } from "@/server/models/catalog";
+export type { CatalogBandDoc, CatalogPhotoDoc, CategoryDoc, CategoryFieldDoc, FaqDoc, LocationDoc, LocationLevel } from "@/server/models/catalog";
 
 export {
   Listing,
@@ -164,3 +164,6 @@ export type {
 
 export { SeoAuditRun, MAX_AUDIT_ROWS } from "@/server/models/seo";
 export type { SeoAuditRowDoc, SeoAuditRunDoc } from "@/server/models/seo";
+
+export { ContentItem, ContentRevision, CONTENT_KINDS, CONTENT_STATUSES } from "@/server/models/content";
+export type { ContentFields, ContentItemDoc, ContentKind, ContentRevisionDoc, ContentStatus } from "@/server/models/content";
