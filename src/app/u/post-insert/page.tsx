@@ -14,6 +14,9 @@ import { newDesignOn } from "@/server/site-links/new-design";
 import { getPaths } from "@/server/urls/service";
 import { idCheckRequired, idCheckScreen } from "@/server/settings/id-check";
 import { IdCheckFirst } from "@/components/post/IdCheckFirst";
+import { getCategories, getCities } from "@/lib/queries";
+import { plain } from "@/lib/plain";
+import { kindFor } from "@/server/categories/kind";
 
 export async function generateMetadata() {
   const paths = await getPaths();
@@ -59,5 +62,16 @@ export default async function PostInsertPage({
     console.error("post-ad layout could not be read; using the built-in wording", error);
   }
   // H7.5: the New design (five steps, live preview) only when the switch is on.
-  return <PostWizard copy={buildPostCopy(blocks)} requireIdCheck={requireIdCheck} newDesign={newDesign} />;
+  const [categoryRows, cityRows] = newDesign ? await Promise.all([getCategories(), getCities()]) : [[], []];
+  const categories = plain(
+    categoryRows.map((row) => ({
+      _id: String(row._id),
+      name: row.name,
+      slug: row.slug,
+      people: row.kind === "people" || kindFor(row.slug, row.fields) === "people",
+      fields: row.fields,
+    })),
+  );
+  const cities = plain(cityRows.map((row) => ({ id: row.id, name: row.name, slug: row.slug })).sort((a, b) => a.name.localeCompare(b.name)));
+  return <PostWizard copy={buildPostCopy(blocks)} requireIdCheck={requireIdCheck} newDesign={newDesign} initialCategories={categories} initialCities={cities} />;
 }

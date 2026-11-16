@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { api, fieldErrors, friendlyError } from "@/lib/ui/api";
 import { loadPostSubcategories, type PostSubcategory } from "@/server/categories/actions";
@@ -12,10 +12,14 @@ import { useUrlPaths } from "./UrlPaths";
 import { HelpCard } from "./ui/HelpCard";
 import { AdCard } from "./ui/AdCard";
 import { POST_COPY_DEFAULTS, wizardFields, type CtaCopy, type PostCopy, type PostStepKey } from "./post/copy";
-import { CATEGORY_TINTS, NEW_POST_TIPS, PostPreviewCard, PostRail, PostTip, type RailItem } from "./post/NewPostParts";
+import { NEW_POST_TIPS, PostRail, PostTip, RAIL_LABELS, type RailItem } from "./post/NewPostParts";
+import { CategoryTiles } from "./post/CategoryTiles";
+import { hintsFor } from "./post/placeholders";
+import { PostPreviewCard, PreviewSheet, previewAd } from "./post/PostPreview";
+import "./post/post-wizard.css";
 import type { ListingDoc } from "@/lib/models";
 
-type Cat = { _id: string; name: string; slug: string; fields?: Record<string, unknown>[] };
+type Cat = { _id: string; name: string; slug: string; people?: boolean; kind?: string; fields?: Record<string, unknown>[] };
 type Place = { id: string; name: string; slug: string; parentId?: string | null };
 
 /** H7.5: the New design step that reads each step's wording from the post-ad copy (see copy.ts). */
@@ -53,18 +57,22 @@ export function PostWizard({
   copy = POST_COPY_DEFAULTS,
   requireIdCheck = false,
   newDesign = false,
+  initialCategories,
+  initialCities,
 }: {
   copy?: PostCopy;
   requireIdCheck?: boolean;
   /** H7.5: the New design switch. On shows the five-step form with the live preview. Off keeps the three-step form. */
   newDesign?: boolean;
+  initialCategories?: Cat[];
+  initialCities?: Place[];
 }) {
   const paths = useUrlPaths();
   const lastStep = newDesign ? NEW_POST_STEPS.length : 3;
   const photoStep = newDesign ? NEW_PHOTO_STEP : OLD_PHOTO_STEP;
   const [step, setStep] = useState(1);
-  const [categories, setCategories] = useState<Cat[]>([]);
-  const [cities, setCities] = useState<Place[]>([]);
+  const [categories, setCategories] = useState<Cat[]>(initialCategories ?? []);
+  const [cities, setCities] = useState<Place[]>(initialCities ?? []);
   const [districts, setDistricts] = useState<Place[]>([]);
   const [categoryId, setCategoryId] = useState("");
   const [subsByCategory, setSubsByCategory] = useState<Record<string, PostSubcategory[]>>({});
@@ -94,8 +102,15 @@ export function PostWizard({
   const [done, setDone] = useState(false);
   const [plans, setPlans] = useState<{ id: string; code?: string; name: string; amount?: number }[]>([]);
   const [hydrated, setHydrated] = useState(true);
+  const [saveState, setSaveState] = useState<"idle" | "saving" | "saved">("idle");
+  const [touched, setTouched] = useState<Record<string, boolean>>({});
+  const [showAll, setShowAll] = useState(false);
+  const [previewOpen, setPreviewOpen] = useState(false);
+  const draftRef = useRef("");
+  const queueRef = useRef<Promise<unknown>>(Promise.resolve());
 
   const category = categories.find((item) => item._id === categoryId);
+  const people = Boolean(category?.people) || category?.kind === "people";
   const subOptions = subsByCategory[categoryId] ?? [];
   const fields = useMemo(() => wizardFields(category?.fields), [category]);
   const ageField = fields.find((field) => field.key === "age" || field.type === "number" && /age/i.test(field.label));
@@ -149,20 +164,24 @@ export function PostWizard({
         });
       }
     }, 0);
-    api<{ categories: Cat[] }>("/api/categories").then((res) => {
-      if (res.ok) setCategories(res.data.categories || []);
-    });
+    if (!initialCategories?.length) {
+      api<{ categories: Cat[] }>("/api/categories").then((res) => {
+        if (res.ok) setCategories(res.data.categories || []);
+      });
+    }
     loadPostSubcategories().then(setSubsByCategory).catch(() => setSubsByCategory({}));
-    api<{ locations: Place[] }>("/api/locations?type=city").then((res) => {
-      if (res.ok) setCities(res.data.locations || []);
-    });
+    if (!initialCities?.length) {
+      api<{ locations: Place[] }>("/api/locations?type=city").then((res) => {
+        if (res.ok) setCities([...(res.data.locations || [])].sort((a, b) => a.name.localeCompare(b.name)));
+      });
+    }
     if (document.cookie.split(";").some((part) => part.trim().startsWith("tk-in="))) {
       api<{ products: { id: string; code?: string; name: string; amount?: number }[] }>("/api/promotions/products").then((res) => {
         if (res.ok) setPlans(res.data.products || []);
       });
     }
     return () => window.clearTimeout(id);
-  }, [lastStep, photoStep]);
+  }, [lastStep, photoStep, initialCategories, initialCities]);
 
   useEffect(() => {
     if (!cityId) {
@@ -198,6 +217,8 @@ export function PostWizard({
   }
 
   function remember(id: string, nextStep: number) {
+    setTouched({});
+    setShowAll(false);
     const url = `${postAdPath(paths)}?step=${nextStep}&draft=${id}`;
     window.history.replaceState(null, "", url);
     setStep(nextStep);
@@ -206,6 +227,7 @@ export function PostWizard({
   function showErrors(found: Record<string, string>) {
     setErrors(found);
     setBanner("");
+    setShowAll(Object.keys(found).length > 0);
     if (Object.keys(found).length) document.querySelector("[data-tk=field-error]")?.scrollIntoView({ block: "center" });
     return Object.keys(found).length === 0;
   }
@@ -215,8 +237,15 @@ export function PostWizard({
    * the save failed (the banner then says why). The contact is sent only when `includeContact` is set, so a save from
    * an earlier step never clears a phone number that was saved later.
    */
-  async function saveAll(includeContact: boolean): Promise<string> {
-    setBusy(true);
+  function saveAll(includeContact: boolean, quiet = false): Promise<string> {
+    const task = queueRef.current.then(() => doSave(includeContact, quiet));
+    queueRef.current = task.catch(() => "");
+    return task;
+  }
+
+  async function doSave(includeContact: boolean, quiet: boolean): Promise<string> {
+    if (!quiet) setBusy(true);
+    else setSaveState("saving");
     const basics = {
       categoryId,
       title: title.trim(),
@@ -225,15 +254,21 @@ export function PostWizard({
       ...(cityId ? { cityId } : {}),
       ...(districtId ? { districtId } : {}),
     };
-    const created = draftId
-      ? await api(`/api/listings/${draftId}`, { method: "PATCH", body: JSON.stringify({ stage: "basics", ...basics }) })
+    const existing = draftRef.current || draftId;
+    const created = existing
+      ? await api(`/api/listings/${existing}`, { method: "PATCH", body: JSON.stringify({ stage: "basics", ...basics }) })
       : await api<{ id: string }>("/api/listings", { method: "POST", body: JSON.stringify(basics) });
     if (!created.ok) {
+      if (quiet) {
+        setSaveState("idle");
+        return "";
+      }
       setBusy(false);
       setBanner(created.error.code === "UNAUTHORIZED" ? "Sign in to save this draft." : friendlyError(created.error));
       return "";
     }
-    const id = draftId || String((created.data as { id?: string })?.id || "");
+    const id = existing || String((created.data as { id?: string })?.id || "");
+    draftRef.current = id;
     setDraftId(id);
     const contact = {
       ...(phone ? { phone: normalPhone(phone) } : {}),
@@ -246,12 +281,16 @@ export function PostWizard({
         stage: "details",
         attributes: { ...cleanAttrs(attrs), ...(age ? { age: Number(age) } : {}) },
         nickname,
-        ...(newDesign ? { price: priceDigits || null } : {}),
+        ...(newDesign ? { price: people ? null : priceDigits || null } : {}),
         ...(includeContact ? { contact } : {}),
       }),
     });
-    setBusy(false);
+    if (!quiet) setBusy(false);
     if (!details.ok) {
+      if (quiet) {
+        setSaveState("idle");
+        return "";
+      }
       const mapped = fieldErrors(details.error);
       const nextErrors: Record<string, string> = {};
       for (const [key, messages] of Object.entries(mapped)) {
@@ -262,7 +301,41 @@ export function PostWizard({
       setBanner(Object.values(nextErrors)[0] || friendlyError(details.error));
       return "";
     }
+    setSaveState("saved");
     return id;
+  }
+
+  const saveLatest = useRef<() => void>(() => undefined);
+  useEffect(() => {
+    saveLatest.current = () => {
+      const valid = Boolean(categoryId) && (subOptions.length === 0 || Boolean(subcategoryId)) && title.trim().length >= 5 && text.trim().length >= 20 && Boolean(cityId);
+      if (!newDesign || !hydrated || step > 2 || !valid || done) return;
+      void saveAll(false, true).then((id) => {
+        if (id) window.history.replaceState(null, "", `${postAdPath(paths)}?step=${step}&draft=${id}`);
+      });
+    };
+  });
+
+  useEffect(() => {
+    if (!newDesign) return;
+    const id = window.setTimeout(() => saveLatest.current(), 800);
+    return () => window.clearTimeout(id);
+  }, [newDesign, categoryId, subcategoryId, cityId, districtId, title, text, price, nickname, age, attrs]);
+
+  function moveOnEnter(event: React.KeyboardEvent<HTMLElement>) {
+    const target = event.target as HTMLElement;
+    if (event.key !== "Enter" || !(target instanceof HTMLInputElement) || target.type === "checkbox") return;
+    event.preventDefault();
+    const fields = Array.from(event.currentTarget.querySelectorAll<HTMLElement>("input:not([type=hidden]):not([type=checkbox]), select, textarea")).filter((el) => !el.hasAttribute("disabled"));
+    const next = fields[fields.indexOf(target) + 1];
+    if (next) next.focus();
+    else document.querySelector<HTMLButtonElement>("[data-tk=go-on]")?.click();
+  }
+
+  function keepFocusedFieldVisible(event: React.FocusEvent<HTMLElement>) {
+    const target = event.target as HTMLElement;
+    if (!/^(INPUT|SELECT|TEXTAREA)$/.test(target.tagName) || !window.matchMedia("(max-width: 1023px)").matches) return;
+    window.setTimeout(() => target.scrollIntoView({ block: "center", behavior: "smooth" }), 250);
   }
 
   /** The three-step form (New design off): one check of everything, then one save. */
@@ -442,11 +515,11 @@ export function PostWizard({
     </div>
   );
 
-  /** The category fields the seller fills in (the "About You" group, or "More about it" in the New design). */
+  /** The category fields the seller fills in (the "About You" group in the old form, a plain block in the New design). */
   function renderExtraFields() {
     if (!extra.length) return null;
-    return (
-      <Group title="About You">
+    const rows = (
+      <>
         {extra.map((field) =>
           field.options.length && (field.type === "select" || field.type === "multiselect") ? (
             <PickGroup
@@ -465,8 +538,9 @@ export function PostWizard({
             <TextField key={field.key} id={field.key} label={field.label} required={field.required} note={field.help} placeholder={field.placeholder} error={errors[field.key]} value={textOf(attrs[field.key])} onChange={(value) => setAttrs((prev) => ({ ...prev, [field.key]: value }))} />
           ),
         )}
-      </Group>
+      </>
     );
+    return newDesign ? <div className="tkp-group">{rows}</div> : <Group title="About You">{rows}</Group>;
   }
 
   function renderContactFields() {
@@ -511,21 +585,44 @@ export function PostWizard({
     );
   }
 
-  /** H7.5: the New design. Five steps, a step rail, the live preview and the tip. Logic is shared with the three-step form. */
+  /** H7.83: the New design. Five steps, a step rail, the live preview (the real ad card) and the tip. Logic is shared with the three-step form. */
   function renderNewDesign() {
     const current = NEW_POST_STEPS[step - 1] ?? "category";
     const stepCopy = steps[NEW_STEP_COPY[current]];
     const railItems: RailItem[] = NEW_POST_STEPS.map((key, index) => ({
       key,
-      label: steps[NEW_STEP_COPY[key]].title,
+      label: RAIL_LABELS[key],
       num: index + 1,
       state: index + 1 < step ? "done" : index + 1 === step ? "current" : "todo",
       clickable: index + 1 < step ? true : index + 1 === step,
     }));
     const placeParts = [cityName, districtName].filter(Boolean).join(" / ");
     const previewPrice = priceDigits ? `₹${Number(priceDigits).toLocaleString("en-IN")}` : "";
+    const hints = hintsFor(category?.slug);
+    const adPreview = previewAd({
+      title: title.trim(),
+      description: text.trim(),
+      categorySlug: category?.slug ?? "",
+      citySlug: cities.find((item) => item.id === cityId)?.slug ?? "",
+      districtName,
+      price: people || !priceDigits ? null : Number(priceDigits),
+      cover: null,
+    });
+    const categoryReady = Boolean(categoryId) && (subOptions.length === 0 || Boolean(subcategoryId));
+    const live = errorsForStep(validate(), current);
+    const err = (key: string) => (showAll || touched[key] ? live[key] : undefined) ?? errors[key];
+    const blur = (key: string) => () => setTouched((prev) => ({ ...prev, [key]: true }));
     return (
       <div className="tkp-post" data-design="post-new">
+        <div className="tkp-top">
+          <p className="tkp-top-title">Post an ad</p>
+          <div className="tkp-top-actions">
+            <span className="tkp-saved" data-state={saveState} data-tk="draft-saved" role="status">
+              {saveState === "saving" ? "Saving…" : "Saved"}
+            </span>
+            <Link href="/u/account/ads/" className="tkp-exit" data-tk="exit-post">Exit</Link>
+          </div>
+        </div>
         <div className="tkp-progress" aria-hidden><i style={{ width: `${(step / NEW_POST_STEPS.length) * 100}%` }} /></div>
         <div className="tkp-grid">
           <PostRail
@@ -537,147 +634,138 @@ export function PostWizard({
               else setStep(num);
             }}
           />
-          <section className="tkp-main" aria-labelledby="post-step-title">
-            <p className="tkp-kicker" data-tk="step-of">Step {step} of {NEW_POST_STEPS.length}</p>
-            <h1 id="post-step-title" className="tkp-h1" data-tk="step-title">{stepCopy.title}</h1>
-            {stepCopy.help ? <p className="tkp-help" data-tk="step-help">{stepCopy.help}</p> : null}
-            <div aria-live="polite" className="tkp-banner">
-              {banner}{" "}
-              {banner.startsWith("Sign in") ? <Link href={`${loginPath(paths)}?next=${encodeURIComponent(postAdPath(paths))}`}>Log in</Link> : null}
-              {/ID needs a quick check/i.test(banner) ? <Link href="/u/account/kyc/" data-tk="verify-id">Verify ID</Link> : null}
+          <section className="tkp-main" aria-labelledby="post-step-title" onFocusCapture={keepFocusedFieldVisible}>
+            <div className="tkp-head">
+              <p className="tkp-kicker" data-tk="step-of">Step {step} of {NEW_POST_STEPS.length}</p>
+              <h1 id="post-step-title" className="tkp-h1" data-tk="step-title">{stepCopy.title}</h1>
+              {stepCopy.help ? <p className="tkp-help" data-tk="step-help">{stepCopy.help}</p> : null}
+              <div aria-live="polite" className="tkp-banner">
+                {banner}{" "}
+                {banner.startsWith("Sign in") ? <Link href={`${loginPath(paths)}?next=${encodeURIComponent(postAdPath(paths))}`}>Log in</Link> : null}
+                {/ID needs a quick check/i.test(banner) ? <Link href="/u/account/kyc/" data-tk="verify-id">Verify ID</Link> : null}
+              </div>
             </div>
+            <div className="tkp-scroll" onKeyDown={moveOnEnter}>
+              {current === "category" ? (
+                <>
+                  <CategoryTiles categories={categories} selectedId={categoryId} onPick={(id) => { setCategoryId(id); setSubcategoryId(""); }} />
+                  {errors.category ? <p className="tk-error" data-tk="field-error">{errors.category}</p> : null}
+                  {subOptions.length > 0 ? (
+                    <>
+                      <p className="tkp-sub-title" id="sub-title">{category ? `Sub-category in ${category.name}` : "Sub-category"}</p>
+                      <div className="tkp-chips" role="group" aria-labelledby="sub-title">
+                        {subOptions.map((sub) => {
+                          const pressed = sub.id === subcategoryId;
+                          return (
+                            <button key={sub.id} type="button" className={`tkp-chip ${pressed ? "on" : ""}`} aria-pressed={pressed} onClick={() => setSubcategoryId(sub.id)}>
+                              {sub.name}
+                            </button>
+                          );
+                        })}
+                      </div>
+                      {errors.subcategory ? <p className="tk-error" data-tk="field-error">{errors.subcategory}</p> : null}
+                    </>
+                  ) : null}
+                </>
+              ) : null}
 
-            {current === "category" ? (
-              <>
-                <div className="tkp-tiles" role="group" aria-label="Category">
-                  {categories.map((cat, index) => {
-                    const pressed = cat._id === categoryId;
-                    const tint = CATEGORY_TINTS[index % CATEGORY_TINTS.length];
-                    return (
-                      <button
-                        key={cat._id}
-                        type="button"
-                        className={`tkp-tile ${pressed ? "on" : ""}`}
-                        aria-pressed={pressed}
-                        onClick={() => { setCategoryId(cat._id); setSubcategoryId(""); }}
-                      >
-                        <span className="tkp-tile-mark" style={{ background: tint.tint, color: tint.ink }} aria-hidden>{cat.name.charAt(0).toUpperCase()}</span>
-                        <span className="tkp-tile-name">{cat.name}</span>
+              {current === "details" ? (
+                <div className="tkp-fields">
+                  <div className="tkp-two tkp-two-keep">
+                    <SelectField id="city" label="City" required value={cityId} error={err("city")} onBlur={blur("city")} onChange={(value) => { setCityId(value); setDistrictId(""); }}>
+                      <option value="">Select city</option>
+                      {cities.map((city) => (
+                        <option key={city.id} value={city.id}>{city.name}</option>
+                      ))}
+                    </SelectField>
+                    <SelectField id="district" label="Area" value={districtId} error={err("district")} disabled={!cityId} onChange={setDistrictId}>
+                      <option value="">{cityId ? "Select area" : "Pick a city first"}</option>
+                      {districts.map((item) => (
+                        <option key={item.id} value={item.id}>{item.name}</option>
+                      ))}
+                    </SelectField>
+                  </div>
+                  <div className="tkp-two tkp-two-keep">
+                    <TextField id="nickname" label="Nickname" required value={nickname} error={err("nickname")} onBlur={blur("nickname")} placeholder="Your name or nickname" onChange={(value) => setNickname(value.slice(0, 20))} />
+                    {ageField ? <TextField id="age" label="Age" required={ageField.required} value={age} error={err("age")} onBlur={blur("age")} inputMode="numeric" placeholder="18 to 99" onChange={(value) => setAge(value.replace(/\D/g, "").slice(0, 2))} /> : <span />}
+                  </div>
+                  <TextField id="title" label="Ad title" required value={title} error={err("title")} onBlur={blur("title")} note={`${title.length} / 70`} placeholder={hints.title} onChange={(value) => setTitle(value.slice(0, 70))} />
+                  <TextField id="text" label="Description" required area rows={4} value={text} error={err("text")} onBlur={blur("text")} note="20 characters or more" placeholder={hints.text} onChange={setText} />
+                  {people ? null : <TextField id="price" label="Price (₹)" value={price} error={err("price")} onBlur={blur("price")} inputMode="numeric" placeholder="18,000" onChange={setPrice} />}
+                  {renderExtraFields()}
+                </div>
+              ) : null}
+
+              {current === "photos" ? (
+                <PhotoStep listingId={draftId} copy={copy} onBack={() => remember(draftId, 2)} onNext={() => remember(draftId, NEW_CONTACT_STEP)} />
+              ) : null}
+
+              {current === "contact" ? (
+                <div className="tkp-fields">
+                  <p className="tkp-sub-title" style={{ margin: 0 }}>How would you like to be contacted?</p>
+                  <div className="tkp-chips" role="group" aria-label="How people reach you">
+                    {[
+                      ["phone", "Only Phone"],
+                      ["email", "Only Email"],
+                      ["both", "Email and Phone"],
+                    ].map(([id, label]) => (
+                      <button key={id} type="button" className={`tkp-chip ${contactMode === id ? "on" : ""}`} aria-pressed={contactMode === id} onClick={() => setContactMode(id)}>
+                        {label}
                       </button>
-                    );
-                  })}
-                </div>
-                {errors.category ? <p className="tk-error" data-tk="field-error">{errors.category}</p> : null}
-                {subOptions.length > 0 ? (
-                  <>
-                    <p className="tkp-sub-title" id="sub-title">{category ? `Sub-category in ${category.name}` : "Sub-category"}</p>
-                    <div className="tkp-chips" role="group" aria-labelledby="sub-title">
-                      {subOptions.map((sub) => {
-                        const pressed = sub.id === subcategoryId;
-                        return (
-                          <button key={sub.id} type="button" className={`tkp-chip ${pressed ? "on" : ""}`} aria-pressed={pressed} onClick={() => setSubcategoryId(sub.id)}>
-                            {sub.name}
-                          </button>
-                        );
-                      })}
-                    </div>
-                    {errors.subcategory ? <p className="tk-error" data-tk="field-error">{errors.subcategory}</p> : null}
-                  </>
-                ) : null}
-              </>
-            ) : null}
-
-            {current === "details" ? (
-              <div className="tkp-fields">
-                <div className="tkp-two">
-                  <SelectField id="city" label="City" required value={cityId} error={errors.city} onChange={(value) => { setCityId(value); setDistrictId(""); }}>
-                    <option value="">Select city</option>
-                    {cities.map((city) => (
-                      <option key={city.id} value={city.id}>{city.name}</option>
                     ))}
-                  </SelectField>
-                  <SelectField id="district" label="Area" value={districtId} error={errors.district} disabled={!cityId} onChange={setDistrictId}>
-                    <option value="">Select area</option>
-                    {districts.map((item) => (
-                      <option key={item.id} value={item.id}>{item.name}</option>
-                    ))}
-                  </SelectField>
+                  </div>
+                  <TextField id="phone" label="Phone number" required={contactMode !== "email"} value={phone} error={err("phone")} onBlur={blur("phone")} inputMode="tel" placeholder="+91 81234 56789" onChange={setPhone} />
+                  <div className="tkp-toggle-row"><span>WhatsApp</span><Switch on={whatsapp} onClick={() => setWhatsapp((v) => !v)} label="WhatsApp" /></div>
+                  <div className="tkp-toggle-row"><span>Telegram</span><Switch on={telegramOn} onClick={() => setTelegramOn((v) => !v)} label="Telegram" /></div>
+                  {telegramOn ? <TextField id="telegram" label="Telegram" value={telegram} onChange={setTelegram} /> : null}
                 </div>
-                <TextField id="title" label="Ad title" required value={title} error={errors.title} note={`${title.length} / 70`} placeholder="For example: 2 BHK flat near Adajan" onChange={(value) => setTitle(value.slice(0, 70))} />
-                <TextField id="text" label="Description" required area rows={5} value={text} error={errors.text} note="20 characters required" placeholder="Spacious 2 BHK on the 4th floor with lift and covered parking." onChange={setText} />
-                <div className="tkp-two">
-                  <TextField id="price" label="Price (₹)" value={price} error={errors.price} placeholder="18,000" onChange={setPrice} />
-                  <TextField id="nickname" label="Nickname" required value={nickname} error={errors.nickname} note="max 20 characters" placeholder="Insert your name or nickname" onChange={setNickname} />
+              ) : null}
+
+              {current === "review" ? (
+                <div className="tkp-fields">
+                  <dl className="tkp-summary">
+                    <div><dt>Category</dt><dd>{[category?.name, subOptions.find((sub) => sub.id === subcategoryId)?.name].filter(Boolean).join(" › ") || "Not chosen"}</dd></div>
+                    <div><dt>Title</dt><dd>{title.trim() || "No title yet"}</dd></div>
+                    {people ? null : <div><dt>Price</dt><dd>{previewPrice || "Not set"}</dd></div>}
+                    <div><dt>Place</dt><dd>{placeParts || "Not set"}</dd></div>
+                    <div><dt>Contact</dt><dd>{contactMode === "email" ? "Email only" : phone ? normalPhone(phone) : "Not set"}</dd></div>
+                  </dl>
+                  <p className="tkp-note">Your ad stays live for 72 hours after it is approved. You can renew it from your panel.</p>
+                  {renderConsents()}
                 </div>
-                {ageField ? <TextField id="age" label="Age" required value={age} error={errors.age} onChange={setAge} /> : null}
-                {renderExtraFields()}
-              </div>
-            ) : null}
-
-            {current === "photos" ? (
-              <PhotoStep listingId={draftId} copy={copy} onBack={() => remember(draftId, 2)} onNext={() => remember(draftId, NEW_CONTACT_STEP)} />
-            ) : null}
-
-            {current === "contact" ? (
-              <div className="tkp-fields">
-                <p className="tkp-sub-title">How would you like to be contacted?</p>
-                <div className="tkp-chips" role="group" aria-label="How buyers reach you">
-                  {[
-                    ["phone", "Only Phone"],
-                    ["email", "Only Email"],
-                    ["both", "Email and Phone"],
-                  ].map(([id, label]) => (
-                    <button key={id} type="button" className={`tkp-chip ${contactMode === id ? "on" : ""}`} aria-pressed={contactMode === id} onClick={() => setContactMode(id)}>
-                      {label}
-                    </button>
-                  ))}
-                </div>
-                <TextField id="phone" label="Phone number" required={contactMode !== "email"} value={phone} error={errors.phone} placeholder="+91 81234 56789" onChange={setPhone} />
-                <div className="tkp-toggle-row"><span>WhatsApp</span><Switch on={whatsapp} onClick={() => setWhatsapp((v) => !v)} label="WhatsApp" /></div>
-                <div className="tkp-toggle-row"><span>Telegram</span><Switch on={telegramOn} onClick={() => setTelegramOn((v) => !v)} label="Telegram" /></div>
-                {telegramOn ? <TextField id="telegram" label="Telegram" value={telegram} onChange={setTelegram} /> : null}
-              </div>
-            ) : null}
-
-            {current === "review" ? (
-              <div className="tkp-fields">
-                <dl className="tkp-summary">
-                  <div><dt>Category</dt><dd>{[category?.name, subOptions.find((sub) => sub.id === subcategoryId)?.name].filter(Boolean).join(" › ") || "Not chosen"}</dd></div>
-                  <div><dt>Title</dt><dd>{title.trim() || "No title yet"}</dd></div>
-                  <div><dt>Price</dt><dd>{previewPrice || "Not set"}</dd></div>
-                  <div><dt>Place</dt><dd>{placeParts || "Not set"}</dd></div>
-                  <div><dt>Contact</dt><dd>{contactMode === "email" ? "Email only" : phone ? normalPhone(phone) : "Not set"}</dd></div>
-                </dl>
-                <p className="tkp-note">Your ad stays live for 72 hours after it is approved. You can renew it from your panel.</p>
-                {renderConsents()}
-              </div>
-            ) : null}
+              ) : null}
+            </div>
 
             {current !== "photos" ? (
               <div className="tkp-nav">
                 {step > 1 ? (
-                  <button type="button" className="tkp-btn tkp-btn-ghost" onClick={() => (draftId ? remember(draftId, step - 1) : setStep(step - 1))}>
+                  <button type="button" className="tkp-btn" onClick={() => (draftId ? remember(draftId, step - 1) : setStep(step - 1))}>
                     {stepCopy.backLabel || "Back"}
                   </button>
                 ) : <span />}
-                {current === "review" ? (
-                  <button type="button" className="tkp-btn tkp-btn-primary" data-tk="go-on" disabled={busy || !hydrated || !title.trim()} onClick={publish}>
-                    {stepCopy.nextLabel || "Publish ad"}
-                  </button>
-                ) : (
-                  <button type="button" className="tkp-btn tkp-btn-primary" data-tk="go-on" disabled={busy} onClick={() => continueFrom(current)}>
-                    {stepCopy.nextLabel || "Continue"}
-                  </button>
-                )}
+                <div className="tkp-nav-right">
+                  <button type="button" className="tkp-btn tkp-btn-preview" data-tk="open-preview" onClick={() => setPreviewOpen(true)}>Preview</button>
+                  {current === "review" ? (
+                    <button type="button" className="tkp-btn tkp-btn-primary" data-tk="go-on" disabled={busy || !hydrated || !title.trim()} onClick={publish}>
+                      {stepCopy.nextLabel || "Publish ad"}
+                    </button>
+                  ) : (
+                    <button type="button" className="tkp-btn tkp-btn-primary" data-tk="go-on" disabled={busy || (current === "category" && !categoryReady)} onClick={() => continueFrom(current)}>
+                      {stepCopy.nextLabel || "Continue"}
+                    </button>
+                  )}
+                </div>
               </div>
             ) : null}
           </section>
           <aside className="tkp-aside">
-            <PostPreviewCard title={title.trim()} category={category?.name ?? ""} place={placeParts} price={previewPrice} previewLabel="Live preview" />
+            <p className="tkp-aside-label">Live preview</p>
+            <PostPreviewCard ad={adPreview} label="Live preview" />
+            <p className="tkp-preview-line">This is how your ad will look. Posting is free.</p>
             <PostTip text={NEW_POST_TIPS[current]} />
           </aside>
         </div>
-        <HelpCard />
+        {previewOpen ? <PreviewSheet ad={adPreview} onClose={() => setPreviewOpen(false)} /> : null}
       </div>
     );
   }
@@ -710,6 +798,7 @@ function SelectField({
   error,
   disabled,
   help,
+  onBlur,
   onChange,
   children,
 }: {
@@ -720,13 +809,14 @@ function SelectField({
   error?: string;
   disabled?: boolean;
   help?: string;
+  onBlur?: () => void;
   onChange: (value: string) => void;
   children: React.ReactNode;
 }) {
   return (
     <label className={`tk-field ${error ? "is-bad" : ""}`} htmlFor={id}>
       <span>{required ? "* " : ""}{label}</span>
-      <select id={id} value={value} disabled={disabled} onChange={(event) => onChange(event.target.value)}>{children}</select>
+      <select id={id} value={value} disabled={disabled} onBlur={onBlur} onChange={(event) => onChange(event.target.value)}>{children}</select>
       {help ? <span className="t-caption" style={{ color: "var(--muted)" }}>{help}</span> : null}
       {error ? <span className="tk-error" data-tk="field-error">{error}</span> : null}
     </label>
@@ -743,6 +833,8 @@ function TextField({
   placeholder,
   area,
   rows,
+  inputMode,
+  onBlur,
   onChange,
 }: {
   id: string;
@@ -754,6 +846,8 @@ function TextField({
   placeholder?: string;
   area?: boolean;
   rows?: number;
+  inputMode?: "numeric" | "tel" | "text";
+  onBlur?: () => void;
   onChange: (value: string) => void;
 }) {
   return (
@@ -763,9 +857,21 @@ function TextField({
         {note ? <span style={{ fontWeight: 500, color: "var(--muted)" }}>{note}</span> : null}
       </span>
       {area ? (
-        <textarea id={id} rows={rows || 2} value={value} placeholder={placeholder} onChange={(event) => onChange(event.target.value)} />
+        <textarea
+          id={id}
+          rows={rows || 2}
+          value={value}
+          placeholder={placeholder}
+          onBlur={onBlur}
+          ref={(node) => {
+            if (!node) return;
+            node.style.height = "auto";
+            node.style.height = `${Math.min(node.scrollHeight + 2, 200)}px`;
+          }}
+          onChange={(event) => onChange(event.target.value)}
+        />
       ) : (
-        <input id={id} value={value} placeholder={placeholder} onChange={(event) => onChange(event.target.value)} />
+        <input id={id} value={value} placeholder={placeholder} inputMode={inputMode} onBlur={onBlur} onChange={(event) => onChange(event.target.value)} />
       )}
       {error ? <span className="tk-error" data-tk="field-error">{error}</span> : null}
     </label>

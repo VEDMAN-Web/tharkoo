@@ -31,8 +31,8 @@ export interface PostCopy {
 export const POST_COPY_DEFAULTS: PostCopy = {
   intro: null,
   steps: {
-    basics: { title: "Information", help: "", nextLabel: "Continue", backLabel: "" },
-    details: { title: "Your data", help: "", nextLabel: "", backLabel: "" },
+    basics: { title: "What are you posting?", help: "Pick a category. This helps the right people find your ad.", nextLabel: "Continue", backLabel: "" },
+    details: { title: "Describe your ad", help: "", nextLabel: "", backLabel: "" },
     photos: { title: "Photos", help: "Add a photo of the item or place. People ads can use a portrait.", nextLabel: "Continue", backLabel: "BACK" },
     contact: { title: "Your contacts", help: "", nextLabel: "", backLabel: "" },
     review: { title: "Publish", help: "", nextLabel: "PUBLISH", backLabel: "BACK" },
@@ -48,6 +48,8 @@ export const POST_COPY_DEFAULTS: PostCopy = {
     secondaryCta: { label: "Post another ad", href: "" },
   },
 };
+
+const LEGACY_TITLES: Partial<Record<PostStepKey, string>> = { basics: "Information", details: "Your data" };
 
 type Props = Record<string, unknown>;
 
@@ -89,8 +91,8 @@ export function buildPostCopy(blocks: readonly BlockBase[] | null | undefined): 
       if (key === "promote") sawPromote = true;
       const base = POST_COPY_DEFAULTS.steps[key];
       copy.steps[key] = {
-        title: str(props.title) || base.title,
-        help: str(props.help),
+        title: !str(props.title) || str(props.title) === LEGACY_TITLES[key] ? base.title : str(props.title),
+        help: str(props.help) || (key === "basics" ? base.help : ""),
         nextLabel: str(props.nextLabel) || base.nextLabel,
         backLabel: str(props.backLabel) || base.backLabel,
       };

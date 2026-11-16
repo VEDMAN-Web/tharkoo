@@ -54,7 +54,7 @@ export function validatePost(input: PostDraftInput) {
   if (input.text.trim().length < 20) next.text = "You must enter at least 20 characters";
   if (input.contactMode !== "email" && !input.phone.replace(/[\s-]/g, "")) next.phone = "If you want to be contacted by phone, please fill in this field";
   if (input.ageRequired && !input.age.trim()) next.age = "Please, fill in this field";
-  else if (input.age && (Number(input.age) < 18 || Number(input.age) > 120)) next.age = "Invalid field";
+  else if (input.age && (Number(input.age) < 18 || Number(input.age) > 99)) next.age = "Invalid field";
   if (!input.terms) next.terms = "Please, fill in this field";
   if (!input.adult) next.adult = "Please, fill in this field";
   for (const field of input.fields) {

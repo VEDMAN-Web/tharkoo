@@ -1,0 +1,21 @@
+{
+  "branchPrefix": "haiku/h7.83",
+  "globs": [
+    "docs/ownership/H7.83.json",
+    "src/app/globals.css",
+    "src/app/u/post-insert/page.tsx",
+    "src/components/PostWizard.tsx",
+    "src/components/post/CategoryTiles.tsx",
+    "src/components/post/NewPostParts.tsx",
+    "src/components/post/PostPreview.tsx",
+    "src/components/post/categoryIcons.ts",
+    "src/components/post/copy.ts",
+    "src/components/post/placeholders.ts",
+    "src/components/post/post-wizard.css",
+    "src/lib/ui/post-form.ts",
+    "tests/e2e/post-check-switch.e2e.ts",
+    "tests/e2e/post-new-design.e2e.ts",
+    "tests/e2e/post-steps-1-2.e2e.ts",
+    "tests/server/ui/post-wizard-copy.test.ts"
+  ]
+}

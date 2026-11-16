@@ -27,7 +27,7 @@ test.describe("H6.14 ID-check switch on post-ad", () => {
     await loginUi(page, email, USER_PASSWORD, "/u/post-insert/");
     await page.waitForURL(/\/u\/post-insert\//);
     // The form opens straight away: no check-first screen, no Verify ID link.
-    await expect(page.locator("[data-tk=step-title]")).toContainText(/information/i);
+    await expect(page.locator("[data-tk=step-title]")).toHaveText("What are you posting?");
     await expect(page.locator("[data-tk=id-check-first]")).toHaveCount(0);
     await expectNoHorizontalScroll(page);
 
