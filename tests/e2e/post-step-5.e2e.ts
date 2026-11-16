@@ -251,7 +251,7 @@ test.describe("H7.86 post an ad, step 5 and the success screen", () => {
     await page.locator("#whatsapp-number").blur();
     await page.getByRole("switch", { name: "Telegram" }).click();
     await expect(page.locator("#telegram")).toHaveAttribute("placeholder", "@yourname");
-    await expect(page.getByText("Telegram username", { exact: true })).toBeVisible();
+    await expect(page.locator("label[for=telegram]")).toContainText("Telegram username");
     await page.locator("#telegram").fill("ab");
     await page.locator("[data-tk=go-on]").click();
     await expect(page.getByText("Use +91 and 10 digits")).toBeVisible();

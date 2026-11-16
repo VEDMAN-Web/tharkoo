@@ -740,7 +740,7 @@ export function PostWizard({
               else setStep(num);
             }}
           />
-          <section className="tkp-main" aria-labelledby="post-step-title" onFocusCapture={keepFocusedFieldVisible}>
+          <section className="tkp-main" data-step={current} aria-labelledby="post-step-title" onFocusCapture={keepFocusedFieldVisible}>
             <div className="tkp-head">
               <p className="tkp-kicker" data-tk="step-of">Step {step} of {NEW_POST_STEPS.length}</p>
               <h1 id="post-step-title" className="tkp-h1" data-tk="step-title">{stepCopy.title}</h1>
