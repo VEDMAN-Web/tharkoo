@@ -1,6 +1,7 @@
 import { BadgeCheck, Circle, Image as ImageIcon, ListFilter, SlidersHorizontal, ToggleRight, Video } from "lucide-react";
 import { ListingPlaceSelects } from "./ListingPlaceSelects";
 import { KeywordField } from "./KeywordField";
+import { InstantForm } from "./InstantForm";
 import type { IconKind, ListingLabels, ListingToggles, PanelRow, PlaceSelects } from "./listing-filters";
 
 /**
@@ -21,6 +22,7 @@ export function ListingFilterPanel({
   hidden = [],
   placesOnly = false,
   keyword,
+  total,
 }: {
   action: string;
   clearHref: string;
@@ -32,9 +34,10 @@ export function ListingFilterPanel({
   hidden?: { name: string; value: string }[];
   placesOnly?: boolean;
   keyword?: KeywordProps;
+  total?: number;
 }) {
   return (
-    <form method="get" action={action} className="tkn-ls-form" aria-label={labels.panelTitle}>
+    <InstantForm action={action} className="tkn-ls-form" label={labels.panelTitle}>
       {hidden.map((field) => (
         <input key={`${field.name}-${field.value}`} type="hidden" name={field.name} value={field.value} />
       ))}
@@ -53,12 +56,12 @@ export function ListingFilterPanel({
           <a href={clearHref} className="tkn-ls-clear">
             {labels.clear}
           </a>
-          <button type="submit" className="tkn-ls-go">
-            {labels.apply}
+          <button type="submit" className="tkn-ls-go" data-sheet-close="" data-tk="show-count">
+            {total === undefined ? labels.apply : total === 1 ? labels.showOne : labels.show.replace("{count}", total.toLocaleString("en-IN"))}
           </button>
         </div>
       )}
-    </form>
+    </InstantForm>
   );
 }
 

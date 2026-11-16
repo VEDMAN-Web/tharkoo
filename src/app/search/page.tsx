@@ -3,7 +3,7 @@ import { notFound } from "next/navigation";
 import { ListingPageView } from "@/components/ListingPage";
 import { FallbackAds } from "@/components/FallbackAds";
 import { ListingFrame } from "@/components/new/ListingFrame";
-import { SearchHeader } from "@/components/new/SearchHeader";
+import { SearchBar, SearchChips, SearchTop } from "@/components/new/SearchHeader";
 import { searchChips, searchHeading, searchHref, sortFrom } from "@/components/new/search-header";
 import { listingFrameProps, listingLabels, searchPlaceSelects } from "@/components/new/listing-frame-props";
 import { attributePicks, hasFieldPicks, type ListingToggles } from "@/components/new/listing-filters";
@@ -179,19 +179,11 @@ export default async function SearchPage({ searchParams }: { searchParams: Promi
         labels={labels}
         filters={frame.filters}
         activeCount={frame.activeCount}
-        header={
-          <SearchHeader
-            crumbs={crumbs}
-            breadcrumbLabel={labels.breadcrumb}
-            heading={searchHeading(searchState, t)}
-            total={feed.total}
-            sortValue={sortValue}
-            sortOptions={sortOptions}
-            chips={searchChips(base, allParams, searchState, labels, t)}
-            clearHref={base}
-            t={t}
-          />
-        }
+        header={{
+          top: <SearchTop crumbs={crumbs} breadcrumbLabel={labels.breadcrumb} heading={searchHeading(searchState, t)} />,
+          bar: <SearchBar total={feed.total} sortValue={sortValue} sortOptions={sortOptions} t={t} />,
+          chips: <SearchChips chips={searchChips(base, allParams, searchState, labels, t)} clearHref={base} t={t} />,
+        }}
       >
         <ListingPageView
           texts={texts}

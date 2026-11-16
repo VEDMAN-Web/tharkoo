@@ -30,8 +30,9 @@ export function ListingPlaceSelects({ selects, labels }: { selects: PlaceSelects
     options: PlaceOption[],
     value: string,
     disabled = false,
+    wide = false,
   ) => (
-    <label className="tkn-ls-select">
+    <label className={wide ? "tkn-ls-select tkn-ls-select-wide" : "tkn-ls-select"}>
       <span className="tkn-ls-select-label">{title}</span>
       <select value={value} disabled={disabled} onChange={(event) => go(options, event.target.value)}>
         {scopeToCountry(options, site, value).map((option) => (
@@ -44,17 +45,16 @@ export function ListingPlaceSelects({ selects, labels }: { selects: PlaceSelects
   );
   return (
     <div className="tkn-ls-places">
-      {field(labels.category, selects.categories, selects.categoryValue)}
+      {field(labels.category, selects.categories, selects.categoryValue, false, true)}
       {field(labels.state, selects.states, selects.stateValue)}
-      <div className="tkn-ls-cityarea">
-        {field(labels.city, selects.cities, selects.cityValue)}
-        {field(
-          labels.area,
-          selects.areas.length ? selects.areas : [{ value: "", label: selects.cityValue ? labels.allAreas : labels.pickCity, href: "" }],
-          selects.areaValue,
-          selects.areas.length === 0,
-        )}
-      </div>
+      {field(labels.city, selects.cities, selects.cityValue)}
+      {field(
+        labels.area,
+        selects.areas.length ? selects.areas : [{ value: "", label: selects.cityValue ? labels.allAreas : labels.pickCity, href: "" }],
+        selects.areaValue,
+        selects.areas.length === 0,
+        true,
+      )}
     </div>
   );
 }

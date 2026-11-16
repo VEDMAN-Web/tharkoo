@@ -112,6 +112,8 @@ export const TEXT_DEFAULTS = {
   "listing.promo.text": "Promote your ad and stay at the top.",
   "listing.promo.button": "Post your ad",
   "listing.more": "Show more",
+  "listing.panel.show": "Show {count} ads",
+  "listing.panel.showOne": "Show 1 ad",
   "listing.pager.nav": "Pages",
   "listing.pager.prev": "Previous",
   "listing.pager.prevShort": "Prev",

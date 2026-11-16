@@ -154,6 +154,8 @@ export type ListingLabels = {
   pickCity: string;
   clear: string;
   apply: string;
+  show: string;
+  showOne: string;
   noFilters: string;
   verified: string;
   photos: string;

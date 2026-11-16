@@ -39,6 +39,8 @@ export function listingLabels(t: TextFn): ListingLabels {
     pickCity: t("listing.panel.pickCity"),
     clear: t("listing.panel.clear"),
     apply: t("listing.panel.apply"),
+    show: t("listing.panel.show"),
+    showOne: t("listing.panel.showOne"),
     noFilters: t("listing.panel.noFilters"),
     verified: t("listing.filters.verified"),
     photos: t("listing.filters.photos"),
@@ -153,6 +155,7 @@ export function listingFrameProps(input: {
   panelHidden?: { name: string; value: string }[];
   placesOnly?: boolean;
   keyword?: KeywordProps;
+  total?: number;
 }) {
   const rows = panelRows(input.fields, input.picks);
   const activeCount = activeFilterCount(rows, input.toggles);
@@ -181,6 +184,7 @@ export function listingFrameProps(input: {
         hidden={input.panelHidden}
         placesOnly={input.placesOnly}
         keyword={input.keyword}
+        total={input.total}
       />
     ),
     activeCount,

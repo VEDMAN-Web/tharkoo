@@ -11,7 +11,7 @@ test.describe("H7.90: compact search results page", () => {
     await expect(page.locator('[data-tk="listing-band"]')).toHaveCount(0);
     const header = page.locator('[data-tk="results-header"]');
     await expect(header.locator("h1")).toHaveText("All ads in India");
-    await expect(header.locator('[data-tk="results-count"]')).toHaveText(/^[\d,]+ ads$/);
+    await expect(page.locator('[data-tk="results-count"]')).toHaveText(/^[\d,]+ ads$/);
     expect((await header.boundingBox())!.height).toBeLessThanOrEqual(140);
     const firstCard = (await page.locator('[data-tk="card"]').first().boundingBox())!;
     expect(firstCard.y).toBeLessThan(768);
@@ -33,16 +33,16 @@ test.describe("H7.90: compact search results page", () => {
     await page.goto("/search/?category=dating&city=surat&verified=1");
     const header = page.locator('[data-tk="results-header"]');
     await expect(header.locator("h1")).toHaveText("Dating ads in Surat");
-    const chips = header.locator('[data-tk="active-chips"] .tkn-sr-chip');
+    const chips = page.locator('[data-tk="active-chips"] .tkn-sr-chip');
     await expect(chips).toHaveText([/Category: Dating/, /City: Surat/, /Verified/]);
-    await header.locator('[data-chip="verified"]').click();
+    await page.locator('[data-chip="verified"]').click();
     await expect(page).toHaveURL(/\/search\/\?category=dating&city=surat$/);
-    await expect(header.locator('[data-chip="verified"]')).toHaveCount(0);
-    await header.locator('[data-chip="city"]').click();
+    await expect(page.locator('[data-chip="verified"]')).toHaveCount(0);
+    await page.locator('[data-chip="city"]').click();
     await expect(page).toHaveURL(/\/search\/\?category=dating$/);
-    await header.getByRole("link", { name: "Clear all" }).click();
+    await page.getByRole("link", { name: "Clear all" }).click();
     await expect(page).toHaveURL(/\/search\/$/);
-    await expect(header.locator('[data-tk="active-chips"]')).toHaveCount(0);
+    await expect(page.locator('[data-tk="active-chips"]')).toHaveCount(0);
   });
 
   test("the sort select keeps the filters and shows Verified first", async ({ page }) => {
