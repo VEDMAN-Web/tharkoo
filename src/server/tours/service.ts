@@ -8,7 +8,9 @@ import { mailerFromEnv } from "@/server/mailer";
 import { Category, Listing, User } from "@/server/models";
 import { CATEGORY_KINDS, type CategoryKind } from "@/server/models/catalog";
 import { VideoTour, type VideoTourDoc } from "@/server/tours/model";
-import { videoRoomProvider } from "@/server/tours/room";
+import { callPagePath, roomExpiry, videoRoomProvider } from "@/server/tours/room";
+import { accountName } from "@/lib/account-name";
+import { siteUrl } from "@/lib/utils";
 import { holdInEscrow, refundEscrow, releaseEscrow } from "@/server/wallet/escrow";
 import { videoTourPrice } from "@/server/wallet/listing-guard";
 
@@ -105,6 +107,20 @@ async function notifyAdvertiser(ownerId: string, title: string) {
   }
 }
 
+async function notifyBuyer(userId: string, tourId: string) {
+  try {
+    const buyer = await User.findById(userId).select("email").lean();
+    if (!buyer?.email) return;
+    await mailerFromEnv().send({
+      to: buyer.email,
+      subject: "Your live video call is ready",
+      text: `The advertiser accepted your live video call. Open it here when you are ready: ${siteUrl()}${callPagePath(tourId)}`,
+    });
+  } catch (error) {
+    console.error("video tour email could not be sent", error);
+  }
+}
+
 /** A buyer asks for a tour. The coin moves into escrow now and is paid out or refunded later. */
 export async function requestTour(input: { userId: string; listingId: string } & Escrow) {
   await connectDb();
@@ -169,13 +185,18 @@ export async function acceptTour(input: { ownerId: string; tourId: string; reque
     await closeTour(tour, { from: "requested", to: "expired", reason: "not-accepted", requestId: input.requestId });
     throw new ConflictError("This tour request has expired");
   }
-  const room = videoRoomProvider().createRoom({ tourId: String(tour._id) });
+  const acceptedAt = new Date();
+  const provider = videoRoomProvider();
+  const room = await provider.createRoom({ tourId: String(tour._id), expiresAt: roomExpiry(acceptedAt) });
   const claim = await VideoTour.findOneAndUpdate(
     { _id: tour._id, status: "requested" },
-    { $set: { status: "accepted", acceptedAt: new Date(), roomId: room.roomId } },
+    { $set: { status: "accepted", acceptedAt, roomId: room.roomId } },
     { returnDocument: "after" },
   ).lean();
-  if (!claim) throw new ConflictError("This tour request is no longer open");
+  if (!claim) {
+    await provider.deleteRoom(room.roomId);
+    throw new ConflictError("This tour request is no longer open");
+  }
   await audit.append({
     actorId: input.ownerId,
     actorType: "user",
@@ -184,7 +205,8 @@ export async function acceptTour(input: { ownerId: string; tourId: string; reque
     targetId: String(tour._id),
     requestId: input.requestId,
   });
-  return { ...present(claim), joinUrl: room.joinUrl };
+  if (room.live) await notifyBuyer(String(tour.userId), String(tour._id));
+  return { ...present(claim), joinUrl: room.live ? callPagePath(String(tour._id)) : null };
 }
 
 /** The advertiser declines: the whole hold goes back to the buyer. */
@@ -231,6 +253,7 @@ async function closeTour(
     throw error;
   }
   await VideoTour.updateOne({ _id: tour._id, status: "ending" }, { $set: { status: input.to, failureReason: input.reason, endedAt: new Date() } });
+  if (input.from === "accepted" && tour.roomId) await videoRoomProvider().deleteRoom(tour.roomId);
   await audit.append({
     actorType: "system",
     action: "video_tour.refund",
@@ -263,6 +286,7 @@ export async function endTour(input: { tourId: string; eventId: string; outcome:
     await VideoTour.updateOne({ _id: id, status: "ending" }, { $set: { status: "accepted", eventId: "", endedAt: null, durationSeconds: null } });
     throw error;
   }
+  if (claim.roomId) await videoRoomProvider().deleteRoom(claim.roomId);
   const reason = paid ? "" : input.outcome === "failed" ? "call-failed" : "call-too-short";
   await VideoTour.updateOne({ _id: id, status: "ending" }, { $set: { status: paid ? "completed" : "failed", failureReason: reason } });
   if (paid) {
@@ -383,9 +407,31 @@ export async function listTours(userId: string) {
     .lean();
   return rows.map((row) => {
     const isAdvertiser = String(row.ownerId) === userId;
-    const joinUrl = isAdvertiser && row.roomId ? videoRoomProvider().joinUrlFor(row.roomId) : null;
+    const joinUrl = row.roomId && row.status === "accepted" && videoRoomProvider().name === "daily" ? callPagePath(String(row._id)) : null;
     return { ...present(row), role: isAdvertiser ? "advertiser" : "buyer", joinUrl };
   });
+}
+
+/** The call page for one side of an accepted tour: who they are, and a fresh link into the room. */
+export async function tourCallFor(input: { userId: string; tourId: string }) {
+  await connectDb();
+  const tour = await VideoTour.findById(objectId(input.tourId, "tourId")).lean();
+  const isAdvertiser = tour ? String(tour.ownerId) === input.userId : false;
+  const isBuyer = tour ? String(tour.userId) === input.userId : false;
+  if (!tour || (!isAdvertiser && !isBuyer)) throw new NotFoundError("Not found");
+  const listing = await Listing.findById(tour.listingId).select("slug title").lean();
+  const report = listing?.slug || String(tour.listingId);
+  const base = { id: String(tour._id), status: tour.status, role: isAdvertiser ? ("advertiser" as const) : ("buyer" as const), title: listing?.title || "", report };
+  const expiresAt = tour.acceptedAt ? roomExpiry(new Date(tour.acceptedAt)) : null;
+  if (tour.status !== "accepted" || !tour.roomId || !expiresAt || expiresAt.getTime() <= Date.now()) return { ...base, joinUrl: null };
+  const user = await User.findById(input.userId).select("displayName email").lean();
+  const joinUrl = await videoRoomProvider().joinUrlFor({
+    roomId: tour.roomId,
+    side: base.role,
+    userName: accountName(user?.displayName, user?.email || ""),
+    expiresAt,
+  });
+  return { ...base, joinUrl };
 }
 
 export async function listVideoTourCategories() {
