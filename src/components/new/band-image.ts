@@ -25,7 +25,7 @@ export function heroBandFrom(
 }
 
 const DEFAULT_BAND_FOCUS_X = 72;
-const DEFAULT_BAND_FOCUS_Y = 22;
+const DEFAULT_BAND_FOCUS_Y = 12;
 const DEFAULT_PHONE_FOCUS_X = 50;
 const DEFAULT_PHONE_FOCUS_Y = 12;
 

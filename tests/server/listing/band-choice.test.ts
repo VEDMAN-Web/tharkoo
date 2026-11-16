@@ -56,7 +56,7 @@ describe("heroBandFrom", () => {
 
 describe("bandStyleFor focus (H7.67)", () => {
   it("sets the phone focus to the computer focus when there is no separate phone photo", () => {
-    expect(bandStyleFor({ band: "https://cdn.example/a.jpg", bandPhone: "https://cdn.example/a.jpg" })["--band-focus-phone"]).toBe("72% 22%");
+    expect(bandStyleFor({ band: "https://cdn.example/a.jpg", bandPhone: "https://cdn.example/a.jpg" })["--band-focus-phone"]).toBe("72% 12%");
     expect(bandStyleFor({ band: "https://cdn.example/a.jpg", bandPhone: "https://cdn.example/a-phone.jpg" })["--band-focus-phone"]).toBeUndefined();
     expect(bandStyleFor(null)).toEqual({});
   });
@@ -77,7 +77,7 @@ describe("band and card focus points (H7.70)", () => {
   it("uses the computer focus for the phone when there is no phone photo, and no variable when nothing is set", () => {
     const style = bandStyleFor(bandChoice(withFocus, HERO, { category: "dating" }));
     expect(style["--band-focus"]).toBeUndefined();
-    expect(style["--band-focus-phone"]).toBe("72% 22%");
+    expect(style["--band-focus-phone"]).toBe("72% 12%");
   });
 
   it("takes the home hero focus points for the default band", () => {
@@ -85,5 +85,48 @@ describe("band and card focus points (H7.70)", () => {
     const style = bandStyleFor(bandChoice(withFocus, hero, { city: "jaipur" }));
     expect(style["--band-focus"]).toBe("72% 12%");
     expect(style["--band-focus-phone"]).toBe("50% 8%");
+  });
+});
+
+describe("band source choice and focus defaults (H7.70)", () => {
+  const both = shellWith([{ scope: "category", slug: "jobs", band: "https://cdn.example/wide.jpg", bandPhone: "https://cdn.example/old.jpg" }]);
+  const desktopOnly = shellWith([{ scope: "category", slug: "jobs", band: "https://cdn.example/wide.jpg", bandPhone: "" }]);
+  const phoneOnly = shellWith([{ scope: "category", slug: "jobs", band: "", bandPhone: "https://cdn.example/old.jpg" }]);
+
+  it("reads the desktop and the phone photo independently", () => {
+    const style = bandStyleFor(bandChoice(both, HERO, { category: "jobs" }));
+    expect(style["--band-desk"]).toBe('url("https://cdn.example/wide.jpg")');
+    expect(style["--band-phone"]).toBe('url("https://cdn.example/old.jpg")');
+  });
+
+  it("uses the desktop photo on the phone when no phone photo is set", () => {
+    const style = bandStyleFor(bandChoice(desktopOnly, HERO, { category: "jobs" }));
+    expect(style["--band-desk"]).toBe('url("https://cdn.example/wide.jpg")');
+    expect(style["--band-phone"]).toBe('url("https://cdn.example/wide.jpg")');
+  });
+
+  it("uses the phone photo on the desktop when only a phone photo is set", () => {
+    const style = bandStyleFor(bandChoice(phoneOnly, HERO, { category: "jobs" }));
+    expect(style["--band-desk"]).toBe('url("https://cdn.example/old.jpg")');
+    expect(style["--band-phone"]).toBe('url("https://cdn.example/old.jpg")');
+  });
+
+  it("carries the saved focus points of each photo and leaves the rest to the style sheet defaults", () => {
+    const set = shellWith([{ scope: "category", slug: "jobs", band: "https://cdn.example/w.jpg", bandPhone: "https://cdn.example/p.jpg", bandFocusX: 70, bandFocusY: 18, bandPhoneFocusX: 50, bandPhoneFocusY: 12 }]);
+    const style = bandStyleFor(bandChoice(set, HERO, { category: "jobs" }));
+    expect(style["--band-focus"]).toBe("70% 18%");
+    expect(style["--band-focus-phone"]).toBe("50% 12%");
+    const unset = bandStyleFor(bandChoice(both, HERO, { category: "jobs" }));
+    expect(unset["--band-focus"]).toBeUndefined();
+    expect(unset["--band-focus-phone"]).toBeUndefined();
+  });
+});
+
+describe("band style sheet defaults (H7.70)", () => {
+  it("falls back to 72% 12% on a computer and 50% 12% on a phone", async () => {
+    const { readFileSync } = await import("node:fs");
+    const css = readFileSync("src/components/new/listing-spec.css", "utf8");
+    expect(css).toContain("var(--band-focus, 72% 12%)");
+    expect(css).toContain("var(--band-focus-phone, 50% 12%)");
   });
 });

@@ -223,7 +223,7 @@ function ImageRows({ items, onChange }: { items: ShellImage[]; onChange: (next: 
               aspect="1232 / 400"
               src={item.band}
               x={item.bandFocusX ?? 72}
-              y={item.bandFocusY ?? 22}
+              y={item.bandFocusY ?? 12}
               onChange={(next) => update(index, { bandFocusX: next.x, bandFocusY: next.y })}
             />
           ) : null}
