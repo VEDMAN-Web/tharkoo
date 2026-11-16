@@ -5,6 +5,10 @@ import { requireUser } from "@/server/auth/service";
 import { applyWebhook, checkoutPack, recordWebhookRejection, refundPayment, webhookRejection } from "@/server/billing";
 import { json, readJson, segmentsOf } from "@/server/billing/http";
 import { NotFoundError, handle, parseInput, requestIdFrom } from "@/server/http";
+import { confirmMockPayment, listOwnPayments, readOwnPayment, rechargePacks, startRecharge, mockPaymentsAvailable, SHEET_PACK_LIMIT } from "@/server/billing/recharge";
+import { postingFeeStatus } from "@/server/billing/posting-fee";
+import { walletBalance } from "@/server/billing";
+import { pageQuerySchema } from "@/server/shared/schemas/common";
 import { idSchema } from "@/server/shared/schemas/common";
 import { paymentWebhookBodySchema, refundBodySchema } from "@/server/shared/schemas/commerce";
 
@@ -16,6 +20,17 @@ const checkoutBodySchema = z.object({
   idempotencyKey: z.string().trim().min(8).max(200).optional(),
   couponCode: z.string().trim().min(1).max(40).optional(),
 });
+
+const rechargeBodySchema = z.object({
+  packId: idSchema,
+  method: z.string().trim().max(20),
+  coin: z.string().trim().max(10).optional(),
+  network: z.string().trim().max(10).optional(),
+  returnTo: z.string().trim().max(512).optional(),
+  idempotencyKey: z.string().trim().min(8).max(200).optional(),
+});
+
+const confirmBodySchema = z.object({ outcome: z.string().trim().max(20) });
 
 async function dispatch(request: Request) {
   const requestId = requestIdFrom(request);
@@ -41,6 +56,27 @@ async function dispatch(request: Request) {
   assertOrigin(request);
   const user = await requireUser(readCookie(request, SESSION_COOKIE));
   const ip = clientKey(request.headers);
+  if (request.method === "GET" && path === "packs") {
+    const [packs, balance, fee, available] = await Promise.all([rechargePacks(), walletBalance(user.user.id), postingFeeStatus(user.user.id), mockPaymentsAvailable()]);
+    return json({ packs: packs.slice(0, SHEET_PACK_LIMIT), allPacks: packs.length, balance, fee: fee.fee, creditPriceInr: fee.creditPriceInr, available }, requestId);
+  }
+  if (request.method === "GET" && path === "history") {
+    const query = parseInput(pageQuerySchema, Object.fromEntries(new URL(request.url).searchParams));
+    const data = await listOwnPayments(user.user.id, query.page, query.pageSize);
+    return json(data, requestId, 200, { page: query.page, pageSize: query.pageSize, total: data.total });
+  }
+  if (request.method === "POST" && path === "recharge") {
+    const body = parseInput(rechargeBodySchema, await readJson(request));
+    return json(await startRecharge({ ...body, userId: user.user.id, requestId, ip }), requestId);
+  }
+  const parts = segmentsOf(request, "/api/payments");
+  if (request.method === "GET" && parts.length === 1 && parts[0] !== "checkout") {
+    return json(await readOwnPayment(user.user.id, parts[0]), requestId);
+  }
+  if (request.method === "POST" && parts.length === 2 && parts[1] === "confirm") {
+    const body = parseInput(confirmBodySchema, await readJson(request));
+    return json(await confirmMockPayment({ userId: user.user.id, paymentId: parts[0], outcome: body.outcome, requestId }), requestId);
+  }
   if (request.method === "POST" && path === "checkout") {
     const body = parseInput(checkoutBodySchema, await readJson(request));
     const data = await checkoutPack({
@@ -71,4 +107,5 @@ async function dispatch(request: Request) {
   throw new NotFoundError("Not found");
 }
 
+export const GET = handle(dispatch);
 export const POST = handle(dispatch);
