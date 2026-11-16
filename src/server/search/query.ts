@@ -250,16 +250,6 @@ export async function loadCategories() {
   );
 }
 
-function slugOf(rows: { _id?: Types.ObjectId; slug: string }[], id?: Types.ObjectId | null) {
-  if (!id) return "";
-  return rows.find((row) => String(row._id) === String(id))?.slug ?? "";
-}
-
-function nameOf(rows: LocationRow[], id?: Types.ObjectId | null) {
-  if (!id) return "";
-  return rows.find((row) => String(row._id) === String(id))?.name ?? "";
-}
-
 function matchSlug(row: { slug: string; oldSlugs?: string[] }, slug: string) {
   return row.slug === slug || (row.oldSlugs ?? []).includes(slug);
 }
@@ -453,25 +443,41 @@ export async function buildFilter(input: ListingQuery): Promise<QueryFilter<List
   return filter as QueryFilter<ListingDoc>;
 }
 
+const RANK_FIELDS = "slug badges bumpedAt publishedAt mediaIds categoryId cityId";
+
 async function findRows(filter: QueryFilter<ListingDoc>, q?: string): Promise<Row[]> {
   const text = q ? cleanQuery(q) : "";
-  if (!text) return Listing.find(filter).lean() as Promise<Row[]>;
+  if (!text) return Listing.find(filter).select(RANK_FIELDS).lean() as Promise<Row[]>;
   const [categories, locations] = await Promise.all([loadCategories(), loadLocations()]);
   const textMatch = searchTextMatch(text, categories, locations);
-  if (!textMatch) return Listing.find(filter).lean() as Promise<Row[]>;
+  if (!textMatch) return Listing.find(filter).select(RANK_FIELDS).lean() as Promise<Row[]>;
   if (filter.$or) {
     const { $or, ...rest } = filter;
-    return (await Listing.find({ ...rest, $and: [{ $or }, textMatch] }).lean()) as Row[];
+    return (await Listing.find({ ...rest, $and: [{ $or }, textMatch] }).select(RANK_FIELDS).lean()) as Row[];
   }
-  return (await Listing.find({ ...filter, ...textMatch }).lean()) as Row[];
+  return (await Listing.find({ ...filter, ...textMatch }).select(RANK_FIELDS).lean()) as Row[];
 }
 
-function facetsFrom(hits: PublicHit[]): SearchFacets {
+async function fullRows(light: Row[]): Promise<Row[]> {
+  if (light.length === 0) return [];
+  const rows = (await Listing.find({ _id: { $in: light.map((doc) => doc._id) } }).lean()) as Row[];
+  const byId = new Map(rows.map((row) => [String(row._id), row]));
+  return light.flatMap((doc) => {
+    const row = byId.get(String(doc._id));
+    return row ? [row] : [];
+  });
+}
+
+function facetsFrom(docs: Row[], categoryRows: { _id?: Types.ObjectId; slug: string }[], locationRows: LocationRow[]): SearchFacets {
+  const categorySlugs = new Map(categoryRows.map((row) => [String(row._id), row.slug]));
+  const locationSlugs = new Map(locationRows.map((row) => [String(row._id), row.slug]));
   const categories = new Map<string, number>();
   const cities = new Map<string, number>();
-  for (const hit of hits) {
-    if (hit.categorySlug) categories.set(hit.categorySlug, (categories.get(hit.categorySlug) ?? 0) + 1);
-    if (hit.citySlug) cities.set(hit.citySlug, (cities.get(hit.citySlug) ?? 0) + 1);
+  for (const doc of docs) {
+    const category = doc.categoryId ? categorySlugs.get(String(doc.categoryId)) : "";
+    const city = doc.cityId ? locationSlugs.get(String(doc.cityId)) : "";
+    if (category) categories.set(category, (categories.get(category) ?? 0) + 1);
+    if (city) cities.set(city, (cities.get(city) ?? 0) + 1);
   }
   const pack = (map: Map<string, number>) =>
     [...map.entries()]
@@ -500,16 +506,22 @@ export async function presentRows(docs: Row[], promotions: Map<string, RankPromo
       : Promise.resolve([]),
   ]);
   const peopleById = new Map(people.map((person) => [String(person._id), person]));
+  const categoryById = new Map(categories.map((row) => [String(row._id), row]));
+  const locationById = new Map(locations.map((row) => [String(row._id), row]));
   const hits: PublicHit[] = [];
   const legacy: LegacyListing[] = [];
   for (const doc of docs) {
     const id = String(doc._id);
     const view = publicView(doc as ListingDoc);
-    const categorySlug = slugOf(categories, doc.categoryId);
-    const stateSlug = slugOf(locations, doc.stateId);
-    const citySlug = slugOf(locations, doc.cityId);
-    const districtSlug = slugOf(locations, doc.districtId);
-    const place = nameOf(locations, doc.districtId) || nameOf(locations, doc.cityId);
+    const category = doc.categoryId ? categoryById.get(String(doc.categoryId)) : undefined;
+    const state = doc.stateId ? locationById.get(String(doc.stateId)) : undefined;
+    const city = doc.cityId ? locationById.get(String(doc.cityId)) : undefined;
+    const district = doc.districtId ? locationById.get(String(doc.districtId)) : undefined;
+    const categorySlug = category?.slug ?? "";
+    const stateSlug = state?.slug ?? "";
+    const citySlug = city?.slug ?? "";
+    const districtSlug = district?.slug ?? "";
+    const place = district?.name || city?.name || "";
     const code = bestCode(promotions.get(id) ?? [], now);
     const variant = VARIANT[code.trim().toLowerCase()] ?? "free";
     const verified = doc.badges?.includes("verified") === true;
@@ -517,7 +529,6 @@ export async function presentRows(docs: Row[], promotions: Map<string, RankPromo
     const bumped = doc.bumpedAt ? new Date(doc.bumpedAt) : doc.publishedAt;
     const publicId = publicIdOf(doc.slug, id);
     const photoList = listingPhotos(categorySlug, publicId, photos.get(id) ?? []);
-    const category = categories.find((row) => String(row._id) === String(doc.categoryId));
     const people = category?.kind === "people" || kindFor(categorySlug, category?.fields) === "people";
     const trust = trustMarks(person?.verificationStatus, person?.attestedAdultAt, verified, photoList.length, people);
     const age = ageOf(doc.attributes);
@@ -609,21 +620,22 @@ export async function queryListings(input: ListingQuery): Promise<SearchResult> 
   const pins = scope ? await loadActivePins(scope, now) : [];
   const ordered = applyPins(ranked.map((row) => row.doc), pins, (doc) => String(doc._id), now);
   const promoMap = new Map(ranked.map((row) => [String(row.doc._id), row.promos]));
-  const presented = await presentRows(ordered, promoMap, now);
-  const present = new Set(ordered.map((doc) => String(doc._id)));
+  const start = (page - 1) * pageSize;
+  const pageDocs = await fullRows(ordered.slice(start, start + pageSize));
+  const [presented, categoryRows, locationRows] = await Promise.all([presentRows(pageDocs, promoMap, now), loadCategories(), loadLocations()]);
+  const present = new Set(pageDocs.map((doc) => String(doc._id)));
   const slotOf = new Map(
     pins.filter((pin) => isPinActive(pin, now) && present.has(pin.listingId)).map((pin) => [pin.listingId, pin.position] as const),
   );
   if (slotOf.size > 0) {
-    const slugSlot = new Map(ordered.flatMap((doc) => (slotOf.has(String(doc._id)) && doc.slug ? [[doc.slug, slotOf.get(String(doc._id))!] as const] : [])));
+    const slugSlot = new Map(pageDocs.flatMap((doc) => (slotOf.has(String(doc._id)) && doc.slug ? [[doc.slug, slotOf.get(String(doc._id))!] as const] : [])));
     presented.legacy = presented.legacy.map((item) => (item.slug && slugSlot.has(item.slug) ? { ...item, pinPosition: slugSlot.get(item.slug) } : item));
   }
-  const start = (page - 1) * pageSize;
   return {
-    hits: presented.hits.slice(start, start + pageSize),
-    legacy: presented.legacy.slice(start, start + pageSize),
-    total: presented.hits.length,
-    facets: facetsFrom(presented.hits),
+    hits: presented.hits,
+    legacy: presented.legacy,
+    total: ordered.length,
+    facets: facetsFrom(ordered, categoryRows, locationRows),
   };
 }
 
