@@ -172,7 +172,7 @@ export default async function CityAreasPage({ params, searchParams }: Props) {
         <JsonLd data={breadcrumbJsonLd(crumbs)} />
           {latest.total > 0 ? (
             <section data-tk="city-latest">
-              <h2>Latest ads in {data.name}</h2>
+              <h2 className="tkn-sr">Latest ads in {data.name}</h2>
               <ListingGrid label={t("listing.feed.label")}>
                 {latest.items.map((ad, index) => (
                   <li key={ad.publicId || ad.slug || index}>
