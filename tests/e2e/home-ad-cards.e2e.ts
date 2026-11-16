@@ -32,13 +32,14 @@ test.describe("H7.84 home ad cards", () => {
     }
   });
 
-  test("the title is one line with an ellipsis, 16 px and 600", async ({ page }) => {
+  test("the title is one line with an ellipsis (up to two lines on a phone), 16 px and 600", async ({ page }) => {
     const row = await openHome(page);
     const style = await row.locator(".tkh-ad-title").first().evaluate((node) => {
       const css = getComputedStyle(node);
       return { overflow: css.textOverflow, wrap: css.whiteSpace, size: css.fontSize, weight: css.fontWeight };
     });
-    expect(style).toEqual({ overflow: "ellipsis", wrap: "nowrap", size: "16px", weight: "600" });
+    const phone = (page.viewportSize()?.width ?? 1440) < 640;
+    expect(style).toEqual({ overflow: "ellipsis", wrap: phone ? "normal" : "nowrap", size: "16px", weight: "600" });
   });
 
   test("the heart sits on the photo, top right, 40 px, and fills when saved", async ({ page }) => {

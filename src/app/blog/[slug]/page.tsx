@@ -5,6 +5,7 @@ import { JsonLd } from "@/lib/jsonld";
 import { getBlog } from "@/lib/queries";
 import { canonical } from "@/lib/seo";
 import { blogPostingNode } from "@/lib/seo/schema";
+import { blogDescription } from "@/lib/seo/home-blog";
 import { Container } from "@/components/ui/Container";
 import { Prose } from "@/components/ui/Prose";
 import { LegalView } from "@/components/new/LegalView";
@@ -27,11 +28,11 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   const postTitle = post.title || "Blog";
   const brandTitle = /\|\s*Tharkoo$/.test(postTitle) ? postTitle : `${postTitle} | Tharkoo`;
   const seoTitle = brandTitle.length < 30 ? `Blog: ${brandTitle}` : brandTitle;
-  const body = stripDevNotes(post.body || "");
+  const body = blogDescription(stripDevNotes(post.body || ""));
   const seoDescription = body.length >= 70 ? body : `${postTitle} on the Tharkoo blog. Read the full article for practical tips on posting and staying safe.`;
   return withUrlSeo(path, {
     title: seoTitle,
-    description: seoDescription.slice(0, 160),
+    description: seoDescription,
     path,
   });
 }

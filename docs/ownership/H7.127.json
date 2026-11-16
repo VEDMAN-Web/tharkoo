@@ -1,0 +1,12 @@
+{
+  "branchPrefix": "haiku/h7.127",
+  "globs": [
+    "docs/ownership/H7.127.json",
+    "src/components/new/ad-spec.css",
+    "src/components/new/home-ads.css",
+    "src/components/CookieBanner.css",
+    "src/app/globals.css",
+    "tests/e2e/h7-127-public-ux.e2e.ts",
+    "tests/e2e/home-ad-cards.e2e.ts"
+  ]
+}

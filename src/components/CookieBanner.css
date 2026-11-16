@@ -1,23 +1,23 @@
 .tkc-banner {
-  position: fixed; right: 96px; bottom: 16px; z-index: 40; box-sizing: border-box; max-width: 360px; padding: 16px 18px; border-radius: 16px;
-  background: rgba(255, 255, 255, 0.92); -webkit-backdrop-filter: blur(18px) saturate(170%); backdrop-filter: blur(18px) saturate(170%);
-  border: 1px solid rgba(255, 255, 255, 0.95); box-shadow: 0 8px 32px rgba(45, 18, 72, 0.14);
-  color: #1e0b38; font-size: 13px; line-height: 1.5;
+  position: fixed; left: 16px; right: auto; bottom: 16px; z-index: 40; box-sizing: border-box; width: min(300px, calc(100vw - 32px)); padding: 12px 14px; border-radius: 14px;
+  background: rgba(255, 255, 255, 0.96); -webkit-backdrop-filter: blur(18px) saturate(170%); backdrop-filter: blur(18px) saturate(170%);
+  border: 1px solid rgba(255, 255, 255, 0.95); box-shadow: 0 8px 32px rgba(45, 18, 72, 0.18);
+  color: #1e0b38; font-size: 13px; line-height: 1.4;
 }
 .tkc-banner p { margin: 0; }
-.tkc-banner a { color: #a8124f; text-decoration: underline; }
-.tkc-actions { display: flex; gap: 8px; margin-top: 12px; flex-wrap: wrap; }
+.tkc-banner a { color: #a8124f; text-decoration: underline; display: inline-block; padding-block: 4px; }
+.tkc-actions { display: flex; gap: 8px; margin-top: 8px; flex-wrap: nowrap; }
 .tkc-accept, .tkc-necessary {
-  min-height: 40px; padding: 0 16px; border-radius: 12px; font: inherit; font-size: 14px; font-weight: 700; cursor: pointer; text-transform: none;
+  flex: 1 1 0; min-height: 40px; padding: 0 10px; border-radius: 12px; font: inherit; font-size: 13px; font-weight: 700; cursor: pointer; text-transform: none; white-space: nowrap;
 }
 .tkc-accept { border: 0; background: linear-gradient(135deg, #d1137a, #a8124f); color: #fff; }
 .tkc-necessary { border: 1.5px solid #ead8f0; background: #fff; color: #4a2870; }
 @media (max-width: 767px) {
+  /* A slim bar: two short lines and two buttons side by side, so the Home banner and its search card stay in view. */
   .tkc-banner {
-    left: 0; right: 0; bottom: 0; max-width: none; max-height: 30vh; overflow-y: auto; border-radius: 16px 16px 0 0; border-bottom: 0;
-    padding: 12px 88px calc(12px + env(safe-area-inset-bottom, 0px)) 16px;
+    left: 0; right: 0; bottom: 0; width: auto; max-width: none; border-radius: 14px 14px 0 0; border-bottom: 0;
+    padding: 6px 84px calc(6px + env(safe-area-inset-bottom, 0px)) 12px; font-size: 12px; line-height: 1.35;
   }
-  .tkc-banner p { line-height: 1.4; }
-  .tkc-actions { margin-top: 8px; }
-  .tkc-accept, .tkc-necessary { min-height: 44px; padding: 0 14px; }
+  .tkc-actions { margin-top: 4px; }
+  .tkc-accept, .tkc-necessary { min-height: 36px; padding: 0 8px; font-size: 12px; }
 }
