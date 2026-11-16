@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useState } from "react";
 import { Notice, TextField } from "@/components/admin/ui";
 import { api, friendlyError } from "@/lib/ui/api";
@@ -45,10 +46,9 @@ export function TaxSettingsForm({ initial }: { initial: FinanceValues }) {
   }
 
   async function save() {
-    const values: FinanceValues = {
+    const values = {
       tdsPercent: Number(text.tdsPercent),
       gstPercent: Number(text.gstPercent),
-      coinValueInr: Number(text.coinValueInr),
       minWithdrawCoins: Number(text.minWithdrawCoins),
       withdrawCooldownDays: Number(text.withdrawCooldownDays),
     };
@@ -79,7 +79,9 @@ export function TaxSettingsForm({ initial }: { initial: FinanceValues }) {
       </p>
       {field("tdsPercent", "TDS %", "Recorded on each record.")}
       {field("gstPercent", "GST %", "Recorded on each record.")}
-      {field("coinValueInr", "Value of one credit (INR)", "Used to show prices and payout amounts.")}
+      <p className="t-small" data-tk="credit-value-note">
+        Value of one credit: <strong>Rs {initial.coinValueInr}</strong>. It is set once, in <Link href="/admin/settings/money/">Money settings</Link>, and used for prices, payouts and earnings.
+      </p>
       {field("minWithdrawCoins", "Minimum withdrawal (credits)", "Vendors cannot withdraw less.")}
       {field("withdrawCooldownDays", "Days between withdrawals", "One withdrawal per vendor per this many days.")}
       <div style={{ display: "flex", gap: 10, alignItems: "center", flexWrap: "wrap" }}>

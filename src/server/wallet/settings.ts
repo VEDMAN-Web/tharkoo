@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { connectDb } from "@/lib/db";
 import { AuditRepository } from "@/server/audit";
+import { readMoneySettings } from "@/server/billing/money-settings";
 import { ForbiddenError } from "@/server/http";
 import { FinanceSettings } from "@/server/wallet/models";
 
@@ -15,13 +16,13 @@ export const DEFAULT_FINANCE_SETTINGS = {
   withdrawCooldownDays: 3,
 };
 
+/** The rupee value of one credit is not stored here: it is the Money setting "Credit price (Rs)", read through readMoneySettings(). */
 export type FinanceSettingsValues = typeof DEFAULT_FINANCE_SETTINGS;
 
 export const financeSettingsBodySchema = z
   .object({
     tdsPercent: z.number().min(0).max(100),
     gstPercent: z.number().min(0).max(100),
-    coinValueInr: z.number().int().min(1).max(1_000_000),
     minWithdrawCoins: z.number().int().min(1).max(1000),
     withdrawCooldownDays: z.number().int().min(0).max(365),
   })
@@ -30,11 +31,11 @@ export const financeSettingsBodySchema = z
 
 export async function getFinanceSettings(): Promise<FinanceSettingsValues> {
   await connectDb();
-  const row = await FinanceSettings.findOne({ key: KEY }).lean();
+  const [row, money] = await Promise.all([FinanceSettings.findOne({ key: KEY }).lean(), readMoneySettings()]);
   return {
     tdsPercent: row?.tdsPercent ?? DEFAULT_FINANCE_SETTINGS.tdsPercent,
     gstPercent: row?.gstPercent ?? DEFAULT_FINANCE_SETTINGS.gstPercent,
-    coinValueInr: row?.coinValueInr ?? DEFAULT_FINANCE_SETTINGS.coinValueInr,
+    coinValueInr: money.creditPriceInr,
     minWithdrawCoins: row?.minWithdrawCoins ?? DEFAULT_FINANCE_SETTINGS.minWithdrawCoins,
     withdrawCooldownDays: row?.withdrawCooldownDays ?? DEFAULT_FINANCE_SETTINGS.withdrawCooldownDays,
   };

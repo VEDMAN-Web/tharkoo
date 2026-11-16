@@ -1,0 +1,9 @@
+{
+  "branchPrefix": "haiku/h7.114",
+  "globs": [
+    "docs/ownership/H7.114.json",
+    "src/server/wallet/settings.ts",
+    "src/app/admin/finance/TaxSettingsForm.tsx",
+    "tests/**"
+  ]
+}
