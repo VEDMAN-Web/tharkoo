@@ -1,0 +1,11 @@
+{
+  "branchPrefix": "haiku/h8.8",
+  "globs": [
+    "docs/ownership/H8.8.json",
+    "src/app/admin/users/page.tsx",
+    "src/app/admin/users/_list/**",
+    "src/server/admin/users.ts",
+    "tests/server/admin/a8-*.test.ts",
+    "tests/e2e/a8-users.e2e.ts"
+  ]
+}
