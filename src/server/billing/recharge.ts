@@ -132,6 +132,7 @@ export function paymentView(row: PaymentRow, now = Date.now()) {
 }
 
 export async function mockPaymentsAvailable(): Promise<boolean> {
+  await connectDb();
   return paymentProvider() === "mock" && (await readMoneySettings()).mockPaymentsOn;
 }
 
@@ -190,6 +191,7 @@ async function ownPayment(userId: string, paymentId: string) {
 }
 
 export async function readOwnPayment(userId: string, paymentId: string) {
+  await connectDb();
   return paymentView(await ownPayment(userId, paymentId));
 }
 
@@ -208,6 +210,7 @@ export async function listOwnPayments(userId: string, page: number, pageSize: nu
 }
 
 export async function chooseCoin(input: { userId: string; paymentId: string; coin: string; network?: string; requestId: string }) {
+  await connectDb();
   const row = await ownPayment(input.userId, input.paymentId);
   if (row.method !== "crypto") throw new ConflictError("This payment is not a crypto payment");
   const picked = checkedCoin(input.coin, input.network);
@@ -222,6 +225,7 @@ export async function chooseCoin(input: { userId: string; paymentId: string; coi
 export type MockOutcome = "paid" | "cancelled";
 
 export async function confirmMockPayment(input: { userId: string; paymentId: string; outcome: string; requestId: string }) {
+  await connectDb();
   if (input.outcome !== "paid" && input.outcome !== "cancelled") throw new ValidationError("Invalid request", { outcome: ["Invalid outcome"] });
   const row = await ownPayment(input.userId, input.paymentId);
   if (row.provider !== "mock" || !row.providerRef) throw new ForbiddenError("This payment cannot be confirmed here");
