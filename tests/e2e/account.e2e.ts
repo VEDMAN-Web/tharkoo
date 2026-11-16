@@ -1,23 +1,10 @@
-import { expect, loginUi, test, uniqueEmail, USER_PASSWORD, originHeaders } from "./helpers";
+import { expect, loginUi, registerApi, test, uniqueEmail, originHeaders } from "./helpers";
 
 test.describe("3 Account", () => {
-  test("register, dashboard, settings, logout, login", async ({ page, baseURL }) => {
+  test("sign up, dashboard, settings, logout, login", async ({ page, baseURL }) => {
     const email = uniqueEmail("acct");
 
-    // Register through the real page (STAGING_AUTO_VERIFY_EMAIL=true on the test server).
-    await page.goto("/u/register/");
-    await expect(page.locator("h1")).toHaveCount(1);
-    await page.locator("#email").fill(email);
-    await page.locator("#displayName").fill("Account E2E");
-    await page.locator("#password").fill(USER_PASSWORD);
-    await page.locator("#dateOfBirth").fill("1990-01-01");
-    await page.locator("input[name=acceptedTerms]").check();
-    await page.locator("input[name=attestedAdult]").check();
-    await page.getByRole("button", { name: "CREATE ACCOUNT" }).click();
-    await page.waitForURL(/\/u\/account\/dashboard\/|\/u\/login\/|\/u\/verify-email\/|\/u\/post-insert\//);
-
-    // Log in (works whether or not register signed us in).
-    await page.context().clearCookies();
+    await registerApi(page.request, baseURL!, email);
     await loginUi(page, email);
     await page.waitForURL(/\/u\/account\/dashboard\//);
 
