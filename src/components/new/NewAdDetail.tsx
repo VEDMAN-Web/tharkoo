@@ -10,6 +10,7 @@ import { makeT, type UiTextMap } from "@/lib/ui/text";
 import { formatPrice } from "@/components/search/price";
 import { CitySync } from "@/components/CityContext";
 import { AdMetaLine, AdSellerRow } from "./AdLiveBits";
+import { AdActions } from "./AdActions";
 import { NewGallery } from "./NewGallery";
 import type { AdPopupAlt } from "./AdPopup";
 import "./new-design.css";
@@ -139,15 +140,16 @@ export function NewAdDetail({
             </div>
             <aside className="tkn-ad-side" aria-label="Contact">
               <div className="tkn-contact-panel" data-tk="contact-card">
-                <p className="tkn-ad-price">{price ? `${price}${priceUnit ? ` / ${priceUnit}` : ""}` : "Price on request"}</p>
+                {peopleAd ? null : <p className="tkn-ad-price">{price ? `${price}${priceUnit ? ` / ${priceUnit}` : ""}` : "Price on request"}</p>}
                 <AdSellerRow name={seller} />
                 <ContactButtons />
+                <AdActions slug={ad.slug || ""} publicId={ad.publicId || ""} title={title} place={placeText} />
               </div>
               <section className="tkn-safe" data-tk="security-tips">
                 <h2>{t("ad.safe.title")}</h2>
-                <p>{t("ad.safe.body")}</p>
+                <p>{peopleAd ? t("ad.safe.bodyPeople") : t("ad.safe.body")}</p>
                 <p>{t("ad.safe.otp")}</p>
-                <p className="tkn-fine">{t("ad.safe.fine")}</p>
+                {peopleAd ? <p className="tkn-fine">{t("ad.safe.fine")}</p> : null}
               </section>
             </aside>
           </div>

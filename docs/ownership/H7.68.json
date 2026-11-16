@@ -1,0 +1,12 @@
+{
+  "branchPrefix": "haiku/h7.68",
+  "globs": [
+    "docs/ownership/H7.68.json",
+    "src/components/FooterNew.tsx",
+    "src/components/FooterNew.css",
+    "src/components/BrandMarks.tsx",
+    "src/lib/support.ts",
+    "src/server/site-links/shell-config-rules.ts",
+    "tests/**"
+  ]
+}

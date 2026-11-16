@@ -1,0 +1,31 @@
+{
+  "branchPrefix": "haiku/h7.66",
+  "globs": [
+    "docs/ownership/H7.66.json",
+    "src/app/globals.css",
+    "src/components/ContactButtons.tsx",
+    "src/components/chat/ChatPanel.tsx",
+    "src/components/chat/ChatThread.tsx",
+    "src/components/new/AdActions.tsx",
+    "src/components/new/NewAdDetail.tsx",
+    "src/components/new/NewGallery.tsx",
+    "src/components/new/ListingPlaceSelects.tsx",
+    "src/components/new/listing-filters.ts",
+    "src/components/new/listing-frame-props.tsx",
+    "src/components/new/listing-spec.css",
+    "src/components/ui/AdCard.tsx",
+    "src/components/ui/SaveButton.tsx",
+    "src/server/listings/owner-cards.ts",
+    "src/server/listings/owner-groups.ts",
+    "src/server/notifications/summary.ts",
+    "src/components/new/ad-spec.css",
+    "src/lib/ui/text.ts",
+    "src/server/search/query.ts",
+    "tests/e2e/ad-page.e2e.ts",
+    "tests/e2e/my-ads.e2e.ts",
+    "tests/e2e/session-refresh.e2e.ts",
+    "tests/server/listings/owner-groups.test.ts",
+    "tests/server/ui/country-flag.test.ts",
+    "tests/server/search/trust-marks.test.ts"
+  ]
+}

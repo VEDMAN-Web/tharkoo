@@ -1,0 +1,19 @@
+{
+  "branchPrefix": "haiku/h7.75",
+  "globs": [
+    "docs/ownership/H7.75.json",
+    "progress/H7.75.md",
+    "src/app/[category]/[location]/[district]/page.tsx",
+    "src/app/[category]/[location]/[district]/sub-hub.tsx",
+    "src/app/[category]/[location]/page.tsx",
+    "src/app/[category]/tag/[tag]/page.tsx",
+    "src/app/search/page.tsx",
+    "src/components/ListingPage.tsx",
+    "src/components/new/ListingFilterPanel.tsx",
+    "src/components/new/listing-frame-props.tsx",
+    "src/components/new/listing-narrow.ts",
+    "src/lib/queries.ts",
+    "tests/e2e/h7-75-search-body.e2e.ts",
+    "tests/server/listing/search-frame.test.ts"
+  ]
+}

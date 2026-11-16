@@ -2369,3 +2369,27 @@ body:has([data-tk="bottom-bar"]) .tkn-float { bottom: 104px; }
 @keyframes tkn-skel-shimmer { from { background-position: 200% 0; } to { background-position: -200% 0; } }
 @media (prefers-reduced-motion: reduce) { .tkn-skel { animation: none; } }
 @media (max-width: 767px) { .tkn-float-pagebars .tkn-chat-bubble { display: none; } .tkn-float-panel .tkn-top { display: none; } }
+@media (max-width: 599px) { .tkn-float-pagebars .tkn-top { display: none; } }
+.tkn-chatp { position: fixed; z-index: 60; right: 24px; bottom: 24px; width: min(400px, calc(100vw - 32px)); height: min(600px, calc(100vh - 48px)); box-sizing: border-box; display: flex; flex-direction: column; overflow: hidden; border-radius: 22px; background: rgba(255, 255, 255, 0.94); -webkit-backdrop-filter: blur(22px) saturate(180%); backdrop-filter: blur(22px) saturate(180%); border: 1px solid #ead8f0; box-shadow: 0 24px 60px rgba(45, 18, 72, 0.28); }
+.tkn-chatp-head { display: flex; align-items: center; gap: 12px; padding: 14px; background: linear-gradient(135deg, #d1137a, #a8124f); color: #fff; }
+.tkn-chatp-head .tkn-icon-btn { background: rgba(255, 255, 255, 0.2); border-color: transparent; color: #fff; flex: none; }
+.tkn-chatp-avatar { display: inline-flex; align-items: center; justify-content: center; width: 40px; height: 40px; border-radius: 50%; flex: none; background: #fff; color: #a8124f; font-weight: 800; font-size: 17px; }
+.tkn-chatp-who { display: flex; flex-direction: column; flex: 1; min-width: 0; }
+.tkn-chatp-who strong { font-size: 16px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.tkn-chatp-who span { font-size: 12px; opacity: 0.95; }
+.tkn-chatp-body { flex: 1; min-height: 0; display: flex; flex-direction: column; }
+.tkn-chatp-skel { flex: 1; min-height: 0; display: grid; gap: 12px; align-content: start; padding: 16px; }
+.tkn-chatp-skel .tkn-skel { display: block; border-radius: 14px; max-width: 100%; }
+.tkn-thread { display: flex; flex-direction: column; flex: 1; min-height: 0; }
+.tkn-thread-log { flex: 1; min-height: 0; overflow-y: auto; padding: 14px; display: grid; gap: 8px; align-content: start; font-size: 14px; color: #4a2870; }
+.tkn-msg { justify-self: start; max-width: 85%; padding: 9px 13px; border-radius: 16px 16px 16px 4px; background: #fdf0f7; color: #1e0b38; overflow-wrap: anywhere; white-space: pre-wrap; font-size: 14px; }
+.tkn-msg.is-mine { justify-self: end; border-radius: 16px 16px 4px 16px; background: linear-gradient(135deg, #d1137a, #a8124f); color: #fff; }
+.tkn-thread-form { display: grid; gap: 8px; padding: 12px 14px 14px; border-top: 1px solid #ead8f0; }
+.tkn-thread-input { box-sizing: border-box; width: 100%; min-height: 56px; padding: 10px 12px; border: 1.5px solid #ead8f0; border-radius: 14px; background: #fff; color: #1e0b38; font: inherit; font-size: 16px; resize: none; }
+.tkn-thread-input:focus-visible { outline: 3px solid #7c3aed; outline-offset: 2px; }
+.tkn-thread-row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.tkn-thread-row label { cursor: pointer; }
+.tkn-thread-link { min-height: 44px; padding: 0 8px; border: 0; background: none; color: #a8124f; font: inherit; font-size: 13px; font-weight: 600; cursor: pointer; }
+.tkn-thread-link:disabled { color: #6b4a8a; cursor: default; }
+@media (max-width: 767px) { .tkn-chatp { right: 0; left: 0; bottom: 0; width: 100%; height: min(86vh, 640px); border-radius: 22px 22px 0 0; } }
+

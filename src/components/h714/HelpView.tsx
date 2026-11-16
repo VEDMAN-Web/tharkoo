@@ -1,5 +1,8 @@
 import Link from "next/link";
+import { Send } from "lucide-react";
+import { SUPPORT_HOURS } from "@/lib/support";
 import { H714Page } from "./H714Page";
+import { BrandMark } from "@/components/BrandMarks";
 
 export type HelpCard = { title: string; desc: string; count: string; href: string };
 export type HelpRow = { title: string; href: string };
@@ -32,7 +35,7 @@ export function HelpView({
     <H714Page>
         {" "}
         <section className="h714-pad" style={{ maxWidth: "1280px", margin: "0 auto", padding: "22px 24px 0", boxSizing: "border-box" }}>
-          <div className="h714-band" style={{ borderRadius: "20px", padding: "30px 32px", background: "linear-gradient(120deg, rgba(255,240,247,.9), rgba(245,240,255,.9) 55%, rgba(255,248,236,.9))", border: "1px solid rgba(255,255,255,.95)", boxShadow: "0 8px 32px rgba(45,18,72,.07)" }}>
+          <div className="h714-band" style={{ borderRadius: "20px", padding: "30px 32px", background: "linear-gradient(120deg, rgba(255,240,247,.9), rgba(245,240,255,.9) 55%, rgba(253,246,251,.9))", border: "1px solid rgba(255,255,255,.95)", boxShadow: "0 8px 32px rgba(45,18,72,.07)" }}>
             <nav aria-label="Breadcrumb" style={{ fontSize: "13px", color: "#6B4A8A", marginBottom: "10px" }}>
               <Link href="/" style={{ textDecoration: "none" }}>Tharkoo India</Link>
               {" "}
@@ -76,45 +79,44 @@ export function HelpView({
               ))}
             </div>
         </section>
-        <section className="h714-pad" style={{ maxWidth: "1280px", margin: "0 auto", padding: "64px 24px 0", boxSizing: "border-box" }}>
-          <div className="h714-2r">
-            <div>
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "end", gap: "16px", flexWrap: "wrap", marginBottom: "26px" }}>
-                <div>
-                  <p style={{ display: "inline-block", margin: "0 0 10px", fontSize: "12px", fontWeight: "700", letterSpacing: ".12em", textTransform: "uppercase", color: "#5B21B6", background: "#F5F0FF", borderRadius: "999px", padding: "6px 14px" }}>Popular</p>
-                  <h2 className="h714-h2" style={{ margin: "0", fontSize: "40px", letterSpacing: "-.035em", lineHeight: "1.1", color: "#110520" }}>{popularHeading}</h2>
-                </div>
-              </div>
-              <div style={{ borderRadius: "20px", overflow: "hidden", background: "rgba(255,255,255,.78)", backdropFilter: "blur(18px) saturate(170%)", WebkitBackdropFilter: "blur(18px) saturate(170%)", border: "1px solid rgba(255,255,255,.95)", boxShadow: "0 8px 32px rgba(45,18,72,.08)" }}>
+        <section className="h714-pad h714-help" style={{ maxWidth: "1280px", margin: "0 auto", padding: "64px 24px 0", boxSizing: "border-box" }}>
+          <div className="h714-help-head">
+            <p className="h714-eyebrow h714-eyebrow-violet">Popular</p>
+            <h2 className="h714-h2">{popularHeading}</h2>
+          </div>
+          <div className="h714-help-grid">
+            <div className="h714-help-list">
               {popular.map((row) => (
-                    <Link key={row.href} href={row.href} className="h714-row-link" style={{ display: "flex", alignItems: "center", gap: "12px", minHeight: "58px", padding: "0 22px", borderTop: "0", textDecoration: "none", color: "#110520", fontSize: "15px", fontWeight: "600" }}>
-                      <span style={{ flex: "1" }}>{row.title}</span>
-                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#C2185B" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                        <path d="M9 6l6 6-6 6"></path>
-                      </svg>
-                    </Link>
+                <Link key={row.href} href={row.href} className="h714-row-link">
+                  <span>{row.title}</span>
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#C2185B" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                    <path d="M9 6l6 6-6 6"></path>
+                  </svg>
+                </Link>
               ))}
-              </div>
             </div>
-            <div style={{ paddingTop: "8px" }}>
-              <div style={{ padding: "24px", borderRadius: "20px", background: "rgba(255,255,255,.78)", backdropFilter: "blur(18px) saturate(170%)", WebkitBackdropFilter: "blur(18px) saturate(170%)", border: "1px solid rgba(255,255,255,.95)", boxShadow: "0 8px 32px rgba(45,18,72,.08)" }}>
-                <p style={{ display: "inline-block", margin: "0 0 10px", fontSize: "12px", fontWeight: "700", letterSpacing: ".12em", textTransform: "uppercase", color: "#C2185B", background: "#FDF0F7", borderRadius: "999px", padding: "6px 14px" }}>Still stuck?</p>
-                <h3 style={{ margin: "0 0 6px", fontSize: "22px", color: "#110520" }}>Talk to our team</h3>
-                <p style={{ margin: "0 0 18px", fontSize: "15px", lineHeight: "1.6", color: "#4A2870" }}>We usually reply in about 10 minutes, 9 am to 9 pm.</p>
-                {" "}
-                <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
-                  <Link href={chatHref} className="h714-b" style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", gap: "8px", minHeight: "48px", padding: "0 24px", borderRadius: "999px", background: "linear-gradient(135deg, #D1137A, #A8124F)", color: "#fff", fontWeight: "700", textDecoration: "none", boxShadow: "0 8px 24px rgba(209,19,122,.3)", fontSize: "15px", width: "100%", boxSizing: "border-box" }}>
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                      <path d="M4 5h16v11H8l-4 4z"></path>
-                    </svg>
-                    Chat with us
-                  </Link>
-                  <Link href={whatsappHref} style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: "8px", minHeight: "48px", borderRadius: "999px", background: "linear-gradient(135deg, #F0FDF4, #DCFCE7)", color: "#15803D", fontSize: "15px", fontWeight: "700", textDecoration: "none" }}>WhatsApp</Link>
-                  <Link href={telegramHref} style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: "8px", minHeight: "48px", borderRadius: "999px", background: "linear-gradient(135deg, #F0F9FF, #E0F2FE)", color: "#0369A1", fontSize: "15px", fontWeight: "700", textDecoration: "none" }}>Telegram</Link>
-                  <Link href={contactHref} style={{ textAlign: "center", fontSize: "14px", fontWeight: "700", paddingTop: "4px" }}>Send us a message</Link>
-                </div>
+            <aside className="h714-help-card" aria-labelledby="h714-help-team">
+              <p className="h714-eyebrow h714-eyebrow-pink">Still stuck?</p>
+              <h3 id="h714-help-team" className="h714-help-title">Talk to our team</h3>
+              <p className="h714-help-sub">Support hours {SUPPORT_HOURS}. We reply by chat or email.</p>
+              <div className="h714-help-actions">
+                <Link href={chatHref} className="h714-btn h714-btn-primary">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                    <path d="M4 5h16v11H8l-4 4z"></path>
+                  </svg>
+                  Chat with us
+                </Link>
+                <Link href={whatsappHref} className="h714-btn h714-btn-wa">
+                  <BrandMark name="whatsapp" size={20} />
+                  WhatsApp
+                </Link>
+                <Link href={telegramHref} className="h714-btn h714-btn-tg">
+                  <Send size={18} aria-hidden="true" focusable="false" />
+                  Telegram
+                </Link>
+                <Link href={contactHref} className="h714-btn h714-btn-ghost">Send us a message</Link>
               </div>
-            </div>
+            </aside>
           </div>
         </section>
         {" "}

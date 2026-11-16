@@ -119,6 +119,7 @@ function pageQuery(filter: Record<string, unknown>): ListingQuery {
     // H7.4b: the field picks from the filter panel. The query checks the keys against the category's filter fields.
     attributes: isPickMap(filter.attributes) ? (filter.attributes as ListingQuery["attributes"]) : undefined,
     video: filter.video === true ? true : undefined,
+    online: filter.online === true ? true : undefined,
   };
 }
 
@@ -251,8 +252,12 @@ export async function searchListings(opts: {
   location?: string;
   /** H7.32: a state slug (the hero search for a state alone). */
   state?: string;
+  area?: string;
   photos?: boolean;
   verified?: boolean;
+  video?: boolean;
+  online?: boolean;
+  attributes?: ListingQuery["attributes"];
   page?: number;
 }) {
   const safePage = Math.max(1, Number(opts.page) || 1);
@@ -265,8 +270,12 @@ export async function searchListings(opts: {
         categorySlug: opts.category,
         placeSlug: opts.location,
         stateSlug: opts.state,
+        districtSlug: opts.area,
         photos: opts.photos,
         verified: opts.verified,
+        video: opts.video,
+        online: opts.online,
+        attributes: opts.attributes,
         page: safePage,
         pageSize: PAGE_SIZE,
         // H7.32: without a search term the page lists every live ad, newest first.
