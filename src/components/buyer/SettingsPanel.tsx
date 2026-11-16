@@ -37,10 +37,6 @@ export function SettingsPanel({ summary }: { summary: PanelSummary }) {
           </div>
           <Link href="/u/account/kyc/" className="up-btn-ghost">View</Link>
         </div>
-        <section aria-labelledby="phone-title" className="up-disabled-box">
-          <p id="phone-title" className="up-phone-title">Login phone</p>
-          <p className="up-muted">Text message codes are coming soon</p>
-        </section>
         <p>
           <Link href="/u/account/delete/" className="up-muted-link">Delete account</Link>
         </p>

@@ -1,0 +1,31 @@
+{
+  "branchPrefix": "haiku/h7.109",
+  "globs": [
+    "docs/ownership/H7.109.json",
+    "src/app/u/account/delete/page.tsx",
+    "src/app/u/account/analytics/page.tsx",
+    "src/app/u/account/credits/bank/page.tsx",
+    "src/app/u/account/subscription/page.tsx",
+    "src/app/u/account/packs/page.tsx",
+    "src/app/u/account/media/verify/page.tsx",
+    "src/app/u/account/media/album/page.tsx",
+    "src/app/u/account/ads/in00001/page.tsx",
+    "src/app/u/account/ads/in00001/edit/page.tsx",
+    "src/app/u/age-verification/page.tsx",
+    "src/components/buyer/PanelNotice.tsx",
+    "src/components/buyer/DeleteFlow.tsx",
+    "src/components/buyer/AnalyticsPanel.tsx",
+    "src/components/buyer/SettingsPanel.tsx",
+    "src/components/buyer/user-panel.css",
+    "tests/e2e/account.e2e.ts",
+    "tests/e2e/account-pages.e2e.ts",
+    "tests/e2e/coming-soon-screens.e2e.ts",
+    "tests/e2e/age-gate.e2e.ts",
+    "src/components/ui/PostStrip.tsx",
+    "src/components/ui/post-strip.css",
+    "src/lib/ui/text.ts",
+    "src/components/new/NewAdDetail.tsx",
+    "src/components/vendor/MyAdsBoard.tsx",
+    "tests/e2e/post-strip.e2e.ts"
+  ]
+}
