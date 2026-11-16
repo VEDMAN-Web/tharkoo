@@ -402,6 +402,16 @@ test.describe("H7.99b ad page content", () => {
     }
   });
 
+  test("a wellness ad keeps its price row while a dating ad has none", async ({ page }, testInfo) => {
+    test.skip(testInfo.project.name !== "desktop-1440", "one run is enough");
+    const wellness = await adAt(page, "/wellness/", 2);
+    await page.goto(wellness);
+    await expect(page.locator(".tkn-contact-panel .tkn-ad-price")).toBeVisible();
+    const dating = await adAt(page, "/dating/bengaluru/", 3);
+    await page.goto(dating);
+    await expect(page.locator(".tkn-ad-price")).toHaveCount(0);
+  });
+
   test("an item without a price says Price on request at 20 px muted", async ({ page }, testInfo) => {
     test.skip(testInfo.project.name !== "desktop-1440", "the card is a wide-screen part");
     await page.goto("/ad/demo-7920/");

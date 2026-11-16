@@ -25,6 +25,7 @@ import "./ad-spec.css";
 
 const PERSONAL = new Set(["dating", "friendship", "meetups", "personal-ads"]);
 const GOLD_TIERS = new Set(["supertop", "top"]);
+const PRICED_PEOPLE = new Set(["wellness"]);
 const DAY_MS = 24 * 60 * 60 * 1000;
 
 function tierOf(ad: ListingDoc, categoryName: string) {
@@ -129,6 +130,7 @@ export function NewAdDetail({
   };
   const categoryCrumb = crumbs[1]?.path;
   const cityCrumb = crumbs.find((crumb) => crumb.name === `${city} ${categoryName}`)?.path;
+  const showPrice = !peopleAd || PRICED_PEOPLE.has(ad.categorySlug || "");
   const actionProps = { slug: ad.slug || "", publicId: ad.publicId || "", title, place: placeText };
 
   return (
@@ -154,7 +156,7 @@ export function NewAdDetail({
                   <h1>{title}</h1>
                   <AdActions {...actionProps} icons />
                 </div>
-                {peopleAd ? null : <p className={priceText ? "tkn-ad-phoneprice" : "tkn-ad-phoneprice is-request"}>{priceText || t("ad.price.request")}</p>}
+                {!showPrice ? null : <p className={priceText ? "tkn-ad-phoneprice" : "tkn-ad-phoneprice is-request"}>{priceText || t("ad.price.request")}</p>}
                 <div className="tkn-ad-subrow">
                   <p className="tkn-ad-meta">{t("ad.meta.simple", { place: placeText, date })}</p>
                   <ul className="tkn-ad-pills" aria-label={t("ad.details")}>
@@ -195,7 +197,7 @@ export function NewAdDetail({
             <aside className="tkn-ad-side" aria-label={t("ad.contact.label")}>
               <div className="tkn-ad-sticky">
                 <div className="tkn-contact-panel" data-tk="contact-card">
-                  {peopleAd ? null : <p className={priceText ? "tkn-ad-price" : "tkn-ad-price is-request"}>{priceText || t("ad.price.request")}</p>}
+                  {!showPrice ? null : <p className={priceText ? "tkn-ad-price" : "tkn-ad-price is-request"}>{priceText || t("ad.price.request")}</p>}
                   <AdSellerRow name={seller} verified={Boolean(ad.verified)} since={since} />
                   <ContactButtons />
                   <AdActions {...actionProps} />

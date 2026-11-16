@@ -31,7 +31,9 @@ async function liveShapedListing(slug: string, kind?: string) {
 
 describe("people categories without a kind on the stored document (H7.99c)", () => {
   it("are decided from the slug list", () => {
-    for (const slug of ["dating", "friendship", "meetups", "personal-ads"]) expect(isPeopleCategory({ slug })).toBe(true);
+    for (const slug of ["dating", "friendship", "meetups", "personal-ads", "personals"]) expect(isPeopleCategory({ slug })).toBe(true);
+    expect(isPeopleCategory({ slug: "wellness" })).toBe(false);
+    expect(isPeopleCategory({ slug: "wellness", kind: "people" })).toBe(true);
     expect(isPeopleCategory({ slug: "property" })).toBe(false);
     expect(isPeopleCategory({ slug: "jobs", kind: "job" })).toBe(false);
     expect(isPeopleCategory({ slug: "anything", kind: "people" })).toBe(true);
@@ -45,6 +47,13 @@ describe("people categories without a kind on the stored document (H7.99c)", () 
     expect(await listingIsPeople(property.listingId)).toBe(false);
     const ids = await peopleCategoryIds([dating.categoryId, property.categoryId]);
     expect([...ids]).toEqual([dating.categoryId]);
+  });
+
+  it("leave wellness as it was: only its stored kind decides", async () => {
+    const wellness = await liveShapedListing("wellness");
+    expect(await listingIsPeople(wellness.listingId)).toBe(false);
+    const stored = await liveShapedListing("wellness-kind", "people");
+    expect(await listingIsPeople(stored.listingId)).toBe(true);
   });
 
   it("still honour the admin kind", async () => {

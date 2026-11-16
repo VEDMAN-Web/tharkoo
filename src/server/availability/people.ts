@@ -1,7 +1,6 @@
 import mongoose from "mongoose";
 import { connectDb } from "@/lib/db";
 import { Category, Listing } from "@/server/models";
-import { kindFor } from "@/server/categories/kind";
 
 /**
  * H7.5: the people rule for calls. A listing whose category kind is "people" never shows the Call button (chat stays).
@@ -9,11 +8,13 @@ import { kindFor } from "@/server/categories/kind";
  */
 export const PEOPLE_KIND = "people";
 
-type CategoryRow = { slug?: string; kind?: string; fields?: unknown };
+export const PEOPLE_SLUGS = ["dating", "friendship", "meetups", "personal-ads", "personals"] as const;
+
+type CategoryRow = { slug?: string; kind?: string };
 
 export function isPeopleCategory(row: CategoryRow | null | undefined): boolean {
   if (!row) return false;
-  return row.kind === PEOPLE_KIND || kindFor(row.slug || "", row.fields) === PEOPLE_KIND;
+  return row.kind === PEOPLE_KIND || (PEOPLE_SLUGS as readonly string[]).includes(row.slug || "");
 }
 
 export async function listingIsPeople(listingId: string): Promise<boolean> {
@@ -21,7 +22,7 @@ export async function listingIsPeople(listingId: string): Promise<boolean> {
   await connectDb();
   const listing = await Listing.findById(listingId).select("categoryId").lean<{ categoryId?: unknown } | null>();
   if (!listing?.categoryId) return false;
-  const category = await Category.findById(listing.categoryId).select("kind slug fields").lean<CategoryRow | null>();
+  const category = await Category.findById(listing.categoryId).select("kind slug").lean<CategoryRow | null>();
   return isPeopleCategory(category);
 }
 
@@ -30,6 +31,6 @@ export async function peopleCategoryIds(categoryIds: string[]): Promise<Set<stri
   const valid = categoryIds.filter((id) => mongoose.isValidObjectId(id));
   if (valid.length === 0) return new Set();
   await connectDb();
-  const rows = await Category.find({ _id: { $in: valid } }).select("_id kind slug fields").lean<(CategoryRow & { _id: unknown })[]>();
+  const rows = await Category.find({ _id: { $in: valid } }).select("_id kind slug").lean<(CategoryRow & { _id: unknown })[]>();
   return new Set(rows.filter(isPeopleCategory).map((row) => String(row._id)));
 }
