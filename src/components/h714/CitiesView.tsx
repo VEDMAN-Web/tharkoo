@@ -18,6 +18,11 @@ const ALL_STYLE: CSSProperties = { display: "inline-flex", alignItems: "center",
 const LETTER_STYLE: CSSProperties = { width: "36px", height: "36px", borderRadius: "10px", display: "inline-flex", alignItems: "center", justifyContent: "center", fontSize: "13px", fontWeight: "700", textDecoration: "none", flex: "none", background: "rgba(255,255,255,.85)", border: "1px solid #EAD8F0", color: "#4A2870" };
 const LETTERS_STYLE: CSSProperties = { marginBottom: "22px" };
 
+export function searchHint(cities: CityCard[]): string {
+  const names = cities.map((city) => city.name).filter(Boolean).slice(0, 2);
+  return names.length ? `Type a city or area, e.g. ${names.join(", ")}` : "Type a city or area";
+}
+
 export function CitiesView({
   bandIntro,
   bandChips,
@@ -54,8 +59,8 @@ export function CitiesView({
                   <circle cx="11" cy="11" r="7"></circle>
                   <path d="M20 20l-4-4"></path>
                 </svg>
-                <span style={{ position: "absolute", left: "-9999px" }}>Type a city or area, e.g. Vesu, Surat</span>
-                <input name="q" placeholder="Type a city or area, e.g. Vesu, Surat" style={{ border: "0", outline: "none", font: "inherit", fontSize: "15px", width: "100%", background: "transparent" }} />
+                <span style={{ position: "absolute", left: "-9999px" }}>{searchHint(bandChips)}</span>
+                <input name="q" placeholder={searchHint(bandChips)} style={{ border: "0", outline: "none", font: "inherit", fontSize: "15px", width: "100%", background: "transparent" }} />
               </label>
               <button type="submit" className="h714-b" style={{ minHeight: "48px", padding: "0 24px", border: "0", borderRadius: "12px", background: "linear-gradient(135deg, #D1137A, #A8124F)", color: "#fff", fontWeight: "700", textDecoration: "none", boxShadow: "0 8px 24px rgba(209,19,122,.3)", font: "inherit", cursor: "pointer" }}>Search</button>
             </form>

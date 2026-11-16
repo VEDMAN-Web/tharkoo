@@ -1,0 +1,13 @@
+{
+  "branchPrefix": "haiku/h7.111",
+  "globs": [
+    "docs/ownership/H7.111.json",
+    "progress/H7.111.md",
+    "progress/KNOWN-E2E.md",
+    "src/server/site-links/shell-config-rules.ts",
+    "tests/e2e/h7-111-blog-nav.e2e.ts",
+    "tests/e2e/top-bar.e2e.ts",
+    "tests/server/shell/shell-config.test.ts",
+    "tests/server/shell/shell-render.test.ts"
+  ]
+}

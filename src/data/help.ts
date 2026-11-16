@@ -12,5 +12,5 @@ export const HELP_ARTICLES = [
 export const BLOG_POSTS = [
   { slug: "most-searched-hyderabad", title: "Most searched in Hyderabad this week", date: "3 November 2026", body: "Jobs, property, and dating are the most searched categories in Hyderabad this week. Open a city page to see the live ads." },
   { slug: "how-star-works", title: "How Star listings work", date: "28 October 2026", body: "Star is a premium city-page slot, sold in two daily windows with six spots. Each spot shows one ad with a short name." },
-  { slug: "stay-safe", title: "Stay safe when you meet", date: "12 October 2026", body: "Meet in public first. Do not pay a deposit. Report stolen photos and fake numbers with the Ad ID." },
+  { slug: "stay-safe", title: "Stay safe when you meet", date: "12 October 2026", body: "Meet in public first. Do not pay a deposit. Report stolen photos and fake numbers with the Ad ID.", cover: "https://res.cloudinary.com/tat1zj72/image/upload/v1794815500/tharkoo/site/6afab60c0a35b1df43d37886.jpg", coverAlt: "Two friends chatting over coffee in a busy cafe at dusk", coverFocus: "60% 40%" },
 ];

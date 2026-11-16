@@ -142,7 +142,7 @@ export function PathChrome({ shell, paths, children }: { shell: ChromeData; path
         lead={content.age.lead}
         rest={content.age.rest}
         terms={content.age.terms}
-        yes={content.age.yes}
+        yes={content.age.yes === "ACCEPT" || content.age.yes === "Accept" ? "I am 18 or older, enter" : content.age.yes}
         no={content.age.no}
         noHref={safeHref(content.age.noHref) || "https://www.google.com"}
       />

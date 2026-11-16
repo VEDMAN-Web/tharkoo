@@ -35,7 +35,7 @@ function header(config: ShellConfig = defaultShellConfig()) {
 describe("H7.1 new header", () => {
   it("shows the pill nav, the country pill, Log in and Post your ad, and no saved or heart icon", () => {
     const html = header();
-    for (const label of ["Home", "Categories", "Cities", "How it works", "Help", "Log in"]) {
+    for (const label of ["Home", "Categories", "Cities", "How it works", "Blog", "Log in"]) {
       expect(html).toContain(label);
     }
     // H7.4c: the location pill shows the country (flag and name), not a city.

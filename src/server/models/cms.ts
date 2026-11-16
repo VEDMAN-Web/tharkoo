@@ -85,6 +85,9 @@ export interface BlogPostDoc extends BaseDoc {
   date?: string;
   author?: string;
   category?: string;
+  cover?: string;
+  coverAlt?: string;
+  coverFocus?: string;
   status?: string;
 }
 
@@ -237,6 +240,9 @@ const blogPostSchema = new Schema<BlogPostDoc>(
     date: String,
     author: String,
     category: String,
+    cover: String,
+    coverAlt: String,
+    coverFocus: String,
     status: { type: String, default: "published" },
   },
   { timestamps: true, collection: collectionName("blog_posts", "BlogPost") },

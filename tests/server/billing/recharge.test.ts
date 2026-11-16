@@ -188,6 +188,42 @@ describe("the mock payment page", () => {
   });
 });
 
+describe("two confirmations at the same moment", () => {
+  async function race(method: "card" | "crypto") {
+    await WalletEntry.init();
+    const user = await member();
+    const { popular } = await packs();
+    let expected = 0;
+    for (let round = 0; round < 20; round += 1) {
+      const started = await startRecharge({ userId: user.id, packId: String(popular._id), method, requestId: `s${round}` });
+      if (method === "crypto") await chooseCoin({ userId: user.id, paymentId: started.paymentId, coin: "USDT", network: "TRC-20", requestId: `c${round}` });
+      const results = await Promise.allSettled([
+        confirmMockPayment({ userId: user.id, paymentId: started.paymentId, outcome: "paid", requestId: `a${round}` }),
+        confirmMockPayment({ userId: user.id, paymentId: started.paymentId, outcome: "paid", requestId: `b${round}` }),
+      ]);
+      expect(results.map((row) => row.status), `round ${round}`).toEqual(["fulfilled", "fulfilled"]);
+      expected += 575;
+      expect(await walletBalance(user.id), `round ${round}`).toBe(expected);
+      expect(await WalletEntry.countDocuments({ userId: user.id, refType: "pack", refId: started.paymentId }), `round ${round}`).toBe(1);
+      expect(await WalletEntry.countDocuments({ userId: user.id, refType: "pack_bonus", refId: `${started.paymentId}:bonus` }), `round ${round}`).toBe(1);
+      const row = await Payment.findById(started.paymentId).lean();
+      expect(row, `round ${round}`).toMatchObject({ status: "paid", outcome: "paid" });
+      const again = await confirmMockPayment({ userId: user.id, paymentId: started.paymentId, outcome: "paid", requestId: `z${round}` });
+      expect(again.payment.status).toBe("paid");
+      expect(again.balance).toBe(expected);
+    }
+    expect(await WalletEntry.countDocuments({ userId: user.id })).toBe(40);
+  }
+
+  it("credit the card pack and its bonus once, 20 rounds, and the second call answers without an error", async () => {
+    await race("card");
+  });
+
+  it("credit the crypto pack and its bonus once, 20 rounds", async () => {
+    await race("crypto");
+  });
+});
+
 describe("the routes", () => {
   async function signedIn() {
     const user = await member("route");

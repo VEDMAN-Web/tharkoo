@@ -80,7 +80,7 @@ export function defaultShellConfig(): ShellConfig {
         link("Categories", "/categories/", "grid"),
         link("Cities", "/cities/", "pin"),
         link("How it works", "/how-it-works/", "info"),
-        link("Help", "/help/", "help"),
+        link("Blog", "/blog/", "book"),
       ],
       loginLabel: "Log in",
       postLabel: "Post your ad",
@@ -341,6 +341,20 @@ function pickImages(value: unknown): ShellImage[] {
  * Reads whatever is stored and fills every gap from the defaults. Used on every page, so it never throws:
  * a broken stored value falls back to the default for that field.
  */
+const OLD_DEFAULT_NAV = [
+  ["Home", "/"],
+  ["Categories", "/categories/"],
+  ["Cities", "/cities/"],
+  ["How it works", "/how-it-works/"],
+  ["Help", "/help/"],
+] as const;
+
+/** H7.88b: a saved header menu that is still the old default (ending in Help) takes the new default (ending in Blog). A menu an admin changed is left alone. */
+export function upgradeOldNav(saved: ShellLink[], fresh: ShellLink[]): ShellLink[] {
+  const same = saved.length === OLD_DEFAULT_NAV.length && saved.every((item, index) => item.label === OLD_DEFAULT_NAV[index][0] && item.href === OLD_DEFAULT_NAV[index][1] && item.visible);
+  return same ? fresh : saved;
+}
+
 export function normaliseShellConfig(raw: unknown): ShellConfig {
   const base = defaultShellConfig();
   const data = (raw && typeof raw === "object" ? raw : {}) as Record<string, Record<string, unknown> | undefined>;
@@ -351,7 +365,7 @@ export function normaliseShellConfig(raw: unknown): ShellConfig {
   const media = (data.media ?? {}) as Record<string, unknown>;
   return {
     header: {
-      navLinks: pickLinks(header.navLinks, base.header.navLinks),
+      navLinks: upgradeOldNav(pickLinks(header.navLinks, base.header.navLinks), base.header.navLinks),
       loginLabel: pickText(header.loginLabel, base.header.loginLabel),
       postLabel: pickText(header.postLabel, base.header.postLabel),
     },
