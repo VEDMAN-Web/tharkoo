@@ -54,10 +54,11 @@ test.describe("H7.83 post an ad, steps 1 and 2", () => {
     expect(await overflow(page)).toBeLessThanOrEqual(0);
   });
 
-  test("tiles are two across on a phone and three across from 600 px", async ({ page, baseURL }) => {
+  test("tiles are two across on a phone, three across from 600 px and four across from 1280 px", async ({ page, baseURL }) => {
     await poster(page, baseURL!, "tiles");
     const columns = await page.locator(".tkp-tiles").evaluate((node) => getComputedStyle(node).gridTemplateColumns.split(" ").length);
-    expect(columns).toBe((page.viewportSize()?.width ?? 1440) < 600 ? 2 : 3);
+    const wide = page.viewportSize()?.width ?? 1440;
+    expect(columns).toBe(wide < 600 ? 2 : wide < 1280 ? 3 : 4);
   });
 
   test("Dating details: placeholders for dating, no price, a numeric age, A to Z cities, no old header", async ({ page, baseURL }) => {
