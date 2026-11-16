@@ -4,12 +4,12 @@ import { useEffect, useState } from "react";
 import { api, friendlyError } from "@/lib/ui/api";
 import { listMyVideosAction, removeMyVideoAction } from "./videoActions";
 
-export const VIDEO_RULE_LINE = "Videos: max 10 MB and 30 seconds each. Photos and videos: up to 10 in total.";
-const MAX_BYTES = 10 * 1024 * 1024;
-const MAX_SECONDS = 30;
+export const VIDEO_RULE_LINE = "Videos: max 100 MB and 60 seconds each. Photos and videos: up to 10 in total.";
+const MAX_BYTES = 100 * 1024 * 1024;
+const MAX_SECONDS = 60;
 const MAX_VIDEOS = 2;
 const TYPES = ["video/mp4", "video/webm", "video/quicktime"];
-const RULE_NOTE = "Use an mp4, webm or mov video up to 10 MB and 30 seconds.";
+const RULE_NOTE = "Use an mp4, webm or mov video up to 100 MB and 60 seconds.";
 
 type Signed = {
   uploadUrl: string;
