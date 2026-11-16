@@ -1,7 +1,7 @@
 import { mkdirSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { ObjectId } from "mongodb";
-import type { Page } from "@playwright/test";
+import type { Locator, Page } from "@playwright/test";
 import { expect, hasHorizontalScroll, signInAdminContext, test, withLocalDb } from "./helpers";
 
 const CARD = '[data-tk="home-ad"]';
@@ -66,7 +66,7 @@ async function openHome(page: Page) {
   return row;
 }
 
-const slideOf = async (page: Page, position: number) => Number(await page.locator(CARD).nth(position).getAttribute("data-slide"));
+const slideOf = async (card: Locator) => Number(await card.getAttribute("data-slide"));
 
 test.describe("H7.104 Home: four categories, eight smaller cards, auto-swipe", () => {
   test.beforeEach(({}, testInfo) => {
@@ -110,8 +110,8 @@ test.describe("H7.104 Home: four categories, eight smaller cards, auto-swipe", (
       const field = page.getByLabel("Number of categories on Home (1 to 8)");
       await expect(field).toBeVisible();
       await field.fill(value);
-      await page.getByRole("button", { name: "Save", exact: true }).click();
-      await expect(page.getByText(/^Saved\./)).toBeVisible();
+      await page.getByRole("button", { name: "Save number of categories" }).click();
+      await expect(page.getByText("Saved.", { exact: true })).toBeVisible();
     };
     await page.goto("/admin/homepage/");
     await expect(page.getByLabel("Number of categories on Home (1 to 8)")).toHaveValue("4");
@@ -130,42 +130,43 @@ test.describe("H7.104 Home: four categories, eight smaller cards, auto-swipe", (
     test.setTimeout(120_000);
     await page.setViewportSize({ width: 1440, height: 900 });
     await openHome(page);
-    const card = page.locator(CARD).first();
+    const card = page.locator(CARD).filter({ hasNot: page.locator('[data-tk="card-video"]') }).first();
     await card.evaluate((el) => el.scrollIntoView({ block: "center" }));
     await page.mouse.move(2, 2);
-    const start = await slideOf(page, 0);
-    await expect.poll(() => slideOf(page, 0), { timeout: SLIDE_WAIT }).not.toBe(start);
-    const moved = await slideOf(page, 0);
-    await expect.poll(() => slideOf(page, 0), { timeout: SLIDE_WAIT }).not.toBe(moved);
+    const start = await slideOf(card);
+    await expect.poll(() => slideOf(card), { timeout: SLIDE_WAIT }).not.toBe(start);
+    const moved = await slideOf(card);
+    await expect.poll(() => slideOf(card), { timeout: SLIDE_WAIT }).not.toBe(moved);
 
     await page.evaluate(() => window.scrollTo(0, 0));
     await page.waitForTimeout(500);
-    const parked = await slideOf(page, 0);
+    const parked = await slideOf(card);
     await page.waitForTimeout(5_000);
-    expect(await slideOf(page, 0), "a card that is off screen does not move").toBe(parked);
+    expect(await slideOf(card), "a card that is off screen does not move").toBe(parked);
 
     await card.evaluate((el) => el.scrollIntoView({ block: "center" }));
     await page.mouse.move(2, 2);
     await card.hover();
     const next = card.getByRole("button", { name: "Next photo" });
-    const before = await slideOf(page, 0);
+    const before = await slideOf(card);
     await next.click();
-    const after = await slideOf(page, 0);
+    const after = await slideOf(card);
     expect(after).not.toBe(before);
     await page.mouse.move(2, 2);
     await page.waitForTimeout(4_500);
-    expect(await slideOf(page, 0), "no auto move for 6 s after a click").toBe(after);
-    await expect.poll(() => slideOf(page, 0), { timeout: SLIDE_WAIT }).not.toBe(after);
+    expect(await slideOf(card), "no auto move for 6 s after a click").toBe(after);
+    await expect.poll(() => slideOf(card), { timeout: SLIDE_WAIT }).not.toBe(after);
   });
 
   test("with reduced motion nothing moves by itself", async ({ browser, baseURL }) => {
     const context = await browser.newContext({ baseURL, viewport: { width: 1440, height: 900 }, reducedMotion: "reduce" });
     const page = await context.newPage();
     await openHome(page);
-    await page.locator(CARD).first().evaluate((el) => el.scrollIntoView({ block: "center" }));
-    const start = await slideOf(page, 0);
+    const card = page.locator(CARD).filter({ hasNot: page.locator('[data-tk="card-video"]') }).first();
+    await card.evaluate((el) => el.scrollIntoView({ block: "center" }));
+    const start = await slideOf(card);
     await page.waitForTimeout(6_000);
-    expect(await slideOf(page, 0)).toBe(start);
+    expect(await slideOf(card)).toBe(start);
     await context.close();
   });
 
@@ -177,17 +178,17 @@ test.describe("H7.104 Home: four categories, eight smaller cards, auto-swipe", (
     const cleanup = await addVideos(page, slugs);
     try {
       await page.waitForTimeout(61_000);
-      const card = page.locator(CARD).first();
+      const card = page.locator(CARD).filter({ has: page.locator('[data-tk="card-video"]') }).first();
       await expect(async () => {
         await page.goto("/");
-        await expect(card.locator('[data-tk="card-video"]')).toHaveCount(1, { timeout: 2_000 });
+        await expect(card).toHaveCount(1, { timeout: 2_000 });
       }).toPass({ timeout: 40_000, intervals: [3_000] });
       await card.evaluate((el) => el.scrollIntoView({ block: "center" }));
       await page.mouse.move(2, 2);
       const video = card.locator('[data-tk="card-video"]');
       await expect.poll(() => video.evaluate((el: HTMLVideoElement) => !el.paused), { timeout: SLIDE_WAIT }).toBe(true);
       expect(await video.evaluate((el: HTMLVideoElement) => el.muted)).toBe(true);
-      await expect.poll(() => slideOf(page, 0), { timeout: 20_000 }).toBeGreaterThan(0);
+      await expect.poll(() => slideOf(card), { timeout: 20_000 }).toBeGreaterThan(0);
       expect(await video.evaluate((el: HTMLVideoElement) => el.paused)).toBe(true);
 
       const phone = await browser.newContext({ baseURL, viewport: { width: 390, height: 844 }, hasTouch: true, isMobile: true });

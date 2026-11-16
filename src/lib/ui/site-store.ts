@@ -119,6 +119,18 @@ export async function applyListingBandSwitch(input: { roles: string[]; email: st
   return applyHomepageChange({ roles: input.roles, email: input.email, content });
 }
 
+/** H7.104: how many categories the Home categories block shows (1 to 8, default 4). Same role check, audit entry and cache refresh as the homepage save. */
+export async function applyHomeCategoriesCount(input: { roles: string[]; email: string; count: number }) {
+  if (!isAdminRole(input.roles)) throw new ForbiddenError("Only an admin can edit the homepage");
+  if (!Number.isInteger(input.count) || input.count < 1 || input.count > 8) {
+    throw new ValidationError("Enter a number from 1 to 8", { count: ["Enter a number from 1 to 8"] });
+  }
+  await connectDb();
+  const current = await Site.findOne({ key: "default" }).lean();
+  const content = { ...readContent(current?.homepage), homeCategoriesCount: input.count };
+  return applyHomepageChange({ roles: input.roles, email: input.email, content });
+}
+
 /**
  * Saves the home page title and description from the Home page editor (H6.10).
  * It writes the same stored fields the public page reads (Site.homepage.content.seoTitle and seoDescription),

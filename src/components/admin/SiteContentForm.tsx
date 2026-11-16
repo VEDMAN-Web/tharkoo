@@ -246,10 +246,6 @@ export function SiteContentForm({
             <div className="mt-3 grid gap-3">
               <label className="tk-field">Heading<input value={content.cardsHeading} onChange={(event) => patch({ ...content, cardsHeading: event.target.value })} /></label>
               <label className="tk-field">Intro<input value={content.cardsIntro} onChange={(event) => patch({ ...content, cardsIntro: event.target.value })} /></label>
-              <label className="tk-field">
-                Number of categories on Home (1 to 8)
-                <input type="number" min={1} max={8} value={content.homeCategoriesCount} onChange={(event) => patch({ ...content, homeCategoriesCount: Math.min(8, Math.max(1, Math.round(Number(event.target.value)) || 4)) })} />
-              </label>
               <label className="tk-field">Page title<input value={content.seoTitle} onChange={(event) => patch({ ...content, seoTitle: event.target.value })} /></label>
               <label className="tk-field">Page description<textarea rows={3} value={content.seoDescription} onChange={(event) => patch({ ...content, seoDescription: event.target.value })} /></label>
               <label className="tk-field">Extra text under the cards<textarea rows={4} value={content.seoIntro} onChange={(event) => patch({ ...content, seoIntro: event.target.value })} /></label>
