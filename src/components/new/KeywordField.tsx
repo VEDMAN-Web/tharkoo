@@ -34,11 +34,7 @@ export function KeywordField({
   const typed = useRef(false);
 
   useEffect(() => {
-    if (!typed.current) return;
-    if (text.trim().length < MIN_LENGTH) {
-      setItems([]);
-      return;
-    }
+    if (!typed.current || text.trim().length < MIN_LENGTH) return;
     const controller = new AbortController();
     const timer = window.setTimeout(async () => {
       try {
@@ -112,6 +108,7 @@ export function KeywordField({
         aria-activedescendant={active >= 0 ? `${listId}-${active}` : undefined}
         onChange={(event) => {
           typed.current = true;
+          if (event.target.value.trim().length < MIN_LENGTH) setItems([]);
           setText(event.target.value);
         }}
         onFocus={() => setOpen(true)}

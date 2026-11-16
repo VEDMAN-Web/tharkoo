@@ -9,7 +9,7 @@ const empty = { toggles: none, picks: {} } satisfies SearchState;
 
 describe("searchHeading", () => {
   it("is built from the filters", () => {
-    expect(searchHeading(empty, t)).toBe("All ads in India");
+    expect(searchHeading({}, t)).toBe("All ads in India");
     expect(searchHeading({ city: { slug: "surat", name: "Surat" } }, t)).toBe("Ads in Surat");
     expect(searchHeading({ category: { slug: "dating", name: "Dating" }, state: { slug: "gujarat", name: "Gujarat" } }, t)).toBe("Dating ads in Gujarat");
     expect(searchHeading({ category: { slug: "dating", name: "Dating" } }, t)).toBe("Dating ads in India");
