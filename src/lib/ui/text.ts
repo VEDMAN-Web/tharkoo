@@ -55,6 +55,8 @@ export const TEXT_DEFAULTS = {
   "listing.band.search": "Search",
   "listing.band.searchPlaceholder": "Search {category} in {place}",
   "listing.band.searchCategory": "Search {category}",
+  "listing.band.introIndia": "Free {category} ads across India.",
+  "listing.band.introPlace": "Free {category} ads in {place}.",
   "listing.band.filters": "Filters",
   "listing.band.all": "All",
   "listing.band.close": "Close filters",

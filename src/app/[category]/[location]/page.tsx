@@ -269,7 +269,7 @@ export default async function LocationPage({ params, searchParams }: Props) {
   const frame = listingFrameProps({
     crumbs,
     h1,
-    intro: listingHeading(introTemplate, "", { ...layout.vars, h1 }) || undefined,
+    intro: listingHeading(introTemplate, "", { ...layout.vars, h1 }) || t("listing.band.introPlace", { category: cat.name, place: loc.name }),
     photo: bandChoice(shell, hero, { city: loc.kind === "city" ? citySlug : undefined, category: categorySlug }),
     categorySlug,
     citySlug: loc.kind === "city" ? citySlug : undefined,
