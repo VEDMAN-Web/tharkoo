@@ -369,7 +369,7 @@ body:has(.tkp-post) .tkn-footer, body:has(.tkp-post) .tkn-chat-bubble { display:
 }
 .tkn .tkp-post .tkp-media[data-state="failed"], .tkn .tkp-post .tkp-media[data-state="refused"] { padding: 6px; border: 1.5px solid #dc2626; border-radius: 14px; background: #fef2f2; }
 .tkn .tkp-post .tkp-media-failed { background: #fee2e2; color: #b91c1c; }
-.tkn .tkp-post .tkp-media-reason { display: flex; align-items: flex-start; gap: 6px; font-size: 13px; line-height: 1.35; color: #b91c1c; }
+.tkn .tkp-post .tkp-media-reason { display: flex; align-items: flex-start; gap: 6px; font-size: 13px; line-height: 1.35; color: #9f1239; }
 .tkn .tkp-post .tkp-media-reason svg { flex: none; margin-top: 2px; }
 @media (min-width: 1024px) {
   .tkn .tkp-post .tkp-media[data-state="failed"], .tkn .tkp-post .tkp-media[data-state="refused"] { grid-column: span 2; }
