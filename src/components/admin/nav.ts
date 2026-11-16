@@ -141,6 +141,7 @@ export const NAV_GROUPS: NavGroup[] = [
     label: "System",
     items: [
       item("settings", "Settings", "/admin/settings/", "gear", "superadmin"),
+      item("money", "Money", "/admin/settings/money/", "coin", "admin"),
       item("flags", "Feature flags", "/admin/flags/", "toggle", "superadmin"),
       item("audit", "Audit log", "/admin/audit/", "history", "admin"),
     ],

@@ -1,0 +1,18 @@
+{
+  "branchPrefix": "haiku/h7.82",
+  "globs": [
+    "docs/ownership/H7.82.json",
+    "src/server/chat/service.ts",
+    "src/components/chat/Inbox.tsx",
+    "src/components/chat/ChatThread.tsx",
+    "src/lib/ui/chat-time.ts",
+    "src/lib/ui/profile-progress.ts",
+    "src/components/buyer/ProfileCard.tsx",
+    "src/components/buyer/PanelHomePage.tsx",
+    "src/components/buyer/UserPanelHome.tsx",
+    "src/components/buyer/user-panel.css",
+    "tests/server/chat/chat.test.ts",
+    "tests/server/ui/inbox-profile.test.ts",
+    "tests/e2e/inbox-profile.e2e.ts"
+  ]
+}

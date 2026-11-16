@@ -20,11 +20,13 @@ export function ChatThread({
   onCreate,
   variant = "page",
   peerName = "",
+  hideTitle = false,
 }: {
   conversationId: string | null;
   onCreate?: () => Promise<CreateResult>;
   variant?: "page" | "panel";
   peerName?: string;
+  hideTitle?: boolean;
 }) {
   const [info, setInfo] = useState<Info | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
@@ -136,7 +138,7 @@ export function ChatThread({
     <div data-tk="chat-thread" className={panel ? "tkn-thread" : undefined} style={panel ? undefined : { display: "grid", gridTemplateRows: "auto 1fr auto", minHeight: 0, height: "100%" }}>
       {panel ? null : (
         <div style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center", padding: "8px 12px", borderBottom: "1px solid var(--border)" }}>
-          <strong style={{ flex: 1, minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{info?.listingTitle || "Chat"}</strong>
+          {hideTitle ? <span style={{ flex: 1 }} /> : <strong style={{ flex: 1, minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{info?.listingTitle || "Chat"}</strong>}
           <button type="button" className="tk-btn tk-btn-outline-primary" style={buttonStyle} onClick={() => void report()} disabled={info?.reported}>
             {info?.reported ? "Reported" : "Report"}
           </button>
