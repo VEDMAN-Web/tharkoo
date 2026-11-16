@@ -17,6 +17,7 @@
     "src/lib/ui/text.ts",
     "src/server/search/query.ts",
     "src/server/search/suggest.ts",
+    "tests/e2e/h7-75-search-body.e2e.ts",
     "tests/e2e/h7-90-search-results.e2e.ts",
     "tests/server/search/search-header.test.ts",
     "tests/server/search/search.test.ts"
