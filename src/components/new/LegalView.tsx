@@ -1,3 +1,4 @@
+import type { ReactNode } from "react";
 import Link from "next/link";
 import { PageBand } from "./PageParts";
 import type { LegalSection } from "./legal-copy";
@@ -15,6 +16,7 @@ export function LegalView({
   sections,
   askHref,
   askLabel,
+  cover,
 }: {
   crumbs: LegalCrumb[];
   title: string;
@@ -26,6 +28,7 @@ export function LegalView({
   sections: LegalSection[];
   askHref: string;
   askLabel: string;
+  cover?: ReactNode;
 }) {
   const withHeadings = sections.filter((section) => section.heading);
   return (
@@ -39,6 +42,7 @@ export function LegalView({
       </PageBand>
 
       <div className={withHeadings.length ? "tkp-legal" : "tkp-legal tkp-legal-solo"}>
+        {cover}
         {withHeadings.length ? (
           <aside className="tkp-toc tkp-glass tkp-toc-hide-xs" aria-label="On this page">
             <p className="tkp-toc-title">On this page</p>

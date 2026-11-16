@@ -1,0 +1,19 @@
+{
+  "branchPrefix": "haiku/h7.69",
+  "globs": [
+    "docs/ownership/H7.69.json",
+    "progress/H7.69.md",
+    "src/app/blog/[slug]/page.tsx",
+    "src/app/cms/[slug]/page.tsx",
+    "src/app/help/[slug]/page.tsx",
+    "src/components/new/BlogCover.tsx",
+    "src/components/new/LegalView.tsx",
+    "src/components/new/legal-copy.ts",
+    "src/components/new/p10-p13.css",
+    "src/content/editorial.ts",
+    "src/content/trust.ts",
+    "src/data/help.ts",
+    "tests/e2e/h7-69-text-cleanup.e2e.ts",
+    "tests/server/ui/dev-notes.test.ts"
+  ]
+}
