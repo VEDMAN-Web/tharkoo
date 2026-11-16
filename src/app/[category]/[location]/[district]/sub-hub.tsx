@@ -3,16 +3,17 @@ import { withPagination } from "@/lib/seo/pagination";
 import type { Metadata } from "next";
 import { resolveListingLayout } from "@/components/blocks/ListingLayout";
 import { ListingPageView } from "@/components/ListingPage";
-import { NewListingPage } from "@/components/new/ListingBand";
+import { ListingFrame } from "@/components/new/ListingFrame";
 import { bandChoice, heroBandFrom } from "@/components/new/band-image";
-import { listingLabels } from "@/components/new/listing-frame-props";
+import { listingFrameProps, listingLabels, placeSelects } from "@/components/new/listing-frame-props";
+import { loadCardWidth } from "@/server/listings/card-width";
 import { FallbackAds } from "@/components/FallbackAds";
 import { loadFallbackSections, showFallback } from "@/lib/fallback-ads";
 import { readShellConfig } from "@/server/site-links/shell-config";
 import { getPaths } from "@/server/urls/service";
 import { makeT } from "@/lib/ui/text";
 import { textOverrides } from "@/app/admin/ui-text/store";
-import { getCategory, getCityBySlug, getHomepageContent, getSite } from "@/lib/queries";
+import { getCategories, getCategory, getCities, getCityBySlug, getDistricts, getHomepageContent, getSite, getStates } from "@/lib/queries";
 import { fallbackLanding } from "@/lib/seo/landing";
 import { subcategoryCopy } from "@/server/seo/templates";
 import { withUrlSeo, urlHeading } from "@/lib/seo/override";
@@ -88,7 +89,7 @@ export async function SubHub({ params, page }: { params: SubHubParams; page: num
     permanentRedirect(placePath(catSlug, citySlug, hub.sub.slug));
   }
   const canonicalPath = placePath(catSlug, citySlug, hub.sub.slug);
-  const [site, feed, siblings, texts, heading, shell, hero, paths] = await Promise.all([
+  const [site, feed, siblings, texts, heading, shell, hero, paths, categories, states, cities, districts, cardWidth] = await Promise.all([
     getSite(),
     subcategoryFeed({ categoryId: String(hub.cat._id), cityId: hub.cityId, subcategoryId: hub.sub.id, page }),
     subcategoryChips(catSlug, citySlug),
@@ -97,6 +98,11 @@ export async function SubHub({ params, page }: { params: SubHubParams; page: num
     readShellConfig(),
     getHomepageContent().then(heroBandFrom),
     getPaths(),
+    getCategories(),
+    getStates(),
+    getCities(),
+    getDistricts(hub.city.slug || params.location),
+    loadCardWidth(),
   ]);
   if (page > feed.pages) notFound();
   const t = makeT(texts);
@@ -129,31 +135,50 @@ export async function SubHub({ params, page }: { params: SubHubParams; page: num
     feed.total === 0
       ? { text: `No ads in ${hub.city.name} yet. Here are ads close by.`, button: `Post the first ad in ${hub.city.name}`, href: postAdPath(paths) }
       : undefined;
+  const labels = listingLabels(t);
+  const frame = listingFrameProps({
+    crumbs,
+    h1,
+    photo: bandChoice(shell, hero, { city: citySlug, category: catSlug }),
+    categorySlug: catSlug,
+    citySlug,
+    searchAction: placePath(catSlug, citySlug),
+    searchPlaceholder: `Search ${hub.cat.name} in ${hub.city.name}`,
+    chips: null,
+    fields: undefined,
+    picks: {},
+    toggles: { verified: false, photos: false, video: false, online: false },
+    panelPath: canonicalPath,
+    labels,
+    placesOnly: true,
+    places: placeSelects({
+      categorySlug: catSlug,
+      categories,
+      states,
+      cities,
+      districts,
+      stateSlug: hub.city.stateSlug || undefined,
+      citySlug,
+      labels,
+    }),
+  });
   return (
-    <NewListingPage
-      tk="sub-hub"
-      band={{
-        crumbs,
-        h1,
-        photo: bandChoice(shell, hero, { city: citySlug, category: catSlug }),
-        categorySlug: catSlug,
-        citySlug,
-        searchAction: placePath(catSlug, citySlug),
-        placeholder: `Search ${hub.cat.name} in ${hub.city.name}`,
-        labels: listingLabels(t),
-      }}
+    <div data-card-width={cardWidth}>
+    <ListingFrame
+      bandStyle={frame.bandStyle}
+      labels={labels}
+      head={frame.head}
+      chips={frame.chips}
+      searchForm={frame.searchForm}
+      filters={frame.filters}
+      activeCount={frame.activeCount}
     >
     <ListingPageView
-      frame
       layout={layout}
       texts={texts}
-      h1={h1}
       faqs={copy.faqs}
       intro={copy.intro}
       crumbs={crumbs}
-      cityName={hub.city.name}
-      categoryName={hub.sub.name}
-      locationLabel={hub.city.name}
       path={canonicalPath}
       stars={[]}
       items={feed.items}
@@ -170,6 +195,7 @@ export async function SubHub({ params, page }: { params: SubHubParams; page: num
       hideEmpty={feed.total === 0}
       fallback={own ? <FallbackAds sections={fallback} lead={lead} layout="row" /> : undefined}
     />
-    </NewListingPage>
+    </ListingFrame>
+    </div>
   );
 }
