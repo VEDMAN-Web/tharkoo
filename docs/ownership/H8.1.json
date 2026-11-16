@@ -1,8 +1,8 @@
 {
-  "branchPrefix": "haiku/a1",
+  "branchPrefix": "haiku/h8.1",
   "globs": [
-    "docs/ownership/A1.json",
-    "progress/A1.md",
+    "docs/ownership/H8.1.json",
+    "progress/H8.1.md",
     "src/server/models/listing.ts",
     "src/server/models/catalog.ts",
     "src/server/models/layout.ts",
@@ -12,6 +12,6 @@
     "src/server/models/content.ts",
     "src/server/models/index.ts",
     "scripts/sync-admin-indexes.mjs",
-    "tests/server/models/a1-*.test.ts"
+    "tests/server/models/h8-1-*.test.ts"
   ]
 }
