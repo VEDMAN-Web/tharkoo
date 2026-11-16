@@ -4,7 +4,7 @@ import Link from "next/link";
 import { HeroSearch } from "@/components/HeroSearch";
 import { HomeLayout } from "@/components/blocks/HomeLayout";
 import { HomeBlocks, SkeletonGrid } from "@/components/HomeBlocks";
-import { getCategories, getFeed, getHomepageContent } from "@/lib/queries";
+import { getCategories, getHomeAds, getHomepageContent } from "@/lib/queries";
 import { getPageBlocks } from "@/lib/layout/read";
 import { postAdPath } from "@/lib/urls";
 import { textOverrides } from "@/app/admin/ui-text/store";
@@ -46,7 +46,7 @@ async function newHome(texts: ReturnType<typeof pickTexts>) {
     getPaths(),
     getCategories(),
     countryPlaces(),
-    getFeed({}, 1),
+    getHomeAds(),
     readShellConfig(),
   ]);
   return (
@@ -54,7 +54,7 @@ async function newHome(texts: ReturnType<typeof pickTexts>) {
       <NewHome
         hero={plain(content.hero)}
         categories={plain(categories)}
-        ads={plain(feed.items)}
+        ads={plain(feed)}
         shell={shell}
         paths={paths}
         countries={plain(countries)}

@@ -77,6 +77,8 @@ export interface ListingQuery {
   excludeStar?: boolean;
   starOnly?: boolean;
   excludeSlug?: string;
+  /** Only ads an admin chose for the Home page row. */
+  homeChosen?: boolean;
   slug?: string;
   /** Unsaved ordering settings for the admin preview; normal callers leave it out. */
   rank?: RankSettings;
@@ -404,6 +406,7 @@ export async function buildFilter(input: ListingQuery): Promise<QueryFilter<List
   if (input.slug) filter.slug = input.slug;
   else {
     filter.feedHidden = { $ne: true };
+    if (input.homeChosen) filter.homeShow = true;
     if (input.excludeSlug) filter.slug = { $ne: input.excludeSlug };
   }
   if (input.attributes && Object.keys(input.attributes).length > 0) {
