@@ -20,18 +20,18 @@ test.describe("H7.75: every search and listing page has the shared body", () => 
   });
 
   for (const path of PAGES) {
-    test(`${path} has the band, the filter column and the list at the shared width`, async ({ page }) => {
+    test(`${path} has the header, the filter column and the list at the shared width`, async ({ page }) => {
       await page.setViewportSize({ width: 1440, height: 900 });
       const response = await page.goto(path);
       expect(response?.status()).toBe(200);
-      await expect(page.locator(path.startsWith("/search/") ? '[data-tk="results-header"]' : '[data-tk="listing-band"]')).toBeVisible();
+      await expect(page.locator('[data-tk="results-header"]')).toBeVisible();
       const aside = (await page.locator(".tkn-ls-aside").first().boundingBox())!;
       const main = (await page.locator(".tkn-ls-main").first().boundingBox())!;
-      expect(Math.round(aside.width)).toBe(260);
+      expect(Math.round(aside.width)).toBe(272);
       expect(main.x).toBeGreaterThan(aside.x + aside.width);
-      expect(Math.round(main.width)).toBeLessThanOrEqual(880);
+      expect(Math.round(main.width)).toBeLessThanOrEqual(904);
       expect(Math.round(main.width)).toBeGreaterThanOrEqual(760);
-      expect(await page.locator('[data-tk="card"]').count()).toBeGreaterThan(0);
+      expect(await page.locator('[data-tk="home-ad"]').count()).toBeGreaterThan(0);
       const pagesNote = await page.locator('[data-tk="pager"] .tkp-showing').count();
       if (pagesNote) await expect(page.locator('[data-tk="pager"] .tkp-showing')).toHaveText(/^Showing 1-\d+ of \d+ ads$/);
       expect(await hasHorizontalScroll(page)).toBe(false);

@@ -40,7 +40,7 @@ test.describe("4 Advertiser", () => {
 
     // My ads shows it.
     await page.goto("/u/account/ads/");
-    const mine = page.locator("[data-tk=card]").filter({ hasText: title });
+    const mine = page.locator(":is([data-tk=card], [data-tk=home-ad])").filter({ hasText: title });
     await expect(mine.first()).toBeVisible();
     const adHref = await mine.first().locator('a[href*="/ad/"]').first().getAttribute("href");
     expect(adHref).toBeTruthy();
@@ -66,7 +66,7 @@ test.describe("4 Advertiser", () => {
     // Edit: change the title. The owner Edit link opens the details step.
     const edited = title + " edited";
     await page.goto("/u/account/ads/");
-    await page.locator("[data-tk=card]").filter({ hasText: title }).first().getByRole("link", { name: "Edit" }).click();
+    await page.locator(":is([data-tk=card], [data-tk=home-ad])").filter({ hasText: title }).first().getByRole("link", { name: "Edit" }).click();
     await page.waitForURL(/draft=/);
     await expect(page.locator("#title")).toHaveValue(title);
     // The edit form does not bring the nickname back (BUG 4 in lane-d-bugs), so enter it again.
@@ -81,7 +81,7 @@ test.describe("4 Advertiser", () => {
 
     // Pause and resume from My ads. A paused ad is no longer public, then it is live again.
     await page.goto("/u/account/ads/");
-    const card = () => page.locator("[data-tk=card]").filter({ hasText: edited }).first();
+    const card = () => page.locator(":is([data-tk=card], [data-tk=home-ad])").filter({ hasText: edited }).first();
     await card().getByRole("button", { name: "Pause" }).click();
     await expect(page.getByText("Paused.")).toBeVisible();
     await expect(card()).toContainText("Paused");

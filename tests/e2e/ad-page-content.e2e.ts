@@ -17,7 +17,7 @@ const GAP_MAX = 56;
 
 async function adAt(page: Page, feed: string, position = 0) {
   await page.goto(feed);
-  const link = page.locator('[data-tk=card] a[href*="/ad/"]').nth(position);
+  const link = page.locator(':is([data-tk=card], [data-tk=home-ad]) a[href*="/ad/"]').nth(position);
   await link.waitFor({ state: "attached" });
   return (await link.getAttribute("href")) as string;
 }
@@ -324,7 +324,7 @@ test.describe("H7.99b ad page content", () => {
 
   test("the Featured pill sits in the pills row and the main photo carries no tier badge", async ({ page }) => {
     await page.goto("/dating/bengaluru/");
-    const hrefs = await page.locator('[data-tk=card] a[href*="/ad/"]').evaluateAll((els) => els.slice(0, 10).map((el) => (el as HTMLAnchorElement).getAttribute("href")));
+    const hrefs = await page.locator(':is([data-tk=card], [data-tk=home-ad]) a[href*="/ad/"]').evaluateAll((els) => els.slice(0, 10).map((el) => (el as HTMLAnchorElement).getAttribute("href")));
     let featured = 0;
     for (const href of hrefs) {
       await page.goto(href!);
@@ -371,7 +371,7 @@ test.describe("H7.99b ad page content", () => {
     let checked = 0;
     for (const feed of ["/dating/bengaluru/", "/friendship/bengaluru/", "/meetups/bengaluru/", "/personal-ads/bengaluru/"]) {
       await page.goto(feed);
-      const link = page.locator('[data-tk=card] a[href*="/ad/"]').first();
+      const link = page.locator(':is([data-tk=card], [data-tk=home-ad]) a[href*="/ad/"]').first();
       if (!(await link.count())) continue;
       await page.goto((await link.getAttribute("href"))!);
       await expect(page.locator(".tkn-contact-panel")).toBeAttached();

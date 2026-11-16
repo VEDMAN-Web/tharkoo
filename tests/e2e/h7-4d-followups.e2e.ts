@@ -14,7 +14,7 @@ async function setNewDesign(on: boolean) {
 
 async function anyAdPath(page: Page, feed: string) {
   await page.goto(feed);
-  const link = page.locator('[data-tk=card] a[href*="/ad/"]').first();
+  const link = page.locator(':is([data-tk=card], [data-tk=home-ad]) a[href*="/ad/"]').first();
   await link.waitFor({ state: "attached" });
   return (await link.getAttribute("href")) as string;
 }

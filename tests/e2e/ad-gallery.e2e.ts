@@ -11,7 +11,7 @@ const UPLOADS = resolve("public/uploads");
 
 async function datingAdAt(page: Page, position: number) {
   await page.goto("/dating/bengaluru/");
-  const link = page.locator('[data-tk=card] a[href*="/ad/"]').nth(position);
+  const link = page.locator(':is([data-tk=card], [data-tk=home-ad]) a[href*="/ad/"]').nth(position);
   await link.waitFor({ state: "attached" });
   return (await link.getAttribute("href")) as string;
 }
