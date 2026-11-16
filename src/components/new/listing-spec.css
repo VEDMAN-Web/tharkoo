@@ -36,7 +36,7 @@
   background: linear-gradient(120deg, rgba(255, 240, 247, 0.9), rgba(245, 240, 255, 0.9) 55%, rgba(255, 248, 236, 0.9));
   border: 1px solid rgba(255, 255, 255, 0.95); box-shadow: 0 8px 32px rgba(45, 18, 72, 0.07);
 }
-.tkn-ls-band[data-photo="true"] { background: var(--band-desk, var(--band-phone)) var(--band-focus, 72% 12%) / cover no-repeat; }
+.tkn-ls-band[data-photo="true"] { background: var(--band-desk, var(--band-phone)) var(--band-focus, 72% 18%) / cover no-repeat; }
 .tkn-ls-band-card {
   box-sizing: border-box; width: 100%; max-width: 560px; padding: 24px 28px; border-radius: 20px; background: rgba(255, 255, 255, 0.6);
   -webkit-backdrop-filter: blur(14px) saturate(160%); backdrop-filter: blur(14px) saturate(160%); border: 1px solid rgba(255, 255, 255, 0.55);

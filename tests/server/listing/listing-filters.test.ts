@@ -116,7 +116,7 @@ describe("bandImageFor and bandStyleFor", () => {
     expect(bandStyleFor(bandImageFor(shell, "dating"))).toEqual({
       "--band-desk": 'url("https://cdn.example/dating.jpg")',
       "--band-phone": 'url("https://cdn.example/dating.jpg")',
-      "--band-focus-phone": "72% 12%",
+      "--band-focus-phone": "72% 18%",
     });
     expect(bandStyleFor(null)).toEqual({});
   });

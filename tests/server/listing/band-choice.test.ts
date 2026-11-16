@@ -56,7 +56,7 @@ describe("heroBandFrom", () => {
 
 describe("bandStyleFor focus (H7.67)", () => {
   it("sets the phone focus to the computer focus when there is no separate phone photo", () => {
-    expect(bandStyleFor({ band: "https://cdn.example/a.jpg", bandPhone: "https://cdn.example/a.jpg" })["--band-focus-phone"]).toBe("72% 12%");
+    expect(bandStyleFor({ band: "https://cdn.example/a.jpg", bandPhone: "https://cdn.example/a.jpg" })["--band-focus-phone"]).toBe("72% 18%");
     expect(bandStyleFor({ band: "https://cdn.example/a.jpg", bandPhone: "https://cdn.example/a-phone.jpg" })["--band-focus-phone"]).toBeUndefined();
     expect(bandStyleFor(null)).toEqual({});
   });
@@ -77,7 +77,7 @@ describe("band and card focus points (H7.70)", () => {
   it("uses the computer focus for the phone when there is no phone photo, and no variable when nothing is set", () => {
     const style = bandStyleFor(bandChoice(withFocus, HERO, { category: "dating" }));
     expect(style["--band-focus"]).toBeUndefined();
-    expect(style["--band-focus-phone"]).toBe("72% 12%");
+    expect(style["--band-focus-phone"]).toBe("72% 18%");
   });
 
   it("takes the home hero focus points for the default band", () => {
@@ -123,10 +123,10 @@ describe("band source choice and focus defaults (H7.70)", () => {
 });
 
 describe("band style sheet defaults (H7.70)", () => {
-  it("falls back to 72% 12% on a computer and 50% 12% on a phone", async () => {
+  it("falls back to 72% 18% on a computer and 50% 12% on a phone", async () => {
     const { readFileSync } = await import("node:fs");
     const css = readFileSync("src/components/new/listing-spec.css", "utf8");
-    expect(css).toContain("var(--band-focus, 72% 12%)");
+    expect(css).toContain("var(--band-focus, 72% 18%)");
     expect(css).toContain("var(--band-focus-phone, 50% 12%)");
   });
 });
