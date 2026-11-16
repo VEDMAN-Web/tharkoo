@@ -5,7 +5,6 @@ import { displayTitle, listingDateLabel, prettyPlace } from "@/lib/format";
 import { listingTagSections } from "@/lib/media";
 import { CitySync } from "./CityContext";
 import { ContactButtons, ContactProvider } from "./ContactButtons";
-import { listingPhotos } from "@/lib/media";
 import { Gallery } from "./ui/Gallery";
 import { SaveButton } from "./ui/SaveButton";
 import { AdCard } from "./ui/AdCard";
@@ -123,7 +122,7 @@ export function AdDetail({
                   </span>
                 </div>
               </section>
-              <Gallery photos={listingPhotos(ad.categorySlug, ad.publicId || ad.slug || "", ad.photos || [])} title={title} seed={ad.slug || title} category={ad.categorySlug} />
+              <Gallery photos={ad.photos || []} title={title} seed={ad.slug || title} category={ad.categorySlug} />
             </div>
             <aside className="tk-ad-side">
               <div className="tk-contact-card" data-tk="contact-card">

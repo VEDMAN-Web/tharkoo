@@ -3,6 +3,8 @@ import { cached } from "@/lib/cache";
 import { connectDb } from "@/lib/db";
 import type { ListingDoc as LegacyListing } from "@/lib/models";
 import { listingPhotos } from "@/lib/media";
+import { isDemoAd } from "@/server/listings/demo-ads";
+import { adPhotoUrl } from "@/server/media/photo-url";
 import { onlineOwnerIds } from "@/server/availability/listings";
 import { firstAdVideos } from "@/server/media/video";
 import {
@@ -14,6 +16,7 @@ import {
   PromotionProduct,
   type CategoryDoc,
   type ListingDoc,
+  type MediaStatus,
 } from "@/server/models";
 import { loadLocations, type LocationRow } from "@/server/locations/service";
 import {
@@ -299,16 +302,17 @@ async function promotionsFor(ids: Types.ObjectId[], now: Date) {
   return byListing;
 }
 
-async function photoMap(docs: Row[]) {
+const PUBLIC_PHOTO_STATUSES: MediaStatus[] = ["cleared"];
+const OWNER_PHOTO_STATUSES: MediaStatus[] = ["cleared", "scanning"];
+
+async function photoMap(docs: Row[], statuses: MediaStatus[]) {
   const ids = docs.flatMap((doc) => doc.mediaIds ?? []);
   const map = new Map<string, string[]>();
   if (ids.length === 0) return map;
-  const assets = await MediaAsset.find({ _id: { $in: ids } }).select("objectKey").lean();
-  const url = new Map(assets.map((asset) => [String(asset._id), asset.objectKey]));
+  const assets = await MediaAsset.find({ _id: { $in: ids }, kind: "image", status: { $in: statuses } }).select("objectKey").lean();
+  const url = new Map(assets.map((asset) => [String(asset._id), adPhotoUrl(asset.objectKey)]));
   for (const doc of docs) {
-    const photos = (doc.mediaIds ?? [])
-      .map((id) => url.get(String(id)))
-      .filter((value): value is string => Boolean(value && (value.startsWith("/") || value.startsWith("http"))));
+    const photos = (doc.mediaIds ?? []).map((id) => url.get(String(id))).filter((value): value is string => Boolean(value));
     map.set(String(doc._id), photos);
   }
   return map;
@@ -492,23 +496,23 @@ function facetsFrom(docs: Row[], categoryRows: { _id?: Types.ObjectId; slug: str
   return { categories: pack(categories), cities: pack(cities) };
 }
 
-export function trustMarks(status: string | undefined, adult: Date | undefined, verified: boolean, photos: number, people: boolean) {
+export function trustMarks(status: string | undefined, verified: boolean, photos: number, people: boolean) {
   const marks: string[] = [];
   if (status === "approved" || verified) marks.push("ID verified");
-  if (people && (adult || status === "approved" || verified)) marks.push("Age verified");
+  if (people && marks.includes("ID verified")) marks.push("Age verified");
   if (photos > 0 && marks.includes("ID verified")) marks.push("Photo verified");
   return marks;
 }
 
-export async function presentRows(docs: Row[], promotions: Map<string, RankPromotion[]>, now: Date) {
+export async function presentRows(docs: Row[], promotions: Map<string, RankPromotion[]>, now: Date, options: { ownerView?: boolean } = {}) {
   await connectDb();
   const ownerIds = [...new Set(docs.map((doc) => (doc.ownerId ? String(doc.ownerId) : "")).filter(Boolean))];
   const [categories, locations, photos, people, videos] = await Promise.all([
     loadCategories(),
     loadLocations(),
-    photoMap(docs),
+    photoMap(docs, options.ownerView ? OWNER_PHOTO_STATUSES : PUBLIC_PHOTO_STATUSES),
     ownerIds.length
-      ? User.find({ _id: { $in: ownerIds } }).select("verificationStatus attestedAdultAt").lean<{ _id: Types.ObjectId; verificationStatus?: string; attestedAdultAt?: Date }[]>()
+      ? User.find({ _id: { $in: ownerIds } }).select("verificationStatus email").lean<{ _id: Types.ObjectId; verificationStatus?: string; email?: string }[]>()
       : Promise.resolve([]),
     firstAdVideos(docs.map((doc) => String(doc._id))).catch(() => new Map<string, never>()),
   ]);
@@ -535,9 +539,9 @@ export async function presentRows(docs: Row[], promotions: Map<string, RankPromo
     const person = doc.ownerId ? peopleById.get(String(doc.ownerId)) : undefined;
     const bumped = doc.bumpedAt ? new Date(doc.bumpedAt) : doc.publishedAt;
     const publicId = publicIdOf(doc.slug, id);
-    const photoList = listingPhotos(categorySlug, publicId, photos.get(id) ?? []);
+    const photoList = listingPhotos(categorySlug, publicId, photos.get(id) ?? [], isDemoAd(person?.email, doc.slug));
     const people = category?.kind === "people" || kindFor(categorySlug, category?.fields) === "people";
-    const trust = trustMarks(person?.verificationStatus, person?.attestedAdultAt, verified, photoList.length, people);
+    const trust = trustMarks(person?.verificationStatus, verified, photoList.length, people);
     const age = ageOf(doc.attributes);
     const price = cleanPrice(doc.price);
     const video = videos.get(id);
