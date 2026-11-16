@@ -5,6 +5,7 @@
     "progress/H7.67.md",
     "src/app/cities/[city]/city-page.css",
     "src/app/cities/[city]/page.tsx",
+    "src/app/countries/countries-page.css",
     "src/components/new/ListingBand.tsx",
     "src/components/new/ListingFrame.tsx",
     "src/components/new/band-image.ts",
