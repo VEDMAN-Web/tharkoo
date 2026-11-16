@@ -21,6 +21,7 @@ import { UrlPathProvider } from "./UrlPaths";
 import { UiTextProvider } from "./help/UiTextProvider";
 import { SupportChat } from "./chat/SupportChat";
 import { SignInPopup } from "./auth/SignInPopup";
+import { AccountProvider } from "./account/AccountContext";
 
 type City = { slug: string; name: string; stateSlug?: string };
 type Cat = { slug: string; name: string };
@@ -72,6 +73,7 @@ export function PathChrome({ shell, paths, children }: { shell: ChromeData; path
     <UrlPathProvider paths={paths}>
     <UiTextProvider texts={texts}>
     <CityProvider cities={cities}>
+    <AccountProvider>
       {path.startsWith(`/${paths.ad.replace(/^\/|\/$/g, "")}/`) ? null : (
         <JsonLd
           data={{
@@ -145,6 +147,7 @@ export function PathChrome({ shell, paths, children }: { shell: ChromeData; path
         noticeHref={safeHref(content.cookies.noticeHref) || "/cookies/"}
       />
       )}
+    </AccountProvider>
     </CityProvider>
     </UiTextProvider>
     </UrlPathProvider>

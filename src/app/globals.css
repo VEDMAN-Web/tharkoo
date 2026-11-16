@@ -2324,3 +2324,12 @@ body:has([data-tk="bottom-bar"]) .tkn-float { bottom: 96px; }
 .tkn-contact-head h2 { margin: 0; }
 .tk-circle:disabled { opacity: 0.45; cursor: not-allowed; }
 .tk-btn:disabled[data-tk="call"] { opacity: 0.6; cursor: not-allowed; }
+.tkn-skel { display: inline-block; vertical-align: middle; border-radius: 8px; background: linear-gradient(90deg, #fbeff7 25%, #f6e4f2 50%, #fbeff7 75%); background-size: 200% 100%; animation: tkn-skel-shimmer 1.4s ease-in-out infinite; }
+.tkn-skel-stack { display: grid; gap: 12px; }
+.tkn-coin-chip.tkn-skel { width: 84px; padding: 0; border-color: transparent; }
+@media (max-width: 600px) { .tkn-coin-chip.tkn-skel { display: none; } }
+.tkn-avatar-circle.tkn-skel { border-radius: 50%; }
+.tkv-avatar.tkn-skel { display: block; border-radius: 50%; }
+@keyframes tkn-skel-shimmer { from { background-position: 200% 0; } to { background-position: -200% 0; } }
+@media (prefers-reduced-motion: reduce) { .tkn-skel { animation: none; } }
+@media (max-width: 767px) { .tkn-float-pagebars .tkn-chat-bubble { display: none; } }

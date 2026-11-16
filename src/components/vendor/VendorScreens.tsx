@@ -7,6 +7,7 @@ import { Images, Megaphone, Settings, Ticket, UserRound, Wallet } from "lucide-r
 import { Suspense } from "react";
 import { VendorShell } from "./VendorShell";
 import { api, hasSessionHint } from "@/lib/ui/api";
+import { useAccount } from "../account/AccountContext";
 import { EmptyState } from "../ui/EmptyState";
 import { displayTitle } from "@/lib/format";
 import { readSaved, type SavedItem } from "../ui/SaveButton";
@@ -16,7 +17,6 @@ import { HelpCard } from "../ui/HelpCard";
 import { TourInbox } from "./TourInbox";
 import type { ListingDoc } from "@/lib/models";
 
-type Me = { user: { displayName?: string; email?: string; verificationStatus?: string } };
 type Own = { items: { id: string; title?: string; status?: string; slug?: string; description?: string }[]; total: number };
 type Entry = { id: string; delta: number; reason: string };
 
@@ -29,28 +29,16 @@ function statusChip(status?: string) {
 }
 
 export function Dashboard({ locked = false }: { locked?: boolean }) {
-  const [me, setMe] = useState<Me["user"] | null>(null);
+  const { phase, user: me, balance } = useAccount();
   const [rows, setRows] = useState<Own["items"] | null>(null);
-  const [balance, setBalance] = useState<number | null>(null);
   const [used, setUsed] = useState<number | null>(null);
-  const [signedOut, setSignedOut] = useState(false);
+  const signedOut = phase === "out";
 
   useEffect(() => {
     const id = window.setTimeout(() => {
-      if (!hasSessionHint()) {
-        setSignedOut(true);
-        return;
-      }
-      api<Me>("/api/auth/me").then((res) => {
-        if (!res.ok) setSignedOut(true);
-        else setMe(res.data.user);
-      });
+      if (!hasSessionHint()) return;
       api<Own>("/api/listings?pageSize=100").then((res) => {
         if (res.ok) setRows(res.data.items || []);
-      });
-      api<{ balance: number }>("/api/wallet").then((res) => {
-        if (res.ok) setBalance(res.data.balance);
-        else setBalance(null);
       });
       api<{ items: Entry[] }>("/api/wallet/entries").then((res) => {
         if (!res.ok) return setUsed(null);
