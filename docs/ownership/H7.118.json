@@ -1,0 +1,16 @@
+{
+  "branchPrefix": "haiku/h7.118",
+  "globs": [
+    "docs/ownership/H7.118.json",
+    "src/server/listings/service.ts",
+    "tests/server/listings/listings.test.ts",
+    "src/components/PostWizard.tsx",
+    "src/components/post/CategoryTiles.tsx",
+    "src/components/post/newCopy.ts",
+    "src/components/post/PostSuccess.tsx",
+    "src/components/post/PayParts.tsx",
+    "tests/e2e/h7-118-edit-ad.e2e.ts",
+    "tests/e2e/post-step-5.e2e.ts",
+    "tests/e2e/advertiser.e2e.ts"
+  ]
+}

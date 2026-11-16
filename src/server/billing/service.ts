@@ -1,4 +1,4 @@
-import type { Types } from "mongoose";
+import { Types } from "mongoose";
 import { AuditRepository } from "@/server/audit";
 import { STAR_SLOT_CAP, boostsDue, promotionRule } from "@/server/billing/catalog";
 import { consumeCoupon, packBonus, promotionCost, validateCoupon } from "@/server/billing/coupons";
@@ -17,6 +17,7 @@ import {
   PaymentRequiredError,
   PolicyViolationError,
   ValidationError,
+  isDuplicateKey,
 } from "@/server/http";
 import {
   AuditEvent,
@@ -33,6 +34,23 @@ import { randomToken, sha256 } from "@/server/shared/crypto";
 import { connectDb } from "@/lib/db";
 
 const audit = new AuditRepository();
+const CLAIM_WAIT_STEPS = 50;
+const CLAIM_WAIT_MS = 100;
+
+async function existingPromotion(idempotencyKey: string, userId: string) {
+  for (let step = 0; step < CLAIM_WAIT_STEPS; step += 1) {
+    const payment = await Payment.findOne({ idempotencyKey });
+    if (!payment) return null;
+    if (payment.userId.toString() !== userId) throw new ConflictError("Idempotency key is in use");
+    if (payment.status === "paid" && payment.provider === "wallet") {
+      const order = await PromotionOrder.findById(payment.orderId);
+      if (order) return presentOrder(order, String(payment._id), await walletBalance(userId));
+    }
+    if (payment.status !== "pending") break;
+    await new Promise((resolve) => setTimeout(resolve, CLAIM_WAIT_MS));
+  }
+  throw new ConflictError("Checkout is already in progress");
+}
 
 function presentOrder(
   order: { _id?: Types.ObjectId; startsAt?: Date; endsAt?: Date },
@@ -310,7 +328,19 @@ async function undoClaim(paymentId: Types.ObjectId, before: { status: string; pr
   await Payment.updateOne({ _id: paymentId, status: "paid", providerEventId: eventId }, restore);
 }
 
-export async function purchasePromotion(input: {
+export async function purchasePromotion(input: Parameters<typeof placePromotion>[0]) {
+  await connectDb();
+  try {
+    return await placePromotion(input);
+  } catch (error) {
+    if (!input.idempotencyKey) throw error;
+    const settled = await existingPromotion(input.idempotencyKey.trim(), input.userId).catch(() => null);
+    if (settled) return settled;
+    throw error;
+  }
+}
+
+async function placePromotion(input: {
   userId: string;
   listingId: string;
   productId: string;
@@ -328,15 +358,8 @@ export async function purchasePromotion(input: {
   const listingId = objectId(input.listingId, "listingId");
   const productId = objectId(input.productId, "productId");
   const idempotencyKey = input.idempotencyKey?.trim() || randomToken();
-  const existingPayment = await Payment.findOne({ idempotencyKey });
-  if (existingPayment) {
-    if (existingPayment.userId.toString() !== input.userId) throw new ConflictError("Idempotency key is in use");
-    if (existingPayment.status === "paid" && existingPayment.provider === "wallet") {
-      const order = await PromotionOrder.findById(existingPayment.orderId);
-      if (order) return presentOrder(order, String(existingPayment._id), await walletBalance(input.userId));
-    }
-    throw new ConflictError("Checkout is already in progress");
-  }
+  const earlier = await existingPromotion(idempotencyKey, input.userId);
+  if (earlier) return earlier;
 
   const listing = await Listing.findById(listingId);
   if (!listing) throw new NotFoundError("Not found");
@@ -374,7 +397,26 @@ export async function purchasePromotion(input: {
   if (!boostFitsBeforeExpiry(endsAt, listing.expiresAt)) {
     throw new ConflictError("This boost would run past the ad's expiry. Renew the ad first or choose a shorter boost.");
   }
-  const order = await PromotionOrder.create({
+  const orderId = new Types.ObjectId();
+  let payment;
+  try {
+    payment = await Payment.create({
+      userId,
+      orderId,
+      idempotencyKey,
+      provider: "wallet",
+      amount: cost,
+      currency: "CRD",
+      status: "pending",
+    });
+  } catch (error) {
+    if (!isDuplicateKey(error)) throw error;
+    const settled = await existingPromotion(idempotencyKey, input.userId);
+    if (settled) return settled;
+    throw error;
+  }
+  const order = new PromotionOrder({
+    _id: orderId,
     userId,
     listingId,
     productId,
@@ -384,26 +426,19 @@ export async function purchasePromotion(input: {
     endsAt,
     autoRenew: input.autoRenew === true,
   });
-  const payment = await Payment.create({
-    userId,
-    orderId: order._id,
-    idempotencyKey,
-    provider: "wallet",
-    amount: cost,
-    currency: "CRD",
-    status: "pending",
-  });
   let charged = false;
   try {
+    await order.save();
     if (cost > 0) {
       await debitWallet({
         userId: input.userId,
         amount: cost,
         refType: "promotion",
-        refId: String(order._id),
+        refId: idempotencyKey,
         requestId: input.requestId,
         actorId: input.userId,
         ip: input.ip,
+        once: true,
       });
       charged = true;
     }
@@ -432,8 +467,10 @@ export async function purchasePromotion(input: {
     });
     return presentOrder(order, String(payment._id), await walletBalance(input.userId));
   } catch (error) {
-    order.status = "failed";
-    await order.save();
+    if (!order.isNew) {
+      order.status = "failed";
+      await order.save();
+    }
     payment.status = "failed";
     await payment.save();
     if (charged) {

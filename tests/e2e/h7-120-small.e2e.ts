@@ -176,6 +176,21 @@ test.describe("H7.120 small list", () => {
     await shot(page, "h7-120-checkout-rupee");
   });
 
+  test("g: in edit mode the review note talks about saving, and a paused ad says it stays paused", async ({ page, baseURL }) => {
+    test.setTimeout(300_000);
+    const ad = await createLiveAd(page, baseURL!, "editnote");
+    await page.goto(`/u/post-insert/?draft=${ad.listingId}&step=5`);
+    await expect(page.locator("[data-tk=step-title]")).toHaveText("Review your changes");
+    const note = page.locator("[data-tk=review-step]");
+    await expect(note).toContainText("Your changes show on your ad as soon as you save.");
+    await expect(note).not.toContainText("goes live as soon as you publish");
+    const paused = await page.request.post(`/api/listings/${ad.listingId}/pause`, { data: {}, headers: originHeaders(baseURL!, "/u/account/ads/") });
+    expect(paused.status(), await paused.text()).toBe(200);
+    await page.goto(`/u/post-insert/?draft=${ad.listingId}&step=5`);
+    await expect(note).toContainText("Your ad stays paused until you resume it.");
+    await shot(page, "h7-120-edit-note-paused");
+  });
+
   test("d and e: a long title keeps the Title label on one line, and Email only changes the contact subtitle", async ({ page, baseURL }) => {
     test.setTimeout(300_000);
     const ad = await createLiveAd(page, baseURL!, "labels");
