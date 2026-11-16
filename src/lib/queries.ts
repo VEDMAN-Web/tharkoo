@@ -18,6 +18,7 @@ import { cities, districts, loadLocations, locationBySlug, siblingCities, states
 import type { ListingDoc } from "@/lib/models";
 import { readContent } from "@/lib/ui/site-content";
 import { LISTING_PAGE_SIZE } from "@/lib/listing-page-size";
+import { composeHomeAds, HOME_ADS_LIMIT } from "@/lib/home-ads";
 
 const PAGE_SIZE = LISTING_PAGE_SIZE;
 const THIN = 3;
@@ -162,6 +163,27 @@ export async function getFeed(filter: Record<string, unknown>, page = 1) {
   );
 }
 
+export async function getHomeAds(limit = HOME_ADS_LIMIT) {
+  return cached(
+    `home-ads:${limit}`,
+    60_000,
+    async () => {
+      await connectDb();
+      const order = await Listing.find({ homeShow: true, status: "active", feedHidden: { $ne: true } })
+        .sort({ homeOrder: 1, updatedAt: -1 })
+        .limit(limit)
+        .select("slug")
+        .lean<{ slug?: string }[]>();
+      const chosenSlugs = order.map((row) => row.slug || "").filter(Boolean);
+      const chosen = chosenSlugs.length ? (await queryListings({ homeChosen: true, page: 1, pageSize: limit, sort: "fresh" })).legacy : [];
+      const fill = (await queryListings({ page: 1, pageSize: limit, sort: "fresh" })).legacy;
+      return composeHomeAds(chosenSlugs, chosen, fill, limit);
+    },
+    ["feed", "listings"],
+    true,
+  );
+}
+
 export type LatestListing = {
   slug: string;
   title: string;
@@ -258,6 +280,8 @@ export async function searchListings(opts: {
   video?: boolean;
   online?: boolean;
   attributes?: ListingQuery["attributes"];
+  sort?: "ranked" | "fresh";
+  prefer?: "verified" | "online";
   page?: number;
 }) {
   const safePage = Math.max(1, Number(opts.page) || 1);
@@ -279,7 +303,8 @@ export async function searchListings(opts: {
         page: safePage,
         pageSize: PAGE_SIZE,
         // H7.32: without a search term the page lists every live ad, newest first.
-        sort: opts.q ? "ranked" : "fresh",
+        sort: opts.sort ?? (opts.q ? "ranked" : "fresh"),
+        prefer: opts.prefer,
       });
       return {
         items: result.legacy,

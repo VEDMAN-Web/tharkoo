@@ -5,7 +5,7 @@ import type { TextFn } from "@/lib/ui/text";
 import { bandStyleFor } from "./band-image";
 import { ListingHead } from "./ListingHead";
 import { ListingSearchForm } from "./ListingSearchForm";
-import { ListingFilterPanel } from "./ListingFilterPanel";
+import { ListingFilterPanel, type KeywordProps } from "./ListingFilterPanel";
 import {
   activeFilterCount,
   panelRows,
@@ -152,6 +152,7 @@ export function listingFrameProps(input: {
   places: PlaceSelects;
   panelHidden?: { name: string; value: string }[];
   placesOnly?: boolean;
+  keyword?: KeywordProps;
 }) {
   const rows = panelRows(input.fields, input.picks);
   const activeCount = activeFilterCount(rows, input.toggles);
@@ -179,6 +180,7 @@ export function listingFrameProps(input: {
         places={input.places}
         hidden={input.panelHidden}
         placesOnly={input.placesOnly}
+        keyword={input.keyword}
       />
     ),
     activeCount,
