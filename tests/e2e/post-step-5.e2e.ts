@@ -5,7 +5,10 @@ import { expect, newApi, originHeaders, PNG, registerApi, test, uniqueEmail, USE
 const SHOTS = process.env.POST_SHOTS ?? "";
 
 async function shot(page: Page, name: string) {
-  await page.locator(".tkn-ls-photo img").first().evaluate((img) => (img as HTMLImageElement).decode().catch(() => undefined)).catch(() => undefined);
+  await page.evaluate(async () => {
+    const img = document.querySelector<HTMLImageElement>(".tkn-ls-photo img");
+    if (img) await img.decode().catch(() => undefined);
+  });
   if (SHOTS) await page.screenshot({ path: `${SHOTS}/${name}.png` });
 }
 
@@ -217,6 +220,117 @@ test.describe("H7.86 post an ad, step 5 and the success screen", () => {
     await expect(page.locator("[data-tk=step-title]")).toHaveText("Contact");
     await expect(page.locator("#about-dob")).toHaveCount(0);
     await expect(page.locator("#about-name")).toHaveCount(0);
+  });
+
+  test("contact choices: sentence case in order, the masked account email, WhatsApp same as phone, a checked Telegram username, and Email only publishes", async ({ page, baseURL }) => {
+    test.setTimeout(240_000);
+    const email = await newPoster(page, baseURL!, "contact5");
+    const draft = await reachAbout(page, `Contact check ${Date.now()}`, "contact5");
+    await expect(page.locator(".tkp-chips[aria-label='How people reach you'] .tkp-chip")).toHaveText(["Phone and email", "Phone only", "Email only"]);
+    await expect(page.getByRole("button", { name: "Phone and email" })).toHaveAttribute("aria-pressed", "true");
+    const [local, domain] = email.split("@");
+    await expect(page.locator("[data-tk=account-email]")).toHaveText(`We will use your account email: ${local[0]}••••@${domain}`);
+    expect(await page.locator("[data-tk=account-email]").innerText()).not.toContain(local);
+
+    await page.getByRole("button", { name: "Phone only" }).click();
+    await expect(page.locator("[data-tk=account-email]")).toHaveCount(0);
+    await expect(page.locator("#phone")).toBeVisible();
+    await page.getByRole("button", { name: "Phone and email" }).click();
+    await expect(page.locator("[data-tk=account-email]")).toBeVisible();
+
+    await page.locator("#phone").fill("9876543210");
+    await page.getByRole("switch", { name: "WhatsApp" }).click();
+    await expect(page.locator("#whatsapp-same")).toBeChecked();
+    await expect(page.locator("#whatsapp-number")).toHaveCount(0);
+    await page.locator("#whatsapp-same").uncheck();
+    await expect(page.locator("#whatsapp-number")).toBeVisible();
+    await page.locator("#whatsapp-number").fill("123");
+    await page.getByRole("switch", { name: "Telegram" }).click();
+    await expect(page.locator("#telegram")).toHaveAttribute("placeholder", "@yourname");
+    await expect(page.getByText("Telegram username", { exact: true })).toBeVisible();
+    await page.locator("#telegram").fill("ab");
+    await page.locator("[data-tk=go-on]").click();
+    await expect(page.getByText("Use +91 and 10 digits")).toBeVisible();
+    await expect(page.getByText("Use 5 to 32 letters, digits or underscores")).toBeVisible();
+    await stepOf(page, 4);
+    await page.locator("#telegram").fill("bad name!");
+    await expect(page.getByText("Use 5 to 32 letters, digits or underscores")).toBeVisible();
+    await page.locator("#telegram").fill("");
+    await page.locator("#telegram").blur();
+    await expect(page.getByText("Enter your Telegram username")).toBeVisible();
+    await page.locator("#telegram").fill("@asha_walks");
+    await page.locator("#whatsapp-number").fill("9123456780");
+    await page.locator("[data-tk=go-on]").click();
+    await stepOf(page, 5);
+    await expect(page.locator("[data-tk=review-contact]")).toContainText("+919876543210 and email");
+
+    const saved = (await (await page.request.get(`/api/listings/by-id/${draft}`)).json()).data.contact;
+    expect(saved).toMatchObject({ phone: "+919876543210", whatsapp: "+919123456780", telegram: "@asha_walks", acceptForm: true });
+
+    await page.getByRole("button", { name: "Back" }).click();
+    await stepOf(page, 4);
+    await page.getByRole("button", { name: "Email only" }).click();
+    await expect(page.locator("#phone")).toHaveCount(0);
+    await expect(page.getByRole("switch", { name: "WhatsApp" })).toHaveCount(0);
+    await expect(page.locator("[data-tk=account-email]")).toBeVisible();
+    await page.locator("[data-tk=go-on]").click();
+    await stepOf(page, 5);
+    await expect(page.locator("[data-tk=review-contact]")).toHaveText(/Email only/);
+    const emailOnly = (await (await page.request.get(`/api/listings/by-id/${draft}`)).json()).data.contact;
+    expect(emailOnly.phone ?? null).toBeNull();
+    expect(emailOnly.whatsapp ?? null).toBeNull();
+    expect(emailOnly.acceptForm).toBe(true);
+    await consentAndPublish(page);
+  });
+
+  test("desktop: step 2 shows the whole preview column and step 3 fits four photos with no inner scroll", async ({ page, baseURL }, info) => {
+    test.skip(info.project.name !== "desktop-1440", "desktop sizes only");
+    test.setTimeout(240_000);
+    await newPoster(page, baseURL!, "fit5");
+    await chooseDating(page, "fit5");
+    await page.locator("#city").selectOption({ label: "Mumbai" });
+    await page.locator("#nickname").fill("Asha");
+    await page.locator("#age").fill("28");
+    await page.locator("#title").fill("A long title that wraps in the preview card");
+    await page.locator("#text").fill("Looking to meet for coffee and a long walk by the sea on weekends, then dinner somewhere quiet and a chat about books, music and travel.");
+    await page.getByRole("button", { name: "Coffee", exact: true }).click();
+    const sizes: [number, number][] = [[1366, 768], [1536, 730]];
+    for (const [width, height] of sizes) {
+      await page.setViewportSize({ width, height });
+      await expect(page.locator(".tkp-aside")).toBeVisible();
+      const aside = await page.locator(".tkp-aside").evaluate((node) => {
+        const box = node.getBoundingClientRect();
+        return { bottom: box.bottom, cut: node.scrollHeight - node.clientHeight };
+      });
+      expect(aside.bottom, `${width}x${height} preview column inside the window`).toBeLessThanOrEqual(height);
+      expect(aside.cut, `${width}x${height} nothing cut in the preview column`).toBeLessThanOrEqual(0);
+      await shot(page, `3-3-step2-${width}x${height}`);
+    }
+    await page.setViewportSize({ width: 1366, height: 768 });
+    await page.locator("[data-tk=go-on]").click();
+    await stepOf(page, 3);
+    await page.locator("[data-tk=photo-input]").waitFor({ state: "attached" });
+    const files = Array.from({ length: 4 }, (_, index) => ({ name: `p${index}.png`, mimeType: "image/png", buffer: PNG }));
+    await page.locator("[data-tk=photo-input]").setInputFiles(files);
+    await expect(page.locator("[data-tk=photo-tile]")).toHaveCount(4, { timeout: 30_000 });
+    await expect(page.locator("[data-tk=upload-progress]")).toHaveCount(0);
+    for (const [width, height] of sizes) {
+      await page.setViewportSize({ width, height });
+      const fit = await page.evaluate(() => {
+        const scroll = document.querySelector(".tkp-scroll") as HTMLElement;
+        const frames = Array.from(document.querySelectorAll<HTMLElement>("[data-tk=photo-grid] .tkp-media-frame")).map((node) => node.getBoundingClientRect());
+        const nav = (document.querySelector(".tkp-nav") as HTMLElement).getBoundingClientRect();
+        return { inner: scroll.scrollHeight - scroll.clientHeight, page: document.documentElement.scrollHeight - window.innerHeight, frames: frames.map((box) => [Math.round(box.width), Math.round(box.height), Math.round(box.top)]), navBottom: nav.bottom };
+      });
+      expect(fit.frames.length).toBe(4);
+      expect(fit.frames.map((box) => box[0]), `${width} tile widths`).toEqual([96, 96, 96, 96]);
+      expect(fit.frames.map((box) => box[1]), `${width} tile heights`).toEqual([96, 96, 96, 96]);
+      expect(new Set(fit.frames.map((box) => box[2])).size, `${width} one row`).toBe(1);
+      expect(fit.inner, `${width}x${height} no inner scroll`).toBeLessThanOrEqual(0);
+      expect(fit.page, `${width}x${height} no page scroll`).toBeLessThanOrEqual(0);
+      expect(fit.navBottom, `${width}x${height} buttons in view`).toBeLessThanOrEqual(height);
+      await shot(page, `3-3-step3-${width}x${height}`);
+    }
   });
 
   test("steps 4 and 5 and the success screen fit every common size, keep the bar clear of the last field, and pass axe", async ({ page, baseURL }) => {

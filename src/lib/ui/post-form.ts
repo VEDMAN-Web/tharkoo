@@ -78,9 +78,16 @@ export type SavedDraft = {
   attributes?: Record<string, unknown> | null;
   price?: number | null;
   nickname?: string | null;
-  contact?: { phone?: string | null; whatsapp?: string | null; telegram?: string | null } | null;
+  contact?: { phone?: string | null; whatsapp?: string | null; telegram?: string | null; acceptForm?: boolean | null } | null;
   mediaIds?: string[] | null;
 };
+
+function contactModeOf(contact: SavedDraft["contact"]) {
+  if (!contact) return "both";
+  const phone = Boolean(contact.phone);
+  if (contact.acceptForm) return phone ? "both" : "email";
+  return phone ? "phone" : "both";
+}
 
 export function draftToForm(row: SavedDraft) {
   const attributes = row.attributes || {};
@@ -104,7 +111,9 @@ export function draftToForm(row: SavedDraft) {
     area: typeof attributes.area === "string" ? attributes.area : "",
     phone: row.contact?.phone || "",
     whatsapp: Boolean(row.contact?.whatsapp),
+    whatsappNumber: row.contact?.whatsapp || "",
     telegram: row.contact?.telegram || "",
+    contactMode: contactModeOf(row.contact),
     lookingFor: textOf(attrs["looking-for"]),
     attrs,
     photos: row.mediaIds || [],
@@ -126,7 +135,7 @@ export type NewPostStep = (typeof NEW_POST_STEPS)[number];
 /** The step a validation key belongs to. Any key not listed is a detail (title, text, city, a category field...). */
 export function stepOfError(key: string): NewPostStep {
   if (key === "category" || key === "subcategory") return "category";
-  if (key === "phone" || key === "dob" || key === "ageConfirmed") return "contact";
+  if (key === "phone" || key === "whatsapp" || key === "telegram" || key === "dob" || key === "ageConfirmed") return "contact";
   if (key === "terms" || key === "adult") return "review";
   return "details";
 }
@@ -153,4 +162,35 @@ export function validateAbout(input: AboutInput, now = new Date()): Record<strin
   else if (!isAtLeast18(born, now)) out.dob = "You must be 18 or older to post an ad";
   if (!input.ageConfirmed) out.ageConfirmed = "Tick this box to go on";
   return out;
+}
+
+const TELEGRAM_PATTERN = /^[A-Za-z0-9_]{5,32}$/;
+
+export function telegramHandle(raw: string) {
+  return raw.trim().replace(/^@/, "");
+}
+
+export function isIndianMobile(raw: string) {
+  return /^(91)?[6-9]\d{9}$/.test(raw.replace(/\D/g, ""));
+}
+
+export type ContactChoices = { mode: string; whatsappOn: boolean; whatsappSame: boolean; whatsappNumber: string; telegramOn: boolean; telegram: string };
+
+export function validateContact(input: ContactChoices): Record<string, string> {
+  const out: Record<string, string> = {};
+  if (input.mode !== "email" && input.whatsappOn && !input.whatsappSame && !isIndianMobile(input.whatsappNumber)) {
+    out.whatsapp = "Use +91 and 10 digits";
+  }
+  if (input.telegramOn) {
+    const handle = telegramHandle(input.telegram);
+    if (!handle) out.telegram = "Enter your Telegram username";
+    else if (!TELEGRAM_PATTERN.test(handle)) out.telegram = "Use 5 to 32 letters, digits or underscores";
+  }
+  return out;
+}
+
+export function maskEmail(email: string) {
+  const at = email.lastIndexOf("@");
+  if (at < 1) return "";
+  return `${email.slice(0, 1)}••••${email.slice(at)}`;
 }

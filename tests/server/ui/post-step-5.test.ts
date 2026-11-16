@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { POST_COPY_DEFAULTS, buildPostCopy } from "@/components/post/copy";
 import { ABOUT_YOU_HELP, ABOUT_YOU_TITLE, newStepCopy, newSuccessCopy } from "@/components/post/newCopy";
-import { errorsForStep, stepOfError, validateAbout } from "@/lib/ui/post-form";
+import { draftToForm, errorsForStep, maskEmail, stepOfError, telegramHandle, validateAbout, validateContact } from "@/lib/ui/post-form";
 
 const now = new Date("2026-11-16T10:00:00Z");
 
@@ -75,5 +75,56 @@ describe("the success screen wording (H7.86)", () => {
   it("keeps a button an admin wrote", () => {
     const copy = { ...POST_COPY_DEFAULTS, success: { ...POST_COPY_DEFAULTS.success, primaryCta: { label: "See my page", href: "/u/account/ads/" } } };
     expect(newSuccessCopy(copy, true).primary.label).toBe("See my page");
+  });
+});
+
+const choices = { mode: "both", whatsappOn: false, whatsappSame: true, whatsappNumber: "", telegramOn: false, telegram: "" };
+
+describe("contact choices (H7.86)", () => {
+  it("accepts nothing wrong when WhatsApp and Telegram are off, or WhatsApp is the same as the phone", () => {
+    expect(validateContact(choices)).toEqual({});
+    expect(validateContact({ ...choices, whatsappOn: true })).toEqual({});
+  });
+
+  it("checks a different WhatsApp number as an Indian mobile number", () => {
+    const other = { ...choices, whatsappOn: true, whatsappSame: false };
+    expect(validateContact({ ...other, whatsappNumber: "" }).whatsapp).toBe("Use +91 and 10 digits");
+    expect(validateContact({ ...other, whatsappNumber: "12345" }).whatsapp).toBe("Use +91 and 10 digits");
+    expect(validateContact({ ...other, whatsappNumber: "5123456789" }).whatsapp).toBe("Use +91 and 10 digits");
+    expect(validateContact({ ...other, whatsappNumber: "+91 91234 56780" })).toEqual({});
+  });
+
+  it("ignores WhatsApp when only email is chosen", () => {
+    expect(validateContact({ ...choices, mode: "email", whatsappOn: true, whatsappSame: false, whatsappNumber: "1" })).toEqual({});
+  });
+
+  it("wants a Telegram username of 5 to 32 letters, digits or underscores, with or without the at sign", () => {
+    const on = { ...choices, telegramOn: true };
+    expect(validateContact({ ...on, telegram: "" }).telegram).toBe("Enter your Telegram username");
+    expect(validateContact({ ...on, telegram: "ab" }).telegram).toBe("Use 5 to 32 letters, digits or underscores");
+    expect(validateContact({ ...on, telegram: "bad name!" }).telegram).toBe("Use 5 to 32 letters, digits or underscores");
+    expect(validateContact({ ...on, telegram: "a".repeat(33) }).telegram).toBe("Use 5 to 32 letters, digits or underscores");
+    expect(validateContact({ ...on, telegram: "asha_walks" })).toEqual({});
+    expect(validateContact({ ...on, telegram: "@Asha_99" })).toEqual({});
+    expect(telegramHandle(" @asha_walks ")).toBe("asha_walks");
+  });
+
+  it("keeps the telegram and whatsapp errors on the contact step", () => {
+    expect(errorsForStep({ telegram: "x", whatsapp: "y", title: "z" }, "contact")).toEqual({ telegram: "x", whatsapp: "y" });
+  });
+
+  it("masks the account email but keeps the first letter and the domain", () => {
+    expect(maskEmail("asha.k@gmail.com")).toBe("a••••@gmail.com");
+    expect(maskEmail("a@x.in")).toBe("a••••@x.in");
+    expect(maskEmail("")).toBe("");
+    expect(maskEmail("no-at-sign")).toBe("");
+  });
+
+  it("reads the choice back from a saved draft", () => {
+    expect(draftToForm({ contact: { phone: "+919876543210", acceptForm: true } }).contactMode).toBe("both");
+    expect(draftToForm({ contact: { phone: "+919876543210" } }).contactMode).toBe("phone");
+    expect(draftToForm({ contact: { acceptForm: true } }).contactMode).toBe("email");
+    expect(draftToForm({}).contactMode).toBe("both");
+    expect(draftToForm({ contact: { phone: "+919876543210", whatsapp: "+919123456780" } }).whatsappNumber).toBe("+919123456780");
   });
 });

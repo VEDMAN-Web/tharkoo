@@ -6,14 +6,15 @@ import { api, fieldErrors, friendlyError } from "@/lib/ui/api";
 import { loadPostSubcategories, type PostSubcategory } from "@/server/categories/actions";
 import { PhotoStep } from "@/components/post/PhotoStep";
 import { PickGroup } from "@/components/post/PickGroup";
-import { NEW_POST_STEPS, cleanAttrs, DEFAULT_PICK_LIMIT, draftToForm, errorsForStep, needsIdCheck, picksOf, textOf, validateAbout, validatePost, type NewPostStep, type PostAttrs, type SavedDraft } from "@/lib/ui/post-form";
+import { NEW_POST_STEPS, cleanAttrs, DEFAULT_PICK_LIMIT, draftToForm, errorsForStep, needsIdCheck, picksOf, telegramHandle, textOf, validateAbout, validateContact, validatePost, type NewPostStep, type PostAttrs, type SavedDraft } from "@/lib/ui/post-form";
 import { loginPath, postAdPath } from "@/lib/urls";
 import { useUrlPaths } from "./UrlPaths";
 import { HelpCard } from "./ui/HelpCard";
 import { AdCard } from "./ui/AdCard";
 import { POST_COPY_DEFAULTS, wizardFields, type CtaCopy, type PostCopy } from "./post/copy";
 import { newStepCopy, newSuccessCopy } from "./post/newCopy";
-import { SelectField, TextField } from "./post/FormFields";
+import { SelectField, Switch, TextField } from "./post/FormFields";
+import { ContactFields } from "./post/ContactFields";
 import { AboutYou } from "./post/AboutYou";
 import { ReviewStep, type ReviewRow } from "./post/ReviewStep";
 import { PostSuccess } from "./post/PostSuccess";
@@ -59,6 +60,7 @@ export function PostWizard({
   initialCities,
   defaultCityId = "",
   defaultName = "",
+  maskedEmail = "",
   about = null,
 }: {
   copy?: PostCopy;
@@ -69,6 +71,7 @@ export function PostWizard({
   initialCities?: Place[];
   defaultCityId?: string;
   defaultName?: string;
+  maskedEmail?: string;
   about?: { askDateOfBirth: boolean } | null;
 }) {
   const paths = useUrlPaths();
@@ -94,6 +97,8 @@ export function PostWizard({
   const [contactMode, setContactMode] = useState("both");
   const [phone, setPhone] = useState("");
   const [whatsapp, setWhatsapp] = useState(false);
+  const [whatsappSame, setWhatsappSame] = useState(true);
+  const [whatsappNumber, setWhatsappNumber] = useState("");
   const [telegramOn, setTelegramOn] = useState(false);
   const [telegram, setTelegram] = useState("");
   const [terms, setTerms] = useState(false);
@@ -161,6 +166,9 @@ export function PostWizard({
             setPrice(form.price);
             setPhone(form.phone);
             setWhatsapp(form.whatsapp);
+            setWhatsappNumber(form.whatsappNumber);
+            setWhatsappSame(!form.whatsappNumber || form.whatsappNumber === form.phone);
+            setContactMode(form.contactMode);
             setTelegram(form.telegram);
             setTelegramOn(Boolean(form.telegram));
             setAttrs(form.attrs);
@@ -223,6 +231,7 @@ export function PostWizard({
     });
     if (phone && contactMode !== "email" && !/^\+91[6-9]\d{9}$/.test(normalPhone(phone))) next.phone = "Use +91 and 10 digits";
     if (newDesign && price.trim() && !/^\d{1,9}$/.test(priceDigits)) next.price = "Use whole rupees, numbers only";
+    if (newDesign) Object.assign(next, validateContact({ mode: contactMode, whatsappOn: whatsapp, whatsappSame, whatsappNumber, telegramOn, telegram }));
     if (about) Object.assign(next, validateAbout({ askDateOfBirth: about.askDateOfBirth, dateOfBirth, ageConfirmed }));
     return next;
   }
@@ -269,6 +278,8 @@ export function PostWizard({
    * the save failed (the banner then says why). The contact is sent only when `includeContact` is set, so a save from
    * an earlier step never clears a phone number that was saved later.
    */
+  const whatsappValue = !whatsapp || (newDesign && contactMode === "email") ? "" : normalPhone(newDesign && !whatsappSame ? whatsappNumber : phone);
+
   function saveAll(includeContact: boolean, quiet = false): Promise<string> {
     const task = queueRef.current.then(() => doSave(includeContact, quiet));
     queueRef.current = task.catch(() => "");
@@ -278,6 +289,7 @@ export function PostWizard({
   async function doSave(includeContact: boolean, quiet: boolean): Promise<string> {
     if (!quiet) setBusy(true);
     else setSaveState("saving");
+    const emailOnly = newDesign && contactMode === "email";
     const basics = {
       categoryId,
       title: title.trim(),
@@ -303,9 +315,10 @@ export function PostWizard({
     draftRef.current = id;
     setDraftId(id);
     const contact = {
-      ...(phone ? { phone: normalPhone(phone) } : {}),
-      ...(whatsapp && phone ? { whatsapp: normalPhone(phone) } : {}),
-      ...(telegramOn && telegram ? { telegram } : {}),
+      ...(phone && !emailOnly ? { phone: normalPhone(phone) } : {}),
+      ...(whatsappValue ? { whatsapp: whatsappValue } : {}),
+      ...(telegramOn && telegram ? { telegram: newDesign ? `@${telegramHandle(telegram)}` : telegram } : {}),
+      ...(newDesign && contactMode !== "phone" ? { acceptForm: true } : {}),
     };
     const details = await api(`/api/listings/${id}`, {
       method: "PATCH",
@@ -386,7 +399,7 @@ export function PostWizard({
       body: JSON.stringify({
         name: nickname.trim(),
         city: cityName,
-        whatsapp: whatsapp && phone ? normalPhone(phone) : "",
+        whatsapp: whatsappValue,
         availableNow: false,
         ...(about.askDateOfBirth ? { dateOfBirth, adultConfirmed: ageConfirmed } : {}),
       }),
@@ -691,6 +704,7 @@ export function PostWizard({
     const previewPrice = priceDigits ? `₹${Number(priceDigits).toLocaleString("en-IN")}` : "";
     const hints = hintsFor(category?.slug);
     const subName = subOptions.find((sub) => sub.id === subcategoryId)?.name;
+    const contactSummary = contactMode === "email" ? "Email only" : phone ? `${normalPhone(phone)}${contactMode === "both" ? " and email" : ""}` : "Not set";
     const reviewRows: ReviewRow[] = [
       { key: "category", label: "Category", value: [category?.name, subName].filter(Boolean).join(" › ") || "Not chosen", step: 1 },
       { key: "title", label: "Title", value: title.trim() || "No title yet", step: 2 },
@@ -698,7 +712,7 @@ export function PostWizard({
       { key: "place", label: "Place", value: placeParts || "Not set", step: 2 },
       { key: "name", label: "Name on your ads", value: byline || nickname.trim() || "Not set", step: about ? NEW_CONTACT_STEP : 2 },
       { key: "photos", label: "Photos", value: photoCount === null ? (draftId ? "Checking" : "No photos yet") : photoCount ? `${photoCount} ${photoCount === 1 ? "photo" : "photos"}` : "No photos yet", step: NEW_PHOTO_STEP },
-      { key: "contact", label: "Contact", value: contactMode === "email" ? "Email only" : phone ? normalPhone(phone) : "Not set", step: NEW_CONTACT_STEP },
+      { key: "contact", label: "Contact", value: contactSummary, step: NEW_CONTACT_STEP },
     ];
     const categoryReady = Boolean(categoryId) && (subOptions.length === 0 || Boolean(subcategoryId));
     const live = errorsForStep(validate(), current, Boolean(about));
@@ -810,22 +824,25 @@ export function PostWizard({
                       onAgeConfirmed={() => setAgeConfirmed((v) => !v)}
                     />
                   ) : null}
-                  <p className="tkp-sub-title" style={{ margin: 0 }}>How should people reach you?</p>
-                  <div className="tkp-chips" role="group" aria-label="How people reach you">
-                    {[
-                      ["phone", "Only Phone"],
-                      ["email", "Only Email"],
-                      ["both", "Email and Phone"],
-                    ].map(([id, label]) => (
-                      <button key={id} type="button" className={`tkp-chip ${contactMode === id ? "on" : ""}`} aria-pressed={contactMode === id} onClick={() => setContactMode(id)}>
-                        {label}
-                      </button>
-                    ))}
-                  </div>
-                  <TextField id="phone" label="Phone number" required={contactMode !== "email"} value={phone} error={err("phone")} onBlur={blur("phone")} inputMode="tel" placeholder="+91 81234 56789" onChange={setPhone} />
-                  <div className="tkp-toggle-row"><span>WhatsApp</span><Switch on={whatsapp} onClick={() => setWhatsapp((v) => !v)} label="WhatsApp" /></div>
-                  <div className="tkp-toggle-row"><span>Telegram</span><Switch on={telegramOn} onClick={() => setTelegramOn((v) => !v)} label="Telegram" /></div>
-                  {telegramOn ? <TextField id="telegram" label="Telegram" value={telegram} onChange={setTelegram} /> : null}
+                  <ContactFields
+                    mode={contactMode}
+                    maskedEmail={maskedEmail}
+                    phone={phone}
+                    whatsapp={whatsapp}
+                    whatsappSame={whatsappSame}
+                    whatsappNumber={whatsappNumber}
+                    telegramOn={telegramOn}
+                    telegram={telegram}
+                    error={err}
+                    onBlur={blur}
+                    onMode={setContactMode}
+                    onPhone={setPhone}
+                    onWhatsapp={() => setWhatsapp((v) => !v)}
+                    onWhatsappSame={() => setWhatsappSame((v) => !v)}
+                    onWhatsappNumber={setWhatsappNumber}
+                    onTelegramOn={() => setTelegramOn((v) => !v)}
+                    onTelegram={setTelegram}
+                  />
                 </div>
               ) : null}
 
@@ -896,13 +913,5 @@ function Group({ title, help, children }: { title: string; help?: string; childr
         {children}
       </div>
     </section>
-  );
-}
-
-function Switch({ on, onClick, label }: { on: boolean; onClick: () => void; label: string }) {
-  return (
-    <button type="button" role="switch" aria-checked={on} aria-label={label} className={`tk-switch ${on ? "on" : ""}`} onClick={onClick}>
-      <i />
-    </button>
   );
 }

@@ -17,6 +17,7 @@ import { IdCheckFirst } from "@/components/post/IdCheckFirst";
 import { getCategories, getCities } from "@/lib/queries";
 import { plain } from "@/lib/plain";
 import { kindFor } from "@/server/categories/kind";
+import { maskEmail } from "@/lib/ui/post-form";
 
 export async function generateMetadata() {
   const paths = await getPaths();
@@ -74,5 +75,5 @@ export default async function PostInsertPage({
   const cities = plain(cityRows.map((row) => ({ id: row.id, name: row.name, slug: row.slug })).sort((a, b) => a.name.localeCompare(b.name)));
   const home = (session.user.seller?.city ?? "").trim().toLowerCase();
   const defaultCityId = home ? (cities.find((item) => item.slug.toLowerCase() === home || item.name.toLowerCase() === home)?.id ?? "") : "";
-  return <PostWizard copy={buildPostCopy(blocks)} requireIdCheck={requireIdCheck} newDesign={newDesign} initialCategories={categories} initialCities={cities} defaultCityId={defaultCityId} defaultName={session.user.seller?.name ?? ""} about={about} />;
+  return <PostWizard copy={buildPostCopy(blocks)} requireIdCheck={requireIdCheck} newDesign={newDesign} initialCategories={categories} initialCities={cities} defaultCityId={defaultCityId} defaultName={session.user.seller?.name ?? ""} maskedEmail={maskEmail(session.user.email)} about={about} />;
 }
