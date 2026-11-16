@@ -66,6 +66,13 @@ export async function getCities(limit?: number) {
   return cached(`cities:${limit || "all"}`, 60_000, async () => cities(limit), ["locations"], true);
 }
 
+export async function getCityBySlug(slug: string) {
+  const loc = await getLocationBySlug(slug);
+  if (loc?.kind === "city") return loc;
+  const rows = await getCities();
+  return rows.find((row) => row.slug === slug) ?? null;
+}
+
 export async function getTopCities() {
   return cached("top-cities", 60_000, async () => topCities(), ["locations"], true);
 }

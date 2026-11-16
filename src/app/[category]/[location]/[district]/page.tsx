@@ -12,11 +12,10 @@ import { makeT } from "@/lib/ui/text";
 import { textOverrides } from "@/app/admin/ui-text/store";
 import {
   getCategory,
-  getCities,
+  getCityBySlug,
   getDistricts,
   getFeed,
   getHomepageContent,
-  getLocationBySlug,
   getSeoFor,
   getSite,
   getStarListings,
@@ -41,19 +40,12 @@ type Props = {
 
 export const revalidate = 60;
 
-async function cityFor(slug: string) {
-  const loc = await getLocationBySlug(slug);
-  if (loc?.kind === "city") return loc;
-  const rows = await getCities();
-  return rows.find((row) => row.slug === slug) ?? null;
-}
-
 export async function generateMetadata({ params, searchParams }: Props): Promise<Metadata> {
   const { category, location, district } = await params;
   const sp = await searchParams;
   const [cat, city, districtRows, seo, site] = await Promise.all([
     getCategory(category),
-    cityFor(location),
+    getCityBySlug(location),
     getDistricts(location),
     getSeoFor("district", category, "location"),
     getSite(),
@@ -107,7 +99,7 @@ export default async function DistrictPage({ params, searchParams }: Props) {
   const page = Math.max(1, Number(sp.page) || 1);
   const [cat, city, districtRows] = await Promise.all([
     getCategory(category),
-    cityFor(location),
+    getCityBySlug(location),
     getDistricts(location),
   ]);
   const dist = districtRows.find((row) => row.slug === district);

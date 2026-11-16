@@ -11,7 +11,7 @@ import { readShellConfig } from "@/server/site-links/shell-config";
 import { getPaths } from "@/server/urls/service";
 import { makeT } from "@/lib/ui/text";
 import { textOverrides } from "@/app/admin/ui-text/store";
-import { getCategory, getCities, getHomepageContent, getLocationBySlug, getSite } from "@/lib/queries";
+import { getCategory, getCityBySlug, getHomepageContent, getSite } from "@/lib/queries";
 import { fallbackLanding } from "@/lib/seo/landing";
 import { subcategoryCopy } from "@/server/seo/templates";
 import { withUrlSeo, urlHeading } from "@/lib/seo/override";
@@ -27,8 +27,7 @@ async function resolve({ category, location, district }: SubHubParams) {
   if (!cat?._id) return null;
   const found = await findSubcategory(String(cat._id), district);
   if (!found) return null;
-  const loc = await getLocationBySlug(location);
-  const city = loc?.kind === "city" ? loc : ((await getCities()).find((row) => row.slug === location) ?? null);
+  const city = await getCityBySlug(location);
   if (!city) return null;
   await connectDb();
   const row = await Location.findOne({ type: "city", slug: city.slug || location }).select("_id").lean<{ _id: unknown }>();

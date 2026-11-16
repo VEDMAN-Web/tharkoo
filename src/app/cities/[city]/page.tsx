@@ -2,7 +2,7 @@ import "./city-page.css";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
-import { countListings, getCategories, getCityLatest, getDistricts, getHomepageContent, getLocationBySlug, listingCountsByCategoryCity, pageOutOfRange } from "@/lib/queries";
+import { countListings, getCategories, getCityBySlug, getCityLatest, getDistricts, getHomepageContent, listingCountsByCategoryCity, pageOutOfRange } from "@/lib/queries";
 import { isCityAlias } from "@/lib/seo/district-alias";
 import { citiesPath, joinPath, placePath, postAdPath, searchPath } from "@/lib/urls";
 import { withUrlSeo } from "@/lib/seo/override";
@@ -27,13 +27,13 @@ type Props = { params: Promise<{ city: string }>; searchParams: Promise<{ page?:
 /** The city's areas and categories, and its live ad count. Shared by the metadata and the page. */
 async function cityAreas(city: string) {
   const [loc, areas, counts, categories, total] = await Promise.all([
-    getLocationBySlug(city),
+    getCityBySlug(city),
     getDistricts(city),
     listingCountsByCategoryCity().catch(() => []),
     getCategories().catch(() => []),
     countListings({ citySlug: city }),
   ]);
-  if (!loc || loc.kind !== "city") return null;
+  if (!loc) return null;
   const named = areas.filter((area) => area.slug && area.name && !isCityAlias(loc.name || city, area.name));
   const cityCounts = new Map(counts.filter((row) => row._id.citySlug === city && row.n > 0).map((row) => [row._id.categorySlug, row.n]));
   return { name: loc.name || city, stateSlug: loc.stateSlug || "", total, areas: named, categories, cityCounts };

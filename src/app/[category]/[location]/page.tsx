@@ -208,7 +208,7 @@ export default async function LocationPage({ params, searchParams }: Props) {
   const crumbs = [
     { name: t("listing.crumb.home"), path: "/" },
     { name: cat.name!, path: `/${cat.slug}/` },
-    ...(loc.stateSlug ? [{ name: `${stateName} ${cat.name}`, path: placePath(cat.slug || category, loc.stateSlug) }] : []),
+    ...(loc.stateSlug && loc.stateSlug !== (loc.slug || location) ? [{ name: `${stateName} ${cat.name}`, path: placePath(cat.slug || category, loc.stateSlug) }] : []),
     { name: `${loc.name} ${cat.name}`, path: canonicalPath },
   ];
   const h1 = heading || visibleHeading(fillTemplate(seo?.h1 || "", vars), copy.h1);

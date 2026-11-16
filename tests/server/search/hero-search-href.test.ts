@@ -22,4 +22,17 @@ describe("heroSearchHref", () => {
   it("goes to search when nothing is picked", () => {
     expect(heroSearchHref(paths, {})).toBe("/search/");
   });
+
+  it.each([
+    ["nothing", {}, "/search/"],
+    ["state", { state: "gujarat" }, "/search/?state=gujarat"],
+    ["state and city", { state: "gujarat", city: "surat" }, "/cities/surat/"],
+    ["city", { city: "surat" }, "/cities/surat/"],
+    ["category", { category: "dating" }, "/dating/"],
+    ["category and state", { category: "dating", state: "gujarat" }, "/dating/gujarat/"],
+    ["category and city", { category: "dating", city: "surat" }, "/dating/surat/"],
+    ["all three", { category: "dating", state: "gujarat", city: "surat" }, "/dating/surat/"],
+  ])("routes the %s pattern", (_name, pick, href) => {
+    expect(heroSearchHref(paths, pick)).toBe(href);
+  });
 });
