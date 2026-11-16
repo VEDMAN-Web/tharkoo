@@ -63,8 +63,10 @@ test.describe("H7.61 my ads and support form", () => {
     await card.getByRole("button", { name: "Delete", exact: true }).click();
     await card.getByRole("button", { name: "Tap again to delete" }).click();
     await expect(page.getByText("Deleted.")).toBeVisible();
-    await expect(card.locator(".tkp-owner-status")).toHaveText("Ended");
-    await expect(card.getByText("Not live yet.")).toHaveCount(0);
+    await expect(page.locator('[data-tk="owner-card"]')).toHaveCount(0);
+    await page.goto("/u/account/ads/");
+    await expect(page.locator('[data-tk="owner-card"]')).toHaveCount(0);
+    await expect(page.getByText("No ads here yet.")).toBeVisible();
   });
 
   test("Finish your ad opens the last step of the draft", async ({ page, baseURL }) => {
@@ -73,7 +75,7 @@ test.describe("H7.61 my ads and support form", () => {
     await page.waitForURL(new RegExp(`draft=${id}.*step=5|step=5.*draft=${id}`));
   });
 
-  test("on a phone the up-arrow is gone on panel pages and sits clear above the ad bar", async ({ page, baseURL }) => {
+  test("on a phone the up-arrow is gone on panel pages and on the ad page", async ({ page, baseURL }) => {
     test.skip(!test.info().project.name.startsWith("phone"), "phone layout only");
     const { email } = await newUserApi(baseURL!, "arrow");
     await loginUi(page, email, undefined, "/u/account/dashboard/");
@@ -82,10 +84,8 @@ test.describe("H7.61 my ads and support form", () => {
     await expect(page.locator(".tkn-top")).toBeHidden();
     await page.goto("/ad/demo-1410/");
     await page.evaluate(() => window.scrollTo(0, 900));
-    await expect(page.locator(".tkn-top")).toBeVisible();
-    const arrow = (await page.locator(".tkn-top").boundingBox())!;
-    const bar = (await page.locator('[data-tk="bottom-bar"]').boundingBox())!;
-    expect(bar.y - (arrow.y + arrow.height)).toBeGreaterThanOrEqual(24);
+    await page.waitForTimeout(500);
+    await expect(page.locator(".tkn-top")).toBeHidden();
     await expect(page.locator(".tkn-chat-bubble")).toBeHidden();
   });
 

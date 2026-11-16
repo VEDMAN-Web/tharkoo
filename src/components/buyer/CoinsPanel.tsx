@@ -3,8 +3,11 @@
 import Link from "next/link";
 import { useState } from "react";
 import type { PackRow, PanelSummary } from "@/server/notifications/summary";
+import { makeT } from "@/lib/ui/text";
 import { PackPicker } from "./PackPicker";
 import { SignedOutPanel, UserPanelShell } from "./UserPanelShell";
+
+const t = makeT();
 
 /** H7.17: coins and payments on the user panel: the pack grid, the coin balance and a link to the history. */
 
@@ -21,8 +24,8 @@ export function CoinsPanel({ summary, packs }: { summary: PanelSummary; packs: P
 
   const aside = (
     <section aria-labelledby="coins-heading" className="up-coins-card">
-      <h2 id="coins-heading" className="up-coins-label">Your coins</h2>
-      <p className="up-coins-value" data-tk="coin-balance">{balance} coins</p>
+      <h2 id="coins-heading" className="up-coins-label">{t("panel.coins.title")}</h2>
+      <p className="up-coins-value" data-tk="coin-balance">{t("panel.coins.balance", { count: balance })}</p>
       <Link href="/u/account/credits/history/" className="up-coins-link">See history</Link>
     </section>
   );
@@ -31,7 +34,7 @@ export function CoinsPanel({ summary, packs }: { summary: PanelSummary; packs: P
     <UserPanelShell active="coins" summary={summary} aside={aside}>
       <section aria-labelledby="buy-heading" className="up-glass up-panel">
         <div className="up-panel-head">
-          <h1 id="buy-heading" className="up-h2">Buy coins</h1>
+          <h1 id="buy-heading" className="up-h2">{t("panel.coins.buy")}</h1>
           <p className="up-muted">Choose a pack</p>
         </div>
         {packs.length === 0 ? <p className="up-muted">No coin packs are on sale right now.</p> : <PackPicker packs={packs} onPaid={setBalance} />}

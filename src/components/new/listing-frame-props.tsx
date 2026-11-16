@@ -36,6 +36,7 @@ export function listingLabels(t: TextFn): ListingLabels {
     allStates: t("listing.panel.allStates"),
     allCities: t("listing.panel.allCities"),
     allAreas: t("listing.panel.allAreas"),
+    pickCity: t("listing.panel.pickCity"),
     clear: t("listing.panel.clear"),
     apply: t("listing.panel.apply"),
     noFilters: t("listing.panel.noFilters"),
@@ -92,6 +93,42 @@ export function placeSelects(input: {
   };
 }
 
+export function searchPlaceSelects(input: {
+  searchPath: string;
+  params: Record<string, string>;
+  categories: { slug?: string | null; name?: string | null }[];
+  states: { slug?: string | null; name?: string | null; countrySlug?: string | null }[];
+  cities: { slug?: string | null; name?: string | null; countrySlug?: string | null; stateSlug?: string | null }[];
+  districts: { slug?: string | null; name?: string | null }[];
+  labels: ListingLabels;
+}): PlaceSelects {
+  const hrefFor = (change: Record<string, string>) => {
+    const query = new URLSearchParams();
+    for (const [key, value] of Object.entries({ ...input.params, ...change })) {
+      if (key !== "page" && value) query.set(key, value);
+    }
+    const text = query.toString();
+    return text ? `${input.searchPath}?${text}` : input.searchPath;
+  };
+  const options = <T extends { slug?: string | null; name?: string | null; countrySlug?: string | null }>(rows: T[], key: string, reset: Record<string, string> = {}): PlaceOption[] =>
+    rows
+      .filter((row): row is T & { slug: string } => Boolean(row.slug))
+      .map((row) => ({ value: row.slug, label: row.name || row.slug, href: hrefFor({ [key]: row.slug, ...reset }), country: row.countrySlug || undefined }));
+  const stateSlug = input.params.state || "";
+  const citySlug = input.params.city || "";
+  const cities = stateSlug ? input.cities.filter((city) => !city.stateSlug || city.stateSlug === stateSlug) : input.cities;
+  return {
+    categories: [{ value: "", label: input.labels.all, href: hrefFor({ category: "" }) }, ...options(input.categories, "category")],
+    categoryValue: input.params.category || "",
+    states: [{ value: "", label: input.labels.allStates, href: hrefFor({ state: "", city: "", area: "" }) }, ...options(input.states, "state", { city: "", area: "" })],
+    stateValue: stateSlug,
+    cities: [{ value: "", label: input.labels.allCities, href: hrefFor({ city: "", area: "" }) }, ...options(cities, "city", { area: "" })],
+    cityValue: citySlug,
+    areas: citySlug ? [{ value: "", label: input.labels.allAreas, href: hrefFor({ area: "" }) }, ...options(input.districts, "area")] : [],
+    areaValue: input.params.area || "",
+  };
+}
+
 /**
  * Builds the parts of the listing frame (title band, search form, filter panel) for a category or city page.
  * The city page and the category page share it. Server-side only: it returns elements.
@@ -113,6 +150,8 @@ export function listingFrameProps(input: {
   panelPath: string;
   labels: ListingLabels;
   places: PlaceSelects;
+  panelHidden?: { name: string; value: string }[];
+  placesOnly?: boolean;
 }) {
   const rows = panelRows(input.fields, input.picks);
   const activeCount = activeFilterCount(rows, input.toggles);
@@ -138,6 +177,8 @@ export function listingFrameProps(input: {
         toggles={input.toggles}
         labels={input.labels}
         places={input.places}
+        hidden={input.panelHidden}
+        placesOnly={input.placesOnly}
       />
     ),
     activeCount,

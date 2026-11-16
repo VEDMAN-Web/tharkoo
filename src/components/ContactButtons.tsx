@@ -113,29 +113,17 @@ export function ContactProvider({
   }
 
   async function startChat(): Promise<FlowResult> {
-    if (conversationId) {
-      setChatOpen(true);
-      return "ok";
-    }
     if (!listingId) {
       setNotice({ text: "Chat is unavailable right now." });
       return "error";
     }
-    setBusy("chat");
-    setNotice(null);
-    const res = await api<{ conversationId: string }>("/api/chat/conversations", { method: "POST", body: JSON.stringify({ listingId }) });
-    setBusy(null);
-    if (res.ok) {
-      setConversationId(res.data.conversationId);
-      setChatOpen(true);
-      return "ok";
-    }
-    if (res.status === 401) {
+    if (!hasSessionHint()) {
       setSignedIn(false);
       return "auth";
     }
-    setNotice({ text: friendlyError(res.error) });
-    return "error";
+    setNotice(null);
+    setChatOpen(true);
+    return "ok";
   }
 
   async function startCall(): Promise<FlowResult> {
@@ -203,7 +191,15 @@ export function ContactProvider({
           }}
         />
       ) : null}
-      {chatOpen && conversationId ? <ChatPanel conversationId={conversationId} onClose={() => setChatOpen(false)} /> : null}
+      {chatOpen && listingId ? (
+        <ChatPanel
+          listingId={listingId}
+          peerName={info.sellerName || "the advertiser"}
+          conversationId={conversationId}
+          onConversation={setConversationId}
+          onClose={() => setChatOpen(false)}
+        />
+      ) : null}
     </ContactCtx.Provider>
   );
 }

@@ -195,10 +195,6 @@ export default async function LocationPage({ params, searchParams }: Props) {
       label: t("listing.link.in", { name: names.get(row._id.categorySlug) || row._id.categorySlug, place: loc.name }),
     })),
   ].slice(0, 5);
-  const newest = feed.items[0]?.publishedAt;
-  const updated = newest && !isThin(feed.total, hubMin)
-    ? new Date(newest).toLocaleDateString("en-IN", { day: "numeric", month: "long", year: "numeric" })
-    : undefined;
 
   const layout = await resolveListingLayout({ path: canonicalPath, category: cat.slug || category, vars });
   // H7.4: the New design title band (image, search bar and chips) replaces the chips that sit under the list.
@@ -235,19 +231,14 @@ export default async function LocationPage({ params, searchParams }: Props) {
       : undefined;
   const listing = (
     <ListingPageView
-      frame={Boolean(shell)}
       layout={layout}
       texts={texts}
-      h1={h1}
       h2={fillTemplate(seo?.h2 || "", vars)}
       intro={hub.intro}
       faqs={hub.faqs}
       popular={tags.slice(0, 6).map((tag) => ({ href: tagPath(paths, cat.slug || category, tag.slug), label: `${cat.name} ${tag.label}` }))}
       footer={fillTemplate(seo?.footer || "", vars)}
       crumbs={crumbs}
-      locationLabel={`${stateName} - ${loc.name}`}
-      cityName={loc.name}
-      categoryName={cat.name}
       districts={districts.map((d) => ({ href: placePath(cat.slug || category, loc.slug || location, d.slug || ""), label: d.name! }))}
       path={`${canonicalPath}${filterQs ? `?${filterQs}` : ""}`}
       stars={stars}
@@ -256,11 +247,8 @@ export default async function LocationPage({ params, searchParams }: Props) {
       pages={feed.pages}
       total={feed.total}
       noindex={isThin(feed.total, hubMin) || page > 1 || (filtered && feed.total === 0)}
-      updated={updated}
       siblingLinks={siblingLinks}
       emptyNearby={siblings.slice(0, 6).map((c) => ({ href: placePath(cat.slug || category, c.slug || ""), label: c.name! }))}
-      photos={toggles.photos}
-      verified={toggles.verified}
       hideEmpty={feed.total === 0}
       fallback={own ? <FallbackAds sections={fallback} layout="row" lead={emptyLead} /> : undefined}
     />

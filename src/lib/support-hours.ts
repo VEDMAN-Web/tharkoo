@@ -1,5 +1,5 @@
-const DEFAULT_OPEN_HOUR = 9;
-const DEFAULT_CLOSE_HOUR = 21;
+import { SUPPORT_HOURS } from "@/lib/support";
+
 const SUPPORT_ZONE = "Asia/Kolkata";
 const RANGE = /(\d{1,2})(?::(\d{2}))?\s*(am|pm)\s*(?:to|-|until)\s*(\d{1,2})(?::(\d{2}))?\s*(am|pm)/i;
 
@@ -11,13 +11,18 @@ function minutesOf(hour: string, minute: string | undefined, meridiem: string): 
   return shifted * 60 + Number(minute || 0);
 }
 
-export function parseSupportHours(text: string): SupportHours {
+function readRange(text: string): SupportHours | null {
   const match = RANGE.exec(text);
-  if (!match) return { openMinutes: DEFAULT_OPEN_HOUR * 60, closeMinutes: DEFAULT_CLOSE_HOUR * 60 };
+  if (!match) return null;
   const open = minutesOf(match[1], match[2], match[3]);
   const close = minutesOf(match[4], match[5], match[6]);
-  if (open === close) return { openMinutes: DEFAULT_OPEN_HOUR * 60, closeMinutes: DEFAULT_CLOSE_HOUR * 60 };
-  return { openMinutes: open, closeMinutes: close };
+  return open === close ? null : { openMinutes: open, closeMinutes: close };
+}
+
+const FALLBACK_HOURS = readRange(SUPPORT_HOURS) ?? { openMinutes: 540, closeMinutes: 1260 };
+
+export function parseSupportHours(text: string): SupportHours {
+  return readRange(text) ?? FALLBACK_HOURS;
 }
 
 function minutesNowInZone(now: Date): number {

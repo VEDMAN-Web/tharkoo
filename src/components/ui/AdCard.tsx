@@ -198,8 +198,7 @@ export function AdCard({
               {ad.trust.slice(0, 3).map((item) => (
                 <span key={item} className="tk-chk" title={item}>
                   <Check size={12} aria-hidden />
-                  <span aria-hidden>{item.replace(/\s*verified$/i, "")}</span>
-                  <span className="sr-only">{item}</span>
+                  <span>{item}</span>
                 </span>
               ))}
             </span>
