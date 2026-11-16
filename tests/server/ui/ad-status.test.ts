@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { ENDING_SOON_MS, ownAdStatus } from "@/lib/ui/ad-status";
+import { draftPath, ENDING_SOON_MS, isDraftStatus, ownAdStatus } from "@/lib/ui/ad-status";
 
 const NOW = Date.parse("2026-11-15T12:00:00Z");
 
@@ -32,5 +32,18 @@ describe("vendor panel status label (H6.19)", () => {
   it("falls back to Draft for an unknown or missing status", () => {
     expect(ownAdStatus("draft", null, NOW).label).toBe("Draft");
     expect(ownAdStatus(undefined, undefined, NOW).label).toBe("Draft");
+  });
+});
+
+describe("draft helpers (H7.61)", () => {
+  it("knows a draft from every other status", () => {
+    expect(isDraftStatus("draft")).toBe(true);
+    expect(isDraftStatus(undefined)).toBe(true);
+    for (const status of ["active", "pending", "paused", "rejected", "expired", "archived"]) expect(isDraftStatus(status)).toBe(false);
+  });
+
+  it("builds the post-ad link for a draft at the details step by default", () => {
+    expect(draftPath("abc")).toBe("/u/post-insert/?draft=abc&step=2");
+    expect(draftPath("abc", 5)).toBe("/u/post-insert/?draft=abc&step=5");
   });
 });

@@ -47,7 +47,7 @@ function variantOf(ad: ListingDoc, featured?: boolean) {
  * H7.5: the seller's own view of a card in the vendor panel. The status chip, the ad's own shown views and clicks,
  * and the owner actions. In owner mode the card does not count the owner's own visits or clicks.
  */
-export type AdOwnerView = { label: string; bg: string; fg: string; views: number; clicks: number; actions?: ReactNode };
+export type AdOwnerView = { label: string; bg: string; fg: string; views: number; clicks: number; href?: string; actions?: ReactNode };
 
 export function AdCard({
   ad,
@@ -66,7 +66,8 @@ export function AdCard({
   const t = useT();
   const variant = variantOf(ad, featured);
   const title = displayTitle(ad.title) || t("card.fallbackTitle");
-  const href = adPath(useUrlPaths(), ad.slug || "");
+  const publicHref = adPath(useUrlPaths(), ad.slug || "");
+  const href = owner?.href ?? publicHref;
   const photos = listingPhotos(ad.categorySlug, ad.publicId || ad.slug || "", ad.photos || []);
   const superTop = variant === "supertop" || variant === "star";
   const [shown, setShown] = useState("");

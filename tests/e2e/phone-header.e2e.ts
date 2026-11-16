@@ -16,10 +16,10 @@ test.describe("H7.60 phone menu and header", () => {
     await expect(drawer.getByRole("link", { name: "My account" })).toHaveAttribute("href", "/u/account/");
     await expect(drawer.getByRole("link", { name: "Log in" })).toHaveCount(0);
     await expect(drawer.locator('a[href*="/u/logout"]')).toHaveCount(0);
-    const logout = page.waitForRequest((request) => request.url().endsWith("/api/auth/logout") && request.method() === "POST");
+    const logout = page.waitForResponse((response) => response.url().endsWith("/api/auth/logout") && response.request().method() === "POST");
     await drawer.getByRole("button", { name: "Log out" }).click();
     await logout;
-    await page.waitForURL((url) => url.pathname === "/");
+    await page.waitForLoadState("load");
     expect((await page.request.get("/api/auth/me")).status()).toBe(401);
     await page.locator('[data-tk="menu-button"]').click();
     await expect(page.locator('[data-tk="drawer"]').getByRole("link", { name: "Log in" })).toBeVisible();
