@@ -184,3 +184,7 @@ export function listingFrameProps(input: {
     activeCount,
   };
 }
+
+export function introCategory(name: string | null | undefined): string {
+  return (name || "").toLowerCase().replace(/\s+ads?$/, "");
+}

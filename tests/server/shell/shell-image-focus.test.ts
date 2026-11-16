@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { normaliseShellConfig, shellConfigSchema, defaultShellConfig } from "@/server/site-links/shell-config-rules";
 import { photoFocusOf } from "@/components/h714/photo";
+import { introCategory } from "@/components/new/listing-frame-props";
 
 const base = defaultShellConfig();
 
@@ -42,5 +43,13 @@ describe("shell image focus points", () => {
     expect(photoFocusOf(shell, "category", "dating")).toBe("40% 10%");
     expect(photoFocusOf(shell, "category", "jobs")).toBe("50% 18%");
     expect(photoFocusOf(shell, "category", "missing")).toBe("50% 18%");
+  });
+});
+
+describe("band intro category", () => {
+  it("is lower case and does not repeat the word ads", () => {
+    expect(introCategory("Friendship")).toBe("friendship");
+    expect(introCategory("Personal ads")).toBe("personal");
+    expect(introCategory(undefined)).toBe("");
   });
 });

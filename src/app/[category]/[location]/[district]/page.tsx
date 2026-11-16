@@ -4,7 +4,7 @@ import { resolveListingLayout } from "@/components/blocks/ListingLayout";
 import { ListingPageView } from "@/components/ListingPage";
 import { ListingFrame } from "@/components/new/ListingFrame";
 import { bandChoice, heroBandFrom } from "@/components/new/band-image";
-import { listingFrameProps, listingLabels, placeSelects } from "@/components/new/listing-frame-props";
+import { introCategory, listingFrameProps, listingLabels, placeSelects } from "@/components/new/listing-frame-props";
 import { listingFilterQuery } from "@/components/new/listing-filters";
 import { narrowFromParams } from "@/components/new/listing-narrow";
 import { loadCardWidth } from "@/server/listings/card-width";
@@ -187,7 +187,7 @@ export default async function DistrictPage({ params, searchParams }: Props) {
   const frame = listingFrameProps({
     crumbs,
     h1,
-    intro: t("listing.band.introPlace", { category: (cat.name || "").toLowerCase(), place: `${dist.name}, ${city.name}` }),
+    intro: t("listing.band.introPlace", { category: introCategory(cat.name), place: `${dist.name}, ${city.name}` }),
     photo: bandChoice(shell, hero, { city: city.slug || location, category: cat.slug || category }),
     categorySlug: cat.slug || category,
     citySlug: city.slug || location,
