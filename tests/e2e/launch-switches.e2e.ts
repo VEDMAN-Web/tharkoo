@@ -39,6 +39,7 @@ test.describe("H7.95 launch switches", () => {
       const href = await page.locator('[data-tk=card] a[href*="/ad/"]').first().getAttribute("href");
       for (const [width, height] of [
         [1440, 900],
+        [1536, 674],
         [390, 844],
       ] as const) {
         await page.setViewportSize({ width, height });
@@ -46,10 +47,11 @@ test.describe("H7.95 launch switches", () => {
         await expect(page.locator('[data-tk="pack"]').first()).toBeVisible();
         await expect(page.getByRole("button", { name: /^Pay / })).toHaveCount(0);
         await expect(page.locator('[data-tk="coming-soon"]').first()).toBeVisible();
+        await page.locator('[data-tk="coming-soon"]').first().scrollIntoViewIfNeeded();
         await shot(page, `5-2-credits-off-${width}`);
 
         await page.goto(href!);
-        const scope = page.locator(width < 768 ? "[data-tk=bottom-bar]" : "[data-tk=contact-card]");
+        const scope = page.locator(width < 1024 ? "[data-tk=bottom-bar]" : "[data-tk=contact-card]");
         const tour = scope.locator("[data-tk=tour]");
         await expect(tour).toBeDisabled();
         await expect(tour.locator('[data-tk="coming-soon"]')).toBeVisible();

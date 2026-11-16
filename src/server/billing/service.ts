@@ -322,6 +322,7 @@ export async function purchasePromotion(input: {
   requestId: string;
   ip?: string;
 }) {
+  await assertCreditPurchasesOn();
   await connectDb();
   await readyBilling();
   const userId = objectId(input.userId, "userId");

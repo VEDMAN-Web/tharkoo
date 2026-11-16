@@ -3,7 +3,7 @@ import { POST as toursPost } from "@/app/api/tours/[[...slug]]/route";
 import { hashToken } from "@/server/auth/http";
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it } from "vitest";
 import { invalidateTags } from "@/lib/cache";
-import { checkoutPack } from "@/server/billing";
+import { checkoutPack, purchasePromotion } from "@/server/billing";
 import { requestTour, tourCallFor } from "@/server/tours/service";
 import { AuditEvent, Session, Site, User } from "@/server/models";
 import { readLaunchSwitches, setLaunchSwitch } from "@/server/wallet/launch-switches";
@@ -51,6 +51,10 @@ describe("with the switches off the server refuses", () => {
     await expect(startCoinPurchase({ userId: ID, packId: ID, requestId: "r" })).rejects.toThrow(/coming soon/i);
   });
 
+  it("a promotion purchase", async () => {
+    await expect(purchasePromotion({ userId: ID, listingId: ID, productId: ID, requestId: "r" })).rejects.toThrow(/coming soon/i);
+  });
+
   it("a video call request and a call room", async () => {
     await expect(requestTour({ userId: ID, listingId: ID, requestId: "r" })).rejects.toThrow(/coming soon/i);
     await expect(tourCallFor({ userId: ID, tourId: ID })).rejects.toThrow(/coming soon/i);
@@ -91,6 +95,8 @@ describe("with the switches on the guard lets the request through", () => {
     expect((failure as Error).message).not.toMatch(/coming soon/i);
     const coin = await startCoinPurchase({ userId: ID, packId: ID, requestId: "r" }).catch((error: Error) => error);
     expect((coin as Error).message).not.toMatch(/coming soon/i);
+    const promo = await purchasePromotion({ userId: ID, listingId: ID, productId: ID, requestId: "r" }).catch((error: Error) => error);
+    expect((promo as Error).message).not.toMatch(/coming soon/i);
   });
 
   it("video calls reach the normal checks", async () => {
