@@ -18,7 +18,7 @@ export const metadata = pageMetadata({
 const FAQS = [
   {
     q: "Is posting really free?",
-    a: "Yes. Posting, chatting and calling the seller are free. Only video calls and optional boosts use credits.",
+    a: "Yes. Posting, chatting and calling the advertiser are free. Only video calls and optional boosts use credits.",
   },
   {
     q: "Do I need a password?",
