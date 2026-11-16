@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { X } from "lucide-react";
 import { api, friendlyError } from "@/lib/ui/api";
 import { ChatThread, type CreateResult } from "./ChatThread";
@@ -21,6 +21,7 @@ export function ChatPanel({
   onClose: () => void;
 }) {
   const [looked, setLooked] = useState(false);
+  const panel = useRef<HTMLElement>(null);
   const loading = !conversationId && !looked;
 
   useEffect(() => {
@@ -29,6 +30,18 @@ export function ChatPanel({
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
+  }, [onClose]);
+
+  // H7.131: a tap or click outside the chat closes it, like Escape and the X. The Chat buttons are not "outside".
+  useEffect(() => {
+    const onPointer = (event: Event) => {
+      const target = event.target;
+      if (!(target instanceof Element) || panel.current?.contains(target)) return;
+      if (target.closest("[data-tk=chat], [data-tk=pop-chat]")) return;
+      onClose();
+    };
+    document.addEventListener("pointerdown", onPointer);
+    return () => document.removeEventListener("pointerdown", onPointer);
   }, [onClose]);
 
   useEffect(() => {
@@ -53,7 +66,7 @@ export function ChatPanel({
   }, [listingId, onConversation]);
 
   return (
-    <section role="dialog" aria-label={`Chat with ${peerName}`} data-tk="chat-panel" className="tkn-chatp">
+    <section ref={panel} role="dialog" aria-label={`Chat with ${peerName}`} data-tk="chat-panel" className="tkn-chatp">
       <header className="tkn-chatp-head">
         <span className="tkn-chatp-avatar" aria-hidden="true">{peerName.slice(0, 1).toUpperCase()}</span>
         <span className="tkn-chatp-who">

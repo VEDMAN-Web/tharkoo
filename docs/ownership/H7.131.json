@@ -1,0 +1,20 @@
+{
+  "branchPrefix": "haiku/h7.131",
+  "globs": [
+    "docs/ownership/H7.131.json",
+    "src/components/ContactButtons.tsx",
+    "src/components/chat/ChatPanel.tsx",
+    "src/components/chat/ChatThread.tsx",
+    "src/components/chat/SupportChat.tsx",
+    "src/components/new/HomeAdPopout.tsx",
+    "src/components/new/HomeAdCard.tsx",
+    "src/components/account/AccountContext.tsx",
+    "src/components/HeaderNew.tsx",
+    "src/components/PostWizard.tsx",
+    "src/components/post/PostSuccess.tsx",
+    "src/components/post/credits.ts",
+    "src/components/post/post-wizard.css",
+    "src/app/globals.css",
+    "tests/e2e/h7-131-chat-flows.e2e.ts"
+  ]
+}

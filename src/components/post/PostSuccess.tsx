@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { CircleCheck, Clock } from "lucide-react";
 import type { ListingDoc } from "@/lib/models";
+import { openSupportWith } from "@/components/recharge/openRecharge";
 import { creditsText } from "./credits";
 import type { SuccessCopy } from "./newCopy";
 import { PostPreviewCard } from "./PostPreview";
@@ -87,6 +88,7 @@ export function PostSuccess({ copy, live, where, ad, hasPhoto, byline, anotherHr
               <Link href={copy.primary.href} className="tkp-btn tkp-btn-primary" data-tk="view-my-ads">{copy.primary.label}</Link>
               <a href={anotherHref} className="tkp-btn" data-tk="post-another">{copy.secondary.label}</a>
             </div>
+            <button type="button" className="tkp-help-link" data-tk="success-help" onClick={() => openSupportWith("")}>Need help? Chat with us</button>
           </div>
         </div>
       </section>

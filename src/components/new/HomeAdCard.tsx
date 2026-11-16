@@ -307,6 +307,7 @@ export function HomeAdCard({ ad, labels, order = 0 }: { ad: HomeAdCardData; labe
           labels={labels}
           anchor={anchor}
           online={online}
+          chatOn={Boolean(seller?.chatOn)}
           slides={slides}
           index={index}
           onIndex={(position) => {

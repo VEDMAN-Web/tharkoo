@@ -18,6 +18,7 @@ export function HomeAdPopout({
   labels,
   anchor,
   online,
+  chatOn = false,
   slides,
   index,
   onIndex,
@@ -29,6 +30,8 @@ export function HomeAdPopout({
   labels: HomeAdLabels;
   anchor: DOMRect;
   online: boolean;
+  /** H7.131: the advertiser takes live chat, so Chat opens it on the ad page. */
+  chatOn?: boolean;
   slides: CardSlide[];
   index: number;
   onIndex: (position: number) => void;
@@ -110,7 +113,7 @@ export function HomeAdPopout({
           {ad.city ? <Link href={ad.cityHref} prefetch={false} className="tkh-pill tkh-pill-lavender">{ad.city}</Link> : null}
         </p>
         <div className="tkh-pop-acts">
-          <Link href={ad.href} prefetch={false} className="tkh-pop-btn">{labels.chat}</Link>
+          {chatOn ? <Link href={`${ad.href}${ad.href.includes("?") ? "&" : "?"}chat=1`} prefetch={false} className="tkh-pop-btn" data-tk="pop-chat">{labels.chat}</Link> : null}
           <Link href={ad.href} prefetch={false} className="tkh-pop-btn is-main">{labels.viewAd}</Link>
         </div>
       </div>

@@ -512,3 +512,8 @@ body:has(.tkp-post) .tkn-footer, body:has(.tkp-post) .tkn-chat-bubble { display:
   .tkn .tkp-post .tkp-aside .tkn-ls.tkp-previewbox .tkn-ls-photo { flex: 1 1 auto; height: auto; min-height: 220px; aspect-ratio: auto; }
   .tkn .tkp-post .tkp-aside .tkn-ls.tkp-previewbox .tkn-ls-body { flex: none; }
 }
+
+/* H7.131: a help link that opens the support chat, because the chat bubble is hidden on the post page. */
+.tkn .tkp-post .tkp-help-link { display: inline-flex; align-items: center; min-height: 32px; padding: 4px 0; border: 0; background: transparent; color: #a8124f; font: inherit; font-size: 13px; font-weight: 700; text-decoration: underline; cursor: pointer; text-align: left; }
+.tkn .tkp-post .tkp-help-link:focus-visible { outline: 3px solid #7c3aed; outline-offset: 2px; }
+.tkn .tkp-post .tkp-top-actions .tkp-help-link { min-height: 44px; padding: 0 4px; }

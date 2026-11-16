@@ -6,13 +6,16 @@ import { api, hasSessionHint } from "@/lib/ui/api";
 
 export type AccountUser = { displayName?: string; email?: string; verificationStatus?: string; roles?: string[] };
 export type AccountPhase = "unknown" | "out" | "loading" | "ready";
-export type AccountState = { phase: AccountPhase; user: AccountUser | null; balance: number | null; balanceReady: boolean };
+export type AccountState = { phase: AccountPhase; user: AccountUser | null; balance: number | null; balanceReady: boolean; unread: number };
 
 export const SESSION_EVENT = "tk:session-changed";
 /** Same name as CREDITS_ADDED_EVENT in post/credits.ts: sent after a recharge, a publish or a promotion. */
 export const CREDITS_CHANGED_EVENT = "tk:credits-added";
 
-const IDLE: AccountState = { phase: "unknown", user: null, balance: null, balanceReady: false };
+const IDLE: AccountState = { phase: "unknown", user: null, balance: null, balanceReady: false, unread: 0 };
+/** H7.131: sent when chat messages arrive or are read, so the header unread badge refreshes. */
+export const CHAT_ACTIVITY_EVENT = "tk:chat-activity";
+const UNREAD_POLL_MS = 20000;
 
 const AccountContext = createContext<AccountState>(IDLE);
 
@@ -73,6 +76,29 @@ export function AccountProvider({ children }: { children: ReactNode }) {
     window.addEventListener(CREDITS_CHANGED_EVENT, onCredits);
     return () => window.removeEventListener(CREDITS_CHANGED_EVENT, onCredits);
   }, []);
+
+  const signedInNow = state.phase === "ready";
+  useEffect(() => {
+    if (!signedInNow) return;
+    function readUnread() {
+      if (!hasSessionHint()) return;
+      api<{ unread: number }>("/api/chat/unread").then((res) => {
+        if (!mounted.current || !res.ok) return;
+        const unread = Number(res.data.unread) || 0;
+        setState((prev) => (prev.unread === unread ? prev : { ...prev, unread }));
+      });
+    }
+    const first = window.setTimeout(readUnread, 0);
+    const timer = window.setInterval(() => {
+      if (document.visibilityState === "visible") readUnread();
+    }, UNREAD_POLL_MS);
+    window.addEventListener(CHAT_ACTIVITY_EVENT, readUnread);
+    return () => {
+      window.clearTimeout(first);
+      window.clearInterval(timer);
+      window.removeEventListener(CHAT_ACTIVITY_EVENT, readUnread);
+    };
+  }, [signedInNow]);
 
   return <AccountContext.Provider value={state}>{children}</AccountContext.Provider>;
 }

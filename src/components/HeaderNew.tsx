@@ -56,7 +56,7 @@ export function HeaderNew({
   const paths = useUrlPaths();
   const [menuOpen, setMenuOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
-  const { phase, user, balance, balanceReady } = useAccount();
+  const { phase, user, balance, balanceReady, unread } = useAccount();
   const signedIn = isSignedInPhase(phase);
   const accountLabel = user ? accountName(user.displayName, user.email || "") : "";
   const [accountOpen, setAccountOpen] = useState(false);
@@ -128,7 +128,7 @@ export function HeaderNew({
                 <button
                   type="button"
                   className="tkn-avatar"
-                  aria-label={user ? `Account menu for ${accountLabel}` : "Account menu"}
+                  aria-label={(user ? `Account menu for ${accountLabel}` : "Account menu") + (unread > 0 ? `, ${unread} unread ${unread === 1 ? "chat message" : "chat messages"}` : "")}
                   aria-haspopup="menu"
                   aria-expanded={accountOpen}
                   data-tk="header-avatar"
@@ -137,6 +137,7 @@ export function HeaderNew({
                   {user ? <span className="tkn-avatar-circle">{accountLabel.slice(0, 1).toUpperCase()}</span> : <span className="tkn-avatar-circle tkn-skel" aria-hidden="true" />}
                   <ChevronDown size={12} aria-hidden="true" focusable="false" />
                 </button>
+                {unread > 0 ? <span className="tkn-avatar-dot" data-tk="header-unread" aria-hidden="true">{unread > 9 ? "9+" : unread}</span> : null}
                 {accountOpen ? (
                   <div className="tkn-account-menu" role="menu">
                     {balance !== null ? (
@@ -144,7 +145,7 @@ export function HeaderNew({
                     ) : null}
                     <Link role="menuitem" href="/u/account/" onClick={() => setAccountOpen(false)}>My account</Link>
                     <Link role="menuitem" href="/u/account/ads/" onClick={() => setAccountOpen(false)}>My ads</Link>
-                    <Link role="menuitem" href="/u/account/messages/" onClick={() => setAccountOpen(false)}>Chats</Link>
+                    <Link role="menuitem" href="/u/account/messages/" onClick={() => setAccountOpen(false)}>Chats{unread > 0 ? <span className="tkn-menu-badge" data-tk="menu-unread">{unread}</span> : null}</Link>
                     <Link role="menuitem" href="/u/account/saved/" onClick={() => setAccountOpen(false)}>Saved ads</Link>
                     <Link role="menuitem" href="/u/account/credits/" onClick={() => setAccountOpen(false)}>{t("panel.menu.coins")}</Link>
                     <Link role="menuitem" href="/u/account/support/" onClick={() => setAccountOpen(false)}>Help and support</Link>

@@ -43,6 +43,7 @@ export function ChatThread({
     if (!res.ok) return setNote(friendlyError(res.error));
     setInfo(res.data.conversation);
     if (res.data.messages.length === 0) return;
+    window.dispatchEvent(new Event("tk:chat-activity"));
     last.current = res.data.messages[res.data.messages.length - 1].createdAt;
     setMessages((current) => {
       const seen = new Set(current.map((message) => message.id));
