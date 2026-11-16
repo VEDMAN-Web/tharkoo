@@ -3,7 +3,8 @@
 import { useEffect, useRef, useState } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { SearchX } from "lucide-react";
-import { Badge, Button, FilterBar, PageHeader, ServerTable, Tabs, type TableColumn } from "@/components/admin/ui";
+import { Badge, Button, FilterBar, PageHeader, ServerTable, Tabs, ToastProvider, type TableColumn } from "@/components/admin/ui";
+import type { UserAccess } from "../_actions/UserActions";
 import type { UserDetail, UserList, UserRow, UserTab } from "@/server/admin/users";
 import { lastSeenLabel, dateLabel, statusLook, subLine } from "./format";
 import { UserDrawer } from "./UserDrawer";
@@ -13,7 +14,7 @@ const TAB_LABELS: Record<UserTab, string> = { all: "All", sellers: "Sellers", id
 const SEARCH_DEBOUNCE_MS = 350;
 
 /** The Users screen (H8.8, read only): tabs, search, the table and the drawer. Everything you pick lives in the address. */
-export function UsersView({ list, detail }: { list: UserList; detail: UserDetail | null }) {
+export function UsersView({ list, detail, access }: { list: UserList; detail: UserDetail | null; access: UserAccess }) {
   const router = useRouter();
   const pathname = usePathname();
   const params = useSearchParams();
@@ -68,6 +69,7 @@ export function UsersView({ list, detail }: { list: UserList; detail: UserDetail
 
   const searching = list.query.q !== "";
   return (
+    <ToastProvider>
     <div className="adm-k" data-tk="users-screen">
       <PageHeader
         level={2}
@@ -126,7 +128,8 @@ export function UsersView({ list, detail }: { list: UserList; detail: UserDetail
           />
         </div>
       </div>
-      <UserDrawer detail={detail} onClose={() => go({ open: null })} />
+      <UserDrawer detail={detail} onClose={() => go({ open: null })} access={access} />
     </div>
+    </ToastProvider>
   );
 }

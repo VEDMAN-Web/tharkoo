@@ -11,7 +11,7 @@ export type MoreItem = { key: string; label: string; icon?: LucideIcon; href?: s
 export type HeaderAction = { key: string; label: string; icon?: LucideIcon; href?: string; onClick?: () => void; kind?: ButtonKind; busy?: boolean; disabled?: boolean };
 
 /** The overflow menu: a button with a list. Esc and a click outside close it; the arrow keys move between items. */
-export function MoreMenu({ items, phoneItems = [] }: { items: MoreItem[]; phoneItems?: MoreItem[] }) {
+export function MoreMenu({ items, phoneItems = [], placement = "down" }: { items: MoreItem[]; phoneItems?: MoreItem[]; placement?: "down" | "up" }) {
   const [open, setOpen] = useState(false);
   const box = useRef<HTMLDivElement>(null);
   const menuId = useId();
@@ -81,7 +81,7 @@ export function MoreMenu({ items, phoneItems = [] }: { items: MoreItem[]; phoneI
         More
       </Button>
       {open ? (
-        <div className="adm-k-menu" role="menu" id={menuId} aria-label="More actions">
+        <div className={`adm-k-menu${placement === "up" ? " adm-k-menu-up" : ""}`} role="menu" id={menuId} aria-label="More actions">
           {phoneItems.map((item) => renderItem(item, true))}
           {items.map((item) => renderItem(item))}
         </div>

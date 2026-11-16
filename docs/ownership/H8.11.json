@@ -1,0 +1,17 @@
+{
+  "branchPrefix": "haiku/h8.11",
+  "globs": [
+    "docs/ownership/H8.11.json",
+    "src/server/admin/user-actions.ts",
+    "src/app/admin/users/_actions/**",
+    "src/app/admin/users/_list/UserDrawer.tsx",
+    "src/app/admin/users/_list/UsersView.tsx",
+    "src/app/admin/users/page.tsx",
+    "src/server/admin/undo/handlers/user-ban.ts",
+    "src/components/admin/ui/Drawer.tsx",
+    "src/components/admin/ui/PageHeader.tsx",
+    "src/styles/admin-kit.css",
+    "tests/server/admin/a11-*.test.ts",
+    "tests/e2e/a11-ban.e2e.ts"
+  ]
+}

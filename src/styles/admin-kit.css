@@ -91,6 +91,7 @@
 .adm-k-menu svg { width: 16px; height: 16px; color: var(--adm-kmuted); }
 .adm-k-menu .adm-k-menu-danger { color: var(--adm-bad); }
 .adm-k-menu .adm-k-menu-danger svg { color: var(--adm-bad); }
+.adm-k-menu-up { top: auto; bottom: calc(100% + 6px); }
 .adm-k-menu hr { margin: 4px 0; border: 0; border-top: 1px solid var(--adm-line2); }
 .adm-k-menu .adm-k-menu-phone { display: none; }
 
