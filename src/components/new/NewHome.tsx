@@ -98,7 +98,7 @@ export function NewHome({
   texts: UiTextMap;
 }) {
   const t = makeT(texts);
-  const photos = new Map(shell.media.images.filter((image) => image.scope === "category" && image.photo).map((image) => [image.slug, image.photo]));
+  const photos = new Map(shell.media.images.filter((image) => image.scope === "category" && image.photo).map((image) => [image.slug, { src: image.photo, focus: `${image.focusX ?? 50}% ${image.focusY ?? 18}%` }]));
   const cats = categories.filter((cat) => cat.slug && cat.name).slice(0, 8);
   const categoryNames = new Map(categories.map((cat) => [cat.slug || "", cat.name || ""]));
   const shown = ads.slice(0, HOME_ADS_SHOWN);
@@ -186,7 +186,7 @@ export function NewHome({
               <li key={slug} data-reveal>
                 <Link className="tkh-cat m-lift" href={applyPrefixes(categoryPath(slug), paths)} prefetch={false}>
                   {photo ? (
-                    <img className="tkh-cat-photo" src={photo} alt="" width={480} height={320} loading="lazy" />
+                    <img className="tkh-cat-photo" src={photo.src} alt="" width={480} height={320} loading="lazy" style={{ objectPosition: photo.focus }} />
                   ) : (
                     <span className="tkh-cat-photo tkh-cat-empty" aria-hidden="true" />
                   )}

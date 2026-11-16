@@ -8,7 +8,7 @@ interface Request {
   next: string;
 }
 
-export function SignInPopup({ showMobile, image }: { showMobile: boolean; image: string }) {
+export function SignInPopup({ showMobile, image, imageFocus }: { showMobile: boolean; image: string; imageFocus?: string }) {
   const [request, setRequest] = useState<Request | null>(null);
 
   useEffect(() => {
@@ -34,7 +34,7 @@ export function SignInPopup({ showMobile, image }: { showMobile: boolean; image:
     <div {...{ [SIGN_IN_HOST_ATTR]: "" }} hidden={!request}>
       {request ? (
         <div className="tk-si-backdrop" onMouseDown={(event) => event.target === event.currentTarget && setRequest(null)}>
-          <SignInSheet key={request.id} mode="popup" initialNext={request.next} showMobile={showMobile} image={image} onClose={() => setRequest(null)} />
+          <SignInSheet key={request.id} mode="popup" initialNext={request.next} showMobile={showMobile} image={image} imageFocus={imageFocus} onClose={() => setRequest(null)} />
         </div>
       ) : null}
     </div>
