@@ -1340,6 +1340,10 @@ input, select, textarea { font-size: 16px; }
 .tk-step-of { margin: 0 0 8px; font-size: 14px; font-weight: 600; color: var(--primary); }
 .tk-form-panel { background: var(--bg-form); border: 1px solid var(--border-2); border-radius: 10px; padding: 12px; display: grid; gap: 12px; }
 .tk-field { display: grid; gap: 4px; font-size: 13px; font-weight: 700; }
+input.tk-field, select.tk-field, textarea.tk-field { box-sizing: border-box; width: 100%; border: 1.5px solid #ead8f0; border-radius: 12px; background: #fff; color: #1e0b38; font: inherit; font-weight: 500; }
+input.tk-field:focus-visible, select.tk-field:focus-visible, textarea.tk-field:focus-visible { outline: 3px solid #7c3aed; outline-offset: 2px; }
+.tk-file { font: inherit; font-size: 14px; color: #4a2870; max-width: 100%; }
+.tk-file::file-selector-button { min-height: 44px; margin-right: 12px; padding: 0 18px; border-radius: 999px; border: 1.5px solid #ead8f0; background: #fff; color: #a8124f; font: inherit; font-weight: 700; cursor: pointer; }
 .tk-field input, .tk-field select, .tk-field textarea {
   width: 100%;
   min-height: 36px;
@@ -2261,11 +2265,16 @@ body:has([data-tk="bottom-bar"]) .tkn-float { bottom: 96px; }
 .tkv-tab { min-height: 44px; padding: 0 14px; border-radius: 999px; border: 1.5px solid #ead8f0; background: #fff; color: #4a2870; font: inherit; font-size: 13px; font-weight: 600; cursor: pointer; }
 .tkv-tab.on { background: #a8124f; border-color: #a8124f; color: #fff; font-weight: 700; }
 .tkv-feed { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 16px; }
+.tkv-feed .tk-card { flex-direction: column; }
+.tkv-feed .tk-card-photo { width: 100%; min-height: 0; aspect-ratio: 4 / 3; align-self: auto; border-radius: calc(var(--r-card) - 1px) calc(var(--r-card) - 1px) 0 0; }
 .tkv-owner-buttons { display: flex; flex-wrap: wrap; gap: 6px; }
-.tkv-mini { display: inline-flex; align-items: center; min-height: 40px; padding: 0 14px; border-radius: 999px; border: 1.5px solid #ead8f0; background: #fff; color: #4a2870; font: inherit; font-size: 13px; font-weight: 600; text-decoration: none; cursor: pointer; }
+.tkv-mini { display: inline-flex; align-items: center; min-height: 44px; padding: 0 14px; border-radius: 999px; border: 1.5px solid #ead8f0; background: #fff; color: #4a2870; font: inherit; font-size: 13px; font-weight: 600; text-decoration: none; cursor: pointer; }
 .tkv-mini:disabled { opacity: 0.6; cursor: wait; }
-.tkv-mini-strong { border: 0; background: #fff5e6; color: #92400e; font-weight: 700; }
+.tkv-mini-strong { border: 0; background: #fdf0f7; color: #a8124f; font-weight: 700; }
 .tkv-mini-quiet { color: #6b4a8a; border-style: dashed; }
+.tkv-mini-primary { border: 0; background: linear-gradient(135deg, #d1137a, #a8124f); color: #fff; font-weight: 700; }
+.tkv-mini-confirm { border-color: #a8124f; background: #fdf0f7; color: #a8124f; font-weight: 700; }
+.tkv-owner-note { flex-basis: 100%; margin: 0; font-size: 12px; line-height: 1.4; color: #4a2870; }
 .tkv-more { text-align: center; margin: 16px 0 0; }
 .tkv-note { margin: 12px 0 0; font-size: 14px; color: #4a2870; }
 .tkv-empty { padding: 40px 20px; text-align: center; }
