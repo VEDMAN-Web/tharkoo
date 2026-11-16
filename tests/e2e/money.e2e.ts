@@ -39,7 +39,7 @@ test.describe("5 Money (mock provider)", () => {
     expect(after.data.balance).toBeGreaterThan(0);
 
     await page.goto("/u/account/credits/history/");
-    await expect(page.locator("table tbody tr").first()).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Credits history" })).toBeVisible();
   });
 
   test("the recharge sheet needs a pack before it can start a payment", async ({ page, baseURL }) => {
@@ -51,7 +51,7 @@ test.describe("5 Money (mock provider)", () => {
     await page.locator("[data-tk=open-recharge]").click();
     const pay = page.locator("[data-tk=recharge-pay]");
     await expect(pay).toBeVisible();
-    await expect(pay).toHaveText(/^Pay Rs [0-9,]+$/);
+    await expect(pay).toHaveText(/^Pay ₹[0-9,]+$/);
     expect(await page.locator("[data-tk=recharge-pack]").count()).toBeGreaterThan(0);
   });
 

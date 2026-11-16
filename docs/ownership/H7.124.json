@@ -1,0 +1,8 @@
+{
+  "branchPrefix": "haiku/h7.124",
+  "globs": [
+    "docs/ownership/H7.124.json",
+    "src/components/new/home-spec.css",
+    "src/components/AgeGate.tsx"
+  ]
+}

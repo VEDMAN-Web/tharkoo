@@ -117,7 +117,7 @@ export function RechargeSheet({ options, onClose }: { options: RechargeOptions; 
                     <strong>{money(pack.total)}</strong> {t("recharge.credits")}
                   </span>
                   <span className="tkr-price">
-                    Rs {money(pack.price)}
+                    ₹{money(pack.price)}
                     {pack.bonus > 0 ? <em>{t("recharge.bonus", { count: money(pack.bonus) })}</em> : null}
                   </span>
                 </button>

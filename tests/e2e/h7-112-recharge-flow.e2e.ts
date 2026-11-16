@@ -105,7 +105,7 @@ for (const method of ["card", "usdt"] as const) {
       await expect(checkout.locator("[data-tk=test-ribbon]")).toBeVisible();
       if (method === "card") {
         await shot(page, `h7-112-${method}-3-checkout`);
-        await checkout.getByRole("button", { name: /^Pay Rs/ }).click();
+        await checkout.getByRole("button", { name: /^Pay ₹/ }).click();
       } else {
         await checkout.locator("[data-tk=coin-USDT]").click();
         await checkout.locator("[data-tk=network-TRC-20]").click();

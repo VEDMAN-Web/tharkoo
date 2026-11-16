@@ -17,7 +17,7 @@ export function creditsText(count: number): string {
 }
 
 export function rupeesText(credits: number, price = CREDIT_RUPEES): string {
-  return `Rs ${(credits * price).toLocaleString("en-IN")}`;
+  return `₹${(credits * price).toLocaleString("en-IN")}`;
 }
 
 export function shortfallOf(fee: number, balance: number | null): number {

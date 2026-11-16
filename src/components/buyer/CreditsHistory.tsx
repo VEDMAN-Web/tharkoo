@@ -17,7 +17,7 @@ type Tab = "purchases" | "used";
 const t = makeT();
 
 function dateOf(value: string | null): string {
-  return value ? new Date(value).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" }) : "";
+  return value ? new Date(value).toLocaleDateString("en-IN", { timeZone: "Asia/Kolkata", day: "numeric", month: "short", year: "numeric" }) : "";
 }
 
 export function usedLabel(entry: Pick<Entry, "refType" | "reason">): string {

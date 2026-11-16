@@ -57,7 +57,7 @@ export function AgeGate({
           type="button"
           className="tk-btn tk-btn-cta"
           data-tk="age-accept"
-          style={{ width: 100, height: 45, margin: "12px auto 0" }}
+          style={{ minWidth: 100, height: 45, padding: "0 24px", margin: "12px auto 0", whiteSpace: "nowrap" }}
           onClick={() => {
             localStorage.setItem("nl-age", "ok");
             window.dispatchEvent(new Event("tk-age-ok"));
