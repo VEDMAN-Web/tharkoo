@@ -1,4 +1,5 @@
 export const SUPPORT_PHONE = "+91 912345678";
+export const SUPPORT_HOURS = "9 am to 9 pm";
 export const SUPPORT_TELEGRAM = "@tharkoo_support";
 
 const MIN_PHONE_DIGITS = 8;

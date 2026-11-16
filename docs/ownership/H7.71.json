@@ -1,0 +1,13 @@
+{
+  "branchPrefix": "haiku/h7.71",
+  "globs": [
+    "docs/ownership/H7.71.json",
+    "src/components/h714/HelpView.tsx",
+    "src/components/h714/H714Page.tsx",
+    "src/components/h714/WhatsAppMark.tsx",
+    "src/components/h714/h714.css",
+    "src/lib/support.ts",
+    "src/lib/support-hours.ts",
+    "tests/**"
+  ]
+}
