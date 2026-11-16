@@ -224,7 +224,7 @@ export function isPhone(page: Page) {
 /** The first listing path (one that has a contact method) found on a city feed, e.g. /ad/demo-0352/. */
 export async function firstAdPath(page: Page, feed = "/dating/bengaluru/") {
   await page.goto(feed);
-  const link = page.locator("[data-tk=card] a[href*=\"/ad/\"]").first();
+  const link = page.locator(":is([data-tk=card], [data-tk=home-ad]) a[href*=\"/ad/\"]").first();
   await link.waitFor({ state: "attached" });
   return (await link.getAttribute("href")) as string;
 }

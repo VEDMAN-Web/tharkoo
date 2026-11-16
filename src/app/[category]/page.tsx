@@ -15,6 +15,7 @@ import { JsonLd, breadcrumbJsonLd } from "@/lib/jsonld";
 import { faqPage, itemListNode } from "@/lib/seo/schema";
 import { canonical } from "@/lib/seo";
 import { AdCard, UiTextProvider } from "@/components/ui/AdCard";
+import { ListingCard, ListingGrid } from "@/components/new/ListingCards";
 import { textOverrides } from "@/app/admin/ui-text/store";
 import { makeT, pickTexts } from "@/lib/ui/text";
 import { resolveListingLayout } from "@/components/blocks/ListingLayout";
@@ -98,6 +99,7 @@ export default async function CategoryHub({ params, searchParams }: Props) {
   const shell = await readShellConfig();
   const texts = await textOverrides();
   const t = makeT(texts);
+  const homeContent = await getHomepageContent();
   const vars = { category: cat.name, site: site.name, year: new Date().getFullYear() };
   const copy = mergeLanding(
     fallbackLanding({ category: cat.name || category, count: feed.total, site: site.name }),
@@ -132,11 +134,21 @@ export default async function CategoryHub({ params, searchParams }: Props) {
   const fallbackNode = own ? <FallbackAds sections={fallback} layout="row" lead={emptyLead} /> : null;
   const feedAndText = (
     <>
-      <div className="tk-feed" data-tk="category-feed">
-        {ads.map((ad, index) => (
-          <AdCard key={ad.publicId || ad.slug || index} ad={ad} featured={page === 1 && index < stars.length} priority={index === 0} layout={shell ? "row" : undefined} />
-        ))}
-      </div>
+      {shell ? (
+        <ListingGrid label={t("listing.feed.label")}>
+          {ads.map((ad, index) => (
+            <li key={ad.publicId || ad.slug || index}>
+              <ListingCard ad={ad} order={index} texts={texts} />
+            </li>
+          ))}
+        </ListingGrid>
+      ) : (
+        <div className="tk-feed" data-tk="category-feed">
+          {ads.map((ad, index) => (
+            <AdCard key={ad.publicId || ad.slug || index} ad={ad} featured={page === 1 && index < stars.length} priority={index === 0} />
+          ))}
+        </div>
+      )}
       <ListingPager base={pageBase(categoryPath(cat.slug || category), sp)} page={page} pages={feed.pages} total={feed.total} size={feed.pageSize} labels={pagerLabels(t)} />
       {fallbackNode}
       <section className="tk-browse-city" data-tk="browse-by-city">
@@ -202,6 +214,19 @@ export default async function CategoryHub({ params, searchParams }: Props) {
         total: feed.total,
         labels,
         places,
+        showBand: homeContent.showListingBand,
+        template: {
+          state: { category: { slug: cat.slug || category, name: cat.name || category }, toggles, picks, fields: cat.fields },
+          crumbs: [
+            { name: t("listing.crumb.home"), path: "/" },
+            { name: cat.name || category, path: categoryPath(cat.slug || category) },
+          ],
+          h1: h1Text,
+          total: feed.total,
+          nearby: own,
+          pagePath: categoryPath(cat.slug || category),
+          t,
+        },
       })
     : null;
 
@@ -228,6 +253,7 @@ export default async function CategoryHub({ params, searchParams }: Props) {
       {frame ? (
         <div data-card-width={cardWidth}>
           <ListingFrame
+            header={frame.header}
             bandStyle={frame.bandStyle}
             labels={labels}
             head={frame.head}

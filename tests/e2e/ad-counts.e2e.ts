@@ -17,7 +17,7 @@ function slugOf(adPath: string) {
 test.describe("H6.17 views and clicks", () => {
   test("no card and no ad page shows views or clicks to a visitor", async ({ page }) => {
     await page.goto(FEED);
-    const card = page.locator("[data-tk=card]").first();
+    const card = page.locator(":is([data-tk=card], [data-tk=home-ad])").first();
     await card.waitFor({ state: "attached" });
     await card.scrollIntoViewIfNeeded();
     await page.waitForTimeout(1_500);

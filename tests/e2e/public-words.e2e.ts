@@ -22,7 +22,7 @@ test.describe("H7.99 visitor-facing words", () => {
 
   test("an ad page and its popups never say seller, vendor or buyer", async ({ page }) => {
     await page.goto("/dating/bengaluru/");
-    const href = await page.locator('[data-tk=card] a[href*="/ad/"]').first().getAttribute("href");
+    const href = await page.locator(':is([data-tk=card], [data-tk=home-ad]) a[href*="/ad/"]').first().getAttribute("href");
     await page.goto(href!);
     const body = (await page.locator("body").innerText()).replace(/\s+/g, " ");
     expect(BANNED.exec(body)?.[0] ?? "").toBe("");

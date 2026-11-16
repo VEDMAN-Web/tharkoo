@@ -184,6 +184,7 @@ export default async function DistrictPage({ params, searchParams }: Props) {
       ];
   const labels = listingLabels(t);
   const filterQs = listingFilterQuery(picks, toggles);
+  const homeContent = await getHomepageContent();
   const frame = listingFrameProps({
     crumbs,
     h1,
@@ -200,6 +201,24 @@ export default async function DistrictPage({ params, searchParams }: Props) {
     panelPath: canonicalPath,
     total: feed.total,
     labels,
+    showBand: homeContent.showListingBand,
+    template: {
+      state: {
+        category: { slug: cat.slug || category, name: cat.name || category },
+        city: { slug: city.slug || location, name: city.name || location },
+        area: { slug: dist.slug || district, name: dist.name || district },
+        toggles,
+        picks,
+        fields: cat.fields,
+      },
+      crumbs,
+      h1,
+      total: feed.total,
+      nearby: own,
+      placeName: dist.name || undefined,
+      pagePath: canonicalPath,
+      t,
+    },
     places: placeSelects({
       categorySlug: cat.slug || category,
       categories,
@@ -215,6 +234,7 @@ export default async function DistrictPage({ params, searchParams }: Props) {
   return (
     <div data-card-width={cardWidth}>
     <ListingFrame
+      header={frame.header}
       bandStyle={frame.bandStyle}
       labels={labels}
       head={frame.head}

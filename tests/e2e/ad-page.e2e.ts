@@ -5,7 +5,7 @@ const SLOW_MS = 2500;
 
 async function adPathIn(page: Page, feed: string) {
   await page.goto(feed);
-  const link = page.locator('[data-tk=card] a[href*="/ad/"]').first();
+  const link = page.locator(':is([data-tk=card], [data-tk=home-ad]) a[href*="/ad/"]').first();
   await link.waitFor({ state: "attached" });
   return (await link.getAttribute("href")) as string;
 }
@@ -80,7 +80,7 @@ test.describe("H7.66 ad page", () => {
 
   test("a property ad keeps the deposit advice and no age badge on its cards", async ({ page }) => {
     const path = await adPathIn(page, "/property/bengaluru/");
-    await expect(page.locator('[data-tk=card] .tk-chk', { hasText: "Age" })).toHaveCount(0);
+    await expect(page.locator(':is([data-tk=card], [data-tk=home-ad]) .tk-chk', { hasText: "Age" })).toHaveCount(0);
     await page.goto(path);
     await expect(page.locator('[data-tk="security-tips"]')).toContainText("deposit");
     await expect(page.locator('[data-tk="security-tips"]')).not.toContainText("Meet in a public place");

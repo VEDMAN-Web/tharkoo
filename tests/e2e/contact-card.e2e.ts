@@ -61,7 +61,7 @@ const PHONE_TOUR_LABELS = ["WhatsApp", "Chat", `Video · ${TOUR_COINS} credits`]
 /** The first ad on a city feed. (firstAdPath needs a super-top card, which the property feed may not have.) */
 async function anyAdPath(page: Page, feed: string) {
   await page.goto(feed);
-  const link = page.locator("[data-tk=card] a[href*=\"/ad/\"]").first();
+  const link = page.locator(":is([data-tk=card], [data-tk=home-ad]) a[href*=\"/ad/\"]").first();
   await link.waitFor({ state: "attached" });
   return (await link.getAttribute("href")) as string;
 }
