@@ -2,10 +2,7 @@
 
 import { withPins } from "@/lib/ui/pins";
 import Link from "next/link";
-import { useCallback, useRef, useState } from "react";
-import { MapPin, Search } from "lucide-react";
 import { AdCard, UiTextProvider } from "./ui/AdCard";
-import { useDismiss } from "./ui/useDismiss";
 import { EmptyState } from "./ui/EmptyState";
 import { JsonLd, breadcrumbJsonLd } from "@/lib/jsonld";
 import { faqPage } from "@/lib/seo/schema";
@@ -16,7 +13,6 @@ import { adPath, postAdPath } from "@/lib/urls";
 import { useUrlPaths } from "./UrlPaths";
 import { deviceClass } from "./blocks/device";
 import type { ListingLayout } from "./blocks/ListingLayout";
-import { listingHeading } from "@/lib/layout/listing";
 import { listingDefaultBlocks } from "@/server/layout/defaults/listing";
 import type { BlockBase } from "@/server/models/layout";
 import { makeT, type UiTextMap } from "@/lib/ui/text";
@@ -24,18 +20,7 @@ import { ListingPager } from "./new/ListingPager";
 import { LISTING_PAGE_SIZE, pagerLabels } from "./new/listing-pager";
 import "./blocks/blocks.css";
 
-function toggleHref(path: string, key: string, on: boolean) {
-  const [base, qs] = path.split("?");
-  const params = new URLSearchParams(qs || "");
-  if (on) params.delete(key);
-  else params.set(key, "1");
-  params.delete("page");
-  const next = params.toString();
-  return next ? `${base}?${next}` : base;
-}
-
-export function ListingPageView({
-  h1,
+export function ListingPageView({
   intro,
   footer,
   crumbs,
@@ -49,22 +34,14 @@ export function ListingPageView({
   emptyNearby,
   query,
   suggestions = [],
-  photos,
-  verified,
-  locationLabel,
-  cityName,
-  categoryName,
   districts = [],
   faqs = [],
   popular = [],
-  updated,
   layout,
   texts,
-  frame = false,
   fallback,
   hideEmpty = false,
-}: {
-  h1: string;
+}: {
   h2?: string;
   intro?: string;
   footer?: string;
@@ -80,15 +57,9 @@ export function ListingPageView({
   emptyNearby: { href: string; label: string }[];
   query?: string;
   suggestions?: { href: string; label: string }[];
-  photos?: boolean;
-  verified?: boolean;
-  locationLabel?: string;
-  cityName?: string;
-  categoryName?: string;
   districts?: { href: string; label: string }[];
   faqs?: { q: string; a: string }[];
   popular?: { href: string; label: string }[];
-  updated?: string;
   /** Block layout for this page. Without one the built-in layout is used, which is the page as it always was. */
   layout?: ListingLayout;
   /** Admin-edited UI text overrides (see /admin/ui-text/). Without them the built-in text is used. */
@@ -97,30 +68,14 @@ export function ListingPageView({
   fallback?: React.ReactNode;
   /** H7.32: leave out the built-in empty state, for a page that draws its own under the fallback. */
   hideEmpty?: boolean;
-  /**
-   * H7.4b: the page frame (title band, filter panel) is drawn by the page around this view. The header and filter
-   * blocks are then left out here, and the ads use the row card. Without it the page is drawn as it always was.
-   */
-  frame?: boolean;
 }) {
-  const [open, setOpen] = useState(false);
-  // H7.4d: the breadcrumb place menu closes on an outside click or tap, and on Escape.
-  const crumbRef = useRef<HTMLDivElement>(null);
-  const closeCrumbs = useCallback(() => setOpen(false), []);
-  useDismiss(open, crumbRef, closeCrumbs);
   const t = makeT(texts);
   const paths = useUrlPaths();
   const clear = path.split("?")[0];
-  const chips = districts.slice(0, 2);
   const feed = withPins(stars, items, page);
-  const short = cityName && categoryName ? `${cityName} ${categoryName}` : crumbs[crumbs.length - 1]?.name;
 
-  // In frame mode the title band (header block) and the filter panel (filters block) are drawn by the frame.
-  const blocks: BlockBase[] = (layout?.blocks ?? listingDefaultBlocks()).filter(
-    (block) => !(frame && (block.type === "listingHeader" || block.type === "filters")),
-  );
+  const blocks: BlockBase[] = (layout?.blocks ?? listingDefaultBlocks()).filter((block) => block.type !== "listingHeader" && block.type !== "filters");
   const nodes = layout?.nodes ?? {};
-  const vars = { ...(layout?.vars ?? {}), h1, count: total };
   const feedProps = (blocks.find((block) => block.type === "listingFeed")?.props ?? {}) as Record<string, unknown>;
   const inFeedId = typeof feedProps.inFeedBlockId === "string" ? feedProps.inFeedBlockId : "";
   const inFeedEvery = Number(feedProps.inFeedEvery) || 0;
@@ -140,97 +95,6 @@ export function ListingPageView({
     );
   };
 
-  const filtersBlock = (block: BlockBase) => {
-    const enabled = Array.isArray(block.props.enabled) ? (block.props.enabled as string[]) : ["verified", "photos"];
-    return (
-      <>
-        <button type="button" className="tk-loc" data-tk="location-field" onClick={() => window.dispatchEvent(new Event("tk-open-search"))}>
-          <MapPin size={18} aria-hidden />
-          <span>{locationLabel || query || t("listing.location.select")}</span>
-          <span className="tk-loc-go" aria-hidden>
-            <Search size={16} color="#fff" />
-          </span>
-        </button>
-        <div className="tk-filters">
-          {enabled.includes("verified") ? (
-            <Link className={`tk-filter ${verified ? "is-on" : ""}`} data-tk="filter-chip" href={toggleHref(path, "verified", !!verified)} prefetch={false}>
-              {t("listing.filters.verified")}
-            </Link>
-          ) : null}
-          {enabled.includes("photos") ? (
-            <Link className={`tk-filter ${photos ? "is-on" : ""}`} data-tk="filter-chip" href={toggleHref(path, "photos", !!photos)} prefetch={false}>
-              {t("listing.filters.photos")}
-            </Link>
-          ) : null}
-          {chips.map((link) => (
-            <Link key={link.href} className="tk-filter" data-tk="filter-chip" href={link.href} prefetch={false}>
-              {link.label}
-            </Link>
-          ))}
-        </div>
-        <div className="tk-hair" />
-      </>
-    );
-  };
-
-  const headerBlock = (block: BlockBase) => {
-    const heading = listingHeading(String(block.props.h1Template ?? ""), h1, vars);
-    const introText = listingHeading(String(block.props.introTemplate ?? ""), "", vars);
-    return (
-      <>
-        <div className="tk-crumb-wrap" ref={crumbRef}>
-        <nav className="tk-crumbs tk-crumbs-full" aria-label={t("listing.crumb.label")}>
-          {crumbs.map((crumb, index) => {
-            const last = index === crumbs.length - 1;
-            return (
-              <span key={crumb.path} style={{ position: "relative" }}>
-                {index > 0 ? <span style={{ color: "var(--muted)" }}> / </span> : null}
-                {last && districts.length ? (
-                  <button type="button" aria-expanded={open} onClick={() => setOpen((v) => !v)}>
-                    {crumb.name} ▾
-                  </button>
-                ) : (
-                  <Link href={crumb.path} prefetch={false}>
-                    {crumb.name}
-                  </Link>
-                )}
-                {last && open ? (
-                  <span className="tk-crumb-menu">
-                    {districts.map((item) => (
-                      <Link key={item.href} href={item.href} prefetch={false}>
-                        {item.label}
-                      </Link>
-                    ))}
-                  </span>
-                ) : null}
-              </span>
-            );
-          })}
-        </nav>
-        {short ? (
-          <nav className="tk-crumbs tk-crumbs-short" aria-label={t("listing.crumb.label")}>
-            <button type="button" onClick={() => setOpen((v) => !v)}>
-              {short} ▾
-            </button>
-            {open ? (
-              <span className="tk-crumb-menu">
-                {districts.map((item) => (
-                  <Link key={item.href} href={item.href} prefetch={false}>
-                    {item.label}
-                  </Link>
-                ))}
-              </span>
-            ) : null}
-          </nav>
-        ) : null}
-        </div>
-        <h1 className="tk-listing-h1">{heading}</h1>
-        {updated && block.props.showUpdated !== false ? <p className="tk-listing-updated">{t("listing.updated", { date: updated })}</p> : null}
-        {introText ? <p className="tk-listing-intro">{introText}</p> : null}
-      </>
-    );
-  };
-
   const feedBlock = () => {
     const emptyTitle = typeof feedProps.emptyTitle === "string" && feedProps.emptyTitle.trim() ? feedProps.emptyTitle : t("listing.empty.title");
     const emptyText = typeof feedProps.emptyText === "string" ? feedProps.emptyText.trim() : "";
@@ -239,7 +103,7 @@ export function ListingPageView({
         <div className="tk-feed">
           {feed.map((ad, index) => (
             <span key={ad.publicId || ad.slug || index} style={{ display: "contents" }}>
-              <AdCard ad={ad} featured={stars.some((star) => star.slug && star.slug === ad.slug)} priority={index === 0} layout={frame ? "row" : undefined} />
+              <AdCard ad={ad} featured={stars.some((star) => star.slug && star.slug === ad.slug)} priority={index === 0} layout="row" />
               {inFeedEvery > 0 && (index + 1) % inFeedEvery === 0 ? (
                 inFeedId && nodes[inFeedId] ? (
                   nodes[inFeedId]
@@ -322,10 +186,6 @@ export function ListingPageView({
     const title = (fallback: string) => (typeof block.props.title === "string" && block.props.title.trim() ? block.props.title : fallback);
     const max = (fallback: number) => Number(block.props.max) || fallback;
     switch (block.type) {
-      case "filters":
-        return wrap(block, filtersBlock(block));
-      case "listingHeader":
-        return wrap(block, headerBlock(block));
       case "listingFeed":
         return wrap(block, feedBlock());
       case "relatedCategories":
@@ -369,9 +229,5 @@ export function ListingPageView({
       {tailAt >= blocks.length ? seoTail : null}
     </>
   );
-  return (
-    <UiTextProvider texts={texts}>
-      {frame ? body : <div className="tk-container" style={{ paddingTop: 16, paddingBottom: 24 }}>{body}</div>}
-    </UiTextProvider>
-  );
+  return <UiTextProvider texts={texts}>{body}</UiTextProvider>;
 }

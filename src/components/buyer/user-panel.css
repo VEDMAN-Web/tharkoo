@@ -112,6 +112,7 @@
 }
 
 .up-call-frame { width: 100%; height: min(70vh, 640px); margin-top: 16px; border: 0; border-radius: 16px; background: #1e0b38; }
+.up-coins-card .up-promo-row { margin-top: 14px; }
 
 .up-cards { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 16px; }
 .up-cards-fill { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 14px; }
@@ -163,9 +164,7 @@
 .up-reply-row { display: flex; gap: 10px; align-items: flex-end; }
 
 .up-empty { padding: 28px; text-align: center; display: flex; flex-direction: column; align-items: center; gap: 10px; }
-.up-empty-box {
-  width: 100%; min-height: 120px; border-radius: 16px; background: linear-gradient(160deg, #fce4f0, #ede9ff); box-sizing: border-box;
-}
+.up-empty-icon { width: 72px; height: 72px; border-radius: 50%; display: flex; align-items: center; justify-content: center; background: #fce4f0; color: #a8124f; flex: none; }
 .up-empty-title { margin: 0; font-size: 18px; font-weight: 800; color: #1e0b38; }
 .up-empty-body { margin: 0 0 6px; font-size: 14px; color: #4a2870; }
 .up-error { color: #9f1239; font-size: 14px; margin: 0; }

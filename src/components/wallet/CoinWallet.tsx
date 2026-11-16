@@ -180,8 +180,8 @@ function HistoryTab() {
   );
 }
 
-export function CoinWallet() {
-  const [tab, setTab] = useState<Tab>("buy");
+export function CoinWallet({ initialTab = "buy" }: { initialTab?: Tab }) {
+  const [tab, setTab] = useState<Tab>(initialTab);
   const [data, setData] = useState<CoinsResponse | null>(null);
   const [signedOut, setSignedOut] = useState(false);
   const [error, setError] = useState("");
