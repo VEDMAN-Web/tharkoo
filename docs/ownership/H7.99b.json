@@ -1,0 +1,15 @@
+{
+  "branchPrefix": "haiku/h7.99b",
+  "globs": [
+    "docs/ownership/H7.99b.json",
+    "src/components/new/NewAdDetail.tsx",
+    "src/components/new/SimilarAds.tsx",
+    "src/components/new/AdLiveBits.tsx",
+    "src/components/new/AdActions.tsx",
+    "src/components/new/ad-spec.css",
+    "src/app/ad/[slug]/page.tsx",
+    "src/lib/ad-details.ts",
+    "src/lib/ui/text.ts",
+    "tests/**"
+  ]
+}
