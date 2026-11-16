@@ -121,3 +121,33 @@ describe("H7.1 shell config save", () => {
     expect((await readShellConfig()).footer.quickLinks.some((item) => item.label === "Bad")).toBe(false);
   });
 });
+
+describe("H7.88b header menu: Blog instead of Help", () => {
+  it("the default header ends with Blog and has no Help", async () => {
+    const { defaultShellConfig } = await import("@/server/site-links/shell-config-rules");
+    const labels = defaultShellConfig().header.navLinks.map((item) => item.label);
+    expect(labels).toEqual(["Home", "Categories", "Cities", "How it works", "Blog"]);
+    expect(defaultShellConfig().header.navLinks.at(-1)?.href).toBe("/blog/");
+    expect(defaultShellConfig().footer.quickLinks.map((item) => item.label)).toContain("Help and support");
+  });
+
+  it("a saved menu that is still the old default takes the new one, and saving again changes nothing", async () => {
+    const { normaliseShellConfig } = await import("@/server/site-links/shell-config-rules");
+    const old = ["Home:/", "Categories:/categories/", "Cities:/cities/", "How it works:/how-it-works/", "Help:/help/"].map((pair) => {
+      const [label, href] = [pair.slice(0, pair.indexOf(":")), pair.slice(pair.indexOf(":") + 1)];
+      return { label, href, visible: true, icon: "tag" };
+    });
+    const first = normaliseShellConfig({ header: { navLinks: old } });
+    expect(first.header.navLinks.map((item) => item.label)).toEqual(["Home", "Categories", "Cities", "How it works", "Blog"]);
+    expect(normaliseShellConfig(first).header.navLinks).toEqual(first.header.navLinks);
+  });
+
+  it("a menu an admin changed keeps its Help link", async () => {
+    const { normaliseShellConfig } = await import("@/server/site-links/shell-config-rules");
+    const custom = [
+      { label: "Home", href: "/", visible: true, icon: "home" },
+      { label: "Help", href: "/help/", visible: true, icon: "help" },
+    ];
+    expect(normaliseShellConfig({ header: { navLinks: custom } }).header.navLinks.map((item) => item.label)).toEqual(["Home", "Help"]);
+  });
+});
