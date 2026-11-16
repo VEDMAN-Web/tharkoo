@@ -118,10 +118,12 @@ test.describe("H7.84 home ad cards", () => {
     });
     const page = await context.newPage();
     const row = await openHome(page);
-    await row.locator(CARD).first().hover();
+    const withPhotos = row.locator(CARD).filter({ has: page.getByRole("button", { name: "Next photo" }) }).first();
+    await expect(withPhotos).toBeVisible();
+    await withPhotos.hover();
     await page.waitForTimeout(800);
     await expect(page.locator('[data-tk="home-ad-popout"]')).toHaveCount(0);
-    await expect(row.locator(CARD).first().getByRole("button", { name: "Next photo" })).toBeVisible();
+    await expect(withPhotos.getByRole("button", { name: "Next photo" })).toBeVisible();
     expect(await hasHorizontalScroll(page)).toBe(false);
     await context.close();
   });
