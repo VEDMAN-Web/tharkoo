@@ -69,6 +69,7 @@ export function validatePost(input: PostDraftInput) {
 }
 
 export type SavedDraft = {
+  status?: string | null;
   title?: string | null;
   description?: string | null;
   categoryId?: string | null;

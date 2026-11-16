@@ -19,14 +19,19 @@ const CONTACT_DEFAULT_TITLE = "Your contacts";
 const CONTACT_TITLE = "Contact";
 const CONTACT_HELP = "Add the phone number people can reach you on.";
 const REVIEW_DEFAULT_TITLE = "Publish";
-const REVIEW_TITLE = "Check your ad";
+const REVIEW_TITLE = "Review and publish";
 const REVIEW_HELP = "Look it over. Use Edit to change anything before it goes live.";
 const LEGACY_PUBLISH = "PUBLISH";
 const PUBLISH_LABEL = "Publish ad";
 
-export function newStepCopy(step: NewPostStep, copy: PostCopy, aboutYou: boolean, people = false): StepCopy {
+const DEFAULT_BASICS_HELP = "Pick a category. This helps the right people find your ad.";
+
+export function newStepCopy(step: NewPostStep, copy: PostCopy, aboutYou: boolean, people = false, fee = 0): StepCopy {
   const base = copy.steps[STEP_KEYS[step]];
   if (step === "more") return { ...base, title: people ? MORE_PEOPLE_TITLE : MORE_TITLE, help: "", nextLabel: "", backLabel: "" };
+  if (step === "category" && fee > 0 && (!base.help || base.help === DEFAULT_BASICS_HELP)) {
+    return { ...base, help: `Pick a category. Posting an ad costs ${fee} credits.` };
+  }
   if (step === "contact") {
     const edited = base.title !== CONTACT_DEFAULT_TITLE && base.title !== "";
     if (aboutYou) {

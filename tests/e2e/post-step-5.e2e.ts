@@ -1,6 +1,6 @@
 import AxeBuilder from "@axe-core/playwright";
 import type { Page } from "@playwright/test";
-import { expect, newApi, originHeaders, PNG, registerApi, test, uniqueEmail, USER_PASSWORD, withLocalDb } from "./helpers";
+import { expect, grantCredits, newApi, originHeaders, PNG, registerApi, test, uniqueEmail, USER_PASSWORD, withLocalDb } from "./helpers";
 
 const SHOTS = process.env.POST_SHOTS ?? "";
 
@@ -16,7 +16,7 @@ async function overflow(page: Page) {
   return page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
 }
 
-async function newPoster(page: Page, baseURL: string, prefix: string, withBirthDate = true) {
+async function newPoster(page: Page, baseURL: string, prefix: string, withBirthDate = true, credits = 100) {
   const email = uniqueEmail(prefix);
   const signup = await newApi(baseURL);
   await registerApi(signup, baseURL, email);
@@ -26,6 +26,7 @@ async function newPoster(page: Page, baseURL: string, prefix: string, withBirthD
   }
   const res = await page.request.post("/api/auth/login", { headers: originHeaders(baseURL, "/u/login/"), data: { email, password: USER_PASSWORD } });
   expect(res.status(), await res.text()).toBe(200);
+  if (credits > 0) await grantCredits(page, credits);
   await page.goto("/u/post-insert/");
   await expect(page.locator(".tkp-tile").first()).toBeVisible();
   return email;
@@ -75,7 +76,7 @@ async function reachAbout(page: Page, title: string, prefix: string) {
 async function consentAndPublish(page: Page) {
   await page.locator("#consent-terms").check();
   await page.locator("#consent-adult").check();
-  const publish = page.getByRole("button", { name: "Publish ad", exact: true });
+  const publish = page.getByRole("button", { name: /^Publish( ad| for \d+ credits)$/ });
   expect(await publish.evaluate((node) => getComputedStyle(node).textTransform)).toBe("none");
   await publish.click();
   await expect(page.locator("[data-tk=step-title]")).toHaveText("Your ad is live");
@@ -116,7 +117,7 @@ test.describe("H7.86 post an ad, step 5 and the success screen", () => {
     await page.locator("[data-tk=go-on]").click();
     await stepOf(page, 5);
 
-    await expect(page.locator("[data-tk=step-title]")).toHaveText("Check your ad");
+    await expect(page.locator("[data-tk=step-title]")).toHaveText("Review and publish");
     await expect(page.locator("[data-tk=review-title]")).toContainText(title);
     await expect(page.locator("[data-tk=review-photos]")).toContainText("1 photo");
     await expect(page.locator("[data-tk=review-contact]")).toContainText("+919876543210");
@@ -133,7 +134,7 @@ test.describe("H7.86 post an ad, step 5 and the success screen", () => {
       await page.locator("[data-tk=go-on]").click();
       await stepOf(page, step);
     }
-    await expect(page.locator("[data-tk=step-title]")).toHaveText("Check your ad");
+    await expect(page.locator("[data-tk=step-title]")).toHaveText("Review and publish");
     await expect(page.locator("[data-tk=review-title]")).toContainText(edited);
 
     await page.locator("[data-tk=go-on]").click();
@@ -171,7 +172,7 @@ test.describe("H7.86 post an ad, step 5 and the success screen", () => {
       await page.locator("[data-tk=go-on]").click();
       await stepOf(page, step);
     }
-    await expect(page.locator("[data-tk=step-title]")).toHaveText("Check your ad");
+    await expect(page.locator("[data-tk=step-title]")).toHaveText("Review and publish");
     await consentAndPublish(page);
     await page.goto("/u/account/ads/");
     await expect(page.locator("[data-tk=card]").filter({ hasText: final }).first()).toBeVisible();
@@ -376,6 +377,79 @@ test.describe("H7.86 post an ad, step 5 and the success screen", () => {
       expect(fit.navBottom, `${width}x${height} buttons in view`).toBeLessThanOrEqual(height);
       await shot(page, `3-3-step3-${width}x${height}`);
     }
+  });
+
+  test("paid posting: the price is clear early, step 5 turns amber with no credits, a recharge turns it back, and the receipt shows after publishing", async ({ page, baseURL }, info) => {
+    test.setTimeout(240_000);
+    const prefix = `paid${info.project.name === "phone-390" ? "390" : "1440"}`;
+    await newPoster(page, baseURL!, "paid", true, 0);
+    await expect(page.locator("[data-tk=step-help]")).toHaveText("Pick a category. Posting an ad costs 30 credits.");
+    if ((page.viewportSize()?.width ?? 0) >= 1024) {
+      await expect(page.locator("[data-tk=credits-card]")).toContainText("Balance 0 credits");
+      await expect(page.locator("[data-tk=credits-card]")).toContainText("This ad: 30 credits");
+      await expect(page.locator("[data-tk=credits-topup]")).toBeVisible();
+      await shot(page, `${prefix}-A-rail-card`);
+    }
+    const draft = await reachAbout(page, `Paid check ${Date.now()}`, prefix);
+    await page.locator("#phone").fill("9876543210");
+    await page.locator("[data-tk=go-on]").click();
+    await stepOf(page, 5);
+    await expect(page.locator("[data-tk=step-title]")).toHaveText("Review and publish");
+    const card = page.locator("[data-tk=pay-card]");
+    await expect(card).toHaveAttribute("data-state", "low");
+    await expect(page.locator("[data-tk=pay-fee]")).toHaveText("30 credits");
+    await expect(page.locator("[data-tk=pay-balance]")).toHaveText("0 credits");
+    await expect(page.locator("[data-tk=pay-short]")).toContainText("You need 30 more credits to publish.");
+    await expect(page.locator("[data-tk=publish-blocked]")).toBeDisabled();
+    await expect(page.locator("[data-tk=publish-blocked]")).toHaveAttribute("aria-describedby", "pay-reason");
+    const recharge = page.locator(".tkp-nav [data-tk=go-on]");
+    await expect(recharge).toHaveText("Recharge now");
+    expect(await card.evaluate((node) => getComputedStyle(node).backgroundColor)).toBe("rgb(255, 251, 235)");
+    await card.scrollIntoViewIfNeeded();
+    await shot(page, `${prefix}-B-amber`);
+
+    await recharge.click();
+    await page.waitForURL(/\/u\/account\/credits\/\?shortfall=30/);
+    await page.goBack();
+    await stepOf(page, 5);
+    await expect(page.locator("[data-tk=pay-card]")).toHaveAttribute("data-state", "low");
+
+    await grantCredits(page, 100);
+    await page.evaluate(() => window.dispatchEvent(new CustomEvent("tk:credits-added", { detail: { added: 100 } })));
+    await expect(page.locator("[data-tk=credits-toast]")).toHaveText("100 credits added");
+    await expect(page.locator("[data-tk=pay-card]")).toHaveAttribute("data-state", "ok");
+    await expect(page.locator("[data-tk=pay-balance]")).toHaveText("100 credits");
+    await expect(page.locator("[data-tk=pay-after]")).toHaveText("70 credits");
+    await expect(page.locator(".tkp-nav [data-tk=go-on]")).toHaveText("Publish for 30 credits");
+    await expect(page.locator("[data-tk=publish-blocked]")).toHaveCount(0);
+    await page.locator("[data-tk=pay-card]").scrollIntoViewIfNeeded();
+    await shot(page, `${prefix}-B-ok`);
+
+    await consentAndPublish(page);
+    await expect(page.locator("[data-tk=receipt]")).toHaveText("30 credits paid · Balance 70 credits");
+    await expect(page.locator("[data-tk=view-ad]")).toHaveAttribute("href", /^\/ad\//);
+    await expect(page.locator("[data-tk=upsell]")).toContainText("Get more views");
+    expect(await page.locator("[data-tk=upsell-plan]").count()).toBeGreaterThan(0);
+    await expect(page.locator("[data-tk=post-another]")).toBeVisible();
+    expect(await overflow(page)).toBeLessThanOrEqual(0);
+    await shot(page, `${prefix}-C-success`);
+    expect(draft).toBeTruthy();
+  });
+
+  test("a live ad can be edited without a fee: no pay card and a plain Publish ad button", async ({ page, baseURL }) => {
+    test.setTimeout(240_000);
+    await newPoster(page, baseURL!, "freeedit", true, 100);
+    const title = `Free edit ${Date.now()}`;
+    const draft = await reachAbout(page, title, "freeedit");
+    await page.locator("#phone").fill("9876543210");
+    await page.locator("[data-tk=go-on]").click();
+    await stepOf(page, 5);
+    await consentAndPublish(page);
+    await page.goto(`/u/post-insert/?draft=${draft}&step=5`);
+    await stepOf(page, 5);
+    await expect(page.locator("[data-tk=pay-card]")).toHaveCount(0);
+    await expect(page.locator(".tkp-nav [data-tk=go-on]")).toHaveText("Publish ad");
+    await expect(page.locator("[data-tk=credits-card]")).toContainText("no charge");
   });
 
   test("steps 4 and 5 and the success screen fit every common size, keep the bar clear of the last field, and pass axe", async ({ page, baseURL }) => {

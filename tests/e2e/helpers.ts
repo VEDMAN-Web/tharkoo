@@ -2,7 +2,7 @@ import { createHmac } from "node:crypto";
 import { existsSync, mkdirSync, readFileSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import { expect, request, test as base, type APIRequestContext, type Page } from "@playwright/test";
-import { MongoClient, type Db } from "mongodb";
+import { MongoClient, ObjectId, type Db } from "mongodb";
 
 export const ADMIN_EMAIL = process.env.ADMIN_BOOTSTRAP_EMAIL || "homepage-admin@example.test";
 export const ADMIN_PASSWORD = process.env.ADMIN_BOOTSTRAP_PASSWORD || "HomepageAdmin1!";
@@ -124,6 +124,25 @@ export async function loginUi(page: Page, email: string, password = USER_PASSWOR
   await page.goto(next || "/u/account/dashboard/");
 }
 
+/** Puts credits in the signed-in account's wallet in the in-memory test database. Posting an ad costs credits. */
+export async function grantCredits(page: Page, credits = 100) {
+  const me = await page.request.get("/api/auth/me");
+  const id = ((await me.json()).data?.user?.id ?? "") as string;
+  expect(id, "signed-in account id").toBeTruthy();
+  await withLocalDb((db) =>
+    db.collection("wallet_entries").insertOne({
+      userId: new ObjectId(id),
+      delta: credits,
+      reason: "e2e grant",
+      refType: "e2e",
+      refId: `e2e-${Date.now()}`,
+      balanceAfter: credits,
+      idempotencyKey: `e2e-${id}-${Date.now()}-${Math.random()}`,
+      createdAt: new Date(),
+    }),
+  );
+}
+
 /** Saves a seller profile for the signed-in page (H7.2b). Needed before the post-ad form opens in the New design. */
 export async function becomeSeller(page: Page, base: string, name = "E2E Seller", city = "Mumbai") {
   const res = await page.request.put("/api/auth/seller-profile", {
@@ -131,6 +150,7 @@ export async function becomeSeller(page: Page, base: string, name = "E2E Seller"
     data: { name, city, whatsapp: "", availableNow: false },
   });
   expect(res.status(), await res.text()).toBe(200);
+  await grantCredits(page);
 }
 
 /** Visible-or-not safe text of the page, scripts and styles removed. */

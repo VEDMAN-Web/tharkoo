@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { POST_COPY_DEFAULTS, buildPostCopy } from "@/components/post/copy";
 import { ABOUT_YOU_HELP, ABOUT_YOU_TITLE, newStepCopy, newSuccessCopy } from "@/components/post/newCopy";
+import { creditsText, insufficientFrom, rupeesText, shortfallOf } from "@/components/post/credits";
 import { draftToForm, errorsForStep, maskEmail, stepOfError, telegramHandle, validateAbout, validateContact } from "@/lib/ui/post-form";
 
 const now = new Date("2026-11-16T10:00:00Z");
@@ -51,7 +52,7 @@ describe("wording of steps 4 and 5 (H7.86)", () => {
     expect(newStepCopy("review", POST_COPY_DEFAULTS, false).nextLabel).toBe("Publish ad");
     const custom = buildPostCopy([{ id: "r", type: "postStep", visible: true, props: { stepKey: "review", nextLabel: "Go live" } } as never]);
     expect(newStepCopy("review", custom, false).nextLabel).toBe("Go live");
-    expect(newStepCopy("review", POST_COPY_DEFAULTS, false).title).toBe("Check your ad");
+    expect(newStepCopy("review", POST_COPY_DEFAULTS, false).title).toBe("Review and publish");
   });
 
   it("leaves the other steps as they are", () => {
@@ -126,5 +127,35 @@ describe("contact choices (H7.86)", () => {
     expect(draftToForm({ contact: { acceptForm: true } }).contactMode).toBe("email");
     expect(draftToForm({}).contactMode).toBe("both");
     expect(draftToForm({ contact: { phone: "+919876543210", whatsapp: "+919123456780" } }).whatsappNumber).toBe("+919123456780");
+  });
+});
+
+describe("paid posting helpers (H7.86)", () => {
+  it("says credits in singular and plural, and the rupee price at 1 credit = Rs 10", () => {
+    expect(creditsText(1)).toBe("1 credit");
+    expect(creditsText(30)).toBe("30 credits");
+    expect(rupeesText(30)).toBe("Rs 300");
+    expect(rupeesText(100)).toBe("Rs 1,000");
+  });
+
+  it("works out how many credits are missing", () => {
+    expect(shortfallOf(30, 12)).toBe(18);
+    expect(shortfallOf(30, 45)).toBe(0);
+    expect(shortfallOf(30, 30)).toBe(0);
+    expect(shortfallOf(30, null)).toBe(0);
+  });
+
+  it("reads need and balance from an INSUFFICIENT_CREDITS error, and ignores other errors", () => {
+    expect(insufficientFrom({ code: "INSUFFICIENT_CREDITS", details: { need: 30, balance: 12 } as never }, 30)).toEqual({ need: 30, balance: 12 });
+    expect(insufficientFrom({ code: "INSUFFICIENT_CREDITS", details: { need: ["30"], balance: ["0"] } }, 30)).toEqual({ need: 30, balance: 0 });
+    expect(insufficientFrom({ code: "INSUFFICIENT_CREDITS" }, 30)).toEqual({ need: 30, balance: 0 });
+    expect(insufficientFrom({ code: "VERIFICATION_REQUIRED" }, 30)).toBeNull();
+    expect(insufficientFrom(undefined, 30)).toBeNull();
+  });
+
+  it("puts the price in the first step line, and keeps a help line an admin wrote", () => {
+    expect(newStepCopy("category", POST_COPY_DEFAULTS, false, false, 30).help).toBe("Pick a category. Posting an ad costs 30 credits.");
+    const custom = { ...POST_COPY_DEFAULTS, steps: { ...POST_COPY_DEFAULTS.steps, basics: { ...POST_COPY_DEFAULTS.steps.basics, help: "Choose wisely." } } };
+    expect(newStepCopy("category", custom, false, false, 30).help).toBe("Choose wisely.");
   });
 });

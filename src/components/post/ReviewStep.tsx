@@ -10,6 +10,7 @@ type Props = {
   hasPhoto: boolean;
   byline: string;
   note: string;
+  pay?: React.ReactNode;
   terms: boolean;
   adult: boolean;
   termsError?: string;
@@ -19,7 +20,7 @@ type Props = {
   onAdult: () => void;
 };
 
-export function ReviewStep({ rows, ad, hasPhoto, byline, note, terms, adult, termsError, adultError, onEdit, onTerms, onAdult }: Props) {
+export function ReviewStep({ rows, ad, hasPhoto, byline, note, pay, terms, adult, termsError, adultError, onEdit, onTerms, onAdult }: Props) {
   return (
     <div className="tkp-fields" data-tk="review-step">
       <div className="tkp-review-card" data-tk="review-preview">
@@ -39,6 +40,7 @@ export function ReviewStep({ rows, ad, hasPhoto, byline, note, terms, adult, ter
         ))}
       </dl>
       <p className="tkp-note">{note}</p>
+      {pay}
       <div className={`tkp-consent ${termsError ? "is-bad" : ""}`}>
         <input id="consent-terms" type="checkbox" className="tk-check" checked={terms} onChange={onTerms} aria-invalid={Boolean(termsError)} />
         <label htmlFor="consent-terms">

@@ -1,14 +1,15 @@
 import type { Page } from "@playwright/test";
-import { expect, newUserApi, originHeaders, test, USER_PASSWORD } from "./helpers";
+import { expect, grantCredits, newUserApi, originHeaders, test, USER_PASSWORD } from "./helpers";
 
 const SHOTS = process.env.POST_SHOTS ?? "";
 const SIZES: [number, number][] = [[1536, 674], [1366, 768], [1536, 730], [1440, 900]];
 const GROUPS = ["dating", "buy-and-sell", "property", "jobs", "vehicles", "education"];
 
-async function draftFor(page: Page, baseURL: string, slug: string, seller: boolean) {
+async function draftFor(page: Page, baseURL: string, slug: string, seller: boolean, credits = 100) {
   const user = await newUserApi(baseURL, `fit-${slug}`);
   const login = await page.request.post("/api/auth/login", { headers: originHeaders(baseURL, "/u/login/"), data: { email: user.email, password: USER_PASSWORD } });
   expect(login.status()).toBe(200);
+  if (credits > 0) await grantCredits(page, credits);
   if (seller) {
     const saved = await page.request.put("/api/auth/seller-profile", {
       headers: originHeaders(baseURL, "/u/seller-profile/"),
@@ -79,6 +80,22 @@ test.describe("H7.86 no scrolling on desktop", () => {
       }
     });
   }
+
+  test("step 5 with no credits (the amber card) fits at the four laptop sizes", async ({ page, baseURL }, info) => {
+    test.skip(info.project.name !== "desktop-1440", "desktop sizes only");
+    test.setTimeout(120_000);
+    const id = await draftFor(page, baseURL!, "dating", true, 0);
+    for (const [width, height] of SIZES) {
+      await page.setViewportSize({ width, height });
+      await page.goto(`/u/post-insert/?draft=${id}&step=5`);
+      await expect(page.locator("[data-tk=pay-card]")).toHaveAttribute("data-state", "low");
+      const found = await overflows(page);
+      expect(found.pageExtra, `amber ${width}x${height}: page scroll`).toBeLessThanOrEqual(0);
+      expect(found.inner, `amber ${width}x${height}: inner scroll`).toEqual([]);
+      expect(found.navBottom, `amber ${width}x${height}: buttons in view`).toBeLessThanOrEqual(height);
+      if (SHOTS) await page.screenshot({ path: `${SHOTS}/3-3-amber-${width}x${height}.png` });
+    }
+  });
 
   test("a first-time account: About you fits at the four laptop sizes", async ({ page, baseURL }, info) => {
     test.skip(info.project.name !== "desktop-1440", "desktop sizes only");

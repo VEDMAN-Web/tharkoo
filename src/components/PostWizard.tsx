@@ -17,7 +17,9 @@ import { SelectField, Switch, TextField } from "./post/FormFields";
 import { ContactFields } from "./post/ContactFields";
 import { AboutYou } from "./post/AboutYou";
 import { ReviewStep, type ReviewRow } from "./post/ReviewStep";
-import { PostSuccess } from "./post/PostSuccess";
+import { PostSuccess, type UpsellPlan } from "./post/PostSuccess";
+import { CreditsCard, PayCard } from "./post/PayParts";
+import { creditsText, insufficientFrom, openRecharge, shortfallOf, usePostingMoney } from "./post/credits";
 import { NEW_POST_TIPS, PostRail, PostTip, RAIL_LABELS, RAIL_MORE_LABEL, type RailItem } from "./post/NewPostParts";
 import { CategoryTiles } from "./post/CategoryTiles";
 import { hintsFor, photoHelp } from "./post/placeholders";
@@ -118,6 +120,15 @@ export function PostWizard({
   const [dateOfBirth, setDateOfBirth] = useState("");
   const [ageConfirmed, setAgeConfirmed] = useState(false);
   const [publishedStatus, setPublishedStatus] = useState("");
+  const [serverShort, setServerShort] = useState<{ need: number; balance: number } | null>(null);
+  const [adSlug, setAdSlug] = useState("");
+  const [receipt, setReceipt] = useState("");
+  const [afterBalance, setAfterBalance] = useState<number | null>(null);
+  const [planNote, setPlanNote] = useState("");
+  const [draftStatus, setDraftStatus] = useState("");
+  const money = usePostingMoney();
+  const alreadyPaid = draftStatus !== "" && draftStatus !== "draft";
+  const short = alreadyPaid ? 0 : serverShort ? shortfallOf(serverShort.need, serverShort.balance) : shortfallOf(money.fee, money.balance);
   const draftRef = useRef("");
   const queueRef = useRef<Promise<unknown>>(Promise.resolve());
 
@@ -158,6 +169,7 @@ export function PostWizard({
         api<SavedDraft>(`/api/listings/by-id/${draft}`).then((res) => {
           if (res.ok && res.data) {
             const form = draftToForm(res.data);
+            setDraftStatus(String(res.data.status ?? ""));
             setCategoryId(form.categoryId);
             setSubcategoryId(form.subcategoryId);
             setCityId(form.cityId);
@@ -255,6 +267,11 @@ export function PostWizard({
   useEffect(() => {
     if (done) window.scrollTo(0, 0);
   }, [done]);
+
+  useEffect(() => {
+    const id = window.setTimeout(() => setServerShort(null), 0);
+    return () => window.clearTimeout(id);
+  }, [money.balance]);
 
   const handleMedia = useCallback((media: DraftMedia) => {
     const cover = media.photos.find((photo) => photo.id === media.coverId) ?? media.photos[0];
@@ -446,6 +463,7 @@ export function PostWizard({
     if (!hydrated) return setBanner("The draft is still loading.");
     if (!draftId || !title.trim()) return setBanner("Save a draft before submitting.");
     if (newDesign && !showErrors(errorsForStep(validate(), "review"))) return;
+    if (newDesign && short > 0) return openRecharge({ shortfall: short });
     setBusy(true);
     setBanner("");
     // H6.14: the ID check is asked for only when the switch is on. Off, the submit goes straight to the server.
@@ -464,6 +482,12 @@ export function PostWizard({
     });
     setBusy(false);
     if (!res.ok) {
+      const lack = insufficientFrom(res.error, money.fee);
+      if (lack) {
+        setServerShort(lack);
+        void money.refresh();
+        return;
+      }
       if (res.error.code === "VERIFICATION_REQUIRED") {
         setBanner("Your ID needs a quick check before this ad can go live.");
         return;
@@ -471,9 +495,31 @@ export function PostWizard({
       setBanner(friendlyError(res.error));
       return;
     }
-    setPublishedStatus(String((res.data as { status?: string } | null)?.status ?? "active"));
+    const outcome = (res.data ?? {}) as { status?: string; charged?: number; balance?: number };
+    setPublishedStatus(String(outcome.status ?? "active"));
+    if (newDesign) {
+      const charged = typeof outcome.charged === "number" ? outcome.charged : alreadyPaid ? 0 : money.fee;
+      const left = typeof outcome.balance === "number" ? outcome.balance : Math.max(0, (money.balance ?? 0) - charged);
+      setAfterBalance(left);
+      setReceipt(charged > 0 ? `${creditsText(charged)} paid · Balance ${creditsText(left)}` : `No charge for changes · Balance ${creditsText(left)}`);
+      void api<{ slug?: string }>(`/api/listings/by-id/${draftId}`).then((found) => {
+        if (found.ok && found.data?.slug) setAdSlug(found.data.slug);
+      });
+    }
     window.history.replaceState(null, "", postAdPath(paths));
     setDone(true);
+  }
+
+  async function buyPlan(plan: UpsellPlan) {
+    setPlanNote("");
+    const price = plan.amount ?? 0;
+    const have = afterBalance ?? money.balance ?? 0;
+    if (price > have) return openRecharge({ shortfall: price - have });
+    const res = await api("/api/promotions", { method: "POST", body: JSON.stringify({ listingId: draftId, productId: plan.id }) });
+    if (!res.ok) return setPlanNote(friendlyError(res.error));
+    setAfterBalance(have - price);
+    setPlanNote(`${plan.name} added to your ad.`);
+    void money.refresh();
   }
 
   const preview = useMemo(
@@ -504,6 +550,11 @@ export function PostWizard({
         hasPhoto={Boolean(coverUrl)}
         byline={byline}
         anotherHref={copy.success.secondaryCta?.href || postAdPath(paths)}
+        adHref={adSlug ? `/ad/${adSlug}/` : ""}
+        receipt={receipt}
+        plans={visiblePlans.slice(0, 2)}
+        planNote={planNote}
+        onPlan={(plan) => void buyPlan(plan)}
       />
     );
   }
@@ -760,7 +811,7 @@ export function PostWizard({
 
   /** H7.83: the New design. Five steps, a step rail, the live preview (the real ad card) and the tip. Logic is shared with the three-step form. */
   function renderNewDesign() {
-    const stepCopy = newStepCopy(current, copy, Boolean(about), people);
+    const stepCopy = newStepCopy(current, copy, Boolean(about), people, money.fee);
     const railItems: RailItem[] = flow.map((key, index) => ({
       key,
       label: key === "more" ? RAIL_MORE_LABEL : RAIL_LABELS[key],
@@ -810,7 +861,9 @@ export function PostWizard({
               if (draftId) remember(draftId, num);
               else setStep(num);
             }}
-          />
+          >
+            <CreditsCard fee={alreadyPaid ? 0 : money.fee} balance={money.balance} ready={money.ready} onTopUp={() => openRecharge({ shortfall: short })} />
+          </PostRail>
           <section className="tkp-main" data-step={current} aria-labelledby="post-step-title" onFocusCapture={keepFocusedFieldVisible}>
             <div className="tkp-head">
               <p className="tkp-kicker" data-tk="step-of">Step {step} of {flow.length}</p>
@@ -926,6 +979,7 @@ export function PostWizard({
                   hasPhoto={Boolean(coverUrl)}
                   byline={byline}
                   note="Your ad goes live as soon as you publish it. You can edit, pause or renew it from My ads."
+                  pay={alreadyPaid ? undefined : <PayCard fee={money.fee} balance={money.balance} short={short} onRecharge={() => openRecharge({ shortfall: short })} />}
                   terms={terms}
                   adult={adult}
                   termsError={errors.terms}
@@ -945,9 +999,14 @@ export function PostWizard({
                 ) : <span />}
                 <div className="tkp-nav-right">
                   {current === "review" ? null : <button type="button" className="tkp-btn tkp-btn-preview" data-tk="open-preview" onClick={() => setPreviewOpen(true)}>Preview</button>}
-                  {current === "review" ? (
+                  {current === "review" && short > 0 ? (
+                    <>
+                      <button type="button" className="tkp-btn" data-tk="publish-blocked" disabled aria-describedby="pay-reason">Publish</button>
+                      <button type="button" className="tkp-btn tkp-btn-primary" data-tk="go-on" onClick={() => openRecharge({ shortfall: short })}>Recharge now</button>
+                    </>
+                  ) : current === "review" ? (
                     <button type="button" className="tkp-btn tkp-btn-primary" data-tk="go-on" disabled={busy || !hydrated || !title.trim()} onClick={publish}>
-                      {stepCopy.nextLabel || "Publish ad"}
+                      {!stepCopy.nextLabel || stepCopy.nextLabel === "Publish ad" ? (alreadyPaid ? "Publish ad" : `Publish for ${creditsText(money.fee)}`) : stepCopy.nextLabel}
                     </button>
                   ) : (
                     <button type="button" className="tkp-btn tkp-btn-primary" data-tk="go-on" disabled={busy || (current === "category" && !categoryReady) || (current === "photos" && photoBusy)} onClick={() => continueFrom(current)}>
@@ -964,6 +1023,7 @@ export function PostWizard({
             <PostTip text={NEW_POST_TIPS[current === "more" ? "details" : current]} />
           </aside>
         </div>
+        {money.added ? <div className="tkp-toast" role="status" data-tk="credits-toast">{creditsText(money.added)} added</div> : null}
         {previewOpen ? <PreviewSheet ad={adPreview} hasPhoto={Boolean(coverUrl)} byline={byline} onClose={() => setPreviewOpen(false)} /> : null}
       </div>
     );

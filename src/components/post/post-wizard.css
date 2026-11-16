@@ -324,3 +324,38 @@ body:has(.tkp-post) .tkn-footer, body:has(.tkp-post) .tkn-chat-bubble { display:
   .tkn .tkp-post .tkp-success { gap: 8px; padding: 14px 24px 16px; }
   .tkn .tkp-post .tkp-success-mark { width: 44px; height: 44px; }
 }
+.tkn .tkp-post .tkp-credits { display: none; margin-top: 12px; padding: 10px 12px; border: 1px solid #ead8f0; border-radius: 14px; background: #fff; font-size: 13px; line-height: 1.5; color: #4a2870; }
+.tkn .tkp-post .tkp-credits-title { margin: 0 0 2px; font-size: 12px; font-weight: 700; color: #6b4a8a; }
+.tkn .tkp-post .tkp-credits-line { margin: 0; font-weight: 600; }
+.tkn .tkp-post .tkp-credits-link { padding: 0; border: 0; background: none; color: #a8124f; font: inherit; font-weight: 700; text-decoration: underline; cursor: pointer; min-height: 24px; }
+.tkn .tkp-post .tkp-credits-link:focus-visible { outline: 3px solid #7c3aed; outline-offset: 2px; }
+.tkn .tkp-post .tkp-pay { padding: 10px 14px; border: 1.5px solid #ead8f0; border-radius: 14px; background: #fff; }
+.tkn .tkp-post .tkp-pay.is-low { border-color: #f59e0b; background: #fffbeb; }
+.tkn .tkp-post .tkp-pay-title { margin: 0 0 4px; font-size: 14px; font-weight: 700; color: #1e0b38; }
+.tkn .tkp-post .tkp-pay-rows { margin: 0; }
+.tkn .tkp-post .tkp-pay-rows > div { display: flex; justify-content: space-between; gap: 12px; padding: 3px 0; font-size: 14px; }
+.tkn .tkp-post .tkp-pay-rows dt { color: #4a2870; }
+.tkn .tkp-post .tkp-pay-rows dd { margin: 0; font-weight: 700; color: #1e0b38; }
+.tkn .tkp-post .tkp-pay-note { margin: 6px 0 0; font-size: 14px; font-weight: 700; color: #92400e; }
+.tkn .tkp-post .tkp-toast { position: fixed; left: 50%; bottom: 84px; z-index: 80; transform: translateX(-50%); padding: 10px 18px; border-radius: 999px; background: #047857; color: #fff; font-size: 14px; font-weight: 700; box-shadow: 0 8px 24px rgba(4, 120, 87, 0.3); }
+.tkn .tkp-post .tkp-success-cols { display: grid; grid-template-columns: minmax(0, 1fr); gap: 12px; width: 100%; }
+.tkn .tkp-post .tkp-success-col { display: flex; flex-direction: column; align-items: stretch; gap: 10px; min-width: 0; }
+.tkn .tkp-post .tkp-receipt { margin: 0; padding: 8px 12px; border-radius: 12px; background: #ecfdf5; color: #047857; font-size: 14px; font-weight: 700; }
+.tkn .tkp-post .tkp-ad-link { align-self: center; display: inline-flex; align-items: center; min-height: 44px; color: #a8124f; font-weight: 700; }
+.tkn .tkp-post .tkp-upsell { padding: 10px 12px; border: 1.5px solid #ead8f0; border-radius: 14px; background: linear-gradient(135deg, #f5f0ff, #fff0f7); text-align: left; }
+.tkn .tkp-post .tkp-upsell-title { margin: 0 0 6px; font-size: 14px; font-weight: 700; color: #5b21b6; }
+.tkn .tkp-post .tkp-upsell-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 6px; }
+.tkn .tkp-post .tkp-upsell-list li { display: flex; align-items: center; gap: 10px; }
+.tkn .tkp-post .tkp-upsell-name { flex: 1; font-size: 14px; font-weight: 700; }
+.tkn .tkp-post .tkp-upsell-price { font-size: 13px; color: #4a2870; }
+.tkn .tkp-post .tkp-upsell-note { margin: 6px 0 0; font-size: 13px; font-weight: 600; color: #047857; }
+.tkn .tkp-post .tkp-btn-small { min-height: 44px; padding: 0 14px; font-size: 14px; }
+@media (min-width: 720px) {
+  .tkn .tkp-post .tkp-success { max-width: 880px; }
+  .tkn .tkp-post .tkp-success-cols { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
+  .tkn .tkp-post .tkp-success-card { max-width: 100%; }
+}
+@media (min-width: 1024px) {
+  .tkn .tkp-post .tkp-credits { display: block; }
+  .tkn .tkp-post .tkp-toast { bottom: 24px; }
+}

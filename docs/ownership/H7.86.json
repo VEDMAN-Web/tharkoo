@@ -21,6 +21,12 @@
     "src/components/post/NewPostParts.tsx",
     "src/server/seed/data.ts",
     "tests/server/seed/seed.test.ts",
-    "tests/e2e/post-fit.e2e.ts"
+    "tests/e2e/post-fit.e2e.ts",
+    "tests/e2e/flows.ts",
+    "tests/e2e/h6-features.e2e.ts",
+    "tests/e2e/advertiser.e2e.ts",
+    "src/components/post/credits.ts",
+    "src/components/post/PayParts.tsx",
+    "tests/e2e/helpers.ts"
   ]
 }
