@@ -1,10 +1,7 @@
-import { mkdirSync } from "node:fs";
-import { join } from "node:path";
 import { expect, firstAdPath, hasHorizontalScroll, signInAdminContext, test } from "./helpers";
 
 /** H6.17: views and clicks on ad cards and on the ad page. Runs at 390 px (phone) and 1440 px (desktop). */
 
-const SHOTS = join(process.cwd(), ".shots", "H6.17");
 const FEED = "/dating/bengaluru/";
 
 async function countsOf(request: import("@playwright/test").APIRequestContext, slug: string) {
