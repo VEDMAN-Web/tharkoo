@@ -3,6 +3,10 @@
   "globs": [
     "docs/ownership/H7.70.json",
     "progress/H7.70.md",
+    "src/app/[category]/[location]/[district]/page.tsx",
+    "src/app/[category]/[location]/[district]/sub-hub.tsx",
+    "src/app/[category]/[location]/page.tsx",
+    "src/app/[category]/page.tsx",
     "src/app/admin/content-actions.ts",
     "src/app/admin/homepage/LoginImageField.tsx",
     "src/app/admin/homepage/page.tsx",
@@ -26,6 +30,7 @@
     "src/components/new/ad-spec.css",
     "src/components/new/band-image.ts",
     "src/components/new/home-spec.css",
+    "src/components/new/listing-frame-props.tsx",
     "src/components/new/listing-spec.css",
     "src/lib/ui/site-content.ts",
     "src/server/site-links/shell-config-rules.ts",
