@@ -359,3 +359,11 @@ body:has(.tkp-post) .tkn-footer, body:has(.tkp-post) .tkn-chat-bubble { display:
   .tkn .tkp-post .tkp-credits { display: block; }
   .tkn .tkp-post .tkp-toast { bottom: 24px; }
 }
+@media (min-width: 1024px) {
+  .tkn .tkp-post .tkp-pay { padding: 8px 14px; }
+  .tkn .tkp-post .tkp-pay-title { margin: 0 0 2px; }
+  .tkn .tkp-post .tkp-pay-rows { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+  .tkn .tkp-post .tkp-pay-rows > div { flex-direction: column; justify-content: flex-start; gap: 0; padding: 0; }
+  .tkn .tkp-post .tkp-pay-rows dt { font-size: 13px; }
+  .tkn .tkp-post .tkp-pay-note { margin-top: 4px; }
+}

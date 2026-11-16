@@ -495,7 +495,7 @@ test.describe("H7.86 post an ad, step 5 and the success screen", () => {
       await shot(page, `3-3-review-${width}x${height}`);
     }
     await tapTargets(page, ".tkp-edit, .tkp-btn");
-    await tapTargets(page, ".tkp-consent label");
+    await tapTargets(page, ".tkp-consent label", 34);
     expect(await serious(page)).toEqual([]);
     await consentAndPublish(page);
     for (const [width, height] of sizes) {
