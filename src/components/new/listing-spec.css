@@ -43,8 +43,9 @@
   box-shadow: 0 8px 30px rgba(45, 18, 72, 0.1);
 }
 @media (max-width: 1023px) {
-  .tkn-ls-band { min-height: 360px; padding: 28px 32px; }
-  .tkn-ls-band-card { max-width: min(560px, 56%); }
+  .tkn-ls-band { min-height: 360px; padding: 24px 32px; }
+  .tkn-ls-band-card { max-width: min(560px, 60%); padding: 20px 24px; }
+  .tkn-ls-band-card .tkn-ls-searchrow { margin-top: 14px; }
 }
 @media (max-width: 767px) {
   .tkn-ls-band { display: block; min-height: 0; margin-top: 16px; padding: 16px; border-radius: 20px; }
