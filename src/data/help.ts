@@ -5,12 +5,12 @@ export const HELP_ARTICLES = [
   { slug: "verification", title: "ID verification", body: "Document + face scan. Until verified, Ads and Post stay locked on the vendor dashboard." },
   { slug: "scams", title: "How to report a scam", body: "Tharkoo staff never ask you to pay on personal UPI. Keep the Ad ID. Use Submit a report. Never share OTPs." },
   { slug: "contacts", title: "Call, WhatsApp, Telegram, Email", body: "Contact buttons on Super Top cards and ad pages. Email is relayed. Free contact limits can apply." },
-  { slug: "photos", title: "Photos and restricted media", body: "This demo uses original placeholder graphics. Upload only photos you have the right to use." },
+  { slug: "photos", title: "Photos and restricted media", body: "Upload only photos you have the right to use. Ads that use someone else's photos are removed." },
   { slug: "account", title: "Account, password and delete", body: "Change email with verification, add a second email, reset password, or type DELETE to close the account." },
 ];
 
 export const BLOG_POSTS = [
-  { slug: "most-searched-hyderabad", title: "Most searched in Hyderabad this week", date: "3 November 2026", body: "Jobs, property, and dating in Hyderabad are the busiest demo queries. Use a city URL, not search, if you want the page indexed." },
-  { slug: "how-star-works", title: "How Star listings work", date: "28 October 2026", body: "Star is a premium city-page slot, sold in two daily windows with six spots. Use one placeholder image and a short name." },
+  { slug: "most-searched-hyderabad", title: "Most searched in Hyderabad this week", date: "3 November 2026", body: "Jobs, property, and dating are the most searched categories in Hyderabad this week. Open a city page to see the live ads." },
+  { slug: "how-star-works", title: "How Star listings work", date: "28 October 2026", body: "Star is a premium city-page slot, sold in two daily windows with six spots. Each spot shows one ad with a short name." },
   { slug: "stay-safe", title: "Stay safe when you meet", date: "12 October 2026", body: "Meet in public first. Do not pay a deposit. Report stolen photos and fake numbers with the Ad ID." },
 ];

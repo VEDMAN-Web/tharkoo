@@ -53,3 +53,11 @@ describe("heroBandFrom", () => {
     expect(heroBandFrom(null)).toBeNull();
   });
 });
+
+describe("bandStyleFor focus (H7.67)", () => {
+  it("sets the phone focus to the computer focus when there is no separate phone photo", () => {
+    expect(bandStyleFor({ band: "https://cdn.example/a.jpg", bandPhone: "https://cdn.example/a.jpg" })["--band-focus-phone"]).toBe("72% 22%");
+    expect(bandStyleFor({ band: "https://cdn.example/a.jpg", bandPhone: "https://cdn.example/a-phone.jpg" })["--band-focus-phone"]).toBeUndefined();
+    expect(bandStyleFor(null)).toEqual({});
+  });
+});

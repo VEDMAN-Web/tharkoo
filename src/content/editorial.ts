@@ -11,7 +11,7 @@ export const ABOUT_BODY = [
 export const GRIEVANCE_BODY = [
   "If a listing, a photo, or an account on Tharkoo has harmed you, write to us through the contact page and include the link to the ad. We read reports in the order they arrive. If the ad breaks the terms or the prohibited items list, we can remove it and close the account that posted it.",
   "Tell us what is wrong in plain language, and whether you want the ad taken down or a correction. If you are the person in a photo and you did not agree to it, say so. We may ask for the email on the account so we can reply to the right person.",
-  "This grievance note is a draft. The postal address is a placeholder until it is confirmed, and a lawyer should review the process before the site is indexed. Emergency danger should go to local services first. Tharkoo cannot send someone to a street address.",
+  "Emergency danger should go to local services first. Tharkoo cannot send someone to a street address.",
 ].join("\n\n");
 
 export const DRAFT_POSTS = [

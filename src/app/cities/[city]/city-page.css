@@ -35,3 +35,17 @@
   margin: 0; padding: 18px 20px; box-sizing: border-box; border-radius: 16px; font-size: 16px; color: #4a2870;
   background: rgba(255, 255, 255, 0.88); border: 1px solid #ead8f0;
 }
+
+.tkn-ls-grid-aside .tkn-ls-main { display: grid; gap: 48px; align-content: start; }
+.tkn-ls-grid-aside .tkn-ls-main h2 { margin: 0 0 14px; font-size: 22px; line-height: 1.25; font-weight: 800; color: #1e0b38; }
+.tkn-city-nav { list-style: none; margin: 0; padding: 0 10px 12px; display: flex; flex-direction: column; gap: 2px; }
+.tkn-city-nav a {
+  min-height: 44px; box-sizing: border-box; display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 0 12px; border-radius: 12px;
+  font-size: 14px; font-weight: 600; color: #4a2870; text-decoration: none;
+}
+.tkn-city-nav a:hover { background: #fdf0f7; color: #a8124f; }
+.tkn-city-nav-n { font-size: 12px; font-weight: 700; color: #6b4a8a; }
+@media (max-width: 819px) {
+  .tkn-ls-aside-nav { display: none; }
+  .tkn-ls-grid-aside .tkn-ls-main { gap: 32px; }
+}

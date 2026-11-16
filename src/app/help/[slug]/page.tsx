@@ -1,3 +1,4 @@
+import { stripDevNotes } from "@/components/new/legal-copy";
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import { getHelp, getHelpArticles } from "@/lib/queries";
@@ -20,7 +21,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   const plainTitle = articleTitle.replace(/\s*\|\s*Tharkoo$/, "");
   const helpTitle = `Help: ${plainTitle} | Tharkoo`;
   const seoTitle = helpTitle.length < 30 ? `Help: ${plainTitle} guide | Tharkoo` : helpTitle;
-  const plain = (article.body || "").replace(/<[^>]+>/g, " ").replace(/[#*_>\[\]()`]/g, " ").replace(/\s+/g, " ").trim();
+  const plain = stripDevNotes(article.body || "").replace(/<[^>]+>/g, " ").replace(/[#*_>\[\]()`]/g, " ").replace(/\s+/g, " ").trim();
   const clipped = plain.length > 160 ? `${plain.slice(0, 157).replace(/\s+\S*$/, "")}…` : plain;
   const seoDescription = clipped.length >= 70 ? clipped : `${articleTitle} on Tharkoo help. Read the full guide for step-by-step help with posting, your account and contacting people.`;
   return withUrlSeo(path, {
@@ -57,9 +58,9 @@ export default async function HelpArticlePage({ params }: { params: Promise<{ sl
       section={section || "Help"}
       title={heading}
       updatedLabel={updatedLabel(article.updatedAt)}
-      readLabel={readLabel(article.body || "")}
+      readLabel={readLabel(stripDevNotes(article.body || ""))}
       related={related}
-      body={article.body || ""}
+      body={stripDevNotes(article.body || "")}
       contactHref="/contact/"
     />
   );

@@ -1,23 +1,26 @@
 "use client";
 
 import { ArrowUp, MessageCircle, Phone, Send, X } from "lucide-react";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import type { FormEvent, TouchEvent } from "react";
 import { usePathname } from "next/navigation";
 import { useUrlPaths } from "@/components/UrlPaths";
 import { safeHref } from "@/lib/sanitize";
 import { useDismiss } from "@/components/ui/useDismiss";
 import { api, friendlyError, hasSessionHint } from "@/lib/ui/api";
+import { isSupportOpen, openingLabel, parseSupportHours } from "@/lib/support-hours";
 import { makeT, type UiTextMap } from "@/lib/ui/text";
 import type { ShellConfig } from "@/server/site-links/shell-config-rules";
-import type { SupportTopic } from "@/server/support/constants";
+import { SUBJECT_MAX, TOPIC_LABELS, type SupportTopic } from "@/server/support/constants";
+import { ArticleCards, GuestForm, type ChatArticle, type ChatLine } from "./SupportChatParts";
 
 type Chat = ShellConfig["chat"];
-type Line = { id: number; from: "you" | "support"; text: string };
 type Session = "unknown" | "guest" | "member";
+type LineInput = { kind: "text"; from: "you" | "support"; text: string } | { kind: "articles"; articles: ChatArticle[]; loading: boolean };
 
 const BODY_MIN = 10;
-const SUBJECT_MAX = 60;
 const BACK_TO_TOP_AFTER = 300;
+const SWIPE_CLOSE_PX = 60;
 const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const PHONE = /^\+?[\d\s-]{8,20}$/;
 
@@ -26,19 +29,24 @@ function callLink(value: string) {
   return digits.replace(/\D/g, "").length >= 8 ? `tel:${digits}` : "";
 }
 
-/** H7.1: the live chat bubble, bottom right, closed by default. Each chat opens or continues an H6.21 support ticket. */
-export function SupportChat({ chat, texts }: { chat: Chat; texts?: UiTextMap }) {
-  // H7.8: every visible word in the chat comes from the UI-text store (defaults in src/lib/ui/text.ts).
+function ticketBody(parts: string[], topic: SupportTopic) {
+  const text = parts.join("\n").trim();
+  return text.length >= BODY_MIN ? text : `${text} (${TOPIC_LABELS[topic]})`.trim();
+}
+
+export function SupportChat({ chat, texts, hours = "" }: { chat: Chat; texts?: UiTextMap; hours?: string }) {
   const t = useMemo(() => makeT(texts), [texts]);
+  const supportHours = useMemo(() => parseSupportHours(hours), [hours]);
   const path = usePathname() || "/";
   const paths = useUrlPaths();
   const section = path.split("/")[1];
   const pageBars = section === "u" || section === paths.ad;
-  const floatClass = ["tkn-float", pageBars ? "tkn-float-pagebars" : "", section === "u" ? "tkn-float-panel" : ""].filter(Boolean).join(" ");
   const [open, setOpen] = useState(false);
+  const [online, setOnline] = useState(false);
   const [session, setSession] = useState<Session>("unknown");
   const [topic, setTopic] = useState<SupportTopic>("something_else");
-  const [lines, setLines] = useState<Line[]>([]);
+  const [lines, setLines] = useState<ChatLine[]>([]);
+  const [pending, setPending] = useState<string[]>([]);
   const [draft, setDraft] = useState("");
   const [ticketId, setTicketId] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
@@ -46,10 +54,13 @@ export function SupportChat({ chat, texts }: { chat: Chat; texts?: UiTextMap }) 
   const [showTop, setShowTop] = useState(false);
   const [guest, setGuest] = useState({ name: "", contact: "" });
   const [guestError, setGuestError] = useState("");
-  const [guestDone, setGuestDone] = useState(false);
-  const [guestSent, setGuestSent] = useState(false);
+  const [contactOpen, setContactOpen] = useState(false);
+  const [sent, setSent] = useState(false);
   const nextLine = useRef(0);
+  const swipeStart = useRef<number | null>(null);
   const bubble = useRef<HTMLButtonElement>(null);
+  const bodyRef = useRef<HTMLDivElement>(null);
+  const float = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const onScroll = () => setShowTop(window.scrollY > BACK_TO_TOP_AFTER);
@@ -64,9 +75,8 @@ export function SupportChat({ chat, texts }: { chat: Chat; texts?: UiTextMap }) 
     };
   }, []);
 
-  // H7.4c: a click or tap outside the chat (panel and bubble) closes it, as does Escape.
-  const float = useRef<HTMLDivElement>(null);
-  useDismiss(open, float, () => setOpen(false));
+  const closePanel = useCallback(() => setOpen(false), []);
+  useDismiss(open, float, closePanel);
 
   useEffect(() => {
     if (!open) return;
@@ -79,7 +89,6 @@ export function SupportChat({ chat, texts }: { chat: Chat; texts?: UiTextMap }) 
     return () => document.removeEventListener("keydown", onKey);
   }, [open]);
 
-  // A signed-in visitor continues their newest open ticket, so the next message lands in the same Support desk thread.
   useEffect(() => {
     if (!open || session !== "member" || ticketId) return;
     let cancelled = false;
@@ -93,47 +102,33 @@ export function SupportChat({ chat, texts }: { chat: Chat; texts?: UiTextMap }) 
     };
   }, [open, session, ticketId]);
 
-  function add(from: Line["from"], text: string) {
+  useEffect(() => {
+    const body = bodyRef.current;
+    if (body) body.scrollTop = body.scrollHeight;
+  }, [lines, contactOpen, sent]);
+
+  function toggle() {
+    if (!open) setOnline(isSupportOpen(supportHours, new Date()));
+    setOpen((value) => !value);
+  }
+
+  function add(line: LineInput) {
     nextLine.current += 1;
-    setLines((rows) => [...rows, { id: nextLine.current, from, text }]);
+    const id = nextLine.current;
+    setLines((rows) => [...rows, { ...line, id }]);
+    return id;
   }
 
-  function submitGuest(event: React.FormEvent) {
-    event.preventDefault();
-    const name = guest.name.trim();
-    const contact = guest.contact.trim();
-    if (name.length < 2) return setGuestError(t("chat.guest.needName"));
-    if (!EMAIL.test(contact) && !PHONE.test(contact)) return setGuestError(t("chat.guest.needContact"));
-    setGuestError("");
-    setGuestDone(true);
+  async function tapQuick(item: Chat["topics"][number]) {
+    setTopic(item.topic);
+    setPending((rows) => [...rows, item.label]);
+    add({ kind: "text", from: "you", text: item.label });
+    const id = add({ kind: "articles", articles: [], loading: true });
+    const res = await api<ChatArticle[]>(`/api/support-articles?topic=${item.topic}&q=${encodeURIComponent(item.label)}`);
+    setLines((rows) => rows.map((row) => (row.id === id && row.kind === "articles" ? { ...row, articles: res.ok ? res.data : [], loading: false } : row)));
   }
 
-  /** H7.1: a guest opens one ticket with the name and contact given. Replies come by email link when an address was given. */
-  async function sendAsGuest(text: string) {
-    setBusy(true);
-    setError("");
-    const contact = guest.contact.trim();
-    const byEmail = EMAIL.test(contact);
-    const res = await api<{ replyVia: "email" | "phone"; emailed: boolean }>("/api/support/guest/tickets", {
-      method: "POST",
-      body: JSON.stringify({ name: guest.name.trim(), email: byEmail ? contact : "", phone: byEmail ? "" : contact, topic, body: text }),
-    });
-    setBusy(false);
-    if (!res.ok) return setError(friendlyError(res.error));
-    setGuestSent(true);
-    add("you", text);
-    add(
-      "support",
-      res.data.replyVia === "email" ? t("chat.guest.replyEmail") : t("chat.guest.replyPhone"),
-    );
-    setDraft("");
-  }
-
-  async function send(event: React.FormEvent) {
-    event.preventDefault();
-    const text = draft.trim();
-    if (text.length < BODY_MIN) return setError(t("chat.composer.minLength", { count: BODY_MIN }));
-    if (session === "guest") return sendAsGuest(text);
+  async function openMemberTicket(text: string) {
     setBusy(true);
     setError("");
     const res = ticketId
@@ -143,11 +138,67 @@ export function SupportChat({ chat, texts }: { chat: Chat; texts?: UiTextMap }) 
           body: JSON.stringify({ topic, subject: text.slice(0, SUBJECT_MAX), body: text }),
         });
     setBusy(false);
-    if (!res.ok) return setError(friendlyError(res.error));
-    if (!ticketId && res.data && typeof res.data === "object" && "id" in res.data) setTicketId(String(res.data.id));
-    add("you", text);
-    add("support", t("chat.reply.first"));
+    if (!res.ok) {
+      setError(friendlyError(res.error));
+      return false;
+    }
+    const first = !ticketId;
+    if (first && res.data && typeof res.data === "object" && "id" in res.data) setTicketId(String(res.data.id));
+    add({ kind: "text", from: "support", text: t("chat.sent") });
+    setPending([]);
+    return true;
+  }
+
+  function talk() {
+    if (session === "member") {
+      void openMemberTicket(ticketBody(pending, topic));
+      return;
+    }
+    setContactOpen(true);
+  }
+
+  async function sendFree(event: FormEvent) {
+    event.preventDefault();
+    const text = draft.trim();
+    if (text.length < BODY_MIN) return setError(t("chat.composer.minLength", { count: BODY_MIN }));
+    setError("");
+    if (session === "member") {
+      add({ kind: "text", from: "you", text });
+      setDraft("");
+      await openMemberTicket(text);
+      return;
+    }
+    add({ kind: "text", from: "you", text });
+    setPending((rows) => [...rows, text]);
     setDraft("");
+    setContactOpen(true);
+  }
+
+  async function submitGuest(event: FormEvent) {
+    event.preventDefault();
+    const name = guest.name.trim();
+    const contact = guest.contact.trim();
+    if (name.length < 2) return setGuestError(t("chat.guest.needName"));
+    const byEmail = EMAIL.test(contact);
+    if (!byEmail && !PHONE.test(contact)) return setGuestError(t("chat.guest.needContact"));
+    setGuestError("");
+    setBusy(true);
+    const res = await api<{ replyVia: "email" | "phone"; emailed: boolean }>("/api/support/guest/tickets", {
+      method: "POST",
+      body: JSON.stringify({ name, email: byEmail ? contact : "", phone: byEmail ? "" : contact, topic, body: ticketBody(pending, topic) }),
+    });
+    setBusy(false);
+    if (!res.ok) return setGuestError(friendlyError(res.error));
+    setSent(true);
+    setContactOpen(false);
+    setPending([]);
+    add({ kind: "text", from: "support", text: res.data.replyVia === "email" ? t("chat.sent") : t("chat.guest.replyPhone") });
+  }
+
+  function onSwipeEnd(event: TouchEvent) {
+    const start = swipeStart.current;
+    swipeStart.current = null;
+    if (start !== null && event.changedTouches[0].clientY - start > SWIPE_CLOSE_PX) setOpen(false);
   }
 
   const whatsapp = safeHref(chat.whatsapp);
@@ -158,22 +209,32 @@ export function SupportChat({ chat, texts }: { chat: Chat; texts?: UiTextMap }) 
     telegram ? { label: "Telegram", href: telegram, icon: "tg" } : null,
     call ? { label: "Call", href: call, icon: "call" } : null,
   ].filter((item): item is { label: string; href: string; icon: string } => item !== null);
-  // Members write at once. A guest writes after the name and contact step, and once: the first message opens the ticket.
-  const canWrite = session === "member" || (session === "guest" && guestDone && !guestSent);
-  const showGuest = session === "guest" && !guestDone;
+  const guestLocked = session !== "member" && sent;
+  const canTalk = !sent && !contactOpen;
+  const status = online ? t("chat.status.online") : t("chat.status.offline", { time: openingLabel(supportHours) });
+  const floatClass = ["tkn-float", pageBars ? "tkn-float-pagebars" : "", section === "u" ? "tkn-float-panel" : "", open ? "tkn-float-open" : ""].filter(Boolean).join(" ");
 
   return (
     <div className={floatClass} ref={float}>
       {open ? (
-        <section aria-label={chat.title} className="tkn-chatbox" id="tkn-chat-panel">
-          <div className="tkn-chat-head">
+        <section aria-label={chat.title} className="tkn-chatbox" id="tkn-chat-panel" data-tk="support-chat">
+          <div
+            className="tkn-chat-head"
+            onTouchStart={(event) => {
+              swipeStart.current = event.touches[0].clientY;
+            }}
+            onTouchEnd={onSwipeEnd}
+          >
             <span className="tkn-mark" aria-hidden="true">t</span>
             <div className="tkn-chat-title">
               <strong>{chat.title}</strong>
-              <span className="tkn-chat-status"><span className="tkn-dot" aria-hidden="true" />{chat.status}</span>
+              <span className="tkn-chat-status" data-tk="chat-status" data-online={online ? "yes" : "no"}>
+                <span className={online ? "tkn-dot" : "tkn-dot tkn-dot-off"} aria-hidden="true" />
+                {status}
+              </span>
             </div>
-            <button type="button" className="tkn-icon-btn" aria-label={t("chat.closePanel")} onClick={() => setOpen(false)}>
-              <X size={18} aria-hidden="true" focusable="false" />
+            <button type="button" className="tkn-chat-close" aria-label={t("chat.closePanel")} onClick={closePanel}>
+              <X size={20} aria-hidden="true" focusable="false" />
             </button>
           </div>
           {quick.length ? (
@@ -186,53 +247,42 @@ export function SupportChat({ chat, texts }: { chat: Chat; texts?: UiTextMap }) 
               ))}
             </div>
           ) : null}
-          <div className="tkn-chat-body" aria-live="polite">
+          <div className="tkn-chat-body" aria-live="polite" ref={bodyRef}>
             <p className="tkn-bubble tkn-bubble-in">{chat.welcome}</p>
             <div className="tkn-topics" role="group" aria-label={t("chat.topicsLabel")}>
               {chat.topics.map((item) => (
-                <button
-                  key={item.label}
-                  type="button"
-                  className="tkn-chip"
-                  aria-pressed={topic === item.topic}
-                  onClick={() => setTopic(item.topic)}
-                >
+                <button key={item.label} type="button" className="tkn-chip" data-tk="chat-quick" onClick={() => void tapQuick(item)}>
                   {item.label}
                 </button>
               ))}
             </div>
-            {showGuest ? (
-              <form className="tkn-guest" onSubmit={submitGuest} noValidate>
-                <p className="t-small">{chat.guestHint}</p>
-                <label className="tkn-field">
-                  <span>{t("chat.guest.name")}</span>
-                  <input value={guest.name} autoComplete="name" maxLength={80} onChange={(e) => setGuest({ ...guest, name: e.target.value })} />
-                </label>
-                <label className="tkn-field">
-                  <span>{t("chat.guest.contact")}</span>
-                  <input value={guest.contact} autoComplete="email" maxLength={120} onChange={(e) => setGuest({ ...guest, contact: e.target.value })} />
-                </label>
-                {guestError ? <p className="tkn-error" role="alert">{guestError}</p> : null}
-                <button type="submit" className="tkn-btn tkn-btn-primary tkn-btn-block">{t("chat.guest.continue")}</button>
-              </form>
-            ) : null}
-            {lines.map((line) => (
-              <p key={line.id} className={line.from === "you" ? "tkn-bubble tkn-bubble-you" : "tkn-bubble tkn-bubble-in"}>{line.text}</p>
-            ))}
+            {lines.map((line) =>
+              line.kind === "articles" ? (
+                <ArticleCards key={line.id} line={line} t={t} canTalk={canTalk} onTalk={talk} />
+              ) : (
+                <p key={line.id} className={line.from === "you" ? "tkn-bubble tkn-bubble-you" : "tkn-bubble tkn-bubble-in"}>{line.text}</p>
+              ),
+            )}
+            {contactOpen && !sent ? <GuestForm hint={chat.guestHint} t={t} value={guest} error={guestError} busy={busy} onChange={setGuest} onSubmit={submitGuest} /> : null}
             {error ? <p className="tkn-error" role="alert">{error}</p> : null}
           </div>
-          {canWrite ? (
-            <form className="tkn-composer" onSubmit={send}>
-              <label className="tkn-sr" htmlFor="tkn-chat-input">{t("chat.composer.label")}</label>
-              <input id="tkn-chat-input" value={draft} placeholder={t("chat.composer.placeholder")} maxLength={4000} onChange={(e) => setDraft(e.target.value)} />
-              <button type="submit" className="tkn-send" aria-label={t("chat.composer.send")} disabled={busy}>
-                <Send size={18} aria-hidden="true" focusable="false" />
-              </button>
-            </form>
-          ) : null}
+          <form className="tkn-composer" onSubmit={sendFree}>
+            <label className="tkn-sr" htmlFor="tkn-chat-input">{t("chat.composer.label")}</label>
+            <input
+              id="tkn-chat-input"
+              value={draft}
+              placeholder={guestLocked ? t("chat.sent.placeholder") : t("chat.composer.placeholder")}
+              maxLength={4000}
+              disabled={guestLocked}
+              onChange={(e) => setDraft(e.target.value)}
+            />
+            <button type="submit" className="tkn-send" aria-label={t("chat.composer.send")} disabled={busy || guestLocked}>
+              <Send size={18} aria-hidden="true" focusable="false" />
+            </button>
+          </form>
         </section>
       ) : null}
-      {showTop ? (
+      {showTop && !open ? (
         <button type="button" className="tkn-top" aria-label={t("chat.backToTop")} onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}>
           <ArrowUp size={18} aria-hidden="true" focusable="false" />
         </button>
@@ -244,7 +294,7 @@ export function SupportChat({ chat, texts }: { chat: Chat; texts?: UiTextMap }) 
         aria-expanded={open}
         aria-controls={open ? "tkn-chat-panel" : undefined}
         aria-label={open ? t("chat.close") : t("chat.open")}
-        onClick={() => setOpen((value) => !value)}
+        onClick={toggle}
       >
         <MessageCircle size={26} aria-hidden="true" focusable="false" />
       </button>

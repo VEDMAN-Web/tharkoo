@@ -1,0 +1,16 @@
+{
+  "branchPrefix": "haiku/h7.64",
+  "globs": [
+    "docs/ownership/H7.64.json",
+    "src/components/chat/SupportChat.tsx",
+    "src/components/chat/SupportChatParts.tsx",
+    "src/components/PathChrome.tsx",
+    "src/lib/support-hours.ts",
+    "src/lib/ui/text.ts",
+    "src/server/support/articles.ts",
+    "src/app/api/support-articles/**",
+    "src/app/globals.css",
+    "src/app/admin/menus/ShellEditor.tsx",
+    "tests/**"
+  ]
+}
