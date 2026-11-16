@@ -3,7 +3,7 @@ import { pageMetadata } from "@/lib/ui/meta";
 
 export const metadata = pageMetadata({
   title: "Wallet | Tharkoo",
-  description: "Your Tharkoo coin balance, coin packs, vendor earnings and withdrawals.",
+  description: "Your Tharkoo credit balance, credit packs, vendor earnings and withdrawals.",
   path: "/u/account/wallet/",
   index: false,
 });

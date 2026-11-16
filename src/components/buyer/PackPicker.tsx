@@ -11,7 +11,7 @@ function inr(value: number) {
 }
 
 function tagText(tag: string) {
-  return tag.replace(/extra credits/i, "Extra coins");
+  return tag.replace(/extra (coins|credits)/i, "Extra credits");
 }
 
 export function PackPicker({ packs, onPaid }: { packs: PackRow[]; onPaid?: (balance: number) => void }) {
@@ -27,7 +27,7 @@ export function PackPicker({ packs, onPaid }: { packs: PackRow[]; onPaid?: (bala
       body: JSON.stringify({ packId: chosen.id, idempotencyKey: idempotencyKey(chosen.id) }),
     });
     if (!res.ok) {
-      if (res.error.code === "PAYMENT_REQUIRED") return setMessage("Payment is required before coins can be added.");
+      if (res.error.code === "PAYMENT_REQUIRED") return setMessage("Payment is required before credits can be added.");
       if (res.error.code === "CONFLICT") return setMessage("That payment was already used.");
       return setMessage(friendlyError(res.error));
     }
@@ -38,14 +38,14 @@ export function PackPicker({ packs, onPaid }: { packs: PackRow[]; onPaid?: (bala
 
   return (
     <>
-      <div role="radiogroup" aria-label="Coin packs" className="up-packs">
+      <div role="radiogroup" aria-label="Credit packs" className="up-packs">
         {packs.map((pack) => {
           const on = pack.id === selected;
           return (
             <button key={pack.id} type="button" role="radio" aria-checked={on} className={on ? "up-pack up-pack-on" : "up-pack"} data-tk="pack" onClick={() => setSelected(pack.id)}>
               {pack.tag ? <span className="up-pack-tag">{tagText(pack.tag)}</span> : null}
               <span className="up-pack-coins">{pack.credits + (pack.bonus || 0)}</span>
-              <span className="up-pack-unit">coins{pack.bonus ? ` (${pack.credits} + ${pack.bonus} free)` : ""}</span>
+              <span className="up-pack-unit">credits{pack.bonus ? ` (${pack.credits} + ${pack.bonus} free)` : ""}</span>
               <span className="up-pack-price">{inr(pack.price)}</span>
             </button>
           );

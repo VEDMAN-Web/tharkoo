@@ -42,7 +42,7 @@ export function SupportList({ selectedId, onSelect }: { selectedId: string | nul
     );
   }
   if (error) return <p role="alert" className="up-error">{friendlyError(error)}</p>;
-  if (rows.length === 0) return <p className="up-muted">You have no tickets yet. Open one if you need help with coins, your ads or your account.</p>;
+  if (rows.length === 0) return <p className="up-muted">You have no tickets yet. Open one if you need help with credits, your ads or your account.</p>;
 
   return (
     <ul className="up-ticket-ul" aria-label="Your tickets">

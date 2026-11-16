@@ -6,8 +6,8 @@ import { pageMetadata } from "@/lib/ui/meta";
 
 export const dynamic = "force-dynamic";
 export const metadata = pageMetadata({
-  title: "Coins and payments | Tharkoo",
-  description: "Your Tharkoo coin balance.",
+  title: "Credits and payments | Tharkoo",
+  description: "Your Tharkoo credit balance.",
   path: "/u/account/credits/",
   index: false,
 });

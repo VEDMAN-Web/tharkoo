@@ -5,11 +5,11 @@ import type { NotificationItem } from "@/server/notifications/feed";
 
 /** H7.6: the Notifications list. Items come from real sources (support, chats, coins). */
 
-const KIND_LABEL: Record<NotificationItem["kind"], string> = { support: "Support", chat: "Chat", coins: "Coins" };
+const KIND_LABEL: Record<NotificationItem["kind"], string> = { support: "Support", chat: "Chat", coins: "Credits" };
 
 export function NotificationsPanel({ items }: { items: NotificationItem[] | null }) {
   if (items === null) {
-    return <SignedOutPanel next="/u/account/notifications/" title="Log in to see notifications" body="Replies, chat messages and coin updates show here after you log in." />;
+    return <SignedOutPanel next="/u/account/notifications/" title="Log in to see notifications" body="Replies, chat messages and credit updates show here after you log in." />;
   }
   return (
     <section aria-labelledby="notif-heading" className={`up-panel up-glass`}>
@@ -18,7 +18,7 @@ export function NotificationsPanel({ items }: { items: NotificationItem[] | null
       {items.length === 0 ? (
         <div className="up-empty">
           <p className="up-empty-title">No notifications yet</p>
-          <p className="up-empty-body">Support replies, unread chats and coin updates will show here.</p>
+          <p className="up-empty-body">Support replies, unread chats and credit updates will show here.</p>
           <Link href="/u/account/dashboard/" className="up-btn-ghost">Back to my panel</Link>
         </div>
       ) : (

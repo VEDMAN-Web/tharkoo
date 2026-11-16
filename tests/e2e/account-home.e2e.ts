@@ -24,7 +24,7 @@ async function openMenu(page: Page) {
 }
 
 test.describe("H7.73 one account home", () => {
-  test("the avatar menu lists My account, My ads, Chats, Saved ads, Coins, Help, Settings and Log out", async ({ page, baseURL }) => {
+  test("the avatar menu lists My account, My ads, Chats, Saved ads, Credits, Help, Settings and Log out", async ({ page, baseURL }) => {
     const { email } = await newUserApi(baseURL!, "menu");
     await loginUi(page, email, undefined, "/");
     await openMenu(page);
@@ -33,7 +33,7 @@ test.describe("H7.73 one account home", () => {
     await expect(menu.getByRole("menuitem", { name: "My ads" })).toHaveAttribute("href", "/u/account/ads/");
     await expect(menu.getByRole("menuitem", { name: "Chats" })).toHaveAttribute("href", "/u/account/messages/");
     await expect(menu.getByRole("menuitem", { name: "Saved ads" })).toHaveAttribute("href", "/u/account/saved/");
-    await expect(menu.getByRole("menuitem", { name: "Coins", exact: true })).toHaveAttribute("href", "/u/account/credits/");
+    await expect(menu.getByRole("menuitem", { name: "Credits", exact: true })).toHaveAttribute("href", "/u/account/credits/");
     await expect(menu.getByRole("menuitem", { name: "Help and support" })).toHaveAttribute("href", "/u/account/support/");
     await expect(menu.getByRole("menuitem", { name: "Settings" })).toHaveAttribute("href", "/u/account/edit-account/");
     await expect(menu.getByRole("menuitem", { name: "Log out" })).toBeVisible();
@@ -47,7 +47,7 @@ test.describe("H7.73 one account home", () => {
     await expect(page.getByRole("heading", { level: 1 })).toHaveText("Find it, save it, chat with the advertiser");
     const nav = page.getByRole("navigation", { name: "My account" });
     for (const label of NAV_LABELS) await expect(nav.getByRole("link", { name: new RegExp(`^${label}`) })).toBeVisible();
-    await expect(nav.getByRole("link", { name: /^Coins and payments/ })).toBeVisible();
+    await expect(nav.getByRole("link", { name: /^Credits and payments/ })).toBeVisible();
     const headline = await page.locator("h1").innerText();
 
     await becomeSeller(page, baseURL!);

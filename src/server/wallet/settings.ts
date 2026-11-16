@@ -10,7 +10,7 @@ const KEY = "finance";
 export const DEFAULT_FINANCE_SETTINGS = {
   tdsPercent: 0,
   gstPercent: 0,
-  coinValueInr: 100,
+  coinValueInr: 10,
   minWithdrawCoins: 5,
   withdrawCooldownDays: 3,
 };

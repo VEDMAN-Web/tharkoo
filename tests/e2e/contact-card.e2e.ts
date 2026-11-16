@@ -54,9 +54,9 @@ const TOUR_COINS = 2;
 const BASE_LABELS = ["Call", "WhatsApp", "Chat online now"];
 // H7.5 (relay #69): a people ad has no video call. Call, WhatsApp and chat stay.
 const PEOPLE_LABELS = ["Call", "WhatsApp", "Chat online now"];
-const TOUR_LABEL = `Video call and verify · ${TOUR_COINS} coins`;
+const TOUR_LABEL = `Video call and verify · ${TOUR_COINS} credits`;
 const PHONE_PEOPLE_LABELS = ["Call", "WhatsApp", "Chat"];
-const PHONE_TOUR_LABELS = ["WhatsApp", "Chat", `Video · ${TOUR_COINS} coins`];
+const PHONE_TOUR_LABELS = ["WhatsApp", "Chat", `Video · ${TOUR_COINS} credits`];
 
 /** The first ad on a city feed. (firstAdPath needs a super-top card, which the property feed may not have.) */
 async function anyAdPath(page: Page, feed: string) {

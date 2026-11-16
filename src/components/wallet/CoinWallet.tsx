@@ -40,17 +40,17 @@ interface Movement {
 
 type Tab = "buy" | "earnings" | "history";
 const TABS: { key: Tab; label: string }[] = [
-  { key: "buy", label: "Buy coins" },
+  { key: "buy", label: "Buy credits" },
   { key: "earnings", label: "Earnings" },
   { key: "history", label: "History" },
 ];
 
-const HELD = "The payment provider is not connected yet. No money was taken and no coins were added.";
+const HELD = "The payment provider is not connected yet. No money was taken and no credits were added.";
 
 function Balance({ balance, coinValueInr }: { balance: number; coinValueInr: number }) {
   return (
     <section
-      aria-label="Coin balance"
+      aria-label="Credit balance"
       style={{
         borderRadius: 16,
         padding: "20px 18px",
@@ -59,8 +59,8 @@ function Balance({ balance, coinValueInr }: { balance: number; coinValueInr: num
         boxShadow: "0 8px 24px rgba(138, 100, 22, 0.18)",
       }}
     >
-      <p className="t-small" style={{ margin: 0, opacity: 0.8 }}>Coin balance</p>
-      <p style={{ margin: "4px 0 0", fontSize: 36, fontWeight: 800, lineHeight: 1.1 }}>{balance} coins</p>
+      <p className="t-small" style={{ margin: 0, opacity: 0.8 }}>Credit balance</p>
+      <p style={{ margin: "4px 0 0", fontSize: 36, fontWeight: 800, lineHeight: 1.1 }}>{balance} credits</p>
       <p className="t-small" style={{ margin: "6px 0 0" }}>About {inr(balance * coinValueInr)} in value</p>
     </section>
   );
@@ -90,11 +90,11 @@ function BuyTab({ data }: { data: CoinsResponse }) {
   }
 
   if (data.packs.length === 0) {
-    return <p className="t-small" style={{ color: "var(--muted)" }}>No coin packs are on sale right now.</p>;
+    return <p className="t-small" style={{ color: "var(--muted)" }}>No credit packs are on sale right now.</p>;
   }
   return (
     <div style={{ display: "grid", gap: 14 }}>
-      <div role="radiogroup" aria-label="Coin packs" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(150px, 1fr))", gap: 10 }}>
+      <div role="radiogroup" aria-label="Credit packs" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(150px, 1fr))", gap: 10 }}>
         {data.packs.map((item) => {
           const on = item.id === selected;
           return (
@@ -116,7 +116,7 @@ function BuyTab({ data }: { data: CoinsResponse }) {
                 boxShadow: on ? "0 0 0 3px rgba(233, 30, 140, 0.25)" : "none",
               }}
             >
-              <span style={{ display: "block", fontSize: 22, fontWeight: 800 }}>{item.coins} coins</span>
+              <span style={{ display: "block", fontSize: 22, fontWeight: 800 }}>{item.coins} credits</span>
               <span className="t-small" style={{ display: "block", color: "var(--muted)" }}>{inr(item.price)}</span>
               {item.tag ? <span className="t-small" style={{ color: "var(--accent)" }}>{item.tag}</span> : null}
             </button>
@@ -124,7 +124,7 @@ function BuyTab({ data }: { data: CoinsResponse }) {
         })}
       </div>
       <button type="button" className="tk-btn tk-btn-cta" disabled={!pack || busy} onClick={buy} style={{ width: "100%" }}>
-        {pack ? `Buy ${pack.coins} coins for ${inr(pack.price)}` : "Choose a pack"}
+        {pack ? `Buy ${pack.coins} credits for ${inr(pack.price)}` : "Choose a pack"}
       </button>
       <div aria-live="polite" className="t-small" style={{ minHeight: 18, color: message === HELD ? "var(--muted)" : "var(--danger, #a12626)" }}>
         {message}
@@ -154,7 +154,7 @@ function HistoryTab() {
         {purchases.map((row) => (
           <div key={row.id} style={{ display: "flex", justifyContent: "space-between", gap: 8, flexWrap: "wrap", borderTop: "1px solid var(--border)", paddingTop: 8 }}>
             <span>
-              <strong>{row.coins} coins</strong> <span className="t-small" style={{ color: "var(--muted)" }}>{dateTime(row.createdAt)}</span>
+              <strong>{row.coins} credits</strong> <span className="t-small" style={{ color: "var(--muted)" }}>{dateTime(row.createdAt)}</span>
             </span>
             <span style={{ display: "flex", gap: 8, alignItems: "center" }}>
               <span className="t-small">{inr(row.amount)} · TDS {row.tdsPercent}% · GST {row.gstPercent}%</span>
@@ -163,8 +163,8 @@ function HistoryTab() {
           </div>
         ))}
       </section>
-      <section aria-label="Coin movements" style={{ display: "grid", gap: 10 }}>
-        <h2 style={{ fontSize: 18, margin: 0 }}>Coin movements</h2>
+      <section aria-label="Credit movements" style={{ display: "grid", gap: 10 }}>
+        <h2 style={{ fontSize: 18, margin: 0 }}>Credit movements</h2>
         {movements.length === 0 ? <p className="t-small" style={{ color: "var(--muted)", margin: 0 }}>No movements yet.</p> : null}
         {movements.map((row) => (
           <div key={row.id} style={{ display: "flex", justifyContent: "space-between", gap: 8, flexWrap: "wrap", borderTop: "1px solid var(--border)", paddingTop: 8 }}>
@@ -206,7 +206,7 @@ export function CoinWallet({ initialTab = "buy" }: { initialTab?: Tab }) {
     return (
       <EmptyState
         title="Sign in to see your wallet"
-        body="Your coin balance and earnings load after you log in."
+        body="Your credit balance and earnings load after you log in."
         action={{ href: "/u/login/?next=/u/account/wallet/", label: "Log in" }}
       />
     );
