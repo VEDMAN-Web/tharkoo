@@ -36,6 +36,7 @@ export function listingLabels(t: TextFn): ListingLabels {
     allStates: t("listing.panel.allStates"),
     allCities: t("listing.panel.allCities"),
     allAreas: t("listing.panel.allAreas"),
+    pickCity: t("listing.panel.pickCity"),
     clear: t("listing.panel.clear"),
     apply: t("listing.panel.apply"),
     noFilters: t("listing.panel.noFilters"),

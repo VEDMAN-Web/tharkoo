@@ -12,6 +12,7 @@ const labels = {
   allStates: "All states",
   allCities: "All cities",
   allAreas: "All areas",
+  pickCity: "Pick a city first",
 } as ListingLabels;
 
 describe("H7.4d: SVG country flags", () => {

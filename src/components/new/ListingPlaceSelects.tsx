@@ -18,7 +18,7 @@ export function scopeToCountry(options: PlaceOption[], site: string, value: stri
  * URL (the place or the category), so the filter URLs stay out of the place selects. Area is disabled until a city
  * page has areas to choose from. H7.4d: states and cities are scoped to the site country.
  */
-export function ListingPlaceSelects({ selects, labels }: { selects: PlaceSelects; labels: Pick<ListingLabels, "category" | "state" | "city" | "area"> }) {
+export function ListingPlaceSelects({ selects, labels }: { selects: PlaceSelects; labels: Pick<ListingLabels, "category" | "state" | "city" | "area" | "allAreas" | "pickCity"> }) {
   const router = useRouter();
   const site = useSiteCountrySlug();
   const go = (options: PlaceOption[], value: string) => {
@@ -48,7 +48,12 @@ export function ListingPlaceSelects({ selects, labels }: { selects: PlaceSelects
       {field(labels.state, selects.states, selects.stateValue)}
       <div className="tkn-ls-cityarea">
         {field(labels.city, selects.cities, selects.cityValue)}
-        {field(labels.area, selects.areas, selects.areaValue, selects.areas.length === 0)}
+        {field(
+          labels.area,
+          selects.areas.length ? selects.areas : [{ value: "", label: selects.cityValue ? labels.allAreas : labels.pickCity, href: "" }],
+          selects.areaValue,
+          selects.areas.length === 0,
+        )}
       </div>
     </div>
   );
