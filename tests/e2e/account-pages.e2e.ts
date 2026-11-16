@@ -1,6 +1,6 @@
 import AxeBuilder from "@axe-core/playwright";
 import type { Page } from "@playwright/test";
-import { expect, hasHorizontalScroll, loginUi, newUserApi, test } from "./helpers";
+import { expect, hasHorizontalScroll, loginUi, newUserApi, PNG, test } from "./helpers";
 
 const SHOTS = process.env.POST_SHOTS ?? "";
 
@@ -47,6 +47,38 @@ test.describe("H7.81 old account pages in the panel", () => {
     await expect(page.locator("[data-tk=kyc-status]")).toContainText("Not checked yet");
     await expect(page.locator("[data-tk=kyc-form]")).toBeVisible();
     await expect(page.getByText(/unsubmitted|pending_review|approved|rejected/)).toHaveCount(0);
+    await api.dispose();
+  });
+
+  test("the identity check uses the site's upload boxes, shows a preview after choosing, and sends for review", async ({ page, baseURL }, info) => {
+    test.setTimeout(120_000);
+    const { api, email } = await newUserApi(baseURL!, "kycboxes");
+    await loginUi(page, email, undefined, "/u/account/kyc/");
+    const front = page.locator("[data-tk=upload-front]");
+    const selfie = page.locator("[data-tk=upload-selfie]");
+    await expect(front).toContainText("Add photo of your ID");
+    await expect(selfie).toContainText("Add a photo of you holding it");
+    for (const box of [front, selfie]) {
+      expect((await box.boundingBox())!.height).toBeGreaterThanOrEqual(120);
+      expect(await box.evaluate((node) => getComputedStyle(node).borderStyle)).toBe("dashed");
+      await expect(box.locator("svg")).toBeVisible();
+    }
+    await expect(page.getByText("No file chosen")).toHaveCount(0);
+    await page.locator("#front-id").setInputFiles({ name: "front.png", mimeType: "image/png", buffer: PNG });
+    await expect(front.locator("img.up-drop-thumb")).toBeVisible();
+    await expect(front).toContainText("Photo added");
+    expect(await serious(page)).toEqual([]);
+    if (SHOTS) {
+      for (const [width, height] of [[1536, 674], [1366, 768], [390, 844]] as [number, number][]) {
+        await page.setViewportSize({ width, height });
+        await page.screenshot({ path: `${SHOTS}/h7-81b-kyc-boxes-${width}x${height}.png` });
+      }
+      await page.setViewportSize(info.project.use.viewport ?? { width: 1440, height: 900 });
+    }
+    await page.locator("#selfie-id").setInputFiles({ name: "me.png", mimeType: "image/png", buffer: PNG });
+    await page.locator("[data-tk=kyc-submit]").click();
+    await expect(page.locator("[data-tk=kyc-note]")).toContainText(/review/i);
+    await expect(page.locator("[data-tk=kyc-status]")).toContainText("Being checked");
     await api.dispose();
   });
 

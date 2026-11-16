@@ -255,6 +255,16 @@
 .up-status .up-name { color: #1e0b38; }
 .up-form { display: grid; gap: 14px; max-width: 460px; }
 .up-file { width: 100%; box-sizing: border-box; min-height: 48px; padding: 10px 12px; border: 1.5px dashed #e9a6cc; border-radius: 12px; background: #fff8fc; font: inherit; font-size: 14px; color: #4a2870; }
+.up-drop-wrap { position: relative; }
+.up-dropbox { position: relative; min-height: 120px; box-sizing: border-box; display: flex; align-items: center; justify-content: center; gap: 14px; padding: 14px 16px; border: 2px dashed #e9a6cc; border-radius: 16px; background: #fff8fc; color: #a8124f; cursor: pointer; text-align: left; }
+.up-dropbox:hover, .up-dropbox.is-over { background: #fdf0f7; border-color: #d1137a; }
+.up-dropbox:focus-within { outline: 3px solid #7c3aed; outline-offset: 2px; }
+.up-dropbox.has-file { border-style: solid; border-color: #a7f3d0; background: #f4fdf8; color: #047857; }
+.up-drop-icon { width: 52px; height: 52px; flex: none; border-radius: 14px; background: #fce4f0; display: flex; align-items: center; justify-content: center; }
+.up-drop-thumb { width: 72px; height: 72px; flex: none; object-fit: cover; border-radius: 12px; }
+.up-drop-text { display: grid; gap: 2px; min-width: 0; font-size: 13px; color: #4a2870; }
+.up-drop-text strong { font-size: 15px; color: #1e0b38; }
+.up-drop-input { position: absolute; inset: 0; width: 100%; height: 100%; opacity: 0; cursor: pointer; }
 .up-note { margin: 0; padding: 10px 14px; border-radius: 12px; background: #fdf0f7; font-size: 14px; color: #4a2870; }
 .up-list { margin: 0; padding-left: 20px; display: grid; gap: 6px; font-size: 14px; line-height: 1.5; color: #4a2870; }
 .up-actions { display: flex; flex-wrap: wrap; gap: 10px; }
