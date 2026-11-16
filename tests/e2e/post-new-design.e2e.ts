@@ -24,7 +24,7 @@ test.describe("H7.5 post-ad, New design", () => {
     test.setTimeout(180_000);
     await signedInPoster(page, baseURL!, "steps");
     await expect(page.locator(".tkp-post")).toBeVisible();
-    await expect(page.locator("[data-tk=step-title]")).toContainText(/information/i);
+    await expect(page.locator("[data-tk=step-title]")).toHaveText("What are you posting?");
     await expect(page.locator(".tkp-step")).toHaveCount(5);
     await expect(page.locator("[data-tk=step-of]")).toContainText("Step 1 of 5");
     await expect(page.locator("h1")).toHaveCount(1);
@@ -45,17 +45,27 @@ test.describe("H7.5 post-ad, New design", () => {
     await page.locator(".tkp-tile", { hasText: "Jobs" }).click();
     await page.locator("[data-tk=go-on]").click();
     await page.locator("#title").fill("Preview check title");
-    await expect(page.locator(".tkp-preview-title")).toHaveText("Preview check title");
-    await page.locator("#price").fill("18,000");
-    await expect(page.locator(".tkp-preview-price")).toContainText("₹18,000");
+    const phone = (page.viewportSize()?.width ?? 1440) < 1024;
+    if (phone) await page.locator("[data-tk=open-preview]").click();
+    const card = phone ? page.locator("[data-tk=preview-sheet]") : page.locator("[data-tk=post-preview]");
+    await expect(card.locator(".tkn-ls-title")).toHaveText("Preview check title");
+    if (phone) await page.getByRole("button", { name: "Close preview" }).click();
+    await page.locator("#price").fill("18000");
+    if (phone) await page.locator("[data-tk=open-preview]").click();
+    await expect(card.locator(".tkn-ls-price")).toContainText("18,000");
   });
 
-  test("continuing with nothing chosen shows the error and stays on step 1", async ({ page, baseURL }) => {
+  test("Continue stays off until a category is chosen, and the title error shows inline", async ({ page, baseURL }) => {
     test.setTimeout(120_000);
     await signedInPoster(page, baseURL!, "errors");
+    await expect(page.locator("[data-tk=go-on]")).toBeDisabled();
+    await page.locator(".tkp-tile", { hasText: "Jobs" }).click();
+    await expect(page.locator("[data-tk=go-on]")).toBeEnabled();
     await page.locator("[data-tk=go-on]").click();
+    await page.locator("#title").fill("ab");
+    await page.locator("#text").focus();
     await expect(page.locator(".tkp-main [data-tk=field-error]").first()).toBeVisible();
-    await expect(page.locator("[data-tk=step-of]")).toContainText("Step 1 of 5");
+    await expect(page.locator("[data-tk=step-of]")).toContainText("Step 2 of 5");
   });
 
   test("publish from the five steps goes live", async ({ page, baseURL }) => {
