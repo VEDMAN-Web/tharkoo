@@ -1,5 +1,6 @@
 export const SUPPORT_PHONE = "+91 912345678";
 export const SUPPORT_TELEGRAM = "@tharkoo_support";
+export const SUPPORT_EMAIL = "support@tharkoo.com";
 
 const MIN_PHONE_DIGITS = 8;
 
@@ -16,6 +17,11 @@ export function telHref(value: string): string {
 export function whatsappHref(value: string): string {
   const digits = phoneDigits(value);
   return digits.length < MIN_PHONE_DIGITS ? "" : `https://wa.me/${digits}`;
+}
+
+export function mailtoHref(value: string): string {
+  const address = value.trim();
+  return /^[^ @]+@[^ @]+$/.test(address) ? `mailto:${address}` : "";
 }
 
 export function telegramHref(value: string): string {
