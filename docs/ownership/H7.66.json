@@ -1,0 +1,18 @@
+{
+  "branchPrefix": "haiku/h7.66",
+  "globs": [
+    "docs/ownership/H7.66.json",
+    "src/app/globals.css",
+    "src/components/ContactButtons.tsx",
+    "src/components/chat/ChatPanel.tsx",
+    "src/components/chat/ChatThread.tsx",
+    "src/components/new/AdActions.tsx",
+    "src/components/new/NewAdDetail.tsx",
+    "src/components/new/NewGallery.tsx",
+    "src/components/new/ad-spec.css",
+    "src/lib/ui/text.ts",
+    "src/server/search/query.ts",
+    "tests/e2e/ad-page.e2e.ts",
+    "tests/server/search/trust-marks.test.ts"
+  ]
+}

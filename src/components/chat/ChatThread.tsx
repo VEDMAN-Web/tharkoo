@@ -10,11 +10,22 @@ const IMAGE_TYPES = ["image/jpeg", "image/png", "image/webp"];
 type Message = { id: string; mine: boolean; text: string; imageUrl: string | null; createdAt: string; read: boolean; deleted: boolean };
 type Info = { listingTitle: string; blocked: boolean; reported: boolean; role: "buyer" | "seller" };
 type Loaded = { conversation: Info; messages: Message[] };
+export type CreateResult = { id: string } | { error: string };
 
 const buttonStyle = { minHeight: 32, padding: "4px 12px", fontSize: 13 } as const;
 
 /** One conversation: messages, a text box with photo attach, Report and Block. Polls every 5 s while mounted. */
-export function ChatThread({ conversationId }: { conversationId: string }) {
+export function ChatThread({
+  conversationId,
+  onCreate,
+  variant = "page",
+  peerName = "",
+}: {
+  conversationId: string | null;
+  onCreate?: () => Promise<CreateResult>;
+  variant?: "page" | "panel";
+  peerName?: string;
+}) {
   const [info, setInfo] = useState<Info | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
   const [text, setText] = useState("");
@@ -23,9 +34,10 @@ export function ChatThread({ conversationId }: { conversationId: string }) {
   const last = useRef("");
   const endRef = useRef<HTMLDivElement>(null);
 
-  const load = useCallback(async () => {
+  const load = useCallback(async (id: string | null = conversationId) => {
+    if (!id) return;
     const query = last.current ? `?after=${encodeURIComponent(last.current)}` : "";
-    const res = await api<Loaded>(`/api/chat/conversations/${conversationId}/messages${query}`);
+    const res = await api<Loaded>(`/api/chat/conversations/${id}/messages${query}`);
     if (!res.ok) return setNote(friendlyError(res.error));
     setInfo(res.data.conversation);
     if (res.data.messages.length === 0) return;
@@ -37,6 +49,7 @@ export function ChatThread({ conversationId }: { conversationId: string }) {
   }, [conversationId]);
 
   useEffect(() => {
+    if (!conversationId) return;
     const first = window.setTimeout(() => void load(), 0);
     const timer = window.setInterval(() => {
       if (document.visibilityState === "visible") void load();
@@ -45,7 +58,7 @@ export function ChatThread({ conversationId }: { conversationId: string }) {
       window.clearTimeout(first);
       window.clearInterval(timer);
     };
-  }, [load]);
+  }, [load, conversationId]);
 
   useEffect(() => {
     endRef.current?.scrollIntoView?.({ block: "end" });
@@ -56,22 +69,31 @@ export function ChatThread({ conversationId }: { conversationId: string }) {
     if (!body && !photo) return;
     setBusy(true);
     setNote("");
+    let id = conversationId;
+    if (!id) {
+      const created = onCreate ? await onCreate() : { error: "Chat is unavailable right now." };
+      if ("error" in created) {
+        setBusy(false);
+        return setNote(created.error);
+      }
+      id = created.id;
+    }
     let res;
     if (photo) {
       const form = new FormData();
       form.set("text", body);
       form.set("image", photo);
-      const raw = await fetch(`/api/chat/conversations/${conversationId}/messages`, { method: "POST", body: form, credentials: "same-origin" });
+      const raw = await fetch(`/api/chat/conversations/${id}/messages`, { method: "POST", body: form, credentials: "same-origin" });
       const json = (await raw.json().catch(() => null)) as { ok?: boolean; error?: { message?: string } } | null;
       res = json?.ok ? { ok: true as const } : { ok: false as const, message: json?.error?.message || "Could not send the photo." };
     } else {
-      const sent = await api(`/api/chat/conversations/${conversationId}/messages`, { method: "POST", body: JSON.stringify({ text: body }) });
+      const sent = await api(`/api/chat/conversations/${id}/messages`, { method: "POST", body: JSON.stringify({ text: body }) });
       res = sent.ok ? { ok: true as const } : { ok: false as const, message: friendlyError(sent.error) };
     }
     setBusy(false);
     if (!res.ok) return setNote(res.message);
     setText("");
-    await load();
+    await load(id);
   }
 
   function pick(file: File | undefined) {
@@ -96,33 +118,39 @@ export function ChatThread({ conversationId }: { conversationId: string }) {
   }
 
   const closed = info?.blocked ?? false;
+  const panel = variant === "panel";
+  const bubbleStyle = (mine: boolean) =>
+    panel
+      ? undefined
+      : {
+          justifySelf: mine ? "end" : "start",
+          maxWidth: "85%",
+          padding: "8px 12px",
+          borderRadius: 12,
+          background: mine ? "var(--accent)" : "var(--bg-soft)",
+          color: mine ? "#1a1405" : "var(--text)",
+          overflowWrap: "anywhere" as const,
+          whiteSpace: "pre-wrap" as const,
+        };
   return (
-    <div data-tk="chat-thread" style={{ display: "grid", gridTemplateRows: "auto 1fr auto", minHeight: 0, height: "100%" }}>
-      <div style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center", padding: "8px 12px", borderBottom: "1px solid var(--border)" }}>
-        <strong style={{ flex: 1, minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{info?.listingTitle || "Chat"}</strong>
-        <button type="button" className="tk-btn tk-btn-outline-primary" style={buttonStyle} onClick={() => void report()} disabled={info?.reported}>
-          {info?.reported ? "Reported" : "Report"}
-        </button>
-        <button type="button" className="tk-btn tk-btn-outline-primary" style={buttonStyle} onClick={() => void block()} disabled={closed}>
-          {closed ? "Blocked" : "Block"}
-        </button>
-      </div>
-      <div role="log" aria-live="polite" aria-label="Messages" style={{ overflowY: "auto", padding: 12, display: "grid", gap: 8, alignContent: "start" }}>
-        {messages.length === 0 ? <p className="t-small">No messages yet. Say hello. Phone numbers and emails are never shown here.</p> : null}
+    <div data-tk="chat-thread" className={panel ? "tkn-thread" : undefined} style={panel ? undefined : { display: "grid", gridTemplateRows: "auto 1fr auto", minHeight: 0, height: "100%" }}>
+      {panel ? null : (
+        <div style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center", padding: "8px 12px", borderBottom: "1px solid var(--border)" }}>
+          <strong style={{ flex: 1, minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{info?.listingTitle || "Chat"}</strong>
+          <button type="button" className="tk-btn tk-btn-outline-primary" style={buttonStyle} onClick={() => void report()} disabled={info?.reported}>
+            {info?.reported ? "Reported" : "Report"}
+          </button>
+          <button type="button" className="tk-btn tk-btn-outline-primary" style={buttonStyle} onClick={() => void block()} disabled={closed}>
+            {closed ? "Blocked" : "Block"}
+          </button>
+        </div>
+      )}
+      <div role="log" aria-live="polite" aria-label="Messages" className={panel ? "tkn-thread-log" : undefined} style={panel ? undefined : { overflowY: "auto", padding: 12, display: "grid", gap: 8, alignContent: "start" }}>
+        {messages.length === 0 ? (
+          <p className="t-small">{panel ? `Say hello to ${peerName}. Your first message starts the chat.` : "No messages yet. Say hello. Phone numbers and emails are never shown here."}</p>
+        ) : null}
         {messages.map((message) => (
-          <div
-            key={message.id}
-            style={{
-              justifySelf: message.mine ? "end" : "start",
-              maxWidth: "85%",
-              padding: "8px 12px",
-              borderRadius: 12,
-              background: message.mine ? "var(--accent)" : "var(--bg-soft)",
-              color: message.mine ? "#1a1405" : "var(--text)",
-              overflowWrap: "anywhere",
-              whiteSpace: "pre-wrap",
-            }}
-          >
+          <div key={message.id} className={panel ? `tkn-msg${message.mine ? " is-mine" : ""}` : undefined} style={bubbleStyle(message.mine)}>
             {message.deleted ? <em>Message removed</em> : null}
             {message.imageUrl ? (
               // eslint-disable-next-line @next/next/no-img-element
@@ -138,11 +166,12 @@ export function ChatThread({ conversationId }: { conversationId: string }) {
           event.preventDefault();
           void send();
         }}
-        style={{ display: "grid", gap: 6, padding: 12, borderTop: "1px solid var(--border)" }}
+        className={panel ? "tkn-thread-form" : undefined}
+        style={panel ? undefined : { display: "grid", gap: 6, padding: 12, borderTop: "1px solid var(--border)" }}
       >
         {note ? <p role="status" className="t-small" data-tk="chat-note">{note}</p> : null}
         <textarea
-          className="tk-input"
+          className={panel ? "tkn-thread-input" : "tk-input"}
           rows={2}
           maxLength={1000}
           value={text}
@@ -150,14 +179,24 @@ export function ChatThread({ conversationId }: { conversationId: string }) {
           aria-label="Your message"
           placeholder={closed ? "This conversation is blocked" : "Write a message"}
           onChange={(event) => setText(event.target.value)}
-          style={{ fontSize: 16 }}
+          style={panel ? undefined : { fontSize: 16 }}
         />
-        <div style={{ display: "flex", gap: 8 }}>
-          <label className="tk-btn tk-btn-outline-primary" style={{ ...buttonStyle, cursor: "pointer" }} aria-disabled={closed || busy}>
+        <div className={panel ? "tkn-thread-row" : undefined} style={panel ? undefined : { display: "flex", gap: 8 }}>
+          <label className={panel ? "tkn-btn tkn-btn-ghost" : "tk-btn tk-btn-outline-primary"} style={panel ? undefined : { ...buttonStyle, cursor: "pointer" }} aria-disabled={closed || busy}>
             Photo
             <input type="file" accept="image/jpeg,image/png,image/webp" hidden disabled={closed || busy} onChange={(event) => { pick(event.target.files?.[0]); event.target.value = ""; }} />
           </label>
-          <button type="submit" className="tk-btn tk-btn-cta" style={{ ...buttonStyle, marginLeft: "auto" }} disabled={closed || busy || !text.trim()}>
+          {panel && conversationId ? (
+            <>
+              <button type="button" className="tkn-thread-link" onClick={() => void report()} disabled={info?.reported}>
+                {info?.reported ? "Reported" : "Report"}
+              </button>
+              <button type="button" className="tkn-thread-link" onClick={() => void block()} disabled={closed}>
+                {closed ? "Blocked" : "Block"}
+              </button>
+            </>
+          ) : null}
+          <button type="submit" className={panel ? "tkn-btn tkn-btn-primary" : "tk-btn tk-btn-cta"} style={panel ? { marginLeft: "auto" } : { ...buttonStyle, marginLeft: "auto" }} disabled={closed || busy || !text.trim()}>
             Send
           </button>
         </div>

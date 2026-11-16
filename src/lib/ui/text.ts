@@ -106,6 +106,8 @@ export const TEXT_DEFAULTS = {
   "ad.safe.title": "Stay safe",
   "ad.safe.body": "Never pay a deposit before you have seen the place. Use the video call to check first.",
   "ad.safe.otp": "Never share OTPs or card details.",
+  "ad.safe.bodyPeople": "Meet in a public place and tell a friend where you are going. Never send money before you meet.",
+  "ad.report": "Report this ad",
   "ad.meta.line": "{place} \u00b7 Posted {date} \u00b7 {views} \u00b7 {clicks} clicks",
   "ad.about": "About this ad",
   "ad.details": "Details",
@@ -166,7 +168,7 @@ export const TEXT_DEFAULTS = {
   "ad.calling.help": "If {name} does not join within 2 minutes, your coin comes back.",
   "ad.calling.cancel": "Cancel",
   "ad.chat.signIn": "Log in to chat with {name}.",
-  "ad.seller.name": "Seller",
+  "ad.seller.name": "Advertiser",
   "ad.safe.fine": "Tharkoo does not intervene in relationships between users and advertisers. People arrange meetings on their own.",
   // H7.8: the header's short button label (under 420 px) and the live chat (bubble, panel and guest form)
   "header.postShort": "Post ad",
