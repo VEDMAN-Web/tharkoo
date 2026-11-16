@@ -186,6 +186,60 @@ const promotionPicker = z.object({
 
 const postSuccess = z.object({ title: required(120), text: text(500).default(""), primaryCta: opt(link), secondaryCta: opt(link) });
 
+const homeImage = z.object({
+  assetId: text(64).optional(),
+  src: z
+    .string()
+    .trim()
+    .max(500)
+    .refine((value) => safeHref(value) !== "", "Invalid image address"),
+  alt: z.string().trim().min(3, "Describe the image in at least 3 characters").max(125, "Alt text can be at most 125 characters"),
+  width: z.number().int().min(1).max(10000).optional(),
+  height: z.number().int().min(1).max(10000).optional(),
+});
+
+const focusPoint = z.object({ x: z.number().min(0).max(100), y: z.number().min(0).max(100) });
+
+const homeBanner = z.object({
+  imageDesktop: opt(homeImage),
+  imageMobile: opt(homeImage),
+  focus: focusPoint.optional(),
+  phoneFocus: focusPoint.optional(),
+  h1: required(120),
+  textInImage: z.boolean().default(false),
+  subline: text(300).default(""),
+  showSearch: z.boolean().default(true),
+});
+
+const homeCategories = z.object({
+  eyebrow: text(60).default(""),
+  title: required(120),
+  allText: text(60).default(""),
+  count: z.number().int().min(1).max(8).default(4),
+  source: z.enum(["catalogue", "picked"]).default("catalogue"),
+  picked: z.array(slug).max(8).default([]),
+});
+
+const homeAds = z.object({
+  eyebrow: text(60).default(""),
+  title: required(120),
+  moreText: text(60).default(""),
+  listLabel: text(60).default(""),
+});
+
+const homeSteps = z.object({
+  eyebrow: text(60).default(""),
+  title: required(120),
+  items: z.array(z.object({ title: required(80), text: text(300).default("") })).max(3).default([]),
+});
+
+const homeTrust = z.object({
+  items: z.array(z.object({ label: required(60) })).max(5).default([]),
+  phoneButton: opt(link),
+});
+
+const latestPosts = z.object({ title: required(120), count: z.number().int().min(1).max(6).default(3) });
+
 /* ---- registry ---- */
 
 export interface BlockDef {
@@ -195,6 +249,8 @@ export interface BlockDef {
   deletable: boolean;
   /** Most blocks of this type allowed on one page. */
   max?: number;
+  /** Format 2 home blocks: rendered by HomeBlocksV2 only, never offered by the old editors. */
+  v2?: boolean;
 }
 
 const ALL: PageKey[] = ["home", "listing", "post"];
@@ -240,6 +296,12 @@ export const BLOCKS = {
   photoRules: { pages: ["post"], schema: photoRules, defaults: () => ({ title: "Photo rules" }), deletable: true, max: 1 },
   promotionPicker: { pages: ["post"], schema: promotionPicker, defaults: () => ({ title: "Promote your ad" }), deletable: true, max: 1 },
   postSuccess: { pages: ["post"], schema: postSuccess, defaults: () => ({ title: "Your ad is live" }), deletable: true, max: 1 },
+  homeBanner: { pages: ["home"], schema: homeBanner, defaults: () => ({ h1: "Find what you need", textInImage: false, subline: "", showSearch: true }), deletable: false, max: 1, v2: true },
+  homeCategories: { pages: ["home"], schema: homeCategories, defaults: () => ({ title: "Popular categories", count: 4, source: "catalogue", picked: [] }), deletable: true, max: 1, v2: true },
+  homeAds: { pages: ["home"], schema: homeAds, defaults: () => ({ title: "Latest ads in {city}" }), deletable: true, max: 1, v2: true },
+  homeSteps: { pages: ["home"], schema: homeSteps, defaults: () => ({ title: "How it works", items: [] }), deletable: true, max: 1, v2: true },
+  homeTrust: { pages: ["home"], schema: homeTrust, defaults: () => ({ items: [] }), deletable: true, max: 1, v2: true },
+  latestPosts: { pages: ["home"], schema: latestPosts, defaults: () => ({ title: "From the blog", count: 3 }), deletable: true, max: 1, v2: true },
 } satisfies Record<string, BlockDef>;
 
 export type BlockType = keyof typeof BLOCKS;
@@ -255,7 +317,7 @@ export function blockDef(type: string): BlockDef | null {
 
 /** Block types an editor may add to a page. */
 export function typesForPage(page: PageKey): BlockType[] {
-  return BLOCK_TYPES.filter((type) => (BLOCKS[type] as BlockDef).pages.includes(page));
+  return BLOCK_TYPES.filter((type) => (BLOCKS[type] as BlockDef).pages.includes(page) && !(BLOCKS[type] as BlockDef).v2);
 }
 
 /** Common fields of every block, checked before the type's own props. */
