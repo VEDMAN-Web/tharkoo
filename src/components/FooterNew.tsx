@@ -1,76 +1,113 @@
 "use client";
 
-import type { CSSProperties } from "react";
+import type { CSSProperties, ReactNode } from "react";
 import Link from "next/link";
-import { ArrowRight } from "lucide-react";
+import { ArrowRight, BadgeCheck, ChevronRight, Lock, Mail, Sparkles } from "lucide-react";
 import { safeHref } from "@/lib/sanitize";
-import { applyPrefixes, categoryPath } from "@/lib/urls";
+import { applyPrefixes, categoriesPath, categoryPath } from "@/lib/urls";
+import { SUPPORT_EMAIL, SUPPORT_PHONE, SUPPORT_TELEGRAM, mailtoHref, telegramHref, whatsappHref } from "@/lib/support";
 import { useUrlPaths } from "./UrlPaths";
-import { SUPPORT_PHONE, SUPPORT_TELEGRAM, telegramHref, whatsappHref } from "@/lib/support";
+import { BrandMark, type BrandName } from "./BrandMarks";
 import "./FooterNew.css";
 import type { ShellConfig, ShellContact, ShellLink } from "@/server/site-links/shell-config-rules";
 
 type Cat = { slug: string; name: string };
 
-/** P1 / H7.10: the six social squares, always shown in this order. The admin link is used when it has one, else "#". */
-const SOCIALS: { name: string; text: string; bg: string; fg: string; fallback?: string }[] = [
-  { name: "WhatsApp", text: "WA", bg: "#DCFCE7", fg: "#15803D", fallback: whatsappHref(SUPPORT_PHONE) },
-  { name: "X", text: "X", bg: "#F3F4F6", fg: "#111827" },
-  { name: "LinkedIn", text: "in", bg: "#DBEAFE", fg: "#1D4ED8" },
-  { name: "Instagram", text: "IG", bg: "#FCE7F3", fg: "#BE185D" },
-  { name: "Pinterest", text: "P", bg: "#FEE2E2", fg: "#B91C1C" },
-  { name: "Telegram", text: "TG", bg: "#E0F2FE", fg: "#0369A1", fallback: telegramHref(SUPPORT_TELEGRAM) },
+const SOCIALS: { name: string; brand: BrandName; color: string; fill: string; fallback: string }[] = [
+  { name: "WhatsApp", brand: "whatsapp", color: "#25D366", fill: "#25D366", fallback: whatsappHref(SUPPORT_PHONE) },
+  { name: "X", brand: "x", color: "#000000", fill: "#000000", fallback: "" },
+  { name: "LinkedIn", brand: "linkedin", color: "#0A66C2", fill: "#0A66C2", fallback: "" },
+  { name: "Instagram", brand: "instagram", color: "#DD2A7B", fill: "linear-gradient(45deg, #F58529, #DD2A7B 45%, #8134AF 75%, #515BD4)", fallback: "" },
+  { name: "Pinterest", brand: "pinterest", color: "#E60023", fill: "#E60023", fallback: "" },
+  { name: "Telegram", brand: "telegram", color: "#26A5E4", fill: "#26A5E4", fallback: telegramHref(SUPPORT_TELEGRAM) },
 ];
 
-/**
- * P1 / H7.10: the three get-in-touch rows, always shown. The admin value is used when set; an empty value shows the
- * mockup placeholder and links to "#". A Telegram row is matched by its kind or, for older rows, by its label.
- */
+const TRUST_STYLES = [
+  { tone: "blue", icon: BadgeCheck },
+  { tone: "violet", icon: Lock },
+  { tone: "pink", icon: Sparkles },
+] as const;
+
 const CONTACT_ROWS: {
   label: string;
-  text: string;
-  bg: string;
-  fg: string;
-  placeholder: string;
+  tint: string;
+  accent: string;
+  fallback: string;
   hrefFor: (value: string) => string;
+  icon: ReactNode;
   match: (contact: ShellContact) => boolean;
 }[] = [
-  { label: "WhatsApp", text: "WA", bg: "#DCFCE7", fg: "#15803D", placeholder: SUPPORT_PHONE, hrefFor: whatsappHref, match: (c) => c.kind === "whatsapp" },
-  { label: "Telegram", text: "TG", bg: "#E0F2FE", fg: "#0369A1", placeholder: SUPPORT_TELEGRAM, hrefFor: telegramHref, match: (c) => c.kind === "telegram" || /telegram/i.test(c.label) },
-  { label: "Email", text: "@", bg: "#FCE7F3", fg: "#BE185D", placeholder: "[YOUR SUPPORT EMAIL]", hrefFor: () => "", match: (c) => c.kind === "email" },
+  {
+    label: "WhatsApp",
+    tint: "#E9FBF0",
+    accent: "#25D366",
+    fallback: SUPPORT_PHONE,
+    hrefFor: whatsappHref,
+    icon: <BrandMark name="whatsapp" size={22} color="#25D366" />,
+    match: (c) => c.kind === "whatsapp",
+  },
+  {
+    label: "Telegram",
+    tint: "#E8F6FD",
+    accent: "#26A5E4",
+    fallback: SUPPORT_TELEGRAM,
+    hrefFor: telegramHref,
+    icon: <BrandMark name="telegram" size={22} color="#26A5E4" />,
+    match: (c) => c.kind === "telegram" || /telegram/i.test(c.label),
+  },
+  {
+    label: "Email",
+    tint: "#FDE7F2",
+    accent: "#E91E8C",
+    fallback: SUPPORT_EMAIL,
+    hrefFor: mailtoHref,
+    icon: <Mail size={22} color="#C2185B" aria-hidden="true" focusable="false" />,
+    match: (c) => c.kind === "email",
+  },
 ];
 
-function LinkColumn({ title, items, columns }: { title: string; items: ShellLink[]; columns: 1 | 2 }) {
+function LinkColumn({ title, items, className, extra }: { title: string; items: ShellLink[]; className: string; extra?: ShellLink }) {
   const paths = useUrlPaths();
   const shown = items.filter((item) => item.visible && item.label);
   return (
-    <nav aria-label={title} className="tkn-foot-col">
+    <nav aria-label={title} className={`tkn-foot-col ${className}`}>
       <p className="tkn-foot-title"><span aria-hidden="true" className="tkn-foot-dot" />{title}</p>
-      <ul className={columns === 2 ? "tkn-foot-links tkn-foot-links-2" : "tkn-foot-links tkn-foot-links-1"}>
+      <ul className="tkn-foot-links">
         {shown.map((item) => {
           const href = safeHref(item.href);
           return (
             <li key={item.label + item.href}>
-              {href ? <Link href={applyPrefixes(href, paths)} prefetch={false}>{item.label}</Link> : <span>{item.label}</span>}
+              {href ? (
+                <Link href={applyPrefixes(href, paths)} prefetch={false}>
+                  <ChevronRight className="tkn-foot-chev" size={14} aria-hidden="true" focusable="false" />
+                  {item.label}
+                </Link>
+              ) : (
+                <span>{item.label}</span>
+              )}
             </li>
           );
         })}
+        {extra ? (
+          <li>
+            <Link href={applyPrefixes(extra.href, paths)} prefetch={false} className="tkn-foot-all">
+              {extra.label}
+              <ArrowRight size={14} aria-hidden="true" focusable="false" />
+            </Link>
+          </li>
+        ) : null}
       </ul>
     </nav>
   );
 }
 
-/**
- * H7.1 / P1 / H7.10: the one footer on every public page when the New design is on, as the mockup. Nothing is hidden:
- * the six socials, the three get-in-touch rows and the address always show. An empty admin value shows the placeholder
- * and links to "#". All other text comes from the shell config.
- */
 export function FooterNew({ siteName, shell, categories }: { siteName: string; shell: ShellConfig; categories: Cat[] }) {
   const paths = useUrlPaths();
   const f = shell.footer;
   const topCategories: ShellLink[] = f.topCategories.length
     ? f.topCategories
     : categories.slice(0, 6).map((cat) => ({ label: cat.name, href: categoryPath(cat.slug), visible: true, icon: "tag" as const }));
+  const allCategories: ShellLink = { label: "All categories", href: categoriesPath(), visible: true, icon: "grid" };
   const adminLink = (name: string) => f.socials.find((item) => item.visible && item.label.trim().toLowerCase() === name.toLowerCase());
   return (
     <footer className="tkn-footer" data-tk="footer">
@@ -86,50 +123,62 @@ export function FooterNew({ siteName, shell, categories }: { siteName: string; s
           <p className="tkn-foot-about">{f.about}</p>
           {f.trust.length ? (
             <ul className="tkn-pills" aria-label="Trust">
-              {f.trust.map((text) => <li key={text} className="tkn-pill">{text}</li>)}
+              {f.trust.map((text, index) => {
+                const style = TRUST_STYLES[index % TRUST_STYLES.length];
+                const Icon = style.icon;
+                return (
+                  <li key={text} className={`tkn-pill tkn-pill-${style.tone}`}>
+                    <Icon size={14} aria-hidden="true" focusable="false" />
+                    {text}
+                  </li>
+                );
+              })}
             </ul>
           ) : null}
           <ul className="tkn-socials" aria-label="Social links">
             {SOCIALS.map((social) => {
               const link = adminLink(social.name);
-              const href = (link && safeHref(link.href)) || social.fallback || "#";
+              const href = (link && safeHref(link.href)) || social.fallback;
+              const style = { "--sc": social.color, "--sf": social.fill } as CSSProperties;
               return (
                 <li key={social.name}>
-                  <a
-                    href={href}
-                    target={href === "#" ? undefined : "_blank"}
-                    rel={href === "#" ? undefined : "noopener noreferrer"}
-                    className="tkn-social"
-                    aria-label={`${social.text} ${social.name}`}
-                    style={{ "--sb": social.bg, "--sf": social.fg } as CSSProperties}
-                  >
-                    {social.text}
-                  </a>
+                  {href ? (
+                    <a href={href} target="_blank" rel="noopener noreferrer" className="tkn-social" aria-label={`Tharkoo on ${social.name}`} style={style}>
+                      <BrandMark name={social.brand} />
+                    </a>
+                  ) : (
+                    <span className="tkn-social tkn-social-off" role="img" aria-label={`Tharkoo on ${social.name}`} style={style}>
+                      <BrandMark name={social.brand} />
+                    </span>
+                  )}
                 </li>
               );
             })}
           </ul>
         </div>
-        <LinkColumn title="Quick links" items={f.quickLinks} columns={2} />
-        <LinkColumn title="Top categories" items={topCategories} columns={1} />
-        <div className="tkn-foot-col">
+        <LinkColumn title="Quick links" items={f.quickLinks} className="tkn-foot-quick" />
+        <LinkColumn title="Top categories" items={topCategories} className="tkn-foot-top" extra={allCategories} />
+        <div className="tkn-foot-col tkn-foot-touch">
           <p className="tkn-foot-title"><span aria-hidden="true" className="tkn-foot-dot" />Get in touch</p>
           <ul className="tkn-contacts">
             {CONTACT_ROWS.map((row) => {
-              const contact = f.contacts.find((item) => item.visible && item.value && row.match(item));
-              const value = contact?.value || row.placeholder;
-              const href = (contact && safeHref(contact.href)) || row.hrefFor(value) || "#";
+              const contact = f.contacts.find((item) => item.visible && item.value && !item.value.startsWith("[") && row.match(item));
+              const value = contact?.value || row.fallback;
+              const href = (contact && safeHref(contact.href)) || row.hrefFor(value);
+              const style = { "--cb": row.tint, "--ca": row.accent } as CSSProperties;
+              const body = (
+                <>
+                  <span className="tkn-contact-tile" aria-hidden="true">{row.icon}</span>
+                  <span className="tkn-contact-text">
+                    <span className="tkn-contact-label">{row.label}</span>
+                    <span className="tkn-contact-value">{value}</span>
+                  </span>
+                  {href ? <ArrowRight size={16} aria-hidden="true" focusable="false" className="tkn-contact-arrow" /> : null}
+                </>
+              );
               return (
                 <li key={row.label}>
-                  <a href={href} className="tkn-contact">
-                    <span className="tkn-contact-tile" aria-hidden="true" style={{ "--sb": row.bg, "--sf": row.fg } as CSSProperties}>
-                      {row.text}
-                    </span>
-                    <span className="tkn-contact-text">
-                      <span className="tkn-contact-label">{row.label}:</span> <span className="tkn-contact-value">{value}</span>
-                    </span>
-                    <ArrowRight size={16} aria-hidden="true" focusable="false" className="tkn-contact-arrow" />
-                  </a>
+                  {href ? <a href={href} className="tkn-contact" style={style}>{body}</a> : <div className="tkn-contact" style={style}>{body}</div>}
                 </li>
               );
             })}
@@ -146,7 +195,7 @@ export function FooterNew({ siteName, shell, categories }: { siteName: string; s
             <ul className="tkn-legal">
               {f.legal.filter((item) => item.visible && safeHref(item.href)).map((item) => (
                 <li key={item.label + item.href}>
-                  <Link href={applyPrefixes(safeHref(item.href), paths)} prefetch={false} className="tkn-pill">{item.label}</Link>
+                  <Link href={applyPrefixes(safeHref(item.href), paths)} prefetch={false} className="tkn-pill tkn-legal-pill">{item.label}</Link>
                 </li>
               ))}
             </ul>
