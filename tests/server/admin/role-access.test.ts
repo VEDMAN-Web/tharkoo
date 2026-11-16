@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { canUseModel } from "@/lib/admin-model-access";
-import { canOpenAdminPath, routeMinRole } from "@/lib/admin-gate";
+import { canOpenAdminPath } from "@/lib/admin-gate";
 
 const ROLES = {
   superadmin: ["superadmin"],
@@ -10,20 +10,22 @@ const ROLES = {
   seo_editor: ["seo_editor"],
   support: ["support"],
   finance: ["finance"],
+  blog_editor: ["blog_editor"],
   user: ["user"],
   anonymous: [],
 } as const;
 
 type RoleName = keyof typeof ROLES;
 
-/** Every route the sidebar names, with the roles that may open it. Anything else needs admin. */
+/** Every route the screens map names, with the roles that may open it. Anything else needs admin. */
+const ALL_STAFF: RoleName[] = ["superadmin", "admin", "moderator", "trust_safety", "seo_editor", "support", "finance", "blog_editor"];
 const ROUTE_TABLE: [string, RoleName[]][] = [
-  ["/admin/", ["superadmin", "admin", "moderator", "trust_safety", "seo_editor", "support", "finance"]],
+  ["/admin/", ALL_STAFF],
   ["/admin/homepage/", ["superadmin", "admin"]],
-  ["/admin/moderation/", ["superadmin", "admin", "moderator"]],
-  ["/admin/listings/", ["superadmin", "admin", "moderator"]],
-  ["/admin/reports/", ["superadmin", "admin", "trust_safety"]],
-  ["/admin/kyc/", ["superadmin", "admin", "trust_safety"]],
+  ["/admin/moderation/", ["superadmin", "admin", "moderator", "trust_safety"]],
+  ["/admin/listings/", ["superadmin", "admin", "moderator", "trust_safety", "support"]],
+  ["/admin/reports/", ["superadmin", "admin", "moderator", "trust_safety"]],
+  ["/admin/kyc/", ["superadmin", "admin", "moderator", "trust_safety"]],
   ["/admin/tags/", ["superadmin", "admin", "seo_editor"]],
   ["/admin/seo/", ["superadmin", "admin", "seo_editor"]],
   ["/admin/seo/pages/", ["superadmin", "admin", "seo_editor"]],
@@ -33,14 +35,15 @@ const ROUTE_TABLE: [string, RoleName[]][] = [
   ["/admin/templates/", ["superadmin", "admin", "seo_editor"]],
   ["/admin/coupons/", ["superadmin", "admin", "finance"]],
   ["/admin/finance/", ["superadmin", "admin", "finance"]],
-  ["/admin/users/", ["superadmin", "admin"]],
+  ["/admin/users/", ["superadmin", "admin", "moderator", "trust_safety", "support"]],
   ["/admin/admins/", ["superadmin"]],
+  ["/admin/team/", ["superadmin"]],
   ["/admin/settings/", ["superadmin"]],
   ["/admin/flags/", ["superadmin"]],
+  ["/admin/settings/money/", ["superadmin", "admin"]],
   ["/admin/audit/", ["superadmin", "admin"]],
-  // Not in the sidebar: closed until it is listed.
+  // Not in the screens map: closed until it is listed.
   ["/admin/some-new-screen/", ["superadmin", "admin"]],
-  ["/admin/seo/settings/", ["superadmin", "admin", "seo_editor"]],
 ];
 
 describe("admin screens by role (server gate)", () => {
@@ -51,7 +54,8 @@ describe("admin screens by role (server gate)", () => {
   });
 
   it("an unknown screen needs admin", () => {
-    expect(routeMinRole("/admin/not-in-the-sidebar/")).toBe("admin");
+    expect(canOpenAdminPath(ROLES.moderator, "/admin/not-in-the-sidebar/")).toBe(false);
+    expect(canOpenAdminPath(ROLES.admin, "/admin/not-in-the-sidebar/")).toBe(true);
   });
 
   it("a signed-in user without a staff role opens no admin screen", () => {

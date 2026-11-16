@@ -1,6 +1,6 @@
 import type { Types } from "mongoose";
 import { connectDb } from "@/lib/db";
-import { canSee } from "@/components/admin/nav";
+import { can } from "@/lib/admin/perms";
 import { AuditRepository } from "@/server/audit";
 import { ConflictError, ForbiddenError, NotFoundError, ValidationError } from "@/server/http";
 import { adLifetimeMs } from "@/server/listings/lifetime";
@@ -22,7 +22,7 @@ async function slugFor(title: string, id: Types.ObjectId) {
 }
 
 async function pendingListing(id: string, roles: string[]) {
-  if (!canSee(roles, "moderator")) throw new ForbiddenError("Only a moderator or admin can decide on ads");
+  if (!can(roles, "ads.decide")) throw new ForbiddenError("Only a moderator or admin can decide on ads");
   await connectDb();
   const listing = await Listing.findById(id);
   if (!listing) throw new NotFoundError("Ad not found");

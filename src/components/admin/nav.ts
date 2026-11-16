@@ -1,4 +1,4 @@
-export type StaffRole = "support" | "moderator" | "trust_safety" | "seo_editor" | "finance" | "admin" | "superadmin";
+import { GROUPS, SCREENS, canOpen, type CountId, type IconName } from "@/lib/admin/screens";
 
 export interface NavItem {
   id: string;
@@ -6,8 +6,8 @@ export interface NavItem {
   href: string;
   /** Inline SVG path data (24 x 24 viewBox, stroke icon). */
   icon: string;
-  /** Lowest role that can open the screen. */
-  minRole: StaffRole;
+  counts: readonly CountId[];
+  phoneBar: boolean;
   /** Set when the screen is not built yet: the item opens a placeholder that says "Coming in <task>". */
   task?: string;
 }
@@ -50,130 +50,46 @@ const ICON = {
   wrench: "M14.7 6.3a4 4 0 0 0-5.4 5.4L3.6 17.4a2.1 2.1 0 0 0 3 3l5.7-5.7a4 4 0 0 0 5.4-5.4l-2.5 2.5-2.5-.5-.5-2.5z",
 } as const;
 
-function item(
-  id: string,
-  label: string,
-  href: string,
-  icon: keyof typeof ICON,
-  minRole: StaffRole,
-  task?: string,
-): NavItem {
-  return { id, label, href: task ? `/admin/coming/${id}/` : href, icon: ICON[icon], minRole, task };
-}
+const ICON_FOR: Record<IconName, keyof typeof ICON> = {
+  chart: "chart",
+  history: "history",
+  shield: "shield",
+  flag: "flag",
+  id: "id",
+  ticket: "ticket",
+  list: "list",
+  user: "user",
+  wallet: "wallet",
+  coin: "coin",
+  layers: "layers",
+  page: "page",
+  image: "image",
+  menu: "menu",
+  grid: "grid",
+  pin: "pin",
+  search: "search",
+  gear: "gear",
+  team: "team",
+};
 
-/** Sidebar groups and screens, as in docs/claude/ADMIN_PLAN.md section 4. */
-export const NAV_GROUPS: NavGroup[] = [
-  {
-    id: "overview",
-    label: "Overview",
-    items: [item("dashboard", "Dashboard", "/admin/", "chart", "support"), item("support", "Support desk", "/admin/support/", "ticket", "support")],
-  },
-  {
-    id: "pages",
-    label: "Pages",
-    items: [
-      item("home-page", "Home page", "/admin/homepage/", "home", "admin"),
-      item("listing-pages", "Listing pages", "/admin/listing-pages/", "page", "admin"),
-      item("post-ad-page", "Post-ad page", "/admin/post-page/", "page", "admin"),
-      item("ui-text", "UI text", "/admin/ui-text/", "text", "admin"),
-      item("menus", "Menus & footer", "/admin/menus/", "menu", "admin"),
-      item("banners", "Banners & notices", "/admin/banners/", "bell", "admin", "later"),
-      item("media", "Media library", "/admin/media/", "image", "admin"),
-    ],
-  },
-  {
-    id: "catalogue",
-    label: "Catalogue",
-    items: [
-      item("categories", "Categories & post fields", "/admin/categories/", "grid", "admin"),
-      item("locations", "Locations", "/admin/locations/", "pin", "admin"),
-      item("tags", "Tags / sub-categories", "/admin/tags/", "tag", "seo_editor"),
-    ],
-  },
-  {
-    id: "listings",
-    label: "Listings",
-    items: [
-      item("moderation", "Moderation queue", "/admin/moderation/", "shield", "moderator"),
-      item("all-ads", "All ads", "/admin/listings/", "list", "moderator"),
-      item("create-ad", "Create ad", "/admin/ads/create/", "page", "admin"),
-      item("bulk-import", "Bulk import", "/admin/import/", "box", "admin"),
-      item("listing-order", "Listing order", "/admin/listing-order/", "layers", "admin"),
-      item("reports", "Reports", "/admin/reports/", "flag", "trust_safety"),
-      item("id-checks", "ID checks", "/admin/kyc/", "id", "trust_safety"),
-    ],
-  },
-  {
-    id: "seo",
-    label: "SEO",
-    items: [
-      item("seo-overview", "SEO overview", "/admin/seo/", "search", "seo_editor"),
-      item("seo-issues", "Pages & issues", "/admin/seo/pages/", "list", "seo_editor"),
-      item("seo-templates", "Templates", "/admin/templates/", "page", "seo_editor"),
-      item("seo-overrides", "Page overrides", "/admin/urls/", "link", "seo_editor"),
-      item("seo-redirects", "Redirects & 404s", "/admin/urls/", "link", "seo_editor"),
-      item("seo-indexing", "Indexing rules & sitemaps", "/admin/seo/indexing/", "globe", "seo_editor"),
-      item("seo-robots", "robots, llms & schema", "/admin/seo/settings/", "robot", "seo_editor"),
-      item("seo-tools", "Tools", "/admin/seo/tools/", "wrench", "seo_editor"),
-      item("seo-console", "Search Console", "/admin/search-console/", "chart", "seo_editor", "later"),
-    ],
-  },
-  {
-    id: "money",
-    label: "Money",
-    items: [
-      item("promotions", "Promotions", "/admin/promotions/", "coin", "finance"),
-      item("credit-packs", "Credit packs", "/admin/credit-packs/", "box", "finance"),
-      item("coupons", "Coupons", "/admin/coupons/", "ticket", "finance"),
-      item("finance", "Finance", "/admin/finance/", "wallet", "finance"),
-    ],
-  },
-  {
-    id: "people",
-    label: "People",
-    items: [
-      item("users", "Users", "/admin/users/", "user", "admin"),
-      item("team", "Team & roles", "/admin/admins/", "team", "superadmin"),
-    ],
-  },
-  {
-    id: "system",
-    label: "System",
-    items: [
-      item("settings", "Settings", "/admin/settings/", "gear", "superadmin"),
-      item("money", "Money", "/admin/settings/money/", "coin", "admin"),
-      item("flags", "Feature flags", "/admin/flags/", "toggle", "superadmin"),
-      item("audit", "Audit log", "/admin/audit/", "history", "admin"),
-    ],
-  },
-  {
-    id: "other",
-    label: "Other tools",
-    items: [
-      item("landings", "Landing pages", "/admin/landings/", "page", "admin"),
-      item("cms-pages", "Pages (CMS)", "/admin/pages/", "page", "admin"),
-    ],
-  },
-];
+/** Sidebar v5: the groups and screens come from SCREENS (src/lib/admin/screens.ts). */
+export const NAV_GROUPS: NavGroup[] = GROUPS.map((group) => ({
+  id: group.id,
+  label: group.label,
+  items: SCREENS.filter((screen) => screen.group === group.id).map((screen) => ({
+    id: screen.id,
+    label: screen.label,
+    href: screen.href,
+    icon: ICON[ICON_FOR[screen.icon]],
+    counts: screen.counts ?? [],
+    phoneBar: Boolean(screen.phoneBar),
+  })),
+}));
 
-/**
- * Who sees an item:
- * - superadmin sees everything;
- * - admin sees everything except superadmin-only screens;
- * - any staff role sees `support` screens (support is the lowest staff role);
- * - otherwise the viewer needs the exact role named in `minRole`.
- */
-export function canSee(roles: readonly string[], minRole: StaffRole): boolean {
-  if (roles.includes("superadmin")) return true;
-  if (roles.includes("admin")) return minRole !== "superadmin";
-  if (minRole === "support") return roles.length > 0;
-  return roles.includes(minRole);
-}
-
+/** The groups and screens this role may open. The same rule closes the route in the proxy. */
 export function visibleGroups(roles: readonly string[]): NavGroup[] {
-  return NAV_GROUPS.map((group) => ({ ...group, items: group.items.filter((entry) => canSee(roles, entry.minRole)) })).filter(
-    (group) => group.items.length > 0,
-  );
+  const open = new Set(SCREENS.filter((screen) => canOpen(roles, screen)).map((screen) => screen.id));
+  return NAV_GROUPS.map((group) => ({ ...group, items: group.items.filter((entry) => open.has(entry.id)) })).filter((group) => group.items.length > 0);
 }
 
 export function findItem(id: string): NavItem | undefined {

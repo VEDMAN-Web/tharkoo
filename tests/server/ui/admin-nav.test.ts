@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { NAV_GROUPS, canSee, findItem, visibleGroups } from "@/components/admin/nav";
+import { NAV_GROUPS, visibleGroups } from "@/components/admin/nav";
 import { csvField, toCsv } from "@/components/admin/ui/DataTable";
 import { reorder } from "@/components/admin/ui/SortableList";
 import { counterTone } from "@/components/admin/ui/TextField";
@@ -10,8 +10,8 @@ function labels(roles: string[]) {
 }
 
 describe("admin sidebar by role", () => {
-  it("shows support only the Dashboard and the Support desk (Users is admin-only, per BUG 8)", () => {
-    expect(labels(["support"])).toEqual(["Dashboard", "Support desk"]);
+  it("shows support the Dashboard, History, the Support desk, All ads and Users", () => {
+    expect(labels(["support"])).toEqual(["Dashboard", "History & undo", "Support desk", "All ads", "Users"]);
     expect(labels(["admin"])).toContain("Users");
     expect(labels(["seo_editor"])).not.toContain("Users");
   });
@@ -21,35 +21,20 @@ describe("admin sidebar by role", () => {
     expect(labels(["superadmin"])).toEqual(all);
   });
 
-  it("shows admin everything except superadmin-only screens", () => {
+  it("shows admin everything except the superadmin-only screens", () => {
     const seen = labels(["admin"]);
-    expect(seen).toContain("Home page");
-    expect(seen).toContain("Listing order");
+    expect(seen).toContain("Page builder");
+    expect(seen).toContain("Prices & plans");
     expect(seen).not.toContain("Team & roles");
     expect(seen).not.toContain("Settings");
-    expect(seen).not.toContain("Feature flags");
   });
 
-  it("shows seo_editor the whole SEO group", () => {
-    const seo = NAV_GROUPS.find((group) => group.id === "seo");
-    const seen = visibleGroups(["seo_editor"]).find((group) => group.id === "seo");
-    expect(seo?.items.length).toBeGreaterThan(0);
-    expect(seen?.items.map((entry) => entry.id)).toEqual(seo?.items.map((entry) => entry.id));
+  it("shows seo_editor the SEO screen", () => {
+    expect(labels(["seo_editor"])).toContain("SEO");
   });
 
   it("hides every group from a viewer with no staff role", () => {
     expect(visibleGroups([])).toEqual([]);
-    expect(canSee([], "support")).toBe(false);
-  });
-
-  it("links unbuilt screens to the placeholder page", () => {
-    const pending = NAV_GROUPS.flatMap((group) => group.items).filter((entry) => entry.task);
-    for (const entry of pending) {
-      expect(findItem(entry.id)?.href).toBe(`/admin/coming/${entry.id}/`);
-    }
-    const built = findItem("media");
-    expect(built?.task).toBeUndefined();
-    expect(built?.href).toBe("/admin/media/");
   });
 });
 

@@ -1,6 +1,6 @@
 import { readdirSync, existsSync } from "node:fs";
 import { join } from "node:path";
-import { expect, loginApi, newApi, originHeaders, registerApi, setRoles, test, uniqueEmail, visibleText } from "./helpers";
+import { expect, loginApi, loginUi, newApi, originHeaders, registerApi, setRoles, test, uniqueEmail, visibleText } from "./helpers";
 
 /** Every admin screen that exists as a route (static segments only). */
 function adminRoutes() {
@@ -81,7 +81,7 @@ test.describe("8 Roles", () => {
     expect(await res.text()).toMatch(/<meta name="robots" content="[^"]*noindex/);
   });
 
-  test("a seo_editor sees only the SEO group in the sidebar", async ({ page, baseURL }) => {
+  test("a seo_editor sees only the screens its role opens in the sidebar", async ({ page, baseURL }) => {
     const email = uniqueEmail("seo");
     const api = await newApi(baseURL!);
     await registerApi(api, baseURL!, email);
@@ -89,26 +89,10 @@ test.describe("8 Roles", () => {
     const promoted = await setRoles(email, ["seo_editor"]);
     test.skip(!promoted, "Needs the in-memory Mongo URI written by tests/e2e/server.mjs (E2E_MONGO_URI_FILE).");
 
-    await page.goto("/u/login/");
-    await page.locator("#email").fill(email);
-    await page.locator("#password").fill("E2ePass1!xyz");
-    await page.getByRole("button", { name: "LOG IN" }).click();
-    await page.waitForURL(/\/u\/account\/dashboard\/|\/admin\//);
-    await page.goto("/admin/seo/");
+    await loginUi(page, email, undefined, "/admin/seo/");
     await expect(page.locator(".adm-nav").first()).toBeAttached();
-    const groups = await page.locator(".adm-group-label").allTextContents();
-    expect(groups).toContain("SEO");
-    for (const hidden of ["Pages", "Money", "System", "Listings"]) {
-      expect(groups, `group ${hidden} is hidden from a seo_editor`).not.toContain(hidden);
-    }
-    const links = await page.locator(".adm-link-label").allTextContents();
-    expect(links).toContain("SEO overview");
-    expect(links).not.toContain("Finance");
-    expect(links).not.toContain("Coupons");
-    // The plan says only the SEO group. Today the Users screen (People) is also open to a seo_editor.
-    if (groups.includes("People")) {
-      test.info().annotations.push({ type: "BUG 8", description: "seo_editor sees the People group (Users screen)" });
-    }
+    const links = await page.locator(".adm-nav .adm-link-label").allTextContents();
+    expect(links).toEqual(["Dashboard", "History & undo", "Content studio", "Media library", "SEO"]);
   });
 
   test("a seo_editor cannot open money or system screens by URL", async ({ baseURL }) => {
