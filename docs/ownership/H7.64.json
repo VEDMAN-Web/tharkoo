@@ -10,6 +10,7 @@
     "src/server/support/articles.ts",
     "src/app/api/support-articles/**",
     "src/app/globals.css",
+    "src/app/admin/menus/ShellEditor.tsx",
     "tests/**"
   ]
 }

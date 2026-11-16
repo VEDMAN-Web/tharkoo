@@ -1943,7 +1943,7 @@ input.tk-field:focus-visible, select.tk-field:focus-visible, textarea.tk-field:f
   .tkn-brand-tag { display: none; }
   .tkn-float-open .tkn-chat-bubble { display: none; }
   .tkn-chatbox {
-    position: fixed; left: 0; right: 0; bottom: 0; width: 100%; height: auto; max-height: calc(100dvh - 72px);
+    position: fixed; left: 0; right: 0; bottom: 0; width: 100%; height: auto; max-height: calc(100dvh - 120px);
     border-radius: 24px 24px 0 0; z-index: 40;
   }
   .tkn-chat-body { min-height: 220px; }

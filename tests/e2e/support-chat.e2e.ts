@@ -104,7 +104,8 @@ test.describe("H7.64 support chat", () => {
     await expect(page.locator(".tkn-top")).toHaveCount(0);
     const box = (await panel.boundingBox())!;
     const view = page.viewportSize()!;
-    expect(box.y).toBeGreaterThanOrEqual(isPhone(page) ? 72 : 70);
+    const header = (await page.locator(".tkn-header").boundingBox())!;
+    expect(box.y).toBeGreaterThanOrEqual(header.y + header.height);
     expect(box.x + box.width).toBeLessThanOrEqual(view.width);
     if (isPhone(page)) {
       expect(box.x).toBe(0);
@@ -118,6 +119,22 @@ test.describe("H7.64 support chat", () => {
     expect(close.width).toBeGreaterThanOrEqual(isPhone(page) ? 44 : 40);
     expect(close.height).toBeGreaterThanOrEqual(isPhone(page) ? 44 : 40);
     expect(await hasHorizontalScroll(page)).toBe(false);
+  });
+
+  test("on a phone the sheet never covers the site header, even at the top of Home with the contact form open", async ({ page }, testInfo) => {
+    test.skip(testInfo.project.name !== "phone-390", "phones only");
+    const panel = await openChat(page);
+    await panel.getByRole("button", { name: "Help with my ad" }).click();
+    await expect(panel.locator('[data-tk="chat-articles"] .tkn-art').first()).toBeVisible();
+    await panel.locator("#tkn-chat-input").fill("How do I renew my ad after 72 hours?");
+    await panel.getByRole("button", { name: "Send" }).click();
+    await expect(panel.locator('[data-tk="chat-guest"]')).toBeVisible();
+    expect(await page.evaluate(() => window.scrollY)).toBe(0);
+    const box = (await panel.boundingBox())!;
+    const header = (await page.locator(".tkn-header").boundingBox())!;
+    expect(box.y).toBeGreaterThanOrEqual(header.y + header.height);
+    expect(Math.round(box.y + box.height)).toBe(page.viewportSize()!.height);
+    await expect(panel.locator(".tkn-chat-body")).toHaveCSS("overflow-y", "auto");
   });
 
   test("the open panel passes axe with no serious or critical issues", async ({ page }) => {
