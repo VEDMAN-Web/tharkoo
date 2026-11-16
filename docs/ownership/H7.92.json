@@ -1,0 +1,10 @@
+{
+  "branchPrefix": "haiku/h7.92",
+  "globs": [
+    "docs/ownership/H7.92.json",
+    "progress/H7.92.md",
+    "src/server/models/listing.ts",
+    "scripts/sync-listing-indexes.mjs",
+    "tests/server/listings/listing-indexes.test.ts"
+  ]
+}
