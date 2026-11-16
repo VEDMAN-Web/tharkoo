@@ -2,7 +2,11 @@ import { mkdtempSync, readdirSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
-import { loadOwnership } from "../../../.github/scripts/ownership-loader.mjs";
+import { loadOwnership as loadOwnershipUntyped } from "../../../.github/scripts/ownership-loader.mjs";
+
+type Entry = { branchPrefix: string; globs: string[]; exclude?: string[] };
+
+const loadOwnership = loadOwnershipUntyped as (dir: string) => { tasks: Record<string, Entry> };
 
 let dir = "";
 
