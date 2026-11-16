@@ -55,6 +55,7 @@ export function AdCard({
   priority,
   owner,
   layout,
+  byline,
 }: {
   ad: ListingDoc;
   featured?: boolean;
@@ -62,6 +63,7 @@ export function AdCard({
   /** "row": the H7.4b listing card (photo left, text right; photo on top below 600 px). Default: the card used everywhere else. */
   layout?: "row" | "tile";
   owner?: AdOwnerView;
+  byline?: string;
 }) {
   const t = useT();
   const variant = variantOf(ad, featured);
@@ -141,6 +143,7 @@ export function AdCard({
               className="tkn-ls-save relative z-[2] h-[38px] w-[38px] min-h-[38px] min-w-[38px] shrink-0 justify-center border border-[#EAD8F0] bg-white px-0 text-[#C2185B]"
             />
           </div>
+          {byline ? <p className="tkn-ls-by">{byline}</p> : null}
           {ad.description ? <p className="tkn-ls-desc">{ad.description}</p> : null}
           <div className="tkn-ls-pills">
             {verifiedText ? <span className="tkn-ls-pill-ok">{verifiedText}</span> : null}
