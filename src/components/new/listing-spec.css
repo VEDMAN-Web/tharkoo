@@ -314,23 +314,23 @@
   width: calc(100% - 2 * var(--gutter)); max-width: 1232px; margin: 20px auto 0;
 }
 .tkn-sr-head .tkn-ls-crumbs { flex: 1 1 100%; order: 1; margin: 0; }
-.tkn-sr-h1 { flex: 1 1 100%; order: 2; margin: 0; font-size: 28px; line-height: 1.2; font-weight: 800; letter-spacing: -0.02em; color: var(--deep); }
-.tkn-sr-meta { flex: 1 1 auto; order: 3; display: flex; align-items: center; justify-content: space-between; gap: 12px; min-width: 0; }
+.tkn-sr-h1 { flex: 1 1 100%; order: 2; margin: 0; font-size: 26px; line-height: 1.15; font-weight: 800; letter-spacing: -0.02em; color: var(--deep); }
+.tkn-sr-meta { flex: 1 1 auto; max-width: 1164px; order: 3; display: flex; align-items: center; justify-content: space-between; gap: 12px; min-width: 0; }
 .tkn-sr-count { margin: 0; font-size: 15px; font-weight: 700; color: var(--muted); }
 .tkn-sr-sort { display: inline-flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 600; color: var(--muted); }
 .tkn-sr-sort select {
-  min-height: 40px; box-sizing: border-box; padding: 0 10px; border-radius: 10px; border: 1.5px solid var(--line); background: #fff; color: var(--ink);
+  min-height: 36px; box-sizing: border-box; padding: 0 10px; border-radius: 10px; border: 1.5px solid var(--line); background: #fff; color: var(--ink);
   font: inherit; font-size: 14px;
 }
 .tkn-sr-head .tkn-ls-filter-btn { order: 4; }
-.tkn-sr-chips { order: 5; flex: 1 1 100%; list-style: none; margin: 8px 0 0; padding: 0; display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.tkn-sr-chips { order: 5; flex: 1 1 100%; list-style: none; margin: 4px 0 0; padding: 0; display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
 .tkn-sr-chip {
-  min-height: 36px; box-sizing: border-box; display: inline-flex; align-items: center; gap: 8px; padding: 0 12px; border-radius: 999px;
+  min-height: 32px; box-sizing: border-box; display: inline-flex; align-items: center; gap: 8px; padding: 0 12px; border-radius: 999px;
   border: 1.5px solid #f3c6dc; background: #fff0f7; color: var(--deep); font-size: 13px; font-weight: 600; text-decoration: none;
 }
 .tkn-sr-chip:hover { border-color: var(--rose); }
 .tkn-sr-x { font-size: 18px; line-height: 1; }
-.tkn-sr-clear { min-height: 36px; display: inline-flex; align-items: center; padding: 0 6px; color: var(--deep); font-size: 13px; font-weight: 700; text-decoration: underline; }
+.tkn-sr-clear { min-height: 32px; display: inline-flex; align-items: center; padding: 0 6px; color: var(--deep); font-size: 13px; font-weight: 700; text-decoration: underline; }
 .tkn-kw { position: relative; display: grid; gap: 6px; padding: 14px 18px 10px; }
 .tkn-kw-label { font-size: 12px; font-weight: 800; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted-2); }
 .tkn-kw input {
@@ -347,5 +347,10 @@
 @media (max-width: 599px) {
   .tkn-sr-head { margin-top: 16px; }
   .tkn-sr-h1 { font-size: 24px; }
-  .tkn-sr-chip, .tkn-sr-clear { min-height: 44px; }
+  .tkn-sr-sort-label { position: absolute; width: 1px; height: 1px; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; }
+  .tkn-sr-sort select { min-height: 44px; max-width: 150px; }
+  .tkn-sr-head .tkn-ls-filter-btn { min-height: 44px; padding: 0 12px; }
+  .tkn-sr-chips { flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; padding-bottom: 2px; }
+  .tkn-sr-chips::-webkit-scrollbar { display: none; }
+  .tkn-sr-chip, .tkn-sr-clear { min-height: 44px; white-space: nowrap; flex: none; }
 }
