@@ -5,7 +5,7 @@ import { requireUser } from "@/server/auth/service";
 import { applyWebhook, checkoutPack, recordWebhookRejection, refundPayment, webhookRejection } from "@/server/billing";
 import { json, readJson, segmentsOf } from "@/server/billing/http";
 import { NotFoundError, handle, parseInput, requestIdFrom } from "@/server/http";
-import { confirmMockPayment, listOwnPayments, readOwnPayment, rechargePacks, startRecharge, mockPaymentsAvailable, SHEET_PACK_LIMIT } from "@/server/billing/recharge";
+import { chooseCoin, confirmMockPayment, listOwnPayments, readOwnPayment, rechargePacks, startRecharge, mockPaymentsAvailable, sheetPacks } from "@/server/billing/recharge";
 import { postingFeeStatus } from "@/server/billing/posting-fee";
 import { walletBalance } from "@/server/billing";
 import { pageQuerySchema } from "@/server/shared/schemas/common";
@@ -29,6 +29,8 @@ const rechargeBodySchema = z.object({
   returnTo: z.string().trim().max(512).optional(),
   idempotencyKey: z.string().trim().min(8).max(200).optional(),
 });
+
+const coinBodySchema = z.object({ coin: z.string().trim().max(10), network: z.string().trim().max(10).optional() });
 
 const confirmBodySchema = z.object({ outcome: z.string().trim().max(20) });
 
@@ -58,7 +60,8 @@ async function dispatch(request: Request) {
   const ip = clientKey(request.headers);
   if (request.method === "GET" && path === "packs") {
     const [packs, balance, fee, available] = await Promise.all([rechargePacks(), walletBalance(user.user.id), postingFeeStatus(user.user.id), mockPaymentsAvailable()]);
-    return json({ packs: packs.slice(0, SHEET_PACK_LIMIT), allPacks: packs.length, balance, fee: fee.fee, creditPriceInr: fee.creditPriceInr, available }, requestId);
+    const shortfall = Math.max(0, Math.floor(Number(new URL(request.url).searchParams.get("shortfall")) || 0));
+    return json({ packs: sheetPacks(packs, shortfall), allPacks: packs.length, balance, fee: fee.fee, creditPriceInr: fee.creditPriceInr, available }, requestId);
   }
   if (request.method === "GET" && path === "history") {
     const query = parseInput(pageQuerySchema, Object.fromEntries(new URL(request.url).searchParams));
@@ -72,6 +75,10 @@ async function dispatch(request: Request) {
   const parts = segmentsOf(request, "/api/payments");
   if (request.method === "GET" && parts.length === 1 && parts[0] !== "checkout") {
     return json(await readOwnPayment(user.user.id, parts[0]), requestId);
+  }
+  if (request.method === "POST" && parts.length === 2 && parts[1] === "coin") {
+    const body = parseInput(coinBodySchema, await readJson(request));
+    return json(await chooseCoin({ userId: user.user.id, paymentId: parts[0], coin: body.coin, network: body.network, requestId }), requestId);
   }
   if (request.method === "POST" && parts.length === 2 && parts[1] === "confirm") {
     const body = parseInput(confirmBodySchema, await readJson(request));

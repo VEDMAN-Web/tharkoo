@@ -2,17 +2,21 @@ import { createLiveAd } from "./flows";
 import type { Page } from "@playwright/test";
 import { confirmPayment, expect, isPhone, loginUi, newApi, newUserApi, originHeaders, test, uniqueEmail, registerApi } from "./helpers";
 
+async function startPackPayment(page: Page, pick: "first" | "last" = "first") {
+  const list = (await (await page.request.get("/api/payments/packs")).json()).data.packs as { id: string }[];
+  expect(list.length).toBeGreaterThan(0);
+  const pack = pick === "last" ? list[list.length - 1] : list[0];
+  const res = await page.request.post("/api/wallet/packs", {
+    headers: originHeaders(new URL(page.url()).origin, "/u/account/credits/"),
+    data: { packId: pack.id, idempotencyKey: `pack-${pack.id}-${Date.now()}-e2e` },
+  });
+  expect(res.status()).toBe(200);
+  return ((await res.json()).data as { providerRef: string }).providerRef;
+}
+
 async function buyFirstPack(page: Page, pick: "first" | "last" = "first") {
   await page.goto("/u/account/credits/");
-  const packs = page.locator("[data-tk=pack]");
-  await expect(packs.first()).toBeVisible();
-  await (pick === "last" ? packs.last() : packs.first()).click();
-  const checkout = page.waitForResponse((r) => r.url().includes("/api/wallet/packs") && r.request().method() === "POST" && r.status() !== 308);
-  await page.getByRole("button", { name: "PAY", exact: true }).click();
-  const res = await checkout;
-  expect(res.status()).toBe(200);
-  await expect(page.getByText("Test mode: no real payment")).toBeVisible();
-  const { providerRef } = (await res.json()).data as { providerRef: string };
+  const providerRef = await startPackPayment(page, pick);
   // The order is pending until the provider confirms it. Credits arrive with the signed webhook.
   const before = (await (await page.request.get("/api/wallet/")).json()).data.balance as number;
   expect(before).toBe(0);
@@ -74,10 +78,7 @@ test.describe("5 Money (mock provider)", () => {
     await signup.dispose();
     await loginUi(page, email);
     await page.goto("/u/account/credits/");
-    await page.locator("[data-tk=pack]").first().click();
-    const checkout = page.waitForResponse((r) => r.url().includes("/api/wallet/packs") && r.status() === 200);
-    await page.getByRole("button", { name: "PAY", exact: true }).click();
-    const { providerRef } = (await (await checkout).json()).data as { providerRef: string };
+    const providerRef = await startPackPayment(page);
     await confirmPayment(baseURL!, providerRef, { withOrigin: false });
   });
 

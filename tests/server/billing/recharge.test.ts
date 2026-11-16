@@ -5,6 +5,7 @@ import { hashToken } from "@/server/auth/http";
 import { walletBalance } from "@/server/billing/ledger";
 import { setMoneySettings } from "@/server/billing/money-settings";
 import {
+  chooseCoin,
   confirmMockPayment,
   estimateCoinAmount,
   listOwnPayments,
@@ -80,15 +81,17 @@ describe("starting a recharge", () => {
   it("records a crypto purchase with the coin, the network and a 30 minute window", async () => {
     const user = await member();
     const { small } = await packs();
-    const started = await startRecharge({ userId: user.id, packId: String(small._id), method: "crypto", coin: "USDT", network: "TRC-20", requestId: "r" });
-    const view = await readOwnPayment(user.id, started.paymentId);
+    const started = await startRecharge({ userId: user.id, packId: String(small._id), method: "crypto", requestId: "r" });
+    expect(await readOwnPayment(user.id, started.paymentId)).toMatchObject({ method: "crypto", coin: null, expiresAt: null, depositAddress: null });
+    const view = await chooseCoin({ userId: user.id, paymentId: started.paymentId, coin: "USDT", network: "TRC-20", requestId: "r" });
     expect(view).toMatchObject({ method: "crypto", coin: "USDT", network: "TRC-20", amount: 1000, credits: 100, status: "pending", cryptoAmount: "11.36" });
     const minutes = (new Date(view.expiresAt!).getTime() - Date.now()) / 60000;
     expect(minutes).toBeGreaterThan(29);
     expect(minutes).toBeLessThanOrEqual(30);
     expect(view.depositAddress).toMatch(/^T[A-Za-z0-9]{33}$/);
-    const bitcoin = await startRecharge({ userId: user.id, packId: String(small._id), method: "crypto", coin: "BTC", requestId: "r" });
-    expect((await readOwnPayment(user.id, bitcoin.paymentId)).depositAddress).toMatch(/^bc1q/);
+    const bitcoin = await startRecharge({ userId: user.id, packId: String(small._id), method: "crypto", requestId: "r" });
+    expect((await chooseCoin({ userId: user.id, paymentId: bitcoin.paymentId, coin: "BTC", requestId: "r" })).depositAddress).toMatch(/^bc1q/);
+    expect((await chooseCoin({ userId: user.id, paymentId: bitcoin.paymentId, coin: "ETH", requestId: "r" })).depositAddress).toMatch(/^0x/);
   });
 
   it("asks for a network for USDT and USDC and refuses an unknown method or coin", async () => {
@@ -99,6 +102,12 @@ describe("starting a recharge", () => {
     await expect(startRecharge({ ...base, method: "crypto", coin: "DOGE" })).rejects.toThrow(/Invalid request/);
     await expect(startRecharge({ ...base, method: "cheque" })).rejects.toThrow(/Invalid request/);
     expect(await Payment.countDocuments({})).toBe(0);
+    const started = await startRecharge({ ...base, method: "crypto" });
+    await expect(chooseCoin({ userId: user.id, paymentId: started.paymentId, coin: "USDT", requestId: "r" })).rejects.toThrow(/Invalid request/);
+    await expect(chooseCoin({ userId: user.id, paymentId: started.paymentId, coin: "USDT", network: "SOL", requestId: "r" })).rejects.toThrow(/Invalid request/);
+    await expect(chooseCoin({ userId: user.id, paymentId: started.paymentId, coin: "DOGE", requestId: "r" })).rejects.toThrow(/Invalid request/);
+    const card = await startRecharge({ ...base, method: "card" });
+    await expect(chooseCoin({ userId: user.id, paymentId: card.paymentId, coin: "BTC", requestId: "r" })).rejects.toThrow(/not a crypto/i);
   });
 
   it("refuses while mock payments are off and nothing real is connected", async () => {
@@ -151,7 +160,8 @@ describe("the mock payment page", () => {
     const card = await startRecharge({ userId: user.id, packId: String(small._id), method: "card", requestId: "r" });
     await expect(confirmMockPayment({ userId: other.id, paymentId: card.paymentId, outcome: "paid", requestId: "r" })).rejects.toThrow(/not found/i);
     await expect(confirmMockPayment({ userId: user.id, paymentId: card.paymentId, outcome: "free", requestId: "r" })).rejects.toThrow(/invalid/i);
-    const crypto = await startRecharge({ userId: user.id, packId: String(small._id), method: "crypto", coin: "BTC", requestId: "r" });
+    const crypto = await startRecharge({ userId: user.id, packId: String(small._id), method: "crypto", requestId: "r" });
+    await chooseCoin({ userId: user.id, paymentId: crypto.paymentId, coin: "BTC", requestId: "r" });
     await Payment.updateOne({ _id: crypto.paymentId }, { $set: { expiresAt: new Date(Date.now() - 1000) } });
     expect((await readOwnPayment(user.id, crypto.paymentId)).status).toBe("expired");
     await expect(confirmMockPayment({ userId: user.id, paymentId: crypto.paymentId, outcome: "paid", requestId: "r" })).rejects.toThrow(/window has ended/i);
@@ -166,7 +176,8 @@ describe("the mock payment page", () => {
     const { small, popular } = await packs();
     const a = await startRecharge({ userId: user.id, packId: String(small._id), method: "card", requestId: "r" });
     await confirmMockPayment({ userId: user.id, paymentId: a.paymentId, outcome: "paid", requestId: "r" });
-    await startRecharge({ userId: user.id, packId: String(popular._id), method: "crypto", coin: "ETH", requestId: "r" });
+    const eth = await startRecharge({ userId: user.id, packId: String(popular._id), method: "crypto", requestId: "r" });
+    await chooseCoin({ userId: user.id, paymentId: eth.paymentId, coin: "ETH", requestId: "r" });
     const list = await listOwnPayments(user.id, 1, 20);
     expect(list.total).toBe(2);
     expect(list.items.map((item) => [item.method, item.amount, item.credits, item.status])).toEqual([

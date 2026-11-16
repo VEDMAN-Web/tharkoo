@@ -49,6 +49,14 @@ export async function rechargePacks(): Promise<RechargePack[]> {
     .sort((a, b) => a.total - b.total);
 }
 
+export function sheetPacks(packs: RechargePack[], shortfall: number): RechargePack[] {
+  const shown = packs.slice(0, SHEET_PACK_LIMIT);
+  if (shortfall <= 0) return shown;
+  const cover = packs.find((pack) => pack.total >= shortfall) ?? packs[packs.length - 1];
+  if (!cover || shown.some((pack) => pack.id === cover.id)) return shown;
+  return [...shown.slice(0, SHEET_PACK_LIMIT - 1), cover];
+}
+
 export function estimateCoinAmount(amountInr: number, coin: CryptoCoin): string {
   return (amountInr / MOCK_RATE_INR[coin]).toFixed(COIN_DECIMALS[coin]);
 }
@@ -127,6 +135,13 @@ export async function mockPaymentsAvailable(): Promise<boolean> {
   return paymentProvider() === "mock" && (await readMoneySettings()).mockPaymentsOn;
 }
 
+function checkedCoin(coin: string, network: string | undefined): { coin: string; network: string | undefined } {
+  if (!(CRYPTO_COINS as readonly string[]).includes(coin)) throw new ValidationError("Invalid request", { coin: ["Choose a coin"] });
+  if (!needsNetwork(coin)) return { coin, network: undefined };
+  if (!network || !(STABLE_NETWORKS as readonly string[]).includes(network)) throw new ValidationError("Invalid request", { network: ["Choose a network"] });
+  return { coin, network };
+}
+
 export const NOT_AVAILABLE_MESSAGE = "Payments are not available right now. Nothing was charged.";
 
 export async function startRecharge(input: {
@@ -143,16 +158,7 @@ export async function startRecharge(input: {
   await connectDb();
   if (!(RECHARGE_METHODS as readonly string[]).includes(input.method)) throw new ValidationError("Invalid request", { method: ["Choose Card or Crypto"] });
   const method = input.method as RechargeMethod;
-  let coin: string | undefined;
-  let network: string | undefined;
-  if (method === "crypto") {
-    if (!input.coin || !(CRYPTO_COINS as readonly string[]).includes(input.coin)) throw new ValidationError("Invalid request", { coin: ["Choose a coin"] });
-    coin = input.coin;
-    if (needsNetwork(coin)) {
-      if (!input.network || !(STABLE_NETWORKS as readonly string[]).includes(input.network)) throw new ValidationError("Invalid request", { network: ["Choose a network"] });
-      network = input.network;
-    }
-  }
+  const picked = method === "crypto" && input.coin ? checkedCoin(input.coin, input.network) : { coin: undefined, network: undefined };
   if (!(await mockPaymentsAvailable())) throw new ConflictError(NOT_AVAILABLE_MESSAGE);
   const returnTo = input.returnTo ? safeNext(input.returnTo) ?? undefined : undefined;
   const result = await checkoutPack({
@@ -161,7 +167,7 @@ export async function startRecharge(input: {
     idempotencyKey: input.idempotencyKey,
     requestId: input.requestId,
     ip: input.ip,
-    recharge: { method, coin, network, returnTo, expiresAt: method === "crypto" ? new Date(Date.now() + CRYPTO_WINDOW_MS) : undefined },
+    recharge: { method, coin: picked.coin, network: picked.network, returnTo, expiresAt: picked.coin ? new Date(Date.now() + CRYPTO_WINDOW_MS) : undefined },
   });
   await audit.append({
     actorId: input.userId,
@@ -170,7 +176,7 @@ export async function startRecharge(input: {
     targetType: "payment",
     targetId: result.paymentId,
     requestId: input.requestId,
-    after: { method, coin: coin ?? null, network: network ?? null },
+    after: { method, coin: picked.coin ?? null, network: picked.network ?? null },
   });
   return { paymentId: result.paymentId, checkoutPath: `/pay/checkout/${result.paymentId}/` };
 }
@@ -199,6 +205,18 @@ export async function listOwnPayments(userId: string, page: number, pageSize: nu
     Payment.countDocuments(filter),
   ]);
   return { items: rows.map((row) => paymentView(row)), total };
+}
+
+export async function chooseCoin(input: { userId: string; paymentId: string; coin: string; network?: string; requestId: string }) {
+  const row = await ownPayment(input.userId, input.paymentId);
+  if (row.method !== "crypto") throw new ConflictError("This payment is not a crypto payment");
+  const picked = checkedCoin(input.coin, input.network);
+  if (statusOf(row) !== "pending") throw new ConflictError("This payment is closed. Nothing was charged.");
+  const expiresAt = row.expiresAt && row.coin ? row.expiresAt : new Date(Date.now() + CRYPTO_WINDOW_MS);
+  const set: Record<string, unknown> = { coin: picked.coin, expiresAt };
+  if (picked.network) set.network = picked.network;
+  await Payment.updateOne({ _id: row._id, status: "pending" }, picked.network ? { $set: set } : { $set: set, $unset: { network: "" } });
+  return readOwnPayment(input.userId, input.paymentId);
 }
 
 export type MockOutcome = "paid" | "cancelled";
