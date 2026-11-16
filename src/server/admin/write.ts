@@ -1,3 +1,4 @@
+import { connectDb } from "@/lib/db";
 import { can, STAFF_ROLES, type Perm } from "@/lib/admin/perms";
 import { AuditRepository, redact } from "@/server/audit";
 import type { AdminCtx } from "@/server/admin/context";
@@ -55,6 +56,7 @@ async function auditDenial(ctx: AdminCtx, spec: { perm: Perm; action: string; ta
 }
 
 export async function adminWrite<T>(ctx: AdminCtx, spec: AdminWriteSpec<T>): Promise<{ result: T; eventId: string; undoUntil: string | null }> {
+  await connectDb();
   if (!can(ctx.roles, spec.perm)) {
     await auditDenial(ctx, spec);
     throw new ForbiddenError("You do not have permission to do this");
