@@ -58,8 +58,8 @@ test.describe("H7.105: new logo and banner", () => {
   test("admin Settings has the two logo pickers", async ({ page, context, baseURL }) => {
     await signInAdminContext(context, baseURL!);
     await page.goto("/admin/settings/");
-    await expect(page.getByText("Logo (light backgrounds)")).toBeVisible();
-    await expect(page.getByText("Logo (dark backgrounds)")).toBeVisible();
+    await expect(page.locator(".adm-field-label", { hasText: "Logo (light backgrounds)" })).toBeVisible();
+    await expect(page.locator(".adm-field-label", { hasText: "Logo (dark backgrounds)" })).toBeVisible();
   });
 
   test("with the headline in the picture the banner draws no text, keeps one hidden h1 and shows the whole picture", async ({ page, context, baseURL }) => {
@@ -91,7 +91,8 @@ test.describe("H7.105: new logo and banner", () => {
         const fit = await banner.locator("img").first().evaluate((img) => getComputedStyle(img).objectFit);
         expect(fit).toBe("contain");
         const box = (await banner.boundingBox())!;
-        expect(Math.abs(box.width / box.height - 2400 / 1029)).toBeLessThan(0.06);
+        const phoneOwn = size.width < 600 && (await banner.getAttribute("data-phone-photo")) === "true";
+        if (!phoneOwn) expect(Math.abs(box.width / box.height - 2400 / 1029), `ratio at ${size.width}x${size.height}: ${box.width} x ${box.height}`).toBeLessThan(0.06);
         expect(await hasHorizontalScroll(page)).toBe(false);
         await expect(page.locator(".tkh-search")).toBeVisible();
       }
