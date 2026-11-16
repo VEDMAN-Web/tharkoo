@@ -1,3 +1,4 @@
+import { LISTING_PAGE_SIZE } from "@/lib/listing-page-size";
 import { Types } from "mongoose";
 import { connectDb } from "@/lib/db";
 import { Category, Listing, Location } from "@/server/models";
@@ -6,7 +7,7 @@ import { presentRows } from "@/server/search/query";
 
 /** A sub-category page is indexable only with at least this many real active ads (3, same thin-page rule at every level). */
 export const SUBCATEGORY_HUB_MINIMUM = 3;
-export const SUBCATEGORY_PAGE_SIZE = 20;
+export const SUBCATEGORY_PAGE_SIZE = LISTING_PAGE_SIZE;
 
 export interface SubcategoryView {
   id: string;

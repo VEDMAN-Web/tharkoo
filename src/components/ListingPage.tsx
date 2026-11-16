@@ -20,6 +20,8 @@ import { listingHeading } from "@/lib/layout/listing";
 import { listingDefaultBlocks } from "@/server/layout/defaults/listing";
 import type { BlockBase } from "@/server/models/layout";
 import { makeT, type UiTextMap } from "@/lib/ui/text";
+import { ListingPager } from "./new/ListingPager";
+import { LISTING_PAGE_SIZE, pagerLabels } from "./new/listing-pager";
 import "./blocks/blocks.css";
 
 function toggleHref(path: string, key: string, on: boolean) {
@@ -28,15 +30,6 @@ function toggleHref(path: string, key: string, on: boolean) {
   if (on) params.delete(key);
   else params.set(key, "1");
   params.delete("page");
-  const next = params.toString();
-  return next ? `${base}?${next}` : base;
-}
-
-function pageHref(path: string, n: number) {
-  const [base, qs] = path.split("?");
-  const params = new URLSearchParams(qs || "");
-  if (n <= 1) params.delete("page");
-  else params.set("page", String(n));
   const next = params.toString();
   return next ? `${base}?${next}` : base;
 }
@@ -281,13 +274,7 @@ export function ListingPageView({
             />
           )
         ) : null}
-        {page < pages ? (
-          <div className="tk-more">
-            <Link href={pageHref(path, page + 1)} rel="next" className="tk-btn tkn-ls-more-btn" data-tk="show-more" prefetch={false}>
-              {t("listing.more")}
-            </Link>
-          </div>
-        ) : null}
+        <ListingPager base={path} page={page} pages={pages} total={total} size={LISTING_PAGE_SIZE} labels={pagerLabels(t)} />
         {fallback}
       </>
     );

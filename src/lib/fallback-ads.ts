@@ -1,6 +1,7 @@
 import { cached } from "@/lib/cache";
 import type { ListingDoc } from "@/lib/models";
 import { queryListings } from "@/server/search";
+import { LISTING_PAGE_SIZE } from "@/lib/listing-page-size";
 
 /**
  * H7.32 (FIX B): fallback ads for a page whose own results are few. Real live ads only, each card keeps its own
@@ -11,7 +12,7 @@ import { queryListings } from "@/server/search";
 /** A page with fewer own results than this gets fallback sections. */
 export const FALLBACK_OWN_MINIMUM = 8;
 /** A page shows at most this many ad cards: its own results plus the fallback ads. */
-export const FALLBACK_TOTAL = 24;
+export const FALLBACK_TOTAL = LISTING_PAGE_SIZE;
 
 export type FallbackKey = "nearby" | "category" | "latest";
 
@@ -30,7 +31,11 @@ export type FallbackSection<T> = { key: FallbackKey; title: string; items: T[] }
 
 type Placed = { slug?: string; stateSlug?: string };
 
-/** How many fallback cards a page may add: none at 8 or more own results, otherwise enough for 24 in total. */
+export function showFallback(feed: { page: number; pages: number; items: readonly unknown[] }): boolean {
+  return feed.page >= feed.pages && feed.items.length < FALLBACK_OWN_MINIMUM;
+}
+
+/** How many fallback cards a page may add: none at 8 or more own results, otherwise enough for 15 in total. */
 export function fallbackBudget(ownCount: number): number {
   if (ownCount >= FALLBACK_OWN_MINIMUM) return 0;
   return Math.max(0, FALLBACK_TOTAL - Math.max(0, ownCount));
