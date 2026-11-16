@@ -505,3 +505,10 @@ body:has(.tkp-post) .tkn-footer, body:has(.tkp-post) .tkn-chat-bubble { display:
 @media (min-width: 1280px) and (max-height: 859px) {
   .tkn .tkp-post .tkp-tile { justify-content: center; min-height: 0; padding: 8px 14px; }
 }
+@media (min-width: 1024px) and (max-height: 859px) {
+  .tkn .tkp-post .tkp-aside .tkp-previewbox { flex: 1 1 auto; min-height: 0; display: flex; flex-direction: column; }
+  .tkn .tkp-post .tkp-aside .tkp-previewbox > div { flex: 1 1 auto; min-height: 0; display: flex; flex-direction: column; }
+  .tkn .tkp-post .tkp-aside .tkn-ls.tkp-previewbox .tkn-ls-card { flex: 1 1 auto; min-height: 0; }
+  .tkn .tkp-post .tkp-aside .tkn-ls.tkp-previewbox .tkn-ls-photo { flex: 1 1 auto; height: auto; min-height: 220px; aspect-ratio: auto; }
+  .tkn .tkp-post .tkp-aside .tkn-ls.tkp-previewbox .tkn-ls-body { flex: none; }
+}
