@@ -1,6 +1,7 @@
 import AxeBuilder from "@axe-core/playwright";
 import { existsSync, readdirSync, readFileSync, statSync } from "node:fs";
 import { join } from "node:path";
+import { SUPPORT_PHONE, SUPPORT_TELEGRAM, phoneDigits, telHref, telegramHref, whatsappHref } from "../../src/lib/support";
 import { expect, hasHorizontalScroll, originHeaders, signInAdminContext, test, uniqueEmail } from "./helpers";
 
 const PUBLIC_PAGES = [
@@ -100,6 +101,12 @@ function walk(dir: string, out: string[] = []) {
   return out;
 }
 
+const SITE_SUPPORT_VALUES = [SUPPORT_PHONE, telHref(SUPPORT_PHONE), whatsappHref(SUPPORT_PHONE), telegramHref(SUPPORT_TELEGRAM), SUPPORT_TELEGRAM, phoneDigits(SUPPORT_PHONE)].filter(Boolean);
+
+function withoutSiteSupport(text: string) {
+  return SITE_SUPPORT_VALUES.reduce((rest, value) => rest.split(value).join(""), text);
+}
+
 test.describe("Plus: security sweep", () => {
   const CONTACT_PATTERNS: [string, RegExp][] = [
     ["phone number", /(?<![\d.])(?:\+?91[\s-]?)?[6-9]\d{9}(?![\d])/],
@@ -115,12 +122,27 @@ test.describe("Plus: security sweep", () => {
       const rsc = await (await request.get(path, { headers: { rsc: "1" } })).text();
       for (const [label, pattern] of CONTACT_PATTERNS) {
         // Next.js build ids and asset hashes are digits-and-letters, not 10-digit mobile numbers, but strip data URIs and srcsets to be safe.
-        const cleaned = (text: string) => text.replace(/data:[^"')]+/g, "").replace(/srcset="[^"]*"/g, "").replace(/\/_next\/[^"')\s]*/g, "");
+        const cleaned = (text: string) => withoutSiteSupport(text.replace(/data:[^"')]+/g, "").replace(/srcset="[^"]*"/g, "").replace(/\/_next\/[^"')\s]*/g, "").replace(/[\w\-./]+\.(?:js|css|woff2?|webp|png|jpe?g|svg|map)\b/g, ""));
         expect(cleaned(html), `${label} in HTML of ${path}`).not.toMatch(pattern);
         expect(cleaned(rsc), `${label} in RSC of ${path}`).not.toMatch(pattern);
       }
     });
   }
+
+  test("only the site support number is excluded: another phone, tel link, wa.me or t.me link still fails", () => {
+    const own = `<a href="${telHref(SUPPORT_PHONE)}">${SUPPORT_PHONE}</a> <a href="${whatsappHref(SUPPORT_PHONE)}">chat</a> <a href="${telegramHref(SUPPORT_TELEGRAM)}">${SUPPORT_TELEGRAM}</a>`;
+    for (const [label, pattern] of CONTACT_PATTERNS) expect(withoutSiteSupport(own), `support values hide nothing else: ${label}`).not.toMatch(pattern);
+    const others: [string, string][] = [
+      ["phone number", "Call 9876543210 now"],
+      ["tel link", '<a href="tel:+919876543210">call</a>'],
+      ["whatsapp number link", '<a href="https://wa.me/919876543210">chat</a>'],
+      ["telegram handle link", '<a href="https://t.me/some_advertiser">chat</a>'],
+    ];
+    for (const [label, html] of others) {
+      const pattern = CONTACT_PATTERNS.find(([name]) => name === label)![1];
+      expect(withoutSiteSupport(`${own} ${html}`), `another ${label} must still fail`).toMatch(pattern);
+    }
+  });
 
   test("public listing JSON has no contact values", async ({ request }) => {
     const res = await request.get("/api/listings/demo-0352/");

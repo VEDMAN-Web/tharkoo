@@ -1,0 +1,20 @@
+{
+  "branchPrefix": "haiku/h8.4",
+  "globs": [
+    "docs/ownership/H8.4.json",
+    "src/components/admin/ui/ServerTable.tsx",
+    "src/components/admin/ui/FilterBar.tsx",
+    "src/components/admin/ui/HistoryDrawer.tsx",
+    "src/components/admin/ui/DiffView.tsx",
+    "src/components/admin/ui/MediaPicker.tsx",
+    "src/components/admin/ui/RecordForm.tsx",
+    "src/components/admin/ui/ReasonDialog.tsx",
+    "src/components/admin/ui/kit-helpers.ts",
+    "src/components/admin/ui/index.ts",
+    "src/styles/admin-kit.css",
+    "src/app/admin/kit/**",
+    "tests/server/ui/a4-*.test.ts",
+    "tests/e2e/a4-kit.e2e.ts",
+    "tests/e2e/a2-kit.e2e.ts"
+  ]
+}

@@ -163,7 +163,7 @@ test.describe("H8.2 admin kit core", () => {
     const dialog = page.locator("[data-tk=reason-dialog]");
     await expect(dialog).toBeVisible();
     await expect(dialog.getByRole("heading", { name: "Ban spam.bot22?" })).toBeVisible();
-    await expect(dialog.locator("[data-tk=give-back] input")).not.toBeChecked();
+    await expect(dialog.locator("[data-tk=give-back]")).toHaveCount(0);
     const cancel = (await dialog.getByRole("button", { name: "Cancel" }).boundingBox())!;
     const confirm = (await dialog.getByRole("button", { name: "Ban user" }).boundingBox())!;
     expect(cancel.x).toBeLessThan(confirm.x);
@@ -179,6 +179,14 @@ test.describe("H8.2 admin kit core", () => {
     await expect(dialog).toHaveCount(0);
     await expect(page.locator("[data-tk=toast]")).toContainText("spam.bot22 banned.");
 
+    // Give back the credits shows only for a paid ad that is rejected or removed, and is off by default.
+    await page.getByRole("button", { name: "Remove paid ad..." }).click();
+    const paid = page.locator("[data-tk=reason-dialog]");
+    await expect(paid.getByRole("heading", { name: "Remove this ad?" })).toBeVisible();
+    await expect(paid.locator("[data-tk=give-back]")).toContainText("Give back the 30 credits to Riya");
+    await expect(paid.locator("[data-tk=give-back] input")).not.toBeChecked();
+    await paid.getByRole("button", { name: "Cancel" }).click();
+    await expect(paid).toHaveCount(0);
     await page.getByRole("button", { name: "End demo ads..." }).click();
     const typed = page.locator("[data-tk=reason-dialog]");
     await typed.getByRole("button", { name: "End demo ads" }).click();

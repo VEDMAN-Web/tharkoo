@@ -1,0 +1,9 @@
+{
+  "branchPrefix": "haiku/h7.133",
+  "globs": [
+    "docs/ownership/H7.133.json",
+    "src/app/admin/finance/page.tsx",
+    "src/app/admin/finance/BlockedRefunds.tsx",
+    "tests/e2e/h7-133-finance.e2e.ts"
+  ]
+}

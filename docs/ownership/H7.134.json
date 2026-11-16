@@ -1,0 +1,7 @@
+{
+  "branchPrefix": "haiku/h7.134",
+  "globs": [
+    "docs/ownership/H7.134.json",
+    "tests/e2e/quality.e2e.ts"
+  ]
+}
