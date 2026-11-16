@@ -187,6 +187,7 @@ export default async function DistrictPage({ params, searchParams }: Props) {
   const frame = listingFrameProps({
     crumbs,
     h1,
+    intro: t("listing.band.introPlace", { category: cat.name, place: `${dist.name}, ${city.name}` }),
     photo: bandChoice(shell, hero, { city: city.slug || location, category: cat.slug || category }),
     categorySlug: cat.slug || category,
     citySlug: city.slug || location,

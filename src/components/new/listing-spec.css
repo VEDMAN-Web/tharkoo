@@ -55,13 +55,14 @@
     content: ""; display: block; height: 260px; border-radius: 24px;
     background: var(--band-phone, var(--band-desk)) var(--band-focus-phone, 50% 12%) / cover no-repeat;
   }
-  .tkn-ls-band[data-photo="true"] .tkn-ls-band-card { position: relative; margin: -24px 12px 0; }
+  .tkn-ls-band[data-photo="true"] .tkn-ls-band-card { position: relative; margin: -24px 0 0; }
 }
 .tkn-ls-crumbs { font-size: 13px; color: #1e0b38; margin: 0 0 10px; }
 .tkn-ls-crumbs a { color: #1e0b38; text-decoration: none; display: inline-flex; align-items: center; min-height: 24px; }
 .tkn-ls-crumbs a:hover { text-decoration: underline; }
 .tkn-ls-h1 { margin: 0 0 6px; font-size: 38px; line-height: 1.15; font-weight: 800; letter-spacing: -0.03em; color: #a8124f; }
 .tkn-ls-intro { margin: 0; font-size: 15px; line-height: 1.6; color: var(--muted); }
+.tkn-ls-chips:empty { display: none; }
 .tkn-ls-chips { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 18px; }
 .tkn-ls-chips a {
   min-height: 38px; display: inline-flex; align-items: center; padding: 0 16px; border-radius: 999px; font-size: 13px; font-weight: 600;
@@ -85,8 +86,8 @@
   cursor: pointer; white-space: nowrap;
 }
 .tkn-ls-filter-btn {
-  display: none; min-height: 48px; padding: 0 18px; border: 0; border-radius: 12px; background: var(--btn); color: #fff; font: inherit; font-weight: 700;
-  font-size: 14px; cursor: pointer; white-space: nowrap;
+  display: none; min-height: 48px; padding: 0 16px; border: 1.5px solid var(--rose); border-radius: 12px; background: #fff; color: var(--deep); font: inherit; font-weight: 700;
+  font-size: 14px; cursor: pointer; white-space: nowrap; gap: 8px;
 }
 
 /* Grid: filters 260 px, ads on the right */
@@ -250,7 +251,7 @@
 /* Phone search row (fix L5): the input and "Filters · N" share one row; Search goes below, full width. */
 @media (max-width: 599px) {
   .tkn-ls .tkn-ls-searchrow {
-    display: flex; flex-wrap: wrap; gap: 8px; align-items: center; max-width: none; padding: 8px; box-sizing: border-box;
+    display: flex; flex-wrap: wrap; gap: 8px; align-items: center; max-width: none; margin-top: 14px; padding: 8px; box-sizing: border-box;
     border-radius: 16px; background: rgba(255, 255, 255, 0.8); border: 1px solid rgba(255, 255, 255, 0.95);
     box-shadow: 0 8px 24px rgba(45, 18, 72, 0.08);
   }

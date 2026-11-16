@@ -41,7 +41,7 @@ export function ListingFilterPanel({
         <span className="tkn-ls-pill">{labels.activeTemplate.replace("{count}", String(activeCount))}</span>
       </div>
       <ListingPlaceSelects selects={places} labels={labels} />
-      {placesOnly ? null : <FilterRows rows={rows} toggles={toggles} labels={labels} />}
+      {placesOnly ? null : <FilterRows rows={rows} toggles={toggles} labels={labels} hasCategory={Boolean(places.categoryValue)} />}
       {placesOnly ? null : (
         <div className="tkn-ls-bottom">
           <a href={clearHref} className="tkn-ls-clear">
@@ -56,7 +56,7 @@ export function ListingFilterPanel({
   );
 }
 
-function FilterRows({ rows, toggles, labels }: { rows: PanelRow[]; toggles: ListingToggles; labels: ListingLabels }) {
+function FilterRows({ rows, toggles, labels, hasCategory }: { rows: PanelRow[]; toggles: ListingToggles; labels: ListingLabels; hasCategory: boolean }) {
   return (
     <>
       <p className="tkn-ls-label">{labels.filtersLabel}</p>
@@ -66,7 +66,7 @@ function FilterRows({ rows, toggles, labels }: { rows: PanelRow[]; toggles: List
         <ChipLine icon="video" name="video" label={labels.video} checked={toggles.video} />
         <ChipLine icon="online" name="online" label={labels.online} checked={Boolean(toggles.online)} />
       </div>
-      {rows.length === 0 ? <p className="tkn-ls-empty">{labels.noFilters}</p> : null}
+      {rows.length === 0 && hasCategory ? <p className="tkn-ls-empty">{labels.noFilters}</p> : null}
       {rows.map((row) => {
         if (row.kind === "boolean") {
           return <ChipLine key={row.key} icon="toggle" name={`f.${row.key}`} value="1" label={row.label} checked={row.checked} />;
