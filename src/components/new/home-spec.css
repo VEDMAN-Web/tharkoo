@@ -596,8 +596,16 @@
   object-fit: contain;
   object-position: center;
 }
+/* H7.124: the search card sits on the banner's lower edge again (Vedant: the banner and the filters are one block). The headline is in the upper part of the picture, so nothing it covers matters. */
 .tkh-banner[data-text-in-image="true"] + .tkh-search {
-  margin-top: 16px;
+  position: relative;
+  z-index: 2;
+  margin-top: -46px;
+}
+@media (max-width: 600px) {
+  .tkh-banner[data-text-in-image="true"] + .tkh-search {
+    margin-top: -28px;
+  }
 }
 @media (max-width: 599px) {
   .tkh-banner[data-text-in-image="true"] {
