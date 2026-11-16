@@ -1,0 +1,17 @@
+{
+  "branchPrefix": "haiku/h7.65",
+  "globs": [
+    "docs/ownership/H7.65.json",
+    "progress/H7.65.md",
+    "src/app/countries/countries-page.css",
+    "src/app/countries/page.tsx",
+    "src/app/u/register/page.tsx",
+    "src/components/AuthForm.tsx",
+    "src/components/Header.tsx",
+    "src/components/new/LegalView.tsx",
+    "src/components/new/p10-p13.css",
+    "tests/e2e/account.e2e.ts",
+    "tests/e2e/h7-65-old-pages.e2e.ts",
+    "tests/e2e/quality.e2e.ts"
+  ]
+}

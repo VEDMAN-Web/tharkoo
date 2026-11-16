@@ -1,52 +1,89 @@
+import "./countries-page.css";
 import Link from "next/link";
-import { Globe } from "lucide-react";
-import { getCategories } from "@/lib/queries";
-import { countryPath, placePath } from "@/lib/urls";
+import { getCategories, getHomepageContent } from "@/lib/queries";
+import { countryPath, placePath, searchPath } from "@/lib/urls";
 import { withUrlSeo } from "@/lib/seo/override";
+import { withSeoDefaults } from "@/lib/ui/meta-defaults";
 import { loadCountryDirectory } from "@/server/locations/countries";
+import { getPaths } from "@/server/urls/service";
+import { readShellConfig } from "@/server/site-links/shell-config";
+import { textOverrides } from "@/app/admin/ui-text/store";
+import { makeT } from "@/lib/ui/text";
 import { CountryFlag } from "@/components/ui/CountryFlag";
+import { NewListingPage } from "@/components/new/ListingBand";
+import { listingLabels } from "@/components/new/listing-frame-props";
+import { bandChoice, heroBandFrom } from "@/components/new/band-image";
 
 export const revalidate = 300;
 
 const PATH = "/countries/";
 
 export async function generateMetadata() {
-  return withUrlSeo(PATH, {
-    title: "All countries: browse classifieds by country | Tharkoo",
-    description: "Every country and city on Tharkoo with the number of live ads. Pick a place to browse free classifieds.",
-    path: PATH,
-  });
+  return withSeoDefaults(
+    await withUrlSeo(PATH, {
+      title: "All countries: browse classifieds by country | Tharkoo",
+      description: "Every country and city on Tharkoo with the number of live ads. Pick a place to browse free classifieds.",
+      path: PATH,
+    }),
+  );
+}
+
+function adsLabel(count: number) {
+  return `${count.toLocaleString("en-IN")} ${count === 1 ? "ad" : "ads"}`;
 }
 
 export default async function CountriesPage() {
-  const [countries, categories] = await Promise.all([loadCountryDirectory(), getCategories()]);
+  const [countries, categories, paths, shell, hero, texts] = await Promise.all([
+    loadCountryDirectory(),
+    getCategories().catch(() => []),
+    getPaths(),
+    readShellConfig(),
+    getHomepageContent().then(heroBandFrom),
+    textOverrides(),
+  ]);
+  const t = makeT(texts);
   const first = categories[0]?.slug || "dating";
+  const ordered = [...countries].sort((a, b) => Number(b.slug === "india") - Number(a.slug === "india"));
+  const crumbs = [
+    { name: t("listing.crumb.home"), path: "/" },
+    { name: "Countries", path: PATH },
+  ];
   return (
-    <>
-      <div className="tk-banner" data-tk="countries-banner">
-        <div className="tk-container">
-          <h1>All countries</h1>
-        </div>
-        <Globe className="tk-banner-pins tk-icon-lg" size={116} color="#fff" aria-hidden />
-      </div>
-      <div className="tk-container" style={{ paddingBottom: 32 }}>
-        {countries.length === 0 ? <p>No countries yet.</p> : null}
-        {countries.map((country) => (
-          <div className="tk-panel" key={country.slug}>
-            <div className="tk-panel-head">
-              <CountryFlag code={country.code} /> {country.name} ({country.count})
+    <NewListingPage
+      tk="countries"
+      band={{
+        crumbs,
+        h1: "All countries",
+        intro: "Pick a country to browse free classifieds. Every country lists its cities with the number of live ads.",
+        photo: bandChoice(shell, hero, {}),
+        searchAction: searchPath(paths),
+        placeholder: "Search ads",
+        labels: listingLabels(t),
+      }}
+    >
+      {ordered.length === 0 ? <p className="tkn-co-empty">No countries yet.</p> : null}
+      <ul className="tkn-co-grid">
+        {ordered.map((country) => (
+          <li key={country.slug} className="tkn-co-card" data-tk="country-card" data-wide={country.cities.length > 8 ? "true" : "false"}>
+            <div className="tkn-co-head">
+              <CountryFlag code={country.code} />
+              <h2 className="tkn-co-name">
+                <Link href={countryPath(country.slug)} prefetch={false}>
+                  {country.name}
+                </Link>
+              </h2>
+              <span className="tkn-co-count">{adsLabel(country.count)}</span>
             </div>
-            <Link href={countryPath(country.slug)} className="tk-dir-state" prefetch={false}>
-              {country.name}
-            </Link>
-            {country.cities.map((city) => (
-              <Link key={city.slug} href={placePath(first, city.slug)} className="tk-dir-city" prefetch={false}>
-                {city.name} ({city.count})
-              </Link>
-            ))}
-          </div>
+            <div className="tk-pills tk-pills-left">
+              {country.cities.map((city) => (
+                <Link key={city.slug} href={placePath(first, city.slug)} className="tk-pill" prefetch={false}>
+                  {city.name} ({city.count})
+                </Link>
+              ))}
+            </div>
+          </li>
         ))}
-      </div>
-    </>
+      </ul>
+    </NewListingPage>
   );
 }

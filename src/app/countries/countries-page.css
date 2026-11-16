@@ -1,0 +1,16 @@
+.tkn-co-grid { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 420px), 1fr)); gap: 20px; }
+.tkn-co-card {
+  box-sizing: border-box; padding: 22px 24px; border-radius: 20px; background: #fff; border: 1px solid #ead8f0;
+  box-shadow: 0 2px 14px rgba(45, 18, 72, 0.07); min-width: 0;
+}
+.tkn-co-card[data-wide="true"] { grid-column: 1 / -1; }
+.tkn-co-head { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin-bottom: 14px; }
+.tkn-co-name { margin: 0; font-size: 22px; font-weight: 800; letter-spacing: -0.02em; color: #1e0b38; }
+.tkn-co-name a { color: inherit; text-decoration: none; }
+.tkn-co-name a:hover { color: #a8124f; }
+.tkn-co-count { padding: 4px 12px; border-radius: 999px; background: #fdf0f7; color: #a8124f; font-size: 13px; font-weight: 700; }
+.tkn-co-empty { margin: 0; font-size: 16px; color: #4a2870; }
+@media (max-width: 599px) {
+  .tkn-co-card { padding: 18px 16px; }
+  .tkn-co-name { font-size: 20px; }
+}
