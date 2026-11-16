@@ -27,6 +27,7 @@
     "tests/e2e/advertiser.e2e.ts",
     "src/components/post/credits.ts",
     "src/components/post/PayParts.tsx",
-    "tests/e2e/helpers.ts"
+    "tests/e2e/helpers.ts",
+    "tests/e2e/post-new-design.e2e.ts"
   ]
 }

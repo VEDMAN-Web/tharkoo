@@ -552,7 +552,7 @@ export function PostWizard({
         anotherHref={copy.success.secondaryCta?.href || postAdPath(paths)}
         adHref={adSlug ? `/ad/${adSlug}/` : ""}
         receipt={receipt}
-        plans={visiblePlans.slice(0, 2)}
+        plans={visiblePlans.filter((plan) => (plan.amount ?? 0) > 0).slice(0, 2)}
         planNote={planNote}
         onPlan={(plan) => void buyPlan(plan)}
       />
@@ -1019,7 +1019,7 @@ export function PostWizard({
           <aside className="tkp-aside">
             <p className="tkp-aside-label">Live preview</p>
             <PostPreviewCard ad={adPreview} label="Live preview" hasPhoto={Boolean(coverUrl)} byline={byline} />
-            <p className="tkp-preview-line">This is how your ad will look. Posting is free.</p>
+            <p className="tkp-preview-line">This is how your ad will look.</p>
             <PostTip text={NEW_POST_TIPS[current === "more" ? "details" : current]} />
           </aside>
         </div>

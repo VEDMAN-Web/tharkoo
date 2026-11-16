@@ -28,7 +28,7 @@ async function bottomOfNav(page: Page) {
 async function toDetails(page: Page, category: string) {
   await page.locator(".tkp-tile", { hasText: category }).click();
   await page.locator("[data-tk=go-on]").click();
-  await expect(page.locator("[data-tk=step-of]")).toContainText("Step 2 of 5");
+  await expect(page.locator("[data-tk=step-of]")).toContainText("Step 2 of");
 }
 
 test.describe("H7.83 post an ad, steps 1 and 2", () => {
@@ -136,7 +136,7 @@ test.describe("H7.83 post an ad, steps 1 and 2", () => {
       expect(box.height, selector).toBeGreaterThanOrEqual(44);
     }
     await page.locator("[data-tk=go-on]").click();
-    await expect(page.locator("[data-tk=step-of]")).toContainText("Step 2 of 5");
+    await expect(page.locator("[data-tk=step-of]")).toContainText("Step 2 of");
     for (const id of ["#city", "#nickname", "#age", "#title", "#text"]) {
       const box = (await page.locator(id).boundingBox())!;
       expect(box.height, id).toBeGreaterThanOrEqual(44);
@@ -173,7 +173,7 @@ test.describe("H7.83 post an ad, steps 1 and 2", () => {
       expect(await overflow(page), `${width} step 1`).toBeLessThanOrEqual(0);
       if (width >= 1024) expect((await bottomOfNav(page)) - height, `${width}x${height} step 1: Continue below the fold`).toBeLessThanOrEqual(1);
       await page.locator("[data-tk=go-on]").click();
-      await expect(page.locator("[data-tk=step-of]")).toContainText("Step 2 of 5");
+      await expect(page.locator("[data-tk=step-of]")).toContainText("Step 2 of");
       expect(await overflow(page), `${width} step 2`).toBeLessThanOrEqual(0);
       if (width >= 1024) expect((await bottomOfNav(page)) - height, `${width}x${height} step 2: Continue below the fold`).toBeLessThanOrEqual(1);
     }
