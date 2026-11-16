@@ -8,6 +8,7 @@ import { SESSION_COOKIE } from "@/server/auth/http";
 import { userFromToken } from "@/server/auth/service";
 import { readOwnPresence } from "@/server/availability/service";
 import { newDesignOn } from "@/server/site-links/new-design";
+import { getCities } from "@/lib/queries";
 import { getPaths } from "@/server/urls/service";
 
 export const dynamic = "force-dynamic";
@@ -34,13 +35,15 @@ export default async function Page({ searchParams }: { searchParams: Promise<Rec
     redirect(`${loginPath(paths)}?role=seller&next=${encodeURIComponent(next)}`);
   }
   const user = session.user;
-  const presence = await readOwnPresence(user.id);
+  const [presence, cityRows] = await Promise.all([readOwnPresence(user.id), getCities()]);
+  const cities = cityRows.map((row) => ({ id: row.id, name: row.name, slug: row.slug })).sort((a, b) => a.name.localeCompare(b.name));
   return (
     <SellerProfileForm
       next={next}
       initial={user.seller}
       askDateOfBirth={!user.dateOfBirth}
       initialLiveChat={presence.liveChat}
+      cities={cities}
     />
   );
 }

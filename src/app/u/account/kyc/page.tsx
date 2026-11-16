@@ -1,5 +1,8 @@
-import { KycStatus } from "@/components/account/AccountTools";
+import { KycPanel } from "@/components/buyer/KycPanel";
+import { PanelPage } from "@/components/buyer/PanelPage";
 import { pageMetadata } from "@/lib/ui/meta";
+
+export const dynamic = "force-dynamic";
 
 export const metadata = pageMetadata({
   title: "Identity check | Tharkoo",
@@ -9,5 +12,9 @@ export const metadata = pageMetadata({
 });
 
 export default function Page() {
-  return <KycStatus />;
+  return (
+    <PanelPage active="settings" next="/u/account/kyc/" title="Log in to see your identity check" body="Your check status appears here after you log in.">
+      <KycPanel />
+    </PanelPage>
+  );
 }
