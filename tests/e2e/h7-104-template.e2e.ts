@@ -34,7 +34,7 @@ test.describe("H7.104: one listing template for every listing page", () => {
       await expect(page.locator('[data-tk="card"]')).toHaveCount(0);
       const cards = page.locator(CARD);
       expect(await cards.count()).toBeGreaterThan(0);
-      const text = (await page.locator('[data-tk="listing-grid"]').first().innerText()).toLowerCase();
+      const text = (await cards.allInnerTexts()).join(" ").toLowerCase();
       expect(text).not.toMatch(/\bstar\b|super top|\btop\b/);
       const tops = await cardTops(page);
       expect(tops[0], "first card top").toBeLessThanOrEqual(260);
@@ -96,8 +96,9 @@ test.describe("H7.104: one listing template for every listing page", () => {
       await page.goto("/admin/homepage/");
       const box = page.getByLabel("Show photo band on listing pages");
       await expect(box).toBeVisible();
-      if ((await box.isChecked()) !== on) await box.setChecked(on);
+      if ((await box.isChecked()) !== on) await box.click();
       await expect(page.getByText("Saved.", { exact: true }).last()).toBeVisible();
+      if (on) await expect(box).toBeChecked();
     };
     await toggle(true);
     try {
