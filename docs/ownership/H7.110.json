@@ -1,0 +1,19 @@
+{
+  "branchPrefix": "haiku/h7.110",
+  "globs": [
+    "docs/ownership/H7.110.json",
+    "src/components/h714/CitiesView.tsx",
+    "src/app/[category]/tag/[tag]/page.tsx",
+    "src/app/u/login/page.tsx",
+    "src/components/auth/reset-card.css",
+    "src/styles/motion.css",
+    "src/components/vendor/TourInbox.tsx",
+    "src/components/buyer/user-panel.css",
+    "src/components/AgeGate.tsx",
+    "src/components/PathChrome.tsx",
+    "src/lib/ui/site-content.ts",
+    "tests/e2e/h7-110-small.e2e.ts",
+    "tests/e2e/listing-availability.e2e.ts",
+    "progress/KNOWN-E2E.md"
+  ]
+}
