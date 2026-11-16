@@ -1,6 +1,7 @@
 import { cookies } from "next/headers";
 import { CoinsPanel } from "@/components/buyer/CoinsPanel";
 import { SESSION_COOKIE } from "@/server/auth/http";
+import { readMoneySettings } from "@/server/billing/money-settings";
 import { loadPacks, loadPanelSummary } from "@/server/notifications/summary";
 import { pageMetadata } from "@/lib/ui/meta";
 
@@ -13,6 +14,6 @@ export const metadata = pageMetadata({
 });
 
 export default async function Page() {
-  const [summary, packs] = await Promise.all([loadPanelSummary((await cookies()).get(SESSION_COOKIE)?.value), loadPacks()]);
-  return <CoinsPanel summary={summary} packs={packs} />;
+  const [summary, packs, money] = await Promise.all([loadPanelSummary((await cookies()).get(SESSION_COOKIE)?.value), loadPacks(), readMoneySettings()]);
+  return <CoinsPanel summary={summary} packs={packs} creditPriceInr={money.creditPriceInr} />;
 }

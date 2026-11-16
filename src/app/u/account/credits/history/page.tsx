@@ -1,4 +1,5 @@
 import { WalletHistory } from "@/components/account/AccountTools";
+import { PurchaseHistory } from "@/components/recharge/PurchaseHistory";
 import { pageMetadata } from "@/lib/ui/meta";
 
 export const metadata = pageMetadata({
@@ -9,5 +10,5 @@ export const metadata = pageMetadata({
 });
 
 export default function Page() {
-  return <WalletHistory />;
+  return <WalletHistory purchases={<PurchaseHistory />} />;
 }
