@@ -1,0 +1,14 @@
+{
+  "branchPrefix": "haiku/h0.1",
+  "globs": [
+    "CLAUDE.md",
+    "docs/claude/**",
+    "scripts/seo-check.mjs",
+    "scripts/local-prod.mjs",
+    "scripts/relay-wait.mjs",
+    ".github/scripts/ownership-check.mjs",
+    "docs/ownership/H0.1.json",
+    ".gitignore",
+    "package.json"
+  ]
+}

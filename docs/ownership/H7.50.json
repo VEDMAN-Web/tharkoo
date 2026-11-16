@@ -1,0 +1,12 @@
+{
+  "branchPrefix": "haiku/h7.50",
+  "globs": [
+    "docs/ownership.json",
+    "docs/ownership/**",
+    "docs/WORKFLOW.md",
+    ".github/PULL_REQUEST_TEMPLATE.md",
+    ".github/scripts/ownership-check.mjs",
+    ".github/scripts/ownership-loader.mjs",
+    "tests/server/ownership/**"
+  ]
+}

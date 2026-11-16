@@ -1,0 +1,19 @@
+{
+  "branchPrefix": "haiku/p1",
+  "globs": [
+    "src/components/HeaderCountry.tsx",
+    "src/components/HeaderNew.tsx",
+    "src/components/new/NewHome.tsx",
+    "src/components/new/HomeAdCard.tsx",
+    "src/components/new/home-spec.css",
+    "src/components/new/UtilityStrip.tsx",
+    "src/components/FooterNew.tsx",
+    "src/components/FooterNew.css",
+    "src/lib/ui/text.ts",
+    "src/server/locations/site-country.ts",
+    "tests/e2e/shell.e2e.ts",
+    "tests/e2e/h7-4d-followups.e2e.ts",
+    "docs/ownership/P1.json",
+    "src/app/globals.css"
+  ]
+}

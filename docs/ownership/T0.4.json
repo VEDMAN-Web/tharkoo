@@ -1,0 +1,18 @@
+{
+  "branchPrefix": "codex/t0.4",
+  "globs": [
+    "src/data/**",
+    "scripts/**",
+    "public/**",
+    "src/lib/seo.ts",
+    "src/components/HomeBlocks.tsx",
+    "src/lib/media.ts",
+    "src/app/[category]/tag/[tag]/page.tsx",
+    "docs/ASSETS.md",
+    "docs/PLAN.md",
+    "docs/seo/PROJECT.md"
+  ],
+  "exclude": [
+    "public/brand/**"
+  ]
+}

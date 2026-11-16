@@ -1,0 +1,12 @@
+{
+  "branchPrefix": "haiku/h7.14",
+  "globs": [
+    "src/app/categories/**",
+    "src/app/cities/**",
+    "src/app/how-it-works/**",
+    "src/app/help/**",
+    "src/components/h714/**",
+    "src/components/CookieBanner.tsx",
+    "docs/ownership/H7.14.json"
+  ]
+}

@@ -1,0 +1,17 @@
+{
+  "branchPrefix": "codex/t2.4",
+  "globs": [
+    "src/app/u/login/**",
+    "src/app/u/register/**",
+    "src/app/u/forgot/**",
+    "src/app/u/reset/**",
+    "src/app/u/verify-email/**",
+    "src/app/u/age-verification/**",
+    "src/app/u/logout/**",
+    "src/app/u/password-expired/**",
+    "src/app/u/account/kyc/**",
+    "src/components/AuthForm.tsx",
+    "src/components/AgeGate.tsx",
+    "src/components/session/**"
+  ]
+}

@@ -1,0 +1,10 @@
+{
+  "branchPrefix": "codex/t0.2",
+  "globs": [
+    "src/components/**",
+    "src/app/**",
+    "src/lib/models.ts",
+    "tsconfig.json",
+    "eslint.config.mjs"
+  ]
+}

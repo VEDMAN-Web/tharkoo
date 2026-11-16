@@ -1,0 +1,26 @@
+{
+  "branchPrefix": "haiku/h7.1",
+  "globs": [
+    "src/components/Header*.tsx",
+    "src/components/Footer*.tsx",
+    "src/components/chat/**",
+    "src/components/SiteShell.tsx",
+    "src/components/PathChrome.tsx",
+    "src/app/layout.tsx",
+    "src/server/chat/**",
+    "src/server/site-links/**",
+    "src/app/admin/menus/**",
+    "src/app/admin/footer/**",
+    "src/app/admin/settings/**",
+    "src/app/globals.css",
+    "src/app/api/cron/expire/route.ts",
+    "src/app/api/support/guest/**",
+    "src/app/support/guest/**",
+    "src/server/models/support.ts",
+    "src/server/support/**",
+    "tests/e2e/shell*.e2e.ts",
+    "tests/server/shell/**",
+    "progress/H7.1.md",
+    "docs/ownership/H7.1.json"
+  ]
+}

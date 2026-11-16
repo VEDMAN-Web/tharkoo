@@ -1,0 +1,12 @@
+{
+  "branchPrefix": "cursor/t1.1",
+  "globs": [
+    "src/server/models/**",
+    "src/server/shared/**",
+    "src/server/audit/**",
+    "src/server/http/**",
+    "docs/contracts/**",
+    "tests/server/shared/**",
+    "tests/server/models/**"
+  ]
+}

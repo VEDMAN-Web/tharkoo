@@ -1,0 +1,18 @@
+{
+  "branchPrefix": "haiku/h3.7",
+  "globs": [
+    "src/lib/ui/text.ts",
+    "src/app/admin/ui-text/**",
+    "src/components/ui/AdCard.tsx",
+    "tests/server/layout/ui-text.test.ts",
+    "src/app/page.tsx",
+    "src/components/HomeBlocks.tsx",
+    "src/app/[category]/page.tsx",
+    "src/app/[category]/[location]/page.tsx",
+    "src/app/[category]/[location]/[district]/page.tsx",
+    "src/components/ListingPage.tsx",
+    "src/components/PostWizard.tsx",
+    "src/components/post/**",
+    "src/components/blocks/**"
+  ]
+}

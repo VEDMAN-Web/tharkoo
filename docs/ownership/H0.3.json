@@ -1,0 +1,17 @@
+{
+  "branchPrefix": "haiku/h0.3",
+  "globs": [
+    "docs/design/ref/**",
+    "docs/design/CLONE_SPEC.md",
+    "docs/design/README.md",
+    "docs/CODE_MAP.md",
+    "docs/MASTER_PLAN.md",
+    "docs/ASSETS.md",
+    "progress/t0.1.md",
+    "progress/t0.4.md",
+    "progress/t0.5.md",
+    "progress/t9.1.md",
+    "tests/server/ui/theme.test.ts",
+    ".github/scripts/forbidden-terms.mjs"
+  ]
+}

@@ -1,0 +1,14 @@
+{
+  "branchPrefix": "haiku/h3.2",
+  "globs": [
+    "src/server/models/layout.ts",
+    "src/server/models/index.ts",
+    "src/server/layout/**",
+    "src/lib/layout/**",
+    "src/components/blocks/**",
+    "src/app/admin/layout-actions.ts",
+    "tests/server/layout/**",
+    "docs/ownership/H3.2.json",
+    "progress/H3.2.md"
+  ]
+}

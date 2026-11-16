@@ -1,0 +1,14 @@
+{
+  "branchPrefix": "haiku/h5.9b",
+  "globs": [
+    "src/server/content/**",
+    "src/server/seed/run.ts",
+    "src/app/api/cron/expire/route.ts",
+    "src/app/admin/seo/tools/**",
+    "src/app/admin/seo/SeoTabs.tsx",
+    "src/components/admin/nav.ts",
+    "tests/server/content/**",
+    "docs/ownership/H5.9b.json",
+    "progress/H5.9b.md"
+  ]
+}

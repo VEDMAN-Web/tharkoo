@@ -1,0 +1,12 @@
+{
+  "branchPrefix": "cursor/t6.1",
+  "globs": [
+    "src/server/seo/**",
+    "src/app/sitemap*",
+    "src/app/robots.ts",
+    "src/app/llms.txt/**",
+    "scripts/seo-audit.ts",
+    "scripts/indexnow.ts",
+    "tests/server/seo/**"
+  ]
+}

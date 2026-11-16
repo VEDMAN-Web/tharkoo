@@ -1,7 +1,13 @@
 import { execSync } from "node:child_process";
-import { readFileSync } from "node:fs";
+import { loadOwnership } from "./ownership-loader.mjs";
 
-const ownership = JSON.parse(readFileSync("docs/ownership.json", "utf8"));
+let ownership;
+try {
+  ownership = loadOwnership("docs/ownership");
+} catch (error) {
+  console.error(`ownership-check: ${error.message}`);
+  process.exit(1);
+}
 
 function sh(cmd) {
   return execSync(cmd, { encoding: "utf8" }).trim();
@@ -82,7 +88,7 @@ if (!match) {
 const taskId = `${(match[1] || match[2]).toUpperCase()}${match[3]}.${match[4]}${match[5] ?? ""}`;
 const task = ownership.tasks[taskId];
 if (!task) {
-  console.error(`ownership-check: no docs/ownership.json entry for ${taskId}`);
+  console.error(`ownership-check: no docs/ownership/${taskId}.json entry`);
   process.exit(1);
 }
 if (task.branchPrefix && !branch.startsWith(task.branchPrefix)) {

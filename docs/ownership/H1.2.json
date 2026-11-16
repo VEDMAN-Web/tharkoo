@@ -1,0 +1,6 @@
+{
+  "branchPrefix": "haiku/h1.2",
+  "globs": [
+    "next.config.ts"
+  ]
+}

@@ -1,0 +1,15 @@
+{
+  "branchPrefix": "haiku/h3.8",
+  "globs": [
+    "src/server/ranking/**",
+    "src/lib/queries.ts",
+    "src/server/models/cms.ts",
+    "src/server/models/listing.ts",
+    "src/app/admin/listing-order/**",
+    "tests/server/ranking/**",
+    "src/server/search/query.ts",
+    "docs/ownership/H3.8.json",
+    "progress/H3.8.md",
+    "src/components/admin/nav.ts"
+  ]
+}

@@ -1,0 +1,21 @@
+{
+  "branchPrefix": "haiku/h1.6",
+  "globs": [
+    "src/app/[category]/page.tsx",
+    "src/app/cities/page.tsx",
+    "src/app/categories/page.tsx",
+    "src/app/blog/page.tsx",
+    "src/app/help/page.tsx",
+    "src/app/contact/page.tsx",
+    "src/app/terms/page.tsx",
+    "src/app/privacy/page.tsx",
+    "src/app/cookies/page.tsx",
+    "src/app/scam-report/page.tsx",
+    "src/app/safety/page.tsx",
+    "src/app/how-it-works/page.tsx",
+    "src/app/prohibited-items/page.tsx",
+    "src/app/cms/[slug]/page.tsx",
+    "src/app/help/[slug]/page.tsx",
+    "src/app/blog/[slug]/page.tsx"
+  ]
+}

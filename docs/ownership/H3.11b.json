@@ -1,0 +1,19 @@
+{
+  "branchPrefix": "haiku/h3.11b",
+  "globs": [
+    "src/server/models/listing.ts",
+    "src/server/listings/**",
+    "src/components/PostWizard.tsx",
+    "src/components/post/**",
+    "src/components/ui/AdCard.tsx",
+    "src/components/AdDetail.tsx",
+    "src/server/shared/policy.ts",
+    "tests/server/listings/**",
+    "docs/ownership/H3.11b.json",
+    "progress/H3.11b.md",
+    "src/server/shared/schemas/listings.ts",
+    "src/lib/models.ts",
+    "src/app/ad/[slug]/page.tsx",
+    "src/lib/ui/post-form.ts"
+  ]
+}

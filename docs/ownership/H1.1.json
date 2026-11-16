@@ -1,0 +1,7 @@
+{
+  "branchPrefix": "haiku/h1.1",
+  "globs": [
+    "src/app/robots.ts",
+    "tests/server/seo/**"
+  ]
+}

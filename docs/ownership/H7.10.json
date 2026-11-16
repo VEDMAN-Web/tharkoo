@@ -1,0 +1,26 @@
+{
+  "branchPrefix": "haiku/h7.10",
+  "globs": [
+    "src/app/actions/site-country.ts",
+    "src/components/SiteCountry.ts",
+    "src/components/HeaderCountry.tsx",
+    "src/components/FooterNew.tsx",
+    "src/components/FooterNew.css",
+    "src/components/HeaderNew.tsx",
+    "src/components/new/NewAdsGate.tsx",
+    "src/components/new/NewHome.tsx",
+    "src/components/new/HomeAdCard.tsx",
+    "src/components/new/UtilityStrip.tsx",
+    "src/components/new/home-spec.css",
+    "src/lib/countries.ts",
+    "src/lib/ui/text.ts",
+    "src/lib/ui/site-content.ts",
+    "src/server/locations/site-country.ts",
+    "src/app/globals.css",
+    "public/flags/**",
+    "tests/server/shell/home-config-banner.test.ts",
+    "tests/e2e/h7-4d-followups.e2e.ts",
+    "tests/e2e/shell.e2e.ts",
+    "docs/ownership/H7.10.json"
+  ]
+}

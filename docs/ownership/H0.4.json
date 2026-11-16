@@ -1,0 +1,9 @@
+{
+  "branchPrefix": "haiku/h0.4",
+  "globs": [
+    "docs/claude/SETUP.md",
+    "package.json",
+    "scripts/preview.mjs",
+    "docs/ownership/H0.4.json"
+  ]
+}

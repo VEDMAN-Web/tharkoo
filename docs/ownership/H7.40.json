@@ -1,0 +1,9 @@
+{
+  "branchPrefix": "haiku/h7.40",
+  "globs": [
+    "docs/ownership/H7.40.json",
+    "src/app/api/auth/[[...slug]]/route.ts",
+    "src/server/auth/service.ts",
+    "tests/server/auth/cookie-life.test.ts"
+  ]
+}
