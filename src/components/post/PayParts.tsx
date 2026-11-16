@@ -15,7 +15,7 @@ export function CreditsCard({ fee, price, balance, ready, onTopUp }: CardProps) 
       <p className="tkp-credits-title">Credits</p>
       <p className="tkp-credits-line" data-tk="credits-balance">Balance {balance === null ? "..." : creditsText(balance)}</p>
       <p className="tkp-credits-line">{fee > 0 ? `This ad: ${creditsText(fee)}` : "Changes to this ad: no charge"}</p>
-      <button type="button" className="tkp-credits-link" data-tk="credits-topup" onClick={onTopUp}>Top up</button>
+      {fee > 0 ? <button type="button" className="tkp-credits-link" data-tk="credits-topup" onClick={onTopUp}>Top up</button> : null}
     </div>
   );
 }

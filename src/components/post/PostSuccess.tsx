@@ -20,9 +20,19 @@ type Props = {
   plans: UpsellPlan[];
   planNote: string;
   onPlan: (plan: UpsellPlan) => void;
+  /** H7.118: an edit of a posted ad was saved. No fee, no upsell. */
+  saved?: boolean;
+  paused?: boolean;
 };
 
-function nextSteps(live: boolean, where: string): string[] {
+function nextSteps(live: boolean, where: string, saved = false, paused = false): string[] {
+  if (saved) {
+    return [
+      paused ? "It is still paused. Resume it in My ads when you are ready." : "Your changes are on your ad now.",
+      "See views and replies in My ads.",
+      "Pause, renew or promote it any time.",
+    ];
+  }
   if (live) {
     return [
       where ? `People can find it on the ${where} page now.` : "People can find it on the site now.",
@@ -33,10 +43,10 @@ function nextSteps(live: boolean, where: string): string[] {
   return ["We check every ad before it goes live.", "You will see the result in My ads.", "You can still edit it while you wait."];
 }
 
-export function PostSuccess({ copy, live, where, ad, hasPhoto, byline, anotherHref, adHref, receipt, plans, planNote, onPlan }: Props) {
+export function PostSuccess({ copy, live, where, ad, hasPhoto, byline, anotherHref, adHref, receipt, plans, planNote, onPlan, saved = false, paused = false }: Props) {
   const Mark = live ? CircleCheck : Clock;
   return (
-    <div className="tkp-post" data-design="post-new" data-tk="post-success" data-state={live ? "live" : "review"}>
+    <div className="tkp-post" data-design="post-new" data-tk="post-success" data-state={saved ? "saved" : live ? "live" : "review"}>
       <div className="tkp-progress" aria-hidden><i style={{ width: "100%" }} /></div>
       <section className="tkp-success" aria-labelledby="post-success-title">
         <span className="tkp-success-mark" aria-hidden><Mark size={32} focusable="false" /></span>
@@ -48,15 +58,15 @@ export function PostSuccess({ copy, live, where, ad, hasPhoto, byline, anotherHr
               <PostPreviewCard ad={ad} label="Your ad" hasPhoto={hasPhoto} byline={byline} />
             </div>
             <ul className="tkp-next" data-tk="what-next">
-              {nextSteps(live, where).map((line) => (
+              {nextSteps(live, where, saved, paused).map((line) => (
                 <li key={line}>{line}</li>
               ))}
             </ul>
           </div>
           <div className="tkp-success-col">
             {receipt ? <p className="tkp-receipt" data-tk="receipt">{receipt}</p> : null}
-            {adHref && live ? <Link href={adHref} className="tkp-ad-link" data-tk="view-ad">View your ad</Link> : null}
-            {plans.length ? (
+            {adHref && live && !paused ? <Link href={adHref} className="tkp-ad-link" data-tk="view-ad">View your ad</Link> : null}
+            {plans.length && !saved ? (
               <section className="tkp-upsell" data-tk="upsell" aria-label="Get more views">
                 <h2 className="tkp-upsell-title">Get more views</h2>
                 <ul className="tkp-upsell-list">

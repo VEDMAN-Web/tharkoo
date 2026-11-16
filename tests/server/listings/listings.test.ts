@@ -108,9 +108,63 @@ describe("listing routes", () => {
     const other = await account("other@example.com");
     const { category, city, media } = await catalogue(owner.user._id);
     const id = await draftFor(owner.cookie, category._id.toString(), city._id.toString(), media._id.toString());
-    expect((await call("PATCH", id, { stage: "basics", title: "Taken" }, other.cookie)).status).toBe(403);
-    expect((await call("POST", `${id}/pause`, undefined, other.cookie)).status).toBe(403);
-    expect((await call("DELETE", id, undefined, other.cookie)).status).toBe(403);
+    expect((await call("PATCH", id, { stage: "basics", title: "Taken" }, other.cookie)).status).toBe(404);
+    expect((await call("POST", `${id}/pause`, undefined, other.cookie)).status).toBe(404);
+    expect((await call("DELETE", id, undefined, other.cookie)).status).toBe(404);
+    expect((await call("POST", `${id}/submit`, { attestations }, other.cookie)).status).toBe(404);
+    expect((await call("GET", `by-id/${id}`, undefined, other.cookie)).status).toBe(404);
+    expect((await call("GET", `by-id/${id}`, undefined, owner.cookie)).status).toBe(200);
+  });
+
+  it("saves edits to a live ad on the same ad: same id and slug, no fee even with paid posting on, still live", async () => {
+    const owner = await account("edit-live@example.com");
+    const { category, city, media } = await catalogue(owner.user._id);
+    const id = await draftFor(owner.cookie, category._id.toString(), city._id.toString(), media._id.toString(), "Blue city cycle");
+    const first = await call("POST", `${id}/submit`, { attestations }, owner.cookie);
+    expect(first.status).toBe(200);
+    const before = await Listing.findById(id);
+    expect(before?.status).toBe("active");
+    const slug = before?.slug;
+    const expiresAt = before?.expiresAt?.getTime();
+    expect(slug).toBeTruthy();
+
+    await Site.updateOne({ key: "default" }, { $set: { paidPostingOn: true, postingFeeCredits: 30 } }, { upsert: true, strict: false });
+    const changed = await call("PATCH", id, { stage: "basics", title: "Red city cycle, new title" }, owner.cookie);
+    expect(changed.status).toBe(200);
+    const saved = await call("POST", `${id}/submit`, { attestations }, owner.cookie);
+    expect(saved.status).toBe(200);
+    const body = (await saved.json()).data;
+    expect(body.status).toBe("active");
+    expect(body.charged).toBe(0);
+    const after = await Listing.findById(id);
+    expect(String(after?._id)).toBe(id);
+    expect(after?.slug).toBe(slug);
+    expect(after?.title).toBe("Red city cycle, new title");
+    expect(after?.status).toBe("active");
+    expect(after?.expiresAt?.getTime()).toBe(expiresAt);
+
+    const again = await call("POST", `${id}/submit`, { attestations }, owner.cookie);
+    expect(again.status).toBe(200);
+    expect((await again.json()).data.charged).toBe(0);
+  });
+
+  it("keeps a paused ad paused when its edits are saved, with no fee", async () => {
+    const owner = await account("edit-paused@example.com");
+    const { category, city, media } = await catalogue(owner.user._id);
+    const id = await draftFor(owner.cookie, category._id.toString(), city._id.toString(), media._id.toString(), "Paused cycle");
+    expect((await call("POST", `${id}/submit`, { attestations }, owner.cookie)).status).toBe(200);
+    const slug = (await Listing.findById(id))?.slug;
+    expect((await call("POST", `${id}/pause`, undefined, owner.cookie)).status).toBe(200);
+    await Site.updateOne({ key: "default" }, { $set: { paidPostingOn: true, postingFeeCredits: 30 } }, { upsert: true, strict: false });
+    expect((await call("PATCH", id, { stage: "details", price: 1200 }, owner.cookie)).status).toBe(200);
+    const saved = await call("POST", `${id}/submit`, { attestations }, owner.cookie);
+    expect(saved.status).toBe(200);
+    const body = (await saved.json()).data;
+    expect(body.status).toBe("paused");
+    expect(body.charged).toBe(0);
+    const after = await Listing.findById(id);
+    expect(after?.status).toBe("paused");
+    expect(after?.slug).toBe(slug);
   });
 
   it("omits contact from the public listing and returns 410 after removal", async () => {
