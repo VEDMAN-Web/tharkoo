@@ -15,9 +15,9 @@ import type { UiTextMap } from "@/lib/ui/text";
 import { UtilityStrip } from "./new/UtilityStrip";
 import { applyPrefixes, loginPath, postAdPath } from "@/lib/urls";
 import type { ShellConfig } from "@/server/site-links/shell-config-rules";
-import { api } from "@/lib/ui/api";
 import { LogoutButton } from "./auth/LogoutButton";
 import { accountName } from "@/lib/account-name";
+import { isSignedInPhase, useAccount } from "./account/AccountContext";
 
 // The search pop-up loads only when a visitor opens it, as in the old header.
 const SearchModal = dynamic(() => import("./SearchModal").then((mod) => mod.SearchModal), { ssr: false });
@@ -50,7 +50,9 @@ export function HeaderNew({
   const paths = useUrlPaths();
   const [menuOpen, setMenuOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
-  const [account, setAccount] = useState<{ name: string; balance: number | null } | null>(null);
+  const { phase, user, balance, balanceReady } = useAccount();
+  const signedIn = isSignedInPhase(phase);
+  const accountLabel = user ? accountName(user.displayName, user.email || "") : "";
   const [accountOpen, setAccountOpen] = useState(false);
   const links = shell.header.navLinks.filter((item) => item.visible && safeHref(item.href));
 
@@ -60,18 +62,6 @@ export function HeaderNew({
     }
     window.addEventListener("tk-open-search", open);
     return () => window.removeEventListener("tk-open-search", open);
-  }, []);
-
-  useEffect(() => {
-    if (!isProbablySignedIn()) return;
-    let live = true;
-    Promise.all([api<{ user: { displayName?: string; email?: string } }>("/api/auth/me"), api<{ balance: number }>("/api/wallet")]).then(([who, wallet]) => {
-      if (!live || !who.ok) return;
-      setAccount({ name: accountName(who.data.user.displayName, who.data.user.email || ""), balance: wallet.ok ? wallet.data.balance : null });
-    });
-    return () => {
-      live = false;
-    };
   }, []);
 
   const navRef = useRef<HTMLElement>(null);
@@ -121,28 +111,30 @@ export function HeaderNew({
         </nav>
         <div className="tkn-header-actions">
           <HeaderCountry countries={countries} />
-          {account ? (
+          {signedIn ? (
             <>
-              {account.balance !== null ? (
-                <Link href="/u/account/credits/" className="tkn-coin-chip" data-tk="header-coins">{account.balance} coins</Link>
-              ) : null}
+              {balanceReady ? (
+                balance !== null ? <Link href="/u/account/credits/" className="tkn-coin-chip" data-tk="header-coins">{balance} coins</Link> : null
+              ) : (
+                <span className="tkn-coin-chip tkn-skel" data-tk="header-coins-wait" aria-hidden="true" />
+              )}
               <div className="tkn-account">
                 <button
                   type="button"
                   className="tkn-avatar"
-                  aria-label={`Account menu for ${account.name}`}
+                  aria-label={user ? `Account menu for ${accountLabel}` : "Account menu"}
                   aria-haspopup="menu"
                   aria-expanded={accountOpen}
                   data-tk="header-avatar"
                   onClick={() => setAccountOpen((open) => !open)}
                 >
-                  <span className="tkn-avatar-circle">{account.name.slice(0, 1).toUpperCase()}</span>
+                  {user ? <span className="tkn-avatar-circle">{accountLabel.slice(0, 1).toUpperCase()}</span> : <span className="tkn-avatar-circle tkn-skel" aria-hidden="true" />}
                   <ChevronDown size={12} aria-hidden="true" focusable="false" />
                 </button>
                 {accountOpen ? (
                   <div className="tkn-account-menu" role="menu">
-                    {account.balance !== null ? (
-                      <Link role="menuitem" href="/u/account/credits/" className="tkn-account-coins" onClick={() => setAccountOpen(false)}>{account.balance} coins</Link>
+                    {balance !== null ? (
+                      <Link role="menuitem" href="/u/account/credits/" className="tkn-account-coins" onClick={() => setAccountOpen(false)}>{balance} coins</Link>
                     ) : null}
                     <Link role="menuitem" href="/u/account/dashboard/" onClick={() => setAccountOpen(false)}>My account</Link>
                     <Link role="menuitem" href="/u/account/saved/" onClick={() => setAccountOpen(false)}>Saved ads</Link>
@@ -187,6 +179,7 @@ export function HeaderNew({
         countries={countries}
         loginLabel={shell.header.loginLabel}
         postLabel={shell.header.postLabel}
+        signedIn={signedIn}
         paths={paths}
         onClose={() => setMenuOpen(false)}
       />
