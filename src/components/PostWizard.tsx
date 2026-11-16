@@ -20,6 +20,7 @@ import { AboutYou } from "./post/AboutYou";
 import { ReviewStep, type ReviewRow } from "./post/ReviewStep";
 import { PostSuccess, type UpsellPlan } from "./post/PostSuccess";
 import { openPromote } from "./promote/openPromote";
+import { openSupportWith } from "./recharge/openRecharge";
 import { CreditsCard, PayCard } from "./post/PayParts";
 import { CREDITS_ADDED_EVENT, creditsText, insufficientFrom, openRecharge, shortfallOf, usePostingMoney } from "./post/credits";
 import { NEW_POST_TIPS, PostRail, PostTip, RAIL_LABELS, RAIL_MORE_LABEL, type RailItem } from "./post/NewPostParts";
@@ -855,6 +856,7 @@ export function PostWizard({
                     {saveState === "saving" ? "Saving…" : "Saved"}
                   </span>
                   <Link href="/u/account/ads/" className="tkp-exit" data-tk="exit-post">Exit</Link>
+                  <button type="button" className="tkp-help-link" data-tk="post-help" aria-label="Need help? Chat with us" onClick={() => openSupportWith("")}>Help</button>
                 </div>
               </div>
               <div className="tkp-progress" aria-hidden><i style={{ width: `${(step / flow.length) * 100}%` }} /></div>

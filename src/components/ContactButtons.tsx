@@ -1,6 +1,6 @@
 "use client";
 
-import { createContext, useContext, useState } from "react";
+import { createContext, useContext, useEffect, useRef, useState } from "react";
 import dynamic from "next/dynamic";
 import { MessageCircle, Phone, Video } from "lucide-react";
 import { api, friendlyError, hasSessionHint } from "@/lib/ui/api";
@@ -166,6 +166,21 @@ export function ContactProvider({
     setPopup(null);
     setNotice(null);
   }
+
+  // H7.131: a link with ?chat=1 (the Chat button on a card) opens the chat on this ad, once. A guest gets the sign-in step first.
+  const deepLinked = useRef(false);
+  useEffect(() => {
+    if (deepLinked.current || !listingId) return;
+    const params = new URLSearchParams(window.location.search);
+    if (params.get("chat") !== "1") return;
+    deepLinked.current = true;
+    params.delete("chat");
+    const query = params.toString();
+    window.history.replaceState(null, "", `${window.location.pathname}${query ? `?${query}` : ""}${window.location.hash}`);
+    const id = window.setTimeout(() => void openChatFlow(), 0);
+    return () => window.clearTimeout(id);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [listingId]);
 
   const value: Ctx = { shown, notice, busy, tour, tourRequested, open, openChatFlow: () => void openChatFlow(), openCall, seller, people, info };
   return (
