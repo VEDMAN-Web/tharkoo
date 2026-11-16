@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useMemo, useState } from "react";
 import { api, fieldErrors, type ApiError, friendlyError, isStaffRole, safeNext } from "@/lib/ui/api";
-import { loginPath, registerPath } from "@/lib/urls";
+import { loginPath } from "@/lib/urls";
 import { useUrlPaths } from "./UrlPaths";
 import { PhoneLogin } from "./PhoneLogin";
 
@@ -243,8 +243,6 @@ function AuthFormInner({ mode }: { mode: Mode }) {
       {mode === "login" ? (
         <p className="t-small" style={{ textAlign: "center", marginTop: 12 }}>
           <Link href={withNext("/u/forgot/")} style={{ color: "var(--accent)" }}>Forgot password?</Link>
-          {" · "}
-          <Link href={withNext(registerPath(paths))} style={{ color: "var(--accent)" }}>Create account</Link>
         </p>
       ) : null}
       {mode === "login" ? <PhoneLogin next={next} /> : null}

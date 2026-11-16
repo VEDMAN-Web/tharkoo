@@ -11,7 +11,7 @@ import { useFocusTrap } from "./ui/useFocusTrap";
 import { useDismiss } from "./ui/useDismiss";
 import { api, hasSessionHint, isStaffRole } from "@/lib/ui/api";
 import { safeHref } from "@/lib/sanitize";
-import { applyPrefixes, blogPath, helpPath, loginPath, postAdPath, registerPath } from "@/lib/urls";
+import { applyPrefixes, blogPath, helpPath, loginPath, postAdPath } from "@/lib/urls";
 import { useUrlPaths } from "./UrlPaths";
 import { LogoutButton } from "./auth/LogoutButton";
 
@@ -135,7 +135,6 @@ export function Header({
                     <div className="tk-menu-guest">
                       <p>Welcome to Tharkoo</p>
                       <Link role="menuitem" className="tk-btn tk-btn-primary" href={loginPath(paths)} onClick={() => setAccount(false)}>Log in</Link>
-                      <Link role="menuitem" className="tk-btn tk-btn-outline-gold" href={registerPath(paths)} onClick={() => setAccount(false)}>Create account</Link>
                     </div>
                   )}
                 </div>

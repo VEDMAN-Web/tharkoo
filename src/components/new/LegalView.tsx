@@ -38,7 +38,7 @@ export function LegalView({
         </div>
       </PageBand>
 
-      <div className="tkp-legal">
+      <div className={withHeadings.length ? "tkp-legal" : "tkp-legal tkp-legal-solo"}>
         {withHeadings.length ? (
           <aside className="tkp-toc tkp-glass tkp-toc-hide-xs" aria-label="On this page">
             <p className="tkp-toc-title">On this page</p>
