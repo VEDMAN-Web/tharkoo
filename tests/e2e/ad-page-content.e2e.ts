@@ -96,7 +96,7 @@ test.describe("H7.99b ad page content", () => {
         const box = (await card.boundingBox())!;
         expect(box.height, `${width}x${height} card height`).toBeLessThanOrEqual(CARD_MAX);
         const headerBottom = await page.evaluate(() => document.querySelector("header")!.getBoundingClientRect().bottom);
-        await page.evaluate(() => window.scrollTo(0, 700));
+        await page.evaluate(() => window.scrollTo(0, 260));
         await page.waitForTimeout(150);
         const moved = (await card.boundingBox())!;
         expect(moved.y, `${width}x${height} card top below header`).toBeGreaterThanOrEqual(headerBottom - 1);
@@ -115,7 +115,8 @@ test.describe("H7.99b ad page content", () => {
     test.skip(testInfo.project.name !== "desktop-1440", "the card is a wide-screen part");
     await page.goto(await adAt(page, "/property/bengaluru/"));
     const card = page.locator('[data-tk="contact-card"]');
-    await expect(card.locator(".tkn-ad-price")).toHaveCSS("font-size", "26px");
+    const request = await card.locator(".tkn-ad-price").evaluate((node) => node.classList.contains("is-request"));
+    await expect(card.locator(".tkn-ad-price")).toHaveCSS("font-size", request ? "20px" : "26px");
     await expect(card.locator(".tkn-seller-avatar")).toHaveCSS("width", "44px");
     await expect(card.locator(".tkn-seller-since")).toContainText("Member since");
     const call = (await card.locator("[data-tk=call]").boundingBox())!;
@@ -185,6 +186,68 @@ test.describe("H7.99b ad page content", () => {
       await expect(icons.getByRole("link", { name: "Report this ad" })).toBeVisible();
       await expect(page.locator('[data-tk="contact-card"] [data-tk="call"]')).toBeHidden();
       expect(await hasHorizontalScroll(page)).toBe(false);
+    }
+  });
+
+  test("the full-screen viewer has 52 px white arrows, a 14 px counter pill top-left and a 44 px close button", async ({ page }) => {
+    await page.goto(await adAt(page, "/dating/bengaluru/"));
+    await page.locator('[data-tk="gallery-expand"]').click();
+    const viewer = page.locator('[data-tk="gallery-viewer"]');
+    await expect(viewer).toBeVisible();
+    for (const name of ["Previous photo", "Next photo"]) {
+      const arrow = viewer.getByRole("button", { name });
+      const box = (await arrow.boundingBox())!;
+      expect(Math.round(box.width)).toBe(52);
+      expect(Math.round(box.height)).toBe(52);
+      await expect(arrow).toHaveCSS("background-color", "rgb(255, 255, 255)");
+    }
+    const counter = viewer.locator(".tkn-viewer-count");
+    await expect(counter).toHaveCSS("font-size", "14px");
+    await expect(counter).toHaveCSS("background-color", "rgba(17, 5, 32, 0.78)");
+    const at = (await counter.boundingBox())!;
+    expect(at.x).toBeLessThan(40);
+    expect(at.y).toBeLessThan(40);
+    const close = (await viewer.getByRole("button", { name: "Close full screen" }).boundingBox())!;
+    expect(Math.round(close.width)).toBe(44);
+    expect(Math.round(close.height)).toBe(44);
+    await shot(page, `viewer-${isPhone(page) ? "390" : "1440"}`);
+    await page.keyboard.press("Escape");
+  });
+
+  test("the Featured pill sits in the pills row and the main photo carries no tier badge", async ({ page }) => {
+    await page.goto("/dating/bengaluru/");
+    const hrefs = await page.locator('[data-tk=card] a[href*="/ad/"]').evaluateAll((els) => els.slice(0, 10).map((el) => (el as HTMLAnchorElement).getAttribute("href")));
+    let featured = 0;
+    for (const href of hrefs) {
+      await page.goto(href!);
+      await expect(page.locator(".tkn-gal")).toBeVisible();
+      await expect(page.locator(".tkn-gal .tkn-gal-badge")).toHaveCount(0);
+      await expect(page.locator(".tkn-gal")).not.toContainText(/SUPER Top/);
+      const pill = page.locator(".tkn-ad-pills li.is-featured");
+      if (await pill.count()) {
+        featured += 1;
+        await expect(pill).toHaveText("Featured");
+        if (featured === 1) await shot(page, `featured-${isPhone(page) ? "390" : "1440"}`);
+      }
+    }
+    expect(featured).toBeGreaterThan(0);
+  });
+
+  test("on a phone the breadcrumb is one line with the last two crumbs", async ({ page }, testInfo) => {
+    test.skip(testInfo.project.name !== "phone-390", "the phone layout");
+    for (const width of [390, 360]) {
+      await page.setViewportSize({ width, height: 740 });
+      await page.goto(await adAt(page, "/dating/bengaluru/"));
+      const nav = page.locator(".tkn-ad-crumbs");
+      await expect(nav).toHaveCSS("font-size", "13px");
+      await expect(nav).toHaveCSS("row-gap", "4px");
+      const shown = await nav.locator(":scope > span").evaluateAll((els) => els.filter((el) => getComputedStyle(el).display !== "none").length);
+      expect(shown).toBe(2);
+      const box = (await nav.boundingBox())!;
+      expect(box.height).toBeLessThanOrEqual(32);
+      await expect(nav.locator("a:visible").first()).toBeVisible();
+      expect((await nav.innerText()).trim().startsWith("/")).toBe(false);
+      await shot(page, `crumbs-${width}`);
     }
   });
 

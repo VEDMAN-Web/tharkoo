@@ -184,6 +184,7 @@ export const TEXT_DEFAULTS = {
   "ad.similar.list": "Similar ads",
   "ad.meta.simple": "{place} · Posted {date}",
   "ad.pill.verified": "ID verified",
+  "ad.pill.featured": "Featured",
   "ad.price.request": "Price on request",
   "ad.aboutMe": "About me",
   "ad.save": "Save this ad",

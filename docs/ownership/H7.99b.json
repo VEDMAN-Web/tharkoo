@@ -3,6 +3,9 @@
   "globs": [
     "docs/ownership/H7.99b.json",
     "src/components/new/NewAdDetail.tsx",
+    "src/components/new/NewGallery.tsx",
+    "src/components/new/GalleryViewer.tsx",
+    "src/components/new/gallery.css",
     "src/components/new/SimilarAds.tsx",
     "src/components/new/AdLiveBits.tsx",
     "src/components/new/AdActions.tsx",

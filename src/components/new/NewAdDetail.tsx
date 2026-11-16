@@ -143,7 +143,7 @@ export function NewAdDetail({
           </nav>
           <div className="tkn-ad-grid">
             <div className="tkn-ad-main">
-              <NewGallery photos={photos} videos={videos} title={title} badge={GOLD_TIERS.has(tier.key) ? tier.label : null} isNew={isRecent(ad)} />
+              <NewGallery photos={photos} videos={videos} title={title} isNew={isRecent(ad)} />
               <article className="tkn-ad-card" data-tk="ad-summary">
                 <div className="tkn-ad-titlerow">
                   <h1>{title}</h1>
@@ -152,6 +152,7 @@ export function NewAdDetail({
                 <p className="tkn-ad-meta">{t("ad.meta.simple", { place: placeText, date })}</p>
                 {peopleAd ? null : <p className={priceText ? "tkn-ad-phoneprice" : "tkn-ad-phoneprice is-request"}>{priceText || t("ad.price.request")}</p>}
                 <ul className="tkn-ad-pills" aria-label={t("ad.details")}>
+                  {GOLD_TIERS.has(tier.key) ? <li className="is-featured">{t("ad.pill.featured")}</li> : null}
                   <li>{categoryName}</li>
                   {city ? <li>{city}</li> : null}
                   {ad.verified ? (
