@@ -28,11 +28,33 @@ export function SearchTop({ crumbs, breadcrumbLabel, heading }: { crumbs: { name
   );
 }
 
-export function SearchBar({ total, sortValue, sortOptions, t }: { total: number; sortValue: string; sortOptions: SortOption[]; t: TextFn }) {
+export function SearchBar({
+  total,
+  place,
+  nearby,
+  sortValue,
+  sortOptions,
+  t,
+}: {
+  total: number;
+  place?: string;
+  nearby?: boolean;
+  sortValue: string;
+  sortOptions: SortOption[];
+  t: TextFn;
+}) {
+  const text =
+    total === 0 && nearby
+      ? place
+        ? t("search.count.nonePlace", { place })
+        : t("search.count.none")
+      : total === 1
+        ? t("search.count.one")
+        : t("search.count.many", { count: total.toLocaleString("en-IN") });
   return (
     <div className="tkn-sr-meta">
       <p className="tkn-sr-count" data-tk="results-count">
-        {total === 1 ? t("search.count.one") : t("search.count.many", { count: total.toLocaleString("en-IN") })}
+        {text}
       </p>
       <SortSelect label={t("search.sort.label")} value={sortValue} options={sortOptions} />
     </div>

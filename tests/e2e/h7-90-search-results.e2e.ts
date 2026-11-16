@@ -23,7 +23,7 @@ test.describe("H7.90: compact search results page", () => {
     await page.goto("/search/?q=coffee");
     const aside = page.locator(".tkn-ls-aside");
     await expect(aside.locator(".tkn-kw label")).toHaveText("Keyword (optional)");
-    await expect(aside.locator(".tkn-kw input")).toHaveAttribute("placeholder", "e.g. yoga, bike, flat in Adajan");
+    await expect(aside.locator(".tkn-kw input")).toHaveAttribute("placeholder", "e.g. yoga, bike, flat");
     await expect(aside.locator(".tkn-kw input")).toHaveValue("coffee");
     await expect(page.locator('[data-tk="results-header"] h1')).toHaveText("Results for \u201ccoffee\u201d");
   });

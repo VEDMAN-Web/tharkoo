@@ -156,9 +156,10 @@ export function listingFrameProps(input: {
   placesOnly?: boolean;
   keyword?: KeywordProps;
   total?: number;
+  activeCount?: number;
 }) {
   const rows = panelRows(input.fields, input.picks);
-  const activeCount = activeFilterCount(rows, input.toggles);
+  const activeCount = input.activeCount ?? activeFilterCount(rows, input.toggles);
   return {
     bandStyle: bandStyleFor(input.photo),
     head: <ListingHead crumbs={input.crumbs} h1={input.h1} intro={input.intro} labels={input.labels} />,

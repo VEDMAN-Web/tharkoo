@@ -91,4 +91,63 @@ test.describe("H7.91: sticky, instant filter column and phone sheet", () => {
     expect(aside.y).toBeGreaterThanOrEqual(60);
     expect(aside.y).toBeLessThanOrEqual(110);
   });
+
+  test("the number of active filters equals the number of chips, on the column and on the phone button", async ({ page }) => {
+    await page.setViewportSize({ width: 1440, height: 900 });
+    await page.goto("/search/?category=dating&city=surat&verified=1&online=1");
+    await expect(page.locator('[data-tk="active-chips"] .tkn-sr-chip')).toHaveCount(4);
+    await expect(page.locator(".tkn-ls-aside .tkn-ls-pill")).toHaveText("4 active");
+    await page.setViewportSize({ width: 390, height: 844 });
+    await expect(page.locator('[data-tk="results-bar"] .tkn-ls-filter-btn')).toContainText("Filters \u00b7 4");
+  });
+
+  test("the keyword placeholder fits the column", async ({ page }) => {
+    await page.setViewportSize({ width: 1440, height: 900 });
+    await page.goto("/search/");
+    const input = page.locator(".tkn-kw input");
+    await expect(input).toHaveAttribute("placeholder", "e.g. yoga, bike, flat");
+    const fits = await input.evaluate((el) => {
+      const probe = document.createElement("span");
+      const cs = getComputedStyle(el);
+      probe.style.cssText = `position:absolute;visibility:hidden;white-space:nowrap;font:${cs.font}`;
+      probe.textContent = (el as HTMLInputElement).placeholder;
+      document.body.appendChild(probe);
+      const width = probe.getBoundingClientRect().width;
+      probe.remove();
+      return width <= el.clientWidth - 24;
+    });
+    expect(fits).toBe(true);
+  });
+
+  test("an empty result says that ads close by are shown, and the post button is a real button", async ({ page }) => {
+    await page.setViewportSize({ width: 1366, height: 768 });
+    await page.goto("/search/?category=dating&city=surat&online=1&verified=1&video=1");
+    await expect(page.locator('[data-tk="results-count"]')).toHaveText("0 ads in Surat \u00b7 showing ads close by");
+    const button = page.locator('[data-tk="fallback-lead"] .tk-btn');
+    await expect(button).toBeVisible();
+    expect((await button.boundingBox())!.height).toBeGreaterThanOrEqual(44);
+    expect(await button.evaluate((el) => getComputedStyle(el).backgroundImage)).toContain("gradient");
+    const lead = (await page.locator('[data-tk="fallback-lead"]').boundingBox())!;
+    const box = (await button.boundingBox())!;
+    expect(box.x + box.width).toBeGreaterThan(lead.x + lead.width - 40);
+    await page.setViewportSize({ width: 390, height: 844 });
+    await page.goto("/search/?category=dating&city=surat&online=1&verified=1&video=1");
+    const phoneButton = (await page.locator('[data-tk="fallback-lead"] .tk-btn').boundingBox())!;
+    const phoneLead = (await page.locator('[data-tk="fallback-lead"]').boundingBox())!;
+    expect(phoneButton.width).toBeGreaterThan(phoneLead.width - 50);
+  });
+
+  test("a list card shows no views or clicks and is about 200 px high with a 200 px photo", async ({ page }) => {
+    await page.setViewportSize({ width: 1440, height: 900 });
+    await page.goto("/search/?category=dating");
+    const card = page.locator('[data-tk="card"]').first();
+    await expect(page.locator('[data-tk="ad-counts"]')).toHaveCount(0);
+    await expect(card).not.toContainText(/\bviews?\b|\bclicks?\b/);
+    const box = (await card.boundingBox())!;
+    expect(box.height).toBeGreaterThanOrEqual(190);
+    expect(box.height).toBeLessThanOrEqual(225);
+    const photo = (await card.locator(".tkn-ls-photo").boundingBox())!;
+    expect(Math.round(photo.width)).toBe(200);
+    expect(await card.locator(".tkn-ls-photo img").first().evaluate((el) => getComputedStyle(el).objectPosition)).toBe("50% 18%");
+  });
 });

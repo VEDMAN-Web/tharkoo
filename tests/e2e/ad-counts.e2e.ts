@@ -18,38 +18,17 @@ function slugOf(adPath: string) {
 }
 
 test.describe("H6.17 views and clicks", () => {
-  test("each card shows its views and clicks in the bottom right corner, with no sideways scroll", async ({ page }, testInfo) => {
-    mkdirSync(SHOTS, { recursive: true });
+  test("no card and no ad page shows views or clicks to a visitor", async ({ page }) => {
     await page.goto(FEED);
     const card = page.locator("[data-tk=card]").first();
     await card.waitFor({ state: "attached" });
     await card.scrollIntoViewIfNeeded();
-    const label = card.locator('[data-tk="ad-counts"]');
-    await expect(label).toBeVisible({ timeout: 15_000 });
-    await expect(label.locator('[data-tk="ad-views"]')).toContainText("views");
-    await expect(label.locator('[data-tk="ad-clicks"]')).toContainText("clicks");
-    await expect(label.locator('[data-tk="ad-views"]')).toHaveCSS("font-size", "12px");
-
-    // Inside the card, in its bottom right corner.
-    const cardBox = await card.boundingBox();
-    const labelBox = await label.boundingBox();
-    expect(cardBox && labelBox).toBeTruthy();
-    expect(labelBox!.x + labelBox!.width).toBeLessThanOrEqual(cardBox!.x + cardBox!.width + 1);
-    expect(labelBox!.y + labelBox!.height).toBeLessThanOrEqual(cardBox!.y + cardBox!.height + 1);
+    await page.waitForTimeout(1_500);
+    await expect(page.locator('[data-tk="ad-counts"]')).toHaveCount(0);
     expect(await hasHorizontalScroll(page)).toBe(false);
-    await card.screenshot({ path: join(SHOTS, `card-counts-${testInfo.project.name}.png`) });
-  });
-
-  test("the counts arrive after the cards are drawn, so the card does not change size", async ({ page }) => {
-    await page.goto(FEED);
-    const card = page.locator("[data-tk=card]").first();
-    await card.waitFor({ state: "attached" });
-    await card.scrollIntoViewIfNeeded();
-    const before = await card.boundingBox();
-    await expect(card.locator('[data-tk="ad-counts"]')).toBeVisible({ timeout: 15_000 });
-    const after = await card.boundingBox();
-    expect(after!.height).toBeCloseTo(before!.height, 0);
-    expect(after!.width).toBeCloseTo(before!.width, 0);
+    await page.goto(await firstAdPath(page, FEED));
+    await page.waitForTimeout(1_500);
+    await expect(page.locator('[data-tk="ad-counts"]')).toHaveCount(0);
   });
 
   test("opening an ad counts one view per visitor: opening it again does not add another", async ({ page, request }) => {

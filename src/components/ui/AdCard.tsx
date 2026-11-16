@@ -16,8 +16,7 @@ import { adPath } from "@/lib/urls";
 import { useUrlPaths } from "../UrlPaths";
 import { makeT, type TextFn, type UiTextMap } from "@/lib/ui/text";
 import { videoVerifiedLabel } from "../ad/tourLabels";
-import { recordAdClick, useShownCounts, watchAdCard } from "../ad/adCountStore";
-import { AdCountsLabel } from "../ad/AdCountsLabel";
+import { recordAdClick, watchAdCard } from "../ad/adCountStore";
 import { useSellerStatus } from "../availability/sellerStatus";
 import { AvailabilityBadge } from "../availability/AvailabilityBadge";
 
@@ -78,7 +77,6 @@ export function AdCard({
   const tier = variant in TIER_KEYS ? t(TIER_KEYS[variant as keyof typeof TIER_KEYS]) : "";
   const videoVerified = videoVerifiedLabel(ad.videoVerifiedUntil);
   const cardRef = useRef<HTMLElement>(null);
-  const counts = useShownCounts(ad.slug || "");
   const isOwner = Boolean(owner);
   // H7.5: the seller's Online now or Away, and whether calls are allowed. The owner view does not show it.
   const seller = useSellerStatus(isOwner ? undefined : ad.slug);
@@ -147,10 +145,11 @@ export function AdCard({
             {ad.categorySlug ? <span className="tkn-ls-pill-cat">{prettyPlace(ad.categorySlug)}</span> : null}
             {placeText ? <span className="tkn-ls-pill-place">{placeText}</span> : null}
           </div>
-          <div className="tkn-ls-foot">
-            {priceText ? <span className="tkn-ls-price" data-tk="card-price">{priceText}</span> : <span />}
-            <AdCountsLabel counts={counts ?? { views: 0, clicks: 0 }} />
-          </div>
+          {priceText ? (
+            <div className="tkn-ls-foot">
+              <span className="tkn-ls-price" data-tk="card-price">{priceText}</span>
+            </div>
+          ) : null}
         </div>
       </article>
     );
@@ -246,9 +245,7 @@ export function AdCard({
           </div>
           {owner.actions ? <div className="tkp-owner-actions">{owner.actions}</div> : null}
         </div>
-      ) : (
-        <AdCountsLabel counts={counts} />
-      )}
+      ) : null}
     </article>
   );
 }

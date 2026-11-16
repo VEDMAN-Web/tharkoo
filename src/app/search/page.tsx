@@ -146,6 +146,7 @@ export default async function SearchPage({ searchParams }: { searchParams: Promi
     { value: "online", label: t("search.sort.online"), href: searchHref(base, { ...allParams, sort: "online" }) },
     { value: "verified", label: t("search.sort.verified"), href: searchHref(base, { ...allParams, sort: "verified" }) },
   ];
+  const chipList = searchChips(base, allParams, searchState, labels, t);
   const frame = listingFrameProps({
     crumbs,
     h1: "",
@@ -172,6 +173,7 @@ export default async function SearchPage({ searchParams }: { searchParams: Promi
     },
     labels,
     total: feed.total,
+    activeCount: chipList.length,
     places: searchPlaceSelects({ searchPath: base, params: { ...params }, categories, states, cities, districts, labels }),
   });
   return (
@@ -182,8 +184,8 @@ export default async function SearchPage({ searchParams }: { searchParams: Promi
         activeCount={frame.activeCount}
         header={{
           top: <SearchTop crumbs={crumbs} breadcrumbLabel={labels.breadcrumb} heading={searchHeading(searchState, t)} />,
-          bar: <SearchBar total={feed.total} sortValue={sortValue} sortOptions={sortOptions} t={t} />,
-          chips: <SearchChips chips={searchChips(base, allParams, searchState, labels, t)} clearHref={base} t={t} />,
+          bar: <SearchBar total={feed.total} place={placeName} nearby={own} sortValue={sortValue} sortOptions={sortOptions} t={t} />,
+          chips: <SearchChips chips={chipList} clearHref={base} t={t} />,
         }}
       >
         <ListingPageView
