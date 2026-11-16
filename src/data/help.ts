@@ -2,7 +2,7 @@ export const HELP_ARTICLES = [
   { slug: "post-ad", title: "How to post an ad", body: "Open Post your ad. Step 1 is information (phone, city, title). Step 2 is photos. Step 3 is promote or publish as Basic." },
   { slug: "promotions", title: "Top, Flash and Star", body: "Top bumps your ad on a schedule. Flash is 4 hours with Available now. Star is a paid strip on the city page." },
   { slug: "credits", title: "Credits and wallet", body: "Buy a credit pack, apply a coupon, or send a bank transfer proof. Promotions deduct credits instantly." },
-  { slug: "verification", title: "ID verification", body: "Document + face scan. Until verified, Ads and Post stay locked on the vendor dashboard." },
+  { slug: "verification", title: "ID verification", body: "Document + face scan. Until verified, Ads and Post stay locked in your account." },
   { slug: "scams", title: "How to report a scam", body: "Tharkoo staff never ask you to pay on personal UPI. Keep the Ad ID. Use Submit a report. Never share OTPs." },
   { slug: "contacts", title: "Call, WhatsApp, Telegram, Email", body: "Contact buttons on Super Top cards and ad pages. Email is relayed. Free contact limits can apply." },
   { slug: "photos", title: "Photos and restricted media", body: "Upload only photos you have the right to use. Ads that use someone else's photos are removed." },
