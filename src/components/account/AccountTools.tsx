@@ -94,7 +94,7 @@ export function CouponRedeem() {
   );
 }
 
-async function storeId(file: File) {
+export async function storeId(file: File) {
   const signed = await api<{ uploadUrl: string; mediaId: string; apiKey?: string; timestamp?: number; signature?: string; folder?: string; params?: Record<string, string | number> }>("/api/media/sign", {
     method: "POST",
     body: JSON.stringify({ contentType: file.type, byteSize: file.size, kind: "id_document" }),

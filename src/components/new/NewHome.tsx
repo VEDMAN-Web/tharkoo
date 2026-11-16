@@ -88,6 +88,7 @@ export function NewHome({
   paths,
   countries,
   texts,
+  categoriesCount = 4,
 }: {
   hero: Hero;
   categories: Cat[];
@@ -96,10 +97,11 @@ export function NewHome({
   paths: UrlPaths;
   countries: CountryPlaces[];
   texts: UiTextMap;
+  categoriesCount?: number;
 }) {
   const t = makeT(texts);
   const photos = new Map(shell.media.images.filter((image) => image.scope === "category" && image.photo).map((image) => [image.slug, { src: image.photo, focus: `${image.focusX ?? 50}% ${image.focusY ?? 18}%` }]));
-  const cats = categories.filter((cat) => cat.slug && cat.name).slice(0, 8);
+  const cats = categories.filter((cat) => cat.slug && cat.name).slice(0, Math.min(8, Math.max(1, categoriesCount)));
   const categoryNames = new Map(categories.map((cat) => [cat.slug || "", cat.name || ""]));
   const shown = ads.slice(0, HOME_ADS_SHOWN);
   const city = commonCity(shown);
@@ -215,12 +217,10 @@ export function NewHome({
           listLabel={t("home.ads.list")}
           moreHref={applyPrefixes("/search/", paths)}
           moreText={t("home.ads.all")}
-          prevLabel={t("home.ads.prev")}
-          nextLabel={t("home.ads.next")}
         >
-          {shown.map((ad) => (
+          {shown.map((ad, position) => (
             <li key={ad.slug}>
-              <HomeAdCard ad={homeAdCardData(ad, categoryNames, paths, t("card.fallbackTitle"))} labels={cardLabels} />
+              <HomeAdCard ad={homeAdCardData(ad, categoryNames, paths, t("card.fallbackTitle"))} labels={cardLabels} order={position} />
             </li>
           ))}
         </HomeAdsSection>

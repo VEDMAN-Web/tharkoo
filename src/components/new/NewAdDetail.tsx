@@ -13,6 +13,8 @@ import { CitySync } from "@/components/CityContext";
 import { BadgeCheck, ShieldCheck } from "lucide-react";
 import { AdSellerRow } from "./AdLiveBits";
 import { SIMILAR_ADS_MAX, SimilarAds } from "./SimilarAds";
+import { PictureHeight } from "./PictureHeight";
+import { ReadMoreText } from "./ReadMoreText";
 import { AdActions } from "./AdActions";
 import { NewGallery } from "./NewGallery";
 import type { AdVideo } from "@/server/media/video";
@@ -23,6 +25,7 @@ import "./ad-spec.css";
 
 const PERSONAL = new Set(["dating", "friendship", "meetups", "personal-ads"]);
 const GOLD_TIERS = new Set(["supertop", "top"]);
+const PRICED_PEOPLE = new Set(["wellness"]);
 const DAY_MS = 24 * 60 * 60 * 1000;
 
 function tierOf(ad: ListingDoc, categoryName: string) {
@@ -125,6 +128,9 @@ export function NewAdDetail({
     viewAd: t("home.ads.viewAd"),
     age: t("home.ads.age"),
   };
+  const categoryCrumb = crumbs[1]?.path;
+  const cityCrumb = crumbs.find((crumb) => crumb.name === `${city} ${categoryName}`)?.path;
+  const showPrice = !peopleAd || PRICED_PEOPLE.has(ad.categorySlug || "");
   const actionProps = { slug: ad.slug || "", publicId: ad.publicId || "", title, place: placeText };
 
   return (
@@ -135,13 +141,14 @@ export function NewAdDetail({
           <CitySync name={city} slug={ad.citySlug} />
           <nav className="tkn-ad-crumbs" aria-label="Breadcrumb">
             {crumbs.map((crumb, index) => (
-              <span key={crumb.path}>
+              <span key={crumb.path} data-phone={crumb.path === categoryCrumb ? "first" : crumb.path === cityCrumb ? "show" : undefined}>
                 {index > 0 ? <span aria-hidden="true"> / </span> : null}
                 <Link href={crumb.path} prefetch={false}>{crumb.name}</Link>
               </span>
             ))}
           </nav>
           <div className="tkn-ad-grid">
+            <PictureHeight />
             <div className="tkn-ad-main">
               <NewGallery photos={photos} videos={videos} title={title} isNew={isRecent(ad)} />
               <article className="tkn-ad-card" data-tk="ad-summary">
@@ -149,23 +156,25 @@ export function NewAdDetail({
                   <h1>{title}</h1>
                   <AdActions {...actionProps} icons />
                 </div>
-                <p className="tkn-ad-meta">{t("ad.meta.simple", { place: placeText, date })}</p>
-                {peopleAd ? null : <p className={priceText ? "tkn-ad-phoneprice" : "tkn-ad-phoneprice is-request"}>{priceText || t("ad.price.request")}</p>}
-                <ul className="tkn-ad-pills" aria-label={t("ad.details")}>
-                  {GOLD_TIERS.has(tier.key) ? <li className="is-featured">{t("ad.pill.featured")}</li> : null}
-                  <li>{categoryName}</li>
-                  {city ? <li>{city}</li> : null}
-                  {ad.verified ? (
-                    <li className="is-verified">
-                      <BadgeCheck size={14} aria-hidden />
-                      {t("ad.pill.verified")}
-                    </li>
-                  ) : null}
-                </ul>
+                {!showPrice ? null : <p className={priceText ? "tkn-ad-phoneprice" : "tkn-ad-phoneprice is-request"}>{priceText || t("ad.price.request")}</p>}
+                <div className="tkn-ad-subrow">
+                  <p className="tkn-ad-meta">{t("ad.meta.simple", { place: placeText, date })}</p>
+                  <ul className="tkn-ad-pills" aria-label={t("ad.details")}>
+                    {GOLD_TIERS.has(tier.key) ? <li className="is-featured">{t("ad.pill.featured")}</li> : null}
+                    <li>{categoryName}</li>
+                    {city ? <li>{city}</li> : null}
+                    {ad.verified ? (
+                      <li className="is-verified">
+                        <BadgeCheck size={14} aria-hidden />
+                        {t("ad.pill.verified")}
+                      </li>
+                    ) : null}
+                  </ul>
+                </div>
                 <hr className="tkn-ad-rule" />
                 <section aria-labelledby="tkn-about">
                   <h2 id="tkn-about">{personal ? t("ad.aboutMe") : t("ad.about")}</h2>
-                  <p className="tkn-ad-text">{ad.description}</p>
+                  <ReadMoreText text={ad.description || ""} more={t("ad.readMore")} less={t("ad.readLess")} />
                 </section>
                 {ad.details?.length ? (
                   <>
@@ -188,7 +197,7 @@ export function NewAdDetail({
             <aside className="tkn-ad-side" aria-label={t("ad.contact.label")}>
               <div className="tkn-ad-sticky">
                 <div className="tkn-contact-panel" data-tk="contact-card">
-                  {peopleAd ? null : <p className={priceText ? "tkn-ad-price" : "tkn-ad-price is-request"}>{priceText || t("ad.price.request")}</p>}
+                  {!showPrice ? null : <p className={priceText ? "tkn-ad-price" : "tkn-ad-price is-request"}>{priceText || t("ad.price.request")}</p>}
                   <AdSellerRow name={seller} verified={Boolean(ad.verified)} since={since} />
                   <ContactButtons />
                   <AdActions {...actionProps} />
@@ -216,6 +225,8 @@ export function NewAdDetail({
               allText={t("ad.similar.all", { category: categoryName })}
               allHref={listHref}
               listLabel={t("ad.similar.list")}
+              prevLabel={t("ad.similar.prev")}
+              nextLabel={t("ad.similar.next")}
               fallbackTitle={t("card.fallbackTitle")}
               labels={cardLabels}
             />
