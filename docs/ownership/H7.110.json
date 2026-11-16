@@ -14,6 +14,7 @@
     "src/lib/ui/site-content.ts",
     "tests/e2e/h7-110-small.e2e.ts",
     "tests/e2e/listing-availability.e2e.ts",
+    "tests/e2e/helpers.ts",
     "progress/KNOWN-E2E.md"
   ]
 }
