@@ -48,4 +48,11 @@ test.describe("H7.78: phone band", () => {
     const row = (await filters.boundingBox())!;
     expect(row.height).toBeGreaterThanOrEqual(44);
   });
+
+  test("the filter column says nothing about missing filters when no category is chosen", async ({ page }) => {
+    await page.setViewportSize({ width: 1440, height: 900 });
+    await page.goto("/search/");
+    await expect(page.locator(".tkn-ls-aside")).toBeVisible();
+    await expect(page.locator(".tkn-ls-empty")).toHaveCount(0);
+  });
 });

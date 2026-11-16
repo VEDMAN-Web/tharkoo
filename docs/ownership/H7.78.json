@@ -7,6 +7,7 @@
     "src/app/[category]/[location]/[district]/sub-hub.tsx",
     "src/app/[category]/[location]/page.tsx",
     "src/app/[category]/page.tsx",
+    "src/components/new/ListingFilterPanel.tsx",
     "src/components/new/ListingFrame.tsx",
     "src/components/new/listing-spec.css",
     "src/lib/ui/text.ts",
