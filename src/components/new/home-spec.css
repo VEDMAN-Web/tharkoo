@@ -22,6 +22,8 @@
   --btn: linear-gradient(135deg, #d1137a, #a8124f);
 
   box-sizing: border-box;
+  /* H7.106: stops the banner's top margin from leaking out, which left a 22 px band of plain page colour under the header with a hard edge where the pink glow started. */
+  display: flow-root;
   min-height: 100vh;
   font-family: "Plus Jakarta Sans", system-ui, sans-serif;
   color: var(--ink);
