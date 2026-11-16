@@ -2,15 +2,43 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
+import { ArrowLeft, ImageIcon, MessageSquare } from "lucide-react";
 import { api, friendlyError } from "@/lib/ui/api";
-import { MessageSquare } from "lucide-react";
+import { chatTime } from "@/lib/ui/chat-time";
+import { adPath } from "@/lib/urls";
 import { EmptyIcon } from "@/components/buyer/UserPanelShell";
+import { useUrlPaths } from "@/components/UrlPaths";
 import { ChatThread } from "./ChatThread";
 
-type Row = { id: string; listingTitle: string; role: "buyer" | "seller"; lastText: string; lastMessageAt: string; unread: number; blocked: boolean };
+type Row = {
+  id: string;
+  listingTitle: string;
+  role: "buyer" | "seller";
+  lastText: string;
+  lastMessageAt: string;
+  unread: number;
+  blocked: boolean;
+  peerName: string;
+  cover: string | null;
+  adSlug: string | null;
+  adLive: boolean;
+};
 
-/** The Messages inbox: a list of conversations, and the open chat beside or below it. */
+function Thumb({ row }: { row: Row }) {
+  return (
+    <span className="up-chat-thumb" aria-hidden="true">
+      {row.cover ? (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img src={row.cover} alt="" loading="lazy" />
+      ) : (
+        <ImageIcon size={20} focusable="false" />
+      )}
+    </span>
+  );
+}
+
 export function Inbox() {
+  const paths = useUrlPaths();
   const [rows, setRows] = useState<Row[] | null>(null);
   const [error, setError] = useState("");
   const [openId, setOpenId] = useState("");
@@ -35,11 +63,12 @@ export function Inbox() {
     };
   }, []);
 
-  if (rows === null) return <p className="t-small">Loading messages...</p>;
+  if (rows === null) return <p className="up-muted">Loading chats...</p>;
+  const open = rows.find((row) => row.id === openId) ?? null;
   return (
-    <div style={{ display: "grid", gap: 16, gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 320px), 1fr))", alignItems: "start" }}>
-      <section aria-label="Conversations">
-        {error ? <p role="alert">{error}</p> : null}
+    <div className="up-inbox" data-open={open ? "yes" : "no"}>
+      <section aria-label="Conversations" className="up-inbox-list">
+        {error ? <p role="alert" className="up-note">{error}</p> : null}
         {!error && rows.length === 0 ? (
           <div className="up-empty">
             <EmptyIcon icon={MessageSquare} />
@@ -48,45 +77,44 @@ export function Inbox() {
             <Link href="/search/" className="up-btn">Browse ads</Link>
           </div>
         ) : null}
-        <ul style={{ listStyle: "none", padding: 0, margin: 0, display: "grid", gap: 8 }}>
+        <ul className="up-chat-rows">
           {rows.map((row) => (
             <li key={row.id}>
-              <button
-                type="button"
-                onClick={() => setOpenId(row.id)}
-                aria-current={openId === row.id}
-                style={{
-                  width: "100%",
-                  textAlign: "left",
-                  padding: 12,
-                  minHeight: 48,
-                  borderRadius: 10,
-                  border: `1px solid ${openId === row.id ? "var(--accent)" : "var(--border)"}`,
-                  background: "var(--card)",
-                  color: "var(--text)",
-                  display: "grid",
-                  gap: 2,
-                }}
-              >
-                <span style={{ display: "flex", justifyContent: "space-between", gap: 8 }}>
-                  <strong style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{row.listingTitle || "Ad"}</strong>
-                  {row.unread > 0 ? (
-                    <span aria-label={`${row.unread} unread`} style={{ background: "var(--accent)", color: "#1a1405", borderRadius: 10, padding: "0 8px", fontSize: 12, fontWeight: 800 }}>
-                      {row.unread}
-                    </span>
-                  ) : null}
+              <button type="button" className="up-chat-row" data-tk="chat-row" data-unread={row.unread > 0 ? "yes" : "no"} aria-current={openId === row.id} onClick={() => setOpenId(row.id)}>
+                <Thumb row={row} />
+                <span className="up-chat-main">
+                  <span className="up-chat-top">
+                    <strong className="up-chat-name">{row.peerName}</strong>
+                    <span className="up-chat-time">{chatTime(row.lastMessageAt)}</span>
+                  </span>
+                  <span className="up-chat-ad">{row.listingTitle || "Ad"}</span>
+                  <span className="up-chat-last">{row.blocked ? "Blocked" : row.lastText || "No messages yet"}</span>
                 </span>
-                <span className="t-small" style={{ color: "var(--muted)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                  {row.blocked ? "Blocked" : row.lastText || "No messages yet"}
-                </span>
+                {row.unread > 0 ? <span className="up-chat-dot" role="img" aria-label={`${row.unread} unread`} data-tk="chat-unread" /> : null}
               </button>
             </li>
           ))}
         </ul>
       </section>
-      {openId ? (
-        <section aria-label="Conversation" style={{ border: "1px solid var(--border)", borderRadius: 12, background: "var(--card)", height: "min(70vh, 560px)" }}>
-          <ChatThread key={openId} conversationId={openId} />
+      {open ? (
+        <section aria-label="Conversation" className="up-inbox-thread">
+          <div className="up-thread-head">
+            <button type="button" className="up-thread-back" data-tk="chat-back" onClick={() => setOpenId("")}>
+              <ArrowLeft size={18} aria-hidden="true" focusable="false" />
+              All chats
+            </button>
+            <Thumb row={open} />
+            <div className="up-chat-main">
+              <strong className="up-chat-name">{open.peerName}</strong>
+              <span className="up-chat-ad">{open.listingTitle || "Ad"}</span>
+            </div>
+            {open.adSlug && open.adLive ? (
+              <Link href={adPath(paths, open.adSlug)} className="up-btn-ghost" data-tk="chat-view-ad">View ad</Link>
+            ) : null}
+          </div>
+          <div className="up-thread-body">
+            <ChatThread key={open.id} conversationId={open.id} hideTitle />
+          </div>
         </section>
       ) : null}
     </div>

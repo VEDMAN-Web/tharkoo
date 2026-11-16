@@ -18,3 +18,7 @@ export const PUBLISH_MESSAGES: Record<PublishBlockReason, string> = {
 export function publishMessage(code: string | undefined | null): string | null {
   return code && code in PUBLISH_MESSAGES ? PUBLISH_MESSAGES[code as PublishBlockReason] : null;
 }
+
+export function insufficientCreditsLine(short: number): string {
+  return short === 1 ? "You need 1 more credit to publish." : `You need ${short} more credits to publish.`;
+}

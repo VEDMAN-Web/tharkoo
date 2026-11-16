@@ -1,6 +1,9 @@
 import { cookies } from "next/headers";
 import { UserPanelHome } from "./UserPanelHome";
 import { SESSION_COOKIE } from "@/server/auth/http";
+import { userFromToken } from "@/server/auth/service";
+import { readOwnPresence } from "@/server/availability/service";
+import { profileProgress } from "@/lib/ui/profile-progress";
 import { listOwnCards } from "@/server/listings/owner-cards";
 import { loadPacks, loadPanelSummary, type PackRow } from "@/server/notifications/summary";
 
@@ -16,5 +19,17 @@ export async function PanelHomePage() {
   const token = (await cookies()).get(SESSION_COOKIE)?.value;
   const [summary, packs] = await Promise.all([loadPanelSummary(token), loadPacks()]);
   const ads = summary.signedIn && summary.adCount > 0 ? await listOwnCards(summary.userId, { page: 1, pageSize: 6 }) : null;
-  return <UserPanelHome summary={summary} ads={ads} packs={homePacks(packs)} />;
+  const session = summary.signedIn && summary.seller ? await userFromToken(token) : null;
+  const presence = session ? await readOwnPresence(session.user.id) : null;
+  const profile = session
+    ? profileProgress({
+        hasProfile: Boolean(session.user.seller),
+        emailVerified: Boolean(session.user.emailVerifiedAt),
+        whatsapp: Boolean(session.user.seller?.whatsapp),
+        idChecked: session.user.verificationStatus === "approved",
+        hasAd: Boolean(ads && ads.counts.live + ads.counts.review + ads.counts.ended > 0),
+        liveChat: Boolean(presence?.liveChat),
+      })
+    : null;
+  return <UserPanelHome summary={summary} ads={ads} packs={homePacks(packs)} profile={profile} />;
 }

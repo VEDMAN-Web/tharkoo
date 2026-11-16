@@ -156,7 +156,7 @@ export default async function CityAreasPage({ params, searchParams }: Props) {
         band={{
           crumbs,
           h1: data.name,
-          intro: `Free classifieds across ${data.name}. Pick a category or an area.`,
+          intro: `Classifieds across ${data.name}. Pick a category or an area.`,
           photo: band,
           searchAction: searchPath(paths),
           citySlug: city,

@@ -66,11 +66,11 @@ export const AD_TITLE_PATTERN = "{title}, {city} {category} | {site}";
 export const STATIC_PAGE_DEFAULTS = {
   cities: {
     title: "Cities across India: browse classifieds by city | Tharkoo",
-    description: "Pick your city to browse free classifieds across India. See ads, photos and how to contact each poster.",
+    description: "Pick your city to browse classifieds across India. See ads, photos and how to contact each poster.",
   },
   countries: {
     title: "All countries: browse classifieds by country | Tharkoo",
-    description: "Every country and city on Tharkoo with the number of live ads. Pick a place to browse free classifieds.",
+    description: "Every country and city on Tharkoo with the number of live ads. Pick a place to browse classifieds.",
   },
   blog: {
     title: "Tharkoo Blog: tips for safe, clear classified ads | Tharkoo",
@@ -106,7 +106,7 @@ export const STATIC_PAGE_DEFAULTS = {
 export function countryDefault(name: string): TitleText {
   return {
     title: `${name} classifieds: browse by state and city | Tharkoo`,
-    description: `Browse free classifieds across ${name}, by state and city, with the number of live ads in each place.`,
+    description: `Browse classifieds across ${name}, by state and city, with the number of live ads in each place.`,
   };
 }
 

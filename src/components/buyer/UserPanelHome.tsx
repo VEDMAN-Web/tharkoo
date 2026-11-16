@@ -3,6 +3,8 @@ import { FreshAds } from "./FreshAds";
 import { PackPicker } from "./PackPicker";
 import { MyAdsList } from "./MyAdsList";
 import { SavedAdsRail } from "./SavedAdsRail";
+import { ProfileCard } from "./ProfileCard";
+import type { profileProgress } from "@/lib/ui/profile-progress";
 import { SectionHelp } from "@/components/help/SectionHelp";
 import { SignedOutPanel, UserPanelShell } from "./UserPanelShell";
 import { howItWorksPath } from "@/lib/urls";
@@ -30,10 +32,12 @@ export function UserPanelHome({
   summary,
   ads,
   packs,
+  profile = null,
 }: {
   summary: PanelSummary;
   ads: Ads | null;
   packs: PackRow[];
+  profile?: ReturnType<typeof profileProgress> | null;
 }) {
   const headline = ads ? homeHeadline(ads) : null;
   const aside = (
@@ -50,6 +54,7 @@ export function UserPanelHome({
           {summary.signedIn && summary.seller ? <Link href="/u/account/wallet/?tab=earnings" className="up-coins-link" data-tk="withdraw">{t("panel.coins.withdraw")}</Link> : null}
         </div>
       </section>
+      {profile ? <ProfileCard percent={profile.percent} missing={profile.missing} /> : null}
       <section aria-labelledby="support-heading" className="up-glass up-panel">
         <div className="up-panel-head">
           <h2 id="support-heading" className="up-h2">Help and support</h2>
@@ -108,11 +113,11 @@ export function UserPanelHome({
           {summary.signedIn && summary.seller ? <AvailabilityControls /> : null}
           {summary.signedIn ? (
             <section aria-labelledby="promo-heading" className="up-promo">
-              <p className="up-promo-kicker">FREE TO POST</p>
+              <p className="up-promo-kicker">POST AN AD</p>
               <h2 id="promo-heading" className="up-promo-title">Have something to offer?</h2>
-              <p className="up-promo-text">Post a free ad in 2 minutes. People in your city see it today, and they reach you by chat or video call.</p>
+              <p className="up-promo-text">Post your ad in 2 minutes. People in your city see it today, and they reach you by chat or video call.</p>
               <div className="up-promo-row">
-                <Link href="/u/post-insert/" className="up-btn-white">Post a free ad</Link>
+                <Link href="/u/post-insert/" className="up-btn-white">Post your ad</Link>
                 <Link href={howItWorksPath()} className="up-btn-outline">How it works</Link>
               </div>
             </section>
