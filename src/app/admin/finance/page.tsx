@@ -13,7 +13,7 @@ type BlockedRefund = Awaited<ReturnType<typeof listRefundBlockedPurchases>>[numb
 const COLUMNS: Column<BlockedRefund>[] = [
   { key: "updatedAt", label: "Updated" },
   { key: "userId", label: "User" },
-  { key: "coins", label: "Coins", sortable: true },
+  { key: "coins", label: "Credits", sortable: true },
   { key: "amount", label: "Paid (INR)", sortable: true },
   { key: "eventId", label: "Provider event" },
 ];
@@ -33,7 +33,7 @@ export default async function Page() {
       <section className="mb-6" aria-labelledby="payouts-heading">
         <h2 id="payouts-heading" className="mb-2">Payouts</h2>
         <p className="mb-3 t-small text-muted">
-          Vendor withdrawals. Approve sends the payout through the payout provider. Coins return to the vendor if a payout is rejected or fails.
+          Vendor withdrawals. Approve sends the payout through the payout provider. Credits return to the vendor if a payout is rejected or fails.
         </p>
         {canFinance ? (
           <PayoutsQueue rows={payouts} />
@@ -50,7 +50,7 @@ export default async function Page() {
       <section className="mb-6">
         <h2 className="mb-2">Refunds to handle by hand</h2>
         <p className="mb-3 t-small text-muted">
-          The provider refunded these purchases after the coins were already spent. Nothing was taken back automatically.
+          The provider refunded these purchases after the credits were already spent. Nothing was taken back automatically.
         </p>
         <DataTable columns={COLUMNS} rows={blocked} rowKey={(row) => row.id} csvName="refund-blocked" />
       </section>

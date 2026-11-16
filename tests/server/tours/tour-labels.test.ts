@@ -2,12 +2,12 @@ import { describe, expect, it } from "vitest";
 import { roomLine, tourRequestLabel, tourStatusLabel, videoVerifiedLabel } from "@/components/ad/tourLabels";
 
 describe("tourRequestLabel", () => {
-  it("uses the singular for one coin", () => {
-    expect(tourRequestLabel(1)).toBe("Video call and verify · 1 coin");
+  it("uses the singular for one credit", () => {
+    expect(tourRequestLabel(1)).toBe("Video call and verify · 1 credit");
   });
 
   it("uses the plural for other prices", () => {
-    expect(tourRequestLabel(3)).toBe("Video call and verify · 3 coins");
+    expect(tourRequestLabel(3)).toBe("Video call and verify · 3 credits");
   });
 });
 

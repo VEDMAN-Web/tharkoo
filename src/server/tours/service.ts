@@ -380,7 +380,7 @@ export async function reverseTour(input: { actorId: string; roles: readonly stri
   } catch (error) {
     await VideoTour.updateOne({ _id: id, status: "reversing" }, { $set: { status: "disputed" } });
     if (error instanceof PaymentRequiredError) {
-      throw new ConflictError("The advertiser has already withdrawn these coins; handle it by hand");
+      throw new ConflictError("The advertiser has already withdrawn these credits; handle it by hand");
     }
     throw error;
   }

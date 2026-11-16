@@ -82,13 +82,13 @@ test.describe("H7.64 support chat", () => {
     await signInAdminContext(context, baseURL!);
     await context.addCookies([{ name: "tk-in", value: "1", url: baseURL! }]);
     const panel = await openChat(page);
-    await panel.getByRole("button", { name: "Coins and payments" }).click();
+    await panel.getByRole("button", { name: "Credits and payments" }).click();
     await expect(panel.locator('[data-tk="chat-talk"]')).toBeVisible();
     const created = page.waitForResponse((res) => res.url().includes("/api/support/tickets") && res.request().method() === "POST" && res.status() !== 308);
     await panel.locator('[data-tk="chat-talk"]').click();
     const response = await created;
     expect(response.status()).toBe(200);
-    expect(response.request().postDataJSON()).toMatchObject({ body: "Coins and payments" });
+    expect(response.request().postDataJSON()).toMatchObject({ body: "Credits and payments" });
     await expect(panel.getByText("Thanks, we'll reply here and by email.")).toBeVisible();
     await expect(panel.locator('[data-tk="chat-guest"]')).toHaveCount(0);
   });

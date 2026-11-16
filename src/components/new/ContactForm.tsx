@@ -6,7 +6,7 @@ import { BODY_MAX, BODY_MIN, type SupportTopic } from "@/server/support/constant
 
 const CONTACT_TOPICS: { value: SupportTopic; label: string }[] = [
   { value: "my_ads", label: "An ad I posted" },
-  { value: "coins_payments", label: "Coins and payments" },
+  { value: "coins_payments", label: "Credits and payments" },
   { value: "report_problem", label: "Report a problem" },
 ];
 

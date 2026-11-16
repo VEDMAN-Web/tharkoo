@@ -18,7 +18,7 @@ export const metadata = pageMetadata({
 const FAQS = [
   {
     q: "Is posting really free?",
-    a: "Yes. Posting, chatting and calling the seller are free. Only video calls and optional boosts use coins.",
+    a: "Yes. Posting, chatting and calling the seller are free. Only video calls and optional boosts use credits.",
   },
   {
     q: "Do I need a password?",
@@ -26,7 +26,7 @@ const FAQS = [
   },
   {
     q: "How does the video call work?",
-    a: "Tap Video call on an ad. It uses coins and connects you live with the person who posted, so you can see the item, place or person is real before you meet or pay.",
+    a: "Tap Video call on an ad. It uses credits and connects you live with the person who posted, so you can see the item, place or person is real before you meet or pay.",
   },
   {
     q: "How long does my ad stay live?",

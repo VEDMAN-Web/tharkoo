@@ -112,10 +112,10 @@ export function HowItWorksView({
             </div>
             {" "}
             <div>
-              <p style={{ display: "inline-block", margin: "0 0 10px", fontSize: "12px", fontWeight: "700", letterSpacing: ".12em", textTransform: "uppercase", color: "#5B21B6", background: "#F5F0FF", borderRadius: "999px", padding: "6px 14px" }}>Coins</p>
+              <p style={{ display: "inline-block", margin: "0 0 10px", fontSize: "12px", fontWeight: "700", letterSpacing: ".12em", textTransform: "uppercase", color: "#5B21B6", background: "#F5F0FF", borderRadius: "999px", padding: "6px 14px" }}>Credits</p>
               <h2 className="h714-h2" style={{ margin: "0 0 14px", fontSize: "40px", letterSpacing: "-.035em", lineHeight: "1.1", color: "#110520" }}>See it live before you go</h2>
               <p style={{ margin: "0 0 18px", fontSize: "16px", lineHeight: "1.65", color: "#4A2870" }}>
-                Buy a coin pack once. A video call uses 2 coins. Your coins are held until the call ends and go to the seller only after a real call. If the seller does not answer, the coins come back.
+                Buy a credit pack once. A video call uses 2 credits. Your credits are held until the call ends and go to the seller only after a real call. If the seller does not answer, the credits come back.
               </p>
               {" "}
               <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
@@ -125,7 +125,7 @@ export function HowItWorksView({
                 </div>
                 <div style={{ display: "flex", gap: "10px", alignItems: "center", fontSize: "15px", fontWeight: "600", color: "#1E0B38" }}>
                   <span style={{ width: "24px", height: "24px", borderRadius: "50%", background: "#ECFDF5", color: "#047857", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "13px", fontWeight: "800" }}>✓</span>
-                  Coins back if there is no call
+                  Credits back if there is no call
                 </div>
                 <div style={{ display: "flex", gap: "10px", alignItems: "center", fontSize: "15px", fontWeight: "600", color: "#1E0B38" }}>
                   <span style={{ width: "24px", height: "24px", borderRadius: "50%", background: "#ECFDF5", color: "#047857", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "13px", fontWeight: "800" }}>✓</span>

@@ -58,15 +58,15 @@ function WithdrawForm({ summary, onDone }: { summary: PayoutSummary; onDone: () 
     setBusy(false);
     if (!res.ok) return setMessage(friendlyError(res.error));
     setCoins("");
-    setMessage(`Request sent for ${amount} coins. Finance will review it.`);
+    setMessage(`Request sent for ${amount} credits. Finance will review it.`);
     onDone();
   }
 
   return (
-    <form onSubmit={submit} style={{ display: "grid", gap: 10 }} aria-label="Withdraw coins">
+    <form onSubmit={submit} style={{ display: "grid", gap: 10 }} aria-label="Withdraw credits">
       <h2 style={H2}>Withdraw</h2>
       <label style={{ display: "grid", gap: 6 }}>
-        <span className="t-small">Coins to withdraw</span>
+        <span className="t-small">Credits to withdraw</span>
         <input
           name="coins"
           inputMode="numeric"
@@ -76,7 +76,7 @@ function WithdrawForm({ summary, onDone }: { summary: PayoutSummary; onDone: () 
         />
       </label>
       <p className="t-small" style={{ color: "var(--muted)", margin: 0 }}>
-        Minimum {summary.minWithdrawCoins} coins. One withdrawal every {summary.withdrawCooldownDays} days.
+        Minimum {summary.minWithdrawCoins} credits. One withdrawal every {summary.withdrawCooldownDays} days.
         {Number.isInteger(amount) && amount > 0 ? ` That is about ${inr(amount * summary.coinValueInr)} before deductions.` : ""}
         {` TDS ${summary.tdsPercent}% and GST ${summary.gstPercent}% are recorded on the payout.`}
       </p>
@@ -103,7 +103,7 @@ function WithdrawalHistory({ rows }: { rows: WithdrawalRow[] }) {
         <li key={row.id} style={{ borderTop: "1px solid var(--border)", paddingTop: 10, display: "grid", gap: 4 }}>
           <div style={{ display: "flex", justifyContent: "space-between", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
             <span style={{ ...statusTone(row.status), borderRadius: 999, padding: "2px 10px", fontSize: 13, fontWeight: 600 }}>{STATUS_LABEL[row.status] ?? row.status}</span>
-            <strong>{row.coins} coins</strong>
+            <strong>{row.coins} credits</strong>
           </div>
           <span className="t-small" style={{ color: "var(--muted)" }}>
             {dateTime(row.requestedAt)} · {inr(row.amountInr)} · TDS {row.tdsPercent}% · GST {row.gstPercent}%
@@ -147,9 +147,9 @@ export function VendorEarnings({ onSignedOut }: { onSignedOut: () => void }) {
   return (
     <div style={{ display: "grid", gap: 16 }}>
       <section style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(140px, 1fr))", gap: 10 }} aria-label="Earnings">
-        <Stat label="Available" value={`${summary.availableCoins} coins`} />
-        <Stat label="Pending payout" value={`${summary.pendingCoins} coins`} />
-        <Stat label="Paid out" value={`${summary.paidCoins} coins`} />
+        <Stat label="Available" value={`${summary.availableCoins} credits`} />
+        <Stat label="Pending payout" value={`${summary.pendingCoins} credits`} />
+        <Stat label="Paid out" value={`${summary.paidCoins} credits`} />
       </section>
       <section style={CARD} aria-label="Payout details">
         <h2 style={H2}>Payout details</h2>

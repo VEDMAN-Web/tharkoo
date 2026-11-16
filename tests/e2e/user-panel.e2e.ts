@@ -38,7 +38,7 @@ test.describe("H7.6 user panel: signed in", () => {
     await page.waitForURL(/\/u\/account/, { timeout: 30_000 }).catch(() => undefined);
     await page.goto("/u/account/dashboard/");
     await expect(page.getByRole("navigation", { name: "My account" })).toBeVisible();
-    await expect(page.locator('[data-tk="coin-balance"]')).toContainText("coins");
+    await expect(page.locator('[data-tk="coin-balance"]')).toContainText("credits");
     await expect(page.getByRole("heading", { name: "Saved ads" })).toBeVisible();
     await expect(page.locator('[data-tk="discover"]')).toBeVisible();
     expect(await hasHorizontalScroll(page)).toBe(false);

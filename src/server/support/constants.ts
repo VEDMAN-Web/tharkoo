@@ -4,7 +4,7 @@ export const SUPPORT_TOPICS = ["coins_payments", "my_ads", "my_account", "report
 export type SupportTopic = (typeof SUPPORT_TOPICS)[number];
 
 export const TOPIC_LABELS: Record<SupportTopic, string> = {
-  coins_payments: "Coins and payments",
+  coins_payments: "Credits and payments",
   my_ads: "My ads",
   my_account: "My account",
   report_problem: "Report a problem",
