@@ -2,7 +2,7 @@ import Link from "next/link";
 import { notFound, permanentRedirect } from "next/navigation";
 import type { Metadata } from "next";
 import { MapPin } from "lucide-react";
-import { getCategories, getCategory, getCities, getFeed, getHomepageContent, getSeoFor, getSite, getStarListings, getStates, listingCountsByCategoryCity } from "@/lib/queries";
+import { getCategories, getCategory, getCities, getFeed, getHomepageContent, getSeoFor, getSite, getStarListings, getStates, listingCountsByCategoryCity, pageOutOfRange } from "@/lib/queries";
 import { getPaths } from "@/server/urls/service";
 import { adPath, categoryPath, placePath, postAdPath, searchPath } from "@/lib/urls";
 import { fillTemplate } from "@/lib/seo";
@@ -24,13 +24,15 @@ import { hourSeed, orderFeed } from "@/components/feedOrder";
 import { fallbackLanding, mergeLanding, type LandingCopy } from "@/lib/seo/landing";
 import { SubcategoryChips } from "./SubcategoryChips";
 import { loadCardWidth } from "@/server/listings/card-width";
-import { listingRobots, type ListingParams } from "@/server/search/filter-seo";
+import { activeFilterKeys, listingCanonicalSuffix, listingRobots, type ListingParams } from "@/server/search/filter-seo";
 import { readShellConfig } from "@/server/site-links/shell-config";
 import { bandChoice, heroBandFrom } from "@/components/new/band-image";
 import { FallbackAds } from "@/components/FallbackAds";
-import { FALLBACK_OWN_MINIMUM, loadFallbackSections } from "@/lib/fallback-ads";
+import { loadFallbackSections, showFallback } from "@/lib/fallback-ads";
 import { ListingFrame } from "@/components/new/ListingFrame";
-import { ListingMore } from "@/components/new/ListingMore";
+import { withPagination } from "@/lib/seo/pagination";
+import { ListingPager } from "@/components/new/ListingPager";
+import { pageBase, pagerLabels } from "@/components/new/listing-pager";
 import { listingFrameProps, listingLabels, placeSelects } from "@/components/new/listing-frame-props";
 import { attributePicks, hasFieldPicks, type ListingToggles } from "@/components/new/listing-filters";
 
@@ -40,7 +42,8 @@ export const revalidate = 300;
 
 export async function generateMetadata({ params, searchParams }: Props): Promise<Metadata> {
   const { category } = await params;
-  const robots = listingRobots(await searchParams);
+  const sp = await searchParams;
+  const robots = listingRobots(sp);
   const [cat, seo, site] = await Promise.all([getCategory(category), getSeoFor("category", category), getSite()]);
   if (!cat) return {};
   const vars = { category: cat.name, site: site.name, year: new Date().getFullYear() };
@@ -48,7 +51,14 @@ export async function generateMetadata({ params, searchParams }: Props): Promise
   const description = fillTemplate(seo?.description || "Browse {category} on Tharkoo: listings from people across Indian cities. Filter by city and district, see photos and contact posters directly.", vars);
   const path = categoryPath(cat.slug || category);
   const on = isCategoryOn(await getIndexing(), cat.slug || category);
-  return withSeoDefaults(await withUrlSeo(path, { title, description, path, index: on && robots.index, follow: robots.follow }));
+  const pageNo = Math.max(1, Number(sp.page) || 1);
+  const suffix = listingCanonicalSuffix(sp, pageNo);
+  const meta = await withSeoDefaults(
+    await withUrlSeo(path, { title, description, path: `${path}${suffix}`, canonicalUrl: canonical(`${path}${suffix}`), index: on && robots.index, follow: robots.follow }),
+  );
+  if (activeFilterKeys(sp).length > 0) return meta;
+  const feed = await getFeed({ categorySlug: category }, 1);
+  return withPagination(meta, path, pageNo, feed.pages);
 }
 
 export default async function CategoryHub({ params, searchParams }: Props) {
@@ -83,6 +93,7 @@ export default async function CategoryHub({ params, searchParams }: Props) {
     getCategories().catch(() => []),
     getHomepageContent().then(heroBandFrom),
   ]);
+  if (pageOutOfRange(sp.page as string | undefined, feed.pages)) notFound();
   // H7.32: the New design band on every category page, always.
   const shell = await readShellConfig();
   const texts = await textOverrides();
@@ -107,7 +118,7 @@ export default async function CategoryHub({ params, searchParams }: Props) {
     return cls ? <div key={id} className={cls}>{content}</div> : <span key={id} style={{ display: "contents" }}>{content}</span>;
   };
   // H7.32 (FIX B): few own ads keep their place, and fallback ads go below them. Nothing is empty.
-  const own = feed.total < FALLBACK_OWN_MINIMUM;
+  const own = showFallback(feed);
   const fallback = own
     ? await loadFallbackSections({
         scope: { categorySlug: cat.slug || category, categoryName: cat.name || undefined },
@@ -126,8 +137,8 @@ export default async function CategoryHub({ params, searchParams }: Props) {
           <AdCard key={ad.publicId || ad.slug || index} ad={ad} featured={page === 1 && index < stars.length} priority={index === 0} layout={shell ? "row" : undefined} />
         ))}
       </div>
+      <ListingPager base={pageBase(categoryPath(cat.slug || category), sp)} page={page} pages={feed.pages} total={feed.total} size={feed.pageSize} labels={pagerLabels(t)} />
       {fallbackNode}
-      <ListingMore page={page} pages={feed.pages} params={sp} label={t("listing.more")} />
       <section className="tk-browse-city" data-tk="browse-by-city">
         <h2>{t("listing.hub.browseByCity")}</h2>
         <div className="tk-pills tk-pills-left">

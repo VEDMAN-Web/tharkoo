@@ -37,10 +37,11 @@ import { loadCardWidth } from "@/server/listings/card-width";
 import { readShellConfig } from "@/server/site-links/shell-config";
 import { bandChoice, heroBandFrom } from "@/components/new/band-image";
 import { FallbackAds } from "@/components/FallbackAds";
-import { FALLBACK_OWN_MINIMUM, loadFallbackSections } from "@/lib/fallback-ads";
+import { loadFallbackSections, showFallback } from "@/lib/fallback-ads";
 import { ListingFrame } from "@/components/new/ListingFrame";
 import { listingFrameProps } from "@/components/new/listing-frame-props";
 import { attributePicks, hasFieldPicks, listingFilterQuery, type ListingToggles } from "@/components/new/listing-filters";
+import { withPagination } from "@/lib/seo/pagination";
 import { listingLabels, placeSelects } from "@/components/new/listing-frame-props";
 import { listingHeading } from "@/lib/layout/listing";
 import { type ListingParams } from "@/server/search/filter-seo";
@@ -100,7 +101,7 @@ export async function generateMetadata({ params, searchParams }: Props): Promise
   const clean = placePath(cat.slug || category, loc.slug || location);
   const suffix = listingCanonicalSuffix(sp, pageNo);
   // Filter URLs are noindex, follow, and their canonical is the clean page (see filter-seo.ts).
-  return withSeoDefaults(
+  const meta = await withSeoDefaults(
     await withUrlSeo(clean, {
       title,
       description,
@@ -110,6 +111,7 @@ export async function generateMetadata({ params, searchParams }: Props): Promise
       follow: true,
     }),
   );
+  return filtered ? meta : withPagination(meta, clean, pageNo, feed.pages);
 }
 
 export default async function LocationPage({ params, searchParams }: Props) {
@@ -215,7 +217,7 @@ export default async function LocationPage({ params, searchParams }: Props) {
   const toggles: ListingToggles = { verified: sp.verified === "1", photos: sp.photos === "1", video: sp.video === "1", online: sp.online === "1" };
   const filterQs = listingFilterQuery(picks, toggles);
   // H7.32 (FIX B): few own ads keep their place, and fallback ads go below them. Nothing is empty.
-  const own = feed.total < FALLBACK_OWN_MINIMUM;
+  const own = showFallback(feed);
   const fallback = own
     ? await loadFallbackSections({
         scope: {

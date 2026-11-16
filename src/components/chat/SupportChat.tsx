@@ -34,6 +34,7 @@ export function SupportChat({ chat, texts }: { chat: Chat; texts?: UiTextMap }) 
   const paths = useUrlPaths();
   const section = path.split("/")[1];
   const pageBars = section === "u" || section === paths.ad;
+  const floatClass = ["tkn-float", pageBars ? "tkn-float-pagebars" : "", section === "u" ? "tkn-float-panel" : ""].filter(Boolean).join(" ");
   const [open, setOpen] = useState(false);
   const [session, setSession] = useState<Session>("unknown");
   const [topic, setTopic] = useState<SupportTopic>("something_else");
@@ -162,7 +163,7 @@ export function SupportChat({ chat, texts }: { chat: Chat; texts?: UiTextMap }) 
   const showGuest = session === "guest" && !guestDone;
 
   return (
-    <div className={pageBars ? "tkn-float tkn-float-pagebars" : "tkn-float"} ref={float}>
+    <div className={floatClass} ref={float}>
       {open ? (
         <section aria-label={chat.title} className="tkn-chatbox" id="tkn-chat-panel">
           <div className="tkn-chat-head">

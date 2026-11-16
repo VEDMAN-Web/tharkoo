@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { FALLBACK_OWN_MINIMUM, FALLBACK_TOTAL, composeFallback, fallbackBudget } from "@/lib/fallback-ads";
+import { FALLBACK_OWN_MINIMUM, FALLBACK_TOTAL, composeFallback, fallbackBudget, showFallback } from "@/lib/fallback-ads";
 
 type Ad = { slug: string; stateSlug: string };
 
@@ -21,9 +21,9 @@ function run(input: { own: number; sources: Ad[][]; stateSlug?: string; ownSlugs
 const total = (sections: { items: Ad[] }[]) => sections.reduce((sum, section) => sum + section.items.length, 0);
 
 describe("fallbackBudget", () => {
-  it("gives 24 cards when the page has no own results, 21 at 3, and none at 8 or more", () => {
+  it("gives 15 cards when the page has no own results, 12 at 3, and none at 8 or more", () => {
     expect(fallbackBudget(0)).toBe(FALLBACK_TOTAL);
-    expect(fallbackBudget(3)).toBe(21);
+    expect(fallbackBudget(3)).toBe(12);
     expect(fallbackBudget(FALLBACK_OWN_MINIMUM - 1)).toBe(FALLBACK_TOTAL - (FALLBACK_OWN_MINIMUM - 1));
     expect(fallbackBudget(FALLBACK_OWN_MINIMUM)).toBe(0);
     expect(fallbackBudget(10)).toBe(0);
@@ -31,15 +31,15 @@ describe("fallbackBudget", () => {
 });
 
 describe("composeFallback", () => {
-  it("fills up to 24 cards when the page has no own results", () => {
+  it("fills up to 15 cards when the page has no own results", () => {
     const sections = run({ own: 0, sources: [ads("a", 30), ads("b", 30), ads("c", 30)] });
     expect(total(sections)).toBe(FALLBACK_TOTAL);
-    expect(sections.map((section) => section.items.length)).toEqual([24]);
+    expect(sections.map((section) => section.items.length)).toEqual([15]);
   });
 
-  it("keeps own results and fills the rest to 24 when the page has 3 own results", () => {
+  it("keeps own results and fills the rest to 15 when the page has 3 own results", () => {
     const sections = run({ own: 3, sources: [ads("a", 30), ads("b", 30)] });
-    expect(total(sections)).toBe(21);
+    expect(total(sections)).toBe(12);
     expect(total(sections) + 3).toBe(FALLBACK_TOTAL);
   });
 
@@ -72,5 +72,20 @@ describe("composeFallback", () => {
 
   it("returns nothing when there is no budget left", () => {
     expect(composeFallback({ budget: 0, ownSlugs: [], sources: [{ key: "latest", title: "x", items: ads("a", 3) }] })).toEqual([]);
+  });
+});
+
+describe("showFallback", () => {
+  const items = (count: number) => Array.from({ length: count }, (_, index) => index);
+
+  it("shows fallback ads only on the last page, and only when its own ads are few", () => {
+    expect(showFallback({ page: 3, pages: 3, items: items(2) })).toBe(true);
+    expect(showFallback({ page: 2, pages: 3, items: items(2) })).toBe(false);
+    expect(showFallback({ page: 3, pages: 3, items: items(FALLBACK_OWN_MINIMUM) })).toBe(false);
+    expect(showFallback({ page: 1, pages: 1, items: [] })).toBe(true);
+  });
+
+  it("caps a page at 15 cards", () => {
+    expect(FALLBACK_TOTAL).toBe(15);
   });
 });

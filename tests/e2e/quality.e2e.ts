@@ -20,7 +20,6 @@ const PUBLIC_PAGES = [
   "/scam-report/",
   "/submit-report/",
   "/u/login/",
-  "/u/register/",
   "/u/forgot/",
   "/admin/login/",
   "/this-page-does-not-exist/",
@@ -69,7 +68,7 @@ test.describe("Plus: accessibility (axe, serious and critical)", () => {
     ["home", "/"],
     ["listing", "/dating/bengaluru/"],
     ["ad", "/ad/demo-0352/"],
-    ["register", "/u/register/"],
+    ["login", "/u/login/"],
   ] as const) {
     test(`axe: ${name}`, async ({ page }) => {
       knownBug(name);

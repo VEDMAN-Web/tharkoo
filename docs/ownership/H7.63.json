@@ -1,0 +1,29 @@
+{
+  "branchPrefix": "haiku/h7.63",
+  "globs": [
+    "docs/ownership/H7.63.json",
+    "progress/H7.63.md",
+    "src/app/[category]/[location]/[district]/page.tsx",
+    "src/app/[category]/[location]/[district]/sub-hub.tsx",
+    "src/app/[category]/[location]/page.tsx",
+    "src/app/[category]/page.tsx",
+    "src/app/[category]/tag/[tag]/page.tsx",
+    "src/app/cities/[city]/page.tsx",
+    "src/app/search/page.tsx",
+    "src/components/ListingPage.tsx",
+    "src/components/new/ListingMore.tsx",
+    "src/components/new/ListingPager.tsx",
+    "src/components/new/listing-pager.css",
+    "src/components/new/listing-pager.ts",
+    "src/lib/fallback-ads.ts",
+    "src/lib/listing-page-size.ts",
+    "src/lib/queries.ts",
+    "src/lib/seo/pagination.ts",
+    "src/lib/ui/text.ts",
+    "src/server/categories/public.ts",
+    "tests/e2e/h7-63-listing-pager.e2e.ts",
+    "tests/server/listing/listing-pager.test.ts",
+    "tests/server/search/fallback-ads.test.ts",
+    "tests/server/seo/pagination-meta.test.ts"
+  ]
+}

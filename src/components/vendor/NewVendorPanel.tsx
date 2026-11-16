@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { api, friendlyError, hasSessionHint } from "@/lib/ui/api";
-import { ownAdStatus } from "@/lib/ui/ad-status";
+import { draftPath, ownAdStatus } from "@/lib/ui/ad-status";
 import { AdCard } from "../ui/AdCard";
 import type { ListingDoc } from "@/lib/models";
 import { displayTitle } from "@/lib/format";
@@ -269,6 +269,7 @@ export function NewVendorPanel({ initialTab = "all" }: { initialTab?: Tab }) {
                     fg: status.fg,
                     views: item.shown?.views ?? 0,
                     clicks: item.shown?.clicks ?? 0,
+                    href: item.slug ? undefined : draftPath(item.id),
                     actions: <OwnerActions id={item.id} status={item.status} endsSoon={status.label === "Ending soon"} onDone={reloadAfterAction} />,
                   }}
                 />

@@ -13,7 +13,7 @@ import { prettyPlace } from "@/lib/format";
 import { makeT } from "@/lib/ui/text";
 import { textOverrides } from "@/app/admin/ui-text/store";
 import { readShellConfig } from "@/server/site-links/shell-config";
-import { FALLBACK_OWN_MINIMUM, loadFallbackSections } from "@/lib/fallback-ads";
+import { loadFallbackSections, showFallback } from "@/lib/fallback-ads";
 
 export const dynamic = "force-dynamic";
 
@@ -65,7 +65,7 @@ export default async function SearchPage({
   const t = makeT(texts);
   const category = categories.find((cat) => cat.slug === sp.category);
   // H7.32 (FIX B): few own results keep their place, and fallback ads go below them. Nothing is empty.
-  const own = feed.total < FALLBACK_OWN_MINIMUM;
+  const own = showFallback(feed);
   const placeName = city ? loc?.name || prettyPlace(city) : prettyPlace(state);
   const fallback = own
     ? await loadFallbackSections({

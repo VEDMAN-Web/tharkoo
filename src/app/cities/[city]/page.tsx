@@ -13,12 +13,15 @@ import { readShellConfig } from "@/server/site-links/shell-config";
 import { textOverrides } from "@/app/admin/ui-text/store";
 import { makeT, pickTexts } from "@/lib/ui/text";
 import { AdCard, UiTextProvider } from "@/components/ui/AdCard";
-import { ListingMore } from "@/components/new/ListingMore";
+import { canonical } from "@/lib/seo";
+import { withPagination } from "@/lib/seo/pagination";
+import { ListingPager } from "@/components/new/ListingPager";
+import { pagerLabels } from "@/components/new/listing-pager";
 import { NewListingPage } from "@/components/new/ListingBand";
 import { listingLabels } from "@/components/new/listing-frame-props";
 import { bandChoice, heroBandFrom } from "@/components/new/band-image";
 import { FallbackAds } from "@/components/FallbackAds";
-import { FALLBACK_OWN_MINIMUM, loadFallbackSections } from "@/lib/fallback-ads";
+import { loadFallbackSections, showFallback } from "@/lib/fallback-ads";
 
 export const revalidate = 300;
 
@@ -43,22 +46,28 @@ function countLabel(n: number) {
   return `${n} ${n === 1 ? "ad" : "ads"}`;
 }
 
-export async function generateMetadata({ params }: Props): Promise<Metadata> {
+export async function generateMetadata({ params, searchParams }: Props): Promise<Metadata> {
   const { city } = await params;
+  const sp = await searchParams;
   const paths = await getPaths();
   const data = await cityAreas(city);
   if (!data) return {};
   const path = joinPath(citiesPath(paths), city);
-  return withSeoDefaults(
+  const latest = await getCityLatest(city, 1);
+  const pageNo = Math.max(1, Number(sp.page) || 1);
+  const suffix = pageNo > 1 ? `?page=${pageNo}` : "";
+  const meta = await withSeoDefaults(
     await withUrlSeo(path, {
       title: `Areas in ${data.name} | Tharkoo`,
       description: `Pick an area of ${data.name} to browse classifieds near you on Tharkoo. Every area lists its own ads and photos.`,
-      path,
+      path: `${path}${suffix}`,
+      canonicalUrl: canonical(`${path}${suffix}`),
       // H7.32: a city with no ads of its own stays noindex (fallback ads do not count as its content).
       index: data.areas.length > 0 && data.total > 0,
       follow: true,
     }),
   );
+  return withPagination(meta, path, pageNo, latest.pages);
 }
 
 export default async function CityAreasPage({ params, searchParams }: Props) {
@@ -90,7 +99,7 @@ export default async function CityAreasPage({ params, searchParams }: Props) {
   const photos = new Map(shell.media.images.filter((image) => image.scope === "category" && image.photo).map((image) => [image.slug, image.photo]));
 
   // H7.32 (FIX B): few own ads keep their place, and fallback ads go below them. With none, one line and a post button.
-  const own = latest.total < FALLBACK_OWN_MINIMUM;
+  const own = showFallback(latest);
   const fallback = own
     ? await loadFallbackSections({
         scope: { stateSlug: data.stateSlug || undefined, placeName: data.name },
@@ -126,7 +135,7 @@ export default async function CityAreasPage({ params, searchParams }: Props) {
                   <AdCard key={ad.publicId || ad.slug || index} ad={ad} priority={index === 0} layout="row" />
                 ))}
               </div>
-              <ListingMore page={latest.page} pages={latest.pages} params={{}} label={t("listing.more")} />
+              <ListingPager base={joinPath(hub, city)} page={latest.page} pages={latest.pages} total={latest.total} size={latest.pageSize} labels={pagerLabels(t)} />
             </section>
           ) : null}
           <FallbackAds sections={fallback} layout="row" lead={lead} />
