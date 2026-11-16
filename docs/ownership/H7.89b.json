@@ -1,7 +1,7 @@
 {
-  "branchPrefix": "haiku/h7.99",
+  "branchPrefix": "haiku/h7.89b",
   "globs": [
-    "docs/ownership/H7.99.json",
+    "docs/ownership/H7.89b.json",
     "src/components/ContactButtons.tsx",
     "src/app/u/seller-profile/page.tsx",
     "src/components/auth/SellerProfileForm.tsx",
