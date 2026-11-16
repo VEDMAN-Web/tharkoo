@@ -189,6 +189,9 @@ const listingSchema = new Schema<ListingDoc>(
 );
 listingSchema.index({ slug: 1 }, { unique: true, sparse: true });
 listingSchema.index({ status: 1, categoryId: 1, cityId: 1, publishedAt: -1 });
+listingSchema.index({ status: 1, stateId: 1, publishedAt: -1 });
+listingSchema.index({ status: 1, cityId: 1, publishedAt: -1 });
+listingSchema.index({ status: 1, publishedAt: -1 });
 listingSchema.index({ ownerId: 1, status: 1 });
 listingSchema.index({ title: "text", description: "text" });
 
