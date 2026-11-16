@@ -7,53 +7,6 @@ import { VendorShell } from "../vendor/VendorShell";
 import { EmptyState } from "../ui/EmptyState";
 import { HelpCard } from "../ui/HelpCard";
 
-export function WalletHistory({ purchases }: { purchases?: React.ReactNode }) {
-  const [items, setItems] = useState<{ id: string; delta: number; reason: string; createdAt: string | null }[] | null>(null);
-  const [signedOut, setSignedOut] = useState(false);
-  useEffect(() => {
-    const id = window.setTimeout(() => {
-      if (!hasSessionHint()) {
-        setSignedOut(true);
-        return;
-      }
-      api<{ items: { id: string; delta: number; reason: string; createdAt: string | null }[] }>("/api/wallet/entries").then((res) => {
-        if (!res.ok) setSignedOut(true);
-        else setItems(res.data.items || []);
-      });
-    }, 0);
-    return () => window.clearTimeout(id);
-  }, []);
-  return (
-    <VendorShell>
-      <h1 className="tk-page-h1">Transaction History</h1>
-      {purchases}
-      {signedOut ? (
-        <EmptyState title="Sign in to see history" body="Transactions appear after you log in." action={{ href: "/u/login/?next=/u/account/credits/history/", label: "Log in" }} />
-      ) : items && items.length === 0 ? (
-        <EmptyState title="No transactions yet" body="Purchases and spends will show up here." action={{ href: "/u/account/credits/", label: "Open wallet" }} />
-      ) : (
-        <div style={{ overflowX: "auto" }}>
-          <table className="w-full text-left t-small">
-            <thead>
-              <tr><th>When</th><th>Reason</th><th>Credits</th></tr>
-            </thead>
-            <tbody>
-              {(items || []).map((row) => (
-                <tr key={row.id}>
-                  <td>{row.createdAt ? new Date(row.createdAt).toLocaleDateString("en-IN") : ""}</td>
-                  <td>{row.reason}</td>
-                  <td>{row.delta}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      )}
-      <HelpCard />
-    </VendorShell>
-  );
-}
-
 export function CouponRedeem() {
   const [code, setCode] = useState("");
   const [message, setMessage] = useState("");
