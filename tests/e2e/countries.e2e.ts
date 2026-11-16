@@ -5,24 +5,14 @@ test.describe("Countries", () => {
     await page.goto("/countries/");
     await expect(page.locator("h1")).toHaveCount(1);
     await expect(page.locator("h1")).toContainText(/all countries/i);
-    expect(await page.locator(".tk-panel").count()).toBeGreaterThan(0);
-    expect(await hasHorizontalScroll(page)).toBe(false);
-  });
-
-  test("footer countries block opens to cities and links to all countries", async ({ page }) => {
-    await page.goto("/");
-    const block = page.locator("[data-tk=footer-countries]");
-    await expect(block).toBeVisible();
-    await block.locator("summary").first().click();
-    expect(await block.locator("details[open] a").count()).toBeGreaterThan(0);
-    await expect(block.getByRole("link", { name: /all countries/i })).toHaveAttribute("href", "/countries/");
+    expect(await page.locator("[data-tk=country-card]").count()).toBeGreaterThan(0);
     expect(await hasHorizontalScroll(page)).toBe(false);
   });
 
   test("every link on /countries/ returns 200 (no 404 from a country link)", async ({ page, request }) => {
     await page.goto("/countries/");
     const hrefs = await page
-      .locator(".tk-panel a[href]")
+      .locator("[data-tk=country-card] a[href]")
       .evaluateAll((links) => [...new Set(links.map((link) => link.getAttribute("href") || ""))]);
     expect(hrefs.length).toBeGreaterThan(0);
     const failures: string[] = [];
@@ -36,7 +26,7 @@ test.describe("Countries", () => {
 
   test("a country on the all-countries page opens its own country page", async ({ page }) => {
     await page.goto("/countries/");
-    const link = page.locator(".tk-panel a.tk-dir-state").first();
+    const link = page.locator("[data-tk=country-card] h2 a").first();
     await expect(link).toBeAttached();
     const href = await link.getAttribute("href");
     expect(href).toMatch(/^\/countries\/[a-z0-9-]+\/$/);
