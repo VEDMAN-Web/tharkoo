@@ -120,6 +120,7 @@ export async function checkoutPack(input: {
   couponCode?: string;
   requestId: string;
   ip?: string;
+  recharge?: { method: "card" | "crypto"; coin?: string; network?: string; returnTo?: string; expiresAt?: Date };
 }) {
   await connectDb();
   await readyBilling();
@@ -153,6 +154,7 @@ export async function checkoutPack(input: {
     amount: price,
     currency: "INR",
     status: "pending",
+    ...(input.recharge ? { ...input.recharge, credits: credits + (pack.bonus ?? 0) } : {}),
   });
   try {
     const order = createCheckoutOrder({ amount: price, currency: "INR", receipt: String(payment._id) });

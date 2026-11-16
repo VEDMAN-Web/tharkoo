@@ -1,0 +1,6 @@
+.tk-poststrip { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px 20px; margin: 24px auto; padding: 16px 20px; max-width: 1200px; box-sizing: border-box; border: 1px solid #ead8f0; border-radius: 18px; background: linear-gradient(135deg, #f5f0ff, #fff0f7); }
+.tk-poststrip-text { margin: 0; flex: 1 1 260px; font-size: 16px; font-weight: 700; line-height: 1.4; color: #1e0b38; }
+.tk-poststrip-text span { font-weight: 600; color: #4a2870; }
+.tk-poststrip-btn { display: inline-flex; align-items: center; justify-content: center; min-height: 44px; padding: 0 24px; border-radius: 999px; background: linear-gradient(135deg, #d1137a, #a8124f); color: #fff; font-size: 15px; font-weight: 700; text-decoration: none; box-shadow: 0 6px 20px rgba(209, 19, 122, 0.25); }
+.tk-poststrip-btn:hover { color: #fff; }
+.tk-poststrip-btn:focus-visible { outline: 3px solid #7c3aed; outline-offset: 2px; }

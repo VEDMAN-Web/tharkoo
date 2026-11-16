@@ -9,6 +9,10 @@ import type { ListingDoc } from "@/lib/models";
 import { displayTitle } from "@/lib/format";
 import { OwnerActions } from "./OwnerActions";
 import { usePresenceActivity } from "./AvailabilityControls";
+import { PostStrip } from "../ui/PostStrip";
+import { makeT } from "@/lib/ui/text";
+
+const t = makeT();
 
 type OwnItem = {
   id: string;
@@ -131,6 +135,7 @@ export function MyAdsBoard({ initialTab = "all" }: { initialTab?: Tab }) {
       ) : null}
       <p className="tkv-note" aria-live="polite">{note}</p>
       <p className="up-muted"><Link href="/u/account/media/" className="up-link">Photos and videos</Link></p>
+      <PostStrip text={t("post.strip.text")} button={t("post.strip.button")} feeText={t("post.strip.fee")} />
     </section>
   );
 }

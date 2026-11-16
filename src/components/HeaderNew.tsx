@@ -19,6 +19,7 @@ import { applyPrefixes, loginPath, postAdPath } from "@/lib/urls";
 import type { ShellConfig } from "@/server/site-links/shell-config-rules";
 import { LogoutButton } from "./auth/LogoutButton";
 import { accountName } from "@/lib/account-name";
+import { openRecharge } from "./recharge/openRecharge";
 import { isSignedInPhase, useAccount } from "./account/AccountContext";
 
 // The search pop-up loads only when a visitor opens it, as in the old header.
@@ -119,7 +120,7 @@ export function HeaderNew({
           {signedIn ? (
             <>
               {balanceReady ? (
-                balance !== null ? <Link href="/u/account/credits/" className="tkn-coin-chip" data-tk="header-coins">{t("panel.coins.balance", { count: balance })}</Link> : null
+                balance !== null ? <button type="button" className="tkn-coin-chip" data-tk="header-coins" onClick={() => openRecharge({})}>{t("panel.coins.balance", { count: balance })}</button> : null
               ) : (
                 <span className="tkn-coin-chip tkn-skel" data-tk="header-coins-wait" aria-hidden="true" />
               )}
