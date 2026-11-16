@@ -25,7 +25,7 @@ test.describe("H7.4 home (New design)", () => {
     const chosen = await form.locator("select[name=category]").inputValue();
     await form.getByRole("button").click();
     await expect(page).toHaveURL(new RegExp("/" + chosen + "/"));
-    await expect(page.locator('[data-tk="listing-band"]')).toBeVisible();
+    await expect(page.locator('[data-tk="results-header"] h1')).toBeVisible();
   });
 
   test("has no serious or critical accessibility problems", async ({ page }) => {
