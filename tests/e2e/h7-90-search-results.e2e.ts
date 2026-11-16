@@ -40,7 +40,7 @@ test.describe("H7.90: compact search results page", () => {
     await expect(page.locator('[data-chip="verified"]')).toHaveCount(0);
     await page.locator('[data-chip="city"]').click();
     await expect(page).toHaveURL(/\/search\/\?category=dating$/);
-    await page.getByRole("link", { name: "Clear all" }).click();
+    await page.locator('[data-tk="active-chips"]').getByRole("link", { name: "Clear all" }).click();
     await expect(page).toHaveURL(/\/search\/$/);
     await expect(page.locator('[data-tk="active-chips"]')).toHaveCount(0);
   });

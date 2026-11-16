@@ -171,6 +171,7 @@ export default async function SearchPage({ searchParams }: { searchParams: Promi
       listLabel: t("search.keyword.suggestions"),
     },
     labels,
+    total: feed.total,
     places: searchPlaceSelects({ searchPath: base, params: { ...params }, categories, states, cities, districts, labels }),
   });
   return (
