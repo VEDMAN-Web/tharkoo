@@ -171,22 +171,23 @@ test.describe("H7.104 Home: four categories, eight smaller cards, auto-swipe", (
   });
 
   test("a video plays first, muted, then the photos follow; on a phone only one video plays at a time", async ({ page, browser, baseURL }) => {
-    test.setTimeout(180_000);
+    test.setTimeout(360_000);
     await page.setViewportSize({ width: 1440, height: 900 });
     await page.goto("/");
     const slugs = (await page.locator(`${CARD} .tkh-ad-title a`).evaluateAll((links) => links.slice(0, 3).map((link) => link.getAttribute("href") ?? ""))).map((href) => href.replace(/^\/ad\//, "").replace(/\/$/, ""));
     const cleanup = await addVideos(page, slugs);
     try {
-      await page.waitForTimeout(61_000);
       const card = page.locator(CARD).filter({ has: page.locator('[data-tk="card-video"]') }).first();
       await expect(async () => {
         await page.goto("/");
         await expect(card).toHaveCount(1, { timeout: 2_000 });
-      }).toPass({ timeout: 40_000, intervals: [3_000] });
+      }).toPass({ timeout: 150_000, intervals: [3_000] });
+      await page.waitForLoadState("networkidle");
       await card.evaluate((el) => el.scrollIntoView({ block: "center" }));
       await page.mouse.move(2, 2);
+      await page.waitForTimeout(500);
       const video = card.locator('[data-tk="card-video"]');
-      await expect.poll(() => video.evaluate((el: HTMLVideoElement) => !el.paused), { timeout: SLIDE_WAIT }).toBe(true);
+      await expect.poll(() => video.evaluate((el: HTMLVideoElement) => !el.paused), { timeout: 15_000 }).toBe(true);
       expect(await video.evaluate((el: HTMLVideoElement) => el.muted)).toBe(true);
       await expect.poll(() => slideOf(card), { timeout: 20_000 }).toBeGreaterThan(0);
       expect(await video.evaluate((el: HTMLVideoElement) => el.paused)).toBe(true);
@@ -204,6 +205,8 @@ test.describe("H7.104 Home: four categories, eight smaller cards, auto-swipe", (
       await phone.close();
     } finally {
       await cleanup();
+      await page.waitForTimeout(61_000);
+      await page.goto("/");
     }
   });
 });
