@@ -4,9 +4,15 @@
     "docs/ownership/H7.99c.json",
     "src/components/new/NewAdDetail.tsx",
     "src/components/new/NewGallery.tsx",
+    "src/components/new/PictureHeight.tsx",
+    "src/components/new/ReadMoreText.tsx",
+    "src/components/new/SimilarAds.tsx",
+    "src/components/new/SimilarRow.tsx",
     "src/components/new/ad-spec.css",
     "src/components/new/gallery.css",
     "src/server/availability/people.ts",
+    "src/app/ad/[slug]/page.tsx",
+    "src/lib/ui/text.ts",
     "tests/**"
   ]
 }

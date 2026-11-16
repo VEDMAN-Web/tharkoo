@@ -122,7 +122,7 @@ export default async function AdPage({ params }: Props) {
   const listingId = row?._id ? String(row._id) : undefined;
   const [cat, related, videos, tourOffer, newDesign, peopleAd] = await Promise.all([
     getCategory(ad.categorySlug || ""),
-    getRelated(ad, 8),
+    getRelated(ad, 12),
     listingId ? listAdVideos(listingId).catch(() => []) : Promise.resolve([]),
     listingId ? videoTourOffer(listingId) : Promise.resolve(null),
     newDesignOn(),

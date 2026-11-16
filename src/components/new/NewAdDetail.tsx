@@ -13,6 +13,8 @@ import { CitySync } from "@/components/CityContext";
 import { BadgeCheck, ShieldCheck } from "lucide-react";
 import { AdSellerRow } from "./AdLiveBits";
 import { SIMILAR_ADS_MAX, SimilarAds } from "./SimilarAds";
+import { PictureHeight } from "./PictureHeight";
+import { ReadMoreText } from "./ReadMoreText";
 import { AdActions } from "./AdActions";
 import { NewGallery } from "./NewGallery";
 import type { AdVideo } from "@/server/media/video";
@@ -144,51 +146,33 @@ export function NewAdDetail({
             ))}
           </nav>
           <div className="tkn-ad-grid">
-            <aside className="tkn-ad-side" aria-label={t("ad.contact.label")}>
-              <div className="tkn-ad-sticky">
-                <div className="tkn-contact-panel" data-tk="contact-card">
-                  <div className="tkn-ad-titleblock" data-tk="ad-summary">
-                    <div className="tkn-ad-titlerow">
-                      <h1>{title}</h1>
-                      <AdActions {...actionProps} icons />
-                    </div>
-                    <p className="tkn-ad-meta">{t("ad.meta.simple", { place: placeText, date })}</p>
-                    {peopleAd ? null : <p className={priceText ? "tkn-ad-phoneprice" : "tkn-ad-phoneprice is-request"}>{priceText || t("ad.price.request")}</p>}
-                    <ul className="tkn-ad-pills" aria-label={t("ad.details")}>
-                      {GOLD_TIERS.has(tier.key) ? <li className="is-featured">{t("ad.pill.featured")}</li> : null}
-                      <li>{categoryName}</li>
-                      {city ? <li>{city}</li> : null}
-                      {ad.verified ? (
-                        <li className="is-verified">
-                          <BadgeCheck size={14} aria-hidden />
-                          {t("ad.pill.verified")}
-                        </li>
-                      ) : null}
-                    </ul>
-                  </div>
-                  {peopleAd ? null : <p className={priceText ? "tkn-ad-price" : "tkn-ad-price is-request"}>{priceText || t("ad.price.request")}</p>}
-                  <AdSellerRow name={seller} verified={Boolean(ad.verified)} since={since} />
-                  <ContactButtons />
-                  <AdActions {...actionProps} />
-                </div>
-                <section className="tkn-safe" data-tk="security-tips">
-                  <ShieldCheck size={22} aria-hidden className="tkn-safe-icon" />
-                  <div>
-                    <h2>{t("ad.safe.title")}</h2>
-                    <p>{peopleAd ? t("ad.safe.bodyPeople") : t("ad.safe.body")}</p>
-                    <p>{t("ad.safe.otp")}</p>
-                    <Link href="/help/" prefetch={false} className="tkn-safe-more">{t("ad.safe.more")}</Link>
-                  </div>
-                </section>
-                {peopleAd ? <p className="tkn-fine">{t("ad.safe.fine")}</p> : null}
-              </div>
-            </aside>
+            <PictureHeight />
             <div className="tkn-ad-main">
               <NewGallery photos={photos} videos={videos} title={title} isNew={isRecent(ad)} />
-              <article className="tkn-ad-card" data-tk="ad-content">
+              <article className="tkn-ad-card" data-tk="ad-summary">
+                <div className="tkn-ad-titlerow">
+                  <h1>{title}</h1>
+                  <AdActions {...actionProps} icons />
+                </div>
+                {peopleAd ? null : <p className={priceText ? "tkn-ad-phoneprice" : "tkn-ad-phoneprice is-request"}>{priceText || t("ad.price.request")}</p>}
+                <div className="tkn-ad-subrow">
+                  <p className="tkn-ad-meta">{t("ad.meta.simple", { place: placeText, date })}</p>
+                  <ul className="tkn-ad-pills" aria-label={t("ad.details")}>
+                    {GOLD_TIERS.has(tier.key) ? <li className="is-featured">{t("ad.pill.featured")}</li> : null}
+                    <li>{categoryName}</li>
+                    {city ? <li>{city}</li> : null}
+                    {ad.verified ? (
+                      <li className="is-verified">
+                        <BadgeCheck size={14} aria-hidden />
+                        {t("ad.pill.verified")}
+                      </li>
+                    ) : null}
+                  </ul>
+                </div>
+                <hr className="tkn-ad-rule" />
                 <section aria-labelledby="tkn-about">
                   <h2 id="tkn-about">{personal ? t("ad.aboutMe") : t("ad.about")}</h2>
-                  <p className="tkn-ad-text">{ad.description}</p>
+                  <ReadMoreText text={ad.description || ""} more={t("ad.readMore")} less={t("ad.readLess")} />
                 </section>
                 {ad.details?.length ? (
                   <>
@@ -208,6 +192,26 @@ export function NewAdDetail({
                 ) : null}
               </article>
             </div>
+            <aside className="tkn-ad-side" aria-label={t("ad.contact.label")}>
+              <div className="tkn-ad-sticky">
+                <div className="tkn-contact-panel" data-tk="contact-card">
+                  {peopleAd ? null : <p className={priceText ? "tkn-ad-price" : "tkn-ad-price is-request"}>{priceText || t("ad.price.request")}</p>}
+                  <AdSellerRow name={seller} verified={Boolean(ad.verified)} since={since} />
+                  <ContactButtons />
+                  <AdActions {...actionProps} />
+                </div>
+                <section className="tkn-safe" data-tk="security-tips">
+                  <ShieldCheck size={22} aria-hidden className="tkn-safe-icon" />
+                  <div>
+                    <h2>{t("ad.safe.title")}</h2>
+                    <p>{peopleAd ? t("ad.safe.bodyPeople") : t("ad.safe.body")}</p>
+                    <p>{t("ad.safe.otp")}</p>
+                    <Link href="/help/" prefetch={false} className="tkn-safe-more">{t("ad.safe.more")}</Link>
+                  </div>
+                </section>
+                {peopleAd ? <p className="tkn-fine">{t("ad.safe.fine")}</p> : null}
+              </div>
+            </aside>
           </div>
           {similar.length ? (
             <SimilarAds
@@ -219,6 +223,8 @@ export function NewAdDetail({
               allText={t("ad.similar.all", { category: categoryName })}
               allHref={listHref}
               listLabel={t("ad.similar.list")}
+              prevLabel={t("ad.similar.prev")}
+              nextLabel={t("ad.similar.next")}
               fallbackTitle={t("card.fallbackTitle")}
               labels={cardLabels}
             />
