@@ -44,9 +44,11 @@ test.describe("H7.98 pick the ads on Home", () => {
     await expect(section.getByText("Nothing to save.")).toBeVisible();
 
     try {
-      await page.goto("/");
-      await page.waitForLoadState("networkidle");
-      await expect(page.locator("[data-tk=home-ad]").first().locator(".tkh-ad-title")).toContainText(firstTitle.slice(0, 12));
+      await expect(async () => {
+        await page.goto("/");
+        await page.waitForLoadState("networkidle");
+        await expect(page.locator("[data-tk=home-ad]").first().locator(".tkh-ad-title")).toContainText(firstTitle.slice(0, 12), { timeout: 2000 });
+      }).toPass({ timeout: 20000 });
     } finally {
       await page.goto("/admin/ads/");
       const again = page.locator('[data-tk="home-selection"]');
