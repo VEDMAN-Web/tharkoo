@@ -1,0 +1,9 @@
+{
+  "branchPrefix": "haiku/h7.98",
+  "globs": [
+    "docs/ownership/H7.98.json",
+    "src/app/admin/ads/**",
+    "src/server/listings/home-selection.ts",
+    "tests/**"
+  ]
+}
