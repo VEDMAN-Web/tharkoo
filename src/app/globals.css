@@ -1924,7 +1924,7 @@ input.tk-field:focus-visible, select.tk-field:focus-visible, textarea.tk-field:f
 @media (max-width: 599px) { .tkn-chat-bubble { width: 52px; height: 52px; } .tkn-brand-tag { display: none; } }
 /* Review #77: no bubble while a dialog, sheet or drawer is open; it sits above a sticky bottom bar; the footer keeps room at the end. */
 body:has([role="dialog"]) .tkn-float { display: none; }
-body:has([data-tk="bottom-bar"]) .tkn-float { bottom: 96px; }
+body:has([data-tk="bottom-bar"]) .tkn-float { bottom: 104px; }
 @media (min-width: 600px) { body:has([data-tk="bottom-bar"]) .tkn-float { bottom: 24px; } }
 @media (max-width: 599px) { .tkn-footer { padding-bottom: 96px; } }
 /* P1: the full "Post your ad" label on every phone (no short label). */
@@ -2341,4 +2341,4 @@ body:has([data-tk="bottom-bar"]) .tkn-float { bottom: 96px; }
 .tkv-avatar.tkn-skel { display: block; border-radius: 50%; }
 @keyframes tkn-skel-shimmer { from { background-position: 200% 0; } to { background-position: -200% 0; } }
 @media (prefers-reduced-motion: reduce) { .tkn-skel { animation: none; } }
-@media (max-width: 767px) { .tkn-float-pagebars .tkn-chat-bubble { display: none; } }
+@media (max-width: 767px) { .tkn-float-pagebars .tkn-chat-bubble { display: none; } .tkn-float-panel .tkn-top { display: none; } }

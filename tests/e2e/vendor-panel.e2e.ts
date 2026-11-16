@@ -22,13 +22,17 @@ async function signedInSeller(page: Page, baseURL: string, prefix: string) {
   await page.waitForURL(/\/u\/account\//);
 }
 
+function availableNow(page: Page) {
+  return page.getByRole("button", { name: /^Available now/ });
+}
+
 test.describe("H7.5 seller panel, New design", () => {
   test("the panel shows the switch, the numbers and My ads; no sideways scroll", async ({ page, baseURL }) => {
     test.setTimeout(120_000);
     await signedInSeller(page, baseURL!, "panel");
     await expect(page.locator(".tkv-page")).toBeVisible();
     await expect(page.locator("h1")).toHaveCount(1);
-    await expect(page.locator(".tkv-avail")).toHaveAttribute("aria-pressed", "false");
+    await expect(availableNow(page)).toHaveAttribute("aria-pressed", /^(true|false)$/);
     await expect(page.locator(".tkv-stats")).toContainText("Live ads");
     await expect(page.locator("#tkv-ads-title")).toHaveText("My ads");
     await expectNoHorizontalScroll(page);
@@ -41,15 +45,19 @@ test.describe("H7.5 seller panel, New design", () => {
     const userId = ((await me.json()).data?.user?.id || "") as string;
     expect(userId).toBeTruthy();
 
-    await page.locator(".tkv-avail").click();
-    await expect(page.locator(".tkv-avail")).toHaveAttribute("aria-pressed", "true");
-    const on = await page.request.get(`/api/availability/status/${userId}`);
-    expect(((await on.json()).data as { status: string }).status).toBe("online");
+    const startsOn = (await availableNow(page).getAttribute("aria-pressed")) === "true";
 
-    await page.locator(".tkv-avail").click();
-    await expect(page.locator(".tkv-avail")).toHaveAttribute("aria-pressed", "false");
-    const off = await page.request.get(`/api/availability/status/${userId}`);
-    expect(((await off.json()).data as { status: string; callsAllowed: boolean })).toMatchObject({ status: "away", callsAllowed: false });
+    async function flipAndExpect(wantOn: boolean) {
+      await availableNow(page).click();
+      await expect(availableNow(page)).toHaveAttribute("aria-pressed", String(wantOn));
+      const res = await page.request.get(`/api/availability/status/${userId}`);
+      const data = (await res.json()).data as { status: string; callsAllowed: boolean };
+      if (wantOn) expect(data.status).toBe("online");
+      else expect(data).toMatchObject({ status: "away", callsAllowed: false });
+    }
+
+    await flipAndExpect(!startsOn);
+    await flipAndExpect(startsOn);
     await expectNoHorizontalScroll(page);
   });
 

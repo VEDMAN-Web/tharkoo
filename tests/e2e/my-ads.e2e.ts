@@ -73,6 +73,22 @@ test.describe("H7.61 my ads and support form", () => {
     await page.waitForURL(new RegExp(`draft=${id}.*step=5|step=5.*draft=${id}`));
   });
 
+  test("on a phone the up-arrow is gone on panel pages and sits clear above the ad bar", async ({ page, baseURL }) => {
+    test.skip(!test.info().project.name.startsWith("phone"), "phone layout only");
+    const { email } = await newUserApi(baseURL!, "arrow");
+    await loginUi(page, email, undefined, "/u/account/dashboard/");
+    await page.evaluate(() => window.scrollTo(0, 1200));
+    await page.waitForTimeout(500);
+    await expect(page.locator(".tkn-top")).toBeHidden();
+    await page.goto("/ad/demo-1410/");
+    await page.evaluate(() => window.scrollTo(0, 900));
+    await expect(page.locator(".tkn-top")).toBeVisible();
+    const arrow = (await page.locator(".tkn-top").boundingBox())!;
+    const bar = (await page.locator('[data-tk="bottom-bar"]').boundingBox())!;
+    expect(bar.y - (arrow.y + arrow.height)).toBeGreaterThanOrEqual(24);
+    await expect(page.locator(".tkn-chat-bubble")).toBeHidden();
+  });
+
   test("the new ticket form shows visible boxes and a styled file button", async ({ page, baseURL }) => {
     const { email } = await newUserApi(baseURL!, "ticketform");
     await loginUi(page, email, undefined, "/u/account/support/new/");

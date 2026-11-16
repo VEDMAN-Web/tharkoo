@@ -3,6 +3,9 @@
   "globs": [
     "docs/ownership/H7.61.json",
     "src/app/globals.css",
+    "src/components/account/AccountContext.tsx",
+    "src/components/auth/SignInSheet.tsx",
+    "src/components/chat/SupportChat.tsx",
     "src/components/buyer/MyAdsList.tsx",
     "src/components/support/NewTicketForm.tsx",
     "src/components/ui/AdCard.tsx",
@@ -10,6 +13,8 @@
     "src/components/vendor/OwnerActions.tsx",
     "src/lib/ui/ad-status.ts",
     "tests/e2e/my-ads.e2e.ts",
+    "tests/e2e/session-refresh.e2e.ts",
+    "tests/e2e/vendor-panel.e2e.ts",
     "tests/server/ui/ad-status.test.ts"
   ]
 }
