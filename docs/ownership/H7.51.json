@@ -1,0 +1,23 @@
+{
+  "branchPrefix": "haiku/h7.51",
+  "globs": [
+    "docs/ownership/H7.51.json",
+    "src/lib/support.ts",
+    "src/lib/ui/text.ts",
+    "src/components/new/UtilityStrip.tsx",
+    "src/components/new/utility-strip.css",
+    "src/components/new/ContactView.tsx",
+    "src/components/HeaderNew.tsx",
+    "src/components/FooterNew.tsx",
+    "src/components/SiteShell.tsx",
+    "src/components/PathChrome.tsx",
+    "src/components/ui/HelpCard.tsx",
+    "src/components/h714/HelpView.tsx",
+    "src/app/contact/page.tsx",
+    "src/app/help/page.tsx",
+    "src/app/admin/menus/ShellEditor.tsx",
+    "src/server/site-links/shell-config-rules.ts",
+    "src/styles/motion.css",
+    "tests/**"
+  ]
+}
