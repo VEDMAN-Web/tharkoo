@@ -175,7 +175,7 @@ export function ContactProvider({
       {popup ? (
         <AdPopup
           kind={popup}
-          name={info.sellerName || "the seller"}
+          name={info.sellerName || "the advertiser"}
           signedIn={signedIn}
           seller={seller}
           tourCoins={tour && !people ? tour.coins : null}

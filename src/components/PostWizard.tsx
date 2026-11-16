@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { api, fieldErrors, friendlyError } from "@/lib/ui/api";
 import { loadPostSubcategories, type PostSubcategory } from "@/server/categories/actions";
@@ -14,7 +14,9 @@ import { AdCard } from "./ui/AdCard";
 import { POST_COPY_DEFAULTS, wizardFields, type CtaCopy, type PostCopy, type PostStepKey } from "./post/copy";
 import { NEW_POST_TIPS, PostRail, PostTip, RAIL_LABELS, type RailItem } from "./post/NewPostParts";
 import { CategoryTiles } from "./post/CategoryTiles";
-import { hintsFor } from "./post/placeholders";
+import { hintsFor, photoHelp } from "./post/placeholders";
+import { listDraftMediaAction } from "./post/mediaActions";
+import type { DraftMedia } from "@/server/media/mine";
 import { PostPreviewCard, PreviewSheet, previewAd } from "./post/PostPreview";
 import "./post/post-wizard.css";
 import type { ListingDoc } from "@/lib/models";
@@ -59,6 +61,7 @@ export function PostWizard({
   newDesign = false,
   initialCategories,
   initialCities,
+  defaultCityId = "",
 }: {
   copy?: PostCopy;
   requireIdCheck?: boolean;
@@ -66,6 +69,7 @@ export function PostWizard({
   newDesign?: boolean;
   initialCategories?: Cat[];
   initialCities?: Place[];
+  defaultCityId?: string;
 }) {
   const paths = useUrlPaths();
   const lastStep = newDesign ? NEW_POST_STEPS.length : 3;
@@ -77,7 +81,7 @@ export function PostWizard({
   const [categoryId, setCategoryId] = useState("");
   const [subsByCategory, setSubsByCategory] = useState<Record<string, PostSubcategory[]>>({});
   const [subcategoryId, setSubcategoryId] = useState("");
-  const [cityId, setCityId] = useState("");
+  const [cityId, setCityId] = useState(defaultCityId);
   const [districtId, setDistrictId] = useState("");
   const [address, setAddress] = useState("");
   const [postal, setPostal] = useState("");
@@ -106,6 +110,8 @@ export function PostWizard({
   const [touched, setTouched] = useState<Record<string, boolean>>({});
   const [showAll, setShowAll] = useState(false);
   const [previewOpen, setPreviewOpen] = useState(false);
+  const [coverUrl, setCoverUrl] = useState<string | null>(null);
+  const [photoBusy, setPhotoBusy] = useState(false);
   const draftRef = useRef("");
   const queueRef = useRef<Promise<unknown>>(Promise.resolve());
 
@@ -215,6 +221,22 @@ export function PostWizard({
     if (newDesign && price.trim() && !/^\d{1,9}$/.test(priceDigits)) next.price = "Use whole rupees, numbers only";
     return next;
   }
+
+  const handleMedia = useCallback((media: DraftMedia) => {
+    const cover = media.photos.find((photo) => photo.id === media.coverId) ?? media.photos[0];
+    setCoverUrl(cover?.url ?? null);
+  }, []);
+
+  useEffect(() => {
+    if (!newDesign || !draftId || step === 3) return;
+    let live = true;
+    void listDraftMediaAction(draftId).then((media) => {
+      if (live && media) handleMedia(media);
+    });
+    return () => {
+      live = false;
+    };
+  }, [newDesign, draftId, step, handleMedia]);
 
   function remember(id: string, nextStep: number) {
     setTouched({});
@@ -349,6 +371,7 @@ export function PostWizard({
   async function continueFrom(from: NewPostStep) {
     if (!showErrors(errorsForStep(validate(), from))) return;
     if (from === "category") return setStep(2);
+    if (from === "photos") return remember(draftId, NEW_CONTACT_STEP);
     const id = await saveAll(from === "contact");
     if (id) remember(id, from === "details" ? NEW_PHOTO_STEP : NEW_REVIEW_STEP);
   }
@@ -596,7 +619,10 @@ export function PostWizard({
       state: index + 1 < step ? "done" : index + 1 === step ? "current" : "todo",
       clickable: index + 1 < step ? true : index + 1 === step,
     }));
-    const placeParts = [cityName, districtName].filter(Boolean).join(" / ");
+    const shownDistrict = districtName.toLowerCase() === `${cityName} city`.toLowerCase() ? "" : districtName;
+    const placeParts = [cityName, shownDistrict].filter(Boolean).join(" / ");
+    const photoHelpLine = steps.photos.help === POST_COPY_DEFAULTS.steps.photos.help || !steps.photos.help ? photoHelp(people) : steps.photos.help;
+    const headHelp = current === "photos" ? photoHelpLine : stepCopy.help;
     const previewPrice = priceDigits ? `₹${Number(priceDigits).toLocaleString("en-IN")}` : "";
     const hints = hintsFor(category?.slug);
     const adPreview = previewAd({
@@ -604,10 +630,11 @@ export function PostWizard({
       description: text.trim(),
       categorySlug: category?.slug ?? "",
       citySlug: cities.find((item) => item.id === cityId)?.slug ?? "",
-      districtName,
+      districtName: shownDistrict,
       price: people || !priceDigits ? null : Number(priceDigits),
-      cover: null,
+      cover: coverUrl,
     });
+    const byline = people ? [nickname.trim(), age.trim()].filter(Boolean).join(", ") : "";
     const categoryReady = Boolean(categoryId) && (subOptions.length === 0 || Boolean(subcategoryId));
     const live = errorsForStep(validate(), current);
     const err = (key: string) => (showAll || touched[key] ? live[key] : undefined) ?? errors[key];
@@ -638,7 +665,7 @@ export function PostWizard({
             <div className="tkp-head">
               <p className="tkp-kicker" data-tk="step-of">Step {step} of {NEW_POST_STEPS.length}</p>
               <h1 id="post-step-title" className="tkp-h1" data-tk="step-title">{stepCopy.title}</h1>
-              {stepCopy.help ? <p className="tkp-help" data-tk="step-help">{stepCopy.help}</p> : null}
+              {headHelp ? <p className="tkp-help" data-tk="step-help">{headHelp}</p> : null}
               <div aria-live="polite" className="tkp-banner">
                 {banner}{" "}
                 {banner.startsWith("Sign in") ? <Link href={`${loginPath(paths)}?next=${encodeURIComponent(postAdPath(paths))}`}>Log in</Link> : null}
@@ -697,7 +724,7 @@ export function PostWizard({
               ) : null}
 
               {current === "photos" ? (
-                <PhotoStep listingId={draftId} copy={copy} onBack={() => remember(draftId, 2)} onNext={() => remember(draftId, NEW_CONTACT_STEP)} />
+                <PhotoStep listingId={draftId} copy={copy} onMedia={handleMedia} onBusy={setPhotoBusy} />
               ) : null}
 
               {current === "contact" ? (
@@ -736,8 +763,7 @@ export function PostWizard({
               ) : null}
             </div>
 
-            {current !== "photos" ? (
-              <div className="tkp-nav">
+            <div className="tkp-nav">
                 {step > 1 ? (
                   <button type="button" className="tkp-btn" onClick={() => (draftId ? remember(draftId, step - 1) : setStep(step - 1))}>
                     {stepCopy.backLabel || "Back"}
@@ -750,22 +776,21 @@ export function PostWizard({
                       {stepCopy.nextLabel || "Publish ad"}
                     </button>
                   ) : (
-                    <button type="button" className="tkp-btn tkp-btn-primary" data-tk="go-on" disabled={busy || (current === "category" && !categoryReady)} onClick={() => continueFrom(current)}>
+                    <button type="button" className="tkp-btn tkp-btn-primary" data-tk="go-on" disabled={busy || (current === "category" && !categoryReady) || (current === "photos" && photoBusy)} onClick={() => continueFrom(current)}>
                       {stepCopy.nextLabel || "Continue"}
                     </button>
                   )}
                 </div>
               </div>
-            ) : null}
           </section>
           <aside className="tkp-aside">
             <p className="tkp-aside-label">Live preview</p>
-            <PostPreviewCard ad={adPreview} label="Live preview" />
+            <PostPreviewCard ad={adPreview} label="Live preview" hasPhoto={Boolean(coverUrl)} byline={byline} />
             <p className="tkp-preview-line">This is how your ad will look. Posting is free.</p>
             <PostTip text={NEW_POST_TIPS[current]} />
           </aside>
         </div>
-        {previewOpen ? <PreviewSheet ad={adPreview} onClose={() => setPreviewOpen(false)} /> : null}
+        {previewOpen ? <PreviewSheet ad={adPreview} hasPhoto={Boolean(coverUrl)} byline={byline} onClose={() => setPreviewOpen(false)} /> : null}
       </div>
     );
   }

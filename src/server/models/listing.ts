@@ -52,6 +52,9 @@ export interface ListingDoc {
   seoNoindex?: boolean;
   /** Admin only: the ad stays reachable by URL but is skipped in feeds. */
   feedHidden?: boolean;
+  /** Admin only: the ad is chosen for the Home page row; homeOrder sorts the chosen ads (lowest first). */
+  homeShow?: boolean;
+  homeOrder?: number;
   attestations?: Record<string, unknown>;
   createdAt?: Date;
   updatedAt?: Date;
@@ -178,6 +181,8 @@ const listingSchema = new Schema<ListingDoc>(
     lastModerationAt: { type: Date },
     seoNoindex: { type: Boolean, default: true },
     feedHidden: { type: Boolean, default: false },
+    homeShow: { type: Boolean, default: false },
+    homeOrder: { type: Number, default: 0 },
     attestations: { type: Schema.Types.Mixed },
   },
   { timestamps: true, collection: collectionName("listings", "Listing") },

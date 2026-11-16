@@ -1,0 +1,25 @@
+{
+  "branchPrefix": "haiku/h7.90",
+  "globs": [
+    "docs/ownership/H7.90.json",
+    "progress/H7.90.md",
+    "src/app/api/search/suggest/route.ts",
+    "src/app/search/page.tsx",
+    "src/components/new/KeywordField.tsx",
+    "src/components/new/ListingFilterPanel.tsx",
+    "src/components/new/ListingFrame.tsx",
+    "src/components/new/SearchHeader.tsx",
+    "src/components/new/SortSelect.tsx",
+    "src/components/new/listing-frame-props.tsx",
+    "src/components/new/listing-spec.css",
+    "src/components/new/search-header.ts",
+    "src/lib/queries.ts",
+    "src/lib/ui/text.ts",
+    "src/server/search/query.ts",
+    "src/server/search/suggest.ts",
+    "tests/e2e/h7-75-search-body.e2e.ts",
+    "tests/e2e/h7-90-search-results.e2e.ts",
+    "tests/server/search/search-header.test.ts",
+    "tests/server/search/search.test.ts"
+  ]
+}

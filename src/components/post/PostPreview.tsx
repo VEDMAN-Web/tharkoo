@@ -31,17 +31,17 @@ export function previewAd(input: PreviewInput): ListingDoc {
   } as ListingDoc;
 }
 
-export function PostPreviewCard({ ad, label }: { ad: ListingDoc; label: string }) {
+export function PostPreviewCard({ ad, label, hasPhoto, byline }: { ad: ListingDoc; label: string; hasPhoto: boolean; byline?: string }) {
   return (
-    <section aria-label={label} className="tkn-ls tkp-previewbox" data-tk="post-preview">
+    <section aria-label={label} className="tkn-ls tkp-previewbox" data-tk="post-preview" data-photo={hasPhoto ? "yes" : "none"}>
       <div inert>
-        <AdCard ad={ad} layout="row" />
+        <AdCard ad={ad} layout="row" byline={byline} />
       </div>
     </section>
   );
 }
 
-export function PreviewSheet({ ad, onClose }: { ad: ListingDoc; onClose: () => void }) {
+export function PreviewSheet({ ad, hasPhoto, byline, onClose }: { ad: ListingDoc; hasPhoto: boolean; byline?: string; onClose: () => void }) {
   const ref = useFocusTrap<HTMLDivElement>(true, onClose);
   return (
     <div className="tkp-sheet-back" onClick={onClose}>
@@ -52,7 +52,7 @@ export function PreviewSheet({ ad, onClose }: { ad: ListingDoc; onClose: () => v
             <X size={20} aria-hidden="true" focusable="false" />
           </button>
         </div>
-        <PostPreviewCard ad={ad} label="Live preview" />
+        <PostPreviewCard ad={ad} label="Live preview" hasPhoto={hasPhoto} byline={byline} />
         <p className="tkp-preview-line" style={{ marginTop: 12 }}>This is how your ad will look.</p>
       </div>
     </div>

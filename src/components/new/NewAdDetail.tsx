@@ -6,12 +6,14 @@ import { ContactButtons, ContactProvider, type ContactPopupInfo } from "@/compon
 import { AdCard, UiTextProvider } from "@/components/ui/AdCard";
 import { TrackView } from "@/components/ui/RecentlyViewed";
 import { adPath, type UrlPaths } from "@/lib/urls";
+import { isCityAlias } from "@/lib/seo/district-alias";
 import { makeT, type UiTextMap } from "@/lib/ui/text";
 import { formatPrice } from "@/components/search/price";
 import { CitySync } from "@/components/CityContext";
 import { AdMetaLine, AdSellerRow } from "./AdLiveBits";
 import { AdActions } from "./AdActions";
 import { NewGallery } from "./NewGallery";
+import type { AdVideo } from "@/server/media/video";
 import type { AdPopupAlt } from "./AdPopup";
 import "./new-design.css";
 import "./listing-spec.css";
@@ -34,8 +36,8 @@ function isRecent(ad: ListingDoc) {
 
 function placeOf(ad: ListingDoc) {
   const city = prettyPlace(ad.citySlug);
-  const district = ad.place && ad.place !== city ? ad.place : prettyPlace(ad.districtSlug);
-  return { city, district };
+  const named = ad.place && ad.place !== city ? ad.place : prettyPlace(ad.districtSlug);
+  return { city, district: named && !isCityAlias(city, named) ? named : "" };
 }
 
 export function popupAlternatives(ad: ListingDoc, related: ListingDoc[], paths: UrlPaths): AdPopupAlt[] {
@@ -60,6 +62,7 @@ export function NewAdDetail({
   categoryName,
   related = [],
   listingId,
+  videos = [],
   crumbs = [],
   heading,
   tour,
@@ -74,6 +77,7 @@ export function NewAdDetail({
   categoryName: string;
   related?: ListingDoc[];
   listingId?: string;
+  videos?: AdVideo[];
   crumbs?: { name: string; path: string }[];
   shareUrl: string;
   heading?: string;
@@ -115,7 +119,7 @@ export function NewAdDetail({
           </nav>
           <div className="tkn-ad-grid">
             <div className="tkn-ad-main">
-              <NewGallery photos={photos} title={title} badge={GOLD_TIERS.has(tier.key) ? tier.label : null} isNew={isRecent(ad)} />
+              <NewGallery photos={photos} videos={videos} title={title} badge={GOLD_TIERS.has(tier.key) ? tier.label : null} isNew={isRecent(ad)} />
               <section className="tkn-ad-head" data-tk="ad-summary">
                 <h1>{title}</h1>
                 <AdMetaLine slug={ad.slug || ""} place={placeText} posted={date} />

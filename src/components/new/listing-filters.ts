@@ -148,12 +148,15 @@ export type ListingLabels = {
   state: string;
   city: string;
   area: string;
+  allCategories: string;
   allStates: string;
   allCities: string;
   allAreas: string;
   pickCity: string;
   clear: string;
   apply: string;
+  show: string;
+  showOne: string;
   noFilters: string;
   verified: string;
   photos: string;

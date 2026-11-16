@@ -5,7 +5,7 @@ import type { TextFn } from "@/lib/ui/text";
 import { bandStyleFor } from "./band-image";
 import { ListingHead } from "./ListingHead";
 import { ListingSearchForm } from "./ListingSearchForm";
-import { ListingFilterPanel } from "./ListingFilterPanel";
+import { ListingFilterPanel, type KeywordProps } from "./ListingFilterPanel";
 import {
   activeFilterCount,
   panelRows,
@@ -33,12 +33,15 @@ export function listingLabels(t: TextFn): ListingLabels {
     state: t("listing.panel.state"),
     city: t("listing.panel.city"),
     area: t("listing.panel.area"),
+    allCategories: t("listing.panel.allCategories"),
     allStates: t("listing.panel.allStates"),
     allCities: t("listing.panel.allCities"),
     allAreas: t("listing.panel.allAreas"),
     pickCity: t("listing.panel.pickCity"),
     clear: t("listing.panel.clear"),
     apply: t("listing.panel.apply"),
+    show: t("listing.panel.show"),
+    showOne: t("listing.panel.showOne"),
     noFilters: t("listing.panel.noFilters"),
     verified: t("listing.filters.verified"),
     photos: t("listing.filters.photos"),
@@ -118,7 +121,7 @@ export function searchPlaceSelects(input: {
   const citySlug = input.params.city || "";
   const cities = stateSlug ? input.cities.filter((city) => !city.stateSlug || city.stateSlug === stateSlug) : input.cities;
   return {
-    categories: [{ value: "", label: input.labels.all, href: hrefFor({ category: "" }) }, ...options(input.categories, "category")],
+    categories: [{ value: "", label: input.labels.allCategories, href: hrefFor({ category: "" }) }, ...options(input.categories, "category")],
     categoryValue: input.params.category || "",
     states: [{ value: "", label: input.labels.allStates, href: hrefFor({ state: "", city: "", area: "" }) }, ...options(input.states, "state", { city: "", area: "" })],
     stateValue: stateSlug,
@@ -152,9 +155,12 @@ export function listingFrameProps(input: {
   places: PlaceSelects;
   panelHidden?: { name: string; value: string }[];
   placesOnly?: boolean;
+  keyword?: KeywordProps;
+  total?: number;
+  activeCount?: number;
 }) {
   const rows = panelRows(input.fields, input.picks);
-  const activeCount = activeFilterCount(rows, input.toggles);
+  const activeCount = input.activeCount ?? activeFilterCount(rows, input.toggles);
   return {
     bandStyle: bandStyleFor(input.photo),
     head: <ListingHead crumbs={input.crumbs} h1={input.h1} intro={input.intro} labels={input.labels} />,
@@ -179,6 +185,8 @@ export function listingFrameProps(input: {
         places={input.places}
         hidden={input.panelHidden}
         placesOnly={input.placesOnly}
+        keyword={input.keyword}
+        total={input.total}
       />
     ),
     activeCount,

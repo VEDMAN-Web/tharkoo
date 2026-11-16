@@ -21,6 +21,8 @@ import { listingVisibility } from "@/server/listings/visibility";
 import { adPath, categoryPath, placePath } from "@/lib/urls";
 import { withUrlSeo, urlHeading } from "@/lib/seo/override";
 import { plain } from "@/lib/plain";
+import { isCityAlias } from "@/lib/seo/district-alias";
+import { publicSellerName } from "@/lib/seller-name";
 import { getPaths } from "@/server/urls/service";
 import { videoTourOffer } from "@/server/tours/offer";
 import { listingIsPeople } from "@/server/availability/people";
@@ -145,7 +147,7 @@ export default async function AdPage({ params }: Props) {
     { name: catName, path: categoryPath(ad.categorySlug || "") },
     ...(state ? [{ name: `${state} ${catName}`, path: placePath(ad.categorySlug || "", ad.stateSlug || "") }] : []),
     { name: `${city} ${catName}`, path: placePath(ad.categorySlug || "", ad.citySlug || "") },
-    ...(district ? [{ name: `${district} ${catName}`, path: placePath(ad.categorySlug || "", ad.citySlug || "", ad.districtSlug || "") }] : []),
+    ...(district && !isCityAlias(city, district) ? [{ name: `${district} ${catName}`, path: placePath(ad.categorySlug || "", ad.citySlug || "", ad.districtSlug || "") }] : []),
   ];
   const seoSettings = await getSeoSettings().catch(() => null);
   const structured = listingJsonLd({
@@ -168,11 +170,12 @@ export default async function AdPage({ params }: Props) {
       {newDesign ? (
         <NewAdDetail
           ad={adView}
-          sellerName={owner?.displayName?.trim() || ""}
+          sellerName={publicSellerName(owner?.displayName)}
           priceUnit={cat?.fields?.find((field) => ["price", "rent", "salary"].includes(field.key))?.unit || ""}
           categoryName={catName}
           related={plain(related)}
           listingId={listingId}
+          videos={videos}
           crumbs={crumbs}
           shareUrl={shareUrl}
           heading={heading}
@@ -185,12 +188,8 @@ export default async function AdPage({ params }: Props) {
       ) : (
         <AdDetail ad={adView} categoryName={catName} related={plain(related)} listingId={listingId} crumbs={crumbs} shareUrl={shareUrl} heading={heading} tour={tour} peopleAd={peopleAd} />
       )}
-      {newDesign ? null : (
-        <div className="tk-container">
-          <AdCountsBar slug={ad.slug || slug} />
-        </div>
-      )}
-      <AdVideos videos={videos} title={displayTitle(ad.title) || "Listing"} />
+      <AdCountsBar slug={ad.slug || slug} />
+      {newDesign ? null : <AdVideos videos={videos} title={displayTitle(ad.title) || "Listing"} />}
     </>
   );
 }

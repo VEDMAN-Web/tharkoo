@@ -24,7 +24,7 @@ export function HowItWorksView({
             </nav>
             <h1 className="h714-h1" style={{ margin: "0 0 6px", fontSize: "38px", letterSpacing: "-.03em", color: "#110520" }}>How Tharkoo works</h1>
             <p style={{ margin: "0", fontSize: "15px", lineHeight: "1.55", color: "#4A2870", maxWidth: "640px" }}>
-              Find what you need, chat with the seller, and see it live on a video call before you meet or pay.
+              Find what you need, chat with the advertiser, and see it live on a video call before you meet or pay.
             </p>
             <div className="h714-chips" style={{ marginTop: "18px" }}>
               <span aria-current="page" style={{ minHeight: "38px", display: "inline-flex", alignItems: "center", padding: "0 16px", borderRadius: "999px", background: "#A8124F", color: "#fff", fontSize: "13px", fontWeight: "700", textDecoration: "none", whiteSpace: "nowrap" }}>I&apos;m looking for something</span>
@@ -42,7 +42,7 @@ export function HowItWorksView({
             <div style={{ padding: "26px", borderRadius: "20px", background: "linear-gradient(160deg, #F5F0FF, #FFFFFF)", backdropFilter: "blur(18px) saturate(170%)", WebkitBackdropFilter: "blur(18px) saturate(170%)", border: "1px solid rgba(255,255,255,.95)", boxShadow: "0 8px 32px rgba(45,18,72,.08)" }}>
               <span style={{ display: "flex", width: "48px", height: "48px", borderRadius: "14px", alignItems: "center", justifyContent: "center", fontSize: "20px", fontWeight: "800", color: "#fff", background: "linear-gradient(135deg, #7C3AED, #5B21B6)" }}>2</span>
               <h3 style={{ margin: "18px 0 8px", fontSize: "19px", color: "#110520" }}>Chat for free</h3>
-              <p style={{ margin: "0", fontSize: "15px", lineHeight: "1.6", color: "#4A2870" }}>Message the seller on Tharkoo or WhatsApp. Ask for more photos.</p>
+              <p style={{ margin: "0", fontSize: "15px", lineHeight: "1.6", color: "#4A2870" }}>Message the advertiser on Tharkoo or WhatsApp. Ask for more photos.</p>
             </div>
             <div style={{ padding: "26px", borderRadius: "20px", background: "linear-gradient(160deg, #FFF8EC, #FFFFFF)", backdropFilter: "blur(18px) saturate(170%)", WebkitBackdropFilter: "blur(18px) saturate(170%)", border: "1px solid rgba(255,255,255,.95)", boxShadow: "0 8px 32px rgba(45,18,72,.08)" }}>
               <span style={{ display: "flex", width: "48px", height: "48px", borderRadius: "14px", alignItems: "center", justifyContent: "center", fontSize: "20px", fontWeight: "800", color: "#fff", background: "linear-gradient(135deg, #D1137A, #A8124F)" }}>3</span>
@@ -73,7 +73,7 @@ export function HowItWorksView({
                 </span>
                 <div>
                   <h3 style={{ margin: "0 0 6px", fontSize: "17px", color: "#110520" }}>Photo verified badge</h3>
-                  <p style={{ margin: "0", fontSize: "15px", lineHeight: "1.6", color: "#4A2870" }}>Sellers who pass a live photo check get a badge on every ad.</p>
+                  <p style={{ margin: "0", fontSize: "15px", lineHeight: "1.6", color: "#4A2870" }}>Advertisers who pass a live photo check get a badge on every ad.</p>
                 </div>
               </div>
             </div>
@@ -115,7 +115,7 @@ export function HowItWorksView({
               <p style={{ display: "inline-block", margin: "0 0 10px", fontSize: "12px", fontWeight: "700", letterSpacing: ".12em", textTransform: "uppercase", color: "#5B21B6", background: "#F5F0FF", borderRadius: "999px", padding: "6px 14px" }}>Credits</p>
               <h2 className="h714-h2" style={{ margin: "0 0 14px", fontSize: "40px", letterSpacing: "-.035em", lineHeight: "1.1", color: "#110520" }}>See it live before you go</h2>
               <p style={{ margin: "0 0 18px", fontSize: "16px", lineHeight: "1.65", color: "#4A2870" }}>
-                Buy a credit pack once. A video call uses 2 credits. Your credits are held until the call ends and go to the seller only after a real call. If the seller does not answer, the credits come back.
+                Buy a credit pack once. A video call uses 2 credits. Your credits are held until the call ends and go to the advertiser only after a real call. If the advertiser does not answer, the credits come back.
               </p>
               {" "}
               <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>

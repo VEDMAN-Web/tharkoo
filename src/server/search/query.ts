@@ -4,6 +4,7 @@ import { connectDb } from "@/lib/db";
 import type { ListingDoc as LegacyListing } from "@/lib/models";
 import { listingPhotos } from "@/lib/media";
 import { onlineOwnerIds } from "@/server/availability/listings";
+import { firstAdVideos } from "@/server/media/video";
 import {
   Category,
   Listing,
@@ -72,11 +73,15 @@ export interface ListingQuery {
   /** H7.8: only ads whose seller is Online now (see onlineOwnerIds). */
   online?: boolean;
   sort?: "ranked" | "fresh";
+  /** Ads of verified, or of online, sellers come first inside the chosen order. */
+  prefer?: "verified" | "online";
   page?: number;
   pageSize?: number;
   excludeStar?: boolean;
   starOnly?: boolean;
   excludeSlug?: string;
+  /** Only ads an admin chose for the Home page row. */
+  homeChosen?: boolean;
   slug?: string;
   /** Unsaved ordering settings for the admin preview; normal callers leave it out. */
   rank?: RankSettings;
@@ -203,7 +208,7 @@ export function expandSearchTerms(q: string) {
     });
 }
 
-function escapeRegExp(value: string) {
+export function escapeRegExp(value: string) {
   return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }
 
@@ -404,6 +409,7 @@ export async function buildFilter(input: ListingQuery): Promise<QueryFilter<List
   if (input.slug) filter.slug = input.slug;
   else {
     filter.feedHidden = { $ne: true };
+    if (input.homeChosen) filter.homeShow = true;
     if (input.excludeSlug) filter.slug = { $ne: input.excludeSlug };
   }
   if (input.attributes && Object.keys(input.attributes).length > 0) {
@@ -443,7 +449,7 @@ export async function buildFilter(input: ListingQuery): Promise<QueryFilter<List
   return filter as QueryFilter<ListingDoc>;
 }
 
-const RANK_FIELDS = "slug badges bumpedAt publishedAt mediaIds categoryId cityId";
+const RANK_FIELDS = "slug badges bumpedAt publishedAt mediaIds categoryId cityId ownerId";
 
 async function findRows(filter: QueryFilter<ListingDoc>, q?: string): Promise<Row[]> {
   const text = q ? cleanQuery(q) : "";
@@ -497,13 +503,14 @@ export function trustMarks(status: string | undefined, adult: Date | undefined, 
 export async function presentRows(docs: Row[], promotions: Map<string, RankPromotion[]>, now: Date) {
   await connectDb();
   const ownerIds = [...new Set(docs.map((doc) => (doc.ownerId ? String(doc.ownerId) : "")).filter(Boolean))];
-  const [categories, locations, photos, people] = await Promise.all([
+  const [categories, locations, photos, people, videos] = await Promise.all([
     loadCategories(),
     loadLocations(),
     photoMap(docs),
     ownerIds.length
       ? User.find({ _id: { $in: ownerIds } }).select("verificationStatus attestedAdultAt").lean<{ _id: Types.ObjectId; verificationStatus?: string; attestedAdultAt?: Date }[]>()
       : Promise.resolve([]),
+    firstAdVideos(docs.map((doc) => String(doc._id))).catch(() => new Map<string, never>()),
   ]);
   const peopleById = new Map(people.map((person) => [String(person._id), person]));
   const categoryById = new Map(categories.map((row) => [String(row._id), row]));
@@ -533,6 +540,7 @@ export async function presentRows(docs: Row[], promotions: Map<string, RankPromo
     const trust = trustMarks(person?.verificationStatus, person?.attestedAdultAt, verified, photoList.length, people);
     const age = ageOf(doc.attributes);
     const price = cleanPrice(doc.price);
+    const video = videos.get(id);
     hits.push({
       ...view,
       price,
@@ -569,6 +577,7 @@ export async function presentRows(docs: Row[], promotions: Map<string, RankPromo
       lastBumpedAt: bumped ? new Date(bumped) : undefined,
       publishedAt: doc.publishedAt,
       videoVerifiedUntil: doc.videoVerifiedUntil ?? null,
+      ...(video ? { videoUrl: video.url, ...(video.posterUrl ? { videoPoster: video.posterUrl } : {}) } : {}),
       status: "live",
     });
   }
@@ -616,6 +625,11 @@ export async function queryListings(input: ListingQuery): Promise<SearchResult> 
     }
     return compareRank(a.score, b.score, settings) || (a.doc.slug ?? "").localeCompare(b.doc.slug ?? "");
   });
+  if (input.prefer) {
+    const onlineIds = input.prefer === "online" ? new Set(await onlineOwnerIds()) : null;
+    const preferred = (doc: Row) => (onlineIds ? Boolean(doc.ownerId && onlineIds.has(String(doc.ownerId))) : doc.badges?.includes("verified") === true);
+    ranked.sort((a, b) => Number(preferred(b.doc)) - Number(preferred(a.doc)));
+  }
   const scope = (input.sort ?? "ranked") === "ranked" ? pinScopeOf(input) : null;
   const pins = scope ? await loadActivePins(scope, now) : [];
   const ordered = applyPins(ranked.map((row) => row.doc), pins, (doc) => String(doc._id), now);
