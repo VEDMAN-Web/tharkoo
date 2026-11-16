@@ -1,0 +1,18 @@
+{
+  "branchPrefix": "haiku/h7.6",
+  "globs": [
+    "src/app/u/account/**",
+    "src/app/u/**",
+    "src/components/buyer/**",
+    "src/server/notifications/**",
+    "src/server/alerts/**",
+    "tests/e2e/user*.e2e.ts",
+    "progress/H7.6.md",
+    "docs/ownership/H7.6.json",
+    "src/app/api/discover/**",
+    "src/app/api/alerts/**",
+    "tests/server/discover/**",
+    "tests/server/notifications/**",
+    "src/server/discover/**"
+  ]
+}

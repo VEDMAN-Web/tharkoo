@@ -1,0 +1,16 @@
+{
+  "branchPrefix": "haiku/h6.1",
+  "globs": [
+    "src/app/admin/locations/**",
+    "src/app/countries/**",
+    "src/components/site/**",
+    "src/components/Footer*.tsx",
+    "src/server/locations/**",
+    "src/server/models/location*.ts",
+    "src/server/layout/**",
+    "tests/server/locations/**",
+    "tests/e2e/**",
+    "docs/ownership/H6.1.json",
+    "progress/H6.1.md"
+  ]
+}

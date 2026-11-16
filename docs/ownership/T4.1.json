@@ -1,0 +1,13 @@
+{
+  "branchPrefix": "cursor/t4.1",
+  "globs": [
+    "src/server/billing/**",
+    "src/server/ranking/**",
+    "src/app/api/wallet/**",
+    "src/app/api/promotions/**",
+    "src/app/api/payments/**",
+    "src/app/api/coupons/**",
+    "src/app/api/cron/boost/**",
+    "tests/server/billing/**"
+  ]
+}

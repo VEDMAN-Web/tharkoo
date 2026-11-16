@@ -1,0 +1,17 @@
+{
+  "branchPrefix": "haiku/h7.2",
+  "globs": [
+    "src/app/login/**",
+    "src/app/u/login/**",
+    "src/app/u/account/**",
+    "src/server/auth/**",
+    "src/app/api/auth/**",
+    "src/components/auth/**",
+    "src/server/otp/**",
+    "src/server/mailer/**",
+    "tests/server/auth/**",
+    "tests/e2e/login*.e2e.ts",
+    "progress/H7.2.md",
+    "docs/ownership/H7.2.json"
+  ]
+}

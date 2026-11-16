@@ -1,0 +1,7 @@
+{
+  "branchPrefix": "haiku/h1.5",
+  "globs": [
+    "src/app/page.tsx",
+    "src/app/globals.css"
+  ]
+}

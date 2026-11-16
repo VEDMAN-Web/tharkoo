@@ -1,0 +1,8 @@
+{
+  "branchPrefix": "haiku/h1.3",
+  "globs": [
+    "src/proxy.ts",
+    "src/lib/rate-limit.ts",
+    "tests/server/proxy/**"
+  ]
+}

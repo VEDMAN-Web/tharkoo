@@ -1,0 +1,7 @@
+{
+  "branchPrefix": "cursor/t10.2",
+  "globs": [
+    ".github/workflows/deploy.yml",
+    "deploy/**"
+  ]
+}

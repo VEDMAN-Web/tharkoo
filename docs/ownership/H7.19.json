@@ -1,0 +1,28 @@
+{
+  "branchPrefix": "haiku/h7.19",
+  "globs": [
+    "docs/ownership/H7.19.json",
+    "src/app/globals.css",
+    "src/app/u/login/page.tsx",
+    "src/components/ContactButtons.tsx",
+    "src/components/HeaderDrawer.tsx",
+    "src/components/HeaderNew.tsx",
+    "src/components/PathChrome.tsx",
+    "src/components/SiteShell.tsx",
+    "src/components/auth/SignInPopup.tsx",
+    "src/components/auth/SignInSheet.tsx",
+    "src/components/auth/landing.ts",
+    "src/components/auth/sign-in-css.ts",
+    "src/components/new/NewHome.tsx",
+    "src/components/new/home-spec.css",
+    "src/components/vendor/NewVendorPanel.tsx",
+    "src/server/auth/landing-paths.ts",
+    "src/server/site-links/shell-config-rules.ts",
+    "tests/e2e/contact-card.e2e.ts",
+    "tests/e2e/login-sheet.e2e.ts",
+    "tests/server/auth/sign-in-sheet.test.ts",
+    "src/components/auth/SellerSetup.tsx",
+    "src/components/auth/SellerProfileForm.tsx",
+    "src/app/u/seller-profile/page.tsx"
+  ]
+}

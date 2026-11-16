@@ -1,0 +1,24 @@
+{
+  "branchPrefix": "haiku/h7.18",
+  "globs": [
+    "src/app/globals.css",
+    "src/components/new/home-spec.css",
+    "src/components/new/ad-spec.css",
+    "src/components/new/listing-spec.css",
+    "src/components/new/p10-p13.css",
+    "src/components/new/PageParts.tsx",
+    "src/components/new/LegalView.tsx",
+    "src/components/new/BlogView.tsx",
+    "docs/ownership/H7.18.json",
+    "src/components/ui/SaveButton.tsx",
+    "src/lib/ui/text.ts",
+    "src/components/ad/counts-format.ts",
+    "src/components/ad/AdCountsLabel.tsx",
+    "src/components/ui/AdCard.tsx",
+    "src/components/new/AdLiveBits.tsx",
+    "src/components/new/HomeAdCard.tsx",
+    "src/components/new/NewHome.tsx",
+    "src/components/new/NotFoundView.tsx",
+    "src/app/not-found.tsx"
+  ]
+}

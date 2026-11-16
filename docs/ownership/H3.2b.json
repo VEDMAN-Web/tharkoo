@@ -1,0 +1,9 @@
+{
+  "branchPrefix": "haiku/h3.2b",
+  "globs": [
+    "src/server/models/layout.ts",
+    "src/server/ranking/pins.ts",
+    "docs/ownership/H3.2b.json",
+    "progress/H3.2b.md"
+  ]
+}

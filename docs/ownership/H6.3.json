@@ -1,0 +1,19 @@
+{
+  "branchPrefix": "haiku/h6.3",
+  "globs": [
+    "src/server/media/**",
+    "src/app/admin/media/**",
+    "src/components/PostWizard.tsx",
+    "src/components/ListingPage.tsx",
+    "src/components/ListingCard*.tsx",
+    "src/components/ad/**",
+    "src/app/ad/**",
+    "src/app/submit-report/**",
+    "src/server/reports/**",
+    "tests/server/media/**",
+    "tests/server/reports/**",
+    "tests/e2e/**",
+    "docs/ownership/H6.3.json",
+    "progress/H6.3.md"
+  ]
+}

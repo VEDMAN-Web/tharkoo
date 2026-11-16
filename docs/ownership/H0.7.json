@@ -1,0 +1,13 @@
+{
+  "branchPrefix": "haiku/h0.7",
+  "globs": [
+    "src/server/auth/http.ts",
+    "tests/server/auth/**",
+    "src/app/u/login/**",
+    "src/app/admin/login/**",
+    "src/components/AuthForm.tsx",
+    "src/components/admin/AdminLoginForm.tsx",
+    "docs/ownership/H0.7.json",
+    "progress/H0.7.md"
+  ]
+}

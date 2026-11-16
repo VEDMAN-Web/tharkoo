@@ -1,0 +1,29 @@
+{
+  "branchPrefix": "haiku/h6.18",
+  "globs": [
+    "src/server/media/**",
+    "src/server/listings/**",
+    "src/app/api/media/**",
+    "src/app/api/cron/expire/route.ts",
+    "src/server/settings/**",
+    "src/app/admin/settings/**",
+    "src/app/admin/import/**",
+    "src/server/listings/import.ts",
+    "src/components/post/**",
+    "src/components/PostWizard.tsx",
+    "src/app/u/post-insert/**",
+    "src/app/u/account/media/**",
+    "tests/server/media/**",
+    "tests/server/listings/**",
+    "tests/e2e/media*.e2e.ts",
+    "tests/server/import/**",
+    "src/app/admin/ads/create/CreateAdForm.tsx",
+    "src/app/admin/ads/create/AdMediaPicker.tsx",
+    "src/components/ad/VideoUploader.tsx",
+    "src/server/import/rules.ts",
+    "package.json",
+    "package-lock.json",
+    "progress/H6.18.md",
+    "docs/ownership/H6.18.json"
+  ]
+}

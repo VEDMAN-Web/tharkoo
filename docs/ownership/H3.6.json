@@ -1,0 +1,22 @@
+{
+  "branchPrefix": "haiku/h3.6",
+  "globs": [
+    "src/app/u/post-insert/**",
+    "src/components/PostWizard.tsx",
+    "src/components/post/**",
+    "src/components/blocks/**",
+    "src/server/layout/defaults/post.ts",
+    "src/server/seed/layouts.ts",
+    "src/app/admin/post-page/**",
+    "src/app/admin/categories/**",
+    "src/components/admin/category-fields/**",
+    "tests/server/layout/post.test.ts",
+    "docs/ownership/H3.6.json",
+    "progress/H3.6.md",
+    "src/components/admin/nav.ts",
+    "src/app/admin/layout-actions.ts",
+    "src/server/models/catalog.ts",
+    "src/server/shared/fields.ts",
+    "src/components/admin/layout-editor/**"
+  ]
+}

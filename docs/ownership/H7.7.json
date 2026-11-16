@@ -1,0 +1,12 @@
+{
+  "branchPrefix": "haiku/h7.7",
+  "globs": [
+    "src/app/admin/**",
+    "src/server/content/**",
+    "src/server/layout/**",
+    "src/lib/ui/**",
+    "src/components/admin/**",
+    "progress/H7.7.md",
+    "docs/ownership/H7.7.json"
+  ]
+}

@@ -1,0 +1,12 @@
+{
+  "branchPrefix": "codex/t4.2",
+  "globs": [
+    "src/app/u/account/credits/**",
+    "src/app/u/account/packs/**",
+    "src/app/u/account/coupons/**",
+    "src/app/u/account/subscription/**",
+    "src/app/u/account/dashboard/**",
+    "src/app/u/account/analytics/**",
+    "src/components/vendor/**"
+  ]
+}
