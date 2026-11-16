@@ -7,7 +7,7 @@ import { connectDb } from "@/lib/db";
 import { shownFrom } from "@/server/analytics/shown";
 import { AdCounter } from "@/server/models/ad-event";
 import { Listing } from "@/server/models";
-import { homeSelectionRows } from "@/server/listings/home-selection";
+import { homePickerData } from "@/server/listings/home-selection";
 import { HomeSelection } from "./HomeSelection";
 
 export const dynamic = "force-dynamic";
@@ -37,11 +37,11 @@ async function recentCounts() {
 }
 
 export default async function Page() {
-  const [rows, homeRows] = await Promise.all([recentCounts(), homeSelectionRows()]);
+  const [rows, picker] = await Promise.all([recentCounts(), homePickerData()]);
   return (
     <AdminShell title="Ads">
       <p className="mb-3 t-small text-muted">Full ad records. Change title, photos, variant, city and status. The public feed updates.</p>
-      <HomeSelection rows={homeRows} />
+      <HomeSelection pinned={picker.pinned} results={picker.results} />
       <section className="adm-card" aria-labelledby="ad-counts-heading" style={{ marginBottom: 16 }}>
         <h2 id="ad-counts-heading" className="t-h4">Views and clicks</h2>
         <p className="t-small text-muted">
