@@ -23,9 +23,9 @@ test.describe("H7.5 Online now and Away on cards and the ad page", () => {
     await expect(page.locator("[data-tk=chat]:visible").first()).toBeEnabled();
 
     await page.goto(PEOPLE_FEED);
-    await expect(page.locator("[data-tk=card]").first()).toBeVisible();
-    await expect(page.locator("[data-tk=card] [data-tk=call]")).toHaveCount(0);
-    await expect(page.locator("[data-tk=card] [data-tk=availability]").first()).toBeVisible();
+    await expect(page.locator(":is([data-tk=card], [data-tk=home-ad])").first()).toBeVisible();
+    await expect(page.locator(":is([data-tk=card], [data-tk=home-ad]) [data-tk=call]")).toHaveCount(0);
+    await expect(page.locator(":is([data-tk=card], [data-tk=home-ad]) [data-tk=availability]").first()).toBeVisible();
   });
 
   test("a job ad keeps its Call button, and it pauses while the seller is Away", async ({ page, baseURL }) => {
@@ -77,12 +77,12 @@ test.describe("H7.5 Online now and Away on cards and the ad page", () => {
     await setSellerAvailable(slug, true);
 
     await page.goto(`/search/?q=${encodeURIComponent(ad.title)}`);
-    const card = page.locator("[data-tk=card]").filter({ hasText: ad.title }).first();
+    const card = page.locator(":is([data-tk=card], [data-tk=home-ad])").filter({ hasText: ad.title }).first();
     await expect(card).toBeVisible();
     await expect(card.locator("[data-tk=availability]")).toHaveAttribute("data-status", "online");
 
     await setSellerAvailable(slug, false);
     await page.goto(`/search/?q=${encodeURIComponent(ad.title)}`);
-    await expect(page.locator("[data-tk=card]").filter({ hasText: ad.title }).first().locator("[data-tk=availability]")).toHaveAttribute("data-status", "away");
+    await expect(page.locator(":is([data-tk=card], [data-tk=home-ad])").filter({ hasText: ad.title }).first().locator("[data-tk=availability]")).toHaveAttribute("data-status", "away");
   });
 });

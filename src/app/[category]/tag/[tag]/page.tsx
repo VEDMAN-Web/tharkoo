@@ -16,7 +16,7 @@ import { makeT } from "@/lib/ui/text";
 import { textOverrides } from "@/app/admin/ui-text/store";
 import { readShellConfig } from "@/server/site-links/shell-config";
 import { loadFallbackSections, showFallback } from "@/lib/fallback-ads";
-import { postAdPath, searchPath, tagPath } from "@/lib/urls";
+import { categoryPath, postAdPath, searchPath, tagPath } from "@/lib/urls";
 import { withUrlSeo, urlHeading } from "@/lib/seo/override";
 import { getPaths, publicTags } from "@/server/urls/service";
 
@@ -100,6 +100,7 @@ export default async function TagPage({ params, searchParams }: Props) {
       : undefined;
   const labels = listingLabels(t);
   const filterQs = listingFilterQuery(picks, toggles);
+  const homeContent = await getHomepageContent();
   const frame = listingFrameProps({
     crumbs,
     h1: heading,
@@ -115,11 +116,23 @@ export default async function TagPage({ params, searchParams }: Props) {
     panelPath: path,
     total: feed.total,
     labels,
+    showBand: homeContent.showListingBand,
+    template: {
+      state: { category: { slug: cat.slug || category, name: cat.name || category }, toggles, picks, fields: cat.fields },
+      crumbs,
+      h1: heading,
+      total: feed.total,
+      nearby: own,
+      pagePath: path,
+      extraChips: [{ key: "tag", label: `Tag: ${meta.label}`, removeLabel: `Remove Tag: ${meta.label}`, href: categoryPath(cat.slug || category) }],
+      t,
+    },
     places: placeSelects({ categorySlug: cat.slug || category, categories, states, cities, districts: [], labels }),
   });
   return (
     <div data-card-width={cardWidth}>
     <ListingFrame
+      header={frame.header}
       bandStyle={frame.bandStyle}
       labels={labels}
       head={frame.head}

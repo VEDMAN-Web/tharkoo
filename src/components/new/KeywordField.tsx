@@ -73,7 +73,22 @@ export function KeywordField({
     router.push(searchHref(base, next));
   }
 
+  function submitText() {
+    const next: Record<string, string> = { ...params };
+    delete next.page;
+    const value = text.trim();
+    if (value) next.q = value;
+    else delete next.q;
+    setOpen(false);
+    router.push(searchHref(base, next));
+  }
+
   function onKeyDown(event: React.KeyboardEvent<HTMLInputElement>) {
+    if (event.key === "Enter" && active < 0) {
+      event.preventDefault();
+      submitText();
+      return;
+    }
     if (!open || items.length === 0) return;
     if (event.key === "ArrowDown") {
       event.preventDefault();

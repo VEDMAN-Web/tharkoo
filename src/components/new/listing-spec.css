@@ -92,12 +92,12 @@
 
 /* Grid: filters 260 px, ads on the right */
 .tkn-ls-grid {
-  box-sizing: border-box; max-width: 1280px; margin: 24px auto 72px; padding: 0 var(--gutter);
+  box-sizing: border-box; max-width: 1280px; margin: 12px auto 72px; padding: 0 var(--gutter);
   display: grid; grid-template-columns: 272px minmax(0, 1fr); gap: 24px; align-items: start;
 }
 .tkn-ls-scrim { display: none; }
 .tkn-ls-aside {
-  position: sticky; top: 86px; display: flex; flex-direction: column; max-height: calc(100vh - 102px); border-radius: 20px; box-sizing: border-box;
+  position: sticky; top: 86px; display: flex; flex-direction: column; max-height: min(500px, calc(100vh - 102px)); border-radius: 20px; box-sizing: border-box;
   background: rgba(255, 255, 255, 0.78); -webkit-backdrop-filter: blur(18px) saturate(170%); backdrop-filter: blur(18px) saturate(170%);
   border: 1px solid rgba(255, 255, 255, 0.95); box-shadow: 0 8px 32px rgba(45, 18, 72, 0.08);
 }
@@ -145,7 +145,7 @@
 @media (min-width: 1024px) { .tkn-ls-bottom { display: none; } }
 
 /* Ad rows */
-.tkn-ls-main { min-width: 0; max-width: 880px; }
+.tkn-ls-main { min-width: 0; max-width: 904px; }
 .tkn-ls-main .tk-feed { display: flex; flex-direction: column; gap: 16px; max-width: 880px; }
 .tkn-ls .tkn-ls-card {
   position: relative; display: flex; background: rgba(255, 255, 255, 0.88); border: 1px solid var(--line); border-radius: 16px;
@@ -385,4 +385,7 @@
 @media (max-width: 1023px) {
   .tkn-sr-bar .tkn-ls-filter-btn { display: inline-flex; align-items: center; }
   .tkn-sr-chipswrap { margin-top: 8px; }
+}
+@media (max-width: 599px) {
+  .tkn-sr-count { white-space: nowrap; font-size: 13px; }
 }
