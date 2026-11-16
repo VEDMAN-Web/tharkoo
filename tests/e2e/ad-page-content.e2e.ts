@@ -12,7 +12,7 @@ const SIZES = [
   [390, 844],
   [360, 740],
 ] as const;
-const CARD_MAX = 380;
+const CARD_MAX = 460;
 const GAP_MAX = 56;
 
 async function adAt(page: Page, feed: string, position = 0) {
@@ -44,15 +44,17 @@ test.describe("H7.99b ad page content", () => {
   test("one content card: no views or clicks, pills, plain three-column details, wide container", async ({ page }, testInfo) => {
     const href = await adAt(page, "/property/bengaluru/");
     await page.goto(href);
-    const card = page.locator('[data-tk="ad-summary"]');
-    await expect(card).toBeVisible();
+    const head = page.locator('[data-tk="ad-summary"]');
+    const card = page.locator('[data-tk="ad-content"]');
+    await expect(head).toBeVisible();
     await expect(page.locator("h1")).toHaveCount(1);
-    await expect(card.locator("h1")).toHaveCSS("font-weight", "700");
-    await expect(card).not.toContainText(/\b\d+\s+views?\b/i);
-    await expect(card).not.toContainText(/clicks/i);
-    await expect(card.locator(".tkn-ad-meta")).toContainText("Posted");
+    await expect(head.locator("h1")).toHaveCSS("font-weight", "700");
+    await expect(head).not.toContainText(/\b\d+\s+views?\b/i);
+    await expect(head).not.toContainText(/clicks/i);
+    await expect(head.locator(".tkn-ad-meta")).toContainText("Posted");
     await expect(card.getByRole("heading", { name: "About this ad", level: 2 })).toBeVisible();
-    await expect(card.locator(".tkn-ad-pills li").first()).toBeVisible();
+    expect(await card.locator("h2").first().innerText()).toBe("About this ad");
+    await expect(head.locator(".tkn-ad-pills li").first()).toBeVisible();
     const items = card.locator(".tkn-det-item");
     if ((await items.count()) > 0) {
       await expect(items.first().locator("dd")).toHaveCSS("font-weight", "600");
@@ -90,6 +92,12 @@ test.describe("H7.99b ad page content", () => {
         await page.goto(href);
         const card = page.locator('[data-tk="contact-card"]');
         await expect(card).toBeVisible();
+        await expect(card.locator("h1")).toHaveCount(1);
+        await expect(card.locator("h1")).toHaveCSS("font-size", "26px");
+        const title = (await card.locator("h1").boundingBox())!;
+        expect(title.y + title.height, `${width}x${height} title on the first screen`).toBeLessThanOrEqual(height);
+        await expect(card.locator(".tkn-ad-pills")).toBeVisible();
+        await expect(page.locator('[data-tk="ad-content"] h1')).toHaveCount(0);
         await expect(page.locator('[data-tk="contact-card"] [data-tk="tour"]')).toBeVisible();
         const sticky = page.locator(".tkn-ad-sticky");
         await expect(sticky).toHaveCSS("position", "sticky");
@@ -118,6 +126,8 @@ test.describe("H7.99b ad page content", () => {
     const request = await card.locator(".tkn-ad-price").evaluate((node) => node.classList.contains("is-request"));
     await expect(card.locator(".tkn-ad-price")).toHaveCSS("font-size", request ? "20px" : "26px");
     await expect(card.locator(".tkn-seller-avatar")).toHaveCSS("width", "44px");
+    const order = await card.evaluate((node) => [".tkn-ad-titleblock", ".tkn-ad-price", ".tkn-seller-row", "[data-tk=call]"].map((sel) => node.querySelector(sel)!.getBoundingClientRect().top));
+    expect([...order].sort((a, b) => a - b)).toEqual(order);
     await expect(card.locator(".tkn-seller-since")).toContainText("Member since");
     const call = (await card.locator("[data-tk=call]").boundingBox())!;
     const chat = (await card.locator("[data-tk=chat]").boundingBox())!;
@@ -233,7 +243,7 @@ test.describe("H7.99b ad page content", () => {
     expect(featured).toBeGreaterThan(0);
   });
 
-  test("on a phone the breadcrumb is one line with the last two crumbs", async ({ page }, testInfo) => {
+  test("on a phone the breadcrumb is one line with the category and the city", async ({ page }, testInfo) => {
     test.skip(testInfo.project.name !== "phone-390", "the phone layout");
     for (const width of [390, 360]) {
       await page.setViewportSize({ width, height: 740 });
@@ -243,12 +253,34 @@ test.describe("H7.99b ad page content", () => {
       await expect(nav).toHaveCSS("row-gap", "4px");
       const shown = await nav.locator(":scope > span").evaluateAll((els) => els.filter((el) => getComputedStyle(el).display !== "none").length);
       expect(shown).toBe(2);
+      expect((await nav.innerText()).split(/ +/).join(" ").trim()).toBe("Dating / Bengaluru Dating");
       const box = (await nav.boundingBox())!;
       expect(box.height).toBeLessThanOrEqual(32);
       await expect(nav.locator("a:visible").first()).toBeVisible();
       expect((await nav.innerText()).trim().startsWith("/")).toBe(false);
       await shot(page, `crumbs-${width}`);
     }
+  });
+
+  test("a single-photo ad has no counter and no arrows", async ({ page }) => {
+    await page.goto("/ad/demo-7920/");
+    await expect(page.locator(".tkn-gal")).toBeVisible();
+    await expect(page.locator('[data-tk="gallery-counter"]')).toHaveCount(0);
+    await expect(page.locator('[data-tk="gallery-prev"]')).toHaveCount(0);
+    await expect(page.locator('[data-tk="gallery-next"]')).toHaveCount(0);
+  });
+
+  test("on the first screen of a laptop window the title, the buttons and the picture are all visible", async ({ page }, testInfo) => {
+    test.skip(testInfo.project.name !== "desktop-1440", "the laptop window");
+    await page.setViewportSize({ width: 1536, height: 674 });
+    await page.goto("/ad/demo-7920/");
+    const h1 = (await page.locator("h1").boundingBox())!;
+    const call = (await page.locator('[data-tk="contact-card"] [data-tk="call"]').boundingBox())!;
+    expect(h1.y + h1.height).toBeLessThanOrEqual(674);
+    expect(call.y + call.height).toBeLessThanOrEqual(674);
+    expect(h1.y).toBeLessThan(call.y);
+    const gallery = (await page.locator(".tkn-gal").boundingBox())!;
+    expect(gallery.y + gallery.height).toBeLessThanOrEqual(674);
   });
 
   test("the page passes axe in the content, right card, similar ads and bar", async ({ page }) => {

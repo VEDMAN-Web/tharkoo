@@ -1,0 +1,11 @@
+{
+  "branchPrefix": "haiku/h7.99c",
+  "globs": [
+    "docs/ownership/H7.99c.json",
+    "src/components/new/NewAdDetail.tsx",
+    "src/components/new/NewGallery.tsx",
+    "src/components/new/ad-spec.css",
+    "src/components/new/gallery.css",
+    "tests/**"
+  ]
+}
