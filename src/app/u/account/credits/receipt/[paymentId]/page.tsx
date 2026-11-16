@@ -22,7 +22,7 @@ export default async function ReceiptPage({ params }: { params: Promise<{ paymen
   const t = makeT();
   const rows: [string, string][] = [
     [t("receipt.no"), payment.receiptNo],
-    [t("history.when"), payment.createdAt ? new Date(payment.createdAt).toLocaleString("en-IN") : ""],
+    [t("history.when"), payment.createdAt ? new Date(payment.createdAt).toLocaleString("en-IN", { timeZone: "Asia/Kolkata", day: "numeric", month: "short", year: "numeric", hour: "numeric", minute: "2-digit" }) : ""],
     [t("history.method"), methodLabel(payment)],
     [t("history.amount"), `₹${payment.amount.toLocaleString("en-IN")}`],
     [t("history.credits"), payment.credits.toLocaleString("en-IN")],

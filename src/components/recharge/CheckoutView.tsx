@@ -132,7 +132,7 @@ export function CheckoutView({ payment: first }: { payment: Payment }) {
         <dl className="tkc-sum">
           <div>
             <dt>{t("checkout.amount")}</dt>
-            <dd data-tk="checkout-amount">Rs {money(payment.amount)}</dd>
+            <dd data-tk="checkout-amount">₹{money(payment.amount)}</dd>
           </div>
           <div>
             <dt>{t("recharge.credits")}</dt>

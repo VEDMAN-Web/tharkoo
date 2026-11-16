@@ -96,7 +96,7 @@
 .tkn .tkp-post .tkp-summary { margin: 0; border: 1px solid #ead8f0; border-radius: 12px; overflow: hidden; }
 .tkn .tkp-post .tkp-summary > div { display: flex; justify-content: space-between; align-items: center; gap: 12px; min-height: 52px; padding: 4px 8px 4px 14px; border-bottom: 1px solid #f3e8f7; }
 .tkn .tkp-post .tkp-summary > div:last-child { border-bottom: 0; }
-.tkn .tkp-post .tkp-summary dt { font-size: 13px; color: #6b4a8a; }
+.tkn .tkp-post .tkp-summary dt { font-size: 13px; color: #6b4a8a; flex: none; white-space: nowrap; }
 .tkn .tkp-post .tkp-summary dd { margin: 0; display: flex; align-items: center; justify-content: flex-end; gap: 6px; min-width: 0; font-size: 13px; font-weight: 600; text-align: right; }
 .tkn .tkp-post .tkp-summary-value { min-width: 0; overflow-wrap: anywhere; }
 .tkn .tkp-post .tkp-edit { flex: none; min-width: 44px; min-height: 44px; padding: 0 10px; border: 0; border-radius: 12px; background: transparent; color: #a8124f; font: inherit; font-size: 13px; font-weight: 700; text-decoration: underline; cursor: pointer; }

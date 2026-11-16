@@ -1,0 +1,26 @@
+{
+  "branchPrefix": "haiku/h7.120",
+  "globs": [
+    "docs/ownership/H7.120.json",
+    "src/app/admin/settings/money/MoneySettingsForm.tsx",
+    "src/components/account/AccountContext.tsx",
+    "src/components/PostWizard.tsx",
+    "src/components/recharge/RechargeHost.tsx",
+    "src/components/recharge/RechargeSheet.tsx",
+    "src/components/recharge/CheckoutView.tsx",
+    "src/components/recharge/openRecharge.ts",
+    "src/app/u/account/credits/receipt/**",
+    "src/components/buyer/CreditsHistory.tsx",
+    "src/components/wallet/format.ts",
+    "src/components/post/post-wizard.css",
+    "src/components/post/newCopy.ts",
+    "src/components/post/credits.ts",
+    "src/lib/ui/text.ts",
+    "tests/e2e/h7-120-small.e2e.ts",
+    "tests/e2e/h7-102-money.e2e.ts",
+    "tests/e2e/h7-103-recharge.e2e.ts",
+    "tests/e2e/h7-112-recharge-flow.e2e.ts",
+    "tests/e2e/money.e2e.ts",
+    "tests/server/ui/post-step-5.test.ts"
+  ]
+}

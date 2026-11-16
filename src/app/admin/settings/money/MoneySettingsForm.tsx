@@ -60,7 +60,7 @@ export function MoneySettingsForm({ initial }: { initial: MoneySettings }) {
       <Toggle
         checked={saved.paidPostingOn}
         onChange={(on) => void save({ paidPostingOn: on }, on ? "Saved. Posting now costs the fee above." : "Saved. Posting is free again.")}
-        label="Paid posting: On"
+        label={saved.paidPostingOn ? "Paid posting: On" : "Paid posting: Off"}
         disabled={busy}
       />
       <h3 className="t-h4" style={{ marginTop: 16 }}>Mock payments</h3>
@@ -68,7 +68,7 @@ export function MoneySettingsForm({ initial }: { initial: MoneySettings }) {
       <Toggle
         checked={saved.mockPaymentsOn}
         onChange={(on) => void save({ mockPaymentsOn: on }, on ? "Saved. Test payments are on." : "Saved. Test payments are off.")}
-        label="Mock payments: On"
+        label={saved.mockPaymentsOn ? "Mock payments: On" : "Mock payments: Off"}
         disabled={busy}
       />
       {notice ? (

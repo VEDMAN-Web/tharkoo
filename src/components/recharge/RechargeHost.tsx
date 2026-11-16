@@ -35,7 +35,10 @@ export function RechargeHost() {
     window.history.replaceState(null, "", `${path}${query ? `?${query}` : ""}`);
     const id = window.setTimeout(() => {
       setResult({ kind: status, credits });
-      if (status === "paid") router.refresh();
+      if (status === "paid") {
+        router.refresh();
+        window.dispatchEvent(new CustomEvent("tk:credits-added", { detail: { added: 0 } }));
+      }
     }, 0);
     return () => window.clearTimeout(id);
   }, [status, credits, path, router]);

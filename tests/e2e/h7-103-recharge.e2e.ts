@@ -48,7 +48,7 @@ test.describe("H7.103 recharge sheet and mock checkout", () => {
     await signIn(page, baseURL!, "rechcard");
     const sheet = await openSheet(page);
     await expect(sheet.getByRole("heading", { name: "Recharge credits" })).toBeVisible();
-    await expect(sheet).toContainText("1 credit = Rs 10");
+    await expect(sheet).toContainText("1 credit = ₹10");
     const packs = sheet.locator('[data-tk="recharge-pack"]');
     const count = await packs.count();
     expect(count).toBeGreaterThan(1);
@@ -60,7 +60,7 @@ test.describe("H7.103 recharge sheet and mock checkout", () => {
     await expect(sheet.getByRole("img", { name: "Visa" })).toBeVisible();
     await expect(sheet.getByRole("img", { name: "Mastercard" })).toBeVisible();
     for (const mark of ["Bitcoin", "Ethereum", "USDT", "USDC"]) await expect(sheet.getByRole("img", { name: mark })).toBeVisible();
-    await expect(sheet.locator('[data-tk="recharge-pay"]')).toHaveText(/^Pay Rs [0-9,]+$/);
+    await expect(sheet.locator('[data-tk="recharge-pay"]')).toHaveText(/^Pay ₹[0-9,]+$/);
     await expect(sheet).toContainText("Secure payment");
     await expect(sheet.locator('[data-tk="recharge-support"]')).toBeVisible();
     if (testInfo.project.name === "desktop-1440") {
@@ -88,12 +88,12 @@ test.describe("H7.103 recharge sheet and mock checkout", () => {
     await expect(checkout.locator('[data-tk="test-ribbon"]')).toHaveText("Test payment");
     await expect(checkout.locator('[data-tk="checkout-amount"]')).toContainText(Number(price).toLocaleString("en-IN"));
     await expect(checkout.locator("input, textarea")).toHaveCount(0);
-    await expect(checkout.getByRole("button", { name: /^Pay Rs/ })).toBeVisible();
+    await expect(checkout.getByRole("button", { name: /^Pay ₹/ })).toBeVisible();
     await expect(checkout.getByRole("button", { name: "Cancel" })).toBeVisible();
     expect(await hasHorizontalScroll(page)).toBe(false);
     await shot(page, "card-checkout");
     expect(await balance(page)).toBe(0);
-    await checkout.getByRole("button", { name: /^Pay Rs/ }).click();
+    await checkout.getByRole("button", { name: /^Pay ₹/ }).click();
     await expect(checkout.locator('[data-tk="checkout-busy"]')).toContainText("Processing");
     await shot(page, "card-processing");
     await page.waitForURL(/\/u\/account\/credits\//, { timeout: 15_000 });
@@ -135,7 +135,7 @@ test.describe("H7.103 recharge sheet and mock checkout", () => {
     await page.locator('[data-tk="open-recharge"]').click();
     await expect(page.locator('[data-tk="recharge-pack"]').first()).toBeVisible();
     await page.locator('[data-tk="recharge-support"]').click();
-    await expect.poll(async () => page.locator("#tkn-chat-input").inputValue()).toMatch(/Pack: .* credits\. Amount: Rs .*Method: Card/);
+    await expect.poll(async () => page.locator("#tkn-chat-input").inputValue()).toMatch(/Pack: .* credits\. Amount: ₹.*Method: Card/);
   });
 
   test("crypto: choose a coin and a network, see the estimate, address, QR and timer, then I have paid adds the credits", async ({ page, baseURL }) => {
