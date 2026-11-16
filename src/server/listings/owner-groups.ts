@@ -5,6 +5,8 @@
 export const OWNER_GROUPS = ["live", "review", "ended"] as const;
 export type OwnerGroup = (typeof OWNER_GROUPS)[number];
 
+export const DELETED_STATUSES = ["removed", "deleted"] as const;
+
 const GROUP_STATUSES: Record<OwnerGroup, readonly string[]> = {
   live: ["active"],
   review: ["pending"],
@@ -17,7 +19,7 @@ export function ownerGroupStatuses(group: OwnerGroup): string[] {
 
 /** The Mongo filter for one owner's ads. A group wins over a single status. */
 export function ownerFilter(userId: string, query: { status?: string; group?: OwnerGroup }): Record<string, unknown> {
-  const filter: Record<string, unknown> = { ownerId: userId };
+  const filter: Record<string, unknown> = { ownerId: userId, status: { $nin: [...DELETED_STATUSES] } };
   if (query.group) filter.status = { $in: ownerGroupStatuses(query.group) };
   else if (query.status) filter.status = query.status;
   return filter;

@@ -2,7 +2,7 @@ import { Types } from "mongoose";
 import { connectDb } from "@/lib/db";
 import { shownCountsFor } from "@/server/analytics/counts";
 import { ownerView } from "@/server/listings/service";
-import { ownerFilter, type OwnerGroup } from "@/server/listings/owner-groups";
+import { DELETED_STATUSES, ownerFilter, type OwnerGroup } from "@/server/listings/owner-groups";
 import { Listing } from "@/server/models/listing";
 import { presentRows } from "@/server/search/query";
 
@@ -26,7 +26,7 @@ export interface OwnTotals {
 export async function listOwnCards(userId: string, query: { status?: string; group?: OwnerGroup; page: number; pageSize: number }) {
   await connectDb();
   const filter = ownerFilter(userId, query);
-  const base = { ownerId: new Types.ObjectId(userId) };
+  const base = { ownerId: new Types.ObjectId(userId), status: { $nin: [...DELETED_STATUSES] } };
   const [rows, total, owned] = await Promise.all([
     Listing.find(filter)
       .select("+contact")

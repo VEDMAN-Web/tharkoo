@@ -28,8 +28,11 @@ test.describe("H7.61 header after a pop-up sign-in", () => {
     );
     await page.goto("/");
     await expect(page.locator('[data-tk="header-avatar"]')).toHaveCount(0);
-    await page.evaluate(() => window.dispatchEvent(new CustomEvent("tk:open-sign-in", { detail: { next: null } })));
     const sheet = page.locator(".tk-si");
+    await expect(async () => {
+      await page.evaluate(() => window.dispatchEvent(new CustomEvent("tk:open-sign-in", { detail: { next: null } })));
+      await expect(sheet).toBeVisible({ timeout: 1500 });
+    }).toPass({ timeout: 20_000 });
     await sheet.getByLabel("Email", { exact: true }).fill(email);
     await sheet.getByRole("button", { name: "Send me a code" }).click();
     await expect(sheet.getByRole("group", { name: "6-digit code" })).toBeVisible();

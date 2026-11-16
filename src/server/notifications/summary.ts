@@ -6,6 +6,7 @@ import { unreadForOwner } from "@/server/support/tickets";
 import { connectDb } from "@/lib/db";
 import { Listing } from "@/server/models/listing";
 import { accountName } from "@/lib/account-name";
+import { DELETED_STATUSES } from "@/server/listings/owner-groups";
 
 /**
  * H7.6: what the user panel shell shows: coins, unread counts and the first name for the greeting.
@@ -35,7 +36,7 @@ export async function loadPanelSummary(token: string | undefined): Promise<Panel
     walletBalance(userId),
     unreadCount(userId),
     unreadForOwner(userId),
-    Listing.countDocuments({ ownerId: userId }),
+    Listing.countDocuments({ ownerId: userId, status: { $nin: [...DELETED_STATUSES] } }),
   ]);
   const email = session.user.email ?? "";
   return {

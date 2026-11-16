@@ -81,7 +81,9 @@
 .tkn .tkn-ad-share a, .tkn .tkn-report { min-height: 44px; display: inline-flex; align-items: center; gap: 6px; color: #a8124f; font-weight: 600; }
 .tkn .tkn-ad-more { margin: 0; font-size: 14px; }
 .tkn .tkn-ad-actions { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px 12px; }
-.tkn .tkn-ad-save { border: 1.5px solid #ead8f0; box-shadow: none; padding: 0 14px; }
+.tkn .tkn-ad-save { display: inline-flex; align-items: center; gap: 8px; min-height: 44px; padding: 0 16px; border-radius: 999px; border: 1.5px solid #ead8f0; background: #fff; color: #a8124f; font: inherit; font-size: 14px; font-weight: 600; cursor: pointer; }
+.tkn .tkn-ad-save .t-small { font-size: 14px; }
+.tkn .tkn-ad-save:focus-visible { outline: 3px solid #7c3aed; outline-offset: 2px; }
 .tkn .tkn-ad-more a { color: #a8124f; min-height: 44px; display: inline-flex; align-items: center; }
 
 .tkn .tkn-contact-panel {

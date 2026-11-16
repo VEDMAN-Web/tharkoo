@@ -2342,6 +2342,7 @@ body:has([data-tk="bottom-bar"]) .tkn-float { bottom: 104px; }
 @keyframes tkn-skel-shimmer { from { background-position: 200% 0; } to { background-position: -200% 0; } }
 @media (prefers-reduced-motion: reduce) { .tkn-skel { animation: none; } }
 @media (max-width: 767px) { .tkn-float-pagebars .tkn-chat-bubble { display: none; } .tkn-float-panel .tkn-top { display: none; } }
+@media (max-width: 599px) { .tkn-float-pagebars .tkn-top { display: none; } }
 .tkn-chatp { position: fixed; z-index: 60; right: 24px; bottom: 24px; width: min(400px, calc(100vw - 32px)); height: min(600px, calc(100vh - 48px)); box-sizing: border-box; display: flex; flex-direction: column; overflow: hidden; border-radius: 22px; background: rgba(255, 255, 255, 0.94); -webkit-backdrop-filter: blur(22px) saturate(180%); backdrop-filter: blur(22px) saturate(180%); border: 1px solid #ead8f0; box-shadow: 0 24px 60px rgba(45, 18, 72, 0.28); }
 .tkn-chatp-head { display: flex; align-items: center; gap: 12px; padding: 14px; background: linear-gradient(135deg, #d1137a, #a8124f); color: #fff; }
 .tkn-chatp-head .tkn-icon-btn { background: rgba(255, 255, 255, 0.2); border-color: transparent; color: #fff; flex: none; }

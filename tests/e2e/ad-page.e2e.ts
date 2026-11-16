@@ -1,4 +1,4 @@
-import { expect, loginUi, newUserApi, test } from "./helpers";
+import { expect, loginUi, newUserApi, originHeaders, test } from "./helpers";
 import type { Page } from "@playwright/test";
 
 const SLOW_MS = 2500;
@@ -11,6 +11,46 @@ async function adPathIn(page: Page, feed: string) {
 }
 
 test.describe("H7.66 ad page", () => {
+  test("an ad card shows Age verified once, not doubled", async ({ page, baseURL }) => {
+    const { api, email } = await newUserApi(baseURL!, "agebadge");
+    const categories = (await (await api.get("/api/categories")).json()).data.categories as { _id: string }[];
+    const cities = (await (await api.get("/api/locations?type=city")).json()).data.locations as { id: string; name: string }[];
+    const city = cities.find((item) => item.name === "Mumbai") ?? cities[0];
+    for (const category of categories) {
+      const res = await api.post("/api/listings", {
+        headers: originHeaders(baseURL!, "/u/post-insert/"),
+        data: { categoryId: category._id, cityId: city.id, title: `Badge desk ${Date.now()}`, description: "A wooden desk in good condition for the whole family." },
+      });
+      if (res.status() === 201) break;
+    }
+    await loginUi(page, email, undefined, "/");
+    const profile = await page.request.put("/api/auth/seller-profile", {
+      headers: originHeaders(baseURL!, "/u/seller-profile/"),
+      data: { name: "E2E Seller", city: "Mumbai", whatsapp: "", availableNow: false },
+    });
+    expect(profile.status(), await profile.text()).toBe(200);
+    await page.goto("/u/account/ads/");
+    const chips = page.locator(".tk-chk");
+    await expect(chips.first()).toBeVisible();
+    const texts = await chips.allInnerTexts();
+    expect(texts.some((text) => text.trim() === "Age verified")).toBe(true);
+    expect(texts.every((text) => !/Age\s+Age/.test(text))).toBe(true);
+    await api.dispose();
+  });
+
+  test("the Area filter says Pick a city first and is grey until a city is chosen", async ({ page }) => {
+    await page.goto("/dating/");
+    const area = page.locator(".tkn-ls-select select:disabled").first();
+    await expect(area).toBeAttached();
+    await expect(area.locator("option")).toHaveText(["Pick a city first"]);
+    const look = await area.evaluate((node) => {
+      const css = getComputedStyle(node);
+      return { background: css.backgroundColor, border: css.borderTopColor };
+    });
+    expect(look.background).toBe("rgb(243, 243, 245)");
+    expect(look.border).toBe("rgb(217, 217, 224)");
+  });
+
   test("the main ad has a Report this ad link and a Save heart", async ({ page }) => {
     await page.goto("/ad/demo-1410/");
     const actions = page.locator('[data-tk="ad-actions"]');
@@ -18,10 +58,10 @@ test.describe("H7.66 ad page", () => {
     const report = actions.getByRole("link", { name: "Report this ad" });
     await expect(report).toHaveAttribute("href", /^\/submit-report\/\?ad=.+/);
     expect((await report.boundingBox())!.height).toBeGreaterThanOrEqual(44);
-    const save = actions.getByRole("button", { name: "Save ad" });
+    const save = actions.getByRole("button", { name: "Save this ad" });
     await expect(save).toHaveAttribute("aria-pressed", "false");
     await save.click();
-    await expect(actions.getByRole("button", { name: "Remove saved ad" })).toHaveAttribute("aria-pressed", "true");
+    await expect(actions.getByRole("button", { name: "Saved" })).toHaveAttribute("aria-pressed", "true");
     await report.click();
     await page.waitForURL(/\/submit-report\/\?ad=/);
   });

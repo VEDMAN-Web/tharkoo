@@ -69,6 +69,7 @@ export const TEXT_DEFAULTS = {
   "listing.panel.allStates": "All states",
   "listing.panel.allCities": "All cities",
   "listing.panel.allAreas": "All areas",
+  "listing.panel.pickCity": "Pick a city first",
   "listing.panel.clear": "Clear all",
   "listing.panel.apply": "Search",
   "listing.panel.noFilters": "No filters for this category yet.",
