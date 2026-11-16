@@ -14,14 +14,14 @@
 
 .tkn .tkn-ad-card { padding: 24px; border-radius: 16px; }
 .tkn .tkn-ad-titlerow { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; }
-.tkn .tkn-ad-titleblock { padding-bottom: 12px; border-bottom: 1px solid #efe4f4; }
-.tkn .tkn-ad-titleblock h1 { margin: 0; font-size: 26px; line-height: 32px; font-weight: 700; letter-spacing: -0.02em; color: #110520; overflow-wrap: anywhere; }
-.tkn .tkn-ad-meta { margin: 4px 0 0; font-size: 14px; color: #5b3d7a; }
+.tkn .tkn-ad-titleblock { padding-bottom: 0; }
+.tkn .tkn-ad-titleblock h1 { margin: 0; font-size: 26px; line-height: 30px; font-weight: 700; letter-spacing: -0.02em; color: #110520; overflow-wrap: anywhere; }
+.tkn .tkn-ad-meta { margin: 2px 0 0; font-size: 14px; color: #5b3d7a; }
 .tkn .tkn-ad-phoneprice { display: none; margin: 8px 0 0; font-size: 22px; font-weight: 800; color: #c2185b; }
 .tkn .tkn-ad-phoneprice.is-request { font-size: 16px; font-weight: 600; color: #5b3d7a; }
-.tkn .tkn-ad-pills { list-style: none; margin: 10px 0 0; padding: 0; display: flex; flex-wrap: wrap; gap: 8px; }
+.tkn .tkn-ad-pills { list-style: none; margin: 8px 0 0; padding: 0; display: flex; flex-wrap: wrap; gap: 8px; }
 .tkn .tkn-ad-pills li {
-  display: inline-flex; align-items: center; gap: 6px; min-height: 28px; padding: 0 12px; border-radius: 999px;
+  display: inline-flex; align-items: center; gap: 6px; min-height: 24px; padding: 0 12px; border-radius: 999px;
   background: #f5f0ff; font-size: 13px; font-weight: 600; color: #3b1f5e;
 }
 .tkn .tkn-ad-pills li.is-featured { background: #fde7f3; color: #a8124f; }
@@ -44,7 +44,7 @@
 .tkn .tkn-ad-actions.is-icons { display: none; flex: none; gap: 4px; }
 .tkn .tkn-ad-actions.is-icons .tkn-ad-save, .tkn .tkn-ad-actions.is-icons .tkn-report { width: 44px; min-width: 44px; height: 44px; padding: 0; justify-content: center; border: 1px solid #ead8f0; background: #fff; }
 
-.tkn .tkn-contact-panel { display: flex; flex-direction: column; gap: 12px; padding: 16px 20px; border-radius: 16px; box-shadow: 0 12px 36px rgba(45, 18, 72, 0.1); }
+.tkn .tkn-contact-panel { display: flex; flex-direction: column; gap: 10px; padding: 12px 20px; border-radius: 16px; box-shadow: 0 12px 36px rgba(45, 18, 72, 0.1); }
 .tkn .tkn-ad-price { margin: 0; font-size: 26px; font-weight: 700; line-height: 32px; color: #c2185b; }
 .tkn .tkn-ad-price.is-request { font-size: 20px; line-height: 28px; font-weight: 600; color: #5b3d7a; }
 .tkn .tkn-seller-row { display: flex; align-items: center; gap: 12px; }
@@ -53,12 +53,12 @@
   background: #f5f0ff; font-size: 18px; font-weight: 700; color: #6d28d9;
 }
 .tkn .tkn-seller-text { display: flex; flex-direction: column; min-width: 0; gap: 1px; }
-.tkn .tkn-seller-text strong { font-size: 16px; line-height: 22px; font-weight: 600; color: #110520; overflow-wrap: anywhere; }
-.tkn .tkn-seller-line { display: flex; flex-wrap: wrap; align-items: center; gap: 2px 10px; font-size: 13px; line-height: 18px; }
+.tkn .tkn-seller-text strong { font-size: 16px; line-height: 20px; font-weight: 600; color: #110520; overflow-wrap: anywhere; }
+.tkn .tkn-seller-line { display: flex; flex-wrap: wrap; align-items: center; gap: 0 10px; font-size: 13px; line-height: 16px; }
 .tkn .tkn-seller-verified { display: inline-flex; align-items: center; gap: 4px; font-weight: 600; color: #065f46; }
 .tkn .tkn-seller-status { display: inline-flex; align-items: center; gap: 6px; font-weight: 600; color: #4b5563; }
 .tkn .tkn-seller-status[data-status="online"] { color: #047857; }
-.tkn .tkn-seller-since { font-size: 13px; line-height: 18px; color: #5b3d7a; }
+.tkn .tkn-seller-since { font-size: 13px; line-height: 16px; color: #5b3d7a; }
 .tkn .tkn-dot { width: 8px; height: 8px; border-radius: 50%; flex: none; background: #9ca3af; display: inline-block; }
 .tkn .tkn-dot[data-status="online"] { background: #10b981; }
 .tkn .tkn-contact-panel .tk-actions { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
@@ -68,7 +68,7 @@
 }
 .tkn .tkn-contact-panel .tk-btn { min-height: 48px; height: 48px; }
 .tkn .tkn-contact-panel .tk-btn[data-tk="chat"], .tkn .tkn-contact-panel .tk-btn[data-tk="tour"] { grid-column: 1 / -1; }
-.tkn .tkn-contact-panel .tk-btn[data-tk="chat"] { min-height: 44px; height: 44px; }
+.tkn .tkn-contact-panel .tk-btn[data-tk="chat"], .tkn .tkn-contact-panel .tk-btn[data-tk="tour"] { min-height: 44px; height: 44px; }
 .tkn .tkn-contact-panel .tk-btn:hover:not(:disabled), .tkn .tkn-ad-bar .tk-btn:hover:not(:disabled) { transform: translateY(-1px); box-shadow: 0 8px 20px rgba(45, 18, 72, 0.14); }
 .tkn .tkn-ad .tk-btn { text-transform: none; }
 .tkn .tk-btn[data-tk="call"] { background: linear-gradient(135deg, #d1137a, #a8124f); color: #fff; border: 0; }

@@ -6,6 +6,7 @@
     "src/components/new/NewGallery.tsx",
     "src/components/new/ad-spec.css",
     "src/components/new/gallery.css",
+    "src/server/availability/people.ts",
     "tests/**"
   ]
 }

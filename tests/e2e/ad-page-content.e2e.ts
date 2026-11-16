@@ -77,7 +77,7 @@ test.describe("H7.99b ad page content", () => {
     expect(await hasHorizontalScroll(page)).toBe(false);
   });
 
-  test("the right card is sticky, at most 380 px high, and fits below the header at every laptop size", async ({ page }, testInfo) => {
+  test("the right card is sticky, at most 460 px high, and fits below the header at every laptop size", async ({ page }, testInfo) => {
     test.skip(testInfo.project.name !== "desktop-1440", "the card is a wide-screen part");
     await setTour(true);
     try {
@@ -253,7 +253,8 @@ test.describe("H7.99b ad page content", () => {
       await expect(nav).toHaveCSS("row-gap", "4px");
       const shown = await nav.locator(":scope > span").evaluateAll((els) => els.filter((el) => getComputedStyle(el).display !== "none").length);
       expect(shown).toBe(2);
-      expect((await nav.innerText()).split(/ +/).join(" ").trim()).toBe("Dating / Bengaluru Dating");
+      const crumbText = (await nav.innerText()).split(String.fromCharCode(10)).join(" ").split(/ +/).join(" ").trim();
+      expect(crumbText).toBe("Dating / Bengaluru Dating");
       const box = (await nav.boundingBox())!;
       expect(box.height).toBeLessThanOrEqual(32);
       await expect(nav.locator("a:visible").first()).toBeVisible();
@@ -300,13 +301,28 @@ test.describe("H7.99b ad page content", () => {
       await expect(page.locator(".tkn-ad-price")).toHaveCount(0);
       await expect(page.locator(".tkn-ad-phoneprice")).toHaveCount(0);
       await expect(page.getByText("Price on request")).toHaveCount(0);
-      await expect(page.locator(".tkn-contact-panel > :first-child")).toHaveAttribute("data-tk", "seller-row");
+      await expect(page.locator(".tkn-contact-panel > .tkn-ad-titleblock + *")).toHaveAttribute("data-tk", "seller-row");
       await expect(page.locator('[data-tk="security-tips"]')).toContainText("Meet in a public place");
       await expect(page.locator('[data-tk="ad-summary"]')).not.toContainText(/clicks/i);
       expect(await hasHorizontalScroll(page)).toBe(false);
       checked += 1;
     }
     expect(checked).toBeGreaterThan(0);
+  });
+
+  test("a dating ad shows no price even when the stored category has no kind", async ({ page }, testInfo) => {
+    test.skip(testInfo.project.name !== "desktop-1440", "one run is enough");
+    const href = await adAt(page, "/dating/bengaluru/", 11);
+    await withLocalDb((db) => db.collection("categories").updateOne({ slug: "dating" }, { $unset: { kind: "" } }));
+    try {
+      await page.goto(href);
+      await expect(page.locator(".tkn-contact-panel")).toBeAttached();
+      await expect(page.locator(".tkn-ad-price")).toHaveCount(0);
+      await expect(page.locator(".tkn-ad-phoneprice")).toHaveCount(0);
+      await expect(page.getByText("Price on request")).toHaveCount(0);
+    } finally {
+      await withLocalDb((db) => db.collection("categories").updateOne({ slug: "dating" }, { $set: { kind: "people" } }));
+    }
   });
 
   test("an item without a price says Price on request at 20 px muted", async ({ page }, testInfo) => {
