@@ -25,7 +25,7 @@
 .tkn .tkn-gal-main { position: absolute; inset: 0; overflow: hidden; }
 .tkn .tkn-gal-blur {
   position: absolute; inset: -24px; width: calc(100% + 48px); height: calc(100% + 48px); object-fit: cover;
-  filter: blur(24px); opacity: 0.85;
+  filter: blur(24px); opacity: 1;
 }
 .tkn .tkn-gal-img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; }
 .tkn .tkn-gal-badges { position: absolute; left: 16px; top: 16px; z-index: 2; display: flex; flex-wrap: wrap; gap: 6px; }

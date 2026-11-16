@@ -21,7 +21,7 @@ export function NewGallery({ photos, title, badge, isNew = false }: { photos: st
     <div className="tkn-gallery">
       <figure className="tkn-gal">
         <div className="tkn-gal-main">
-          <img className="tkn-gal-blur" src={current} alt="" aria-hidden="true" loading="lazy" />
+          <img className="tkn-gal-blur" src={current} alt="" aria-hidden="true" />
           <img className="tkn-gal-img" src={current} alt={`${title}, ${t("ad.gallery.photo", { index: index + 1, count })}`} />
         </div>
         <span className="tkn-gal-badges">
