@@ -1,4 +1,4 @@
-import { cached, invalidateTags } from "@/lib/cache";
+import { cached, invalidateTags, purgeNext } from "@/lib/cache";
 import { connectDb } from "@/lib/db";
 import { isAdminRole } from "@/lib/ui/site-content";
 import { isTextKey, makeT, TEXT_DEFAULTS, TEXT_MAX, type UiTextKey, type UiTextMap } from "@/lib/ui/text";
@@ -36,13 +36,7 @@ export async function uiTexts() {
 
 async function refresh() {
   invalidateTags([TEXT_TAG]);
-  try {
-    const { revalidatePath, revalidateTag } = await import("next/cache");
-    revalidateTag(TEXT_TAG, { expire: 0 });
-    revalidatePath("/", "layout");
-  } catch {
-    /* scripts and unit tests have no Next request store */
-  }
+  await purgeNext({ tags: [TEXT_TAG], paths: [["/", "layout"]], caller: "site text" });
 }
 
 function requireAdmin(roles: string[]) {

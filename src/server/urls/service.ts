@@ -1,5 +1,5 @@
 import { connectDb } from "@/lib/db";
-import { refreshPublicCache } from "@/lib/cache";
+import { purgeNext, refreshPublicCache } from "@/lib/cache";
 import { TAG_PAGES } from "@/data/catalog";
 import {
   cleanPath,
@@ -37,13 +37,7 @@ export function invalidateUrlCache() {
 async function refreshPublic() {
   invalidateUrlCache();
   await refreshPublicCache();
-  try {
-    const { revalidatePath } = await import("next/cache");
-    revalidatePath("/sitemap.xml");
-    for (const shard of ["categories", "cities", "districts", "tags", "ads", "content"]) revalidatePath(`/sitemap/${shard}`);
-  } catch {
-    /* tests and scripts have no Next request store */
-  }
+  await purgeNext({ paths: ["/sitemap.xml", ...["categories", "cities", "districts", "tags", "ads", "content"].map((shard) => `/sitemap/${shard}`)], caller: "url settings" });
 }
 
 export async function getUrlTable() {
