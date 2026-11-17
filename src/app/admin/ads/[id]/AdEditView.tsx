@@ -123,8 +123,12 @@ function Screen({ ad, history }: { ad: StaffAd; history: AdHistory }) {
     setErrors(next);
     if (Object.keys(next).length) return;
     setBusy(true);
-    const answer = await saveAdEditAction({ id: ad.id, values });
+    const answer = await saveAdEditAction({ id: ad.id, values }).catch(() => null);
     setBusy(false);
+    if (!answer) {
+      toast.show({ kind: "error", message: "Could not save. Nothing you did was lost. Try again." });
+      return;
+    }
     if (!answer.ok) {
       setErrors(Object.fromEntries(Object.entries(answer.fields ?? {}).map(([key, list]) => [key, list[0] ?? ""])));
       toast.show({ kind: "error", message: answer.message });

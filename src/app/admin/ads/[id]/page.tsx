@@ -40,19 +40,14 @@ export default async function AdEditPage({ params }: { params: Promise<{ id: str
     <AdminShell title={ad.values.title || "Ad"} hasHeader>
       <AdEditView ad={ad} history={history} />
       {isAdminRole(identity.roles) && ad.counts ? (
-        <section className="adm-card" aria-labelledby="ad-counts-heading" style={{ marginTop: 16 }} data-tk="ad-counts">
-          <h2 id="ad-counts-heading" className="t-h4">Views and clicks</h2>
-          <p className="t-small text-muted">
-            Shown is the number visitors see. Real is what visitors have actually done.
-            {ad.slug ? (
-              <>
-                {" "}
-                <a href={`/ad/${ad.slug}/`} target="_blank" rel="noreferrer">Open the ad</a>
-              </>
-            ) : null}
-          </p>
+        <div style={{ marginTop: 16 }} data-tk="ad-counts">
+          {ad.slug ? (
+            <p className="t-small text-muted">
+              <a href={`/ad/${ad.slug}/`} target="_blank" rel="noreferrer">Open the ad</a>
+            </p>
+          ) : null}
           <CountsForm listingId={id} initial={ad.counts} />
-        </section>
+        </div>
       ) : null}
     </AdminShell>
   );

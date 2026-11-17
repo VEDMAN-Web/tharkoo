@@ -87,6 +87,7 @@ describe("a staff edit", () => {
     await bad({ title: "x".repeat(71) }, "title");
     await bad({ description: "" }, "description");
     await bad({ price: -5 }, "price");
+    await bad({ attributes: { furnished: "semi" } }, "bedrooms");
     await expect(saveStaffEdit(mod, adId, values({ description: "blockedword here" }))).rejects.toThrow();
     expect((await Listing.findById(adId).lean())?.title).toBe("2 BHK flat near Adajan");
     expect(await ListingVersion.countDocuments({ listingId: adId })).toBe(1);

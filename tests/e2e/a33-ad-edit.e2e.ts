@@ -18,6 +18,11 @@ async function shot(page: Page, name: string) {
 async function seed(tag: string) {
   return withLocalDb(async (db) => {
     const category = await db.collection("categories").findOne({});
+    const attributes: Record<string, unknown> = {};
+    for (const field of (category?.fields ?? []) as { key: string; type: string; required?: boolean; enabled?: boolean; options?: string[]; min?: number }[]) {
+      if (!field.required || field.enabled === false) continue;
+      attributes[field.key] = field.type === "number" || field.type === "range" ? Math.max(field.min ?? 0, 30) : field.options?.length ? field.options[0] : "x";
+    }
     const owner = new ObjectId();
     await db.collection("users").insertOne({ _id: owner, email: `${tag}@example.test`, displayName: `A33 Seller ${tag}`, status: "active", roles: ["user"], createdAt: new Date() });
     const id = new ObjectId();
@@ -30,7 +35,7 @@ async function seed(tag: string) {
       slug: `a33-${tag}`,
       description: "Spacious flat with lift and parking. Family or working people preferred.",
       price: 20000,
-      attributes: {},
+      attributes,
       feedHidden: true,
       createdAt: new Date(),
       updatedAt: new Date(),

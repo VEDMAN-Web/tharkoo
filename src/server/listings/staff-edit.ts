@@ -1,4 +1,5 @@
 import { Types } from "mongoose";
+import { ZodError } from "zod";
 import { connectDb } from "@/lib/db";
 import { can } from "@/lib/admin/perms";
 import { diffFields, type DiffRow } from "@/components/admin/ui/kit-helpers";
@@ -164,7 +165,18 @@ async function applyEdit(ctx: AdminCtx, id: string, next: { title: unknown; desc
   const title = cleanTitle(next.title);
   const description = cleanDescription(next.description);
   const price = parsePrice(next.price === "" ? null : next.price);
-  const attributes = parseListingAttributes(await withPickLimits(category.slug, fieldDefs(category)), next.attributes ?? {});
+  let attributes: Record<string, unknown>;
+  try {
+    attributes = parseListingAttributes(await withPickLimits(category.slug, fieldDefs(category)), next.attributes ?? {});
+  } catch (error) {
+    if (!(error instanceof ZodError)) throw error;
+    const fields: Record<string, string[]> = {};
+    for (const issue of error.issues) {
+      const key = String(issue.path[0] ?? "details");
+      if (!fields[key]) fields[key] = [/received undefined|required/i.test(issue.message) ? "Fill in this field." : issue.message];
+    }
+    throw new ValidationError("Check the highlighted fields", fields);
+  }
   await assertCleanText([title, description, ...Object.values(attributes).filter((value): value is string => typeof value === "string")]);
   const before = valuesOf(plain(listing.toObject() as unknown as Doc));
   const after: StaffAdValues = { title, description, price: price ?? "", attributes };
