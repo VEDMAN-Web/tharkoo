@@ -1,0 +1,15 @@
+{
+  "branchPrefix": "haiku/h7.147",
+  "globs": [
+    "docs/ownership/H7.147.json",
+    "progress/H7.147.md",
+    "src/app/admin/page-builder/_home/HomeSwitch.tsx",
+    "src/app/admin/page-builder/_home/HomeBuilder.tsx",
+    "src/app/admin/page-builder/_home/actions.ts",
+    "src/app/admin/page-builder/_home/builder.css",
+    "src/server/layout/home-builder.ts",
+    "tests/server/layout/h7-147-*.test.ts",
+    "tests/e2e/a16-builder.e2e.ts",
+    "tests/e2e/h7-147-home-switch.e2e.ts"
+  ]
+}
