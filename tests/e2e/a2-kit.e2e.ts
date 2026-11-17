@@ -216,7 +216,8 @@ test.describe("H8.2 admin kit core", () => {
 
   test("the bottom bar shows on a phone with at most 5 items and is hidden on a desktop; a lock badge says why", async ({ page, baseURL }) => {
     await openGallery(page, baseURL!);
-    const bar = page.locator("[data-tk=bottom-bar]");
+    // The admin shell has its own bottom bar; this test is about the one in the kit gallery.
+    const bar = page.locator("[data-tk=kit-gallery] [data-tk=bottom-bar]");
     if (isPhone(page)) {
       await expect(bar).toBeVisible();
       expect(await bar.locator("a").count()).toBeLessThanOrEqual(5);
