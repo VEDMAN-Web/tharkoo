@@ -57,7 +57,7 @@ test.describe("H7.163 support desk", () => {
 
     // Close with nothing typed.
     await thread.getByRole("button", { name: "Close ticket" }).click();
-    const dialog = page.getByRole("dialog");
+    const dialog = page.getByRole("alertdialog");
     await expect(dialog.getByText("Close without replying?")).toBeVisible();
     await dialog.getByRole("button", { name: "Close ticket" }).click();
     await expect(page.locator("[data-tk=toast]")).toContainText("closed. The customer was not emailed.");
