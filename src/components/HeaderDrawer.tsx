@@ -12,6 +12,7 @@ import { safeHref } from "@/lib/sanitize";
 import { applyPrefixes, loginPath, postAdPath } from "@/lib/urls";
 import type { ShellLink } from "@/server/site-links/shell-config-rules";
 import type { UrlPaths } from "@/lib/urls";
+import type { TextFn } from "@/lib/ui/text";
 import { isProbablySignedIn, openSignInFromLink } from "./auth/SignInSheet";
 import { LogoutButton } from "./auth/LogoutButton";
 
@@ -27,6 +28,7 @@ export function HeaderDrawer({
   postLabel,
   signedIn,
   paths,
+  t,
   onClose,
 }: {
   links: ShellLink[];
@@ -35,6 +37,7 @@ export function HeaderDrawer({
   postLabel: string;
   signedIn: boolean;
   paths: UrlPaths;
+  t: TextFn;
   onClose: () => void;
 }) {
   const [countryOpen, setCountryOpen] = useState(false);
@@ -47,18 +50,18 @@ export function HeaderDrawer({
         className="tkn-drawer"
         role="dialog"
         aria-modal="true"
-        aria-label="Menu"
+        aria-label={t("chrome.menu.title")}
         ref={ref}
         data-tk="drawer"
         onClick={(event) => event.stopPropagation()}
       >
         <div className="tkn-drawer-head">
-          <span className="tkn-drawer-title">Menu</span>
-          <button type="button" className="tkn-icon-btn" aria-label="Close menu" onClick={onClose}>
+          <span className="tkn-drawer-title">{t("chrome.menu.title")}</span>
+          <button type="button" className="tkn-icon-btn" aria-label={t("chrome.menu.close")} onClick={onClose}>
             <X size={22} aria-hidden="true" focusable="false" />
           </button>
         </div>
-        <nav aria-label="Main menu" className="tkn-drawer-nav">
+        <nav aria-label={t("chrome.menu.nav")} className="tkn-drawer-nav">
           {visible.map((item) => (
             <Link key={item.href + item.label} href={applyPrefixes(safeHref(item.href), paths)} className="tkn-drawer-row" onClick={onClose}>
               <ShellGlyph icon={item.icon} />
@@ -77,7 +80,7 @@ export function HeaderDrawer({
               <Link href="/u/account/" className="tkn-btn tkn-btn-ghost" data-tk="drawer-account" onClick={onClose}>
                 My account
               </Link>
-              <LogoutButton className="tkn-btn tkn-btn-ghost" onClick={onClose}>Log out</LogoutButton>
+              <LogoutButton className="tkn-btn tkn-btn-ghost" onClick={onClose}>{t("chrome.account.logout")}</LogoutButton>
             </>
           ) : (
             <Link
