@@ -1,0 +1,16 @@
+/* H8.21: parts that belong to the Reports screen only. The shared kit stays in src/styles/admin-kit.css. */
+.adm-rp-pane { padding: 16px; display: grid; gap: 12px; grid-template-columns: minmax(0, 1fr); }
+.adm-rp-kvs { margin: 0; display: grid; }
+.adm-rp-kvs > div { display: grid; grid-template-columns: 110px minmax(0, 1fr); gap: 12px; padding: 8px 0; font-size: 13.5px; }
+.adm-rp-kvs dt { color: var(--adm-kmuted); }
+.adm-rp-kvs dd { margin: 0; font-weight: 600; overflow-wrap: anywhere; }
+.adm-rp-card { display: grid; gap: 2px; padding: 12px 14px; border: 1px solid var(--adm-line2); border-radius: 10px; background: #fff; }
+.adm-rp-card span { color: var(--adm-kmuted); font-size: 13.5px; overflow-wrap: anywhere; }
+.adm-rp-card small { color: var(--adm-kmuted); font-size: 12.5px; }
+.adm-rp-note { display: grid; gap: 6px; }
+.adm-rp-help { margin: 0; color: var(--adm-kmuted); font-size: 12.5px; }
+@media (max-width: 767px) {
+  [data-tk="reports-screen"] .adm-k-pagesize { display: none; }
+  [data-tk="reports-screen"] .adm-k-pager { flex-wrap: nowrap; }
+  .adm-rp-kvs > div { grid-template-columns: 96px minmax(0, 1fr); }
+}

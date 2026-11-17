@@ -1,0 +1,14 @@
+{
+  "branchPrefix": "haiku/h8.21",
+  "globs": [
+    "docs/ownership/H8.21.json",
+    "progress/H8.21.md",
+    "src/app/admin/reports/**",
+    "src/server/admin/reports.ts",
+    "src/server/admin/undo/handlers/report-decision.ts",
+    "src/server/moderation/review.ts",
+    "tests/server/admin/a21-*.test.ts",
+    "tests/server/admin/a3-write.test.ts",
+    "tests/e2e/a21-reports.e2e.ts"
+  ]
+}

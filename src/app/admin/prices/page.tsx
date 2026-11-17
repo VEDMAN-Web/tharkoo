@@ -3,6 +3,8 @@ import { Lock } from "lucide-react";
 import { AdminShell } from "@/components/admin/AdminShell";
 import { getStaffFromHeaders } from "@/lib/admin-auth";
 import { can } from "@/lib/admin/perms";
+import { readCoupons } from "@/server/billing/coupons-admin";
+import { readPacks } from "@/server/billing/packs-admin";
 import { readPricesData } from "@/server/billing/plans-admin";
 import { PricesView } from "./_view/PricesView";
 
@@ -25,7 +27,7 @@ export default async function Page() {
   }
   return (
     <AdminShell title="Prices & plans" hasHeader>
-      <PricesView data={await readPricesData()} canEdit={can(identity.roles, "prices.edit")} />
+      <PricesView data={await readPricesData()} packs={await readPacks()} coupons={await readCoupons()} canEdit={can(identity.roles, "prices.edit")} />
     </AdminShell>
   );
 }

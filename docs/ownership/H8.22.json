@@ -1,0 +1,13 @@
+{
+  "branchPrefix": "haiku/h8.22",
+  "globs": [
+    "docs/ownership/H8.22.json",
+    "src/app/admin/finance/page.tsx",
+    "src/app/admin/finance/_orders/**",
+    "src/app/admin/finance/receipt/**",
+    "src/server/admin/orders.ts",
+    "tests/server/admin/a22-*.test.ts",
+    "tests/e2e/a22-orders.e2e.ts",
+    "tests/e2e/h7-133-finance.e2e.ts"
+  ]
+}

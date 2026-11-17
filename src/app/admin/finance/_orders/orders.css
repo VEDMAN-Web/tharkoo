@@ -1,0 +1,22 @@
+/* H8.22: Orders & credits only. The shared kit stays in src/styles/admin-kit.css. */
+.adm-o-kpis { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 16px; margin-bottom: 16px; }
+.adm-o-flat { padding: 0; overflow: clip; margin-bottom: 16px; }
+.adm-o-flat .adm-k-tablewrap { border: 0; border-radius: 0; box-shadow: none; }
+.adm-o-badges { display: inline-flex; gap: 6px; flex-wrap: wrap; }
+.adm-o-pane { padding: 16px; display: grid; gap: 12px; }
+.adm-o-h { margin: 8px 0 0; font-size: 15px; font-weight: 800; }
+.adm-o-detail { display: grid; gap: 14px; padding: 16px; }
+.adm-o-kvs { margin: 0; display: grid; }
+.adm-o-kv { display: grid; grid-template-columns: 120px minmax(0, 1fr); gap: 12px; padding: 9px 0; border-bottom: 1px solid var(--adm-line2); font-size: 13.5px; }
+.adm-o-kv dt { color: var(--adm-kmuted); }
+.adm-o-kv dd { margin: 0; font-weight: 600; overflow-wrap: anywhere; }
+.adm-o-state { display: grid; justify-items: center; text-align: center; gap: 8px; padding: 40px 20px; }
+.adm-o-state-icon { width: 52px; height: 52px; border-radius: 50%; display: grid; place-items: center; background: var(--adm-line2); color: var(--adm-kmuted); }
+.adm-o-state-icon svg { width: 24px; height: 24px; }
+.adm-o-state h3 { margin: 4px 0 0; font-size: 16px; }
+.adm-o-state p { margin: 0; color: var(--adm-kmuted); max-width: 44ch; }
+@media (max-width: 1023px) { .adm-o-kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 767px) {
+  .adm-o-kpis { gap: 8px; }
+  .adm-o-kv { grid-template-columns: 100px minmax(0, 1fr); }
+}

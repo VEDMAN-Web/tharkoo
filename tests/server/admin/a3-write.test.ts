@@ -53,7 +53,7 @@ beforeEach(async () => {
 });
 
 /** Undo kinds whose real handler has been built (the rest are still stubs). Add a kind here when its card lands. */
-const BUILT_KINDS: readonly string[] = ["user.ban", "wallet.adjust", "record.restore", "layout.publish"];
+const BUILT_KINDS: readonly string[] = ["user.ban", "wallet.adjust", "record.restore", "layout.publish", "listing.decision", "report.decision"];
 
 type Spec = Parameters<typeof adminWrite<string>>[1];
 

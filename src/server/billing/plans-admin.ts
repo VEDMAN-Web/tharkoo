@@ -144,7 +144,7 @@ export async function updatePlan(ctx: AdminCtx, input: { id: string } & PlanInpu
       };
     },
   });
-  await refreshPublicCache();
+  await refreshPublicCache("promotion plans");
   return { eventId: written.eventId, undoUntil: written.undoUntil, summary: `Saved ${next.name}` };
 }
 
@@ -166,7 +166,7 @@ export async function createPlan(ctx: AdminCtx, input: { code: string } & PlanIn
       return { after: { code, ...next }, result: String(doc._id), summary: `Added the plan ${next.name}` };
     },
   });
-  await refreshPublicCache();
+  await refreshPublicCache("promotion plans");
   return { eventId: written.eventId, undoUntil: written.undoUntil, summary: `Added ${next.name}` };
 }
 
@@ -202,6 +202,6 @@ export async function movePlan(ctx: AdminCtx, input: { id: string; direction: "u
       };
     },
   });
-  await refreshPublicCache();
+  await refreshPublicCache("promotion plans");
   return { eventId: written.eventId, undoUntil: written.undoUntil, summary: `Moved ${target.name} ${input.direction}` };
 }
