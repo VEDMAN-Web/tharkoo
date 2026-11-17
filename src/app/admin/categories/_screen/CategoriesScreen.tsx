@@ -11,7 +11,7 @@ import { CategoryList } from "./CategoryList";
 import { DetailPane } from "./DetailPane";
 import { NewCategoryDialog } from "./NewCategoryDialog";
 import { tabOf, type TabKey } from "./model";
-import "./categories.css";
+import "@/app/admin/_catalog/catalog.css";
 
 const BASE = "/admin/categories/";
 

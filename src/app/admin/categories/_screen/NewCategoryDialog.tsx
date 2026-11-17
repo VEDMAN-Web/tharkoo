@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { Button, TextField } from "@/components/admin/ui";
 import { createCategoryAction } from "../manage-actions";
-import { FormDialog } from "./FormDialog";
+import { FormDialog } from "@/app/admin/_catalog/FormDialog";
 import { KIND_HELP, KIND_OPTIONS, MAX_NAME, slugFromName } from "./model";
 
 /** The small New category dialog: a name, a web address and a kind. Everything else is on the category's own tabs afterwards. */

@@ -10,8 +10,9 @@ import { CategoryFieldsEditor, type EditorField, type FieldsControl } from "@/co
 import type { CategoryDetailView } from "@/server/categories/screen";
 import { deleteCategoryAction, updateCategoryAction } from "../manage-actions";
 import { saveCategoryPicturesAction } from "../picture-actions";
+import { SaveBar } from "@/app/admin/_catalog/SaveBar";
 import { DetailsTab } from "./DetailsTab";
-import { PicturesTab } from "./PicturesTab";
+import { PicturesTab } from "@/app/admin/_catalog/PicturesTab";
 import { SubsTab } from "./SubsTab";
 import { adsText, detailsOf, detailsProblems, KIND_MISSING, picturesOf, picturesProblems, TABS, type TabKey } from "./model";
 
@@ -210,22 +211,14 @@ export function DetailPane({
         {tab === "subs" ? <SubsTab key={detail.id} categoryId={detail.id} categoryName={detail.name} subs={detail.subs} /> : null}
       </div>
       {showBar ? (
-        <div className="adm-k-savebar adm-cat-bar" role="region" aria-label="Save changes" data-tk="save-bar" data-dirty={dirty ? "yes" : "no"}>
-          <span className={`adm-k-savedot${dirty ? " is-dirty" : ""}`} aria-hidden="true" />
-          <span className="adm-k-savetext" aria-live="polite">
-            <strong>{dirty ? "Unsaved changes" : saved ? "Saved. Live on the site in a few seconds." : "All changes saved"}</strong>{" "}
-            {!dirty && saved ? (
-              <span>
-                <a href="/" target="_blank" rel="noopener" data-tk="view-home">Home page</a>
-                {" · "}
-                <a href={`/${baseDetails.slug}/`} target="_blank" rel="noopener" data-tk="view-category">View on site</a>
-              </span>
-            ) : null}
-          </span>
-          <span className="adm-k-sp" />
-          <Button kind="quiet" disabled={!dirty || busy} onClick={discard}>Discard</Button>
-          <Button kind="primary" busy={busy || fieldsState?.pending} disabled={!dirty} onClick={() => void saveAll()}>Save</Button>
-        </div>
+        <SaveBar
+          dirty={dirty}
+          saved={saved}
+          busy={busy || Boolean(fieldsState?.pending)}
+          links={[{ href: "/", label: "Home page", tk: "view-home" }, { href: `/${baseDetails.slug}/`, label: "View on site", tk: "view-category" }]}
+          onDiscard={discard}
+          onSave={() => void saveAll()}
+        />
       ) : null}
       <ConfirmDialog
         open={removing}
