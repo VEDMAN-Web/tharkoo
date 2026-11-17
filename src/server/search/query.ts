@@ -345,7 +345,7 @@ function detailRows(attributes?: Record<string, unknown>) {
 export async function buildFilter(input: ListingQuery): Promise<QueryFilter<ListingDoc> | null> {
   await connectDb();
   const [categories, locations] = await Promise.all([loadCategories(), loadLocations()]);
-  const filter: Record<string, unknown> = { status: "active" };
+  const filter: Record<string, unknown> = { status: "active", $nor: [{ expiresAt: { $lte: new Date() } }] };
   if (input.categorySlug) {
     const category = categories.find(
       (row) => row.enabled !== false && !row.deletedAt && matchSlug(row, input.categorySlug ?? ""),

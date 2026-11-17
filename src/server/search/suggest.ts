@@ -22,7 +22,7 @@ export async function suggestSearch(raw: string): Promise<Suggestion[]> {
   }
   const places = found.slice(0, 4);
   await connectDb();
-  const rows = await Listing.find({ status: "active", title: { $regex: `(^| )${escapeRegExp(text)}`, $options: "i" } })
+  const rows = await Listing.find({ status: "active", $nor: [{ expiresAt: { $lte: new Date() } }], title: { $regex: `(^| )${escapeRegExp(text)}`, $options: "i" } })
     .select("title")
     .sort({ publishedAt: -1 })
     .limit(40)

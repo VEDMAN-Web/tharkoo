@@ -8,6 +8,8 @@ import { validateSlug } from "@/lib/urls";
 import { AuditRepository } from "@/server/audit";
 import { ForbiddenError, NotFoundError, ValidationError } from "@/server/http";
 import { isCategoryKind } from "@/server/categories/kind";
+import type { AdminCtx } from "@/server/admin/context";
+import { picturesOf, setCatalogPictures, type PictureInput, type PicturesView } from "@/server/layout/catalog-pictures";
 import { Category, Listing, User } from "@/server/models";
 import type { CategoryKind } from "@/server/models/catalog";
 import { Subcategory } from "@/server/models/subcategory";
@@ -267,4 +269,20 @@ export async function reorder(actor: Actor, kind: "category" | "subcategory", id
   await record(actor, `${kind}.reorder`, kind, ids[0], null, { ids });
   await refreshPublicCache();
   return { ok: true as const };
+}
+
+export type CategoryPictureItem = { id: string; name: string; sub: string; pictures: PicturesView };
+
+/** Sets or clears the photo and the band of a category. One audited write that can be undone (see catalog-pictures.ts). */
+export async function setCategoryPictures(ctx: AdminCtx, id: string, input: PictureInput) {
+  await connectDb();
+  return setCatalogPictures(ctx, "Category", id, input);
+}
+
+/** Every category with its pictures, for the picture editor on Categories and fields. */
+export async function categoryPictureItems(): Promise<CategoryPictureItem[]> {
+  await connectDb();
+  const rows = await Category.find({ deletedAt: null }).select("slug name photo band").sort({ order: 1, name: 1 }).lean();
+  const views = await picturesOf(rows);
+  return rows.map((row, index) => ({ id: String(row._id), name: row.name, sub: row.slug, pictures: views[index] }));
 }

@@ -3,6 +3,7 @@ import { TRUST } from "@/content/trust";
 import { pageMetadata } from "@/lib/ui/meta";
 import { getPaths } from "@/server/urls/service";
 import { postAdPath } from "@/lib/urls";
+import { DEFAULT_AD_LIFETIME_HOURS } from "@/lib/ads/lifetime-rules";
 import { HowItWorksView } from "@/components/h714/HowItWorksView";
 
 const copy = TRUST["how-it-works"];
@@ -30,7 +31,7 @@ const FAQS = [
   },
   {
     q: "How long does my ad stay live?",
-    a: "72 hours from the time it goes live. After that it ends on its own; you can renew it from My ads in one tap.",
+    a: `${DEFAULT_AD_LIFETIME_HOURS} hours from the time it goes live. After that it ends on its own; you can renew it from My ads in one tap.`,
   },
   {
     q: "How do I report a fake ad?",

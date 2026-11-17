@@ -1,0 +1,21 @@
+{
+  "branchPrefix": "haiku/h7.158-",
+  "globs": [
+    "docs/ownership/H7.158.json",
+    "progress/H7.158.md",
+    "src/lib/ads/lifetime-rules.ts",
+    "src/server/listings/lifetime.ts",
+    "src/server/models/cms.ts",
+    "src/server/search/query.ts",
+    "src/server/search/suggest.ts",
+    "src/lib/ui/text.ts",
+    "src/lib/ui/ad-status.ts",
+    "src/server/site-links/shell-config-rules.ts",
+    "src/app/how-it-works/page.tsx",
+    "src/app/admin/ads/create/CreateAdForm.tsx",
+    "tests/server/listings/**",
+    "tests/server/support/support-links.test.ts",
+    "tests/server/layout/a6-home-baseline.json",
+    "tests/e2e/h7-158-*.e2e.ts"
+  ]
+}
