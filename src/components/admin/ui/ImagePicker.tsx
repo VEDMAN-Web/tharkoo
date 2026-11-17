@@ -22,7 +22,7 @@ const toRef = (row: PickerRow): ImageRef => ({ assetId: row.id, src: row.url, al
  * choose / replace from the library, upload a new banner, remove the banner.
  * H7.8: `rule` puts the size help under the label with an (i) button, and refuses a file that is too big or the wrong type.
  */
-export function ImagePicker({ label, value, onChange, banner = false, rule, hideLabel = false, hidePreview = false }: { label: string; value?: ImageRef | null; onChange: (next: ImageRef | null) => void; banner?: boolean; rule?: UploadRule; hideLabel?: boolean; hidePreview?: boolean }) {
+export function ImagePicker({ label, value, onChange, banner = false, rule, hideLabel = false, hidePreview = false, infoText }: { label: string; value?: ImageRef | null; onChange: (next: ImageRef | null) => void; banner?: boolean; rule?: UploadRule; hideLabel?: boolean; hidePreview?: boolean; infoText?: string }) {
   const uid = useId();
   const [dialog, setDialog] = useState<PickerTab | null>(null);
 
@@ -37,7 +37,7 @@ export function ImagePicker({ label, value, onChange, banner = false, rule, hide
       {rule ? (
         <>
           <p className="adm-field-help" id={`${uid}-line`}>{rule.line}</p>
-          <InfoPopover id={`${uid}-info`} label={label}>
+          <InfoPopover id={`${uid}-info`} label={label} text={infoText}>
             <strong>{label}</strong>
             <ul>
               {rule.details.map((row) => (

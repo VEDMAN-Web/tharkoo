@@ -1,0 +1,14 @@
+{
+  "branchPrefix": "haiku/h7.170b",
+  "globs": [
+    "docs/ownership/H7.170b.json",
+    "progress/H7.170b.md",
+    "src/app/admin/settings/_view/SettingsCards.tsx",
+    "src/app/admin/settings/_view/settings.css",
+    "src/app/admin/settings/LogoSettings.tsx",
+    "src/components/upload/InfoPopover.tsx",
+    "src/components/upload/upload.css",
+    "src/components/admin/ui/ImagePicker.tsx",
+    "tests/e2e/h7-170b-settings-stack.e2e.ts"
+  ]
+}

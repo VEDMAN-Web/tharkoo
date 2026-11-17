@@ -188,9 +188,9 @@ export function SearchEnginesCard({ hidden }: { hidden: boolean }) {
       <header className="adm-s-head">
         <h2 id="search-title">Search engines</h2>
       </header>
-      <div className="adm-s-body adm-s-row">
+      <div className="adm-s-body adm-s-stack" data-tk="search-stack">
         {hidden ? <Badge tone="warn">Hidden from Google</Badge> : <Badge tone="ok">Open to Google</Badge>}
-        <p className="adm-k-help" style={{ flex: 1 }}>
+        <p className="adm-k-help">
           {hidden ? "The site is hidden on purpose until launch. The setting is on the server and stays on until the launch checklist is done." : "Search engines may list the site. Rules for what they may list are in SEO."}
         </p>
         <Button kind="quiet" icon={Globe} href="/admin/seo/">Open SEO</Button>

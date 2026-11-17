@@ -19,6 +19,8 @@
 .adm-s-item-h { margin: 0; font-size: 14px; font-weight: 800; }
 .adm-s-links { margin: 0; padding-left: 18px; display: grid; gap: 6px; font-size: 14px; }
 .adm-s-links a { display: inline-flex; align-items: center; min-height: 24px; font-weight: 700; }
+.adm-s-stack { display: grid; justify-items: start; gap: 10px; }
+.adm-s-stack > p { margin: 0; max-width: none; justify-self: stretch; }
 .adm-s-row { display: flex; gap: 14px; align-items: center; flex-wrap: wrap; }
 .adm-s-raw { margin: 10px 0 0; max-height: 360px; overflow: auto; padding: 12px; border: 1px solid var(--adm-line2); border-radius: 8px; background: #fafbfd; font-size: 12px; white-space: pre-wrap; overflow-wrap: anywhere; }
 @media (max-width: 1023px) {

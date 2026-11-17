@@ -4,11 +4,11 @@ import { useEffect, useRef, useState, type ReactNode } from "react";
 import "./upload.css";
 
 /**
- * H7.8: a small (i) button with a popover. Desktop hover opens it; click or tap pins it open.
+ * H7.8: a small (i) button with a popover, optionally with a short visible label beside the i. Desktop hover opens it; click or tap pins it open.
  * Esc and an outside click close it. The popover is always in the page (hidden when closed) so the
  * field can point at it with aria-describedby.
  */
-export function InfoPopover({ id, label, children }: { id: string; label: string; children: ReactNode }) {
+export function InfoPopover({ id, label, text, children }: { id: string; label: string; text?: string; children: ReactNode }) {
   const [open, setOpen] = useState(false);
   const [pinned, setPinned] = useState(false);
   const wrap = useRef<HTMLDivElement>(null);
@@ -41,8 +41,8 @@ export function InfoPopover({ id, label, children }: { id: string; label: string
       <button
         ref={button}
         type="button"
-        className="upl-info"
-        aria-label={`About ${label}`}
+        className={text ? "upl-info upl-info-text" : "upl-info"}
+        aria-label={text ? `${text}: ${label}` : `About ${label}`}
         aria-expanded={open}
         aria-controls={popId}
         onPointerEnter={(event) => {
@@ -61,7 +61,8 @@ export function InfoPopover({ id, label, children }: { id: string; label: string
           }
         }}
       >
-        i
+        {text ? <span className="upl-info-i" aria-hidden="true" /> : "i"}
+        {text}
       </button>
       <div id={popId} role="note" className="upl-pop" hidden={!open}>
         {children}
