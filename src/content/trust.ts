@@ -4,8 +4,6 @@ export type TrustCopy = {
   paragraphs: string[];
 };
 
-const POSTAL = "Postal address: [placeholder: Ved to confirm the full registered office address before publication].";
-
 export const TRUST: Record<string, TrustCopy> = {
   terms: {
     title: "Terms of use",
@@ -16,7 +14,7 @@ export const TRUST: Record<string, TrustCopy> = {
       "Posting an ad costs a posting fee in credits, shown before you publish. Paid options, such as a star, a bump, or a longer highlight, change where the ad sits and for how long. They do not change these terms, and they do not promise a reply. Prices for those options are shown before you pay.",
       "You keep ownership of the words and photos you upload. You give Tharkoo permission to display them on the listing, in search, and in the places the site uses to describe a public ad. Do not upload a photo of someone else unless you have their permission, and do not copy another person’s listing.",
       "We can refuse, pause, or remove an ad that breaks these terms, that we cannot verify, or that a report gives us reason to review. We can also close an account that repeats the same problem. If we remove an ad, the public URL stops working. You can write to us through the contact page if you think that was a mistake.",
-      POSTAL,
+      "These terms apply to every visitor and to every account. If we change them in a way that matters, we update this page, and the new terms apply from the day they are published.",
     ],
   },
   privacy: {
@@ -29,7 +27,6 @@ export const TRUST: Record<string, TrustCopy> = {
       "Staff can see account and listing records in the admin tools so they can review reports, ID checks, and promotions. Access is limited to people with an admin role. We keep a short audit note when an admin changes the homepage or a public URL.",
       "You can ask what we hold about your account by writing through the contact page. We will reply to the email on the account. If the law requires us to keep a record, for example a payment or a report, we keep that record even after the ad is gone.",
       "If you have a question about this note, write to us through the contact page. We read messages on business days and reply to the email on your account. We will update this page when the way we handle data changes, and the date at the top shows the latest version.",
-      POSTAL,
     ],
   },
   cookies: {
@@ -43,7 +40,6 @@ export const TRUST: Record<string, TrustCopy> = {
       "The cookie note at the bottom of the page is there so you can see this explanation before you continue. Choosing OK stores that choice. It does not change the terms or the privacy page.",
       "If you use more than one browser, each one keeps its own choice. A public computer should be signed out when you leave, because the session cookie lasts until you log out or the browser clears it. We do not use the cookie to build a profile of the cities you open.",
       "If you want to change a choice, clear the site data for Tharkoo in your browser settings and the cookie note will appear again on your next visit. The terms and the privacy page explain the rest of how your information is handled.",
-      POSTAL,
     ],
   },
   contact: {
@@ -56,7 +52,7 @@ export const TRUST: Record<string, TrustCopy> = {
       "We read messages on business days. A promotion question includes the ad link and the option you paid for. A privacy question can ask what we store, or ask us to close the account. Closing an account removes the public ads.",
       "Please do not send copies of bank cards, one-time passwords, or identity documents in the first email. Tell us the account email and the page you were on. If the matter is a listing, the report form on the ad is still the fastest way for the review queue to see it. A short note is enough. We do not need a long story to find the right account.",
       "We try to answer every message, but a reply can take a few business days when many reports arrive together. Reports about unsafe ads are read first, so use the report link on the ad when someone may be at risk.",
-      POSTAL,
+      "Please include the ad link and the date you noticed the problem. That lets the review team find the right record on the first read, and it saves you a second email.",
     ],
   },
   safety: {
@@ -69,7 +65,7 @@ export const TRUST: Record<string, TrustCopy> = {
       "Report an ad that uses someone else’s photos, that asks for payment before any contact, or that offers something the prohibited items page does not allow. Reports go to the review queue. We can remove the ad and close the account.",
       "The help centre has short guides on reading a listing and on reporting. The scam report page is the form. If you are in immediate danger, contact local emergency services first. Tharkoo cannot send help to a street address.",
       "A careful reply stays specific. Ask about the item, the job, or the plan that is already written on the ad. If the answers change the offer, or the photos do not match the description, stop. You can leave the conversation without explaining yourself. Take the time you need today. A genuine poster can wait for a reply before you decide.",
-      POSTAL,
+      "Tell a friend or a family member where you are going and when you expect to be back. Keep your phone charged, and leave if a place feels wrong, even if you have already travelled there.",
     ],
   },
   "how-it-works": {
@@ -82,7 +78,6 @@ export const TRUST: Record<string, TrustCopy> = {
       "A promotion is optional. A star, a bump, or a highlight changes the order and the badge for a fixed number of days. The price is shown before you pay. When the time ends, the ad returns to the ordinary order. It does not disappear unless it has also expired or you removed it.",
       "City, category, and ad links are built from the public names you see in the address bar. If an admin renames one, the old address points to the new one. You do not need to keep a private copy of the link for it to keep working.",
       "When an ad expires, the city page drops it. For 30 days the old link explains that the listing has ended. After that, the link answers that the listing is gone. Removing an ad yourself ends it immediately.",
-      POSTAL,
     ],
   },
   "prohibited-items": {
@@ -95,7 +90,7 @@ export const TRUST: Record<string, TrustCopy> = {
       "We remove ads that break this list, and we can close the account. Reporting a listing helps us see it sooner. The safety page explains how to report, and the terms explain what happens after a review.",
       "A title should describe the same thing as the body. Do not hide a banned offer behind an ordinary category. Staff can move, refuse, or delete a listing during review, including after it has been public. Repeating a removed offer from a new account is still a breach of these rules and can close that account too.",
       "If you are not sure a listing fits, do not post it. Write through the contact page and describe the offer in plain words. We would rather answer first than take an ad down after it is public. A clear description saves a review and keeps the city page useful for everyone else.",
-      POSTAL,
+      "This list can change as new problems appear. Check it again before you post, because an ad that was accepted last month may not fit today.",
     ],
   },
 };
