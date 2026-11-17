@@ -12,7 +12,7 @@ import { getHomepageContent } from "@/lib/queries";
 import { D1_NOTE, runHomeLayoutD1 } from "@/server/layout/d1-home";
 import { homeBlocksFrom } from "@/server/layout/home-v2";
 import { AuditEvent, PageLayout, PageLayoutRevision, Site } from "@/server/models";
-import { seedHomeLayout } from "@/server/seed/layouts";
+import { seedLegacyHome } from "./a19-legacy-home";
 import { readShellConfig } from "@/server/site-links/shell-config";
 import { clearMemoryMongo, connectMemoryMongo, disconnectMemoryMongo } from "../../setup/mongo";
 import { HOME_FIXTURES } from "./a6-fixtures";
@@ -33,7 +33,7 @@ afterAll(async () => {
 
 describe("D1 dry run (A13)", () => {
   it("builds the five format 2 blocks from the stored page and writes nothing", async () => {
-    await seedHomeLayout();
+    await seedLegacyHome();
     const before = await PageLayout.findOne({ key: "home" }).lean();
     const result = await runHomeLayoutD1({ apply: false });
     expect(result).toMatchObject({ action: "dry-run", fromVersion: 1, fromFormat: 1, toVersion: 2 });
@@ -59,7 +59,7 @@ describe("D1 dry run (A13)", () => {
 
 describe("D1 apply (A13)", () => {
   it("publishes version n+1 as format 2 with the note D1, keeps the old version as a revision, and leaves the switch off", async () => {
-    await seedHomeLayout();
+    await seedLegacyHome();
     const result = await runHomeLayoutD1({ apply: true, actor: "d1-test" });
     expect(result).toMatchObject({ action: "applied", fromVersion: 1, toVersion: 2 });
     const doc = await PageLayout.findOne({ key: "home", scope: "default" }).lean();

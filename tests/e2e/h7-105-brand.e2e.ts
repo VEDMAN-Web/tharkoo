@@ -62,42 +62,4 @@ test.describe("H7.105: new logo and banner", () => {
     await expect(page.locator(".adm-field-label", { hasText: "Logo (dark backgrounds)" })).toBeVisible();
   });
 
-  test("with the headline in the picture the banner draws no text, keeps one hidden h1 and shows the whole picture", async ({ page, context, baseURL }) => {
-    test.setTimeout(300_000);
-    await signInAdminContext(context, baseURL!);
-    const set = async (on: boolean) => {
-      await page.goto("/admin/homepage/");
-      const box = page.getByLabel("The headline is already in the picture");
-      await expect(box).toBeVisible();
-      if ((await box.isChecked()) !== on) await box.click();
-      await expect(page.getByText("Saved.", { exact: true }).last()).toBeVisible();
-    };
-    await set(true);
-    try {
-      await expect(async () => {
-        await page.goto("/");
-        await expect(page.locator('.tkh-banner[data-text-in-image="true"]')).toHaveCount(1, { timeout: 2_000 });
-      }).toPass({ timeout: 150_000, intervals: [5_000] });
-      for (const size of SIZES) {
-        await page.setViewportSize(size);
-        await page.goto("/");
-        const banner = page.locator('.tkh-banner[data-text-in-image="true"]');
-        await expect(banner).toHaveCount(1);
-        await expect(page.locator(".tkh-banner-copy")).toHaveCount(0);
-        await expect(page.locator("h1")).toHaveCount(1);
-        const h1 = page.locator("h1");
-        await expect(h1).toHaveClass(/tkh-sr/);
-        expect((await h1.innerText()).length).toBeGreaterThan(10);
-        const fit = await banner.locator("img").first().evaluate((img) => getComputedStyle(img).objectFit);
-        expect(fit).toBe("contain");
-        const box = (await banner.boundingBox())!;
-        const phoneOwn = size.width < 600 && (await banner.getAttribute("data-phone-photo")) === "true";
-        if (!phoneOwn) expect(Math.abs(box.width / box.height - 2400 / 1029), `ratio at ${size.width}x${size.height}: ${box.width} x ${box.height}`).toBeLessThan(0.06);
-        expect(await hasHorizontalScroll(page)).toBe(false);
-        await expect(page.locator(".tkh-search")).toBeVisible();
-      }
-    } finally {
-      await set(false);
-    }
-  });
 });

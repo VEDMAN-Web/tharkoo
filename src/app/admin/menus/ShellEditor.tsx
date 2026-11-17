@@ -1,6 +1,7 @@
 "use client";
 
 import { FocalPicker } from "@/components/admin/FocalPicker";
+import Link from "next/link";
 import { useState } from "react";
 import { Notice } from "@/components/admin/ui";
 import { SUPPORT_TOPICS, TOPIC_LABELS } from "@/server/support/constants";
@@ -8,13 +9,11 @@ import {
   CONTACT_KINDS,
   SHELL_ICONS,
   type ContactKind,
-  type HowStep,
   type ShellConfig,
   type ShellContact,
   type ShellIcon,
   type ShellImage,
   type ShellLink,
-  type TrustPill,
 } from "@/server/site-links/shell-config-rules";
 import { saveShellAction } from "./actions";
 
@@ -105,70 +104,6 @@ function ContactRows({ items, onChange }: { items: ShellContact[]; onChange: (ne
   );
 }
 
-
-/** H7.4: the five trust pills on the New design home page. */
-function TrustRows({ items, onChange }: { items: TrustPill[]; onChange: (next: TrustPill[]) => void }) {
-  return (
-    <fieldset className="mb-4 grid gap-2">
-      <legend className="t-small font-semibold">Trust pills (up to 5)</legend>
-      {items.map((item, index) => (
-        <div key={index} className="flex flex-wrap items-end gap-2">
-          <label className="flex min-w-[10rem] flex-1 flex-col t-small">
-            Text
-            <input
-              className="adm-input"
-              value={item.label}
-              maxLength={200}
-              onChange={(e) => onChange(items.map((row, i) => (i === index ? { ...row, label: e.target.value } : row)))}
-            />
-          </label>
-          <button type="button" className="adm-btn" aria-label={`Remove ${item.label || "pill"}`} onClick={() => onChange(items.filter((_, i) => i !== index))}>Remove</button>
-        </div>
-      ))}
-      {items.length < 5 ? (
-        <button type="button" className="adm-btn w-fit" onClick={() => onChange([...items, { label: "", tone: "pink" }])}>Add a pill</button>
-      ) : null}
-    </fieldset>
-  );
-}
-
-/** H7.4: the How it works steps (three). */
-function StepRows({ items, onChange }: { items: HowStep[]; onChange: (next: HowStep[]) => void }) {
-  return (
-    <fieldset className="mb-4 grid gap-2">
-      <legend className="t-small font-semibold">How it works steps (up to 3)</legend>
-      {items.map((item, index) => (
-        <div key={index} className="grid gap-2">
-          <label className="flex flex-col t-small">
-            Step {index + 1} title
-            <input
-              className="adm-input"
-              value={item.title}
-              maxLength={200}
-              onChange={(e) => onChange(items.map((row, i) => (i === index ? { ...row, title: e.target.value } : row)))}
-            />
-          </label>
-          <label className="flex flex-col t-small">
-            Step {index + 1} text
-            <textarea
-              className="adm-input"
-              rows={2}
-              maxLength={400}
-              value={item.text}
-              onChange={(e) => onChange(items.map((row, i) => (i === index ? { ...row, text: e.target.value } : row)))}
-            />
-          </label>
-          <div>
-            <button type="button" className="adm-btn" aria-label={`Remove step ${index + 1}`} onClick={() => onChange(items.filter((_, i) => i !== index))}>Remove step</button>
-          </div>
-        </div>
-      ))}
-      {items.length < 3 ? (
-        <button type="button" className="adm-btn w-fit" onClick={() => onChange([...items, { title: "", text: "" }])}>Add a step</button>
-      ) : null}
-    </fieldset>
-  );
-}
 
 /**
  * H7.4: category photos (cards on the home page) and the listing title band images for a category or a city.
@@ -285,8 +220,17 @@ export function ShellEditor({ initial, section }: { initial: ShellConfig; sectio
         <>
           <section aria-labelledby="home-edit">
             <h2 className="t-h3" id="home-edit">Home page (New design)</h2>
-            <TrustRows items={draft.home.trust} onChange={(next) => setDraft({ ...draft, home: { ...draft.home, trust: next } })} />
-            <StepRows items={draft.home.steps} onChange={(next) => setDraft({ ...draft, home: { ...draft.home, steps: next } })} />
+            <p className="mb-4 t-small" data-tk="home-blocks-moved">
+              The trust bar and the How it works steps are edited in the <Link href="/admin/page-builder/" className="text-accent">Page builder</Link> now. They show here as read-only text.
+            </p>
+            <ul className="mb-4 t-small" data-tk="home-blocks-readonly">
+              {draft.home.trust.map((pill, index) => (
+                <li key={`trust-${index}`}>Trust bar: {pill.label}</li>
+              ))}
+              {draft.home.steps.map((step, index) => (
+                <li key={`step-${index}`}>Step {index + 1}: {step.title}</li>
+              ))}
+            </ul>
             <ImageRows items={draft.media.images} onChange={(next) => setDraft({ ...draft, media: { images: next } })} />
           </section>
           <section aria-labelledby="header-edit">

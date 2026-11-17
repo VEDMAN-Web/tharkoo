@@ -3,7 +3,7 @@ import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 import { AuditEvent, Site, User } from "@/server/models";
 import { clearMemoryMongo, connectMemoryMongo, disconnectMemoryMongo } from "../../setup/mongo";
 import { defaultSiteContent, isAdminRole, readContent, sanitizeSiteContent } from "@/lib/ui/site-content";
-import { applyHomepageChange, ensureHomepageDocument } from "@/lib/ui/site-store";
+import { applyHomepageChange, ensureHomepageDocument, HOME_MOVED_MESSAGE } from "@/lib/ui/site-store";
 import { safeNext } from "@/lib/ui/api";
 import { peoplePortraits } from "@/lib/media";
 
@@ -79,19 +79,34 @@ describe("homepage content", () => {
     const saved = await applyHomepageChange({
       roles: ["admin"],
       email: "owner@example.test",
-      content: { ...defaultSiteContent(), hero: { ...defaultSiteContent().hero, desktop: "Edited headline" } },
+      content: { ...defaultSiteContent(), seoTitle: "Edited home title" },
     });
-    expect(saved.hero.desktop).toBe("Edited headline");
+    expect(saved.seoTitle).toBe("Edited home title");
     const site = await Site.findOne({ key: "default" }).lean();
-    expect(readContent(site?.homepage).hero.desktop).toBe("Edited headline");
+    expect(readContent(site?.homepage).seoTitle).toBe("Edited home title");
     const events = await AuditEvent.find({ action: "site.homepage.update" }).lean();
     expect(events).toHaveLength(1);
     expect(String(events[0]?.actorType)).toBe("admin");
-    const reset = await applyHomepageChange({ roles: ["superadmin"], email: "owner@example.test", content: null, reset: true });
-    expect(reset.hero.desktop).toBe(defaultSiteContent().hero.desktop);
+  });
+
+  it("refuses the old Home writers with a message that points to the Page builder (H8.19)", async () => {
     await ensureHomepageDocument();
-    const again = await Site.findOne({ key: "default" }).lean();
-    expect(readContent(again?.homepage).hero.desktop).toBe(defaultSiteContent().hero.desktop);
+    const base = defaultSiteContent();
+    const other = { roles: ["admin"], email: "owner@example.test" };
+    await expect(applyHomepageChange({ ...other, content: { ...base, hero: { ...base.hero, desktop: "Edited headline" } } })).rejects.toThrow(HOME_MOVED_MESSAGE);
+    await expect(applyHomepageChange({ ...other, content: { ...base, homeCategoriesCount: 6 } })).rejects.toThrow(/Page builder/);
+    await expect(applyHomepageChange({ ...other, content: { ...base, cards: base.cards.slice(1) } })).rejects.toThrow(/Page builder/);
+    await expect(applyHomepageChange({ ...other, content: null, reset: true })).rejects.toThrow(/Page builder/);
+    const site = await Site.findOne({ key: "default" }).lean();
+    expect(readContent(site?.homepage).hero.desktop).toBe(base.hero.desktop);
+    expect(await AuditEvent.countDocuments({ action: { $in: ["site.homepage.update", "site.homepage.reset"] } })).toBe(0);
+  });
+
+  it("still saves what the Page builder does not own: the Home title, the login picture and the listing band (H8.19)", async () => {
+    await ensureHomepageDocument();
+    const base = defaultSiteContent();
+    const saved = await applyHomepageChange({ roles: ["admin"], email: "owner@example.test", content: { ...base, loginImage: "/placeholders/login.webp", showListingBand: true } });
+    expect(saved).toMatchObject({ loginImage: "/placeholders/login.webp", showListingBand: true });
   });
 });
 

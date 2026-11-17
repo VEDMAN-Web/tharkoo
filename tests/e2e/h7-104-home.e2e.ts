@@ -2,7 +2,7 @@ import { mkdirSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { ObjectId } from "mongodb";
 import type { Locator, Page } from "@playwright/test";
-import { expect, hasHorizontalScroll, signInAdminContext, test, withLocalDb } from "./helpers";
+import { expect, hasHorizontalScroll, test, withLocalDb } from "./helpers";
 
 const CARD = '[data-tk="home-ad"]';
 const SLIDE_WAIT = 9_000;
@@ -100,31 +100,6 @@ test.describe("H7.104 Home: four categories, eight smaller cards, auto-swipe", (
       expect(await hasHorizontalScroll(page)).toBe(false);
     });
   }
-
-  test("the number of categories is a setting in the Home page editor, default 4", async ({ page, context, baseURL }) => {
-    test.setTimeout(240_000);
-    await page.setViewportSize({ width: 1440, height: 900 });
-    await signInAdminContext(context, baseURL!);
-    const setCount = async (value: string) => {
-      await page.goto("/admin/homepage/");
-      const field = page.getByLabel("Number of categories on Home (1 to 8)");
-      await expect(field).toBeVisible();
-      await field.fill(value);
-      await page.getByRole("button", { name: "Save number of categories" }).click();
-      await expect(page.getByText("Saved.", { exact: true })).toBeVisible();
-    };
-    await page.goto("/admin/homepage/");
-    await expect(page.getByLabel("Number of categories on Home (1 to 8)")).toHaveValue("4");
-    await setCount("6");
-    try {
-      await expect(async () => {
-        await page.goto("/");
-        await expect(page.locator(".tkh-cats > li")).toHaveCount(6, { timeout: 2_000 });
-      }).toPass({ timeout: 120_000, intervals: [5_000] });
-    } finally {
-      await setCount("4");
-    }
-  });
 
   test("photos swipe by themselves, 3 s each, only while the card is on screen, and pause after a click", async ({ page }) => {
     test.setTimeout(120_000);

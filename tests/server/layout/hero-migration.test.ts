@@ -4,7 +4,7 @@ import { convertHeroBlocks, convertHeroLayouts, convertHeroProps } from "@/serve
 import { getPublished, validateBlocks } from "@/server/layout/service";
 import { PageLayout, PageLayoutRevision } from "@/server/models";
 import type { BlockBase } from "@/server/models/layout";
-import { seedHomeLayout } from "@/server/seed/layouts";
+import { seedLegacyHome } from "./a19-legacy-home";
 import { clearMemoryMongo, connectMemoryMongo, disconnectMemoryMongo } from "../../setup/mongo";
 
 const photo = { assetId: "a1", src: "/uploads/site/hero.webp", alt: "A bright living room", width: 1920, height: 640 };
@@ -130,9 +130,9 @@ describe("hero conversion (database)", () => {
     expect(await convertHeroLayouts("test:none")).toEqual({ updated: 0 });
   });
 
-  it("makes the seeded home hero a full banner that the public page reads, once the seed has run the conversion", async () => {
-    expect(await seedHomeLayout()).toBe(true);
-    // The built-in home hero is written with no layout and no version; the seed runs the conversion right after.
+  it("makes an old seeded home hero a full banner that the public page reads, once the conversion has run", async () => {
+    await seedLegacyHome();
+    // The old built-in home hero is written with no layout and no version; the daily conversion runs on it.
     expect((await getPublished("home", "default"))?.[0].props).not.toHaveProperty("heroVersion");
     expect(await convertHeroLayouts("seed:test")).toEqual({ updated: 1 });
     const published = await getPublished("home", "default");

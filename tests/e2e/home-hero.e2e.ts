@@ -1,16 +1,11 @@
 import { mkdirSync } from "node:fs";
 import { join } from "node:path";
-import type { Page } from "@playwright/test";
 import { expect, hasHorizontalScroll, signInAdminContext, test } from "./helpers";
 
 /** H6.13: the home hero is a full banner by default (one photo edge to edge, text on top), and the banner can be replaced or removed. */
 
 const SHOTS = join(process.cwd(), ".shots", "H6.13");
 const WIDTHS = [360, 390, 768, 1440];
-
-function heroBlock(page: Page) {
-  return page.locator("li.lay-block").filter({ has: page.locator(".lay-type", { hasText: /^hero$/ }) });
-}
 
 test.describe("H6.13 hero banner (H7.136: current Home markup)", () => {
   test.beforeEach(async ({ context, baseURL }) => {
@@ -60,32 +55,4 @@ test.describe("H6.13 hero banner (H7.136: current Home markup)", () => {
     }
   });
 
-  test("the hero editor offers upload, library, replace and remove for the banner, with the sizes in the help", async ({ page }, testInfo) => {
-    test.skip(testInfo.project.name !== "desktop-1440", "runs once, at desktop width");
-    await page.goto("/admin/homepage/");
-    await expect(page.locator("li.lay-block").first()).toBeVisible();
-    const hero = heroBlock(page);
-    await hero.getByRole("button", { name: "Edit", exact: true }).click();
-
-    // The layout starts on the full banner.
-    await expect(hero.getByLabel("Layout")).toHaveValue("full");
-
-    const desktop = hero.locator(".lay-image", { hasText: "Image for desktop" });
-    await expect(desktop.getByText("Up to 8 MB (2 MB or less loads faster). Recommended 1920 x 640 px.")).toBeVisible();
-    await expect(desktop.getByRole("button", { name: "Upload new banner" })).toBeVisible();
-
-    const phone = hero.locator(".lay-image", { hasText: "Image for phone (optional)" });
-    await expect(phone.getByText("Recommended 1080 x 1350 px.")).toBeVisible();
-    await expect(phone.getByRole("button", { name: "Upload new banner" })).toBeVisible();
-    // The phone photo is optional: its remove button only shows when a photo is set.
-    await expect(phone.getByRole("button", { name: "Remove banner" })).toHaveCount(0);
-
-    // The library and upload dialogs open from the banner buttons.
-    await desktop.getByRole("button", { name: /Choose from media library|Replace/ }).click();
-    await expect(page.getByRole("dialog").getByRole("button", { name: "Library" })).toBeVisible();
-    await page.getByRole("dialog").getByRole("button", { name: "Close" }).click();
-    await desktop.getByRole("button", { name: "Upload new banner" }).click();
-    await expect(page.getByRole("dialog").getByRole("button", { name: "Upload and use" })).toBeVisible();
-    await page.getByRole("dialog").getByRole("button", { name: "Close" }).click();
-  });
 });
