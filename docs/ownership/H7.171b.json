@@ -1,0 +1,11 @@
+{
+  "branchPrefix": "haiku/h7.171b",
+  "globs": [
+    "docs/ownership/H7.171b.json",
+    "src/server/admin/launch-checklist.ts",
+    "src/server/models/listing.ts",
+    "src/app/admin/_dashboard/**",
+    "tests/server/admin/h7171-checklist-keep.test.ts",
+    "tests/e2e/h7-171-queues.e2e.ts"
+  ]
+}

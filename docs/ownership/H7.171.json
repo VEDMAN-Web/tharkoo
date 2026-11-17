@@ -14,10 +14,6 @@
     "tests/e2e/a10-dashboard.e2e.ts",
     "tests/e2e/a43-desk.e2e.ts",
     "tests/e2e/a7-shell.e2e.ts",
-    "src/server/admin/launch-checklist.ts",
-    "src/server/models/listing.ts",
-    "src/app/admin/_dashboard/**",
-    "tests/server/admin/h7171-checklist-keep.test.ts",
     "tests/e2e/h7-171-queues.e2e.ts"
   ]
 }
