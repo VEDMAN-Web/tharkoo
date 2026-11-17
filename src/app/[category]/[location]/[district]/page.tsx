@@ -169,11 +169,12 @@ export default async function DistrictPage({ params, searchParams }: Props) {
     ? await loadFallbackSections({
         scope: { categorySlug: cat.slug || category, categoryName: cat.name || undefined, stateSlug: city.stateSlug || undefined, placeName: city.name },
         ownSlugs: feed.items.map((ad) => ad.slug || "").filter(Boolean),
+        t,
       })
     : [];
   const lead =
     feed.total === 0
-      ? { text: `No ads in ${dist.name} yet. Here are ads close by.`, button: `Post the first ad in ${dist.name}`, href: postAdPath(paths) }
+      ? { text: t("listing.empty.leadPlace", { place: dist.name || "" }), button: t("listing.empty.buttonPlace", { place: dist.name || "" }), href: postAdPath(paths) }
       : undefined;
   const crumbs = [
         { name: t("listing.crumb.home"), path: "/" },
