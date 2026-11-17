@@ -1,0 +1,11 @@
+{
+  "branchPrefix": "haiku/h7.158c-",
+  "globs": [
+    "docs/ownership/H7.158c.json",
+    "progress/H7.158c.md",
+    "src/server/admin/ads-bulk.ts",
+    "src/app/admin/ads/[id]/AdEditView.tsx",
+    "tests/server/admin/h7-158c-*.test.ts",
+    "tests/e2e/h7-158c-*.e2e.ts"
+  ]
+}
