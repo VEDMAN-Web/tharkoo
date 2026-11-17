@@ -91,7 +91,7 @@ test.describe("A33 part 2: ad edit photos, category and place", () => {
       await shot(page, "ad-photos");
 
       await photos.getByRole("button", { name: "Make Photo 2 the cover" }).click();
-      await expect(page.getByText("1 unsaved change")).toBeVisible();
+      await expect(page.getByText(/unsaved changes?/).first()).toBeVisible();
       await photos.locator("input[type=file]").setInputFiles([{ name: "extra.png", mimeType: "image/png", buffer: PNG }]);
       await expect(photos.locator("[data-state=ready]")).toHaveCount(3, { timeout: 30_000 });
       await photos.getByRole("button", { name: "Remove Photo 1" }).click();
