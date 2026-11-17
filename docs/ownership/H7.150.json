@@ -1,0 +1,8 @@
+{
+  "branchPrefix": "haiku/h7.150",
+  "globs": [
+    "docs/ownership/H7.150.json",
+    "src/components/post/post-wizard.css",
+    "tests/e2e/post-steps-3-4.e2e.ts"
+  ]
+}

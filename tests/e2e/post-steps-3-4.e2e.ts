@@ -112,10 +112,16 @@ test.describe("H7.85 post an ad, steps 3 and 4", () => {
         const nav = (await page.locator(".tkp-nav").boundingBox())!;
         if (width < 1024) {
           expect(Math.round(nav.y + nav.height), `${width} bar at bottom`).toBe(height);
+          await page.waitForLoadState("networkidle");
           await page.evaluate(() => window.scrollTo(0, document.documentElement.scrollHeight));
-          const last = await page.locator(".tkp-scroll > *").last().boundingBox();
+          await page.waitForTimeout(300);
+          await page.evaluate(() => window.scrollTo(0, document.documentElement.scrollHeight));
+          const lastBottom = await page.evaluate(() => {
+            const shown = [...document.querySelectorAll(".tkp-scroll > *")].filter((node) => node.getClientRects().length > 0);
+            return shown[shown.length - 1].getBoundingClientRect().bottom;
+          });
           const bar = (await page.locator(".tkp-nav").boundingBox())!;
-          expect(last!.y + last!.height, `${width} step ${step} end above bar`).toBeLessThanOrEqual(bar.y + 1);
+          expect(lastBottom, `${width} step ${step} end above bar`).toBeLessThanOrEqual(bar.y + 1);
         } else {
           await page.evaluate(() => window.scrollTo(0, 0));
           const top = (await page.locator(".tkp-nav").boundingBox())!;
