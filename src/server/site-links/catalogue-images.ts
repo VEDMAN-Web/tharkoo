@@ -1,3 +1,4 @@
+import { cached } from "@/lib/cache";
 import { connectDb } from "@/lib/db";
 import { Category, Location, SiteMedia } from "@/server/models";
 import type { CatalogBandDoc, CatalogPhotoDoc } from "@/server/models/catalog";
@@ -31,7 +32,8 @@ export function mergeCatalogueImages(old: readonly ShellImage[], fresh: readonly
       ...was,
       ...(row.photo ? { photo: row.photo, focusX: row.focusX, focusY: row.focusY } : {}),
       // A new band brings its own phone band (empty means phones use the band itself), never the old row's phone picture.
-      ...(row.band ? { band: row.band, bandPhone: row.bandPhone, bandFocusX: row.bandFocusX, bandFocusY: row.bandFocusY } : {}),
+      // bandNew marks it as set in the new boxes, so a page shows it even while the older photo band switch is off.
+      ...(row.band ? { band: row.band, bandPhone: row.bandPhone, bandFocusX: row.bandFocusX, bandFocusY: row.bandFocusY, bandNew: true } : {}),
     };
   }
   return out;
@@ -49,13 +51,23 @@ function rowOf(scope: ShellImage["scope"], doc: Slots, urls: Map<string, string>
     band,
     bandPhone,
     ...(photo ? { focusX: doc.photo?.focusX, focusY: doc.photo?.focusY } : {}),
-    ...(band ? { bandFocusX: doc.band?.focusX, bandFocusY: doc.band?.focusY } : {}),
+    ...(band ? { bandFocusX: doc.band?.focusX, bandFocusY: doc.band?.focusY, bandNew: true } : {}),
   };
 }
 
-/** The pictures set in the new boxes, as shell image rows. A picture in the Trash or without a safe address is left out. */
+/** How long the rows are kept. Saving pictures in the admin clears them at once (refreshPublicCache); this only bounds a second server. */
+const CACHE_MS = 15_000;
+
+/**
+ * The pictures set in the new boxes, as shell image rows. A picture in the Trash or without a safe address is left out.
+ * Every public page reads this, so it is kept for a few seconds under the "categories" and "locations" tags that refreshPublicCache clears.
+ */
 export async function loadCatalogueImages(): Promise<ShellImage[]> {
   await connectDb();
+  return cached("catalogue-images", CACHE_MS, readCatalogueImages, ["categories", "locations"]);
+}
+
+async function readCatalogueImages(): Promise<ShellImage[]> {
   const withPictures = { $or: [{ "photo.mediaId": { $exists: true } }, { "band.mediaId": { $exists: true } }] };
   const [categories, places] = await Promise.all([
     Category.find({ deletedAt: null, ...withPictures }).select("slug photo band").lean<Lean[]>(),

@@ -1,0 +1,13 @@
+{
+  "branchPrefix": "haiku/h7.161",
+  "globs": [
+    "docs/ownership/H7.161.json",
+    "src/server/site-links/catalogue-images.ts",
+    "src/server/site-links/shell-config-rules.ts",
+    "src/components/new/band-image.ts",
+    "src/app/[category]/**",
+    "src/app/cities/[city]/page.tsx",
+    "tests/server/site-links/h7160-catalogue-images.test.ts",
+    "tests/e2e/h7160-menus.e2e.ts"
+  ]
+}

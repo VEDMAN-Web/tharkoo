@@ -33,6 +33,8 @@ export type ShellImage = {
   bandFocusY?: number;
   bandPhoneFocusX?: number;
   bandPhoneFocusY?: number;
+  /** H7.161: set only on a row made from the new boxes on Categories and Cities (never stored): its band was chosen on purpose. */
+  bandNew?: boolean;
 };
 
 export function focusValue(value: unknown): number | undefined {

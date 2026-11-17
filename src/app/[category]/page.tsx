@@ -28,7 +28,7 @@ import { SubcategoryChips } from "./SubcategoryChips";
 import { loadCardWidth } from "@/server/listings/card-width";
 import { activeFilterKeys, listingCanonicalSuffix, listingRobots, type ListingParams } from "@/server/search/filter-seo";
 import { readShellConfig } from "@/server/site-links/shell-config";
-import { bandChoice, heroBandFrom } from "@/components/new/band-image";
+import { bandChoice, hasOwnBand, heroBandFrom } from "@/components/new/band-image";
 import { FallbackAds } from "@/components/FallbackAds";
 import { loadFallbackSections, showFallback } from "@/lib/fallback-ads";
 import { ListingFrame } from "@/components/new/ListingFrame";
@@ -237,7 +237,7 @@ export default async function CategoryHub({ params, searchParams }: Props) {
         total: feed.total,
         labels,
         places,
-        showBand: homeContent.showListingBand,
+        showBand: homeContent.showListingBand || hasOwnBand(shell, { category: cat.slug || category }),
         template: {
           state: { category: { slug: cat.slug || category, name: cat.name || category }, toggles, picks, fields: cat.fields },
           crumbs: [

@@ -21,7 +21,7 @@ import { ListingPager } from "@/components/new/ListingPager";
 import { pagerLabels } from "@/components/new/listing-pager";
 import { listingFrameProps, listingLabels, searchPlaceSelects } from "@/components/new/listing-frame-props";
 import { SEARCH_BASE } from "@/components/new/listing-template";
-import { bandChoice, heroBandFrom } from "@/components/new/band-image";
+import { bandChoice, hasOwnBand, heroBandFrom } from "@/components/new/band-image";
 import { FallbackAds } from "@/components/FallbackAds";
 import { loadFallbackSections, showFallback } from "@/lib/fallback-ads";
 
@@ -144,7 +144,7 @@ export default async function CityAreasPage({ params, searchParams }: Props) {
       districts: data.areas,
       labels,
     }),
-    showBand: homeContent.showListingBand,
+    showBand: homeContent.showListingBand || hasOwnBand(shell, { city, state: data.stateSlug || undefined }),
     template: {
       state: { city: { slug: city, name: data.name }, toggles, picks: {} },
       crumbs,

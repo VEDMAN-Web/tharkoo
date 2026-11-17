@@ -36,7 +36,7 @@ import { isCityAlias } from "@/lib/seo/district-alias";
 import { SubcategoryChips } from "../SubcategoryChips";
 import { loadCardWidth } from "@/server/listings/card-width";
 import { readShellConfig } from "@/server/site-links/shell-config";
-import { bandChoice, heroBandFrom } from "@/components/new/band-image";
+import { bandChoice, hasOwnBand, heroBandFrom } from "@/components/new/band-image";
 import { FallbackAds } from "@/components/FallbackAds";
 import { loadFallbackSections, showFallback } from "@/lib/fallback-ads";
 import { ListingFrame } from "@/components/new/ListingFrame";
@@ -317,7 +317,7 @@ export default async function LocationPage({ params, searchParams }: Props) {
     total: feed.total,
     labels,
     places,
-    showBand: homeContent.showListingBand,
+    showBand: homeContent.showListingBand || hasOwnBand(shell, { city: loc.kind === "city" ? citySlug : undefined, category: categorySlug }),
     template: {
       state: {
         category: { slug: categorySlug, name: cat.name || categorySlug },
