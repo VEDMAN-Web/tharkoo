@@ -3,7 +3,7 @@ import { Lock } from "lucide-react";
 import { AdminShell } from "@/components/admin/AdminShell";
 import type { EditorField } from "@/components/admin/category-fields/CategoryFieldsEditor";
 import { getStaffFromHeaders } from "@/lib/admin-auth";
-import { isAdminRole } from "@/lib/ui/site-content";
+import { canEditSite } from "@/lib/ui/site-content";
 import { loadCategoriesScreen } from "@/server/categories/screen";
 import { readCategoryFields } from "./fields-service";
 import { CategoriesScreen } from "./_screen/CategoriesScreen";
@@ -16,7 +16,7 @@ const one = (value: string | string[] | undefined) => (Array.isArray(value) ? va
 /** Categories & fields (H8.51): one master-detail screen. `?c=` names the category and `?tab=` the tab, so links and Back work. */
 export default async function Page({ searchParams }: { searchParams: Promise<Record<string, string | string[] | undefined>> }) {
   const identity = await getStaffFromHeaders();
-  if (!isAdminRole(identity.roles)) {
+  if (!canEditSite(identity.roles)) {
     return (
       <AdminShell title="Categories & fields" hasHeader>
         <div className="adm-card" style={{ padding: 40, textAlign: "center", display: "grid", gap: 8, justifyItems: "center" }} data-tk="no-access">

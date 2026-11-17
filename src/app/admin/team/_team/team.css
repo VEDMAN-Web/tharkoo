@@ -22,6 +22,7 @@
 .adm-tm-roles { display: grid; gap: 8px; margin: 0; padding: 0; border: 0; min-width: 0; }
 .adm-tm-choice { display: grid; grid-template-columns: 24px minmax(0, 1fr); gap: 10px; align-items: start; min-height: 44px; padding: 8px 0; }
 .adm-tm-choice small { display: block; color: var(--adm-kmuted); font-size: 12.5px; }
+.adm-tm-choice small.adm-tm-warn { color: var(--adm-bad); font-weight: 700; }
 .adm-tm-end { display: grid; gap: 8px; padding-top: 12px; border-top: 1px solid var(--adm-line2); }
 .adm-tm-end .adm-k-btn { justify-self: start; }
 @media (max-width: 1023px) {

@@ -1,7 +1,7 @@
 import { randomUUID } from "node:crypto";
 import { refreshPublicCache } from "@/lib/cache";
 import { connectDb } from "@/lib/db";
-import { isAdminRole } from "@/lib/ui/site-content";
+import { canEditSite } from "@/lib/ui/site-content";
 import { AuditRepository } from "@/server/audit";
 import { reviewOptionCells } from "@/server/fields/options";
 import {
@@ -124,7 +124,7 @@ async function actorId(email: string) {
 
 /** Saves one category's post-form fields. Admin or superadmin only; audited with before and after. */
 export async function updateCategoryFields(input: { slug: string; edits: unknown; email: string; roles: string[] }) {
-  if (!isAdminRole(input.roles)) throw new ForbiddenError("Only an admin can edit post fields");
+  if (!canEditSite(input.roles)) throw new ForbiddenError("Only an admin can edit post fields");
   await connectDb();
   const category = await Category.findOne({ slug: input.slug, deletedAt: null });
   if (!category) throw new NotFoundError("Category not found");
@@ -171,7 +171,7 @@ export async function updateCategoryFields(input: { slug: string; edits: unknown
 
 /** Adds a field to the end of a category's post-ad form. Admin only. The key is made from the label and kept unique. */
 export async function addCategoryField(input: { slug: string; label: string; kind: string; email: string; roles: string[] }) {
-  if (!isAdminRole(input.roles)) throw new ForbiddenError("Only an admin can add post fields");
+  if (!canEditSite(input.roles)) throw new ForbiddenError("Only an admin can add post fields");
   if (!Object.prototype.hasOwnProperty.call(FIELD_KINDS, input.kind)) throw new ValidationError("Choose one of the five field types");
   const label = requireText(input.label, 80, "The field needs a label (up to 80 characters)");
   if (textDenied(label).denied) throw new ValidationError("That label is not allowed on Tharkoo");

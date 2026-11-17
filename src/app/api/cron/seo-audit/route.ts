@@ -2,7 +2,7 @@ import { handle, parseInput, requestIdFrom, success } from "@/server/http";
 import { assertCronAuth } from "@/server/shared/cron-auth";
 import { cronBodySchema } from "@/server/shared/schemas/common";
 import { siteUrl } from "@/lib/utils";
-import { runAudit } from "@/server/seo/audit-run";
+import { NIGHTLY_PAGE_LIMIT, runAudit } from "@/server/seo/audit-run";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -20,7 +20,7 @@ async function dispatch(request: Request) {
   const requestId = requestIdFrom(request);
   assertCronAuth(request);
   parseInput(cronBodySchema, await readBody(request));
-  const data = await runAudit({ base: siteUrl(), triggeredBy: "cron" });
+  const data = await runAudit({ base: siteUrl(), triggeredBy: "cron", limit: NIGHTLY_PAGE_LIMIT });
   return Response.json(success(data, requestId), { status: 200, headers: { "x-request-id": requestId } });
 }
 

@@ -22,12 +22,12 @@ export type MediaTabCounts = { pictures: number; unused: number; missing: number
 export type MediaDetail = { item: MediaItem; phone: MediaItem | null; usages: MediaUsage[]; trashed: boolean };
 
 function requireMedia(roles: readonly string[]) {
-  if (!can(roles, "settings.edit")) throw new ForbiddenError("Only an admin can open the media library");
+  if (!can(roles, "media.library")) throw new ForbiddenError("Only an admin or a content editor can open the media library");
 }
 
 async function requireWrite(ctx: AdminCtx, id: string, action: string) {
-  if (can(ctx.roles, "settings.edit")) return;
-  await adminWrite(ctx, { perm: "settings.edit", action, target: { type: "site_media", id }, before: async () => null, apply: async () => ({ after: null, result: null, summary: "" }) });
+  if (can(ctx.roles, "media.library")) return;
+  await adminWrite(ctx, { perm: "media.library", action, target: { type: "site_media", id }, before: async () => null, apply: async () => ({ after: null, result: null, summary: "" }) });
 }
 
 function plain<T>(value: T): T {
@@ -117,7 +117,7 @@ export async function saveMediaDetails(ctx: AdminCtx, id: string, input: MediaDe
   const next: Fields = { ...before, alt, phoneVariantId: phone, focusX: focus(input.focusX, "focusX"), focusY: focus(input.focusY, "focusY") };
   if (JSON.stringify(before) === JSON.stringify(next) && row.altAuto !== true) return { eventId: "", changed: false, item: present(row) };
   const written = await adminWrite<null>(ctx, {
-    perm: "settings.edit",
+    perm: "media.library",
     action: "media.update",
     target: { type: "site_media", id, label: alt },
     texts: [alt],
@@ -143,7 +143,7 @@ export async function trashMedia(ctx: AdminCtx, id: string): Promise<{ eventId: 
   const purgeAfter = new Date(Date.now() + TRASH_DAYS * DAY_MS).toISOString();
   const next: Fields = { ...before, trashedAt: new Date().toISOString(), purgeAfter };
   const written = await adminWrite<null>(ctx, {
-    perm: "settings.edit",
+    perm: "media.library",
     action: "media.trash",
     target: { type: "site_media", id, label: row.alt },
     undo: { kind: "media.trash", windowKey: "edits" },
@@ -165,7 +165,7 @@ export async function restoreMedia(ctx: AdminCtx, id: string): Promise<{ eventId
   const before = fieldsOf(plain(row) as unknown as Doc);
   const next: Fields = { ...before, trashedAt: null, purgeAfter: null };
   const written = await adminWrite<null>(ctx, {
-    perm: "settings.edit",
+    perm: "media.library",
     action: "media.restore",
     target: { type: "site_media", id, label: row.alt },
     undo: { kind: "media.trash", windowKey: "edits" },

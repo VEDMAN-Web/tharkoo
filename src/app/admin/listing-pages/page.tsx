@@ -6,7 +6,7 @@ import { getStaffFromHeaders } from "@/lib/admin-auth";
 import { connectDb } from "@/lib/db";
 import { canonical } from "@/lib/seo";
 import { sampleVarsFor, type PageTitleTarget } from "@/lib/seo/page-title-defaults";
-import { isAdminRole } from "@/lib/ui/site-content";
+import { canEditSite } from "@/lib/ui/site-content";
 import { getSite } from "@/lib/queries";
 import { typesForPage } from "@/server/layout/blocks";
 import { readPageTitle } from "@/server/seo/page-titles";
@@ -60,7 +60,7 @@ function pickScope(kind: string, category: string, url: string): { scope: string
 
 export default async function ListingPagesAdmin({ searchParams }: Search) {
   const identity = await getStaffFromHeaders();
-  if (!isAdminRole(identity.roles)) {
+  if (!canEditSite(identity.roles)) {
     return (
       <AdminShell title="Listing pages">
         <Notice kind="warn">Only an admin can edit listing pages.</Notice>

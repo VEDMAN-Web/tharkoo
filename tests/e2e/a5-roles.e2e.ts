@@ -13,6 +13,10 @@ const EXPECTED: Record<string, { labels: string[]; closed: string[] }> = {
     labels: ["Dashboard", "History & undo", "Content studio", "Media library"],
     closed: ["/admin/moderation/", "/admin/reports/", "/admin/users/", "/admin/prices/", "/admin/seo/", "/admin/settings/", "/admin/team/"],
   },
+  content_editor: {
+    labels: ["Dashboard", "History & undo", "Page builder", "Content studio", "Media library", "Menus & site text", "Categories & fields", "Cities & areas"],
+    closed: ["/admin/moderation/", "/admin/reports/", "/admin/finance/", "/admin/users/", "/admin/prices/", "/admin/support/", "/admin/seo/", "/admin/settings/", "/admin/team/"],
+  },
   support: {
     labels: ["Dashboard", "History & undo", "Support desk", "All ads", "Users"],
     closed: ["/admin/moderation/", "/admin/finance/", "/admin/content/", "/admin/page-builder/"],

@@ -3,14 +3,14 @@
 import { refreshPublicCache } from "@/lib/cache";
 import { getStaffFromHeaders } from "@/lib/admin-auth";
 import { applyHomepageChange, applyListingBandSwitch, applyHomeSeoChange, ensureHomepageDocument } from "@/lib/ui/site-store";
-import { readContent, type SiteContent } from "@/lib/ui/site-content";
+import { canEditSite, readContent, type SiteContent } from "@/lib/ui/site-content";
 import { connectDb } from "@/lib/db";
 import { HttpError } from "@/server/http";
 import { Site } from "@/server/models";
 
 export async function loadHomepageForAdmin(): Promise<SiteContent> {
   const identity = await getStaffFromHeaders();
-  if (!identity.roles.some((role) => role === "admin" || role === "superadmin")) {
+  if (!canEditSite(identity.roles)) {
     throw new Error("Only an admin can edit the homepage");
   }
   await ensureHomepageDocument();

@@ -3,7 +3,7 @@ import { mkdir, unlink, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { Types, isValidObjectId } from "mongoose";
 import { connectDb } from "@/lib/db";
-import { isAdminRole } from "@/lib/ui/site-content";
+import { canEditSite } from "@/lib/ui/site-content";
 import { AuditRepository } from "@/server/audit";
 import { ConflictError, ForbiddenError, NotFoundError, ValidationError } from "@/server/http";
 import { cloudinaryClient, uploadToCloudinary } from "@/server/media/client";
@@ -38,7 +38,7 @@ export function siteMediaDir() {
 }
 
 function requireAdmin(roles: string[]) {
-  if (!isAdminRole(roles)) throw new ForbiddenError("Only an admin can manage the media library");
+  if (!canEditSite(roles)) throw new ForbiddenError("Only an admin can manage the media library");
 }
 
 async function actorId(email: string) {

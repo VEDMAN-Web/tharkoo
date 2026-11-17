@@ -12,6 +12,7 @@ export const STAFF_ROLE_NAMES: ReadonlySet<string> = new Set([
   "seo_editor",
   "finance",
   "blog_editor",
+  "content_editor",
 ]);
 
 /** The seller profile, asked once before the first ad (H7.2b). Name and city show on ads. Date of birth never shows. */
