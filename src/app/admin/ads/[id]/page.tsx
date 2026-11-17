@@ -1,46 +1,59 @@
+import Link from "next/link";
 import { notFound } from "next/navigation";
-import { Types } from "mongoose";
+import { Lock } from "lucide-react";
 import { AdminShell } from "@/components/admin/AdminShell";
-import { Notice } from "@/components/admin/ui";
 import { getStaffFromHeaders } from "@/lib/admin-auth";
-import { connectDb } from "@/lib/db";
+import { can } from "@/lib/admin/perms";
 import { isAdminRole } from "@/lib/ui/site-content";
-import { adCountsFor } from "@/server/listings/ad-counts";
-import { Listing } from "@/server/models";
+import { NotFoundError } from "@/server/http";
+import { getAdHistory, getStaffAd } from "@/server/listings/staff-edit";
+import { AdEditView } from "./AdEditView";
 import { CountsForm } from "./CountsForm";
 
 export const dynamic = "force-dynamic";
 
-/** H6.17: Admin > All ads > this ad > Views and clicks. */
-export default async function AdViewsAndClicks({ params }: { params: Promise<{ id: string }> }) {
+/** H8.33 (A33): Ad edit. The form, the side cards, the history drawer, and (admins) the shown views and clicks. */
+export default async function AdEditPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const identity = await getStaffFromHeaders();
-  if (!isAdminRole(identity.roles)) {
+  if (!can(identity.roles, "ads.view")) {
     return (
-      <AdminShell title="Views and clicks">
-        <Notice kind="warn">Only an admin can change views and clicks.</Notice>
+      <AdminShell title="Ad" hasHeader>
+        <div className="adm-card" style={{ padding: 40, textAlign: "center", display: "grid", gap: 8, justifyItems: "center" }} data-tk="no-access">
+          <Lock aria-hidden="true" size={28} />
+          <h2 style={{ margin: 0, fontSize: 16 }}>You cannot open this ad</h2>
+          <p style={{ margin: 0, maxWidth: "44ch" }}>This screen is for moderators, trust and safety, support and admins. Ask an admin if you need it.</p>
+          <Link href="/admin/" className="adm-btn adm-btn-quiet">Back to Dashboard</Link>
+        </div>
       </AdminShell>
     );
   }
-  if (!Types.ObjectId.isValid(id)) notFound();
-  await connectDb();
-  const ad = await Listing.findById(id).select("title slug status").lean<{ title?: string; slug?: string; status?: string } | null>();
-  if (!ad) notFound();
-  const counts = await adCountsFor(id);
+  let ad;
+  try {
+    ad = await getStaffAd(identity.roles, id);
+  } catch (error) {
+    if (error instanceof NotFoundError) notFound();
+    throw error;
+  }
+  const history = await getAdHistory(identity.roles, id);
   return (
-    <AdminShell title="Views and clicks">
-      <p className="mb-3 t-small text-muted">
-        {ad.title || "Ad"} · status {ad.status || "unknown"}
-        {ad.slug ? (
-          <>
-            {" · "}
-            <a href={`/ad/${ad.slug}/`} target="_blank" rel="noreferrer">
-              Open the ad
-            </a>
-          </>
-        ) : null}
-      </p>
-      <CountsForm listingId={id} initial={counts} />
+    <AdminShell title={ad.values.title || "Ad"} hasHeader>
+      <AdEditView ad={ad} history={history} />
+      {isAdminRole(identity.roles) && ad.counts ? (
+        <section className="adm-card" aria-labelledby="ad-counts-heading" style={{ marginTop: 16 }} data-tk="ad-counts">
+          <h2 id="ad-counts-heading" className="t-h4">Views and clicks</h2>
+          <p className="t-small text-muted">
+            Shown is the number visitors see. Real is what visitors have actually done.
+            {ad.slug ? (
+              <>
+                {" "}
+                <a href={`/ad/${ad.slug}/`} target="_blank" rel="noreferrer">Open the ad</a>
+              </>
+            ) : null}
+          </p>
+          <CountsForm listingId={id} initial={ad.counts} />
+        </section>
+      ) : null}
     </AdminShell>
   );
 }
