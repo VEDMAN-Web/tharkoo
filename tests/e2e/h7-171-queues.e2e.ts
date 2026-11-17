@@ -122,6 +122,7 @@ test.describe("H7.171 Dashboard and queues", () => {
         await page.goto("/admin/");
         await expect(page.locator('[data-tk="check-junk-ads"]').getByRole("button", { name: `Not junk: ${marker}` })).toBeVisible();
         expect(await hasHorizontalScroll(page)).toBe(false);
+        await page.locator('[data-tk="check-support-phone"]').scrollIntoViewIfNeeded();
         await shot(page, "checklist");
       }
       await page.setViewportSize({ width: 1440, height: 900 });
@@ -131,6 +132,8 @@ test.describe("H7.171 Dashboard and queues", () => {
       await phone.locator('[data-tk="keep-as-is"]').click();
       await expect(page.locator('[data-tk="checklist-note"]')).toContainText("Kept as is");
       await expect(phone).toHaveAttribute("data-done", "yes");
+      await phone.scrollIntoViewIfNeeded();
+      await shot(page, "checklist-kept");
       await page.locator('[data-tk="checklist-undo"]').click();
       await expect(phone).toHaveAttribute("data-done", "no");
 
