@@ -1,0 +1,9 @@
+{
+  "branchPrefix": "haiku/h7.139",
+  "globs": [
+    "docs/ownership/H7.139.json",
+    "src/styles/admin-kit.css",
+    "src/components/admin/ui/Toast.tsx",
+    "tests/e2e/h7-139-toast.e2e.ts"
+  ]
+}
