@@ -70,18 +70,17 @@ test.describe("H7.173 Reports and SEO", () => {
     await withLocalDb((db) => db.collection("reports").deleteMany({ askedBy: who }));
   });
 
-  test("SEO: the tab is called Search engines & AI, issues say Must fix and Should fix, and the hidden-site line shows only while the site is hidden", async ({ page, context, baseURL, request }) => {
+  test("SEO: the tab is called Search engines & AI, issues say Must fix and Should fix, and the hidden-site line shows while the site is hidden", async ({ page, context, baseURL }) => {
     test.setTimeout(180_000);
     await signInAdminContext(context, baseURL!);
-    const robots = await (await request.get("/robots.txt")).text();
-    const hidden = /^User-agent: \*\s*\nDisallow: \/\s*$/m.test(robots);
+    // The test server runs with SITE_NOINDEX on (tests/e2e/server.mjs), so the site counts as hidden.
     for (const size of [{ width: 1440, height: 900 }, { width: 390, height: 844 }]) {
       await page.setViewportSize(size);
       await page.goto("/admin/seo/");
       await expect(page.getByRole("link", { name: "Search engines & AI" })).toBeVisible();
       await expect(page.getByText("robots, llms & schema")).toHaveCount(0);
-      await expect(page.locator('[data-tk="seo-hidden-note"]')).toHaveCount(hidden ? 1 : 0);
-      if (hidden) await expect(page.locator('[data-tk="seo-hidden-note"]')).toContainText("The site is hidden from Google until launch, so no page counts as indexable yet.");
+      await expect(page.locator('[data-tk="seo-hidden-note"]')).toHaveCount(1);
+      await expect(page.locator('[data-tk="seo-hidden-note"]')).toContainText("The site is hidden from Google until launch, so no page counts as indexable yet.");
       await expect(page.getByText(/\bP0\b|\bP1\b/)).toHaveCount(0);
       expect(await hasHorizontalScroll(page)).toBe(false);
       expect(await serious(page)).toEqual([]);
