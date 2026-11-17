@@ -29,6 +29,28 @@ function ago(iso: string) {
   return `${Math.floor(hours / HOURS_PER_DAY)} d`;
 }
 
+function IdPhoto({ label, src }: { label: string; src: string }) {
+  const [broken, setBroken] = useState(false);
+  if (broken) {
+    return (
+      <span className="adm-id-none adm-id-gone" role="img" aria-label={`${label}: photo not available`} data-tk="id-photo-missing">
+        Photo not available
+      </span>
+    );
+  }
+  return (
+    // eslint-disable-next-line @next/next/no-img-element
+    <img
+      ref={(node) => {
+        if (node && node.complete && node.naturalWidth === 0) setBroken(true);
+      }}
+      src={src}
+      alt={label}
+      onError={() => setBroken(true)}
+    />
+  );
+}
+
 function Screen({ list, detail }: { list: IdList; detail: IdDetail | null }) {
   const router = useRouter();
   const pathname = usePathname();
@@ -197,8 +219,7 @@ function Screen({ list, detail }: { list: IdList; detail: IdDetail | null }) {
               ).map(([label, src]) => (
                 <figure key={label}>
                   {src ? (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img src={src} alt={label} />
+                    <IdPhoto key={src} label={label} src={src} />
                   ) : (
                     <span className="adm-id-none" role="img" aria-label={`${label} not sent`} />
                   )}

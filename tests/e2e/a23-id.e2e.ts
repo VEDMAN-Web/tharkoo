@@ -70,6 +70,9 @@ test.describe("A23 ID checks", () => {
     await expect(drawer.getByText("ID front")).toBeVisible();
     await expect(drawer.getByText("ID back")).toBeVisible();
     await expect(drawer.getByText("18+")).toBeVisible();
+    await expect(drawer.locator('[data-tk="id-photo-missing"]')).toHaveCount(3);
+    await expect(drawer.getByText("Photo not available")).toHaveCount(3);
+    await expect(drawer.locator("img")).toHaveCount(0);
     if (SHOTS) await page.screenshot({ path: `${SHOTS}/id-drawer-1440x900.png` });
     await page.getByRole("button", { name: "Reject..." }).last().click();
     const dialog = page.locator('[data-tk="reason-dialog"]');
