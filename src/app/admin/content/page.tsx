@@ -3,6 +3,7 @@ import { Notice } from "@/components/admin/ui";
 import { getStaffFromHeaders } from "@/lib/admin-auth";
 import { can } from "@/lib/admin/perms";
 import { siteUrl } from "@/lib/utils";
+import { builtInCounts, builtInScreen, listBuiltIns } from "@/server/content/studio/builtin";
 import { listContent, options, parseKind, parseStatus, readEditorItem, tabCounts } from "@/server/content/studio/admin";
 import { canPublishKind } from "@/server/content/studio/service";
 import { getPaths } from "@/server/urls/service";
@@ -36,14 +37,17 @@ export default async function Page({ searchParams }: { searchParams: Promise<Par
   const status = parseStatus(one(params.status));
   const q = one(params.q).trim().slice(0, 80);
   const itemId = one(params.item).slice(0, 40);
-  const [rows, counts, item, authors, categories, paths] = await Promise.all([
+  const [rows, ownCounts, item, authors, categories, paths, builtIns, builtCounts] = await Promise.all([
     listContent(tab, { status, q }),
     tabCounts(),
     itemId ? readEditorItem(itemId) : Promise.resolve(null),
     options("author"),
     options("blogCategory"),
     getPaths(),
+    listBuiltIns(tab),
+    builtInCounts(),
   ]);
+  const counts = { blog: ownCounts.blog + builtCounts.blog, help: ownCounts.help + builtCounts.help };
   const shown = item && item.kind === tab ? item : null;
   const problem = itemId && !shown ? "That item was not found. Pick one from the list." : "";
   return (
@@ -53,6 +57,8 @@ export default async function Page({ searchParams }: { searchParams: Promise<Par
         status={status}
         q={q}
         rows={rows}
+        builtIns={builtIns}
+        builtInScreen={builtInScreen(tab)}
         counts={counts}
         item={shown}
         authors={authors}

@@ -23,7 +23,7 @@ const requestSchema = z.object({ listingId: idSchema });
 const disputeSchema = z.object({ reason: z.string().trim().min(3).max(500) });
 const settingsSchema = z.object({
   categoryId: idSchema,
-  kind: z.enum(["goods", "property", "vehicle", "job", "service", "people"]).optional(),
+  kind: z.string().trim().min(1).max(40).optional(),
   enabled: z.boolean().optional(),
   coins: z.number().int().min(1).max(100).optional(),
 });

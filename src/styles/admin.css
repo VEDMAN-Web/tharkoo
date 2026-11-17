@@ -264,7 +264,16 @@ textarea.adm-input { min-height: 96px; resize: vertical; }
 .adm-brand-img { display: block; width: 32px; height: 32px; border-radius: 10px; }
 .adm-mockbar { display: flex; align-items: center; flex-wrap: wrap; gap: 6px 12px; padding: 8px 24px; background: var(--adm-danger); color: #fff; font-size: 13px; font-weight: 700; }
 .adm .adm-mockbar a { display: inline-flex; align-items: center; min-height: 24px; color: #fff; text-decoration: underline; }
-@media (max-width: 767px) { .adm-mockbar { padding: 8px 12px; } .adm .adm-mockbar a { min-height: 44px; } }
+@media (max-width: 767px) {
+  .adm-mockbar { flex-wrap: nowrap; justify-content: space-between; gap: 12px; padding: 0 12px; white-space: nowrap; }
+  .adm .adm-mockbar a { min-height: 44px; }
+  .adm-mockbar-more { display: none; }
+  .adm-savebar { bottom: 76px; flex-wrap: nowrap; gap: var(--adm-s2); margin-top: var(--adm-s3); padding: var(--adm-s2) 12px; }
+  .adm-savebar > .adm-savebar-status { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+  .adm-savebar > .adm-savebar-actions { flex: 1; flex-wrap: nowrap; }
+  .adm-savebar > .adm-savebar-actions > .adm-btn { flex: 1 1 0; min-width: 0; min-height: 44px; padding-inline: 8px; }
+  :root:has(.adm-savebar, .adm-pb-savebar) { scroll-padding-bottom: 160px; }
+}
 
 /* ---- staff sign in ---- */
 .adm-login { display: grid; place-items: center; padding: var(--adm-s4); }

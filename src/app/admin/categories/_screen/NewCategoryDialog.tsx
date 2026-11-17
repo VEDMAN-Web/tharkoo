@@ -4,10 +4,11 @@ import { useState } from "react";
 import { Button, TextField } from "@/components/admin/ui";
 import { createCategoryAction } from "../manage-actions";
 import { FormDialog } from "@/app/admin/_catalog/FormDialog";
-import { KIND_HELP, KIND_OPTIONS, MAX_NAME, slugFromName } from "./model";
+import type { KindView } from "@/lib/category-kinds";
+import { KIND_HELP, MAX_NAME, slugFromName } from "./model";
 
 /** The small New category dialog: a name, a web address and a kind. Everything else is on the category's own tabs afterwards. */
-export function NewCategoryDialog({ open, onClose, onCreated }: { open: boolean; onClose: () => void; onCreated: (slug: string) => void }) {
+export function NewCategoryDialog({ open, kinds, onClose, onCreated }: { open: boolean; kinds: KindView[]; onClose: () => void; onCreated: (slug: string) => void }) {
   const [name, setName] = useState("");
   const [slug, setSlug] = useState("");
   const [touched, setTouched] = useState(false);
@@ -63,9 +64,9 @@ export function NewCategoryDialog({ open, onClose, onCreated }: { open: boolean;
           <option value="" disabled>
             Choose a kind
           </option>
-          {KIND_OPTIONS.map((option) => (
-            <option key={option.value} value={option.value}>
-              {option.label}
+          {kinds.map((option) => (
+            <option key={option.key} value={option.key}>
+              {option.name}
             </option>
           ))}
         </select>

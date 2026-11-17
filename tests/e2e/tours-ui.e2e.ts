@@ -8,7 +8,7 @@ test.describe("Live video tours UI", () => {
     await signInAdminContext(context, baseURL!);
     await page.goto("/admin/settings/video-tours/");
     await expect(page.getByRole("heading", { name: "Video tours", level: 1 })).toBeVisible();
-    await expect(page.getByText("Not available for people listings").first()).toBeVisible();
+    await expect(page.getByText("Video is never allowed on listings about people.").first()).toBeVisible();
 
     const peopleSwitch = page.getByRole("switch", { name: /Live video tours for Dating/ });
     if (await peopleSwitch.count()) await expect(peopleSwitch.first()).toBeDisabled();

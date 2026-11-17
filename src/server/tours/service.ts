@@ -6,7 +6,8 @@ import { postTransaction } from "@/server/ledger/service";
 import { ConflictError, ForbiddenError, NotFoundError, PaymentRequiredError, ValidationError, isDuplicateKey } from "@/server/http";
 import { mailerFromEnv } from "@/server/mailer";
 import { Category, Listing, User } from "@/server/models";
-import { CATEGORY_KINDS, type CategoryKind } from "@/server/models/catalog";
+import { kindAllowsVideo, isPeopleListing, listKinds, requireKind, VIDEO_NEVER_FOR_PEOPLE } from "@/server/categories/kinds";
+import type { CategoryKind } from "@/server/models/catalog";
 import { VideoTour, type VideoTourDoc } from "@/server/tours/model";
 import { callPagePath, roomExpiry, videoRoomProvider } from "@/server/tours/room";
 import { accountName } from "@/lib/account-name";
@@ -438,8 +439,11 @@ export async function tourCallFor(input: { userId: string; tourId: string }) {
 
 export async function listVideoTourCategories() {
   await connectDb();
-  const rows = await Category.find({}).select("name slug kind videoTourEnabled videoTourCoins").sort({ order: 1 }).lean();
+  const rows = await Category.find({}).select("name slug kind fields videoTourEnabled videoTourCoins").sort({ order: 1 }).lean();
+  const allowing = new Set((await listKinds()).filter((kind) => kind.videoTours).map((kind) => kind.key));
   return rows.map((row) => ({
+    kindVideoOff: !allowing.has(row.kind ?? ""),
+    peopleLocked: isPeopleListing(row as { slug?: string; kind?: string; fields?: unknown }),
     id: String(row._id),
     name: row.name,
     slug: row.slug,
@@ -463,12 +467,17 @@ export async function updateVideoTourSettings(input: {
   await connectDb();
   const category = await Category.findById(objectId(input.categoryId, "categoryId")).lean();
   if (!category) throw new NotFoundError("Not found");
-  const kind = input.kind ?? (category.kind as CategoryKind | undefined) ?? "goods";
-  if (!(CATEGORY_KINDS as readonly string[]).includes(kind)) throw new ValidationError("Invalid request", { kind: ["Unknown kind"] });
-  if (kind === "people" && input.enabled === true) {
-    throw new ValidationError("Invalid request", { enabled: ["Not available for people listings"] });
+  const kind: CategoryKind = await requireKind(input.kind ?? category.kind ?? "goods").catch(() => {
+    throw new ValidationError("Invalid request", { kind: ["Unknown kind"] });
+  });
+  const people = isPeopleListing({ slug: category.slug, kind, fields: category.fields });
+  if (people && input.enabled === true) {
+    throw new ValidationError("Invalid request", { enabled: [VIDEO_NEVER_FOR_PEOPLE] });
   }
-  const enabled = kind === "people" ? false : (input.enabled ?? category.videoTourEnabled === true);
+  if (input.enabled === true && !(await kindAllowsVideo({ slug: category.slug, kind, fields: category.fields }))) {
+    throw new ValidationError("Invalid request", { enabled: ["This kind does not allow live video tours. Change it under Categories & fields, Kinds."] });
+  }
+  const enabled = people ? false : (input.enabled ?? category.videoTourEnabled === true);
   const coins = input.coins ?? category.videoTourCoins ?? 1;
   await Category.updateOne({ _id: category._id }, { $set: { kind, videoTourEnabled: enabled, videoTourCoins: coins } });
   await audit.append({

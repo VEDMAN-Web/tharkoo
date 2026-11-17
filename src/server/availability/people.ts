@@ -1,5 +1,6 @@
 import mongoose from "mongoose";
 import { connectDb } from "@/lib/db";
+import { hasAgeGate } from "@/server/categories/kind";
 import { Category, Listing } from "@/server/models";
 
 /**
@@ -10,11 +11,11 @@ export const PEOPLE_KIND = "people";
 
 export const PEOPLE_SLUGS = ["dating", "friendship", "meetups", "personal-ads", "personals"] as const;
 
-type CategoryRow = { slug?: string; kind?: string };
+type CategoryRow = { slug?: string; kind?: string; fields?: unknown };
 
 export function isPeopleCategory(row: CategoryRow | null | undefined): boolean {
   if (!row) return false;
-  return row.kind === PEOPLE_KIND || (PEOPLE_SLUGS as readonly string[]).includes(row.slug || "");
+  return row.kind === PEOPLE_KIND || (PEOPLE_SLUGS as readonly string[]).includes(row.slug || "") || hasAgeGate(row.fields);
 }
 
 export async function listingIsPeople(listingId: string): Promise<boolean> {
@@ -22,7 +23,7 @@ export async function listingIsPeople(listingId: string): Promise<boolean> {
   await connectDb();
   const listing = await Listing.findById(listingId).select("categoryId").lean<{ categoryId?: unknown } | null>();
   if (!listing?.categoryId) return false;
-  const category = await Category.findById(listing.categoryId).select("kind slug").lean<CategoryRow | null>();
+  const category = await Category.findById(listing.categoryId).select("kind slug fields").lean<CategoryRow | null>();
   return isPeopleCategory(category);
 }
 
@@ -31,6 +32,6 @@ export async function peopleCategoryIds(categoryIds: string[]): Promise<Set<stri
   const valid = categoryIds.filter((id) => mongoose.isValidObjectId(id));
   if (valid.length === 0) return new Set();
   await connectDb();
-  const rows = await Category.find({ _id: { $in: valid } }).select("_id kind slug").lean<(CategoryRow & { _id: unknown })[]>();
+  const rows = await Category.find({ _id: { $in: valid } }).select("_id kind slug fields").lean<(CategoryRow & { _id: unknown })[]>();
   return new Set(rows.filter(isPeopleCategory).map((row) => String(row._id)));
 }

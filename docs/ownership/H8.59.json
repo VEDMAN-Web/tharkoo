@@ -1,0 +1,13 @@
+{
+  "branchPrefix": "haiku/h8.59",
+  "globs": [
+    "docs/ownership/H8.59.json",
+    "progress/H8.59.md",
+    "src/components/admin/MockPaymentsBanner.tsx",
+    "src/styles/admin.css",
+    "src/app/admin/page-builder/_home/builder.css",
+    "src/app/admin/page-builder/_home/HomeBuilder.tsx",
+    "src/app/admin/page-builder/_post/PostBuilder.tsx",
+    "tests/e2e/h8-59-phone-bars.e2e.ts"
+  ]
+}

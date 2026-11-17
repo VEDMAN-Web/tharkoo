@@ -127,7 +127,7 @@ test.describe("H8.51 Categories and fields", () => {
     const [c, d] = [await name.boundingBox(), await address.boundingBox()];
     expect(d!.y).toBeGreaterThan(c!.y + c!.height - 2);
     expect(Math.abs(d!.x - c!.x)).toBeLessThan(2);
-    for (const label of ["Name", "Web address", "Kind", "Icon when there is no photo", "Max photos for admin posts and imports", "SEO intro"]) await expect(page.getByText(label, { exact: false }).first()).toBeVisible();
+    for (const label of ["Name", "Web address", "Kind", "Icon when there is no photo", "Max photos for admin posts and imports", "SEO intro"]) await expect(page.locator('[data-tk="details-form"]').getByText(label, { exact: false }).first()).toBeVisible();
   });
 
   test("New category dialog, then edit and save Details (the tab and address change), Kind missing shows a red note, reorder with the arrows, and Remove with a typed confirm", async ({ page, context, baseURL }) => {

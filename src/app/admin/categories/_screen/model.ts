@@ -14,17 +14,7 @@ export function tabOf(value: string | undefined | null): TabKey {
   return TABS.find((tab) => tab.key === value)?.key ?? "details";
 }
 
-/** Kinds an admin chooses from. There is no preselected value: a category needs one before it can be saved (H6.5). */
-export const KIND_OPTIONS: { value: string; label: string }[] = [
-  { value: "goods", label: "Goods" },
-  { value: "property", label: "Property" },
-  { value: "vehicle", label: "Vehicle" },
-  { value: "job", label: "Job" },
-  { value: "service", label: "Service" },
-  { value: "people", label: "People (no live video tours)" },
-];
-
-export const KIND_HELP = "Decides the rules of the post form. People categories ask for an age check and have no live video tours.";
+export const KIND_HELP = "Decides what the category turns on. Add or change kinds with the Kinds button at the top. There is no preselected value: a category needs one before it can be saved.";
 export const KIND_MISSING = "Choose a kind to save.";
 
 export const MAX_INTRO = 600;

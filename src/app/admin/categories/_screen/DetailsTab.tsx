@@ -2,11 +2,12 @@
 
 import { TextField } from "@/components/admin/ui";
 import { CATEGORY_ICONS, categoryIconKey } from "@/lib/category-icons";
-import { KIND_HELP, KIND_OPTIONS, MAX_HOME_LINE, MAX_INTRO, MAX_NAME, type Details, type DetailsErrors } from "./model";
+import { VIDEO_NEVER_FOR_PEOPLE, type KindView } from "@/lib/category-kinds";
+import { KIND_HELP, MAX_HOME_LINE, MAX_INTRO, MAX_NAME, type Details, type DetailsErrors } from "./model";
 
 /** The Details tab: two columns on a computer, one on a phone, every label on top, every help line under its field. */
-export function DetailsTab({ draft, errors, canEdit, onChange }: { draft: Details; errors: DetailsErrors; canEdit: boolean; onChange: (next: Details) => void }) {
-  const fallback = CATEGORY_ICONS.find((choice) => choice.key === categoryIconKey("", draft.kind));
+export function DetailsTab({ draft, errors, kinds, peopleLocked, canEdit, onChange }: { draft: Details; errors: DetailsErrors; kinds: KindView[]; peopleLocked: boolean; canEdit: boolean; onChange: (next: Details) => void }) {
+  const fallback = CATEGORY_ICONS.find((choice) => choice.key === (kinds.find((kind) => kind.key === draft.kind)?.icon || categoryIconKey("", draft.kind)));
   const set = (patch: Partial<Details>) => onChange({ ...draft, ...patch });
   return (
     <div className="adm-cat-form" data-tk="details-form">
@@ -21,14 +22,15 @@ export function DetailsTab({ draft, errors, canEdit, onChange }: { draft: Detail
           <option value="" disabled>
             Choose a kind
           </option>
-          {KIND_OPTIONS.map((option) => (
-            <option key={option.value} value={option.value}>
-              {option.label}
+          {kinds.map((option) => (
+            <option key={option.key} value={option.key}>
+              {option.name}
             </option>
           ))}
         </select>
         {errors.kind ? <p className="adm-k-err" role="alert" data-tk="kind-missing">{errors.kind}</p> : null}
         <p className="adm-k-help" id="cat-kind-help">{KIND_HELP}</p>
+        {peopleLocked ? <p className="adm-k-help" data-tk="people-locked">This is a listing about people, so it always behaves as People, whatever kind is chosen. {VIDEO_NEVER_FOR_PEOPLE}</p> : null}
       </div>
 
       <div className="adm-cat-field">

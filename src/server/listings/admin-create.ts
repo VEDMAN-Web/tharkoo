@@ -4,6 +4,7 @@ import { Types } from "mongoose";
 import { z } from "zod";
 import { connectDb } from "@/lib/db";
 import { AuditRepository } from "@/server/audit";
+import { kindMaxPhotos } from "@/server/categories/kinds";
 import { categoryNeedsSubcategory } from "@/server/categories/public";
 import { isSiteMediaType, readImageSize } from "@/server/layout/media";
 import { ConflictError, ForbiddenError, NotFoundError, PolicyViolationError, ValidationError } from "@/server/http";
@@ -225,7 +226,7 @@ async function checkAd(input: ParsedAd, owner: Owner): Promise<{ errors: string[
   const attributes = await checkAttributes(category, input.attributes, errors);
   const subcategoryId = await checkSubcategory(category._id, input.subcategoryId, errors);
   const place = await checkPlace(input, errors);
-  const limit = adPhotoLimit(category.importMaxPhotos);
+  const limit = adPhotoLimit(category.importMaxPhotos ?? (await kindMaxPhotos(category.kind)));
   if (input.photoIds.length > limit) errors.push(`Too many photos: ${input.photoIds.length}. The limit for this category is ${limit}`);
   if (input.photoIds.length + input.videoIds.length > AD_MEDIA_MAX) errors.push(AD_MEDIA_LIMIT_MESSAGE);
   await checkMedia(owner.id, input.photoIds, "image", errors);

@@ -107,3 +107,12 @@
 @media (max-width: 767px) {
   .adm-cat-sub { flex-wrap: wrap; }
 }
+
+/* The Kinds manager drawer (H7.167). */
+.adm-kd, .adm-kd-list { display: grid; gap: 12px; margin: 0; padding: 0; list-style: none; }
+.adm-kd-row { display: grid; gap: 12px; padding: 12px; border: 1px solid var(--adm-line); border-radius: 10px; }
+.adm-kd-head { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.adm-kd-head .adm-k-help { flex: 1; }
+.adm-kd-form { display: grid; gap: 12px; }
+.adm-kd-form .adm-k-label { display: grid; gap: 4px; }
+.adm-kd-actions { display: flex; flex-wrap: wrap; justify-content: flex-end; align-items: center; gap: 8px; }

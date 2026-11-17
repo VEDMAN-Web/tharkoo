@@ -53,6 +53,12 @@
 .adm-pb-switchrow .adm-pb-note { padding: 0; flex: 1 1 280px; }
 .adm-pb-stack { display: grid; gap: 12px; justify-items: start; }
 .adm-pb-tabs { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+@media (max-width: 767px) {
+  .adm-pb-savebar { flex-wrap: nowrap; gap: 8px; padding: 8px 12px; }
+  .adm-pb-savebar .adm-k-savetext { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+  .adm-pb-savebar .adm-k-sp { display: none; }
+  .adm-pb-savebar .adm-k-btn { flex: 1 1 0; min-width: 0; padding-inline: 8px; }
+}
 
 @media (max-width: 1279px) {
   .adm-pb-grid { grid-template-columns: 300px minmax(0, 1fr); }

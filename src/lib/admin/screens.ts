@@ -93,6 +93,8 @@ export const LEGACY_ROUTES: readonly LegacyRoute[] = [
   { href: "/admin/ads/photos/", view: "settings.edit" },
   { href: "/admin/blog/", view: "content.write" },
   { href: "/admin/help/", view: "content.write" },
+  { href: "/admin/blog-posts/", view: "content.write" },
+  { href: "/admin/help-topics/", view: "content.write" },
   { href: "/admin/tags/", view: "catalogue.seo" },
   { href: "/admin/urls/", view: "seo.edit" },
   { href: "/admin/ui-text/", view: "sitetext.edit" },

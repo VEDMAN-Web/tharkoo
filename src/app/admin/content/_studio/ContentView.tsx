@@ -1,10 +1,12 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { ChevronLeft, Plus } from "lucide-react";
 import { Badge, Button, Drawer, EmptyState, PageHeader, Tabs, ToastProvider, type BadgeTone } from "@/components/admin/ui";
 import type { EditorItem, ListRow, Option, StudioKind } from "@/server/content/studio/admin";
+import type { BuiltInRow } from "@/server/content/studio/builtin";
 import type { ContentStatus } from "@/server/models/content";
 import { createItemAction } from "../actions";
 import { Editor } from "./Editor";
@@ -33,6 +35,8 @@ export type StudioProps = {
   status: ContentStatus | "";
   q: string;
   rows: ListRow[];
+  builtIns: BuiltInRow[];
+  builtInScreen: string;
   counts: Record<StudioKind, number>;
   item: EditorItem | null;
   authors: Option[];
@@ -137,9 +141,9 @@ export function ContentView(props: StudioProps) {
                 ))}
               </div>
             </div>
-            {rows.length === 0 ? (
+            {rows.length === 0 && (props.builtIns.length === 0 || q || status) ? (
               <EmptyState title={`No ${tab === "blog" ? "posts" : "articles"} here`} why={q || status ? "Nothing matches these filters." : `Start the first ${word} with the button above.`} />
-            ) : (
+            ) : rows.length === 0 ? null : (
               <ul className="adm-st-rows">
                 {rows.map((row) => (
                   <li key={row.id}>
@@ -154,6 +158,26 @@ export function ContentView(props: StudioProps) {
                 ))}
               </ul>
             )}
+            {props.builtIns.length > 0 ? (
+              <div className="adm-st-built" data-tk="built-in-list">
+                <h2 className="adm-st-builthead">Built in, live on the site now</h2>
+                <p className="adm-k-help">These came with the site. {props.canWrite ? "Open one to edit its words or remove it." : "Only editors can change them."}</p>
+                <ul className="adm-st-rows">
+                  {props.builtIns.map((row) => (
+                    <li key={row.id}>
+                      <Link className="adm-st-row" data-tk="built-in-row" href={`${props.builtInScreen}?open=${row.id}`}>
+                        <strong>{row.title}</strong>
+                        <span className="adm-st-rowmeta">
+                          <Badge tone="info">Built in</Badge>
+                          <Badge tone={row.status === "published" ? "ok" : "neutral"}>{row.status === "published" ? "Published" : "Draft"}</Badge>
+                          <small>{[row.group, `/${row.slug}/`].filter(Boolean).join(" · ")}</small>
+                        </span>
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ) : null}
           </section>
           {item ? (
             <div className="adm-st-work">

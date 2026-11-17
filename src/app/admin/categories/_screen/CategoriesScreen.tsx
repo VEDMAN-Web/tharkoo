@@ -9,6 +9,7 @@ import type { CategoriesScreenData, CategoryRowView } from "@/server/categories/
 import { reorderAction } from "../manage-actions";
 import { CategoryList } from "./CategoryList";
 import { DetailPane } from "./DetailPane";
+import { KindsDrawer } from "./KindsDrawer";
 import { NewCategoryDialog } from "./NewCategoryDialog";
 import { tabOf, type TabKey } from "./model";
 import "@/app/admin/_catalog/catalog.css";
@@ -32,6 +33,7 @@ function Screen({ data, tab: startTab, fields }: { data: CategoriesScreenData; t
   const [tab, setTab] = useState<TabKey>(startTab);
   const [local, setLocal] = useState<{ base: string; ids: string[] } | null>(null);
   const [creating, setCreating] = useState(false);
+  const [kindsOpen, setKindsOpen] = useState(false);
   const dirty = useRef(false);
   const { detail } = data;
 
@@ -76,6 +78,7 @@ function Screen({ data, tab: startTab, fields }: { data: CategoriesScreenData; t
         crumbs={[{ label: "Catalogue" }]}
         title="Categories & fields"
         purpose="Order, pictures, sub-categories and the fields people fill in."
+        secondary={[{ key: "kinds", label: "Kinds", onClick: () => setKindsOpen(true) }]}
         primary={{ key: "new", label: "New category", icon: Plus, kind: "primary", onClick: () => setCreating(true) }}
       />
       <div className="adm-cat" data-view={data.chosen ? "detail" : "list"} data-tk="cat-layout">
@@ -91,6 +94,7 @@ function Screen({ data, tab: startTab, fields }: { data: CategoriesScreenData; t
           <DetailPane
             key={detail.id}
             detail={detail}
+            kinds={data.kinds}
             fieldCount={data.rows.find((row) => row.id === detail.id)?.fieldCount ?? fields.length}
             fields={fields}
             tab={tab}
@@ -108,7 +112,8 @@ function Screen({ data, tab: startTab, fields }: { data: CategoriesScreenData; t
           </section>
         )}
       </div>
-      <NewCategoryDialog open={creating} onClose={() => setCreating(false)} onCreated={(slug) => { setCreating(false); router.push(urlFor(slug, "details")); router.refresh(); }} />
+      <KindsDrawer kinds={data.kinds} open={kindsOpen} onClose={() => setKindsOpen(false)} />
+      <NewCategoryDialog open={creating} kinds={data.kinds} onClose={() => setCreating(false)} onCreated={(slug) => { setCreating(false); router.push(urlFor(slug, "details")); router.refresh(); }} />
     </div>
   );
 }
