@@ -108,6 +108,9 @@ test.describe("H9.2 advertiser account home", () => {
       if ((await section.count()) === 1) {
         const cards = section.locator(".tk-card");
         expect(await cards.count()).toBeGreaterThan(0);
+        // Every card is on the page and visible at once, not faded out until it is scrolled to.
+        const faded = await cards.evaluateAll((nodes) => nodes.filter((node) => Number(getComputedStyle(node.closest("[data-reveal]") ?? node).opacity) < 0.99).length);
+        expect(faded).toBe(0);
         await section.scrollIntoViewIfNeeded();
         await expect(cards.first()).toBeVisible();
         const box = await cards.first().boundingBox();
