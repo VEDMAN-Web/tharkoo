@@ -84,6 +84,8 @@ test.describe("H8.51 Categories and fields", () => {
       } else {
         await expect(page.locator('[data-tk="category-detail"]')).toBeVisible();
         await expect(page.locator('[data-tk="cat-list"]')).toBeVisible();
+        await expect(page.getByRole("button", { name: "More" })).toHaveCount(1);
+        await expect(page.getByText("Shown", { exact: true })).toHaveCount(0);
       }
       for (const name of TABS) {
         await tab(page, name).click();
@@ -184,13 +186,35 @@ test.describe("H8.51 Categories and fields", () => {
     await page.getByRole("button", { name: `Move H851 Renamed ${stamp} down` }).click();
     await expect.poll(async () => (await order()).indexOf(`h851-renamed-${stamp}`)).toBe(before);
 
-    await page.getByRole("button", { name: "More" }).nth(1).click();
+    await page.locator("[data-tk=category-detail]").getByRole("button", { name: "More" }).click();
     await page.getByRole("menuitem", { name: "Remove category" }).click();
     const confirm = page.getByRole("alertdialog");
     await confirm.getByRole("textbox").fill(`h851-renamed-${stamp}`);
     await confirm.getByRole("button", { name: "Remove category" }).click();
     await expect(page.locator('[data-tk="cat-row"]')).toHaveCount(before);
     expect(await withLocalDb((db) => db.collection("categories").countDocuments({ slug: `h851-renamed-${stamp}` }))).toBe(0);
+  });
+
+  test("a category with no kind (as Dating on the live site) shows a red note at the Kind field, not a silent grey Save", async ({ page, context, baseURL }) => {
+    test.setTimeout(180_000);
+    await signInAdminContext(context, baseURL!);
+    const was = await withLocalDb(async (db) => (await db.collection("categories").findOne({ slug: "dating" }, { projection: { kind: 1 } }))?.kind as string | undefined);
+    await withLocalDb((db) => db.collection("categories").updateOne({ slug: "dating" }, { $unset: { kind: "" } }));
+    try {
+      for (const size of [{ width: 1440, height: 900 }, { width: 390, height: 844 }]) {
+        await page.setViewportSize(size);
+        await open(page, "?c=dating");
+        await expect(page.locator('[data-tk="kind-missing"]')).toHaveText("Choose a kind to save.");
+        await expect(saveButton(page)).toBeDisabled();
+        await page.locator('[data-tk="kind-field"]').scrollIntoViewIfNeeded();
+        await shot(page, "kind-missing");
+      }
+      await page.getByLabel(/^Kind/).selectOption("people");
+      await expect(page.locator('[data-tk="kind-missing"]')).toHaveCount(0);
+      await expect(saveButton(page)).toBeEnabled();
+    } finally {
+      await withLocalDb((db) => db.collection("categories").updateOne({ slug: "dating" }, was ? { $set: { kind: was } } : { $unset: { kind: "" } }));
+    }
   });
 
   test("a category with ads cannot be removed: the screen says to hide it", async ({ page, context, baseURL }) => {
@@ -203,7 +227,7 @@ test.describe("H8.51 Categories and fields", () => {
     });
     test.skip(!withAds, "Needs a category that has ads.");
     await open(page, `?c=${withAds}`);
-    await page.getByRole("button", { name: "More" }).nth(1).click();
+    await page.locator("[data-tk=category-detail]").getByRole("button", { name: "More" }).click();
     await page.getByRole("menuitem", { name: "Remove category" }).click();
     const confirm = page.getByRole("alertdialog");
     await confirm.getByRole("textbox").fill(withAds!);
@@ -290,12 +314,14 @@ test.describe("H8.51 Categories and fields", () => {
     const required = first.getByRole("switch", { name: "Required" });
     const was = await required.getAttribute("aria-checked");
     await required.click();
-    await expect(editor.getByRole("button", { name: "Save changes" })).toBeEnabled();
-    await editor.getByRole("button", { name: "Save changes" }).click();
+    await expect(editor.getByRole("button", { name: "Save changes" })).toHaveCount(0);
+    await expect(page.locator('[data-tk="save-bar"]')).toContainText("Unsaved changes");
+    await expect(saveButton(page)).toBeEnabled();
+    await saveButton(page).click();
     await expect(editor.getByText("Saved. The post-ad form and the filters now use these settings.")).toBeVisible();
     await expect(required).toHaveAttribute("aria-checked", was === "true" ? "false" : "true");
     await required.click();
-    await editor.getByRole("button", { name: "Save changes" }).click();
+    await saveButton(page).click();
     await expect(editor.getByText("Saved. The post-ad form and the filters now use these settings.")).toBeVisible();
   });
 

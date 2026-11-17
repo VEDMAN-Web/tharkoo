@@ -76,10 +76,6 @@ function Screen({ data, tab: startTab, fields }: { data: CategoriesScreenData; t
         crumbs={[{ label: "Catalogue" }]}
         title="Categories & fields"
         purpose="Order, pictures, sub-categories and the fields people fill in."
-        more={[
-          { key: "places", label: "Cities & areas", href: "/admin/locations/" },
-          { key: "media", label: "Media library", href: "/admin/media/" },
-        ]}
         primary={{ key: "new", label: "New category", icon: Plus, kind: "primary", onClick: () => setCreating(true) }}
       />
       <div className="adm-cat" data-view={data.chosen ? "detail" : "list"} data-tk="cat-layout">

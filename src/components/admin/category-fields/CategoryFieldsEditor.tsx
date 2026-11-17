@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState, useTransition } from "react";
+import { useEffect, useMemo, useRef, useState, useTransition } from "react";
 import { saveCategoryFieldsAction } from "@/app/admin/categories/field-actions";
 import { addCategoryFieldAction, type ActionResult } from "@/app/admin/categories/option-actions";
 import { Notice, TextField, Toggle } from "@/components/admin/ui";
@@ -42,7 +42,15 @@ function savedShape(rows: EditorField[]) {
  * Fields and filters for one category. The field list holds the switches (post-ad, filter, required) and the order;
  * the panel on the right edits the selected field and its options. "Save changes" saves the field settings; options save as they are added.
  */
-export function CategoryFieldsEditor({ slug, categoryName, initial }: { slug: string; categoryName: string; initial: EditorField[] }) {
+/** What a screen with its own save bar needs from the editor: whether there is something to save, and the two actions. */
+export interface FieldsControl {
+  dirty: boolean;
+  pending: boolean;
+  save: () => void;
+  discard: () => void;
+}
+
+export function CategoryFieldsEditor({ slug, categoryName, initial, control }: { slug: string; categoryName: string; initial: EditorField[]; control?: (state: FieldsControl) => void }) {
   const [saved, setSaved] = useState(initial);
   const [fields, setFields] = useState(initial);
   const [selectedKey, setSelectedKey] = useState(initial[0]?.key ?? "");
@@ -54,6 +62,7 @@ export function CategoryFieldsEditor({ slug, categoryName, initial }: { slug: st
   const [pending, startTransition] = useTransition();
   const dirty = useMemo(() => JSON.stringify(savedShape(fields)) !== JSON.stringify(savedShape(saved)), [fields, saved]);
   const current = fields.find((field) => field.key === selectedKey) ?? fields[0];
+  const actions = useRef<{ save: () => void; discard: () => void }>({ save: () => undefined, discard: () => undefined });
 
   function change(key: string, patch: Partial<EditorField>) {
     setFields((rows) => rows.map((row) => (row.key === key ? { ...row, ...patch } : row)));
@@ -108,6 +117,14 @@ export function CategoryFieldsEditor({ slug, categoryName, initial }: { slug: st
     });
   }
 
+  useEffect(() => {
+    actions.current = { save, discard: () => setFields(saved) };
+  });
+
+  useEffect(() => {
+    control?.({ dirty, pending, save: () => actions.current.save(), discard: () => actions.current.discard() });
+  }, [control, dirty, pending]);
+
   function addField() {
     setMessage(null);
     startTransition(async () => {
@@ -144,12 +161,14 @@ export function CategoryFieldsEditor({ slug, categoryName, initial }: { slug: st
           <h2 className="adm-field-label" style={{ fontSize: 18, margin: 0 }}>Fields and filters for {categoryName}</h2>
           <p className="adm-field-help">Each field shows in the post-ad form, and can also be a filter on the listing pages.</p>
         </div>
-        <div className="adm-savebar-actions">
-          <span className={`adm-savebar-status ${dirty ? "is-dirty" : ""}`} aria-live="polite">{dirty ? "Unsaved changes" : "All changes saved"}</span>
-          <button type="button" className="adm-btn" disabled={!dirty || pending} onClick={save}>
-            {pending ? "Saving…" : "Save changes"}
-          </button>
-        </div>
+        {control ? null : (
+          <div className="adm-savebar-actions">
+            <span className={`adm-savebar-status ${dirty ? "is-dirty" : ""}`} aria-live="polite">{dirty ? "Unsaved changes" : "All changes saved"}</span>
+            <button type="button" className="adm-btn" disabled={!dirty || pending} onClick={save}>
+              {pending ? "Saving…" : "Save changes"}
+            </button>
+          </div>
+        )}
       </div>
       {message ? <Notice kind={message.kind}>{message.text}</Notice> : null}
       <div className="cf-layout">

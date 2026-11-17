@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import { undoAction } from "@/app/admin/undo-actions";
 import { Badge, Button, ConfirmDialog, MoreMenu, Tabs, Toggle, useToast } from "@/components/admin/ui";
-import { CategoryFieldsEditor, type EditorField } from "@/components/admin/category-fields/CategoryFieldsEditor";
+import { CategoryFieldsEditor, type EditorField, type FieldsControl } from "@/components/admin/category-fields/CategoryFieldsEditor";
 import type { CategoryDetailView } from "@/server/categories/screen";
 import { deleteCategoryAction, updateCategoryAction } from "../manage-actions";
 import { saveCategoryPicturesAction } from "../picture-actions";
@@ -52,10 +52,12 @@ export function DetailPane({
   const [busy, setBusy] = useState(false);
   const [saved, setSaved] = useState(false);
   const [removing, setRemoving] = useState(false);
+  const [fieldsState, setFieldsState] = useState<FieldsControl | null>(null);
 
   const detailsDirty = !same(details, baseDetails);
   const picturesDirty = !same(pictures, basePictures);
-  const dirty = detailsDirty || picturesDirty;
+  const fieldsDirty = fieldsState?.dirty ?? false;
+  const dirty = detailsDirty || picturesDirty || fieldsDirty;
   const detailErrors = { ...(tried ? detailsProblems(details) : {}), ...(details.kind ? {} : { kind: KIND_MISSING }) };
   const pictureErrors = tried ? picturesProblems(pictures) : {};
 
@@ -86,19 +88,19 @@ export function DetailPane({
     router.refresh();
   }
 
-  async function save() {
+  async function save(): Promise<boolean> {
     setTried(true);
     const detailProblem = detailsProblems(details);
     const pictureProblem = picturesProblems(pictures);
     if (Object.keys(detailProblem).length > 0) {
       onTab("details");
       toast.show({ kind: "error", message: Object.values(detailProblem)[0] as string });
-      return;
+      return false;
     }
     if (Object.keys(pictureProblem).length > 0) {
       onTab("pictures");
       toast.show({ kind: "error", message: Object.values(pictureProblem)[0] as string });
-      return;
+      return false;
     }
     setBusy(true);
     let slug = detail.slug;
@@ -116,7 +118,7 @@ export function DetailPane({
       if (!result.ok) {
         setBusy(false);
         toast.show({ kind: "error", message: result.message });
-        return;
+        return false;
       }
       slug = (result.data as { slug?: string } | undefined)?.slug ?? slug;
       setBaseDetails({ ...details, slug });
@@ -132,7 +134,7 @@ export function DetailPane({
       if (!answer.ok) {
         setBusy(false);
         toast.show({ kind: "error", message: answer.message });
-        return;
+        return false;
       }
       eventId = answer.eventId;
       setBasePictures(pictures);
@@ -144,9 +146,16 @@ export function DetailPane({
     toast.show(eventId ? { kind: "undo", message, onUndo: () => void undoPictures(eventId) } : { kind: "success", message });
     if (slug !== detail.slug) router.replace(urlFor(slug, tab));
     router.refresh();
+    return true;
+  }
+
+  async function saveAll() {
+    if ((detailsDirty || picturesDirty) && !(await save())) return;
+    if (fieldsDirty) fieldsState?.save();
   }
 
   function discard() {
+    fieldsState?.discard();
     setDetails(baseDetails);
     setPictures(basePictures);
     setTried(false);
@@ -166,7 +175,7 @@ export function DetailPane({
     router.refresh();
   }
 
-  const showBar = tab === "details" || tab === "pictures";
+  const showBar = tab !== "subs";
   const tabs = TABS.map((item) => ({ key: item.key, label: item.label, ...(item.key === "fields" ? { count: fieldCount } : item.key === "subs" ? { count: detail.subs.length } : {}) }));
 
   return (
@@ -180,7 +189,6 @@ export function DetailPane({
           <p>{`/${baseDetails.slug}/ · ${adsText(detail.adCount)}`}</p>
         </div>
         <div className="adm-cat-headtools">
-          {details.enabled ? <Badge tone="ok">Shown</Badge> : <Badge>Hidden</Badge>}
           <Toggle checked={details.enabled} onChange={(enabled) => change(setDetails)({ ...details, enabled })} label="Visible on site" />
           <MoreMenu
             items={[
@@ -194,9 +202,9 @@ export function DetailPane({
       <div role="tabpanel" id={`cat-panel-${tab}`} aria-labelledby={`cat-${tab}`} className="adm-cat-body">
         {tab === "details" ? <DetailsTab draft={details} errors={detailErrors} canEdit onChange={change(setDetails)} /> : null}
         {tab === "pictures" ? <PicturesTab draft={pictures} errors={pictureErrors} onChange={change(setPictures)} /> : null}
-        {tab === "fields" ? (
-          <div className="adm-cat-fields" data-tk="fields-tab">
-            <CategoryFieldsEditor key={detail.slug} slug={detail.slug} categoryName={detail.name} initial={fields} />
+        {tab === "fields" || fieldsState ? (
+          <div className="adm-cat-fields" data-tk="fields-tab" hidden={tab !== "fields"}>
+            <CategoryFieldsEditor key={detail.slug} slug={detail.slug} categoryName={detail.name} initial={fields} control={setFieldsState} />
           </div>
         ) : null}
         {tab === "subs" ? <SubsTab key={detail.id} categoryId={detail.id} categoryName={detail.name} subs={detail.subs} /> : null}
@@ -216,7 +224,7 @@ export function DetailPane({
           </span>
           <span className="adm-k-sp" />
           <Button kind="quiet" disabled={!dirty || busy} onClick={discard}>Discard</Button>
-          <Button kind="primary" busy={busy} disabled={!dirty} onClick={() => void save()}>Save</Button>
+          <Button kind="primary" busy={busy || fieldsState?.pending} disabled={!dirty} onClick={() => void saveAll()}>Save</Button>
         </div>
       ) : null}
       <ConfirmDialog
