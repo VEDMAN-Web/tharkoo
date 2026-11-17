@@ -695,11 +695,11 @@ export function fillText(text: string, vars?: Vars): string {
   return text.replace(/\{(\w+)\}/g, (whole, name: string) => (vars[name] === undefined ? whole : String(vars[name])));
 }
 
-/** `t(key, vars)` for a map of overrides (or nothing for defaults only). Works on server and client. */
-export function makeT(overrides?: UiTextMap | null) {
+/** `t(key, vars)` for a map of overrides (or nothing for defaults only). `shared` values fill placeholders every text may use, such as `{fee}`. Works on server and client. */
+export function makeT(overrides?: UiTextMap | null, shared?: Vars) {
   return (key: UiTextKey, vars?: Vars) => {
     const own = overrides?.[key];
-    return fillText(typeof own === "string" && own.trim() ? own : TEXT_DEFAULTS[key], vars);
+    return fillText(typeof own === "string" && own.trim() ? own : TEXT_DEFAULTS[key], shared ? { ...shared, ...vars } : vars);
   };
 }
 

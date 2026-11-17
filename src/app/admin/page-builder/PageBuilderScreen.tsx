@@ -7,6 +7,7 @@ import { PageHeader } from "@/components/admin/ui/PageHeader";
 import { Tabs } from "@/components/admin/ui/Tabs";
 import { HomeBuilder } from "./_home/HomeBuilder";
 import { ListingBuilder, type CategoryOption } from "./_listing/ListingBuilder";
+import { PostBuilder } from "./_post/PostBuilder";
 
 const TABS = [
   { key: "home", label: "Home" },
@@ -15,7 +16,6 @@ const TABS = [
 ];
 
 const OLD: Record<string, { href: string; label: string }> = {
-  post: { href: "/admin/post-page/", label: "Open the Post-ad page editor" },
 };
 
 export function PageBuilderScreen({ categories = [] }: { categories?: CategoryOption[] }) {
@@ -37,6 +37,8 @@ export function PageBuilderScreen({ categories = [] }: { categories?: CategoryOp
           <HomeBuilder />
         ) : tab === "listing" ? (
           <ListingBuilder categories={categories} />
+        ) : tab === "post" ? (
+          <PostBuilder />
         ) : (
           <EmptyState title="Coming" why="This tab is planned and not built yet. The old editor still works for now." action={old ? { label: old.label, href: old.href } : undefined} />
         )}
