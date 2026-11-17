@@ -1,31 +1,33 @@
 import Link from "next/link";
+import { makeT, type TextFn } from "@/lib/ui/text";
 import type { IdCheckScreen } from "@/server/settings/id-check";
 
 /**
  * H6.14: the one screen post-ad shows before step 1 when the ID-check switch is on and the person
- * is not approved. "verify" asks for the check; "checking" says it is with the team.
+ * is not approved. "verify" asks for the check; "checking" says it is with the team. The words are UI text keys (H8.35).
  */
-export function IdCheckFirst({ screen, postPath }: { screen: Exclude<IdCheckScreen, "form">; postPath: string }) {
+export function IdCheckFirst({ screen, postPath, t = makeT() }: { screen: Exclude<IdCheckScreen, "form">; postPath: string; t?: TextFn }) {
   if (screen === "checking") {
     return (
       <div className="tk-container" style={{ padding: "24px 0 40px" }} data-tk="id-check-first">
-        <h1 className="tk-page-h1" data-tk="step-title">We are checking your ID</h1>
-        <p style={{ textAlign: "center" }}>Thanks for sending your ID. Our team is checking it now. You can post your ad once it is approved.</p>
+        <h1 className="tk-page-h1" data-tk="step-title">{t("post.idcheck.checkingTitle")}</h1>
+        <p style={{ textAlign: "center" }}>{t("post.idcheck.checkingText")}</p>
         <p style={{ textAlign: "center" }}>
-          <Link href="/u/account/dashboard/">Back to your account</Link>
+          <Link href="/u/account/dashboard/">{t("post.idcheck.backToAccount")}</Link>
         </p>
       </div>
     );
   }
   return (
     <div className="tk-container" style={{ padding: "24px 0 40px" }} data-tk="id-check-first">
-      <h1 className="tk-page-h1" data-tk="step-title">Verify your ID first</h1>
-      <p style={{ textAlign: "center" }}>Before you post an ad, we need an approved ID check. Upload a photo of your ID and a selfie.</p>
+      <h1 className="tk-page-h1" data-tk="step-title">{t("post.idcheck.verifyTitle")}</h1>
+      <p style={{ textAlign: "center" }}>{t("post.idcheck.verifyText")}</p>
       <p style={{ textAlign: "center" }}>
-        <Link className="tk-btn tk-btn-cta" href="/u/account/kyc/" data-tk="verify-id">Verify ID</Link>
+        <Link className="tk-btn tk-btn-cta" href="/u/account/kyc/" data-tk="verify-id">{t("post.idcheck.verifyButton")}</Link>
       </p>
       <p className="t-small" style={{ textAlign: "center" }}>
-        Once it is approved, come back to <Link href={postPath}>post an ad</Link>.
+        {t("post.idcheck.afterPre")} <Link href={postPath}>{t("post.idcheck.afterLink")}</Link>
+        {t("post.idcheck.afterPost")}
       </p>
     </div>
   );
