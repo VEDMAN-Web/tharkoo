@@ -4,7 +4,7 @@ import type { Metadata } from "next";
 import { resolveListingLayout } from "@/components/blocks/ListingLayout";
 import { ListingPageView } from "@/components/ListingPage";
 import { ListingFrame } from "@/components/new/ListingFrame";
-import { bandChoice, heroBandFrom } from "@/components/new/band-image";
+import { bandChoice, hasOwnBand, heroBandFrom } from "@/components/new/band-image";
 import { introCategory, listingFrameProps, listingLabels, placeSelects } from "@/components/new/listing-frame-props";
 import { loadCardWidth } from "@/server/listings/card-width";
 import { FallbackAds } from "@/components/FallbackAds";
@@ -154,7 +154,7 @@ export async function SubHub({ params, page }: { params: SubHubParams; page: num
     panelPath: canonicalPath,
     labels,
     placesOnly: true,
-    showBand: homeContent.showListingBand,
+    showBand: homeContent.showListingBand || hasOwnBand(shell, { city: citySlug, category: catSlug }),
     template: {
       state: {
         category: { slug: catSlug, name: hub.cat.name || catSlug },

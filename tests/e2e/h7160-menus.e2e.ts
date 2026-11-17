@@ -83,4 +83,72 @@ test.describe("H7.160 menus pictures moved and vendor note", () => {
     await shot(page, "h7160-vendor-note");
     await staff.close();
   });
+
+  test("a card photo, band and phone band set for Dating show on Home and /dating/ (computer and phone), and clearing them falls back to the old row", async ({ browser, baseURL }) => {
+    test.setTimeout(300_000);
+    const stamp = Date.now();
+    const urls = { card: `/uploads/dating-card-${stamp}.png`, band: `/uploads/dating-band-${stamp}.png`, phone: `/uploads/dating-phone-${stamp}.png`, oldCard: `/uploads/dating-old-card-${stamp}.png`, oldBand: `/uploads/dating-old-band-${stamp}.png` };
+    const alts = { card: `H7161 card ${stamp % 100000}`, band: `H7161 band ${stamp % 100000}`, phone: `H7161 phone ${stamp % 100000}` };
+    for (const slot of ["card", "band", "phone"] as const) {
+      await withLocalDb((db) => db.collection("site_media").insertOne({ url: urls[slot], objectKey: `h7161-${slot}-${stamp}`, alt: alts[slot], width: 1200, height: 800, bytes: 1000, contentType: "image/png", tags: [], uploadedBy: "e2e@example.test", createdAt: new Date(), updatedAt: new Date() }));
+    }
+    // The old row (Menus and footer) that is the fallback.
+    await withLocalDb((db) => db.collection("shell_config_settings").updateOne({ key: "default" }, { $set: { "config.media.images": [{ scope: "category", slug: "dating", photo: urls.oldCard, band: urls.oldBand, bandPhone: "" }] } }, { upsert: true }));
+    // Start from a Dating with no pictures of its own, whatever an earlier run left.
+    await withLocalDb((db) => db.collection("categories").updateOne({ slug: "dating" }, { $unset: { photo: "", band: "" } }));
+    const staff = await browser.newContext({ baseURL });
+    const page = await staff.newPage();
+    await signInAdminContext(staff, baseURL!);
+    await page.goto("/admin/categories/");
+    await page.waitForLoadState("networkidle");
+    const card = page.locator("[data-tk=catalog-pictures]");
+    const row = card.locator("[data-tk=pictures-row]").filter({ has: page.locator("strong", { hasText: /^Dating$/ }) });
+    await row.getByRole("button", { name: "Edit pictures" }).click();
+    const pick = async (slot: string, alt: string) => {
+      await row.locator(`[data-slot="${slot}"]`).getByRole("button", { name: "Choose image" }).click();
+      const dialog = page.getByRole("dialog");
+      await dialog.getByLabel("Search images").fill(alt);
+      await dialog.getByTitle(alt).click();
+    };
+    await pick("Card photo", alts.card);
+    await pick("Band, computers", alts.band);
+    await pick("Band, phones", alts.phone);
+    await row.locator('[data-slot="Card photo"]').getByLabel(/^Describe the picture/).fill("Dating card");
+    await row.locator('[data-slot="Band, computers"]').getByLabel(/^Describe the picture/).fill("Dating band");
+    await row.getByRole("button", { name: "Save pictures" }).click();
+    await expect(row.getByText("Saved the pictures of Dating.")).toBeVisible();
+
+    const phone = test.info().project.name.startsWith("phone");
+    const view = await browser.newContext({ baseURL, viewport: page.viewportSize() ?? undefined });
+    const site = await view.newPage();
+    await expect
+      .poll(async () => {
+        await site.goto("/");
+        const src = await site.locator("a[href='/dating/'] img.tkh-cat-photo, a[href*='dating'] img.tkh-cat-photo").first().getAttribute("src");
+        return src ?? "";
+      }, { timeout: 60_000 })
+      .toBe(urls.card);
+    await expect
+      .poll(async () => {
+        await site.goto("/dating/");
+        // On a phone the picture is drawn on the strip above the card (::before); on a computer on the band itself.
+        return await site.locator(".tkn-ls-band").first().evaluate((el, isPhone) => getComputedStyle(el, isPhone ? "::before" : null).backgroundImage, phone);
+      }, { timeout: 60_000 })
+      .toContain(phone ? urls.phone : urls.band);
+
+    // Clearing the new pictures brings the old row back.
+    await row.getByRole("button", { name: "Remove" }).first().click();
+    await row.getByRole("button", { name: "Remove" }).first().click();
+    await row.getByRole("button", { name: "Remove" }).first().click();
+    await row.getByRole("button", { name: "Save pictures" }).click();
+    await expect(row.getByText("Saved the pictures of Dating.")).toBeVisible();
+    await expect
+      .poll(async () => {
+        await site.goto("/");
+        return (await site.locator("a[href*='dating'] img.tkh-cat-photo").first().getAttribute("src")) ?? "";
+      }, { timeout: 60_000 })
+      .toBe(urls.oldCard);
+    await view.close();
+    await staff.close();
+  });
 });
