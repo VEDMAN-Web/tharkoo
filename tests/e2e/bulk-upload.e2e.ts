@@ -26,7 +26,7 @@ test.describe("H6.12 bulk upload", () => {
     await page.getByRole("button", { name: "Upload 10 images" }).click();
     await expect(page.getByText("10 uploaded, 0 failed, 0 waiting")).toBeVisible({ timeout: 60_000 });
     await page.goto("/admin/media/?tab=missing");
-    await expect(page.locator('[data-tk="media-grid"]').getByText("Missing alt").first()).toBeVisible();
+    await expect(page.locator('[data-tk="describe-list"]').getByText("Only the file name so far").first()).toBeVisible();
     await expect(page.locator("h1")).toHaveCount(1);
     expect(await hasHorizontalScroll(page)).toBe(false);
   });

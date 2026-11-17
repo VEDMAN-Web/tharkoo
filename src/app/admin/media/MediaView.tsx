@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { ImageOff, Lock, RotateCcw, SearchX, Trash2, Upload } from "lucide-react";
-import { Badge, Button, Drawer, FilterBar, Notice, PageHeader, ToastProvider, useToast } from "@/components/admin/ui";
+import { Badge, Button, Drawer, FilterBar, Notice, PageHeader, ReasonDialog, ToastProvider, useToast } from "@/components/admin/ui";
 import { FocalPicker } from "@/components/admin/FocalPicker";
 import { ImagePicker, type ImageRef } from "@/components/admin/ui/ImagePicker";
 import type { MediaItem } from "@/server/layout/media";
@@ -12,7 +12,8 @@ import type { MediaDetail, MediaTabCounts } from "@/server/layout/media-admin";
 import type { MediaUsage } from "@/server/layout/media-refs";
 import { BatchUpload } from "./BatchUpload";
 import { MEDIA_PAGE_SIZE, MEDIA_TABS, type MediaTab } from "./media-tabs";
-import { restoreMediaAction, saveMediaDetailsAction, trashMediaAction, undoMediaAction } from "./library-actions";
+import { DescribeList } from "./DescribeList";
+import { restoreMediaAction, saveMediaDetailsAction, trashManyMediaAction, trashMediaAction, undoManyMediaAction, undoMediaAction } from "./library-actions";
 import "./media.css";
 
 type Item = MediaItem & { used: boolean; usedIn: number };
@@ -149,7 +150,11 @@ function Screen({ tab, q, page, total, items, counts, detail, uploadsEnabled }: 
   const params = useSearchParams();
   const [search, setSearch] = useState(q);
   const sent = useRef(q);
+  const toast = useToast();
   const [uploading, setUploading] = useState(false);
+  const [ticked, setTicked] = useState<string[]>([]);
+  const [confirming, setConfirming] = useState(false);
+  const [removing, setRemoving] = useState(false);
 
   function go(changes: Record<string, string | null>) {
     const next = new URLSearchParams(params.toString());
@@ -175,6 +180,34 @@ function Screen({ tab, q, page, total, items, counts, detail, uploadsEnabled }: 
   const from = total === 0 ? 0 : (page - 1) * MEDIA_PAGE_SIZE + 1;
   const to = Math.min(total, page * MEDIA_PAGE_SIZE);
   const searching = q !== "";
+  // Only the pictures on this page can stay ticked, so a tick never reaches a picture that is out of sight.
+  const shownIds = new Set(items.map((item) => item.id));
+  const picked = ticked.filter((id) => shownIds.has(id));
+  const canTick = tab === "pictures" || tab === "unused";
+
+  function tick(id: string, on: boolean) {
+    setTicked((current) => (on ? [...new Set([...current, id])] : current.filter((value) => value !== id)));
+  }
+
+  async function trashPicked() {
+    setConfirming(false);
+    setRemoving(true);
+    const answer = await trashManyMediaAction(picked);
+    setRemoving(false);
+    if (!answer.ok) {
+      toast.show({ kind: "error", message: answer.message });
+      return;
+    }
+    setTicked([]);
+    const stayed = answer.refused.length;
+    const words = `Moved ${answer.trashed} ${answer.trashed === 1 ? "picture" : "pictures"} to the Trash.${stayed ? ` ${stayed} ${stayed === 1 ? "is" : "are"} still used on the site and stayed.` : ""}`;
+    if (answer.trashed > 0) {
+      toast.show({ kind: "undo", message: words, onUndo: () => void undoManyMediaAction(answer.eventIds).then((undone) => { toast.show({ kind: undone.ok ? "success" : "error", message: undone.message }); router.refresh(); }) });
+    } else {
+      toast.show({ kind: "error", message: stayed ? `Nothing moved. ${answer.refused[0].reason}` : "Nothing moved." });
+    }
+    router.refresh();
+  }
   return (
     <div className="adm-k" data-tk="media-screen">
       <PageHeader
@@ -211,10 +244,17 @@ function Screen({ tab, q, page, total, items, counts, detail, uploadsEnabled }: 
               <p>{searching ? "Try the first letters of the alt text, or a tag." : tab === "pictures" ? "Upload a picture with the button at the top." : "Nothing to show here."}</p>
               {searching ? <Button onClick={() => { setSearch(""); sent.current = ""; go({ q: null, page: null }); }}>Clear search</Button> : null}
             </div>
+          ) : tab === "missing" ? (
+            <DescribeList items={items} onSaved={() => router.refresh()} />
           ) : (
             <ul className="adm-ml-grid" data-tk="media-grid">
               {items.map((item) => (
-                <li key={item.id}>
+                <li key={item.id} className="adm-ml-cell">
+                  {canTick ? (
+                    <label className="adm-ml-tick">
+                      <input type="checkbox" checked={picked.includes(item.id)} aria-label={`Select ${item.alt || "picture without a description"}`} data-tk="media-tick" onChange={(event) => tick(item.id, event.target.checked)} />
+                    </label>
+                  ) : null}
                   <button type="button" className="adm-ml-card" data-open={detail?.item.id === item.id ? "yes" : undefined} onClick={() => go({ open: item.id })}>
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img src={item.url} alt="" loading="lazy" />
@@ -228,6 +268,15 @@ function Screen({ tab, q, page, total, items, counts, detail, uploadsEnabled }: 
               ))}
             </ul>
           )}
+          {picked.length > 0 ? (
+            <div className="adm-ml-bulk" role="region" aria-label="Selected pictures" data-tk="bulk-bar">
+              <strong>{`${picked.length} selected`}</strong>
+              <Button onClick={() => setTicked(items.map((item) => item.id))}>Select all on this page</Button>
+              <Button kind="quiet" onClick={() => setTicked([])}>Clear</Button>
+              <span className="adm-k-sp" />
+              <Button kind="danger" icon={Trash2} busy={removing} onClick={() => setConfirming(true)}>Move to Trash</Button>
+            </div>
+          ) : null}
           <div className="adm-ml-pager">
             <span>{total === 0 ? "0 pictures" : `${from} to ${to} of ${total.toLocaleString("en-IN")}`}</span>
             <span className="adm-k-sp" />
@@ -236,6 +285,15 @@ function Screen({ tab, q, page, total, items, counts, detail, uploadsEnabled }: 
           </div>
         </div>
       </div>
+      <ReasonDialog
+        open={confirming}
+        title={`Move ${picked.length} ${picked.length === 1 ? "picture" : "pictures"} to the Trash?`}
+        body="They stay in the Trash for 30 days and can be put back. A picture that a page, category or place still uses is not moved."
+        confirmLabel="Move to Trash"
+        danger
+        onConfirm={() => void trashPicked()}
+        onCancel={() => setConfirming(false)}
+      />
       {detail ? (
         <DetailDrawer
           key={detail.item.id + detail.item.alt + String(detail.trashed)}
