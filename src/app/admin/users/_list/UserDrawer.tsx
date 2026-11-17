@@ -36,7 +36,7 @@ export function UserDrawer({ detail, credits, onClose, access }: { detail: UserD
   const look = statusLook(user);
   const staff = staffRoleLabels(user.roles);
   const now = new Date();
-  const sub = [`joined ${dateLabel(user.createdAt, now, false)}`, user.city].filter(Boolean).join(" · ");
+  const sub = [`joined ${dateLabel(user.createdAt, now, false)}`, user.city ? user.cityName : ""].filter(Boolean).join(" · ");
 
   return (
     <Drawer
@@ -82,7 +82,7 @@ export function UserDrawer({ detail, credits, onClose, access }: { detail: UserD
                 {staff.length ? <Row label="Staff role">{staff.map((name) => <Badge key={name} tone="pri">{name}</Badge>)}</Row> : null}
                 <Row label="Email">{user.email}</Row>
                 <Row label="Phone">{user.phone ?? "not added"}</Row>
-                <Row label="City">{user.city ?? "unknown"}</Row>
+                <Row label="City">{user.cityName}</Row>
                 <Row label="Seller">{user.seller ? "Yes" : "No"}</Row>
                 <Row label="Last seen">{lastSeenLabel(user.lastSeen, now)}</Row>
                 <Row label="Joined">{dateLabel(user.createdAt, now)}</Row>

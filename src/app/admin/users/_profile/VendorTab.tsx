@@ -53,8 +53,9 @@ export function VendorTab({ detail, canEdit }: { detail: UserDetail; canEdit: bo
     >
       <div className="adm-up-head">
         <strong>{detail.user.name}</strong>
-        {vendor.hidden ? <Badge tone="bad">Vendor profile hidden</Badge> : <Badge tone="ok">Vendor profile shown</Badge>}
+        {vendor.hidden ? <Badge tone="bad">Vendor profile hidden</Badge> : null}
       </div>
+      <Notice kind="info"><span data-tk="not-shown">This vendor profile is not shown on the site yet. What you save here is kept for when it is.</span></Notice>
       {error ? <p className="adm-k-err" role="alert" data-tk="vendor-error">{error}</p> : null}
       <div className="adm-k-field">
         <label className="adm-k-label adm-k-lab" htmlFor="uv-about">
@@ -62,7 +63,6 @@ export function VendorTab({ detail, canEdit }: { detail: UserDetail; canEdit: bo
           <span className="adm-k-count">{about.length} / {ABOUT_MAX}</span>
         </label>
         <textarea id="uv-about" className="adm-k-input" rows={4} value={about} maxLength={ABOUT_MAX + 50} disabled={!editable} onChange={(event) => setAbout(event.target.value)} />
-        <p className="adm-k-help" data-tk="not-shown">Not shown on the site yet.</p>
       </div>
       <div className="adm-k-field">
         <label className="adm-k-label" htmlFor="uv-wa">WhatsApp number</label>
@@ -70,12 +70,10 @@ export function VendorTab({ detail, canEdit }: { detail: UserDetail; canEdit: bo
       </div>
       <div className="adm-k-field">
         {editable ? <ImagePicker label="Profile picture" value={photo} onChange={setPhoto} /> : <span className="adm-k-help">{photo ? "A profile picture is set." : "No profile picture."}</span>}
-        <p className="adm-k-help" data-tk="not-shown">Not shown on the site yet.</p>
       </div>
       <div className="adm-k-field">
         <Toggle checked={hidden} onChange={setHidden} label="Hide this vendor profile" disabled={!editable} />
         <p className="adm-k-help">Hiding keeps everything and only switches the profile off. Show it again at any time.</p>
-        <p className="adm-k-help" data-tk="not-shown">Not shown on the site yet.</p>
       </div>
       {hiding ? (
         <div className="adm-k-field">

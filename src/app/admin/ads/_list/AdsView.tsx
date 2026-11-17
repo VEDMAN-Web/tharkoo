@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { CalendarClock, CalendarPlus, Pause, Play, Plus, Trash2 } from "lucide-react";
+import { CalendarClock, CalendarPlus, ImageOff, Pause, Play, Plus, Trash2 } from "lucide-react";
 import { SearchX } from "lucide-react";
 import { Badge, Button, FilterBar, PageHeader, ReasonDialog, ServerTable, Tabs, ToastProvider, useToast, type BadgeTone, type FilterChip, type TableColumn } from "@/components/admin/ui";
 import type { AdRow, AdsList, AdsSort, AdsTab } from "@/server/admin/ads-list";
@@ -166,10 +166,18 @@ function Screen({ list, access, demoPanel }: { list: AdsList; access: AdsAccess;
       header: "Ad",
       primary: true,
       cell: (row) => (
-        <>
-          <strong>{row.title}</strong>
-          <small>{[row.category, row.city].filter(Boolean).join(" · ")}</small>
-        </>
+        <span className="adm-ads-ad">
+          {row.thumb ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img className="adm-ads-thumb" src={row.thumb} alt="" width={48} height={48} loading="lazy" data-tk="ad-thumb" />
+          ) : (
+            <span className="adm-ads-thumb adm-ads-nothumb" data-tk="ad-nothumb" aria-hidden="true"><ImageOff size={18} /></span>
+          )}
+          <span className="adm-ads-adtext">
+            <strong>{row.title}</strong>
+            <small>{[row.category, row.city].filter(Boolean).join(" · ")}</small>
+          </span>
+        </span>
       ),
     },
     { key: "status", header: "Status", cell: (row) => <Status row={row} /> },

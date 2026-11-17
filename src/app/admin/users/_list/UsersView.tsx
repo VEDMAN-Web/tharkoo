@@ -64,7 +64,7 @@ export function UsersView({ list, detail, credits, access }: { list: UserList; d
       },
     },
     { key: "ads", header: "Ads", nowrap: true, cell: (row) => `${row.ads} ${row.ads === 1 ? "ad" : "ads"}` },
-    { key: "city", header: "City", hideOnPhone: true, cell: (row) => row.city ?? "unknown" },
+    { key: "city", header: "City", hideOnPhone: true, cell: (row) => <span data-tk="user-city">{row.cityName}</span> },
     { key: "seen", header: "Last seen", nowrap: true, cell: (row) => <span title={dateLabel(row.lastSeen, now)}>{lastSeenLabel(row.lastSeen, now)}</span> },
   ];
 
