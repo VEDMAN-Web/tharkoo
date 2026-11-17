@@ -1,42 +1,43 @@
+import Link from "next/link";
+import { Lock } from "lucide-react";
 import { AdminShell } from "@/components/admin/AdminShell";
-import { EmptyState } from "@/components/admin/ui";
-import { connectDb } from "@/lib/db";
-import { Category, Listing, Location } from "@/server/models";
-import { ModerationRow, type PendingAd } from "./ModerationRow";
+import { getStaffFromHeaders } from "@/lib/admin-auth";
+import { can } from "@/lib/admin/perms";
+import { NotFoundError } from "@/server/http";
+import { getReviewDetail, listReviewTab, parseReviewQuery, type ReviewDetail } from "@/server/moderation/review";
+import { ReviewView } from "./_list/ReviewView";
 
 export const dynamic = "force-dynamic";
-const LIMIT = 100;
 
-export default async function Page() {
-  await connectDb();
-  const rows = await Listing.find({ status: "pending" }).sort({ createdAt: 1 }).limit(LIMIT).lean();
-  const [cats, places] = await Promise.all([
-    Category.find({ _id: { $in: rows.map((row) => row.categoryId) } }).select("name").lean<{ _id: unknown; name?: string }[]>(),
-    Location.find({ _id: { $in: rows.flatMap((row) => (row.cityId ? [row.cityId] : [])) } }).select("name").lean<{ _id: unknown; name?: string }[]>(),
-  ]);
-  const nameOf = (list: { _id: unknown; name?: string }[], id: unknown) => list.find((item) => String(item._id) === String(id))?.name || "";
-  const ads: PendingAd[] = rows.map((row) => ({
-    id: String(row._id),
-    title: row.title || "",
-    description: row.description || "",
-    category: nameOf(cats, row.categoryId),
-    city: nameOf(places, row.cityId),
-    createdAt: row.createdAt ? new Date(row.createdAt).toISOString() : "",
-  }));
+/** H8.15 (A15): Ads to review. Tab, search, page and the open ad all live in the address. */
+export default async function Page({ searchParams }: { searchParams: Promise<Record<string, string | string[] | undefined>> }) {
+  const identity = await getStaffFromHeaders();
+  if (!can(identity.roles, "ads.review")) {
+    return (
+      <AdminShell title="Ads to review" hasHeader>
+        <div className="adm-card" style={{ padding: 40, textAlign: "center", display: "grid", gap: 8, justifyItems: "center" }} data-tk="no-access">
+          <Lock aria-hidden="true" size={28} />
+          <h2 style={{ margin: 0, fontSize: 16 }}>You cannot open Ads to review</h2>
+          <p style={{ margin: 0, maxWidth: "44ch" }}>This screen is for moderators, trust and safety and admins. Ask an admin if you need it.</p>
+          <Link href="/admin/" className="adm-btn adm-btn-quiet">Back to Dashboard</Link>
+        </div>
+      </AdminShell>
+    );
+  }
+  const params = await searchParams;
+  const list = await listReviewTab(identity.roles, parseReviewQuery(params));
+  const open = typeof params.open === "string" ? params.open : "";
+  let detail: ReviewDetail | null = null;
+  if (open) {
+    try {
+      detail = await getReviewDetail(identity.roles, open);
+    } catch (error) {
+      if (!(error instanceof NotFoundError)) throw error;
+    }
+  }
   return (
-    <AdminShell title="Moderation queue">
-      <p className="mb-3 t-small text-muted">
-        Ads waiting for review, oldest first{ads.length === LIMIT ? ` (first ${LIMIT})` : ""}. Approving makes the ad live; rejecting needs a reason.
-      </p>
-      {ads.length ? (
-        <ul className="adm-stack" style={{ listStyle: "none", padding: 0 }}>
-          {ads.map((ad) => (
-            <ModerationRow key={ad.id} ad={ad} />
-          ))}
-        </ul>
-      ) : (
-        <EmptyState title="Nothing to review" why="No ads are waiting for review." />
-      )}
+    <AdminShell title="Ads to review" hasHeader>
+      <ReviewView list={list} detail={detail} />
     </AdminShell>
   );
 }
