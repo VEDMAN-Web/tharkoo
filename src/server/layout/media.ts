@@ -8,8 +8,9 @@ import { AuditRepository } from "@/server/audit";
 import { ConflictError, ForbiddenError, NotFoundError, ValidationError } from "@/server/http";
 import { cloudinaryClient, uploadToCloudinary } from "@/server/media/client";
 import { CLOUDINARY_FOLDER, UPLOAD_NEEDS_CLOUDINARY, optionalCloudinary, uploadsAvailable } from "@/server/media/config";
-import { PageLayout, SiteMedia, User } from "@/server/models";
-import type { BlockBase, SiteMediaDoc } from "@/server/models/layout";
+import { SiteMedia, User } from "@/server/models";
+import type { SiteMediaDoc } from "@/server/models/layout";
+import { findMediaUsages, mediaUsageCounts, type MediaUsage } from "@/server/layout/media-refs";
 import { textDenied } from "@/server/shared/policy";
 import { altFromFileName } from "@/server/media/alt-from-filename";
 
@@ -118,7 +119,7 @@ export function toImageRef(doc: Pick<SiteMediaDoc, "url" | "alt" | "width" | "he
   return { assetId: String(doc._id), src: doc.url, alt: doc.alt, width: doc.width, height: doc.height };
 }
 
-function present(doc: SiteMediaDoc & { _id: unknown }) {
+export function present(doc: SiteMediaDoc & { _id: unknown }) {
   return {
     id: String(doc._id),
     url: doc.url,
@@ -133,6 +134,11 @@ function present(doc: SiteMediaDoc & { _id: unknown }) {
     oversize: doc.bytes > SITE_MEDIA_OVERSIZE_BYTES,
     autoAlt: doc.altAuto === true,
     missingAlt: !doc.alt || doc.alt.trim().length < ALT_MIN || doc.altAuto === true,
+    phoneVariantId: doc.phoneVariantId ? String(doc.phoneVariantId) : null,
+    focusX: doc.focusX ?? 50,
+    focusY: doc.focusY ?? 50,
+    trashedAt: doc.trashedAt ? new Date(doc.trashedAt).toISOString() : null,
+    purgeAfter: doc.purgeAfter ? new Date(doc.purgeAfter).toISOString() : null,
   };
 }
 
@@ -140,54 +146,30 @@ export type MediaItem = ReturnType<typeof present>;
 
 /* ---- usage ---- */
 
-export interface MediaUsage {
-  key: string;
-  scope: string;
-  where: "draft" | "published";
-  blockId: string;
-  blockType: string;
-}
-
-function mentions(value: unknown, assetId: string): boolean {
-  if (Array.isArray(value)) return value.some((item) => mentions(item, assetId));
-  if (value && typeof value === "object") {
-    const record = value as Record<string, unknown>;
-    if (record.assetId === assetId) return true;
-    return Object.values(record).some((item) => mentions(item, assetId));
-  }
-  return false;
-}
-
-function usagesIn(blocks: BlockBase[] | undefined, assetId: string) {
-  return (blocks ?? []).filter((block) => mentions(block.props, assetId));
-}
-
-/** Every draft or published block that uses this image. */
+/** Every block, category and place that uses this image (the registry lives in media-refs.ts). */
 export async function findUsages(assetId: string): Promise<MediaUsage[]> {
-  await connectDb();
-  const docs = await PageLayout.find({}).lean();
-  const out: MediaUsage[] = [];
-  for (const doc of docs) {
-    for (const [where, blocks] of [["draft", doc.draft], ["published", doc.published]] as const) {
-      for (const block of usagesIn(blocks as BlockBase[], assetId)) {
-        out.push({ key: doc.key, scope: doc.scope, where, blockId: block.id, blockType: block.type });
-      }
-    }
-  }
-  return out;
+  return findMediaUsages(assetId);
 }
 
 function describeUsage(usages: MediaUsage[]) {
-  const places = [...new Set(usages.map((use) => `${use.key} page${use.scope === "default" ? "" : ` (${use.scope})`}, ${use.where}`))];
+  const places = [
+    ...new Set(
+      usages.map((use) =>
+        use.kind === "page"
+          ? `${use.key} page${use.scope === "default" ? "" : ` (${use.scope})`}, ${use.where}`
+          : `the ${use.kind === "category" ? "category" : "place"} ${use.label || use.key} (${use.blockId})`,
+      ),
+    ),
+  ];
   return places.slice(0, 4).join("; ") + (places.length > 4 ? ` and ${places.length - 4} more` : "");
 }
 
 /** The refusal when an image is still in use. A Home page hero banner gets its own wording (H6.13). */
-function inUseMessage(usages: MediaUsage[]) {
-  if (usages.every((use) => use.key === "home" && use.blockType === "hero")) {
+export function inUseMessage(usages: MediaUsage[]) {
+  if (usages.every((use) => use.kind === "page" && use.key === "home" && use.blockType === "hero")) {
     return "This image is still used by the Home page hero. Remove it from the Home page hero first.";
   }
-  return `This image is still used: ${describeUsage(usages)}. Remove it from those blocks first.`;
+  return `This image is still used: ${describeUsage(usages)}. Remove it from those places first.`;
 }
 
 /* ---- operations ---- */
@@ -245,12 +227,16 @@ export async function uploadSiteMedia(input: {
   return item;
 }
 
+const UNUSED_SCAN_LIMIT = 5000;
+
 export interface MediaFilter {
   q?: string;
   tag?: string;
   missingAlt?: boolean;
   oversize?: boolean;
   unused?: boolean;
+  /** Only the images in the Trash (H8.45). Without it the Trash is left out. */
+  trash?: boolean;
   limit?: number;
   skip?: number;
 }
@@ -269,24 +255,25 @@ export async function listSiteMedia(filter: MediaFilter, roles: string[]) {
   // An auto alt (from the file name) counts as missing until someone checks it and saves the card.
   if (filter.missingAlt) and.push({ $or: [{ alt: "" }, { alt: { $regex: `^.{0,${ALT_MIN - 1}}$` } }, { altAuto: true }] });
   if (filter.oversize) query.bytes = { $gt: SITE_MEDIA_OVERSIZE_BYTES };
+  query.trashedAt = filter.trash ? { $ne: null } : null;
   if (and.length) query.$and = and;
   const limit = Math.min(Math.max(filter.limit ?? 48, 1), 200);
   const skip = Math.max(filter.skip ?? 0, 0);
-  let rows = await SiteMedia.find(query).sort({ createdAt: -1 }).skip(skip).limit(limit).lean();
-  let usedIds: Set<string> | null = null;
-  if (filter.unused || rows.length) {
-    usedIds = new Set();
-    const layouts = await PageLayout.find({}).lean();
-    for (const row of rows) {
-      const id = String(row._id);
-      if (layouts.some((layout) => mentions(layout.draft, id) || mentions(layout.published, id))) usedIds.add(id);
-    }
+  if (filter.unused) {
+    // The unused ones are found over the whole library first, so paging and the total are right (capped at 5,000 pictures).
+    const all = await SiteMedia.find(query).sort({ createdAt: -1 }).select("_id").limit(UNUSED_SCAN_LIMIT).lean<{ _id: Types.ObjectId }[]>();
+    const used = await mediaUsageCounts(all.map((row) => String(row._id)));
+    const unusedIds = all.map((row) => row._id).filter((id) => !used.has(String(id)));
+    const byId = new Map((await SiteMedia.find({ _id: { $in: unusedIds.slice(skip, skip + limit) } }).lean()).map((row) => [String(row._id), row]));
+    const page = unusedIds.slice(skip, skip + limit).flatMap((id) => (byId.has(String(id)) ? [byId.get(String(id))!] : []));
+    return { total: unusedIds.length, items: page.map((row) => ({ ...present(row as SiteMediaDoc & { _id: unknown }), used: false, usedIn: 0 })) };
   }
-  if (filter.unused) rows = rows.filter((row) => !usedIds!.has(String(row._id)));
+  const rows = await SiteMedia.find(query).sort({ createdAt: -1 }).skip(skip).limit(limit).lean();
+  const usage = await mediaUsageCounts(rows.map((row) => String(row._id)));
   const total = await SiteMedia.countDocuments(query);
   return {
     total,
-    items: rows.map((row) => ({ ...present(row as SiteMediaDoc & { _id: unknown }), used: usedIds!.has(String(row._id)) })),
+    items: rows.map((row) => ({ ...present(row as SiteMediaDoc & { _id: unknown }), used: usage.has(String(row._id)), usedIn: usage.get(String(row._id)) ?? 0 })),
   };
 }
 
@@ -307,6 +294,15 @@ export async function updateSiteMedia(id: string, patch: { alt?: unknown; tags?:
   return present(current.toObject() as SiteMediaDoc & { _id: unknown });
 }
 
+/** Removes the stored file of an image (Cloudinary or the local uploads folder). The database row is the caller's job. */
+export async function removeStoredFile(objectKey: string) {
+  if (objectKey.startsWith(`${CLOUDINARY_FOLDER}/`)) {
+    await cloudinaryClient().destroy(objectKey, "upload");
+  } else {
+    await unlink(path.join(siteMediaDir(), path.basename(objectKey))).catch(() => undefined);
+  }
+}
+
 /** Deleting is refused while a published or draft block still uses the image; the message says where. */
 export async function deleteSiteMedia(id: string, email: string, roles: string[]) {
   requireAdmin(roles);
@@ -317,11 +313,7 @@ export async function deleteSiteMedia(id: string, email: string, roles: string[]
   const usages = await findUsages(id);
   if (usages.length) throw new ConflictError(inUseMessage(usages));
   await SiteMedia.deleteOne({ _id: id });
-  if (current.objectKey.startsWith(`${CLOUDINARY_FOLDER}/`)) {
-    await cloudinaryClient().destroy(current.objectKey, "upload");
-  } else {
-    await unlink(path.join(siteMediaDir(), path.basename(current.objectKey))).catch(() => undefined);
-  }
+  await removeStoredFile(current.objectKey);
   await record("media.site.delete", email, id, { url: current.url, alt: current.alt }, null);
   return { id };
 }

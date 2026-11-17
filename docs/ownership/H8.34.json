@@ -1,0 +1,12 @@
+{
+  "branchPrefix": "haiku/h8.34",
+  "globs": [
+    "docs/ownership/H8.34.json",
+    "src/app/admin/content/_review/**",
+    "src/server/content/studio/workflow.ts",
+    "src/app/api/cron/content-publish/**",
+    "src/server/admin/undo/handlers/content-publish.ts",
+    "tests/server/content/a34-*.test.ts",
+    "tests/e2e/a34-review.e2e.ts"
+  ]
+}

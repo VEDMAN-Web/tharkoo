@@ -1,0 +1,16 @@
+{
+  "branchPrefix": "haiku/h8.45",
+  "globs": [
+    "docs/ownership/H8.45.json",
+    "src/app/admin/media/**",
+    "src/app/api/cron/media-purge/**",
+    "src/server/layout/media.ts",
+    "src/server/layout/media-refs.ts",
+    "src/server/layout/media-admin.ts",
+    "src/server/admin/undo/handlers/media-trash.ts",
+    "tests/server/layout/a45-*.test.ts",
+    "tests/server/admin/a3-write.test.ts",
+    "tests/e2e/a45-media.e2e.ts",
+    "tests/e2e/bulk-upload.e2e.ts"
+  ]
+}
