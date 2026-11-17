@@ -23,6 +23,7 @@ async function seed(tag: string) {
       if (!field.required || field.enabled === false) continue;
       attributes[field.key] = field.type === "number" || field.type === "range" ? Math.max(field.min ?? 0, 30) : field.options?.length ? field.options[0] : "x";
     }
+    const city = await db.collection("locations").findOne({ type: "city" });
     const owner = new ObjectId();
     await db.collection("users").insertOne({ _id: owner, email: `${tag}@example.test`, displayName: `A33 Seller ${tag}`, status: "active", roles: ["user"], createdAt: new Date() });
     const id = new ObjectId();
@@ -31,6 +32,7 @@ async function seed(tag: string) {
       ownerId: owner,
       status: "active",
       categoryId: category?._id ?? new ObjectId(),
+      cityId: city?._id,
       title: `A33 ${tag} flat near Adajan`,
       slug: `a33-${tag}`,
       description: "Spacious flat with lift and parking. Family or working people preferred.",
