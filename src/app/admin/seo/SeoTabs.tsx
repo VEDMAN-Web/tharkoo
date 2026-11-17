@@ -7,7 +7,7 @@ const TABS = [
   { href: "/admin/seo/templates/", label: "Templates" },
   { href: "/admin/urls/", label: "Page overrides" },
   { href: "/admin/seo/indexing/", label: "Indexing" },
-  { href: "/admin/seo/settings/", label: "robots, llms & schema" },
+  { href: "/admin/seo/settings/", label: "Search engines & AI" },
   { href: "/admin/seo/tools/", label: "Tools" },
 ];
 

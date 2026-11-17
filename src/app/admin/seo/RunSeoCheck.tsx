@@ -15,7 +15,7 @@ export function RunSeoCheck({ canRun, waiting }: { canRun: boolean; waiting: boo
     start(async () => {
       const out = await runSeoCheckAction();
       if (out.ok) {
-        setMessage({ kind: "info", text: `Done. ${out.counts.p0Rows} pages with P0 issues, ${out.counts.p1Rows} with P1 issues.` });
+        setMessage({ kind: "info", text: `Done. ${out.counts.p0Rows} pages with Must fix issues, ${out.counts.p1Rows} with Should fix issues.` });
         router.refresh();
       } else {
         setMessage({ kind: "error", text: out.message });

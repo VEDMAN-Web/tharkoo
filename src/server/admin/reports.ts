@@ -211,7 +211,7 @@ export async function getReportDetail(roles: readonly string[], tab: ReportTab, 
     reports: reports.map((report) => ({
       id: String(report._id),
       reason: report.source === "legal" ? "Legal takedown request" : (REASON_LABEL[report.reason] ?? report.reason),
-      details: report.details || "",
+      details: [report.source === "legal" && report.askedBy ? `Asked by ${report.askedBy}${report.channel ? `, by ${report.channel}` : ""}.` : "", report.details || ""].filter(Boolean).join(" "),
       since: new Date(report.createdAt ?? Date.now()).toISOString(),
       status: report.status,
     })),
