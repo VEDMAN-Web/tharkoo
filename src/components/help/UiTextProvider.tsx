@@ -3,14 +3,17 @@
 import { createContext, useContext, useMemo, type ReactNode } from "react";
 import { makeT, type TextFn, type UiTextMap } from "@/lib/ui/text";
 
+type Shared = Parameters<typeof makeT>[1];
+
 const TextContext = createContext<TextFn>(makeT());
 
 /**
  * H7.8: the UI-text overrides for a part of the page (header, chat, help), so client components read their words from
- * the admin store without each one being handed props. Without a provider the code defaults are used.
+ * the admin store without each one being handed props. `shared` (a stable object) fills placeholders every text may use.
+ * Without a provider the code defaults are used.
  */
-export function UiTextProvider({ texts, children }: { texts?: UiTextMap; children: ReactNode }) {
-  const t = useMemo(() => makeT(texts), [texts]);
+export function UiTextProvider({ texts, shared, children }: { texts?: UiTextMap; shared?: Shared; children: ReactNode }) {
+  const t = useMemo(() => makeT(texts, shared), [texts, shared]);
   return <TextContext.Provider value={t}>{children}</TextContext.Provider>;
 }
 

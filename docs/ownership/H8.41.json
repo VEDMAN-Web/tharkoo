@@ -1,0 +1,20 @@
+{
+  "branchPrefix": "haiku/h8.41",
+  "globs": [
+    "docs/ownership/H8.41.json",
+    "progress/H8.41.md",
+    "src/server/layout/blocks.ts",
+    "src/server/layout/defaults/post.ts",
+    "src/server/layout/post-builder.ts",
+    "src/app/admin/page-builder/_post/**",
+    "src/app/admin/page-builder/PageBuilderScreen.tsx",
+    "src/app/u/post-insert/page.tsx",
+    "src/components/post/copy.ts",
+    "src/components/help/UiTextProvider.tsx",
+    "src/components/admin/layout-editor/fields.ts",
+    "src/lib/ui/text.ts",
+    "tests/server/layout/a41-*.test.ts",
+    "tests/server/layout/blocks.test.ts",
+    "tests/e2e/a41-post-builder.e2e.ts"
+  ]
+}

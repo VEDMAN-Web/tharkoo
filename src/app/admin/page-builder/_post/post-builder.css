@@ -1,0 +1,8 @@
+.adm-pb-pair-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); padding-top: 0; border-top: 0; }
+.adm-pb-previewlink { margin-left: auto; }
+@media (max-width: 767px) {
+  .adm-pb-pair-2 { grid-template-columns: minmax(0, 1fr); }
+  .adm-pb-previewlink { margin-left: 0; }
+}
+.adm-pb-blockrow.is-off .adm-pb-blockname { opacity: 1; }
+.adm-pb-blockrow.is-off .adm-pb-blockname strong { font-weight: 600; }

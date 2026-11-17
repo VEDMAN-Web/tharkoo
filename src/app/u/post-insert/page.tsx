@@ -1,7 +1,7 @@
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { PostWizard } from "@/components/PostWizard";
-import { buildPostCopy } from "@/components/post/copy";
+import { buildPostCopy, feeLabel, fillCopyFee } from "@/components/post/copy";
 import { getStaffFromHeaders } from "@/lib/admin-auth";
 import { getPageBlocks, inWindow } from "@/lib/layout/read";
 import { isAdminRole } from "@/lib/ui/site-content";
@@ -17,6 +17,7 @@ import { IdCheckFirst } from "@/components/post/IdCheckFirst";
 import { UiTextProvider } from "@/components/help/UiTextProvider";
 import { textOverrides } from "@/app/admin/ui-text/store";
 import { makeT, pickTexts } from "@/lib/ui/text";
+import { effectivePostingFee, readMoneySettings } from "@/server/billing/money-settings";
 import { getCategories, getCities } from "@/lib/queries";
 import { plain } from "@/lib/plain";
 import { kindFor } from "@/server/categories/kind";
@@ -53,8 +54,6 @@ export default async function PostInsertPage({
   // H6.14: with the ID-check switch on, the ID check comes first, before step 1. Off, the form always opens.
   const requireIdCheck = await idCheckRequired();
   const screen = idCheckScreen(requireIdCheck, session.user.verificationStatus);
-  const texts = pickTexts(await textOverrides(), "post.");
-  if (screen !== "form") return <IdCheckFirst screen={screen} postPath={postAdPath(await getPaths())} t={makeT(texts)} />;
   let blocks = null;
   try {
     // "?preview=1" shows an admin the saved draft instead of the published layout.
@@ -65,6 +64,11 @@ export default async function PostInsertPage({
   } catch (error) {
     console.error("post-ad layout could not be read; using the built-in wording", error);
   }
+  const fee = feeLabel(effectivePostingFee(await readMoneySettings()));
+  const copy = fillCopyFee(buildPostCopy(blocks), fee);
+  const texts = { ...pickTexts(await textOverrides(), "post."), ...copy.texts };
+  const shared = { fee };
+  if (screen !== "form") return <IdCheckFirst screen={screen} postPath={postAdPath(await getPaths())} t={makeT(texts, shared)} />;
   // H7.5: the New design (five steps, live preview) only when the switch is on.
   const [categoryRows, cityRows] = newDesign ? await Promise.all([getCategories(), getCities()]) : [[], []];
   const categories = plain(
@@ -79,5 +83,5 @@ export default async function PostInsertPage({
   const cities = plain(cityRows.map((row) => ({ id: row.id, name: row.name, slug: row.slug })).sort((a, b) => a.name.localeCompare(b.name)));
   const home = (session.user.seller?.city ?? "").trim().toLowerCase();
   const defaultCityId = home ? (cities.find((item) => item.slug.toLowerCase() === home || item.name.toLowerCase() === home)?.id ?? "") : "";
-  return <UiTextProvider texts={texts}><PostWizard copy={buildPostCopy(blocks)} requireIdCheck={requireIdCheck} newDesign={newDesign} initialCategories={categories} initialCities={cities} defaultCityId={defaultCityId} defaultName={session.user.seller?.name ?? ""} maskedEmail={maskEmail(session.user.email)} about={about} /></UiTextProvider>;
+  return <UiTextProvider texts={texts} shared={shared}><PostWizard copy={copy} requireIdCheck={requireIdCheck} newDesign={newDesign} initialCategories={categories} initialCities={cities} defaultCityId={defaultCityId} defaultName={session.user.seller?.name ?? ""} maskedEmail={maskEmail(session.user.email)} about={about} /></UiTextProvider>;
 }
