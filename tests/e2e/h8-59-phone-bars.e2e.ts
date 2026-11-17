@@ -10,7 +10,8 @@ const SHOTS = process.env.H859_SHOTS_DIR ?? "";
 async function shot(page: Page, name: string) {
   if (!SHOTS) return;
   mkdirSync(SHOTS, { recursive: true });
-  await page.screenshot({ path: `${SHOTS}/${name}-390x844.png` });
+  const size = page.viewportSize();
+  await page.screenshot({ path: `${SHOTS}/${name}-${size?.width}x${size?.height}.png` });
 }
 
 async function serious(page: Page) {
@@ -37,10 +38,14 @@ test.describe("H8.59 phone bars", () => {
     const link = await bar.getByRole("link").boundingBox();
     expect(link!.height).toBeGreaterThanOrEqual(44);
     expect(await hasHorizontalScroll(page)).toBe(false);
+    expect((await bar.getByRole("link").innerText()).trim()).toBe("Turn off");
     await shot(page, "test-payments-bar");
     await page.setViewportSize({ width: 1440, height: 900 });
     await expect(bar).toContainText("anyone can add credits without paying");
     await expect(bar.getByRole("link", { name: "Turn off in Prices & plans" })).toBeVisible();
+    expect((await bar.getByRole("link").innerText()).replace(/\s+/g, " ")).toBe("Turn off in Prices & plans");
+    expect(await bar.getByRole("link").innerText()).not.toContain("offin");
+    await shot(page, "test-payments-bar");
   });
 
   test("the Page builder save bar is one short row above the bottom menu, with all three actions reachable", async ({ page, context, baseURL }) => {

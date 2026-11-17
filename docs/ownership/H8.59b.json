@@ -1,0 +1,9 @@
+{
+  "branchPrefix": "haiku/h8.59b",
+  "globs": [
+    "docs/ownership/H8.59b.json",
+    "progress/H8.59b.md",
+    "src/components/admin/MockPaymentsBanner.tsx",
+    "tests/e2e/h8-59-phone-bars.e2e.ts"
+  ]
+}
