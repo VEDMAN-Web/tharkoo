@@ -16,7 +16,7 @@ export const TEXT_AREAS: TextArea[] = [
   { id: "credits", label: "Credits and payments", where: "Adding credits, checkout, receipts and credit history", prefixes: ["recharge.", "checkout.", "history.", "receipt."] },
   { id: "panel", label: "Account panel", where: "The signed-in menu and the account home", prefixes: ["panel."] },
   { id: "chat", label: "Live chat", where: "The chat box on the site", prefixes: ["chat."] },
-  { id: "header", label: "Header", where: "The top of every page", prefixes: ["header."] },
+  { id: "header", label: "Header and footer", where: "The top and the bottom of every page", prefixes: ["header.", "chrome."] },
   { id: "help", label: "Help texts", where: "The help lines on the account pages", prefixes: ["help."] },
 ];
 
@@ -113,6 +113,10 @@ const WHERE: Record<string, string> = {
   "checkout.crypto": "Checkout, paying with crypto",
   "history.used": "Credits history, what credits were spent on",
   "history.status": "Credits history, the status of a payment",
+  "chrome.nav": "Header, the main menu (read by screen readers)",
+  "chrome.account": "Header, the account menu",
+  "chrome.menu": "Header, the menu on a phone",
+  "chrome.footer": "Footer",
   "chat.guest": "Live chat, before the visitor signs in",
   "chat.composer": "Live chat, the message box",
   "chat.articles": "Live chat, help articles",
