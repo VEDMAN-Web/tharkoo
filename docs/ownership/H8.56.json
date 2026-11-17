@@ -1,0 +1,14 @@
+{
+  "branchPrefix": "haiku/h8.56",
+  "globs": [
+    "docs/ownership/H8.56.json",
+    "src/server/locations/reorder.ts",
+    "src/server/locations/screen.ts",
+    "src/app/admin/locations/reorder-action.ts",
+    "src/app/admin/locations/_screen/PlaceList.tsx",
+    "src/app/admin/locations/_screen/PlacesScreen.tsx",
+    "tests/server/locations/h856-reorder.test.ts",
+    "tests/e2e/h8-56-reorder.e2e.ts",
+    "tests/e2e/h8-52-cities.e2e.ts"
+  ]
+}
