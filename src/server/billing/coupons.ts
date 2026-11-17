@@ -18,6 +18,7 @@ export interface CouponQuote {
   redeemedCount?: number;
   status?: string;
   expiresAt?: Date | null;
+  startsAt?: Date | null;
   expiry?: string | null;
 }
 
@@ -47,6 +48,7 @@ async function assertUsable(coupon: CouponQuote, userId: string) {
   if (coupon.kind === "credits" && (coupon.credits == null || coupon.credits <= 0)) {
     throw new NotFoundError("Coupon is invalid");
   }
+  if (coupon.startsAt && coupon.startsAt.getTime() > Date.now()) throw new ConflictError("Coupon is not active yet");
   if (isExpired(coupon)) throw new ConflictError("Coupon is expired");
   if (coupon.maxRedemptions != null && (coupon.redeemedCount ?? 0) >= coupon.maxRedemptions) {
     throw new ConflictError("Coupon is used up");
