@@ -1,27 +1,11 @@
-import { Site } from "@/server/models";
-import { connectDb } from "@/lib/db";
+import { clampLifetimeHours, DEFAULT_AD_LIFETIME_HOURS, lifetimeMs, MAX_AD_LIFETIME_HOURS, MIN_AD_LIFETIME_HOURS } from "@/lib/ads/lifetime-rules";
 
-const HOUR_MS = 60 * 60 * 1000;
+export { clampLifetimeHours, DEFAULT_AD_LIFETIME_HOURS, lifetimeMs, MAX_AD_LIFETIME_HOURS, MIN_AD_LIFETIME_HOURS };
 
-/** Ads stay live this long unless an admin changes "Ad lifetime (hours)" (H6.7). */
-export const DEFAULT_AD_LIFETIME_HOURS = 72;
-export const MIN_AD_LIFETIME_HOURS = 1;
-export const MAX_AD_LIFETIME_HOURS = 720;
-
-/** Clamps an admin value to the allowed range; anything that is not a number gets the default. */
-export function clampLifetimeHours(value: unknown): number {
-  const number = Number(value);
-  if (!Number.isFinite(number)) return DEFAULT_AD_LIFETIME_HOURS;
-  return Math.min(MAX_AD_LIFETIME_HOURS, Math.max(MIN_AD_LIFETIME_HOURS, Math.round(number)));
-}
-
-export function lifetimeMs(hours: number): number {
-  return clampLifetimeHours(hours) * HOUR_MS;
-}
-
-/** The lifetime in force now, read from the site settings. Used for new ads, renewals and approvals. */
+/**
+ * The lifetime for new ads, renewals and approvals: the code constant. A `Site.adLifetimeHours` value saved earlier (72 by the old schema
+ * default) is ignored on purpose, so every ad gets 48 hours. Ads that are live keep their end time; an admin changes one in Ads.
+ */
 export async function adLifetimeMs(): Promise<number> {
-  await connectDb();
-  const site = await Site.findOne({ key: "default" }).select("adLifetimeHours").lean<{ adLifetimeHours?: number }>();
-  return lifetimeMs(site?.adLifetimeHours ?? DEFAULT_AD_LIFETIME_HOURS);
+  return lifetimeMs(DEFAULT_AD_LIFETIME_HOURS);
 }
