@@ -3,14 +3,15 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { createContext, useCallback, useContext, useEffect, useRef, useState } from "react";
-import { Bell, Ellipsis, House, Menu, MessageSquare, Search, ShieldCheck } from "lucide-react";
+import { Ellipsis, House, Menu, MessageSquare, Search, ShieldCheck } from "lucide-react";
 import { visibleGroups, type NavItem } from "./nav";
 import { LogoutButton } from "@/components/auth/LogoutButton";
-import { allWaiting, countLabel, sumCounts, type AdminCounts } from "@/lib/admin/count-sum";
+import { countLabel, sumCounts, type AdminCounts } from "@/lib/admin/count-sum";
 import "@/styles/admin-kit.css";
 import { roleWords } from "@/lib/admin/role-words";
 import { canOpenPath } from "@/lib/admin/screens";
 import { AdminSearchPanel } from "./AdminSearchPanel";
+import { NotificationBell } from "./notifications/NotificationBell";
 
 type Viewer = { name: string; roles: readonly string[] };
 
@@ -164,7 +165,6 @@ export function AdminShell({ title, hasHeader = false, children }: { title: stri
   const [searching, setSearching] = useState(false);
   const [query, setQuery] = useState("");
   const search = useRef<HTMLInputElement>(null);
-  const waiting = allWaiting(counts);
 
   const openSearch = useCallback(() => {
     setSearching(true);
@@ -221,10 +221,7 @@ export function AdminShell({ title, hasHeader = false, children }: { title: stri
             <button type="button" className="adm-ibtn adm-search-btn" aria-label="Search" onClick={openSearch}>
               <Search aria-hidden="true" focusable="false" size={18} />
             </button>
-            <Link href="/admin/" className="adm-ibtn" aria-label={waiting ? `${waiting} things waiting` : "Nothing waiting"} data-tk="bell">
-              <Bell aria-hidden="true" focusable="false" size={18} />
-              {waiting ? <b aria-hidden="true">{countLabel(waiting)}</b> : null}
-            </Link>
+            <NotificationBell />
             <div className="adm-user">
               <span className="adm-avatar" aria-hidden>{(name || "A").slice(0, 1).toUpperCase()}</span>
               <span className="adm-user-text">

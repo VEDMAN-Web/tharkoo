@@ -86,6 +86,7 @@ export const SCREENS: readonly Screen[] = [
 ];
 
 export const LEGACY_ROUTES: readonly LegacyRoute[] = [
+  { href: "/admin/notifications/", view: "dashboard.view" },
   { href: "/admin/listings/", view: "ads.view" },
   { href: "/admin/ads/home/", view: "settings.edit" },
   { href: "/admin/ads/create/", view: "settings.edit" },
