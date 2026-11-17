@@ -15,6 +15,9 @@ export type AdsTab = (typeof ADS_TABS)[number];
 export const ADS_PAGE_SIZES = [25, 50, 100] as const;
 export type AdsKind = "all" | "real" | "demo";
 export type AdsPaid = "all" | "paid" | "free";
+export const ADS_SORTS = ["new", "ends", "ends_last"] as const;
+export type AdsSort = (typeof ADS_SORTS)[number];
+const ENDS_SOON_HOURS = 24;
 
 const SEARCH_MAX = 120;
 const FOUND_MAX = 200;
@@ -42,6 +45,9 @@ export type AdsQuery = {
   paid: AdsPaid;
   category: string;
   city: string;
+  sort: AdsSort;
+  /** Only live or paused ads that end within the next 24 hours. */
+  endsSoon: boolean;
 };
 
 export type AdRow = {
@@ -94,6 +100,8 @@ export function parseAdsQuery(params: Record<string, string | string[] | undefin
     paid: paid === "paid" || paid === "free" ? paid : "all",
     category: /^[a-f0-9]{24}$/i.test(category) ? category.toLowerCase() : "",
     city: one("city").trim().slice(0, 60),
+    sort: (ADS_SORTS as readonly string[]).includes(one("sort")) ? (one("sort") as AdsSort) : "new",
+    endsSoon: one("ends") === "24",
   };
 }
 
@@ -158,6 +166,7 @@ async function filterFor(query: AdsQuery): Promise<QueryFilter<ListingDoc>> {
   if (query.q) parts.push(await searchFilter(query.q));
   if (query.junk) parts.push({ $or: JUNK_PATTERN_SOURCES.map((source) => ({ title: { $regex: source, $options: "i" } })) });
   if (query.home) parts.push({ homeShow: true });
+  if (query.endsSoon) parts.push({ status: { $in: ["active", "paused"] }, expiresAt: { $gt: new Date(), $lte: new Date(Date.now() + ENDS_SOON_HOURS * 3_600_000) } });
   if (query.category) parts.push({ $or: [{ categoryId: query.category }, { subcategoryId: query.category }] } as QueryFilter<ListingDoc>);
   if (query.city) parts.push(await cityFilter(query.city));
   if (query.kind !== "all" && query.tab !== "demo") {
@@ -212,7 +221,7 @@ export async function listAds(roles: readonly string[], query: AdsQuery): Promis
     adsCounts(),
     Listing.countDocuments(filter),
     Listing.find(filter)
-      .sort({ createdAt: -1, _id: -1 })
+      .sort(query.sort === "ends" ? { expiresAt: 1, _id: 1 } : query.sort === "ends_last" ? { expiresAt: -1, _id: -1 } : { createdAt: -1, _id: -1 })
       .skip((query.page - 1) * query.pageSize)
       .limit(query.pageSize)
       .select("title status categoryId cityId ownerId slug createdAt expiresAt homeShow")

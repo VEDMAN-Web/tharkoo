@@ -2,9 +2,10 @@
 
 import { useRouter } from "next/navigation";
 import { useRef, useState } from "react";
-import { CalendarPlus, ExternalLink, History, Pause, Play } from "lucide-react";
-import { Badge, Button, HistoryDrawer, PageHeader, ToastProvider, useToast, type BadgeTone, type HistoryEntry } from "@/components/admin/ui";
+import { CalendarPlus, ExternalLink, History, Pause, Play, Power } from "lucide-react";
+import { Badge, Button, HistoryDrawer, PageHeader, ReasonDialog, ToastProvider, useToast, type BadgeTone, type HistoryEntry } from "@/components/admin/ui";
 import { changedFields } from "@/components/admin/ui/kit-helpers";
+import { endsIn, istDateTime, istInputToIso, istInputValue } from "@/lib/admin/ad-ends";
 import { moveItem } from "@/components/upload/rules";
 import { AdMediaPicker } from "../create/AdMediaPicker";
 import { AdPlacePicker, type PlaceChoice } from "../create/AdPlacePicker";
@@ -103,6 +104,10 @@ function Screen({ ad, history }: { ad: StaffAd; history: AdHistory }) {
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [busy, setBusy] = useState(false);
   const [showHistory, setShowHistory] = useState(false);
+  const [now] = useState(() => Date.now());
+  const [endValue, setEndValue] = useState(() => (ad.expiresAt ? istInputValue(ad.expiresAt) : ""));
+  const [endError, setEndError] = useState("");
+  const [endingNow, setEndingNow] = useState(false);
   const [photos, setPhotos] = useState<MediaItem[]>(() => ad.photos.map((photo, index) => ({ key: photo.id, name: `Photo ${index + 1}`, previewUrl: photo.url, state: "ready" as const, size: 0, mediaId: photo.id, error: "" })));
   const [photoNote, setPhotoNote] = useState("");
   const [places, setPlaces] = useState<AdFormPlace[]>(ad.options.places);
@@ -216,14 +221,25 @@ function Screen({ ad, history }: { ad: StaffAd; history: AdHistory }) {
     router.refresh();
   }
 
-  async function status(action: "pause" | "resume" | "extend") {
+  async function status(action: "pause" | "resume" | "extend" | "setEnd" | "expireIn" | "endNow", extra: { hours?: number; endsAt?: string; reason?: string } = {}) {
     setBusy(true);
-    const answer = await bulkAdsAction({ action, ids: [ad.id] });
+    const answer = await bulkAdsAction({ action, ids: [ad.id], ...extra });
     setBusy(false);
     if (!answer.ok) toast.show({ kind: "error", message: answer.message });
     else if (answer.changed === 0) toast.show({ kind: "error", message: `Nothing changed. ${answer.skipped[0]?.why ?? ""}`.trim() });
-    else toast.show({ kind: "undo", message: action === "pause" ? "Paused." : action === "resume" ? "Back live." : "Extended by 30 days.", onUndo: () => void undoAdsBatchAction({ batchId: answer.batchId, eventIds: answer.eventIds }).then((done) => { toast.show({ kind: done.ok ? "success" : "error", message: done.message }); router.refresh(); }) });
+    else {
+      const words = { pause: "Paused.", resume: "Back live.", extend: `Ends ${extra.hours} hours later.`, setEnd: "End time set.", expireIn: "Ends in 24 hours.", endNow: "The ad has ended." }[action];
+      toast.show({ kind: "undo", message: words, onUndo: () => void undoAdsBatchAction({ batchId: answer.batchId, eventIds: answer.eventIds }).then((done) => { toast.show({ kind: done.ok ? "success" : "error", message: done.message }); router.refresh(); }) });
+    }
     router.refresh();
+  }
+
+  function saveEnd() {
+    const iso = istInputToIso(endValue);
+    if (!iso) return setEndError("Pick a date and time.");
+    if (new Date(iso).getTime() <= Date.now()) return setEndError("Pick a time in the future. To end the ad now, use End now.");
+    setEndError("");
+    void status("setEnd", { endsAt: iso });
   }
 
   const tabs = [
@@ -333,12 +349,27 @@ function Screen({ ad, history }: { ad: StaffAd; history: AdHistory }) {
             <h2 id="ae-status">Status</h2>
             <div className="adm-ae-badges"><Badge tone={look.tone}>{look.text}</Badge></div>
             <dl className="adm-ae-kv">
-              <div><dt>Expires</dt><dd>{day(ad.expiresAt)}</dd></div>
+              <div><dt>Ends</dt><dd data-tk="ad-ends">{ad.expiresAt ? `${istDateTime(ad.expiresAt)}${["active", "paused"].includes(ad.status) ? `, ${endsIn(ad.expiresAt, now)}` : ", ended"}` : "No end time"}</dd></div>
               <div><dt>Posted</dt><dd>{day(ad.createdAt)}</dd></div>
             </dl>
+            {edit && ["active", "paused"].includes(ad.status) ? (
+              <div className="adm-ae-end" data-tk="end-controls">
+                <label className="adm-k-label" htmlFor="ae-ends-on">Ends on (India time)</label>
+                <div className="adm-ae-end-row">
+                  <input id="ae-ends-on" type="datetime-local" className="adm-k-input" data-tk="ends-on" min={istInputValue(new Date(now).toISOString())} value={endValue} onChange={(event) => { setEndValue(event.target.value); setEndError(""); }} />
+                  <Button busy={busy} onClick={saveEnd}>Set end time</Button>
+                </div>
+                {endError ? <p className="adm-k-err" role="alert" data-tk="ends-on-error">{endError}</p> : null}
+                <div className="adm-ae-actions">
+                  <Button icon={CalendarPlus} busy={busy} onClick={() => void status("extend", { hours: 24 })}>+24 h</Button>
+                  <Button icon={CalendarPlus} busy={busy} onClick={() => void status("extend", { hours: 48 })}>+48 h</Button>
+                  <Button busy={busy} onClick={() => void status("expireIn", { hours: 24 })}>Expire in 24 h</Button>
+                  <Button kind="danger" icon={Power} busy={busy} onClick={() => setEndingNow(true)}>End now...</Button>
+                </div>
+              </div>
+            ) : null}
             {edit ? (
               <div className="adm-ae-actions">
-                <Button icon={CalendarPlus} busy={busy} onClick={() => void status("extend")}>Extend 30 days</Button>
                 {ad.status === "paused" ? (
                   <Button icon={Play} busy={busy} onClick={() => void status("resume")}>Resume</Button>
                 ) : (
@@ -346,6 +377,21 @@ function Screen({ ad, history }: { ad: StaffAd; history: AdHistory }) {
                 )}
               </div>
             ) : null}
+            <ReasonDialog
+              key={endingNow ? "end-open" : "end-closed"}
+              open={endingNow}
+              title="End this ad now?"
+              body="The ad comes down at once and visitors no longer see it. Credits are not given back from here. You can undo this."
+              textLabel="Why are you ending it?"
+              requireText
+              confirmLabel="End ad now"
+              danger
+              onCancel={() => setEndingNow(false)}
+              onConfirm={(result) => {
+                setEndingNow(false);
+                void status("endNow", { reason: result.text });
+              }}
+            />
           </section>
           <section className="adm-card" aria-labelledby="ae-money">
             <h2 id="ae-money">Money</h2>
