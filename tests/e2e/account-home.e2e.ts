@@ -1,5 +1,5 @@
 import AxeBuilder from "@axe-core/playwright";
-import { becomeSeller, expect, hasHorizontalScroll, loginUi, newUserApi, originHeaders, test } from "./helpers";
+import { becomeSeller, expect, hasHorizontalScroll, loginUi, newUserApi, originHeaders, test, withLocalDb } from "./helpers";
 import type { APIRequestContext, Page } from "@playwright/test";
 
 const NAV_LABELS = ["Home", "My ads", "Chats", "Saved ads", "Notifications", "Help and support", "Settings"];
@@ -48,15 +48,15 @@ test.describe("H7.73 one account home", () => {
     const nav = page.getByRole("navigation", { name: "My account" });
     for (const label of NAV_LABELS) await expect(nav.getByRole("link", { name: new RegExp(`^${label}`) })).toBeVisible();
     await expect(nav.getByRole("link", { name: /^Credits and payments/ })).toBeVisible();
-    const headline = await page.locator("h1").innerText();
 
     await becomeSeller(page, baseURL!);
     await page.goto("/u/account/");
     await expect(page.getByRole("navigation", { name: "My account" })).toBeVisible();
-    await expect(page.locator("h1")).toHaveText(headline);
+    // H9.2: an advertiser has no buyer headline; the home starts with Your ads.
+    await expect(page.locator("h1")).toHaveText("Your ads");
     await expect(page.locator('[data-tk="availability"]')).toBeVisible();
     await page.goto("/u/account/dashboard/");
-    await expect(page.locator("h1")).toHaveText(headline);
+    await expect(page.locator("h1")).toHaveText("Your ads");
     await expect(page.getByRole("navigation", { name: "My account" }).getByRole("link", { name: /^Home/ })).toHaveAttribute("aria-current", "page");
     expect(await hasHorizontalScroll(page)).toBe(false);
   });

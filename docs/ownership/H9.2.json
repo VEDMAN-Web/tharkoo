@@ -1,0 +1,16 @@
+{
+  "branchPrefix": "haiku/h9.2",
+  "globs": [
+    "docs/ownership/H9.2.json",
+    "src/components/buyer/SellerHomeAds.tsx",
+    "src/components/buyer/FreshAds.tsx",
+    "src/components/buyer/UserPanelHome.tsx",
+    "src/components/buyer/PanelHomePage.tsx",
+    "src/components/buyer/user-panel.css",
+    "src/server/listings/owner-cards.ts",
+    "tests/server/listings/h92-ending-soon.test.ts",
+    "tests/server/ui/h92-seller-line.test.ts",
+    "tests/e2e/h9-2-seller-home.e2e.ts",
+    "tests/e2e/account-home.e2e.ts"
+  ]
+}

@@ -39,27 +39,21 @@ export function FreshAds({ title = "Fresh ads for you" }: { title?: string }) {
       live = false;
     };
   }, []);
+  // Nothing to show (still loading, a failed load, or no ads): no section at all, never an empty frame.
+  if (!items || items.length === 0) return null;
   return (
     <section aria-labelledby="fresh-heading" className="up-glass up-panel" data-tk="discover">
       <div className="up-panel-head">
         <h2 id="fresh-heading" className="up-h2">{title}</h2>
         <Link href="/search/" className="up-link">See all ads</Link>
       </div>
-      {items === null ? (
-        <div className="up-cards3" aria-hidden="true">
-          <div className="up-skeleton" />
-        </div>
-      ) : items.length === 0 ? (
-        <p className="up-muted">No ads to show right now.</p>
-      ) : (
-        <ul className="up-cards3">
-          {items.map((card) => (
-            <li key={card.slug}>
-              <AdCard ad={toAdDoc(card)} />
-            </li>
-          ))}
-        </ul>
-      )}
+      <ul className="up-cards3">
+        {items.map((card) => (
+          <li key={card.slug}>
+            <AdCard ad={toAdDoc(card)} />
+          </li>
+        ))}
+      </ul>
     </section>
   );
 }

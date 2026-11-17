@@ -4,6 +4,7 @@ import { SESSION_COOKIE } from "@/server/auth/http";
 import { userFromToken } from "@/server/auth/service";
 import { readOwnPresence } from "@/server/availability/service";
 import { profileProgress } from "@/lib/ui/profile-progress";
+import { readMoneySettings } from "@/server/billing/money-settings";
 import { listOwnCards } from "@/server/listings/owner-cards";
 import { loadPacks, loadPanelSummary, type PackRow } from "@/server/notifications/summary";
 
@@ -31,5 +32,9 @@ export async function PanelHomePage() {
         liveChat: Boolean(presence?.liveChat),
       })
     : null;
-  return <UserPanelHome summary={summary} ads={ads} packs={homePacks(packs)} profile={profile} />;
+  // An advertiser sees what the credits are worth in ads (only while posting costs credits) and Withdraw only with earnings.
+  const seller = summary.signedIn && summary.seller;
+  const money = seller ? await readMoneySettings() : null;
+  const adsLeft = summary.signedIn && money && money.paidPostingOn && money.postingFeeCredits > 0 ? Math.floor(summary.balance / money.postingFeeCredits) : null;
+  return <UserPanelHome summary={summary} ads={ads} packs={homePacks(packs)} profile={profile} adsLeft={adsLeft} />;
 }
