@@ -1,0 +1,7 @@
+{
+  "branchPrefix": "haiku/h7.160",
+  "globs": [
+    "docs/ownership/H7.160.json",
+    "tests/e2e/a49-search.e2e.ts"
+  ]
+}
