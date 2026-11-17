@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache";
 import { adminContext } from "@/server/admin/context";
 import { HttpError } from "@/server/http";
 import type { HeaderProps } from "./model";
-import { explainAddress, loadListingHeader, publishListingHeader, saveListingHeaderDraft, type ExplainedAddress, type ListingHeaderState } from "./server";
+import { explainAddress, loadListingHeader, loadListingTitle, publishListingHeader, saveListingHeaderDraft, type ExplainedAddress, type ListingHeaderState, type ListingTitleState } from "./server";
 
 type Result<T> = ({ ok: true } & T) | { ok: false; error: string };
 
@@ -36,4 +36,8 @@ export async function publishListingHeaderAction(scope: string, note: string): P
 
 export async function explainAddressAction(address: string): Promise<Result<{ explained: ExplainedAddress }>> {
   return run(async () => ({ explained: await explainAddress(await adminContext(), String(address ?? "")) }));
+}
+
+export async function loadListingTitleAction(scope: string): Promise<Result<{ title: ListingTitleState }>> {
+  return run(async () => ({ title: await loadListingTitle(await adminContext(), String(scope)) }));
 }

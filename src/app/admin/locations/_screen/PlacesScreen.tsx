@@ -5,17 +5,20 @@ import { Plus, Search } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
 import "@/app/admin/_catalog/catalog.css";
-import { Button, PageHeader, ToastProvider } from "@/components/admin/ui";
+import { Button, PageHeader, ToastProvider, useToast } from "@/components/admin/ui";
 import type { PlaceRowView, PlacesScreenData } from "@/server/locations/screen";
 import { NewPlaceDialog } from "./NewPlaceDialog";
 import { PlaceDetailPane } from "./PlaceDetailPane";
 import { PlaceList } from "./PlaceList";
+import { reorderPlacesAction } from "../reorder-action";
 import { tabOf, urlFor, type TabKey } from "./model";
 
 const SEARCH_DEBOUNCE_MS = 350;
 
 function Screen({ data, tab: startTab }: { data: PlacesScreenData; tab: TabKey }) {
   const router = useRouter();
+  const toast = useToast();
+  const [local, setLocal] = useState<{ base: string; ids: string[] } | null>(null);
   const [tab, setTab] = useState<TabKey>(startTab);
   const [creating, setCreating] = useState(false);
   const [search, setSearch] = useState(data.q);
@@ -53,6 +56,25 @@ function Screen({ data, tab: startTab }: { data: PlacesScreenData; tab: TabKey }
     if (dirty.current && row.id !== detail?.id && !window.confirm("You have unsaved changes. Leave without saving?")) event.preventDefault();
   }
 
+  const baseKey = data.rows.map((row) => row.id).join(",");
+  const order = local && local.base === baseKey ? local.ids : data.rows.map((row) => row.id);
+  const byId = new Map(data.rows.map((row) => [row.id, row]));
+  const rows = [...order.map((id) => byId.get(id)).filter((row): row is PlaceRowView => Boolean(row)), ...data.rows.filter((row) => !order.includes(row.id))];
+  // Order only means something in the plain list. A search shows a part of it, so dragging is off while one is on.
+  const canReorder = !data.q;
+
+  async function move(from: number, to: number) {
+    if (to < 0 || to >= rows.length || from === to || rows[from].type !== rows[to].type) return;
+    const next = [...rows];
+    const [item] = next.splice(from, 1);
+    next.splice(to, 0, item);
+    setLocal({ base: baseKey, ids: next.map((row) => row.id) });
+    const result = await reorderPlacesAction(next.filter((row) => row.type === item.type).map((row) => row.id));
+    toast.show(result.ok ? { kind: "success", message: "Order saved." } : { kind: "error", message: result.message });
+    if (!result.ok) setLocal(null);
+    router.refresh();
+  }
+
   const pagerHref = (page: number) => urlFor({ q: data.q, page }, detail?.id ?? "", tab);
   return (
     <div className="adm-k" data-tk="places-screen">
@@ -75,7 +97,8 @@ function Screen({ data, tab: startTab }: { data: PlacesScreenData; tab: TabKey }
               <input id="place-search" className="adm-k-input" type="search" placeholder="Search by name" autoComplete="off" value={search} onChange={(event) => setSearch(event.target.value)} style={{ width: "100%", paddingLeft: 32 }} data-tk="place-search" />
             </div>
           </div>
-          <PlaceList rows={data.rows} selectedId={detail?.id ?? ""} hrefFor={(row) => urlFor(base, row.id, tab)} onOpen={open} empty={data.q ? "No place matches this search." : "No places yet. Use New place to add the first one."} />
+          <PlaceList rows={data.rows} selectedId={detail?.id ?? ""} hrefFor={(row) => urlFor(base, row.id, tab)} onOpen={open} onMove={(from, to) => void move(from, to)} canReorder={canReorder} empty={data.q ? "No place matches this search." : "No places yet. Use New place to add the first one."} />
+          {canReorder && data.rows.length > 1 ? <p className="adm-cat-listnote" data-tk="place-order-note" style={{ margin: 0 }}>Drag or use the arrows to change the order of cities, or of states, on this page. It saves at once.</p> : null}
           {data.pages > 1 ? (
             <nav className="adm-cat-listnote" aria-label="Pages of places" style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8 }} data-tk="place-pager">
               {data.page > 1 ? <Link className="adm-cat-linkbtn" href={pagerHref(data.page - 1)} data-tk="page-prev">Previous</Link> : <span />}

@@ -3,7 +3,8 @@
 import { canEditSite } from "@/lib/ui/site-content";
 import { getStaffFromHeaders, isStaff } from "@/lib/admin-auth";
 import { ForbiddenError, HttpError } from "@/server/http";
-import { getDraft, getPublished, listRevisions, publish, restore, saveDraft } from "@/server/layout/service";
+import { listingDefaultBlocks } from "@/server/layout/defaults/listing";
+import { getDraft, getPublished, listRevisions, publish, restore, saveDraft, validateBlocks } from "@/server/layout/service";
 import { seedPostLayout } from "@/server/seed/layouts";
 import type { BlockBase, PageKey } from "@/server/models/layout";
 
@@ -32,7 +33,14 @@ export async function loadLayout(key: PageKey, scope: string) {
     // The first time an admin opens the post-ad editor, start from the page as it is today. The Home layout is made by the Page builder.
     if (key === "post" && scope === "default") await seedPostLayout();
     const [draft, published] = await Promise.all([getDraft(key, scope), getPublished(key, scope)]);
-    return { draft: (draft ?? published ?? []) as BlockBase[], published: published as BlockBase[] | null };
+    const own = (draft && draft.length > 0 ? draft : published) as BlockBase[] | null;
+    // A listing scope with no layout yet starts from what the pages show today: the default layout, else the built-in blocks.
+    if (key === "listing" && (!own || own.length === 0)) {
+      const fallback = scope === "default" ? null : await getPublished(key, "default");
+      const start = fallback && fallback.length > 0 ? fallback : validateBlocks("listing", listingDefaultBlocks(), new Set());
+      return { draft: start as BlockBase[], published: null, starter: true };
+    }
+    return { draft: (own ?? []) as BlockBase[], published: published as BlockBase[] | null, starter: false };
   });
 }
 

@@ -28,10 +28,11 @@ test.describe("H6.17 card width", () => {
   test("an admin changes the card width to narrow, and the list follows", async ({ page, context, baseURL }, testInfo) => {
     test.skip(testInfo.project.name !== "desktop-1440", "the admin setting runs once, at desktop width");
     await signInAdminContext(context, baseURL!);
-    await page.goto("/admin/listing-pages/");
+    await page.goto("/admin/page-builder/?tab=listing");
     await page.getByLabel("Narrow (760 px)").check();
-    await page.getByRole("button", { name: "Save card width" }).click();
-    await expect(page.getByText(/^Saved\. Category and city pages/)).toBeVisible();
+    await page.getByRole("region", { name: "Save changes" }).getByRole("button", { name: "Publish" }).click();
+    await page.getByRole("dialog", { name: "Publish" }).getByRole("button", { name: "Publish now" }).click();
+    await expect(page.getByText(/Published as version \d+/)).toBeVisible();
 
     await page.goto(FEED);
     const feed = page.locator('[data-tk="listing-grid"]').first();
@@ -41,9 +42,10 @@ test.describe("H6.17 card width", () => {
     expect(box!.width).toBeLessThanOrEqual(760.5);
 
     // Put it back to the default so the other tests see medium.
-    await page.goto("/admin/listing-pages/");
+    await page.goto("/admin/page-builder/?tab=listing");
     await page.getByLabel("Medium (880 px, default)").check();
-    await page.getByRole("button", { name: "Save card width" }).click();
-    await expect(page.getByText(/^Saved\. Category and city pages/)).toBeVisible();
+    await page.getByRole("region", { name: "Save changes" }).getByRole("button", { name: "Publish" }).click();
+    await page.getByRole("dialog", { name: "Publish" }).getByRole("button", { name: "Publish now" }).click();
+    await expect(page.getByText(/Published as version \d+/)).toBeVisible();
   });
 });

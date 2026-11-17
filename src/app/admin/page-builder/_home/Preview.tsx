@@ -8,7 +8,7 @@ const HEIGHT = 900;
 export type Device = keyof typeof WIDTHS;
 
 /** The saved draft, drawn by the real page code in a frame and scaled to fit the column. Hidden on a phone (UI rules). */
-export function Preview({ device, version, reloadKey }: { device: Device; version: number; reloadKey: number }) {
+export function Preview({ device, version, reloadKey, src = "/admin/page-builder/preview/?embed=1", note }: { device: Device; version: number; reloadKey: number; src?: string; note?: string }) {
   const box = useRef<HTMLDivElement>(null);
   const [scale, setScale] = useState(0.25);
   const width = WIDTHS[device];
@@ -29,12 +29,12 @@ export function Preview({ device, version, reloadKey }: { device: Device; versio
         <iframe
           key={reloadKey}
           title={`Preview of the saved draft, ${device} size`}
-          src="/admin/page-builder/preview/?embed=1"
+          src={src}
           style={{ width, height: HEIGHT, transform: `scale(${scale})` }}
           inert
         />
       </div>
-      <p className="adm-pb-note">Draft preview. Visitors see {version > 0 ? `version ${version}` : "today's Home page"} until you publish.</p>
+      <p className="adm-pb-note">{note ?? `Draft preview. Visitors see ${version > 0 ? `version ${version}` : "today's Home page"} until you publish.`}</p>
     </div>
   );
 }

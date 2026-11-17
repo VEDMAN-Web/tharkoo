@@ -1,0 +1,11 @@
+{
+  "branchPrefix": "haiku/h8.57",
+  "globs": [
+    "docs/ownership/H8.57.json",
+    "src/app/admin/media/**",
+    "src/server/layout/media-bulk.ts",
+    "tests/server/layout/h857-media-bulk.test.ts",
+    "tests/e2e/h8-57-media.e2e.ts",
+    "tests/e2e/bulk-upload.e2e.ts"
+  ]
+}

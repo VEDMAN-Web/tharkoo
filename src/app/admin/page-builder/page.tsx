@@ -5,12 +5,16 @@ import { getStaffFromHeaders } from "@/lib/admin-auth";
 import { can } from "@/lib/admin/perms";
 import { connectDb } from "@/lib/db";
 import { Category } from "@/server/models";
+import { loadCardWidth } from "@/server/listings/card-width";
 import { PageBuilderScreen } from "./PageBuilderScreen";
+import { tabOf } from "./tabs";
 
 export const dynamic = "force-dynamic";
 
-/** H8.16 (A16): the Page builder. The Home tab edits the format 2 home layout; the other tabs still point to the old editors. */
-export default async function Page() {
+/** H8.16 (A16): the Page builder. Home, Listing pages and Post-ad page are tabs; the address says which one opens (?tab=listing). */
+const one = (value: string | string[] | undefined) => (Array.isArray(value) ? value[0] : value) ?? "";
+
+export default async function Page({ searchParams }: { searchParams: Promise<Record<string, string | string[] | undefined>> }) {
   const identity = await getStaffFromHeaders();
   if (!can(identity.roles, "pages.edit")) {
     return (
@@ -24,11 +28,18 @@ export default async function Page() {
       </AdminShell>
     );
   }
+  const params = await searchParams;
   await connectDb();
   const rows = await Category.find({ deletedAt: null }).sort({ name: 1 }).select("slug name").lean<{ slug: string; name: string }[]>();
   return (
     <AdminShell title="Page builder" hasHeader>
-      <PageBuilderScreen categories={rows.map((row) => ({ slug: row.slug, name: row.name }))} />
+      <PageBuilderScreen
+        categories={rows.map((row) => ({ slug: row.slug, name: row.name }))}
+        initialTab={tabOf(one(params.tab))}
+        initialCategory={/^[a-z0-9-]{1,80}$/.test(one(params.category)) ? one(params.category) : ""}
+        initialAddress={one(params.url).startsWith("/") ? one(params.url).slice(0, 300) : ""}
+        cardWidth={await loadCardWidth()}
+      />
     </AdminShell>
   );
 }

@@ -12,7 +12,7 @@ import { reorder } from "../ui/SortableList";
 import { Skeleton } from "../ui/Skeleton";
 import { TextField } from "../ui/TextField";
 import { BlockCard, blockTitle, type BlockDraft } from "./BlockCard";
-import { cleanProps, metaFor } from "./fields";
+import { cleanProps, metaFor, type Props } from "./fields";
 import { RevisionsDrawer } from "./RevisionsDrawer";
 import { useDragRows } from "./useDragRows";
 import "./layout-editor.css";
@@ -59,18 +59,32 @@ function serialize(blocks: readonly BlockDraft[]) {
 
 const jsonOf = (blocks: readonly BlockDraft[]) => JSON.stringify(serialize(blocks));
 
+/**
+ * Parts of a page that save together with the layout: fields that edit one block of the layout (shown above the list), and a part of
+ * its own (shown below it) that is applied when the layout is published. Their changes count as unsaved changes of the one save bar.
+ */
+export interface LayoutExtras {
+  headerType: string;
+  top: (ctl: { props: Props; update: (patch: Props) => void }) => React.ReactNode;
+  bottom: React.ReactNode;
+  dirty: boolean;
+  publish: () => Promise<string | null>;
+}
+
 export function LayoutEditor({
   pageKey,
   scope,
   allowedTypes,
   previewHref,
   seoHref,
+  extras,
 }: {
   pageKey: PageKey;
   scope: string;
   allowedTypes: string[];
   previewHref: string;
   seoHref?: string;
+  extras?: LayoutExtras;
 }) {
   const [data, setData] = useState<Loaded | null>(null);
   const [loadError, setLoadError] = useState("");
@@ -109,7 +123,7 @@ export function LayoutEditor({
   }, [load]);
 
   const rows = useMemo(() => data?.rows ?? [], [data]);
-  const dirty = data ? jsonOf(rows.map((row) => row.block)) !== data.saved : false;
+  const dirty = (data ? jsonOf(rows.map((row) => row.block)) !== data.saved : false) || Boolean(extras?.dirty);
 
   /* Warn before leaving with unsaved changes (reload, close tab, or a link inside the admin). */
   useEffect(() => {
@@ -231,7 +245,8 @@ export function LayoutEditor({
       }
       setNote("");
       setData((current) => (current ? { ...current, published: json } : current));
-      setMsg({ kind: "info", text: `Published as version ${res.version}. The live page updates within a few seconds.` });
+      const extraError = extras ? await extras.publish() : null;
+      setMsg(extraError ? { kind: "error", text: `Published as version ${res.version}, but ${extraError}` } : { kind: "info", text: `Published as version ${res.version}. The live page updates within a few seconds.` });
     });
 
   const restore = (version: number) =>
@@ -260,9 +275,12 @@ export function LayoutEditor({
 
   const state = data.published === null ? "Not published yet" : data.published === data.saved ? "Live page matches the saved draft" : "Saved draft has changes that are not live yet";
   const deleting = rows.find((row) => row.key === deleteKey);
+  const headerRow = extras ? rows.find((row) => row.block.type === extras.headerType) : undefined;
+  const updateHeader = (patch: Props) => setRows((current) => current.map((row) => (row === headerRow || row.key === headerRow?.key ? { ...row, block: { ...row.block, props: { ...row.block.props, ...patch } } } : row)));
 
   return (
     <div className="lay">
+      {extras && headerRow ? extras.top({ props: headerRow.block.props, update: updateHeader }) : null}
       <div className="lay-toolbar">
         <span className="lay-state" aria-live="polite">{state}</span>
         <button type="button" className="adm-btn adm-btn-quiet" onClick={() => setShowRevisions(true)}>Revisions</button>
@@ -309,6 +327,8 @@ export function LayoutEditor({
         </label>
         <button type="button" className="adm-btn" disabled={!selectedAdd} onClick={addBlock}>Add block</button>
       </div>
+
+      {extras?.bottom}
 
       <SaveBar dirty={dirty} busy={busy} onSaveDraft={() => void saveDraft()} onPreview={() => void preview()} onPublish={() => setPublishing(true)} />
 
