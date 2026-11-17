@@ -67,7 +67,9 @@ describe("tab filters", () => {
   it("lists nothing under Live, not checked until the cut-over date is set", async () => {
     await Site.updateOne({ key: "main" }, { $set: { postModerationSince: null } });
     expect(await titles("live")).toEqual([]);
+    expect((await listReviewTab(ADMIN, { tab: "live", q: "", page: 1, pageSize: 25 })).liveCheckOn).toBe(false);
     await Site.updateOne({ key: "main" }, { $set: { postModerationSince: AGO(60 * 24) } });
+    expect((await listReviewTab(ADMIN, { tab: "live", q: "", page: 1, pageSize: 25 })).liveCheckOn).toBe(true);
   });
 
   it("search narrows the list by title", async () => {

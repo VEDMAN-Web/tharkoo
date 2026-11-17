@@ -218,7 +218,8 @@ export function ThreadPane({
             void send(false);
           }}
         >
-          <div className="adm-sd-chips" role="group" aria-label="Ready-made replies">
+          <span className="adm-k-label" id="desk-quick-label">Quick replies</span>
+          <div className="adm-sd-chips" role="group" aria-labelledby="desk-quick-label">
             {REPLY_TEMPLATES.map((template) => (
               <button
                 key={template.key}

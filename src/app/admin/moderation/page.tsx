@@ -5,6 +5,7 @@ import { getStaffFromHeaders } from "@/lib/admin-auth";
 import { can } from "@/lib/admin/perms";
 import { NotFoundError } from "@/server/http";
 import { getReviewDetail, listReviewTab, parseReviewQuery, type ReviewDetail } from "@/server/moderation/review";
+import { canOpenPath } from "@/lib/admin/screens";
 import { ReviewView } from "./_list/ReviewView";
 
 export const dynamic = "force-dynamic";
@@ -37,7 +38,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<Rec
   }
   return (
     <AdminShell title="Ads to review" hasHeader>
-      <ReviewView list={list} detail={detail} />
+      <ReviewView list={list} detail={detail} canSettings={canOpenPath(identity.roles, "/admin/settings/")} />
     </AdminShell>
   );
 }

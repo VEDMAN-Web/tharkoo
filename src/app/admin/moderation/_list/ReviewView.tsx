@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { Check, History, X } from "lucide-react";
+import { Check, History, List, X } from "lucide-react";
 import { Badge, Button, DiffView, Drawer, EmptyState, FilterBar, Notice, PageHeader, ReasonDialog, ServerTable, Tabs, ToastProvider, useToast, type BadgeTone, type TableColumn } from "@/components/admin/ui";
 import type { ReviewDetail, ReviewList, ReviewRow, ReviewTab } from "@/server/moderation/review";
 import { approveAction } from "../actions";
@@ -47,7 +47,7 @@ function Flags({ flags, paid }: { flags: string[]; paid: boolean }) {
   );
 }
 
-function Screen({ list, detail }: { list: ReviewList; detail: ReviewDetail | null }) {
+function Screen({ list, detail, canSettings }: { list: ReviewList; detail: ReviewDetail | null; canSettings: boolean }) {
   const router = useRouter();
   const pathname = usePathname();
   const params = useSearchParams();
@@ -156,8 +156,10 @@ function Screen({ list, detail }: { list: ReviewList; detail: ReviewDetail | nul
         crumbs={[{ label: "Queues" }]}
         title="Ads to review"
         purpose="Ads go live at once. Check them here, oldest first. Approve keeps an ad live."
-        secondary={[{ key: "history", label: "History", icon: History, href: "/admin/history/" }]}
-        more={[{ key: "all-ads", label: "Open all ads", href: "/admin/ads/" }]}
+        secondary={[
+          { key: "history", label: "History", icon: History, href: "/admin/history/" },
+          { key: "all-ads", label: "Open all ads", icon: List, href: "/admin/ads/" },
+        ]}
       />
       <div className="adm-card" style={{ padding: 0, overflow: "clip", marginBottom: 16 }}>
         <Tabs
@@ -205,10 +207,18 @@ function Screen({ list, detail }: { list: ReviewList; detail: ReviewDetail | nul
                 : undefined
             }
             empty={
-              <EmptyState
-                title={searching ? `No ads match "${list.query.q}"` : "No ads waiting"}
-                why={searching ? "Try the first letters of the title." : tab === "live" && list.counts.live === 0 ? "Nothing live is waiting for a check." : "Everything in this list has been looked at."}
-              />
+              tab === "live" && !list.liveCheckOn && !searching ? (
+                <EmptyState
+                  title="The check after going live is off"
+                  why="Ads go live without a check, so none wait here. Turn on Check ads after they go live under Posting rules in Settings."
+                  action={canSettings ? { label: "Open Posting rules", href: "/admin/settings/#posting" } : undefined}
+                />
+              ) : (
+                <EmptyState
+                  title={searching ? `No ads match "${list.query.q}"` : "No ads waiting"}
+                  why={searching ? "Try the first letters of the title." : tab === "live" && list.counts.live === 0 ? "Nothing live is waiting for a check." : "Everything in this list has been looked at."}
+                />
+              )
             }
           />
         </div>
@@ -307,10 +317,10 @@ function Screen({ list, detail }: { list: ReviewList; detail: ReviewDetail | nul
 }
 
 /** The Ads to review screen: three tabs, search, a table with Approve, and a preview drawer. Everything you pick lives in the address. */
-export function ReviewView({ list, detail }: { list: ReviewList; detail: ReviewDetail | null }) {
+export function ReviewView({ list, detail, canSettings }: { list: ReviewList; detail: ReviewDetail | null; canSettings: boolean }) {
   return (
     <ToastProvider>
-      <Screen list={list} detail={detail} />
+      <Screen list={list} detail={detail} canSettings={canSettings} />
     </ToastProvider>
   );
 }

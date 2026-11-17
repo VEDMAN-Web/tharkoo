@@ -66,7 +66,7 @@ test.describe("H8.43 support desk", () => {
     expect(axe.violations.filter((item) => item.impact === "serious" || item.impact === "critical").map((item) => `${item.id}: ${item.nodes[0]?.target.join(" ")}`)).toEqual([]);
     await shot(page, "a43-desk-thread");
 
-    await thread.getByRole("button", { name: "Template: credits added" }).click();
+    await thread.getByRole("button", { name: "Credits added", exact: true }).click();
     await expect(thread.getByLabel("Reply to the customer")).toHaveValue(/^Hi .*, your payment is confirmed now/);
 
     await card.getByRole("button", { name: "Add credits" }).click();

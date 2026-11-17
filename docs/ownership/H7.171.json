@@ -1,0 +1,19 @@
+{
+  "branchPrefix": "haiku/h7.171",
+  "globs": [
+    "docs/ownership/H7.171.json",
+    "src/app/admin/_dashboard/DashboardHeader.tsx",
+    "src/app/admin/moderation/page.tsx",
+    "src/app/admin/moderation/_list/ReviewView.tsx",
+    "src/server/moderation/review.ts",
+    "src/components/admin/ui/Tabs.tsx",
+    "src/styles/admin-kit.css",
+    "src/app/admin/support/_desk/templates.ts",
+    "src/app/admin/support/_desk/ThreadPane.tsx",
+    "tests/server/moderation/a15-review.test.ts",
+    "tests/e2e/a10-dashboard.e2e.ts",
+    "tests/e2e/a43-desk.e2e.ts",
+    "tests/e2e/a7-shell.e2e.ts",
+    "tests/e2e/h7-171-queues.e2e.ts"
+  ]
+}

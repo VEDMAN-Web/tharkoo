@@ -41,7 +41,7 @@ export function parseReviewQuery(params: Record<string, string | string[] | unde
 }
 
 export type ReviewRow = { id: string; title: string; category: string; city: string; seller: string; since: string; paid: boolean; paidCredits: number; thumb: string | null; flags: string[] };
-export type ReviewList = { query: ReviewQuery; rows: ReviewRow[]; total: number; counts: Record<ReviewTab, number> };
+export type ReviewList = { query: ReviewQuery; rows: ReviewRow[]; total: number; counts: Record<ReviewTab, number>; /** False while "Check ads after they go live" is off in Settings: the Live tab then has nothing to show. */ liveCheckOn: boolean };
 
 function escapeRegex(value: string) {
   return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
@@ -98,7 +98,7 @@ export async function listReviewTab(roles: readonly string[], query: ReviewQuery
   await connectDb();
   const base = await tabFilter(query.tab);
   const filter = query.q ? { ...base, title: { $regex: escapeRegex(query.q), $options: "i" } } : base;
-  const [counts, total, rows] = await Promise.all([
+  const [counts, total, rows, site] = await Promise.all([
     reviewCounts(),
     Listing.countDocuments(filter),
     Listing.find(filter)
@@ -107,6 +107,7 @@ export async function listReviewTab(roles: readonly string[], query: ReviewQuery
       .limit(query.pageSize)
       .select("title description categoryId cityId ownerId publishedAt createdAt mediaIds coverMediaId")
       .lean(),
+    Site.findOne().select("postModerationSince").lean<{ postModerationSince?: Date | null } | null>(),
   ]);
   const firstMedia = rows.flatMap((row) => (row.coverMediaId ? [row.coverMediaId] : row.mediaIds?.[0] ? [row.mediaIds[0]] : []));
   const [cats, places, owners, fees, thumbs] = await Promise.all([
@@ -121,6 +122,7 @@ export async function listReviewTab(roles: readonly string[], query: ReviewQuery
     query,
     total,
     counts,
+    liveCheckOn: Boolean(site?.postModerationSince),
     rows: rows.map((row) => ({
       id: String(row._id),
       title: row.title || "",
