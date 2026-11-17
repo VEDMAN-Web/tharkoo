@@ -5,7 +5,7 @@ import type { AdminCtx } from "@/server/admin/context";
 import { eventIsUndone } from "@/server/admin/undo/core";
 import { adminWrite } from "@/server/admin/write";
 import { creditWallet, debitWallet, walletBalance } from "@/server/billing/ledger";
-import { ConflictError, ForbiddenError, NotFoundError, ValidationError } from "@/server/http";
+import { ConflictError, ForbiddenError, NotFoundError, PaymentRequiredError, ValidationError } from "@/server/http";
 import { AuditEvent, Payment, User, WalletEntry } from "@/server/models";
 
 /**
@@ -70,7 +70,13 @@ export async function adjustCredits(ctx: AdminCtx, input: { userId: string; amou
       } else {
         const balance = await walletBalance(userId);
         if (balance < -amount) throw new ConflictError(`${user.displayName} has only ${credits(balance)}. You cannot remove more than that.`);
-        done = await debitWallet({ ...line, amount: -amount, auditAction: "wallet.staff_debit", auditReason: input.reason });
+        try {
+          done = await debitWallet({ ...line, amount: -amount, auditAction: "wallet.staff_debit", auditReason: input.reason });
+        } catch (error) {
+          // The balance dropped between the check above and the ledger line (the person spent credits at the same moment).
+          if (error instanceof PaymentRequiredError) throw new ConflictError(`${user.displayName} has fewer credits than that right now. Open the Credits tab and try again.`);
+          throw error;
+        }
       }
       if (!done.created) throw new ConflictError("This change was already made. Nothing was added twice.");
       return {
