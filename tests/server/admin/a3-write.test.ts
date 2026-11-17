@@ -52,6 +52,9 @@ beforeEach(async () => {
   overrideUndoHandler("record.restore", handler);
 });
 
+/** Undo kinds whose real handler has been built (the rest are still stubs). Add a kind here when its card lands. */
+const BUILT_KINDS: readonly string[] = ["user.ban"];
+
 type Spec = Parameters<typeof adminWrite<string>>[1];
 
 function change(ctx: AdminCtx, next: string, extra: Partial<Spec> = {}) {
@@ -216,6 +219,11 @@ describe("undoEvent", () => {
     for (const kind of UNDO_KINDS) {
       overrideUndoHandler(kind, null);
       const loaded = await loadUndoHandler(kind);
+      // A card that built its handler replaces the stub: it must still load and expose the three methods.
+      if (BUILT_KINDS.includes(kind)) {
+        expect([typeof loaded.canUndo, typeof loaded.conflict, typeof loaded.run]).toEqual(["function", "function", "function"]);
+        continue;
+      }
       await expect(loaded.run(admin, event)).rejects.toThrow("not built yet");
     }
   });

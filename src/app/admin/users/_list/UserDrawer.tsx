@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { Badge, Drawer, LockBadge, Tabs } from "@/components/admin/ui";
 import type { UserDetail } from "@/server/admin/users";
+import { UserActions, type UserAccess } from "../_actions/UserActions";
 import { dateLabel, lastSeenLabel, staffRoleLabels, statusLook } from "./format";
 
 type Section = "overview" | "ads" | "tickets" | "history";
@@ -20,7 +21,7 @@ function Row({ label, children }: { label: string; children: React.ReactNode }) 
 }
 
 /** The drawer for one user (read only): profile, ads, tickets and the last changes. 460 px wide. */
-export function UserDrawer({ detail, onClose }: { detail: UserDetail | null; onClose: () => void }) {
+export function UserDrawer({ detail, onClose, access }: { detail: UserDetail | null; onClose: () => void; access: UserAccess }) {
   const [section, setSection] = useState<Section>("overview");
   if (!detail) return null;
   const { user } = detail;
@@ -30,7 +31,14 @@ export function UserDrawer({ detail, onClose }: { detail: UserDetail | null; onC
   const sub = [`joined ${dateLabel(user.createdAt, now, false)}`, user.city].filter(Boolean).join(" · ");
 
   return (
-    <Drawer open title={user.name} subtitle={`${user.email} · ${sub}`} size="lg" onClose={onClose}>
+    <Drawer
+      open
+      title={user.name}
+      subtitle={`${user.email} · ${sub}`}
+      size="lg"
+      onClose={onClose}
+      footer={<UserActions userId={user.id} name={user.name} status={user.status} isStaff={staff.length > 0} access={access} />}
+    >
       <div className="adm-k-hist" data-tk="user-drawer">
         <Tabs
           idPrefix="user"
@@ -68,7 +76,7 @@ export function UserDrawer({ detail, onClose }: { detail: UserDetail | null; onC
                 <Row label="Joined">{dateLabel(user.createdAt, now)}</Row>
               </dl>
               <p className="adm-k-help">
-                <LockBadge reason="Ban, log out and credit changes arrive in the next release. This view only reads." />
+                <LockBadge reason="Credit changes arrive in the next release." />
               </p>
             </>
           ) : null}
