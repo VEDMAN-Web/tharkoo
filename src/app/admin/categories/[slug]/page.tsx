@@ -1,46 +1,10 @@
-import Link from "next/link";
-import { notFound } from "next/navigation";
-import { AdminShell } from "@/components/admin/AdminShell";
-import { CategoryFieldsEditor, type EditorField } from "@/components/admin/category-fields/CategoryFieldsEditor";
-import { getStaffFromHeaders } from "@/lib/admin-auth";
-import { canEditSite } from "@/lib/ui/site-content";
-import { readCategoryFields } from "../fields-service";
+import { notFound, redirect } from "next/navigation";
 
 export const dynamic = "force-dynamic";
 
+/** The fields editor now lives in the Form fields tab of Categories & fields; this address leads there. */
 export default async function CategoryFieldsPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
-  const identity = await getStaffFromHeaders();
-  if (!canEditSite(identity.roles)) {
-    return (
-      <AdminShell title="Post fields">
-        <p>Only an admin can edit post fields.</p>
-      </AdminShell>
-    );
-  }
   if (!/^[a-z0-9-]{1,80}$/.test(slug)) notFound();
-  const data = await readCategoryFields(slug);
-  if (!data) notFound();
-  // Options are read by the editor one page at a time; the page only needs how many each field has.
-  const fields: EditorField[] = data.fields.map((field) => ({
-    key: String(field.key),
-    label: String(field.label ?? ""),
-    filterLabel: String(field.filterLabel ?? ""),
-    type: String(field.type ?? "text"),
-    help: String(field.help ?? ""),
-    placeholder: String(field.placeholder ?? ""),
-    required: field.required === true,
-    enabled: field.enabled !== false,
-    filterable: field.filterable === true,
-    maxPicks: typeof field.maxPicks === "number" ? field.maxPicks : null,
-    optionCount: Array.isArray(field.options) ? field.options.length : 0,
-  }));
-  return (
-    <AdminShell title={`Post fields: ${data.name}`}>
-      <p className="mb-3 t-small text-muted">
-        <Link href="/admin/categories/" className="adm-link">All categories</Link>
-      </p>
-      <CategoryFieldsEditor slug={slug} categoryName={data.name} initial={fields} />
-    </AdminShell>
-  );
+  redirect(`/admin/categories/?c=${slug}&tab=fields`);
 }
