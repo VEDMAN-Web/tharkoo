@@ -50,8 +50,8 @@ test.describe("H8.56 reorder places", () => {
 
     await page.getByRole("button", { name: `Move ${names[1]} up` }).click();
     await expect(page.locator('[data-tk="toast"]')).toContainText("Order saved.");
-    expect(await firstFour(page)).toEqual([names[1], names[0], names[2], names[3]]);
     await expect.poll(async () => await orderInDb(names)).toEqual([names[1], names[0], names[2], names[3]]);
+    await expect.poll(async () => await firstFour(page)).toEqual([names[1], names[0], names[2], names[3]]);
 
     // Dragging the grip of the last one onto the first.
     await page.locator('[data-tk="place-row"]').nth(3).locator('[data-tk="place-grip"]').dragTo(page.locator('[data-tk="place-row"]').nth(0));

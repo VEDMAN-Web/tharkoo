@@ -60,4 +60,14 @@ describe("H8.56 reorder places", () => {
     await reorderPlaces(admin, [String(states[1]._id), String(states[0]._id)]);
     expect((await loadPlacesScreen({})).rows.filter((row) => row.type === "state").map((row) => row.name)).toEqual(["Kerala", "Goa"]);
   });
+
+  it("works when the places already carry their own order numbers, and when the moved places are the whole page", async () => {
+    const { cities } = await seed();
+    await Promise.all(cities.map((city, index) => Location.updateOne({ _id: city._id }, { $set: { order: -9000 + index } })));
+    const page = (await loadPlacesScreen({})).rows.filter((row) => row.type === "city");
+    expect(page.map((row) => row.name)).toEqual(["Agra", "Bhopal", "Chennai", "Delhi", "Erode", "Faridabad"]);
+    const next = [page[1], page[0], ...page.slice(2)].map((row) => row.id);
+    await reorderPlaces(admin, next);
+    expect(await cityNames()).toEqual(["Bhopal", "Agra", "Chennai", "Delhi", "Erode", "Faridabad"]);
+  });
 });
