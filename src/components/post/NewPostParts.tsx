@@ -1,4 +1,6 @@
 import type { NewPostStep } from "@/lib/ui/post-form";
+import type { UiTextKey } from "@/lib/ui/text";
+import { useT } from "@/components/help/UiTextProvider";
 
 type BaseStep = Exclude<NewPostStep, "more">;
 
@@ -13,23 +15,23 @@ export const CATEGORY_TINTS = [
   { tint: "#FDF0F7", ink: "#C2185B" },
 ] as const;
 
-/** Default tips shown beside each step. The wording is a code default; it is not a published block. */
-export const NEW_POST_TIPS: Record<BaseStep, string> = {
-  category: "Pick the category that fits best. It puts your ad on the pages people search.",
-  details: "Short titles work best. Put the most important word first.",
-  photos: "Bright photos taken in daylight look best on the listing page.",
-  contact: "Ads with WhatsApp turned on are easier to reply to.",
-  review: "You can edit your ad any time from your panel.",
+/** The UI text key of the tip shown beside each step. The words live in the UI text store (H8.35). */
+export const NEW_POST_TIP_KEYS: Record<BaseStep, UiTextKey> = {
+  category: "post.tip.category",
+  details: "post.tip.details",
+  photos: "post.tip.photos",
+  contact: "post.tip.contact",
+  review: "post.tip.review",
 };
 
-export const RAIL_MORE_LABEL = "More";
+export const RAIL_MORE_KEY: UiTextKey = "post.rail.more";
 
-export const RAIL_LABELS: Record<BaseStep, string> = {
-  category: "Category",
-  details: "Details",
-  photos: "Photos",
-  contact: "Contact",
-  review: "Review",
+export const RAIL_LABEL_KEYS: Record<BaseStep, UiTextKey> = {
+  category: "post.rail.category",
+  details: "post.rail.details",
+  photos: "post.rail.photos",
+  contact: "post.rail.contact",
+  review: "post.rail.review",
 };
 
 export type RailItem = { key: NewPostStep; label: string; num: number; state: "done" | "current" | "todo"; clickable: boolean };
@@ -69,9 +71,10 @@ export function PostRail({ items, progressLabel, onGo, head, children }: { items
 }
 
 export function PostTip({ text }: { text: string }) {
+  const t = useT();
   return (
     <div className="tkp-tip">
-      <p className="tkp-tip-title">Tip</p>
+      <p className="tkp-tip-title">{t("post.tip.title")}</p>
       <p className="tkp-tip-text">{text}</p>
     </div>
   );
