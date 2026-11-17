@@ -38,7 +38,7 @@ afterAll(async () => {
 });
 
 describe("launch checklist rules (A10)", () => {
-  it("has the 12 rows of the mockup, in order", () => {
+  it("has the 11 rows of the mockup, in order (no office address row)", () => {
     expect(buildChecklist(BASE).map((item) => item.title)).toEqual([
       "Staff sign-in works",
       "Test payments OFF and a real gateway connected",
@@ -46,7 +46,6 @@ describe("launch checklist rules (A10)", () => {
       "End demo ads, or keep them",
       "Remove junk test ads",
       "Real 10-digit support phone",
-      "Real office address on Terms and Safety",
       "Banner picture checked against the content rules",
       "Home, category and city photos with alt text",
       "Legal pages and grievance officer",
@@ -77,16 +76,15 @@ describe("launch checklist rules (A10)", () => {
     expect(row({ ...BASE, supportPhone: "+91 912345678" }, "support-phone")).toMatchObject({ done: false, detail: "Now +91 912345678 (9 digits)" });
   });
 
-  it("a placeholder on any legal page keeps the address and legal rows open", () => {
+  it("a placeholder on any legal page keeps the legal row open and there is no office address row", () => {
     const pages = placeholderPagesIn([
       { name: "The Safety page", text: "Postal address: [placeholder: add address]." },
       { name: "The Terms page", text: "Fine." },
     ]);
     expect(pages).toEqual(["The Safety page"]);
     const withPlaceholder = { ...BASE, placeholderPages: pages };
-    expect(row(withPlaceholder, "office-address")).toMatchObject({ done: false, detail: "The Safety page shows a placeholder" });
+    expect(buildChecklist(withPlaceholder).some((item) => item.id === "office-address")).toBe(false);
     expect(row(withPlaceholder, "legal").done).toBe(false);
-    expect(row(BASE, "office-address").done).toBe(true);
     expect(row({ ...BASE, grievancePublished: false }, "legal")).toMatchObject({ done: false, detail: "The grievance page is not published" });
   });
 
@@ -147,6 +145,6 @@ describe("ticking a manual row (A10)", () => {
     await Page.create({ slug: "about", title: "About", body: "Postal address: [placeholder: add].", status: "published" });
     const list = await getLaunchChecklist();
     expect(list.find((item) => item.id === "legal")).toMatchObject({ done: false, detail: "The grievance page is not published" });
-    expect(list.find((item) => item.id === "office-address")?.done).toBe(false);
+    expect(list.some((item) => item.id === "office-address")).toBe(false);
   });
 });
