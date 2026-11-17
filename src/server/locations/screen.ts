@@ -183,7 +183,7 @@ export async function loadPlacesScreen(query: PlacesQuery = {}): Promise<PlacesS
   const docs = await Location.aggregate<Lean>([
     { $match: match },
     { $addFields: { rank: { $switch: { branches: Object.entries(RANK).map(([type, rank]) => ({ case: { $eq: ["$type", type] }, then: rank })), default: 9 } } } },
-    { $sort: { rank: 1, name: 1, _id: 1 } },
+    { $sort: { rank: 1, order: 1, name: 1, _id: 1 } },
     { $skip: (page - 1) * pageSize },
     { $limit: pageSize },
     { $project: { type: 1, slug: 1, name: 1, parentId: 1, enabled: 1, order: 1, countryCode: 1, photo: 1, band: 1 } },
