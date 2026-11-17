@@ -201,7 +201,7 @@ export function AdminShell({ title, hasHeader = false, children }: { title: stri
       <a className="adm-skip" href="#adm-content">Skip to content</a>
       <div className="adm-shell">
         <aside className="adm-side" aria-label="Admin menu">
-          <Link href="/admin/" className="adm-brand">
+          <Link href="/admin/" className="adm-brand" aria-label="Tharkoo admin">
             <img className="adm-brand-img" src="/brand/logo-mark-512.png" alt="" width={30} height={30} />
             <span className="adm-link-label">Tharkoo admin</span>
           </Link>

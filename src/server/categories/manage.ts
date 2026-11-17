@@ -19,6 +19,7 @@ import { renameCategory } from "@/server/urls/service";
 const audit = new AuditRepository();
 const MAX_NAME = 80;
 const MAX_INTRO = 600;
+const MAX_HOME_LINE = 160;
 
 export interface Actor {
   email: string;
@@ -31,6 +32,8 @@ export interface CategoryInput {
   order?: number;
   enabled?: boolean;
   seoIntro?: string;
+  /** The short line under the name on the Home tile (stored as the description). */
+  description?: string;
   /** Required when a category is created. There is no default kind (H6.5). */
   kind?: string;
   /** H7.4c: a key from lib/category-icons.ts, or empty for the default of the kind. */
@@ -111,6 +114,15 @@ export async function subcategoryAdCount(subcategoryId: Types.ObjectId) {
   return Listing.countDocuments({ subcategoryId });
 }
 
+/** A new category or sub-category goes to the end of its list unless an order is given. */
+async function nextOrder(kind: "category" | "subcategory", categoryId?: Types.ObjectId): Promise<number> {
+  const last =
+    kind === "category"
+      ? await Category.findOne({ deletedAt: null }).sort({ order: -1 }).select("order").lean<{ order?: number } | null>()
+      : await Subcategory.findOne({ categoryId }).sort({ order: -1 }).select("order").lean<{ order?: number } | null>();
+  return typeof last?.order === "number" ? last.order + 1 : 0;
+}
+
 export async function createCategory(actor: Actor, input: CategoryInput) {
   requireAdmin(actor);
   await connectDb();
@@ -124,13 +136,14 @@ export async function createCategory(actor: Actor, input: CategoryInput) {
     kind,
     icon: isCategoryIconKey(input.icon) ? input.icon : "",
     videoTourEnabled: false,
-    order: cleanOrder(input.order),
+    order: input.order === undefined ? await nextOrder("category") : cleanOrder(input.order),
     enabled: input.enabled !== false,
     introHtml: cleanText(input.seoIntro, "SEO intro", MAX_INTRO, false),
+    description: cleanText(input.description, "Home tile line", MAX_HOME_LINE, false),
   });
   await record(actor, "category.create", "category", String(doc._id), null, { slug, name, kind });
   await refreshPublicCache();
-  return { id: String(doc._id) };
+  return { id: String(doc._id), slug };
 }
 
 export async function updateCategory(actor: Actor, id: string, input: CategoryInput) {
@@ -138,13 +151,14 @@ export async function updateCategory(actor: Actor, id: string, input: CategoryIn
   await connectDb();
   const doc = await Category.findById(objectId(id, "Category"));
   if (!doc || doc.deletedAt) throw new NotFoundError("Category not found");
-  const before = { slug: doc.slug, name: doc.name, order: doc.order, enabled: doc.enabled, seoIntro: doc.introHtml, importMaxPhotos: doc.importMaxPhotos ?? null };
+  const before = { slug: doc.slug, name: doc.name, order: doc.order, enabled: doc.enabled, seoIntro: doc.introHtml, description: doc.description, importMaxPhotos: doc.importMaxPhotos ?? null };
   if (input.name !== undefined) doc.name = cleanText(input.name, "Name", MAX_NAME, true);
   if (input.importMaxPhotos !== undefined) doc.importMaxPhotos = cleanImportMaxPhotos(input.importMaxPhotos);
   if (input.icon !== undefined) doc.icon = isCategoryIconKey(input.icon) ? input.icon : "";
   if (input.order !== undefined) doc.order = cleanOrder(input.order);
   if (input.enabled !== undefined) doc.enabled = Boolean(input.enabled);
   if (input.seoIntro !== undefined) doc.introHtml = cleanText(input.seoIntro, "SEO intro", MAX_INTRO, false);
+  if (input.description !== undefined) doc.description = cleanText(input.description, "Home tile line", MAX_HOME_LINE, false);
   if (input.kind !== undefined) {
     doc.kind = cleanKind(input.kind);
     // A people category can never keep live tours on (H6.5).
@@ -165,10 +179,11 @@ export async function updateCategory(actor: Actor, id: string, input: CategoryIn
     order: after?.order,
     enabled: after?.enabled,
     seoIntro: after?.introHtml,
+    description: after?.description,
     importMaxPhotos: after?.importMaxPhotos ?? null,
   });
   await refreshPublicCache();
-  return { ok: true as const };
+  return { ok: true as const, slug: after?.slug ?? doc.slug };
 }
 
 /** A category with ads is never removed: hide it instead. An empty category takes its sub-categories with it. */
@@ -198,13 +213,13 @@ export async function createSubcategory(actor: Actor, input: SubcategoryInput) {
     slug,
     name,
     icon: isCategoryIconKey(input.icon) ? input.icon : "",
-    order: cleanOrder(input.order),
+    order: input.order === undefined ? await nextOrder("subcategory", category._id) : cleanOrder(input.order),
     enabled: input.enabled !== false,
     seoIntro: cleanText(input.seoIntro, "SEO intro", MAX_INTRO, false),
   });
   await record(actor, "subcategory.create", "subcategory", String(doc._id), null, { slug, name, categoryId: String(category._id) });
   await refreshPublicCache();
-  return { id: String(doc._id) };
+  return { id: String(doc._id), slug };
 }
 
 export async function updateSubcategory(actor: Actor, id: string, input: SubcategoryInput) {

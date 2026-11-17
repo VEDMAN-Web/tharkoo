@@ -1,71 +1,53 @@
 import Link from "next/link";
+import { Lock } from "lucide-react";
 import { AdminShell } from "@/components/admin/AdminShell";
-import { CollectionEditor } from "@/components/admin/CollectionEditor";
-import { connectDb } from "@/lib/db";
-import { Category } from "@/server/models";
-import { Subcategory } from "@/server/models/subcategory";
-import { CatalogPictures } from "@/app/admin/_catalog/CatalogPictures";
+import type { EditorField } from "@/components/admin/category-fields/CategoryFieldsEditor";
 import { getStaffFromHeaders } from "@/lib/admin-auth";
-import { can } from "@/lib/admin/perms";
-import { categoryPictureItems } from "@/server/categories/manage";
-import { saveCategoryPicturesAction, undoCategoryPicturesAction } from "./picture-actions";
-import { CategoriesManager, type ManagedCategory, type ManagedSub } from "./CategoriesManager";
+import { isAdminRole } from "@/lib/ui/site-content";
+import { loadCategoriesScreen } from "@/server/categories/screen";
+import { readCategoryFields } from "./fields-service";
+import { CategoriesScreen } from "./_screen/CategoriesScreen";
+import { tabOf } from "./_screen/model";
 
 export const dynamic = "force-dynamic";
 
-export default async function Page() {
-  await connectDb();
-  const rows = await Category.find({ deletedAt: null }).select("slug name fields enabled introHtml kind importMaxPhotos").sort({ order: 1, name: 1 }).lean();
-  const subRows = await Subcategory.find({}).sort({ order: 1, name: 1 }).lean();
-  const categories: ManagedCategory[] = rows.map((row) => ({
-    id: String(row._id),
-    slug: row.slug,
-    name: row.name,
-    enabled: row.enabled !== false,
-    seoIntro: row.introHtml ?? "",
-    kind: row.kind ?? "",
-    icon: row.icon ?? "",
-    importMaxPhotos: row.importMaxPhotos ?? null,
+const one = (value: string | string[] | undefined) => (Array.isArray(value) ? value[0] : value) ?? "";
+
+/** Categories & fields (H8.51): one master-detail screen. `?c=` names the category and `?tab=` the tab, so links and Back work. */
+export default async function Page({ searchParams }: { searchParams: Promise<Record<string, string | string[] | undefined>> }) {
+  const identity = await getStaffFromHeaders();
+  if (!isAdminRole(identity.roles)) {
+    return (
+      <AdminShell title="Categories & fields" hasHeader>
+        <div className="adm-card" style={{ padding: 40, textAlign: "center", display: "grid", gap: 8, justifyItems: "center" }} data-tk="no-access">
+          <Lock aria-hidden="true" size={28} />
+          <h2 style={{ margin: 0, fontSize: 16 }}>You cannot open Categories &amp; fields</h2>
+          <p style={{ margin: 0, maxWidth: "44ch" }}>This screen is for admins. Ask an admin if you need it.</p>
+          <Link href="/admin/" className="adm-btn adm-btn-quiet">Back to Dashboard</Link>
+        </div>
+      </AdminShell>
+    );
+  }
+  const params = await searchParams;
+  const slug = one(params.c).toLowerCase();
+  const data = await loadCategoriesScreen(/^[a-z0-9-]{1,80}$/.test(slug) ? slug : "");
+  const loaded = data.detail ? await readCategoryFields(data.detail.slug) : null;
+  const fields: EditorField[] = (loaded?.fields ?? []).map((field) => ({
+    key: String(field.key),
+    label: String(field.label ?? ""),
+    filterLabel: String(field.filterLabel ?? ""),
+    type: String(field.type ?? "text"),
+    help: String(field.help ?? ""),
+    placeholder: String(field.placeholder ?? ""),
+    required: field.required === true,
+    enabled: field.enabled !== false,
+    filterable: field.filterable === true,
+    maxPicks: typeof field.maxPicks === "number" ? field.maxPicks : null,
+    optionCount: Array.isArray(field.options) ? field.options.length : 0,
   }));
-  const subs: ManagedSub[] = subRows.map((row) => ({
-    id: String(row._id),
-    categoryId: String(row.categoryId),
-    slug: row.slug,
-    name: row.name,
-    icon: row.icon ?? "",
-    enabled: row.enabled !== false,
-    seoIntro: row.seoIntro ?? "",
-  }));
-  const viewer = await getStaffFromHeaders();
-  const pictures = can(viewer.roles, "catalogue.edit") ? await categoryPictureItems() : null;
   return (
-    <AdminShell title="Categories">
-      <CategoriesManager categories={categories} subs={subs} />
-      {pictures ? (
-        <CatalogPictures
-          title="Pictures"
-          intro="The photo of each category shows on the home page and its band shows at the top of its page. Pictures come from the media library; one that is used here cannot be deleted there."
-          noun="category"
-          items={pictures}
-          save={saveCategoryPicturesAction}
-          undo={undoCategoryPicturesAction}
-        />
-      ) : null}
-      <section className="adm-card" style={{ margin: "16px 0" }} aria-labelledby="post-fields-h">
-        <h2 id="post-fields-h" className="adm-field-label" style={{ fontSize: 16 }}>Post form fields</h2>
-        <p className="adm-field-help">Choose a category to change the labels, help text, placeholders, required flags, order and options of its post-ad form.</p>
-        <ul style={{ listStyle: "none", padding: 0, margin: "12px 0 0", display: "flex", flexWrap: "wrap", gap: 8 }}>
-          {rows.map((row) => (
-            <li key={row.slug}>
-              <Link className="adm-btn adm-btn-ghost" href={`/admin/categories/${row.slug}/`}>
-                {row.name} ({row.fields?.length ?? 0} fields)
-              </Link>
-            </li>
-          ))}
-        </ul>
-      </section>
-      <p className="mb-3 t-small text-muted">Names, colours, home blurbs, showOnHome, homeCities drive the homepage blocks.</p>
-      <CollectionEditor model="Category" title="Categories" />
+    <AdminShell title="Categories & fields" hasHeader>
+      <CategoriesScreen data={data} tab={tabOf(one(params.tab))} fields={fields} />
     </AdminShell>
   );
 }
