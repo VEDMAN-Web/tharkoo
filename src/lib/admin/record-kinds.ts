@@ -1,9 +1,9 @@
 import { z } from "zod";
 import type { Perm } from "@/lib/admin/perms";
 
-export const RECORD_KINDS = ["banned-words", "broadcasts", "flags", "help-sections"] as const;
+export const RECORD_KINDS = ["banned-words", "broadcasts", "flags", "help-sections", "blog-posts", "help-topics"] as const;
 export type RecordKind = (typeof RECORD_KINDS)[number];
-export type RecordModel = "BannedWord" | "Banner" | "FeatureFlag" | "HelpArticle";
+export type RecordModel = "BannedWord" | "Banner" | "FeatureFlag" | "HelpArticle" | "BlogPost";
 
 export type FieldDef = {
   name: string;
@@ -93,6 +93,19 @@ const helpSchema = z.object({
   body: z.string().max(BODY_MAX, `Use at most ${BODY_MAX.toLocaleString("en-IN")} characters.`),
 });
 
+const blogSchema = z.object({
+  title: word("a title", 120),
+  slug: helpSchema.shape.slug,
+  date: z.string().trim().max(40, "Use at most 40 characters."),
+  author: z.string().trim().max(80, "Use at most 80 characters."),
+  category: z.string().trim().max(60, "Use at most 60 characters."),
+  cover: link,
+  coverAlt: z.string().trim().max(200, "Use at most 200 characters."),
+  coverFocus: z.string().trim().max(40, "Use at most 40 characters."),
+  status: helpSchema.shape.status,
+  body: helpSchema.shape.body,
+});
+
 const MATCH = [
   { value: "contains", label: "Anywhere in the text" },
   { value: "whole", label: "Whole word only" },
@@ -107,6 +120,68 @@ const ACTION = [
   { value: "block", label: "Stop it from posting" },
   { value: "review", label: "Send it to review" },
 ];
+
+const helpSections: KindConfig = {
+  kind: "help-sections",
+  model: "HelpArticle",
+  path: "/admin/help-sections/",
+  title: "Help sections",
+  purpose: "The articles in the help centre, by section. Each change can be undone for 30 days.",
+  singular: "article",
+  newLabel: "New article",
+  searchPlaceholder: "Search articles",
+  searchFields: ["title", "section", "slug"],
+  sort: { section: 1, order: 1, title: 1 },
+  view: "settings.edit",
+  write: "settings.edit",
+  remove: "settings.edit",
+  nameField: "title",
+  subField: "slug",
+  columns: ["section", "status"],
+  deleteNote: "The article is deleted and its page stops working. This cannot be undone. Set it to draft instead if you may want it back.",
+  schema: helpSchema,
+  fields: [
+    { name: "title", label: "Title", type: "text", max: 120, required: true },
+    { name: "slug", label: "Web address", type: "text", max: 80, required: true, help: "Lowercase words joined by dashes, for example how-to-post." },
+    { name: "section", label: "Section", type: "text", max: 60, help: "The group it sits in, for example Getting started." },
+    { name: "order", label: "Order in the section", type: "number", help: "Lowest number first." },
+    { name: "status", label: "Status", type: "select", options: [{ value: "published", label: "Published" }, { value: "draft", label: "Draft" }] },
+    { name: "body", label: "Text", type: "textarea", max: BODY_MAX },
+  ],
+};
+
+const BLOG_POSTS_CONFIG: KindConfig = {
+  kind: "blog-posts",
+  model: "BlogPost",
+  path: "/admin/blog-posts/",
+  title: "Blog posts",
+  purpose: "The built-in blog posts the site shows today. Edit the words, set one to draft, or remove it. Changes can be undone for 30 days.",
+  singular: "post",
+  newLabel: "New post",
+  searchPlaceholder: "Search posts",
+  searchFields: ["title", "slug", "category"],
+  sort: { date: -1, title: 1 },
+  view: "content.write",
+  write: "content.write",
+  remove: "content.publish",
+  nameField: "title",
+  subField: "slug",
+  columns: ["category", "status"],
+  deleteNote: "The post is deleted and its page stops working. This cannot be undone. Set it to draft instead if you may want it back.",
+  schema: blogSchema,
+  fields: [
+    { name: "title", label: "Title", type: "text", max: 120, required: true },
+    { name: "slug", label: "Web address", type: "text", max: 80, required: true, help: "Lowercase words joined by dashes, for example stay-safe." },
+    { name: "category", label: "Category", type: "text", max: 60 },
+    { name: "author", label: "Author", type: "text", max: 80 },
+    { name: "date", label: "Date shown", type: "text", max: 40, help: "As readers see it, for example 3 November 2026." },
+    { name: "status", label: "Status", type: "select", options: [{ value: "published", label: "Published" }, { value: "draft", label: "Draft" }] },
+    { name: "cover", label: "Cover picture address", type: "text", max: 200, help: "An https image address. With none, the post keeps the pink band." },
+    { name: "coverAlt", label: "What the cover shows", type: "text", max: 200 },
+    { name: "coverFocus", label: "Part to keep when cropped", type: "text", max: 40, help: "For example 60% 40%." },
+    { name: "body", label: "Text", type: "textarea", max: BODY_MAX },
+  ],
+};
 
 export const KINDS: Record<RecordKind, KindConfig> = {
   "banned-words": {
@@ -191,34 +266,18 @@ export const KINDS: Record<RecordKind, KindConfig> = {
       { name: "enabled", label: "On", type: "switch" },
     ],
   },
-  "help-sections": {
-    kind: "help-sections",
-    model: "HelpArticle",
-    path: "/admin/help-sections/",
-    title: "Help sections",
-    purpose: "The articles in the help centre, by section. Each change can be undone for 30 days.",
-    singular: "article",
-    newLabel: "New article",
-    searchPlaceholder: "Search articles",
-    searchFields: ["title", "section", "slug"],
-    sort: { section: 1, order: 1, title: 1 },
-    view: "settings.edit",
-    write: "settings.edit",
-    remove: "settings.edit",
-    nameField: "title",
-    subField: "slug",
-    columns: ["section", "status"],
-    deleteNote: "The article is deleted and its page stops working. This cannot be undone. Set it to draft instead if you may want it back.",
-    schema: helpSchema,
-    fields: [
-      { name: "title", label: "Title", type: "text", max: 120, required: true },
-      { name: "slug", label: "Web address", type: "text", max: 80, required: true, help: "Lowercase words joined by dashes, for example how-to-post." },
-      { name: "section", label: "Section", type: "text", max: 60, help: "The group it sits in, for example Getting started." },
-      { name: "order", label: "Order in the section", type: "number", help: "Lowest number first." },
-      { name: "status", label: "Status", type: "select", options: [{ value: "published", label: "Published" }, { value: "draft", label: "Draft" }] },
-      { name: "body", label: "Text", type: "textarea", max: BODY_MAX },
-    ],
+  "help-sections": helpSections,
+  "help-topics": {
+    ...helpSections,
+    kind: "help-topics",
+    path: "/admin/help-topics/",
+    title: "Help topics",
+    purpose: "The built-in help articles the site shows today. Edit the words, set one to draft, or remove it. Changes can be undone for 30 days.",
+    view: "content.write",
+    write: "content.write",
+    remove: "content.publish",
   },
+  "blog-posts": BLOG_POSTS_CONFIG,
 };
 
 export function isRecordKind(value: string): value is RecordKind {

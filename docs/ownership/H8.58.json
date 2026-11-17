@@ -1,0 +1,19 @@
+{
+  "branchPrefix": "haiku/h8.58",
+  "globs": [
+    "docs/ownership/H8.58.json",
+    "progress/H8.58.md",
+    "src/lib/admin/record-kinds.ts",
+    "src/lib/admin/screens.ts",
+    "src/server/admin/records.ts",
+    "src/server/content/studio/builtin.ts",
+    "src/app/admin/_records/RecordsView.tsx",
+    "src/app/admin/blog-posts/**",
+    "src/app/admin/help-topics/**",
+    "src/app/admin/content/page.tsx",
+    "src/app/admin/content/_studio/ContentView.tsx",
+    "src/app/admin/content/_studio/studio.css",
+    "tests/server/admin/h8-58-*.test.ts",
+    "tests/e2e/h8-58-builtins.e2e.ts"
+  ]
+}

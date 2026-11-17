@@ -8,10 +8,10 @@ import { sanitizeRecord } from "@/lib/sanitize";
 import type { AdminCtx } from "@/server/admin/context";
 import { adminWrite } from "@/server/admin/write";
 import { ConflictError, ForbiddenError, NotFoundError, ValidationError } from "@/server/http";
-import { Banner, BannedWord, FeatureFlag, HelpArticle } from "@/server/models";
+import { Banner, BannedWord, BlogPost, FeatureFlag, HelpArticle } from "@/server/models";
 
 type Doc = Record<string, unknown>;
-const MODELS = { BannedWord, Banner, FeatureFlag, HelpArticle } as unknown as Record<KindConfig["model"], MongooseModel<Doc>>;
+const MODELS = { BannedWord, Banner, BlogPost, FeatureFlag, HelpArticle } as unknown as Record<KindConfig["model"], MongooseModel<Doc>>;
 const SEARCH_MAX = 120;
 const RAW_HIDDEN = new Set(["_id", "__v", "createdAt", "updatedAt"]);
 

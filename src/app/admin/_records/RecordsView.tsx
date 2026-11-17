@@ -14,7 +14,7 @@ export type RecordsAccess = { write: boolean; remove: boolean; raw: boolean };
 type Values = Record<string, unknown>;
 
 const SEARCH_DEBOUNCE_MS = 350;
-const CRUMB: Record<RecordKind, string> = { "banned-words": "System", broadcasts: "Website", flags: "System", "help-sections": "Website" };
+const CRUMB: Record<RecordKind, string> = { "banned-words": "System", broadcasts: "Website", flags: "System", "help-sections": "Website", "blog-posts": "Website", "help-topics": "Website" };
 
 function labelOf(field: FieldDef | undefined, value: unknown) {
   if (!field) return String(value ?? "");
