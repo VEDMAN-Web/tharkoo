@@ -32,11 +32,10 @@ export async function listingPagePaths(listing: PublishedListing, categorySlug?:
 export async function revalidateListingPages(listing: PublishedListing, categorySlug?: string | null) {
   await connectDb();
   try {
-    const { refreshPublicCache } = await import("@/lib/cache");
-    await refreshPublicCache();
-    const { revalidatePath } = await import("next/cache");
-    for (const path of await listingPagePaths(listing, categorySlug)) revalidatePath(path);
-  } catch {
-    /* no Next request store */
+    const { purgeNext, refreshPublicCache } = await import("@/lib/cache");
+    await refreshPublicCache("listing pages");
+    await purgeNext({ paths: await listingPagePaths(listing, categorySlug), caller: "listing pages" });
+  } catch (error) {
+    console.error("listing pages could not be refreshed", error instanceof Error ? error.message : error);
   }
 }
