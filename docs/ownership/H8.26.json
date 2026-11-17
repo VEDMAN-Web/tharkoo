@@ -5,6 +5,7 @@
     "progress/H8.26.md",
     "src/app/admin/history/**",
     "src/server/admin/history.ts",
+    "src/server/admin/history-rules.ts",
     "tests/server/admin/a26-*.test.ts",
     "tests/e2e/a26-history.e2e.ts"
   ]
