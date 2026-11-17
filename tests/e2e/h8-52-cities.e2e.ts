@@ -195,7 +195,7 @@ test.describe("H8.52 Cities and areas", () => {
     const alt = `H852 picture ${Date.now() % 100000}`;
     await seedPicture(alt);
     await page.setViewportSize({ width: 1440, height: 900 });
-    await open(page, `?place=${first}&tab=pictures`);
+    await open(page, `?place=${first}&q=${encodeURIComponent("H852 Town pic 000")}&tab=pictures`);
     for (const title of ["Home page tile", "Top banner for computers", "Top banner for phones (optional)"]) await expect(page.getByRole("heading", { name: title })).toBeVisible();
     await expect(page.getByLabel(/^Left/)).toHaveCount(0);
     await pick(page, page.locator('[data-tk="picture-box"][data-slot="tile"]'), alt);
@@ -242,28 +242,36 @@ test.describe("H8.52 Cities and areas", () => {
     await dialog.getByRole("textbox", { name: /^Name/ }).fill(`Heritage ${stamp}`);
     await dialog.getByRole("checkbox", { name: "Visible on the site" }).uncheck();
     await dialog.getByRole("button", { name: "Save", exact: true }).click();
-    await expect(toast(page)).toContainText("Renamed to");
+    await expect(toast(page)).toContainText("is hidden");
     const district = await withLocalDb((db) => db.collection("locations").findOne({ slug: `old-town-${stamp}` }, { projection: { name: 1, enabled: 1 } }));
     expect(district).toMatchObject({ name: `Heritage ${stamp}`, enabled: false });
     await expect(page.locator('[data-tk="district-row"]')).toContainText("Hidden");
     await toast(page).getByRole("button", { name: "Undo" }).click();
     await expect.poll(async () => (await withLocalDb((db) => db.collection("locations").findOne({ slug: `old-town-${stamp}` }, { projection: { name: 1 } })))?.name).toBe(`Old Town ${stamp}`);
 
-    await withLocalDb((db) => db.collection("listings").insertOne({ districtId: district && new ObjectId(String((district as { _id: unknown })._id)), title: "h852 ad marker", slug: `h852-marker-${stamp}`, status: "expired" }));
+    // A district with a locality inside cannot be removed.
     await page.reload();
     await page.getByRole("button", { name: `Edit Old Town ${stamp}` }).click();
     await page.getByRole("dialog").getByRole("button", { name: "Remove..." }).click();
     let confirm = page.getByRole("alertdialog");
     await confirm.getByRole("textbox").fill(`old-town-${stamp}`);
     await confirm.getByRole("button", { name: "Remove" }).click();
-    await expect(toast(page)).toContainText("Hide it instead");
-
+    await expect(toast(page)).toContainText("has places inside it");
     await page.getByRole("button", { name: `Edit Market ${stamp}` }).click();
     await page.getByRole("dialog").getByRole("button", { name: "Remove..." }).click();
     confirm = page.getByRole("alertdialog");
     await confirm.getByRole("textbox").fill(`market-${stamp}`);
     await confirm.getByRole("button", { name: "Remove" }).click();
     await expect.poll(async () => await withLocalDb((db) => db.collection("locations").countDocuments({ slug: `market-${stamp}` }))).toBe(0);
+    await withLocalDb((db) => db.collection("listings").insertOne({ districtId: district && new ObjectId(String((district as { _id: unknown })._id)), title: "h852 ad marker", slug: `h852-marker-${stamp}`, status: "expired" }));
+    await page.reload();
+    await page.getByRole("button", { name: `Edit Old Town ${stamp}` }).click();
+    await page.getByRole("dialog").getByRole("button", { name: "Remove..." }).click();
+    confirm = page.getByRole("alertdialog");
+    await confirm.getByRole("textbox").fill(`old-town-${stamp}`);
+    await confirm.getByRole("button", { name: "Remove" }).click();
+    await expect(toast(page)).toContainText("Hide it instead");
+
     await withLocalDb((db) => db.collection("listings").deleteMany({ slug: `h852-marker-${stamp}` }));
   });
 });
