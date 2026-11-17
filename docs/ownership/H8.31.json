@@ -1,0 +1,12 @@
+{
+  "branchPrefix": "haiku/h8.31",
+  "globs": [
+    "docs/ownership/H8.31.json",
+    "src/app/admin/content/**",
+    "src/server/content/studio/admin.ts",
+    "src/server/content/studio/slug.ts",
+    "src/server/content/studio/suggest.ts",
+    "tests/server/content/a31-*.test.ts",
+    "tests/e2e/a31-content.e2e.ts"
+  ]
+}
