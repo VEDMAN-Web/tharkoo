@@ -7,6 +7,7 @@ import { connectDb } from "@/lib/db";
 import { Listing } from "@/server/models/listing";
 import { accountName } from "@/lib/account-name";
 import { DELETED_STATUSES } from "@/server/listings/owner-groups";
+import { userHasEarnings } from "@/server/wallet/has-earnings";
 
 /**
  * H7.6: what the user panel shell shows: coins, unread counts and the first name for the greeting.
@@ -25,6 +26,8 @@ export type PanelSummary =
       unreadSupport: number;
       adCount: number;
       seller: boolean;
+      /** True when the account has earnings, a payout waiting or a withdrawal; the Earnings tab and Withdraw show only then (H9.1). */
+      hasEarnings: boolean;
       memberSince: string;
     };
 
@@ -33,11 +36,12 @@ export async function loadPanelSummary(token: string | undefined): Promise<Panel
   const session = await userFromToken(token).catch(() => null);
   if (!session) return { signedIn: false };
   const userId = session.user.id;
-  const [balance, unreadChat, unreadSupport, adCount] = await Promise.all([
+  const [balance, unreadChat, unreadSupport, adCount, hasEarnings] = await Promise.all([
     walletBalance(userId),
     unreadCount(userId),
     unreadForOwner(userId),
     Listing.countDocuments({ ownerId: userId, status: { $nin: [...DELETED_STATUSES] } }),
+    userHasEarnings(userId),
   ]);
   const email = session.user.email ?? "";
   return {
@@ -50,6 +54,7 @@ export async function loadPanelSummary(token: string | undefined): Promise<Panel
     unreadSupport,
     adCount,
     seller: Boolean(session.user.seller),
+    hasEarnings,
     memberSince: new Date(parseInt(userId.slice(0, 8), 16) * 1000).toLocaleDateString("en-GB", { month: "short", year: "numeric" }),
   };
 }

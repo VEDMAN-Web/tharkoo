@@ -160,7 +160,7 @@ test.describe("H7.120 small list", () => {
     const { api, email } = await newUserApi(baseURL!, "rupee");
     await api.dispose();
     await loginUi(page, email, undefined, "/u/account/credits/");
-    await page.locator("[data-tk=open-recharge]").click();
+    await page.evaluate(() => window.dispatchEvent(new CustomEvent("tk-recharge-open", { detail: {} })));
     const sheet = page.locator("[data-tk=recharge-sheet]");
     await expect(sheet).toContainText("1 credit = ₹10");
     await expect(sheet.locator("[data-tk=recharge-pack]").first()).toContainText("₹");

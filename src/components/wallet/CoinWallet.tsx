@@ -2,22 +2,16 @@
 
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
-import { api, friendlyError, hasSessionHint, idempotencyKey } from "@/lib/ui/api";
+import { api, friendlyError, hasSessionHint } from "@/lib/ui/api";
+import { CreditPacksPanel } from "@/components/recharge/CreditPacks";
+import { rupees } from "@/lib/credit-pack-view";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { VendorEarnings } from "@/components/wallet/VendorEarnings";
 import { dateTime, inr, STATUS_LABEL, statusTone } from "@/components/wallet/format";
 
-interface Pack {
-  id: string;
-  coins: number;
-  price: number;
-  tag: string | null;
-}
-
 interface CoinsResponse {
   balance: number;
   coinValueInr: number;
-  packs: Pack[];
 }
 
 interface Purchase {
@@ -45,7 +39,8 @@ const TABS: { key: Tab; label: string }[] = [
   { key: "history", label: "History" },
 ];
 
-const HELD = "The payment provider is not connected yet. No money was taken and no credits were added.";
+/** The Earnings tab shows only for an account that has earnings (H9.1). */
+export const tabsFor = (hasEarnings: boolean) => TABS.filter((item) => item.key !== "earnings" || hasEarnings);
 
 function Balance({ balance, coinValueInr }: { balance: number; coinValueInr: number }) {
   return (
@@ -61,75 +56,8 @@ function Balance({ balance, coinValueInr }: { balance: number; coinValueInr: num
     >
       <p className="t-small" style={{ margin: 0, opacity: 0.8 }}>Credit balance</p>
       <p style={{ margin: "4px 0 0", fontSize: 36, fontWeight: 800, lineHeight: 1.1 }}>{balance} credits</p>
-      <p className="t-small" style={{ margin: "6px 0 0" }}>About {inr(balance * coinValueInr)} in value</p>
+      <p className="t-small" style={{ margin: "6px 0 0" }}>About {rupees(balance * coinValueInr)} in value</p>
     </section>
-  );
-}
-
-function BuyTab({ data }: { data: CoinsResponse }) {
-  const [selected, setSelected] = useState<string>("");
-  const [busy, setBusy] = useState(false);
-  const [message, setMessage] = useState("");
-  const pack = data.packs.find((item) => item.id === selected);
-
-  async function buy() {
-    if (!pack) return;
-    setBusy(true);
-    setMessage("");
-    const res = await api<{ checkoutUrl: string | null }>("/api/wallet/coins/checkout", {
-      method: "POST",
-      body: JSON.stringify({ packId: pack.id, idempotencyKey: idempotencyKey(`coins-${pack.id}`) }),
-    });
-    setBusy(false);
-    if (!res.ok) return setMessage(friendlyError(res.error));
-    if (res.data.checkoutUrl) {
-      window.location.assign(res.data.checkoutUrl);
-      return;
-    }
-    setMessage(HELD);
-  }
-
-  if (data.packs.length === 0) {
-    return <p className="t-small" style={{ color: "var(--muted)" }}>No credit packs are on sale right now.</p>;
-  }
-  return (
-    <div style={{ display: "grid", gap: 14 }}>
-      <div role="radiogroup" aria-label="Credit packs" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(150px, 1fr))", gap: 10 }}>
-        {data.packs.map((item) => {
-          const on = item.id === selected;
-          return (
-            <button
-              key={item.id}
-              type="button"
-              role="radio"
-              aria-checked={on}
-              onClick={() => setSelected(item.id)}
-              style={{
-                textAlign: "left",
-                minHeight: 88,
-                padding: 14,
-                borderRadius: 12,
-                cursor: "pointer",
-                background: "var(--card, #fff)",
-                color: "var(--text)",
-                border: on ? "2px solid var(--rose)" : "1px solid var(--border)",
-                boxShadow: on ? "0 0 0 3px rgba(233, 30, 140, 0.25)" : "none",
-              }}
-            >
-              <span style={{ display: "block", fontSize: 22, fontWeight: 800 }}>{item.coins} credits</span>
-              <span className="t-small" style={{ display: "block", color: "var(--muted)" }}>{inr(item.price)}</span>
-              {item.tag ? <span className="t-small" style={{ color: "var(--accent)" }}>{item.tag}</span> : null}
-            </button>
-          );
-        })}
-      </div>
-      <button type="button" className="tk-btn tk-btn-cta" disabled={!pack || busy} onClick={buy} style={{ width: "100%" }}>
-        {pack ? `Buy ${pack.coins} credits for ${inr(pack.price)}` : "Choose a pack"}
-      </button>
-      <div aria-live="polite" className="t-small" style={{ minHeight: 18, color: message === HELD ? "var(--muted)" : "var(--danger, #a12626)" }}>
-        {message}
-      </div>
-    </div>
   );
 }
 
@@ -180,8 +108,8 @@ function HistoryTab() {
   );
 }
 
-export function CoinWallet({ initialTab = "buy" }: { initialTab?: Tab }) {
-  const [tab, setTab] = useState<Tab>(initialTab);
+export function CoinWallet({ initialTab = "buy", hasEarnings = false }: { initialTab?: Tab; hasEarnings?: boolean }) {
+  const [tab, setTab] = useState<Tab>(initialTab === "earnings" && !hasEarnings ? "buy" : initialTab);
   const [data, setData] = useState<CoinsResponse | null>(null);
   const [signedOut, setSignedOut] = useState(false);
   const [error, setError] = useState("");
@@ -212,12 +140,11 @@ export function CoinWallet({ initialTab = "buy" }: { initialTab?: Tab }) {
     );
   }
   return (
-    <div style={{ display: "grid", gap: 18, padding: "8px 0 40px" }}>
-      <h1 className="tk-page-h1" style={{ margin: 0 }}>Wallet</h1>
+    <div style={{ display: "grid", gap: 18 }}>
       {error ? <p className="t-small" role="alert" style={{ color: "var(--danger, #a12626)" }}>{error}</p> : null}
       {data ? <Balance balance={data.balance} coinValueInr={data.coinValueInr} /> : <p className="t-small" style={{ color: "var(--muted)" }}>Loading balance</p>}
       <nav aria-label="Wallet sections" style={{ display: "flex", gap: 6, overflowX: "auto" }}>
-        {TABS.map((item) => (
+        {tabsFor(hasEarnings).map((item) => (
           <button
             key={item.key}
             type="button"
@@ -230,7 +157,7 @@ export function CoinWallet({ initialTab = "buy" }: { initialTab?: Tab }) {
           </button>
         ))}
       </nav>
-      {tab === "buy" && data ? <BuyTab data={data} /> : null}
+      {tab === "buy" ? <CreditPacksPanel returnTo="/u/account/wallet/" /> : null}
       {tab === "earnings" ? <VendorEarnings onSignedOut={signOut} /> : null}
       {tab === "history" ? <HistoryTab /> : null}
       <p className="t-small" style={{ color: "var(--muted)", margin: 0 }}>

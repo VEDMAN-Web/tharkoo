@@ -1,0 +1,29 @@
+{
+  "branchPrefix": "haiku/h9.1",
+  "globs": [
+    "docs/ownership/H9.1.json",
+    "progress/H9.1.md",
+    "src/lib/credit-pack-view.ts",
+    "src/lib/ui/text.ts",
+    "src/server/wallet/has-earnings.ts",
+    "src/server/notifications/summary.ts",
+    "src/app/api/payments/**",
+    "src/app/u/account/credits/page.tsx",
+    "src/app/u/account/wallet/page.tsx",
+    "src/components/recharge/CreditPacks.tsx",
+    "src/components/recharge/RechargeSheet.tsx",
+    "src/components/recharge/recharge.css",
+    "src/components/buyer/PackPicker.tsx",
+    "src/components/buyer/CoinsPanel.tsx",
+    "src/components/buyer/UserPanelHome.tsx",
+    "src/components/wallet/CoinWallet.tsx",
+    "tests/server/billing/h9-1-*.test.ts",
+    "tests/server/wallet/h9-1-*.test.ts",
+    "tests/server/notifications/feed.test.ts",
+    "tests/e2e/h9-1-credit-packs.e2e.ts",
+    "tests/e2e/h7-103-recharge.e2e.ts",
+    "tests/e2e/h7-120-small.e2e.ts",
+    "tests/e2e/money.e2e.ts",
+    "tests/e2e/account-home.e2e.ts"
+  ]
+}
