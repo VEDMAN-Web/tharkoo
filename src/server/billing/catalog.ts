@@ -27,12 +27,28 @@ function topDays(requested: number | undefined, productDays: number) {
   return 7;
 }
 
+/** TOP boosts three times a day, so a plan of N hours boosts about N / 8 times, at least once. */
+function topBoostsFor(hours: number) {
+  return Math.max(1, Math.round((TOP_BOOSTS_PER_DAY * hours) / 24));
+}
+
 export function promotionRule(
   code: string,
   requestedDays: number | undefined,
   productDays: number,
+  productHours?: number | null,
 ): PromotionRule {
   const normalized = code.trim().toLowerCase();
+  const hours = typeof productHours === "number" && productHours > 0 ? productHours : null;
+  if (hours !== null && normalized !== "flash" && normalized !== "auto-boost") {
+    return {
+      durationDays: Math.max(1, Math.ceil(hours / 24)),
+      durationMs: hours * HOUR,
+      boosts: normalized === "top" ? topBoostsFor(hours) : 0,
+      intervalMs: normalized === "top" ? DAY / TOP_BOOSTS_PER_DAY : 0,
+      boostWindowMs: null,
+    };
+  }
   if (normalized === "flash") {
     const boosts = 5;
     return {

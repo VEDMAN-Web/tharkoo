@@ -31,12 +31,12 @@ export async function saveMoneyAction(values: Partial<MoneySettings>, summary: s
   return { ok: true, eventId: result.value.eventId, undoUntil: result.value.undoUntil, summary, settings: result.value.settings };
 }
 
-export async function savePlanAction(input: { id: string; name: string; description: string; amount: number; durationDays: number; shown: boolean }): Promise<PriceResult> {
-  return plan(await run((ctx) => updatePlan(ctx, { id: String(input.id), name: input.name, description: input.description, amount: input.amount, durationDays: input.durationDays, shown: input.shown })));
+export async function savePlanAction(input: { id: string; name: string; description: string; amount: number; durationHours: number; shown: boolean }): Promise<PriceResult> {
+  return plan(await run((ctx) => updatePlan(ctx, { id: String(input.id), name: input.name, description: input.description, amount: input.amount, durationHours: input.durationHours, shown: input.shown })));
 }
 
-export async function createPlanAction(input: { code: string; name: string; description: string; amount: number; durationDays: number; shown: boolean }): Promise<PriceResult> {
-  return plan(await run((ctx) => createPlan(ctx, { code: String(input.code), name: input.name, description: input.description, amount: input.amount, durationDays: input.durationDays, shown: input.shown })));
+export async function createPlanAction(input: { code: string; name: string; description: string; amount: number; durationHours: number; shown: boolean }): Promise<PriceResult> {
+  return plan(await run((ctx) => createPlan(ctx, { code: String(input.code), name: input.name, description: input.description, amount: input.amount, durationHours: input.durationHours, shown: input.shown })));
 }
 
 export async function movePlanAction(input: { id: string; direction: "up" | "down" }): Promise<PriceResult> {

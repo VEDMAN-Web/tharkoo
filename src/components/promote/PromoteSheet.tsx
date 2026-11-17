@@ -12,7 +12,7 @@ import type { PromoteOptions } from "./openPromote";
 import "@/components/recharge/recharge.css";
 import "./promote.css";
 
-type Plan = { id: string; code: string; name: string; description: string; amount: number; durationDays: number };
+type Plan = { id: string; code: string; name: string; description: string; amount: number; durationHours: number };
 type Done = { name: string; endsAt: string | null; balance: number };
 
 const money = (value: number) => value.toLocaleString("en-IN");
@@ -147,7 +147,7 @@ export function PromoteSheet({ options, onClose }: { options: PromoteOptions; on
                     <span className="tkpr-plan-price">{t("promote.price", { count: money(plan.amount) })}</span>
                   </span>
                   <span className="tkpr-plan-text">{plan.description}</span>
-                  <span className="tkpr-plan-days">{plan.durationDays === 1 ? t("promote.day") : t("promote.days", { count: plan.durationDays })}</span>
+                  <span className="tkpr-plan-days">{plan.durationHours === 1 ? t("promote.hour") : t("promote.hours", { count: plan.durationHours })}</span>
                 </button>
               ))}
             </div>

@@ -73,7 +73,7 @@ test.describe("H7.116 Promote an ad", () => {
     const top = sheet.locator("[data-tk=promote-plan][data-code=top]");
     await expect(top).toContainText("TOP");
     await expect(top).toContainText("499 credits");
-    await expect(top).toContainText("7 days");
+    await expect(top).toContainText("24 hours");
     await expect(sheet.locator("[data-tk=promote-plan][data-code=free]")).toHaveCount(0);
     await top.click();
     await expect(sheet.locator("[data-tk=promote-short]")).toHaveText(`You need ${missing} more credits to promote this ad.`);

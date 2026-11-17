@@ -339,6 +339,7 @@ async function walkProducts(dryRun: boolean): Promise<Bucket> {
               amount: product.amount,
               currency: product.currency,
               durationDays: product.durationDays,
+              ...("durationHours" in product ? { durationHours: product.durationHours } : {}),
               enabled: true,
               seedBatch: SEED_BATCH,
             },

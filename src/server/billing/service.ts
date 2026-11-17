@@ -86,7 +86,7 @@ export async function listProducts() {
   const products = [];
   for (const row of rows) {
     if (productCodeDenied(row.code).denied) continue;
-    const rule = promotionRule(row.code, undefined, row.durationDays);
+    const rule = promotionRule(row.code, undefined, row.durationDays, row.durationHours);
     products.push({
       id: String(row._id),
       code: row.code,
@@ -95,6 +95,7 @@ export async function listProducts() {
       amount: row.amount,
       currency: row.currency,
       durationDays: rule.durationDays,
+      durationHours: Math.round((rule.durationMs / 3_600_000) * 10) / 10,
       schedule: {
         durationMs: rule.durationMs,
         boosts: rule.boosts,
@@ -389,7 +390,7 @@ async function placePromotion(input: {
   const cost = promotionCost(price, quote);
   const balance = await walletBalance(input.userId);
   if (cost > balance) throw new PaymentRequiredError("Insufficient credits");
-  const rule = promotionRule(product.code, input.durationDays, product.durationDays);
+  const rule = promotionRule(product.code, input.durationDays, product.durationDays, product.durationHours);
   const now = new Date();
   const requested = input.startsAt ? new Date(input.startsAt) : now;
   if (Number.isNaN(requested.getTime())) {
@@ -630,7 +631,7 @@ export async function renewDuePromotions(requestId: string) {
   for (const order of due) {
     const product = await PromotionProduct.findById(order.productId);
     const adRow = await Listing.findById(order.listingId).select("expiresAt").lean<{ expiresAt?: Date | null }>();
-    const renewRule = product ? promotionRule(product.code, order.durationDays, product.durationDays) : null;
+    const renewRule = product ? promotionRule(product.code, order.durationDays, product.durationDays, product.durationHours) : null;
     const fits = renewRule ? boostFitsBeforeExpiry(new Date(Date.now() + renewRule.durationMs), adRow?.expiresAt) : false;
     if (!product || !adRow || !fits) {
       order.autoRenew = false;
@@ -656,7 +657,7 @@ export async function renewDuePromotions(requestId: string) {
           once: true,
         });
       }
-      const rule = promotionRule(product.code, order.durationDays, product.durationDays);
+      const rule = promotionRule(product.code, order.durationDays, product.durationDays, product.durationHours);
       const start = new Date();
       order.startsAt = start;
       order.endsAt = new Date(start.getTime() + rule.durationMs);

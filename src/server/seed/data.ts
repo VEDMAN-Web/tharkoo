@@ -344,13 +344,13 @@ export const DISTRICTS: Record<string, ReadonlyArray<readonly [string, string]>>
 /** Amounts are INR rupees. Codes stay inside ALLOWED_PRODUCT_CODES. */
 export const PRODUCTS = [
   { code: "free", name: "Free", description: "A standard listing with no promotion charge.", amount: 0, currency: "INR", durationDays: 7 },
-  { code: "top", name: "TOP", description: "Placement at the top of results for seven days.", amount: 499, currency: "INR", durationDays: 7 },
+  { code: "top", name: "TOP", description: "Placement at the top of results for 24 hours.", amount: 499, currency: "INR", durationDays: 1, durationHours: 24 },
   { code: "auto-boost", name: "Auto Boost", description: "Ten automatic boosts across six hours.", amount: 299, currency: "INR", durationDays: 1 },
-  { code: "super-top", name: "Super Top", description: "Highest placement in a city for seven days.", amount: 999, currency: "INR", durationDays: 7 },
-  { code: "highlight", name: "Highlight", description: "A highlighted listing card for three days.", amount: 199, currency: "INR", durationDays: 3 },
-  { code: "new", name: "New", description: "A new-listing label for seven days.", amount: 99, currency: "INR", durationDays: 7 },
+  { code: "super-top", name: "Super Top", description: "Highest placement in a city for 24 hours.", amount: 999, currency: "INR", durationDays: 1, durationHours: 24 },
+  { code: "highlight", name: "Highlight", description: "A highlighted listing card for 24 hours.", amount: 199, currency: "INR", durationDays: 1, durationHours: 24 },
+  { code: "new", name: "New", description: "A new-listing label for 24 hours.", amount: 99, currency: "INR", durationDays: 1, durationHours: 24 },
   { code: "flash", name: "Flash", description: "A short flash label for four hours.", amount: 149, currency: "INR", durationDays: 1 },
-  { code: "star", name: "Star", description: "A premium slot on a city page.", amount: 799, currency: "INR", durationDays: 7 },
+  { code: "star", name: "Star", description: "A premium slot on a city page for 24 hours.", amount: 799, currency: "INR", durationDays: 1, durationHours: 24 },
   { code: "bump", name: "Bump", description: "Refresh this ad so it sorts with the newest posts.", amount: 49, currency: "INR", durationDays: 1 },
 ] as const;
 
