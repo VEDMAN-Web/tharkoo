@@ -4,7 +4,7 @@ import { AdminShell } from "@/components/admin/AdminShell";
 import { getStaffFromHeaders } from "@/lib/admin-auth";
 import { can } from "@/lib/admin/perms";
 import { listAds, parseAdsQuery } from "@/server/admin/ads-list";
-import { demoAdCounts } from "@/server/listings/demo-ads";
+import { demoPanelData } from "@/server/listings/demo-ads";
 import { DemoAds } from "./DemoAds";
 import { AdsView } from "./_list/AdsView";
 
@@ -26,14 +26,13 @@ export default async function Page({ searchParams }: { searchParams: Promise<Rec
     );
   }
   const list = await listAds(identity.roles, parseAdsQuery(await searchParams));
-  const showDemo = list.query.tab === "demo" && can(identity.roles, "ads.demo.end");
-  const demo = showDemo ? await demoAdCounts() : null;
+  const demo = list.query.tab === "demo" ? await demoPanelData() : null;
   return (
     <AdminShell title="All ads" hasHeader>
       <AdsView
         list={list}
         access={{ edit: can(identity.roles, "ads.edit"), decide: can(identity.roles, "ads.decide"), create: can(identity.roles, "settings.edit"), pins: can(identity.roles, "settings.edit") }}
-        demoPanel={demo ? <DemoAds total={demo.total} active={demo.active} /> : null}
+        demoPanel={demo ? <DemoAds panel={demo} canEnd={can(identity.roles, "ads.demo.end")} canRestore={can(identity.roles, "ads.demo.restore")} /> : null}
       />
     </AdminShell>
   );

@@ -9,10 +9,22 @@
 .adm-ads-state-icon svg { width: 24px; height: 24px; }
 .adm-ads-state h3 { margin: 4px 0 0; font-size: 16px; }
 .adm-ads-state p { margin: 0; color: var(--adm-kmuted); max-width: 44ch; }
-[data-tk="ads-screen"] [data-tk="demo-ads"] { margin: 16px; }
 @media (max-width: 767px) {
   [data-tk="ads-screen"] .adm-k-pagesize { display: none; }
   [data-tk="ads-screen"] .adm-k-pager { flex-wrap: nowrap; }
   .adm-ads-edit { display: none !important; }
   .adm-ads-pick select, .adm-ads-pick input { min-width: 0; width: 100%; }
+}
+.adm-ads-demo { margin: 16px; padding: 16px; border: 1px solid var(--adm-line); border-radius: 12px; background: var(--adm-surface); display: grid; gap: 10px; }
+.adm-ads-demo h2 { margin: 0; font-size: 15px; font-weight: 800; }
+.adm-ads-demo p { margin: 0; font-size: 13.5px; color: var(--adm-kmuted); }
+.adm-ads-demo-stats { margin: 0; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
+.adm-ads-demo-stats > div { padding: 10px 12px; border: 1px solid var(--adm-line2); border-radius: 10px; background: #fafbfd; display: grid; gap: 2px; }
+.adm-ads-demo-stats dt { font-size: 12px; font-weight: 700; color: var(--adm-kmuted); }
+.adm-ads-demo-stats dd { margin: 0; font-size: 18px; font-weight: 800; }
+.adm-ads-demo-actions { display: flex; flex-wrap: wrap; gap: 10px 12px; align-items: center; font-size: 13.5px; }
+.adm-ads-demo-muted { color: var(--adm-kmuted); }
+@media (max-width: 767px) {
+  .adm-ads-demo-stats { grid-template-columns: minmax(0, 1fr); }
+  .adm-ads-demo-actions .adm-k-btn { width: 100%; }
 }

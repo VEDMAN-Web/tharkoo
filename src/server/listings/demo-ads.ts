@@ -1,13 +1,16 @@
+import { randomUUID } from "node:crypto";
 import type { Types } from "mongoose";
 import { connectDb } from "@/lib/db";
 import { refreshPublicCache } from "@/lib/cache";
 import { isAdminRole } from "@/lib/ui/site-content";
-import { AuditRepository } from "@/server/audit";
+import { can } from "@/lib/admin/perms";
+import type { AdminCtx } from "@/server/admin/context";
+import { eventIsUndone } from "@/server/admin/undo/core";
+import { undoWindowDays } from "@/server/admin/undo/registry";
+import { adminWrite } from "@/server/admin/write";
 import { ConflictError, ForbiddenError, ValidationError } from "@/server/http";
-import { Listing, User } from "@/server/models";
+import { AuditEvent, Listing, User } from "@/server/models";
 import { SEED_USER_EMAIL } from "@/server/seed/data";
-
-const audit = new AuditRepository();
 
 export const DEMO_SLUG = /^demo-[0-9]{1,6}$/;
 export function isDemoAd(ownerEmail: string | undefined, slug: string | undefined): boolean {
@@ -36,6 +39,13 @@ export function endConfirmation(count: number): string {
   return `END ${count}`;
 }
 
+const DAY_MS = 24 * 60 * 60 * 1000;
+
+function ctxOf(input: { actorId: string; roles: readonly string[]; requestId: string }): AdminCtx {
+  return { actorId: input.actorId, email: "", roles: [...input.roles], requestId: input.requestId };
+}
+
+/** Ends every live demo ad in one batch. The batch id stays on the ads, so Restore brings back only these and never an ad that expired by itself. */
 export async function endDemoAds(input: { actorId: string; roles: readonly string[]; confirm: unknown; requestId: string }) {
   if (!isAdminRole([...input.roles])) throw new ForbiddenError("Only an admin can end demo ads");
   await connectDb();
@@ -47,17 +57,91 @@ export async function endDemoAds(input: { actorId: string; roles: readonly strin
     throw new ValidationError("Invalid request", { confirm: [`Type ${endConfirmation(active.length)} to confirm.`] });
   }
   const ids = active.map((row) => row._id);
-  const result = await Listing.updateMany({ ...filter, _id: { $in: ids }, status: "active" }, { $set: { status: DEMO_END_STATUS } });
-  await audit.append({
-    actorId: input.actorId,
-    actorType: "admin",
+  const batch = randomUUID();
+  const written = await adminWrite<{ ended: number }>(ctxOf(input), {
+    perm: "ads.demo.end",
     action: "listing.demo.end",
-    targetType: "listing",
-    targetId: "demo-ads",
-    requestId: input.requestId,
-    before: { active: active.length },
-    after: { ended: result.modifiedCount, status: DEMO_END_STATUS, sample: active.slice(0, SAMPLE).map((row) => row.slug ?? String(row._id)) },
+    target: { type: "listing", id: "demo-ads" },
+    undo: { kind: "demo.end", windowKey: "demo" },
+    before: async () => ({ active: active.length }),
+    apply: async () => {
+      const result = await Listing.updateMany({ ...filter, _id: { $in: ids }, status: "active" }, { $set: { status: DEMO_END_STATUS, demoEndedBatch: batch } });
+      return {
+        after: { ended: result.modifiedCount, status: DEMO_END_STATUS, batch, sample: active.slice(0, SAMPLE).map((row) => row.slug ?? String(row._id)) },
+        result: { ended: result.modifiedCount },
+        summary: `Ended ${result.modifiedCount} demo ${result.modifiedCount === 1 ? "ad" : "ads"}`,
+        undoData: { batch },
+      };
+    },
   });
   await refreshPublicCache();
-  return { ended: result.modifiedCount };
+  return { ended: written.result.ended, eventId: written.eventId, undoUntil: written.undoUntil };
+}
+
+export type EndedDemoBatch = { batchId: string; endedAt: string; restoreUntil: string; count: number; canRestore: boolean };
+
+/** The newest end of the demo ads that still has ads waiting: when it happened, how many, and whether the days to bring them back are over. */
+export async function lastEndedDemoBatch(): Promise<EndedDemoBatch | null> {
+  await connectDb();
+  const events = await AuditEvent.find({ action: "listing.demo.end", "after.batch": { $exists: true } })
+    .sort({ _id: -1 })
+    .limit(5)
+    .select("after createdAt")
+    .lean<{ _id: Types.ObjectId; after?: { batch?: string }; createdAt?: Date }[]>();
+  const days = await undoWindowDays("demo");
+  for (const event of events) {
+    const batchId = event.after?.batch;
+    if (!batchId || (await eventIsUndone(String(event._id)))) continue;
+    const count = await Listing.countDocuments({ demoEndedBatch: batchId, status: DEMO_END_STATUS });
+    if (count === 0) continue;
+    const endedAt = new Date(event.createdAt ?? Date.now());
+    const until = new Date(endedAt.getTime() + days * DAY_MS);
+    return { batchId, endedAt: endedAt.toISOString(), restoreUntil: until.toISOString(), count, canRestore: until.getTime() > Date.now() };
+  }
+  return null;
+}
+
+/** Puts back the ads of one ended batch that are still ended. An ad that expired by itself has no batch id and is never touched. */
+export async function reviveDemoBatch(batchId: string): Promise<number> {
+  await connectDb();
+  const filter = await demoFilter();
+  if (!filter || !batchId) return 0;
+  const result = await Listing.updateMany({ ...filter, demoEndedBatch: batchId, status: DEMO_END_STATUS }, { $set: { status: "active" }, $unset: { demoEndedBatch: "" } });
+  await refreshPublicCache();
+  return result.modifiedCount;
+}
+
+/** Superadmin only, and only in the days after the end. Brings back the newest ended batch. */
+export async function restoreDemoAds(ctx: AdminCtx): Promise<{ restored: number }> {
+  await connectDb();
+  if (!can(ctx.roles, "ads.demo.restore")) {
+    await adminWrite(ctx, { perm: "ads.demo.restore", action: "listing.demo.restore", target: { type: "listing", id: "demo-ads" }, before: async () => null, apply: async () => ({ after: null, result: null, summary: "" }) });
+  }
+  const last = await lastEndedDemoBatch();
+  if (!last) throw new ConflictError("There are no ended demo ads to bring back.");
+  if (!last.canRestore) throw new ConflictError("The days to bring the demo ads back are over.");
+  const written = await adminWrite<{ restored: number }>(ctx, {
+    perm: "ads.demo.restore",
+    action: "listing.demo.restore",
+    target: { type: "listing", id: "demo-ads" },
+    before: async () => ({ ended: last.count }),
+    apply: async () => {
+      const restored = await reviveDemoBatch(last.batchId);
+      return { after: { restored, batch: last.batchId }, result: { restored }, summary: `Brought back ${restored} demo ${restored === 1 ? "ad" : "ads"}` };
+    },
+  });
+  return written.result;
+}
+
+export type DemoPanelData = { total: number; active: number; onHome: number; ended: EndedDemoBatch | null };
+
+export async function demoPanelData(): Promise<DemoPanelData> {
+  await connectDb();
+  const filter = await demoFilter();
+  const [counts, onHome, ended] = await Promise.all([
+    demoAdCounts(),
+    filter ? Listing.countDocuments({ ...filter, status: "active", homeShow: true }) : 0,
+    lastEndedDemoBatch(),
+  ]);
+  return { ...counts, onHome, ended };
 }
