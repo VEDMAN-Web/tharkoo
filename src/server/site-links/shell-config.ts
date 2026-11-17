@@ -2,6 +2,7 @@ import mongoose, { type Model } from "mongoose";
 import { connectDb } from "@/lib/db";
 import { refreshPublicCache } from "@/lib/cache";
 import { AuditRepository } from "@/server/audit";
+import { loadCatalogueImages, mergeCatalogueImages } from "@/server/site-links/catalogue-images";
 import { ForbiddenError, ValidationError, parseInput } from "@/server/http";
 import {
   defaultShellConfig,
@@ -35,11 +36,26 @@ const ShellConfigModel: Model<ShellConfigRow> =
     ),
   );
 
-/** The config in force now. Never throws for a stored value that is broken: each field falls back to its default. */
-export async function readShellConfig(): Promise<ShellConfig> {
+/** The config as saved on Menus and footer and Support chat, with nothing added. The editors start from this, so a save never copies the new pictures into the old rows. */
+export async function readStoredShellConfig(): Promise<ShellConfig> {
   await connectDb();
   const row = await ShellConfigModel.findOne({ key: SETTING_KEY }).lean<ShellConfigRow | null>();
   return normaliseShellConfig(row?.config);
+}
+
+/**
+ * The config in force now, for the public pages. Never throws for a stored value that is broken: each field falls back to its default.
+ * The pictures set in the new boxes on Categories and Cities (H8.39) come first, slot by slot; the old rows fill what they leave empty (H7.160).
+ */
+export async function readShellConfig(): Promise<ShellConfig> {
+  const stored = await readStoredShellConfig();
+  let fresh: Awaited<ReturnType<typeof loadCatalogueImages>> = [];
+  try {
+    fresh = await loadCatalogueImages();
+  } catch (error) {
+    console.error("shell.catalogue_images_failed", error instanceof Error ? error.message : error);
+  }
+  return fresh.length ? { ...stored, media: { images: mergeCatalogueImages(stored.media.images, fresh) } } : stored;
 }
 
 /** Admin or superadmin. Validates, rejects unsafe links, stores, audits and refreshes the public cache. */
@@ -52,7 +68,7 @@ export async function saveShellConfig(input: { actorId: string; roles: readonly 
   const next = normaliseShellConfig(parsed);
   const bad = unsafeShellLinks(next);
   if (bad.length) throw new ValidationError("Some links are not allowed", { links: bad });
-  const before = await readShellConfig();
+  const before = await readStoredShellConfig();
   await ShellConfigModel.updateOne({ key: SETTING_KEY }, { $set: { config: next } }, { upsert: true });
   await audit.append({
     actorId: input.actorId,

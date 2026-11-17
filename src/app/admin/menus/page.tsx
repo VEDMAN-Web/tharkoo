@@ -1,7 +1,7 @@
 import { AdminShell } from "@/components/admin/AdminShell";
 import { getStaffFromHeaders } from "@/lib/admin-auth";
 import { isAdminRole } from "@/lib/ui/site-content";
-import { readShellConfig } from "@/server/site-links/shell-config";
+import { readStoredShellConfig } from "@/server/site-links/shell-config";
 import { MenusTabs } from "./MenusTabs";
 import { ShellEditor } from "./ShellEditor";
 
@@ -23,7 +23,7 @@ export default async function MenusAdminPage() {
       <p className="mb-4 t-small text-muted">
         Header links, footer columns and contact rows on every public page. The account menu and the Log in and Post your ad targets stay fixed so login and posting keep working.
       </p>
-      <ShellEditor initial={await readShellConfig()} section="menus" />
+      <ShellEditor initial={await readStoredShellConfig()} section="menus" />
     </AdminShell>
   );
 }
