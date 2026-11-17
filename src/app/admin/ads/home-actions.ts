@@ -2,10 +2,13 @@
 
 import { randomUUID } from "node:crypto";
 import { cookies } from "next/headers";
+import { revalidatePath, updateTag } from "next/cache";
 import { SESSION_COOKIE } from "@/server/auth/http";
 import { userFromToken } from "@/server/auth/service";
 import { isAdminRole } from "@/lib/ui/site-content";
 import { homePickerData, setHomeSelectionBatch, type HomeSelectionRow } from "@/server/listings/home-selection";
+
+const HOME_TAGS = ["feed", "listings"] as const;
 
 async function actor() {
   const found = await userFromToken((await cookies()).get(SESSION_COOKIE)?.value);
@@ -35,6 +38,11 @@ export async function saveHomeSelectionAction(
     const who = await actor();
     if (!who) return { ok: false, message: "Sign in again to make this change." };
     const saved = await setHomeSelectionBatch({ items, actor: who, requestId: randomUUID() });
+    if (saved.changed > 0) {
+      // The Home page and the cached ad list must change now, not after their timers. Done here, in the action, where Next has its request store.
+      for (const tag of HOME_TAGS) updateTag(tag);
+      revalidatePath("/", "layout");
+    }
     return { ok: true, changed: saved.changed };
   } catch (error) {
     return failed(error);

@@ -8,6 +8,16 @@ import { ToastCard, type ToastView } from "./UndoToast";
 type Ctx = { show: (toast: ToastView) => void; close: () => void };
 const ToastCtx = createContext<Ctx | null>(null);
 const TICK_MS = 200;
+const PHONE_MAX = 767;
+const LIFT_GAP = 12;
+
+/** On a phone an open drawer is full screen with a sticky footer. The toast sits just above that footer, not on top of its buttons. */
+function footerLift(): number | null {
+  if (window.innerWidth > PHONE_MAX) return null;
+  const footer = document.querySelector<HTMLElement>(".adm-k-drawer .adm-k-df");
+  if (!footer) return null;
+  return Math.ceil(window.innerHeight - footer.getBoundingClientRect().top) + LIFT_GAP;
+}
 
 /**
  * Toasts: bottom left of the content area, one at a time, a newer one replaces the older.
@@ -19,6 +29,7 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
   const elapsedRef = useRef(0);
   const paused = useRef(false);
   const duration = toast ? toastDuration(toast.kind) : null;
+  const dock = useRef<HTMLDivElement>(null);
 
   const close = useCallback(() => setToast(null), []);
   const show = useCallback((next: ToastView) => {
@@ -39,12 +50,20 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
     return () => window.clearInterval(timer);
   }, [toast, duration]);
 
+  useEffect(() => {
+    const node = dock.current;
+    if (!node) return;
+    const lift = toast ? footerLift() : null;
+    if (lift === null) node.style.removeProperty("--adm-dock-lift");
+    else node.style.setProperty("--adm-dock-lift", `${lift}px`);
+  }, [toast]);
+
   const remaining = toast ? toastRemaining(duration, elapsed) : null;
   const value = useMemo(() => ({ show, close }), [show, close]);
   return (
     <ToastCtx.Provider value={value}>
       {children}
-      <div className="adm-k adm-k-dock" data-tk="toast-dock">
+      <div ref={dock} className="adm-k adm-k-dock" data-tk="toast-dock">
         {toast ? (
           <ToastCard
             toast={toast}

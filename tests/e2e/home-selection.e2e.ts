@@ -27,6 +27,7 @@ test.describe("H7.98 pick the ads on Home", () => {
     const firstId = await firstRow.getByRole("spinbutton").getAttribute("id");
     const secondId = await secondRow.getByRole("spinbutton").getAttribute("id");
     const firstTitle = (await firstRow.locator("strong").innerText()).trim();
+    const secondTitle = (await secondRow.locator("strong").innerText()).trim();
     const rowOf = (id: string | null) => section.locator("tr", { has: page.locator("#" + id) }).first();
     await rowOf(firstId).getByRole("checkbox", { name: "Show on Home" }).check();
     await section.locator("#" + firstId).fill("1");
@@ -47,8 +48,11 @@ test.describe("H7.98 pick the ads on Home", () => {
       await expect(async () => {
         await page.goto("/");
         await page.waitForLoadState("networkidle");
-        await expect(page.locator("[data-tk=home-ad]").first().locator(".tkh-ad-title")).toContainText(firstTitle.slice(0, 12), { timeout: 2000 });
-      }).toPass({ timeout: 20000 });
+        // The full titles, in the order typed: a prefix is not enough, many demo ads start with the same words.
+        const shown = page.locator("[data-tk=home-ad] .tkh-ad-title");
+        await expect(shown.nth(0)).toHaveText(firstTitle, { timeout: 2000 });
+        await expect(shown.nth(1)).toHaveText(secondTitle, { timeout: 2000 });
+      }).toPass({ timeout: 30000 });
     } finally {
       await page.goto("/admin/ads/");
       const again = page.locator('[data-tk="home-selection"]');

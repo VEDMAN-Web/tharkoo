@@ -1,0 +1,11 @@
+{
+  "branchPrefix": "haiku/h8.9a",
+  "globs": [
+    "docs/ownership/H8.9a.json",
+    "progress/H8.9a.md",
+    "src/app/admin/actions.ts",
+    "src/server/admin/undo/handlers/record-restore.ts",
+    "tests/server/admin/a9-*.test.ts",
+    "tests/server/admin/a3-write.test.ts"
+  ]
+}
