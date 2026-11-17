@@ -54,7 +54,7 @@ test.describe("H6.17 views and clicks", () => {
     const start = (await countsOf(request, slug)).clicks;
 
     await page.goto(FEED);
-    const link = page.locator(`a.tkn-ls-stretch[href="${adPath}"]`).first();
+    const link = page.locator(`a.tkh-ad-link[href="${adPath}"]`).first();
     await link.waitFor({ state: "attached" });
     await link.click({ force: true });
     await page.waitForURL(`**${adPath}`);
@@ -62,7 +62,7 @@ test.describe("H6.17 views and clicks", () => {
 
     await page.goBack();
     await page.waitForURL(`**${FEED}`);
-    const again = page.locator(`a.tkn-ls-stretch[href="${adPath}"]`).first();
+    const again = page.locator(`a.tkh-ad-link[href="${adPath}"]`).first();
     await again.waitFor({ state: "attached" });
     await again.click({ force: true });
     await page.waitForURL(`**${adPath}`);

@@ -291,6 +291,7 @@ async function assertPhotos(ownerId: string, listing: ListingRow, mediaIds: stri
 }
 
 export async function assertCleanText(parts: Array<string | undefined>) {
+  await connectDb();
   const text = parts.filter((part): part is string => Boolean(part?.trim())).join("\n");
   if (!text) return;
   if (textDenied(text).denied) throw new PolicyViolationError("Listing text is not allowed");
@@ -303,6 +304,7 @@ export async function assertCleanText(parts: Array<string | undefined>) {
 }
 
 export async function writeVersion(listing: ListingRow, actorId: string) {
+  await connectDb();
   const version = (await ListingVersion.countDocuments({ listingId: listing._id })) + 1;
   const snapshot = listing.toObject() as Record<string, unknown>;
   delete snapshot.__v;

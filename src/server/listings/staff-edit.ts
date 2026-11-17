@@ -211,6 +211,7 @@ async function applyEdit(ctx: AdminCtx, id: string, next: { title: unknown; desc
 
 /** A save from the edit page. A live ad stays live; the old values are one undo away. */
 export async function saveStaffEdit(ctx: AdminCtx, id: string, values: { title: unknown; description: unknown; price: unknown; attributes: unknown }) {
+  await connectDb();
   return applyEdit(ctx, id, values, "Edited the ad");
 }
 

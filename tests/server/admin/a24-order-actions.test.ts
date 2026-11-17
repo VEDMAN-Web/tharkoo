@@ -173,6 +173,14 @@ describe("give credits back", () => {
     expect(await WalletEntry.countDocuments({ refType: "refund" })).toBe(1);
   });
 
+  it("eight clicks together still give credits back once", async () => {
+    const data = await paid();
+    const results = await Promise.allSettled(Array.from({ length: 8 }, () => giveCreditsBack(finance(), { paymentId: data.paymentId, amount: 50, reason: "Goodwill" })));
+    expect(results.filter((result) => result.status === "fulfilled")).toHaveLength(1);
+    expect(await walletBalance(data.userId)).toBe(625);
+    expect(await WalletEntry.countDocuments({ refType: "refund" })).toBe(1);
+  });
+
   it("never gives back more than was credited, in one go or across several", async () => {
     const data = await paid();
     await expect(giveCreditsBack(finance(), { paymentId: data.paymentId, amount: 576, reason: "Too much" })).rejects.toBeInstanceOf(ConflictError);
