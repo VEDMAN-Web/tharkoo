@@ -1,0 +1,19 @@
+{
+  "branchPrefix": "haiku/h7.156",
+  "globs": [
+    "docs/ownership/H7.156.json",
+    "src/app/admin/users/**",
+    "src/server/admin/users.ts",
+    "src/server/admin/user-profile.ts",
+    "src/server/admin/close-word.ts",
+    "src/server/admin/undo/handlers/user-edit.ts",
+    "src/server/admin/undo/registry.ts",
+    "src/server/models/identity.ts",
+    "src/lib/admin/perms.ts",
+    "tests/server/admin/h7156-*.test.ts",
+    "tests/server/admin/a3-perms.test.ts",
+    "tests/server/admin/a3-write.test.ts",
+    "tests/server/admin/a8-users.test.ts",
+    "tests/e2e/h7156-user-edit.e2e.ts"
+  ]
+}

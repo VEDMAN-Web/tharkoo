@@ -33,6 +33,7 @@ export type Perm =
   | "id.decide"
   | "desk.work"
   | "users.view"
+  | "users.edit"
   | "users.ban"
   | "users.logout"
   | "wallet.view"
@@ -82,6 +83,7 @@ export const PERMS: Record<Perm, readonly StaffRole[]> = {
   "id.decide": with_("moderator", "trust_safety"),
   "desk.work": with_("support"),
   "users.view": with_("moderator", "trust_safety", "support"),
+  "users.edit": with_("support", "trust_safety"),
   "users.ban": with_("trust_safety"),
   "users.logout": with_("trust_safety", "support"),
   "wallet.view": with_("finance"),

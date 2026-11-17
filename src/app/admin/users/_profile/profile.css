@@ -1,0 +1,16 @@
+/* H7.156: the profile, vendor and badge parts of the Users drawer. */
+.adm-up { display: grid; gap: 14px; }
+.adm-up-head { display: flex; justify-content: space-between; align-items: center; gap: 8px; flex-wrap: wrap; }
+.adm-up-head h3 { margin: 0; display: flex; align-items: center; gap: 6px; font-size: 14px; font-weight: 800; }
+.adm-up-actions { display: flex; justify-content: flex-end; gap: 8px; flex-wrap: wrap; }
+.adm-up-left { justify-content: flex-start; }
+.adm-up-email { margin: 0; overflow-wrap: anywhere; font-weight: 600; }
+.adm-up-box { display: grid; gap: 10px; padding: 14px; border: 1px solid var(--adm-line2); border-radius: 10px; }
+.adm-up-box h3 { margin: 0; font-size: 14px; font-weight: 800; }
+.adm-up-stats { margin: 0; display: grid; gap: 6px; }
+.adm-up-stats > div { display: flex; justify-content: space-between; gap: 12px; font-size: 13.5px; }
+.adm-up-stats dt { color: var(--adm-kmuted); }
+.adm-up-stats dd { margin: 0; font-weight: 700; }
+@media (max-width: 599px) {
+  .adm-up-actions .adm-k-btn { flex: 1; }
+}

@@ -53,7 +53,7 @@ beforeEach(async () => {
 });
 
 /** Undo kinds whose real handler has been built (the rest are still stubs). Add a kind here when its card lands. */
-const BUILT_KINDS: readonly string[] = ["user.ban", "wallet.adjust", "record.restore", "layout.publish", "listing.decision", "report.decision", "id.decision", "content.publish", "team.roles", "demo.end", "listing.edit", "media.trash"];
+const BUILT_KINDS: readonly string[] = ["user.ban", "wallet.adjust", "record.restore", "layout.publish", "listing.decision", "report.decision", "id.decision", "content.publish", "team.roles", "user.edit", "demo.end", "listing.edit", "media.trash"];
 
 type Spec = Parameters<typeof adminWrite<string>>[1];
 
@@ -214,7 +214,7 @@ describe("undoEvent", () => {
   });
 
   it("has a loadable stub for every kind", async () => {
-    expect(UNDO_KINDS).toHaveLength(12);
+    expect(UNDO_KINDS).toHaveLength(13);
     const event = undoSourceOf({ id: "1", action: "a", targetType: "t", targetId: "1", actorId: null, undoOf: null, createdAt: new Date() }, {});
     for (const kind of UNDO_KINDS) {
       overrideUndoHandler(kind, null);
