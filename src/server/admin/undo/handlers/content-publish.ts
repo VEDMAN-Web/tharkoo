@@ -13,6 +13,14 @@ import type { UndoHandler } from "../registry";
 type Before = { status: ContentStatus; published: unknown; publishedAt: string | null; updatedVisibleAt: string | null; unpublish: unknown; scheduled: unknown };
 type ItemLean = { _id: unknown; kind: ContentKind; version: number; status: ContentStatus; published: unknown; publishedAt?: Date; updatedVisibleAt?: Date; unpublish?: unknown; scheduled?: unknown; draft: unknown };
 
+const STATUS_WORDS: Record<ContentStatus, string> = {
+  published: "the earlier live text is back",
+  unpublished: "the item is off the site",
+  draft: "the item is back to a draft",
+  review: "the item is back in review",
+  scheduled: "the item is scheduled again",
+};
+
 const handler: UndoHandler = {
   async canUndo(ctx, event) {
     await connectDb();
@@ -49,7 +57,7 @@ const handler: UndoHandler = {
     await ContentRevision.create({ itemId, version: item.version, fields: published ?? (item.published as object) ?? (item.draft as object), status: before.status, by: ctx.email, note: event.undoOf ? "Applied again" : "Undo" });
     return {
       after: { status: before.status, version: item.version + 1 },
-      summary: `${event.undoOf ? "Applied again" : "Undid"}: ${before.status === "published" ? "the earlier live text is back" : before.status === "unpublished" ? "the item is off the site" : "the item is back to a draft"}`,
+      summary: `${event.undoOf ? "Applied again" : "Undid"}: ${STATUS_WORDS[before.status]}`,
       undoData: { itemId, before: current, afterVersion: item.version + 1 },
     };
   },
