@@ -46,7 +46,7 @@ export interface Explanation {
 }
 
 const EDITORS: Record<PageType, EditorLink> = {
-  home: { label: "Edit home page blocks", href: "/admin/homepage/" },
+  home: { label: "Edit home page blocks", href: "/admin/page-builder/" },
   category: { label: "Edit the category template", href: "/admin/seo/templates/" },
   city: { label: "Edit the city template", href: "/admin/seo/templates/" },
   district: { label: "Edit the district template", href: "/admin/seo/templates/" },

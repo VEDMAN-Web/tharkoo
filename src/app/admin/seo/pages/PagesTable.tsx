@@ -21,7 +21,7 @@ export interface PageRow {
 }
 
 const EDITORS: Record<string, string> = {
-  home: "/admin/homepage/",
+  home: "/admin/page-builder/",
   category: "/admin/seo/templates/",
   city: "/admin/seo/templates/",
   district: "/admin/seo/templates/",

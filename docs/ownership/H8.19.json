@@ -1,0 +1,29 @@
+{
+  "branchPrefix": "haiku/h8.19",
+  "globs": [
+    "docs/ownership/H8.19.json",
+    "progress/H8.19.md",
+    "src/components/admin/SiteContentForm.tsx",
+    "src/app/admin/content-actions.ts",
+    "src/lib/ui/site-store.ts",
+    "src/app/admin/homepage/**",
+    "src/app/admin/menus/ShellEditor.tsx",
+    "src/app/admin/layout-actions.ts",
+    "src/server/seed/layouts.ts",
+    "src/server/admin/launch-checklist.ts",
+    "src/server/seo/explain.ts",
+    "src/app/admin/seo/pages/PagesTable.tsx",
+    "src/app/admin/cms/page.tsx",
+    "tests/server/layout/a19-*",
+    "tests/server/layout/a13-d1.test.ts",
+    "tests/server/layout/hero-migration.test.ts",
+    "tests/server/layout/home.test.ts",
+    "tests/server/ui/site-content.test.ts",
+    "tests/e2e/a16-builder.e2e.ts",
+    "tests/e2e/a19-home-writers.e2e.ts",
+    "tests/e2e/admin-home.e2e.ts",
+    "tests/e2e/h7-104-home.e2e.ts",
+    "tests/e2e/h7-105-brand.e2e.ts",
+    "tests/e2e/home-hero.e2e.ts"
+  ]
+}

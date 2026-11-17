@@ -8,7 +8,7 @@ export default function Page() {
   return (
     <AdminShell title="CMS: banners and static pages">
       <p className="mb-4 text-[13px]">
-        Edit the home page under <Link href="/admin/homepage/" className="text-accent">Homepage</Link> and the header and footer under{" "}
+        Edit the home page in the <Link href="/admin/page-builder/" className="text-accent">Page builder</Link> and the header and footer under{" "}
         <Link href="/admin/menus/" className="text-accent">Menus</Link>.
       </p>
       <h2 className="mb-2 mt-10 text-[18px] font-bold">Banners</h2>

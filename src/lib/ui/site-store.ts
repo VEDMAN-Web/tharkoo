@@ -9,6 +9,10 @@ import { HOME_DESCRIPTION_STORED_MAX, HOME_TITLE_STORED_MAX } from "@/lib/ui/hom
 
 const audit = new AuditRepository();
 
+/** H8.19: the Home banner, cards and number of categories are edited in the Page builder now. The old writers refuse with this message. */
+export const HOME_MOVED_MESSAGE = "The Home page banner, cards and number of categories are edited in the Page builder now. Open Page builder, then Home.";
+const sameJson = (a: unknown, b: unknown) => JSON.stringify(a) === JSON.stringify(b);
+
 function mirror(content: SiteContent) {
   return {
     searchPlaceholder: content.hero.searchPlaceholder,
@@ -104,9 +108,11 @@ export async function applyHomepageChange(input: {
   await connectDb();
   const current = await Site.findOne({ key: "default" }).lean();
   const before = readContent(current?.homepage);
-  if (input.reset) return writeContent(defaultSiteContent(), input.email, "site.homepage.reset", before);
+  if (input.reset) throw new ValidationError(HOME_MOVED_MESSAGE);
   const parsed = sanitizeSiteContent(input.content);
   if (!parsed.ok) throw new ValidationError(parsed.message);
+  const homeChanged = !sameJson(parsed.content.hero, before.hero) || !sameJson(parsed.content.cards, before.cards) || parsed.content.homeCategoriesCount !== before.homeCategoriesCount;
+  if (homeChanged) throw new ValidationError(HOME_MOVED_MESSAGE);
   return writeContent(parsed.content, input.email, "site.homepage.update", before);
 }
 
@@ -117,45 +123,6 @@ export async function applyListingBandSwitch(input: { roles: string[]; email: st
   const current = await Site.findOne({ key: "default" }).lean();
   const content = { ...readContent(current?.homepage), showListingBand: input.on === true };
   return applyHomepageChange({ roles: input.roles, email: input.email, content });
-}
-
-/** H7.104: how many categories the Home categories block shows (1 to 8, default 4). Same role check, audit entry and cache refresh as the homepage save. */
-export async function applyHomeCategoriesCount(input: { roles: string[]; email: string; count: number }) {
-  if (!isAdminRole(input.roles)) throw new ForbiddenError("Only an admin can edit the homepage");
-  if (!Number.isInteger(input.count) || input.count < 1 || input.count > 8) {
-    throw new ValidationError("Enter a number from 1 to 8", { count: ["Enter a number from 1 to 8"] });
-  }
-  await connectDb();
-  const current = await Site.findOne({ key: "default" }).lean();
-  const content = { ...readContent(current?.homepage), homeCategoriesCount: input.count };
-  return applyHomepageChange({ roles: input.roles, email: input.email, content });
-}
-
-/** H7.105: the Home banner picture, its alt text and the "headline is already in the picture" switch. Same role check, audit entry and cache refresh as the homepage save. */
-export async function applyHomeBanner(input: {
-  roles: string[];
-  email: string;
-  photo: string;
-  photoWidth: number;
-  photoHeight: number;
-  photoPhone: string;
-  photoAlt: string;
-  textInImage: boolean;
-}) {
-  if (!isAdminRole(input.roles)) throw new ForbiddenError("Only an admin can edit the homepage");
-  await connectDb();
-  const current = await Site.findOne({ key: "default" }).lean();
-  const base = readContent(current?.homepage);
-  const hero = {
-    ...base.hero,
-    photo: input.photo || base.hero.photo,
-    photoWidth: input.photo ? input.photoWidth : base.hero.photoWidth,
-    photoHeight: input.photo ? input.photoHeight : base.hero.photoHeight,
-    photoPhone: input.photoPhone,
-    photoAlt: input.photoAlt.trim() || base.hero.photoAlt,
-    textInImage: input.textInImage === true,
-  };
-  return applyHomepageChange({ roles: input.roles, email: input.email, content: { ...base, hero } });
 }
 
 /**
