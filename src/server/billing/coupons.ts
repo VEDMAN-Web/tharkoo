@@ -112,13 +112,26 @@ export async function redeemCoupon(userId: string, code: string, requestId: stri
   if (coupon.kind === "percent") return { couponId: String(coupon._id) };
   const updated = await consumeCoupon(coupon, userId, requestId);
   const amount = coupon.credits ?? 0;
-  const result = await creditWallet({
-    userId,
-    amount,
-    refType: "coupon",
-    refId: `${coupon._id}:${updated.redeemedCount ?? 0}`,
-    requestId,
-    actorId: userId,
-  });
-  return { couponId: String(coupon._id), credit: amount, balance: result.balance };
+  const limit = coupon.perUserLimit;
+  try {
+    const result = await creditWallet({
+      userId,
+      amount,
+      refType: "coupon",
+      refId: `${coupon._id}:${updated.redeemedCount ?? 0}`,
+      requestId,
+      actorId: userId,
+      once: true,
+      // Two redemptions by the same person sent together can both pass the check in assertUsable. This one runs inside the ledger write.
+      guard: limit == null ? undefined : (lines) => {
+        const used = lines.filter((line) => line.refType === "coupon" && line.refId.startsWith(`${coupon._id}:`)).length;
+        if (used >= limit) throw new ConflictError("Coupon is used up");
+      },
+    });
+    return { couponId: String(coupon._id), credit: amount, balance: result.balance };
+  } catch (error) {
+    // The use was counted before the credit; give it back when the credit was refused, so the coupon is not used up by a refused try.
+    if (error instanceof ConflictError) await Coupon.updateOne({ _id: coupon._id, redeemedCount: { $gt: 0 } }, { $inc: { redeemedCount: -1 } });
+    throw error;
+  }
 }
