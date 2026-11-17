@@ -87,6 +87,7 @@ export default async function TagPage({ params, searchParams }: Props) {
     ? await loadFallbackSections({
         scope: { categorySlug: cat.slug || category, categoryName: cat.name || undefined },
         ownSlugs: feed.items.map((ad) => ad.slug || "").filter(Boolean),
+        t,
       })
     : [];
   const crumbs = [
@@ -96,7 +97,7 @@ export default async function TagPage({ params, searchParams }: Props) {
   ];
   const lead =
     feed.total === 0
-      ? { text: `No ${cat.name}: ${meta.label} ads yet. Here are ads close by.`, button: `Post the first ad in ${cat.name}`, href: postAdPath(paths) }
+      ? { text: t("listing.empty.leadTag", { category: cat.name || "", tag: meta.label }), button: t("listing.empty.buttonCategory", { category: cat.name || "" }), href: postAdPath(paths) }
       : undefined;
   const labels = listingLabels(t);
   const filterQs = listingFilterQuery(picks, toggles);

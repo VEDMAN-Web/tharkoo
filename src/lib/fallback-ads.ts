@@ -1,5 +1,6 @@
 import { cached } from "@/lib/cache";
 import type { ListingDoc } from "@/lib/models";
+import type { TextFn } from "@/lib/ui/text";
 import { queryListings } from "@/server/search";
 import { LISTING_PAGE_SIZE } from "@/lib/listing-page-size";
 
@@ -98,6 +99,8 @@ function latestAds(filter: { categorySlug?: string; stateSlug?: string }, size: 
 export async function loadFallbackSections(input: {
   scope: FallbackScope;
   ownSlugs: readonly string[];
+  /** The page's UI text function, so the section titles can be edited in Menus & site text. Without it the built-in words are used. */
+  t?: TextFn;
 }): Promise<FallbackSection<ListingDoc>[]> {
   const budget = fallbackBudget(input.ownSlugs.length);
   if (budget === 0) return [];
@@ -114,9 +117,9 @@ export async function loadFallbackSections(input: {
     ownSlugs: input.ownSlugs,
     stateSlug,
     sources: [
-      { key: "nearby", title: `More ads near ${placeName || stateSlug}`, items: nearby },
-      { key: "category", title: `${categoryName || categorySlug} ads across India`, items: category },
-      { key: "latest", title: "Latest ads on Tharkoo", items: latest },
+      { key: "nearby", title: input.t ? input.t("listing.fallback.nearby", { place: placeName || stateSlug || "" }) : `More ads near ${placeName || stateSlug}`, items: nearby },
+      { key: "category", title: input.t ? input.t("listing.fallback.category", { category: categoryName || categorySlug || "" }) : `${categoryName || categorySlug} ads across India`, items: category },
+      { key: "latest", title: input.t ? input.t("listing.fallback.latest") : "Latest ads on Tharkoo", items: latest },
     ],
   });
 }

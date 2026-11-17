@@ -3,8 +3,9 @@ import { notFound, permanentRedirect } from "next/navigation";
 import type { Metadata } from "next";
 import { MapPin } from "lucide-react";
 import { getCategories, getCategory, getCities, getFeed, getHomepageContent, getSeoFor, getSite, getStarListings, getStates, listingCountsByCategoryCity, pageOutOfRange } from "@/lib/queries";
-import { getPaths } from "@/server/urls/service";
-import { adPath, categoryPath, placePath, postAdPath, searchPath } from "@/lib/urls";
+import { getPaths, publicTags } from "@/server/urls/service";
+import { adPath, categoryPath, placePath, postAdPath, searchPath, tagPath } from "@/lib/urls";
+import { ListingLinkNav } from "@/components/new/ListingLinkNav";
 import { fillTemplate } from "@/lib/seo";
 import { getIndexing, isCategoryOn } from "@/server/seo/indexing";
 import { withUrlSeo, urlHeading } from "@/lib/seo/override";
@@ -83,7 +84,7 @@ export default async function CategoryHub({ params, searchParams }: Props) {
     ...(toggles.video ? { video: true } : {}),
     ...(toggles.online ? { online: true } : {}),
   };
-  const [seo, site, cities, states, counts, feed, stars, paths, heading, cardWidth, allCategories, hero] = await Promise.all([
+  const [seo, site, cities, states, counts, feed, stars, paths, heading, cardWidth, allCategories, hero, tags] = await Promise.all([
     getSeoFor("category", category),
     getSite(),
     getCities(),
@@ -96,6 +97,7 @@ export default async function CategoryHub({ params, searchParams }: Props) {
     loadCardWidth(),
     getCategories().catch(() => []),
     getHomepageContent().then(heroBandFrom),
+    publicTags().catch(() => []),
   ]);
   if (pageOutOfRange(sp.page as string | undefined, feed.pages)) notFound();
   // H7.32: the New design band on every category page, always.
@@ -133,11 +135,12 @@ export default async function CategoryHub({ params, searchParams }: Props) {
     ? await loadFallbackSections({
         scope: { categorySlug: cat.slug || category, categoryName: cat.name || undefined },
         ownSlugs: ads.map((ad) => ad.slug || "").filter(Boolean),
+        t,
       })
     : [];
   const emptyLead =
     feed.total === 0
-      ? { text: `No ${cat.name} ads in India yet. Here are ads close by.`, button: "Post the first ad in India", href: postAdPath(paths) }
+      ? { text: t("listing.empty.leadIndia", { category: cat.name || "" }), button: t("listing.empty.buttonIndia"), href: postAdPath(paths) }
       : undefined;
   const fallbackNode = own ? <FallbackAds sections={fallback} layout="row" lead={emptyLead} /> : null;
   const feedAndText = (
@@ -184,11 +187,23 @@ export default async function CategoryHub({ params, searchParams }: Props) {
     </>
   );
   const inFeedId = String(layout.blocks.find((block) => block.type === "listingFeed")?.props.inFeedBlockId ?? "");
-  // Blocks in the order the layout gives. The category page draws the ads and the SEO text itself (the ads come with the text below them);
-  // filters, nearby cities and similar link blocks belong to city pages and are skipped here.
+  // Blocks in the order the layout gives. The category page draws the ads and the SEO text itself (the ads come with the text below them).
+  // The filter panel is part of the title band and the area links belong to city pages, so those are skipped here; related searches and nearby cities are drawn (H8.32).
+  const linkProps = (block: { props: Record<string, unknown> }, fallbackTitle: string, fallbackMax: number) => ({
+    title: typeof block.props.title === "string" && block.props.title.trim() ? block.props.title : fallbackTitle,
+    max: Number(block.props.max) || fallbackMax,
+  });
   const body = layout.blocks.map((block) => {
     if (block.type === "listingFeed") return wrap(block.id, block.devices, feedAndText);
-    if (["listingHeader", "filters", "relatedCategories", "nearbyCities", "districtLinks"].includes(block.type)) return null;
+    if (block.type === "relatedCategories") {
+      const { title, max } = linkProps(block, t("listing.links.popular"), 6);
+      return wrap(block.id, block.devices, <ListingLinkNav title={title} label={t("listing.links.popular")} max={max} links={tags.map((tag) => ({ href: tagPath(paths, cat.slug || category, tag.slug), label: `${cat.name} ${tag.label}` }))} />);
+    }
+    if (block.type === "nearbyCities") {
+      const { title, max } = linkProps(block, t("listing.links.nearby"), 5);
+      return wrap(block.id, block.devices, <ListingLinkNav title={title} label={t("listing.links.nearby")} max={max} links={listed.map((city) => ({ href: placePath(cat.slug || category, city.slug || ""), label: t("listing.link.in", { name: cat.name || "", place: city.name || "" }) }))} />);
+    }
+    if (["listingHeader", "filters", "districtLinks"].includes(block.type)) return null;
     return block.id === inFeedId ? null : wrap(block.id, block.devices, layout.nodes[block.id] ?? null);
   });
   // H7.4b: New design. The title band and the filter panel frame the list.

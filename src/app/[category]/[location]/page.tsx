@@ -255,11 +255,12 @@ export default async function LocationPage({ params, searchParams }: Props) {
           placeName: loc.name,
         },
         ownSlugs: feed.items.map((ad) => ad.slug || "").filter(Boolean),
+        t,
       })
     : [];
   const emptyLead =
     feed.total === 0
-      ? { text: `No ads in ${loc.name} yet. Here are ads close by.`, button: `Post the first ad in ${loc.name}`, href: postAdPath(paths) }
+      ? { text: t("listing.empty.leadPlace", { place: loc.name || "" }), button: t("listing.empty.buttonPlace", { place: loc.name || "" }), href: postAdPath(paths) }
       : undefined;
   const listing = (
     <ListingPageView

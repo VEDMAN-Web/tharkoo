@@ -109,11 +109,12 @@ export default async function CityAreasPage({ params, searchParams }: Props) {
     ? await loadFallbackSections({
         scope: { stateSlug: data.stateSlug || undefined, placeName: data.name },
         ownSlugs: latest.items.map((ad) => ad.slug || "").filter(Boolean),
+        t,
       })
     : [];
   const lead =
     latest.total === 0
-      ? { text: `No ads in ${data.name} yet. Here are ads close by.`, button: `Post the first ad in ${data.name}`, href: postAdPath(paths) }
+      ? { text: t("listing.empty.leadPlace", { place: data.name }), button: t("listing.empty.buttonPlace", { place: data.name }), href: postAdPath(paths) }
       : undefined;
 
   const toggles = { verified: false, photos: false, video: false, online: false };
