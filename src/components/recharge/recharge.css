@@ -25,7 +25,7 @@
 .tkr-credits strong { font-size: 20px; line-height: 24px; font-weight: 800; color: #110520; }
 .tkr-price { font-size: 13px; font-weight: 600; color: #a8124f; display: flex; gap: 8px; align-items: baseline; }
 .tkr-price em { font-style: normal; font-size: 12px; font-weight: 700; color: #065f46; }
-.tkr-badge { position: absolute; top: -8px; right: 8px; padding: 1px 8px; border-radius: 999px; font-size: 11px; line-height: 16px; font-weight: 700; color: #fff; }
+.tkr-badge { position: absolute; top: -8px; right: 8px; padding: 1px 8px; border-radius: 999px; font-size: 12px; line-height: 16px; font-weight: 700; color: #fff; }
 .tkr-badge.is-popular { background: linear-gradient(135deg, #d1137a, #a8124f); }
 .tkr-badge.is-best { background: linear-gradient(135deg, #7c3aed, #5b21b6); }
 .tkr-methods { display: grid; gap: 8px; margin-top: 12px; }

@@ -1,4 +1,5 @@
 import { CouponRedeem } from "@/components/account/AccountTools";
+import { PanelPage } from "@/components/buyer/PanelPage";
 import { pageMetadata } from "@/lib/ui/meta";
 
 export const metadata = pageMetadata({
@@ -9,5 +10,9 @@ export const metadata = pageMetadata({
 });
 
 export default function Page() {
-  return <CouponRedeem />;
+  return (
+    <PanelPage active="coins" next="/u/account/coupons/" title="Log in to use a coupon" body="Coupon credit is added to your account after you log in.">
+      <CouponRedeem />
+    </PanelPage>
+  );
 }

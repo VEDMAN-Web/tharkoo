@@ -48,7 +48,7 @@ function Item({ row }: { row: LibraryRow }) {
         <Preview row={row} />
       </div>
       <p className="t-small" style={{ fontWeight: 600, overflowWrap: "anywhere", margin: 0 }}>
-        <Link href={row.adHref} style={{ color: "var(--accent)" }}>{row.adTitle}</Link>
+        <Link href={row.adHref} style={{ color: "var(--accent)", display: "inline-flex", alignItems: "center", minHeight: 24 }}>{row.adTitle}</Link>
       </p>
       <p style={{ display: "flex", flexWrap: "wrap", gap: 6, margin: 0 }}>
         <span className="tk-chip" data-tk="media-state" style={{ background: chip.bg, color: chip.color }}>{STATE_LABEL[row.state]}</span>

@@ -161,7 +161,7 @@ export function CoinWallet({ initialTab = "buy", hasEarnings = false }: { initia
       {tab === "earnings" ? <VendorEarnings onSignedOut={signOut} /> : null}
       {tab === "history" ? <HistoryTab /> : null}
       <p className="t-small" style={{ color: "var(--muted)", margin: 0 }}>
-        Need help with a payment? <Link href="/u/account/credits/history/" style={{ color: "var(--accent)" }}>See older transactions</Link>
+        Need help with a payment? <Link href="/u/account/credits/history/" style={{ color: "var(--accent)", display: "inline-flex", alignItems: "center", minHeight: 24 }}>See older transactions</Link>
       </p>
     </div>
   );
