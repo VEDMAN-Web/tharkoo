@@ -1,8 +1,8 @@
-import { handle, parseInput, requestIdFrom, success, UnauthorizedError } from "@/server/http";
+import { handle, parseInput, requestIdFrom, success } from "@/server/http";
 import { renewDuePromotions } from "@/server/billing/service";
 import { expireDue } from "@/server/listings/service";
 import { sendSavedSearchDigests } from "@/server/listings/alerts";
-import { safeEqual } from "@/server/shared/crypto";
+import { assertCronAuth } from "@/server/shared/cron-auth";
 import { cronBodySchema } from "@/server/shared/schemas/common";
 import { repairCategoryKinds } from "@/server/categories/kind";
 import { expireDueTours } from "@/server/tours/service";
@@ -25,9 +25,7 @@ async function readBody(request: Request) {
 
 async function dispatch(request: Request) {
   const requestId = requestIdFrom(request);
-  const expected = process.env.CRON_SECRET ?? "";
-  const given = request.headers.get("x-cron-secret") ?? "";
-  if (!expected || !safeEqual(given, expected)) throw new UnauthorizedError("Unauthorized");
+  assertCronAuth(request);
   parseInput(cronBodySchema, await readBody(request));
   const data = await expireDue(requestId);
   const renewed = await renewDuePromotions(requestId);
@@ -70,3 +68,5 @@ async function dispatch(request: Request) {
 }
 
 export const POST = handle(dispatch);
+/** Vercel Cron calls with GET and `Authorization: Bearer <CRON_SECRET>`. */
+export const GET = handle(dispatch);
