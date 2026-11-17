@@ -40,6 +40,7 @@ async function seed(tag: string) {
         title,
         slug: `a27-${tag}-${id.toHexString().slice(-6)}`,
         description: "A well kept thing for sale.",
+        feedHidden: true,
         createdAt: new Date(),
         updatedAt: new Date(),
       });

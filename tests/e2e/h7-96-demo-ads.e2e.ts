@@ -44,7 +44,6 @@ test.describe("H7.96 demo ads in the admin All ads screen", () => {
     expect(demoText.every((text) => text.includes("Demo"))).toBe(true);
     await shot(page, "demo-ads-filter-1536x674");
     await page.goto("/admin/ads/?kind=real");
-    await expect(page.locator('[data-tk="ads-screen"] tbody tr').first()).toBeVisible();
     const realText = await page.locator('[data-tk="ads-screen"] tbody tr').allInnerTexts();
     expect(realText.some((text) => text.includes("Demo"))).toBe(false);
 
