@@ -43,6 +43,7 @@ import { adLifetimeMs } from "@/server/listings/lifetime";
 import { evaluatePublishGate } from "@/server/shared/publish-gate";
 import { effectivePostingFee, readMoneySettings } from "@/server/billing/money-settings";
 import { chargePostingFee, refundPostingFee } from "@/server/billing/posting-fee";
+import { assertNotPaused, isEmergencyOn, isNewAccount } from "@/server/settings/emergency";
 import { walletBalance } from "@/server/billing/ledger";
 import { idCheckRequired } from "@/server/settings/id-check";
 import { toSlug } from "@/server/shared/slug";
@@ -625,6 +626,10 @@ export async function submitListing(
   const site = await Site.findOne({ key: "default" }).select("freeAdsPerWeek").lean<{ freeAdsPerWeek?: number }>();
   const limit = typeof site?.freeAdsPerWeek === "number" ? site.freeAdsPerWeek : intEnv("FREE_ADS_PER_WEEK", 3);
   const fee = effectivePostingFee(await readMoneySettings());
+  // H8.25: the emergency switches. They stop a NEW posting; saving an edit of a live ad is never blocked.
+  if (!isEdit && isNewAccount(user.createdAt)) await assertNotPaused("pauseNewAccounts24h");
+  if (!isEdit && fee > 0) await assertNotPaused("pausePaidPosting");
+  const held = !isEdit && !wasPaused && (await isEmergencyOn("holdNewAds"));
   if (!isEdit && !already && used >= limit && fee <= 0) {
     const retryAfter = Math.max(1, Math.ceil((weekStart().getTime() + 7 * 24 * 60 * 60 * 1000 - Date.now()) / 1000));
     throw new FreeLimitError(retryAfter);
@@ -633,9 +638,10 @@ export async function submitListing(
     ? { charged: 0, balance: await walletBalance(userId), refId: null }
     : await chargePostingFee({ userId, listingId: listing._id.toString(), requestId });
   try {
-    listing.status = wasPaused ? "paused" : "active";
+    listing.status = wasPaused ? "paused" : held ? "pending" : "active";
     if (!wasPaused) listing.seoNoindex = false;
-    if (!listing.publishedAt) listing.publishedAt = new Date();
+    // A held ad gets its publish date when someone approves it (moderation sets it then).
+    if (!listing.publishedAt && !held) listing.publishedAt = new Date();
     if (!isEdit || !listing.expiresAt) listing.expiresAt = new Date(Date.now() + (await adLifetimeMs()));
     listing.attestations = { ...attestations, submittedAt: new Date().toISOString() };
     listing.markModified("attestations");
@@ -646,9 +652,9 @@ export async function submitListing(
     if (charge.charged > 0) await refundPostingFee({ userId, listingId: listing._id.toString(), requestId }).catch(() => 0);
     throw error;
   }
-  await record(userId, "user", "listing.submit", listing._id.toString(), requestId, { status: listing.status, edit: isEdit });
+  await record(userId, "user", "listing.submit", listing._id.toString(), requestId, { status: listing.status, edit: isEdit, held });
   await revalidateListingPages(listing, category.slug);
-  if (listing.slug && !wasPaused) notifyIndexNow([`/ad/${listing.slug}/`]);
+  if (listing.slug && !wasPaused && !held) notifyIndexNow([`/ad/${listing.slug}/`]);
   return { status: listing.status, charged: charge.charged, balance: charge.balance };
 }
 

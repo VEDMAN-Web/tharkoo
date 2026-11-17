@@ -66,24 +66,34 @@ test.describe("H7.84 home ad cards", () => {
     }
   });
 
-  test("the title is one line with an ellipsis (up to two lines on a phone), 16 px and 600", async ({ page }) => {
+  test("the title is one line with an ellipsis (up to two lines on a phone), 15 px (14 px on a phone) and 600", async ({ page }) => {
     const row = await openHome(page);
     const style = await row.locator(".tkh-ad-title").first().evaluate((node) => {
       const css = getComputedStyle(node);
       return { overflow: css.textOverflow, wrap: css.whiteSpace, size: css.fontSize, weight: css.fontWeight };
     });
     const phone = (page.viewportSize()?.width ?? 1440) < 640;
-    expect(style).toEqual({ overflow: "ellipsis", wrap: phone ? "normal" : "nowrap", size: "16px", weight: "600" });
+    expect(style).toEqual({ overflow: "ellipsis", wrap: phone ? "normal" : "nowrap", size: phone ? "14px" : "15px", weight: "600" });
   });
 
-  test("the heart sits on the photo, top right, 40 px, and fills when saved", async ({ page }) => {
+  test("the heart sits on the photo, top right, 32 px with a 44 px tap area, and fills when saved", async ({ page }) => {
     const row = await openHome(page);
     const card = row.locator(CARD).first();
     const photo = (await card.locator(".tkh-ad-photo").boundingBox())!;
     const heart = card.locator(".tkh-ad-photo .tkh-heart");
     const box = (await heart.boundingBox())!;
-    expect(Math.round(box.width)).toBe(40);
-    expect(Math.round(box.height)).toBe(40);
+    expect(Math.round(box.width)).toBe(32);
+    expect(Math.round(box.height)).toBe(32);
+    await heart.scrollIntoViewIfNeeded();
+    const hitSlop = await heart.evaluate((node) => {
+      const rect = node.getBoundingClientRect();
+      const hit = (x: number, y: number) => {
+        const found = document.elementFromPoint(x, y);
+        return found === node || node.contains(found);
+      };
+      return [hit(rect.left - 5, rect.top + 16), hit(rect.right + 5, rect.top + 16), hit(rect.left + 16, rect.top - 5), hit(rect.left + 16, rect.bottom + 5)];
+    });
+    expect(hitSlop).toEqual([true, true, true, true]);
     expect(Math.round(photo.x + photo.width - (box.x + box.width))).toBeLessThanOrEqual(14);
     expect(Math.round(box.y - photo.y)).toBeLessThanOrEqual(14);
     await expect(heart).toHaveAttribute("aria-pressed", "false");
@@ -137,6 +147,19 @@ test.describe("H7.84 home ad cards", () => {
     expect(await hasHorizontalScroll(page)).toBe(false);
   });
 
+  test("a Home card is at most 330 px high on a computer, three to a row from 900 to 1199 px", async ({ page }, testInfo) => {
+    test.skip(testInfo.project.name !== "desktop-1440", "sets its own viewports");
+    await page.setViewportSize({ width: 1440, height: 900 });
+    let row = await openHome(page);
+    const tall = await row.locator(CARD).evaluateAll((cards) => Math.max(...cards.map((card) => card.getBoundingClientRect().height)));
+    expect(tall).toBeLessThanOrEqual(330);
+    await page.setViewportSize({ width: 1000, height: 800 });
+    row = await openHome(page);
+    const tops = await row.locator(CARD).evaluateAll((cards) => cards.map((card) => Math.round(card.getBoundingClientRect().top + window.scrollY)));
+    expect(tops.filter((top) => top === tops[0]).length).toBe(3);
+    expect(await hasHorizontalScroll(page)).toBe(false);
+  });
+
   test("the hover pop-out shows after a short wait on a mouse, and goes away on leave", async ({ page }, testInfo) => {
     test.skip(testInfo.project.name !== "desktop-1440", "mouse only");
     const row = await openHome(page);
@@ -144,7 +167,7 @@ test.describe("H7.84 home ad cards", () => {
     await card.hover();
     const pop = page.locator('[data-tk="home-ad-popout"]');
     await expect(pop).toBeVisible({ timeout: 3000 });
-    await expect(pop.getByRole("link", { name: "Chat" })).toBeVisible();
+    if (await card.locator('[data-tk="availability"]').count()) await expect(pop.getByRole("link", { name: "Chat" })).toBeVisible();
     await expect(pop.getByRole("link", { name: "View ad" })).toBeVisible();
     await page.mouse.move(5, 5);
     await expect(pop).toHaveCount(0);

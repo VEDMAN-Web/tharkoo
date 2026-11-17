@@ -30,6 +30,7 @@ import {
   WalletEntry,
 } from "@/server/models";
 import { boostFitsBeforeExpiry } from "@/server/billing/boost-window";
+import { assertNotPaused } from "@/server/settings/emergency";
 import { productCodeDenied } from "@/server/shared/policy";
 import { randomToken, sha256 } from "@/server/shared/crypto";
 import { connectDb } from "@/lib/db";
@@ -142,6 +143,7 @@ export async function checkoutPack(input: {
   recharge?: { method: "card" | "crypto"; coin?: string; network?: string; returnTo?: string; expiresAt?: Date };
 }) {
   await connectDb();
+  await assertNotPaused("pausePurchases");
   await readyBilling();
   const userId = objectId(input.userId, "userId");
   const packId = objectId(input.packId, "packId");
@@ -331,6 +333,7 @@ async function undoClaim(paymentId: Types.ObjectId, before: { status: string; pr
 
 export async function purchasePromotion(input: Parameters<typeof placePromotion>[0]) {
   await connectDb();
+  await assertNotPaused("pausePurchases");
   try {
     return await placePromotion(input);
   } catch (error) {

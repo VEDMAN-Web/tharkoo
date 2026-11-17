@@ -32,6 +32,7 @@ import { FallbackAds } from "@/components/FallbackAds";
 import { loadFallbackSections, showFallback } from "@/lib/fallback-ads";
 import { ListingFrame } from "@/components/new/ListingFrame";
 import { withPagination } from "@/lib/seo/pagination";
+import { resolveListingCopy } from "@/server/content/listing-copy";
 import { ListingPager } from "@/components/new/ListingPager";
 import { pageBase, pagerLabels } from "@/components/new/listing-pager";
 import { introCategory, listingFrameProps, listingLabels, placeSelects } from "@/components/new/listing-frame-props";
@@ -48,9 +49,11 @@ export async function generateMetadata({ params, searchParams }: Props): Promise
   const [cat, seo, site] = await Promise.all([getCategory(category), getSeoFor("category", category), getSite()]);
   if (!cat) return {};
   const vars = { category: cat.name, site: site.name, year: new Date().getFullYear() };
-  const title = fillTemplate(seo?.title || "{category} classifieds across India | Tharkoo", vars);
-  const description = fillTemplate(seo?.description || "Browse {category} on Tharkoo: listings from people across Indian cities. Filter by city and district, see photos and contact posters directly.", vars);
   const path = categoryPath(cat.slug || category);
+  const fromContent = (site as { listingCopySource?: string }).listingCopySource === "content";
+  const resolved = fromContent ? await resolveListingCopy({ kind: "category", path, categorySlug: cat.slug || category, category: cat.name || category, count: 0, mode: "content" }) : null;
+  const title = resolved?.title ?? fillTemplate(seo?.title || "{category} classifieds across India | Tharkoo", vars);
+  const description = resolved?.description ?? fillTemplate(seo?.description || "Browse {category} on Tharkoo: listings from people across Indian cities. Filter by city and district, see photos and contact posters directly.", vars);
   const on = isCategoryOn(await getIndexing(), cat.slug || category);
   const pageNo = Math.max(1, Number(sp.page) || 1);
   const suffix = listingCanonicalSuffix(sp, pageNo);
@@ -105,7 +108,12 @@ export default async function CategoryHub({ params, searchParams }: Props) {
     fallbackLanding({ category: cat.name || category, count: feed.total, site: site.name }),
     (site as { landings?: Record<string, Partial<LandingCopy>> }).landings?.[`${category}|india`],
   );
-  const hub = await hubCopy(categoryPath(cat.slug || category), { intro: copy.intro || fillTemplate(seo?.intro || "", vars), faqs: copy.faqs });
+  // H8.32: with the switch "content" the words come from the listing copy resolver (the content editor first); otherwise from today's sources.
+  const resolved =
+    (site as { listingCopySource?: string }).listingCopySource === "content"
+      ? await resolveListingCopy({ kind: "category", path: categoryPath(cat.slug || category), categorySlug: cat.slug || category, category: cat.name || category, count: feed.total, mode: "content" })
+      : null;
+  const hub = resolved ? { intro: resolved.intro, faqs: resolved.faqs } : await hubCopy(categoryPath(cat.slug || category), { intro: copy.intro || fillTemplate(seo?.intro || "", vars), faqs: copy.faqs });
   const allowed = new Set(counts.filter((row) => row._id.categorySlug === category && row.n > 0).map((row) => row._id.citySlug));
   const listed = allowed.size ? cities.filter((city) => allowed.has(city.slug || "")) : cities;
   const ads = [
@@ -114,7 +122,7 @@ export default async function CategoryHub({ params, searchParams }: Props) {
   ];
   const layout = await resolveListingLayout({ path: categoryPath(cat.slug || category), category: cat.slug || category, vars: { ...vars, count: feed.total } });
   const headerBlock = layout.blocks.find((block) => block.type === "listingHeader");
-  const h1Text = listingHeading(String(headerBlock?.props.h1Template ?? ""), heading, { ...layout.vars, h1: heading });
+  const h1Text = resolved ? resolved.h1 : listingHeading(String(headerBlock?.props.h1Template ?? ""), heading, { ...layout.vars, h1: heading });
   const wrap = (id: string, devices: Parameters<typeof deviceClass>[0], content: React.ReactNode) => {
     const cls = deviceClass(devices);
     return cls ? <div key={id} className={cls}>{content}</div> : <span key={id} style={{ display: "contents" }}>{content}</span>;

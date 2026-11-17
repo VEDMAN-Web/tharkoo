@@ -1,0 +1,29 @@
+/* H8.25: Settings only. The shared kit stays in src/styles/admin-kit.css. */
+.adm-s-layout { display: grid; grid-template-columns: 240px minmax(0, 1fr); gap: 16px; align-items: start; }
+.adm-s-nav { display: grid; padding: 8px; position: sticky; top: 76px; }
+.adm-s-nav a { padding: 9px 12px; border-radius: 8px; color: var(--adm-ktext); text-decoration: none; font-size: 14px; }
+.adm-s-nav a:hover { background: var(--adm-line2); }
+.adm-s-main { display: grid; gap: 16px; min-width: 0; }
+.adm-s-card { padding: 0; overflow: clip; scroll-margin-top: 76px; }
+.adm-s-head { display: flex; align-items: center; gap: 12px; padding: 16px 20px; border-bottom: 1px solid var(--adm-line2); }
+.adm-s-head h2 { margin: 0; font-size: 15px; font-weight: 800; flex: 1; }
+.adm-s-head-red { background: #fdecec; }
+.adm-s-emergency { border-color: #f4c3c3; }
+.adm-s-body { display: grid; gap: 14px; padding: 16px 20px; }
+.adm-s-blocks > * { margin: 0; }
+.adm-s-switch { display: grid; gap: 4px; }
+.adm-s-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
+.adm-s-actions { display: flex; gap: 8px; justify-content: flex-end; }
+.adm-s-row { display: flex; gap: 14px; align-items: center; flex-wrap: wrap; }
+.adm-s-raw { margin: 10px 0 0; max-height: 360px; overflow: auto; padding: 12px; border: 1px solid var(--adm-line2); border-radius: 8px; background: #fafbfd; font-size: 12px; white-space: pre-wrap; overflow-wrap: anywhere; }
+@media (max-width: 1023px) {
+  .adm-s-layout { grid-template-columns: minmax(0, 1fr); }
+  .adm-s-nav { position: static; display: flex; overflow-x: auto; gap: 4px; }
+  .adm-s-nav a { white-space: nowrap; min-height: 44px; display: inline-flex; align-items: center; }
+}
+@media (max-width: 767px) {
+  .adm-s-grid { grid-template-columns: minmax(0, 1fr); }
+  .adm-s-head { padding: 12px; flex-wrap: wrap; }
+  .adm-s-body { padding: 12px; }
+  .adm-s-actions .adm-k-btn { flex: 1; }
+}

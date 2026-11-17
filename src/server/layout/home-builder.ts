@@ -1,13 +1,14 @@
 import { can } from "@/lib/admin/perms";
+import { refreshPublicCache } from "@/lib/cache";
 import { connectDb } from "@/lib/db";
 import { homeFromLayoutOn } from "@/lib/layout/home-read";
 import { adminWrite } from "@/server/admin/write";
 import type { AdminCtx } from "@/server/admin/context";
-import { ForbiddenError, NotFoundError } from "@/server/http";
+import { ForbiddenError, NotFoundError, ValidationError } from "@/server/http";
 import { buildHomeLayoutBlocks } from "@/server/layout/d1-home";
 import { formatOf, listRevisions, publish, restore, saveDraft } from "@/server/layout/service";
 import { homePickerData, type HomeSelectionRow } from "@/server/listings/home-selection";
-import { PageLayout } from "@/server/models";
+import { PageLayout, Site } from "@/server/models";
 import type { BlockBase } from "@/server/models/layout";
 
 const KEY = "home";
@@ -96,4 +97,53 @@ export async function restoreHomeVersion(ctx: AdminCtx, version: number) {
   await connectDb();
   const done = await restore({ key: KEY, scope: SCOPE, version, email: ctx.email, roles: ctx.roles });
   return { blocks: plain(done.blocks) };
+}
+
+const SITE_KEY = "default";
+
+/** The version a visitor would see if the switch were on: the published format 2 Home, or null. */
+async function publishedVersion(): Promise<number | null> {
+  const doc = await PageLayout.findOne({ key: KEY, scope: SCOPE, publishedAt: { $ne: null } }).select("format version").lean<{ format?: number; version: number } | null>();
+  return doc && doc.format === 2 ? doc.version : null;
+}
+
+/**
+ * The switch "Draw the Home page from the Page builder" (`Site.homeFromLayout`), through adminWrite: admins, audited, and undone
+ * by putting the saved value back (the settings undo window). Turning it ON needs a published format 2 version; turning it OFF always works.
+ */
+export async function setHomeSwitch(ctx: AdminCtx, input: { on: boolean }) {
+  allow(ctx);
+  await connectDb();
+  const version = input.on ? await publishedVersion() : null;
+  if (input.on && version === null) throw new ValidationError("Publish a Home version in the Page builder first. The switch needs a published version.");
+  const was = (await Site.findOne({ key: SITE_KEY }).lean()) as Record<string, unknown> | null;
+  const current = was?.homeFromLayout === true;
+  if (current === input.on) return { on: input.on, version, changed: false, eventId: "", canUndo: false };
+  const written = await adminWrite(ctx, {
+    perm: "pages.edit",
+    action: "settings.home_from_layout.update",
+    target: { type: "site", id: SITE_KEY, label: "Home page switch" },
+    undo: { kind: "record.restore", windowKey: "settings" },
+    before: async () => ({ homeFromLayout: current }),
+    apply: async () => {
+      await Site.updateOne({ key: SITE_KEY }, { $set: { homeFromLayout: input.on } }, { upsert: true, strict: false });
+      const site = (await Site.findOne({ key: SITE_KEY }).lean()) as Record<string, unknown> | null;
+      return {
+        after: { homeFromLayout: input.on },
+        result: { on: input.on },
+        summary: input.on ? `Turned on drawing the Home page from the Page builder (version ${version})` : "Turned off drawing the Home page from the Page builder",
+        undoData: site
+          ? {
+              model: "Site",
+              id: String(site._id),
+              restore: was && "homeFromLayout" in was ? { homeFromLayout: current } : {},
+              unset: was && "homeFromLayout" in was ? [] : ["homeFromLayout"],
+              expect: { homeFromLayout: input.on },
+            }
+          : undefined,
+      };
+    },
+  });
+  await refreshPublicCache("home switch");
+  return { on: written.result.on, version, changed: true, eventId: written.eventId, canUndo: written.eventId !== "" };
 }
