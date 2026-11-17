@@ -1,0 +1,16 @@
+{
+  "branchPrefix": "haiku/h8.16",
+  "globs": [
+    "docs/ownership/H8.16.json",
+    "progress/H8.16.md",
+    "src/app/admin/page-builder/**",
+    "src/server/layout/service.ts",
+    "src/server/layout/home-builder.ts",
+    "src/server/layout/d1-home.ts",
+    "src/server/listings/home-selection.ts",
+    "src/server/admin/undo/handlers/layout-publish.ts",
+    "tests/server/admin/a3-write.test.ts",
+    "tests/server/layout/a16-*.test.ts",
+    "tests/e2e/a16-builder.e2e.ts"
+  ]
+}
