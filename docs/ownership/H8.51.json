@@ -12,6 +12,8 @@
     "tests/e2e/h8-51-categories.e2e.ts",
     "tests/e2e/a39-photos.e2e.ts",
     "tests/e2e/h7160-menus.e2e.ts",
-    "tests/e2e/admin-create-ad.e2e.ts"
+    "tests/e2e/admin-create-ad.e2e.ts",
+    "src/components/admin/FocalPicker.tsx",
+    "src/components/admin/ui/ImagePicker.tsx"
   ]
 }

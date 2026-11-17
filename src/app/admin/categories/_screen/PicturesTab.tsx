@@ -53,7 +53,7 @@ function Box({
               </div>
             ) : (
               <div data-tk="picture-preview">
-                <FocalPicker label={`${title}: the part that must stay in view`} aspect={aspect} src={slot.image.src} x={slot.focusX} y={slot.focusY} onChange={(point) => onChange({ ...slot, focusX: point.x, focusY: point.y })} />
+                <FocalPicker label={`${title}: the part that must stay in view`} aspect={aspect} src={slot.image.src} x={slot.focusX} y={slot.focusY} maxWidth={spot === "tile" ? 460 : 720} collapseNumbers onChange={(point) => onChange({ ...slot, focusX: point.x, focusY: point.y })} />
               </div>
             )
           ) : (
@@ -63,7 +63,9 @@ function Box({
           )}
           <div className="adm-cat-picker">
             <ImagePicker
-              label={`${title} picture`}
+              label={title}
+              hideLabel
+              hidePreview
               value={slot.image}
               onChange={(image) => onChange(image ? { ...slot, image, alt: slot.alt || image.alt.slice(0, MAX_ALT) } : EMPTY)}
             />

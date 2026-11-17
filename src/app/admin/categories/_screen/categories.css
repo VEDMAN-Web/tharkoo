@@ -50,9 +50,7 @@
 .adm-cat-pic-empty { display: grid; place-items: center; width: 100%; max-width: 560px; border: 1.5px dashed var(--adm-line); border-radius: 10px; color: var(--adm-kmuted); font-size: 13px; text-align: center; padding: 12px; }
 .adm-cat-pic-still { position: relative; width: 100%; max-width: 360px; overflow: hidden; border-radius: 10px; border: 1px solid var(--adm-line2); background: var(--adm-line2); }
 .adm-cat-pic-still img { display: block; width: 100%; height: 100%; object-fit: cover; }
-.adm-cat-picker img[width="72"], .adm-cat-picker img[width="72"] + span { display: none; }
 .adm-cat-picker > .adm-field { gap: 8px; }
-.adm-cat-picker .adm-field-label { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
 
 .adm-cat-subs { margin: 0; padding: 0; list-style: none; border: 1px solid var(--adm-line2); border-radius: 12px; overflow: clip; }
 .adm-cat-sub { display: flex; align-items: center; gap: 10px; padding: 8px 12px; min-height: 56px; }

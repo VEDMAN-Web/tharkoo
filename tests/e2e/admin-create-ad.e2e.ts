@@ -16,7 +16,7 @@ test.describe("H6.15 admin create ad", () => {
 
   test("the category form shows the Max photos control", async ({ page, context, baseURL }) => {
     await signInAdminContext(context, baseURL!);
-    await page.goto("/admin/categories/?tab=details");
+    await page.goto("/admin/categories/?c=dating");
     await expect(page.getByText("Max photos for admin posts and imports").first()).toBeVisible();
   });
 });
