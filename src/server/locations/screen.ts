@@ -12,7 +12,6 @@ export const PLACE_PAGE_SIZE = 30;
 export const PLACE_PAGE_MAX = 100;
 const SEARCH_MAX = 80;
 const MANAGED: LocationLevel[] = ["city", "state", "country"];
-const AREA_TYPES: LocationLevel[] = ["district", "locality"];
 const RANK: Record<string, number> = { city: 0, state: 1, country: 2 };
 
 export type PlaceRowView = {
@@ -27,7 +26,9 @@ export type PlaceRowView = {
   thumb: string;
 };
 
-export type PlaceAreaView = { id: string; slug: string; name: string; type: "district" | "locality"; enabled: boolean; parentName: string };
+export type LocalityView = { id: string; slug: string; name: string; enabled: boolean };
+/** A district of a city, with its localities and how many ads use it. */
+export type PlaceAreaView = { id: string; slug: string; name: string; enabled: boolean; ads: number; localities: LocalityView[] };
 
 export type PlaceDetailView = {
   id: string;
@@ -44,11 +45,14 @@ export type PlaceDetailView = {
   adCount: number | null;
   /** Places directly inside it (cities of a state, states of a country, districts of a city). */
   childCount: number;
-  /** Districts and localities of a city. Empty for a state or a country. */
+  /** Districts of a city, each with its localities. Empty for a state or a country. */
   areas: PlaceAreaView[];
   /** The public address of the page for this place. Empty for a state, which has no page of its own. */
   publicPath: string;
 };
+
+/** Where a new state or city can go: the countries and the states, for the New place dialog. */
+export type ParentChoice = { id: string; name: string; where: string };
 
 export type PlacesQuery = { q?: string; page?: number; pageSize?: number; id?: string };
 
@@ -62,6 +66,7 @@ export type PlacesScreenData = {
   detail: PlaceDetailView | null;
   /** True when the address named a place that exists; false when the first row is shown by default. */
   chosen: boolean;
+  choices: { countries: ParentChoice[]; states: ParentChoice[] };
 };
 
 type Lean = {
@@ -107,12 +112,31 @@ async function adCountOf(doc: Lean): Promise<number | null> {
   return null;
 }
 
-async function detailOf(doc: Lean, pictures: PicturesView, where: string): Promise<PlaceDetailView> {
-  const [adCount, childCount, areaDocs] = await Promise.all([
-    adCountOf(doc),
-    Location.countDocuments({ parentId: doc._id }),
-    doc.type === "city" ? Location.find({ parentId: doc._id, type: { $in: AREA_TYPES } }).select("slug name type enabled").sort({ type: 1, name: 1 }).collation({ locale: "en", strength: 2 }).limit(500).lean<{ _id: Types.ObjectId; slug: string; name: string; type: "district" | "locality"; enabled?: boolean }[]>() : Promise.resolve([]),
+type AreaLean = { _id: Types.ObjectId; slug: string; name: string; parentId?: Types.ObjectId; enabled?: boolean };
+
+/** The districts of a city (cap 500) and the localities inside them. */
+async function areasOf(cityId: Types.ObjectId): Promise<PlaceAreaView[]> {
+  const select = "slug name parentId enabled";
+  const districts = await Location.find({ parentId: cityId, type: "district" }).select(select).sort({ name: 1 }).collation({ locale: "en", strength: 2 }).limit(500).lean<AreaLean[]>();
+  if (districts.length === 0) return [];
+  const ids = districts.map((row) => row._id);
+  const [localities, ads] = await Promise.all([
+    Location.find({ parentId: { $in: ids }, type: "locality" }).select(select).sort({ name: 1 }).collation({ locale: "en", strength: 2 }).limit(2000).lean<AreaLean[]>(),
+    Listing.aggregate<{ _id: Types.ObjectId; n: number }>([{ $match: { districtId: { $in: ids } } }, { $group: { _id: "$districtId", n: { $sum: 1 } } }]),
   ]);
+  const adsBy = new Map(ads.map((row) => [String(row._id), row.n]));
+  return districts.map((row) => ({
+    id: String(row._id),
+    slug: row.slug,
+    name: row.name,
+    enabled: row.enabled !== false,
+    ads: adsBy.get(String(row._id)) ?? 0,
+    localities: localities.filter((item) => String(item.parentId) === String(row._id)).map((item) => ({ id: String(item._id), slug: item.slug, name: item.name, enabled: item.enabled !== false })),
+  }));
+}
+
+async function detailOf(doc: Lean, pictures: PicturesView, where: string): Promise<PlaceDetailView> {
+  const [adCount, childCount, areas] = await Promise.all([adCountOf(doc), Location.countDocuments({ parentId: doc._id }), doc.type === "city" ? areasOf(doc._id) : Promise.resolve([])]);
   return {
     id: String(doc._id),
     type: doc.type as PlaceDetailView["type"],
@@ -126,8 +150,20 @@ async function detailOf(doc: Lean, pictures: PicturesView, where: string): Promi
     pictures,
     adCount,
     childCount,
-    areas: areaDocs.map((row) => ({ id: String(row._id), slug: row.slug, name: row.name, type: row.type, enabled: row.enabled !== false, parentName: doc.name })),
+    areas,
     publicPath: doc.type === "city" ? `/cities/${doc.slug}/` : doc.type === "country" ? `/countries/${doc.slug}/` : "",
+  };
+}
+
+async function parentChoices(): Promise<PlacesScreenData["choices"]> {
+  const [countries, states] = await Promise.all([
+    Location.find({ type: "country" }).select("name").sort({ name: 1 }).collation({ locale: "en", strength: 2 }).limit(300).lean<{ _id: Types.ObjectId; name: string }[]>(),
+    Location.find({ type: "state" }).select("name parentId").sort({ name: 1 }).collation({ locale: "en", strength: 2 }).limit(1000).lean<{ _id: Types.ObjectId; name: string; parentId?: Types.ObjectId | null }[]>(),
+  ]);
+  const countryName = new Map(countries.map((row) => [String(row._id), row.name]));
+  return {
+    countries: countries.map((row) => ({ id: String(row._id), name: row.name, where: "" })),
+    states: states.map((row) => ({ id: String(row._id), name: row.name, where: row.parentId ? (countryName.get(String(row.parentId)) ?? "") : "" })),
   };
 }
 
@@ -162,7 +198,7 @@ export async function loadPlacesScreen(query: PlacesQuery = {}): Promise<PlacesS
     enabled: doc.enabled !== false,
     thumb: views[index].photo?.image.src ?? "",
   }));
-  const base = { rows, total, page, pages, pageSize, q };
+  const base = { rows, total, page, pages, pageSize, q, choices: await parentChoices() };
 
   // The place the address names may be on another page or outside the search, so it is read on its own.
   const wanted = query.id && Types.ObjectId.isValid(query.id) ? await Location.findOne({ _id: query.id, type: { $in: MANAGED } }).select("type slug name parentId enabled order countryCode photo band").lean() : null;

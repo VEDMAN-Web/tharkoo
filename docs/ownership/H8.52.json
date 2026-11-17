@@ -3,6 +3,12 @@
   "globs": [
     "docs/ownership/H8.52.json",
     "src/server/locations/screen.ts",
-    "tests/server/locations/h852-screen.test.ts"
+    "src/server/locations/areas.ts",
+    "src/app/admin/locations/**",
+    "src/app/admin/_catalog/**",
+    "src/app/admin/categories/_screen/**",
+    "tests/server/locations/h852-*.test.ts",
+    "tests/e2e/h8-52-cities.e2e.ts",
+    "tests/e2e/a39-photos.e2e.ts"
   ]
 }

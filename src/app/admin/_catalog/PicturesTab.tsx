@@ -89,7 +89,7 @@ function Box({
 }
 
 /** The Pictures tab: three boxes, each with a drawing of where it shows, one help line with the size, the preview at the real crop and its description. */
-export function PicturesTab({ draft, errors, onChange }: { draft: PictureDraft; errors: PictureErrors; onChange: (next: PictureDraft) => void }) {
+export function PicturesTab({ draft, errors, onChange, noun = "category" }: { draft: PictureDraft; errors: PictureErrors; onChange: (next: PictureDraft) => void; noun?: string }) {
   return (
     <div className="adm-cat-pics" data-tk="pictures-tab">
       <Box
@@ -104,7 +104,7 @@ export function PicturesTab({ draft, errors, onChange }: { draft: PictureDraft; 
       />
       <Box
         title="Top banner for computers"
-        help="Shown across the top of this category's page on a computer. Best size 1600 × 500."
+        help={`Shown across the top of the page of this ${noun} on a computer. Best size 1600 × 500.`}
         spot="banner"
         aspect="16 / 5"
         example="A bright street of shops in the evening."

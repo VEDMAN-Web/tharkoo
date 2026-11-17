@@ -7,7 +7,7 @@ import { Badge, Button, ConfirmDialog, MoveButtons, TextField, useToast } from "
 import { CATEGORY_ICONS } from "@/lib/category-icons";
 import type { CategoryDetailView } from "@/server/categories/screen";
 import { createSubcategoryAction, deleteSubcategoryAction, reorderAction, updateSubcategoryAction } from "../manage-actions";
-import { FormDialog } from "./FormDialog";
+import { FormDialog } from "@/app/admin/_catalog/FormDialog";
 import { MAX_INTRO, MAX_NAME, slugFromName } from "./model";
 
 type Sub = CategoryDetailView["subs"][number];

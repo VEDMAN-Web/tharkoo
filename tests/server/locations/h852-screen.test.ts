@@ -97,19 +97,22 @@ describe("H8.52 the place on the right", () => {
     expect(bad.chosen).toBe(false);
     expect((await loadPlacesScreen({ id: String(oid()) })).chosen).toBe(false);
     expect(cities.length).toBe(70);
+    expect(named.choices.countries.map((row) => row.name)).toEqual(["India"]);
+    expect(named.choices.states.map((row) => `${row.name}/${row.where}`)).toEqual(["Goa/India", "Maharashtra/India", "Sikkim/India"]);
   });
 
-  it("counts a city's ads, lists its districts and localities, and a state has no page of its own", async () => {
+  it("counts a city's ads, lists its districts with their localities, and a state has no page of its own", async () => {
     const { cities, states } = await seed(3);
     const city = cities[0];
-    await Location.create([
+    const [old] = await Location.create([
       { type: "district", slug: "old-town", name: "Old Town", parentId: city._id },
-      { type: "locality", slug: "market", name: "Market", parentId: city._id, enabled: false },
+      { type: "district", slug: "harbour", name: "Harbour", parentId: city._id, enabled: false },
     ]);
-    await Listing.create({ ownerId: oid(), categoryId: oid(), cityId: city._id, stateId: states[0]._id, title: "Ad", description: "A description that is long enough", slug: "an-ad", status: "active" });
+    await Location.create({ type: "locality", slug: "market", name: "Market", parentId: old._id, enabled: false });
+    await Listing.create({ ownerId: oid(), categoryId: oid(), cityId: city._id, stateId: states[0]._id, districtId: old._id, title: "Ad", description: "A description that is long enough", slug: "an-ad", status: "active" });
     const detail = (await loadPlacesScreen({ id: String(city._id) })).detail;
     expect(detail).toMatchObject({ type: "city", where: "Goa", adCount: 1, publicPath: "/cities/town-000/" });
-    expect(detail?.areas.map((area) => `${area.name}:${area.type}:${area.enabled}`)).toEqual(["Old Town:district:true", "Market:locality:false"]);
+    expect(detail?.areas.map((area) => `${area.name}:${area.enabled}:${area.ads}:${area.localities.map((item) => `${item.name}/${item.enabled}`).join("+")}`)).toEqual(["Harbour:false:0:", "Old Town:true:1:Market/false"]);
     const state = (await loadPlacesScreen({ id: String(states[0]._id) })).detail;
     expect(state).toMatchObject({ type: "state", adCount: 1, publicPath: "", areas: [] });
   });
