@@ -1,0 +1,13 @@
+{
+  "branchPrefix": "haiku/h8.13",
+  "globs": [
+    "docs/ownership/H8.13.json",
+    "progress/H8.13.md",
+    "src/app/page.tsx",
+    "src/lib/layout/home-read.ts",
+    "src/server/layout/d1-home.ts",
+    "scripts/migrate/d1-home-layout.ts",
+    "tests/server/layout/a13-*.test.ts",
+    "tests/e2e/a13-home-flag.e2e.ts"
+  ]
+}
