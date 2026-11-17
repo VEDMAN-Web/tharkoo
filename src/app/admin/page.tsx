@@ -1,13 +1,11 @@
 import Link from "next/link";
 import { AdminShell } from "@/components/admin/AdminShell";
 import { EmptyState, KpiCard, Notice } from "@/components/admin/ui";
-import { CodeOnlyLoginSwitch } from "@/components/auth/CodeOnlyLoginSwitch";
 import { getStaffFromHeaders } from "@/lib/admin-auth";
 import { can } from "@/lib/admin/perms";
 import { getAdminCounts } from "@/server/admin/counts";
 import { getDashboardData } from "@/server/admin/dashboard";
 import { getLaunchChecklist } from "@/server/admin/launch-checklist";
-import { codeOnlyLoginEnabled } from "@/server/auth/code-only";
 import { loginCodeWarning } from "@/server/auth/email-code";
 import { ChecklistCard } from "./_dashboard/ChecklistCard";
 import { DashboardHeader } from "./_dashboard/DashboardHeader";
@@ -35,7 +33,6 @@ export default async function AdminHome() {
     can(roles, "settings.edit") ? getLaunchChecklist() : Promise.resolve(null),
   ]);
   const loginWarning = loginCodeWarning();
-  const codeOnly = roles.includes("superadmin") ? await codeOnlyLoginEnabled() : false;
   const hidden = process.env.SITE_NOINDEX === "true";
   const showAds = can(roles, "ads.view") || can(roles, "pages.edit");
   const showMoney = can(roles, "orders.view");
@@ -56,7 +53,6 @@ export default async function AdminHome() {
               No email or SMS provider can send a login code, so users and sellers cannot log in or sign up until BREVO_API_KEY is set.
             </Notice>
           ) : null}
-          {roles.includes("superadmin") ? <CodeOnlyLoginSwitch initial={codeOnly} /> : null}
         </div>
         <div className="adm-d-grid">
           <div className="adm-d-col">
