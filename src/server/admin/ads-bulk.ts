@@ -22,9 +22,9 @@ type Rule = { perm: Perm; from: Status[]; to: Status; action: string; word: stri
 const RULES: Record<BulkAction, Rule> = {
   pause: { perm: "ads.edit", from: ["active"], to: "paused", action: "listing.pause", word: "Paused", window: "decisions", reasonRequired: false },
   resume: { perm: "ads.edit", from: ["paused"], to: "active", action: "listing.resume", word: "Resumed", window: "decisions", reasonRequired: false },
-  extend: { perm: "ads.edit", from: ["active", "paused"], to: "active", action: "listing.extend", word: "Extended", window: "edits", reasonRequired: false },
-  setEnd: { perm: "ads.edit", from: ["active", "paused"], to: "active", action: "listing.set_end", word: "End time set", window: "edits", reasonRequired: false },
-  expireIn: { perm: "ads.edit", from: ["active", "paused"], to: "active", action: "listing.set_end", word: "End time set", window: "edits", reasonRequired: false },
+  extend: { perm: "ads.edit", from: ["active", "paused", "expired"], to: "active", action: "listing.extend", word: "Extended", window: "edits", reasonRequired: false },
+  setEnd: { perm: "ads.edit", from: ["active", "paused", "expired"], to: "active", action: "listing.set_end", word: "End time set", window: "edits", reasonRequired: false },
+  expireIn: { perm: "ads.edit", from: ["active", "paused", "expired"], to: "active", action: "listing.set_end", word: "End time set", window: "edits", reasonRequired: false },
   endNow: { perm: "ads.edit", from: ["active", "paused"], to: "expired", action: "listing.end_now", word: "Ended now", window: "decisions", reasonRequired: true },
   remove: { perm: "ads.decide", from: ["active", "paused", "pending", "expired", "archived"], to: "removed", action: "listing.remove", word: "Removed", window: "decisions", reasonRequired: true },
 };
@@ -137,7 +137,8 @@ export async function bulkChangeAds(ctx: AdminCtx, input: { action: BulkAction; 
         batchId,
         before: async () => ({ status: was.status, expiresAt: iso(was.expiresAt) }),
         apply: async () => {
-          if (!["extend", "setEnd", "expireIn"].includes(action)) listing.status = rule.to;
+          const changesEnd = ["extend", "setEnd", "expireIn"].includes(action);
+          if (!changesEnd || was.status === "expired") listing.status = rule.to;
           const end = nextEnd(action, was.expiresAt, parsed, Date.now());
           if (end) listing.expiresAt = end;
           await listing.save();

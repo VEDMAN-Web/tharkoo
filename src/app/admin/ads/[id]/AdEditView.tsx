@@ -228,7 +228,8 @@ function Screen({ ad, history }: { ad: StaffAd; history: AdHistory }) {
     if (!answer.ok) toast.show({ kind: "error", message: answer.message });
     else if (answer.changed === 0) toast.show({ kind: "error", message: `Nothing changed. ${answer.skipped[0]?.why ?? ""}`.trim() });
     else {
-      const words = { pause: "Paused.", resume: "Back live.", extend: `Ends ${extra.hours} hours later.`, setEnd: "End time set.", expireIn: "Ends in 24 hours.", endNow: "The ad has ended." }[action];
+      const revived = ad.status === "expired" && ["extend", "setEnd", "expireIn"].includes(action);
+      const words = revived ? "The ad is live again." : { pause: "Paused.", resume: "Back live.", extend: `Ends ${extra.hours} hours later.`, setEnd: "End time set.", expireIn: "Ends in 24 hours.", endNow: "The ad has ended." }[action];
       toast.show({ kind: "undo", message: words, onUndo: () => void undoAdsBatchAction({ batchId: answer.batchId, eventIds: answer.eventIds }).then((done) => { toast.show({ kind: done.ok ? "success" : "error", message: done.message }); router.refresh(); }) });
     }
     router.refresh();
@@ -349,10 +350,10 @@ function Screen({ ad, history }: { ad: StaffAd; history: AdHistory }) {
             <h2 id="ae-status">Status</h2>
             <div className="adm-ae-badges"><Badge tone={look.tone}>{look.text}</Badge></div>
             <dl className="adm-ae-kv">
-              <div><dt>Ends</dt><dd data-tk="ad-ends">{ad.expiresAt ? `${istDateTime(ad.expiresAt)}${["active", "paused"].includes(ad.status) ? `, ${endsIn(ad.expiresAt, now)}` : ", ended"}` : "No end time"}</dd></div>
+              <div><dt>Ends</dt><dd data-tk="ad-ends">{ad.expiresAt ? `${istDateTime(ad.expiresAt)}${["active", "paused"].includes(ad.status) && new Date(ad.expiresAt).getTime() > now ? `, ${endsIn(ad.expiresAt, now)}` : ", ended"}` : "No end time"}</dd></div>
               <div><dt>Posted</dt><dd>{day(ad.createdAt)}</dd></div>
             </dl>
-            {edit && ["active", "paused"].includes(ad.status) ? (
+            {edit && ["active", "paused", "expired"].includes(ad.status) ? (
               <div className="adm-ae-end" data-tk="end-controls">
                 <label className="adm-k-label" htmlFor="ae-ends-on">Ends on (India time)</label>
                 <div className="adm-ae-end-row">
@@ -364,13 +365,13 @@ function Screen({ ad, history }: { ad: StaffAd; history: AdHistory }) {
                   <Button icon={CalendarPlus} busy={busy} onClick={() => void status("extend", { hours: 24 })}>+24 h</Button>
                   <Button icon={CalendarPlus} busy={busy} onClick={() => void status("extend", { hours: 48 })}>+48 h</Button>
                   <Button busy={busy} onClick={() => void status("expireIn", { hours: 24 })}>Expire in 24 h</Button>
-                  <Button kind="danger" icon={Power} busy={busy} onClick={() => setEndingNow(true)}>End now...</Button>
+                  {ad.status === "expired" ? null : <Button kind="danger" icon={Power} busy={busy} onClick={() => setEndingNow(true)}>End now...</Button>}
                 </div>
               </div>
             ) : null}
             {edit ? (
               <div className="adm-ae-actions">
-                {ad.status === "paused" ? (
+                {ad.status === "expired" ? null : ad.status === "paused" ? (
                   <Button icon={Play} busy={busy} onClick={() => void status("resume")}>Resume</Button>
                 ) : (
                   <Button icon={Pause} busy={busy} disabled={ad.status !== "active"} onClick={() => void status("pause")}>Pause</Button>
