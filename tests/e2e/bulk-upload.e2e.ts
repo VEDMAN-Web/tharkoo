@@ -38,7 +38,7 @@ test.describe("H6.12 bulk upload", () => {
     const input = page.locator('input[type="file"][multiple][accept*="image/jpeg"]').first();
     await input.setInputFiles([{ name: "notes.txt", mimeType: "text/plain", buffer: Buffer.from("not a picture") }]);
     await expect(page.getByText("Only jpeg, png or webp images")).toBeVisible();
-    await expect(page.getByRole("button", { name: /^Upload/ })).toBeDisabled();
+    await expect(page.getByRole("button", { name: /^Upload \d/ })).toBeDisabled();
   });
 
   test("checks a CSV with 5 ads and 12 photos, then imports it as pending", async ({ page, context, baseURL }) => {

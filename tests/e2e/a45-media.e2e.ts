@@ -61,7 +61,7 @@ test.describe("A45 media library", () => {
       await expect(page.locator('[data-tk="media-grid"] li')).toHaveCount(2);
       await shot(page, "media-grid");
 
-      await page.getByRole("button", { name: `Open A45 ${tag} used picture` }).click();
+      await page.locator('[data-tk="media-grid"] button', { hasText: `A45 ${tag} used picture` }).click();
       const drawer = page.locator('[data-tk="media-drawer"]');
       await expect(drawer).toBeVisible();
       await expect(drawer.locator('[data-tk="media-usages"]')).toContainText(`Category > ${seeded.categoryName} > photo`);
@@ -69,7 +69,7 @@ test.describe("A45 media library", () => {
       await shot(page, "media-used");
       await page.getByRole("button", { name: "Cancel" }).click();
 
-      await page.getByRole("button", { name: `Open A45 ${tag} spare picture` }).click();
+      await page.locator('[data-tk="media-grid"] button', { hasText: `A45 ${tag} spare picture` }).click();
       await expect(drawer.locator('[data-tk="media-unused"]')).toBeVisible();
       await drawer.getByLabel(/^Alt text/).fill("x");
       await page.getByRole("button", { name: "Save", exact: true }).click();
@@ -83,14 +83,14 @@ test.describe("A45 media library", () => {
       await expect(page.getByText("Undone.")).toBeVisible();
       expect((await mediaOf(seeded.spare))?.alt).toBe(`A45 ${tag} spare picture`);
 
-      await page.getByRole("button", { name: `Open A45 ${tag} spare picture` }).click();
+      await page.locator('[data-tk="media-grid"] button', { hasText: `A45 ${tag} spare picture` }).click();
       await page.getByRole("button", { name: "Move to Trash" }).click();
       await expect(page.getByText(/Moved to the Trash/)).toBeVisible();
       expect((await mediaOf(seeded.spare))?.trashedAt).toBeTruthy();
 
       await page.getByRole("tab", { name: /Trash/ }).click();
       await expect(page).toHaveURL(/tab=trash/);
-      await page.getByRole("button", { name: `Open A45 ${tag} spare picture` }).click();
+      await page.locator('[data-tk="media-grid"] button', { hasText: `A45 ${tag} spare picture` }).click();
       await expect(drawer).toContainText("Removed for good on");
       await shot(page, "media-trash");
       await page.getByRole("button", { name: "Restore picture" }).click();

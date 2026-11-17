@@ -1,6 +1,7 @@
 .adm-ml-flat { padding: 0; overflow: clip; margin-bottom: 16px; }
 .adm-ml-upload { margin-bottom: 16px; }
-.adm-ml-tabs { display: flex; gap: 4px; overflow-x: auto; padding: 0 12px; border-bottom: 1px solid var(--adm-line2); }
+.adm-ml-tabrow { display: flex; align-items: center; gap: 4px; padding: 0 12px; border-bottom: 1px solid var(--adm-line2); overflow-x: auto; }
+.adm-ml-tabs { display: flex; gap: 4px; }
 .adm-ml-tab { display: inline-flex; align-items: center; gap: 6px; min-height: 44px; padding: 0 12px; border: 0; border-bottom: 3px solid transparent; background: none; font: inherit; font-size: 13.5px; font-weight: 700; color: var(--adm-kmuted); cursor: pointer; text-decoration: none; white-space: nowrap; }
 .adm-ml-tab[aria-selected="true"] { color: var(--adm-pri); border-bottom-color: var(--adm-pri); }
 .adm-ml-count { padding: 1px 8px; border-radius: 999px; background: var(--adm-line2); font-size: 12px; }

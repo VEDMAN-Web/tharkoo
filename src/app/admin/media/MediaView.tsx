@@ -190,12 +190,14 @@ function Screen({ tab, q, page, total, items, counts, detail, uploadsEnabled }: 
       ) : null}
       {!uploadsEnabled ? <Notice kind="warn">Uploads are switched off on this site until the picture storage is set up.</Notice> : null}
       <div className="adm-card adm-ml-flat">
+        <div className="adm-ml-tabrow">
         <div className="adm-ml-tabs" role="tablist" aria-label="Media library sections">
           {MEDIA_TABS.map((key) => (
             <button key={key} type="button" role="tab" id={`ml-${key}`} aria-selected={tab === key} className="adm-ml-tab" onClick={() => go({ tab: key === "pictures" ? null : key, page: null, open: null })}>
               {TAB_LABELS[key]} <span className="adm-ml-count">{numbers[key]}</span>
             </button>
           ))}
+        </div>
           <Link className="adm-ml-tab" href="/admin/broadcasts/" data-tk="notices-tab">
             Notices <span className="adm-ml-count">{counts.notices}</span>
           </Link>
@@ -213,7 +215,7 @@ function Screen({ tab, q, page, total, items, counts, detail, uploadsEnabled }: 
             <ul className="adm-ml-grid" data-tk="media-grid">
               {items.map((item) => (
                 <li key={item.id}>
-                  <button type="button" className="adm-ml-card" data-open={detail?.item.id === item.id ? "yes" : undefined} onClick={() => go({ open: item.id })} aria-label={`Open ${item.alt || "picture"}`}>
+                  <button type="button" className="adm-ml-card" data-open={detail?.item.id === item.id ? "yes" : undefined} onClick={() => go({ open: item.id })}>
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img src={item.url} alt="" loading="lazy" />
                     <span className="adm-ml-meta">
