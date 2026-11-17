@@ -1,0 +1,13 @@
+{
+  "branchPrefix": "haiku/h8.28",
+  "globs": [
+    "docs/ownership/H8.28.json",
+    "src/server/content/studio/**",
+    "src/lib/content/rich.ts",
+    "src/lib/content/inline.ts",
+    "src/components/content/RichBody.tsx",
+    "src/server/admin/undo/handlers/content-publish.ts",
+    "tests/server/content/a28-*.test.ts",
+    "tests/server/admin/a3-write.test.ts"
+  ]
+}
