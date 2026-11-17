@@ -57,6 +57,7 @@ export async function ensureKinds(): Promise<void> {
 }
 
 export async function listKinds(): Promise<KindView[]> {
+  await connectDb();
   await ensureKinds();
   const rows = await CategoryKindDef.find({ removed: { $ne: true } }).sort({ order: 1, name: 1 }).lean<CategoryKindDoc[]>();
   const counts = await Category.aggregate<{ _id: string; n: number }>([{ $match: { deletedAt: null } }, { $group: { _id: "$kind", n: { $sum: 1 } } }]);
@@ -68,6 +69,7 @@ export async function listKinds(): Promise<KindView[]> {
 export async function requireKind(value: unknown): Promise<string> {
   const key = typeof value === "string" ? value.trim() : "";
   if (!key) throw new ValidationError("Choose a kind to save.");
+  await connectDb();
   await ensureKinds();
   if (!(await CategoryKindDef.exists({ key, removed: { $ne: true } }))) throw new ValidationError("Choose a kind from the list.");
   return key;
@@ -130,6 +132,7 @@ async function write(ctx: AdminCtx, action: string, key: string, label: string, 
 }
 
 export async function createKind(ctx: AdminCtx, input: KindInput) {
+  await connectDb();
   await ensureKinds();
   const name = cleanName(input.name);
   const key = cleanKey(input.key, name);
@@ -152,6 +155,7 @@ export async function createKind(ctx: AdminCtx, input: KindInput) {
 }
 
 export async function updateKind(ctx: AdminCtx, key: string, input: KindInput) {
+  await connectDb();
   await ensureKinds();
   const current = await CategoryKindDef.findOne({ key, removed: { $ne: true } }).lean<CategoryKindDoc | null>();
   if (!current) throw new NotFoundError("Kind not found");
@@ -168,6 +172,7 @@ export async function updateKind(ctx: AdminCtx, key: string, input: KindInput) {
 
 /** A kind that categories use is never removed. The kind People is built in and stays. */
 export async function removeKind(ctx: AdminCtx, key: string) {
+  await connectDb();
   await ensureKinds();
   const current = await CategoryKindDef.findOne({ key, removed: { $ne: true } }).lean<CategoryKindDoc | null>();
   if (!current) throw new NotFoundError("Kind not found");
@@ -181,6 +186,7 @@ export async function removeKind(ctx: AdminCtx, key: string) {
 /** What the ad page shows for a kind: price, map and contact buttons. A kind that does not exist shows everything. */
 export async function kindFeatures(key: string | undefined): Promise<{ price: boolean; map: boolean; contact: boolean }> {
   if (!key) return { price: true, map: true, contact: true };
+  await connectDb();
   await ensureKinds();
   const row = await CategoryKindDef.findOne({ key, removed: { $ne: true } }).lean<CategoryKindDoc | null>();
   return { price: row?.showPrice !== false, map: row?.showMap !== false, contact: row?.showContact !== false };
@@ -189,6 +195,7 @@ export async function kindFeatures(key: string | undefined): Promise<{ price: bo
 /** The photo limit for a category: its own number, else the number of its kind, else null (the default of 10). */
 export async function kindMaxPhotos(key: string | undefined): Promise<number | null> {
   if (!key) return null;
+  await connectDb();
   await ensureKinds();
   const row = await CategoryKindDef.findOne({ key, removed: { $ne: true } }).select("maxPhotos").lean<{ maxPhotos?: number | null } | null>();
   return row?.maxPhotos ?? null;
@@ -197,6 +204,7 @@ export async function kindMaxPhotos(key: string | undefined): Promise<number | n
 /** Live video tours may run only for a kind that allows them, and never for a people listing. */
 export async function kindAllowsVideo(row: { slug?: string; kind?: string; fields?: unknown }): Promise<boolean> {
   if (isPeopleListing(row)) return false;
+  await connectDb();
   await ensureKinds();
   const kind = await CategoryKindDef.findOne({ key: row.kind, removed: { $ne: true } }).select("videoTours").lean<{ videoTours?: boolean } | null>();
   return kind?.videoTours === true;
