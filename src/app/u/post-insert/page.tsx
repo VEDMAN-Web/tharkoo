@@ -14,6 +14,9 @@ import { newDesignOn } from "@/server/site-links/new-design";
 import { getPaths } from "@/server/urls/service";
 import { idCheckRequired, idCheckScreen } from "@/server/settings/id-check";
 import { IdCheckFirst } from "@/components/post/IdCheckFirst";
+import { UiTextProvider } from "@/components/help/UiTextProvider";
+import { textOverrides } from "@/app/admin/ui-text/store";
+import { makeT, pickTexts } from "@/lib/ui/text";
 import { getCategories, getCities } from "@/lib/queries";
 import { plain } from "@/lib/plain";
 import { kindFor } from "@/server/categories/kind";
@@ -50,7 +53,8 @@ export default async function PostInsertPage({
   // H6.14: with the ID-check switch on, the ID check comes first, before step 1. Off, the form always opens.
   const requireIdCheck = await idCheckRequired();
   const screen = idCheckScreen(requireIdCheck, session.user.verificationStatus);
-  if (screen !== "form") return <IdCheckFirst screen={screen} postPath={postAdPath(await getPaths())} />;
+  const texts = pickTexts(await textOverrides(), "post.");
+  if (screen !== "form") return <IdCheckFirst screen={screen} postPath={postAdPath(await getPaths())} t={makeT(texts)} />;
   let blocks = null;
   try {
     // "?preview=1" shows an admin the saved draft instead of the published layout.
@@ -75,5 +79,5 @@ export default async function PostInsertPage({
   const cities = plain(cityRows.map((row) => ({ id: row.id, name: row.name, slug: row.slug })).sort((a, b) => a.name.localeCompare(b.name)));
   const home = (session.user.seller?.city ?? "").trim().toLowerCase();
   const defaultCityId = home ? (cities.find((item) => item.slug.toLowerCase() === home || item.name.toLowerCase() === home)?.id ?? "") : "";
-  return <PostWizard copy={buildPostCopy(blocks)} requireIdCheck={requireIdCheck} newDesign={newDesign} initialCategories={categories} initialCities={cities} defaultCityId={defaultCityId} defaultName={session.user.seller?.name ?? ""} maskedEmail={maskEmail(session.user.email)} about={about} />;
+  return <UiTextProvider texts={texts}><PostWizard copy={buildPostCopy(blocks)} requireIdCheck={requireIdCheck} newDesign={newDesign} initialCategories={categories} initialCities={cities} defaultCityId={defaultCityId} defaultName={session.user.seller?.name ?? ""} maskedEmail={maskEmail(session.user.email)} about={about} /></UiTextProvider>;
 }
