@@ -197,7 +197,8 @@ async function owned(id: string, userId: string) {
   return listing;
 }
 
-async function requireCategory(id: string) {
+export async function requireCategory(id: string) {
+  await connectDb();
   if (!mongoose.isValidObjectId(id)) {
     throw new ValidationError("Invalid request", { categoryId: ["Invalid id"] });
   }
@@ -213,7 +214,8 @@ async function requireCategory(id: string) {
  * Checks the sub-category for a category: it must belong to it and be visible. A category with visible
  * sub-categories needs one when `required`. Returns the id to store, or undefined for none.
  */
-async function resolveSubcategoryId(categoryId: Types.ObjectId, value: string | undefined, required: boolean) {
+export async function resolveSubcategoryId(categoryId: Types.ObjectId, value: string | undefined, required: boolean) {
+  await connectDb();
   if (value) {
     if (!mongoose.isValidObjectId(value)) throw new ValidationError("Invalid request", { subcategoryId: ["Invalid id"] });
     const sub = await Subcategory.findById(value).lean<{ _id: Types.ObjectId; categoryId: Types.ObjectId; enabled?: boolean }>();
@@ -228,7 +230,8 @@ async function resolveSubcategoryId(categoryId: Types.ObjectId, value: string | 
   return undefined;
 }
 
-async function requirePlace(id: string | undefined, field: string) {
+export async function requirePlace(id: string | undefined, field: string) {
+  await connectDb();
   if (!id) return undefined;
   if (!mongoose.isValidObjectId(id)) throw new ValidationError("Invalid request", { [field]: ["Invalid id"] });
   const place = await Location.findById(id);
@@ -269,7 +272,8 @@ export async function promoted(listing: ListingRow) {
 
 const ATTACHABLE_PHOTO_STATUS = new Set(["cleared", "scanning"]);
 
-async function assertPhotos(ownerId: string, listing: ListingRow, mediaIds: string[], coverMediaId?: string) {
+export async function assertPhotos(ownerId: string, listing: ListingRow, mediaIds: string[], coverMediaId?: string) {
+  await connectDb();
   if (new Set(mediaIds).size !== mediaIds.length) {
     throw new ValidationError("Invalid request", { mediaIds: ["Duplicate photos"] });
   }
