@@ -1,0 +1,10 @@
+{
+  "branchPrefix": "haiku/h7.143",
+  "globs": [
+    "docs/ownership/H7.143.json",
+    "progress/H7.143.md",
+    "tests/e2e/admin-content.e2e.ts",
+    "tests/e2e/bulk-upload.e2e.ts",
+    "tests/e2e/h7-104-home.e2e.ts"
+  ]
+}

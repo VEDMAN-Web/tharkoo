@@ -66,8 +66,8 @@ test.describe("6 Admin: content screens", () => {
     await expect
       .poll(async () => {
         const html = await (await request.get("/dating/bengaluru/")).text();
-        // The Star slot sits above the ordered list (BUG 6 in lane-d-bugs: position 1 lands second), so look at the first non-star card.
-        const cards = html.split('<article class="tk-card"').slice(1).filter((card) => !/data-variant="star"/.test(card.slice(0, 200)));
+        // Listing pages draw the Home ad card (H7.104b); the first card is the first ad in the ordered list.
+        const cards = html.split('data-tk="home-ad"').slice(1);
         return cards[0]?.match(/href="(\/ad\/[^"]+)"/)?.[1];
       }, POLL)
       .toBe(target);
@@ -110,7 +110,7 @@ test.describe("6 Admin: content screens", () => {
     await page.locator("#import-file").setInputFiles({ name: "e2e.csv", mimeType: "text/csv", buffer: Buffer.from(csv) });
     await page.getByRole("button", { name: /Step 1/ }).click();
     await expect(page.getByText("Dry run, nothing has been saved")).toBeVisible();
-    await expect(page.getByText(/1 of 1 rows are OK/)).toBeVisible();
+    await expect(page.getByText(/1 ad ready \(1 of 1 rows\)/)).toBeVisible();
     await page.getByRole("button", { name: /Step 2: import 1 listing/ }).click();
     await expect(page.getByText("Import finished")).toBeVisible();
   });
@@ -121,7 +121,7 @@ test.describe("6 Admin: content screens", () => {
     await page.getByLabel(/Partner account email/).fill(process.env.ADMIN_BOOTSTRAP_EMAIL || "homepage-admin@example.test");
     await page.locator("#import-file").setInputFiles({ name: "bad.csv", mimeType: "text/csv", buffer: Buffer.from(csv) });
     await page.getByRole("button", { name: /Step 1/ }).click();
-    await expect(page.getByText(/0 of 1 rows are OK/)).toBeVisible();
+    await expect(page.getByText(/0 ads ready \(0 of 1 rows\)/)).toBeVisible();
     await expect(page.getByRole("button", { name: /Step 2/ })).toHaveCount(0);
   });
 

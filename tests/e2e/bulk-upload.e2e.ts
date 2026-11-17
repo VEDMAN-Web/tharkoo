@@ -80,6 +80,6 @@ test.describe("H6.12 bulk upload", () => {
     const res = await context.request.get(`${baseURL}/admin/import/template/`);
     expect(res.status()).toBe(200);
     expect(res.headers()["content-disposition"]).toContain("tharkoo-import-template.csv");
-    expect((await res.text()).split(/\r?\n/)[0]).toBe("category,subcategory,city,district,title,description,price,photos");
+    expect((await res.text()).split(/\r?\n/)[0]).toBe("category,subcategory,city,district,title,description,price,photos,videos");
   });
 });
