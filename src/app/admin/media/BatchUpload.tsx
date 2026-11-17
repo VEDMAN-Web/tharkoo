@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { ImagePlus, X } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
 import { Notice } from "@/components/admin/ui/Notice";
 import { TextField } from "@/components/admin/ui/TextField";
 import { BATCH_PARALLEL, checkBatch } from "@/server/media/batch";
@@ -13,15 +14,18 @@ interface Row {
   name: string;
   size: number;
   file: File | null;
+  /** A picture of the file itself, made in the browser, so staff see what they are about to send. Empty for a refused file. */
+  preview: string;
   state: RowState;
   reason: string;
   alt: string;
 }
 
-const LABEL: Record<RowState, string> = { queued: "Queued", uploading: "Uploading", done: "Done", failed: "Failed" };
+const LABEL: Record<RowState, string> = { queued: "Ready", uploading: "Uploading", done: "Done", failed: "Failed" };
 
 let counter = 0;
 const newId = () => `row-${(counter += 1)}`;
+const kb = (bytes: number) => (bytes >= 1024 * 1024 ? `${(bytes / 1024 / 1024).toFixed(1)} MB` : `${Math.max(1, Math.round(bytes / 1024))} KB`);
 
 /** Sends one image. A network failure is retried once; a refusal from the server is shown as the reason. */
 async function sendOne(file: File, tags: string): Promise<{ ok: true; alt: string } | { ok: false; reason: string }> {
@@ -42,11 +46,21 @@ async function sendOne(file: File, tags: string): Promise<{ ok: true; alt: strin
   return { ok: false, reason: "Upload failed" };
 }
 
+/**
+ * The upload box (H8.57): one big drop area (or choose files with the keyboard), a small picture of every file before it is sent,
+ * a note for each file that is refused, and one button to send the ready ones. A file can be taken off the list before sending.
+ */
 export function BatchUpload({ enabled, onDone }: { enabled: boolean; onDone: () => void }) {
   const [rows, setRows] = useState<Row[]>([]);
   const [tags, setTags] = useState("");
   const [running, setRunning] = useState(false);
   const [dragging, setDragging] = useState(false);
+  const previews = useRef<string[]>([]);
+
+  useEffect(() => {
+    const urls = previews.current;
+    return () => urls.forEach((url) => URL.revokeObjectURL(url));
+  }, []);
 
   function patch(id: string, change: Partial<Row>) {
     setRows((current) => current.map((row) => (row.id === id ? { ...row, ...change } : row)));
@@ -55,9 +69,15 @@ export function BatchUpload({ enabled, onDone }: { enabled: boolean; onDone: () 
   /** A new selection starts a new batch. Files refused here are listed with the reason and never sent. */
   function choose(list: FileList | File[]) {
     if (running) return;
+    previews.current.forEach((url) => URL.revokeObjectURL(url));
+    previews.current = [];
     const check = checkBatch(Array.from(list));
-    const accepted: Row[] = check.accepted.map((file) => ({ id: newId(), name: file.name, size: file.size, file, state: "queued", reason: "", alt: "" }));
-    const refused: Row[] = check.rejected.map((item) => ({ id: newId(), name: item.name, size: 0, file: null, state: "failed", reason: item.reason, alt: "" }));
+    const accepted: Row[] = check.accepted.map((file) => {
+      const preview = URL.createObjectURL(file);
+      previews.current.push(preview);
+      return { id: newId(), name: file.name, size: file.size, file, preview, state: "queued", reason: "", alt: "" };
+    });
+    const refused: Row[] = check.rejected.map((item) => ({ id: newId(), name: item.name, size: 0, file: null, preview: "", state: "failed", reason: item.reason, alt: "" }));
     setRows([...accepted, ...refused]);
   }
 
@@ -80,21 +100,20 @@ export function BatchUpload({ enabled, onDone }: { enabled: boolean; onDone: () 
 
   if (!enabled) {
     return (
-      <section className="adm-card" style={{ display: "grid", gap: 12 }}>
-        <h2 style={{ fontSize: 16, fontWeight: 800 }}>Upload images</h2>
+      <section className="adm-card adm-ml-up">
+        <h2>Upload pictures</h2>
         <Notice kind="error">Image upload needs Cloudinary on this server</Notice>
       </section>
     );
   }
 
   return (
-    <section className="adm-card" style={{ display: "grid", gap: 12 }}>
-      <h2 style={{ fontSize: 16, fontWeight: 800 }}>Upload images</h2>
-      <p className="adm-field-help" style={{ margin: 0 }}>
-        Up to 50 images at a time, each up to 8 MB (jpeg, png or webp). The alt text is filled from the file name and marked for review. You can
-        change it on the card below.
-      </p>
-      <div
+    <section className="adm-card adm-ml-up" aria-labelledby="ml-up-title" data-tk="upload-box">
+      <h2 id="ml-up-title">Upload pictures</h2>
+      <label
+        className="adm-ml-drop"
+        data-over={dragging ? "yes" : "no"}
+        data-tk="upload-drop"
         onDragOver={(event) => {
           event.preventDefault();
           setDragging(true);
@@ -105,53 +124,58 @@ export function BatchUpload({ enabled, onDone }: { enabled: boolean; onDone: () 
           setDragging(false);
           choose(event.dataTransfer.files);
         }}
-        style={{
-          border: `2px dashed ${dragging ? "var(--adm-accent, #2563eb)" : "var(--adm-border, #cbd5e1)"}`,
-          borderRadius: 12,
-          padding: 16,
-          display: "grid",
-          gap: 8,
-          justifyItems: "start",
-        }}
       >
-        <label className="adm-field">
-          <span className="adm-field-label">Choose images, or drop them here</span>
-          <input
-            className="adm-input"
-            type="file"
-            multiple
-            accept="image/jpeg,image/png,image/webp"
-            disabled={running}
-            onChange={(event) => {
-              if (event.target.files) choose(event.target.files);
-              event.target.value = "";
-            }}
-          />
-        </label>
-      </div>
-      <TextField label="Tags for this batch (comma separated)" value={tags} onChange={setTags} max={120} help="Optional. Applied to every image in the batch." />
+        <ImagePlus aria-hidden="true" size={28} />
+        <strong>Drop pictures here, or choose them</strong>
+        <small>Up to 50 at a time, each up to 8 MB. JPEG, PNG or WebP.</small>
+        <input
+          className="adm-ml-file"
+          type="file"
+          multiple
+          accept="image/jpeg,image/png,image/webp"
+          aria-label="Choose pictures to upload"
+          disabled={running}
+          onChange={(event) => {
+            if (event.target.files) choose(event.target.files);
+            event.target.value = "";
+          }}
+        />
+      </label>
+      <p className="adm-k-help" style={{ margin: 0 }}>The description of each picture starts as its file name and is marked to be checked. Write the real one on the Missing alt tab.</p>
+      <TextField label="Tags for this batch (comma separated)" value={tags} onChange={setTags} max={120} help="Optional. Applied to every picture in the batch." />
       {rows.length > 0 ? (
         <>
-          <ul style={{ listStyle: "none", padding: 0, margin: 0, display: "grid", gap: 6 }} aria-label="Upload progress">
+          <ul className="adm-ml-previews" aria-label="Pictures to upload" data-tk="upload-previews">
             {rows.map((row) => (
-              <li key={row.id} style={{ display: "grid", gap: 2, borderBottom: "1px solid var(--adm-border, #e2e8f0)", paddingBottom: 6 }}>
-                <span style={{ display: "flex", flexWrap: "wrap", gap: 8, justifyContent: "space-between", minWidth: 0 }}>
-                  <span style={{ overflowWrap: "anywhere", fontWeight: 600 }}>{row.name}</span>
-                  <span className="adm-field-help">{LABEL[row.state]}</span>
+              <li key={row.id} className="adm-ml-prev" data-state={row.state} data-tk="upload-row">
+                {row.preview ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img src={row.preview} alt="" />
+                ) : (
+                  <span className="adm-ml-prev-none" aria-hidden="true" />
+                )}
+                <span className="adm-ml-prev-text">
+                  <strong>{row.name}</strong>
+                  <small>{row.file ? `${kb(row.size)} · ${LABEL[row.state]}` : "Not sent"}</small>
+                  {row.state === "done" ? <small>{`Alt: ${row.alt} (from the file name)`}</small> : null}
+                  {row.state === "failed" ? <small className="adm-ml-prev-bad">{row.reason}</small> : null}
                 </span>
-                {row.state === "done" ? <span className="adm-field-help">Alt: {row.alt} (auto, check it)</span> : null}
-                {row.state === "failed" ? <span className="adm-field-help" style={{ color: "var(--adm-danger, #b91c1c)" }}>{row.reason}</span> : null}
+                {row.state === "queued" && row.file && !running ? (
+                  <button type="button" className="adm-ml-prev-x" aria-label={`Take ${row.name} off the list`} onClick={() => setRows((current) => current.filter((item) => item.id !== row.id))}>
+                    <X aria-hidden="true" size={16} />
+                  </button>
+                ) : null}
               </li>
             ))}
           </ul>
-          <p className="adm-field-help" style={{ margin: 0 }} aria-live="polite">
-            {doneCount} uploaded, {failed.length} failed, {queued.length} waiting
+          <p className="adm-k-help" style={{ margin: 0 }} aria-live="polite">
+            {doneCount} uploaded, {failed.length} failed, {queued.length} ready
           </p>
         </>
       ) : null}
-      <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
-        <button type="button" className="adm-btn" disabled={running || queued.length === 0} onClick={() => void run(queued)}>
-          {running ? "Uploading..." : `Upload ${queued.length} image${queued.length === 1 ? "" : "s"}`}
+      <div className="adm-ml-up-actions">
+        <button type="button" className="adm-btn adm-btn-primary" disabled={running || queued.length === 0} onClick={() => void run(queued)}>
+          {running ? "Uploading..." : `Upload ${queued.length} picture${queued.length === 1 ? "" : "s"}`}
         </button>
         {failed.length > 0 && !running ? (
           <button type="button" className="adm-btn adm-btn-quiet" onClick={() => void run(failed)}>

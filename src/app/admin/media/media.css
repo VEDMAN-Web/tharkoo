@@ -30,7 +30,46 @@
 .adm-ml-uses li { padding: 10px 12px; border: 1px solid var(--adm-line2); border-radius: 10px; font-size: 13.5px; overflow-wrap: anywhere; }
 .adm-ml-foot { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; padding-top: 12px; border-top: 1px solid var(--adm-line2); }
 .adm-ml-note { font-size: 12.5px; color: var(--adm-kmuted); flex: 1 1 200px; }
+
+/* H8.57: the upload box with previews, ticking several pictures, and the list of pictures to describe. */
+.adm-ml-up { display: grid; gap: 14px; }
+.adm-ml-up h2 { margin: 0; font-size: 16px; font-weight: 800; }
+.adm-ml-drop { position: relative; display: grid; justify-items: center; gap: 6px; padding: 28px 16px; border: 2px dashed var(--adm-line); border-radius: 14px; background: var(--adm-kbg); text-align: center; cursor: pointer; color: var(--adm-ktext); }
+.adm-ml-drop[data-over="yes"] { border-color: var(--adm-pri); background: var(--adm-pri-soft); }
+.adm-ml-drop:focus-within { outline: 3px solid var(--adm-pri); outline-offset: 2px; }
+.adm-ml-drop small { color: var(--adm-kmuted); font-size: 13px; }
+.adm-ml-file { position: absolute; inset: 0; width: 100%; height: 100%; opacity: 0; cursor: pointer; }
+.adm-ml-previews { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 10px; }
+.adm-ml-prev { display: flex; align-items: center; gap: 10px; padding: 8px; border: 1px solid var(--adm-line2); border-radius: 12px; min-width: 0; }
+.adm-ml-prev[data-state="failed"] { border-color: var(--adm-bad); background: var(--adm-bad-soft); }
+.adm-ml-prev[data-state="done"] { border-color: var(--adm-ok); }
+.adm-ml-prev img, .adm-ml-prev-none { flex: none; width: 64px; height: 48px; border-radius: 8px; object-fit: cover; background: var(--adm-line2); }
+.adm-ml-prev-text { display: grid; gap: 1px; min-width: 0; flex: 1; }
+.adm-ml-prev-text strong { font-size: 13px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.adm-ml-prev-text small { font-size: 12.5px; color: var(--adm-kmuted); overflow-wrap: anywhere; }
+.adm-ml-prev-bad { color: var(--adm-bad) !important; }
+.adm-ml-prev-x { flex: none; display: grid; place-items: center; width: 44px; height: 44px; border: 0; border-radius: 10px; background: transparent; color: var(--adm-kmuted); cursor: pointer; }
+.adm-ml-prev-x:hover { background: var(--adm-line2); }
+.adm-ml-prev-x:focus-visible { outline: 2px solid var(--adm-pri); }
+.adm-ml-up-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+.adm-ml-cell { position: relative; }
+.adm-ml-tick { position: absolute; top: 4px; right: 4px; z-index: 2; display: grid; place-items: center; width: 44px; height: 44px; cursor: pointer; }
+.adm-ml-tick input { width: 22px; height: 22px; accent-color: var(--adm-pri); cursor: pointer; }
+.adm-ml-bulk { position: sticky; bottom: 0; z-index: 5; display: flex; align-items: center; gap: 10px; flex-wrap: wrap; padding: 10px 16px; background: var(--adm-surface); border-top: 1px solid var(--adm-line); box-shadow: 0 -4px 14px rgba(22, 26, 43, 0.08); }
+.adm-ml-todo-intro { margin: 0; padding: 14px 16px 4px; color: var(--adm-kmuted); font-size: 13.5px; }
+.adm-ml-todo { list-style: none; margin: 0; padding: 8px 16px 16px; display: grid; gap: 12px; }
+.adm-ml-todo-row { display: grid; grid-template-columns: 160px minmax(0, 1fr); gap: 16px; align-items: start; padding: 12px; border: 1px solid var(--adm-line2); border-radius: 12px; }
+.adm-ml-todo-row img { display: block; width: 100%; aspect-ratio: 4 / 3; object-fit: cover; border-radius: 8px; background: var(--adm-line2); }
+.adm-ml-todo-body { display: grid; gap: 6px; min-width: 0; }
+.adm-ml-todo-hint { color: var(--adm-kmuted); font-size: 12.5px; overflow-wrap: anywhere; }
+.adm-ml-todo-edit { display: flex; gap: 8px; align-items: flex-start; }
+.adm-ml-todo-edit .adm-k-input { flex: 1; min-width: 0; }
 @media (max-width: 767px) {
   .adm-ml-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; padding: 12px; }
   .adm-ml-kv > div { grid-template-columns: 90px minmax(0, 1fr); }
+  .adm-ml-previews { grid-template-columns: minmax(0, 1fr); }
+  .adm-ml-todo-row { grid-template-columns: minmax(0, 1fr); }
+  .adm-ml-todo-row img { max-width: 220px; }
+  .adm-ml-todo-edit { flex-direction: column; }
+  .adm-ml-bulk { padding: 10px 12px; }
 }
