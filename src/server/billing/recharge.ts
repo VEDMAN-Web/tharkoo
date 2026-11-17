@@ -8,6 +8,7 @@ import { objectId, walletBalance } from "@/server/billing/ledger";
 import { paymentProvider } from "@/server/billing/provider";
 import { ConflictError, ForbiddenError, NotFoundError, ValidationError } from "@/server/http";
 import { CreditPack, Payment } from "@/server/models";
+import { assertNotPaused } from "@/server/settings/emergency";
 
 const audit = new AuditRepository();
 
@@ -157,6 +158,7 @@ export async function startRecharge(input: {
   ip?: string;
 }) {
   await connectDb();
+  await assertNotPaused("pausePurchases");
   if (!(RECHARGE_METHODS as readonly string[]).includes(input.method)) throw new ValidationError("Invalid request", { method: ["Choose Card or Crypto"] });
   const method = input.method as RechargeMethod;
   const picked = method === "crypto" && input.coin ? checkedCoin(input.coin, input.network) : { coin: undefined, network: undefined };

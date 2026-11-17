@@ -486,3 +486,51 @@
     overflow: hidden;
   }
 }
+
+/* H7.148: smaller cards in the Home ad row only. Listing, similar-ads and not-found cards keep their size. */
+.tkh-ads[data-tk="ads-row"] .tkh-ad-photo {
+  aspect-ratio: auto;
+  height: 220px;
+}
+.tkh-ads[data-tk="ads-row"] .tkh-ad-body {
+  padding: 12px;
+}
+.tkh-ads[data-tk="ads-row"] .tkh-ad-title {
+  font-size: 15px;
+  font-weight: 600;
+}
+.tkh-ads[data-tk="ads-row"] .tkh-ad-pills {
+  margin-top: 8px;
+  gap: 6px;
+}
+.tkh-ads[data-tk="ads-row"] .tkh-heart {
+  top: 10px !important;
+  right: 10px !important;
+  width: 32px !important;
+  min-width: 32px !important;
+  height: 32px !important;
+  min-height: 32px !important;
+}
+.tkh-ads[data-tk="ads-row"] .tkh-heart::after {
+  content: "";
+  position: absolute;
+  inset: -6px;
+}
+@media (min-width: 900px) and (max-width: 1199px) {
+  .tkh-ads[data-tk="ads-row"] {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+@media (max-width: 899px) {
+  .tkh-ads[data-tk="ads-row"] .tkh-ad-photo {
+    height: 180px;
+  }
+}
+@media (max-width: 639px) {
+  .tkh-ads[data-tk="ads-row"] .tkh-ad-photo {
+    height: 150px;
+  }
+  .tkh-ads[data-tk="ads-row"] .tkh-ad-title {
+    font-size: 14px;
+  }
+}

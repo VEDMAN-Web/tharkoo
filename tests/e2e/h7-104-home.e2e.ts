@@ -90,11 +90,11 @@ test.describe("H7.104 Home: four categories, eight smaller cards, auto-swipe", (
         expect(boxes[0].width).toBeGreaterThan(255);
         expect(boxes[0].width).toBeLessThan(300);
         const photo = (await row.locator(".tkh-ad-photo").first().boundingBox())!;
-        expect(Math.abs(photo.height - 300)).toBeLessThan(20);
-        expect(boxes[0].height).toBeLessThan(420);
+        expect(Math.round(photo.height)).toBe(220);
+        expect(boxes[0].height).toBeLessThanOrEqual(330);
       } else {
         const photo = (await row.locator(".tkh-ad-photo").first().boundingBox())!;
-        expect(Math.round(photo.height)).toBe(200);
+        expect(Math.round(photo.height)).toBe(150);
       }
       await expect(page.getByRole("link", { name: "See all ads" }).or(page.locator(".tkh-more").last())).toBeVisible();
       expect(await hasHorizontalScroll(page)).toBe(false);
