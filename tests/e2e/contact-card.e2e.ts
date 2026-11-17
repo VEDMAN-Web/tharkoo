@@ -2,7 +2,7 @@ import { createHmac, randomInt } from "node:crypto";
 import AxeBuilder from "@axe-core/playwright";
 import type { Page } from "@playwright/test";
 import { ObjectId } from "mongodb";
-import { expect, firstAdPath, hasHorizontalScroll, isPhone, newUserApi, originHeaders, test, withLocalDb } from "./helpers";
+import { expect, firstAdPath, hasHorizontalScroll, isPhone, newUserApi, originHeaders, setSellerAvailable, slugFromAdPath, test, withLocalDb } from "./helpers";
 
 const E2E_SESSION_SECRET = "local-only-session-secret-not-real-0001";
 
@@ -174,7 +174,9 @@ test.describe("H6.8 contact card on a property ad with live tours on", () => {
     await api.dispose();
     await signInUi(page, email);
     await page.waitForURL(/\/u\/account\/dashboard\//);
-    await page.goto(await anyAdPath(page, PROPERTY_FEED));
+    const path = await anyAdPath(page, PROPERTY_FEED);
+    await setSellerAvailable(slugFromAdPath(path), true);
+    await page.goto(path);
     const requests: string[] = [];
     page.on("request", (request) => {
       if (request.url().includes("/api/tours/request") && request.method() === "POST") requests.push(request.url());

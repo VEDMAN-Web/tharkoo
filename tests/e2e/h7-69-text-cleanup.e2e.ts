@@ -23,14 +23,19 @@ test.describe("H7.69: visitor-facing text clean-up", () => {
   });
 
   for (const width of [1440, 390]) {
-    test(`a blog post without a cover shows the 200 px band above the article at ${width}`, async ({ page }) => {
+    test(`a blog post shows its cover band above the article at ${width}: 200 px without a photo, at most 380 px with one`, async ({ page }) => {
       await page.setViewportSize({ width, height: width === 1440 ? 900 : 844 });
       await page.goto("/blog/stay-safe/");
       const cover = page.locator('[data-tk="blog-cover"]');
       await expect(cover).toBeVisible();
       const box = (await cover.boundingBox())!;
       const article = (await page.locator(".tkp-article").boundingBox())!;
-      expect(Math.round(box.height)).toBe(200);
+      if ((await cover.getAttribute("data-cover")) === "photo") {
+        expect(Math.round(box.height)).toBeGreaterThan(200);
+        expect(Math.round(box.height)).toBeLessThanOrEqual(380);
+      } else {
+        expect(Math.round(box.height)).toBe(200);
+      }
       expect(box.y + box.height).toBeLessThanOrEqual(article.y + 1);
       expect(await hasHorizontalScroll(page)).toBe(false);
     });

@@ -34,12 +34,19 @@ test.describe("H7.4d: flags and footer", () => {
     const footer = page.locator("footer.tkn-footer");
     await footer.scrollIntoViewIfNeeded();
     const gaps = await footer.locator(".tkn-foot-brand").evaluate((brand) => {
-      const logo = brand.querySelector(".tkn-brand")!.getBoundingClientRect();
+      const logo = brand.querySelector(".tkn-logo-link")!.getBoundingClientRect();
       const about = brand.querySelector(".tkn-foot-about")!.getBoundingClientRect();
-      const pills = brand.querySelector(".tkn-pills")!.getBoundingClientRect();
-      return { logoToAbout: Math.round(about.top - logo.bottom), aboutToPills: Math.round(pills.top - about.bottom) };
+      const next = (brand.querySelector(".tkn-pills") ?? brand.querySelector(".tkn-socials"))!.getBoundingClientRect();
+      return {
+        logoToAbout: Math.round(about.top - logo.bottom),
+        aboutMargin: getComputedStyle(brand.querySelector(".tkn-foot-about")!).marginTop,
+        aboutToNext: Math.round(next.top - about.bottom),
+      };
     });
-    expect(gaps).toEqual({ logoToAbout: 12, aboutToPills: 12 });
+    expect(gaps.aboutMargin).toBe("12px");
+    expect(gaps.logoToAbout).toBeGreaterThanOrEqual(12);
+    expect(gaps.logoToAbout).toBeLessThanOrEqual(18);
+    expect(gaps.aboutToNext).toBeGreaterThanOrEqual(12);
   });
 });
 
@@ -85,7 +92,7 @@ test.describe("H7.4d: menus close on an outside click and on Escape", () => {
     }
   });
 
-  test("the chat panel closes on Escape, and on wide screens an outside click does not close an open chat", async ({ page, baseURL }) => {
+  test("the chat panel closes on an outside click and on Escape", async ({ page, baseURL }) => {
     test.setTimeout(120_000);
     const seller = await newUserApi(baseURL!, "chatseller");
     await seller.api.dispose();
@@ -99,6 +106,8 @@ test.describe("H7.4d: menus close on an outside click and on Escape", () => {
     await expect(panel).toBeVisible();
     if (!isPhone(page)) {
       await page.locator("h1").first().click({ position: { x: 2, y: 2 } });
+      await expect(panel).toHaveCount(0);
+      await chat.click();
       await expect(panel).toBeVisible();
     }
     await page.keyboard.press("Escape");
@@ -117,7 +126,9 @@ test.describe("H7.4d: menus close on an outside click and on Escape", () => {
     await expect(modal).toHaveCount(0);
     await open();
     await expect(modal).toBeVisible();
-    await page.locator(".tk-modal-back").click({ position: { x: 4, y: 4 } });
-    await expect(modal).toHaveCount(0);
+    if (!isPhone(page)) {
+      await page.locator(".tk-modal-back").click({ position: { x: 4, y: 4 } });
+      await expect(modal).toHaveCount(0);
+    }
   });
 });

@@ -1,0 +1,14 @@
+{
+  "branchPrefix": "haiku/h7.157",
+  "globs": [
+    "docs/ownership/H7.157.json",
+    "tests/e2e/visitor.e2e.ts",
+    "tests/e2e/search.e2e.ts",
+    "tests/e2e/session-refresh.e2e.ts",
+    "tests/e2e/h7-4d-followups.e2e.ts",
+    "tests/e2e/h7-69-text-cleanup.e2e.ts",
+    "tests/e2e/contact-card.e2e.ts",
+    "tests/e2e/home-selection.e2e.ts",
+    "tests/e2e/h7-104-home.e2e.ts"
+  ]
+}
