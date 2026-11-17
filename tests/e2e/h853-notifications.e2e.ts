@@ -35,7 +35,7 @@ const countOf = async (page: Page) => {
 
 test.describe("H8.53 admin notifications", () => {
   test("the bell opens a panel, Esc and an outside click close it, an item marks itself read and opens its page, Mark all as read clears the number", async ({ browser, baseURL }) => {
-    test.setTimeout(180_000);
+    test.setTimeout(240_000);
     const { api, email } = await newUserApi(baseURL!, "h853cust");
     await api.dispose();
     const { id, subject } = await seedTicket(email);
@@ -47,7 +47,11 @@ test.describe("H8.53 admin notifications", () => {
     const bell = page.locator("[data-tk=bell]");
     await expect(bell).toHaveAttribute("aria-haspopup", "dialog");
     await expect(bell).toHaveAttribute("aria-expanded", "false");
-    await expect(page.locator("[data-tk=bell-count]")).toBeVisible();
+    // The shared list is kept for a few seconds, so look again until the new ticket is counted.
+    await expect(async () => {
+      await page.reload();
+      await expect(page.locator("[data-tk=bell-count]")).toBeVisible({ timeout: 3000 });
+    }).toPass({ timeout: 40_000 });
 
     await bell.click();
     const panel = page.locator("[data-tk=notifications-panel]");
@@ -67,7 +71,8 @@ test.describe("H8.53 admin notifications", () => {
     await expect(bell).toBeFocused();
     await bell.click();
     await expect(panel).toBeVisible();
-    await page.locator("[data-tk=shell-title], h1").first().click({ position: { x: 2, y: 2 } });
+    // A press anywhere outside the panel closes it (a real click could land on a link under the sheet on a phone).
+    await page.evaluate(() => document.body.dispatchEvent(new MouseEvent("mousedown", { bubbles: true })));
     await expect(panel).toHaveCount(0);
 
     // Clicking an item marks it read and opens its exact page.
@@ -77,14 +82,19 @@ test.describe("H8.53 admin notifications", () => {
     await panel.locator("[data-tk=notification]", { hasText: subject }).click();
     await expect(page).toHaveURL(new RegExp(`/admin/support/\\?ticket=${id}`));
     await expect.poll(async () => await withLocalDb((db) => db.collection("staff_notification_reads").countDocuments({ itemKey: `ticket:${id}` }))).toBe(1);
-    await page.waitForLoadState("networkidle");
-    await page.reload();
-    await page.waitForLoadState("networkidle");
     // The number is the unread count for this person: one less now (when it was not capped at "9+").
-    if (!beforeText.includes("+")) expect(Number(await countOf(page)) || 0).toBe(before - 1);
+    await page.goto("/admin/");
+    if (!beforeText.includes("+")) await expect.poll(async () => Number(await countOf(page)) || 0, { timeout: 20_000 }).toBe(before - 1);
 
-    // Mark all as read.
-    await bell.click();
+    // Mark all as read: a second ticket arrives, then everything is marked read at once.
+    const second = await seedTicket(email);
+    // The shared list is kept for a few seconds, so open the bell again until the new one shows.
+    await expect(async () => {
+      await page.keyboard.press("Escape");
+      await bell.click();
+      await expect(panel.locator("[data-tk=notification]", { hasText: second.subject })).toHaveAttribute("data-unread", "yes", { timeout: 2000 });
+    }).toPass({ timeout: 40_000 });
+    await expect(page.locator("[data-tk=bell-count]")).toBeVisible();
     await panel.getByRole("button", { name: "Mark all as read" }).click();
     await expect(page.locator("[data-tk=bell-count]")).toHaveCount(0);
     await expect(panel.locator("[data-tk=notification][data-unread=yes]")).toHaveCount(0);

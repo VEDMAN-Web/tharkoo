@@ -12,6 +12,7 @@
 .adm-nt-list { list-style: none; margin: 0; padding: 0; overflow-y: auto; }
 .adm-nt-li + .adm-nt-li { border-top: 1px solid var(--adm-line2, #eef0f5); }
 .adm-nt-item { position: relative; display: flex; align-items: flex-start; gap: var(--adm-s3, 12px); padding: var(--adm-s3, 12px) var(--adm-s4, 16px); color: inherit; text-decoration: none; min-height: 44px; }
+.adm a.adm-nt-item { color: var(--adm-text, #161a2b); }
 .adm-nt-item:hover { background: var(--adm-bg, #f6f7fb); }
 .adm-nt-item[data-unread="yes"] { background: var(--adm-primary-soft, #fdecf3); }
 .adm-nt-item[data-unread="yes"]:hover { background: #fbdce9; }
