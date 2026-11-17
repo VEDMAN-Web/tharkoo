@@ -32,6 +32,7 @@ export function SeoTitleSection({
   save,
   footer,
   compact = false,
+  saveLabel = "Save page title and description",
 }: {
   headingId: string;
   heading?: string;
@@ -42,6 +43,7 @@ export function SeoTitleSection({
   save: (input: SeoTitleValues) => Promise<SeoSaveResult>;
   footer?: ReactNode;
   compact?: boolean;
+  saveLabel?: string;
 }) {
   const [saved, setSaved] = useState<SeoTitleValues>(initial);
   const [title, setTitle] = useState(initial.seoTitle);
@@ -102,7 +104,7 @@ export function SeoTitleSection({
       {notice ? <Notice kind={notice.kind}>{notice.text}</Notice> : null}
       <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
         <button type="button" className="adm-btn" onClick={submit} disabled={pending || !dirty}>
-          {pending ? "Saving..." : "Save page title and description"}
+          {pending ? "Saving..." : saveLabel}
         </button>
         {footer}
       </div>

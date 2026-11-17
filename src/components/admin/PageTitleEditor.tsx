@@ -15,12 +15,14 @@ export function PageTitleEditor({
   siteLabel,
   previewVars = null,
   help,
+  saveLabel,
 }: {
   target: PageTitleTarget;
   initial: { seoTitle: string; seoDescription: string };
   siteLabel: string;
   previewVars?: SampleVars | null;
   help?: string;
+  saveLabel?: string;
 }) {
   return (
     <SeoTitleSection
@@ -29,6 +31,7 @@ export function PageTitleEditor({
       siteLabel={siteLabel}
       previewVars={previewVars}
       help={help}
+      saveLabel={saveLabel}
       save={(input) => saveEditorPageTitleAction(target, input)}
     />
   );

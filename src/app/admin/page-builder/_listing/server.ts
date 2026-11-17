@@ -1,4 +1,9 @@
 import { can } from "@/lib/admin/perms";
+import { canonical } from "@/lib/seo";
+import { sampleVarsFor, type PageTitleTarget } from "@/lib/seo/page-title-defaults";
+import type { SampleVars } from "@/lib/seo/landing";
+import { getSite } from "@/lib/queries";
+import { readPageTitle } from "@/server/seo/page-titles";
 import { connectDb } from "@/lib/db";
 import { categoryPath, placePath } from "@/lib/urls";
 import { getLocationBySlug } from "@/lib/queries";
@@ -20,6 +25,7 @@ import type { HeaderProps } from "./model";
 
 const KEY = "listing";
 const SLUG = /^[a-z0-9-]{1,80}$/;
+const URL_PATH = /^\/[a-zA-Z0-9\-._~/]{1,300}$/;
 
 export type ListingHeaderState = {
   scope: string;
@@ -177,4 +183,47 @@ export async function explainAddress(ctx: AdminCtx, address: string): Promise<Ex
     return { field, winner: text ? { source, text } : null, others: result.candidates[field].filter((row) => row.source !== source) };
   });
   return { path, kind: input.kind, mode: result.mode, fields };
+}
+
+export type ListingTitleState = {
+  target: PageTitleTarget;
+  initial: { seoTitle: string; seoDescription: string };
+  siteLabel: string;
+  previewVars: SampleVars | null;
+  help: string;
+};
+
+/** The Google title and description of one scope: the category template, or the exact address. Saved by the same action as SEO, Page titles. */
+export async function loadListingTitle(ctx: AdminCtx, scope: string): Promise<ListingTitleState> {
+  allow(ctx);
+  await connectDb();
+  let target: PageTitleTarget;
+  let address: string;
+  let help: string;
+  let name = "";
+  if (scope.startsWith("url:")) {
+    address = scope.slice("url:".length);
+    if (!URL_PATH.test(address)) throw new ValidationError("Type a page address such as /property/surat/.");
+    target = { kind: "url", path: address };
+    help = "This sets the title for this one address. It wins over the category title for that address.";
+  } else if (scope.startsWith("category:")) {
+    name = await categoryNameOf(scope);
+    const slug = scope.slice("category:".length);
+    address = `/${slug}/`;
+    target = { kind: "template", pageType: "category", categorySlug: slug };
+    help = "This sets the title for the pages of this one category. It replaces the all-category title for this category only.";
+  } else {
+    address = `/${sampleVarsFor("", "").category.toLowerCase().replace(/\s+/g, "-")}/`;
+    target = { kind: "template", pageType: "category", categorySlug: null };
+    help = "This sets the title for every category page that has no title of its own. City and district pages have their own titles under SEO, Page titles.";
+  }
+  const values = await readPageTitle(target);
+  const site = await getSite();
+  return {
+    target,
+    initial: { seoTitle: values.title, seoDescription: values.description },
+    siteLabel: canonical(address).replace(/^https?:\/\//, ""),
+    previewVars: target.kind === "template" ? sampleVarsFor(name, (site as { name?: string })?.name || "Tharkoo") : null,
+    help,
+  };
 }
