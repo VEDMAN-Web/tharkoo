@@ -16,7 +16,9 @@ test.describe("H7.133 finance screen", () => {
     expect(res.status()).toBe(200);
     const html = await res.text();
     expect(h1Count(html)).toBe(1);
-    expect(html).toContain("Refunds to handle by hand");
+    expect(html).toContain("Real sales today");
+    // The refunds to handle by hand moved to the Refunds tab (H8.22).
+    expect(await (await api.get("/admin/finance/?tab=refunds")).text()).toContain("Refunds to handle by hand");
     await api.dispose();
   });
 
@@ -26,7 +28,9 @@ test.describe("H7.133 finance screen", () => {
     expect(res.status()).toBe(200);
     const html = await res.text();
     expect(h1Count(html)).toBe(1);
-    expect(html).toContain("Refunds to handle by hand");
+    expect(html).toContain("Real sales today");
+    // The refunds to handle by hand moved to the Refunds tab (H8.22).
+    expect(await (await api.get("/admin/finance/?tab=refunds")).text()).toContain("Refunds to handle by hand");
     await api.dispose();
   });
 });
