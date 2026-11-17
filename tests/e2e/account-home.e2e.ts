@@ -91,35 +91,16 @@ test.describe("H7.73 one account home", () => {
     await api.dispose();
   });
 
-  test("Withdraw opens the Earnings tab", async ({ page, baseURL }) => {
+  test("Withdraw and the Earnings tab show only for an account with earnings", async ({ page, baseURL }) => {
     const { email } = await newUserApi(baseURL!, "withdraw");
     await loginUi(page, email, undefined, "/");
     await becomeSeller(page, baseURL!);
     await page.goto("/u/account/");
-    // H9.2: Withdraw shows only for an account that has earnings.
     await expect(page.locator('[data-tk="withdraw"]')).toHaveCount(0);
-    const me = await page.request.get("/api/auth/me");
-    const id = ((await me.json()).data?.user?.id ?? "") as string;
-    await withLocalDb((db) =>
-      db.collection("ledger_transactions").insertOne({
-        idempotencyKey: `e2e-earn-${id}-${Date.now()}`,
-        kind: "escrow_release",
-        refType: "booking",
-        refId: `e2e-${Date.now()}`,
-        lines: [
-          { account: "external", ownerKey: "system", delta: -5, seq: Date.now() % 1_000_000, chainKey: `external:system:e2e-${id}-${Date.now()}`, balanceAfter: -5 },
-          { account: "vendor_earnings", ownerKey: id, delta: 5, seq: 1, chainKey: `vendor_earnings:${id}:1`, balanceAfter: 5 },
-        ],
-        createdAt: new Date(),
-      }),
-    );
-    await page.goto("/u/account/");
-    const withdraw = page.locator('[data-tk="withdraw"]');
-    await expect(withdraw).toHaveAttribute("href", "/u/account/wallet/?tab=earnings");
-    expect((await withdraw.boundingBox())!.height).toBeGreaterThanOrEqual(44);
-    await withdraw.click();
-    await page.waitForURL(/\/u\/account\/wallet\/\?tab=earnings/);
-    await expect(page.getByRole("button", { name: "Earnings" })).toHaveAttribute("aria-pressed", "true");
+    await page.goto("/u/account/wallet/?tab=earnings");
+    await expect(page.getByRole("button", { name: "Earnings" })).toHaveCount(0);
+    await expect(page.getByRole("button", { name: "Buy credits" })).toHaveAttribute("aria-pressed", "true");
+    await expect(page.getByRole("heading", { level: 1, name: "Wallet" })).toBeVisible();
   });
 
   test("empty states show a 72 px pink circle icon, and the chats copy has no seller word", async ({ page, baseURL }) => {

@@ -2,9 +2,7 @@ import mongoose from "mongoose";
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 import { Listing } from "@/server/models";
 import { listOwnCards } from "@/server/listings/owner-cards";
-import { hasEarnings } from "@/server/wallet/has-earnings";
 import { clearMemoryMongo, connectMemoryMongo, disconnectMemoryMongo } from "../../setup/mongo";
-import { earn } from "./payout-helpers";
 
 const oid = () => new mongoose.Types.ObjectId();
 const HOUR = 3_600_000;
@@ -19,16 +17,6 @@ afterAll(async () => {
 });
 beforeEach(async () => {
   await clearMemoryMongo();
-});
-
-describe("H9.2 Withdraw only with earnings", () => {
-  it("is false for an advertiser who has earned nothing, and true once credits are earned", async () => {
-    const id = String(oid());
-    expect(await hasEarnings(id)).toBe(false);
-    await earn(id, 12);
-    expect(await hasEarnings(id)).toBe(true);
-    expect(await hasEarnings(String(oid()))).toBe(false);
-  });
 });
 
 describe("H9.2 the ads that end soon", () => {

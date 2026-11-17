@@ -6,7 +6,6 @@ import { readOwnPresence } from "@/server/availability/service";
 import { profileProgress } from "@/lib/ui/profile-progress";
 import { readMoneySettings } from "@/server/billing/money-settings";
 import { listOwnCards } from "@/server/listings/owner-cards";
-import { hasEarnings } from "@/server/wallet/has-earnings";
 import { loadPacks, loadPanelSummary, type PackRow } from "@/server/notifications/summary";
 
 function homePacks(packs: PackRow[]): PackRow[] {
@@ -37,6 +36,5 @@ export async function PanelHomePage() {
   const seller = summary.signedIn && summary.seller;
   const money = seller ? await readMoneySettings() : null;
   const adsLeft = summary.signedIn && money && money.paidPostingOn && money.postingFeeCredits > 0 ? Math.floor(summary.balance / money.postingFeeCredits) : null;
-  const earnings = summary.signedIn && seller ? await hasEarnings(summary.userId) : false;
-  return <UserPanelHome summary={summary} ads={ads} packs={homePacks(packs)} profile={profile} adsLeft={adsLeft} earnings={earnings} />;
+  return <UserPanelHome summary={summary} ads={ads} packs={homePacks(packs)} profile={profile} adsLeft={adsLeft} />;
 }

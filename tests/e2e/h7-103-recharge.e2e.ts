@@ -34,9 +34,17 @@ async function balance(page: Page) {
   return (await (await page.request.get("/api/wallet/")).json()).data.balance as number;
 }
 
+async function openRechargeSheet(page: Page) {
+  const sheet = page.locator('[data-tk="recharge-sheet"]');
+  await expect(async () => {
+    if ((await sheet.count()) === 0) await page.evaluate(() => window.dispatchEvent(new CustomEvent("tk-recharge-open", { detail: {} })));
+    await expect(sheet).toBeVisible({ timeout: 1500 });
+  }).toPass();
+}
+
 async function openSheet(page: Page) {
   await page.goto("/u/account/credits/");
-  await page.locator('[data-tk="open-recharge"]').click();
+  await openRechargeSheet(page);
   const sheet = page.locator('[data-tk="recharge-sheet"]');
   await expect(sheet).toBeVisible();
   await expect(sheet.locator('[data-tk="recharge-pack"]').first()).toBeVisible();
@@ -132,7 +140,7 @@ test.describe("H7.103 recharge sheet and mock checkout", () => {
     await toast.getByRole("button", { name: "Contact support" }).click();
     await expect.poll(async () => page.locator("#tkn-chat-input").inputValue()).toContain("credit recharge");
     await page.reload();
-    await page.locator('[data-tk="open-recharge"]').click();
+    await openRechargeSheet(page);
     await expect(page.locator('[data-tk="recharge-pack"]').first()).toBeVisible();
     await page.locator('[data-tk="recharge-support"]').click();
     await expect.poll(async () => page.locator("#tkn-chat-input").inputValue()).toMatch(/Pack: .* credits\. Amount: ₹.*Method: Card/);

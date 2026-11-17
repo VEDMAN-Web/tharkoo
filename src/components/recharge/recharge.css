@@ -64,3 +64,14 @@
   .tkr-sheet { animation: tkr-in 160ms ease-out; }
   @keyframes tkr-in { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: none; } }
 }
+
+/* H9.1: the shared credit pack picker, used inline on account pages as well as in the sheet. */
+.tkp { font-family: var(--tkn-font, "Plus Jakarta Sans", system-ui, sans-serif); color: #1e0b38; }
+.tkp-packs { margin-top: 0; }
+.tkp-ads { font-size: 12px; color: #5b3d7a; }
+.tkp-more { display: inline-flex; align-items: center; margin-top: 8px; min-height: 36px; }
+.tkp-note { margin: 8px 0 0; font-size: 13px; line-height: 18px; color: #4a2870; }
+.tkp button:focus-visible, .tkp a:focus-visible { outline: 3px solid #7c3aed; outline-offset: 2px; }
+.tkp .tkr-pack { min-height: 72px; }
+.tkp .tkr-price { flex-wrap: wrap; gap: 0 8px; }
+.tkp-rs { white-space: nowrap; }

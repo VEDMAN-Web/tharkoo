@@ -93,4 +93,53 @@ test.describe("H9.2 advertiser account home", () => {
       await shot(page, "seller-home-renew");
     }
   });
+
+  test("Fresh ads for you shows real cards or nothing: never an empty frame (1440 and 390)", async ({ page, baseURL }) => {
+    test.setTimeout(240_000);
+    const { email } = await newUserApi(baseURL!, "h92fresh");
+    await loginUi(page, email, undefined, "/u/account/");
+    await becomeSeller(page, baseURL!);
+    for (const size of [{ width: 1440, height: 900 }, { width: 390, height: 844 }]) {
+      await page.setViewportSize(size);
+      await page.goto("/u/account/");
+      await page.waitForLoadState("networkidle");
+      const section = page.locator('[data-tk="discover"]');
+      await expect.poll(async () => await section.count(), { timeout: 20_000 }).toBeLessThanOrEqual(1);
+      if ((await section.count()) === 1) {
+        const cards = section.locator(".tk-card");
+        expect(await cards.count()).toBeGreaterThan(0);
+        await section.scrollIntoViewIfNeeded();
+        await expect(cards.first()).toBeVisible();
+        const box = await cards.first().boundingBox();
+        expect(box?.height ?? 0).toBeGreaterThan(120);
+        // The section is only as tall as its cards: no blank space under them.
+        const gap = await section.evaluate((node) => {
+          const last = Array.from(node.querySelectorAll(".tk-card")).pop()?.getBoundingClientRect().bottom ?? 0;
+          return node.getBoundingClientRect().bottom - last;
+        });
+        expect(gap).toBeLessThan(120);
+        const broken = await section.locator("img").evaluateAll((images) => images.filter((image) => (image as HTMLImageElement).complete && (image as HTMLImageElement).naturalWidth === 0).length);
+        expect(broken).toBe(0);
+      }
+      expect(await hasHorizontalScroll(page)).toBe(false);
+      await shot(page, "seller-home-fresh");
+    }
+  });
+
+  test("when there is nothing to show, the Fresh ads section is not on the page at all", async ({ page, baseURL }) => {
+    test.setTimeout(180_000);
+    const { email } = await newUserApi(baseURL!, "h92nofresh");
+    await loginUi(page, email, undefined, "/u/account/");
+    await becomeSeller(page, baseURL!);
+    await page.route("**/api/discover**", (route) => route.fulfill({ json: { ok: true, data: { items: [], page: 1, hasMore: false } } }));
+    for (const size of [{ width: 1440, height: 900 }, { width: 390, height: 844 }]) {
+      await page.setViewportSize(size);
+      await page.goto("/u/account/");
+      await page.waitForLoadState("networkidle");
+      await expect(page.locator('[data-tk="discover"]')).toHaveCount(0);
+      await expect(page.getByRole("heading", { name: "Fresh ads for you" })).toHaveCount(0);
+      await expect(page.getByText("No ads to show right now.")).toHaveCount(0);
+      expect(await hasHorizontalScroll(page)).toBe(false);
+    }
+  });
 });

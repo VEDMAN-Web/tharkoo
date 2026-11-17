@@ -42,13 +42,12 @@ test.describe("5 Money (mock provider)", () => {
     await expect(page.getByRole("heading", { name: "Credits history" })).toBeVisible();
   });
 
-  test("the recharge sheet needs a pack before it can start a payment", async ({ page, baseURL }) => {
+  test("the credits page shows the packs inline and Pay always has a pack to pay for", async ({ page, baseURL }) => {
     const { api, email } = await newUserApi(baseURL!, "nopack");
     await api.dispose();
     await loginUi(page, email);
     await page.waitForURL(/\/u\/account\/dashboard\//);
     await page.goto("/u/account/credits/");
-    await page.locator("[data-tk=open-recharge]").click();
     const pay = page.locator("[data-tk=recharge-pay]");
     await expect(pay).toBeVisible();
     await expect(pay).toHaveText(/^Pay ₹[0-9,]+$/);
