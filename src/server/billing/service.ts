@@ -489,6 +489,17 @@ async function placePromotion(input: {
   }
 }
 
+/** Credits of a paid recharge that can still be given back: what the payment credited, minus refunds already made. */
+export async function refundableCredits(payment: { _id: unknown; userId: unknown }): Promise<number> {
+  await connectDb();
+  const id = String(payment._id);
+  const grantedRows = await WalletEntry.find({ userId: payment.userId as Types.ObjectId, refId: { $in: [id, `${id}:bonus`, `${id}:coupon`] } }).lean();
+  const granted = grantedRows.reduce((sum, row) => sum + Math.max(0, row.delta), 0);
+  const refunds = await WalletEntry.find({ userId: payment.userId as Types.ObjectId, refType: "refund" }).lean();
+  const already = refunds.filter((row) => row.refId.startsWith(`${id}#`)).reduce((sum, row) => sum + row.delta, 0);
+  return Math.max(0, granted - already);
+}
+
 export async function refundPayment(input: {
   actorId: string;
   roles: string[];
@@ -510,16 +521,7 @@ export async function refundPayment(input: {
   }
   const id = String(payment._id);
   const userId = String(payment.userId);
-  const grantedRows = await WalletEntry.find({
-    userId: payment.userId,
-    refId: { $in: [id, `${id}:bonus`, `${id}:coupon`] },
-  }).lean();
-  const granted = grantedRows.reduce((sum, row) => sum + Math.max(0, row.delta), 0);
-  const refunds = await WalletEntry.find({ userId: payment.userId, refType: "refund" }).lean();
-  const already = refunds
-    .filter((row) => row.refId.startsWith(`${id}#`))
-    .reduce((sum, row) => sum + row.delta, 0);
-  if (already + input.amount > granted) throw new ConflictError("Refund exceeds the credited amount");
+  if (input.amount > (await refundableCredits(payment))) throw new ConflictError("Refund exceeds the credited amount");
   const refId = `${id}#${input.amount}#${sha256(input.reason).slice(0, 16)}`;
   const result = await creditWallet({
     userId,

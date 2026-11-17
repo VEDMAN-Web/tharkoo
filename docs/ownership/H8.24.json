@@ -1,0 +1,13 @@
+{
+  "branchPrefix": "haiku/h8.24",
+  "globs": [
+    "docs/ownership/H8.24.json",
+    "src/app/admin/finance/_actions/**",
+    "src/app/admin/finance/_orders/**",
+    "src/server/admin/orders.ts",
+    "src/server/admin/order-actions.ts",
+    "src/server/billing/service.ts",
+    "tests/server/admin/a24-*.test.ts",
+    "tests/e2e/a24-refund.e2e.ts"
+  ]
+}
