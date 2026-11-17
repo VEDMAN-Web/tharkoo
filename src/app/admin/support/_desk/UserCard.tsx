@@ -8,12 +8,18 @@ import { dateLabel } from "@/app/admin/users/_list/format";
 import type { TicketOrder, UserCard as Card } from "./data";
 
 /** The right pane: who the customer is, with Add credits (A14), Open user and Open order. A guest has no account, so the card says so. */
-export function UserCard({ card, order, guestName }: { card: Card | null; order: TicketOrder | null; guestName: string }) {
+export function UserCard({ card, order, guestName, guest }: { card: Card | null; order: TicketOrder | null; guestName: string; guest?: { email: string; phone: string } | null }) {
   const [adding, setAdding] = useState(false);
   if (!card) {
     return (
       <aside className="adm-card adm-sd-card" aria-label="Customer" data-tk="desk-user">
         <h2>{guestName || "Guest"}</h2>
+        {guest?.email || guest?.phone ? (
+          <dl className="adm-sd-kvs" data-tk="desk-guest">
+            {guest.email ? <div><dt>Email</dt><dd><a href={`mailto:${guest.email}`}>{guest.email}</a></dd></div> : null}
+            {guest.phone ? <div><dt>Phone</dt><dd>{guest.phone}</dd></div> : null}
+          </dl>
+        ) : null}
         <p className="adm-k-help">This person wrote without an account, so there are no credits, orders or ads to show.</p>
       </aside>
     );

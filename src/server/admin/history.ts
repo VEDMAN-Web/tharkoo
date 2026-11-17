@@ -223,7 +223,7 @@ export async function historyDetail(ctx: AdminCtx, id: string, now: Date = new D
   const found = await AuditEvent.findById(id).lean<Row | null>();
   if (!found) return null;
   const [row] = await toRows(ctx, [found], now);
-  const earlier = (await recordHistory(ctx, { targetType: found.targetType, targetId: found.targetId }, 9, now)).filter((item) => item.id !== id).slice(0, 8);
+  const earlier = await recordHistory(ctx, { targetType: found.targetType, targetId: found.targetId }, 8, now, { at: found.createdAt ?? now, id: found._id });
   return {
     row,
     before: (safeUndoData(found.before) as Record<string, unknown> | undefined) ?? null,
@@ -232,11 +232,13 @@ export async function historyDetail(ctx: AdminCtx, id: string, now: Date = new D
   };
 }
 
-/** Every logged change to one record, newest first. Used by the History drawer of an ad, a user or a page. */
-export async function recordHistory(ctx: AdminCtx, input: { targetType: string; targetId: string }, limit = 50, now: Date = new Date()): Promise<HistoryRow[]> {
+/** Every logged change to one record, newest first. Used by the History drawer of an ad, a user or a page. With `olderThan`, only the changes made before that one. */
+export async function recordHistory(ctx: AdminCtx, input: { targetType: string; targetId: string }, limit = 50, now: Date = new Date(), olderThan?: { at: Date; id: unknown }): Promise<HistoryRow[]> {
   await connectDb();
   if (!can(ctx.roles, "history.view")) throw new ForbiddenError("You cannot open History & undo");
-  const found = await AuditEvent.find({ targetType: input.targetType, targetId: input.targetId, summary: { $exists: true, $ne: "" } })
+  const filter: Record<string, unknown> = { targetType: input.targetType, targetId: input.targetId, summary: { $exists: true, $ne: "" } };
+  if (olderThan) filter.$or = [{ createdAt: { $lt: olderThan.at } }, { createdAt: olderThan.at, _id: { $lt: olderThan.id } }];
+  const found = await AuditEvent.find(filter)
     .sort({ createdAt: -1, _id: -1 })
     .limit(Math.min(limit, 200))
     .lean<Row[]>();

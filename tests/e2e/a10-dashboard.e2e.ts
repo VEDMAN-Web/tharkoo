@@ -15,7 +15,7 @@ test.describe("A10 admin dashboard", () => {
     test.skip(testInfo.project.name !== "desktop-1440", "sets its own sizes");
   });
 
-  test("one H1, a To do card, a 12 row launch checklist and recent changes, with no sideways scroll and axe 0", async ({ page, context, baseURL }) => {
+  test("one H1, a To do card, an 11 row launch checklist and recent changes, with no sideways scroll and axe 0", async ({ page, context, baseURL }) => {
     test.setTimeout(180_000);
     await signInAdminContext(context, baseURL!);
     await page.setViewportSize({ width: 1440, height: 900 });
@@ -24,7 +24,7 @@ test.describe("A10 admin dashboard", () => {
     await expect(page.getByRole("heading", { level: 1 })).toHaveText("Dashboard");
     await expect(page.locator('[data-tk="shell-title"]')).toHaveText("Dashboard");
     await expect(page.locator('[data-tk="todo"]')).toBeVisible();
-    await expect(page.locator('[data-tk="launch-checklist"] li')).toHaveCount(12);
+    await expect(page.locator('[data-tk="launch-checklist"] li')).toHaveCount(11);
     await expect(page.locator('[data-tk="launch-checklist"]')).toContainText(/\d+ of 11 done/);
     await expect(page.locator('[data-tk="recent"]')).toBeVisible();
     await expect(page.getByRole("button", { name: "More" })).toBeVisible();

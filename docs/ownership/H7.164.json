@@ -1,0 +1,24 @@
+{
+  "branchPrefix": "haiku/h7.164",
+  "globs": [
+    "docs/ownership/H7.164.json",
+    "src/components/admin/AdminShell.tsx",
+    "src/components/admin/ui/PageHeader.tsx",
+    "src/components/admin/ui/Tabs.tsx",
+    "src/components/admin/ui/ReasonDialog.tsx",
+    "src/styles/admin-kit.css",
+    "src/app/admin/not-found.tsx",
+    "src/app/admin/[...missing]/**",
+    "src/app/admin/ads/_list/AdsView.tsx",
+    "src/app/admin/settings/_view/SettingsCards.tsx",
+    "src/app/admin/users/_list/UserDrawer.tsx",
+    "src/app/admin/support/page.tsx",
+    "src/app/admin/support/_desk/**",
+    "src/server/admin/history.ts",
+    "tests/server/admin/a26-history.test.ts",
+    "tests/server/admin/h7164-*.test.ts",
+    "tests/e2e/h7-164-admin-bugs.e2e.ts",
+    "tests/e2e/a10-dashboard.e2e.ts",
+    "tests/e2e/admin-content.e2e.ts"
+  ]
+}
