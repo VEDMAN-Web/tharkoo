@@ -63,7 +63,7 @@ describe("reject and remove with the credits choice", () => {
     expect(await WalletEntry.countDocuments({ refType: "listing_fee_refund" })).toBe(0);
   });
 
-  it("removes a live ad with a reason, keeps the old default of giving the fee back for older callers, and refuses ads that are not live", async () => {
+  it("removes a live ad with a reason, refuses ads that are not live, and gives nothing back unless asked", async () => {
     await fund();
     const id = await ad("active", true);
     await expect(removeLiveAd({ id, ...mod, reason: "  ", refund: false })).rejects.toBeInstanceOf(ValidationError);
@@ -72,7 +72,8 @@ describe("reject and remove with the credits choice", () => {
     expect((await Listing.findById(id).lean())?.status).toBe("removed");
     await expect(removeLiveAd({ id, ...mod, reason: "Spam", refund: true })).rejects.toBeInstanceOf(ConflictError);
     const pending = await ad("pending", true);
-    expect(await rejectListing({ id: pending, ...mod, reason: "No" })).toMatchObject({ refunded: FEE });
+    expect(await rejectListing({ id: pending, ...mod, reason: "No" })).toMatchObject({ refunded: 0 });
+    expect(await isPostingFeePaid(pending)).toBe(true);
   });
 
   it("refuses a role that cannot decide", async () => {

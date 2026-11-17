@@ -182,7 +182,7 @@ describe("the posting fee at publish", () => {
     await submitListing(draft.id, user.id, attest, "r");
     expect(await walletBalance(user.id)).toBe(70);
     await Listing.updateOne({ _id: draft._id }, { $set: { status: "pending" } });
-    const rejected = await rejectListing({ id: draft.id, roles: ["moderator"], email: "mod@example.com", reason: "Not allowed" });
+    const rejected = await rejectListing({ id: draft.id, roles: ["moderator"], email: "mod@example.com", reason: "Not allowed", refund: true });
     expect(rejected).toMatchObject({ status: "rejected", refunded: 30 });
     expect(await walletBalance(user.id)).toBe(100);
     const refund = await WalletEntry.findOne({ refType: "listing_fee_refund" }).lean();
@@ -202,8 +202,8 @@ describe("the posting fee at publish", () => {
       await submitListing(draft.id, user.id, attest, `s${round}`);
       await Listing.updateOne({ _id: draft._id }, { $set: { status: "pending" } });
       const results = await Promise.allSettled([
-        rejectListing({ id: draft.id, roles: ["moderator"], email: "a@example.com", reason: "No" }),
-        rejectListing({ id: draft.id, roles: ["moderator"], email: "b@example.com", reason: "No" }),
+        rejectListing({ id: draft.id, roles: ["moderator"], email: "a@example.com", reason: "No", refund: true }),
+        rejectListing({ id: draft.id, roles: ["moderator"], email: "b@example.com", reason: "No", refund: true }),
       ]);
       expect(results.some((row) => row.status === "fulfilled"), `round ${round}`).toBe(true);
       expect(await WalletEntry.countDocuments({ refType: "listing_fee_refund", refId: new RegExp(`^${draft.id}:`) }), `round ${round}`).toBe(1);

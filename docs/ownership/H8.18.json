@@ -13,6 +13,7 @@
     "tests/server/admin/a3-write.test.ts",
     "tests/e2e/a18-decisions.e2e.ts",
     "src/app/admin/moderation/_list/review.css",
-    "tests/e2e/a15-review.e2e.ts"
+    "tests/e2e/a15-review.e2e.ts",
+    "tests/server/billing/posting-fee.test.ts"
   ]
 }
