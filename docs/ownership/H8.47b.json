@@ -1,0 +1,13 @@
+{
+  "branchPrefix": "haiku/h8.47b",
+  "globs": [
+    "docs/ownership/H8.47b.json",
+    "src/lib/ui/text.ts",
+    "src/lib/ui/text-labels.ts",
+    "src/components/SiteShell.tsx",
+    "src/components/HeaderNew.tsx",
+    "src/components/HeaderDrawer.tsx",
+    "src/components/FooterNew.tsx",
+    "tests/server/layout/a47b-*.test.ts"
+  ]
+}
