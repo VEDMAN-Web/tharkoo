@@ -1,0 +1,8 @@
+{
+  "branchPrefix": "haiku/h7.166",
+  "globs": [
+    "docs/ownership/H7.166.json",
+    ".github/forbidden-terms.txt",
+    "src/server/shared/policy.ts"
+  ]
+}
