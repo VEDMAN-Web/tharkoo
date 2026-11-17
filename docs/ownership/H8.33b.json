@@ -7,6 +7,7 @@
     "src/server/listings/service.ts",
     "src/server/admin/undo/handlers/listing-edit.ts",
     "tests/server/listings/a33b-*.test.ts",
+    "tests/e2e/a33-ad-edit.e2e.ts",
     "tests/e2e/a33b-ad-edit-2.e2e.ts"
   ]
 }
