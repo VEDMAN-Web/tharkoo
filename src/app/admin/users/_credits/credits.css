@@ -1,0 +1,21 @@
+/* H8.14: the Credits tab and its dialog. Only for the Users drawer. */
+.adm-u-stats.adm-c-stats { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
+.adm-c-lines { margin: 0; padding: 0; list-style: none; }
+.adm-c-line { display: grid; grid-template-columns: 56px minmax(0, 1fr) auto; gap: 12px; align-items: center; padding: 12px 0; border-bottom: 1px solid var(--adm-line2); }
+.adm-c-delta { font-weight: 800; font-variant-numeric: tabular-nums; }
+.adm-c-delta[data-sign="plus"] { color: var(--adm-ok); }
+.adm-c-what { display: grid; gap: 2px; min-width: 0; }
+.adm-c-what strong { overflow-wrap: anywhere; }
+.adm-c-what small { color: var(--adm-kmuted); font-size: 12.5px; }
+.adm-c-side { display: flex; gap: 6px; align-items: center; justify-content: flex-end; flex-wrap: wrap; }
+.adm-c-receipt { grid-column: 2 / -1; margin: 0; display: grid; grid-template-columns: 110px minmax(0, 1fr); gap: 4px 12px; padding: 10px 12px; border: 1px solid var(--adm-line2); border-radius: 10px; background: #fafbfd; font-size: 13px; }
+.adm-c-receipt dt { color: var(--adm-kmuted); }
+.adm-c-receipt dd { margin: 0; font-weight: 600; }
+.adm-c-dlg { display: grid; gap: 12px; }
+.adm-c-dlg p { margin: 0; }
+@media (max-width: 767px) {
+  .adm-u-stats.adm-c-stats { gap: 8px; }
+  .adm-c-line { grid-template-columns: 48px minmax(0, 1fr); }
+  .adm-c-side { grid-column: 2; justify-content: flex-start; }
+  .adm-c-receipt { grid-template-columns: 96px minmax(0, 1fr); }
+}

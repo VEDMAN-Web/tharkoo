@@ -1,12 +1,16 @@
 "use client";
 
 import { useState } from "react";
-import { Badge, Drawer, LockBadge, Tabs } from "@/components/admin/ui";
+import { Badge, Drawer, Tabs } from "@/components/admin/ui";
 import type { UserDetail } from "@/server/admin/users";
+import type { CreditsTab as CreditsData } from "@/server/billing/staff-credits";
+import { CreditsDialog } from "../_credits/CreditsDialog";
+import type { CreditsStart } from "../_credits/credits-format";
+import { CreditsTab } from "../_credits/CreditsTab";
 import { UserActions, type UserAccess } from "../_actions/UserActions";
 import { dateLabel, lastSeenLabel, staffRoleLabels, statusLook } from "./format";
 
-type Section = "overview" | "ads" | "tickets" | "history";
+type Section = "overview" | "ads" | "credits" | "tickets" | "history";
 
 const AD_TONE: Record<string, "ok" | "warn" | "bad" | "info" | "neutral"> = { active: "ok", pending: "warn", paused: "neutral", rejected: "bad", expired: "neutral", removed: "bad", draft: "neutral" };
 const AD_WORDS: Record<string, string> = { active: "Live", pending: "In review", paused: "Paused", rejected: "Rejected", expired: "Ended", removed: "Removed", draft: "Draft" };
@@ -21,8 +25,9 @@ function Row({ label, children }: { label: string; children: React.ReactNode }) 
 }
 
 /** The drawer for one user (read only): profile, ads, tickets and the last changes. 460 px wide. */
-export function UserDrawer({ detail, onClose, access }: { detail: UserDetail | null; onClose: () => void; access: UserAccess }) {
+export function UserDrawer({ detail, credits, onClose, access }: { detail: UserDetail | null; credits: CreditsData | null; onClose: () => void; access: UserAccess }) {
   const [section, setSection] = useState<Section>("overview");
+  const [adjust, setAdjust] = useState<CreditsStart | null>(null);
   if (!detail) return null;
   const { user } = detail;
   const look = statusLook(user);
@@ -37,7 +42,7 @@ export function UserDrawer({ detail, onClose, access }: { detail: UserDetail | n
       subtitle={`${user.email} · ${sub}`}
       size="lg"
       onClose={onClose}
-      footer={<UserActions userId={user.id} name={user.name} status={user.status} isStaff={staff.length > 0} access={access} />}
+      footer={<UserActions userId={user.id} name={user.name} status={user.status} isStaff={staff.length > 0} access={access} onAdjust={() => setAdjust({ mode: "add", amount: "" })} />}
     >
       <div className="adm-k-hist" data-tk="user-drawer">
         <Tabs
@@ -48,6 +53,7 @@ export function UserDrawer({ detail, onClose, access }: { detail: UserDetail | n
           items={[
             { key: "overview", label: "Overview" },
             { key: "ads", label: "Ads", count: detail.ads.length },
+            ...(credits ? [{ key: "credits", label: "Credits" }] : []),
             { key: "tickets", label: "Tickets", count: detail.tickets.length },
             { key: "history", label: "History", count: detail.history.length },
           ]}
@@ -75,9 +81,6 @@ export function UserDrawer({ detail, onClose, access }: { detail: UserDetail | n
                 <Row label="Last seen">{lastSeenLabel(user.lastSeen, now)}</Row>
                 <Row label="Joined">{dateLabel(user.createdAt, now)}</Row>
               </dl>
-              <p className="adm-k-help">
-                <LockBadge reason="Credit changes arrive in the next release." />
-              </p>
             </>
           ) : null}
           {section === "ads" ? (
@@ -97,6 +100,7 @@ export function UserDrawer({ detail, onClose, access }: { detail: UserDetail | n
               </ul>
             )
           ) : null}
+          {section === "credits" && credits ? <CreditsTab data={credits} canAdjust={access.adjust} onAdjust={setAdjust} /> : null}
           {section === "tickets" ? (
             detail.tickets.length === 0 ? (
               <p className="adm-k-help">No support tickets.</p>
@@ -132,6 +136,7 @@ export function UserDrawer({ detail, onClose, access }: { detail: UserDetail | n
           ) : null}
         </div>
       </div>
+      {adjust && credits ? <CreditsDialog userId={user.id} name={user.name} balance={credits.balance} start={adjust} onClose={() => setAdjust(null)} /> : null}
     </Drawer>
   );
 }

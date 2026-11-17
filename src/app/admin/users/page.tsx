@@ -2,8 +2,10 @@ import Link from "next/link";
 import { Lock } from "lucide-react";
 import { AdminShell } from "@/components/admin/AdminShell";
 import { getStaffFromHeaders } from "@/lib/admin-auth";
+import { adminContext } from "@/server/admin/context";
 import { can } from "@/lib/admin/perms";
 import { getUserDetail, listUsers, parseUserQuery } from "@/server/admin/users";
+import { canAdjustCredits, canSeeCredits, getCreditsTab } from "@/server/billing/staff-credits";
 import { NotFoundError } from "@/server/http";
 import { UsersView } from "./_list/UsersView";
 
@@ -36,9 +38,16 @@ export default async function Page({ searchParams }: { searchParams: Promise<Rec
       if (!(error instanceof NotFoundError)) throw error;
     }
   }
+  const credits = detail && canSeeCredits(identity.roles) ? await getCreditsTab(detail.user.id, identity.roles, (await adminContext()).actorId) : null;
+  const access = {
+    ban: can(identity.roles, "users.ban"),
+    logout: can(identity.roles, "users.logout"),
+    credits: canSeeCredits(identity.roles),
+    adjust: canAdjustCredits(identity.roles),
+  };
   return (
     <AdminShell title="Users">
-      <UsersView list={list} detail={detail} access={{ ban: can(identity.roles, "users.ban"), logout: can(identity.roles, "users.logout") }} />
+      <UsersView list={list} detail={detail} credits={credits} access={access} />
     </AdminShell>
   );
 }

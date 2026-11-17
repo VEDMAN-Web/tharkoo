@@ -172,6 +172,10 @@ export async function debitWallet(input: {
   refId: string;
   requestId: string;
   actorId?: string;
+  /** Staff debits (H8.14) say "admin" and name their own audit action and reason. Everything else keeps the user defaults. */
+  actorType?: AppendInput["actorType"];
+  auditAction?: string;
+  auditReason?: string;
   ip?: string;
   once?: boolean;
 }) {
@@ -187,8 +191,9 @@ export async function debitWallet(input: {
     refId: input.refId,
     requestId: input.requestId,
     actorId: input.actorId ?? input.userId,
-    actorType: "user",
-    auditAction: "wallet.debit",
+    actorType: input.actorType ?? "user",
+    auditAction: input.auditAction ?? "wallet.debit",
+    auditReason: input.auditReason,
     ip: input.ip,
     once: input.once,
   });
