@@ -1,0 +1,29 @@
+/* H8.44: the Listing tab of the Page builder only. */
+.adm-lb { display: grid; gap: 16px; }
+.adm-lb-card { display: grid; gap: 14px; }
+.adm-lb-head { display: flex; justify-content: space-between; align-items: center; gap: 8px; flex-wrap: wrap; }
+.adm-lb-head h2, .adm-lb-card > h2 { margin: 0; font-size: 16px; font-weight: 800; }
+.adm-lb-scope { max-width: 360px; }
+.adm-lb-form { display: grid; gap: 14px; max-width: 760px; }
+.adm-lb-toggles { display: flex; gap: 20px; flex-wrap: wrap; }
+.adm-lb-sample { display: grid; gap: 4px; padding: 12px 14px; border: 1px solid var(--adm-line2); border-radius: 10px; background: #fafbfd; }
+.adm-lb-sample small { color: var(--adm-kmuted); font-size: 12.5px; }
+.adm-lb-sample strong { font-size: 18px; overflow-wrap: anywhere; }
+.adm-lb-actions { display: flex; gap: 8px; justify-content: flex-end; flex-wrap: wrap; }
+.adm-lb-ask { display: flex; gap: 10px; align-items: end; flex-wrap: wrap; }
+.adm-lb-ask .adm-k-field { flex: 1; min-width: 220px; max-width: 420px; }
+.adm-lb-result { display: grid; gap: 12px; }
+.adm-lb-table { width: 100%; border-collapse: collapse; font-size: 13.5px; }
+.adm-lb-table th, .adm-lb-table td { text-align: left; vertical-align: top; padding: 10px 8px; border-bottom: 1px solid var(--adm-line2); }
+.adm-lb-table thead th { color: var(--adm-kmuted); font-size: 12px; text-transform: uppercase; letter-spacing: 0.04em; }
+.adm-lb-text { display: block; max-width: 56ch; overflow-wrap: anywhere; }
+.adm-lb-others { display: block; margin-top: 4px; color: var(--adm-kmuted); }
+.adm-lb-links { display: flex; gap: 8px; flex-wrap: wrap; }
+.adm-lb code { font-size: 12.5px; padding: 1px 5px; margin-right: 4px; border-radius: 4px; background: #f1f2f6; }
+@media (max-width: 767px) {
+  .adm-lb-table thead { display: none; }
+  .adm-lb-table, .adm-lb-table tbody, .adm-lb-table tr, .adm-lb-table th, .adm-lb-table td { display: block; width: 100%; }
+  .adm-lb-table tr { padding: 10px 0; border-bottom: 1px solid var(--adm-line2); }
+  .adm-lb-table th, .adm-lb-table td { border: 0; padding: 2px 0; }
+  .adm-lb-actions .adm-k-btn { flex: 1; }
+}

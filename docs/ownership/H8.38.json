@@ -1,0 +1,19 @@
+{
+  "branchPrefix": "haiku/h8.38",
+  "globs": [
+    "docs/ownership/H8.38.json",
+    "progress/H8.38.md",
+    "src/lib/ui/text.ts",
+    "src/components/PostWizard.tsx",
+    "src/components/post/PhotoStep.tsx",
+    "src/components/post/ContactFields.tsx",
+    "src/components/post/ReviewStep.tsx",
+    "src/components/post/PostSuccess.tsx",
+    "src/components/post/AboutYou.tsx",
+    "src/components/post/FormFields.tsx",
+    "src/components/post/MediaTile.tsx",
+    "src/components/post/PostPreview.tsx",
+    "src/components/post/newCopy.ts",
+    "tests/server/ui/a38-*.test.ts"
+  ]
+}

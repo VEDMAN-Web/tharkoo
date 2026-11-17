@@ -1,3 +1,4 @@
+import { useT } from "@/components/help/UiTextProvider";
 import { SelectField, TextField } from "./FormFields";
 
 type Place = { id: string; name: string };
@@ -18,12 +19,13 @@ type Props = {
 };
 
 export function AboutYou({ nickname, cityId, cities, askDateOfBirth, dateOfBirth, ageConfirmed, error, onBlur, onNickname, onCity, onDateOfBirth, onAgeConfirmed }: Props) {
+  const t = useT();
   return (
     <div className="tkp-fields" data-tk="about-you">
       <div className="tkp-two tkp-two-keep">
-        <TextField id="about-name" label="Name on your ads" required value={nickname} error={error("nickname")} onBlur={onBlur("nickname")} autoComplete="nickname" placeholder="Your name or nickname" onChange={(value) => onNickname(value.slice(0, 20))} />
-        <SelectField id="about-city" label="Your city" required value={cityId} error={error("city")} onBlur={onBlur("city")} onChange={onCity}>
-          <option value="">Select city</option>
+        <TextField id="about-name" label={t("post.aboutYou.name")} required value={nickname} error={error("nickname")} onBlur={onBlur("nickname")} autoComplete="nickname" placeholder={t("post.aboutYou.namePlaceholder")} onChange={(value) => onNickname(value.slice(0, 20))} />
+        <SelectField id="about-city" label={t("post.aboutYou.city")} required value={cityId} error={error("city")} onBlur={onBlur("city")} onChange={onCity}>
+          <option value="">{t("post.aboutYou.selectCity")}</option>
           {cities.map((city) => (
             <option key={city.id} value={city.id}>{city.name}</option>
           ))}
@@ -31,12 +33,12 @@ export function AboutYou({ nickname, cityId, cities, askDateOfBirth, dateOfBirth
       </div>
       {askDateOfBirth ? (
         <div className="tkp-two">
-          <TextField id="about-dob" label="Date of birth" required type="date" autoComplete="bday" note="Never shown on your ads" value={dateOfBirth} error={error("dob")} onBlur={onBlur("dob")} onChange={onDateOfBirth} />
+          <TextField id="about-dob" label={t("post.aboutYou.dob")} required type="date" autoComplete="bday" note={t("post.aboutYou.dobNote")} value={dateOfBirth} error={error("dob")} onBlur={onBlur("dob")} onChange={onDateOfBirth} />
           <div className={`tkp-consent tkp-consent-box ${error("ageConfirmed") ? "is-bad" : ""}`}>
             <input id="about-adult" type="checkbox" className="tk-check" checked={ageConfirmed} onChange={onAgeConfirmed} aria-invalid={Boolean(error("ageConfirmed"))} />
             <label htmlFor="about-adult">
-              <strong>I am 18 or older</strong>
-              <span>Needed once to post. Some categories also ask for a quick ID check.</span>
+              <strong>{t("post.aboutYou.adult")}</strong>
+              <span>{t("post.aboutYou.adultNote")}</span>
             </label>
             {error("ageConfirmed") ? <span className="tk-error" data-tk="field-error">{error("ageConfirmed")}</span> : null}
           </div>
