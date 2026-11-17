@@ -177,7 +177,9 @@ test.describe("H8.52 Cities and areas", () => {
     await expect(toast(page)).toContainText("Saved. Live on the site in a few seconds.");
     const saved = await withLocalDb((db) => db.collection("locations").findOne({ slug: `h852-new-${stamp}` }, { projection: { name: 1, order: 1, enabled: 1 } }));
     expect(saved).toMatchObject({ name: `H852 Renamed ${stamp}`, order: 5, enabled: false });
-    await expect(page.locator('[data-tk="place-row"][aria-current], [data-tk="place-row"].is-selected').first()).toContainText("Hidden");
+    // The list is in Order number order, so a place with Order 5 may now be on another page: find it by name.
+    await page.locator('[data-tk="place-search"]').fill(`H852 Renamed ${stamp}`);
+    await expect(page.locator('[data-tk="place-row"]').first()).toContainText("Hidden");
     await expect(page.locator('[data-tk="view-place"]')).toHaveAttribute("href", `/cities/h852-new-${stamp}/`);
 
     await page.locator("[data-tk=place-detail]").getByRole("button", { name: "More" }).click();
