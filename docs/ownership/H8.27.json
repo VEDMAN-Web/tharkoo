@@ -1,0 +1,21 @@
+{
+  "branchPrefix": "haiku/h8.27",
+  "globs": [
+    "docs/ownership/H8.27.json",
+    "progress/H8.27.md",
+    "src/app/admin/ads/page.tsx",
+    "src/app/admin/ads/_list/**",
+    "src/app/admin/ads/_actions/**",
+    "src/app/admin/ads/home/**",
+    "src/server/admin/ads-list.ts",
+    "src/server/admin/ads-bulk.ts",
+    "src/lib/admin/ads-junk.ts",
+    "src/lib/admin/ads-bulk-rules.ts",
+    "src/lib/admin/screens.ts",
+    "src/server/admin/undo/handlers/listing-decision.ts",
+    "tests/server/admin/a27-*.test.ts",
+    "tests/e2e/a27-ads.e2e.ts",
+    "tests/e2e/h7-96-demo-ads.e2e.ts",
+    "tests/e2e/home-selection.e2e.ts"
+  ]
+}

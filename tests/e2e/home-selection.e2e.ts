@@ -7,7 +7,7 @@ test.describe("H7.98 pick the ads on Home", () => {
   test("search for ads, tick two, save once, and they come first on Home", async ({ page, context, baseURL }, testInfo) => {
     test.skip(testInfo.project.name !== "desktop-1440", "the admin screens are for wide screens");
     await signInAdminContext(context, baseURL!);
-    await page.goto("/admin/ads/");
+    await page.goto("/admin/ads/home/");
     const section = page.locator('[data-tk="home-selection"]');
     await expect(section).toBeVisible();
     const pinned = section.locator('[data-tk="home-pinned"]');
@@ -54,7 +54,7 @@ test.describe("H7.98 pick the ads on Home", () => {
         await expect(shown.nth(1)).toHaveText(secondTitle, { timeout: 2000 });
       }).toPass({ timeout: 30000 });
     } finally {
-      await page.goto("/admin/ads/");
+      await page.goto("/admin/ads/home/");
       const again = page.locator('[data-tk="home-selection"]');
       await expect(again.locator('[data-tk="home-pinned"]')).toContainText("(2 of 8)");
       const boxes = again.locator('[data-tk="home-row"]').getByRole("checkbox", { name: "Show on Home" });

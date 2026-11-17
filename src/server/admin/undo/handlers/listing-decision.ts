@@ -9,6 +9,7 @@ import type { UndoHandler } from "../registry";
  * The status is set directly, never through publishing, so the posting fee is never charged a second time.
  * When the decision gave credits back, they are taken back only if the seller still has them; otherwise the ad is restored and the summary says so.
  * Undoing the undo (redo) is offered only when no money moved.
+ * A bulk extend (H8.27) also saves the old end date as `expiresTo` (an ISO time, or "none"); undo puts it back.
  */
 const handler: UndoHandler = {
   canUndo(ctx) {
@@ -27,7 +28,13 @@ const handler: UndoHandler = {
     const refund = event.take<{ userId: string; amount: number } | null>("refund");
     const listing = await Listing.findById(event.targetId);
     if (!listing) throw new Error("Ad not found");
+    const restoresExpiry = event.has("expiresTo");
+    const expiryNow = listing.expiresAt ? new Date(listing.expiresAt).toISOString() : "none";
     listing.status = to as typeof listing.status;
+    if (restoresExpiry) {
+      const back = event.take<string>("expiresTo");
+      listing.expiresAt = back === "none" ? undefined : new Date(back);
+    }
     await listing.save();
     await revalidateListingPages(listing, (await Category.findById(listing.categoryId).select("slug").lean<{ slug?: string }>())?.slug);
     let note = "";
@@ -39,7 +46,7 @@ const handler: UndoHandler = {
     return {
       after: { status: to, creditsTakenBack: moved ? refund?.amount ?? 0 : 0 },
       summary: `Undid the decision: ad is ${to === "active" ? "live" : to}${note}`,
-      undoData: refund && moved ? undefined : { id: event.targetId, from: to, to: from, refund: null },
+      undoData: refund && moved ? undefined : { id: event.targetId, from: to, to: from, refund: null, ...(restoresExpiry ? { expiresTo: expiryNow } : {}) },
     };
   },
 };
