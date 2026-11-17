@@ -1,0 +1,14 @@
+{
+  "branchPrefix": "haiku/h8.49",
+  "globs": [
+    "docs/ownership/H8.49.json",
+    "progress/H8.49.md",
+    "src/server/admin/search.ts",
+    "src/app/api/admin/search/**",
+    "src/components/admin/AdminShell.tsx",
+    "src/components/admin/AdminSearchPanel.tsx",
+    "src/styles/admin.css",
+    "tests/server/admin/a49-*.test.ts",
+    "tests/e2e/a49-search.e2e.ts"
+  ]
+}
