@@ -2,7 +2,7 @@ import mongoose from "mongoose";
 import { connectDb } from "@/lib/db";
 import { ForbiddenError } from "@/server/http";
 import { Category, Listing } from "@/server/models";
-import { CATEGORY_KINDS } from "@/server/models/catalog";
+import { isPeopleListing, kindAllowsVideo } from "@/server/categories/kinds";
 import { Subcategory } from "@/server/models/subcategory";
 
 const OFF = "Live video tours are off for this ad";
@@ -13,7 +13,9 @@ interface ListingRow {
 }
 
 interface CategoryRow {
+  slug?: string;
   kind?: string;
+  fields?: unknown;
   videoTourEnabled?: boolean;
   videoTourCoins?: number;
 }
@@ -28,9 +30,10 @@ export async function assertVideoTourAllowed(listingId: string): Promise<void> {
   if (!mongoose.isValidObjectId(listingId)) throw new ForbiddenError(OFF);
   const listing = (await Listing.findById(listingId).select("categoryId subcategoryId").lean()) as ListingRow | null;
   if (!listing?.categoryId) throw new ForbiddenError(OFF);
-  const category = (await Category.findById(listing.categoryId).select("kind videoTourEnabled videoTourCoins").lean()) as CategoryRow | null;
-  if (!category || !(CATEGORY_KINDS as readonly string[]).includes(category.kind ?? "")) throw new ForbiddenError(OFF);
-  if (category.kind === "people") throw new ForbiddenError("Not available for people listings");
+  const category = (await Category.findById(listing.categoryId).select("slug kind fields videoTourEnabled videoTourCoins").lean()) as CategoryRow | null;
+  if (!category) throw new ForbiddenError(OFF);
+  if (isPeopleListing(category)) throw new ForbiddenError("Not available for people listings");
+  if (!(await kindAllowsVideo(category))) throw new ForbiddenError(OFF);
   const sub = listing.subcategoryId
     ? ((await Subcategory.findById(listing.subcategoryId).select("videoTourEnabled").lean()) as { videoTourEnabled?: boolean | null } | null)
     : null;

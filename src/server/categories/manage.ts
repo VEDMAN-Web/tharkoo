@@ -7,7 +7,7 @@ import { canEditSite } from "@/lib/ui/site-content";
 import { validateSlug } from "@/lib/urls";
 import { AuditRepository } from "@/server/audit";
 import { ForbiddenError, NotFoundError, ValidationError } from "@/server/http";
-import { isCategoryKind } from "@/server/categories/kind";
+import { isPeopleListing, requireKind } from "@/server/categories/kinds";
 import type { AdminCtx } from "@/server/admin/context";
 import { picturesOf, setCatalogPictures, type PictureInput, type PicturesView } from "@/server/layout/catalog-pictures";
 import { Category, Listing, User } from "@/server/models";
@@ -79,10 +79,6 @@ export function cleanImportMaxPhotos(value: unknown): number | null {
   return count;
 }
 
-function cleanKind(value: unknown): CategoryKind {
-  if (!isCategoryKind(value)) throw new ValidationError("Choose a kind for this category");
-  return value;
-}
 
 function objectId(id: string, what: string) {
   if (!Types.ObjectId.isValid(id)) throw new NotFoundError(`${what} not found`);
@@ -128,7 +124,7 @@ export async function createCategory(actor: Actor, input: CategoryInput) {
   await connectDb();
   const name = cleanText(input.name, "Name", MAX_NAME, true);
   const slug = cleanSlug(input.slug || name);
-  const kind = cleanKind(input.kind);
+  const kind = await requireKind(input.kind);
   if (await Category.exists({ slug })) throw new ValidationError("That slug is already used");
   const doc = await Category.create({
     slug,
@@ -160,10 +156,10 @@ export async function updateCategory(actor: Actor, id: string, input: CategoryIn
   if (input.seoIntro !== undefined) doc.introHtml = cleanText(input.seoIntro, "SEO intro", MAX_INTRO, false);
   if (input.description !== undefined) doc.description = cleanText(input.description, "Home tile line", MAX_HOME_LINE, false);
   if (input.kind !== undefined) {
-    doc.kind = cleanKind(input.kind);
-    // A people category can never keep live tours on (H6.5).
-    if (doc.kind === "people") doc.videoTourEnabled = false;
+    doc.kind = await requireKind(input.kind);
   }
+  // A people listing can never keep live tours on, whatever kind it has (H6.5, H7.167).
+  if (isPeopleListing({ slug: doc.slug, kind: doc.kind, fields: doc.fields })) doc.videoTourEnabled = false;
   await doc.save();
   if (input.slug !== undefined && input.slug !== doc.slug) {
     try {

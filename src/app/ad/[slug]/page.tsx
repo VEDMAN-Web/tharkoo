@@ -32,6 +32,7 @@ import { pickTexts } from "@/lib/ui/text";
 import { popupAlternatives } from "@/components/new/NewAdDetail";
 import { adDetailRows } from "@/lib/ad-details";
 import { User } from "@/server/models";
+import { kindFeatures } from "@/server/categories/kinds";
 import { contactChannelsOf } from "@/server/listings/contact-channels";
 
 type Props = { params: Promise<{ slug: string }> };
@@ -131,6 +132,7 @@ export default async function AdPage({ params }: Props) {
     // H7.5: a people category never shows the Call button. The same server check as the video tour rule.
     listingId ? listingIsPeople(listingId) : Promise.resolve(true),
   ]);
+  const features = await kindFeatures((cat as { kind?: string } | null)?.kind);
   const tour = listingId && tourOffer ? { listingId, coins: tourOffer.coins } : null;
   const owner = row?.ownerId ? ((await User.findById(row.ownerId).select("displayName createdAt").lean()) as { displayName?: string; createdAt?: Date } | null) : null;
   const adView = { ...plain(ad), details: adDetailRows(row?.attributes, cat?.fields) };
@@ -185,6 +187,7 @@ export default async function AdPage({ params }: Props) {
           heading={heading}
           tour={tour}
           peopleAd={peopleAd}
+          features={features}
           contactChannels={row ? contactChannelsOf(row.contact) : undefined}
           paymentsLive={coinProviderName() !== "mock"}
           alternatives={popupAlternatives(plain(ad), plain(related), paths)}

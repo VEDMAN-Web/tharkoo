@@ -11,6 +11,7 @@ import type { CategoryDetailView } from "@/server/categories/screen";
 import { deleteCategoryAction, updateCategoryAction } from "../manage-actions";
 import { saveCategoryPicturesAction } from "../picture-actions";
 import { SaveBar } from "@/app/admin/_catalog/SaveBar";
+import type { KindView } from "@/lib/category-kinds";
 import { DetailsTab } from "./DetailsTab";
 import { PicturesTab } from "@/app/admin/_catalog/PicturesTab";
 import { SubsTab } from "./SubsTab";
@@ -27,12 +28,14 @@ export function DetailPane({
   fieldCount,
   fields,
   tab,
+  kinds,
   onTab,
   onDirty,
   listHref,
   urlFor,
 }: {
   detail: CategoryDetailView;
+  kinds: KindView[];
   fieldCount: number;
   fields: EditorField[];
   tab: TabKey;
@@ -201,7 +204,7 @@ export function DetailPane({
       </header>
       <Tabs items={tabs} active={tab} onChange={(key) => onTab(key as TabKey)} label="Category sections" idPrefix="cat" />
       <div role="tabpanel" id={`cat-panel-${tab}`} aria-labelledby={`cat-${tab}`} className="adm-cat-body">
-        {tab === "details" ? <DetailsTab draft={details} errors={detailErrors} canEdit onChange={change(setDetails)} /> : null}
+        {tab === "details" ? <DetailsTab draft={details} errors={detailErrors} kinds={kinds} peopleLocked={detail.peopleLocked} canEdit onChange={change(setDetails)} /> : null}
         {tab === "pictures" ? <PicturesTab draft={pictures} errors={pictureErrors} onChange={change(setPictures)} /> : null}
         {tab === "fields" || fieldsState ? (
           <div className="adm-cat-fields" data-tk="fields-tab" hidden={tab !== "fields"}>

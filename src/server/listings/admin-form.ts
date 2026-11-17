@@ -1,4 +1,5 @@
 import { connectDb } from "@/lib/db";
+import { kindMaxPhotos } from "@/server/categories/kinds";
 import { listSubcategories } from "@/server/categories/public";
 import { adPhotoLimit } from "@/server/listings/admin-create";
 import { Category, Location, type CategoryDoc } from "@/server/models";
@@ -78,7 +79,7 @@ async function categoriesForForm(): Promise<AdFormCategory[]> {
         id,
         name: row.name,
         slug: row.slug,
-        photoLimit: adPhotoLimit(row.importMaxPhotos),
+        photoLimit: adPhotoLimit(row.importMaxPhotos ?? (await kindMaxPhotos(row.kind))),
         subcategories: subs.map((sub) => ({ id: sub.id, name: sub.name })),
         fields: visibleFields(row.fields),
       };

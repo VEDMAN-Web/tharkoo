@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { Notice } from "@/components/admin/ui";
+import { VIDEO_NEVER_FOR_PEOPLE } from "@/lib/category-kinds";
 import { api, friendlyError, type ApiError } from "@/lib/ui/api";
 
 export type VideoTourCategory = {
@@ -12,6 +13,10 @@ export type VideoTourCategory = {
   kind: string | null;
   videoTourEnabled: boolean;
   videoTourCoins: number;
+  /** A people listing: the switch is locked off, whatever kind it has. */
+  peopleLocked?: boolean;
+  /** The kind of this category does not allow live video tours. */
+  kindVideoOff?: boolean;
 };
 
 type Draft = { enabled: boolean; coins: string };
@@ -19,7 +24,8 @@ type Banner = { kind: "error" | "info"; text: string };
 
 const COIN_MIN = 1;
 const COIN_MAX = 100;
-const LOCK_PEOPLE = "Not available for people listings";
+const LOCK_PEOPLE = VIDEO_NEVER_FOR_PEOPLE;
+const LOCK_KIND = "This kind does not allow live video tours. Change it under Categories & fields, Kinds.";
 const LOCK_NO_KIND = "Set the category kind first";
 
 /** The first field message from the server, or the generic text. */
@@ -34,9 +40,10 @@ function isCoinPrice(value: string) {
 }
 
 /** A people category can never have live tours; a category with no kind cannot be switched on until it has one. */
-function lockReason(kind: string | null) {
-  if (kind === "people") return LOCK_PEOPLE;
-  if (!kind) return LOCK_NO_KIND;
+function lockReason(row: VideoTourCategory) {
+  if (row.kind === "people" || row.peopleLocked) return LOCK_PEOPLE;
+  if (!row.kind) return LOCK_NO_KIND;
+  if (row.kindVideoOff) return LOCK_KIND;
   return "";
 }
 
@@ -110,7 +117,7 @@ export function VideoTourSettings() {
             <tbody>
               {rows.map((row) => {
                 const draft = draftFor(row);
-                const reason = lockReason(row.kind);
+                const reason = lockReason(row);
                 const locked = reason !== "";
                 const coinsValid = isCoinPrice(draft.coins);
                 const dirty = draft.enabled !== row.videoTourEnabled || draft.coins !== String(row.videoTourCoins);

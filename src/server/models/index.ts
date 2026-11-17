@@ -1,7 +1,7 @@
 import { AuditEvent } from "@/server/models/trust";
 import { ContentPage, SeedBackup, SiteSettings } from "@/server/models/platform";
 import { EmailVerificationToken, IdentityVerification, PasswordResetToken, Session, User } from "@/server/models/identity";
-import { Category, Location } from "@/server/models/catalog";
+import { Category, CategoryKindDef, Location } from "@/server/models/catalog";
 import { Favourite, Listing, ListingVersion, MediaAsset, Message, SavedSearch, Thread } from "@/server/models/listing";
 import { ModerationCase, Report } from "@/server/models/trust";
 import { Payment, PromotionOrder, PromotionProduct, WalletEntry } from "@/server/models/billing";
@@ -34,8 +34,8 @@ export {
 } from "@/server/models/identity";
 export type { UserDoc, SessionDoc, TokenDoc, IdentityVerificationDoc } from "@/server/models/identity";
 
-export { Category, Location } from "@/server/models/catalog";
-export type { CatalogBandDoc, CatalogPhotoDoc, CategoryDoc, CategoryFieldDoc, FaqDoc, LocationDoc, LocationLevel } from "@/server/models/catalog";
+export { Category, CategoryKindDef, Location } from "@/server/models/catalog";
+export type { CatalogBandDoc, CatalogPhotoDoc, CategoryDoc, CategoryKindDoc, CategoryFieldDoc, FaqDoc, LocationDoc, LocationLevel } from "@/server/models/catalog";
 
 export {
   Listing,

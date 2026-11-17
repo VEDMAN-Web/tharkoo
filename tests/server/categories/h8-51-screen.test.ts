@@ -43,7 +43,7 @@ describe("the Categories & fields screen data (H8.51)", () => {
   });
 
   it("an empty site has no detail, and a category with no kind comes through with an empty kind (the screen shows the red note)", async () => {
-    expect(await loadCategoriesScreen("x")).toEqual({ rows: [], detail: null, chosen: false });
+    expect(await loadCategoriesScreen("x")).toMatchObject({ rows: [], detail: null, chosen: false });
     await Category.create({ slug: "dating", name: "Dating", order: 0, enabled: true });
     const data = await loadCategoriesScreen("dating");
     expect(data.detail?.kind).toBe("");
