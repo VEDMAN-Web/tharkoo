@@ -61,8 +61,8 @@ test.describe("A15 Ads to review", () => {
     await page.getByText("Review me one").first().click();
     await expect(page.locator('[data-tk="review-drawer"]')).toBeVisible();
     if (SHOTS) await page.screenshot({ path: `${SHOTS}/review-drawer-1440x900.png` });
-    await page.getByRole("button", { name: "Mark checked" }).last().click();
-    await expect(page.getByText("Ad marked as checked.")).toBeVisible();
+    await page.getByRole("button", { name: "Approve" }).last().click();
+    await expect(page.getByText("Ad approved.")).toBeVisible();
     await page.goto("/admin/moderation/");
     await expect(page.getByText("Review me one")).toHaveCount(0);
     await expect(page.getByText("Review me two").first()).toBeVisible();

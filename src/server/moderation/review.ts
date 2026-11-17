@@ -3,7 +3,8 @@ import { connectDb } from "@/lib/db";
 import { can } from "@/lib/admin/perms";
 import type { AdminCtx } from "@/server/admin/context";
 import { adminWrite } from "@/server/admin/write";
-import { FEE_REF } from "@/server/billing/posting-fee";
+import { FEE_REF, FEE_REFUND_REF } from "@/server/billing/posting-fee";
+import { textDenied } from "@/server/shared/policy";
 import { ConflictError, ForbiddenError, NotFoundError } from "@/server/http";
 import { demoFilter } from "@/server/listings/demo-ads";
 import { adPhotoUrl } from "@/server/media/photo-url";
@@ -13,7 +14,14 @@ export type ReviewTab = "live" | "held" | "edited";
 export const REVIEW_TABS: readonly ReviewTab[] = ["live", "held", "edited"];
 export const REVIEW_PAGE_SIZES = [25, 50, 100] as const;
 const SEARCH_MAX = 120;
-const PHOTOS_SHOWN = 6;
+const PHOTOS_SHOWN = 3;
+const PHONE_IN_TEXT = /(?:\+?91[\s-]?)?[6-9]\d{9}\b|\b\d{5}[\s-]\d{5}\b/;
+
+/** Rule flags read from the words of an ad: cheap, and the same words the publish check uses. */
+export function ruleFlags(title: string, description: string): string[] {
+  const text = `${title} ${description}`;
+  return [...(textDenied(text).denied ? ["Banned word"] : []), ...(PHONE_IN_TEXT.test(text) ? ["Phone in text"] : [])];
+}
 
 export type ReviewQuery = { tab: ReviewTab; q: string; page: number; pageSize: number };
 
@@ -32,7 +40,7 @@ export function parseReviewQuery(params: Record<string, string | string[] | unde
   };
 }
 
-export type ReviewRow = { id: string; title: string; category: string; city: string; seller: string; since: string; paid: boolean };
+export type ReviewRow = { id: string; title: string; category: string; city: string; seller: string; since: string; paid: boolean; paidCredits: number; thumb: string | null; flags: string[] };
 export type ReviewList = { query: ReviewQuery; rows: ReviewRow[]; total: number; counts: Record<ReviewTab, number> };
 
 function escapeRegex(value: string) {
@@ -51,6 +59,26 @@ async function tabFilter(tab: ReviewTab): Promise<QueryFilter<Record<string, unk
   const since = site?.postModerationSince;
   if (!since) return { _id: { $in: [] } };
   return { ...skip, status: "active", lastModerationAt: { $exists: false }, publishedAt: { $gt: since } };
+}
+
+/** What each ad's posting fee stands at now: credits paid and not given back (0 when free or already given back). */
+async function paidCreditsFor(ids: string[]): Promise<Map<string, number>> {
+  const result = new Map<string, number>();
+  if (ids.length === 0) return result;
+  const rows = await WalletEntry.find({ refType: { $in: [FEE_REF, FEE_REFUND_REF] }, refId: { $regex: `^(${ids.join("|")}):` } })
+    .sort({ _id: 1 })
+    .select("refType refId delta")
+    .lean<{ refType: string; refId: string; delta: number }[]>();
+  const open = new Map<string, number[]>();
+  for (const row of rows) {
+    const id = row.refId.split(":")[0];
+    const stack = open.get(id) ?? [];
+    if (row.refType === FEE_REF) stack.push(Math.abs(row.delta));
+    else stack.pop();
+    open.set(id, stack);
+  }
+  for (const [id, stack] of open) if (stack.length) result.set(id, stack[stack.length - 1]);
+  return result;
 }
 
 const SORT: Record<ReviewTab, Record<string, 1>> = { live: { publishedAt: 1 }, held: { createdAt: 1 }, edited: { updatedAt: 1 } };
@@ -76,16 +104,18 @@ export async function listReviewTab(roles: readonly string[], query: ReviewQuery
       .sort(SORT[query.tab])
       .skip((query.page - 1) * query.pageSize)
       .limit(query.pageSize)
-      .select("title categoryId cityId ownerId publishedAt createdAt")
+      .select("title description categoryId cityId ownerId publishedAt createdAt mediaIds coverMediaId")
       .lean(),
   ]);
-  const [cats, places, owners, fees] = await Promise.all([
+  const firstMedia = rows.flatMap((row) => (row.coverMediaId ? [row.coverMediaId] : row.mediaIds?.[0] ? [row.mediaIds[0]] : []));
+  const [cats, places, owners, fees, thumbs] = await Promise.all([
     Category.find({ _id: { $in: rows.map((row) => row.categoryId) } }).select("name").lean<Named[]>(),
     Location.find({ _id: { $in: rows.flatMap((row) => (row.cityId ? [row.cityId] : [])) } }).select("name").lean<Named[]>(),
     User.find({ _id: { $in: rows.map((row) => row.ownerId) } }).select("displayName").lean<Named[]>(),
-    WalletEntry.find({ refType: FEE_REF, refId: { $in: rows.map((row) => `${row._id}:0`) } }).select("refId").lean<{ refId: string }[]>(),
+    paidCreditsFor(rows.map((row) => String(row._id))),
+    MediaAsset.find({ _id: { $in: firstMedia }, kind: "image" }).select("objectKey").lean<{ _id: Types.ObjectId; objectKey: string }[]>(),
   ]);
-  const paid = new Set(fees.map((fee) => fee.refId.split(":")[0]));
+  const thumbOf = new Map(thumbs.map((asset) => [String(asset._id), adPhotoUrl(asset.objectKey)]));
   return {
     query,
     total,
@@ -97,7 +127,10 @@ export async function listReviewTab(roles: readonly string[], query: ReviewQuery
       city: nameOf(places, row.cityId),
       seller: nameOf(owners, row.ownerId, "displayName"),
       since: new Date(row.publishedAt ?? row.createdAt ?? Date.now()).toISOString(),
-      paid: paid.has(String(row._id)),
+      paid: fees.has(String(row._id)),
+      paidCredits: fees.get(String(row._id)) ?? 0,
+      thumb: thumbOf.get(String(row.coverMediaId ?? row.mediaIds?.[0] ?? "")) ?? null,
+      flags: ruleFlags(row.title || "", row.description || ""),
     })),
   };
 }
@@ -112,6 +145,13 @@ export type ReviewDetail = {
   seller: string;
   photos: string[];
   paid: boolean;
+  paidCredits: number;
+  paidAt: string | null;
+  since: string;
+  sellerAds: number;
+  sellerJoined: string | null;
+  idCheck: string;
+  flags: string[];
   changes: { field: string; before: string; after: string }[];
 };
 
@@ -125,11 +165,16 @@ export async function getReviewDetail(roles: readonly string[], id: string): Pro
   const [category, city, owner, fee, assets, last] = await Promise.all([
     Category.findById(listing.categoryId).select("name").lean<Named | null>(),
     listing.cityId ? Location.findById(listing.cityId).select("name").lean<Named | null>() : null,
-    User.findById(listing.ownerId).select("displayName").lean<Named | null>(),
-    WalletEntry.exists({ refType: FEE_REF, refId: `${listing._id}:0` }),
+    User.findById(listing.ownerId).select("displayName createdAt verificationStatus").lean<(Named & { createdAt?: Date; verificationStatus?: string }) | null>(),
+    paidCreditsFor([String(listing._id)]),
     MediaAsset.find({ _id: { $in: listing.mediaIds ?? [] }, kind: "image" }).select("objectKey").lean<{ _id: Types.ObjectId; objectKey: string }[]>(),
     ListingVersion.findOne({ listingId: listing._id }).sort({ version: -1 }).lean(),
   ]);
+  const [sellerAds, paidRow] = await Promise.all([
+    Listing.countDocuments({ ownerId: listing.ownerId, status: { $in: ["active", "pending", "paused"] } }),
+    WalletEntry.findOne({ refType: FEE_REF, refId: { $regex: `^${listing._id}:` } }).sort({ _id: -1 }).select("createdAt").lean<{ createdAt?: Date } | null>(),
+  ]);
+  const idLabels: Record<string, string> = { approved: "Verified", pending_review: "Waiting", rejected: "Not verified" };
   const before = (last?.snapshot ?? {}) as Record<string, unknown>;
   const now = listing as unknown as Record<string, unknown>;
   const text = (value: unknown) => (value === undefined || value === null ? "" : String(value));
@@ -142,7 +187,14 @@ export async function getReviewDetail(roles: readonly string[], id: string): Pro
     city: city?.name || "",
     seller: owner?.displayName || "",
     photos: assets.slice(0, PHOTOS_SHOWN).map((asset) => adPhotoUrl(asset.objectKey)).filter((src): src is string => Boolean(src)),
-    paid: Boolean(fee),
+    paid: fee.has(String(listing._id)),
+    paidCredits: fee.get(String(listing._id)) ?? 0,
+    paidAt: fee.has(String(listing._id)) && paidRow?.createdAt ? new Date(paidRow.createdAt).toISOString() : null,
+    since: new Date(listing.publishedAt ?? listing.createdAt ?? Date.now()).toISOString(),
+    sellerAds,
+    sellerJoined: owner?.createdAt ? new Date(owner.createdAt).toISOString() : null,
+    idCheck: idLabels[owner?.verificationStatus ?? ""] ?? "Not checked yet",
+    flags: ruleFlags(listing.title || "", listing.description || ""),
     changes: last ? DIFF_FIELDS.filter((field) => text(before[field]) !== text(now[field])).map((field) => ({ field, before: text(before[field]), after: text(now[field]) })) : [],
   };
 }

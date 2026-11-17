@@ -2,15 +2,20 @@
 
 import { useEffect, useRef, useState } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { Check, X } from "lucide-react";
-import { Badge, Button, DiffView, Drawer, EmptyState, FilterBar, PageHeader, ReasonDialog, ServerTable, Tabs, ToastProvider, useToast, type TableColumn } from "@/components/admin/ui";
+import { Check, History, X } from "lucide-react";
+import { Badge, Button, DiffView, Drawer, EmptyState, FilterBar, Notice, PageHeader, ReasonDialog, ServerTable, Tabs, ToastProvider, useToast, type BadgeTone, type TableColumn } from "@/components/admin/ui";
 import type { ReviewDetail, ReviewList, ReviewRow, ReviewTab } from "@/server/moderation/review";
-import { approveAction, rejectAction } from "../actions";
+import { approveAction } from "../actions";
+import { rejectAdAction, removeAdAction, undoDecisionAction } from "../_actions/actions";
 import { markCheckedAction } from "./actions";
+import "./review.css";
 
 const TAB_LABELS: Record<ReviewTab, string> = { live: "Live, not checked", held: "Held by rules", edited: "Edited, photos waiting" };
 const TABS = Object.keys(TAB_LABELS) as ReviewTab[];
 const SEARCH_DEBOUNCE_MS = 350;
+const REASONS = ["Breaks the posting rules", "Photos do not match the text", "Spam or a duplicate ad", "The seller asked us to"] as const;
+
+type Deciding = { kind: "reject" | "remove"; id: string; title: string; seller: string; paidCredits: number };
 const MIN_PER_HOUR = 60;
 const HOURS_PER_DAY = 24;
 
@@ -20,6 +25,26 @@ function waited(iso: string) {
   const hours = Math.floor(minutes / MIN_PER_HOUR);
   if (hours < HOURS_PER_DAY) return `${hours} h ${minutes % MIN_PER_HOUR} min`;
   return `${Math.floor(hours / HOURS_PER_DAY)} d`;
+}
+
+const FLAG_TONE: Record<string, BadgeTone> = { "Banned word": "bad", "Phone in text": "warn" };
+
+function when(iso: string) {
+  return new Date(iso).toLocaleString("en-IN", { day: "numeric", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit", hour12: false, timeZone: "Asia/Kolkata" });
+}
+
+function Flags({ flags, paid }: { flags: string[]; paid: boolean }) {
+  if (!flags.length && !paid) return <Badge>No flags</Badge>;
+  return (
+    <span className="adm-r-flags">
+      {flags.map((flag) => (
+        <Badge key={flag} tone={FLAG_TONE[flag] ?? "warn"}>
+          {flag}
+        </Badge>
+      ))}
+      {paid ? <Badge tone="pri">Paid</Badge> : null}
+    </span>
+  );
 }
 
 function Screen({ list, detail }: { list: ReviewList; detail: ReviewDetail | null }) {
@@ -32,7 +57,7 @@ function Screen({ list, detail }: { list: ReviewList; detail: ReviewDetail | nul
   const sentSearch = useRef(list.query.q);
   const [selected, setSelected] = useState<string[]>([]);
   const [busy, setBusy] = useState(false);
-  const [rejecting, setRejecting] = useState<string | null>(null);
+  const [deciding, setDeciding] = useState<Deciding | null>(null);
 
   function go(changes: Record<string, string | null>) {
     if (!("open" in changes && Object.keys(changes).length === 1)) setSelected([]);
@@ -65,33 +90,61 @@ function Screen({ list, detail }: { list: ReviewList; detail: ReviewDetail | nul
     setBusy(false);
     setSelected([]);
     if (failed) toast.show({ kind: "error", message: failed });
-    else toast.show({ kind: "success", message: ids.length === 1 ? (tab === "held" ? "Ad approved and live." : "Ad marked as checked.") : `${ids.length} ads ${tab === "held" ? "approved" : "marked as checked"}.` });
+    else toast.show({ kind: "success", message: ids.length === 1 ? (tab === "held" ? "Ad approved and live." : "Ad approved.") : `${ids.length} ads approved.` });
     router.refresh();
   }
 
-  async function reject(id: string, reason: string) {
-    setRejecting(null);
-    const result = await rejectAction(id, reason);
-    if (result.ok) toast.show({ kind: "success", message: "Ad rejected. The seller is told." });
-    else toast.show({ kind: "error", message: result.error });
+  function decide(kind: "reject" | "remove", id: string) {
+    const row = list.rows.find((item) => item.id === id);
+    const title = row?.title ?? detail?.title ?? "";
+    setDeciding({ kind, id, title, seller: row?.seller ?? detail?.seller ?? "", paidCredits: row?.paidCredits ?? detail?.paidCredits ?? 0 });
+  }
+
+  async function undo(eventId: string) {
+    const answer = await undoDecisionAction(eventId);
+    toast.show({ kind: answer.ok ? "success" : "error", message: answer.message });
+    router.refresh();
+  }
+
+  async function confirmDecision(result: { reason: string; text: string; giveBack: boolean }) {
+    const current = deciding;
+    setDeciding(null);
+    if (!current) return;
+    const reason = [result.reason, result.text].filter(Boolean).join(": ");
+    const run = current.kind === "reject" ? rejectAdAction : removeAdAction;
+    const answer = await run({ id: current.id, reason, refund: result.giveBack });
+    if (!answer.ok) toast.show({ kind: "error", message: answer.message });
+    else {
+      const what = current.kind === "reject" ? "rejected. The seller is told" : "removed";
+      const money = answer.refunded > 0 ? ` ${answer.refunded} credits given back.` : "";
+      toast.show({ kind: "undo", message: `"${current.title}" ${what}.${money}`, onUndo: () => void undo(answer.eventId) });
+    }
     router.refresh();
   }
 
   const actionable = tab !== "edited";
-  const approveLabel = tab === "held" ? "Approve" : "Mark checked";
+  const approveLabel = "Approve";
   const columns: TableColumn<ReviewRow>[] = [
     {
       key: "ad",
       header: "Ad",
       primary: true,
       cell: (row) => (
-        <>
-          <strong>{row.title || "(no title)"}</strong>
-          <small>{[row.category, row.city].filter(Boolean).join(" · ")}</small>
-        </>
+        <span className="adm-r-main">
+          {row.thumb ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img className="adm-r-thumb" src={row.thumb} alt="" width={40} height={40} />
+          ) : (
+            <span className="adm-r-thumb" aria-hidden="true" />
+          )}
+          <span className="adm-r-text">
+            <strong>{row.title || "(no title)"}</strong>
+            <small>{[row.category, row.city].filter(Boolean).join(" · ")}</small>
+          </span>
+        </span>
       ),
     },
-    { key: "flags", header: "Flags", cell: (row) => (row.paid ? <Badge tone="pri">Paid</Badge> : <Badge>Free</Badge>) },
+    { key: "flags", header: "Flags", cell: (row) => <Flags flags={row.flags} paid={row.paid} /> },
     { key: "seller", header: "Seller", hideOnPhone: true, cell: (row) => row.seller || "unknown" },
     { key: "wait", header: "Waiting", nowrap: true, cell: (row) => <span title={new Date(row.since).toLocaleString("en-IN")}>{waited(row.since)}</span> },
   ];
@@ -103,6 +156,8 @@ function Screen({ list, detail }: { list: ReviewList; detail: ReviewDetail | nul
         crumbs={[{ label: "Queues" }]}
         title="Ads to review"
         purpose="Ads go live at once. Check them here, oldest first. Approve keeps an ad live."
+        secondary={[{ key: "history", label: "History", icon: History, href: "/admin/history/" }]}
+        more={[{ key: "all-ads", label: "Open all ads", href: "/admin/ads/" }]}
       />
       <div className="adm-card" style={{ padding: 0, overflow: "clip", marginBottom: 16 }}>
         <Tabs
@@ -142,11 +197,9 @@ function Screen({ list, detail }: { list: ReviewList; detail: ReviewDetail | nul
                       <Button icon={Check} disabled={busy} onClick={() => void approve([row.id])}>
                         {approveLabel}
                       </Button>
-                      {tab === "held" ? (
-                        <Button kind="danger" icon={X} onClick={() => setRejecting(row.id)}>
-                          Reject...
-                        </Button>
-                      ) : null}
+                      <Button kind="danger" icon={X} onClick={() => decide(tab === "held" ? "reject" : "remove", row.id)}>
+                        {tab === "held" ? "Reject..." : "Remove ad..."}
+                      </Button>
                     </>
                   )
                 : undefined
@@ -169,11 +222,10 @@ function Screen({ list, detail }: { list: ReviewList; detail: ReviewDetail | nul
           footer={
             tab === "edited" ? undefined : (
               <>
-                {tab === "held" ? (
-                  <Button kind="danger" icon={X} onClick={() => setRejecting(detail.id)}>
-                    Reject...
-                  </Button>
-                ) : null}
+                <Button kind="danger" icon={X} onClick={() => decide(tab === "held" ? "reject" : "remove", detail.id)}>
+                  {tab === "held" ? "Reject..." : "Remove ad..."}
+                </Button>
+                <span className="adm-k-sp" />
                 <Button kind="primary" icon={Check} busy={busy} onClick={() => void approve([detail.id])}>
                   {approveLabel}
                 </Button>
@@ -181,23 +233,51 @@ function Screen({ list, detail }: { list: ReviewList; detail: ReviewDetail | nul
             )
           }
         >
-          <div className="adm-u-pane" data-tk="review-drawer" style={{ padding: 16, display: "grid", gap: 14 }}>
+          <div className="adm-r-pane" data-tk="review-drawer">
             {detail.photos.length ? (
-              <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+              <div className="adm-r-photos" data-n={Math.min(detail.photos.length, 3)}>
                 {detail.photos.map((src) => (
                   // eslint-disable-next-line @next/next/no-img-element
-                  <img key={src} src={src} alt="" width={96} height={96} style={{ objectFit: "cover", borderRadius: 8 }} />
+                  <img key={src} src={src} alt="" />
                 ))}
               </div>
             ) : null}
-            <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
-              <Badge tone={detail.status === "active" ? "ok" : "warn"}>{detail.status === "active" ? "Live" : "In review"}</Badge>
-              {detail.paid ? <Badge tone="pri">Paid</Badge> : null}
+            <div className="adm-r-flags">
+              <Badge tone={detail.status === "active" ? "ok" : "warn"}>{detail.status === "active" ? `Live since ${waited(detail.since)}` : "In review"}</Badge>
+              {detail.flags.map((flag) => (
+                <Badge key={flag} tone={FLAG_TONE[flag] ?? "warn"}>
+                  {flag}
+                </Badge>
+              ))}
+              {detail.paid ? <Badge tone="pri">{`Paid ${detail.paidCredits} credits`}</Badge> : null}
             </div>
-            <p style={{ margin: 0, whiteSpace: "pre-wrap", overflowWrap: "anywhere" }}>{detail.description}</p>
+            <p className="adm-r-text-body">{detail.description}</p>
+            <dl className="adm-r-kvs">
+              <div>
+                <dt>Seller</dt>
+                <dd>{[detail.seller || "unknown", `${detail.sellerAds} ${detail.sellerAds === 1 ? "ad" : "ads"}`, detail.sellerJoined ? `joined ${new Date(detail.sellerJoined).toLocaleDateString("en-IN", { day: "numeric", month: "short", timeZone: "Asia/Kolkata" })}` : ""].filter(Boolean).join(" · ")}</dd>
+              </div>
+              <div>
+                <dt>ID check</dt>
+                <dd>{detail.idCheck}</dd>
+              </div>
+              <div>
+                <dt>Paid</dt>
+                <dd>{detail.paid ? `${detail.paidCredits} credits${detail.paidAt ? ` · ${when(detail.paidAt)}` : ""}` : "Free ad"}</dd>
+              </div>
+              <div>
+                <dt>Posted from</dt>
+                <dd>{detail.city || "unknown"}</dd>
+              </div>
+            </dl>
+            {detail.paid && tab !== "edited" ? (
+              <Notice kind="info">
+                {tab === "held" ? "Reject" : "Remove"} takes the ad down and tells the seller. Because this ad is paid, you choose on the next step whether to give back the {detail.paidCredits} credits.
+              </Notice>
+            ) : null}
             {detail.changes.length ? (
               <>
-                <h3 style={{ margin: 0, fontSize: 14 }}>Changed since the last approved version</h3>
+                <h3 className="adm-r-h3">Changed since the last approved version</h3>
                 <DiffView rows={detail.changes.map((change) => ({ path: change.field, kind: "changed", before: change.before, after: change.after }))} />
               </>
             ) : null}
@@ -205,15 +285,22 @@ function Screen({ list, detail }: { list: ReviewList; detail: ReviewDetail | nul
         </Drawer>
       ) : null}
       <ReasonDialog
-        open={rejecting !== null}
-        title="Reject this ad?"
-        body="The ad comes down and the seller is told. If the seller paid the posting fee it is given back."
-        textLabel="Tell the seller why"
-        requireText
+        key={deciding ? `${deciding.kind}-${deciding.id}` : "closed"}
+        open={deciding !== null}
+        title={deciding?.kind === "reject" ? "Reject this ad?" : "Remove this ad?"}
+        body={
+          deciding?.kind === "reject"
+            ? "The ad is turned down and the seller is told. You can undo this for 7 days."
+            : "The ad comes down at once and the seller is told. You can undo this for 7 days."
+        }
+        reasons={REASONS}
+        requireReason
+        textLabel="Add a note for the seller (optional)"
+        paidAd={deciding && deciding.paidCredits > 0 ? { name: deciding.seller || "the seller", credits: deciding.paidCredits } : undefined}
         danger
-        confirmLabel="Reject ad"
-        onConfirm={(result) => void reject(rejecting ?? "", result.text)}
-        onCancel={() => setRejecting(null)}
+        confirmLabel={deciding?.kind === "reject" ? "Reject ad" : "Remove ad"}
+        onConfirm={(result) => void confirmDecision(result)}
+        onCancel={() => setDeciding(null)}
       />
     </div>
   );
