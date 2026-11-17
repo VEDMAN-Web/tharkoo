@@ -1,6 +1,5 @@
 "use client";
 
-import { FocalPicker } from "@/components/admin/FocalPicker";
 import Link from "next/link";
 import { useState } from "react";
 import { Notice } from "@/components/admin/ui";
@@ -106,78 +105,31 @@ function ContactRows({ items, onChange }: { items: ShellContact[]; onChange: (ne
 
 
 /**
- * H7.4: category photos (cards on the home page) and the listing title band images for a category or a city.
- * Paste a site path (/uploads/...) or an https address. Empty fields show the built-in gradient.
+ * H7.160: the old "Photos and listing bands" rows. They are no longer edited here: category and city pictures are set in
+ * Categories & fields and Cities & areas. The site still reads these rows for any picture those boxes leave empty, so they stay listed.
  */
-function ImageRows({ items, onChange }: { items: ShellImage[]; onChange: (next: ShellImage[]) => void }) {
-  const update = (index: number, patch: Partial<ShellImage>) => onChange(items.map((row, i) => (i === index ? { ...row, ...patch } : row)));
+function ImagesMoved({ items }: { items: ShellImage[] }) {
   return (
-    <fieldset className="mb-4 grid gap-2">
-      <legend className="t-small font-semibold">Photos and listing bands (category or city slug)</legend>
-      {items.map((item, index) => (
-        <div key={index} className="grid gap-2 rounded border border-line p-2">
-          <div className="flex flex-wrap items-end gap-2">
-            <label className="flex flex-col t-small">
-              For
-              <select className="adm-input" value={item.scope} onChange={(e) => update(index, { scope: e.target.value as ShellImage["scope"] })}>
-                <option value="category">Category</option>
-                <option value="city">City</option>
-              </select>
-            </label>
-            <label className="flex min-w-[8rem] flex-1 flex-col t-small">
-              Slug
-              <input className="adm-input" value={item.slug} maxLength={120} placeholder="dating" onChange={(e) => update(index, { slug: e.target.value })} />
-            </label>
-            <button type="button" className="adm-btn" aria-label={`Remove image row ${index + 1}`} onClick={() => onChange(items.filter((_, i) => i !== index))}>Remove</button>
-          </div>
-          <label className="flex flex-col t-small">
-            Card photo (category only)
-            <input className="adm-input" value={item.photo} maxLength={2048} onChange={(e) => update(index, { photo: e.target.value })} />
-          </label>
-          <label className="flex flex-col t-small">
-            Band image, desktop
-            <input className="adm-input" value={item.band} maxLength={2048} onChange={(e) => update(index, { band: e.target.value })} />
-          </label>
-          <label className="flex flex-col t-small">
-            Band image, phone (optional)
-            <input className="adm-input" value={item.bandPhone} maxLength={2048} onChange={(e) => update(index, { bandPhone: e.target.value })} />
-          </label>
-          {item.photo ? (
-            <FocalPicker
-              label="Card photo focus point"
-              aspect="4 / 3"
-              src={item.photo}
-              x={item.focusX ?? 50}
-              y={item.focusY ?? 18}
-              onChange={(next) => update(index, { focusX: next.x, focusY: next.y })}
-            />
-          ) : null}
-          {item.band ? (
-            <FocalPicker
-              label="Band focus point, desktop"
-              aspect="1232 / 400"
-              src={item.band}
-              x={item.bandFocusX ?? 72}
-              y={item.bandFocusY ?? 18}
-              onChange={(next) => update(index, { bandFocusX: next.x, bandFocusY: next.y })}
-            />
-          ) : null}
-          {item.bandPhone ? (
-            <FocalPicker
-              label="Band focus point, phone"
-              aspect="358 / 260"
-              src={item.bandPhone}
-              x={item.bandPhoneFocusX ?? 50}
-              y={item.bandPhoneFocusY ?? 12}
-              onChange={(next) => update(index, { bandPhoneFocusX: next.x, bandPhoneFocusY: next.y })}
-            />
-          ) : null}
-        </div>
-      ))}
-      {items.length < 40 ? (
-        <button type="button" className="adm-btn w-fit" onClick={() => onChange([...items, { scope: "category", slug: "", photo: "", band: "", bandPhone: "" }])}>Add an image row</button>
+    <section aria-labelledby="pictures-moved" className="mb-4 grid gap-2" data-tk="pictures-moved">
+      <h3 className="t-small font-semibold" id="pictures-moved">Category and city pictures</h3>
+      <p className="t-small">
+        Category and city pictures are now set in <Link href="/admin/categories/" className="text-accent">Categories &amp; fields</Link> and <Link href="/admin/locations/" className="text-accent">Cities &amp; areas</Link>.
+      </p>
+      {items.length ? (
+        <>
+          <p className="t-small text-muted">
+            These older rows are still stored here. The site uses one of them only when the new boxes have no picture for that slot, so you can leave them as they are.
+          </p>
+          <ul className="t-small text-muted" data-tk="pictures-old-rows">
+            {items.map((item, index) => (
+              <li key={`${item.scope}-${item.slug}-${index}`}>
+                {item.scope === "category" ? "Category" : item.scope === "city" ? "City" : "State"} {item.slug}: {[item.photo ? "card photo" : "", item.band ? "band for computers" : "", item.bandPhone ? "band for phones" : ""].filter(Boolean).join(", ")}
+              </li>
+            ))}
+          </ul>
+        </>
       ) : null}
-    </fieldset>
+    </section>
   );
 }
 
@@ -231,7 +183,7 @@ export function ShellEditor({ initial, section }: { initial: ShellConfig; sectio
                 <li key={`step-${index}`}>Step {index + 1}: {step.title}</li>
               ))}
             </ul>
-            <ImageRows items={draft.media.images} onChange={(next) => setDraft({ ...draft, media: { images: next } })} />
+            <ImagesMoved items={draft.media.images} />
           </section>
           <section aria-labelledby="header-edit">
             <h2 className="t-h3" id="header-edit">Header</h2>
