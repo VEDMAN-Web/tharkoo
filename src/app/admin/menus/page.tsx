@@ -2,12 +2,12 @@ import { AdminShell } from "@/components/admin/AdminShell";
 import { getStaffFromHeaders } from "@/lib/admin-auth";
 import { isAdminRole } from "@/lib/ui/site-content";
 import { readStoredShellConfig } from "@/server/site-links/shell-config";
-import { MenusTabs } from "./MenusTabs";
-import { ShellEditor } from "./ShellEditor";
+import { readLegacySocials, socialStatus } from "@/server/site-links/social-status";
+import { MenusEditor } from "./MenusEditor";
 
 export const dynamic = "force-dynamic";
 
-/** H7.1: header links, footer and footer contacts for the New design. Admins and superadmins only. */
+/** H7.1, H8.54: header links, footer and footer contacts for the New design. Admins and superadmins only. */
 export default async function MenusAdminPage() {
   const identity = await getStaffFromHeaders();
   if (!isAdminRole(identity.roles)) {
@@ -17,13 +17,10 @@ export default async function MenusAdminPage() {
       </AdminShell>
     );
   }
+  const [initial, legacy] = await Promise.all([readStoredShellConfig(), readLegacySocials()]);
   return (
-    <AdminShell title="Menus and footer">
-      <MenusTabs current="/admin/menus/" />
-      <p className="mb-4 t-small text-muted">
-        Header links, footer columns and contact rows on every public page. The account menu and the Log in and Post your ad targets stay fixed so login and posting keep working.
-      </p>
-      <ShellEditor initial={await readStoredShellConfig()} section="menus" />
+    <AdminShell title="Menus and footer" hasHeader>
+      <MenusEditor initial={initial} social={socialStatus(initial, legacy)} />
     </AdminShell>
   );
 }

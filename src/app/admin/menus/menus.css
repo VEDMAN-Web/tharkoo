@@ -1,0 +1,58 @@
+/* Menus and footer: cards, compact link rows, one save bar. Colours and spacing come from the admin tokens only. */
+.adm-menu-intro { margin: 0 0 14px; }
+.adm-menu-stack { display: grid; gap: 16px; padding-bottom: 16px; }
+.adm-menu-card { padding: 0; overflow: clip; }
+.adm-menu-cardhead { display: grid; gap: 4px; padding: 14px 20px; border-bottom: 1px solid var(--adm-line2); }
+.adm-menu-cardhead h2 { margin: 0; font-size: 15px; font-weight: 800; }
+.adm-menu-cardhead p { margin: 0; }
+.adm-menu-cardbody { display: grid; gap: 14px; padding: 16px 20px 20px; }
+.adm-menu-two { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
+.adm-menu-sub { margin: 6px 0 0; font-size: 13px; font-weight: 800; letter-spacing: 0.04em; text-transform: uppercase; color: var(--adm-kmuted); }
+.adm-menu-list { display: grid; gap: 8px; }
+.adm-menu-rows { margin: 0; padding: 0; list-style: none; display: grid; gap: 6px; }
+.adm-menu-linkgrid { display: grid; grid-template-columns: 28px minmax(120px, 1.2fr) minmax(150px, 1.7fr) 120px 76px auto; gap: 8px; align-items: center; }
+.adm-menu-contactgrid { display: grid; grid-template-columns: 120px minmax(110px, 1fr) minmax(130px, 1.2fr) minmax(150px, 1.4fr) auto; gap: 8px; align-items: center; }
+.adm-menu-head { color: var(--adm-kmuted); font-size: 12px; font-weight: 800; letter-spacing: 0.05em; text-transform: uppercase; padding: 0 2px; }
+.adm-menu-row { padding: 2px 0; border-radius: 8px; }
+.adm-menu-row.is-over { background: var(--adm-primary-soft); }
+.adm-menu-row.is-off .adm-k-input { opacity: 0.7; }
+.adm-menu-grip { display: grid; place-items: center; width: 28px; height: 36px; color: var(--adm-kmuted); cursor: grab; touch-action: none; }
+.adm-menu-show { display: inline-flex; align-items: center; gap: 6px; min-height: 32px; font-size: 13px; font-weight: 600; cursor: pointer; }
+.adm-menu-show input { width: 24px; height: 24px; accent-color: var(--adm-primary); flex: none; }
+.adm-menu-show span { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+.adm-menu-tools { display: inline-flex; gap: 2px; justify-content: flex-end; }
+.adm-menu-icon { width: 32px; min-width: 32px; }
+.adm-menu-live { display: grid; gap: 6px; padding: 12px 14px; border: 1px solid var(--adm-line2); border-radius: 10px; background: var(--adm-surface); }
+.adm-menu-live h3 { margin: 0; font-size: 13px; font-weight: 800; }
+.adm-menu-live ul { margin: 0; padding: 0; list-style: none; display: grid; gap: 4px; }
+.adm-menu-live li { display: flex; gap: 10px; align-items: baseline; flex-wrap: wrap; font-size: 13px; }
+.adm-menu-live li strong { min-width: 84px; }
+.adm-menu-live li span { color: var(--adm-kmuted); overflow-wrap: anywhere; }
+.adm-menu-live li[data-source="none"] span { font-style: italic; }
+.adm-menu-old { margin: 0; padding-left: 18px; color: var(--adm-kmuted); font-size: 13px; }
+.adm-menu-bar { margin-top: 4px; }
+
+@media (max-width: 1023px) {
+  .adm-menu-linkgrid { grid-template-columns: 28px minmax(110px, 1fr) minmax(130px, 1.4fr) 100px 40px auto; }
+  .adm-menu-contactgrid { grid-template-columns: 100px minmax(90px, 1fr) minmax(110px, 1.2fr) minmax(120px, 1.2fr) auto; }
+}
+@media (max-width: 767px) {
+  .adm-menu-two { grid-template-columns: minmax(0, 1fr); }
+  .adm-menu-cardhead { padding: 12px 16px; }
+  .adm-menu-cardbody { padding: 14px 16px 18px; }
+  .adm-menu-head { display: none; }
+  .adm-menu-row { padding: 10px; border: 1px solid var(--adm-line2); }
+  .adm-menu-linkgrid { grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr); grid-template-areas: "text icon" "link link" "show tools"; gap: 8px; }
+  .adm-menu-linkgrid > :nth-child(2) { grid-area: text; }
+  .adm-menu-linkgrid > :nth-child(3) { grid-area: link; }
+  .adm-menu-linkgrid > :nth-child(4) { grid-area: icon; }
+  .adm-menu-linkgrid > :nth-child(5) { grid-area: show; }
+  .adm-menu-linkgrid > :nth-child(6) { grid-area: tools; }
+  .adm-menu-contactgrid { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 8px; }
+  .adm-menu-contactgrid > :nth-child(3), .adm-menu-contactgrid > :nth-child(4), .adm-menu-contactgrid > :nth-child(5) { grid-column: 1 / -1; }
+  .adm-menu-grip { display: none; }
+  .adm-menu-show { min-height: 44px; }
+  .adm-menu-show span { position: static; width: auto; height: auto; clip-path: none; overflow: visible; }
+  .adm-menu-tools { justify-content: flex-end; gap: 6px; }
+  .adm-menu-icon { width: 44px; min-width: 44px; }
+}

@@ -1,0 +1,12 @@
+{
+  "branchPrefix": "haiku/h8.54",
+  "globs": [
+    "docs/ownership/H8.54.json",
+    "progress/H8.54.md",
+    "src/app/admin/menus/**",
+    "src/server/site-links/social-status.ts",
+    "tests/server/site-links/h8-54-*.test.ts",
+    "tests/e2e/h8-54-menus.e2e.ts",
+    "tests/e2e/a19-home-writers.e2e.ts"
+  ]
+}
