@@ -18,7 +18,7 @@ type Seeded = { id: string; email: string; name: string };
 
 /** A seller with a live ad, an approved ID check and a phone number, in the test database. */
 async function seedSeller(prefix: string): Promise<Seeded> {
-  const member = await newUserApi(process.env.E2E_BASE_URL ?? "http://127.0.0.1:4410", prefix);
+  const member = await newUserApi(process.env.E2E_BASE_URL ?? `http://127.0.0.1:${process.env.E2E_PORT ?? "4342"}`, prefix);
   await member.api.dispose();
   const suffix = String(Date.now()).slice(-6);
   const seeded = await withLocalDb(async (db) => {
@@ -103,11 +103,11 @@ test.describe("H7.156 user and vendor management", () => {
     const close = page.locator("[data-tk=reason-dialog]");
     await close.getByLabel("Fraud or abuse").check();
     await close.getByRole("button", { name: "Close account" }).last().click();
-    await expect(close.getByText(/Type CLOSE/i)).toBeVisible();
+    await expect(close.getByText("Type CLOSE to confirm.", { exact: true })).toBeVisible();
     await shot(page, "h7156-close-dialog");
     await close.getByLabel(/^Type CLOSE/).fill("CLOSE");
     await close.getByRole("button", { name: "Close account" }).last().click();
-    await expect(page.locator("[data-tk=toast]").last()).toContainText("Closed the account");
+    await expect(page.locator("[data-tk=toast]").last()).toContainText("account closed");
     await expect.poll(async () => (await userDoc(seller.id))?.status).toBe("deleted");
     const owner = await userDoc(seller.id);
     expect(await withLocalDb((db) => db.collection("listings").countDocuments({ ownerId: owner!._id, status: "active" }))).toBe(0);
@@ -137,7 +137,7 @@ test.describe("H7.156 user and vendor management", () => {
     await expect(drawer.getByRole("button", { name: "Remove badge..." })).toHaveCount(0);
     await drawer.getByRole("button", { name: "More" }).click();
     await expect(page.getByRole("menuitem", { name: "Close account..." })).toHaveCount(0);
-    await page.keyboard.press("Escape");
+    await drawer.getByRole("button", { name: "More" }).click();
     await drawer.getByRole("tab", { name: "Profile" }).click();
     await drawer.getByLabel("Name").fill(`${seller.name} By Support`);
     await drawer.getByRole("button", { name: "Save profile" }).click();

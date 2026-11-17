@@ -77,7 +77,7 @@ export function VendorTab({ detail, canEdit }: { detail: UserDetail; canEdit: bo
       {hiding ? (
         <div className="adm-k-field">
           <label className="adm-k-label" htmlFor="uv-reason">Reason <span className="adm-k-req" aria-hidden="true">*</span></label>
-          <input id="uv-reason" className="adm-k-input" value={reason} maxLength={200} required onChange={(event) => setReason(event.target.value)} />
+          <input id="uv-reason" className="adm-k-input" value={reason} maxLength={200} aria-required="true" onChange={(event) => setReason(event.target.value)} />
         </div>
       ) : null}
       {editable ? (

@@ -10,6 +10,8 @@
     "src/server/admin/undo/registry.ts",
     "src/server/models/identity.ts",
     "src/lib/admin/perms.ts",
+    "src/components/admin/FocalPicker.tsx",
+    "src/app/admin/_catalog/**",
     "tests/server/admin/h7156-*.test.ts",
     "tests/server/admin/a3-perms.test.ts",
     "tests/server/admin/a3-write.test.ts",
