@@ -2,7 +2,7 @@ import { mkdirSync } from "node:fs";
 import AxeBuilder from "@axe-core/playwright";
 import type { Locator, Page } from "@playwright/test";
 import { ObjectId } from "mongodb";
-import { expect, hasHorizontalScroll, signInAdminContext, test, withLocalDb } from "./helpers";
+import { expect, hasHorizontalScroll, loginUi, newApi, registerApi, setRoles, signInAdminContext, test, uniqueEmail, withLocalDb } from "./helpers";
 
 /** H8.52: Cities & areas as one master-detail screen. */
 
@@ -273,5 +273,33 @@ test.describe("H8.52 Cities and areas", () => {
     await expect(toast(page)).toContainText("Hide it instead");
 
     await withLocalDb((db) => db.collection("listings").deleteMany({ slug: `h852-marker-${stamp}` }));
+  });
+
+  test("a content editor opens Cities & areas and saves a place picture", async ({ page, baseURL }) => {
+    test.setTimeout(240_000);
+    const { first } = await seedCrowd("ce");
+    const alt = `H852 editor picture ${Date.now() % 100000}`;
+    await seedPicture(alt);
+    const email = uniqueEmail("h852editor");
+    const api = await newApi(baseURL!);
+    await registerApi(api, baseURL!, email);
+    await api.dispose();
+    const promoted = await setRoles(email, ["content_editor"]);
+    test.skip(!promoted, "Needs the in-memory Mongo URI written by tests/e2e/server.mjs (E2E_MONGO_URI_FILE).");
+    await page.setViewportSize({ width: 1440, height: 900 });
+    await loginUi(page, email, undefined, "/admin/");
+    await open(page, `?place=${first}&q=${encodeURIComponent("H852 Town ce 000")}&tab=pictures`);
+    await expect(page.locator('[data-tk="no-access"]')).toHaveCount(0);
+    await pick(page, page.locator('[data-tk="picture-box"][data-slot="tile"]'), alt);
+    await page.locator('[data-tk="picture-box"][data-slot="tile"]').getByLabel(/^Describe the picture/).fill("A square at dusk");
+    await saveButton(page).click();
+    await expect(toast(page)).toContainText("Saved. Live on the site in a few seconds.");
+    const row = await withLocalDb((db) => db.collection("locations").findOne({ _id: new ObjectId(first) }, { projection: { photo: 1 } }));
+    expect(row?.photo?.alt).toBe("A square at dusk");
+    await page.getByRole("tab", { name: "Details" }).click();
+    await page.getByRole("textbox", { name: /^Name/ }).fill("H852 Town ce 000 edited");
+    await saveButton(page).click();
+    await expect(toast(page)).toContainText("Saved");
+    expect((await withLocalDb((db) => db.collection("locations").findOne({ _id: new ObjectId(first) }, { projection: { name: 1 } })))?.name).toBe("H852 Town ce 000 edited");
   });
 });

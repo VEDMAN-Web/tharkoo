@@ -79,6 +79,12 @@ describe("H8.52 removing areas", () => {
     await Listing.create({ ownerId: oid(), categoryId: oid(), cityId: city._id, districtId: district.id, title: "Ad", description: "A description that is long enough", slug: "an-ad", status: "active" });
     await expect(removeArea(admin, district.id)).rejects.toThrow("Hide it instead");
     await Listing.deleteMany({});
+    const market = await createArea(admin, { parentId: district.id, name: "Market" });
+    await Listing.create({ ownerId: oid(), categoryId: oid(), cityId: city._id, districtId: district.id, localityId: market.id, title: "Ad two", description: "A description that is long enough", slug: "ad-two", status: "active" });
+    await expect(removeArea(admin, market.id)).rejects.toThrow("Hide it instead");
+    expect(await Location.exists({ _id: market.id })).not.toBeNull();
+    await Listing.deleteMany({});
+    await removeArea(admin, market.id);
     await removeArea(admin, district.id);
     expect(await Location.exists({ _id: district.id })).toBeNull();
     await expect(removeArea(admin, String(city._id))).rejects.toThrow("not found");

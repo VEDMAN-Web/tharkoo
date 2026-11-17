@@ -100,7 +100,8 @@ export async function removeArea(ctx: AdminCtx, id: string): Promise<{ name: str
   const existing = await areaOf(id);
   const label = String(existing.name ?? existing.slug);
   if (await Location.exists({ parentId: id })) throw new ConflictError(`${label} has places inside it. Remove those first, or hide it.`);
-  if (existing.type === "district" && (await Listing.exists({ districtId: id }))) throw new ConflictError(`${label} has ads. Hide it instead of removing it.`);
+  const adField = existing.type === "district" ? "districtId" : "localityId";
+  if (await Listing.exists({ [adField]: id })) throw new ConflictError(`${label} has ads. Hide it instead of removing it.`);
   await adminWrite<null>(ctx, {
     perm: "catalogue.edit",
     action: "area.remove",
