@@ -28,7 +28,8 @@ export interface D1Result {
 }
 
 /** The format 2 home blocks for the page as it is stored today: banner and search, trust pills, categories, latest ads, how it works. */
-async function buildHomeLayoutBlocks(): Promise<BlockBase[]> {
+export async function buildHomeLayoutBlocks(): Promise<BlockBase[]> {
+  await connectDb();
   const [content, shell, overrides] = await Promise.all([getHomepageContent(), readShellConfig(), textOverrides()]);
   const built = homeBlocksFrom({
     hero: content.hero,
