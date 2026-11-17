@@ -372,7 +372,7 @@
   .tkn-sr-head { margin-top: 16px; }
   .tkn-sr-h1 { font-size: 24px; }
   .tkn-sr-sort-label { position: absolute; width: 1px; height: 1px; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; }
-  .tkn-sr-sort select { min-height: 44px; max-width: 150px; }
+  .tkn-sr-sort select { min-height: 44px; max-width: 140px; }
   .tkn-sr-head .tkn-ls-filter-btn { min-height: 44px; padding: 0 12px; }
   .tkn-sr-chips { flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; padding-bottom: 2px; }
   .tkn-sr-chips::-webkit-scrollbar { display: none; }
@@ -387,5 +387,7 @@
   .tkn-sr-chipswrap { margin-top: 8px; }
 }
 @media (max-width: 599px) {
-  .tkn-sr-count { white-space: nowrap; font-size: 13px; }
+  .tkn-sr-meta { flex-wrap: wrap; column-gap: 8px; row-gap: 6px; }
+  .tkn-sr-count { min-width: 0; white-space: normal; font-size: 13px; line-height: 1.3; }
+  .tkn-sr-sort { flex: none; margin-left: auto; }
 }

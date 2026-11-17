@@ -1,0 +1,17 @@
+{
+  "branchPrefix": "haiku/h8.35",
+  "globs": [
+    "docs/ownership/H8.35.json",
+    "progress/H8.35.md",
+    "src/lib/ui/text.ts",
+    "src/components/PostWizard.tsx",
+    "src/components/post/IdCheckFirst.tsx",
+    "src/components/post/PayParts.tsx",
+    "src/components/post/NewPostParts.tsx",
+    "src/components/post/CategoryTiles.tsx",
+    "src/components/post/PickGroup.tsx",
+    "src/app/u/post-insert/page.tsx",
+    "tests/server/ui/a35-*.test.ts",
+    "tests/server/ui/post-wizard-copy.test.ts"
+  ]
+}

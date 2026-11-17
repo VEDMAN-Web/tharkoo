@@ -236,7 +236,7 @@ async function requirePlace(id: string | undefined, field: string) {
   return place._id;
 }
 
-function fieldDefs(category: CategoryDoc): FieldDefinition[] {
+export function fieldDefs(category: CategoryDoc): FieldDefinition[] {
   return (category.fields ?? []).map((field) => ({
     key: field.key,
     label: field.label,
@@ -290,7 +290,8 @@ async function assertPhotos(ownerId: string, listing: ListingRow, mediaIds: stri
   }
 }
 
-async function assertCleanText(parts: Array<string | undefined>) {
+export async function assertCleanText(parts: Array<string | undefined>) {
+  await connectDb();
   const text = parts.filter((part): part is string => Boolean(part?.trim())).join("\n");
   if (!text) return;
   if (textDenied(text).denied) throw new PolicyViolationError("Listing text is not allowed");
@@ -302,7 +303,8 @@ async function assertCleanText(parts: Array<string | undefined>) {
   }
 }
 
-async function writeVersion(listing: ListingRow, actorId: string) {
+export async function writeVersion(listing: ListingRow, actorId: string) {
+  await connectDb();
   const version = (await ListingVersion.countDocuments({ listingId: listing._id })) + 1;
   const snapshot = listing.toObject() as Record<string, unknown>;
   delete snapshot.__v;

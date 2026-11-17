@@ -122,6 +122,7 @@ async function applyWalletLegs(input: PostInput, phase: "debit" | "credit") {
         requestId: input.requestId,
         actorId: input.actorId ?? undefined,
         ip: input.ip,
+        once: true,
       });
     }
     if (phase === "credit" && move.delta > 0) {
@@ -134,6 +135,7 @@ async function applyWalletLegs(input: PostInput, phase: "debit" | "credit") {
         actorType: input.actorType ?? "system",
         auditAction: `ledger.${input.kind}`,
         ip: input.ip,
+        once: true,
       });
     }
   }
@@ -151,6 +153,7 @@ async function undoWalletDebits(input: PostInput) {
       actorType: "system",
       reason: "refund",
       auditAction: `ledger.${input.kind}.undo`,
+      once: true,
     });
   }
 }

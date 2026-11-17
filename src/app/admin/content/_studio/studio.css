@@ -1,0 +1,72 @@
+/* H8.31: the content studio only. The shared kit stays in src/styles/admin-kit.css. */
+.adm-st-tabs { padding: 0 8px; margin-bottom: 16px; }
+.adm-st-grid { display: grid; grid-template-columns: 300px minmax(0, 1fr); gap: 16px; align-items: start; }
+.adm-st-list { padding: 0; overflow: clip; }
+.adm-st-listtop { display: grid; gap: 10px; padding: 12px; border-bottom: 1px solid var(--adm-line2); }
+.adm-st-chips { display: flex; gap: 6px; flex-wrap: wrap; }
+.adm-st-chips .adm-k-chip[aria-pressed="true"] { border-color: var(--adm-pri); background: var(--adm-pri-soft); color: var(--adm-pri-h); }
+.adm-st-rows { margin: 0; padding: 0; list-style: none; }
+.adm-st-row { display: grid; gap: 6px; width: 100%; padding: 12px 16px; border: 0; border-bottom: 1px solid var(--adm-line2); background: transparent; text-align: left; cursor: pointer; font: inherit; color: inherit; }
+.adm-st-row:hover { background: #fafbfd; }
+.adm-st-row[aria-current="true"] { background: #fff7fa; box-shadow: inset 3px 0 0 var(--adm-pri); }
+.adm-st-row strong { overflow-wrap: anywhere; }
+.adm-st-rowmeta { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.adm-st-rowmeta small { color: var(--adm-kmuted); font-size: 12.5px; }
+.adm-st-work { display: grid; gap: 8px; min-width: 0; }
+.adm-st-back { display: none; align-items: center; gap: 4px; min-height: 44px; border: 0; background: transparent; color: var(--adm-kmuted); font: inherit; font-weight: 700; cursor: pointer; }
+.adm-st-pick { display: grid; place-items: center; min-height: 260px; }
+.adm-st-editor { display: grid; grid-template-columns: minmax(0, 1fr) 340px; gap: 16px; align-items: start; }
+.adm-st-main { padding: 0; overflow: clip; display: grid; }
+.adm-st-steps { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; padding: 14px 20px; border-bottom: 1px solid var(--adm-line2); }
+.adm-st-stepbadges { display: flex; gap: 6px; flex-wrap: wrap; }
+.adm-st-fields { display: grid; gap: 16px; padding: 16px 20px; border: 0; margin: 0; min-width: 0; }
+.adm-k-notice-err { margin: 12px 20px 0; padding: 10px 14px; border-radius: 10px; background: #fdecec; color: #8a1c1c; font-size: 13.5px; }
+.adm-k-notice-err ul { margin: 6px 0 0; padding-left: 18px; }
+.adm-st-texthead { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+.adm-st-foot { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; padding: 12px 20px; border-top: 1px solid var(--adm-line); background: #fafbfd; }
+.adm-st-foot .adm-k-sp { flex: 1; }
+.adm-st-note { max-width: 40ch; text-align: right; }
+.adm-st-side { display: grid; gap: 16px; min-width: 0; }
+.adm-st-card { padding: 0; overflow: clip; }
+.adm-st-cardhead { display: flex; justify-content: space-between; align-items: center; gap: 8px; padding: 14px 16px; border-bottom: 1px solid var(--adm-line2); }
+.adm-st-cardhead h2 { margin: 0; font-size: 16px; font-weight: 800; }
+.adm-st-cardbody { display: grid; gap: 14px; padding: 16px; }
+.adm-st-slug { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: 4px; align-items: center; color: var(--adm-kmuted); font-size: 13px; }
+.adm-st-sugg { margin: 0; padding: 0; list-style: none; display: grid; gap: 10px; }
+.adm-st-sugg li { display: flex; justify-content: space-between; gap: 10px; align-items: center; padding-bottom: 10px; border-bottom: 1px solid var(--adm-line2); }
+.adm-st-sugg li span { display: grid; gap: 2px; min-width: 0; }
+.adm-st-sugg small { color: var(--adm-kmuted); font-size: 12.5px; overflow-wrap: anywhere; }
+.adm-st-body { display: grid; gap: 10px; }
+.adm-st-toolbar { display: flex; gap: 4px; flex-wrap: wrap; padding: 6px; border: 1px solid var(--adm-line); border-radius: 10px; background: #fafbfd; }
+.adm-st-tool { min-width: 36px; min-height: 36px; }
+.adm-st-linkbar { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.adm-st-linkbar .adm-k-input { flex: 1; min-width: 160px; }
+.adm-st-nodes { margin: 0; padding: 0; list-style: none; display: grid; gap: 10px; }
+.adm-st-node { display: grid; gap: 6px; padding: 10px; border: 1px solid var(--adm-line2); border-radius: 10px; }
+.adm-st-nodehead { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+.adm-st-nodetype { color: var(--adm-kmuted); font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; }
+.adm-st-nodectl { display: flex; gap: 4px; }
+.adm-st-text { field-sizing: content; min-height: 44px; resize: vertical; }
+.adm-st-h2 { font-size: 20px; font-weight: 800; }
+.adm-st-h3 { font-size: 17px; font-weight: 700; }
+.adm-st-inline { display: flex; gap: 8px; align-items: center; min-height: 44px; font-size: 13px; }
+.adm-st-img, .adm-st-faq, .adm-st-ads { display: grid; gap: 10px; }
+.adm-st-thumb { width: 100%; max-height: 220px; object-fit: cover; border-radius: 8px; }
+.adm-st-faqitem { display: grid; gap: 6px; padding-bottom: 10px; border-bottom: 1px dashed var(--adm-line2); }
+.adm-st-preview { padding: 16px; border: 1px solid var(--adm-line); border-radius: 10px; overflow-wrap: anywhere; }
+.adm-st-preview h3 { margin: 0 0 12px; font-size: 22px; }
+.adm-st-preview img { max-width: 100%; height: auto; }
+@media (max-width: 1279px) {
+  .adm-st-editor { grid-template-columns: minmax(0, 1fr); }
+}
+@media (max-width: 1023px) {
+  .adm-st-grid { grid-template-columns: minmax(0, 1fr); }
+  [data-tk="studio"][data-open="yes"] .adm-st-list { display: none; }
+  .adm-st-back { display: inline-flex; }
+}
+@media (max-width: 767px) {
+  .adm-st-steps, .adm-st-fields, .adm-st-foot { padding-left: 12px; padding-right: 12px; }
+  .adm-k-notice-err { margin-left: 12px; margin-right: 12px; }
+  .adm-st-foot .adm-k-btn { flex: 1; }
+  .adm-st-note { text-align: left; max-width: none; }
+}
