@@ -60,7 +60,7 @@ export function Tabs({
             onKeyDown={(event) => onKey(event, index)}
           >
             {item.label}
-            {typeof item.count === "number" ? <span className="adm-k-tab-count">{item.count.toLocaleString("en-IN")}</span> : null}
+            {typeof item.count === "number" ? <span className="adm-k-tab-count" data-zero={item.count === 0 ? "yes" : undefined}>{item.count.toLocaleString("en-IN")}</span> : null}
           </button>
         );
       })}

@@ -27,7 +27,7 @@ test.describe("A10 admin dashboard", () => {
     await expect(page.locator('[data-tk="launch-checklist"] li')).toHaveCount(11);
     await expect(page.locator('[data-tk="launch-checklist"]')).toContainText(/\d+ of 11 done/);
     await expect(page.locator('[data-tk="recent"]')).toBeVisible();
-    await expect(page.getByRole("button", { name: "More" })).toBeVisible();
+    await expect(page.getByRole("link", { name: "History & undo" }).first()).toBeVisible();
     await expect(page.getByRole("link", { name: "View site" })).toBeVisible();
     expect(await hasHorizontalScroll(page)).toBe(false);
     expect(await serious(page)).toEqual([]);

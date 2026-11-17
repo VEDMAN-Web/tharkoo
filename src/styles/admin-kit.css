@@ -104,6 +104,8 @@
 .adm-k-tab[aria-selected="true"] { color: var(--adm-pri-h); border-bottom-color: var(--adm-pri); }
 .adm-k-tab-count { min-width: 22px; height: 20px; padding: 0 7px; border-radius: 999px; background: var(--adm-line2); color: var(--adm-kmuted); font-size: 12px; font-weight: 700; display: inline-grid; place-items: center; }
 .adm-k-tab[aria-selected="true"] .adm-k-tab-count { background: var(--adm-pri); color: #fff; }
+/* A tab with nothing in it shows a grey number, selected or not. */
+.adm-k-tab .adm-k-tab-count[data-zero="yes"], .adm-k-tab[aria-selected="true"] .adm-k-tab-count[data-zero="yes"] { background: var(--adm-line2); color: var(--adm-kmuted); }
 
 /* ---- drawer ---- */
 .adm-k-drawer { position: fixed; top: 0; right: 0; bottom: 0; z-index: 60; width: 420px; max-width: 100vw; display: flex; flex-direction: column; background: var(--adm-surface); border-left: 1px solid var(--adm-line); box-shadow: -8px 0 30px rgba(22, 26, 43, 0.12); }
