@@ -1,6 +1,7 @@
 import { Types } from "mongoose";
 import { AuditRepository } from "@/server/audit";
-import { STAR_SLOT_CAP, boostsDue, promotionRule } from "@/server/billing/catalog";
+import { STAR_SLOT_CAP, boostsDue, orderPlans, promotionRule } from "@/server/billing/catalog";
+import { readPlanOrder } from "@/server/billing/money-settings";
 import { consumeCoupon, packBonus, promotionCost, validateCoupon } from "@/server/billing/coupons";
 import {
   creditWallet,
@@ -80,7 +81,7 @@ async function starCount(cityId: Types.ObjectId, productId: Types.ObjectId) {
 export async function listProducts() {
   await connectDb();
   await readyBilling();
-  const rows = await PromotionProduct.find({ enabled: { $ne: false } }).sort({ amount: 1 }).lean();
+  const rows = orderPlans(await PromotionProduct.find({ enabled: { $ne: false } }).sort({ amount: 1 }).lean(), await readPlanOrder());
   const products = [];
   for (const row of rows) {
     if (productCodeDenied(row.code).denied) continue;

@@ -1,23 +1,17 @@
+import Link from "next/link";
 import { AdminShell } from "@/components/admin/AdminShell";
-import { getStaffFromHeaders } from "@/lib/admin-auth";
-import { isAdminRole } from "@/lib/ui/site-content";
-import { readMoneySettings } from "@/server/billing/money-settings";
-import { MoneySettingsForm } from "./MoneySettingsForm";
 
 export const dynamic = "force-dynamic";
 
-export default async function MoneyPage() {
-  const identity = await getStaffFromHeaders();
-  if (!isAdminRole(identity.roles)) {
-    return (
-      <AdminShell title="Money">
-        <p>Only an admin can change money settings.</p>
-      </AdminShell>
-    );
-  }
+/** H8.17: the money settings moved to Prices & plans. This page stays so old links and bookmarks still land somewhere useful. */
+export default function MoneyPage() {
   return (
-    <AdminShell title="Money">
-      <MoneySettingsForm initial={await readMoneySettings()} />
+    <AdminShell title="Money" hasHeader>
+      <div className="adm-card" style={{ padding: 24, display: "grid", gap: 10, justifyItems: "start" }} data-tk="money-moved">
+        <h1 style={{ margin: 0, fontSize: 20 }}>Money settings moved</h1>
+        <p style={{ margin: 0 }}>The posting fee, credit price, paid posting and test payments are now on Prices &amp; plans.</p>
+        <Link href="/admin/prices/" className="adm-btn">Open Prices &amp; plans</Link>
+      </div>
     </AdminShell>
   );
 }

@@ -36,12 +36,12 @@ async function accountId(page: Page): Promise<ObjectId> {
 }
 
 test.describe("H7.120 small list", () => {
-  test("a: the Paid posting and Mock payments switches say On or Off to match their state", async ({ browser, baseURL }) => {
+  test("a: the Paid posting and Test payments switches say On or Off to match their state", async ({ browser, baseURL }) => {
     test.setTimeout(120_000);
     const context = await browser.newContext({ baseURL });
     await signInAdminContext(context, baseURL!);
     const page = await context.newPage();
-    await page.goto("/admin/settings/money/");
+    await page.goto("/admin/prices/");
     const section = page.locator('[data-tk="money-settings"]');
     const paid = section.getByRole("switch", { name: /^Paid posting: / });
     await expect(paid).toHaveAttribute("aria-checked", "false");
@@ -50,9 +50,9 @@ test.describe("H7.120 small list", () => {
     await expect(section.getByRole("switch", { name: "Paid posting: On" })).toHaveAttribute("aria-checked", "true");
     await section.getByRole("switch", { name: "Paid posting: On" }).click();
     await expect(section.getByRole("switch", { name: "Paid posting: Off" })).toHaveAttribute("aria-checked", "false");
-    const mock = section.getByRole("switch", { name: /^Mock payments: / });
+    const mock = section.getByRole("switch", { name: /^Test payments: / });
     const state = await mock.getAttribute("aria-checked");
-    await expect(mock).toHaveAccessibleName(state === "true" ? "Mock payments: On" : "Mock payments: Off");
+    await expect(mock).toHaveAccessibleName(state === "true" ? "Test payments: On" : "Test payments: Off");
     await setPaidPosting(false);
     await context.close();
   });

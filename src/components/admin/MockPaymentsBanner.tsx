@@ -7,7 +7,7 @@ export async function MockPaymentsBanner() {
   return (
     <div className="adm-mockbar" role="status" data-tk="mock-payments-banner">
       <span>Test payments are ON: anyone can add credits without paying.</span>{" "}
-      <Link href="/admin/settings/money/">Turn off in Prices & plans</Link>
+      <Link href="/admin/prices/">Turn off in Prices & plans</Link>
     </div>
   );
 }
