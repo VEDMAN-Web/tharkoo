@@ -538,6 +538,7 @@ export async function refundPayment(input: {
     auditAction: "wallet.refund",
     auditReason: input.reason,
     ip: input.ip,
+    once: true,
   });
   if (!result.created) throw new ConflictError("Refund already exists");
   return { refundId: refId, balance: result.balance };

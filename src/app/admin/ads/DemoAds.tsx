@@ -1,54 +1,104 @@
 "use client";
 
-import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { Notice } from "@/components/admin/ui";
-import { endDemoAdsAction } from "./demo-actions";
+import { History, Power } from "lucide-react";
+import { Button, ReasonDialog, useToast } from "@/components/admin/ui";
+import type { DemoPanelData } from "@/server/listings/demo-ads";
+import { endDemoAdsAction, restoreDemoAdsAction, undoEndDemoAdsAction } from "./demo-actions";
 
-export function DemoAds({ total, active }: { total: number; active: number }) {
-  const [typed, setTyped] = useState("");
+function dayOf(iso: string) {
+  return new Date(iso).toLocaleDateString("en-IN", { day: "numeric", month: "short", timeZone: "Asia/Kolkata" });
+}
+
+/** The Demo ads tab panel (H8.30): how many are live, End with a typed confirm, and Restore for a superadmin in the days after. */
+export function DemoAds({ panel, canEnd, canRestore }: { panel: DemoPanelData; canEnd: boolean; canRestore: boolean }) {
+  const router = useRouter();
+  const toast = useToast();
+  const [ending, setEnding] = useState(false);
   const [busy, setBusy] = useState(false);
-  const [message, setMessage] = useState<{ kind: "error" | "info"; text: string } | null>(null);
-  const [left, setLeft] = useState(active);
-  const phrase = `END ${left}`;
-  const ready = left > 0 && typed.trim() === phrase;
+  const { total, active, onHome, ended } = panel;
+  const phrase = `END ${active}`;
+
+  async function undo(eventId: string) {
+    const answer = await undoEndDemoAdsAction(eventId);
+    toast.show({ kind: answer.ok ? "success" : "error", message: answer.message });
+    router.refresh();
+  }
 
   async function end() {
-    if (!ready) return;
+    setEnding(false);
     setBusy(true);
-    setMessage(null);
-    const result = await endDemoAdsAction(typed);
+    const result = await endDemoAdsAction(phrase);
     setBusy(false);
-    if (!result.ok) return setMessage({ kind: "error", text: result.message });
-    setLeft(0);
-    setTyped("");
-    setMessage({ kind: "info", text: `Ended ${result.ended} demo ${result.ended === 1 ? "ad" : "ads"}.` });
+    if (!result.ok) toast.show({ kind: "error", message: result.message });
+    else toast.show({ kind: "undo", message: `Ended ${result.ended} demo ${result.ended === 1 ? "ad" : "ads"}.`, onUndo: () => void undo(result.eventId) });
+    router.refresh();
+  }
+
+  async function restore() {
+    setBusy(true);
+    const result = await restoreDemoAdsAction();
+    setBusy(false);
+    toast.show({ kind: result.ok ? "success" : "error", message: result.message });
+    router.refresh();
   }
 
   return (
-    <section className="adm-card" aria-labelledby="demo-ads-heading" style={{ marginBottom: 16 }} data-tk="demo-ads">
-      <h2 id="demo-ads-heading" className="t-h4">Demo ads</h2>
-      <p className="t-small text-muted">
-        {total} demo {total === 1 ? "ad" : "ads"}, {left} still live. Demo ads stay until you end them here.
+    <section className="adm-ads-demo" aria-labelledby="demo-ads-heading" data-tk="demo-ads">
+      <h2 id="demo-ads-heading">Demo ads</h2>
+      <p>
+        {total} demo {total === 1 ? "ad" : "ads"}, {active} still live. Demo ads fill the site before launch and are left out of every number on the Dashboard.
       </p>
-      <p className="t-small" style={{ margin: "8px 0" }}>
-        <Link href="/admin/ads/?kind=demo" data-tk="filter-demo">Show only demo ads</Link> · <Link href="/admin/ads/?kind=real" data-tk="filter-real">Show only real ads</Link> · <Link href="/admin/ads/">Show all</Link>
-      </p>
-      <div style={{ display: "flex", gap: 8, alignItems: "flex-end", flexWrap: "wrap", margin: "12px 0 6px" }}>
-        <label className="adm-field-label" htmlFor="demo-confirm" style={{ minWidth: 260 }}>
-          {left > 0 ? `Type ${phrase} to confirm` : "No live demo ads to end"}
-          <input id="demo-confirm" className="adm-input" type="text" autoComplete="off" value={typed} disabled={left === 0 || busy} onChange={(event) => setTyped(event.target.value)} />
-        </label>
-        <button type="button" className="adm-btn" data-tk="end-demo" disabled={!ready || busy} onClick={end}>
-          {busy ? "Ending" : "End demo ads"}
-        </button>
-      </div>
-      <p className="t-small text-muted" data-tk="end-demo-note">This ends every demo ad. Real ads are never touched.</p>
-      {message ? (
-        <div style={{ marginTop: 8 }}>
-          <Notice kind={message.kind}>{message.text}</Notice>
+      <dl className="adm-ads-demo-stats">
+        <div>
+          <dt>Demo ads live</dt>
+          <dd>{active}</dd>
         </div>
-      ) : null}
+        <div>
+          <dt>On Home</dt>
+          <dd>{onHome}</dd>
+        </div>
+        <div>
+          <dt>Shown numbers</dt>
+          <dd>Demo ads only</dd>
+        </div>
+      </dl>
+      <p data-tk="end-demo-note">Ending them hides every demo ad at once. Real ads are never touched. A superadmin can bring them back for a few days.</p>
+      <div className="adm-ads-demo-actions">
+        {canEnd ? (
+          <Button kind="danger" icon={Power} busy={busy} disabled={active === 0} data-tk="end-demo" onClick={() => setEnding(true)}>
+            End demo ads...
+          </Button>
+        ) : null}
+        {ended ? (
+          <>
+            <span data-tk="restore-note">
+              {ended.count} demo {ended.count === 1 ? "ad was" : "ads were"} ended on {dayOf(ended.endedAt)}.{" "}
+              {ended.canRestore ? `They can come back until ${dayOf(ended.restoreUntil)}.` : "The days to bring them back are over."}
+            </span>
+            {canRestore && ended.canRestore ? (
+              <Button icon={History} busy={busy} data-tk="restore-demo" onClick={() => void restore()}>
+                {`Restore ${ended.count} demo ${ended.count === 1 ? "ad" : "ads"}`}
+              </Button>
+            ) : null}
+            {!canRestore ? <span className="adm-ads-demo-muted">Only a superadmin can restore them.</span> : null}
+          </>
+        ) : (
+          <span className="adm-ads-demo-muted" data-tk="restore-note">Restore ended demo ads: nothing ended yet.</span>
+        )}
+      </div>
+      <ReasonDialog
+        key={ending ? "open" : "closed"}
+        open={ending}
+        title={`End ${active} demo ${active === 1 ? "ad" : "ads"}?`}
+        body="They disappear from the site at once. Real ads are not touched. You can undo this now, and a superadmin can bring them back for 7 days."
+        typedConfirm={phrase}
+        confirmLabel={`End ${active} demo ${active === 1 ? "ad" : "ads"}`}
+        danger
+        onCancel={() => setEnding(false)}
+        onConfirm={() => void end()}
+      />
     </section>
   );
 }
