@@ -8,7 +8,7 @@ vi.mock("@/server/shared/policy", async (importOriginal) => ({
 
 import type { AdminCtx } from "@/server/admin/context";
 import { undoEvent } from "@/server/admin/undo/core";
-import { loadUndoHandler, overrideUndoHandler, undoSourceOf, UNDO_KINDS, type UndoHandler } from "@/server/admin/undo/registry";
+import { loadUndoHandler, notBuiltHandler, overrideUndoHandler, undoSourceOf, UNDO_KINDS, type UndoHandler } from "@/server/admin/undo/registry";
 import { adminWrite } from "@/server/admin/write";
 import { AppendOnlyError } from "@/server/audit";
 import { ForbiddenError, ValidationError } from "@/server/http";
@@ -53,7 +53,7 @@ beforeEach(async () => {
 });
 
 /** Undo kinds whose real handler has been built (the rest are still stubs). Add a kind here when its card lands. */
-const BUILT_KINDS: readonly string[] = ["user.ban", "wallet.adjust", "record.restore", "layout.publish", "listing.decision", "report.decision", "id.decision", "content.publish", "team.roles", "demo.end"];
+const BUILT_KINDS: readonly string[] = ["user.ban", "wallet.adjust", "record.restore", "layout.publish", "listing.decision", "report.decision", "id.decision", "content.publish", "team.roles", "demo.end", "listing.edit", "media.trash"];
 
 type Spec = Parameters<typeof adminWrite<string>>[1];
 
@@ -208,7 +208,7 @@ describe("undoEvent", () => {
   });
 
   it("answers not built for a kind whose handler is still a stub", async () => {
-    overrideUndoHandler("media.trash", null);
+    overrideUndoHandler("media.trash", notBuiltHandler("media.trash"));
     const done = await change(admin, "two", { undo: { kind: "media.trash", windowKey: "demo" } });
     expect(await undoEvent(admin, done.eventId)).toMatchObject({ ok: false, reason: "not_built" });
   });

@@ -10,6 +10,7 @@ import { PickGroup } from "@/components/post/PickGroup";
 import { cleanAttrs, isChipField, LONG_LIST, needsMoreStep, stepFromUrl, stepsFor, urlStepOf, DEFAULT_PICK_LIMIT, draftToForm, errorsForStep, needsIdCheck, picksOf, telegramHandle, textOf, validateAbout, validateContact, validatePost, type NewPostStep, type PostAttrs, type SavedDraft } from "@/lib/ui/post-form";
 import { loginPath, postAdPath } from "@/lib/urls";
 import { useUrlPaths } from "./UrlPaths";
+import { useT } from "./help/UiTextProvider";
 import { HelpCard } from "./ui/HelpCard";
 import { AdCard } from "./ui/AdCard";
 import { POST_COPY_DEFAULTS, wizardFields, type CtaCopy, type PostCopy } from "./post/copy";
@@ -23,7 +24,7 @@ import { openPromote } from "./promote/openPromote";
 import { openSupportWith } from "./recharge/openRecharge";
 import { CreditsCard, PayCard } from "./post/PayParts";
 import { CREDITS_ADDED_EVENT, creditsText, insufficientFrom, openRecharge, shortfallOf, usePostingMoney } from "./post/credits";
-import { NEW_POST_TIPS, PostRail, PostTip, RAIL_LABELS, RAIL_MORE_LABEL, type RailItem } from "./post/NewPostParts";
+import { NEW_POST_TIP_KEYS, PostRail, PostTip, RAIL_LABEL_KEYS, RAIL_MORE_KEY, type RailItem } from "./post/NewPostParts";
 import { CategoryTiles } from "./post/CategoryTiles";
 import { hintsFor, photoHelp } from "./post/placeholders";
 import { listDraftMediaAction } from "./post/mediaActions";
@@ -76,6 +77,7 @@ export function PostWizard({
   maskedEmail?: string;
   about?: { askDateOfBirth: boolean } | null;
 }) {
+  const t = useT();
   const paths = useUrlPaths();
   const [step, setStep] = useState(1);
   const pendingStep = useRef<string | null>(null);
@@ -198,11 +200,11 @@ export function PostWizard({
             setAttrs(form.attrs);
             setTerms(true);
             setAdult(true);
-          } else setBanner("This draft could not be loaded. Go back and save it again.");
+          } else setBanner(t("post.error.draftLoad"));
           setHydrated(true);
           setStartReady(true);
         }).catch(() => {
-          setBanner("This draft could not be loaded. Go back and save it again.");
+          setBanner(t("post.error.draftLoad"));
           setHydrated(true);
           setStartReady(true);
         });
@@ -225,7 +227,7 @@ export function PostWizard({
       });
     }
     return () => window.clearTimeout(id);
-  }, [newDesign, initialCategories, initialCities]);
+  }, [newDesign, initialCategories, initialCities, t]);
 
   useEffect(() => {
     if (!startReady || !pendingStep.current) return;
@@ -263,8 +265,8 @@ export function PostWizard({
       attrs,
       fields: extra.map((field) => ({ key: field.key, label: field.label, required: field.required })),
     });
-    if (phone && contactMode !== "email" && !/^\+91[6-9]\d{9}$/.test(normalPhone(phone))) next.phone = "Use +91 and 10 digits";
-    if (newDesign && price.trim() && !/^\d{1,9}$/.test(priceDigits)) next.price = "Use whole rupees, numbers only";
+    if (phone && contactMode !== "email" && !/^\+91[6-9]\d{9}$/.test(normalPhone(phone))) next.phone = t("post.error.phone");
+    if (newDesign && price.trim() && !/^\d{1,9}$/.test(priceDigits)) next.price = t("post.error.price");
     if (newDesign) Object.assign(next, validateContact({ mode: contactMode, whatsappOn: whatsapp, whatsappSame, whatsappNumber, telegramOn, telegram }));
     if (about) Object.assign(next, validateAbout({ askDateOfBirth: about.askDateOfBirth, dateOfBirth, ageConfirmed }));
     return next;
@@ -347,7 +349,7 @@ export function PostWizard({
         return "";
       }
       setBusy(false);
-      setBanner(created.error.code === "UNAUTHORIZED" ? "Sign in to save this draft." : friendlyError(created.error));
+      setBanner(created.error.code === "UNAUTHORIZED" ? t("post.error.signIn") : friendlyError(created.error));
       return "";
     }
     const id = existing || String((created.data as { id?: string })?.id || "");
@@ -452,7 +454,7 @@ export function PostWizard({
       if (message) found[keyOf[key] ?? key] = message;
     }
     if (Object.keys(found).length) showErrors(found);
-    else setBanner(res.error.code === "UNAUTHORIZED" ? "Sign in to save this draft." : friendlyError(res.error));
+    else setBanner(res.error.code === "UNAUTHORIZED" ? t("post.error.signIn") : friendlyError(res.error));
     return false;
   }
 
@@ -466,8 +468,8 @@ export function PostWizard({
   }
 
   async function publish() {
-    if (!hydrated) return setBanner("The draft is still loading.");
-    if (!draftId || !title.trim()) return setBanner("Save a draft before submitting.");
+    if (!hydrated) return setBanner(t("post.error.draftLoading"));
+    if (!draftId || !title.trim()) return setBanner(t("post.error.saveFirst"));
     if (newDesign && !showErrors(errorsForStep(validate(), "review"))) return;
     if (newDesign && short > 0) return openRecharge({ shortfall: short });
     setBusy(true);
@@ -507,7 +509,7 @@ export function PostWizard({
     if (newDesign) {
       const charged = typeof outcome.charged === "number" ? outcome.charged : alreadyPaid ? 0 : money.fee;
       const left = typeof outcome.balance === "number" ? outcome.balance : Math.max(0, (money.balance ?? 0) - charged);
-      setReceipt(!chargesFee ? "" : charged > 0 ? `${creditsText(charged)} paid · Balance ${creditsText(left)}` : `No charge for changes · Balance ${creditsText(left)}`);
+      setReceipt(!chargesFee ? "" : charged > 0 ? t("post.receipt.paid", { paid: creditsText(charged), balance: creditsText(left) }) : t("post.receipt.free", { balance: creditsText(left) }));
       void api<{ slug?: string }>(`/api/listings/by-id/${draftId}`).then((found) => {
         if (found.ok && found.data?.slug) setAdSlug(found.data.slug);
       });
@@ -535,14 +537,14 @@ export function PostWizard({
     districtName: shownDistrict,
     price: people || !priceDigits ? null : Number(priceDigits),
     cover: coverUrl,
-  });
+  }, t);
   const byline = people ? [nickname.trim(), age.trim()].filter(Boolean).join(", ") : "";
 
   if (done && newDesign) {
     const isLive = publishedStatus === "active" || (editing && publishedStatus === "paused");
     return (
       <PostSuccess
-        copy={newSuccessCopy(copy, isLive || editing, editing)}
+        copy={newSuccessCopy(copy, isLive || editing, editing, t)}
         live={isLive}
         where={[cityName, category?.name].filter(Boolean).join(" ")}
         ad={adPreview}
@@ -593,7 +595,7 @@ export function PostWizard({
         <i className={step >= 2 ? "on" : ""} />
         <i className={step >= 3 ? "on" : ""} />
       </div>
-      <p className="tk-step-of" data-tk="step-of">Step {step} of 3 · {stepTitles[step - 1]}</p>
+      <p className="tk-step-of" data-tk="step-of">{t("post.step.of3", { step, title: stepTitles[step - 1] })}</p>
       <div className="tk-step-head">
         <h1 className="tk-page-h1" data-tk="step-title" style={{ margin: 0 }}>
           {stepTitles[step - 1]}
@@ -602,49 +604,49 @@ export function PostWizard({
       {step === 1 && steps.basics.help ? <p className="t-small" data-tk="step-help">{steps.basics.help}</p> : null}
       <div aria-live="polite" className="t-small" style={{ color: "var(--danger)", margin: "12px 0" }}>
         {banner}{" "}
-        {banner.startsWith("Sign in") ? <Link href={`${loginPath(paths)}?next=${encodeURIComponent(postAdPath(paths))}`}>Log in</Link> : null}
-        {banner === PUBLISH_MESSAGES.VERIFICATION_REQUIRED ? <Link href="/u/account/kyc/" data-tk="verify-id">Verify ID</Link> : null}
+        {(banner === t("post.error.signIn") || banner.startsWith("Sign in")) ? <Link href={`${loginPath(paths)}?next=${encodeURIComponent(postAdPath(paths))}`}>{t("post.banner.logIn")}</Link> : null}
+        {banner === PUBLISH_MESSAGES.VERIFICATION_REQUIRED ? <Link href="/u/account/kyc/" data-tk="verify-id">{t("post.banner.verifyId")}</Link> : null}
       </div>
       {step === 1 ? (
         <>
-          <Group title="Your Ad">
-            <SelectField id="category" label="Select category" required value={categoryId} error={errors.category} onChange={(value) => { setCategoryId(value); setSubcategoryId(""); }}>
-              <option value="">Select category</option>
+          <Group title={t("post.group.yourAd")}>
+            <SelectField id="category" label={t("post.select.category")} required value={categoryId} error={errors.category} onChange={(value) => { setCategoryId(value); setSubcategoryId(""); }}>
+              <option value="">{t("post.select.category")}</option>
               {categories.map((cat) => (
                 <option key={cat._id} value={cat._id}>{cat.name}</option>
               ))}
             </SelectField>
             {subOptions.length > 0 ? (
-              <SelectField id="subcategory" label="Select sub-category" required value={subcategoryId} error={errors.subcategory} onChange={setSubcategoryId}>
-                <option value="">Select sub-category</option>
+              <SelectField id="subcategory" label={t("post.select.subcategory")} required value={subcategoryId} error={errors.subcategory} onChange={setSubcategoryId}>
+                <option value="">{t("post.select.subcategory")}</option>
                 {subOptions.map((sub) => (
                   <option key={sub.id} value={sub.id}>{sub.name}</option>
                 ))}
               </SelectField>
             ) : null}
-            <SelectField id="city" label="Select city" required value={cityId} error={errors.city} onChange={(value) => { setCityId(value); setDistrictId(""); }}>
-              <option value="">Select city</option>
+            <SelectField id="city" label={t("post.select.city")} required value={cityId} error={errors.city} onChange={(value) => { setCityId(value); setDistrictId(""); }}>
+              <option value="">{t("post.select.city")}</option>
               {cities.map((city) => (
                 <option key={city.id} value={city.id}>{city.name}</option>
               ))}
             </SelectField>
-            <SelectField id="district" label="Select district" value={districtId} error={errors.district} disabled={!cityId} onChange={setDistrictId}>
-              <option value="">Select district</option>
+            <SelectField id="district" label={t("post.select.district")} value={districtId} error={errors.district} disabled={!cityId} onChange={setDistrictId}>
+              <option value="">{t("post.select.district")}</option>
               {districts.map((item) => (
                 <option key={item.id} value={item.id}>{item.name}</option>
               ))}
             </SelectField>
             <div className="tk-modal-grid">
-              <TextField id="address" label="Address" value={address} onChange={setAddress} />
-              <TextField id="postal" label="Postal code" value={postal} onChange={setPostal} />
+              <TextField id="address" label={t("post.field.address")} value={address} onChange={setAddress} />
+              <TextField id="postal" label={t("post.field.postalCode")} value={postal} onChange={setPostal} />
             </div>
-            <TextField id="area" label="Area/District/Neighbourhood" value={area} onChange={setArea} />
+            <TextField id="area" label={t("post.field.area")} value={area} onChange={setArea} />
           </Group>
           <Group title={steps.details.title} help={steps.details.help}>
-            {ageField ? <TextField id="age" label="Age" required value={age} error={errors.age} onChange={setAge} /> : null}
-            <TextField id="nickname" label="Nickname" required value={nickname} error={errors.nickname} note="max 20 characters" placeholder="Insert your name or nickname" onChange={setNickname} />
-            <TextField id="title" label="Title" required area value={title} error={errors.title} note="5 characters required" placeholder="Give your ad a good title" onChange={setTitle} />
-            <TextField id="text" label="Text" required area rows={5} value={text} error={errors.text} note="20 characters required" placeholder="Use this space to describe your ad, what you offer and what you like ..." onChange={setText} />
+            {ageField ? <TextField id="age" label={t("post.field.age")} required value={age} error={errors.age} onChange={setAge} /> : null}
+            <TextField id="nickname" label={t("post.field.nickname")} required value={nickname} error={errors.nickname} note={t("post.field.nicknameNote")} placeholder={t("post.field.nicknamePlaceholder")} onChange={setNickname} />
+            <TextField id="title" label={t("post.field.title")} required area value={title} error={errors.title} note={t("post.field.titleNote")} placeholder={t("post.field.titlePlaceholder")} onChange={setTitle} />
+            <TextField id="text" label={t("post.field.text")} required area rows={5} value={text} error={errors.text} note={t("post.field.textNote")} placeholder={t("post.field.textPlaceholder")} onChange={setText} />
           </Group>
           {renderExtraFields()}
           {renderContactFields()}
@@ -660,8 +662,8 @@ export function PostWizard({
       {step === 3 ? (
         <>
           <div className="tk-form-panel">
-            <h2 className="t-h3">Preview</h2>
-            {hydrated && title.trim() ? <AdCard ad={preview as ListingDoc} /> : <p data-tk="draft-loading">{hydrated ? "This draft has no title yet." : "Loading your draft…"}</p>}
+            <h2 className="t-h3">{t("post.preview.title")}</h2>
+            {hydrated && title.trim() ? <AdCard ad={preview as ListingDoc} /> : <p data-tk="draft-loading">{hydrated ? t("post.preview.noTitle") : t("post.preview.loading")}</p>}
           </div>
           {copy.promoteHidden ? null : (
             <div className="tk-form-panel" style={{ marginTop: 16 }} data-tk="promote-step">
@@ -671,7 +673,7 @@ export function PostWizard({
               {visiblePlans.length ? visiblePlans.map((plan) => (
                 <p key={plan.id} className="t-small">{plan.name}{plan.amount !== undefined ? ` · ₹${plan.amount}` : ""}</p>
               )) : (
-                <p className="t-small">{copy.promotion.note} <Link href="/u/account/credits/" style={{ color: "var(--accent)" }}>Boost visibility</Link></p>
+                <p className="t-small">{copy.promotion.note} <Link href="/u/account/credits/" style={{ color: "var(--accent)" }}>{t("post.promote.boost")}</Link></p>
               )}
             </div>
           )}
@@ -710,7 +712,7 @@ export function PostWizard({
         )}
       </>
     );
-    return <Group title="About You">{rows}</Group>;
+    return <Group title={t("post.group.aboutYou")}>{rows}</Group>;
   }
 
   function renderNewExtras(err: (key: string) => string | undefined, blur: (key: string) => () => void) {
@@ -722,7 +724,7 @@ export function PostWizard({
     const cell = (field: (typeof extra)[number]) =>
       field.type === "select" && field.options.length > LONG_LIST ? (
         <SelectField key={field.key} id={field.key} label={field.label} required={field.required} value={textOf(attrs[field.key])} error={err(field.key)} onBlur={blur(field.key)} onChange={(value) => change(field.key, value)}>
-          <option value="">Select</option>
+          <option value="">{t("post.select.plain")}</option>
           {field.options.map((option) => (
             <option key={option} value={option}>{option}</option>
           ))}
@@ -771,22 +773,22 @@ export function PostWizard({
   function renderContactFields() {
     return (
       <Group title={steps.contact.title} help={steps.contact.help}>
-        <p className="t-small">How would you like to be contacted?</p>
+        <p className="t-small">{t("post.contact.how")}</p>
         <div className="tk-radios">
           {[
-            ["phone", "Only Phone"],
-            ["email", "Only Email"],
-            ["both", "Email and Phone"],
+            ["phone", t("post.contact.phoneOnly")],
+            ["email", t("post.contact.emailOnly")],
+            ["both", t("post.contact.both")],
           ].map(([id, label]) => (
             <button key={id} type="button" className={`tk-radio ${contactMode === id ? "on" : ""}`} onClick={() => setContactMode(id)}>
               {label}
             </button>
           ))}
         </div>
-        <TextField id="phone" label="Phone Number" required={contactMode !== "email"} value={phone} error={errors.phone} placeholder="+91 81234 56789" onChange={setPhone} />
-        <div className="tk-switch-row"><span>WhatsApp</span><Switch on={whatsapp} onClick={() => setWhatsapp((v) => !v)} label="WhatsApp" /></div>
-        <div className="tk-switch-row"><span>Telegram</span><Switch on={telegramOn} onClick={() => setTelegramOn((v) => !v)} label="Telegram" /></div>
-        {telegramOn ? <TextField id="telegram" label="Telegram" value={telegram} onChange={setTelegram} /> : null}
+        <TextField id="phone" label={t("post.contact.phone")} required={contactMode !== "email"} value={phone} error={errors.phone} placeholder="+91 81234 56789" onChange={setPhone} />
+        <div className="tk-switch-row"><span>{t("post.contact.whatsapp")}</span><Switch on={whatsapp} onClick={() => setWhatsapp((v) => !v)} label={t("post.contact.whatsapp")} /></div>
+        <div className="tk-switch-row"><span>{t("post.contact.telegram")}</span><Switch on={telegramOn} onClick={() => setTelegramOn((v) => !v)} label={t("post.contact.telegram")} /></div>
+        {telegramOn ? <TextField id="telegram" label={t("post.contact.telegram")} value={telegram} onChange={setTelegram} /> : null}
       </Group>
     );
   }
@@ -797,13 +799,13 @@ export function PostWizard({
         <p className={`t-small tk-consent tk-consent-first ${errors.terms ? "is-bad" : ""}`}>
           <input id="consent-terms" type="checkbox" className="tk-check" checked={terms} onChange={() => setTerms((v) => !v)} aria-invalid={Boolean(errors.terms)} />
           <label htmlFor="consent-terms">
-          <strong>Terms, Conditions and Privacy Policy</strong> I have read the <Link href="/terms/">Terms and Conditions</Link> of use and <Link href="/privacy/">Privacy Policy</Link> and I hereby authorise the processing of my personal data for the purpose of providing this web service.
+          <strong>{t("post.consent.heading")}</strong> {t("post.consent.read")} <Link href="/terms/">{t("post.consent.terms")}</Link> {t("post.consent.andPrivacy")} <Link href="/privacy/">{t("post.consent.privacy")}</Link> {t("post.consent.authorise")}
           </label>
           {errors.terms ? <span className="tk-error" data-tk="field-error">{errors.terms}</span> : null}
         </p>
         <p className={`t-small tk-consent ${errors.adult ? "is-bad" : ""}`}>
           <input id="consent-adult" type="checkbox" className="tk-check" checked={adult} onChange={() => setAdult((v) => !v)} aria-invalid={Boolean(errors.adult)} />
-          <label htmlFor="consent-adult">I confirm that I am 18 or over, that the details in this ad are accurate, and that I own the rights to any photos I add.</label>
+          <label htmlFor="consent-adult">{t("post.consent.adult")}</label>
           {errors.adult ? <span className="tk-error" data-tk="field-error">{errors.adult}</span> : null}
         </p>
       </>
@@ -812,10 +814,10 @@ export function PostWizard({
 
   /** H7.83: the New design. Five steps, a step rail, the live preview (the real ad card) and the tip. Logic is shared with the three-step form. */
   function renderNewDesign() {
-    const stepCopy = newStepCopy(current, copy, Boolean(about), people, money.fee, editing, contactMode);
+    const stepCopy = newStepCopy(current, copy, Boolean(about), people, money.fee, editing, contactMode, t);
     const railItems: RailItem[] = flow.map((key, index) => ({
       key,
-      label: key === "more" ? RAIL_MORE_LABEL : RAIL_LABELS[key],
+      label: key === "more" ? t(RAIL_MORE_KEY) : t(RAIL_LABEL_KEYS[key]),
       num: index + 1,
       state: index + 1 < step ? "done" : index + 1 === step ? "current" : "todo",
       clickable: index + 1 < step ? true : index + 1 === step,
@@ -826,37 +828,37 @@ export function PostWizard({
     const previewPrice = priceDigits ? `₹${Number(priceDigits).toLocaleString("en-IN")}` : "";
     const hints = hintsFor(category?.slug);
     const subName = subOptions.find((sub) => sub.id === subcategoryId)?.name;
-    const contactSummary = contactMode === "email" ? "Email only" : phone ? `${normalPhone(phone)}${contactMode === "both" ? " and email" : ""}` : "Not set";
+    const contactSummary = contactMode === "email" ? t("post.review.emailOnly") : phone ? `${normalPhone(phone)}${contactMode === "both" ? t("post.review.andEmail") : ""}` : t("post.review.notSet");
     const reviewRows: ReviewRow[] = [
-      { key: "category", label: "Category", value: [category?.name, subName].filter(Boolean).join(" › ") || "Not chosen", step: 1 },
-      { key: "title", label: "Title", value: title.trim() || "No title yet", step: no("details") },
-      ...(people ? [] : [{ key: "price", label: "Price", value: previewPrice || "Not set", step: no("details") }]),
-      { key: "place", label: "Place", value: placeParts || "Not set", step: no("details") },
-      { key: "name", label: "Name on your ads", value: byline || nickname.trim() || "Not set", step: about ? no("contact") : no("details") },
-      { key: "photos", label: "Photos", value: photoCount === null ? (draftId ? "Checking" : "No photos yet") : photoCount ? `${photoCount} ${photoCount === 1 ? "photo" : "photos"}` : "No photos yet", step: no("photos") },
-      { key: "contact", label: "Contact", value: contactSummary, step: no("contact") },
+      { key: "category", label: t("post.review.category"), value: [category?.name, subName].filter(Boolean).join(" › ") || t("post.review.notChosen"), step: 1 },
+      { key: "title", label: t("post.field.title"), value: title.trim() || t("post.review.noTitle"), step: no("details") },
+      ...(people ? [] : [{ key: "price", label: t("post.review.price"), value: previewPrice || t("post.review.notSet"), step: no("details") }]),
+      { key: "place", label: t("post.review.place"), value: placeParts || t("post.review.notSet"), step: no("details") },
+      { key: "name", label: t("post.review.name"), value: byline || nickname.trim() || t("post.review.notSet"), step: about ? no("contact") : no("details") },
+      { key: "photos", label: t("post.review.photos"), value: photoCount === null ? (draftId ? t("post.review.checking") : t("post.review.noPhotos")) : photoCount ? `${photoCount} ${photoCount === 1 ? "photo" : "photos"}` : t("post.review.noPhotos"), step: no("photos") },
+      { key: "contact", label: t("post.review.contact"), value: contactSummary, step: no("contact") },
     ];
     const categoryReady = Boolean(categoryId) && (subOptions.length === 0 || Boolean(subcategoryId));
     const live = errorsForStep(validate(), current, Boolean(about), moreKeys);
     const err = (key: string) => (showAll || touched[key] ? live[key] : undefined) ?? errors[key];
     const blur = (key: string) => () => setTouched((prev) => ({ ...prev, [key]: true }));
-    const priceField = <TextField id="price" label="Price (₹)" value={price} error={err("price")} onBlur={blur("price")} inputMode="numeric" placeholder="18,000" onChange={setPrice} />;
+    const priceField = <TextField id="price" label={t("post.field.priceRupees")} value={price} error={err("price")} onBlur={blur("price")} inputMode="numeric" placeholder="18,000" onChange={setPrice} />;
     return (
       <div className="tkp-post" data-design="post-new">
         <div className="tkp-grid">
           <PostRail
             items={railItems}
-            progressLabel="Your progress"
+            progressLabel={t("post.rail.progress")}
             head={
               <>
               <div className="tkp-top">
-                <p className="tkp-top-title">Post an ad</p>
+                <p className="tkp-top-title">{t("post.header.title")}</p>
                 <div className="tkp-top-actions">
                   <span className="tkp-saved" data-state={saveState} data-tk="draft-saved" role="status">
-                    {saveState === "saving" ? "Saving…" : "Saved"}
+                    {saveState === "saving" ? t("post.save.saving") : t("post.save.saved")}
                   </span>
-                  <Link href="/u/account/ads/" className="tkp-exit" data-tk="exit-post">Exit</Link>
-                  <button type="button" className="tkp-help-link" data-tk="post-help" aria-label="Need help? Chat with us" onClick={() => openSupportWith("")}>Help</button>
+                  <Link href="/u/account/ads/" className="tkp-exit" data-tk="exit-post">{t("post.header.exit")}</Link>
+                  <button type="button" className="tkp-help-link" data-tk="post-help" aria-label={t("post.header.helpLabel")} onClick={() => openSupportWith("")}>{t("post.header.help")}</button>
                 </div>
               </div>
               <div className="tkp-progress" aria-hidden><i style={{ width: `${(step / flow.length) * 100}%` }} /></div>
@@ -872,13 +874,13 @@ export function PostWizard({
           </PostRail>
           <section className="tkp-main" data-step={current} aria-labelledby="post-step-title" onFocusCapture={keepFocusedFieldVisible}>
             <div className="tkp-head">
-              <p className="tkp-kicker" data-tk="step-of">Step {step} of {flow.length}</p>
+              <p className="tkp-kicker" data-tk="step-of">{t("post.step.of", { step, total: flow.length })}</p>
               <h1 id="post-step-title" className="tkp-h1" data-tk="step-title">{stepCopy.title}</h1>
               {headHelp ? <p className="tkp-help" data-tk="step-help">{headHelp}</p> : null}
               <div aria-live="polite" className="tkp-banner">
                 {banner}{" "}
-                {banner.startsWith("Sign in") ? <Link href={`${loginPath(paths)}?next=${encodeURIComponent(postAdPath(paths))}`}>Log in</Link> : null}
-                {banner === PUBLISH_MESSAGES.VERIFICATION_REQUIRED ? <Link href="/u/account/kyc/" data-tk="verify-id">Verify ID</Link> : null}
+                {(banner === t("post.error.signIn") || banner.startsWith("Sign in")) ? <Link href={`${loginPath(paths)}?next=${encodeURIComponent(postAdPath(paths))}`}>{t("post.banner.logIn")}</Link> : null}
+                {banner === PUBLISH_MESSAGES.VERIFICATION_REQUIRED ? <Link href="/u/account/kyc/" data-tk="verify-id">{t("post.banner.verifyId")}</Link> : null}
               </div>
             </div>
             <div className="tkp-scroll" onKeyDown={moveOnEnter}>
@@ -888,7 +890,7 @@ export function PostWizard({
                   {errors.category ? <p className="tk-error" data-tk="field-error">{errors.category}</p> : null}
                   {subOptions.length > 0 ? (
                     <>
-                      <p className="tkp-sub-title" id="sub-title">{category ? `Sub-category in ${category.name}` : "Sub-category"}</p>
+                      <p className="tkp-sub-title" id="sub-title">{category ? t("post.sub.titleIn", { category: category.name }) : t("post.field.subcategory")}</p>
                       <div className="tkp-chips" role="group" aria-labelledby="sub-title">
                         {subOptions.map((sub) => {
                           const pressed = sub.id === subcategoryId;
@@ -908,25 +910,25 @@ export function PostWizard({
               {current === "details" ? (
                 <div className="tkp-fields">
                   <div className="tkp-two tkp-two-keep">
-                    <SelectField id="city" label="City" required value={cityId} error={err("city")} onBlur={blur("city")} onChange={(value) => { setCityId(value); setDistrictId(""); }}>
-                      <option value="">Select city</option>
+                    <SelectField id="city" label={t("post.field.city")} required value={cityId} error={err("city")} onBlur={blur("city")} onChange={(value) => { setCityId(value); setDistrictId(""); }}>
+                      <option value="">{t("post.select.city")}</option>
                       {cities.map((city) => (
                         <option key={city.id} value={city.id}>{city.name}</option>
                       ))}
                     </SelectField>
-                    <SelectField id="district" label="Area" value={districtId} error={err("district")} disabled={!cityId} onChange={setDistrictId}>
-                      <option value="">{cityId ? "Select area" : "Pick a city first"}</option>
+                    <SelectField id="district" label={t("post.field.areaShort")} value={districtId} error={err("district")} disabled={!cityId} onChange={setDistrictId}>
+                      <option value="">{cityId ? t("post.select.area") : t("post.select.pickCityFirst")}</option>
                       {districts.map((item) => (
                         <option key={item.id} value={item.id}>{item.name}</option>
                       ))}
                     </SelectField>
                   </div>
                   <div className="tkp-two tkp-two-keep">
-                    <TextField id="nickname" label="Nickname" required value={nickname} error={err("nickname")} onBlur={blur("nickname")} placeholder="Your name or nickname" onChange={(value) => setNickname(value.slice(0, 20))} />
-                    {ageField ? <TextField id="age" label="Age" required={ageField.required} value={age} error={err("age")} onBlur={blur("age")} inputMode="numeric" placeholder="18 to 99" onChange={(value) => setAge(value.replace(/\D/g, "").slice(0, 2))} /> : people ? <span /> : priceField}
+                    <TextField id="nickname" label={t("post.field.nickname")} required value={nickname} error={err("nickname")} onBlur={blur("nickname")} placeholder={t("post.field.nicknameShort")} onChange={(value) => setNickname(value.slice(0, 20))} />
+                    {ageField ? <TextField id="age" label={t("post.field.age")} required={ageField.required} value={age} error={err("age")} onBlur={blur("age")} inputMode="numeric" placeholder={t("post.field.agePlaceholder")} onChange={(value) => setAge(value.replace(/\D/g, "").slice(0, 2))} /> : people ? <span /> : priceField}
                   </div>
-                  <TextField id="title" label="Ad title" required value={title} error={err("title")} onBlur={blur("title")} note={`${title.length} / 70`} placeholder={hints.title} onChange={(value) => setTitle(value.slice(0, 70))} />
-                  <TextField id="text" label="Description" required area rows={4} value={text} error={err("text")} onBlur={blur("text")} note="20 characters or more" placeholder={hints.text} onChange={setText} />
+                  <TextField id="title" label={t("post.field.adTitle")} required value={title} error={err("title")} onBlur={blur("title")} note={`${title.length} / 70`} placeholder={hints.title} onChange={(value) => setTitle(value.slice(0, 70))} />
+                  <TextField id="text" label={t("post.field.description")} required area rows={4} value={text} error={err("text")} onBlur={blur("text")} note={t("post.field.descriptionNote")} placeholder={hints.text} onChange={setText} />
                   {people || !ageField ? null : priceField}
                   {split ? null : renderNewExtras(err, blur)}
                 </div>
@@ -984,7 +986,7 @@ export function PostWizard({
                   ad={adPreview}
                   hasPhoto={Boolean(coverUrl)}
                   byline={byline}
-                  note={editing ? (draftStatus === "paused" ? "Your ad stays paused until you resume it." : "Your changes show on your ad as soon as you save.") : "Your ad goes live as soon as you publish it. You can edit, pause or renew it from My ads."}
+                  note={editing ? (draftStatus === "paused" ? t("post.note.paused") : t("post.note.saved")) : t("post.note.publish")}
                   pay={alreadyPaid || !chargesFee ? undefined : <PayCard fee={money.fee} balance={shownBalance} short={short} onRecharge={() => openRecharge({ shortfall: short })} />}
                   terms={terms}
                   adult={adult}
@@ -1000,36 +1002,36 @@ export function PostWizard({
             <div className="tkp-nav">
                 {step > 1 ? (
                   <button type="button" className="tkp-btn" onClick={() => (draftId ? remember(draftId, step - 1) : setStep(step - 1))}>
-                    {stepCopy.backLabel || "Back"}
+                    {stepCopy.backLabel || t("post.nav.back")}
                   </button>
                 ) : <span />}
                 <div className="tkp-nav-right">
-                  {current === "review" ? null : <button type="button" className="tkp-btn tkp-btn-preview" data-tk="open-preview" onClick={() => setPreviewOpen(true)}>Preview</button>}
+                  {current === "review" ? null : <button type="button" className="tkp-btn tkp-btn-preview" data-tk="open-preview" onClick={() => setPreviewOpen(true)}>{t("post.preview.title")}</button>}
                   {current === "review" && short > 0 ? (
                     <>
-                      <button type="button" className="tkp-btn" data-tk="publish-blocked" disabled aria-describedby="pay-reason">Publish</button>
-                      <button type="button" className="tkp-btn tkp-btn-primary" data-tk="go-on" onClick={() => openRecharge({ shortfall: short })}>Recharge now</button>
+                      <button type="button" className="tkp-btn" data-tk="publish-blocked" disabled aria-describedby="pay-reason">{t("post.nav.publish")}</button>
+                      <button type="button" className="tkp-btn tkp-btn-primary" data-tk="go-on" onClick={() => openRecharge({ shortfall: short })}>{t("post.nav.recharge")}</button>
                     </>
                   ) : current === "review" ? (
                     <button type="button" className="tkp-btn tkp-btn-primary" data-tk="go-on" disabled={busy || !hydrated || !title.trim()} onClick={publish}>
-                      {!stepCopy.nextLabel || stepCopy.nextLabel === "Publish ad" ? (alreadyPaid || !chargesFee ? "Publish ad" : `Publish for ${creditsText(money.fee)}`) : stepCopy.nextLabel}
+                      {!stepCopy.nextLabel || stepCopy.nextLabel === "Publish ad" ? (alreadyPaid || !chargesFee ? t("post.nav.publishAd") : t("post.nav.publishFor", { fee: creditsText(money.fee) })) : stepCopy.nextLabel}
                     </button>
                   ) : (
                     <button type="button" className="tkp-btn tkp-btn-primary" data-tk="go-on" disabled={busy || (current === "category" && !categoryReady) || (current === "photos" && photoBusy)} onClick={() => continueFrom(current)}>
-                      {stepCopy.nextLabel || "Continue"}
+                      {stepCopy.nextLabel || t("post.nav.continue")}
                     </button>
                   )}
                 </div>
               </div>
           </section>
           <aside className="tkp-aside">
-            <p className="tkp-aside-label">Live preview</p>
-            <PostPreviewCard ad={adPreview} label="Live preview" hasPhoto={Boolean(coverUrl)} byline={byline} />
-            <p className="tkp-preview-line">This is how your ad will look.</p>
-            <PostTip text={NEW_POST_TIPS[current === "more" ? "details" : current]} />
+            <p className="tkp-aside-label">{t("post.aside.live")}</p>
+            <PostPreviewCard ad={adPreview} label={t("post.aside.live")} hasPhoto={Boolean(coverUrl)} byline={byline} />
+            <p className="tkp-preview-line">{t("post.aside.howItLooks")}</p>
+            <PostTip text={t(NEW_POST_TIP_KEYS[current === "more" ? "details" : current])} />
           </aside>
         </div>
-        {money.added ? <div className="tkp-toast" role="status" data-tk="credits-toast">{creditsText(money.added)} added</div> : null}
+        {money.added ? <div className="tkp-toast" role="status" data-tk="credits-toast">{creditsText(money.added)} {t("post.money.added")}</div> : null}
         {previewOpen ? <PreviewSheet ad={adPreview} hasPhoto={Boolean(coverUrl)} byline={byline} onClose={() => setPreviewOpen(false)} /> : null}
       </div>
     );
@@ -1041,11 +1043,12 @@ function SuccessLink({ cta, fallback }: { cta: CtaCopy; fallback: string }) {
 }
 
 function Group({ title, help, children }: { title: string; help?: string; children: React.ReactNode }) {
+  const t = useT();
   return (
     <section style={{ marginBottom: 18 }}>
       <div style={{ display: "flex", justifyContent: "space-between" }}>
         <h2 className="tk-group-h">{title}</h2>
-        <span className="t-caption" style={{ color: "var(--muted)" }}>* Required fields</span>
+        <span className="t-caption" style={{ color: "var(--muted)" }}>{t("post.form.required")}</span>
       </div>
       <div className="tk-form-panel">
         {help ? <p className="t-small">{help}</p> : null}

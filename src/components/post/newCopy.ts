@@ -1,4 +1,5 @@
-import type { CtaCopy, PostCopy, StepCopy } from "./copy";
+import { makeT, TEXT_DEFAULTS, type TextFn } from "@/lib/ui/text";
+import { POST_COPY_DEFAULTS, type CtaCopy, type PostCopy, type StepCopy } from "./copy";
 import type { NewPostStep } from "@/lib/ui/post-form";
 
 const STEP_KEYS: Record<NewPostStep, keyof PostCopy["steps"]> = {
@@ -10,60 +11,45 @@ const STEP_KEYS: Record<NewPostStep, keyof PostCopy["steps"]> = {
   review: "review",
 };
 
-export const MORE_PEOPLE_TITLE = "More about you";
-export const MORE_TITLE = "More details";
-export const ABOUT_YOU_TITLE = "About you";
-export const ABOUT_YOU_HELP = "This shows on your ads. We ask only once, next time it is filled in for you.";
+export const ABOUT_YOU_TITLE = TEXT_DEFAULTS["post.stepCopy.aboutYouTitle"];
+export const ABOUT_YOU_HELP = TEXT_DEFAULTS["post.stepCopy.aboutYouHelp"];
 
-const CONTACT_DEFAULT_TITLE = "Your contacts";
-const CONTACT_TITLE = "Contact";
-const CONTACT_HELP = "Add the phone number people can reach you on.";
-const CONTACT_HELP_EMAIL = "People will write to you by email. No phone number is needed.";
-const REVIEW_DEFAULT_TITLE = "Publish";
-const REVIEW_TITLE = "Review and publish";
-const REVIEW_HELP = "Look it over. Use Edit to change anything before it goes live.";
 const LEGACY_PUBLISH = "PUBLISH";
-const PUBLISH_LABEL = "Publish ad";
-export const EDIT_REVIEW_TITLE = "Review your changes";
-export const EDIT_REVIEW_HELP = "Check your changes, then save. Editing an ad costs nothing.";
-export const EDIT_SAVE_LABEL = "Save changes";
-export const EDIT_CATEGORY_NOTE = "The category of a posted ad cannot change. To use another category, post a new ad.";
+const MY_ADS_PATH = "/u/account/ads/";
+const LEGACY_SUCCESS_LABEL = "Your ads";
 
-const DEFAULT_BASICS_HELP = "Pick a category. This helps the right people find your ad.";
+const isUntouched = (base: StepCopy, stock: StepCopy) => base.title === stock.title && base.help === stock.help && base.backLabel === stock.backLabel;
 
-export function newStepCopy(step: NewPostStep, copy: PostCopy, aboutYou: boolean, people = false, fee = 0, editing = false, contactMode = "both"): StepCopy {
+/**
+ * The wording of one step of the five-step form. A block value an admin saved is shown as saved, also when it
+ * equals the stock wording. Only a step whose title, help and back label are all still the stock seed (nothing
+ * was ever changed there) takes the form's own wording from the site texts.
+ */
+export function newStepCopy(step: NewPostStep, copy: PostCopy, aboutYou: boolean, people = false, fee = 0, editing = false, contactMode = "both", t: TextFn = makeT()): StepCopy {
   const base = copy.steps[STEP_KEYS[step]];
-  if (editing && step === "review") return { ...base, title: EDIT_REVIEW_TITLE, help: EDIT_REVIEW_HELP, nextLabel: EDIT_SAVE_LABEL };
-  if (editing && step === "category") return { ...base, help: EDIT_CATEGORY_NOTE };
-  if (step === "more") return { ...base, title: people ? MORE_PEOPLE_TITLE : MORE_TITLE, help: "", nextLabel: "", backLabel: "" };
-  if (step === "category" && fee > 0 && (!base.help || base.help === DEFAULT_BASICS_HELP)) {
-    return { ...base, help: `Pick a category. Posting an ad costs ${fee} credits.` };
+  if (editing && step === "review") return { ...base, title: t("post.stepCopy.editReviewTitle"), help: t("post.stepCopy.editReviewHelp"), nextLabel: t("post.stepCopy.editSave") };
+  if (editing && step === "category") return { ...base, help: t("post.stepCopy.editCategoryNote") };
+  if (step === "more") return { ...base, title: people ? t("post.stepCopy.moreAboutYou") : t("post.stepCopy.moreDetails"), help: "", nextLabel: "", backLabel: "" };
+  if (step === "category" && fee > 0 && (!base.help || base.help === POST_COPY_DEFAULTS.steps.basics.help)) {
+    return { ...base, help: t("post.stepCopy.basicsHelpFee", { fee }) };
   }
   if (step === "contact") {
-    const edited = base.title !== CONTACT_DEFAULT_TITLE && base.title !== "";
-    if (aboutYou) {
-      return { ...base, title: edited ? base.title : ABOUT_YOU_TITLE, help: base.help || ABOUT_YOU_HELP };
-    }
-    return { ...base, title: edited ? base.title : CONTACT_TITLE, help: base.help || (contactMode === "email" ? CONTACT_HELP_EMAIL : CONTACT_HELP) };
+    const own = base.title !== "" && !isUntouched(base, POST_COPY_DEFAULTS.steps.contact);
+    const title = own ? base.title : aboutYou ? t("post.stepCopy.aboutYouTitle") : t("post.stepCopy.contactTitle");
+    const fallback = aboutYou ? t("post.stepCopy.aboutYouHelp") : contactMode === "email" ? t("post.stepCopy.contactHelpEmail") : t("post.stepCopy.contactHelp");
+    return { ...base, title, help: base.help || fallback };
   }
   if (step === "review") {
-    const edited = base.title !== REVIEW_DEFAULT_TITLE && base.title !== "";
+    const own = base.title !== "" && !isUntouched(base, POST_COPY_DEFAULTS.steps.review);
     return {
       ...base,
-      title: edited ? base.title : REVIEW_TITLE,
-      help: base.help || REVIEW_HELP,
-      nextLabel: !base.nextLabel || base.nextLabel === LEGACY_PUBLISH ? PUBLISH_LABEL : base.nextLabel,
+      title: own ? base.title : t("post.stepCopy.reviewTitle"),
+      help: base.help || t("post.stepCopy.reviewHelp"),
+      nextLabel: !base.nextLabel || base.nextLabel === LEGACY_PUBLISH ? t("post.stepCopy.publishAd") : base.nextLabel,
     };
   }
   return base;
 }
-
-const SAVED_TITLE = "Changes saved";
-const SAVED_TEXT = "Your ad keeps the same link, views and saved count.";
-const LEGACY_SUCCESS_LABEL = "Your ads";
-const SUCCESS_LABEL = "View my ads";
-const SUCCESS_ANOTHER = "Post another ad";
-const MY_ADS_PATH = "/u/account/ads/";
 
 export type SuccessCopy = {
   title: string;
@@ -72,10 +58,10 @@ export type SuccessCopy = {
   secondary: CtaCopy;
 };
 
-export function newSuccessCopy(copy: PostCopy, live: boolean, saved = false): SuccessCopy {
+export function newSuccessCopy(copy: PostCopy, live: boolean, saved = false, t: TextFn = makeT()): SuccessCopy {
   const { title, text, primaryCta, secondaryCta } = copy.success;
-  const primary = primaryCta && primaryCta.label !== LEGACY_SUCCESS_LABEL ? primaryCta : { label: SUCCESS_LABEL, href: primaryCta?.href || MY_ADS_PATH };
-  const secondary = secondaryCta ?? { label: SUCCESS_ANOTHER, href: "" };
-  if (saved) return { title: SAVED_TITLE, text: SAVED_TEXT, primary, secondary };
-  return { title: live ? title : "Your ad is in review", text, primary, secondary };
+  const primary = primaryCta && primaryCta.label !== LEGACY_SUCCESS_LABEL ? primaryCta : { label: t("post.stepCopy.viewMyAds"), href: primaryCta?.href || MY_ADS_PATH };
+  const secondary = secondaryCta ?? { label: t("post.stepCopy.postAnother"), href: "" };
+  if (saved) return { title: t("post.stepCopy.savedTitle"), text: t("post.stepCopy.savedText"), primary, secondary };
+  return { title: live ? title : t("post.stepCopy.inReview"), text, primary, secondary };
 }

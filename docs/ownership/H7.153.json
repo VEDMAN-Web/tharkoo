@@ -1,0 +1,8 @@
+{
+  "branchPrefix": "haiku/h7.153",
+  "globs": [
+    "docs/ownership/H7.153.json",
+    "src/components/new/listing-spec.css",
+    "tests/e2e/h7-153-search-fit.e2e.ts"
+  ]
+}

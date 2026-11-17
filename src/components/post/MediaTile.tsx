@@ -1,5 +1,7 @@
 "use client";
 
+import { useT } from "@/components/help/UiTextProvider";
+import type { UiTextKey } from "@/lib/ui/text";
 import { ArrowLeft, ArrowRight, CircleAlert, ImageOff, RotateCw, Star, Trash2, VideoOff } from "lucide-react";
 
 export type TileState = "uploading" | "live" | "checking" | "refused" | "failed";
@@ -21,9 +23,16 @@ export interface MediaTileProps {
   onRetry?: () => void;
 }
 
-const STATE_TEXT: Record<TileState, string> = { uploading: "Uploading", live: "Live", checking: "Being checked", refused: "Refused", failed: "Not saved" };
+const STATE_KEY: Record<TileState, UiTextKey> = {
+  uploading: "post.tile.uploading",
+  live: "post.tile.live",
+  checking: "post.tile.checking",
+  refused: "post.tile.refused",
+  failed: "post.tile.failed",
+};
 
 function Frame({ kind, url, posterUrl, label, failed }: Pick<MediaTileProps, "kind" | "url" | "posterUrl" | "label"> & { failed?: boolean }) {
+  const t = useT();
   if (failed) {
     const Icon = kind === "video" ? VideoOff : ImageOff;
     return (
@@ -32,7 +41,7 @@ function Frame({ kind, url, posterUrl, label, failed }: Pick<MediaTileProps, "ki
       </div>
     );
   }
-  if (!url) return <div className="tkp-media-empty">{kind === "video" ? "Video" : "Photo"}</div>;
+  if (!url) return <div className="tkp-media-empty">{kind === "video" ? t("post.tile.videoEmpty") : t("post.tile.photoEmpty")}</div>;
   if (kind === "video") {
     return <video src={url} poster={posterUrl || undefined} controls muted playsInline preload="metadata" aria-label={label} />;
   }
@@ -42,6 +51,7 @@ function Frame({ kind, url, posterUrl, label, failed }: Pick<MediaTileProps, "ki
 
 /** One photo or video in the post-ad photo step: preview, status, upload share and the owner's actions. */
 export function MediaTile(props: MediaTileProps) {
+  const t = useT();
   const { kind, label, state, progress = 0, reason, isCover, busy, url, posterUrl } = props;
   const uploading = state === "uploading";
   return (
@@ -53,11 +63,11 @@ export function MediaTile(props: MediaTileProps) {
         ) : (
           <Frame kind={kind} url={url} posterUrl={posterUrl} label={label} failed={state === "failed"} />
         )}
-        {isCover ? <span className="tkp-media-cover" data-tk="photo-cover">Cover</span> : null}
-        {state !== "live" && !uploading ? <span className="tkp-media-state" data-tk="photo-state">{STATE_TEXT[state]}</span> : null}
+        {isCover ? <span className="tkp-media-cover" data-tk="photo-cover">{t("post.tile.cover")}</span> : null}
+        {state !== "live" && !uploading ? <span className="tkp-media-state" data-tk="photo-state">{t(STATE_KEY[state])}</span> : null}
         {uploading ? (
           <div className="tkp-media-progress" data-tk="upload-progress" role="status">
-            Uploading {Math.round(progress * 100)}%
+            {t("post.tile.progress", { percent: Math.round(progress * 100) })}
             <div aria-hidden className="tkp-media-bar"><i style={{ width: `${Math.round(progress * 100)}%` }} /></div>
           </div>
         ) : null}
@@ -73,27 +83,27 @@ export function MediaTile(props: MediaTileProps) {
           {props.onRetry ? (
             <button type="button" className="tkp-mini tkp-mini-wide" data-tk="retry-upload" disabled={busy} onClick={props.onRetry}>
               <RotateCw size={16} aria-hidden="true" focusable="false" />
-              Tap to retry
+              {t("post.tile.retry")}
             </button>
           ) : null}
           {props.onMakeCover && !isCover ? (
-            <button type="button" className="tkp-mini tkp-mini-wide" title="Make cover" disabled={busy} onClick={props.onMakeCover}>
+            <button type="button" className="tkp-mini tkp-mini-wide" title={t("post.tile.makeCover")} disabled={busy} onClick={props.onMakeCover}>
               <Star size={16} aria-hidden="true" focusable="false" />
-              <span className="tkp-mini-text">Make cover</span>
+              <span className="tkp-mini-text">{t("post.tile.makeCover")}</span>
             </button>
           ) : null}
           {props.onMoveLeft ? (
-            <button type="button" className="tkp-mini" disabled={busy} aria-label={`Move ${label} left`} onClick={props.onMoveLeft}>
+            <button type="button" className="tkp-mini" disabled={busy} aria-label={t("post.tile.moveLeft", { label })} onClick={props.onMoveLeft}>
               <ArrowLeft size={18} aria-hidden="true" focusable="false" />
             </button>
           ) : null}
           {props.onMoveRight ? (
-            <button type="button" className="tkp-mini" disabled={busy} aria-label={`Move ${label} right`} onClick={props.onMoveRight}>
+            <button type="button" className="tkp-mini" disabled={busy} aria-label={t("post.tile.moveRight", { label })} onClick={props.onMoveRight}>
               <ArrowRight size={18} aria-hidden="true" focusable="false" />
             </button>
           ) : null}
           {props.onRemove ? (
-            <button type="button" className="tkp-mini" disabled={busy} aria-label={`Remove ${label}`} onClick={props.onRemove}>
+            <button type="button" className="tkp-mini" disabled={busy} aria-label={t("post.tile.remove", { label })} onClick={props.onRemove}>
               <Trash2 size={18} aria-hidden="true" focusable="false" />
             </button>
           ) : null}

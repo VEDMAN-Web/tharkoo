@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Camera, ImagePlus } from "lucide-react";
 import { api, friendlyError } from "@/lib/ui/api";
+import { useT } from "@/components/help/UiTextProvider";
 import type { DraftMedia } from "@/server/media/mine";
 import type { PostCopy } from "./copy";
 import { listDraftMediaAction, removeMyMediaAction } from "./mediaActions";
@@ -10,8 +11,6 @@ import { InfoPopover } from "@/components/upload/InfoPopover";
 import { UPLOAD_RULES } from "@/components/upload/rules";
 import { MediaTile } from "./MediaTile";
 import { AD_MEDIA_MAX, checkPhoto, checkVideo, uploadMedia } from "./mediaUpload";
-
-const VIDEO_RULE_LINE = "Videos: max 100 MB and 60 seconds each. Photos and videos: up to 10 in total.";
 
 type Upload = { key: string; kind: "image" | "video"; previewUrl: string | null; progress: number; file: File; error?: string; retry?: boolean };
 
@@ -38,6 +37,7 @@ export function PhotoStep({
   onMedia?: (media: DraftMedia) => void;
   onBusy?: (busy: boolean) => void;
 }) {
+  const t = useT();
   const [draft, setDraft] = useState<DraftMedia | null>(null);
   const [uploads, setUploads] = useState<Upload[]>([]);
   const [note, setNote] = useState("");
@@ -133,7 +133,7 @@ export function PhotoStep({
     const entry = uploads.find((upload) => upload.key === key);
     if (!entry) return;
     const error = await runUpload(entry);
-    setNote(error ?? (entry.kind === "video" ? "Video saved." : "Photo saved."));
+    setNote(error ?? (entry.kind === "video" ? t("post.photo.videoSaved") : t("post.photo.photoSaved")));
   }
 
   function dismissUpload(key: string) {
@@ -142,10 +142,10 @@ export function PhotoStep({
   }
 
   async function addPhotos(files: File[]) {
-    if (!listingId) return setNote("Save the ad details before adding a photo.");
+    if (!listingId) return setNote(t("post.photo.saveFirstPhoto"));
     const room = limit - shown - sending;
-    if (room <= 0) return setNote(`Your ad allows ${limit} photos and videos in total. Remove one to add another.`);
-    let problem = files.length > room ? `Only ${room} more ${room === 1 ? "item fits" : "items fit"} within your limit of ${limit} photos and videos.` : "";
+    if (room <= 0) return setNote(t("post.photo.limitFull", { limit }));
+    let problem = files.length > room ? t(room === 1 ? "post.photo.roomOne" : "post.photo.roomMany", { room, limit }) : "";
     let saved = 0;
     for (const file of files.slice(0, room)) {
       const rule = checkPhoto(file);
@@ -154,20 +154,20 @@ export function PhotoStep({
       if (error) problem = error;
       else saved += 1;
     }
-    const done = saved === 1 ? "Photo saved." : saved > 1 ? `${saved} photos saved.` : "";
+    const done = saved === 1 ? t("post.photo.photoSaved") : saved > 1 ? t("post.photo.photosSaved", { count: saved }) : "";
     setNote([done, problem].filter(Boolean).join(" "));
   }
 
   async function addVideo(file: File) {
-    if (!listingId) return setNote("Save the ad details first, then add the video.");
-    if (atLimit) return setNote(`Your ad allows ${limit} photos and videos in total. Remove one first.`);
+    if (!listingId) return setNote(t("post.photo.saveFirstVideo"));
+    if (atLimit) return setNote(t("post.photo.limitFullVideo", { limit }));
     const rule = await checkVideo(file);
     if (rule) {
       addFailedTile(file, "video", rule);
       return setNote(rule);
     }
     const error = await sendOne(file, "video");
-    setNote(error ?? "Video saved.");
+    setNote(error ?? t("post.photo.videoSaved"));
   }
 
   async function removeItem(id: string) {
@@ -175,7 +175,7 @@ export function PhotoStep({
     const res = await removeMyMediaAction(id);
     if (res.ok) await refresh();
     setBusyId("");
-    setNote(res.ok ? "Removed." : res.error);
+    setNote(res.ok ? t("post.photo.removed") : res.error);
   }
 
   async function reorder(ids: string[], cover: string | null) {
@@ -204,10 +204,10 @@ export function PhotoStep({
     <div className="tkp-photos">
       <div className="tkp-drop" onDragOver={(event) => event.preventDefault()} onDrop={(event) => { event.preventDefault(); if (!busy) void addPhotos(Array.from(event.dataTransfer.files)); }}>
         <ImagePlus size={28} aria-hidden="true" focusable="false" />
-        <p className="tkp-drop-line">Drag photos here, or choose them from your phone or computer.</p>
+        <p className="tkp-drop-line">{t("post.photo.dropLine")}</p>
         <div className="tkp-drop-buttons">
           <label className="tkp-btn tkp-btn-primary" aria-disabled={busy}>
-            Add photos
+            {t("post.photo.addPhotos")}
             <input
               type="file"
               multiple
@@ -224,7 +224,7 @@ export function PhotoStep({
           </label>
           <label className="tkp-btn tkp-btn-camera" aria-disabled={busy}>
             <Camera size={18} aria-hidden="true" focusable="false" />
-            Take a photo
+            {t("post.photo.takePhoto")}
             <input
               type="file"
               accept="image/*"
@@ -240,7 +240,7 @@ export function PhotoStep({
             />
           </label>
           <label className="tkp-btn" aria-disabled={busy || atLimit}>
-            Add video
+            {t("post.photo.addVideo")}
             <input
               type="file"
               accept="video/mp4,video/webm,video/quicktime"
@@ -256,9 +256,9 @@ export function PhotoStep({
           </label>
         </div>
         <p className="tkp-drop-rule">
-          {copy.photoRules.items[0] ?? "JPG, PNG or WebP, 8 MB each."}
-          <InfoPopover id="post-photos" label="Photo rules">
-            <strong>Your photos</strong>
+          {copy.photoRules.items[0] ?? t("post.photo.photoRuleFallback")}
+          <InfoPopover id="post-photos" label={t("post.photo.photoRulesLabel")}>
+            <strong>{t("post.photo.photoRulesTitle")}</strong>
             <ul>
               {UPLOAD_RULES.adPhotos.details.map((row) => (
                 <li key={row}>{row}</li>
@@ -267,9 +267,9 @@ export function PhotoStep({
           </InfoPopover>
         </p>
         <p className="tkp-drop-rule" data-tk="video-rule">
-          <span>{VIDEO_RULE_LINE}</span>
-          <InfoPopover id="post-videos" label="Video rules">
-            <strong>Your videos</strong>
+          <span>{t("post.photo.videoRule")}</span>
+          <InfoPopover id="post-videos" label={t("post.photo.videoRulesLabel")}>
+            <strong>{t("post.photo.videoRulesTitle")}</strong>
             <ul>
               {UPLOAD_RULES.postVideos.details.map((row) => (
                 <li key={row}>{row}</li>
@@ -279,7 +279,7 @@ export function PhotoStep({
         </p>
       </div>
       <div className="tkp-count-row">
-      <p className="tkp-count" data-tk="photo-count">{shown} of {limit} photos and videos</p>
+      <p className="tkp-count" data-tk="photo-count">{t("post.photo.count", { shown, limit })}</p>
       <p className="tkp-photo-note" data-tk="photo-note" role="status">{note}</p>
       </div>
       <ul className="tkp-media-grid" data-tk="photo-grid">
@@ -287,7 +287,7 @@ export function PhotoStep({
           <MediaTile
             key={photo.id}
             kind="image"
-            label={`Photo ${index + 1}`}
+            label={t("post.photo.photoN", { number: index + 1 })}
             state={photo.state}
             url={photo.url}
             reason={photo.reason}
@@ -303,7 +303,7 @@ export function PhotoStep({
           <MediaTile
             key={upload.key}
             kind="image"
-            label="New photo"
+            label={t("post.photo.newPhoto")}
             state={upload.error ? "failed" : "uploading"}
             url={upload.previewUrl}
             progress={upload.progress}
@@ -319,7 +319,7 @@ export function PhotoStep({
             <MediaTile
               key={video.id}
               kind="video"
-              label={`Video ${index + 1}`}
+              label={t("post.photo.videoN", { number: index + 1 })}
               state={video.state}
               url={video.url}
               posterUrl={video.posterUrl}
@@ -332,7 +332,7 @@ export function PhotoStep({
             <MediaTile
               key={upload.key}
               kind="video"
-              label="New video"
+              label={t("post.photo.newVideo")}
               state={upload.error ? "failed" : "uploading"}
               progress={upload.progress}
               reason={upload.error}
@@ -344,8 +344,8 @@ export function PhotoStep({
       ) : null}
       {onBack && onNext ? (
         <div className="tkp-photo-nav">
-          <button type="button" className="tkp-btn" onClick={onBack}>{steps.photos.backLabel || "Back"}</button>
-          <button type="button" className="tkp-btn tkp-btn-primary" data-tk="go-on" disabled={busy} onClick={onNext}>{steps.photos.nextLabel || "Continue"}</button>
+          <button type="button" className="tkp-btn" onClick={onBack}>{steps.photos.backLabel || t("post.photo.back")}</button>
+          <button type="button" className="tkp-btn tkp-btn-primary" data-tk="go-on" disabled={busy} onClick={onNext}>{steps.photos.nextLabel || t("post.photo.next")}</button>
         </div>
       ) : null}
     </div>

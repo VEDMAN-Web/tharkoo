@@ -2,6 +2,8 @@ import { cached, invalidateTags, purgeNext } from "@/lib/cache";
 import { connectDb } from "@/lib/db";
 import { isAdminRole } from "@/lib/ui/site-content";
 import { isTextKey, makeT, TEXT_DEFAULTS, TEXT_MAX, type UiTextKey, type UiTextMap } from "@/lib/ui/text";
+import type { AdminCtx } from "@/server/admin/context";
+import { adminWrite } from "@/server/admin/write";
 import { AuditRepository } from "@/server/audit";
 import { ForbiddenError, ValidationError } from "@/server/http";
 import { UiText, User } from "@/server/models";
@@ -34,7 +36,7 @@ export async function uiTexts() {
   return makeT(await textOverrides());
 }
 
-async function refresh() {
+export async function refresh() {
   invalidateTags([TEXT_TAG]);
   await purgeNext({ tags: [TEXT_TAG], paths: [["/", "layout"]], caller: "site text" });
 }
@@ -91,6 +93,60 @@ export async function saveUiText(input: { roles: string[]; email: string; key: s
   }
   await refresh();
   return { key: input.key, value };
+}
+
+/**
+ * The same save as above, written through the write helper (H8.47): role check, one audit row with before and after, and an Undo.
+ * Undo puts the old text back (or the default text, when there was no override before); a text equal to the default needs no undo.
+ */
+export async function saveUiTextAs(ctx: AdminCtx, input: { key: string; value: unknown }): Promise<{ key: string; value: string; eventId: string; undoUntil: string | null }> {
+  await connectDb();
+  const value = checkText(input.key, input.value);
+  const fallback = TEXT_DEFAULTS[input.key as UiTextKey];
+  const written = await adminWrite<{ value: string }>(ctx, {
+    perm: "settings.edit",
+    action: "ui_text.update",
+    target: { type: "ui_text", id: input.key },
+    texts: [value],
+    undo: { kind: "record.restore", windowKey: "settings" },
+    before: async () => ({ value: (await UiText.findOne({ key: input.key }).lean<{ value?: string } | null>())?.value ?? null }),
+    apply: async () => {
+      const current = await UiText.findOne({ key: input.key });
+      const before = current?.value ?? null;
+      if (value === fallback) {
+        if (current) await UiText.deleteOne({ key: input.key });
+        return { after: { value: null }, result: { value }, summary: `Text back to the default: ${input.key}` };
+      }
+      if (before !== value) await UiText.updateOne({ key: input.key }, { $set: { value, updatedBy: ctx.email } }, { upsert: true });
+      const doc = await UiText.findOne({ key: input.key }).select("_id").lean<{ _id: unknown } | null>();
+      return {
+        after: { value },
+        result: { value },
+        summary: `Changed the text: ${input.key}`,
+        undoData: doc ? { model: "UiText", id: String(doc._id), restore: { value: before ?? fallback }, expect: { value } } : undefined,
+      };
+    },
+  });
+  await refresh();
+  return { key: input.key, value: written.result.value, eventId: written.eventId, undoUntil: written.undoUntil };
+}
+
+/** The reset above, through the write helper. A reset deletes the override, so it has no undo: type the text again to bring it back. */
+export async function resetUiTextAs(ctx: AdminCtx, key: string): Promise<{ key: string; value: string; eventId: string }> {
+  await connectDb();
+  if (!isTextKey(key)) throw new ValidationError("Unknown text key");
+  const written = await adminWrite<null>(ctx, {
+    perm: "settings.edit",
+    action: "ui_text.update",
+    target: { type: "ui_text", id: key },
+    before: async () => ({ value: (await UiText.findOne({ key }).lean<{ value?: string } | null>())?.value ?? null }),
+    apply: async () => {
+      await UiText.deleteOne({ key });
+      return { after: { value: null }, result: null, summary: `Text back to the default: ${key}` };
+    },
+  });
+  await refresh();
+  return { key, value: TEXT_DEFAULTS[key], eventId: written.eventId };
 }
 
 /** Deletes the override so the default shows again. */

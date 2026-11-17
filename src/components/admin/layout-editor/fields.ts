@@ -359,6 +359,50 @@ export const BLOCK_META: Record<string, BlockMeta> = {
       link("secondaryCta", "Second button"),
     ],
   },
+  idCheckFirst: {
+    label: "ID check first",
+    hint: "Texts of the ID check screen (empty uses the site text)",
+    deletable: true,
+    max: 1,
+    defaults: {},
+    fields: [
+      text("verifyTitle", "Title when an ID check is needed", 120),
+      text("verifyText", "Text when an ID check is needed", 300, { multiline: true }),
+      text("verifyButton", "Button to start the check", 40),
+      text("checkingTitle", "Title while the team checks", 120),
+      text("checkingText", "Text while the team checks", 300, { multiline: true }),
+      text("backLink", "Link back to the account", 60),
+    ],
+  },
+  payStep: {
+    label: "Pay and publish card",
+    hint: "Texts of the pay card (empty uses the site text)",
+    deletable: true,
+    max: 1,
+    defaults: {},
+    fields: [
+      text("title", "Card title", 80),
+      text("feeLabel", "Fee row", 60),
+      text("balanceLabel", "Balance row", 60),
+      text("afterLabel", "Balance after posting row", 60),
+      text("creditsTitle", "Title of the credits box", 60),
+      text("topUpLabel", "Top-up link", 40),
+    ],
+  },
+  consent: {
+    label: "Terms and consent",
+    hint: "Texts of the two consent lines (empty uses the site text)",
+    deletable: true,
+    max: 1,
+    defaults: {},
+    fields: [
+      text("agree", "Start of the terms line", 80),
+      text("terms", "Terms link text", 60),
+      text("and", "Word between the two links", 40),
+      text("privacy", "Privacy link text", 60),
+      text("adult", "Age and rights line", 300, { multiline: true }),
+    ],
+  },
 };
 
 export function metaFor(type: string): BlockMeta {

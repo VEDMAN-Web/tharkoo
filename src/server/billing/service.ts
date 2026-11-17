@@ -297,6 +297,7 @@ async function creditPaidOrder(payment: { _id: unknown; orderId: unknown; userId
       requestId,
       actorId: userId,
       actorType: "system",
+      once: true,
     });
   }
   if (bonus > 0) {
@@ -308,6 +309,7 @@ async function creditPaidOrder(payment: { _id: unknown; orderId: unknown; userId
       requestId,
       actorId: userId,
       actorType: "system",
+      once: true,
     });
   }
   if (couponBonus > 0) {
@@ -319,6 +321,7 @@ async function creditPaidOrder(payment: { _id: unknown; orderId: unknown; userId
       requestId,
       actorId: userId,
       actorType: "system",
+      once: true,
     });
   }
 }
@@ -492,15 +495,27 @@ async function placePromotion(input: {
   }
 }
 
+/**
+ * What a recharge still has to give back, from the ledger lines of its owner: what the payment credited (pack, bonus, coupon bonus)
+ * minus refunds already written for it. Pure, so the same rule runs for the screen and inside the ledger write (H7.152).
+ */
+export function refundableFromLines(lines: readonly { delta: number; refType: string; refId: string }[], paymentId: string): number {
+  const granted = lines.filter((row) => row.refId === paymentId || row.refId === `${paymentId}:bonus` || row.refId === `${paymentId}:coupon`).reduce((sum, row) => sum + Math.max(0, row.delta), 0);
+  const already = lines.filter((row) => row.refType === "refund" && row.refId.startsWith(`${paymentId}#`)).reduce((sum, row) => sum + row.delta, 0);
+  return Math.max(0, granted - already);
+}
+
 /** Credits of a paid recharge that can still be given back: what the payment credited, minus refunds already made. */
 export async function refundableCredits(payment: { _id: unknown; userId: unknown }): Promise<number> {
   await connectDb();
   const id = String(payment._id);
-  const grantedRows = await WalletEntry.find({ userId: payment.userId as Types.ObjectId, refId: { $in: [id, `${id}:bonus`, `${id}:coupon`] } }).lean();
-  const granted = grantedRows.reduce((sum, row) => sum + Math.max(0, row.delta), 0);
-  const refunds = await WalletEntry.find({ userId: payment.userId as Types.ObjectId, refType: "refund" }).lean();
-  const already = refunds.filter((row) => row.refId.startsWith(`${id}#`)).reduce((sum, row) => sum + row.delta, 0);
-  return Math.max(0, granted - already);
+  const rows = await WalletEntry.find({
+    userId: payment.userId as Types.ObjectId,
+    $or: [{ refId: { $in: [id, `${id}:bonus`, `${id}:coupon`] } }, { refType: "refund" }],
+  })
+    .select("delta refType refId")
+    .lean();
+  return refundableFromLines(rows, id);
 }
 
 export async function refundPayment(input: {
@@ -539,6 +554,11 @@ export async function refundPayment(input: {
     auditReason: input.reason,
     ip: input.ip,
     once: true,
+    // The check above can be passed by two different refunds sent together. This one runs inside the ledger write, on the lines read
+    // for that very write, so together they can never give back more than the payment credited.
+    guard: (lines) => {
+      if (input.amount > refundableFromLines(lines, id)) throw new ConflictError("Refund exceeds the credited amount");
+    },
   });
   if (!result.created) throw new ConflictError("Refund already exists");
   return { refundId: refId, balance: result.balance };
@@ -633,6 +653,7 @@ export async function renewDuePromotions(requestId: string) {
           refId: `${order._id}:renew:${order.endsAt?.toISOString() ?? renewed}`,
           requestId,
           actorId: String(order.userId),
+          once: true,
         });
       }
       const rule = promotionRule(product.code, order.durationDays, product.durationDays);

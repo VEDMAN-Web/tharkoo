@@ -186,6 +186,36 @@ const promotionPicker = z.object({
 
 const postSuccess = z.object({ title: required(120), text: text(500).default(""), primaryCta: opt(link), secondaryCta: opt(link) });
 
+/**
+ * Texts only (H8.41). Each field is empty by default, which means "use the site text"; the fee, the balance and the packs
+ * come from code and settings, and `{fee}` is filled with today's posting fee.
+ */
+const idCheckFirst = z.object({
+  verifyTitle: text(120).default(""),
+  verifyText: text(300).default(""),
+  verifyButton: text(40).default(""),
+  checkingTitle: text(120).default(""),
+  checkingText: text(300).default(""),
+  backLink: text(60).default(""),
+});
+
+const payStep = z.object({
+  title: text(80).default(""),
+  feeLabel: text(60).default(""),
+  balanceLabel: text(60).default(""),
+  afterLabel: text(60).default(""),
+  creditsTitle: text(60).default(""),
+  topUpLabel: text(40).default(""),
+});
+
+const consent = z.object({
+  agree: text(80).default(""),
+  terms: text(60).default(""),
+  and: text(40).default(""),
+  privacy: text(60).default(""),
+  adult: text(300).default(""),
+});
+
 const homeImage = z.object({
   assetId: text(64).optional(),
   src: z
@@ -296,6 +326,9 @@ export const BLOCKS = {
   photoRules: { pages: ["post"], schema: photoRules, defaults: () => ({ title: "Photo rules" }), deletable: true, max: 1 },
   promotionPicker: { pages: ["post"], schema: promotionPicker, defaults: () => ({ title: "Promote your ad" }), deletable: true, max: 1 },
   postSuccess: { pages: ["post"], schema: postSuccess, defaults: () => ({ title: "Your ad is live" }), deletable: true, max: 1 },
+  idCheckFirst: { pages: ["post"], schema: idCheckFirst, defaults: () => ({}), deletable: true, max: 1 },
+  payStep: { pages: ["post"], schema: payStep, defaults: () => ({}), deletable: true, max: 1 },
+  consent: { pages: ["post"], schema: consent, defaults: () => ({}), deletable: true, max: 1 },
   homeBanner: { pages: ["home"], schema: homeBanner, defaults: () => ({ h1: "Find what you need", textInImage: false, subline: "", showSearch: true }), deletable: false, max: 1, v2: true },
   homeCategories: { pages: ["home"], schema: homeCategories, defaults: () => ({ title: "Popular categories", count: 4, source: "catalogue", picked: [] }), deletable: true, max: 1, v2: true },
   homeAds: { pages: ["home"], schema: homeAds, defaults: () => ({ title: "Latest ads in {city}" }), deletable: true, max: 1, v2: true },

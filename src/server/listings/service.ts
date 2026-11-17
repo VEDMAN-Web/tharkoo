@@ -197,7 +197,8 @@ async function owned(id: string, userId: string) {
   return listing;
 }
 
-async function requireCategory(id: string) {
+export async function requireCategory(id: string) {
+  await connectDb();
   if (!mongoose.isValidObjectId(id)) {
     throw new ValidationError("Invalid request", { categoryId: ["Invalid id"] });
   }
@@ -213,7 +214,8 @@ async function requireCategory(id: string) {
  * Checks the sub-category for a category: it must belong to it and be visible. A category with visible
  * sub-categories needs one when `required`. Returns the id to store, or undefined for none.
  */
-async function resolveSubcategoryId(categoryId: Types.ObjectId, value: string | undefined, required: boolean) {
+export async function resolveSubcategoryId(categoryId: Types.ObjectId, value: string | undefined, required: boolean) {
+  await connectDb();
   if (value) {
     if (!mongoose.isValidObjectId(value)) throw new ValidationError("Invalid request", { subcategoryId: ["Invalid id"] });
     const sub = await Subcategory.findById(value).lean<{ _id: Types.ObjectId; categoryId: Types.ObjectId; enabled?: boolean }>();
@@ -228,7 +230,8 @@ async function resolveSubcategoryId(categoryId: Types.ObjectId, value: string | 
   return undefined;
 }
 
-async function requirePlace(id: string | undefined, field: string) {
+export async function requirePlace(id: string | undefined, field: string) {
+  await connectDb();
   if (!id) return undefined;
   if (!mongoose.isValidObjectId(id)) throw new ValidationError("Invalid request", { [field]: ["Invalid id"] });
   const place = await Location.findById(id);
@@ -236,7 +239,7 @@ async function requirePlace(id: string | undefined, field: string) {
   return place._id;
 }
 
-function fieldDefs(category: CategoryDoc): FieldDefinition[] {
+export function fieldDefs(category: CategoryDoc): FieldDefinition[] {
   return (category.fields ?? []).map((field) => ({
     key: field.key,
     label: field.label,
@@ -269,7 +272,8 @@ export async function promoted(listing: ListingRow) {
 
 const ATTACHABLE_PHOTO_STATUS = new Set(["cleared", "scanning"]);
 
-async function assertPhotos(ownerId: string, listing: ListingRow, mediaIds: string[], coverMediaId?: string) {
+export async function assertPhotos(ownerId: string, listing: ListingRow, mediaIds: string[], coverMediaId?: string) {
+  await connectDb();
   if (new Set(mediaIds).size !== mediaIds.length) {
     throw new ValidationError("Invalid request", { mediaIds: ["Duplicate photos"] });
   }
@@ -290,7 +294,8 @@ async function assertPhotos(ownerId: string, listing: ListingRow, mediaIds: stri
   }
 }
 
-async function assertCleanText(parts: Array<string | undefined>) {
+export async function assertCleanText(parts: Array<string | undefined>) {
+  await connectDb();
   const text = parts.filter((part): part is string => Boolean(part?.trim())).join("\n");
   if (!text) return;
   if (textDenied(text).denied) throw new PolicyViolationError("Listing text is not allowed");
@@ -302,7 +307,8 @@ async function assertCleanText(parts: Array<string | undefined>) {
   }
 }
 
-async function writeVersion(listing: ListingRow, actorId: string) {
+export async function writeVersion(listing: ListingRow, actorId: string) {
+  await connectDb();
   const version = (await ListingVersion.countDocuments({ listingId: listing._id })) + 1;
   const snapshot = listing.toObject() as Record<string, unknown>;
   delete snapshot.__v;

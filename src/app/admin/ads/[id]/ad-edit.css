@@ -1,0 +1,33 @@
+.adm-ae-grid { display: grid; grid-template-columns: minmax(0, 1fr) 320px; gap: 16px; align-items: start; }
+.adm-ae-main { display: grid; gap: 16px; min-width: 0; }
+.adm-ae-side { display: grid; gap: 16px; min-width: 0; }
+.adm-ae-sec { display: grid; grid-template-columns: 200px minmax(0, 1fr); gap: 20px; padding: 18px 0; border-top: 1px solid var(--adm-line2); }
+.adm-ae-sec:first-of-type { border-top: 0; padding-top: 0; }
+.adm-ae-sec-head h2, .adm-ae-side h2 { margin: 0 0 4px; font-size: 15px; font-weight: 800; }
+.adm-ae-sec-head p { margin: 0; font-size: 12.5px; color: var(--adm-kmuted); }
+.adm-ae-sec-body { display: grid; gap: 14px; min-width: 0; }
+.adm-ae-two { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
+.adm-ae-static { margin: 0; min-height: 40px; display: flex; align-items: center; font-size: 14px; }
+.adm-ae-photos { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 8px; }
+.adm-ae-photos li { position: relative; }
+.adm-ae-photos img { display: block; width: 120px; height: 90px; object-fit: cover; border-radius: 10px; background: var(--adm-line2); }
+.adm-ae-cover { position: absolute; left: 6px; top: 6px; padding: 2px 8px; border-radius: 999px; background: #fff; font-size: 12px; font-weight: 700; }
+.adm-ae-multi { border: 0; margin: 0; padding: 0; display: grid; gap: 6px; }
+.adm-ae-badges { display: flex; flex-wrap: wrap; gap: 6px; margin: 8px 0; }
+.adm-ae-kv { margin: 0; display: grid; gap: 6px; font-size: 13.5px; }
+.adm-ae-kv > div { display: grid; grid-template-columns: 100px minmax(0, 1fr); gap: 10px; }
+.adm-ae-kv dt { color: var(--adm-kmuted); }
+.adm-ae-kv dd { margin: 0; font-weight: 600; overflow-wrap: anywhere; }
+.adm-ae-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+.adm-ae-note { margin: 12px 0 0; padding: 10px 12px; border-radius: 10px; background: #eaf0fe; color: #1d4ed8; font-size: 13px; }
+.adm-ae-seller { margin: 8px 0 12px; display: grid; gap: 2px; font-size: 13.5px; }
+.adm-ae-seller span { color: var(--adm-kmuted); }
+@media (max-width: 1099px) {
+  .adm-ae-grid { grid-template-columns: minmax(0, 1fr); }
+}
+@media (max-width: 767px) {
+  .adm-ae-sec { grid-template-columns: minmax(0, 1fr); gap: 10px; }
+  .adm-ae-two { grid-template-columns: minmax(0, 1fr); }
+  .adm-ae-photos img { width: 96px; height: 72px; }
+  .adm-ae-actions .adm-k-btn { flex: 1; }
+}

@@ -1,0 +1,10 @@
+{
+  "branchPrefix": "haiku/h7.154",
+  "globs": [
+    "docs/ownership/H7.154.json",
+    "vercel.json",
+    "src/app/api/cron/**",
+    "src/server/shared/cron-auth.ts",
+    "tests/server/cron/h7154-*.test.ts"
+  ]
+}

@@ -68,7 +68,18 @@ interface AppendInput {
   auditReason?: string;
   ip?: string;
   once?: boolean;
+  guard?: WalletGuard;
 }
+
+/** The ledger lines of one wallet that a guard may look at (H7.152). */
+export type WalletLine = { delta: number; refType: string; refId: string };
+
+/**
+ * A rule that must hold at the moment a line is written (H7.152). It runs on the lines read in the SAME attempt that writes the line,
+ * and the line is only written when nothing was added to this wallet since they were read (the chain key), so a check and its write
+ * cannot be separated by another request. Throw (a ConflictError) to refuse the line.
+ */
+export type WalletGuard = (lines: readonly WalletLine[]) => void;
 
 /**
  * Inserts one ledger row. The chain key is unique per previous tip, so two
@@ -84,11 +95,12 @@ async function appendEntry(input: AppendInput) {
     }).lean();
     if (existing) return { balance: await sumBalance(input.userId), created: false };
 
-    const rows = (await WalletEntry.find({ userId: input.userId }).sort({ _id: 1 }).select("delta").lean()) as Array<{
-      _id: Types.ObjectId;
-      delta: number;
-    }>;
+    const rows = (await WalletEntry.find({ userId: input.userId })
+      .sort({ _id: 1 })
+      .select(input.guard ? "delta refType refId" : "delta")
+      .lean()) as Array<{ _id: Types.ObjectId; delta: number; refType?: string; refId?: string }>;
     const balance = rows.reduce((sum, row) => sum + row.delta, 0);
+    input.guard?.(rows.map((row) => ({ delta: row.delta, refType: row.refType ?? "", refId: row.refId ?? "" })));
     if (input.delta < 0 && balance + input.delta < 0) {
       throw new PaymentRequiredError("Insufficient credits");
     }
@@ -144,6 +156,7 @@ export async function creditWallet(input: {
   auditReason?: string;
   ip?: string;
   once?: boolean;
+  guard?: WalletGuard;
 }) {
   await connectDb();
   if (!Number.isInteger(input.amount) || input.amount < 1) {
@@ -162,6 +175,7 @@ export async function creditWallet(input: {
     auditReason: input.auditReason,
     ip: input.ip,
     once: input.once,
+    guard: input.guard,
   });
 }
 
@@ -178,6 +192,7 @@ export async function debitWallet(input: {
   auditReason?: string;
   ip?: string;
   once?: boolean;
+  guard?: WalletGuard;
 }) {
   await connectDb();
   if (!Number.isInteger(input.amount) || input.amount < 0) {
@@ -196,6 +211,7 @@ export async function debitWallet(input: {
     auditReason: input.auditReason,
     ip: input.ip,
     once: input.once,
+    guard: input.guard,
   });
 }
 

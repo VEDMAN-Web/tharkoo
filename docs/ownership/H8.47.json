@@ -1,0 +1,12 @@
+{
+  "branchPrefix": "haiku/h8.47",
+  "globs": [
+    "docs/ownership/H8.47.json",
+    "src/app/admin/menus/**",
+    "src/app/admin/ui-text/**",
+    "src/lib/ui/text-labels.ts",
+    "src/server/admin/undo/handlers/record-restore.ts",
+    "tests/server/layout/a47-*.test.ts",
+    "tests/e2e/a47-text.e2e.ts"
+  ]
+}

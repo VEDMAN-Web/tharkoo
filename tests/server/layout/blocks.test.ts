@@ -17,7 +17,7 @@ describe("block registry", () => {
       const parsed = def.schema.safeParse(def.defaults());
       expect(parsed.success, `${type} defaults must be valid`).toBe(true);
     }
-    expect(BLOCK_TYPES).toHaveLength(28);
+    expect(BLOCK_TYPES).toHaveLength(31);
   });
 
   it("lists the block types allowed per page", () => {
