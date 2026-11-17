@@ -3,14 +3,14 @@
 import Link from "next/link";
 import type { PackRow, PanelSummary } from "@/server/notifications/summary";
 import { makeT } from "@/lib/ui/text";
-import { openRecharge } from "@/components/recharge/openRecharge";
+import { PackPicker } from "./PackPicker";
 import { SignedOutPanel, UserPanelShell } from "./UserPanelShell";
 
 const t = makeT();
 
 /** H7.17: coins and payments on the user panel: the pack grid, the coin balance and a link to the history. */
 
-export function CoinsPanel({ summary, packs, creditPriceInr = 10 }: { summary: PanelSummary; packs: PackRow[]; creditPriceInr?: number }) {
+export function CoinsPanel({ summary, packs }: { summary: PanelSummary; packs: PackRow[] }) {
   const balance = summary.signedIn ? summary.balance : 0;
 
   if (!summary.signedIn) {
@@ -34,16 +34,8 @@ export function CoinsPanel({ summary, packs, creditPriceInr = 10 }: { summary: P
       <section aria-labelledby="buy-heading" className="up-glass up-panel">
         <div className="up-panel-head">
           <h1 id="buy-heading" className="up-h2">{t("panel.coins.buy")}</h1>
-          <p className="up-muted">Choose a pack</p>
         </div>
-        {packs.length === 0 ? (
-          <p className="up-muted">No credit packs are on sale right now.</p>
-        ) : (
-          <>
-            <p className="up-muted">{t("recharge.rate", { price: creditPriceInr })}</p>
-            <button type="button" className="up-btn" data-tk="open-recharge" onClick={() => openRecharge({})}>{t("recharge.recharge")}</button>
-          </>
-        )}
+        {packs.length === 0 ? <p className="up-muted">{t("recharge.empty")}</p> : <PackPicker returnTo="/u/account/credits/" />}
       </section>
     </UserPanelShell>
   );

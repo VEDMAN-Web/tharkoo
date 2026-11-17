@@ -51,7 +51,7 @@ export function UserPanelHome({
         )}
         <div className="up-promo-row">
           <Link href="/u/account/credits/history/" className="up-coins-link">See history</Link>
-          {summary.signedIn && summary.seller ? <Link href="/u/account/wallet/?tab=earnings" className="up-coins-link" data-tk="withdraw">{t("panel.coins.withdraw")}</Link> : null}
+          {summary.signedIn && summary.hasEarnings ? <Link href="/u/account/wallet/?tab=earnings" className="up-coins-link" data-tk="withdraw">{t("panel.coins.withdraw")}</Link> : null}
         </div>
       </section>
       {profile ? <ProfileCard percent={profile.percent} missing={profile.missing} /> : null}
@@ -129,9 +129,8 @@ export function UserPanelHome({
         <section aria-labelledby="buy-heading" className="up-glass up-panel">
           <div className="up-panel-head">
             <h2 id="buy-heading" className="up-h2">{t("panel.coins.buy")}</h2>
-            <Link href="/u/account/credits/" className="up-link">See all packs</Link>
           </div>
-          <PackPicker packs={packs} />
+          <PackPicker returnTo="/u/account/" />
         </section>
       ) : null}
       <SavedAdsRail />
