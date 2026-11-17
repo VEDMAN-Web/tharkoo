@@ -248,6 +248,7 @@ body:has(.tkp-post) .tkn-footer, body:has(.tkp-post) .tkn-chat-bubble { display:
   .tkn .tkp-post .tkp-scroll { padding-left: 16px; padding-right: 16px; }
   .tkn .tkp-post .tkp-two { grid-template-columns: minmax(0, 1fr); }
   .tkn .tkp-post .tkp-two-keep { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .tkn .tkp-post .tkp-two-keep.tkp-end { grid-template-columns: minmax(0, 1fr); }
   .tkn .tkp-post .tkp-btn { padding: 0 18px; }
   .tkn .tkp-post .tkp-btn-preview { padding: 0 12px; }
 }
