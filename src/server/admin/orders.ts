@@ -5,6 +5,8 @@ import { RECHARGE_CHECK_AFTER_MS } from "@/server/admin/counts";
 import { walletBalance } from "@/server/billing/ledger";
 import { FEE_REFUND_REF, FEE_REF } from "@/server/billing/posting-fee";
 import { RECHARGE_METHODS, statusOf } from "@/server/billing/recharge";
+import { refundableCredits } from "@/server/billing/service";
+import { actionsFor } from "@/server/admin/order-actions";
 import { ForbiddenError, NotFoundError } from "@/server/http";
 import { Listing, Payment, PromotionOrder, PromotionProduct, User, WalletEntry } from "@/server/models";
 import { Withdrawal } from "@/server/wallet/withdrawals";
@@ -61,6 +63,8 @@ export type OrderRow = {
   details: [string, string][];
   /** The receipt page of a recharge. */
   receipt: string | null;
+  /** What staff may do to this recharge right now (H8.24). Null for rows that are not recharges, or when the viewer may not act. */
+  act: null | { paymentId: string; credits: number; markPaid: boolean; markFailed: boolean; refund: boolean; refundable: number };
 };
 
 export type OrderKpis = {
@@ -144,7 +148,7 @@ export async function orderKpis(now: Date = new Date()): Promise<OrderKpis> {
 
 type PaymentLean = { _id: Types.ObjectId; userId: unknown; amount: number; currency: string; status: "pending" | "paid" | "failed"; provider?: string; method?: "card" | "crypto"; coin?: string; network?: string; credits?: number; expiresAt?: Date; outcome?: string; createdAt?: Date };
 
-async function rechargeRows(query: OrderQuery, skip: number, now: Date): Promise<{ rows: OrderRow[]; total: number }> {
+async function rechargeRows(query: OrderQuery, skip: number, now: Date, canAct: boolean): Promise<{ rows: OrderRow[]; total: number }> {
   const filter: QueryFilter<Record<string, unknown>> = { method: { $in: [...RECHARGE_METHODS] } };
   const since = sinceOf(query.range, now);
   if (since) filter.createdAt = { $gte: since };
@@ -170,6 +174,8 @@ async function rechargeRows(query: OrderQuery, skip: number, now: Date): Promise
       const tone: StatusTone = status === "paid" ? "ok" : status === "pending" ? "warn" : "bad";
       const text = status === "pending" ? (waitedMinutes >= 60 ? `Waiting ${Math.floor(waitedMinutes / 60)} h` : `Waiting ${waitedMinutes} min`) : status === "paid" ? "Paid" : status === "cancelled" ? "Cancelled" : status === "expired" ? "Expired" : "Failed";
       const balance = person ? await walletBalance(String(doc.userId)) : null;
+      const refundable = doc.status === "paid" && doc.provider !== "mock" ? await refundableCredits(doc) : 0;
+      const may = canAct ? actionsFor({ status: doc.status, provider: doc.provider }, refundable) : null;
       return {
         id,
         ref: receiptNo(id),
@@ -189,6 +195,7 @@ async function rechargeRows(query: OrderQuery, skip: number, now: Date): Promise
           ["Payment", doc.provider === "mock" ? "Test payment. No money was taken." : "Real payment"],
         ] as [string, string][],
         receipt: `/admin/finance/receipt/${id}/`,
+        act: may && (may.markPaid || may.markFailed || may.refund) ? { paymentId: id, credits: doc.credits ?? 0, ...may, refundable } : null,
       };
     }),
   );
@@ -252,6 +259,7 @@ async function entryRows(query: OrderQuery, skip: number, now: Date, refTypes: s
         ["Reference", doc.refId],
       ],
       receipt: paymentId && /^[0-9a-f]{24}$/i.test(paymentId) ? `/admin/finance/receipt/${paymentId}/` : null,
+      act: null,
     };
   });
   return { rows, total };
@@ -299,6 +307,7 @@ async function promotionRows(query: OrderQuery, skip: number, now: Date): Promis
         ["Ends", doc.endsAt ? new Date(doc.endsAt).toISOString() : "not set"],
       ],
       receipt: null,
+      act: null,
     };
   });
   return { rows, total };
@@ -311,7 +320,7 @@ export async function listOrders(query: OrderQuery, roles: readonly string[], no
   const skip = (query.page - 1) * query.pageSize;
   const kpis = await orderKpis(now);
   let part: { rows: OrderRow[]; total: number } = { rows: [], total: 0 };
-  if (query.tab === "recharges") part = await rechargeRows(query, skip, now);
+  if (query.tab === "recharges") part = await rechargeRows(query, skip, now, can(roles, "orders.refund"));
   else if (query.tab === "fees") part = await entryRows(query, skip, now, [FEE_REF, FEE_REFUND_REF]);
   else if (query.tab === "refunds") part = await entryRows(query, skip, now, ["refund"]);
   else if (query.tab === "wallet") part = await entryRows(query, skip, now, null);

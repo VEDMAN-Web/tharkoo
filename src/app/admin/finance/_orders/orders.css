@@ -10,6 +10,9 @@
 .adm-o-kv { display: grid; grid-template-columns: 120px minmax(0, 1fr); gap: 12px; padding: 9px 0; border-bottom: 1px solid var(--adm-line2); font-size: 13.5px; }
 .adm-o-kv dt { color: var(--adm-kmuted); }
 .adm-o-kv dd { margin: 0; font-weight: 600; overflow-wrap: anywhere; }
+.adm-o-act { display: grid; gap: 12px; padding-top: 4px; }
+.adm-o-actbar { display: flex; gap: 8px; align-items: center; }
+.adm-o-actbar .adm-k-sp { flex: 1; }
 .adm-o-state { display: grid; justify-items: center; text-align: center; gap: 8px; padding: 40px 20px; }
 .adm-o-state-icon { width: 52px; height: 52px; border-radius: 50%; display: grid; place-items: center; background: var(--adm-line2); color: var(--adm-kmuted); }
 .adm-o-state-icon svg { width: 24px; height: 24px; }
