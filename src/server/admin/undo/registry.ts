@@ -73,7 +73,8 @@ export interface UndoRun {
 
 export interface UndoHandler {
   canUndo(ctx: AdminCtx, event: UndoSource): boolean | Promise<boolean>;
-  conflict(event: UndoSource): Promise<{ changedBy: string | null; at: string } | null>;
+  /** `message` replaces the generic words when the handler knows why it cannot run (for example credits already spent). */
+  conflict(event: UndoSource): Promise<{ changedBy: string | null; at: string; message?: string } | null>;
   run(ctx: AdminCtx, event: UndoSource): Promise<UndoRun>;
 }
 

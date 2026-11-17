@@ -1,6 +1,8 @@
 "use server";
 
 import { getStaffFromHeaders } from "@/lib/admin-auth";
+import { adminContext } from "@/server/admin/context";
+import { adminWrite } from "@/server/admin/write";
 import {
   deleteRedirect,
   importRedirectCsv,
@@ -30,10 +32,23 @@ function failed(error: unknown) {
   return { ok: false as const, message: error instanceof Error ? error.message : "Save failed" };
 }
 
+async function audited<T>(action: string, target: { type: string; id: string }, summary: string, run: () => Promise<T>, texts?: unknown) {
+  const ctx = await adminContext();
+  const done = await adminWrite<T>(ctx, {
+    perm: "settings.edit",
+    action,
+    target,
+    texts,
+    before: async () => null,
+    apply: async () => ({ after: null, result: await run(), summary }),
+  });
+  return done.result;
+}
+
 export async function savePrefixesAction(input: Partial<Record<PathKey, string>>) {
   try {
     await assertAdmin();
-    const paths = await setPrefixes(input);
+    const paths = await audited("urls.prefixes", { type: "site", id: "url-prefixes" }, "Changed the URL prefixes", () => setPrefixes(input));
     return { ok: true as const, paths };
   } catch (error) {
     return failed(error);
@@ -43,7 +58,7 @@ export async function savePrefixesAction(input: Partial<Record<PathKey, string>>
 export async function renameCategoryAction(id: string, slug: string) {
   try {
     await assertAdmin();
-    return { ok: true as const, slug: await renameCategory(id, slug) };
+    return { ok: true as const, slug: await audited("urls.rename", { type: "category", id }, `Renamed a category address to ${slug}`, () => renameCategory(id, slug)) };
   } catch (error) {
     return failed(error);
   }
@@ -52,7 +67,7 @@ export async function renameCategoryAction(id: string, slug: string) {
 export async function renameLocationAction(id: string, slug: string) {
   try {
     await assertAdmin();
-    return { ok: true as const, slug: await renameLocation(id, slug) };
+    return { ok: true as const, slug: await audited("urls.rename", { type: "location", id }, `Renamed a place address to ${slug}`, () => renameLocation(id, slug)) };
   } catch (error) {
     return failed(error);
   }
@@ -61,7 +76,7 @@ export async function renameLocationAction(id: string, slug: string) {
 export async function renameTagAction(previous: string, slug: string) {
   try {
     await assertAdmin();
-    return { ok: true as const, slug: await renameTag(previous, slug) };
+    return { ok: true as const, slug: await audited("urls.rename", { type: "tag", id: previous }, `Renamed a tag address to ${slug}`, () => renameTag(previous, slug)) };
   } catch (error) {
     return failed(error);
   }
@@ -70,7 +85,7 @@ export async function renameTagAction(previous: string, slug: string) {
 export async function renameContentAction(kind: "page" | "post", id: string, slug: string) {
   try {
     await assertAdmin();
-    return { ok: true as const, slug: await renameContent(kind, id, slug) };
+    return { ok: true as const, slug: await audited("urls.rename", { type: kind, id }, `Renamed a ${kind} address to ${slug}`, () => renameContent(kind, id, slug)) };
   } catch (error) {
     return failed(error);
   }
@@ -79,7 +94,7 @@ export async function renameContentAction(kind: "page" | "post", id: string, slu
 export async function renameAdAction(id: string, title: string) {
   try {
     await assertAdmin();
-    return { ok: true as const, slug: await renameAd(id, title) };
+    return { ok: true as const, slug: await audited("urls.rename", { type: "listing", id }, "Renamed an ad address", () => renameAd(id, title), title) };
   } catch (error) {
     return failed(error);
   }
@@ -106,7 +121,7 @@ export async function saveOverrideAction(input: {
 }) {
   try {
     await assertAdmin();
-    await saveUrlOverride(input);
+    await audited("urls.override", { type: "url", id: input.path }, "Saved the page text overrides of an address", () => saveUrlOverride(input), [input.title, input.description, input.h1]);
     return { ok: true as const };
   } catch (error) {
     return failed(error);
@@ -116,7 +131,7 @@ export async function saveOverrideAction(input: {
 export async function addRedirectAction(from: string, to: string) {
   try {
     await assertAdmin();
-    await saveRedirect(from, to);
+    await audited("urls.redirect.add", { type: "redirect", id: from }, `Added a redirect to ${to}`, () => saveRedirect(from, to));
     return { ok: true as const };
   } catch (error) {
     return failed(error);
@@ -126,7 +141,7 @@ export async function addRedirectAction(from: string, to: string) {
 export async function editRedirectAction(id: string, to: string) {
   try {
     await assertAdmin();
-    await updateRedirect(id, to);
+    await audited("urls.redirect.edit", { type: "redirect", id }, `Pointed a redirect to ${to}`, () => updateRedirect(id, to));
     return { ok: true as const };
   } catch (error) {
     return failed(error);
@@ -136,7 +151,7 @@ export async function editRedirectAction(id: string, to: string) {
 export async function deleteRedirectAction(id: string) {
   try {
     await assertAdmin();
-    await deleteRedirect(id);
+    await audited("urls.redirect.delete", { type: "redirect", id }, "Deleted a redirect", () => deleteRedirect(id));
     return { ok: true as const };
   } catch (error) {
     return failed(error);
@@ -156,7 +171,7 @@ export async function exportRedirectsAction() {
 export async function importRedirectsAction(csv: string) {
   try {
     await assertAdmin();
-    const count = await importRedirectCsv(csv);
+    const count = await audited("urls.redirect.import", { type: "redirect", id: "csv" }, "Imported redirects from a CSV file", () => importRedirectCsv(csv));
     return { ok: true as const, count };
   } catch (error) {
     return failed(error);

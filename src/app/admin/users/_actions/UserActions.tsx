@@ -7,17 +7,18 @@ import { undoAction } from "@/app/admin/undo-actions";
 import { Button, MoreMenu, ReasonDialog, useToast, type MoreItem } from "@/components/admin/ui";
 import { banPreviewAction, banUserAction, logoutEverywhereAction, unbanUserAction, type ActionResult } from "./actions";
 
-export type UserAccess = { ban: boolean; logout: boolean };
+export type UserAccess = { ban: boolean; logout: boolean; credits: boolean; adjust: boolean };
 
 const BAN_REASONS = ["Spam", "Fake or junk ads", "Abusive messages", "Other"] as const;
 
 /** The footer of the Users drawer (H8.11): Ban user... on the left, More in the middle, Unban on the right for a banned user. */
-export function UserActions({ userId, name, status, isStaff, access }: { userId: string; name: string; status: "active" | "suspended" | "deleted"; isStaff: boolean; access: UserAccess }) {
+export function UserActions({ userId, name, status, isStaff, access, onAdjust }: { userId: string; name: string; status: "active" | "suspended" | "deleted"; isStaff: boolean; access: UserAccess; onAdjust: () => void }) {
   const toast = useToast();
   const router = useRouter();
   const [dialog, setDialog] = useState<"" | "ban" | "logout">("");
   const [preview, setPreview] = useState<{ liveAds: number; sessions: number } | null>(null);
   const [busy, setBusy] = useState(false);
+  const [banRound, setBanRound] = useState(0);
 
   async function undo(eventId: string, what: string) {
     const outcome = await undoAction(eventId);
@@ -41,6 +42,7 @@ export function UserActions({ userId, name, status, isStaff, access }: { userId:
 
   async function openBan() {
     setPreview(null);
+    setBanRound((round) => round + 1);
     setDialog("ban");
     const result = await banPreviewAction(userId);
     if (result.ok) setPreview({ liveAds: result.liveAds, sessions: result.sessions });
@@ -49,7 +51,8 @@ export function UserActions({ userId, name, status, isStaff, access }: { userId:
   const canBan = access.ban && !isStaff && status === "active";
   const canUnban = access.ban && !isStaff && status === "suspended";
   const more: MoreItem[] = access.logout ? [{ key: "logout", label: "Log out everywhere...", icon: LogOut, onSelect: () => setDialog("logout") }] : [];
-  if (!canBan && !canUnban && more.length === 0) return null;
+  const canAdjust = access.adjust && status !== "deleted";
+  if (!canBan && !canUnban && !canAdjust && more.length === 0) return null;
 
   return (
     <>
@@ -60,6 +63,11 @@ export function UserActions({ userId, name, status, isStaff, access }: { userId:
       ) : null}
       <span className="adm-k-sp" />
       {more.length ? <MoreMenu items={more} placement="up" /> : null}
+      {canAdjust ? (
+        <Button kind={canUnban ? "secondary" : "primary"} onClick={onAdjust}>
+          Add or remove credits
+        </Button>
+      ) : null}
       {canUnban ? (
         <Button
           kind="primary"
@@ -77,6 +85,7 @@ export function UserActions({ userId, name, status, isStaff, access }: { userId:
       ) : null}
 
       <ReasonDialog
+        key={banRound}
         open={dialog === "ban"}
         title={`Ban ${name}?`}
         body={
