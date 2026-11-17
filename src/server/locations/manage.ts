@@ -6,6 +6,8 @@ import { isAdminRole } from "@/lib/ui/site-content";
 import { validateSlug } from "@/lib/urls";
 import { AuditRepository } from "@/server/audit";
 import { ForbiddenError, NotFoundError, ValidationError } from "@/server/http";
+import type { AdminCtx } from "@/server/admin/context";
+import { picturesOf, setCatalogPictures, type PictureInput, type PicturesView } from "@/server/layout/catalog-pictures";
 import { Listing, Location, User, type LocationLevel } from "@/server/models";
 import { textDenied } from "@/server/shared/policy";
 import { renameLocation } from "@/server/urls/service";
@@ -146,4 +148,29 @@ export async function deletePlace(actor: Actor, id: string) {
   await record(actor, "location.delete", id, { type: doc.type, slug: doc.slug, name: doc.name }, null);
   await refreshPublicCache();
   return { ok: true as const };
+}
+
+export type PlacePictureItem = { id: string; name: string; sub: string; pictures: PicturesView };
+
+const PICTURE_SEARCH_LIMIT = 30;
+
+/** Sets or clears the photo and the band of a country, state or city. One audited write that can be undone. */
+export async function setPlacePictures(ctx: AdminCtx, id: string, input: PictureInput) {
+  await connectDb();
+  return setCatalogPictures(ctx, "Location", id, input);
+}
+
+function escapeRegExp(value: string) {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
+/** Places whose name starts with the typed letters (cities first), with their pictures. An empty search gives the first cities. */
+export async function findPlacesForPictures(query: string): Promise<PlacePictureItem[]> {
+  await connectDb();
+  const text = query.trim().slice(0, 60);
+  const filter: Record<string, unknown> = { type: { $in: MANAGED } };
+  if (text) filter.name = new RegExp(`^${escapeRegExp(text)}`, "i");
+  const rows = await Location.find(filter).select("slug name type photo band").sort({ type: -1, name: 1 }).limit(PICTURE_SEARCH_LIMIT).lean();
+  const views = await picturesOf(rows);
+  return rows.map((row, index) => ({ id: String(row._id), name: row.name, sub: row.type, pictures: views[index] }));
 }

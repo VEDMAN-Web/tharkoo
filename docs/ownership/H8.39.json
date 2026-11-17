@@ -1,0 +1,15 @@
+{
+  "branchPrefix": "haiku/h8.39",
+  "globs": [
+    "docs/ownership/H8.39.json",
+    "src/app/admin/_catalog/**",
+    "src/app/admin/categories/**",
+    "src/app/admin/locations/**",
+    "src/server/categories/manage.ts",
+    "src/server/locations/manage.ts",
+    "src/server/layout/catalog-pictures.ts",
+    "src/server/models/catalog.ts",
+    "tests/server/layout/a39-*.test.ts",
+    "tests/e2e/a39-photos.e2e.ts"
+  ]
+}

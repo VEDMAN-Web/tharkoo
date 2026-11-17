@@ -4,6 +4,11 @@ import { CollectionEditor } from "@/components/admin/CollectionEditor";
 import { connectDb } from "@/lib/db";
 import { Category } from "@/server/models";
 import { Subcategory } from "@/server/models/subcategory";
+import { CatalogPictures } from "@/app/admin/_catalog/CatalogPictures";
+import { getStaffFromHeaders } from "@/lib/admin-auth";
+import { can } from "@/lib/admin/perms";
+import { categoryPictureItems } from "@/server/categories/manage";
+import { saveCategoryPicturesAction, undoCategoryPicturesAction } from "./picture-actions";
 import { CategoriesManager, type ManagedCategory, type ManagedSub } from "./CategoriesManager";
 
 export const dynamic = "force-dynamic";
@@ -31,9 +36,21 @@ export default async function Page() {
     enabled: row.enabled !== false,
     seoIntro: row.seoIntro ?? "",
   }));
+  const viewer = await getStaffFromHeaders();
+  const pictures = can(viewer.roles, "catalogue.edit") ? await categoryPictureItems() : null;
   return (
     <AdminShell title="Categories">
       <CategoriesManager categories={categories} subs={subs} />
+      {pictures ? (
+        <CatalogPictures
+          title="Pictures"
+          intro="The photo of each category shows on the home page and its band shows at the top of its page. Pictures come from the media library; one that is used here cannot be deleted there."
+          noun="category"
+          items={pictures}
+          save={saveCategoryPicturesAction}
+          undo={undoCategoryPicturesAction}
+        />
+      ) : null}
       <section className="adm-card" style={{ margin: "16px 0" }} aria-labelledby="post-fields-h">
         <h2 id="post-fields-h" className="adm-field-label" style={{ fontSize: 16 }}>Post form fields</h2>
         <p className="adm-field-help">Choose a category to change the labels, help text, placeholders, required flags, order and options of its post-ad form.</p>

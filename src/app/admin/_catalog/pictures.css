@@ -1,0 +1,10 @@
+.adm-pics-editor { display: grid; gap: 14px; margin-top: 14px; }
+.adm-pics-name { margin: 0; font-size: 15px; font-weight: 800; }
+.adm-pics-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 20px; align-items: start; }
+.adm-pics-actions { display: flex; justify-content: flex-end; }
+.adm-pics-search { display: flex; flex-wrap: wrap; gap: 10px; align-items: end; margin-bottom: 10px; }
+.adm-pics-undo { background: none; border: 0; padding: 4px 6px; min-height: 24px; font: inherit; font-weight: 700; text-decoration: underline; cursor: pointer; color: inherit; }
+@media (max-width: 899px) {
+  .adm-pics-grid { grid-template-columns: minmax(0, 1fr); }
+  .adm-pics-actions .adm-k-btn { width: 100%; }
+}
