@@ -122,7 +122,7 @@ export function buildChecklist(input: ChecklistInputs): ChecklistRow[] {
       title: "Banner picture checked against the content rules",
       detail: input.bannerChangedAt ? `Changed ${dayLabel(input.bannerChangedAt)}` : "Not published yet",
       done: tick("bannerChecked"),
-      href: "/admin/homepage/",
+      href: "/admin/page-builder/",
       manual: "bannerChecked",
     },
     {

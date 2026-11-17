@@ -113,8 +113,8 @@ test.describe("A16 page builder, Home tab", () => {
     const v0 = await liveVersion(page);
     await (await headline(page)).fill("A16 first headline");
     await expect(page.locator('[data-tk="builder-status"]')).toContainText("1 change");
-    await expect(page.locator('[data-tk="save-bar"]')).toContainText(/Draft saved (just now|\d+ s ago)/, { timeout: 30_000 });
-    await expect(page.locator('[data-tk="save-bar"]')).toHaveAttribute("data-dirty", "no");
+    await expect(page.locator('[data-tk="save-bar"]')).toHaveAttribute("data-dirty", "no", { timeout: 30_000 });
+    await expect(page.locator('[data-tk="save-bar"]')).toContainText(/Draft saved (just now|\d+ s ago)/);
     await publishNow(page);
     await expect(page.locator('[data-tk="builder-status"]')).toContainText(`Live: version ${v0 + 1}`);
     await expect(page.locator('[data-tk="toast"]')).toContainText(`Published as version ${v0 + 1}`);

@@ -6,6 +6,7 @@ import { homeDefaultBlocks } from "@/server/layout/defaults/home";
 import { getPublished, publish, saveDraft, validateBlocks } from "@/server/layout/service";
 import { PageLayout, PageLayoutRevision } from "@/server/models";
 import { seedHomeLayout } from "@/server/seed/layouts";
+import { seedLegacyHome } from "./a19-legacy-home";
 import { clearMemoryMongo, connectMemoryMongo, disconnectMemoryMongo } from "../../setup/mongo";
 
 const admin = { email: "admin@example.test", roles: ["admin"] };
@@ -56,7 +57,9 @@ describe("home layout seed", () => {
     expect(await PageLayout.countDocuments({ key: "home", scope: "default" })).toBe(1);
     expect(await PageLayoutRevision.countDocuments({ key: "home" })).toBe(1);
     const published = await getPublished("home", "default");
-    expect(published?.[0].type).toBe("hero");
+    expect(published?.map((block) => block.type)).toEqual(["homeBanner", "homeTrust", "homeCategories", "homeAds", "homeSteps"]);
+    expect(await PageLayout.findOne({ key: "home" }).lean()).toMatchObject({ format: 2, version: 1 });
+    expect(await PageLayoutRevision.findOne({ key: "home", version: 1 }).lean()).toMatchObject({ format: 2 });
     const read = await getPageBlocks("home", ["default"]);
     expect(read?.map((block) => block.type)).toEqual(published?.map((block) => block.type));
   });
@@ -85,7 +88,7 @@ describe("home h1", () => {
   });
 
   it("is a publish away from changing what the page reads", async () => {
-    await seedHomeLayout();
+    await seedLegacyHome();
     const base = (await getPublished("home", "default"))!;
     const edited = base.map((b) => (b.type === "hero" ? { ...b, props: { ...b.props, heading: "A new headline" } } : b));
     await saveDraft({ key: "home", scope: "default", blocks: edited, ...admin });
