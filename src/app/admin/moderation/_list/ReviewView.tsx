@@ -5,12 +5,16 @@ import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { Check, X } from "lucide-react";
 import { Badge, Button, DiffView, Drawer, EmptyState, FilterBar, PageHeader, ReasonDialog, ServerTable, Tabs, ToastProvider, useToast, type TableColumn } from "@/components/admin/ui";
 import type { ReviewDetail, ReviewList, ReviewRow, ReviewTab } from "@/server/moderation/review";
-import { approveAction, rejectAction } from "../actions";
+import { approveAction } from "../actions";
+import { rejectAdAction, removeAdAction, undoDecisionAction } from "../_actions/actions";
 import { markCheckedAction } from "./actions";
 
 const TAB_LABELS: Record<ReviewTab, string> = { live: "Live, not checked", held: "Held by rules", edited: "Edited, photos waiting" };
 const TABS = Object.keys(TAB_LABELS) as ReviewTab[];
 const SEARCH_DEBOUNCE_MS = 350;
+const REASONS = ["Breaks the posting rules", "Photos do not match the text", "Spam or a duplicate ad", "The seller asked us to"] as const;
+
+type Deciding = { kind: "reject" | "remove"; id: string; title: string; seller: string; paidCredits: number };
 const MIN_PER_HOUR = 60;
 const HOURS_PER_DAY = 24;
 
@@ -32,7 +36,7 @@ function Screen({ list, detail }: { list: ReviewList; detail: ReviewDetail | nul
   const sentSearch = useRef(list.query.q);
   const [selected, setSelected] = useState<string[]>([]);
   const [busy, setBusy] = useState(false);
-  const [rejecting, setRejecting] = useState<string | null>(null);
+  const [deciding, setDeciding] = useState<Deciding | null>(null);
 
   function go(changes: Record<string, string | null>) {
     if (!("open" in changes && Object.keys(changes).length === 1)) setSelected([]);
@@ -69,11 +73,31 @@ function Screen({ list, detail }: { list: ReviewList; detail: ReviewDetail | nul
     router.refresh();
   }
 
-  async function reject(id: string, reason: string) {
-    setRejecting(null);
-    const result = await rejectAction(id, reason);
-    if (result.ok) toast.show({ kind: "success", message: "Ad rejected. The seller is told." });
-    else toast.show({ kind: "error", message: result.error });
+  function decide(kind: "reject" | "remove", id: string) {
+    const row = list.rows.find((item) => item.id === id);
+    const title = row?.title ?? detail?.title ?? "";
+    setDeciding({ kind, id, title, seller: row?.seller ?? detail?.seller ?? "", paidCredits: row?.paidCredits ?? detail?.paidCredits ?? 0 });
+  }
+
+  async function undo(eventId: string) {
+    const answer = await undoDecisionAction(eventId);
+    toast.show({ kind: answer.ok ? "success" : "error", message: answer.message });
+    router.refresh();
+  }
+
+  async function confirmDecision(result: { reason: string; text: string; giveBack: boolean }) {
+    const current = deciding;
+    setDeciding(null);
+    if (!current) return;
+    const reason = [result.reason, result.text].filter(Boolean).join(": ");
+    const run = current.kind === "reject" ? rejectAdAction : removeAdAction;
+    const answer = await run({ id: current.id, reason, refund: result.giveBack });
+    if (!answer.ok) toast.show({ kind: "error", message: answer.message });
+    else {
+      const what = current.kind === "reject" ? "rejected. The seller is told" : "removed";
+      const money = answer.refunded > 0 ? ` ${answer.refunded} credits given back.` : "";
+      toast.show({ kind: "undo", message: `"${current.title}" ${what}.${money}`, onUndo: () => void undo(answer.eventId) });
+    }
     router.refresh();
   }
 
@@ -142,11 +166,9 @@ function Screen({ list, detail }: { list: ReviewList; detail: ReviewDetail | nul
                       <Button icon={Check} disabled={busy} onClick={() => void approve([row.id])}>
                         {approveLabel}
                       </Button>
-                      {tab === "held" ? (
-                        <Button kind="danger" icon={X} onClick={() => setRejecting(row.id)}>
-                          Reject...
-                        </Button>
-                      ) : null}
+                      <Button kind="danger" icon={X} onClick={() => decide(tab === "held" ? "reject" : "remove", row.id)}>
+                        {tab === "held" ? "Reject..." : "Remove ad..."}
+                      </Button>
                     </>
                   )
                 : undefined
@@ -169,11 +191,9 @@ function Screen({ list, detail }: { list: ReviewList; detail: ReviewDetail | nul
           footer={
             tab === "edited" ? undefined : (
               <>
-                {tab === "held" ? (
-                  <Button kind="danger" icon={X} onClick={() => setRejecting(detail.id)}>
-                    Reject...
-                  </Button>
-                ) : null}
+                <Button kind="danger" icon={X} onClick={() => decide(tab === "held" ? "reject" : "remove", detail.id)}>
+                  {tab === "held" ? "Reject..." : "Remove ad..."}
+                </Button>
                 <Button kind="primary" icon={Check} busy={busy} onClick={() => void approve([detail.id])}>
                   {approveLabel}
                 </Button>
@@ -205,15 +225,22 @@ function Screen({ list, detail }: { list: ReviewList; detail: ReviewDetail | nul
         </Drawer>
       ) : null}
       <ReasonDialog
-        open={rejecting !== null}
-        title="Reject this ad?"
-        body="The ad comes down and the seller is told. If the seller paid the posting fee it is given back."
-        textLabel="Tell the seller why"
-        requireText
+        key={deciding ? `${deciding.kind}-${deciding.id}` : "closed"}
+        open={deciding !== null}
+        title={deciding?.kind === "reject" ? "Reject this ad?" : "Remove this ad?"}
+        body={
+          deciding?.kind === "reject"
+            ? "The ad is turned down and the seller is told. You can undo this for 7 days."
+            : "The ad comes down at once and the seller is told. You can undo this for 7 days."
+        }
+        reasons={REASONS}
+        requireReason
+        textLabel="Add a note for the seller (optional)"
+        paidAd={deciding && deciding.paidCredits > 0 ? { name: deciding.seller || "the seller", credits: deciding.paidCredits } : undefined}
         danger
-        confirmLabel="Reject ad"
-        onConfirm={(result) => void reject(rejecting ?? "", result.text)}
-        onCancel={() => setRejecting(null)}
+        confirmLabel={deciding?.kind === "reject" ? "Reject ad" : "Remove ad"}
+        onConfirm={(result) => void confirmDecision(result)}
+        onCancel={() => setDeciding(null)}
       />
     </div>
   );

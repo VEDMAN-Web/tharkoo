@@ -3,7 +3,7 @@ import { connectDb } from "@/lib/db";
 import { can } from "@/lib/admin/perms";
 import type { AdminCtx } from "@/server/admin/context";
 import { adminWrite } from "@/server/admin/write";
-import { FEE_REF } from "@/server/billing/posting-fee";
+import { FEE_REF, FEE_REFUND_REF } from "@/server/billing/posting-fee";
 import { ConflictError, ForbiddenError, NotFoundError } from "@/server/http";
 import { demoFilter } from "@/server/listings/demo-ads";
 import { adPhotoUrl } from "@/server/media/photo-url";
@@ -32,7 +32,7 @@ export function parseReviewQuery(params: Record<string, string | string[] | unde
   };
 }
 
-export type ReviewRow = { id: string; title: string; category: string; city: string; seller: string; since: string; paid: boolean };
+export type ReviewRow = { id: string; title: string; category: string; city: string; seller: string; since: string; paid: boolean; paidCredits: number };
 export type ReviewList = { query: ReviewQuery; rows: ReviewRow[]; total: number; counts: Record<ReviewTab, number> };
 
 function escapeRegex(value: string) {
@@ -51,6 +51,26 @@ async function tabFilter(tab: ReviewTab): Promise<QueryFilter<Record<string, unk
   const since = site?.postModerationSince;
   if (!since) return { _id: { $in: [] } };
   return { ...skip, status: "active", lastModerationAt: { $exists: false }, publishedAt: { $gt: since } };
+}
+
+/** What each ad's posting fee stands at now: credits paid and not given back (0 when free or already given back). */
+async function paidCreditsFor(ids: string[]): Promise<Map<string, number>> {
+  const result = new Map<string, number>();
+  if (ids.length === 0) return result;
+  const rows = await WalletEntry.find({ refType: { $in: [FEE_REF, FEE_REFUND_REF] }, refId: { $regex: `^(${ids.join("|")}):` } })
+    .sort({ _id: 1 })
+    .select("refType refId delta")
+    .lean<{ refType: string; refId: string; delta: number }[]>();
+  const open = new Map<string, number[]>();
+  for (const row of rows) {
+    const id = row.refId.split(":")[0];
+    const stack = open.get(id) ?? [];
+    if (row.refType === FEE_REF) stack.push(Math.abs(row.delta));
+    else stack.pop();
+    open.set(id, stack);
+  }
+  for (const [id, stack] of open) if (stack.length) result.set(id, stack[stack.length - 1]);
+  return result;
 }
 
 const SORT: Record<ReviewTab, Record<string, 1>> = { live: { publishedAt: 1 }, held: { createdAt: 1 }, edited: { updatedAt: 1 } };
@@ -83,9 +103,8 @@ export async function listReviewTab(roles: readonly string[], query: ReviewQuery
     Category.find({ _id: { $in: rows.map((row) => row.categoryId) } }).select("name").lean<Named[]>(),
     Location.find({ _id: { $in: rows.flatMap((row) => (row.cityId ? [row.cityId] : [])) } }).select("name").lean<Named[]>(),
     User.find({ _id: { $in: rows.map((row) => row.ownerId) } }).select("displayName").lean<Named[]>(),
-    WalletEntry.find({ refType: FEE_REF, refId: { $in: rows.map((row) => `${row._id}:0`) } }).select("refId").lean<{ refId: string }[]>(),
+    paidCreditsFor(rows.map((row) => String(row._id))),
   ]);
-  const paid = new Set(fees.map((fee) => fee.refId.split(":")[0]));
   return {
     query,
     total,
@@ -97,7 +116,8 @@ export async function listReviewTab(roles: readonly string[], query: ReviewQuery
       city: nameOf(places, row.cityId),
       seller: nameOf(owners, row.ownerId, "displayName"),
       since: new Date(row.publishedAt ?? row.createdAt ?? Date.now()).toISOString(),
-      paid: paid.has(String(row._id)),
+      paid: fees.has(String(row._id)),
+      paidCredits: fees.get(String(row._id)) ?? 0,
     })),
   };
 }
@@ -112,6 +132,7 @@ export type ReviewDetail = {
   seller: string;
   photos: string[];
   paid: boolean;
+  paidCredits: number;
   changes: { field: string; before: string; after: string }[];
 };
 
@@ -126,7 +147,7 @@ export async function getReviewDetail(roles: readonly string[], id: string): Pro
     Category.findById(listing.categoryId).select("name").lean<Named | null>(),
     listing.cityId ? Location.findById(listing.cityId).select("name").lean<Named | null>() : null,
     User.findById(listing.ownerId).select("displayName").lean<Named | null>(),
-    WalletEntry.exists({ refType: FEE_REF, refId: `${listing._id}:0` }),
+    paidCreditsFor([String(listing._id)]),
     MediaAsset.find({ _id: { $in: listing.mediaIds ?? [] }, kind: "image" }).select("objectKey").lean<{ _id: Types.ObjectId; objectKey: string }[]>(),
     ListingVersion.findOne({ listingId: listing._id }).sort({ version: -1 }).lean(),
   ]);
@@ -142,7 +163,8 @@ export async function getReviewDetail(roles: readonly string[], id: string): Pro
     city: city?.name || "",
     seller: owner?.displayName || "",
     photos: assets.slice(0, PHOTOS_SHOWN).map((asset) => adPhotoUrl(asset.objectKey)).filter((src): src is string => Boolean(src)),
-    paid: Boolean(fee),
+    paid: fee.has(String(listing._id)),
+    paidCredits: fee.get(String(listing._id)) ?? 0,
     changes: last ? DIFF_FIELDS.filter((field) => text(before[field]) !== text(now[field])).map((field) => ({ field, before: text(before[field]), after: text(now[field]) })) : [],
   };
 }

@@ -1,0 +1,16 @@
+{
+  "branchPrefix": "haiku/h8.18",
+  "globs": [
+    "docs/ownership/H8.18.json",
+    "progress/H8.18.md",
+    "src/server/moderation/decide.ts",
+    "src/server/moderation/review.ts",
+    "src/app/admin/moderation/actions.ts",
+    "src/app/admin/moderation/_actions/**",
+    "src/app/admin/moderation/_list/ReviewView.tsx",
+    "src/server/admin/undo/handlers/listing-decision.ts",
+    "tests/server/moderation/a18-*.test.ts",
+    "tests/server/admin/a3-write.test.ts",
+    "tests/e2e/a18-decisions.e2e.ts"
+  ]
+}
