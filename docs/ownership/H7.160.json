@@ -2,12 +2,6 @@
   "branchPrefix": "haiku/h7.160",
   "globs": [
     "docs/ownership/H7.160.json",
-    "src/app/admin/users/_profile/VendorTab.tsx",
-    "src/app/admin/menus/**",
-    "src/app/admin/settings/chat/page.tsx",
-    "src/server/site-links/catalogue-images.ts",
-    "src/server/site-links/shell-config.ts",
-    "tests/server/site-links/h7160-*.test.ts",
-    "tests/e2e/h7160-menus.e2e.ts"
+    "tests/e2e/a49-search.e2e.ts"
   ]
 }
