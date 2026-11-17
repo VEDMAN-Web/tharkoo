@@ -6,8 +6,8 @@ const SUPER_ONLY: Perm[] = ["ads.demo.restore", "team.edit", "raw.json"];
 
 const EXPECTED: Record<Exclude<StaffRole, "superadmin" | "admin">, Perm[]> = {
   moderator: ["dashboard.view", "history.view", "ads.review", "ads.decide", "ads.edit", "ads.view", "reports.handle", "id.decide", "users.view"],
-  trust_safety: ["dashboard.view", "history.view", "ads.review", "ads.decide", "ads.view", "reports.handle", "reports.legal", "id.decide", "users.view", "users.ban", "users.logout", "settings.emergency"],
-  support: ["dashboard.view", "history.view", "ads.view", "desk.work", "users.view", "users.logout", "wallet.adjust.own"],
+  trust_safety: ["dashboard.view", "history.view", "ads.review", "ads.decide", "ads.view", "reports.handle", "reports.legal", "id.decide", "users.view", "users.edit", "users.ban", "users.logout", "settings.emergency"],
+  support: ["dashboard.view", "history.view", "ads.view", "desk.work", "users.view", "users.edit", "users.logout", "wallet.adjust.own"],
   finance: ["dashboard.view", "history.view", "wallet.view", "wallet.adjust", "orders.view", "orders.refund", "payouts.decide", "prices.view"],
   seo_editor: ["dashboard.view", "history.view", "content.write", "content.publish", "media.upload", "media.delete", "sitetext.edit", "catalogue.seo", "seo.edit"],
   blog_editor: ["dashboard.view", "history.view", "content.write", "content.publish", "media.upload"],

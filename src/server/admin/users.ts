@@ -3,8 +3,10 @@ import { connectDb } from "@/lib/db";
 import { can } from "@/lib/admin/perms";
 import { normalizePhone, PhoneIdentity } from "@/server/auth/phone";
 import { walletBalance } from "@/server/billing/ledger";
+import { accountBalance } from "@/server/ledger";
+import { Withdrawal } from "@/server/wallet/withdrawals";
 import { ForbiddenError, NotFoundError } from "@/server/http";
-import { AuditEvent, Listing, Session, User } from "@/server/models";
+import { AuditEvent, Listing, Session, SiteMedia, User, WalletEntry } from "@/server/models";
 import { SupportTicket } from "@/server/models/support";
 import { STAFF_ROLE_NAMES, type UserDoc } from "@/server/models/identity";
 
@@ -16,7 +18,7 @@ export const USER_PAGE_SIZES = [25, 50, 100] as const;
 const MAX_RESULTS_FROM_KEY = 200;
 const NAME_PREFIX_MIN = 2;
 
-export type UserQuery = { tab: UserTab; q: string; page: number; pageSize: number };
+export type UserQuery = { tab: UserTab; q: string; page: number; pageSize: number; ads?: boolean; credits?: boolean };
 
 /** Reads the tab, search, page and page size from the address, with safe defaults. */
 export function parseUserQuery(params: Record<string, string | string[] | undefined>): UserQuery {
@@ -32,6 +34,8 @@ export function parseUserQuery(params: Record<string, string | string[] | undefi
     q: one("q").trim().slice(0, 120),
     page: Number.isFinite(page) && page >= 1 ? page : 1,
     pageSize: (USER_PAGE_SIZES as readonly number[]).includes(size) ? size : 25,
+    ads: one("ads") === "1",
+    credits: one("credits") === "1",
   };
 }
 
@@ -79,6 +83,26 @@ async function idsForSearch(raw: string): Promise<Types.ObjectId[] | "none" | nu
   return rows.length ? rows.map((row) => row._id as Types.ObjectId) : "none";
 }
 
+const MAX_FILTER_IDS = 5000;
+
+/** Owners of at least one live ad (capped, newest first is not needed: the list sorts itself). */
+async function idsWithLiveAds(): Promise<Types.ObjectId[]> {
+  const owners = (await Listing.distinct("ownerId", { status: "active" })) as Types.ObjectId[];
+  return owners.slice(0, MAX_FILTER_IDS);
+}
+
+/** People whose wallet holds more than nothing: the sum of every ledger line is above zero (capped). */
+async function idsWithCredits(): Promise<Types.ObjectId[]> {
+  const rows = await WalletEntry.aggregate<{ _id: Types.ObjectId }>([{ $group: { _id: "$userId", total: { $sum: "$delta" } } }, { $match: { total: { $gt: 0 } } }, { $limit: MAX_FILTER_IDS }, { $project: { _id: 1 } }]);
+  return rows.map((row) => row._id);
+}
+
+function intersect(first: Types.ObjectId[] | null, second: Types.ObjectId[]): Types.ObjectId[] {
+  if (!first) return second;
+  const keep = new Set(second.map(String));
+  return first.filter((id) => keep.has(String(id)));
+}
+
 function tabFilter(tab: UserTab): QueryFilter<UserDoc> {
   if (tab === "sellers") return { sellerProfile: { $type: "object" }, status: { $ne: "deleted" } };
   if (tab === "id") return { verificationStatus: "pending_review", status: { $ne: "deleted" } };
@@ -110,7 +134,10 @@ function requireView(roles: readonly string[]) {
 export async function listUsers(query: UserQuery, roles: readonly string[]): Promise<UserList> {
   requireView(roles);
   await connectDb();
-  const ids = await idsForSearch(query.q);
+  const found = await idsForSearch(query.q);
+  let ids: Types.ObjectId[] | "none" | null = found;
+  if (ids !== "none" && query.ads) ids = intersect(ids, await idsWithLiveAds());
+  if (ids !== "none" && query.credits) ids = intersect(ids, await idsWithCredits());
   const filter: QueryFilter<UserDoc> = { ...tabFilter(query.tab) };
   if (ids === "none") filter._id = { $in: [] };
   else if (ids) filter._id = { $in: ids };
@@ -156,8 +183,19 @@ export async function listUsers(query: UserQuery, roles: readonly string[]): Pro
   };
 }
 
+export type VendorView = {
+  about: string;
+  whatsapp: string | null;
+  hidden: boolean;
+  availableNow: boolean;
+  photo: { id: string; src: string; alt: string } | null;
+  /** In coins. null when the viewer may not see money. */
+  earnings: { balance: number; requested: number; paid: number } | null;
+};
+
 export type UserDetail = {
   user: UserRow & { phone: string | null; seller: boolean; whatsapp: string | null };
+  vendor: VendorView | null;
   /** null when the viewer may not see money. */
   balance: number | null;
   ads: { id: string; title: string; status: string; slug: string | null; createdAt: string | null }[];
@@ -182,7 +220,9 @@ export async function getUserDetail(id: string, roles: readonly string[]): Promi
     Listing.countDocuments({ ownerId: userId, status: { $nin: ["deleted", "draft"] } }),
     walletBalance(String(userId)),
   ]);
+  const vendor = doc.sellerProfile ? await vendorView(doc.sellerProfile, userId, roles) : null;
   return {
+    vendor,
     user: {
       id: String(userId),
       name: doc.displayName,
@@ -202,5 +242,26 @@ export async function getUserDetail(id: string, roles: readonly string[]): Promi
     ads: ads.map((ad) => ({ id: String(ad._id), title: ad.title, status: ad.status, slug: ad.slug ?? null, createdAt: ad.createdAt ? new Date(ad.createdAt).toISOString() : null })),
     tickets: tickets.map((ticket) => ({ id: String(ticket._id), number: ticket.number, subject: ticket.subject, status: ticket.status, lastMessageAt: ticket.lastMessageAt ? new Date(ticket.lastMessageAt).toISOString() : null })),
     history: events.map((event) => ({ id: String(event._id), summary: event.summary || event.action, actorRole: event.actorRole ?? null, at: event.createdAt ? new Date(event.createdAt).toISOString() : null })),
+  };
+}
+
+async function vendorView(profile: NonNullable<UserDoc["sellerProfile"]>, userId: Types.ObjectId, roles: readonly string[]): Promise<VendorView> {
+  const media = profile.photoMediaId ? await SiteMedia.findById(profile.photoMediaId).select("url alt").lean<{ url: string; alt: string } | null>() : null;
+  let earnings: VendorView["earnings"] = null;
+  if (can(roles, "wallet.view")) {
+    const [balance, rows] = await Promise.all([
+      accountBalance("vendor_earnings", String(userId)),
+      Withdrawal.aggregate<{ _id: string; coins: number }>([{ $match: { userId, status: { $in: ["requested", "approved", "paid"] } } }, { $group: { _id: "$status", coins: { $sum: "$coins" } } }]),
+    ]);
+    const by = new Map(rows.map((row) => [row._id, row.coins]));
+    earnings = { balance, requested: (by.get("requested") ?? 0) + (by.get("approved") ?? 0), paid: by.get("paid") ?? 0 };
+  }
+  return {
+    about: profile.about ?? "",
+    whatsapp: profile.whatsapp ?? null,
+    hidden: profile.hidden === true,
+    availableNow: profile.availableNow === true,
+    photo: media && profile.photoMediaId ? { id: String(profile.photoMediaId), src: media.url, alt: media.alt } : null,
+    earnings,
   };
 }

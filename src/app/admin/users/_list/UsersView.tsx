@@ -68,7 +68,7 @@ export function UsersView({ list, detail, credits, access }: { list: UserList; d
     { key: "seen", header: "Last seen", nowrap: true, cell: (row) => <span title={dateLabel(row.lastSeen, now)}>{lastSeenLabel(row.lastSeen, now)}</span> },
   ];
 
-  const searching = list.query.q !== "";
+  const searching = list.query.q !== "" || Boolean(list.query.ads) || Boolean(list.query.credits);
   return (
     <ToastProvider>
     <div className="adm-k" data-tk="users-screen">
@@ -91,8 +91,10 @@ export function UsersView({ list, detail, credits, access }: { list: UserList; d
             onSearch={setSearch}
             searchLabel="Search users"
             placeholder="Name, email, phone or ad ID"
-            chips={[]}
-            onRemoveChip={() => undefined}
+            chips={[...(list.query.ads ? [{ key: "ads", label: "Has live ads" }] : []), ...(list.query.credits ? [{ key: "credits", label: "Has credits" }] : [])]}
+            onRemoveChip={(key) => go({ [key]: null, page: null, open: null })}
+            addable={[...(list.query.ads ? [] : [{ key: "ads", label: "Has live ads" }]), ...(list.query.credits ? [] : [{ key: "credits", label: "Has credits" }])]}
+            onAdd={(key) => go({ [key]: "1", page: null, open: null })}
           />
           <ServerTable
             label={`${TAB_LABELS[list.query.tab]} users`}
@@ -110,17 +112,17 @@ export function UsersView({ list, detail, credits, access }: { list: UserList; d
             empty={
               <div className="adm-u-state" data-tk="users-empty">
                 <span className="adm-u-state-icon" aria-hidden="true"><SearchX /></span>
-                <h3>{searching ? `No users match "${list.query.q}"` : "No users here yet"}</h3>
+                <h3>{searching ? (list.query.q ? `No users match "${list.query.q}"` : "No users match these filters") : "No users here yet"}</h3>
                 <p>{searching ? "Try the exact email, a full phone number, an ad ID, or the first letters of a name." : "People show up here as soon as they sign up."}</p>
                 {searching ? (
                   <Button
                     onClick={() => {
                       setSearch("");
                       sentSearch.current = "";
-                      go({ q: null, page: null });
+                      go({ q: null, ads: null, credits: null, page: null });
                     }}
                   >
-                    Clear search
+                    Clear search and filters
                   </Button>
                 ) : null}
               </div>

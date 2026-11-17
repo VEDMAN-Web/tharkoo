@@ -35,35 +35,33 @@ export function FocalPicker({ label, aspect, src, x, y, onChange }: Props) {
   }
 
   return (
-    <div className="grid gap-2">
-      <p className="font-semibold">{label}</p>
-      <p className="t-small text-muted">Click the picture on the spot that must stay in view. The site crops around that point, so faces are not cut.</p>
+    <div style={{ display: "grid", gap: 8 }}>
+      <p style={{ margin: 0, fontWeight: 700 }}>{label}</p>
+      <p style={{ margin: 0, fontSize: 12.5, color: "#6b7280" }}>Click the picture on the spot that must stay in view. The site crops around that point, so faces are not cut.</p>
       {src ? (
         <div
           ref={frame}
           role="img"
           aria-label={`${label}: click to set the focus point. Now ${x}% from the left and ${y}% from the top.`}
-          className="relative w-full cursor-crosshair overflow-hidden rounded-lg border border-line bg-surface"
-          style={{ aspectRatio: aspect, maxWidth: 420 }}
+          style={{ position: "relative", width: "100%", maxWidth: 560, aspectRatio: aspect, overflow: "hidden", borderRadius: 8, border: "1px solid #d8dbe5", background: "#f1f2f6", cursor: "crosshair" }}
           onClick={(event) => setFromPointer(event.clientX, event.clientY)}
         >
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src={src} alt="" className="h-full w-full object-cover" style={{ objectPosition: `${x}% ${y}%` }} draggable={false} />
+          <img src={src} alt="" style={{ display: "block", width: "100%", height: "100%", objectFit: "cover", objectPosition: `${x}% ${y}%` }} draggable={false} />
           <span
             aria-hidden="true"
-            className="pointer-events-none absolute h-5 w-5 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-white shadow"
-            style={{ left: `${x}%`, top: `${y}%`, background: "#E91E8C" }}
+            style={{ position: "absolute", left: `${x}%`, top: `${y}%`, width: 22, height: 22, transform: "translate(-50%, -50%)", borderRadius: "50%", border: "2px solid #fff", boxShadow: "0 1px 4px rgba(0,0,0,0.4)", background: "#E91E8C", pointerEvents: "none" }}
           />
         </div>
       ) : (
-        <p className="t-small text-muted">Add a picture first, then click it to set the focus point.</p>
+        <p style={{ margin: 0, fontSize: 12.5, color: "#6b7280" }}>Add a picture first, then click it to set the focus point.</p>
       )}
-      <div className="flex flex-wrap gap-3">
-        <label className="tk-field w-32">
+      <div style={{ display: "flex", flexWrap: "wrap", gap: 12 }}>
+        <label className="tk-field" style={{ display: "grid", gap: 4, width: 128, fontSize: 13, fontWeight: 600 }}>
           Left, %
           <input type="number" min={0} max={100} value={x} onChange={(event) => onChange({ x: clampPercent(Number(event.target.value)), y })} />
         </label>
-        <label className="tk-field w-32">
+        <label className="tk-field" style={{ display: "grid", gap: 4, width: 128, fontSize: 13, fontWeight: 600 }}>
           Top, %
           <input type="number" min={0} max={100} value={y} onChange={(event) => onChange({ x, y: clampPercent(Number(event.target.value)) })} />
         </label>

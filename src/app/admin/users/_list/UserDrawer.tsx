@@ -8,9 +8,12 @@ import { CreditsDialog } from "../_credits/CreditsDialog";
 import type { CreditsStart } from "../_credits/credits-format";
 import { CreditsTab } from "../_credits/CreditsTab";
 import { UserActions, type UserAccess } from "../_actions/UserActions";
+import { BadgeCard } from "../_profile/BadgeCard";
+import { ProfileTab } from "../_profile/ProfileTab";
+import { VendorTab } from "../_profile/VendorTab";
 import { dateLabel, lastSeenLabel, staffRoleLabels, statusLook } from "./format";
 
-type Section = "overview" | "ads" | "credits" | "tickets" | "history";
+type Section = "overview" | "profile" | "vendor" | "ads" | "credits" | "tickets" | "history";
 
 const AD_TONE: Record<string, "ok" | "warn" | "bad" | "info" | "neutral"> = { active: "ok", pending: "warn", paused: "neutral", rejected: "bad", expired: "neutral", removed: "bad", draft: "neutral" };
 const AD_WORDS: Record<string, string> = { active: "Live", pending: "In review", paused: "Paused", rejected: "Rejected", expired: "Ended", removed: "Removed", draft: "Draft" };
@@ -52,6 +55,8 @@ export function UserDrawer({ detail, credits, onClose, access }: { detail: UserD
           onChange={(key) => setSection(key as Section)}
           items={[
             { key: "overview", label: "Overview" },
+            { key: "profile", label: "Profile" },
+            ...(detail.vendor ? [{ key: "vendor", label: "Vendor" }] : []),
             { key: "ads", label: "Ads", count: detail.ads.length },
             ...(credits ? [{ key: "credits", label: "Credits" }] : []),
             { key: "tickets", label: "Tickets", count: detail.tickets.length },
@@ -81,8 +86,11 @@ export function UserDrawer({ detail, credits, onClose, access }: { detail: UserD
                 <Row label="Last seen">{lastSeenLabel(user.lastSeen, now)}</Row>
                 <Row label="Joined">{dateLabel(user.createdAt, now)}</Row>
               </dl>
+              {staff.length === 0 ? <BadgeCard detail={detail} canRemove={access.badge} /> : null}
             </>
           ) : null}
+          {section === "profile" ? <ProfileTab key={`${user.id}-${user.name}-${user.city}-${user.phone}`} detail={detail} canEdit={access.edit && staff.length === 0} /> : null}
+          {section === "vendor" && detail.vendor ? <VendorTab key={`${user.id}-${detail.vendor.about}-${detail.vendor.hidden}-${detail.vendor.photo?.id}-${detail.vendor.whatsapp}`} detail={detail} canEdit={access.edit && staff.length === 0} /> : null}
           {section === "ads" ? (
             detail.ads.length === 0 ? (
               <p className="adm-k-help">No ads yet.</p>

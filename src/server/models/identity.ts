@@ -21,6 +21,12 @@ export interface SellerProfileDoc {
   whatsapp?: string;
   availableNow: boolean;
   completedAt: Date;
+  /** H7.156: a short text about the vendor, written by staff for now. */
+  about?: string;
+  /** H7.156: the vendor's profile picture, from the media library (SiteMedia). */
+  photoMediaId?: Types.ObjectId;
+  /** H7.156: staff hid this vendor profile. It is never deleted. */
+  hidden?: boolean;
 }
 
 export interface UserDoc {
@@ -96,6 +102,9 @@ const sellerProfileSchema = new Schema<SellerProfileDoc>(
     whatsapp: { type: String, trim: true, maxlength: 20 },
     availableNow: { type: Boolean, default: false },
     completedAt: { type: Date, required: true },
+    about: { type: String, trim: true, maxlength: 500 },
+    photoMediaId: { type: Schema.Types.ObjectId },
+    hidden: { type: Boolean },
   },
   { _id: false },
 );

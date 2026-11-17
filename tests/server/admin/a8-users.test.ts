@@ -47,9 +47,9 @@ beforeEach(async () => {
 
 describe("parsing the address", () => {
   it("falls back to the first tab, page 1 and 25 rows", () => {
-    expect(parseUserQuery({})).toEqual({ tab: "all", q: "", page: 1, pageSize: 25 });
-    expect(parseUserQuery({ tab: "banned", q: " asha ", page: "3", size: "50" })).toEqual({ tab: "banned", q: "asha", page: 3, pageSize: 50 });
-    expect(parseUserQuery({ tab: "nope", page: "-4", size: "13" })).toEqual({ tab: "all", q: "", page: 1, pageSize: 25 });
+    expect(parseUserQuery({})).toEqual({ tab: "all", q: "", page: 1, pageSize: 25, ads: false, credits: false });
+    expect(parseUserQuery({ tab: "banned", q: " asha ", page: "3", size: "50" })).toEqual({ tab: "banned", q: "asha", page: 3, pageSize: 50, ads: false, credits: false });
+    expect(parseUserQuery({ tab: "nope", page: "-4", size: "13" })).toEqual({ tab: "all", q: "", page: 1, pageSize: 25, ads: false, credits: false });
   });
 
   it("tells email, phone, ad id and name apart", () => {
@@ -134,7 +134,7 @@ describe("who may open it", () => {
     const data = await seed();
     const detail = await getUserDetail(String(data.asha._id), SUPPORT);
     expect(detail.user.name).toBe("Asha Rao");
-    expect(Object.keys(detail).sort()).toEqual(["ads", "balance", "history", "tickets", "user"]);
+    expect(Object.keys(detail).sort()).toEqual(["ads", "balance", "history", "tickets", "user", "vendor"]);
   });
 });
 

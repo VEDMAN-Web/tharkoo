@@ -44,6 +44,9 @@ export default async function Page({ searchParams }: { searchParams: Promise<Rec
     logout: can(identity.roles, "users.logout"),
     credits: canSeeCredits(identity.roles),
     adjust: canAdjustCredits(identity.roles),
+    edit: can(identity.roles, "users.edit"),
+    badge: can(identity.roles, "id.decide"),
+    close: can(identity.roles, "users.ban"),
   };
   return (
     <AdminShell title="Users" hasHeader>
