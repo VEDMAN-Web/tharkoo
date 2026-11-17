@@ -58,6 +58,10 @@ test.describe("H7.172 lists, part 1", () => {
       await page.goto("/admin/users/");
       await expect(page.locator('[data-tk="server-table"] tbody').getByText("Demo", { exact: true })).toBeVisible();
       await expect(page.locator('[data-tk="server-table"] tbody').getByText("Seed", { exact: true })).toHaveCount(0);
+      if (size.width > 767) {
+        await expect(page.locator('[data-tk="user-city"]').first()).toHaveText("Not set");
+        await expect(page.locator('[data-tk="server-table"] tbody').getByText("unknown", { exact: true })).toHaveCount(0);
+      }
       expect(await hasHorizontalScroll(page)).toBe(false);
       await shot(page, "users");
     }

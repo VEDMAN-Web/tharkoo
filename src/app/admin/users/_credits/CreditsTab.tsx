@@ -86,7 +86,7 @@ export function CreditsTab({ data, canAdjust, onAdjust }: { data: CreditsData; c
             <li key={line.id} className="adm-c-line" data-tk="credits-line">
               <span className="adm-c-delta" data-sign={line.delta > 0 ? "plus" : "minus"}>{signed(line.delta)}</span>
               <span className="adm-c-what">
-                <strong>{line.title}</strong>
+                <strong>{line.title}{line.receipt?.test ? <>{" "}<Badge tone="warn">TEST</Badge></> : null}</strong>
                 <small>{[line.detail, dateLabel(line.at, now)].filter(Boolean).join(" · ")}{line.staff?.state === "undoable" ? " · unspent" : ""}</small>
               </span>
               <span className="adm-c-side">{side(line)}</span>

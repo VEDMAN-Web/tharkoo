@@ -1,10 +1,11 @@
 import mongoose from "mongoose";
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
+import { cityLabel } from "@/lib/admin/city-label";
 import { listAds, parseAdsQuery } from "@/server/admin/ads-list";
 import { listOrders, parseOrderQuery } from "@/server/admin/orders";
 import { listUsers, parseUserQuery } from "@/server/admin/users";
 import { FEE_REF } from "@/server/billing/posting-fee";
-import { Listing, MediaAsset, PromotionOrder, User, WalletEntry } from "@/server/models";
+import { Listing, Location, MediaAsset, PromotionOrder, User, WalletEntry } from "@/server/models";
 import { SEED_USER_EMAIL } from "@/server/seed/data";
 import { clearMemoryMongo, connectMemoryMongo, disconnectMemoryMongo } from "../../setup/mongo";
 
@@ -49,6 +50,17 @@ describe("H7.172 All ads, Users and Orders lists", () => {
     expect(users.find((row) => row.email === SEED_USER_EMAIL)?.name).toBe("Demo");
     expect(users.find((row) => row.email === "riya@example.test")?.name).toBe("Riya Thakur");
     expect((await User.findOne({ email: SEED_USER_EMAIL }))?.displayName).toBe("Seed");
+  });
+
+  it("shows a city by its place name, in title case, or Not set, without changing what is stored", async () => {
+    expect(["surat", "SURAT", "new delhi", "navi-mumbai", "", "  ", "unknown", null, undefined].map(cityLabel)).toEqual(["Surat", "Surat", "New Delhi", "Navi-Mumbai", "Not set", "Not set", "Not set", "Not set", "Not set"]);
+    await Location.create({ name: "Pune", slug: "pune", type: "city", stateSlug: "maharashtra", order: 0, enabled: true } as never);
+    const stored = [["a@example.test", "pune"], ["b@example.test", "surat"], ["c@example.test", "unknown"], ["d@example.test", undefined]] as const;
+    for (const [email, city] of stored) await User.create({ email, displayName: email, roles: ["user"], status: "active", ...(city ? { sellerProfile: { city, name: email, completedAt: new Date() } } : {}) });
+    const rows = (await listUsers(parseUserQuery({}), ["admin"])).rows;
+    const shown = Object.fromEntries(rows.map((row) => [row.email, row.cityName]));
+    expect(shown).toMatchObject({ "a@example.test": "Pune", "b@example.test": "Surat", "c@example.test": "Not set", "d@example.test": "Not set" });
+    expect((await User.findOne({ email: "c@example.test" }))?.sellerProfile?.city).toBe("unknown");
   });
 
   it("names the ad on wallet rows for a posting fee and for a promotion", async () => {

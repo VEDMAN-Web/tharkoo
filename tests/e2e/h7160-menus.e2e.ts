@@ -54,7 +54,7 @@ test.describe("H7.160 menus pictures moved and vendor note", () => {
     await staff.close();
   });
 
-  test("the Vendor tab says three times that the vendor profile is not shown on the site yet", async ({ browser, baseURL }) => {
+  test("the Vendor tab says once that the vendor profile is not shown on the site yet", async ({ browser, baseURL }) => {
     test.setTimeout(180_000);
     const member = await newUserApi(baseURL!, "h7160v");
     await member.api.dispose();
@@ -73,8 +73,9 @@ test.describe("H7.160 menus pictures moved and vendor note", () => {
     const drawer = page.locator("[data-tk=drawer]");
     await drawer.getByRole("tab", { name: "Vendor" }).click();
     const vendor = drawer.locator("[data-tk=vendor-tab]");
-    await expect(vendor.locator("[data-tk=not-shown]")).toHaveCount(3);
-    await expect(vendor.locator("[data-tk=not-shown]").first()).toHaveText("Not shown on the site yet.");
+    await expect(vendor.locator("[data-tk=not-shown]")).toHaveCount(1);
+    await expect(vendor.locator("[data-tk=not-shown]")).toContainText("not shown on the site yet");
+    await expect(vendor.getByText("Vendor profile shown")).toHaveCount(0);
     await shot(page, "h7160-vendor-note");
     await staff.close();
   });

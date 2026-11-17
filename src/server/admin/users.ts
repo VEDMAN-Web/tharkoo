@@ -6,9 +6,10 @@ import { walletBalance } from "@/server/billing/ledger";
 import { accountBalance } from "@/server/ledger";
 import { Withdrawal } from "@/server/wallet/withdrawals";
 import { ForbiddenError, NotFoundError } from "@/server/http";
-import { AuditEvent, Listing, Session, SiteMedia, User, WalletEntry } from "@/server/models";
+import { AuditEvent, Listing, Location, Session, SiteMedia, User, WalletEntry } from "@/server/models";
 import { SupportTicket } from "@/server/models/support";
 import { SEED_USER_EMAIL } from "@/server/seed/data";
+import { cityLabel, slugOfCity } from "@/lib/admin/city-label";
 import { STAFF_ROLE_NAMES, type UserDoc } from "@/server/models/identity";
 
 /** H8.8 (A8): the Users screen, read only. Ban, log out and credits come with later cards. */
@@ -16,6 +17,14 @@ import { STAFF_ROLE_NAMES, type UserDoc } from "@/server/models/identity";
 /** The built-in demo account shows as "Demo" in the lists. Only the shown word changes; the stored name stays. */
 export const DEMO_USER_WORD = "Demo";
 const shownName = (doc: { displayName: string; email: string }) => (doc.email === SEED_USER_EMAIL ? DEMO_USER_WORD : doc.displayName);
+
+/** City names for display: a stored city that matches a place is shown with that place's name. Nothing is written back. */
+async function cityNames(cities: readonly (string | null | undefined)[]): Promise<(city: string | null | undefined) => string> {
+  const slugs = [...new Set(cities.map((city) => slugOfCity(city ?? "")).filter(Boolean))];
+  const places = slugs.length ? await Location.find({ slug: { $in: slugs } }).select("slug name").lean<{ slug: string; name: string }[]>() : [];
+  const byslug = new Map(places.map((place) => [place.slug, place.name]));
+  return (city) => (city && byslug.get(slugOfCity(city))) || cityLabel(city);
+}
 
 export type UserTab = "all" | "sellers" | "id" | "banned" | "staff";
 export const USER_TABS: readonly UserTab[] = ["all", "sellers", "id", "banned", "staff"];
@@ -124,6 +133,8 @@ export type UserRow = {
   roles: string[];
   verification: UserDoc["verificationStatus"];
   city: string | null;
+  /** The city as it reads on screen: the place's name when it is a known place, else the words in title case, else "Not set". */
+  cityName: string;
   ads: number;
   lastSeen: string | null;
   createdAt: string | null;
@@ -166,6 +177,7 @@ export async function listUsers(query: UserQuery, roles: readonly string[]): Pro
       { $group: { _id: "$userId", at: { $max: "$createdAt" } } },
     ]),
   ]);
+  const nameOfCity = await cityNames(docs.map((doc) => doc.sellerProfile?.city));
   const adMap = new Map(adCounts.map((row) => [String(row._id), row.n]));
   const seenMap = new Map(seen.map((row) => [String(row._id), row.at]));
   const rows: UserRow[] = docs.map((doc) => ({
@@ -176,6 +188,7 @@ export async function listUsers(query: UserQuery, roles: readonly string[]): Pro
     roles: doc.roles ?? [],
     verification: doc.verificationStatus,
     city: doc.sellerProfile?.city ?? null,
+    cityName: nameOfCity(doc.sellerProfile?.city),
     ads: adMap.get(String(doc._id)) ?? 0,
     lastSeen: seenMap.get(String(doc._id))?.toISOString() ?? null,
     createdAt: doc.createdAt ? doc.createdAt.toISOString() : null,
@@ -236,6 +249,7 @@ export async function getUserDetail(id: string, roles: readonly string[]): Promi
       roles: doc.roles ?? [],
       verification: doc.verificationStatus,
       city: doc.sellerProfile?.city ?? null,
+      cityName: (await cityNames([doc.sellerProfile?.city]))(doc.sellerProfile?.city),
       ads: adCount,
       lastSeen: seen?.createdAt ? new Date(seen.createdAt).toISOString() : null,
       createdAt: doc.createdAt ? doc.createdAt.toISOString() : null,
