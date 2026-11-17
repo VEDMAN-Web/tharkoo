@@ -233,6 +233,12 @@
 /* pager */
 .adm-k-pager { display: flex; align-items: center; gap: 8px; padding: 12px 16px; color: var(--adm-kmuted); font-size: 13px; flex-wrap: wrap; }
 .adm-k-pager .adm-k-sp { flex: 1; }
+/* H7.144: on a phone the rows-per-page select goes, and "1 to N of N" with Previous and Next stay on one row. */
+@media (max-width: 600px) {
+  .adm-k-pagesize { display: none; }
+  .adm-k-pager { flex-wrap: nowrap; padding: 12px; }
+  .adm-k-pager [data-tk="pager-range"] { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+}
 
 /* history */
 .adm-k-hist { margin: -16px; }

@@ -1,0 +1,16 @@
+/* H8.23: parts that belong to the ID checks screen only. The shared kit stays in src/styles/admin-kit.css. */
+.adm-id-pane { padding: 16px; display: grid; gap: 14px; grid-template-columns: minmax(0, 1fr); }
+.adm-id-photos { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+.adm-id-photos figure { margin: 0; display: grid; gap: 4px; }
+.adm-id-photos img, .adm-id-photos .adm-id-none { width: 100%; aspect-ratio: 3 / 4; object-fit: cover; border-radius: 10px; background: var(--adm-line2); display: block; }
+.adm-id-photos figcaption { font-size: 12.5px; color: var(--adm-kmuted); }
+.adm-id-kvs { margin: 0; display: grid; }
+.adm-id-kvs > div { display: grid; grid-template-columns: 110px minmax(0, 1fr); gap: 12px; padding: 8px 0; font-size: 13.5px; border-bottom: 1px solid var(--adm-line2); }
+.adm-id-kvs dt { color: var(--adm-kmuted); }
+.adm-id-kvs dd { margin: 0; font-weight: 600; overflow-wrap: anywhere; display: flex; gap: 6px; flex-wrap: wrap; align-items: center; }
+.adm-id-help { margin: 0; color: var(--adm-kmuted); font-size: 12.5px; }
+@media (max-width: 767px) {
+  [data-tk="id-screen"] .adm-k-pagesize { display: none; }
+  [data-tk="id-screen"] .adm-k-pager { flex-wrap: nowrap; }
+  .adm-id-kvs > div { grid-template-columns: 96px minmax(0, 1fr); }
+}

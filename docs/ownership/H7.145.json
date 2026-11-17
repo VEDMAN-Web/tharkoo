@@ -1,0 +1,9 @@
+{
+  "branchPrefix": "haiku/h7.145",
+  "globs": [
+    "docs/ownership/H7.145.json",
+    "src/server/admin/counts.ts",
+    "src/app/admin/reports/_list/ReportsView.tsx",
+    "tests/server/admin/h7145-reports-counter.test.ts"
+  ]
+}
