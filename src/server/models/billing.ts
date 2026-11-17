@@ -11,6 +11,8 @@ export interface PromotionProductDoc {
   amount: number;
   currency: string;
   durationDays: number;
+  /** H7.168: how long the plan lasts, in hours (1 to 48, never longer than an ad lives). Plans saved before it have days only. */
+  durationHours?: number;
   enabled?: boolean;
   seedBatch?: string;
   createdAt?: Date;
@@ -75,6 +77,7 @@ const promotionProductSchema = new Schema<PromotionProductDoc>(
     amount: { type: Number, required: true },
     currency: { type: String, required: true },
     durationDays: { type: Number, required: true },
+    durationHours: { type: Number },
     enabled: { type: Boolean, default: true },
     seedBatch: { type: String },
   },

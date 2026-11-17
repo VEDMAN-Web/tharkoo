@@ -3,14 +3,15 @@
 import { useState } from "react";
 import { Pencil, Plus } from "lucide-react";
 import { Badge, Button, Drawer, MoveButtons, Toggle } from "@/components/admin/ui";
+import { MAX_PLAN_HOURS } from "@/lib/ads/lifetime-rules";
 import type { PlanRow } from "@/server/billing/plans-admin";
 import { createPlanAction, movePlanAction, savePlanAction } from "../_actions/actions";
 import { aboutRupees, checkPlanForm, creditsText } from "./prices-format";
 import { useAnswer } from "./useAnswer";
 
-type Form = { code: string; name: string; description: string; amount: string; days: string; shown: boolean };
+type Form = { code: string; name: string; description: string; amount: string; hours: string; shown: boolean };
 
-const NEW_PLAN: Form = { code: "", name: "", description: "", amount: "", days: "7", shown: false };
+const NEW_PLAN: Form = { code: "", name: "", description: "", amount: "", hours: "24", shown: false };
 
 /** The promotion plans table (move up and down, Edit) and the drawer that edits or adds one plan. */
 export function PlansCard({ plans, freeCodes, creditPriceInr, canEdit }: { plans: PlanRow[]; freeCodes: string[]; creditPriceInr: number; canEdit: boolean }) {
@@ -53,8 +54,12 @@ export function PlansCard({ plans, freeCodes, creditPriceInr, canEdit }: { plans
                 <td className="adm-k-main">
                   <strong>{plan.name}</strong>
                   <small className="adm-p-sub">{plan.description || "No description"}</small>
+                  {plan.notOffered ? <small className="adm-p-sub" data-tk="plan-not-offered">No charge, so it is never offered in Promote. It only stands for an ad with no promotion.</small> : null}
                 </td>
-                <td className="adm-k-hide-phone">{plan.lasts}</td>
+                <td className="adm-k-hide-phone">
+                  {plan.lasts}
+                  {plan.tooLong ? <small className="adm-p-sub" data-tk="plan-too-long">Longer than an ad lasts ({MAX_PLAN_HOURS} hours). Edit it before it can be used.</small> : null}
+                </td>
                 <td>
                   <strong>{creditsText(plan.amount)}</strong>
                   <small className="adm-p-sub">{aboutRupees(plan.amount, creditPriceInr)}</small>
@@ -87,7 +92,7 @@ export function PlansCard({ plans, freeCodes, creditPriceInr, canEdit }: { plans
 
 function PlanDrawer({ plan, freeCodes, creditPriceInr, onClose, onSaved }: { plan: PlanRow | null; freeCodes: string[]; creditPriceInr: number; onClose: () => void; onSaved: (result: Awaited<ReturnType<typeof savePlanAction>>, message: string) => boolean }) {
   const [form, setForm] = useState<Form>(
-    plan ? { code: plan.code, name: plan.name, description: plan.description, amount: String(plan.amount), days: String(plan.durationDays), shown: plan.shown } : { ...NEW_PLAN, code: freeCodes[0] ?? "" },
+    plan ? { code: plan.code, name: plan.name, description: plan.description, amount: String(plan.amount), hours: String(plan.tooLong ? MAX_PLAN_HOURS : plan.hours), shown: plan.shown } : { ...NEW_PLAN, code: freeCodes[0] ?? "" },
   );
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
@@ -101,11 +106,11 @@ function PlanDrawer({ plan, freeCodes, creditPriceInr, onClose, onSaved }: { pla
   const hint = form.amount.trim() !== "" && Number.isInteger(amount) && amount >= 0 ? aboutRupees(amount, creditPriceInr) : "";
 
   async function save() {
-    const problem = checkPlanForm({ name: form.name, description: form.description, amount: form.amount, days: form.days, fixedLength, code: form.code });
+    const problem = checkPlanForm({ name: form.name, description: form.description, amount: form.amount, hours: form.hours, fixedLength, code: form.code });
     if (problem) return setError(problem);
     setError("");
     setBusy(true);
-    const body = { name: form.name, description: form.description, amount: Number(form.amount.trim()), durationDays: Number(form.days.trim() || "1"), shown: form.shown };
+    const body = { name: form.name, description: form.description, amount: Number(form.amount.trim()), durationHours: Number(form.hours.trim() || "1"), shown: form.shown };
     const result = plan ? await savePlanAction({ id: plan.id, ...body }) : await createPlanAction({ code: form.code, ...body });
     setBusy(false);
     if (!result.ok) return setError(result.message);
@@ -154,13 +159,13 @@ function PlanDrawer({ plan, freeCodes, creditPriceInr, onClose, onSaved }: { pla
           <p className="adm-k-help">{hint || "A whole number of credits."}</p>
         </div>
         <div className="adm-k-field">
-          <label className="adm-k-label" htmlFor="plan-days">Days</label>
+          <label className="adm-k-label" htmlFor="plan-hours">Lasts (hours)</label>
           {fixedLength ? (
-            <p className="adm-k-help" id="plan-days">The length of this plan type is fixed, so there is nothing to set.</p>
+            <p className="adm-k-help" id="plan-hours">The length of this plan type is fixed, so there is nothing to set.</p>
           ) : (
             <>
-              <input id="plan-days" className="adm-k-input" inputMode="numeric" autoComplete="off" value={form.days} onChange={(event) => change({ days: event.target.value })} />
-              <p className="adm-k-help">{form.code === "top" ? "TOP lasts 1, 3 or 7 days." : "A whole number of days."}</p>
+              <input id="plan-hours" className="adm-k-input" inputMode="numeric" autoComplete="off" value={form.hours} onChange={(event) => change({ hours: event.target.value })} />
+              <p className="adm-k-help">{`A whole number of hours, 1 to ${MAX_PLAN_HOURS}. An ad lasts ${MAX_PLAN_HOURS} hours and a plan cannot last longer.`}</p>
             </>
           )}
         </div>

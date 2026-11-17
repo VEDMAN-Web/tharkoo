@@ -3,6 +3,7 @@ import { connectDb } from "@/lib/db";
 import { refreshPublicCache } from "@/lib/cache";
 import type { AdminCtx } from "@/server/admin/context";
 import { adminWrite } from "@/server/admin/write";
+import { MAX_PLAN_HOURS } from "@/lib/ads/lifetime-rules";
 import { orderPlans, promotionRule } from "@/server/billing/catalog";
 import { SITE_KEY, readMoneySettings, readPlanOrder, type MoneySettings } from "@/server/billing/money-settings";
 import { ConflictError, NotFoundError, ValidationError } from "@/server/http";
@@ -17,8 +18,7 @@ import { ALLOWED_PRODUCT_CODES, productCodeDenied } from "@/server/shared/policy
 export const MAX_PLAN_PRICE = 100_000;
 const NAME_MAX = 40;
 const DESCRIPTION_MAX = 120;
-const MAX_DAYS = 365;
-const TOP_DAYS = [1, 3, 7];
+export { MAX_PLAN_HOURS };
 /** Plans whose length is fixed by their type, not by the number of days. */
 const FIXED_LENGTH = new Set(["flash", "auto-boost"]);
 
@@ -30,8 +30,14 @@ export type PlanRow = {
   /** Price in credits. */
   amount: number;
   durationDays: number;
-  /** "4 hours", "7 days": what the buyer gets, from the plan type's rule. */
+  /** How long the plan lasts, in hours, from the plan type's rule. */
+  hours: number;
+  /** "4 hours", "48 hours": what the buyer gets. */
   lasts: string;
+  /** A plan with no price is the plain ad: it is never offered in Promote, so the Prices screen says so. */
+  notOffered: boolean;
+  /** The saved length is longer than an ad lives, so it cannot be used until an admin sets it again. */
+  tooLong: boolean;
   fixedLength: boolean;
   shown: boolean;
   /** False for a plan type that is no longer allowed on Tharkoo: it is never offered. */
@@ -46,14 +52,16 @@ export type PricesData = {
   testCredits: { credits: number; wallets: number };
 };
 
-type ProductDoc = { _id: Types.ObjectId; code: string; name: string; description?: string; amount: number; durationDays: number; enabled?: boolean };
+type ProductDoc = { _id: Types.ObjectId; code: string; name: string; description?: string; amount: number; durationDays: number; durationHours?: number; enabled?: boolean };
 
-export function lastsText(code: string, durationDays: number): string {
-  const rule = promotionRule(code, undefined, durationDays);
-  const hours = rule.durationMs / (60 * 60 * 1000);
-  if (hours < 24) return `${hours} hours`;
-  const days = Math.round(hours / 24);
-  return `${days} ${days === 1 ? "day" : "days"}`;
+export function hoursOf(code: string, durationDays: number, durationHours?: number | null): number {
+  const hours = promotionRule(code, undefined, durationDays, durationHours).durationMs / (60 * 60 * 1000);
+  return Math.round(hours * 10) / 10;
+}
+
+export function lastsText(code: string, durationDays: number, durationHours?: number | null): string {
+  const hours = hoursOf(code, durationDays, durationHours);
+  return `${hours} ${hours === 1 ? "hour" : "hours"}`;
 }
 
 function rowOf(doc: ProductDoc): PlanRow {
@@ -64,7 +72,10 @@ function rowOf(doc: ProductDoc): PlanRow {
     description: doc.description ?? "",
     amount: doc.amount,
     durationDays: doc.durationDays,
-    lasts: lastsText(doc.code, doc.durationDays),
+    hours: hoursOf(doc.code, doc.durationDays, doc.durationHours),
+    lasts: lastsText(doc.code, doc.durationDays, doc.durationHours),
+    notOffered: doc.code === "free" || doc.amount <= 0,
+    tooLong: hoursOf(doc.code, doc.durationDays, doc.durationHours) > MAX_PLAN_HOURS,
     fixedLength: FIXED_LENGTH.has(doc.code),
     shown: doc.enabled !== false,
     allowed: !productCodeDenied(doc.code).denied,
@@ -91,9 +102,9 @@ export async function readPricesData(): Promise<PricesData> {
   return { money, plans, freeCodes: ALLOWED_PRODUCT_CODES.filter((code) => !used.has(code)), testCredits };
 }
 
-type PlanInput = { name: unknown; description: unknown; amount: unknown; durationDays: unknown; shown: unknown };
+type PlanInput = { name: unknown; description: unknown; amount: unknown; durationHours: unknown; shown: unknown };
 
-function cleanPlan(code: string, input: PlanInput, currentDays: number) {
+function cleanPlan(code: string, input: PlanInput, current: { days: number; hours?: number | null }) {
   const name = typeof input.name === "string" ? input.name.replace(/\s+/g, " ").trim() : "";
   const description = typeof input.description === "string" ? input.description.replace(/\s+/g, " ").trim() : "";
   if (name.length < 1 || name.length > NAME_MAX) throw new ValidationError(`Give the plan a name of 1 to ${NAME_MAX} characters.`);
@@ -101,19 +112,21 @@ function cleanPlan(code: string, input: PlanInput, currentDays: number) {
   if (/[<>]/.test(name + description)) throw new ValidationError("Text cannot contain < or >.");
   const amount = Number(input.amount);
   if (!Number.isInteger(amount) || amount < 0 || amount > MAX_PLAN_PRICE) throw new ValidationError(`The price is a whole number of credits from 0 to ${MAX_PLAN_PRICE.toLocaleString("en-IN")}.`);
-  let durationDays = Number(input.durationDays);
-  if (FIXED_LENGTH.has(code)) durationDays = currentDays;
-  else if (!Number.isInteger(durationDays) || durationDays < 1 || durationDays > MAX_DAYS) throw new ValidationError(`Days is a whole number from 1 to ${MAX_DAYS}.`);
-  if (code === "top" && !TOP_DAYS.includes(durationDays)) throw new ValidationError("TOP lasts 1, 3 or 7 days.");
+  const fixed = FIXED_LENGTH.has(code);
+  const requested = Number(input.durationHours);
+  if (!fixed && (!Number.isInteger(requested) || requested < 1 || requested > MAX_PLAN_HOURS)) {
+    throw new ValidationError(`Hours is a whole number from 1 to ${MAX_PLAN_HOURS}. A plan cannot last longer than the ad it is bought for, and an ad lasts ${MAX_PLAN_HOURS} hours.`);
+  }
   if (typeof input.shown !== "boolean") throw new ValidationError("Choose Shown or Hidden.");
-  return { name, description, amount, durationDays, enabled: input.shown };
+  const durationDays = fixed ? current.days : Math.max(1, Math.ceil(requested / 24));
+  return { name, description, amount, durationDays, ...(fixed ? {} : { durationHours: requested }), enabled: input.shown };
 }
 
 function pick(doc: Record<string, unknown> | null, keys: string[]) {
   return Object.fromEntries(keys.filter((key) => doc && key in doc).map((key) => [key, (doc as Record<string, unknown>)[key]]));
 }
 
-const PLAN_KEYS = ["name", "description", "amount", "durationDays", "enabled"];
+const PLAN_KEYS = ["name", "description", "amount", "durationDays", "durationHours", "enabled"];
 
 export type PlanWrite = { eventId: string; undoUntil: string | null; summary: string };
 
@@ -124,7 +137,7 @@ export async function updatePlan(ctx: AdminCtx, input: { id: string } & PlanInpu
   const current = await PromotionProduct.findById(input.id).lean<ProductDoc | null>();
   if (!current) throw new NotFoundError("Not found");
   if (productCodeDenied(current.code).denied) throw new ConflictError("This plan type is not allowed on Tharkoo, so it cannot be edited.");
-  const next = cleanPlan(current.code, input, current.durationDays);
+  const next = cleanPlan(current.code, input, { days: current.durationDays, hours: current.durationHours });
   const written = await adminWrite(ctx, {
     perm: "prices.edit",
     action: "plan.update",
@@ -154,7 +167,7 @@ export async function createPlan(ctx: AdminCtx, input: { code: string } & PlanIn
   const code = String(input.code ?? "").trim().toLowerCase();
   if (productCodeDenied(code).denied) throw new ValidationError("Choose one of the plan types shown.");
   if (await PromotionProduct.exists({ code })) throw new ConflictError("This plan type already exists.");
-  const next = cleanPlan(code, input, 1);
+  const next = cleanPlan(code, input, { days: 1 });
   const written = await adminWrite(ctx, {
     perm: "prices.edit",
     action: "plan.create",
