@@ -122,18 +122,6 @@ export const bannedWordBodySchema = z.object({
   action: z.string().trim().max(40).optional(),
 });
 
-export const adminListQuerySchema = z.object({
-  collection: z.string().trim().min(1).max(80),
-  page: z.coerce.number().int().positive().optional(),
-});
-
-export const adminMutateBodySchema = z.object({
-  collection: z.string().trim().min(1).max(80),
-  action: z.enum(["create", "update", "delete"]),
-  id: idSchema.optional(),
-  data: z.record(z.string(), z.unknown()).optional(),
-});
-
 export const analyticsEventBodySchema = z.object({
   name: z.enum([
     "search",

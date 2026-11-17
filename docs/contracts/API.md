@@ -196,8 +196,6 @@ Wallet balance is the latest `WalletEntry.balanceAfter` for that user. A repeate
 | PATCH | `/api/admin/feature-flags/{id}` | Admin | `featureFlagBodySchema` | flag | `VALIDATION_ERROR`, `NOT_FOUND` |
 | GET | `/api/admin/audit` | Admin | `auditQuerySchema` | `{ events, total }` | `FORBIDDEN` |
 | GET | `/api/admin/payments` | Admin `finance` | `pageQuerySchema` | `{ items, total }` | `FORBIDDEN` |
-| GET | `/api/admin/list` | Admin | `adminListQuerySchema` | `{ items }` | `FORBIDDEN` |
-| POST | `/api/admin/mutate` | Admin | `adminMutateBodySchema` | `{ ok: true }` | `VALIDATION_ERROR`, `FORBIDDEN`, `POLICY_VIOLATION` |
 
 Listing decisions are `approve`, `reject`, `request_changes`, `pause`, `remove`. `remove` sets status `removed`. Severity `S0` on a report quarantines the listing. Every mutating admin route writes an `AuditEvent`. `GET /api/admin/audit` is read-only. The legacy `/api/admin/list` and `/api/admin/mutate` routes stay, and T2.1 replaces the Cursor-identity gate with the session plus role check.
 
