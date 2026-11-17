@@ -227,6 +227,29 @@ function refTitle(refType: string) {
   return text ? text.charAt(0).toUpperCase() + text.slice(1) : "Credit change";
 }
 
+const AD_REF_TYPES = [FEE_REF, FEE_REFUND_REF];
+const PROMOTION_REF_TYPES = ["promotion", "promotion_reversal"];
+const HEX_ID = /^[0-9a-f]{24}$/i;
+
+/** The ad each wallet line is about, by title: a posting fee points at the ad, a promotion at its order. */
+async function adTitlesFor(docs: readonly EntryLean[]): Promise<Map<string, string>> {
+  const head = (doc: EntryLean) => doc.refId.split(":")[0];
+  const direct = docs.filter((doc) => AD_REF_TYPES.includes(doc.refType) && HEX_ID.test(head(doc))).map(head);
+  const orderIds = docs.filter((doc) => PROMOTION_REF_TYPES.includes(doc.refType) && HEX_ID.test(head(doc))).map(head);
+  const orders = orderIds.length ? await PromotionOrder.find({ _id: { $in: orderIds } }).select("listingId").lean<{ _id: Types.ObjectId; listingId: Types.ObjectId }[]>() : [];
+  const adOfOrder = new Map(orders.map((order) => [String(order._id), String(order.listingId)]));
+  const adIds = [...new Set([...direct, ...adOfOrder.values()])];
+  const ads = adIds.length ? await Listing.find({ _id: { $in: adIds } }).select("title").lean<{ _id: Types.ObjectId; title?: string }[]>() : [];
+  const titleOf = new Map(ads.map((ad) => [String(ad._id), ad.title || "Untitled"]));
+  return new Map(
+    docs.flatMap((doc) => {
+      const adId = AD_REF_TYPES.includes(doc.refType) ? head(doc) : adOfOrder.get(head(doc));
+      const title = adId ? titleOf.get(adId) : undefined;
+      return title ? [[String(doc._id), title] as const] : [];
+    }),
+  );
+}
+
 async function entryRows(query: OrderQuery, skip: number, now: Date, refTypes: string[] | null): Promise<{ rows: OrderRow[]; total: number }> {
   const filter: QueryFilter<Record<string, unknown>> = refTypes ? { refType: { $in: refTypes } } : {};
   const since = sinceOf(query.range, now);
@@ -236,15 +259,16 @@ async function entryRows(query: OrderQuery, skip: number, now: Date, refTypes: s
     WalletEntry.find(filter).sort({ createdAt: -1, _id: -1 }).skip(skip).limit(query.pageSize).lean<EntryLean[]>(),
     WalletEntry.countDocuments(filter),
   ]);
-  const people = await names(docs.map((doc) => doc.userId));
+  const [people, adTitles] = await Promise.all([names(docs.map((doc) => doc.userId)), adTitlesFor(docs)]);
   const rows: OrderRow[] = docs.map((doc) => {
     const person = people.get(String(doc.userId));
+    const adTitle = adTitles.get(String(doc._id));
     const sign = `${doc.delta > 0 ? "+" : doc.delta < 0 ? "-" : ""}${Math.abs(doc.delta).toLocaleString("en-IN")}`;
     const paymentId = doc.refType === "refund" ? doc.refId.split("#")[0] : doc.refType === "pack" ? doc.refId : "";
     return {
       id: String(doc._id),
       ref: refTitle(doc.refType),
-      sub: paymentId && /^[0-9a-f]{24}$/i.test(paymentId) ? receiptNo(paymentId) : doc.refId.slice(0, 40),
+      sub: adTitle ?? (paymentId && /^[0-9a-f]{24}$/i.test(paymentId) ? receiptNo(paymentId) : doc.refId.slice(0, 40)),
       statusText: doc.delta >= 0 ? "Credits added" : "Credits used",
       statusTone: doc.delta >= 0 ? "ok" : "neutral",
       test: false,
@@ -256,6 +280,7 @@ async function entryRows(query: OrderQuery, skip: number, now: Date, refTypes: s
         ["Change", `${sign} credits`],
         ["Balance after", `${doc.balanceAfter.toLocaleString("en-IN")} credits`],
         ["What for", refTitle(doc.refType)],
+        ...(adTitle ? [["Ad", adTitle] as [string, string]] : []),
         ["Reference", doc.refId],
       ],
       receipt: paymentId && /^[0-9a-f]{24}$/i.test(paymentId) ? `/admin/finance/receipt/${paymentId}/` : null,

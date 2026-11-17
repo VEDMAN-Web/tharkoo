@@ -6,7 +6,8 @@ import { FEE_REF, FEE_REFUND_REF } from "@/server/billing/posting-fee";
 import { ForbiddenError } from "@/server/http";
 import { demoFilter, DEMO_SLUG } from "@/server/listings/demo-ads";
 import { paidCreditsFor } from "@/server/moderation/review";
-import { Category, Listing, Location, PromotionOrder, User, WalletEntry } from "@/server/models";
+import { previewUrlOf } from "@/server/media/mine";
+import { Category, Listing, Location, MediaAsset, PromotionOrder, User, WalletEntry } from "@/server/models";
 import { normalizePhone, PhoneIdentity } from "@/server/auth/phone";
 import type { ListingDoc } from "@/server/models/listing";
 
@@ -57,6 +58,8 @@ export type AdRow = {
   category: string;
   city: string;
   seller: string;
+  /** A small picture of the ad (its cover, else its first photo), or null when it has none. */
+  thumb: string | null;
   createdAt: string;
   expiresAt: string | null;
   paidCredits: number;
@@ -203,7 +206,19 @@ export async function adsCounts(): Promise<Record<AdsTab, number>> {
   };
 }
 
-type Lean = Pick<ListingDoc, "title" | "status" | "categoryId" | "cityId" | "ownerId" | "slug" | "createdAt" | "expiresAt" | "homeShow"> & { _id: Types.ObjectId };
+type Lean = Pick<ListingDoc, "title" | "status" | "categoryId" | "cityId" | "ownerId" | "slug" | "createdAt" | "expiresAt" | "homeShow" | "coverMediaId" | "mediaIds"> & { _id: Types.ObjectId };
+
+/** What the list calls the account that owns the built-in demo ads. Only the shown word changes. */
+export const DEMO_SELLER_WORD = "Demo";
+
+async function thumbsFor(rows: readonly Lean[]): Promise<Map<string, string>> {
+  const coverOf = (row: Lean) => row.coverMediaId ?? row.mediaIds?.[0];
+  const ids = rows.flatMap((row) => (coverOf(row) ? [coverOf(row) as Types.ObjectId] : []));
+  if (ids.length === 0) return new Map();
+  const assets = await MediaAsset.find({ _id: { $in: ids }, kind: "image" }).select("kind objectKey").lean();
+  const urls = new Map(assets.map((asset) => [String(asset._id), previewUrlOf(asset).url] as const));
+  return new Map(rows.flatMap((row) => { const url = urls.get(String(coverOf(row))); return url ? [[String(row._id), url] as const] : []; }));
+}
 type Named = { _id: unknown; name?: string; displayName?: string };
 const nameOf = (list: Named[], id: unknown, key: "name" | "displayName" = "name") => list.find((item) => String(item._id) === String(id))?.[key] || "";
 
@@ -224,19 +239,20 @@ export async function listAds(roles: readonly string[], query: AdsQuery): Promis
       .sort(query.sort === "ends" ? { expiresAt: 1, _id: 1 } : query.sort === "ends_last" ? { expiresAt: -1, _id: -1 } : { createdAt: -1, _id: -1 })
       .skip((query.page - 1) * query.pageSize)
       .limit(query.pageSize)
-      .select("title status categoryId cityId ownerId slug createdAt expiresAt homeShow")
+      .select("title status categoryId cityId ownerId slug createdAt expiresAt homeShow coverMediaId mediaIds")
       .lean<Lean[]>(),
     Category.find({}).select("name").sort({ name: 1 }).lean<Named[]>(),
     homeSlots(),
     demoFilter(),
   ]);
   const ids = rows.map((row) => row._id);
-  const [cats, places, owners, fees, promoted] = await Promise.all([
+  const [cats, places, owners, fees, promoted, thumbs] = await Promise.all([
     Category.find({ _id: { $in: rows.map((row) => row.categoryId) } }).select("name").lean<Named[]>(),
     Location.find({ _id: { $in: rows.flatMap((row) => (row.cityId ? [row.cityId] : [])) } }).select("name").lean<Named[]>(),
     User.find({ _id: { $in: rows.map((row) => row.ownerId) } }).select("displayName").lean<Named[]>(),
     paidCreditsFor(ids.map(String)),
     ids.length ? PromotionOrder.distinct("listingId", { listingId: { $in: ids }, status: "active", endsAt: { $gt: new Date() } }) : [],
+    thumbsFor(rows),
   ]);
   const promotedSet = new Set(promoted.map(String));
   return {
@@ -250,7 +266,8 @@ export async function listAds(roles: readonly string[], query: AdsQuery): Promis
       status: row.status,
       category: nameOf(cats, row.categoryId),
       city: nameOf(places, row.cityId),
-      seller: nameOf(owners, row.ownerId, "displayName"),
+      seller: demo && String(row.ownerId) === String(demo.ownerId) ? DEMO_SELLER_WORD : nameOf(owners, row.ownerId, "displayName"),
+      thumb: thumbs.get(String(row._id)) ?? null,
       createdAt: new Date(row.createdAt ?? Date.now()).toISOString(),
       expiresAt: row.expiresAt ? new Date(row.expiresAt).toISOString() : null,
       paidCredits: fees.get(String(row._id)) ?? 0,

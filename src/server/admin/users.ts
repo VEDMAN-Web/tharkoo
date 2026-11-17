@@ -8,9 +8,14 @@ import { Withdrawal } from "@/server/wallet/withdrawals";
 import { ForbiddenError, NotFoundError } from "@/server/http";
 import { AuditEvent, Listing, Session, SiteMedia, User, WalletEntry } from "@/server/models";
 import { SupportTicket } from "@/server/models/support";
+import { SEED_USER_EMAIL } from "@/server/seed/data";
 import { STAFF_ROLE_NAMES, type UserDoc } from "@/server/models/identity";
 
 /** H8.8 (A8): the Users screen, read only. Ban, log out and credits come with later cards. */
+
+/** The built-in demo account shows as "Demo" in the lists. Only the shown word changes; the stored name stays. */
+export const DEMO_USER_WORD = "Demo";
+const shownName = (doc: { displayName: string; email: string }) => (doc.email === SEED_USER_EMAIL ? DEMO_USER_WORD : doc.displayName);
 
 export type UserTab = "all" | "sellers" | "id" | "banned" | "staff";
 export const USER_TABS: readonly UserTab[] = ["all", "sellers", "id", "banned", "staff"];
@@ -165,7 +170,7 @@ export async function listUsers(query: UserQuery, roles: readonly string[]): Pro
   const seenMap = new Map(seen.map((row) => [String(row._id), row.at]));
   const rows: UserRow[] = docs.map((doc) => ({
     id: String(doc._id),
-    name: doc.displayName,
+    name: shownName(doc),
     email: doc.email,
     status: doc.status,
     roles: doc.roles ?? [],
@@ -225,7 +230,7 @@ export async function getUserDetail(id: string, roles: readonly string[]): Promi
     vendor,
     user: {
       id: String(userId),
-      name: doc.displayName,
+      name: shownName(doc),
       email: doc.email,
       status: doc.status,
       roles: doc.roles ?? [],

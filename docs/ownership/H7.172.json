@@ -1,0 +1,14 @@
+{
+  "branchPrefix": "haiku/h7.172",
+  "globs": [
+    "docs/ownership/H7.172.json",
+    "progress/H7.172.md",
+    "src/server/admin/ads-list.ts",
+    "src/server/admin/users.ts",
+    "src/server/admin/orders.ts",
+    "src/app/admin/ads/_list/**",
+    "src/styles/admin-kit.css",
+    "tests/server/admin/h7-172-*.test.ts",
+    "tests/e2e/h7-172-lists.e2e.ts"
+  ]
+}

@@ -230,7 +230,7 @@
 .adm-k-skel { display: block; height: 12px; border-radius: 6px; background: linear-gradient(90deg, #eef0f5, #f6f7fb, #eef0f5); }
 
 /* bulk bar replaces the header in the same place */
-.adm-k-bulk { position: sticky; top: 0; z-index: 2; display: flex; align-items: center; gap: 10px; min-height: 48px; padding: 0 16px; background: #fff7fa; border-bottom: 1px solid #f6d3e1; font-weight: 700; }
+.adm-k-bulk { position: sticky; top: 60px; z-index: 4; display: flex; align-items: center; gap: 10px; min-height: 48px; padding: 0 16px; background: #fff7fa; border-bottom: 1px solid #f6d3e1; font-weight: 700; }
 .adm-k-bulk .adm-k-sp { flex: 1; }
 
 /* pager */
@@ -304,7 +304,7 @@ li[data-current="yes"] .adm-k-hdot { border-color: var(--adm-pri); background: v
   .adm-k-main { min-width: 0; }
   .adm-k-rowact { display: flex; gap: 8px; margin-top: 8px; text-align: left; white-space: normal; }
   .adm-k-rowact > * { flex: 1; margin-left: 0 !important; }
-  .adm-k-bulk { flex-wrap: wrap; min-height: 56px; padding: 8px 12px; }
+  .adm-k-bulk { top: 56px; flex-wrap: wrap; min-height: 56px; padding: 8px 12px; }
   .adm-k-diff-row { grid-template-columns: 1fr; }
   .adm-k-savebar { bottom: 76px; }
   .adm-k-savebar .adm-k-btn { flex: 1; }
