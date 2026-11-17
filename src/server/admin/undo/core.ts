@@ -72,7 +72,7 @@ export async function undoEvent(ctx: AdminCtx, eventId: string): Promise<UndoOut
     if (!(await handler.canUndo(ctx, source))) return { ok: false, reason: "not_allowed", message: "You cannot undo this change" };
     const changed = await handler.conflict(source);
     if (changed) {
-      return { ok: false, reason: "conflict", changedBy: changed.changedBy, at: changed.at, message: "Changed since. Open the history to restore a version." };
+      return { ok: false, reason: "conflict", changedBy: changed.changedBy, at: changed.at, message: changed.message ?? "Changed since. Open the history to restore a version." };
     }
     const ran = await handler.run(ctx, source);
     const window = new Date(row.undo.until).getTime() - (row.createdAt ? new Date(row.createdAt).getTime() : now);

@@ -1,0 +1,19 @@
+{
+  "branchPrefix": "haiku/h8.14",
+  "globs": [
+    "docs/ownership/H8.14.json",
+    "src/server/billing/staff-credits.ts",
+    "src/server/billing/ledger.ts",
+    "src/app/admin/users/_credits/**",
+    "src/app/admin/users/_actions/UserActions.tsx",
+    "src/app/admin/users/_list/UserDrawer.tsx",
+    "src/app/admin/users/_list/UsersView.tsx",
+    "src/app/admin/users/page.tsx",
+    "src/server/admin/undo/handlers/wallet-adjust.ts",
+    "src/server/admin/undo/core.ts",
+    "src/server/admin/undo/registry.ts",
+    "tests/server/billing/a14-*.test.ts",
+    "tests/server/admin/a3-write.test.ts",
+    "tests/e2e/a14-credits.e2e.ts"
+  ]
+}
