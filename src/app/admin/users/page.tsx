@@ -38,7 +38,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<Rec
   }
   return (
     <AdminShell title="Users">
-      <UsersView list={list} detail={detail} />
+      <UsersView list={list} detail={detail} access={{ ban: can(identity.roles, "users.ban"), logout: can(identity.roles, "users.logout") }} />
     </AdminShell>
   );
 }

@@ -42,6 +42,8 @@ export function Drawer({
     const visible = () => Array.from(panel.current?.querySelectorAll<HTMLElement>(FOCUSABLE) ?? []).filter((node) => node.getClientRects().length > 0);
     visible()[0]?.focus();
     const onKey = (event: KeyboardEvent) => {
+      // A confirm dialog opened from the drawer handles its own Esc: the drawer stays.
+      if (event.key === "Escape" && document.querySelector("[data-tk=reason-dialog]")) return;
       if (event.key === "Escape") {
         event.preventDefault();
         event.stopPropagation();
