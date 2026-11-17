@@ -1,7 +1,12 @@
 type Entry = { exp: number; value: unknown; tags: string[] };
 
-const store = new Map<string, Entry>();
-const inflight = new Map<string, Promise<unknown>>();
+/**
+ * One store for the whole server process. Next builds each route (a page, a server action) as its own bundle, and a plain module-level Map
+ * would then exist once per bundle: the admin action would clear its own copy and the Home page would keep serving the other.
+ */
+const shared = globalThis as typeof globalThis & { __tkCacheStore?: Map<string, Entry>; __tkCacheInflight?: Map<string, Promise<unknown>> };
+const store = (shared.__tkCacheStore ??= new Map<string, Entry>());
+const inflight = (shared.__tkCacheInflight ??= new Map<string, Promise<unknown>>());
 const PUBLIC_TAGS = ["site", "categories", "locations", "feed", "listings", "counts"];
 
 function remember(key: string, ttlMs: number, value: unknown, tags: string[]) {
