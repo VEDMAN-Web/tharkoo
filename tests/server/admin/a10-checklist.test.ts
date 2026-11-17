@@ -60,6 +60,11 @@ describe("launch checklist rules (A10)", () => {
     expect(row({ ...BASE, mockPaymentsOn: true }, "test-payments")).toMatchObject({ done: false, detail: "Test payments are ON today" });
   });
 
+  it("the money rows open Prices & plans", () => {
+    expect(row(BASE, "test-payments").href).toBe("/admin/prices/");
+    expect(row(BASE, "paid-posting").href).toBe("/admin/prices/");
+  });
+
   it("demo ads are done only when none are live", () => {
     expect(row(BASE, "demo-ads").done).toBe(true);
     expect(row({ ...BASE, demoActive: 8228 }, "demo-ads")).toMatchObject({ done: false, detail: "8,228 demo ads are live" });
