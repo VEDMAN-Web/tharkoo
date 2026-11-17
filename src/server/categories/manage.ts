@@ -3,7 +3,7 @@ import { Types } from "mongoose";
 import { refreshPublicCache } from "@/lib/cache";
 import { isCategoryIconKey } from "@/lib/category-icons";
 import { connectDb } from "@/lib/db";
-import { isAdminRole } from "@/lib/ui/site-content";
+import { canEditSite } from "@/lib/ui/site-content";
 import { validateSlug } from "@/lib/urls";
 import { AuditRepository } from "@/server/audit";
 import { ForbiddenError, NotFoundError, ValidationError } from "@/server/http";
@@ -45,7 +45,7 @@ export interface SubcategoryInput extends CategoryInput {
 }
 
 function requireAdmin(actor: Actor) {
-  if (!isAdminRole(actor.roles)) throw new ForbiddenError("Only an admin can edit categories");
+  if (!canEditSite(actor.roles)) throw new ForbiddenError("Only an admin can edit categories");
 }
 
 function cleanText(value: unknown, label: string, max: number, required: boolean) {

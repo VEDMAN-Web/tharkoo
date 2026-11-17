@@ -22,12 +22,12 @@ const WHO_OPENS: Record<string, string[]> = {
   users: [...FOUR, "support"],
   orders: [...ADMINS, "finance"],
   prices: [...ADMINS, "finance"],
-  "page-builder": ADMINS,
-  content: [...ADMINS, "seo_editor", "blog_editor"],
-  media: [...ADMINS, "seo_editor", "blog_editor"],
-  menus: ADMINS,
-  categories: ADMINS,
-  cities: ADMINS,
+  "page-builder": [...ADMINS, "content_editor"],
+  content: [...ADMINS, "seo_editor", "blog_editor", "content_editor"],
+  media: [...ADMINS, "seo_editor", "blog_editor", "content_editor"],
+  menus: [...ADMINS, "content_editor"],
+  categories: [...ADMINS, "content_editor"],
+  cities: [...ADMINS, "content_editor"],
   seo: [...ADMINS, "seo_editor"],
   settings: ["superadmin"],
   team: ["superadmin"],
@@ -74,8 +74,8 @@ describe("screens map (A5)", () => {
     }
   });
 
-  it("covers every one of the 8 roles and the permissions of each screen", () => {
-    expect(STAFF_ROLES).toHaveLength(8);
+  it("covers every one of the 9 roles and the permissions of each screen", () => {
+    expect(STAFF_ROLES).toHaveLength(9);
     for (const screen of SCREENS) {
       for (const role of STAFF_ROLES) {
         const expected = (WHO_OPENS[screen.id] ?? []).includes(role);
@@ -91,6 +91,7 @@ describe("screens map (A5)", () => {
     expect(labels(["finance"])).toEqual(["Dashboard", "History & undo", "Orders & credits", "Prices & plans"]);
     expect(labels(["moderator"])).toEqual(["Dashboard", "History & undo", "Ads to review", "Reports", "ID checks", "All ads", "Users"]);
     expect(labels(["seo_editor"])).toEqual(["Dashboard", "History & undo", "Content studio", "Media library", "SEO"]);
+    expect(labels(["content_editor"])).toEqual(["Dashboard", "History & undo", "Page builder", "Content studio", "Media library", "Menus & site text", "Categories & fields", "Cities & areas"]);
     expect(labels(["admin"])).not.toContain("Settings");
     expect(labels(["admin"])).not.toContain("Team & roles");
     expect(labels(["superadmin"])).toHaveLength(19);

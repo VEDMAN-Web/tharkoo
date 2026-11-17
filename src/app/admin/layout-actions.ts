@@ -1,5 +1,6 @@
 "use server";
 
+import { canEditSite } from "@/lib/ui/site-content";
 import { getStaffFromHeaders, isStaff } from "@/lib/admin-auth";
 import { ForbiddenError, HttpError } from "@/server/http";
 import { getDraft, getPublished, listRevisions, publish, restore, saveDraft } from "@/server/layout/service";
@@ -27,7 +28,7 @@ async function run<T>(job: () => Promise<T>): Promise<Result<T>> {
 export async function loadLayout(key: PageKey, scope: string) {
   return run(async () => {
     const who = await staff();
-    if (!who.roles.some((role) => role === "admin" || role === "superadmin")) throw new ForbiddenError("Only an admin can edit page layouts");
+    if (!canEditSite(who.roles)) throw new ForbiddenError("Only an admin can edit page layouts");
     // The first time an admin opens the post-ad editor, start from the page as it is today. The Home layout is made by the Page builder.
     if (key === "post" && scope === "default") await seedPostLayout();
     const [draft, published] = await Promise.all([getDraft(key, scope), getPublished(key, scope)]);

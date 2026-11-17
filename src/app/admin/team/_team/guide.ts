@@ -3,7 +3,12 @@ import type { StaffRole } from "@/lib/admin/perms";
 import { ROLE_WORDS } from "@/lib/admin/role-words";
 
 /** What each role can open, worked out from the real menu rules (never typed by hand), plus one plain note. */
-export const GUIDE_ORDER: readonly StaffRole[] = ["moderator", "trust_safety", "support", "finance", "seo_editor", "blog_editor", "admin", "superadmin"];
+export const GUIDE_ORDER: readonly StaffRole[] = ["moderator", "trust_safety", "support", "finance", "seo_editor", "blog_editor", "content_editor", "admin", "superadmin"];
+
+/** The order of the role list when inviting or changing someone: Superadmin is always last. */
+export const CHOICE_ORDER: readonly StaffRole[] = GUIDE_ORDER;
+
+export const SUPERADMIN_WARNING = "Full access, including money, users, the team and raw data. Give it to as few people as you can.";
 
 const NOTES: Record<StaffRole, string> = {
   moderator: "",
@@ -12,6 +17,7 @@ const NOTES: Record<StaffRole, string> = {
   finance: "Sees credits and orders.",
   seo_editor: "Can publish content.",
   blog_editor: "Writes blog and help, then sends for review. Cannot publish.",
+  content_editor: "Edits pictures, words and page layouts. Cannot see money, users, settings or the team, or publish content.",
   admin: "",
   superadmin: "Also raw data.",
 };

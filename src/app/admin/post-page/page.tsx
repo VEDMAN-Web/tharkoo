@@ -4,7 +4,7 @@ import { PageTitleEditor } from "@/components/admin/PageTitleEditor";
 import { getStaffFromHeaders } from "@/lib/admin-auth";
 import { canonical } from "@/lib/seo";
 import { postAdPath } from "@/lib/urls";
-import { isAdminRole } from "@/lib/ui/site-content";
+import { canEditSite } from "@/lib/ui/site-content";
 import { typesForPage } from "@/server/layout/blocks";
 import { parsePageTitleTarget, readPageTitle } from "@/server/seo/page-titles";
 import { getPaths } from "@/server/urls/service";
@@ -13,7 +13,7 @@ export const dynamic = "force-dynamic";
 
 export default async function PostPageAdminPage() {
   const identity = await getStaffFromHeaders();
-  if (!isAdminRole(identity.roles)) {
+  if (!canEditSite(identity.roles)) {
     return (
       <AdminShell title="Post-ad page">
         <p>Only an admin can edit the post-ad page.</p>

@@ -1,6 +1,6 @@
 import { cached, invalidateTags, purgeNext } from "@/lib/cache";
 import { connectDb } from "@/lib/db";
-import { isAdminRole } from "@/lib/ui/site-content";
+import { canEditSite } from "@/lib/ui/site-content";
 import { isTextKey, makeT, TEXT_DEFAULTS, TEXT_MAX, type UiTextKey, type UiTextMap } from "@/lib/ui/text";
 import type { AdminCtx } from "@/server/admin/context";
 import { adminWrite } from "@/server/admin/write";
@@ -42,7 +42,7 @@ export async function refresh() {
 }
 
 function requireAdmin(roles: string[]) {
-  if (!isAdminRole(roles)) throw new ForbiddenError("Only an admin can edit UI text");
+  if (!canEditSite(roles)) throw new ForbiddenError("Only an admin can edit UI text");
 }
 
 async function actorId(email: string) {
@@ -104,7 +104,7 @@ export async function saveUiTextAs(ctx: AdminCtx, input: { key: string; value: u
   const value = checkText(input.key, input.value);
   const fallback = TEXT_DEFAULTS[input.key as UiTextKey];
   const written = await adminWrite<{ value: string }>(ctx, {
-    perm: "settings.edit",
+    perm: "sitetext.write",
     action: "ui_text.update",
     target: { type: "ui_text", id: input.key },
     texts: [value],
@@ -136,7 +136,7 @@ export async function resetUiTextAs(ctx: AdminCtx, key: string): Promise<{ key: 
   await connectDb();
   if (!isTextKey(key)) throw new ValidationError("Unknown text key");
   const written = await adminWrite<null>(ctx, {
-    perm: "settings.edit",
+    perm: "sitetext.write",
     action: "ui_text.update",
     target: { type: "ui_text", id: key },
     before: async () => ({ value: (await UiText.findOne({ key }).lean<{ value?: string } | null>())?.value ?? null }),

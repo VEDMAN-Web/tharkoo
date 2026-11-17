@@ -2,6 +2,7 @@ import { AdminShell } from "@/components/admin/AdminShell";
 import { BarList, EmptyState, KpiCard } from "@/components/admin/ui";
 import { getStaffFromHeaders } from "@/lib/admin-auth";
 import { loadOverview } from "@/app/admin/seo/overview";
+import { NIGHTLY_PAGE_LIMIT } from "@/server/seo/audit-run";
 import { RunSeoCheck } from "./RunSeoCheck";
 import { SeoTabs } from "./SeoTabs";
 
@@ -29,7 +30,7 @@ export default async function SeoOverviewPage() {
         <section className="adm-card" style={{ display: "grid", gap: 12 }}>
           <p style={{ margin: 0 }}>
             Last check: <strong>{when(overview.lastRunAt)}</strong>
-            {overview.triggeredBy ? ` (started by ${overview.triggeredBy})` : ""}. The site is also checked automatically every night.
+            {overview.triggeredBy ? ` (started by ${overview.triggeredBy})` : ""}. The site is also checked automatically every night (the first {NIGHTLY_PAGE_LIMIT.toLocaleString("en-IN")} pages of the sitemap, so it finishes in time).
           </p>
           <RunSeoCheck canRun={canRun} waiting={overview.waiting} />
         </section>

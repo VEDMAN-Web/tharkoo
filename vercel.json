@@ -8,6 +8,7 @@
     { "path": "/api/cron/expire", "schedule": "0 21 * * *" },
     { "path": "/api/cron/boost", "schedule": "15 21 * * *" },
     { "path": "/api/cron/content-publish", "schedule": "30 0 * * *" },
-    { "path": "/api/cron/media-purge", "schedule": "30 21 * * *" }
+    { "path": "/api/cron/media-purge", "schedule": "30 21 * * *" },
+    { "path": "/api/cron/seo-audit", "schedule": "0 22 * * *" }
   ]
 }

@@ -11,6 +11,7 @@ const EXPECTED: Record<Exclude<StaffRole, "superadmin" | "admin">, Perm[]> = {
   finance: ["dashboard.view", "history.view", "wallet.view", "wallet.adjust", "orders.view", "orders.refund", "payouts.decide", "prices.view"],
   seo_editor: ["dashboard.view", "history.view", "content.write", "content.publish", "media.upload", "media.delete", "sitetext.edit", "catalogue.seo", "seo.edit"],
   blog_editor: ["dashboard.view", "history.view", "content.write", "content.publish", "media.upload"],
+  content_editor: ["dashboard.view", "history.view", "pages.edit", "content.write", "media.upload", "media.library", "sitetext.edit", "sitetext.write", "menus.edit", "catalogue.edit"],
 };
 
 function allowed(role: StaffRole) {
@@ -18,8 +19,8 @@ function allowed(role: StaffRole) {
 }
 
 describe("admin permissions", () => {
-  it("lists the 8 staff roles", () => {
-    expect([...STAFF_ROLES].sort()).toEqual(["admin", "blog_editor", "finance", "moderator", "seo_editor", "superadmin", "support", "trust_safety"]);
+  it("lists the 9 staff roles", () => {
+    expect([...STAFF_ROLES].sort()).toEqual(["admin", "blog_editor", "content_editor", "finance", "moderator", "seo_editor", "superadmin", "support", "trust_safety"]);
   });
 
   it("gives superadmin everything and admin everything except the three superadmin-only permissions", () => {

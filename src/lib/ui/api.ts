@@ -89,7 +89,7 @@ export function safeNext(raw: string | null | undefined) {
   return value;
 }
 
-const STAFF = new Set(["admin", "superadmin", "moderator", "trust_safety", "support", "seo_editor", "finance", "blog_editor"]);
+const STAFF = new Set(["admin", "superadmin", "moderator", "trust_safety", "support", "seo_editor", "finance", "blog_editor", "content_editor"]);
 
 export function isStaffRole(roles: string[] | undefined) {
   return Boolean(roles?.some((role) => STAFF.has(role)));

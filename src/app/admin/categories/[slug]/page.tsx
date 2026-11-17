@@ -3,7 +3,7 @@ import { notFound } from "next/navigation";
 import { AdminShell } from "@/components/admin/AdminShell";
 import { CategoryFieldsEditor, type EditorField } from "@/components/admin/category-fields/CategoryFieldsEditor";
 import { getStaffFromHeaders } from "@/lib/admin-auth";
-import { isAdminRole } from "@/lib/ui/site-content";
+import { canEditSite } from "@/lib/ui/site-content";
 import { readCategoryFields } from "../fields-service";
 
 export const dynamic = "force-dynamic";
@@ -11,7 +11,7 @@ export const dynamic = "force-dynamic";
 export default async function CategoryFieldsPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
   const identity = await getStaffFromHeaders();
-  if (!isAdminRole(identity.roles)) {
+  if (!canEditSite(identity.roles)) {
     return (
       <AdminShell title="Post fields">
         <p>Only an admin can edit post fields.</p>

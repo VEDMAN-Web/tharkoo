@@ -113,6 +113,8 @@ export async function crawlSite(options: CrawlOptions): Promise<CrawlResult> {
   };
 }
 
+/** The nightly run opens at most this many sitemap pages, so it ends inside the 300 second limit of a scheduled function. */
+export const NIGHTLY_PAGE_LIMIT = 1000;
 export const KEEP_RUNS = 30;
 export const RUN_CONCURRENCY = 2;
 export const RUN_GAP_MS = 100;

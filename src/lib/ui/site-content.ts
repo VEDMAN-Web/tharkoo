@@ -228,6 +228,11 @@ export function isAdminRole(roles: string[] | undefined) {
   return Boolean(roles?.some((role) => role === "admin" || role === "superadmin"));
 }
 
+/** H7.165: who may edit the site's pictures, words, categories and places: admins, and the Content editor role. Menus and footer links stay admin only. */
+export function canEditSite(roles: string[] | undefined) {
+  return isAdminRole(roles) || Boolean(roles?.includes("content_editor"));
+}
+
 function text(value: unknown, max: number, fallback: string) {
   if (typeof value !== "string") return fallback;
   const clean = value.replace(/<[^>]*>/g, "").replace(/[\u0000-\u001F\u007F]/g, "").trim().slice(0, max);

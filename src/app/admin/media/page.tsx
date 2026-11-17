@@ -2,7 +2,7 @@ import Link from "next/link";
 import { Lock } from "lucide-react";
 import { AdminShell } from "@/components/admin/AdminShell";
 import { getStaffFromHeaders } from "@/lib/admin-auth";
-import { isAdminRole } from "@/lib/ui/site-content";
+import { canEditSite } from "@/lib/ui/site-content";
 import { NotFoundError } from "@/server/http";
 import { listSiteMedia } from "@/server/layout/media";
 import { getMediaDetail, mediaTabCounts, type MediaDetail } from "@/server/layout/media-admin";
@@ -16,7 +16,7 @@ export const dynamic = "force-dynamic";
 /** H8.45 (A45): the Media library. Tab, search, page and the open picture live in the address. */
 export default async function MediaPage({ searchParams }: { searchParams: Promise<Record<string, string | string[] | undefined>> }) {
   const identity = await getStaffFromHeaders();
-  if (!isAdminRole(identity.roles)) {
+  if (!canEditSite(identity.roles)) {
     return (
       <AdminShell title="Media library" hasHeader>
         <div className="adm-card" style={{ padding: 40, textAlign: "center", display: "grid", gap: 8, justifyItems: "center" }} data-tk="no-access">

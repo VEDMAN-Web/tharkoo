@@ -6,10 +6,10 @@ import { History, UserPlus } from "lucide-react";
 import { undoAction } from "@/app/admin/undo-actions";
 import { Badge, Button, Drawer, PageHeader, ReasonDialog, ToastProvider, useToast, type BadgeTone } from "@/components/admin/ui";
 import { ROLE_WORDS } from "@/lib/admin/role-words";
-import { STAFF_ROLES, type StaffRole } from "@/lib/admin/perms";
+import type { StaffRole } from "@/lib/admin/perms";
 import type { StaffRow } from "@/server/admin/team";
 import { changeRolesAction, inviteStaffAction, removeAccessAction, resendInviteAction, type TeamResult } from "./actions";
-import { ROLE_GUIDE } from "./guide";
+import { CHOICE_ORDER, ROLE_GUIDE, SUPERADMIN_WARNING } from "./guide";
 import "./team.css";
 
 const REMOVE_REASONS = ["Left the team", "Role no longer needed", "Account safety", "Other"] as const;
@@ -39,7 +39,7 @@ function RoleChoices({ value, onChange, disabled }: { value: StaffRole[]; onChan
   return (
     <fieldset className="adm-tm-roles" disabled={disabled}>
       <legend className="adm-k-label">Roles</legend>
-      {STAFF_ROLES.map((role) => {
+      {CHOICE_ORDER.map((role) => {
         const guide = ROLE_GUIDE.find((item) => item.role === role);
         const checked = value.includes(role);
         return (
@@ -48,6 +48,7 @@ function RoleChoices({ value, onChange, disabled }: { value: StaffRole[]; onChan
             <span>
               <strong>{ROLE_WORDS[role]}</strong>
               <small>{guide ? [guide.opens, guide.note].filter(Boolean).join(". ") : ""}</small>
+              {role === "superadmin" ? <small className="adm-tm-warn" data-tk="superadmin-warning">{SUPERADMIN_WARNING}</small> : null}
             </span>
           </label>
         );

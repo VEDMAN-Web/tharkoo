@@ -1,3 +1,4 @@
+import { redirect } from "next/navigation";
 import { AdminShell } from "@/components/admin/AdminShell";
 import { getStaffFromHeaders } from "@/lib/admin-auth";
 import { isAdminRole } from "@/lib/ui/site-content";
@@ -11,6 +12,7 @@ export const dynamic = "force-dynamic";
 export default async function MenusAdminPage() {
   const identity = await getStaffFromHeaders();
   if (!isAdminRole(identity.roles)) {
+    if (identity.roles.includes("content_editor")) redirect("/admin/ui-text/");
     return (
       <AdminShell title="Menus and footer">
         <p>Only an admin can edit the menus and footer.</p>

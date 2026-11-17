@@ -6,7 +6,8 @@ export type StaffRole =
   | "support"
   | "finance"
   | "seo_editor"
-  | "blog_editor";
+  | "blog_editor"
+  | "content_editor";
 
 export const STAFF_ROLES: readonly StaffRole[] = [
   "superadmin",
@@ -17,6 +18,7 @@ export const STAFF_ROLES: readonly StaffRole[] = [
   "finance",
   "seo_editor",
   "blog_editor",
+  "content_editor",
 ];
 
 export type Perm =
@@ -50,7 +52,9 @@ export type Perm =
   | "content.legal"
   | "media.upload"
   | "media.delete"
+  | "media.library"
   | "sitetext.edit"
+  | "sitetext.write"
   | "menus.edit"
   | "catalogue.edit"
   | "catalogue.seo"
@@ -94,15 +98,17 @@ export const PERMS: Record<Perm, readonly StaffRole[]> = {
   "payouts.decide": with_("finance"),
   "prices.view": with_("finance"),
   "prices.edit": ADMINS,
-  "pages.edit": ADMINS,
-  "content.write": with_("seo_editor", "blog_editor"),
+  "pages.edit": with_("content_editor"),
+  "content.write": with_("seo_editor", "blog_editor", "content_editor"),
   "content.publish": with_("seo_editor", "blog_editor"),
   "content.legal": ADMINS,
-  "media.upload": with_("seo_editor", "blog_editor"),
+  "media.upload": with_("seo_editor", "blog_editor", "content_editor"),
   "media.delete": with_("seo_editor"),
-  "sitetext.edit": with_("seo_editor"),
-  "menus.edit": ADMINS,
-  "catalogue.edit": ADMINS,
+  "media.library": with_("content_editor"),
+  "sitetext.edit": with_("seo_editor", "content_editor"),
+  "sitetext.write": with_("content_editor"),
+  "menus.edit": with_("content_editor"),
+  "catalogue.edit": with_("content_editor"),
   "catalogue.seo": with_("seo_editor"),
   "seo.edit": with_("seo_editor"),
   "seo.robots": ADMINS,
