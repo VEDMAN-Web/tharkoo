@@ -26,7 +26,7 @@ async function seed(cityCount = 70) {
     { type: "state", slug: "maharashtra", name: "Maharashtra", parentId: country._id, enabled: false },
   ]);
   const cities = await Location.create(
-    Array.from({ length: cityCount }, (_, index) => ({ type: "city", slug: `town-${String(index).padStart(3, "0")}`, name: `Town ${String(index).padStart(3, "0")}`, parentId: states[index % 3]._id })),
+    Array.from({ length: cityCount }, (_, index) => ({ type: "city" as const, slug: `town-${String(index).padStart(3, "0")}`, name: `Town ${String(index).padStart(3, "0")}`, parentId: states[index % 3]._id })),
   );
   return { country, states, cities };
 }
