@@ -2,9 +2,9 @@
 
 import { getStaffFromHeaders, isStaff } from "@/lib/admin-auth";
 import { ForbiddenError, HttpError } from "@/server/http";
-import { approveListing, rejectListing } from "@/server/moderation/decide";
+import { approveListing } from "@/server/moderation/decide";
 
-type Result = { ok: true; status: "active" | "rejected" } | { ok: false; error: string };
+type Result = { ok: true; status: "active" } | { ok: false; error: string };
 
 async function staff() {
   const identity = await getStaffFromHeaders();
@@ -12,7 +12,7 @@ async function staff() {
   return identity;
 }
 
-async function run(job: () => Promise<{ status: "active" | "rejected" }>): Promise<Result> {
+async function run(job: () => Promise<{ status: "active" }>): Promise<Result> {
   try {
     return { ok: true, ...(await job()) };
   } catch (error) {
@@ -26,12 +26,5 @@ export async function approveAction(id: string): Promise<Result> {
   return run(async () => {
     const who = await staff();
     return approveListing({ id, roles: who.roles, email: who.email });
-  });
-}
-
-export async function rejectAction(id: string, reason: string): Promise<Result> {
-  return run(async () => {
-    const who = await staff();
-    return rejectListing({ id, roles: who.roles, email: who.email, reason });
   });
 }

@@ -1,0 +1,25 @@
+/* H8.18: parts that belong to the Ads to review screen only. The shared kit stays in src/styles/admin-kit.css. */
+.adm-r-main { display: flex; align-items: center; gap: 10px; min-width: 0; }
+.adm-r-thumb { width: 40px; height: 40px; border-radius: 6px; object-fit: cover; flex: none; background: var(--adm-line2); }
+.adm-r-text { display: grid; gap: 2px; min-width: 0; }
+.adm-r-text small { color: var(--adm-kmuted); font-size: 12.5px; font-weight: 400; }
+.adm-r-flags { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; }
+.adm-r-pane { padding: 16px; display: grid; gap: 14px; grid-template-columns: minmax(0, 1fr); }
+.adm-r-photos { display: grid; grid-template-columns: minmax(0, 2fr) minmax(0, 1fr); grid-template-rows: minmax(0, 1fr) minmax(0, 1fr); gap: 8px; height: 190px; overflow: hidden; }
+.adm-r-photos img { display: block; width: 100%; height: 100%; min-width: 0; min-height: 0; object-fit: cover; border-radius: 10px; background: var(--adm-line2); }
+.adm-r-photos img:first-child { grid-row: 1 / span 2; }
+.adm-r-photos[data-n="1"] { grid-template-columns: minmax(0, 1fr); grid-template-rows: minmax(0, 1fr); }
+.adm-r-photos[data-n="1"] img:first-child { grid-row: auto; }
+.adm-r-photos[data-n="2"] { grid-template-rows: minmax(0, 1fr); }
+.adm-r-photos[data-n="2"] img:first-child { grid-row: auto; }
+.adm-r-text-body { margin: 0; white-space: pre-wrap; overflow-wrap: anywhere; }
+.adm-r-kvs { margin: 0; display: grid; }
+.adm-r-kvs > div { display: grid; grid-template-columns: 110px minmax(0, 1fr); gap: 12px; padding: 9px 0; border-bottom: 1px solid var(--adm-line2); font-size: 13.5px; }
+.adm-r-kvs dt { color: var(--adm-kmuted); }
+.adm-r-kvs dd { margin: 0; font-weight: 600; overflow-wrap: anywhere; }
+.adm-r-h3 { margin: 0; font-size: 14px; }
+@media (max-width: 767px) {
+  [data-tk="review-screen"] .adm-k-pagesize { display: none; }
+  [data-tk="review-screen"] .adm-k-pager { flex-wrap: nowrap; }
+  .adm-r-kvs > div { grid-template-columns: 90px minmax(0, 1fr); }
+}
