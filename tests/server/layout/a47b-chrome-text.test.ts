@@ -9,9 +9,10 @@ const source = (file: string) => readFileSync(path.join(process.cwd(), file), "u
 
 describe("header and footer words as site text (H8.47 part 2)", () => {
   it("keep exactly the words the components had before", () => {
-    expect(CHROME).toHaveLength(20);
+    expect(CHROME).toHaveLength(21);
     expect(TEXT_DEFAULTS["chrome.account.my"]).toBe("My account");
     expect(TEXT_DEFAULTS["chrome.account.help"]).toBe("Help and support");
+    expect(TEXT_DEFAULTS["chrome.account.chats"]).toBe("Chats");
     expect(TEXT_DEFAULTS["chrome.footer.touch"]).toBe("Get in touch");
     expect(TEXT_DEFAULTS["chrome.menu.close"]).toBe("Close menu");
     expect(makeT()("chrome.account.menuFor", { name: "Riya" })).toBe("Account menu for Riya");
@@ -30,6 +31,6 @@ describe("header and footer words as site text (H8.47 part 2)", () => {
     const footer = source("src/components/FooterNew.tsx");
     const drawer = source("src/components/HeaderDrawer.tsx");
     for (const key of CHROME) expect(header + footer + drawer, key).toContain(`"${key}"`);
-    for (const word of ["My account", "Get in touch", "Quick links", "Close menu"]) expect(header + footer + drawer, word).not.toMatch(new RegExp(`>${word}<|"${word}"`));
+    for (const word of ["My account", "Chats", "Get in touch", "Quick links", "Close menu"]) expect(header + footer + drawer, word).not.toMatch(new RegExp(`>${word}<|"${word}"`));
   });
 });
