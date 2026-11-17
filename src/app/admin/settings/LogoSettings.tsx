@@ -29,8 +29,8 @@ export function LogoSettings({ light, dark }: { light: string; dark: string }) {
   return (
     <>
       <p className="adm-k-help">The Tharkoo logo in the header and footer. Remove a picture to go back to the logo that ships with the site.</p>
-      <ImagePicker label="Logo (light backgrounds)" value={ref(values.light, LOGO_LIGHT_DEFAULT)} onChange={(next) => void change("light", next)} rule={LOGO_RULE} />
-      <ImagePicker label="Logo (dark backgrounds)" value={ref(values.dark, LOGO_DARK_DEFAULT)} onChange={(next) => void change("dark", next)} rule={LOGO_RULE} />
+      <ImagePicker label="Logo (light backgrounds)" value={ref(values.light, LOGO_LIGHT_DEFAULT)} onChange={(next) => void change("light", next)} rule={LOGO_RULE} infoText="Size and format" />
+      <ImagePicker label="Logo (dark backgrounds)" value={ref(values.dark, LOGO_DARK_DEFAULT)} onChange={(next) => void change("dark", next)} rule={LOGO_RULE} infoText="Size and format" />
       {message ? <p className="adm-k-help" role="status">{message}</p> : null}
     </>
   );
