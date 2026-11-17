@@ -134,12 +134,11 @@ export function CategoryFieldsEditor({ slug, categoryName, initial }: { slug: st
     });
   }
 
-  if (!fields.length) {
-    return <Notice kind="info" title="No fields yet">{categoryName} has no extra post-ad fields. Use Add field to start.</Notice>;
-  }
-
   return (
     <div className="adm-stack" style={{ paddingBottom: 16 }}>
+      {fields.length === 0 ? <Notice kind="info" title="No fields yet">{categoryName} has no extra post-ad fields. Use Add a field below to start.</Notice> : null}
+      {fields.length > 0 ? (
+      <>
       <div className="adm-card" style={{ display: "flex", flexWrap: "wrap", justifyContent: "space-between", gap: 12, alignItems: "center" }}>
         <div>
           <h2 className="adm-field-label" style={{ fontSize: 18, margin: 0 }}>Fields and filters for {categoryName}</h2>
@@ -155,12 +154,12 @@ export function CategoryFieldsEditor({ slug, categoryName, initial }: { slug: st
       {message ? <Notice kind={message.kind}>{message.text}</Notice> : null}
       <div className="cf-layout">
         <section className="adm-card cf-table" aria-label="Fields">
-          <div className="cf-head" role="row">
+          <div className="cf-head">
             <span />
             <span>Field</span>
             <span>Type</span>
             <span>Options</span>
-            <span>Post-ad</span>
+            <span>On form</span>
             <span>Filter</span>
             <span>Required</span>
           </div>
@@ -168,7 +167,6 @@ export function CategoryFieldsEditor({ slug, categoryName, initial }: { slug: st
             <div
               key={field.key}
               className={`cf-row ${field.key === current?.key ? "is-selected" : ""} ${overKey === field.key ? "is-over" : ""}`}
-              role="row"
               draggable
               onDragStart={() => setDragKey(field.key)}
               onDragOver={(event) => {
@@ -195,7 +193,7 @@ export function CategoryFieldsEditor({ slug, categoryName, initial }: { slug: st
               <span className="cf-type cf-meta">{KIND_LABEL[field.type] ?? field.type}</span>
               <span className="cf-count cf-meta">{SWITCHABLE.has(field.type) ? `${field.optionCount} options` : "No list"}</span>
               <span className="cf-switch">
-                <Toggle label="Post-ad" checked={field.enabled} onChange={(enabled) => change(field.key, { enabled })} />
+                <Toggle label="On form" checked={field.enabled} onChange={(enabled) => change(field.key, { enabled })} />
               </span>
               <span className="cf-switch">
                 <Toggle label="Filter" checked={field.filterable} onChange={(filterable) => change(field.key, { filterable })} />
@@ -251,6 +249,8 @@ export function CategoryFieldsEditor({ slug, categoryName, initial }: { slug: st
           </aside>
         ) : null}
       </div>
+      </>
+      ) : null}
       <section className="adm-card" aria-label="Add a field" style={{ display: "grid", gap: 10 }}>
         <span className="adm-field-label">Add a field</span>
         <div className="cf-add">

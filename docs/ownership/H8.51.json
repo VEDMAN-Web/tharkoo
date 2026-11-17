@@ -1,0 +1,17 @@
+{
+  "branchPrefix": "haiku/h8.51",
+  "globs": [
+    "docs/ownership/H8.51.json",
+    "progress/H8.51.md",
+    "src/app/admin/categories/**",
+    "src/server/categories/manage.ts",
+    "src/server/categories/screen.ts",
+    "src/components/admin/category-fields/**",
+    "src/components/admin/AdminShell.tsx",
+    "tests/server/categories/h8-51-*.test.ts",
+    "tests/e2e/h8-51-categories.e2e.ts",
+    "tests/e2e/a39-photos.e2e.ts",
+    "tests/e2e/h7160-menus.e2e.ts",
+    "tests/e2e/admin-create-ad.e2e.ts"
+  ]
+}
