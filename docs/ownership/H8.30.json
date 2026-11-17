@@ -1,0 +1,17 @@
+{
+  "branchPrefix": "haiku/h8.30",
+  "globs": [
+    "docs/ownership/H8.30.json",
+    "src/app/admin/ads/DemoAds.tsx",
+    "src/app/admin/ads/demo-actions.ts",
+    "src/app/admin/ads/page.tsx",
+    "src/app/admin/ads/_list/ads.css",
+    "src/server/listings/demo-ads.ts",
+    "src/server/admin/undo/handlers/demo-end.ts",
+    "tests/server/listings/a30-*.test.ts",
+    "tests/server/listings/demo-ads.test.ts",
+    "tests/server/admin/a3-write.test.ts",
+    "tests/e2e/h7-96-demo-ads.e2e.ts",
+    "tests/e2e/ad-counts.e2e.ts"
+  ]
+}
