@@ -1,134 +1,54 @@
 "use client";
 
 import Link from "next/link";
-import { useCallback, useEffect, useMemo, useState } from "react";
-import { ExternalLink, Search, Send } from "lucide-react";
+import { useEffect, useState } from "react";
+import { ExternalLink, Search } from "lucide-react";
 import { CardWidthForm } from "@/app/admin/listing-pages/CardWidthForm";
+import { saveCardWidthAction } from "@/app/admin/listing-pages/card-width-actions";
 import { PageTitleEditor } from "@/components/admin/PageTitleEditor";
-import { LayoutEditor } from "@/components/admin/layout-editor/LayoutEditor";
+import { LayoutEditor, type LayoutExtras } from "@/components/admin/layout-editor/LayoutEditor";
+import type { Props } from "@/components/admin/layout-editor/fields";
 import { typesForPage } from "@/server/layout/blocks";
 import type { CardWidth } from "@/server/listings/card-width-config";
 import { Preview } from "../_home/Preview";
-import { undoAction } from "@/app/admin/undo-actions";
 import { Badge } from "@/components/admin/ui/Badge";
 import { Button } from "@/components/admin/ui/Button";
 import { Notice } from "@/components/admin/ui/Notice";
 import { Skeleton } from "@/components/admin/ui/Skeleton";
 import { TextField } from "@/components/admin/ui/TextField";
-import { ToastProvider, useToast } from "@/components/admin/ui/Toast";
 import { Toggle } from "@/components/admin/ui/Toggle";
-import { explainAddressAction, loadListingHeaderAction, loadListingTitleAction, publishListingHeaderAction, saveListingHeaderAction } from "./actions";
-import { FIELD_WORDS, H1_MAX, HEADER_VARIABLES, INTRO_MAX, SOURCE_WORDS, previewHeader, sameHeader, scopeOf, type HeaderProps } from "./model";
-import type { ExplainedAddress, ListingHeaderState, ListingTitleState } from "./server";
+import { explainAddressAction, loadListingTitleAction } from "./actions";
+import { FIELD_WORDS, H1_MAX, HEADER_VARIABLES, INTRO_MAX, SOURCE_WORDS, previewHeader, scopeOf } from "./model";
+import type { ExplainedAddress, ListingTitleState } from "./server";
 import "./listing.css";
 
 export type CategoryOption = { slug: string; name: string };
 
-function HeaderCard({ scope }: { scope: string }) {
-  const toast = useToast();
-  const [state, setState] = useState<ListingHeaderState | null>(null);
-  const [error, setError] = useState("");
-  const [header, setHeader] = useState<HeaderProps | null>(null);
-  const [saved, setSaved] = useState<HeaderProps | null>(null);
-  const [busy, setBusy] = useState<"" | "save" | "publish">("");
-
-  const load = useCallback(async (nextScope: string) => {
-    setError("");
-    const res = await loadListingHeaderAction(nextScope);
-    if (!res.ok) {
-      setError(res.error);
-      return;
-    }
-    setState(res.state);
-    setHeader(res.state.header);
-    setSaved(res.state.header);
-  }, []);
-
-  useEffect(() => {
-    // Loading from the server when the scope changes: the state arrives after the await.
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    void load(scope);
-  }, [load, scope]);
-
-  const dirty = header !== null && saved !== null && !sameHeader(header, saved);
-  const sample = useMemo(() => ({ category: state?.categoryName || "Dating", city: "Surat" }), [state?.categoryName]);
-
-  async function saveDraft(): Promise<boolean> {
-    if (!header) return false;
-    setBusy("save");
-    const res = await saveListingHeaderAction(scope, header);
-    setBusy("");
-    if (!res.ok) {
-      toast.show({ kind: "error", message: res.error });
-      return false;
-    }
-    setSaved(header);
-    toast.show({ kind: "success", message: "Draft saved." });
-    await load(scope);
-    return true;
-  }
-
-  async function publish() {
-    if (!header) return;
-    if ((dirty || state?.liveVersion === 0 || state?.inherited || !state?.hasDraft) && !(await saveDraft())) return;
-    setBusy("publish");
-    const res = await publishListingHeaderAction(scope, "");
-    setBusy("");
-    if (!res.ok) {
-      toast.show({ kind: "error", message: res.error });
-      return;
-    }
-    const label = state?.categoryName ? `the listing pages of ${state.categoryName}` : "the listing pages";
-    if (res.canUndo) {
-      toast.show({
-        kind: "undo",
-        message: `Published ${label} (version ${res.version}).`,
-        onUndo: async () => {
-          const outcome = await undoAction(res.eventId);
-          toast.show({ kind: outcome.ok ? "success" : "error", message: outcome.ok ? "Publishing undone." : outcome.message });
-          await load(scope);
-        },
-      });
-    } else {
-      toast.show({ kind: "success", message: `Published ${label} (version ${res.version}).` });
-    }
-    await load(scope);
-  }
-
-  const statusBadge = !state ? null : dirty ? <Badge tone="warn">Unsaved changes</Badge> : state.inherited ? <Badge>Using the default</Badge> : state.hasDraft && state.liveVersion > 0 ? <Badge tone="ok">Published, version {state.liveVersion}</Badge> : state.hasDraft ? <Badge tone="warn">Draft, not published</Badge> : <Badge tone="ok">Published</Badge>;
-
+function HeaderCard({ props, update, categoryName }: { props: Props; update: (patch: Props) => void; categoryName: string }) {
+  const h1Template = typeof props.h1Template === "string" ? props.h1Template : "";
+  const introTemplate = typeof props.introTemplate === "string" ? props.introTemplate : "";
+  const sample = { category: categoryName || "Dating", city: "Surat" };
   return (
     <section className="adm-card adm-lb-card" aria-labelledby="lb-header-h" data-tk="listing-header-card">
       <div className="adm-lb-head">
         <h2 id="lb-header-h">Heading and intro</h2>
-        {statusBadge}
       </div>
-      <p className="adm-k-help">The words at the top of the category, city and area pages for the pages chosen above.</p>
-      {error ? <Notice kind="error">{error}</Notice> : null}
-      {!header || !state ? (
-        error ? null : <Skeleton lines={4} />
-      ) : (
-        <div className="adm-lb-form">
-          {state.inherited ? <Notice kind="info">This category shows the default wording. When you publish, it gets its own copy of the listing layout with the words below.</Notice> : null}
-          <TextField label="Heading template" value={header.h1Template} onChange={(value) => setHeader({ ...header, h1Template: value })} max={H1_MAX} required help="{h1} is the heading the page works out by itself (from SEO templates and addresses). Keep {h1} to leave it as it is." />
-          <TextField label="Intro template" value={header.introTemplate} onChange={(value) => setHeader({ ...header, introTemplate: value })} max={INTRO_MAX} multiline help="Leave empty or {h1} to use the page's own intro." />
-          <p className="adm-k-help" data-tk="header-variables">
-            You can use: {HEADER_VARIABLES.map((token) => <code key={token}>{token}</code>)}
-          </p>
-          <div className="adm-lb-toggles">
-            <Toggle checked={header.showCount} onChange={(next) => setHeader({ ...header, showCount: next })} label="Show the number of ads" />
-            <Toggle checked={header.showUpdated} onChange={(next) => setHeader({ ...header, showUpdated: next })} label="Show the last updated date" />
-          </div>
-          <div className="adm-lb-sample" data-tk="header-sample">
-            <small>Looks like, for {sample.category} in {sample.city}</small>
-            <strong>{previewHeader(header.h1Template, sample) || `${sample.category} in ${sample.city}`}</strong>
-          </div>
-          <div className="adm-lb-actions">
-            <Button busy={busy === "save"} disabled={!dirty || busy !== ""} onClick={() => void saveDraft()}>Save draft</Button>
-            <Button kind="primary" icon={Send} busy={busy === "publish"} disabled={busy !== "" || (!dirty && !state.inherited && !state.hasDraft && state.liveVersion > 0)} onClick={() => void publish()}>Publish</Button>
-          </div>
+      <p className="adm-k-help">The words at the top of the category, city and area pages for the pages chosen above. Saved and published with the layout below.</p>
+      <div className="adm-lb-form">
+        <TextField label="Heading template" value={h1Template} onChange={(value) => update({ h1Template: value })} max={H1_MAX} required help="{h1} is the heading the page works out by itself (from SEO templates and addresses). Keep {h1} to leave it as it is." />
+        <TextField label="Intro template" value={introTemplate} onChange={(value) => update({ introTemplate: value })} max={INTRO_MAX} multiline help="Leave empty or {h1} to use the page's own intro." />
+        <p className="adm-k-help" data-tk="header-variables">
+          You can use: {HEADER_VARIABLES.map((token) => <code key={token}>{token}</code>)}
+        </p>
+        <div className="adm-lb-toggles">
+          <Toggle checked={props.showCount !== false} onChange={(next) => update({ showCount: next })} label="Show the number of ads" />
+          <Toggle checked={props.showUpdated !== false} onChange={(next) => update({ showUpdated: next })} label="Show the last updated date" />
         </div>
-      )}
+        <div className="adm-lb-sample" data-tk="header-sample">
+          <small>Looks like, for {sample.category} in {sample.city}</small>
+          <strong>{previewHeader(h1Template, sample) || `${sample.category} in ${sample.city}`}</strong>
+        </div>
+      </div>
     </section>
   );
 }
@@ -251,7 +171,7 @@ function TitleCard({ scope }: { scope: string }) {
       {!state ? (
         error ? null : <Skeleton lines={3} />
       ) : (
-        <PageTitleEditor key={JSON.stringify(state.target)} target={state.target} initial={state.initial} siteLabel={state.siteLabel} previewVars={state.previewVars} help={state.help} />
+        <PageTitleEditor key={JSON.stringify(state.target)} target={state.target} initial={state.initial} siteLabel={state.siteLabel} previewVars={state.previewVars} help={state.help} saveLabel="Save Google title and description" />
       )}
       <p className="adm-k-help">The same title and description are in <Link href="/admin/seo/page-titles/">SEO, Page titles</Link>, with every other page.</p>
     </section>
@@ -266,26 +186,38 @@ export function ListingBuilder({ categories, initialCategory = "", initialAddres
   const scope = choice === URL_CHOICE ? (urlOk ? `url:${address.endsWith("/") ? address : `${address}/`}` : "default") : scopeOf(choice);
   const live = choice === URL_CHOICE ? (urlOk ? address : "/") : `/${choice || categories[0]?.slug || ""}/`;
   const exact = choice === URL_CHOICE;
+  const categoryName = categories.find((row) => row.slug === choice)?.name ?? "";
+  const [width, setWidth] = useState<CardWidth>(cardWidth);
+  const [savedWidth, setSavedWidth] = useState<CardWidth>(cardWidth);
+  const extras: LayoutExtras = {
+    headerType: "listingHeader",
+    top: ({ props, update }) => (exact ? <Notice kind="info">An exact address has no heading and intro template of its own. Its layout and its Google text are on this page.</Notice> : <HeaderCard props={props} update={update} categoryName={categoryName} />),
+    bottom: <CardWidthForm width={width} onChange={setWidth} />,
+    dirty: width !== savedWidth,
+    publish: async () => {
+      if (width === savedWidth) return null;
+      const res = await saveCardWidthAction(width);
+      if (!res.ok) return `the card width was not saved: ${res.message}`;
+      setSavedWidth(width);
+      return null;
+    },
+  };
   return (
-    <ToastProvider>
-      <div className="adm-lb-grid" data-tk="listing-builder">
-        <div className="adm-lb">
-          <ScopeCard categories={categories} choice={choice} address={address} onChoice={(next) => { setChoice(next); if (next !== URL_CHOICE) setAddress(""); }} onAddress={setAddress} />
-          {exact ? <Notice kind="info">An exact address has no heading and intro template of its own. Its layout and its Google text are below.</Notice> : <HeaderCard key={scope} scope={scope} />}
-          <TitleCard scope={scope} />
-          <section className="adm-lb-layout" aria-label="Page layout" data-tk="listing-layout">
-            <LayoutEditor key={scope} pageKey="listing" scope={scope} allowedTypes={typesForPage("listing")} previewHref={live} />
-          </section>
-          <CardWidthForm initial={cardWidth} />
-          <ExplainCard />
-        </div>
-        <aside className="adm-lb-side" aria-label="Preview">
-          <section className="adm-card adm-lb-card" aria-labelledby="lb-preview-h" data-tk="listing-preview">
-            <h2 id="lb-preview-h">Preview</h2>
-            <Preview device="laptop" version={0} reloadKey={0} src={live} note={`The live page ${live}. A change shows here after you publish it.`} />
-          </section>
-        </aside>
+    <div className="adm-lb-grid" data-tk="listing-builder">
+      <div className="adm-lb">
+        <ScopeCard categories={categories} choice={choice} address={address} onChoice={(next) => { setChoice(next); if (next !== URL_CHOICE) setAddress(""); }} onAddress={setAddress} />
+        <TitleCard scope={scope} />
+        <section className="adm-lb-layout" aria-label="Page layout" data-tk="listing-layout">
+          <LayoutEditor key={scope} pageKey="listing" scope={scope} allowedTypes={typesForPage("listing")} previewHref={live} extras={extras} />
+        </section>
+        <ExplainCard />
       </div>
-    </ToastProvider>
+      <aside className="adm-lb-side" aria-label="Preview">
+        <section className="adm-card adm-lb-card" aria-labelledby="lb-preview-h" data-tk="listing-preview">
+          <h2 id="lb-preview-h">Preview</h2>
+          <Preview device="laptop" version={0} reloadKey={0} src={live} note={`The live page ${live}. A change shows here after you publish it.`} />
+        </section>
+      </aside>
+    </div>
   );
 }

@@ -33,24 +33,26 @@ test.describe("H8.44 Page builder, Listing tab", () => {
     const slug = await select.locator("option").nth(test.info().project.name.startsWith("phone") ? 1 : 2).getAttribute("value");
     expect(slug).toBeTruthy();
     await select.selectOption(slug!);
-    await expect(card.getByText("Using the default")).toBeVisible();
+    await expect(page.locator("[data-tk=listing-layout]").getByText("Not published yet")).toBeVisible();
     await expect(card.getByLabel(/^Heading template/)).toBeVisible();
 
     const wording = `Meet people ${Date.now() % 100000}: {h1}`;
     await card.getByLabel(/^Heading template/).fill(wording);
     await card.getByLabel(/^Intro template/).fill("Profiles checked by our team.");
     await expect(card.locator("[data-tk=header-sample]")).toContainText("Meet people");
-    await expect(card.getByText("Unsaved changes")).toBeVisible();
+    const bar = page.getByRole("region", { name: "Save changes" });
+    await expect(bar.getByText("Unsaved changes")).toBeVisible();
     const axe = await new AxeBuilder({ page }).include("[data-tk=listing-builder]").withTags(["wcag2a", "wcag2aa"]).analyze();
     expect(axe.violations.filter((item) => item.impact === "serious" || item.impact === "critical").map((item) => `${item.id}: ${item.nodes[0]?.target.join(" ")}`)).toEqual([]);
     await shot(page, "a44-listing-header");
 
-    await card.getByRole("button", { name: "Save draft" }).click();
-    await expect(page.locator("[data-tk=toast]").last()).toContainText("Draft saved.");
-    await expect(card.getByText("Draft, not published")).toBeVisible();
-    await card.getByRole("button", { name: "Publish" }).click();
-    await expect(page.locator("[data-tk=toast]").last()).toContainText("Published");
-    await expect(card.getByText(/Published, version 1/)).toBeVisible();
+    await bar.getByRole("button", { name: "Save draft" }).click();
+    await expect(page.getByText("Draft saved. Visitors do not see it until you publish.")).toBeVisible();
+    await expect(page.locator("[data-tk=listing-layout]").getByText("Not published yet")).toBeVisible();
+    await bar.getByRole("button", { name: "Publish" }).click();
+    await page.getByRole("dialog", { name: "Publish" }).getByRole("button", { name: "Publish now" }).click();
+    await expect(page.getByText(/Published as version 1/)).toBeVisible();
+    await expect(page.locator("[data-tk=listing-layout]").getByText("Live page matches the saved draft")).toBeVisible();
 
     // The address shows the template as the source of the heading.
     const ask = page.locator("[data-tk=explain-card]");

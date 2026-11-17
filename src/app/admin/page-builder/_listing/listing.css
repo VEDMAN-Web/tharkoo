@@ -27,6 +27,8 @@
   .adm-lb-table th, .adm-lb-table td { border: 0; padding: 2px 0; }
   .adm-lb-actions .adm-k-btn { flex: 1; }
 }
+.adm-lb-radios { display: grid; gap: 4px; margin: 12px 0 0; padding: 0; border: 0; }
+.adm-lb-radio { display: flex; align-items: center; gap: 8px; min-height: 36px; }
 .adm-lb-grid { display: grid; grid-template-columns: minmax(0, 1fr) 360px; gap: 16px; align-items: start; }
 .adm-lb-side { position: sticky; top: 76px; display: grid; gap: 16px; min-width: 0; }
 .adm-lb-scoperow { display: flex; gap: 14px; flex-wrap: wrap; align-items: end; }

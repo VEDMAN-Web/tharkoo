@@ -1,5 +1,7 @@
 "use client";
 
+import { Trash2 } from "lucide-react";
+import { buttonClass } from "../ui/Button";
 import { TextField } from "../ui/TextField";
 import { Toggle } from "../ui/Toggle";
 import { FieldsForm } from "./FieldControls";
@@ -97,20 +99,21 @@ export function BlockCard({
       <div className="lay-block-tools">
         <button type="button" className="adm-sort-move" aria-label={`Move ${name} up`} disabled={index === 0} onClick={() => onMove(index - 1)}>↑</button>
         <button type="button" className="adm-sort-move" aria-label={`Move ${name} down`} disabled={index === count - 1} onClick={() => onMove(index + 1)}>↓</button>
-        <button type="button" className="adm-btn adm-btn-quiet" disabled={atMax} title={atMax ? "This page already has the most blocks of this type" : undefined} onClick={onDuplicate}>
+        <button type="button" className={buttonClass({ kind: "quiet", size: "sm" })} disabled={atMax} title={atMax ? "This page already has the most blocks of this type" : undefined} onClick={onDuplicate}>
           Duplicate
+        </button>
+        <button type="button" className={buttonClass({ kind: "secondary", size: "sm" })} aria-expanded={expanded} onClick={onToggle}>
+          {expanded ? "Close" : "Edit"}
         </button>
         <button
           type="button"
-          className="adm-btn adm-btn-danger"
+          className={`${buttonClass({ kind: "quiet", size: "sm", icon: true })} lay-delete`}
+          aria-label={`Delete ${name}`}
           disabled={!meta.deletable}
-          title={meta.deletable ? undefined : "This block is required on this page"}
+          title={meta.deletable ? `Delete ${name}` : "This block is required on this page"}
           onClick={onDelete}
         >
-          Delete
-        </button>
-        <button type="button" className="adm-btn adm-btn-ghost" aria-expanded={expanded} onClick={onToggle}>
-          {expanded ? "Close" : "Edit"}
+          <Trash2 aria-hidden="true" focusable="false" />
         </button>
       </div>
       {expanded ? (

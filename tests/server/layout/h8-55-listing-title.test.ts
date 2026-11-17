@@ -28,7 +28,7 @@ describe("the Google title of a listing scope (H8.55)", () => {
   it("all listing pages edit the all-category template, with a sample and no name", async () => {
     const state = await loadListingTitle(admin, "default");
     expect(state.target).toEqual({ kind: "template", pageType: "category", categorySlug: null });
-    expect(state.siteLabel).toContain("{category}");
+    expect(state.siteLabel).toMatch(/\/jobs\/$/);
     expect(state.previewVars).not.toBeNull();
     expect(state.help).toMatch(/every category page/);
   });

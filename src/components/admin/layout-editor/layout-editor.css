@@ -14,6 +14,7 @@
 .lay-type.is-warn { background: #fff7e6; color: #9a6200; }
 .lay-block-tools { display: flex; flex-wrap: wrap; align-items: center; gap: var(--adm-s2); margin-top: var(--adm-s2); }
 .lay-block-tools .adm-btn { min-height: 36px; }
+.lay-block-tools .lay-delete { margin-left: auto; }
 .lay-block-body { display: grid; gap: var(--adm-s4); margin-top: var(--adm-s4); padding-top: var(--adm-s4); border-top: 1px solid var(--adm-border); }
 
 .lay-fields { display: grid; gap: var(--adm-s4); min-width: 0; }

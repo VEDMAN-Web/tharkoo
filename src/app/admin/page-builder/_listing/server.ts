@@ -213,7 +213,7 @@ export async function loadListingTitle(ctx: AdminCtx, scope: string): Promise<Li
     target = { kind: "template", pageType: "category", categorySlug: slug };
     help = "This sets the title for the pages of this one category. It replaces the all-category title for this category only.";
   } else {
-    address = "/{category}/";
+    address = `/${sampleVarsFor("", "").category.toLowerCase().replace(/\s+/g, "-")}/`;
     target = { kind: "template", pageType: "category", categorySlug: null };
     help = "This sets the title for every category page that has no title of its own. City and district pages have their own titles under SEO, Page titles.";
   }

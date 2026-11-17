@@ -11,6 +11,7 @@ async function shot(page: Page, name: string) {
   if (!SHOTS) return;
   mkdirSync(SHOTS, { recursive: true });
   const size = page.viewportSize();
+  await page.addStyleTag({ content: ".adm-savebar { position: static !important; }" });
   await page.screenshot({ path: `${SHOTS}/${name}-${size?.width}x${size?.height}.png`, fullPage: true });
 }
 
@@ -52,7 +53,7 @@ test.describe("H8.55 Page builder, Listing pages tab", () => {
     await page.goto(`/admin/listing-pages/?kind=category&category=${slug}`);
     await expect(page).toHaveURL(new RegExp(`/admin/page-builder/\\?tab=listing&category=${slug}`));
     await expect(page.getByLabel("Applies to")).toHaveValue(slug!);
-    await expect(page.locator('[data-tk="listing-header-card"]')).toContainText("Using the default");
+    await expect(page.locator('[data-tk="listing-header-card"]').getByLabel(/^Heading template/)).toHaveValue("{h1}");
   });
 
   test("everything is in the tab: pages choice, heading, Google title and description, the layout that starts from what the pages show today, card width, the source of the words and a preview; axe clean and no sideways scroll at 1440 and 390", async ({ page, context, baseURL }) => {
@@ -66,7 +67,14 @@ test.describe("H8.55 Page builder, Listing pages tab", () => {
       for (const title of ["Which pages", "Heading and intro", "Card width", "Which text does this address use?"]) await expect(page.getByRole("heading", { level: 2, name: title })).toBeVisible();
       await expect(page.locator('[data-tk="listing-title-card"]').getByRole("heading", { name: /Page title & description/ })).toBeVisible();
       await expect(page.locator('[data-tk="listing-title-card"]').getByRole("link", { name: "SEO, Page titles" })).toHaveAttribute("href", "/admin/seo/page-titles/");
+      await expect(page.locator('[data-tk="listing-title-card"]')).toContainText("/jobs/");
+      await expect(page.locator('[data-tk="listing-title-card"]')).not.toContainText("/{category}/");
+      await expect(page.getByRole("button", { name: "Save card width" })).toHaveCount(0);
+      await expect(page.locator('[data-tk="listing-header-card"]').getByRole("button")).toHaveCount(0);
       const layout = page.locator('[data-tk="listing-layout"]');
+      await expect(layout.getByRole("button", { name: /^Delete Popular searches/ })).toBeEnabled();
+      await expect(layout.getByRole("button", { name: /^Delete Page heading/ })).toBeDisabled();
+      await expect(layout.getByRole("button", { name: "Delete", exact: true })).toHaveCount(0);
       await expect(layout.getByText("Not published yet")).toBeVisible();
       await expect(layout.getByText("No blocks yet")).toHaveCount(0);
       expect(await layout.locator("ul[aria-label='Blocks on this page'] > li").count()).toBeGreaterThanOrEqual(4);
@@ -84,6 +92,36 @@ test.describe("H8.55 Page builder, Listing pages tab", () => {
     }
   });
 
+  test("one save bar saves the heading and intro, the layout and the card width together", async ({ page, context, baseURL }) => {
+    test.setTimeout(240_000);
+    await signInAdminContext(context, baseURL!);
+    await page.setViewportSize({ width: 1440, height: 900 });
+    await page.goto("/admin/page-builder/?tab=listing");
+    const bar = page.getByRole("region", { name: "Save changes" });
+    await expect(bar.getByText("All changes saved")).toBeVisible();
+    await page.getByLabel(/^Heading template/).fill("H855 {h1}");
+    await expect(bar.getByText("Unsaved changes")).toBeVisible();
+    await bar.getByRole("button", { name: "Save draft" }).click();
+    await expect(page.getByText("Draft saved. Visitors do not see it until you publish.")).toBeVisible();
+    await expect(bar.getByText("All changes saved")).toBeVisible();
+    await page.reload();
+    await expect(page.getByLabel(/^Heading template/)).toHaveValue("H855 {h1}");
+    await page.getByRole("radio", { name: /^Narrow/ }).check();
+    await expect(bar.getByText("Unsaved changes")).toBeVisible();
+    await bar.getByRole("button", { name: "Publish" }).click();
+    await page.getByRole("dialog", { name: "Publish" }).getByRole("button", { name: "Publish now" }).click();
+    await expect(page.getByText(/Published as version \d+/)).toBeVisible();
+    await page.reload();
+    await expect(page.getByRole("radio", { name: /^Narrow/ })).toBeChecked();
+    await page.getByLabel(/^Heading template/).fill("{h1}");
+    await page.getByRole("radio", { name: /^Medium/ }).check();
+    await bar.getByRole("button", { name: "Publish" }).click();
+    await page.getByRole("dialog", { name: "Publish" }).getByRole("button", { name: "Publish now" }).click();
+    await expect(page.getByText(/Published as version \d+/)).toBeVisible();
+    await page.reload();
+    await expect(page.getByRole("radio", { name: /^Medium/ })).toBeChecked();
+  });
+
   test("the Google title and description are written in the tab and appear in SEO, Page titles; an exact address has its own layout and title", async ({ page, context, baseURL }) => {
     test.setTimeout(240_000);
     await signInAdminContext(context, baseURL!);
@@ -95,7 +133,7 @@ test.describe("H8.55 Page builder, Listing pages tab", () => {
     const stamp = String(Date.now() % 100000);
     await title.getByRole("textbox", { name: /^Page title/ }).fill(`H855 title ${stamp} | {category}`);
     await title.getByRole("textbox", { name: /^Page description/ }).fill(`H855 description ${stamp} for {category}.`);
-    await title.getByRole("button", { name: "Save page title and description" }).click();
+    await title.getByRole("button", { name: "Save Google title and description" }).click();
     await expect(title.getByText("Saved. The page now uses this title and description.")).toBeVisible();
     await page.goto("/admin/seo/page-titles/");
     await expect(page.locator('[data-tk="titles-listing-link"]').getByRole("link", { name: /Page builder, Listing pages tab/ })).toHaveAttribute("href", "/admin/page-builder/?tab=listing");
