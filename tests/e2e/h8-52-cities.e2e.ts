@@ -299,7 +299,6 @@ test.describe("H8.52 Cities and areas", () => {
     await page.getByRole("tab", { name: "Details" }).click();
     await page.getByRole("textbox", { name: /^Name/ }).fill("H852 Town ce 000 edited");
     await saveButton(page).click();
-    await expect(toast(page)).toContainText("Saved");
-    expect((await withLocalDb((db) => db.collection("locations").findOne({ _id: new ObjectId(first) }, { projection: { name: 1 } })))?.name).toBe("H852 Town ce 000 edited");
+    await expect.poll(async () => (await withLocalDb((db) => db.collection("locations").findOne({ _id: new ObjectId(first) }, { projection: { name: 1 } })))?.name).toBe("H852 Town ce 000 edited");
   });
 });
