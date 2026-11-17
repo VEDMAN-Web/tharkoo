@@ -121,12 +121,14 @@ async function decide(kind: DecisionKind, input: { id: string; roles: string[]; 
 }
 
 /** pending -> rejected, with a reason kept in the audit log. A paid ad's fee is given back only when `refund` is true (the default stays true for older callers). */
-export function rejectListing(input: { id: string; roles: string[]; email: string; reason: string; refund?: boolean }) {
+export async function rejectListing(input: { id: string; roles: string[]; email: string; reason: string; refund?: boolean }) {
+  await connectDb();
   return decide("reject", { ...input, refund: input.refund ?? true });
 }
 
 /** active -> removed: a live ad comes down. The fee of a paid ad is given back only when `refund` is true. */
-export function removeLiveAd(input: { id: string; roles: string[]; email: string; reason: string; refund: boolean }) {
+export async function removeLiveAd(input: { id: string; roles: string[]; email: string; reason: string; refund: boolean }) {
+  await connectDb();
   return decide("remove", input);
 }
 
