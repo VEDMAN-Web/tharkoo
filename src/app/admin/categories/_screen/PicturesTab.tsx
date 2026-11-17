@@ -101,7 +101,7 @@ export function PicturesTab({ draft, errors, onChange }: { draft: PictureDraft; 
         onChange={(photo) => onChange({ ...draft, photo })}
       />
       <Box
-        title="Top banner — computer"
+        title="Top banner for computers"
         help="Shown across the top of this category's page on a computer. Best size 1600 × 500."
         spot="banner"
         aspect="16 / 5"
@@ -111,7 +111,7 @@ export function PicturesTab({ draft, errors, onChange }: { draft: PictureDraft; 
         onChange={(band) => onChange({ ...draft, band })}
       />
       <Box
-        title="Top banner — phone (optional)"
+        title="Top banner for phones (optional)"
         help="Shown at the top on a phone instead of the wide banner. Best size 800 × 1000. Without it, phones crop the wide banner."
         spot="phone"
         aspect="4 / 5"

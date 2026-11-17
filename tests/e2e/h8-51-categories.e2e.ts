@@ -216,6 +216,7 @@ test.describe("H8.51 Categories and fields", () => {
     test.setTimeout(420_000);
     const alt = `H851 picture ${Date.now() % 100000}`;
     await seedPicture(alt);
+    await withLocalDb((db) => db.collection("categories").updateMany({}, { $unset: { photo: "", band: "" } }));
     await signInAdminContext(context, baseURL!);
     await page.setViewportSize({ width: 1440, height: 900 });
     await open(page, "?tab=pictures");
@@ -224,9 +225,9 @@ test.describe("H8.51 Categories and fields", () => {
     await expect(boxes).toHaveCount(3);
     await expect(boxes.nth(0)).toContainText("Home page tile");
     await expect(boxes.nth(0)).toContainText("Best size 1200 × 800");
-    await expect(boxes.nth(1)).toContainText("Top banner — computer");
+    await expect(boxes.nth(1)).toContainText("Top banner for computers");
     await expect(boxes.nth(1)).toContainText("Best size 1600 × 500");
-    await expect(boxes.nth(2)).toContainText("Top banner — phone (optional)");
+    await expect(boxes.nth(2)).toContainText("Top banner for phones (optional)");
     for (const spot of ["tile", "banner", "phone"]) await expect(page.locator(`[data-tk="where-${spot}"]`)).toBeVisible();
     await shot(page, "pictures-empty");
 
