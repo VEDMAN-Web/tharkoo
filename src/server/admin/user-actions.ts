@@ -28,6 +28,7 @@ async function loadUser(userId: string) {
 export async function refreshAdPages(ids: readonly string[]) {
   if (ids.length === 0) return;
   try {
+    await connectDb();
     const rows = await Listing.find({ _id: { $in: ids.slice(0, MAX_REVALIDATE) } }).select("slug cityId districtId categoryId").lean();
     const categories = await Category.find({ _id: { $in: rows.map((row) => row.categoryId) } }).select("slug").lean();
     const slugs = new Map(categories.map((category) => [String(category._id), category.slug as string]));
@@ -39,6 +40,7 @@ export async function refreshAdPages(ids: readonly string[]) {
 
 /** Stops every live sign-in of a user. Sessions are never brought back: the person signs in again. */
 export async function revokeSessions(userId: Types.ObjectId | string): Promise<number> {
+  await connectDb();
   const result = await Session.updateMany({ userId, revokedAt: { $exists: false } }, { $set: { revokedAt: new Date() } });
   return result.modifiedCount;
 }
@@ -59,6 +61,7 @@ export async function banPreview(userId: string): Promise<{ liveAds: number; ses
  * Undo for 7 days brings back only the ads this ban paused. Ads the seller had paused before stay paused.
  */
 export async function banUser(ctx: AdminCtx, input: { userId: string; reason: string }): Promise<UserActionResult> {
+  await connectDb();
   const user = await loadUser(input.userId);
   if (String(user._id) === ctx.actorId) throw new ForbiddenError("You cannot ban your own account");
   if (user.roles.some((role) => STAFF_ROLE_NAMES.has(role))) throw new ForbiddenError("Staff accounts are changed in Team and roles, not here");
@@ -108,6 +111,7 @@ async function idsPausedByLatestBan(userId: string): Promise<string[]> {
 
 /** Unbans a user and resumes only the ads that the ban paused (and that are still paused). Sessions stay ended. */
 export async function unbanUser(ctx: AdminCtx, input: { userId: string; reason?: string }): Promise<UserActionResult> {
+  await connectDb();
   const user = await loadUser(input.userId);
   if (user.status !== "suspended") throw new ConflictError("This user is not banned");
   const written = await adminWrite(ctx, {
@@ -139,6 +143,7 @@ export async function unbanUser(ctx: AdminCtx, input: { userId: string; reason?:
 
 /** Ends every sign-in of a user, on every device. They can sign in again with a code. */
 export async function logoutEverywhere(ctx: AdminCtx, input: { userId: string }): Promise<UserActionResult> {
+  await connectDb();
   const user = await loadUser(input.userId);
   const written = await adminWrite(ctx, {
     perm: "users.logout",
