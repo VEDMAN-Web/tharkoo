@@ -9,7 +9,7 @@ import { JsonLd } from "@/lib/jsonld";
 import { canonical } from "@/lib/seo";
 import { homeSiteNodes } from "@/lib/seo/home-blog";
 import { siteOrganizationNode } from "@/lib/seo-site";
-import { getPageBlocks } from "@/lib/layout/read";
+import { chooseHomeSource, getPublishedHome, homeFromLayoutOn, type PublishedHome } from "@/lib/layout/home-read";
 import { postAdPath, searchPath } from "@/lib/urls";
 import { textOverrides } from "@/app/admin/ui-text/store";
 import { pickTexts } from "@/lib/ui/text";
@@ -20,6 +20,8 @@ import { plain } from "@/lib/plain";
 import { newDesignOn } from "@/server/site-links/new-design";
 import { readShellConfig } from "@/server/site-links/shell-config";
 import { NewHome } from "@/components/new/NewHome";
+import { HomeBlocksV2 } from "@/components/new/home-blocks/HomeBlocksV2";
+import type { BlockBase } from "@/server/models/layout";
 import { countryPlaces } from "@/server/locations/site-country";
 
 export const revalidate = 60;
@@ -34,9 +36,9 @@ export async function generateMetadata() {
 }
 
 /** The published home layout, or null when there is none (or it cannot be read), so the built-in page below is shown. */
-async function publishedHome() {
+async function publishedHome(): Promise<PublishedHome | null> {
   try {
-    return await getPageBlocks("home", ["default"]);
+    return await getPublishedHome();
   } catch (error) {
     console.error("home layout could not be read, showing the built-in page", error);
     return null;
@@ -44,7 +46,7 @@ async function publishedHome() {
 }
 
 /** H7.4: the New design home, as in the Home mockup. Used only while the New design switch is on. */
-async function newHome(texts: ReturnType<typeof pickTexts>) {
+async function newHome(texts: ReturnType<typeof pickTexts>, layout?: BlockBase[]) {
   const [content, paths, categories, countries, feed, shell, site] = await Promise.all([
     getHomepageContent(),
     getPaths(),
@@ -66,16 +68,20 @@ async function newHome(texts: ReturnType<typeof pickTexts>) {
           searchPath(paths),
         )}
       />
-      <NewHome
-        hero={plain(content.hero)}
-        categories={plain(categories)}
-        ads={plain(feed)}
-        shell={shell}
-        paths={paths}
-        countries={plain(countries)}
-        texts={texts}
-        categoriesCount={content.homeCategoriesCount}
-      />
+      {layout ? (
+        <HomeBlocksV2 blocks={layout} data={{ categories: plain(categories), ads: plain(feed), shell, paths, countries: plain(countries), texts }} />
+      ) : (
+        <NewHome
+          hero={plain(content.hero)}
+          categories={plain(categories)}
+          ads={plain(feed)}
+          shell={shell}
+          paths={paths}
+          countries={plain(countries)}
+          texts={texts}
+          categoriesCount={content.homeCategoriesCount}
+        />
+      )}
     </UiTextProvider>
   );
 }
@@ -83,12 +89,15 @@ async function newHome(texts: ReturnType<typeof pickTexts>) {
 export default async function Home() {
   const [overrides, newDesign] = await Promise.all([textOverrides(), newDesignOn()]);
   const texts = pickTexts(overrides, "card.", "home.");
-  if (newDesign) return newHome(texts);
-  const blocks = await publishedHome();
-  if (blocks) {
+  const fromLayout = newDesign ? await homeFromLayoutOn() : false;
+  const published = newDesign && !fromLayout ? null : await publishedHome();
+  const source = chooseHomeSource({ newDesign, fromLayout, published });
+  if (source === "layout" && published) return newHome(texts, published.blocks);
+  if (source === "new") return newHome(texts);
+  if (source === "layout-v1" && published) {
     return (
       <UiTextProvider texts={texts}>
-        <HomeLayout blocks={blocks} />
+        <HomeLayout blocks={published.blocks} />
       </UiTextProvider>
     );
   }
