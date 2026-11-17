@@ -1,0 +1,11 @@
+{
+  "branchPrefix": "haiku/h7.138",
+  "globs": [
+    "docs/ownership/H7.138.json",
+    "src/lib/cache.ts",
+    "src/app/admin/ads/home-actions.ts",
+    "tests/e2e/home-selection.e2e.ts",
+    "tests/e2e/hero-banner.e2e.ts",
+    "tests/server/lib/cache-shared-store.test.ts"
+  ]
+}
