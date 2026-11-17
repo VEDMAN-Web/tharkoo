@@ -112,10 +112,10 @@ test.describe("H7.171 Dashboard and queues", () => {
     test.setTimeout(240_000);
     await signInAdminContext(context, baseURL!);
     const marker = `htjkjj${Date.now() % 1000}x`;
-    const adId = await withLocalDb(async (db) => {
+    const adId = (await withLocalDb(async (db) => {
       const row = await db.collection("listings").insertOne({ ownerId: new ObjectId(), categoryId: new ObjectId(), title: marker, description: "A description that is long enough", slug: `h7171-${marker}`, status: "active", createdAt: new Date(Date.now() + 60_000), updatedAt: new Date() });
       return row.insertedId;
-    });
+    }))!;
     try {
       for (const size of [{ width: 1440, height: 900 }, { width: 390, height: 844 }]) {
         await page.setViewportSize(size);
