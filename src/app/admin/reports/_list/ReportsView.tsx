@@ -2,10 +2,11 @@
 
 import { useEffect, useRef, useState } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { History, Trash2 } from "lucide-react";
+import { History, Plus, Trash2 } from "lucide-react";
 import { Badge, Button, Drawer, EmptyState, FilterBar, MoreMenu, PageHeader, ReasonDialog, ServerTable, Tabs, ToastProvider, useToast, type BadgeTone, type MoreItem, type TableColumn } from "@/components/admin/ui";
 import type { ReportDetail, ReportList, ReportRow, ReportTab } from "@/server/admin/reports";
 import { reportActAction, undoReportAction } from "../_actions/actions";
+import { TakedownDialog } from "./TakedownDialog";
 import "./reports.css";
 
 type Access = { legal: boolean; ban: boolean; decide: boolean };
@@ -49,6 +50,7 @@ function Screen({ list, detail, access }: { list: ReportList; detail: ReportDeta
   const [note, setNote] = useState("");
   const [removing, setRemoving] = useState<Remove | null>(null);
   const [busy, setBusy] = useState(false);
+  const [adding, setAdding] = useState(false);
 
   function go(changes: Record<string, string | null>) {
     const next = new URLSearchParams(params.toString());
@@ -130,6 +132,7 @@ function Screen({ list, detail, access }: { list: ReportList; detail: ReportDeta
         title="Reports"
         purpose="Reports from users and legal takedown requests. Act on the ad and the seller from here."
         secondary={[{ key: "history", label: "History", icon: History, href: "/admin/history/" }]}
+        primary={tab === "legal" && access.legal ? { key: "add-takedown", label: "Add takedown", icon: Plus, kind: "primary", onClick: () => setAdding(true) } : undefined}
       />
       <div className="adm-card" style={{ padding: 0, overflow: "clip", marginBottom: 16 }}>
         <Tabs
@@ -269,6 +272,15 @@ function Screen({ list, detail, access }: { list: ReportList; detail: ReportDeta
           void act(ban ? "removeBan" : "remove", result.giveBack);
         }}
         onCancel={() => setRemoving(null)}
+      />
+      <TakedownDialog
+        open={adding}
+        onClose={() => setAdding(false)}
+        onAdded={() => {
+          setAdding(false);
+          toast.show({ kind: "success", message: "Takedown added to the list." });
+          router.refresh();
+        }}
       />
     </div>
   );

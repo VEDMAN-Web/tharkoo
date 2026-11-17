@@ -1,0 +1,21 @@
+{
+  "branchPrefix": "haiku/h7.173",
+  "globs": [
+    "docs/ownership/H7.173.json",
+    "src/server/admin/takedown.ts",
+    "src/server/admin/takedown-rules.ts",
+    "src/server/admin/reports.ts",
+    "src/server/models/trust.ts",
+    "src/app/admin/reports/_actions/takedown.ts",
+    "src/app/admin/reports/_list/TakedownDialog.tsx",
+    "src/app/admin/reports/_list/ReportsView.tsx",
+    "src/app/admin/seo/SeoTabs.tsx",
+    "src/app/admin/seo/page.tsx",
+    "src/app/admin/seo/RunSeoCheck.tsx",
+    "src/app/admin/seo/pages/page.tsx",
+    "src/app/admin/seo/settings/page.tsx",
+    "tests/server/admin/h7173-takedown.test.ts",
+    "tests/e2e/h7-173-reports-seo.e2e.ts",
+    "tests/e2e/seo-center.e2e.ts"
+  ]
+}

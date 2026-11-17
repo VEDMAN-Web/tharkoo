@@ -16,7 +16,7 @@ export default async function SeoSettingsPage() {
     Category.find({ enabled: { $ne: false }, deletedAt: null }).select("slug name").sort({ name: 1 }).limit(60).lean(),
   ]);
   return (
-    <AdminShell title="robots, llms & schema">
+    <AdminShell title="Search engines & AI">
       <SeoTabs current="/admin/seo/settings/" />
       <SettingsForm
         initial={settings}

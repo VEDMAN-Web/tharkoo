@@ -21,7 +21,7 @@ export default async function SeoPagesPage() {
     canonical: row.canonical ?? "",
     words: row.words ?? 0,
     schema: (row.ld ?? []).join(", "),
-    issues: [...row.p0.map((text) => `P0: ${text}`), ...row.p1.map((text) => `P1: ${text}`)],
+    issues: [...row.p0.map((text) => `Must fix: ${text}`), ...row.p1.map((text) => `Should fix: ${text}`)],
   }));
   return (
     <AdminShell title="Pages & issues">

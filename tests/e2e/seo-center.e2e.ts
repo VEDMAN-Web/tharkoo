@@ -17,10 +17,10 @@ test.describe("7 SEO center", () => {
     const waiting = await page.getByText(/A check ran in the last 10 minutes/).count();
     if (!waiting) {
       await page.getByRole("button", { name: /Run SEO check now/ }).click();
-      await expect(page.getByText(/^Done\. \d+ pages with P0 issues/)).toBeVisible({ timeout: 300_000 });
+      await expect(page.getByText(/^Done\. \d+ pages with Must fix issues/)).toBeVisible({ timeout: 300_000 });
     }
     await expect(page.getByText("Pages in sitemap")).toBeVisible();
-    await expect(page.getByText("Pages with P0 issues", { exact: true })).toBeVisible();
+    await expect(page.getByText("Pages with Must fix issues", { exact: true })).toBeVisible();
 
     // The sidebar is hidden on phones; open the menu there first, then follow the same link.
     const sidebarLink = page.locator("a[href=\"/admin/seo/pages/\"]").first();
@@ -90,7 +90,7 @@ test.describe("7 SEO center", () => {
   });
 
   test("robots and llms settings", async ({ request }) => {
-    test.fixme(true, "BUG 7 SEO: /admin/robots/ is a 404 (robots, llms & schema tab not on main; H4.7 PR open).");
+    test.fixme(true, "BUG 7 SEO: /admin/robots/ is a 404 (Search engines & AI tab not on main; H4.7 PR open).");
     expect((await request.get("/admin/robots/")).status()).toBe(200);
   });
 });

@@ -29,6 +29,9 @@ export interface ReportDoc {
   assigneeId?: Types.ObjectId;
   note?: string;
   source?: string;
+  /** Legal takedown added by staff: who asked, and how it arrived. */
+  askedBy?: string;
+  channel?: "email" | "letter" | "other";
   ackAt?: Date;
   resolvedAt?: Date;
   decidedBy?: Types.ObjectId;
@@ -108,6 +111,8 @@ const reportSchema = new Schema<ReportDoc>(
     assigneeId: { type: Schema.Types.ObjectId },
     note: { type: String },
     source: { type: String },
+    askedBy: { type: String, maxlength: 120 },
+    channel: { type: String, enum: ["email", "letter", "other"] },
     ackAt: { type: Date },
     resolvedAt: { type: Date },
     decidedBy: { type: Schema.Types.ObjectId },
