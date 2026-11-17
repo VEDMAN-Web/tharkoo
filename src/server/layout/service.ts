@@ -1,5 +1,5 @@
 import { randomUUID } from "node:crypto";
-import { invalidateTags } from "@/lib/cache";
+import { invalidateTags, purgeNext } from "@/lib/cache";
 import { connectDb } from "@/lib/db";
 import { isAdminRole } from "@/lib/ui/site-content";
 import { AuditRepository } from "@/server/audit";
@@ -22,13 +22,7 @@ export function layoutTag(key: PageKey) {
 /** Clears the layout cache and asks Next to rebuild its cached pages, so a publish is live within seconds. */
 async function refreshPages(key: PageKey) {
   invalidateTags([layoutTag(key)]);
-  try {
-    const { revalidatePath, revalidateTag } = await import("next/cache");
-    revalidateTag(layoutTag(key), { expire: 0 });
-    revalidatePath("/", "layout");
-  } catch {
-    /* scripts and unit tests have no Next request store */
-  }
+  await purgeNext({ tags: [layoutTag(key)], paths: [["/", "layout"]], caller: `page layout ${key}` });
 }
 
 function requireAdmin(roles: string[]) {

@@ -1,0 +1,12 @@
+{
+  "branchPrefix": "haiku/h7.140",
+  "globs": [
+    "docs/ownership/H7.140.json",
+    "src/lib/cache.ts",
+    "src/app/admin/ui-text/store.ts",
+    "src/server/layout/service.ts",
+    "src/server/urls/service.ts",
+    "src/server/listings/revalidate.ts",
+    "tests/server/lib/public-purge.test.ts"
+  ]
+}

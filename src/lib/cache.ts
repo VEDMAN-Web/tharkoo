@@ -68,14 +68,56 @@ export function invalidateTags(tags: string[]): void {
   }
 }
 
-/** Forget public catalogue caches and ask Next to refresh ISR entries. */
-export async function refreshPublicCache() {
-  invalidateTags(PUBLIC_TAGS);
+const loggedPurgeFailures = new Set<string>();
+/** What failed to purge, once per caller. Unit tests read this instead of the console. */
+export const purgeFailureLog: string[] = [];
+const WRAPPER_FRAMES = /purgeNext|reportPurgeFailure|refreshPublicCache|callerFromStack/;
+
+/** The two nearest function names outside this file, for the log line: "setMoneySettings < settingsAction". */
+function callerFromStack(): string {
+  const names: string[] = [];
+  for (const line of (new Error().stack ?? "").split(/\r?\n/).slice(1)) {
+    const match = /at (?:async )?([^\s(]+) \(/.exec(line);
+    if (!match || WRAPPER_FRAMES.test(match[1]) || line.includes("node:internal")) continue;
+    names.push(match[1]);
+    if (names.length === 2) break;
+  }
+  return names.join(" < ") || "unknown caller";
+}
+
+function reportPurgeFailure(caller: string | undefined, error: unknown) {
+  const who = caller || callerFromStack();
+  if (loggedPurgeFailures.has(who)) return;
+  loggedPurgeFailures.add(who);
+  const message = error instanceof Error ? error.message : String(error);
+  const line = `public purge did not run (${who}): ${message}. Public pages may stay old until their timer ends.`;
+  purgeFailureLog.push(line);
+  if (!process.env.VITEST) console.error(line);
+}
+
+export type PurgeTarget = { tags?: readonly string[]; paths?: readonly (string | readonly [string, "layout" | "page"])[]; caller?: string };
+
+/**
+ * Asks Next to expire cached tags and pages. This works inside a request (a server action or a route handler). Outside one (a
+ * script, a start-up task) Next throws; that is reported once per caller instead of being swallowed, and the function returns false.
+ */
+export async function purgeNext(target: PurgeTarget): Promise<boolean> {
   try {
     const { revalidatePath, revalidateTag } = await import("next/cache");
-    for (const tag of PUBLIC_TAGS) revalidateTag(tag, { expire: 0 });
-    revalidatePath("/", "layout");
-  } catch {
-    /* scripts and unit tests have no Next request store */
+    for (const tag of target.tags ?? []) revalidateTag(tag, { expire: 0 });
+    for (const path of target.paths ?? []) {
+      if (typeof path === "string") revalidatePath(path);
+      else revalidatePath(path[0], path[1]);
+    }
+    return true;
+  } catch (error) {
+    reportPurgeFailure(target.caller, error);
+    return false;
   }
+}
+
+/** Forget public catalogue caches and ask Next to refresh ISR entries. */
+export async function refreshPublicCache(caller?: string) {
+  invalidateTags(PUBLIC_TAGS);
+  await purgeNext({ tags: PUBLIC_TAGS, paths: [["/", "layout"]], caller });
 }
