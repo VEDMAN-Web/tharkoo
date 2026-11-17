@@ -1,11 +1,12 @@
 import { mkdirSync } from "node:fs";
-import { expect, signInAdminContext, test } from "./helpers";
+import { expect, signInAdminContext, test, withLocalDb } from "./helpers";
 
 const SHOTS = process.env.PICKER_SHOTS_DIR || "";
 
 test.describe("H7.98 pick the ads on Home", () => {
   test("search for ads, tick two, save once, and they come first on Home", async ({ page, context, baseURL }, testInfo) => {
     test.skip(testInfo.project.name !== "desktop-1440", "the admin screens are for wide screens");
+    await withLocalDb((db) => db.collection("listings").updateMany({ homeShow: true }, { $set: { homeShow: false, homeOrder: 0 } }));
     await signInAdminContext(context, baseURL!);
     await page.goto("/admin/ads/home/");
     const section = page.locator('[data-tk="home-selection"]');

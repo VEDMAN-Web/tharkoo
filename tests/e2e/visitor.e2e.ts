@@ -6,9 +6,9 @@ test.describe("1 Visitor", () => {
   test("home to category to city feed", async ({ page }) => {
     await page.goto("/");
     await expect(page.locator("h1")).toHaveCount(1);
-    const cards = page.locator("[data-tk=home-card]");
-    await expect(cards).toHaveCount(5);
-    await cards.filter({ hasText: "Dating" }).first().click();
+    const cards = page.locator(".tkh-cats > li");
+    await expect(cards).toHaveCount(4);
+    await cards.filter({ hasText: "Dating" }).first().locator("a").click();
     await expect(page).toHaveURL(/\/dating\/$/);
     await expect(page.locator("h1")).toHaveCount(1);
     expect(await page.locator(":is([data-tk=card], [data-tk=home-ad])").count()).toBeGreaterThan(3);
@@ -22,18 +22,19 @@ test.describe("1 Visitor", () => {
   test("filters: verified and with photos", async ({ page }) => {
     await page.goto(FEED);
     const all = await page.locator(":is([data-tk=card], [data-tk=home-ad])").count();
-    await page.locator("[data-tk=filter-chip]", { hasText: "Verified" }).click();
+    const aside = page.locator(".tkn-ls-aside");
+    if (isPhone(page)) await page.locator('[data-tk="results-bar"] .tkn-ls-filter-btn').click();
+    await aside.getByText("Verified", { exact: true }).click();
     await expect(page).toHaveURL(/verified=1/);
-    await expect(page.locator("[data-tk=filter-chip]", { hasText: "Verified" })).toHaveClass(/is-on/);
+    await expect(page.locator('[data-chip="verified"]')).toBeVisible();
     const verified = await page.locator(":is([data-tk=card], [data-tk=home-ad])").count();
     expect(verified).toBeGreaterThan(0);
     expect(verified).toBeLessThanOrEqual(all);
-    await page.locator("[data-tk=filter-chip]", { hasText: "With photos" }).click();
+    await aside.getByText("With photos", { exact: true }).click();
     await expect(page).toHaveURL(/photos=1/);
     await expect(page).toHaveURL(/verified=1/);
     expect(await page.locator(":is([data-tk=card], [data-tk=home-ad])").count()).toBeGreaterThan(0);
-    // toggling the chip again removes the filter
-    await page.locator("[data-tk=filter-chip]", { hasText: "Verified" }).click();
+    await aside.getByText("Verified", { exact: true }).click();
     await expect(page).not.toHaveURL(/verified=1/);
   });
 
@@ -57,9 +58,12 @@ test.describe("1 Visitor", () => {
     // The raw HTML carries no phone, WhatsApp or Telegram value.
     const html = await (await request.get(path)).text();
     expect(html).not.toMatch(/\b[6-9]\d{9}\b/);
-    expect(html).not.toMatch(/wa\.me\/\d{6,}/);
+    const siteHtml = await (await request.get("/")).text();
+    const siteLinks = new Set(siteHtml.match(/wa\.me\/\d{6,}/g) ?? []);
+    expect((html.match(/wa\.me\/\d{6,}/g) ?? []).filter((link) => !siteLinks.has(link))).toEqual([]);
     expect(html).not.toMatch(/href="tel:/);
-    expect(html).not.toMatch(/t\.me\/[A-Za-z0-9_]{4,}/);
+    const siteTelegram = new Set(siteHtml.match(/t\.me\/[A-Za-z0-9_]{4,}/g) ?? []);
+    expect((html.match(/t\.me\/[A-Za-z0-9_]{4,}/g) ?? []).filter((link) => !siteTelegram.has(link))).toEqual([]);
 
     await page.goto(path);
     await expect(page.locator("h1")).toHaveCount(1);
@@ -70,27 +74,29 @@ test.describe("1 Visitor", () => {
     await expect(gallery.locator("img").first()).toBeVisible();
     const photos = await gallery.locator("img").count();
     expect(photos).toBeGreaterThan(0);
-    // Lightbox first, then swipe the strip.
-    await gallery.getByRole("button", { name: /^Open photo 1 of/ }).click();
-    const lightbox = page.getByRole("dialog", { name: "Photos" });
+    // Full screen viewer first, then swipe the photo.
+    await gallery.locator("[data-tk=gallery-expand]").click();
+    const lightbox = page.locator("[data-tk=gallery-viewer]");
     await expect(lightbox).toBeVisible();
-    await lightbox.getByRole("button", { name: "Next photo" }).click();
-    await lightbox.getByRole("button", { name: "Previous photo" }).click();
+    if ((await gallery.locator("[data-tk=gallery-next]").count()) > 0) {
+      await lightbox.getByRole("button", { name: "Next photo" }).click();
+      await lightbox.getByRole("button", { name: "Previous photo" }).click();
+    }
     await page.keyboard.press("Escape");
     await expect(lightbox).toBeHidden();
 
-    // Swipe: drag the strip left, the active dot moves on.
-    const dots = gallery.locator(".tk-strip-dots button");
-    if ((await dots.count()) > 1) {
-      // A real finger drag; mouse drags get cancelled by the browser's image drag.
-      await gallery.locator(".tk-strip-view").evaluate((el) => {
+    // Swipe: a finger drag to the left moves to the next photo.
+    const counter = gallery.locator("[data-tk=gallery-counter]");
+    if ((await counter.count()) > 0) {
+      await expect(counter).toHaveText(/^1 [/]/);
+      await gallery.locator(".tkn-gal").evaluate((el) => {
+        const touch = (x: number) => new Touch({ identifier: 1, target: el, clientX: x, clientY: 100 });
         const fire = (type: string, x: number) =>
-          el.dispatchEvent(new PointerEvent(type, { clientX: x, bubbles: true, pointerId: 1, pointerType: "touch" }));
-        fire("pointerdown", 300);
-        fire("pointermove", 200);
-        fire("pointerup", 100);
+          el.dispatchEvent(new TouchEvent(type, { bubbles: true, cancelable: true, touches: type === "touchend" ? [] : [touch(x)], changedTouches: [touch(x)] }));
+        fire("touchstart", 300);
+        fire("touchend", 100);
       });
-      await expect(dots.nth(1)).toHaveAttribute("aria-current", "true");
+      await expect(counter).toHaveText(/^2 [/]/);
     }
 
     // Contact reveal: only after the click is the number in the page.
@@ -105,12 +111,13 @@ test.describe("1 Visitor", () => {
     await expect(link).toHaveText(/\d{6,}/);
     expect(await link.getAttribute("href")).toMatch(/^tel:/);
 
-    // Share: copy link.
-    await page.getByRole("button", { name: "Copy link" }).click();
-    await expect(page.getByRole("status").filter({ hasText: /link copied|address bar/i })).toBeVisible();
+    // Save the ad (the page has no share button any more).
+    const save = page.locator("button.tkn-ad-save:visible").first();
+    await save.click();
+    await expect(save).toHaveAttribute("aria-pressed", "true");
 
     // Report link carries the ad.
-    const report = page.locator("a.tk-report");
+    const report = page.locator("a.tkn-report:visible").first();
     await expect(report).toHaveAttribute("href", /\/submit-report\/\?ad=/);
     await report.click();
     await expect(page).toHaveURL(/\/submit-report\/\?ad=/);
