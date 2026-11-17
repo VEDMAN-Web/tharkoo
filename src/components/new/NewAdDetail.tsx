@@ -91,6 +91,7 @@ export function NewAdDetail({
   heading,
   tour,
   peopleAd = false,
+  features = { price: true, contact: true },
   contactChannels,
   paymentsLive = false,
   alternatives = [],
@@ -110,6 +111,8 @@ export function NewAdDetail({
   heading?: string;
   tour?: { listingId: string; coins: number } | null;
   peopleAd?: boolean;
+  /** H7.167: what the kind of this category turns on. */
+  features?: { price: boolean; contact: boolean };
   contactChannels?: AdChannel[];
   paymentsLive?: boolean;
   alternatives?: AdPopupAlt[];
@@ -145,7 +148,7 @@ export function NewAdDetail({
   const cityCrumb = crumbs.find((crumb) => crumb.name === `${city} ${categoryName}`)?.path;
   const barChannels = channelsFor(peopleAd ? ["phone", "whatsapp"] : ["whatsapp"], contactChannels);
   const barClass = barClassOf(barChannels.length + 1 + (tour && !peopleAd ? 1 : 0), peopleAd);
-  const showPrice = !peopleAd || PRICED_PEOPLE.has(ad.categorySlug || "");
+  const showPrice = features.price && (!peopleAd || PRICED_PEOPLE.has(ad.categorySlug || ""));
   const actionProps = { slug: ad.slug || "", publicId: ad.publicId || "", title, place: placeText };
 
   return (
@@ -214,7 +217,7 @@ export function NewAdDetail({
                 <div className="tkn-contact-panel" data-tk="contact-card">
                   {!showPrice ? null : <p className={priceText ? "tkn-ad-price" : "tkn-ad-price is-request"}>{priceText || t("ad.price.request")}</p>}
                   <AdSellerRow name={seller} verified={Boolean(ad.verified)} since={since} />
-                  <ContactButtons channels={channelsFor(["phone", "whatsapp"], contactChannels)} />
+                  {features.contact ? <ContactButtons channels={channelsFor(["phone", "whatsapp"], contactChannels)} /> : null}
                   <AdActions {...actionProps} />
                 </div>
                 <section className="tkn-safe" data-tk="security-tips">
@@ -247,9 +250,11 @@ export function NewAdDetail({
             />
           ) : null}
           <PostStrip text={t("post.strip.text")} button={t("post.strip.button")} feeText={t("post.strip.fee")} />
-          <div className={`tkn-ad-bar${barClass}`} data-tk="bottom-bar">
-            <ContactButtons sticky channels={barChannels} />
-          </div>
+          {features.contact ? (
+            <div className={`tkn-ad-bar${barClass}`} data-tk="bottom-bar">
+              <ContactButtons sticky channels={barChannels} />
+            </div>
+          ) : null}
         </div>
       </ContactProvider>
     </UiTextProvider>

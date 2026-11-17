@@ -13,6 +13,7 @@ const WRITE_ROLES = new Map<string, readonly string[]>([
   ["Category", ["content_editor"]],
   ["Location", ["content_editor"]],
   ["UiText", ["content_editor"]],
+  ["CategoryKindDef", ["content_editor"]],
 ]);
 
 export type ModelAccess = "read" | "write";

@@ -36,7 +36,8 @@ export interface CategoryFieldDoc {
 
 /** people: dating, friendship, personals. Live video tours can never be switched on for these. */
 export const CATEGORY_KINDS = ["goods", "property", "vehicle", "job", "service", "people"] as const;
-export type CategoryKind = (typeof CATEGORY_KINDS)[number];
+/** H7.167: a kind is a key an admin can add. The six built-in keys stay; any other key comes from the Kinds manager. */
+export type CategoryKind = string;
 
 export interface CatalogPhotoDoc {
   mediaId: Types.ObjectId;
@@ -170,7 +171,7 @@ const categorySchema = new Schema<CategoryDoc>(
     parentId: { type: Schema.Types.ObjectId, default: null },
     enabled: { type: Boolean, default: true },
     /** No default: a category without a kind fails closed for tours until an admin sets one (H6.5, relay #40). */
-    kind: { type: String, enum: CATEGORY_KINDS },
+    kind: { type: String },
     icon: { type: String, default: "" },
     videoTourEnabled: { type: Boolean, default: false },
     videoTourCoins: { type: Number, default: 1, min: 1, max: 100 },
@@ -231,5 +232,43 @@ locationSchema.index({ parentId: 1, type: 1, slug: 1 }, { unique: true });
 locationSchema.index({ type: 1, enabled: 1, order: 1 });
 locationSchema.index({ oldSlugs: 1 });
 
+export interface CategoryKindDoc {
+  _id?: Types.ObjectId;
+  key: string;
+  name: string;
+  icon?: string;
+  /** Photos per ad for staff-made ads and imports when the category sets none. Null means the default of 10. */
+  maxPhotos?: number | null;
+  showPrice?: boolean;
+  showMap?: boolean;
+  showContact?: boolean;
+  /** Live video tours are allowed for categories of this kind. Never for people listings, whatever this says. */
+  videoTours?: boolean;
+  builtIn?: boolean;
+  order?: number;
+  /** Removed kinds stay in the database so Undo can bring them back. */
+  removed?: boolean;
+  createdAt?: Date;
+  updatedAt?: Date;
+}
+
+const categoryKindSchema = new Schema<CategoryKindDoc>(
+  {
+    key: { type: String, required: true, unique: true },
+    name: { type: String, required: true },
+    icon: { type: String, default: "" },
+    maxPhotos: { type: Number, default: null },
+    showPrice: { type: Boolean, default: true },
+    showMap: { type: Boolean, default: true },
+    showContact: { type: Boolean, default: true },
+    videoTours: { type: Boolean, default: false },
+    builtIn: { type: Boolean, default: false },
+    order: { type: Number, default: 0 },
+    removed: { type: Boolean, default: false },
+  },
+  { timestamps: true, collection: "category_kinds" },
+);
+
 export const Category = registerModel<CategoryDoc>(modelName("Category"), categorySchema);
+export const CategoryKindDef = registerModel<CategoryKindDoc>("CategoryKindDef", categoryKindSchema);
 export const Location = registerModel<LocationDoc>(modelName("Location"), locationSchema);

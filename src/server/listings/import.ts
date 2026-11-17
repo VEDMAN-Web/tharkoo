@@ -7,6 +7,7 @@ import { ForbiddenError, HttpError, NotFoundError, ValidationError } from "@/ser
 import { adLifetimeMs } from "@/server/listings/lifetime";
 import { parsePrice } from "@/server/listings/price";
 import { parseCsv } from "@/server/listings/csv";
+import { kindMaxPhotos } from "@/server/categories/kinds";
 import { resolveSubcategory, categoryNeedsSubcategory } from "@/server/categories/public";
 import { createDraft, patchListing } from "@/server/listings/service";
 import {
@@ -447,7 +448,7 @@ async function planRow(
   const attributes = category ? await attributesFor(category, cells, errors) : null;
   const subcategoryId = category ? await subcategoryOf(category._id.toString(), cells.subcategory ?? "", errors) : undefined;
   const price = priceOf(cells.price, errors);
-  const photos = await resolvePhotos(partner.id, cells[PHOTO_COLUMN] ?? "", errors, lookups, category?.importMaxPhotos);
+  const photos = await resolvePhotos(partner.id, cells[PHOTO_COLUMN] ?? "", errors, lookups, category ? (category.importMaxPhotos ?? (await kindMaxPhotos(category.kind))) : undefined);
   const videos = resolveVideos(cells[VIDEO_COLUMN] ?? "", errors, lookups);
   if (photos.length + videos.length > AD_MEDIA_MAX) errors.push(`Too many photos and videos: ${photos.length + videos.length}. The limit is ${AD_MEDIA_MAX} in total`);
   if (category && attributes) {
