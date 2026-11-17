@@ -1,0 +1,13 @@
+{
+  "branchPrefix": "haiku/h8.15",
+  "globs": [
+    "docs/ownership/H8.15.json",
+    "progress/H8.15.md",
+    "src/app/admin/moderation/page.tsx",
+    "src/app/admin/moderation/ModerationRow.tsx",
+    "src/app/admin/moderation/_list/**",
+    "src/server/moderation/review.ts",
+    "tests/server/moderation/a15-*.test.ts",
+    "tests/e2e/a15-review.e2e.ts"
+  ]
+}

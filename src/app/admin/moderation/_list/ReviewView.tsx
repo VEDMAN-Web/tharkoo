@@ -1,0 +1,229 @@
+"use client";
+
+import { useEffect, useRef, useState } from "react";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { Check, X } from "lucide-react";
+import { Badge, Button, DiffView, Drawer, EmptyState, FilterBar, PageHeader, ReasonDialog, ServerTable, Tabs, ToastProvider, useToast, type TableColumn } from "@/components/admin/ui";
+import type { ReviewDetail, ReviewList, ReviewRow, ReviewTab } from "@/server/moderation/review";
+import { approveAction, rejectAction } from "../actions";
+import { markCheckedAction } from "./actions";
+
+const TAB_LABELS: Record<ReviewTab, string> = { live: "Live, not checked", held: "Held by rules", edited: "Edited, photos waiting" };
+const TABS = Object.keys(TAB_LABELS) as ReviewTab[];
+const SEARCH_DEBOUNCE_MS = 350;
+const MIN_PER_HOUR = 60;
+const HOURS_PER_DAY = 24;
+
+function waited(iso: string) {
+  const minutes = Math.max(0, Math.round((Date.now() - new Date(iso).getTime()) / 60_000));
+  if (minutes < MIN_PER_HOUR) return `${minutes} min`;
+  const hours = Math.floor(minutes / MIN_PER_HOUR);
+  if (hours < HOURS_PER_DAY) return `${hours} h ${minutes % MIN_PER_HOUR} min`;
+  return `${Math.floor(hours / HOURS_PER_DAY)} d`;
+}
+
+function Screen({ list, detail }: { list: ReviewList; detail: ReviewDetail | null }) {
+  const router = useRouter();
+  const pathname = usePathname();
+  const params = useSearchParams();
+  const toast = useToast();
+  const { tab } = list.query;
+  const [search, setSearch] = useState(list.query.q);
+  const sentSearch = useRef(list.query.q);
+  const [selected, setSelected] = useState<string[]>([]);
+  const [busy, setBusy] = useState(false);
+  const [rejecting, setRejecting] = useState<string | null>(null);
+
+  function go(changes: Record<string, string | null>) {
+    if (!("open" in changes && Object.keys(changes).length === 1)) setSelected([]);
+    const next = new URLSearchParams(params.toString());
+    for (const [key, value] of Object.entries(changes)) {
+      if (value === null || value === "") next.delete(key);
+      else next.set(key, value);
+    }
+    const text = next.toString();
+    router.push(`${pathname}${text ? `?${text}` : ""}`, { scroll: false });
+  }
+
+  useEffect(() => {
+    if (search.trim() === sentSearch.current) return;
+    const id = window.setTimeout(() => {
+      sentSearch.current = search.trim();
+      go({ q: search.trim() || null, page: null, open: null });
+    }, SEARCH_DEBOUNCE_MS);
+    return () => window.clearTimeout(id);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [search]);
+
+  async function approve(ids: string[]) {
+    setBusy(true);
+    let failed = "";
+    for (const id of ids) {
+      const result = tab === "held" ? await approveAction(id) : await markCheckedAction(id);
+      if (!result.ok) failed = "error" in result ? result.error : result.message;
+    }
+    setBusy(false);
+    setSelected([]);
+    if (failed) toast.show({ kind: "error", message: failed });
+    else toast.show({ kind: "success", message: ids.length === 1 ? (tab === "held" ? "Ad approved and live." : "Ad marked as checked.") : `${ids.length} ads ${tab === "held" ? "approved" : "marked as checked"}.` });
+    router.refresh();
+  }
+
+  async function reject(id: string, reason: string) {
+    setRejecting(null);
+    const result = await rejectAction(id, reason);
+    if (result.ok) toast.show({ kind: "success", message: "Ad rejected. The seller is told." });
+    else toast.show({ kind: "error", message: result.error });
+    router.refresh();
+  }
+
+  const actionable = tab !== "edited";
+  const approveLabel = tab === "held" ? "Approve" : "Mark checked";
+  const columns: TableColumn<ReviewRow>[] = [
+    {
+      key: "ad",
+      header: "Ad",
+      primary: true,
+      cell: (row) => (
+        <>
+          <strong>{row.title || "(no title)"}</strong>
+          <small>{[row.category, row.city].filter(Boolean).join(" · ")}</small>
+        </>
+      ),
+    },
+    { key: "flags", header: "Flags", cell: (row) => (row.paid ? <Badge tone="pri">Paid</Badge> : <Badge>Free</Badge>) },
+    { key: "seller", header: "Seller", hideOnPhone: true, cell: (row) => row.seller || "unknown" },
+    { key: "wait", header: "Waiting", nowrap: true, cell: (row) => <span title={new Date(row.since).toLocaleString("en-IN")}>{waited(row.since)}</span> },
+  ];
+
+  const searching = list.query.q !== "";
+  return (
+    <div className="adm-k" data-tk="review-screen">
+      <PageHeader
+        crumbs={[{ label: "Queues" }]}
+        title="Ads to review"
+        purpose="Ads go live at once. Check them here, oldest first. Approve keeps an ad live."
+      />
+      <div className="adm-card" style={{ padding: 0, overflow: "clip", marginBottom: 16 }}>
+        <Tabs
+          idPrefix="review"
+          label="Ads to review"
+          active={tab}
+          items={TABS.map((key) => ({ key, label: TAB_LABELS[key], count: list.counts[key] }))}
+          onChange={(key) => go({ tab: key === "live" ? null : key, page: null, open: null, q: null })}
+        />
+        <div role="tabpanel" id={`review-panel-${tab}`} aria-labelledby={`review-${tab}`}>
+          <FilterBar search={search} onSearch={setSearch} searchLabel="Search ads" placeholder="Title" chips={[]} onRemoveChip={() => undefined} />
+          <ServerTable
+            label={TAB_LABELS[tab]}
+            columns={columns}
+            rows={list.rows}
+            rowId={(row) => row.id}
+            rowLabel={(row) => row.title || "ad"}
+            total={list.total}
+            page={list.query.page}
+            pageSize={list.query.pageSize}
+            onPage={(page) => go({ page: page === 1 ? null : String(page), open: null })}
+            onPageSize={(size) => go({ size: size === 25 ? null : String(size), page: null, open: null })}
+            selectable={actionable}
+            selected={selected}
+            onSelected={setSelected}
+            bulkActions={
+              <Button icon={Check} busy={busy} onClick={() => void approve(selected)}>
+                {approveLabel}
+              </Button>
+            }
+            openId={detail?.id ?? null}
+            onOpen={(row) => go({ open: row.id })}
+            rowActions={
+              actionable
+                ? (row) => (
+                    <>
+                      <Button icon={Check} disabled={busy} onClick={() => void approve([row.id])}>
+                        {approveLabel}
+                      </Button>
+                      {tab === "held" ? (
+                        <Button kind="danger" icon={X} onClick={() => setRejecting(row.id)}>
+                          Reject...
+                        </Button>
+                      ) : null}
+                    </>
+                  )
+                : undefined
+            }
+            empty={
+              <EmptyState
+                title={searching ? `No ads match "${list.query.q}"` : "No ads waiting"}
+                why={searching ? "Try the first letters of the title." : tab === "live" && list.counts.live === 0 ? "Nothing live is waiting for a check." : "Everything in this list has been looked at."}
+              />
+            }
+          />
+        </div>
+      </div>
+      {detail ? (
+        <Drawer
+          open
+          title={detail.title || "(no title)"}
+          subtitle={[detail.category, detail.city, detail.seller].filter(Boolean).join(" · ")}
+          onClose={() => go({ open: null })}
+          footer={
+            tab === "edited" ? undefined : (
+              <>
+                {tab === "held" ? (
+                  <Button kind="danger" icon={X} onClick={() => setRejecting(detail.id)}>
+                    Reject...
+                  </Button>
+                ) : null}
+                <Button kind="primary" icon={Check} busy={busy} onClick={() => void approve([detail.id])}>
+                  {approveLabel}
+                </Button>
+              </>
+            )
+          }
+        >
+          <div className="adm-u-pane" data-tk="review-drawer" style={{ padding: 16, display: "grid", gap: 14 }}>
+            {detail.photos.length ? (
+              <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+                {detail.photos.map((src) => (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img key={src} src={src} alt="" width={96} height={96} style={{ objectFit: "cover", borderRadius: 8 }} />
+                ))}
+              </div>
+            ) : null}
+            <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+              <Badge tone={detail.status === "active" ? "ok" : "warn"}>{detail.status === "active" ? "Live" : "In review"}</Badge>
+              {detail.paid ? <Badge tone="pri">Paid</Badge> : null}
+            </div>
+            <p style={{ margin: 0, whiteSpace: "pre-wrap", overflowWrap: "anywhere" }}>{detail.description}</p>
+            {detail.changes.length ? (
+              <>
+                <h3 style={{ margin: 0, fontSize: 14 }}>Changed since the last approved version</h3>
+                <DiffView rows={detail.changes.map((change) => ({ path: change.field, kind: "changed", before: change.before, after: change.after }))} />
+              </>
+            ) : null}
+          </div>
+        </Drawer>
+      ) : null}
+      <ReasonDialog
+        open={rejecting !== null}
+        title="Reject this ad?"
+        body="The ad comes down and the seller is told. If the seller paid the posting fee it is given back."
+        textLabel="Tell the seller why"
+        requireText
+        danger
+        confirmLabel="Reject ad"
+        onConfirm={(result) => void reject(rejecting ?? "", result.text)}
+        onCancel={() => setRejecting(null)}
+      />
+    </div>
+  );
+}
+
+/** The Ads to review screen: three tabs, search, a table with Approve, and a preview drawer. Everything you pick lives in the address. */
+export function ReviewView({ list, detail }: { list: ReviewList; detail: ReviewDetail | null }) {
+  return (
+    <ToastProvider>
+      <Screen list={list} detail={detail} />
+    </ToastProvider>
+  );
+}
