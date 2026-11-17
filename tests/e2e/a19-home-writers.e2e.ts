@@ -49,12 +49,15 @@ test.describe("A19 the old Home writers are retired", () => {
     await expect(page).toHaveURL(/\/admin\/page-builder\/$/);
   });
 
-  test("Menus shows the trust bar and How it works as read-only text with a link to the Page builder", async ({ page, context, baseURL }) => {
+  test("Menus no longer shows the old read-only Home page block (the Page builder owns those words)", async ({ page, context, baseURL }) => {
     test.setTimeout(120_000);
     await signInAdminContext(context, baseURL!);
     await page.goto("/admin/menus/");
-    await expect(page.locator('[data-tk="home-blocks-moved"]')).toContainText("Page builder");
-    await expect(page.locator('[data-tk="home-blocks-readonly"] li').first()).toBeVisible();
+    await expect(page.locator('[data-tk="menus-screen"]')).toBeVisible();
+    await expect(page.locator('[data-tk="home-blocks-moved"]')).toHaveCount(0);
+    await expect(page.locator('[data-tk="home-blocks-readonly"]')).toHaveCount(0);
+    await expect(page.getByText("Home page (New design)")).toHaveCount(0);
+    await expect(page.getByText("Ads live for 72 hours")).toHaveCount(0);
     await expect(page.getByRole("button", { name: "Add a pill" })).toHaveCount(0);
     await expect(page.getByRole("button", { name: "Add a step" })).toHaveCount(0);
   });
