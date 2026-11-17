@@ -103,6 +103,9 @@ export const LEGACY_ROUTES: readonly LegacyRoute[] = [
   { href: "/admin/promotions/", view: "prices.view" },
   { href: "/admin/settings/money/", view: "prices.edit" },
   { href: "/admin/flags/", view: "raw.json" },
+  { href: "/admin/banned-words/", view: "settings.edit" },
+  { href: "/admin/broadcasts/", view: "settings.edit" },
+  { href: "/admin/help-sections/", view: "settings.edit" },
 ];
 
 const UNKNOWN: LegacyRoute = { href: "", view: "settings.edit" };
