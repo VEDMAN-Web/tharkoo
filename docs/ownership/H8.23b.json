@@ -1,0 +1,8 @@
+{
+  "branchPrefix": "haiku/h8.23b",
+  "globs": [
+    "docs/ownership/H8.23b.json",
+    "src/app/admin/kyc/**",
+    "tests/e2e/a23-id.e2e.ts"
+  ]
+}
