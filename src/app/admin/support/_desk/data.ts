@@ -6,6 +6,7 @@ import { RECHARGE_METHODS, statusOf } from "@/server/billing/recharge";
 import { Listing, Payment, User } from "@/server/models";
 import { SupportTicket } from "@/server/models/support";
 import type { QueueItem } from "@/server/support/desk";
+import { countUnseenTickets } from "@/server/support/unseen";
 
 /** H8.43 (A43): the extra data the three-pane support desk needs: tab counts, the user card, the order a payment ticket is about. */
 
@@ -42,6 +43,9 @@ export async function tabCounts(): Promise<Record<DeskTab, number>> {
   ]);
   return { open, waiting, closed };
 }
+
+/** The part of the Open tab nobody has looked at yet. This is the only number shown in red. */
+export const openUnseen = countUnseenTickets;
 
 export type UserCard = {
   userId: string;

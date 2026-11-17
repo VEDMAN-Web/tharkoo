@@ -1,0 +1,13 @@
+{
+  "branchPrefix": "haiku/h7.163",
+  "globs": [
+    "docs/ownership/H7.163.json",
+    "src/app/admin/support/**",
+    "src/server/support/desk.ts",
+    "src/server/support/unseen.ts",
+    "src/server/admin/counts.ts",
+    "src/server/models/support.ts",
+    "tests/server/support/h7163-*.test.ts",
+    "tests/e2e/h7163-support-close.e2e.ts"
+  ]
+}

@@ -6,7 +6,7 @@ import { deskQueue, deskThread } from "@/server/support/desk";
 import { currentDeskActor } from "@/server/support/page-actor";
 import { queueQuerySchema } from "@/server/support/schemas";
 import { DeskView, type OpenThread } from "./_desk/DeskView";
-import { inOpenTab, latestOrder, matchesSearch, ownerIdOf, parseTab, tabCounts, tabStatus, userCard } from "./_desk/data";
+import { inOpenTab, latestOrder, matchesSearch, ownerIdOf, openUnseen, parseTab, tabCounts, tabStatus, userCard } from "./_desk/data";
 
 export const dynamic = "force-dynamic";
 
@@ -28,9 +28,6 @@ export default async function Page({ searchParams }: { searchParams: Promise<Par
   const tab = parseTab(one(params.tab));
   const q = one(params.q).trim().slice(0, 120);
   const ticketId = one(params.ticket).slice(0, 40);
-  const [queue, counts] = await Promise.all([deskQueue(actor, queueQuerySchema.parse({ status: tabStatus(tab) })), tabCounts()]);
-  const items = queue.items.filter((item) => (tab === "open" ? inOpenTab(item) : true)).filter((item) => matchesSearch(item, q));
-
   let thread: OpenThread | null = null;
   let problem = "";
   if (ticketId) {
@@ -49,10 +46,14 @@ export default async function Page({ searchParams }: { searchParams: Promise<Par
       problem = error instanceof HttpError ? error.message : "This ticket could not be opened.";
     }
   }
+  // Counted after the ticket is opened, so opening it clears its own red number on this very page.
+  const [queue, counts, unseen] = await Promise.all([deskQueue(actor, queueQuerySchema.parse({ status: tabStatus(tab) })), tabCounts(), openUnseen()]);
+  const items = queue.items.filter((item) => (tab === "open" ? inOpenTab(item) : true)).filter((item) => matchesSearch(item, q));
+
   return (
     <AdminShell title="Support desk" hasHeader>
       {problem ? <Notice kind="error" title="Ticket not available">{problem}</Notice> : null}
-      <DeskView tab={tab} counts={counts} items={items} now={queue.now} q={q} ticketId={thread ? ticketId : ""} thread={thread} viewerId={actor.id} />
+      <DeskView tab={tab} counts={counts} unseen={unseen} items={items} now={queue.now} q={q} ticketId={thread ? ticketId : ""} thread={thread} viewerId={actor.id} />
     </AdminShell>
   );
 }
