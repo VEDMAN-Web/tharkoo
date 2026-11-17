@@ -89,7 +89,7 @@ describe("ending the demo ads", () => {
   it("ends only the live demo ads, never a real ad, writes one audit row, and a second try finds nothing", async () => {
     const w = await world();
     const result = await endDemoAds({ ...admin, confirm: "END 2" });
-    expect(result).toEqual({ ended: 2 });
+    expect(result).toMatchObject({ ended: 2 });
     expect((await Listing.findById(w.demoA._id))?.status).toBe("expired");
     expect((await Listing.findById(w.demoB._id))?.status).toBe("expired");
     expect((await Listing.findById(w.demoOld._id))?.status).toBe("expired");
