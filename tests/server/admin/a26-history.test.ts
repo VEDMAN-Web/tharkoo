@@ -1,8 +1,9 @@
 import mongoose from "mongoose";
-import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
+import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it } from "vitest";
 import type { AdminCtx } from "@/server/admin/context";
 import { historyCsv, historyDetail, listHistory, parseHistoryQuery, recordHistory, typeOfAction } from "@/server/admin/history";
 import { undoEvent } from "@/server/admin/undo/core";
+import { notBuiltHandler, overrideUndoHandler } from "@/server/admin/undo/registry";
 import { ForbiddenError } from "@/server/http";
 import { AuditEvent, User } from "@/server/models";
 import { clearMemoryMongo, connectMemoryMongo, disconnectMemoryMongo } from "../../setup/mongo";
@@ -29,6 +30,9 @@ beforeEach(async () => {
   await clearMemoryMongo();
   const staff = await User.create({ email: "ayesha@example.test", passwordHash: "x", displayName: "Ayesha", dateOfBirth: new Date("1990-01-01"), attestedAdultAt: new Date(), roles: ["moderator"] });
   staffId = staff._id;
+});
+afterEach(() => {
+  overrideUndoHandler("report.decision", null);
 });
 afterAll(async () => {
   await disconnectMemoryMongo();
@@ -85,6 +89,8 @@ describe("recent changes (A26)", () => {
     await event({ summary: "Sent a refund", action: "wallet.refund", lock: "money_sent", createdAt: ago(5 * HOUR) });
     await event({ summary: "Old edit", action: "listing.edit", undo: { kind: "listing.edit", until: ago(HOUR), data: {} }, createdAt: ago(6 * HOUR) });
     await event({ summary: "Added 50 credits", action: "wallet.adjust", targetType: "user", targetId: "u3", undo: open("wallet.adjust", { delta: 50 }), createdAt: ago(7 * HOUR) });
+    // Whether a kind has its real undo built changes from card to card, so this test makes one kind "not built" itself.
+    overrideUndoHandler("report.decision", notBuiltHandler("report.decision"));
     await event({ summary: "Decided later", action: "report.decision", undo: open("report.decision", {}), createdAt: ago(8 * HOUR) });
     await event({ summary: "Ticked a box", action: "launch.tick", createdAt: ago(9 * HOUR) });
     const rows = new Map((await listHistory(admin(), parseHistoryQuery({}), NOW)).rows.map((row) => [row.title, row]));
