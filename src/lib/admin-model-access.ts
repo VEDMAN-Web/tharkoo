@@ -1,13 +1,13 @@
 /** Roles that may use every model through the generic /api/admin endpoints. */
 const ALL_MODELS_ROLES = ["admin", "superadmin"] as const;
 
-/** Roles that may read a model through /api/admin/list (besides the all-model roles). */
+/** Roles that may read a model through the admin list action (besides the all-model roles). */
 const READ_ROLES = new Map<string, readonly string[]>([
   ["SeoTemplate", ["seo_editor"]],
   ["Listing", ["moderator", "trust_safety"]],
 ]);
 
-/** Roles that may create, update or delete a model through /api/admin/mutate (besides the all-model roles). */
+/** Roles that may create, update or delete a model through the admin mutate action (besides the all-model roles). */
 const WRITE_ROLES = new Map<string, readonly string[]>([["SeoTemplate", ["seo_editor"]]]);
 
 export type ModelAccess = "read" | "write";
