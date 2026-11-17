@@ -2,11 +2,12 @@
 
 import { useEffect, useRef, useState } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { CalendarPlus, Pause, Play, Plus, Trash2 } from "lucide-react";
+import { CalendarClock, CalendarPlus, Pause, Play, Plus, Trash2 } from "lucide-react";
 import { SearchX } from "lucide-react";
 import { Badge, Button, FilterBar, PageHeader, ReasonDialog, ServerTable, Tabs, ToastProvider, useToast, type BadgeTone, type FilterChip, type TableColumn } from "@/components/admin/ui";
-import type { AdRow, AdsList, AdsTab } from "@/server/admin/ads-list";
-import { BULK_TYPED_FROM, EXTEND_DAYS } from "@/lib/admin/ads-bulk-rules";
+import type { AdRow, AdsList, AdsSort, AdsTab } from "@/server/admin/ads-list";
+import { BULK_TYPED_FROM, EXTEND_CHOICES, extendWord } from "@/lib/admin/ads-bulk-rules";
+import { endsIn, istDateTime, istInputToIso, istInputValue } from "@/lib/admin/ad-ends";
 import { bulkAdsAction, undoAdsBatchAction } from "../_actions/actions";
 import "./ads.css";
 
@@ -32,11 +33,24 @@ const ADD_FILTERS = [
   { key: "paid", label: "Paid or free" },
   { key: "home", label: "On Home" },
   { key: "kind", label: "Real or demo" },
+  { key: "ends", label: "Ends within 24 h" },
 ] as const;
+const SORT_LABELS: Record<AdsSort, string> = { new: "Newest first", ends: "Ends soonest", ends_last: "Ends last" };
 type FilterKey = (typeof ADD_FILTERS)[number]["key"];
 
 function day(iso: string) {
   return new Date(iso).toLocaleDateString("en-IN", { day: "numeric", month: "short", timeZone: "Asia/Kolkata" });
+}
+
+function Ends({ row, now }: { row: AdRow; now: number }) {
+  if (!row.expiresAt) return <span className="adm-ads-ends">No end time</span>;
+  const gone = ["expired", "archived", "removed", "rejected"].includes(row.status);
+  return (
+    <span className="adm-ads-ends" data-tk="ad-ends">
+      <span>{istDateTime(row.expiresAt)}</span>
+      <small>{gone ? "ended" : endsIn(row.expiresAt, now)}</small>
+    </span>
+  );
 }
 
 function Status({ row }: { row: AdRow }) {
@@ -66,6 +80,11 @@ function Screen({ list, access, demoPanel }: { list: AdsList; access: AdsAccess;
   const [removing, setRemoving] = useState(false);
   const [adding, setAdding] = useState<FilterKey | null>(null);
   const [cityText, setCityText] = useState(query.city);
+  const [now] = useState(() => Date.now());
+  const [extending, setExtending] = useState(false);
+  const [settingEnd, setSettingEnd] = useState(false);
+  const [endValue, setEndValue] = useState("");
+  const [endError, setEndError] = useState("");
 
   function go(changes: Record<string, string | null>) {
     setSelected([]);
@@ -94,7 +113,7 @@ function Screen({ list, access, demoPanel }: { list: AdsList; access: AdsAccess;
     router.refresh();
   }
 
-  async function run(action: "pause" | "resume" | "extend" | "remove", extra: { reason?: string; confirm?: string } = {}) {
+  async function run(action: "pause" | "resume" | "extend" | "setEnd" | "remove", extra: { reason?: string; confirm?: string; hours?: number; endsAt?: string } = {}) {
     const ids = selected;
     setBusy(true);
     const answer = await bulkAdsAction({ action, ids, ...extra });
@@ -104,7 +123,7 @@ function Screen({ list, access, demoPanel }: { list: AdsList; access: AdsAccess;
       return;
     }
     setSelected([]);
-    const verb = { pause: "Paused", resume: "Resumed", extend: `Extended by ${EXTEND_DAYS} days`, remove: "Removed" }[action];
+    const verb = { pause: "Paused", resume: "Resumed", extend: extendWord(extra.hours ?? 720), setEnd: "End time set", remove: "Removed" }[action];
     const skipped = answer.skipped.length ? ` ${answer.skipped.length} skipped: ${answer.skipped[0].why.toLowerCase()}.` : "";
     if (answer.changed === 0) {
       toast.show({ kind: "error", message: `Nothing changed.${skipped}` });
@@ -126,6 +145,7 @@ function Screen({ list, access, demoPanel }: { list: AdsList; access: AdsAccess;
   if (query.paid !== "all") chips.push({ key: "paid", label: "Paid or free", value: query.paid === "paid" ? "Paid" : "Free" });
   if (query.home) chips.push({ key: "home", label: "On Home" });
   if (query.kind !== "all") chips.push({ key: "kind", label: "Real or demo", value: query.kind === "demo" ? "Demo ads" : "Real ads" });
+  if (query.endsSoon) chips.push({ key: "ends", label: "Ends within 24 h" });
   const addable = ADD_FILTERS.filter((item) => !chips.some((chip) => chip.key === item.key));
 
   function clearFilter(key: string) {
@@ -136,6 +156,7 @@ function Screen({ list, access, demoPanel }: { list: AdsList; access: AdsAccess;
 
   function addFilter(key: string) {
     if (key === "junk" || key === "home") go({ [key]: "1", page: null });
+    else if (key === "ends") go({ ends: "24", page: null });
     else setAdding(key as FilterKey);
   }
 
@@ -153,6 +174,7 @@ function Screen({ list, access, demoPanel }: { list: AdsList; access: AdsAccess;
     },
     { key: "status", header: "Status", cell: (row) => <Status row={row} /> },
     { key: "seller", header: "Seller", hideOnPhone: true, cell: (row) => row.seller || "unknown" },
+    { key: "ends", header: "Ends", nowrap: true, cell: (row) => <Ends row={row} now={now} /> },
     { key: "posted", header: "Posted", nowrap: true, cell: (row) => <span title={new Date(row.createdAt).toLocaleString("en-IN", { timeZone: "Asia/Kolkata" })}>{day(row.createdAt)}</span> },
   ];
 
@@ -237,6 +259,14 @@ function Screen({ list, access, demoPanel }: { list: AdsList; access: AdsAccess;
               <Button type="submit">Apply</Button>
             </form>
           ) : null}
+          <label className="adm-ads-pick adm-ads-sort">
+            Sort by
+            <select value={query.sort} data-tk="ads-sort" onChange={(event) => go({ sort: event.target.value === "new" ? null : event.target.value, page: null })}>
+              {(Object.keys(SORT_LABELS) as AdsSort[]).map((key) => (
+                <option key={key} value={key}>{SORT_LABELS[key]}</option>
+              ))}
+            </select>
+          </label>
           <ServerTable
             label={`${TAB_LABELS[query.tab]} ads`}
             columns={columns}
@@ -257,7 +287,8 @@ function Screen({ list, access, demoPanel }: { list: AdsList; access: AdsAccess;
                   <>
                     <Button icon={Pause} busy={busy} onClick={() => void run("pause")}>Pause</Button>
                     <Button icon={Play} busy={busy} onClick={() => void run("resume")}>Resume</Button>
-                    <Button icon={CalendarPlus} busy={busy} onClick={() => void run("extend")}>{`Extend ${EXTEND_DAYS} days`}</Button>
+                    <Button icon={CalendarPlus} busy={busy} onClick={() => setExtending(true)}>Extend...</Button>
+                    <Button icon={CalendarClock} busy={busy} onClick={() => { setEndValue(""); setEndError(""); setSettingEnd(true); }}>Set end...</Button>
                   </>
                 ) : null}
                 {access.decide ? (
@@ -291,6 +322,43 @@ function Screen({ list, access, demoPanel }: { list: AdsList; access: AdsAccess;
           />
         </div>
       </div>
+      <ReasonDialog
+        key={extending ? "extend-open" : "extend-closed"}
+        open={extending}
+        title={`Extend ${selected.length} ${selected.length === 1 ? "ad" : "ads"}?`}
+        body="Each ad ends later by the time you choose, counted from its current end (or from now, if it has already passed). Credits are not charged. You can undo this."
+        reasons={EXTEND_CHOICES.map((choice) => choice.label)}
+        requireReason
+        confirmLabel="Extend"
+        onCancel={() => setExtending(false)}
+        onConfirm={(result) => {
+          setExtending(false);
+          const choice = EXTEND_CHOICES.find((item) => item.label === result.reason);
+          void run("extend", { hours: choice?.hours });
+        }}
+      />
+      <ReasonDialog
+        key={settingEnd ? "end-open" : "end-closed"}
+        open={settingEnd}
+        title={`Set the end time of ${selected.length} ${selected.length === 1 ? "ad" : "ads"}?`}
+        body={
+          <>
+            <p>Every selected ad will end at this moment (India time). It must be in the future. Credits are not charged. You can undo this.</p>
+            <label className="adm-k-label" htmlFor="ads-set-end">Ends on</label>
+            <input id="ads-set-end" type="datetime-local" className="adm-k-input" data-tk="set-end-input" min={istInputValue(new Date(now).toISOString())} value={endValue} onChange={(event) => { setEndValue(event.target.value); setEndError(""); }} />
+            {endError ? <p className="adm-k-err" role="alert">{endError}</p> : null}
+          </>
+        }
+        confirmLabel="Set end time"
+        onCancel={() => setSettingEnd(false)}
+        onConfirm={() => {
+          const iso = istInputToIso(endValue);
+          if (!iso) return setEndError("Pick a date and time.");
+          if (new Date(iso).getTime() <= Date.now()) return setEndError("Pick a time in the future.");
+          setSettingEnd(false);
+          void run("setEnd", { endsAt: iso });
+        }}
+      />
       <ReasonDialog
         key={removing ? "open" : "closed"}
         open={removing}

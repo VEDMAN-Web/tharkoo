@@ -8,11 +8,11 @@ import { HttpError } from "@/server/http";
 export type BulkAnswer = { ok: true; batchId: string; changed: number; skipped: BulkSkip[]; eventIds: string[] } | { ok: false; message: string };
 export type BatchUndoAnswer = { ok: boolean; message: string };
 
-export async function bulkAdsAction(input: { action: string; ids: string[]; reason?: string; confirm?: string }): Promise<BulkAnswer> {
+export async function bulkAdsAction(input: { action: string; ids: string[]; reason?: string; confirm?: string; hours?: number; endsAt?: string }): Promise<BulkAnswer> {
   try {
     const action = BULK_ACTIONS.find((item) => item === input.action) as BulkAction | undefined;
-    if (!action) return { ok: false, message: "Choose pause, resume, extend or remove." };
-    const done = await bulkChangeAds(await adminContext(), { action, ids: Array.isArray(input.ids) ? input.ids.map(String) : [], reason: String(input.reason ?? ""), confirm: String(input.confirm ?? "") });
+    if (!action) return { ok: false, message: "Choose what to do with the ads." };
+    const done = await bulkChangeAds(await adminContext(), { action, ids: Array.isArray(input.ids) ? input.ids.map(String) : [], reason: String(input.reason ?? ""), confirm: String(input.confirm ?? ""), hours: input.hours === undefined ? undefined : Number(input.hours), endsAt: input.endsAt === undefined ? undefined : String(input.endsAt) });
     revalidatePath("/admin/ads/");
     return { ok: true, ...done };
   } catch (error) {

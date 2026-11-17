@@ -1,7 +1,7 @@
 import { Types } from "mongoose";
 import { connectDb } from "@/lib/db";
 import { can, type Perm } from "@/lib/admin/perms";
-import { BULK_MAX, BULK_TYPED_FROM, EXTEND_DAYS } from "@/lib/admin/ads-bulk-rules";
+import { BULK_MAX, BULK_TYPED_FROM, EXTEND_HOURS, EXPIRE_IN_HOURS, SET_END_MAX_DAYS } from "@/lib/admin/ads-bulk-rules";
 import type { AdminCtx } from "@/server/admin/context";
 import { undoEvent } from "@/server/admin/undo/core";
 import { adminWrite } from "@/server/admin/write";
@@ -11,9 +11,8 @@ import { AuditEvent, Category, Listing } from "@/server/models";
 import type { ListingDoc } from "@/server/models/listing";
 import { textDenied } from "@/server/shared/policy";
 
-export const BULK_ACTIONS = ["pause", "resume", "extend", "remove"] as const;
+export const BULK_ACTIONS = ["pause", "resume", "extend", "setEnd", "expireIn", "endNow", "remove"] as const;
 export type BulkAction = (typeof BULK_ACTIONS)[number];
-const DAY_MS = 24 * 60 * 60 * 1000;
 const NO_EXPIRY = "none";
 const REASON_MAX = 500;
 
@@ -23,7 +22,10 @@ type Rule = { perm: Perm; from: Status[]; to: Status; action: string; word: stri
 const RULES: Record<BulkAction, Rule> = {
   pause: { perm: "ads.edit", from: ["active"], to: "paused", action: "listing.pause", word: "Paused", window: "decisions", reasonRequired: false },
   resume: { perm: "ads.edit", from: ["paused"], to: "active", action: "listing.resume", word: "Resumed", window: "decisions", reasonRequired: false },
-  extend: { perm: "ads.edit", from: ["active", "paused"], to: "active", action: "listing.extend", word: `Extended by ${EXTEND_DAYS} days`, window: "edits", reasonRequired: false },
+  extend: { perm: "ads.edit", from: ["active", "paused"], to: "active", action: "listing.extend", word: "Extended", window: "edits", reasonRequired: false },
+  setEnd: { perm: "ads.edit", from: ["active", "paused"], to: "active", action: "listing.set_end", word: "End time set", window: "edits", reasonRequired: false },
+  expireIn: { perm: "ads.edit", from: ["active", "paused"], to: "active", action: "listing.set_end", word: "End time set", window: "edits", reasonRequired: false },
+  endNow: { perm: "ads.edit", from: ["active", "paused"], to: "expired", action: "listing.end_now", word: "Ended now", window: "decisions", reasonRequired: true },
   remove: { perm: "ads.decide", from: ["active", "paused", "pending", "expired", "archived"], to: "removed", action: "listing.remove", word: "Removed", window: "decisions", reasonRequired: true },
 };
 
@@ -42,6 +44,36 @@ async function categorySlug(cache: Map<string, string | undefined>, id: Types.Ob
   const key = String(id);
   if (!cache.has(key)) cache.set(key, (await Category.findById(id).select("slug").lean<{ slug?: string }>())?.slug);
   return cache.get(key);
+}
+
+const HOUR_MS = 60 * 60 * 1000;
+
+type EndInput = { hours?: number; endsAt?: string };
+
+/** The extra input an end-time action needs, checked once for the whole batch. Returns the parsed end for "setEnd". */
+function endInput(action: BulkAction, input: EndInput): { hours: number; endsAt: Date | null } {
+  if (action === "extend" || action === "expireIn") {
+    const allowed: readonly number[] = action === "extend" ? EXTEND_HOURS : EXPIRE_IN_HOURS;
+    const hours = Number(input.hours ?? (action === "extend" ? EXTEND_HOURS[EXTEND_HOURS.length - 1] : Number.NaN));
+    if (!allowed.includes(hours)) throw new ValidationError("Choose one of the lengths in the list");
+    return { hours, endsAt: null };
+  }
+  if (action === "setEnd") {
+    const endsAt = new Date(String(input.endsAt ?? ""));
+    if (Number.isNaN(endsAt.getTime())) throw new ValidationError("Pick a date and time");
+    if (endsAt.getTime() <= Date.now()) throw new ValidationError("Pick a time in the future. To end an ad now, use End now.");
+    if (endsAt.getTime() > Date.now() + SET_END_MAX_DAYS * 24 * HOUR_MS) throw new ValidationError(`Pick a time within ${SET_END_MAX_DAYS} days`);
+    return { hours: 0, endsAt };
+  }
+  return { hours: 0, endsAt: null };
+}
+
+function nextEnd(action: BulkAction, was: Date | undefined | null, parsed: { hours: number; endsAt: Date | null }, now: number): Date | undefined {
+  if (action === "extend") return new Date(Math.max(was ? new Date(was).getTime() : 0, now) + parsed.hours * HOUR_MS);
+  if (action === "expireIn") return new Date(now + parsed.hours * HOUR_MS);
+  if (action === "setEnd") return parsed.endsAt ?? undefined;
+  if (action === "endNow") return new Date(now);
+  return undefined;
 }
 
 async function check(ctx: AdminCtx, action: BulkAction, ids: string[], reason: string, confirm: string) {
@@ -71,13 +103,14 @@ async function check(ctx: AdminCtx, action: BulkAction, ids: string[], reason: s
  * so History shows every row and Undo can bring the whole batch back. Ads in the wrong state are skipped and listed.
  * Credits are never given back from here: open the ad and use Reject or Remove to do that.
  */
-export async function bulkChangeAds(ctx: AdminCtx, input: { action: BulkAction; ids: string[]; reason?: string; confirm?: string }): Promise<BulkResult> {
+export async function bulkChangeAds(ctx: AdminCtx, input: { action: BulkAction; ids: string[]; reason?: string; confirm?: string; hours?: number; endsAt?: string }): Promise<BulkResult> {
   await connectDb();
   const action = input.action;
   const rule = RULES[action];
   const ids = Array.from(new Set(input.ids.map(String)));
   const reason = (input.reason ?? "").trim();
   await check(ctx, action, ids, reason, input.confirm ?? "");
+  const parsed = endInput(action, input);
   const batchId = crypto.randomUUID();
   const slugs = new Map<string, string | undefined>();
   const skipped: BulkSkip[] = [];
@@ -104,15 +137,17 @@ export async function bulkChangeAds(ctx: AdminCtx, input: { action: BulkAction; 
         batchId,
         before: async () => ({ status: was.status, expiresAt: iso(was.expiresAt) }),
         apply: async () => {
-          if (action !== "extend") listing.status = rule.to;
-          if (action === "extend") listing.expiresAt = new Date(Math.max(was.expiresAt ? new Date(was.expiresAt).getTime() : 0, Date.now()) + EXTEND_DAYS * DAY_MS);
+          if (!["extend", "setEnd", "expireIn"].includes(action)) listing.status = rule.to;
+          const end = nextEnd(action, was.expiresAt, parsed, Date.now());
+          if (end) listing.expiresAt = end;
           await listing.save();
           await revalidateListingPages(listing, await categorySlug(slugs, listing.categoryId));
+          const touchesEnd = ["extend", "setEnd", "expireIn", "endNow"].includes(action);
           return {
             after: { status: listing.status, expiresAt: iso(listing.expiresAt) },
             result: null,
-            summary: `${rule.word}: ${listing.title}`,
-            undoData: { id, from: listing.status, to: was.status, refund: null, expiresTo: iso(was.expiresAt) },
+            summary: touchesEnd ? `${rule.word}, ends ${iso(listing.expiresAt)}: ${listing.title}` : `${rule.word}: ${listing.title}`,
+            undoData: { id, from: listing.status, to: was.status, refund: null, ...(touchesEnd ? { expiresTo: iso(was.expiresAt) } : {}) },
           };
         },
       });

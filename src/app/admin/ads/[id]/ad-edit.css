@@ -31,3 +31,9 @@
   .adm-ae-photos img { width: 96px; height: 72px; }
   .adm-ae-actions .adm-k-btn { flex: 1; }
 }
+.adm-ae-end { display: grid; gap: 8px; margin-top: 14px; padding-top: 12px; border-top: 1px solid var(--adm-line2); }
+.adm-ae-end-row { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+.adm-ae-end-row .adm-k-input { flex: 1 1 180px; min-width: 0; min-height: 40px; }
+@media (max-width: 767px) {
+  .adm-ae-end-row .adm-k-input { min-height: 44px; }
+}
