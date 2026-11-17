@@ -5,6 +5,7 @@ import { ownerView } from "@/server/listings/service";
 import { DELETED_STATUSES, ownerFilter, type OwnerGroup } from "@/server/listings/owner-groups";
 import { Listing } from "@/server/models/listing";
 import { presentRows } from "@/server/search/query";
+import { ENDING_SOON_MS } from "@/lib/ui/ad-status";
 
 type PresentInput = Parameters<typeof presentRows>[0];
 
@@ -17,6 +18,8 @@ export interface OwnTotals {
   review: number;
   ended: number;
   draft: number;
+  /** Live ads that end within the last day of their run. Only the full list from listOwnCards has it. */
+  endingSoon?: number;
 }
 
 /**
@@ -35,7 +38,7 @@ export async function listOwnCards(userId: string, query: { status?: string; gro
       .skip((query.page - 1) * query.pageSize)
       .limit(query.pageSize),
     Listing.countDocuments(filter),
-    Listing.find(base).select("status slug").limit(TOTALS_LIMIT).lean<{ status: string; slug?: string }[]>(),
+    Listing.find(base).select("status slug expiresAt").limit(TOTALS_LIMIT).lean<{ status: string; slug?: string; expiresAt?: Date | null }[]>(),
   ]);
   const { legacy } = await presentRows(rows.map((row) => row.toObject()) as unknown as PresentInput, new Map(), new Date(), { ownerView: true });
   const byAd = await shownCountsFor(owned.flatMap((row) => (row.slug ? [row.slug] : [])));
@@ -50,7 +53,9 @@ export async function listOwnCards(userId: string, query: { status?: string; gro
     views: shown.reduce((sum, item) => sum + item.views, 0),
     clicks: shown.reduce((sum, item) => sum + item.clicks, 0),
   };
-  return { items, total, counts: ownTabCounts(owned.map((row) => row.status)), totals };
+  const now = Date.now();
+  const endingSoon = owned.filter((row) => row.status === "active" && row.expiresAt && new Date(row.expiresAt).getTime() - now <= ENDING_SOON_MS).length;
+  return { items, total, counts: { ...ownTabCounts(owned.map((row) => row.status)), endingSoon }, totals };
 }
 
 /** Counts for the tabs, from the statuses of every ad the owner has. */

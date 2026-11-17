@@ -1,5 +1,5 @@
 import AxeBuilder from "@axe-core/playwright";
-import { becomeSeller, expect, hasHorizontalScroll, loginUi, newUserApi, originHeaders, test } from "./helpers";
+import { becomeSeller, expect, hasHorizontalScroll, loginUi, newUserApi, originHeaders, test, withLocalDb } from "./helpers";
 import type { APIRequestContext, Page } from "@playwright/test";
 
 const NAV_LABELS = ["Home", "My ads", "Chats", "Saved ads", "Notifications", "Help and support", "Settings"];
@@ -48,15 +48,15 @@ test.describe("H7.73 one account home", () => {
     const nav = page.getByRole("navigation", { name: "My account" });
     for (const label of NAV_LABELS) await expect(nav.getByRole("link", { name: new RegExp(`^${label}`) })).toBeVisible();
     await expect(nav.getByRole("link", { name: /^Credits and payments/ })).toBeVisible();
-    const headline = await page.locator("h1").innerText();
 
     await becomeSeller(page, baseURL!);
     await page.goto("/u/account/");
     await expect(page.getByRole("navigation", { name: "My account" })).toBeVisible();
-    await expect(page.locator("h1")).toHaveText(headline);
+    // H9.2: an advertiser has no buyer headline; the home starts with Your ads.
+    await expect(page.locator("h1")).toHaveText("Your ads");
     await expect(page.locator('[data-tk="availability"]')).toBeVisible();
     await page.goto("/u/account/dashboard/");
-    await expect(page.locator("h1")).toHaveText(headline);
+    await expect(page.locator("h1")).toHaveText("Your ads");
     await expect(page.getByRole("navigation", { name: "My account" }).getByRole("link", { name: /^Home/ })).toHaveAttribute("aria-current", "page");
     expect(await hasHorizontalScroll(page)).toBe(false);
   });
@@ -95,6 +95,24 @@ test.describe("H7.73 one account home", () => {
     const { email } = await newUserApi(baseURL!, "withdraw");
     await loginUi(page, email, undefined, "/");
     await becomeSeller(page, baseURL!);
+    await page.goto("/u/account/");
+    // H9.2: Withdraw shows only for an account that has earnings.
+    await expect(page.locator('[data-tk="withdraw"]')).toHaveCount(0);
+    const me = await page.request.get("/api/auth/me");
+    const id = ((await me.json()).data?.user?.id ?? "") as string;
+    await withLocalDb((db) =>
+      db.collection("ledger_transactions").insertOne({
+        idempotencyKey: `e2e-earn-${id}-${Date.now()}`,
+        kind: "escrow_release",
+        refType: "booking",
+        refId: `e2e-${Date.now()}`,
+        lines: [
+          { account: "external", ownerKey: "system", delta: -5, seq: Date.now() % 1_000_000, chainKey: `external:system:e2e-${id}-${Date.now()}`, balanceAfter: -5 },
+          { account: "vendor_earnings", ownerKey: id, delta: 5, seq: 1, chainKey: `vendor_earnings:${id}:1`, balanceAfter: 5 },
+        ],
+        createdAt: new Date(),
+      }),
+    );
     await page.goto("/u/account/");
     const withdraw = page.locator('[data-tk="withdraw"]');
     await expect(withdraw).toHaveAttribute("href", "/u/account/wallet/?tab=earnings");

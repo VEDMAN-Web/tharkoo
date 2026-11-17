@@ -2,6 +2,7 @@ import Link from "next/link";
 import { FreshAds } from "./FreshAds";
 import { PackPicker } from "./PackPicker";
 import { MyAdsList } from "./MyAdsList";
+import { SellerHomeAds } from "./SellerHomeAds";
 import { SavedAdsRail } from "./SavedAdsRail";
 import { ProfileCard } from "./ProfileCard";
 import type { profileProgress } from "@/lib/ui/profile-progress";
@@ -9,8 +10,6 @@ import { SectionHelp } from "@/components/help/SectionHelp";
 import { SignedOutPanel, UserPanelShell } from "./UserPanelShell";
 import { howItWorksPath } from "@/lib/urls";
 import { makeT } from "@/lib/ui/text";
-import { AvailabilityControls } from "@/components/vendor/AvailabilityControls";
-import { TourInbox } from "@/components/vendor/TourInbox";
 import type { listOwnCards } from "@/server/listings/owner-cards";
 import type { PackRow, PanelSummary } from "@/server/notifications/summary";
 
@@ -33,28 +32,37 @@ export function UserPanelHome({
   ads,
   packs,
   profile = null,
+  adsLeft = null,
+  earnings = false,
 }: {
   summary: PanelSummary;
   ads: Ads | null;
   packs: PackRow[];
   profile?: ReturnType<typeof profileProgress> | null;
+  /** Whole ads the credits pay for, or null while posting is free. */
+  adsLeft?: number | null;
+  earnings?: boolean;
 }) {
   const headline = ads ? homeHeadline(ads) : null;
-  const aside = (
-    <>
+  const coinsCard = (
       <section aria-labelledby="coins-heading" className="up-coins-card">
         <h2 id="coins-heading" className="up-coins-label">{t("panel.coins.title")}</h2>
         {summary.signedIn ? (
-          <p className="up-coins-value" data-tk="coin-balance">{t("panel.coins.balance", { count: summary.balance })}</p>
+          <>
+            <p className="up-coins-value" data-tk="coin-balance">{t("panel.coins.balance", { count: summary.balance })}</p>
+            {adsLeft !== null ? <p className="up-coins-worth" data-tk="coin-ads">{`About ${adsLeft} ${adsLeft === 1 ? "ad" : "ads"}`}</p> : null}
+          </>
         ) : (
           <p className="up-coins-worth">{t("panel.coins.help")}</p>
         )}
         <div className="up-promo-row">
           <Link href="/u/account/credits/history/" className="up-coins-link">See history</Link>
-          {summary.signedIn && summary.seller ? <Link href="/u/account/wallet/?tab=earnings" className="up-coins-link" data-tk="withdraw">{t("panel.coins.withdraw")}</Link> : null}
+          {summary.signedIn && summary.seller && earnings ? <Link href="/u/account/wallet/?tab=earnings" className="up-coins-link" data-tk="withdraw">{t("panel.coins.withdraw")}</Link> : null}
         </div>
       </section>
-      {profile ? <ProfileCard percent={profile.percent} missing={profile.missing} /> : null}
+  );
+  const profileCard = profile ? <ProfileCard percent={profile.percent} missing={profile.missing} /> : null;
+  const helpCard = (
       <section aria-labelledby="support-heading" className="up-glass up-panel">
         <div className="up-panel-head">
           <h2 id="support-heading" className="up-h2">Help and support</h2>
@@ -71,6 +79,14 @@ export function UserPanelHome({
         )}
         <Link href="/u/account/support/new/" className="up-dashed" style={{ marginTop: 12 }}>Raise a new ticket</Link>
       </section>
+  );
+  // An advertiser sees the order: ads, credits, profile, then help. So credits and profile sit right under the ads, on every screen size.
+  const isSeller = summary.signedIn && summary.seller;
+  const aside = isSeller ? helpCard : (
+    <>
+      {coinsCard}
+      {profileCard}
+      {helpCard}
     </>
   );
   return (
@@ -78,7 +94,13 @@ export function UserPanelHome({
       {summary.signedIn ? null : (
         <SignedOutPanel next="/u/account/dashboard/" title="Log in to see your panel" body="Your saved ads, chats and credits show here after you log in." />
       )}
-      {summary.signedIn && ads && headline ? (
+      {summary.signedIn && summary.seller ? (
+        <>
+          <SellerHomeAds name={summary.displayName} ads={ads} />
+          {coinsCard}
+          {profileCard}
+        </>
+      ) : summary.signedIn && ads && headline ? (
         <>
           <section className="up-hero" aria-labelledby="panel-hero">
             <p className="up-eyebrow">{`Hello ${summary.displayName}`}</p>
@@ -88,7 +110,6 @@ export function UserPanelHome({
               <Link href={headline.href} className="up-btn">{headline.action}</Link>
             </div>
           </section>
-          {summary.seller ? <AvailabilityControls /> : null}
           <div className="up-stats">
             <div className="up-stat"><span className="up-stat-num">{ads.counts.live}</span><span className="up-stat-label">Live ads</span></div>
             <div className="up-stat"><span className="up-stat-num">{ads.totals.views}</span><span className="up-stat-label">Views</span></div>
@@ -110,7 +131,6 @@ export function UserPanelHome({
             <h1 id="panel-hero" className="up-h1">{t("panel.home.title.empty")}</h1>
             <p className="up-lead">{t("panel.home.lead.empty")}</p>
           </section>
-          {summary.signedIn && summary.seller ? <AvailabilityControls /> : null}
           {summary.signedIn ? (
             <section aria-labelledby="promo-heading" className="up-promo">
               <p className="up-promo-kicker">POST AN AD</p>
@@ -135,7 +155,6 @@ export function UserPanelHome({
         </section>
       ) : null}
       <SavedAdsRail />
-      {summary.signedIn && summary.seller ? <TourInbox /> : null}
     </UserPanelShell>
   );
 }

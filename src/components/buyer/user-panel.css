@@ -217,6 +217,7 @@
 }
 .up-sec { margin: 14px 8px 6px; font-size: 11px; font-weight: 800; letter-spacing: 0.14em; text-transform: uppercase; color: #8a6aa6; list-style: none; }
 .up-stats { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; }
+.up-stats-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
 .up-stat { padding: 16px; border-radius: 16px; background: #fff; border: 1px solid #f3e8f7; min-width: 0; }
 .up-stat-num { display: block; font-size: 26px; font-weight: 800; letter-spacing: -0.02em; color: #1e0b38; }
 .up-stat-label { font-size: 13px; color: #6b4a8a; }
