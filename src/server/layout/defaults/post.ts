@@ -3,6 +3,7 @@ import type { BlockBase } from "@/server/models/layout";
 
 /**
  * The post-ad wizard's current wording written as blocks, so it looks the same once it reads a layout.
+ * The idCheckFirst, payStep and consent blocks start empty: an empty field means "use the site text".
  * Ids are filled in on the server when the layout is saved.
  */
 export function postDefaultBlocks(): Omit<BlockBase, "id">[] {
@@ -18,6 +19,9 @@ export function postDefaultBlocks(): Omit<BlockBase, "id">[] {
     { type: "postIntro", visible: false, label: "Intro", props: { title: "Post an ad", text: "" } },
     ...steps,
     { type: "photoRules", visible: true, label: "Photo rules", props: { title: copy.photoRules.title, items: copy.photoRules.items } },
+    { type: "idCheckFirst", visible: true, label: "ID check first", props: {} },
+    { type: "payStep", visible: true, label: "Pay and publish", props: {} },
+    { type: "consent", visible: true, label: "Terms and consent", props: {} },
     { type: "promotionPicker", visible: true, label: "Promotion picker", props: { title: copy.promotion.title, products: [], note: copy.promotion.note } },
     {
       type: "postSuccess",

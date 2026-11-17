@@ -537,14 +537,14 @@ export function PostWizard({
     districtName: shownDistrict,
     price: people || !priceDigits ? null : Number(priceDigits),
     cover: coverUrl,
-  });
+  }, t);
   const byline = people ? [nickname.trim(), age.trim()].filter(Boolean).join(", ") : "";
 
   if (done && newDesign) {
     const isLive = publishedStatus === "active" || (editing && publishedStatus === "paused");
     return (
       <PostSuccess
-        copy={newSuccessCopy(copy, isLive || editing, editing)}
+        copy={newSuccessCopy(copy, isLive || editing, editing, t)}
         live={isLive}
         where={[cityName, category?.name].filter(Boolean).join(" ")}
         ad={adPreview}
@@ -814,7 +814,7 @@ export function PostWizard({
 
   /** H7.83: the New design. Five steps, a step rail, the live preview (the real ad card) and the tip. Logic is shared with the three-step form. */
   function renderNewDesign() {
-    const stepCopy = newStepCopy(current, copy, Boolean(about), people, money.fee, editing, contactMode);
+    const stepCopy = newStepCopy(current, copy, Boolean(about), people, money.fee, editing, contactMode, t);
     const railItems: RailItem[] = flow.map((key, index) => ({
       key,
       label: key === "more" ? t(RAIL_MORE_KEY) : t(RAIL_LABEL_KEYS[key]),

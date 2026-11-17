@@ -25,7 +25,36 @@ export interface PostCopy {
   photoRules: { title: string; items: string[] };
   promotion: { title: string; products: string[]; defaultCode: string; note: string };
   success: { title: string; text: string; primaryCta: CtaCopy | null; secondaryCta: CtaCopy | null };
+  /** Site texts (`post.*`) the idCheckFirst, payStep and consent blocks replace, by key. Empty block fields are left out. */
+  texts: Record<string, string>;
 }
+
+/** Block field -> site text key, for the blocks that hold texts only (H8.41). */
+export const POST_BLOCK_TEXT_KEYS: Record<string, Record<string, string>> = {
+  idCheckFirst: {
+    verifyTitle: "post.idcheck.verifyTitle",
+    verifyText: "post.idcheck.verifyText",
+    verifyButton: "post.idcheck.verifyButton",
+    checkingTitle: "post.idcheck.checkingTitle",
+    checkingText: "post.idcheck.checkingText",
+    backLink: "post.idcheck.backToAccount",
+  },
+  payStep: {
+    title: "post.pay.title",
+    feeLabel: "post.pay.fee",
+    balanceLabel: "post.pay.yourBalance",
+    afterLabel: "post.pay.after",
+    creditsTitle: "post.pay.creditsTitle",
+    topUpLabel: "post.pay.topUp",
+  },
+  consent: {
+    agree: "post.reviewStep.agreePrefix",
+    terms: "post.reviewStep.terms",
+    and: "post.reviewStep.and",
+    privacy: "post.reviewStep.privacy",
+    adult: "post.reviewStep.adult",
+  },
+};
 
 /** The wording the wizard has always had. The wizard shows these whenever no layout is published. */
 export const POST_COPY_DEFAULTS: PostCopy = {
@@ -47,6 +76,7 @@ export const POST_COPY_DEFAULTS: PostCopy = {
     primaryCta: { label: "Your ads", href: "/u/account/ads/" },
     secondaryCta: { label: "Post another ad", href: "" },
   },
+  texts: {},
 };
 
 const LEGACY_BACK_LABEL = "BACK";
@@ -80,6 +110,7 @@ export function buildPostCopy(blocks: readonly BlockBase[] | null | undefined): 
   const copy: PostCopy = {
     ...POST_COPY_DEFAULTS,
     steps: Object.fromEntries(POST_STEPS.map((key) => [key, { ...POST_COPY_DEFAULTS.steps[key] }])) as Record<PostStepKey, StepCopy>,
+    texts: {},
   };
   let sawStep = false;
   let sawPromote = false;
@@ -103,6 +134,11 @@ export function buildPostCopy(blocks: readonly BlockBase[] | null | undefined): 
       copy.photoRules = { title: str(props.title), items: strList(props.items) };
     } else if (block.type === "promotionPicker") {
       copy.promotion = { title: str(props.title), products: strList(props.products), defaultCode: str(props.defaultCode), note: str(props.note) };
+    } else if (POST_BLOCK_TEXT_KEYS[block.type]) {
+      for (const [field, key] of Object.entries(POST_BLOCK_TEXT_KEYS[block.type])) {
+        const value = str(props[field]).trim();
+        if (value) copy.texts[key] = value;
+      }
     } else if (block.type === "postSuccess") {
       copy.success = {
         title: str(props.title) || POST_COPY_DEFAULTS.success.title,
@@ -158,4 +194,29 @@ export function wizardFields(fields: readonly RawField[] | null | undefined): Wi
       help: str(field.help),
       maxPicks: typeof field.maxPicks === "number" && field.maxPicks > 0 ? Math.floor(field.maxPicks) : null,
     }));
+}
+
+const FEE_TOKEN = /\{fee\}/g;
+
+/** "1 credit", "30 credits": the posting fee as visitors read it. */
+export function feeLabel(fee: number): string {
+  return `${fee} ${fee === 1 ? "credit" : "credits"}`;
+}
+
+/** `{fee}` in a text becomes today's posting fee (for example "30 credits"). */
+export function fillFee(text: string, fee: string): string {
+  return text.replace(FEE_TOKEN, fee);
+}
+
+/** The block wording with `{fee}` filled in everywhere an admin can type it. The input is not changed. */
+export function fillCopyFee(copy: PostCopy, fee: string): PostCopy {
+  const step = (row: StepCopy): StepCopy => ({ title: fillFee(row.title, fee), help: fillFee(row.help, fee), nextLabel: fillFee(row.nextLabel, fee), backLabel: fillFee(row.backLabel, fee) });
+  return {
+    ...copy,
+    intro: copy.intro ? { ...copy.intro, title: fillFee(copy.intro.title, fee), text: fillFee(copy.intro.text, fee) } : null,
+    steps: Object.fromEntries(POST_STEPS.map((key) => [key, step(copy.steps[key])])) as Record<PostStepKey, StepCopy>,
+    photoRules: { title: fillFee(copy.photoRules.title, fee), items: copy.photoRules.items.map((item) => fillFee(item, fee)) },
+    promotion: { ...copy.promotion, title: fillFee(copy.promotion.title, fee), note: fillFee(copy.promotion.note, fee) },
+    success: { ...copy.success, title: fillFee(copy.success.title, fee), text: fillFee(copy.success.text, fee) },
+  };
 }

@@ -3,6 +3,8 @@ import { Lock } from "lucide-react";
 import { AdminShell } from "@/components/admin/AdminShell";
 import { getStaffFromHeaders } from "@/lib/admin-auth";
 import { can } from "@/lib/admin/perms";
+import { connectDb } from "@/lib/db";
+import { Category } from "@/server/models";
 import { PageBuilderScreen } from "./PageBuilderScreen";
 
 export const dynamic = "force-dynamic";
@@ -22,9 +24,11 @@ export default async function Page() {
       </AdminShell>
     );
   }
+  await connectDb();
+  const rows = await Category.find({ deletedAt: null }).sort({ name: 1 }).select("slug name").lean<{ slug: string; name: string }[]>();
   return (
     <AdminShell title="Page builder" hasHeader>
-      <PageBuilderScreen />
+      <PageBuilderScreen categories={rows.map((row) => ({ slug: row.slug, name: row.name }))} />
     </AdminShell>
   );
 }

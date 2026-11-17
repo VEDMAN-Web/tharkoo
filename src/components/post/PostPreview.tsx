@@ -1,6 +1,8 @@
 "use client";
 
 import { X } from "lucide-react";
+import { useT } from "@/components/help/UiTextProvider";
+import type { TextFn } from "@/lib/ui/text";
 import { AdCard } from "@/components/ui/AdCard";
 import { useFocusTrap } from "@/components/ui/useFocusTrap";
 import type { ListingDoc } from "@/lib/models";
@@ -16,11 +18,11 @@ export type PreviewInput = {
   cover: string | null;
 };
 
-export function previewAd(input: PreviewInput): ListingDoc {
+export function previewAd(input: PreviewInput, t: TextFn): ListingDoc {
   return {
     slug: "",
     publicId: "preview",
-    title: input.title || "Your ad title",
+    title: input.title || t("post.previewCard.titleFallback"),
     description: input.description,
     categorySlug: input.categorySlug,
     citySlug: input.citySlug,
@@ -42,18 +44,19 @@ export function PostPreviewCard({ ad, label, hasPhoto, byline }: { ad: ListingDo
 }
 
 export function PreviewSheet({ ad, hasPhoto, byline, onClose }: { ad: ListingDoc; hasPhoto: boolean; byline?: string; onClose: () => void }) {
+  const t = useT();
   const ref = useFocusTrap<HTMLDivElement>(true, onClose);
   return (
     <div className="tkp-sheet-back" onClick={onClose}>
-      <div ref={ref} className="tkp-sheet" role="dialog" aria-modal="true" aria-label="Preview of your ad" data-tk="preview-sheet" onClick={(event) => event.stopPropagation()}>
+      <div ref={ref} className="tkp-sheet" role="dialog" aria-modal="true" aria-label={t("post.previewCard.dialog")} data-tk="preview-sheet" onClick={(event) => event.stopPropagation()}>
         <div className="tkp-sheet-head">
-          <h2>Live preview</h2>
-          <button type="button" className="tkn-icon-btn" aria-label="Close preview" onClick={onClose}>
+          <h2>{t("post.previewCard.heading")}</h2>
+          <button type="button" className="tkn-icon-btn" aria-label={t("post.previewCard.close")} onClick={onClose}>
             <X size={20} aria-hidden="true" focusable="false" />
           </button>
         </div>
-        <PostPreviewCard ad={ad} label="Live preview" hasPhoto={hasPhoto} byline={byline} />
-        <p className="tkp-preview-line" style={{ marginTop: 12 }}>This is how your ad will look.</p>
+        <PostPreviewCard ad={ad} label={t("post.previewCard.heading")} hasPhoto={hasPhoto} byline={byline} />
+        <p className="tkp-preview-line" style={{ marginTop: 12 }}>{t("post.previewCard.line")}</p>
       </div>
     </div>
   );

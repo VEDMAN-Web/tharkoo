@@ -1,0 +1,7 @@
+{
+  "branchPrefix": "haiku/h7.155",
+  "globs": [
+    "docs/ownership/H7.155.json",
+    "src/app/globals.css"
+  ]
+}
