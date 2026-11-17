@@ -3,7 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useRef, useState } from "react";
 import { Send } from "lucide-react";
-import { Badge, Button, Notice, Toggle } from "@/components/admin/ui";
+import { Badge, Button, Notice, ReasonDialog, Toggle, useToast } from "@/components/admin/ui";
 import { SCREENSHOT_ACCEPT, SCREENSHOT_LIMIT_TEXT, StatusChip, ageLabel, formatWhen } from "@/components/support/labels";
 import { postForm } from "@/components/support/request";
 import { api, friendlyError, type ApiError } from "@/lib/ui/api";
@@ -15,9 +15,11 @@ type Staff = { id: string; name: string };
 type Outcome = { kind: "info" | "error"; text: string } | null;
 const OVER_HOURS = 4;
 
-async function call(path: string, body?: unknown): Promise<{ ok: true } | { ok: false; error: ApiError }> {
+type Answer = { ok: true; data: unknown } | { ok: false; error: ApiError };
+
+async function call(path: string, body?: unknown): Promise<Answer> {
   const res = await api(path, { method: "POST", body: body === undefined ? undefined : JSON.stringify(body) });
-  return res.ok ? { ok: true } : { ok: false, error: res.error };
+  return res.ok ? { ok: true, data: res.data } : { ok: false, error: res.error };
 }
 
 /** The middle pane: the ticket, its messages, the order it is about, ready-made replies and the reply box. */
@@ -39,6 +41,8 @@ export function ThreadPane({
   now: number;
 }) {
   const router = useRouter();
+  const toast = useToast();
+  const [confirmClose, setConfirmClose] = useState(false);
   const [body, setBody] = useState("");
   const [note, setNote] = useState(false);
   const [files, setFiles] = useState<File[]>([]);
@@ -92,6 +96,37 @@ export function ThreadPane({
     if (result.ok) router.refresh();
   }
 
+  /** Close with no reply. The customer is not emailed. An optional internal note is kept for the team. Undo puts the ticket back where it was. */
+  async function closeSilently(noteText: string) {
+    setConfirmClose(false);
+    setBusy(true);
+    setOutcome(null);
+    if (noteText.trim()) {
+      const form = new FormData();
+      form.append("body", noteText.trim());
+      form.append("internal", "true");
+      const saved = await postForm(`/api/admin/support/tickets/${ticket.id}/messages`, form);
+      if (!saved.ok) {
+        setBusy(false);
+        return setOutcome({ kind: "error", text: `The note was not saved, so the ticket was not closed: ${friendlyError(saved.error)}` });
+      }
+    }
+    const result = await call(`/api/admin/support/tickets/${ticket.id}/close`);
+    setBusy(false);
+    if (!result.ok) return setOutcome({ kind: "error", text: friendlyError(result.error) });
+    const before = (result.data as { before?: string } | null)?.before ?? "open";
+    toast.show({ kind: "undo", message: `Ticket #${ticket.number} closed. The customer was not emailed.`, onUndo: () => void undoClose(before) });
+    router.refresh();
+  }
+
+  async function undoClose(before: string) {
+    const back = await call(`/api/admin/support/tickets/${ticket.id}/reopen`);
+    if (!back.ok) return toast.show({ kind: "error", message: friendlyError(back.error) });
+    if (before !== "open" && before !== "closed") await call(`/api/admin/support/tickets/${ticket.id}/status`, { status: before });
+    toast.show({ kind: "success", message: "Ticket reopened." });
+    router.refresh();
+  }
+
   async function reopen() {
     setBusy(true);
     const result = await call(`/api/admin/support/tickets/${ticket.id}/reopen`);
@@ -118,8 +153,22 @@ export function ThreadPane({
               <option key={person.id} value={person.id}>{person.id === viewerId ? `${person.name} (me)` : person.name}</option>
             ))}
           </select>
+          {closed ? null : (
+            <Button size="sm" busy={busy} onClick={() => setConfirmClose(true)}>
+              Close ticket
+            </Button>
+          )}
         </div>
       </header>
+      <ReasonDialog
+        open={confirmClose}
+        title="Close without replying?"
+        body="The customer is not emailed. You can reopen the ticket any time."
+        textLabel="Internal note (optional, staff only)"
+        confirmLabel="Close ticket"
+        onConfirm={(result) => void closeSilently(result.text)}
+        onCancel={() => setConfirmClose(false)}
+      />
 
       <ol className="adm-sd-messages" aria-label="Messages">
         {messages.map((message) => (

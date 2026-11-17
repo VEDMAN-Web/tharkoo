@@ -63,6 +63,15 @@ export function bandChoice(shell: ShellConfig, hero: BandPhoto | null, levels: B
 }
 
 /**
+ * H7.161: true when this page has a top banner picture set in the new boxes (city, state or category), not just the home hero or an older row. A page with its own
+ * banner shows it even while the older "photo band" switch on the Home page settings is off, so a partner's upload is never invisible.
+ */
+export function hasOwnBand(shell: ShellConfig, levels: BandLevels): boolean {
+  const own = (scope: ShellImage["scope"], slug: string | undefined) => Boolean(imageFor(shell, scope, slug) && shell.media.images.find((item) => item.scope === scope && sameSlug(item.slug, slug))?.bandNew);
+  return own("city", levels.city) || own("state", levels.state) || own("category", levels.category);
+}
+
+/**
  * H7.4: the image for a category and city listing title band. The city's image wins when the admin set one for
  * that city; otherwise the category's. Pure, so the server page and the tests share it. A category page has no city,
  * so pass no city slug there.

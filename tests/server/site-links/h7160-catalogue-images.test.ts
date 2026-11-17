@@ -1,7 +1,8 @@
 import mongoose from "mongoose";
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
-import { bandImageFor, cityBandImageFor } from "@/components/new/band-image";
+import { bandImageFor, cityBandImageFor, hasOwnBand } from "@/components/new/band-image";
 import { photoOf } from "@/components/h714/photo";
+import { invalidateTags } from "@/lib/cache";
 import { loadCatalogueImages, mergeCatalogueImages } from "@/server/site-links/catalogue-images";
 import { readShellConfig, readStoredShellConfig, saveShellConfig } from "@/server/site-links/shell-config";
 import { defaultShellConfig, type ShellImage } from "@/server/site-links/shell-config-rules";
@@ -26,6 +27,7 @@ afterAll(async () => {
 });
 beforeEach(async () => {
   await clearMemoryMongo();
+  invalidateTags(["categories", "locations"]);
 });
 
 describe("merging the new pictures with the old rows", () => {
@@ -87,11 +89,43 @@ describe("what the public pages read", () => {
     expect(photoOf(await readShellConfig(), "category", "dating")).toBe("/uploads/old-card.png");
     const card = await picture("/uploads/new-card.png");
     await Category.create({ slug: "dating", name: "Dating", enabled: true, photo: { mediaId: card, focusX: 50, focusY: 50, alt: "Card" } });
+    invalidateTags(["categories", "locations"]); // what saving pictures does through refreshPublicCache
     const shell = await readShellConfig();
     expect(photoOf(shell, "category", "dating")).toBe("/uploads/new-card.png");
     expect(bandImageFor(shell, "dating")?.band).toBe("/uploads/old-band.png");
     const stored = await readStoredShellConfig();
     expect(stored.media.images).toHaveLength(1);
     expect(stored.media.images[0].photo).toBe("/uploads/old-card.png");
+  });
+});
+
+describe("a banner set in the new boxes shows even while the older photo band switch is off", () => {
+  it("is true only for a band chosen in the new boxes, not for an older row or the home hero", async () => {
+    const band = await picture("/uploads/dating-band.png");
+    await Category.create({ slug: "dating", name: "Dating", enabled: true, band: { mediaId: band, focusX: 50, focusY: 50, alt: "Band" } });
+    await Location.create({ type: "city", slug: "surat", name: "Surat", enabled: true, photo: { mediaId: band, focusX: 50, focusY: 50, alt: "Only a card" } });
+    await saveShellConfig({ actorId: "000000000000000000000071", roles: ["admin"], requestId: "r", config: { ...defaultShellConfig(), media: { images: [{ scope: "category", slug: "jobs", photo: "", band: "/uploads/jobs-old-band.png", bandPhone: "" }] } } });
+    const shell = await readShellConfig();
+    expect(hasOwnBand(shell, { category: "dating" })).toBe(true);
+    expect(hasOwnBand(shell, { category: "Dating", city: "pune" })).toBe(true);
+    expect(hasOwnBand(shell, { category: "jobs" })).toBe(false);
+    expect(hasOwnBand(shell, { city: "surat" })).toBe(false);
+    expect(hasOwnBand(shell, { category: "pets" })).toBe(false);
+    expect(hasOwnBand(shell, {})).toBe(false);
+    expect(bandImageFor(shell, "jobs")?.band).toBe("/uploads/jobs-old-band.png");
+  });
+});
+
+
+describe("the rows are kept for a few seconds", () => {
+  it("a second read does not ask the database again, and saving pictures (the public cache refresh) shows the change", async () => {
+    const photo = await picture("/uploads/cache-card.png");
+    await Category.create({ slug: "dating", name: "Dating", enabled: true, photo: { mediaId: photo, focusX: 50, focusY: 50, alt: "Card" } });
+    const first = await loadCatalogueImages();
+    expect(first.map((row) => row.slug)).toEqual(["dating"]);
+    await Category.updateOne({ slug: "dating" }, { $unset: { photo: 1 } });
+    expect((await loadCatalogueImages()).map((row) => row.slug)).toEqual(["dating"]);
+    invalidateTags(["categories", "locations"]);
+    expect(await loadCatalogueImages()).toEqual([]);
   });
 });

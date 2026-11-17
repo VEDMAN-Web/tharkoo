@@ -2,7 +2,7 @@ import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import { ListingPageView } from "@/components/ListingPage";
 import { ListingFrame } from "@/components/new/ListingFrame";
-import { bandChoice, heroBandFrom } from "@/components/new/band-image";
+import { bandChoice, hasOwnBand, heroBandFrom } from "@/components/new/band-image";
 import { listingFrameProps, listingLabels, placeSelects } from "@/components/new/listing-frame-props";
 import { listingFilterQuery } from "@/components/new/listing-filters";
 import { narrowFromParams } from "@/components/new/listing-narrow";
@@ -117,7 +117,7 @@ export default async function TagPage({ params, searchParams }: Props) {
     panelPath: path,
     total: feed.total,
     labels,
-    showBand: homeContent.showListingBand,
+    showBand: homeContent.showListingBand || hasOwnBand(shell, { category: cat.slug || category }),
     template: {
       state: { category: { slug: cat.slug || category, name: cat.name || category }, toggles, picks, fields: cat.fields },
       crumbs,

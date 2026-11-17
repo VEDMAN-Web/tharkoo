@@ -1,0 +1,12 @@
+{
+  "branchPrefix": "haiku/h7.162",
+  "globs": [
+    "docs/ownership/H7.162.json",
+    "src/components/admin/ui/ImagePicker.tsx",
+    "src/components/admin/ui/ImagePickerDialog.tsx",
+    "src/styles/admin-picker.css",
+    "tests/e2e/h7-162-picker.e2e.ts",
+    "tests/e2e/a39-photos.e2e.ts",
+    "tests/e2e/h7160-menus.e2e.ts"
+  ]
+}

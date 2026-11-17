@@ -3,7 +3,7 @@ import type { Metadata } from "next";
 import { resolveListingLayout } from "@/components/blocks/ListingLayout";
 import { ListingPageView } from "@/components/ListingPage";
 import { ListingFrame } from "@/components/new/ListingFrame";
-import { bandChoice, heroBandFrom } from "@/components/new/band-image";
+import { bandChoice, hasOwnBand, heroBandFrom } from "@/components/new/band-image";
 import { introCategory, listingFrameProps, listingLabels, placeSelects } from "@/components/new/listing-frame-props";
 import { listingFilterQuery } from "@/components/new/listing-filters";
 import { narrowFromParams } from "@/components/new/listing-narrow";
@@ -202,7 +202,7 @@ export default async function DistrictPage({ params, searchParams }: Props) {
     panelPath: canonicalPath,
     total: feed.total,
     labels,
-    showBand: homeContent.showListingBand,
+    showBand: homeContent.showListingBand || hasOwnBand(shell, { city: city.slug || location, category: cat.slug || category }),
     template: {
       state: {
         category: { slug: cat.slug || category, name: cat.name || category },

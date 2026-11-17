@@ -7,7 +7,7 @@ import type { CountId } from "@/lib/admin/screens";
 import { demoFilter } from "@/server/listings/demo-ads";
 import { IdentityVerification, Listing, MediaAsset, Payment, Report, Site } from "@/server/models";
 import { ContentItem } from "@/server/models/content";
-import { SupportTicket } from "@/server/models/support";
+import { COUNTS_TAG, countUnseenTickets } from "@/server/support/unseen";
 import { Withdrawal } from "@/server/wallet/withdrawals";
 
 export const COUNT_TTL_MS = 30_000;
@@ -59,7 +59,7 @@ const LOADERS: Record<CountId, (skip: NotDemo | Record<string, never>) => Promis
   reports: async () => (await Report.distinct("listingId", { status: { $in: ["open", "ack"] }, source: { $ne: "legal" } })).length,
   legal: () => Report.countDocuments({ status: { $in: ["open", "ack"] }, source: "legal" }),
   idChecks: () => IdentityVerification.countDocuments({ status: "pending_review" }),
-  tickets: () => SupportTicket.countDocuments({ status: { $in: ["open", "waiting_for_support"] } }),
+  tickets: () => countUnseenTickets(),
   recharges: () =>
     Payment.countDocuments({ status: "pending", provider: { $ne: "mock" }, createdAt: { $lt: new Date(Date.now() - RECHARGE_CHECK_AFTER_MS) } }),
   payouts: () => Withdrawal.countDocuments({ status: "requested" }),
@@ -78,5 +78,5 @@ export async function getAdminCounts(roles: readonly string[] | undefined): Prom
   const ids = countsForRoles(roles);
   if (ids.length === 0) return {};
   await connectDb();
-  return cached(`admin-counts:${ids.join(",")}`, COUNT_TTL_MS, () => load(ids));
+  return cached(`admin-counts:${ids.join(",")}`, COUNT_TTL_MS, () => load(ids), [COUNTS_TAG]);
 }
