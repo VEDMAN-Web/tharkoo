@@ -130,7 +130,7 @@ test.describe("H7.104 Home: four categories, eight smaller cards, auto-swipe", (
     test.setTimeout(120_000);
     await page.setViewportSize({ width: 1440, height: 900 });
     await openHome(page);
-    const card = page.locator(CARD).filter({ hasNot: page.locator('[data-tk="card-video"]') }).first();
+    const card = page.locator(CARD).filter({ hasNot: page.locator('[data-tk="card-video"]') }).filter({ has: page.locator(".tkh-ad-count") }).first();
     await card.evaluate((el) => el.scrollIntoView({ block: "center" }));
     await page.mouse.move(2, 2);
     const start = await slideOf(card);
