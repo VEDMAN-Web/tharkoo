@@ -13,13 +13,12 @@ import {
   type SubcategoryInput,
 } from "@/server/categories/manage";
 
-export type ManageResult = { ok: true } | { ok: false; message: string };
+export type ManageResult<T = unknown> = { ok: true; data: T } | { ok: false; message: string };
 
-async function run(work: (actor: { email: string; roles: string[] }) => Promise<unknown>): Promise<ManageResult> {
+async function run<T>(work: (actor: { email: string; roles: string[] }) => Promise<T>): Promise<ManageResult<T>> {
   try {
     const who = await getStaffFromHeaders();
-    await work({ email: who.email, roles: who.roles });
-    return { ok: true };
+    return { ok: true, data: await work({ email: who.email, roles: who.roles }) };
   } catch (error) {
     return { ok: false, message: error instanceof Error ? error.message : "Save failed" };
   }
