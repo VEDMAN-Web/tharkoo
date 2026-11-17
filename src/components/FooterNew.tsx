@@ -9,6 +9,7 @@ import { safeHref } from "@/lib/sanitize";
 import { applyPrefixes, categoriesPath, categoryPath } from "@/lib/urls";
 import { SUPPORT_EMAIL, SUPPORT_PHONE, SUPPORT_TELEGRAM, mailtoHref, telegramHref, whatsappHref } from "@/lib/support";
 import { useUrlPaths } from "./UrlPaths";
+import { useT } from "./help/UiTextProvider";
 import { BrandMark, type BrandName } from "./BrandMarks";
 import "./FooterNew.css";
 import type { ShellConfig, ShellContact, ShellLink } from "@/server/site-links/shell-config-rules";
@@ -105,11 +106,12 @@ function LinkColumn({ title, items, className, extra }: { title: string; items: 
 
 export function FooterNew({ siteName, logo = LOGO_LIGHT_DEFAULT, shell, categories }: { siteName: string; logo?: string; shell: ShellConfig; categories: Cat[] }) {
   const paths = useUrlPaths();
+  const t = useT();
   const f = shell.footer;
   const topCategories: ShellLink[] = f.topCategories.length
     ? f.topCategories
     : categories.slice(0, 6).map((cat) => ({ label: cat.name, href: categoryPath(cat.slug), visible: true, icon: "tag" as const }));
-  const allCategories: ShellLink = { label: "All categories", href: categoriesPath(), visible: true, icon: "grid" };
+  const allCategories: ShellLink = { label: t("chrome.footer.all"), href: categoriesPath(), visible: true, icon: "grid" };
   const adminLink = (name: string) => f.socials.find((item) => item.visible && item.label.trim().toLowerCase() === name.toLowerCase());
   return (
     <footer className="tkn-footer" data-tk="footer">
@@ -118,7 +120,7 @@ export function FooterNew({ siteName, logo = LOGO_LIGHT_DEFAULT, shell, categori
           <BrandLogo src={logo} name={siteName} height={40} />
           <p className="tkn-foot-about">{f.about}</p>
           {f.trust.length ? (
-            <ul className="tkn-pills" aria-label="Trust">
+            <ul className="tkn-pills" aria-label={t("chrome.footer.trust")}>
               {f.trust.map((text, index) => {
                 const style = TRUST_STYLES[index % TRUST_STYLES.length];
                 const Icon = style.icon;
@@ -131,7 +133,7 @@ export function FooterNew({ siteName, logo = LOGO_LIGHT_DEFAULT, shell, categori
               })}
             </ul>
           ) : null}
-          <ul className="tkn-socials" aria-label="Social links">
+          <ul className="tkn-socials" aria-label={t("chrome.footer.social")}>
             {SOCIALS.map((social) => {
               const link = adminLink(social.name);
               const href = (link && safeHref(link.href)) || social.fallback;
@@ -152,10 +154,10 @@ export function FooterNew({ siteName, logo = LOGO_LIGHT_DEFAULT, shell, categori
             })}
           </ul>
         </div>
-        <LinkColumn title="Quick links" items={f.quickLinks} className="tkn-foot-quick" />
-        <LinkColumn title="Top categories" items={topCategories} className="tkn-foot-top" extra={allCategories} />
+        <LinkColumn title={t("chrome.footer.quick")} items={f.quickLinks} className="tkn-foot-quick" />
+        <LinkColumn title={t("chrome.footer.top")} items={topCategories} className="tkn-foot-top" extra={allCategories} />
         <div className="tkn-foot-col tkn-foot-touch">
-          <p className="tkn-foot-title"><span aria-hidden="true" className="tkn-foot-dot" />Get in touch</p>
+          <p className="tkn-foot-title"><span aria-hidden="true" className="tkn-foot-dot" />{t("chrome.footer.touch")}</p>
           <ul className="tkn-contacts">
             {CONTACT_ROWS.map((row) => {
               const contact = f.contacts.find((item) => item.visible && item.value && !item.value.startsWith("[") && row.match(item));
@@ -187,7 +189,7 @@ export function FooterNew({ siteName, logo = LOGO_LIGHT_DEFAULT, shell, categori
             {f.copyright}
             {f.adultNotice ? <span className="tkn-adult"> · {f.adultNotice}</span> : null}
           </p>
-          <nav aria-label="Legal">
+          <nav aria-label={t("chrome.footer.legal")}>
             <ul className="tkn-legal">
               {f.legal.filter((item) => item.visible && safeHref(item.href)).map((item) => (
                 <li key={item.label + item.href}>

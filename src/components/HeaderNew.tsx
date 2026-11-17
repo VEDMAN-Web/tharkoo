@@ -92,7 +92,7 @@ export function HeaderNew({
       <div className="tkn-wrap tkn-header-row">
         <BrandLogo src={logo} name={siteName} height={40} priority />
         <nav
-          aria-label="Main"
+          aria-label={t("chrome.nav.main")}
           className="tkn-nav"
           ref={navRef}
           onPointerOver={(event) => {
@@ -128,7 +128,7 @@ export function HeaderNew({
                 <button
                   type="button"
                   className="tkn-avatar"
-                  aria-label={(user ? `Account menu for ${accountLabel}` : "Account menu") + (unread > 0 ? `, ${unread} unread ${unread === 1 ? "chat message" : "chat messages"}` : "")}
+                  aria-label={(user ? t("chrome.account.menuFor", { name: accountLabel }) : t("chrome.account.menu")) + (unread > 0 ? `, ${unread} unread ${unread === 1 ? "chat message" : "chat messages"}` : "")}
                   aria-haspopup="menu"
                   aria-expanded={accountOpen}
                   data-tk="header-avatar"
@@ -143,14 +143,14 @@ export function HeaderNew({
                     {balance !== null ? (
                       <Link role="menuitem" href="/u/account/credits/" className="tkn-account-coins" onClick={() => setAccountOpen(false)}>{t("panel.coins.balance", { count: balance })}</Link>
                     ) : null}
-                    <Link role="menuitem" href="/u/account/" onClick={() => setAccountOpen(false)}>My account</Link>
-                    <Link role="menuitem" href="/u/account/ads/" onClick={() => setAccountOpen(false)}>My ads</Link>
+                    <Link role="menuitem" href="/u/account/" onClick={() => setAccountOpen(false)}>{t("chrome.account.my")}</Link>
+                    <Link role="menuitem" href="/u/account/ads/" onClick={() => setAccountOpen(false)}>{t("chrome.account.ads")}</Link>
                     <Link role="menuitem" href="/u/account/messages/" onClick={() => setAccountOpen(false)}>Chats{unread > 0 ? <span className="tkn-menu-badge" data-tk="menu-unread">{unread}</span> : null}</Link>
-                    <Link role="menuitem" href="/u/account/saved/" onClick={() => setAccountOpen(false)}>Saved ads</Link>
+                    <Link role="menuitem" href="/u/account/saved/" onClick={() => setAccountOpen(false)}>{t("chrome.account.saved")}</Link>
                     <Link role="menuitem" href="/u/account/credits/" onClick={() => setAccountOpen(false)}>{t("panel.menu.coins")}</Link>
-                    <Link role="menuitem" href="/u/account/support/" onClick={() => setAccountOpen(false)}>Help and support</Link>
-                    <Link role="menuitem" href="/u/account/edit-account/" onClick={() => setAccountOpen(false)}>Settings</Link>
-                    <LogoutButton role="menuitem" onClick={() => setAccountOpen(false)}>Log out</LogoutButton>
+                    <Link role="menuitem" href="/u/account/support/" onClick={() => setAccountOpen(false)}>{t("chrome.account.help")}</Link>
+                    <Link role="menuitem" href="/u/account/edit-account/" onClick={() => setAccountOpen(false)}>{t("chrome.account.settings")}</Link>
+                    <LogoutButton role="menuitem" onClick={() => setAccountOpen(false)}>{t("chrome.account.logout")}</LogoutButton>
                   </div>
                 ) : null}
               </div>
@@ -172,7 +172,7 @@ export function HeaderNew({
           <button
             type="button"
             className="tkn-icon-btn tkn-burger"
-            aria-label="Open menu"
+            aria-label={t("chrome.menu.open")}
             aria-haspopup="dialog"
             aria-expanded={menuOpen}
             data-tk="menu-button"
@@ -191,6 +191,7 @@ export function HeaderNew({
         postLabel={shell.header.postLabel}
         signedIn={signedIn}
         paths={paths}
+        t={t}
         onClose={() => setMenuOpen(false)}
       />
     ) : null}
