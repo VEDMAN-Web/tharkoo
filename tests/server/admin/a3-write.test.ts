@@ -53,7 +53,7 @@ beforeEach(async () => {
 });
 
 /** Undo kinds whose real handler has been built (the rest are still stubs). Add a kind here when its card lands. */
-const BUILT_KINDS: readonly string[] = ["user.ban", "wallet.adjust"];
+const BUILT_KINDS: readonly string[] = ["user.ban", "wallet.adjust", "record.restore"];
 
 type Spec = Parameters<typeof adminWrite<string>>[1];
 
@@ -208,8 +208,8 @@ describe("undoEvent", () => {
   });
 
   it("answers not built for a kind whose handler is still a stub", async () => {
-    overrideUndoHandler("record.restore", null);
-    const done = await change(admin, "two");
+    overrideUndoHandler("demo.end", null);
+    const done = await change(admin, "two", { undo: { kind: "demo.end", windowKey: "demo" } });
     expect(await undoEvent(admin, done.eventId)).toMatchObject({ ok: false, reason: "not_built" });
   });
 
