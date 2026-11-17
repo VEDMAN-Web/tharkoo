@@ -30,6 +30,7 @@ test.describe("H7.165 Content editor", () => {
   test("a content editor saves a category picture and cannot open Orders & credits or Users", async ({ page, baseURL }) => {
     test.setTimeout(180_000);
     const alt = `H7165 picture ${Date.now() % 100000}`;
+    await withLocalDb((db) => db.collection("categories").updateMany({}, { $unset: { photo: "", band: "" } }));
     await withLocalDb((db) => db.collection("site_media").insertOne({ url: "/placeholders/dating/01.webp", objectKey: `h7165-${Date.now()}`, alt, width: 1200, height: 800, bytes: 90_000, contentType: "image/webp", tags: [], uploadedBy: "e2e@example.test", createdAt: new Date(), updatedAt: new Date() }));
     await page.setViewportSize({ width: 1440, height: 900 });
     await signInAs(page, baseURL!, "content_editor");
@@ -39,23 +40,23 @@ test.describe("H7.165 Content editor", () => {
       expect(response?.status(), path).toBe(403);
     }
 
-    await page.goto("/admin/categories/");
-    await page.waitForLoadState("networkidle");
-    const row = page.locator("[data-tk=pictures-row]").nth(1);
-    const name = (await row.locator("strong").first().textContent()) ?? "";
-    await row.getByRole("button", { name: "Edit pictures" }).click();
-    const cardBox = row.locator('[data-slot="Card photo"]');
-    await cardBox.getByRole("button", { name: "Choose image" }).click();
+    await page.goto("/admin/categories/?tab=pictures");
+    await expect(page.locator('[data-tk="categories-screen"]')).toBeVisible();
+    const slug = await page.locator('[data-tk="category-detail"]').getAttribute("data-slug");
+    const boxes = page.locator('[data-tk="picture-box"]');
+    await expect(boxes).toHaveCount(3);
+    await boxes.nth(0).getByRole("button", { name: /Choose image|Change image/ }).click();
     const dialog = page.getByRole("dialog");
     await dialog.getByLabel("Search images").fill(alt);
     await dialog.getByTitle(alt).click();
-    await cardBox.getByLabel(/^Describe the picture/).fill("A flat with a balcony");
-    await row.getByRole("button", { name: "Save pictures" }).click();
-    await expect(row.getByText(`Saved the pictures of ${name}.`)).toBeVisible();
-    const saved = await withLocalDb((db) => db.collection("categories").findOne({ name }, { projection: { photo: 1 } }));
+    await expect(dialog).toHaveCount(0);
+    await boxes.nth(0).getByRole("textbox", { name: /^Describe the picture/ }).fill("A flat with a balcony");
+    await page.locator('[data-tk="save-bar"]').getByRole("button", { name: "Save", exact: true }).click();
+    await expect(page.locator('[data-tk="toast"]')).toContainText("Saved. Live on the site in a few seconds.");
+    const saved = await withLocalDb((db) => db.collection("categories").findOne({ slug: slug! }, { projection: { photo: 1 } }));
     expect(saved?.photo?.alt).toBe("A flat with a balcony");
-    await row.getByRole("button", { name: "Undo" }).click();
-    await expect(row.getByText("Undone. The old pictures are back.")).toBeVisible();
+    await page.locator('[data-tk="toast-undo"]').click();
+    await expect.poll(async () => (await withLocalDb((db) => db.collection("categories").findOne({ slug: slug! }, { projection: { photo: 1 } })))?.photo ?? null).toBeNull();
   });
 
   test("Menus & site text opens the Site text screen only: no Menus and footer tab", async ({ page, baseURL }) => {
