@@ -1,0 +1,40 @@
+/* H8.53: the bell panel and the Notifications page. Admin only, admin tokens only. */
+.adm-nt-wrap { position: relative; display: inline-flex; }
+.adm-nt-panel { position: absolute; top: calc(100% + 8px); right: 0; z-index: 80; width: 380px; max-width: calc(100vw - 24px); max-height: 70vh; display: flex; flex-direction: column; background: var(--adm-card, #fff); border: 1px solid var(--adm-border, #e6e8ef); border-radius: var(--adm-r-card, 12px); box-shadow: 0 12px 32px rgba(22, 26, 43, 0.16); color: var(--adm-text, #161a2b); overflow: hidden; }
+.adm-nt-panel:focus { outline: none; }
+.adm-nt-head { display: flex; align-items: center; gap: var(--adm-s2, 8px); padding: var(--adm-s3, 12px) var(--adm-s4, 16px); border-bottom: 1px solid var(--adm-border, #e6e8ef); }
+.adm-nt-title { margin: 0; flex: 1; font-size: 15px; font-weight: 800; }
+.adm-nt-link { background: none; border: 0; padding: 6px 4px; min-height: 28px; font: inherit; font-size: 13px; font-weight: 700; color: var(--adm-primary, #c2185b); cursor: pointer; text-decoration: none; }
+.adm-nt-link:hover { text-decoration: underline; }
+.adm-nt-link:disabled { color: var(--adm-faint, #646b7f); cursor: default; text-decoration: none; }
+.adm-nt-link:focus-visible, .adm-nt-close:focus-visible, .adm-nt-item:focus-visible { outline: 2px solid var(--adm-primary, #c2185b); outline-offset: 2px; }
+.adm-nt-close { display: none; width: 44px; height: 44px; place-items: center; border: 0; border-radius: var(--adm-r-input, 8px); background: transparent; color: inherit; cursor: pointer; }
+.adm-nt-list { list-style: none; margin: 0; padding: 0; overflow-y: auto; }
+.adm-nt-li + .adm-nt-li { border-top: 1px solid var(--adm-line2, #eef0f5); }
+.adm-nt-item { position: relative; display: flex; align-items: flex-start; gap: var(--adm-s3, 12px); padding: var(--adm-s3, 12px) var(--adm-s4, 16px); color: inherit; text-decoration: none; min-height: 44px; }
+.adm-nt-item:hover { background: var(--adm-bg, #f6f7fb); }
+.adm-nt-item[data-unread="yes"] { background: var(--adm-primary-soft, #fdecf3); }
+.adm-nt-item[data-unread="yes"]:hover { background: #fbdce9; }
+.adm-nt-icon { flex: none; display: grid; place-items: center; width: 30px; height: 30px; border-radius: 50%; background: var(--adm-bg, #f6f7fb); color: var(--adm-muted, #5b6275); }
+.adm-nt-body { flex: 1; min-width: 0; display: grid; gap: 2px; }
+.adm-nt-text { font-size: 14px; line-height: 1.35; overflow-wrap: anywhere; }
+.adm-nt-item[data-unread="yes"] .adm-nt-text { font-weight: 700; }
+.adm-nt-meta { font-size: 12.5px; color: var(--adm-muted, #5b6275); }
+.adm-nt-due { color: var(--adm-danger, #b91c1c); font-weight: 700; }
+.adm-nt-dot { flex: none; width: 10px; height: 10px; margin-top: 6px; border-radius: 50%; background: var(--adm-primary, #c2185b); }
+.adm-nt-sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+.adm-nt-empty { margin: 0; padding: var(--adm-s5, 24px) var(--adm-s4, 16px); text-align: center; color: var(--adm-muted, #5b6275); }
+.adm-nt-foot { padding: var(--adm-s2, 8px) var(--adm-s4, 16px); border-top: 1px solid var(--adm-border, #e6e8ef); text-align: center; }
+
+/* The Notifications page. */
+.adm-nt-page { display: grid; gap: var(--adm-s4, 16px); }
+.adm-nt-tools { display: flex; flex-wrap: wrap; gap: var(--adm-s3, 12px); align-items: center; justify-content: space-between; }
+.adm-nt-card { padding: 0; overflow: hidden; }
+.adm-nt-pager { display: flex; gap: var(--adm-s3, 12px); align-items: center; justify-content: center; padding: var(--adm-s3, 12px); border-top: 1px solid var(--adm-border, #e6e8ef); }
+
+/* A phone: the panel is a full-width sheet from the top with a Close button. */
+@media (max-width: 767px) {
+  .adm-nt-wrap { position: static; }
+  .adm-nt-panel { position: fixed; top: 0; left: 0; right: 0; width: 100%; max-width: none; max-height: 85vh; border-radius: 0 0 var(--adm-r-card, 12px) var(--adm-r-card, 12px); }
+  .adm-nt-close { display: grid; }
+}

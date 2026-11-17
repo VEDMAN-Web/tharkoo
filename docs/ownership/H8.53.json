@@ -1,0 +1,16 @@
+{
+  "branchPrefix": "haiku/h8.53",
+  "globs": [
+    "docs/ownership/H8.53.json",
+    "src/components/admin/AdminShell.tsx",
+    "src/components/admin/notifications/**",
+    "src/lib/admin/notification-kinds.ts",
+    "src/lib/admin/screens.ts",
+    "src/app/admin/notifications/**",
+    "src/app/api/admin/notifications/**",
+    "src/server/admin/notifications.ts",
+    "src/server/models/notifications.ts",
+    "tests/server/admin/h853-notifications.test.ts",
+    "tests/e2e/h853-notifications.e2e.ts"
+  ]
+}
