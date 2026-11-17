@@ -131,7 +131,6 @@ describe("screens map (A5)", () => {
     expect(canOpenAdminPath(["admin"], "/admin/homepage/")).toBe(true);
     expect(canOpenAdminPath(["admin"], "/admin/settings/money/")).toBe(true);
     expect(canOpenAdminPath(["admin"], "/admin/settings/")).toBe(false);
-    expect(canOpenAdminPath(["admin"], "/admin/admins/")).toBe(false);
     expect(canOpenAdminPath(["admin"], "/admin/flags/")).toBe(false);
     expect(canOpenAdminPath(["seo_editor"], "/admin/homepage/")).toBe(false);
   });

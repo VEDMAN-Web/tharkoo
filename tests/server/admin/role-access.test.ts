@@ -32,16 +32,13 @@ const ROUTE_TABLE: [string, RoleName[]][] = [
   ["/admin/seo/indexing/", ["superadmin", "admin", "seo_editor"]],
   ["/admin/seo/settings/", ["superadmin", "admin", "seo_editor"]],
   ["/admin/urls/", ["superadmin", "admin", "seo_editor"]],
-  ["/admin/templates/", ["superadmin", "admin", "seo_editor"]],
   ["/admin/coupons/", ["superadmin", "admin", "finance"]],
   ["/admin/finance/", ["superadmin", "admin", "finance"]],
   ["/admin/users/", ["superadmin", "admin", "moderator", "trust_safety", "support"]],
-  ["/admin/admins/", ["superadmin"]],
   ["/admin/team/", ["superadmin"]],
   ["/admin/settings/", ["superadmin"]],
   ["/admin/flags/", ["superadmin"]],
   ["/admin/settings/money/", ["superadmin", "admin"]],
-  ["/admin/audit/", ["superadmin", "admin"]],
   // Not in the screens map: closed until it is listed.
   ["/admin/some-new-screen/", ["superadmin", "admin"]],
 ];

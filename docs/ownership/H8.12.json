@@ -1,0 +1,21 @@
+{
+  "branchPrefix": "haiku/h8.12",
+  "globs": [
+    "docs/ownership/H8.12.json",
+    "progress/H8.12.md",
+    "src/app/admin/templates/**",
+    "src/app/admin/translations/**",
+    "src/app/admin/analytics/**",
+    "src/app/admin/media-review/**",
+    "src/app/admin/packs/**",
+    "src/app/admin/products/**",
+    "src/app/admin/slots/**",
+    "src/app/admin/admins/**",
+    "src/app/admin/audit/**",
+    "tests/server/admin/a12-*.test.ts",
+    "tests/e2e/a12-gone.e2e.ts",
+    "src/lib/admin/screens.ts",
+    "tests/server/admin/a5-screens.test.ts",
+    "tests/server/admin/role-access.test.ts"
+  ]
+}
