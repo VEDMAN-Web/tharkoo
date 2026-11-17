@@ -48,6 +48,9 @@
 .adm-pb-versions li { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 10px 20px; border-top: 1px solid var(--adm-line2); }
 .adm-pb-vtext { display: grid; min-width: 0; line-height: 1.35; }
 .adm-pb-vtext small { color: var(--adm-muted); font-size: 12.5px; overflow-wrap: anywhere; }
+.adm-pb-switch { padding: 12px 16px; }
+.adm-pb-switchrow { display: flex; align-items: center; gap: 12px 20px; flex-wrap: wrap; }
+.adm-pb-switchrow .adm-pb-note { padding: 0; flex: 1 1 280px; }
 .adm-pb-stack { display: grid; gap: 12px; justify-items: start; }
 .adm-pb-tabs { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
 

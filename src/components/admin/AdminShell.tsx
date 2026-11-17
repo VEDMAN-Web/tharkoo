@@ -10,6 +10,7 @@ import { allWaiting, countLabel, sumCounts, type AdminCounts } from "@/lib/admin
 import "@/styles/admin-kit.css";
 import { roleWords } from "@/lib/admin/role-words";
 import { canOpenPath } from "@/lib/admin/screens";
+import { AdminSearchPanel } from "./AdminSearchPanel";
 
 type Viewer = { name: string; roles: readonly string[] };
 
@@ -161,6 +162,7 @@ export function AdminShell({ title, hasHeader = false, children }: { title: stri
   const counts = useLiveCounts(initial);
   const [sheet, setSheet] = useState(false);
   const [searching, setSearching] = useState(false);
+  const [query, setQuery] = useState("");
   const search = useRef<HTMLInputElement>(null);
   const waiting = allWaiting(counts);
 
@@ -207,12 +209,15 @@ export function AdminShell({ title, hasHeader = false, children }: { title: stri
               <Menu aria-hidden="true" focusable="false" size={20} />
             </button>
             {hasHeader ? <p className="adm-title" data-tk="shell-title">{title}</p> : <h1 className="adm-title">{title}</h1>}
+            <div className="adm-searchbox">
             <label className={`adm-search ${searching ? "is-open" : ""}`}>
               <span className="adm-sr">Find an ad, user, page</span>
               <Search aria-hidden="true" focusable="false" size={16} className="adm-search-icon" />
-              <input ref={search} type="search" placeholder="Find an ad, user, page" autoComplete="off" onBlur={() => setSearching(false)} />
+              <input ref={search} type="search" value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Find an ad, user, page" autoComplete="off" onBlur={() => setSearching(false)} />
               <kbd aria-hidden="true">/</kbd>
             </label>
+            <AdminSearchPanel query={query} input={search} open={searching} onClose={() => { setSearching(false); setQuery(""); search.current?.blur(); }} />
+            </div>
             <button type="button" className="adm-ibtn adm-search-btn" aria-label="Search" onClick={openSearch}>
               <Search aria-hidden="true" focusable="false" size={18} />
             </button>

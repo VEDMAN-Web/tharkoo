@@ -1,0 +1,7 @@
+{
+  "branchPrefix": "haiku/h7.149",
+  "globs": [
+    "docs/ownership/H7.149.json",
+    "tests/server/admin/a26-history.test.ts"
+  ]
+}
