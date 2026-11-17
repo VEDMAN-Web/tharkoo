@@ -247,7 +247,7 @@ function Screen({ list, detail, access }: { list: ReportList; detail: ReportDeta
                 <textarea className="adm-k-input" rows={3} maxLength={500} value={note} onChange={(event) => setNote(event.target.value)} />
               </label>
             )}
-            <p className="adm-rp-help">Legal takedown records can be reopened, never deleted.</p>
+            {detail.legal ? <p className="adm-rp-help">Legal takedown records can be reopened, never deleted.</p> : null}
           </div>
         </Drawer>
       ) : null}

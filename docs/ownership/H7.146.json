@@ -1,0 +1,11 @@
+{
+  "branchPrefix": "haiku/h7.146",
+  "globs": [
+    "docs/ownership/H7.146.json",
+    "src/content/trust.ts",
+    "src/server/admin/launch-checklist.ts",
+    "tests/server/admin/a10-checklist.test.ts",
+    "tests/server/seo/no-placeholder-text.test.ts",
+    "tests/e2e/a10-dashboard.e2e.ts"
+  ]
+}

@@ -1,0 +1,10 @@
+{
+  "branchPrefix": "haiku/h7.144",
+  "globs": [
+    "docs/ownership/H7.144.json",
+    "src/styles/admin-kit.css",
+    "src/app/admin/moderation/_list/review.css",
+    "tests/e2e/h7-144-pager.e2e.ts",
+    "tests/e2e/a4-kit.e2e.ts"
+  ]
+}

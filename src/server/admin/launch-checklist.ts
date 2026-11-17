@@ -118,14 +118,6 @@ export function buildChecklist(input: ChecklistInputs): ChecklistRow[] {
       manual: null,
     },
     {
-      id: "office-address",
-      title: "Real office address on Terms and Safety",
-      detail: placeholders.length === 1 ? `${placeholders[0]} shows a placeholder` : placeholders.length ? `${placeholders.length} pages show a placeholder` : "No page shows a placeholder",
-      done: placeholders.length === 0,
-      href: "/admin/pages/",
-      manual: null,
-    },
-    {
       id: "banner",
       title: "Banner picture checked against the content rules",
       detail: input.bannerChangedAt ? `Changed ${dayLabel(input.bannerChangedAt)}` : "Not published yet",
@@ -144,7 +136,7 @@ export function buildChecklist(input: ChecklistInputs): ChecklistRow[] {
     {
       id: "legal",
       title: "Legal pages and grievance officer",
-      detail: !input.grievancePublished ? "The grievance page is not published" : placeholders.length ? "A legal page still has a placeholder" : "Name, email and address set",
+      detail: !input.grievancePublished ? "The grievance page is not published" : placeholders.length ? "A legal page still has a placeholder" : "Name and email set",
       done: input.grievancePublished && placeholders.length === 0,
       href: "/admin/pages/",
       manual: null,

@@ -34,6 +34,11 @@ test.describe("H8.4 admin kit tables and history", () => {
     await expect(table(page).getByRole("button", { name: "Previous" })).toBeDisabled();
     await table(page).getByRole("button", { name: "Next" }).click();
     await expect(table(page).locator("[data-tk=pager-range]")).toHaveText("26 to 50 of 64");
+    if ((page.viewportSize()?.width ?? 1440) <= 600) {
+      // H7.144: on a phone the rows-per-page select is hidden so Previous and Next stay on one row.
+      await expect(table(page).locator(".adm-k-pagesize")).toBeHidden();
+      return;
+    }
     await table(page).getByLabel("Rows per page").selectOption("100");
     await expect(table(page).locator("[data-tk=pager-range]")).toHaveText("1 to 64 of 64");
     await expect(table(page).getByRole("button", { name: "Next" })).toBeDisabled();

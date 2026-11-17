@@ -1,0 +1,23 @@
+/* H8.26: parts that belong to History & undo only. The shared kit stays in src/styles/admin-kit.css. */
+.adm-h-flat { padding: 0; overflow: clip; margin-bottom: 16px; }
+.adm-h-flat .adm-k-tablewrap { border: 0; border-radius: 0; box-shadow: none; }
+.adm-h-filters { display: flex; flex-wrap: wrap; gap: 10px; padding: 0 16px 12px; align-items: flex-end; }
+.adm-h-filters label { display: grid; gap: 4px; font-size: 12.5px; font-weight: 700; color: var(--adm-kmuted); }
+.adm-h-filters select { min-height: 40px; padding: 0 10px; border: 1px solid var(--adm-line); border-radius: 10px; background: #fff; font: inherit; color: var(--adm-text); }
+.adm-h-undone { color: var(--adm-kmuted); }
+.adm-h-lockline { display: inline-flex; gap: 6px; align-items: center; }
+.adm-h-rules { margin: 0; padding: 0; list-style: none; }
+.adm-h-rules li { display: flex; gap: 14px; align-items: baseline; padding: 12px 20px; border-top: 1px solid var(--adm-line2); }
+.adm-h-rules .adm-k-badge { flex: none; min-width: 70px; justify-content: center; }
+.adm-h-pane { padding: 16px; display: grid; gap: 14px; }
+.adm-h-earlier { margin: 0; padding: 0; list-style: none; }
+.adm-h-earlier li { display: grid; gap: 2px; padding: 10px 0; border-top: 1px solid var(--adm-line2); }
+.adm-h-earlier small { color: var(--adm-kmuted); font-size: 12.5px; }
+.adm-h-state { display: grid; justify-items: center; text-align: center; gap: 8px; padding: 40px 20px; }
+.adm-h-state h3 { margin: 4px 0 0; font-size: 16px; }
+.adm-h-state p { margin: 0; color: var(--adm-kmuted); max-width: 44ch; }
+@media (max-width: 767px) {
+  .adm-h-filters { padding: 0 12px 12px; }
+  .adm-h-filters label { flex: 1 1 45%; }
+  .adm-h-rules li { flex-wrap: wrap; padding: 12px 16px; }
+}

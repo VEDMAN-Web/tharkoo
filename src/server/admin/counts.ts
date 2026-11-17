@@ -56,7 +56,7 @@ const LOADERS: Record<CountId, (skip: NotDemo | Record<string, never>) => Promis
   reviewLive,
   reviewHeld: (skip) => Listing.countDocuments({ ...skip, status: "pending" }),
   reviewEdited,
-  reports: () => Report.countDocuments({ status: { $in: ["open", "ack"] }, source: { $ne: "legal" } }),
+  reports: async () => (await Report.distinct("listingId", { status: { $in: ["open", "ack"] }, source: { $ne: "legal" } })).length,
   legal: () => Report.countDocuments({ status: { $in: ["open", "ack"] }, source: "legal" }),
   idChecks: () => IdentityVerification.countDocuments({ status: "pending_review" }),
   tickets: () => SupportTicket.countDocuments({ status: { $in: ["open", "waiting_for_support"] } }),

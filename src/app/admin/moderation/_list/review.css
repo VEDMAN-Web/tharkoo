@@ -19,7 +19,5 @@
 .adm-r-kvs dd { margin: 0; font-weight: 600; overflow-wrap: anywhere; }
 .adm-r-h3 { margin: 0; font-size: 14px; }
 @media (max-width: 767px) {
-  [data-tk="review-screen"] .adm-k-pagesize { display: none; }
-  [data-tk="review-screen"] .adm-k-pager { flex-wrap: nowrap; }
   .adm-r-kvs > div { grid-template-columns: 90px minmax(0, 1fr); }
 }
