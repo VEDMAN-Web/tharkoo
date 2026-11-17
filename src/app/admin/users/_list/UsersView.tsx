@@ -6,6 +6,7 @@ import { SearchX } from "lucide-react";
 import { Badge, Button, FilterBar, PageHeader, ServerTable, Tabs, ToastProvider, type TableColumn } from "@/components/admin/ui";
 import type { UserAccess } from "../_actions/UserActions";
 import type { UserDetail, UserList, UserRow, UserTab } from "@/server/admin/users";
+import type { CreditsTab as CreditsData } from "@/server/billing/staff-credits";
 import { lastSeenLabel, dateLabel, statusLook, subLine } from "./format";
 import { UserDrawer } from "./UserDrawer";
 import "./users.css";
@@ -14,7 +15,7 @@ const TAB_LABELS: Record<UserTab, string> = { all: "All", sellers: "Sellers", id
 const SEARCH_DEBOUNCE_MS = 350;
 
 /** The Users screen (H8.8, read only): tabs, search, the table and the drawer. Everything you pick lives in the address. */
-export function UsersView({ list, detail, access }: { list: UserList; detail: UserDetail | null; access: UserAccess }) {
+export function UsersView({ list, detail, credits, access }: { list: UserList; detail: UserDetail | null; credits: CreditsData | null; access: UserAccess }) {
   const router = useRouter();
   const pathname = usePathname();
   const params = useSearchParams();
@@ -127,7 +128,7 @@ export function UsersView({ list, detail, access }: { list: UserList; detail: Us
           />
         </div>
       </div>
-      <UserDrawer detail={detail} onClose={() => go({ open: null })} access={access} />
+      <UserDrawer detail={detail} credits={credits} onClose={() => go({ open: null })} access={access} />
     </div>
     </ToastProvider>
   );
