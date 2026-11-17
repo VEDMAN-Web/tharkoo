@@ -16,7 +16,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<Rec
   const identity = await getStaffFromHeaders();
   if (!can(identity.roles, "users.view")) {
     return (
-      <AdminShell title="Users">
+      <AdminShell title="Users" hasHeader>
         <div className="adm-card" style={{ padding: 40, textAlign: "center", display: "grid", gap: 8, justifyItems: "center" }} data-tk="no-access">
           <Lock aria-hidden="true" size={28} />
           <h2 style={{ margin: 0, fontSize: 16 }}>You cannot open Users</h2>
@@ -46,7 +46,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<Rec
     adjust: canAdjustCredits(identity.roles),
   };
   return (
-    <AdminShell title="Users">
+    <AdminShell title="Users" hasHeader>
       <UsersView list={list} detail={detail} credits={credits} access={access} />
     </AdminShell>
   );

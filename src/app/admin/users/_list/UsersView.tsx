@@ -73,7 +73,6 @@ export function UsersView({ list, detail, credits, access }: { list: UserList; d
     <ToastProvider>
     <div className="adm-k" data-tk="users-screen">
       <PageHeader
-        level={2}
         crumbs={[{ label: "Ads & people" }]}
         title="Users"
         purpose="Everyone with an account. Open a row to see their ads, tickets and credits."
