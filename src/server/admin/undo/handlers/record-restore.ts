@@ -2,11 +2,16 @@ import type { Model as MongooseModel } from "mongoose";
 import { connectDb } from "@/lib/db";
 import { canUseModel } from "@/lib/admin-model-access";
 import { MODEL_MAP, type ModelName } from "@/lib/models";
+import { PromotionProduct } from "@/server/models";
 import type { UndoHandler } from "../registry";
 
 type Doc = Record<string, unknown>;
 
+/** Models the generic admin editor does not offer, but whose own screens save an undo that restores through here (H8.17). */
+const UNDO_ONLY_MODELS: Record<string, unknown> = { PromotionProduct };
+
 function modelOf(name: string) {
+  if (UNDO_ONLY_MODELS[name]) return UNDO_ONLY_MODELS[name] as MongooseModel<Doc>;
   if (!MODEL_MAP[name as ModelName]) throw new Error("Unknown model");
   return MODEL_MAP[name as ModelName] as unknown as MongooseModel<Doc>;
 }
@@ -30,8 +35,9 @@ const handler: UndoHandler = {
     await connectDb();
     const Model = modelOf(event.take<string>("model"));
     const id = event.take<string>("id");
-    const restore = event.take<Record<string, unknown>>("restore");
-    const unset = event.take<string[]>("unset");
+    // An empty "restore" or "unset" is not saved by the audit log, so a missing one means nothing to restore or nothing to remove.
+    const restore = event.has("restore") ? event.take<Record<string, unknown>>("restore") : {};
+    const unset = event.has("unset") ? event.take<string[]>("unset") : [];
     const keys = [...Object.keys(restore), ...unset];
     const was = (await Model.findById(id).lean()) as Doc | null;
     const update: Record<string, unknown> = {};

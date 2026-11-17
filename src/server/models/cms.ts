@@ -20,6 +20,11 @@ export interface SeoTemplateDoc extends BaseDoc {
 
 export interface SiteDoc extends BaseDoc {
   key?: string;
+  postingFeeCredits?: number;
+  creditPriceInr?: number;
+  mockPaymentsOn?: boolean;
+  paidPostingOn?: boolean;
+  planOrder?: string[];
   name?: string;
   tagline?: string;
   legalName?: string;
@@ -257,6 +262,12 @@ const siteSchema = new Schema<SiteDoc>(
     },
     postModerationSince: { type: Date, default: null },
     homeFromLayout: { type: Boolean, default: false },
+    // H8.17: money settings and the order of promotion plans live on the site record, so one undo restores them.
+    postingFeeCredits: { type: Number, min: 0 },
+    creditPriceInr: { type: Number, min: 1 },
+    mockPaymentsOn: { type: Boolean },
+    paidPostingOn: { type: Boolean },
+    planOrder: { type: [String], default: undefined },
     listingCopySource: { type: String, enum: ["legacy", "content"], default: "legacy" },
     launchChecklist: {
       type: new Schema(

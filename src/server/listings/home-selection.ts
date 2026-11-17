@@ -6,6 +6,7 @@ import { isAdminRole } from "@/lib/ui/site-content";
 import { AuditRepository } from "@/server/audit";
 import { ForbiddenError, NotFoundError, ValidationError } from "@/server/http";
 import { Listing } from "@/server/models/listing";
+import { DEMO_SLUG, demoFilter } from "@/server/listings/demo-ads";
 import { escapeRegExp, loadCategories, presentRows } from "@/server/search/query";
 import { loadLocations } from "@/server/locations";
 
@@ -30,6 +31,8 @@ export type HomeSelectionRow = {
   thumb: string | null;
   city: string;
   category: string;
+  /** A demo ad (seed owner, demo slug): shown with a Demo badge so staff can tell it from a real ad. */
+  demo: boolean;
 };
 
 export type HomePickerData = { pinned: HomeSelectionRow[]; results: HomeSelectionRow[] };
@@ -56,6 +59,7 @@ async function toRows(docs: PickerDoc[]): Promise<HomeSelectionRow[]> {
   if (docs.length === 0) return [];
   const presented = await presentRows(docs as never, new Map(), new Date());
   const bySlug = new Map(presented.hits.map((hit) => [hit.slug ?? "", hit]));
+  const seedOwner = (await demoFilter())?.ownerId;
   return docs.map((doc) => {
     const hit = bySlug.get(doc.slug ?? "");
     return {
@@ -67,6 +71,7 @@ async function toRows(docs: PickerDoc[]): Promise<HomeSelectionRow[]> {
       thumb: hit?.photos?.[0] ?? null,
       city: hit?.place || "",
       category: hit?.categorySlug || "",
+      demo: Boolean(seedOwner && doc.ownerId && String(doc.ownerId) === String(seedOwner) && DEMO_SLUG.test(doc.slug ?? "")),
     };
   });
 }

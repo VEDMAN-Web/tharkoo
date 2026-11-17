@@ -103,6 +103,21 @@ export function validateBlocks(key: PageKey, input: unknown, knownIds: ReadonlyS
   return out;
 }
 
+/** 2 when every block is a format 2 home block (rendered by HomeBlocksV2), otherwise 1. Publishing records it so a reader never draws one format with the other's renderer. */
+export function formatOf(blocks: readonly Pick<BlockBase, "type">[]): 1 | 2 {
+  return blocks.length > 0 && blocks.every((block) => blockDef(block.type)?.v2 === true) ? 2 : 1;
+}
+
+/** Why a format 2 home cannot be published yet, or null. A visible banner with a picture needs its description. */
+export function homeBannerProblem(blocks: readonly BlockBase[]): string | null {
+  for (const block of blocks) {
+    if (block.type !== "homeBanner" || !block.visible) continue;
+    const picture = block.props.imageDesktop as { alt?: unknown } | null | undefined;
+    if (picture && (typeof picture.alt !== "string" || picture.alt.trim().length < 3)) return "Add a picture description (alt text) for the banner picture before you publish.";
+  }
+  return null;
+}
+
 function idsOf(blocks: readonly BlockBase[] | undefined) {
   return new Set((blocks ?? []).map((block) => block.id));
 }
@@ -164,7 +179,7 @@ export async function saveDraft(input: { key: string; scope: string; blocks: unk
   return { blocks: saved?.draft as BlockBase[], version: saved?.version ?? 0 };
 }
 
-export async function publish(input: { key: string; scope: string; email: string; roles: string[]; note?: string }) {
+export async function publish(input: { key: string; scope: string; email: string; roles: string[]; note?: string }, options: { audit?: boolean } = {}) {
   requireAdmin(input.roles);
   assertKeyAndScope(input.key, input.scope);
   const { key, scope } = input;
@@ -175,14 +190,21 @@ export async function publish(input: { key: string; scope: string; email: string
   if (!current) throw new NotFoundError("There is no draft to publish yet");
   const version = current.version + 1;
   const now = new Date();
+  const format = formatOf(current.draft as BlockBase[]);
+  if (format === 2) {
+    const problem = homeBannerProblem(current.draft as BlockBase[]);
+    if (problem) throw new ValidationError(problem);
+  }
   const updated = await PageLayout.findOneAndUpdate(
     { key, scope, version: current.version },
-    { $set: { published: current.draft, version, publishedBy: input.email, publishedAt: now } },
+    { $set: { published: current.draft, format, version, publishedBy: input.email, publishedAt: now } },
     { new: true },
   ).lean();
   if (!updated) throw new ConflictError("Someone else published at the same moment. Reload and try again.");
-  await PageLayoutRevision.create({ key, scope, version, blocks: current.draft, publishedBy: input.email, publishedAt: now, note });
-  await record("layout.publish", input.email, key, scope, { version: current.version, blocks: current.published }, { version, blocks: current.draft }, note || undefined);
+  await PageLayoutRevision.create({ key, scope, format, version, blocks: current.draft, publishedBy: input.email, publishedAt: now, note });
+  if (options.audit !== false) {
+    await record("layout.publish", input.email, key, scope, { version: current.version, blocks: current.published }, { version, blocks: current.draft }, note || undefined);
+  }
   await refreshPages(key);
   return { version };
 }
@@ -211,4 +233,30 @@ export async function listRevisions(key: PageKey, scope: string, roles: string[]
   await connectDb();
   const rows = await PageLayoutRevision.find({ key, scope }).sort({ version: -1 }).limit(Math.min(limit, 100)).select("version publishedBy publishedAt note").lean();
   return rows.map((row) => ({ version: row.version, publishedBy: row.publishedBy, publishedAt: row.publishedAt, note: row.note ?? "" }));
+}
+
+/**
+ * Puts an earlier published version live again as the next version (the undo of a publish).
+ * `expectVersion` is the version that must be live now; if another publish came in between, nothing is changed.
+ */
+export async function republishRevision(input: { key: PageKey; scope: string; fromVersion: number; expectVersion: number; email: string; note: string }) {
+  const { key, scope } = input;
+  await connectDb();
+  const revision = await PageLayoutRevision.findOne({ key, scope, version: input.fromVersion }).lean();
+  if (!revision) throw new NotFoundError("That version does not exist any more");
+  const current = await PageLayout.findOne({ key, scope }).lean();
+  if (!current || current.version !== input.expectVersion) throw new ConflictError("The page was published again since this change.");
+  const blocks = revision.blocks as BlockBase[];
+  const format = revision.format === 2 ? 2 : formatOf(blocks);
+  const version = current.version + 1;
+  const now = new Date();
+  const updated = await PageLayout.findOneAndUpdate(
+    { key, scope, version: current.version },
+    { $set: { draft: blocks, published: blocks, format, version, publishedBy: input.email, publishedAt: now, updatedBy: input.email } },
+    { new: true },
+  ).lean();
+  if (!updated) throw new ConflictError("Someone else published at the same moment. Reload and try again.");
+  await PageLayoutRevision.create({ key, scope, format, version, blocks, publishedBy: input.email, publishedAt: now, note: input.note.slice(0, 200) });
+  await refreshPages(key);
+  return { version };
 }

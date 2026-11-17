@@ -1,0 +1,10 @@
+{
+  "branchPrefix": "haiku/h7.141",
+  "globs": [
+    "docs/ownership/H7.141.json",
+    "src/server/shared/schemas/admin.ts",
+    "src/server/shared/schemas/index.ts",
+    "docs/CODE_MAP.md",
+    "docs/contracts/API.md"
+  ]
+}
