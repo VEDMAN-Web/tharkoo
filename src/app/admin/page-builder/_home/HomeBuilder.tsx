@@ -14,8 +14,9 @@ import { Toggle } from "@/components/admin/ui/Toggle";
 import { useDragRows } from "@/components/admin/layout-editor/useDragRows";
 import type { HomeBuilderState } from "@/server/layout/home-builder";
 import type { BlockBase } from "@/server/models/layout";
-import { loadHomeAction, publishHomeAction, restoreHomeAction, saveHomeDraftAction } from "./actions";
+import { loadHomeAction, publishHomeAction, restoreHomeAction, saveHomeDraftAction, setHomeSwitchAction } from "./actions";
 import { AdsSlots } from "./AdsSlots";
+import { HomeSwitch } from "./HomeSwitch";
 import { BannerFields } from "./BannerFields";
 import { CategoriesFields, PostsFields, StepsFields, TrustFields } from "./BlockFields";
 import { agoLabel, BLOCK_TYPES, changeCount, moveBlock, nameOf, newBlock, problemsOf, stable, summaryOf, withProps, withVisible, type Props } from "./model";
@@ -174,6 +175,31 @@ function Inner() {
     } else toast.show({ kind: "success", message: text });
   }
 
+  async function toggleSwitch(on: boolean) {
+    if (busy) return;
+    setBusy(true);
+    const res = await setHomeSwitchAction(on);
+    setBusy(false);
+    if (!res.ok) {
+      toast.show({ kind: "error", message: res.error });
+      return;
+    }
+    setState((current) => (current ? { ...current, switchOn: res.on } : current));
+    const text = res.on ? `Visitors now see the published version ${res.version}.` : "Visitors see today's Home page again.";
+    if (res.canUndo && res.eventId) {
+      toast.show({
+        kind: "undo",
+        message: text,
+        onUndo: async () => {
+          const undone = await undoAction(res.eventId);
+          toast.show(undone.ok ? { kind: "success", message: "The switch is back as it was." } : { kind: "error", message: undone.message });
+          const fresh = await loadHomeAction();
+          if (fresh.ok) setState((current) => (current ? { ...current, switchOn: fresh.state.switchOn } : current));
+        },
+      });
+    } else toast.show({ kind: "success", message: text });
+  }
+
   async function restore(version: number) {
     if (busy) return;
     setBusy(true);
@@ -199,6 +225,7 @@ function Inner() {
   }
   if (!state) return <Skeleton lines={8} />;
 
+  const switchVisible = state.switchOn || (state.liveFormat === 2 && live > 0);
   const present = new Set(blocks.map((block) => block.type));
   const missing = BLOCK_TYPES.filter((type) => !present.has(type));
   const target = adding && missing.includes(adding) ? adding : missing[0];
@@ -230,11 +257,7 @@ function Inner() {
         <Badge tone={live > 0 ? "ok" : "neutral"} dot>{live > 0 ? `Live: version ${live}` : "Nothing published from here yet"}</Badge>
         {changes > 0 ? <Badge tone="warn" dot>{`Draft: ${changes} ${changes === 1 ? "change" : "changes"}`}</Badge> : null}
       </div>
-      {!state.switchOn ? (
-        <Notice kind="info" title="Visitors still see today's Home page.">
-          The switch that draws Home from this page is off, so publishing the blocks here does not change what visitors see yet. The 8 Home ads slots are the exception: they change Home at once.
-        </Notice>
-      ) : null}
+      {switchVisible ? <HomeSwitch on={state.switchOn} version={live} busy={busy} onChange={(next) => void toggleSwitch(next)} /> : null}
       {message ? <Notice kind="error">{message}</Notice> : null}
 
       <div className="adm-pb-grid">

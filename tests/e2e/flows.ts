@@ -15,8 +15,8 @@ export interface LiveAd {
  * The page must already be the post-ad page for a signed-in poster. Uses the "Jobs" category and Mumbai by default.
  * Returns the new listing's id and the title it was saved with.
  */
-export async function fillNewPostAd(page: Page, base: string, options: { title: string; category?: string; city?: string }) {
-  const { title, category = "Jobs", city = "Mumbai" } = options;
+export async function fillNewPostAd(page: Page, base: string, options: { title: string; category?: string; city?: string; held?: boolean }) {
+  const { title, category = "Jobs", city = "Mumbai", held = false } = options;
   // Step 1: category.
   await page.locator(".tkp-tile", { hasText: category }).click();
   await page.locator("[data-tk=go-on]").click();
@@ -44,7 +44,9 @@ export async function fillNewPostAd(page: Page, base: string, options: { title: 
   await page.locator("#consent-terms").check();
   await page.locator("#consent-adult").check();
   await page.locator(".tkp-nav button", { hasText: "PUBLISH" }).click();
-  await expect(page.locator("[data-tk=step-title]").filter({ hasText: /live/i })).toBeVisible();
+  // H8.25: with "Hold every new ad for review" on, the ad is posted but waits, and the success screen says it will be checked.
+  if (held) await expect(page.locator("[data-tk=post-success]")).toHaveAttribute("data-state", "review");
+  else await expect(page.locator("[data-tk=step-title]").filter({ hasText: /live/i })).toBeVisible();
 
   const own = await page.request.get("/api/listings/?pageSize=100");
   expect(own.status()).toBe(200);

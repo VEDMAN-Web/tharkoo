@@ -2,7 +2,7 @@
 
 import { adminContext } from "@/server/admin/context";
 import { HttpError } from "@/server/http";
-import { loadHomeBuilder, publishHome, restoreHomeVersion, saveHomeDraft, type HomeBuilderState } from "@/server/layout/home-builder";
+import { loadHomeBuilder, publishHome, restoreHomeVersion, saveHomeDraft, setHomeSwitch, type HomeBuilderState } from "@/server/layout/home-builder";
 import type { BlockBase } from "@/server/models/layout";
 
 type Result<T> = ({ ok: true } & T) | { ok: false; error: string };
@@ -31,4 +31,8 @@ export async function publishHomeAction(note: string): Promise<Result<{ version:
 
 export async function restoreHomeAction(version: number): Promise<Result<{ blocks: BlockBase[] }>> {
   return run(async () => restoreHomeVersion(await adminContext(), version));
+}
+
+export async function setHomeSwitchAction(on: boolean): Promise<Result<{ on: boolean; version: number | null; changed: boolean; eventId: string; canUndo: boolean }>> {
+  return run(async () => setHomeSwitch(await adminContext(), { on }));
 }

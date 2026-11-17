@@ -13,6 +13,7 @@ import { accountName } from "@/lib/account-name";
 import { siteUrl } from "@/lib/utils";
 import { holdInEscrow, refundEscrow, releaseEscrow } from "@/server/wallet/escrow";
 import { videoTourPrice } from "@/server/wallet/listing-guard";
+import { assertNotPaused } from "@/server/settings/emergency";
 
 const audit = new AuditRepository();
 const MINUTE = 60_000;
@@ -125,6 +126,7 @@ async function notifyBuyer(userId: string, tourId: string) {
 export async function requestTour(input: { userId: string; listingId: string } & Escrow) {
   await connectDb();
   await VideoTour.init();
+  await assertNotPaused("pauseVideoCalls");
   const listingId = objectId(input.listingId, "listingId");
   const listing = await Listing.findById(listingId).select("ownerId status title").lean();
   if (!listing || listing.status !== "active") throw new NotFoundError("Not found");

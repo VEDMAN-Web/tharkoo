@@ -1,0 +1,13 @@
+{
+  "branchPrefix": "haiku/h8.32",
+  "globs": [
+    "docs/ownership/H8.32.json",
+    "progress/H8.32.md",
+    "src/app/[category]/page.tsx",
+    "src/app/[category]/[location]/page.tsx",
+    "src/server/content/d3-listing-copy.ts",
+    "scripts/migrate/d3-listing-copy.ts",
+    "tests/server/content/a32-*.test.ts",
+    "tests/e2e/a32-listing.e2e.ts"
+  ]
+}

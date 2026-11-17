@@ -59,7 +59,7 @@ test.describe("A16 page builder, Home tab", () => {
     await expect(page.locator('[data-tk="home-slots"] li')).toHaveCount(8);
     await expect(page.locator('[data-tk="preview"] iframe')).toBeVisible();
     await expect(page.locator('[data-tk="slots-live-note"]')).toHaveText("The 8 slots save at once and change the Home page now. Everything else waits for Publish.");
-    await expect(page.getByText("The 8 Home ads slots are the exception: they change Home at once.")).toBeVisible();
+    await expect(page.locator('[data-tk="home-switch-state"]')).toContainText("The 8 Home ads slots change Home at once");
     await expect(page.locator('[data-tk="builder-status"]')).toContainText(/Nothing published from here yet|Live: version \d+/);
     expect(await hasHorizontalScroll(page)).toBe(false);
     expect(await serious(page)).toEqual([]);

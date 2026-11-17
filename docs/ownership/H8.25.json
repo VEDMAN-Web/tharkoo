@@ -1,0 +1,21 @@
+{
+  "branchPrefix": "haiku/h8.25",
+  "globs": [
+    "docs/ownership/H8.25.json",
+    "src/app/admin/settings/page.tsx",
+    "src/app/admin/settings/_view/**",
+    "src/app/admin/settings/_actions/**",
+    "src/app/admin/page.tsx",
+    "src/server/settings/emergency.ts",
+    "src/server/settings/emergency-labels.ts",
+    "src/server/settings/undo-window-labels.ts",
+    "src/server/settings/settings-admin.ts",
+    "src/server/listings/service.ts",
+    "src/server/billing/recharge.ts",
+    "src/server/billing/service.ts",
+    "src/server/tours/service.ts",
+    "tests/server/settings/a25-*.test.ts",
+    "tests/e2e/a25-settings.e2e.ts",
+    "tests/e2e/flows.ts"
+  ]
+}

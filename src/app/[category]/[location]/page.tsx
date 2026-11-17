@@ -28,6 +28,7 @@ import { placePath, postAdPath, searchPath, tagPath } from "@/lib/urls";
 import { activeFilterKeys, listingCanonicalSuffix } from "@/server/search/filter-seo";
 import { withUrlSeo, urlHeading } from "@/lib/seo/override";
 import { hubCopy } from "@/lib/seo-site";
+import { resolveListingCopy } from "@/server/content/listing-copy";
 import { withSeoDefaults } from "@/lib/ui/meta-defaults";
 import { getPaths, publicTags } from "@/server/urls/service";
 import { fallbackLanding, mergeLanding, visibleHeading, type LandingCopy } from "@/lib/seo/landing";
@@ -93,8 +94,22 @@ export async function generateMetadata({ params, searchParams }: Props): Promise
     count: feed.total,
     indexable: !isThin(feed.total, hubMin),
   });
-  const title = fillTemplate(seo?.title || copy.title, vars);
-  const description = fillTemplate(seo?.description || copy.description, vars);
+  const resolved =
+    (site as { listingCopySource?: string }).listingCopySource === "content"
+      ? await resolveListingCopy({
+          kind: "place",
+          path: placePath(cat.slug || category, loc.slug || location),
+          categorySlug: cat.slug || category,
+          category: cat.name || category,
+          place: loc.name || location,
+          state: String(vars.state ?? ""),
+          count: feed.total,
+          indexable: !isThin(feed.total, hubMin),
+          mode: "content",
+        })
+      : null;
+  const title = resolved?.title ?? fillTemplate(seo?.title || copy.title, vars);
+  const description = resolved?.description ?? fillTemplate(seo?.description || copy.description, vars);
   const pageNo = Math.max(1, Number(sp.page) || 1);
   const filtered = activeFilterKeys(sp).length > 0;
   const thin = isThin(feed.total, hubMin);
@@ -182,7 +197,24 @@ export default async function LocationPage({ params, searchParams }: Props) {
     updated: feed.items[0]?.publishedAt ? new Date(feed.items[0].publishedAt).toLocaleDateString("en-IN", { day: "numeric", month: "long", year: "numeric" }) : undefined,
   });
   const texts = await textOverrides();
-  const hub = await hubCopy(canonicalPath, { intro: copy.intro || fillTemplate(seo?.intro || "", vars), faqs: copy.faqs });
+  // H8.32: with the switch "content" the words come from the listing copy resolver (the content editor first); otherwise from today's sources.
+  const resolved =
+    (site as { listingCopySource?: string }).listingCopySource === "content"
+      ? await resolveListingCopy({
+          kind: "place",
+          path: canonicalPath,
+          categorySlug: cat.slug || category,
+          category: cat.name || category,
+          place: loc.name || location,
+          state: stateName,
+          count: feed.total,
+          indexable: !isThin(feed.total, hubMin),
+          districts: districts.map((row) => row.name || "").filter(Boolean).slice(0, 3),
+          updated: feed.items[0]?.publishedAt ? new Date(feed.items[0].publishedAt).toLocaleDateString("en-IN", { day: "numeric", month: "long", year: "numeric" }) : undefined,
+          mode: "content",
+        })
+      : null;
+  const hub = resolved ? { intro: resolved.intro, faqs: resolved.faqs } : await hubCopy(canonicalPath, { intro: copy.intro || fillTemplate(seo?.intro || "", vars), faqs: copy.faqs });
   const t = makeT(texts);
   const filtered = Boolean(sp.photos || sp.verified);
   const siblingLinks = [
@@ -209,7 +241,7 @@ export default async function LocationPage({ params, searchParams }: Props) {
     ...(loc.stateSlug && loc.stateSlug !== (loc.slug || location) ? [{ name: `${stateName} ${cat.name}`, path: placePath(cat.slug || category, loc.stateSlug) }] : []),
     { name: `${loc.name} ${cat.name}`, path: canonicalPath },
   ];
-  const h1 = heading || visibleHeading(fillTemplate(seo?.h1 || "", vars), copy.h1);
+  const h1 = resolved ? resolved.h1 : heading || visibleHeading(fillTemplate(seo?.h1 || "", vars), copy.h1);
   const toggles: ListingToggles = { verified: sp.verified === "1", photos: sp.photos === "1", video: sp.video === "1", online: sp.online === "1" };
   const filterQs = listingFilterQuery(picks, toggles);
   // H7.32 (FIX B): few own ads keep their place, and fallback ads go below them. Nothing is empty.

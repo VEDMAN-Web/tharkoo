@@ -277,3 +277,19 @@ textarea.adm-input { min-height: 96px; resize: vertical; }
 .adm-login-error:empty { display: none; }
 .adm-login-submit { min-height: 44px; width: 100%; }
 .adm-login .adm-input { min-height: 44px; }
+
+/* H8.49: results of the top bar search. */
+.adm-searchbox { position: relative; display: flex; }
+.adm-sr-panel { position: absolute; z-index: 40; top: 44px; left: 0; width: min(520px, 90vw); max-height: min(70vh, 560px); overflow-y: auto; padding: 8px; border: 1px solid var(--adm-border); border-radius: 12px; background: var(--adm-card); box-shadow: 0 12px 32px rgba(17, 5, 32, 0.16); }
+.adm-sr-group + .adm-sr-group { margin-top: 6px; padding-top: 6px; border-top: 1px solid var(--adm-line2); }
+.adm-sr-group h2 { margin: 0; padding: 6px 10px; font-size: 12px; font-weight: 800; letter-spacing: 0.04em; text-transform: uppercase; color: var(--adm-muted); }
+.adm-sr-group ul { margin: 0; padding: 0; list-style: none; }
+.adm-sr-row { display: grid; gap: 2px; min-height: 44px; padding: 8px 10px; border-radius: 8px; color: var(--adm-text) !important; text-decoration: none; }
+.adm-sr-row strong { font-size: 14px; overflow-wrap: anywhere; }
+.adm-sr-row small { color: var(--adm-muted); font-size: 12.5px; overflow-wrap: anywhere; }
+.adm-sr-row:hover, .adm-sr-row.is-on { background: var(--adm-primary-soft); }
+.adm-sr-note { margin: 0; padding: 12px 10px; color: var(--adm-muted); font-size: 13.5px; }
+@media (max-width: 767px) {
+  .adm-searchbox { position: static; }
+  .adm-sr-panel { position: fixed; top: 120px; left: 8px; right: 8px; width: auto; max-height: calc(100vh - 220px); }
+}
