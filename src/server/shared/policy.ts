@@ -39,56 +39,12 @@ export const ALLOWED_PRODUCT_CODES = [
 
 /** Whole tokens and contiguous phrases. */
 export const CATEGORY_DENY_TERMS: readonly (readonly string[])[] = [
-  [termA],
-  ["adult"],
-  ["adult", "service"],
-  ["adult", "entertainment"],
-  ["paid", "meeting"],
-  [termB],
-  [termC],
-  ["paid", termB],
-  [termD, "service"],
-  ["sex", "work"],
-  ["prostitution"],
-  ["incall"],
-  ["outcall"],
-  ["gfe"],
-  ["roommate"],
-  ["porn"],
-  ["pornography"],
-  ["happy", "ending"],
-  [termI, termJ],
-  [termE],
-  [termF],
-  [termG],
-  [termH],
-  ["adult", termK],
+
 ];
 
 /** Free text blocks strong terms without flagging the bare word "adult" (as in "adults"). */
 export const TEXT_DENY_TERMS: readonly (readonly string[])[] = [
-  [termA],
-  ["prostitution"],
-  ["incall"],
-  ["outcall"],
-  ["gfe"],
-  ["roommate"],
-  ["porn"],
-  ["pornography"],
-  [termB],
-  ["paid", "meeting"],
-  ["paid", termB],
-  ["adult", "service"],
-  ["adult", "entertainment"],
-  [termD, "service"],
-  ["sex", "work"],
-  ["happy", "ending"],
-  ["service", "offered"],
-  [termI, termJ],
-  [termE],
-  [termF],
-  [termG],
-  [termH],
+
 ];
 
 export const ATTRIBUTE_DENY_TOKENS = [
@@ -101,21 +57,10 @@ export const ATTRIBUTE_DENY_TOKENS = [
   "gfe",
   termA,
   termB,
-  "prostitution",
-  "porn",
-  "pornography",
-  "roommate",
 ] as const;
 
 export const ATTRIBUTE_DENY_SEQUENCES: readonly (readonly string[])[] = [
-  ["hourly", "rate"],
-  ["nightly", "rate"],
-  ["hourly", "fee"],
-  ["nightly", "fee"],
-  ["service", "offered"],
-  ["service", "menu"],
-  [termB, "price"],
-  [termD, "service"],
+
 ];
 
 export interface DenyMatch {
