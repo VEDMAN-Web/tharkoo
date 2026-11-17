@@ -1,0 +1,9 @@
+{
+  "branchPrefix": "haiku/h8.29",
+  "globs": [
+    "docs/ownership/H8.29.json",
+    "progress/H8.29.md",
+    "src/server/content/listing-copy.ts",
+    "tests/server/content/a29-*.test.ts"
+  ]
+}
