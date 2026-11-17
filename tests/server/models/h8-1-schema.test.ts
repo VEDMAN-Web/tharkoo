@@ -92,10 +92,10 @@ describe("A1 schema defaults", () => {
     expect(listing.demoEndedBatch).toBe("demo-end-1");
   });
 
-  it("blog_editor is a staff role and the other seven still are", () => {
-    for (const role of ["admin", "superadmin", "moderator", "trust_safety", "support", "seo_editor", "finance", "blog_editor"]) expect(STAFF_ROLE_NAMES.has(role), role).toBe(true);
+  it("blog_editor and content_editor are staff roles and the other seven still are", () => {
+    for (const role of ["admin", "superadmin", "moderator", "trust_safety", "support", "seo_editor", "finance", "blog_editor", "content_editor"]) expect(STAFF_ROLE_NAMES.has(role), role).toBe(true);
     expect(STAFF_ROLE_NAMES.has("user")).toBe(false);
-    expect(STAFF_ROLE_NAMES.size).toBe(8);
+    expect(STAFF_ROLE_NAMES.size).toBe(9);
   });
 });
 
