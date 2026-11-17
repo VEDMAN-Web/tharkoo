@@ -174,7 +174,7 @@
   .adm-k-dlg-f .adm-k-btn { flex: 1; }
   .adm-k-df .adm-k-btn { flex: 1 1 auto; }
   .adm-k-toast-btn, .adm-k-toast-x { min-height: 44px; min-width: 44px; justify-content: center; }
-  .adm-k-dock { left: 12px; right: 12px; bottom: 76px; }
+  .adm-k-dock { left: 12px; right: 12px; bottom: var(--adm-dock-lift, 76px); }
   .adm-k-toast { max-width: none; }
   .adm-k-bar { position: fixed; left: 0; right: 0; bottom: 0; z-index: 50; display: grid; grid-auto-flow: column; grid-auto-columns: 1fr; height: 64px; background: var(--adm-surface); border-top: 1px solid var(--adm-line); }
   .adm-k-bar a, .adm-k-bar button { position: relative; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; min-height: 44px; border: 0; background: transparent; color: var(--adm-kmuted); font: inherit; font-size: 12px; font-weight: 700; text-decoration: none; cursor: pointer; }
