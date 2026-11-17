@@ -1,6 +1,6 @@
 import mongoose from "mongoose";
 import { connectDb } from "@/lib/db";
-import { isPeopleListing } from "@/server/categories/kinds";
+import { hasAgeGate } from "@/server/categories/kind";
 import { Category, Listing } from "@/server/models";
 
 /**
@@ -15,7 +15,7 @@ type CategoryRow = { slug?: string; kind?: string; fields?: unknown };
 
 export function isPeopleCategory(row: CategoryRow | null | undefined): boolean {
   if (!row) return false;
-  return row.kind === PEOPLE_KIND || (PEOPLE_SLUGS as readonly string[]).includes(row.slug || "") || isPeopleListing(row);
+  return row.kind === PEOPLE_KIND || (PEOPLE_SLUGS as readonly string[]).includes(row.slug || "") || hasAgeGate(row.fields);
 }
 
 export async function listingIsPeople(listingId: string): Promise<boolean> {
