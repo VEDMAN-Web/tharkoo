@@ -232,7 +232,7 @@ function Inner() {
       </div>
       {!state.switchOn ? (
         <Notice kind="info" title="Visitors still see today's Home page.">
-          The switch that draws Home from this page is off, so publishing here does not change what visitors see yet. You can edit, preview and publish safely.
+          The switch that draws Home from this page is off, so publishing the blocks here does not change what visitors see yet. The 8 Home ads slots are the exception: they change Home at once.
         </Notice>
       ) : null}
       {message ? <Notice kind="error">{message}</Notice> : null}

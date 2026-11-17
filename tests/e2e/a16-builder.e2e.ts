@@ -58,6 +58,8 @@ test.describe("A16 page builder, Home tab", () => {
     await expect(page.locator('[data-tk="banner-fields"]').getByText("Picture description (alt text)")).toBeVisible();
     await expect(page.locator('[data-tk="home-slots"] li')).toHaveCount(8);
     await expect(page.locator('[data-tk="preview"] iframe')).toBeVisible();
+    await expect(page.locator('[data-tk="slots-live-note"]')).toHaveText("The 8 slots save at once and change the Home page now. Everything else waits for Publish.");
+    await expect(page.getByText("The 8 Home ads slots are the exception: they change Home at once.")).toBeVisible();
     await expect(page.locator('[data-tk="builder-status"]')).toContainText(/Nothing published from here yet|Live: version \d+/);
     expect(await hasHorizontalScroll(page)).toBe(false);
     expect(await serious(page)).toEqual([]);
@@ -65,13 +67,23 @@ test.describe("A16 page builder, Home tab", () => {
       mkdirSync(SHOTS, { recursive: true });
       await page.waitForTimeout(1500);
       await page.screenshot({ path: `${SHOTS}/builder-1440x900.png`, fullPage: true });
+      await page.screenshot({ path: `${SHOTS}/builder-top-1440x900.png` });
+      await page.evaluate(() => window.scrollTo(0, document.documentElement.scrollHeight));
+      await page.waitForTimeout(500);
+      await page.screenshot({ path: `${SHOTS}/builder-bottom-1440x900.png` });
     }
     await page.setViewportSize({ width: 390, height: 844 });
     await openBuilder(page);
     await expect(page.locator('[data-tk="preview"]')).toBeHidden();
     expect(await hasHorizontalScroll(page)).toBe(false);
     expect(await serious(page)).toEqual([]);
-    if (SHOTS) await page.screenshot({ path: `${SHOTS}/builder-390x844.png`, fullPage: true });
+    if (SHOTS) {
+      await page.screenshot({ path: `${SHOTS}/builder-390x844.png`, fullPage: true });
+      await page.screenshot({ path: `${SHOTS}/builder-top-390x844.png` });
+      await page.evaluate(() => window.scrollTo(0, document.documentElement.scrollHeight));
+      await page.waitForTimeout(500);
+      await page.screenshot({ path: `${SHOTS}/builder-bottom-390x844.png` });
+    }
     for (const toggle of await page.locator('[data-tk="block-list"] button[role=switch]').all()) expect((await toggle.boundingBox())!.height).toBeGreaterThanOrEqual(24);
   });
 

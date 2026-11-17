@@ -79,6 +79,9 @@ export function AdsSlots({ slots, onSlots }: Props) {
 
   return (
     <div className="adm-pb-slots" data-tk="home-slots">
+      <p className="adm-pb-note" data-tk="slots-live-note">
+        <strong>The 8 slots save at once and change the Home page now. Everything else waits for Publish.</strong>
+      </p>
       <p className="adm-pb-note">
         You choose the 8 ads, demo ads included. A demo ad leaves its slot when demo ads end; the slot then shows the newest ad.
       </p>
