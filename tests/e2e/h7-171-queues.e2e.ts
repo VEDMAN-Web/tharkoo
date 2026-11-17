@@ -1,6 +1,7 @@
 import { mkdirSync } from "node:fs";
 import AxeBuilder from "@axe-core/playwright";
 import type { Page } from "@playwright/test";
+import { ObjectId } from "mongodb";
 import { expect, hasHorizontalScroll, signInAdminContext, test, withLocalDb } from "./helpers";
 
 /** H7.171: direct buttons instead of one-item More menus, a grey zero tab, the empty Live queue says when the check is off, one "Quick replies" label. */
@@ -105,5 +106,46 @@ test.describe("H7.171 Dashboard and queues", () => {
     await expect(group).toBeVisible();
     expect(await hasHorizontalScroll(page)).toBe(false);
     await shot(page, "quick-replies");
+  });
+
+  test("Launch checklist: Keep as is on the support phone row, and Not junk on the junk ads row, each stored with an Undo (1440 and 390)", async ({ page, context, baseURL }) => {
+    test.setTimeout(240_000);
+    await signInAdminContext(context, baseURL!);
+    const marker = `htjkjj${Date.now() % 1000}x`;
+    const adId = (await withLocalDb(async (db) => {
+      const row = await db.collection("listings").insertOne({ ownerId: new ObjectId(), categoryId: new ObjectId(), title: marker, description: "A description that is long enough", slug: `h7171-${marker}`, status: "active", createdAt: new Date(Date.now() + 60_000), updatedAt: new Date() });
+      return row.insertedId;
+    }))!;
+    try {
+      for (const size of [{ width: 1440, height: 900 }, { width: 390, height: 844 }]) {
+        await page.setViewportSize(size);
+        await page.goto("/admin/");
+        await expect(page.locator('[data-tk="check-junk-ads"]').getByRole("button", { name: `Not junk: ${marker}` })).toBeVisible();
+        expect(await hasHorizontalScroll(page)).toBe(false);
+        await page.locator('[data-tk="check-support-phone"]').scrollIntoViewIfNeeded();
+        await shot(page, "checklist");
+      }
+      await page.setViewportSize({ width: 1440, height: 900 });
+      await page.goto("/admin/");
+      const phone = page.locator('[data-tk="check-support-phone"]');
+      await expect(phone.locator('[data-tk="keep-as-is"]')).toBeVisible();
+      await phone.locator('[data-tk="keep-as-is"]').click();
+      await expect(page.locator('[data-tk="checklist-note"]')).toContainText("Kept as is");
+      await expect(phone).toHaveAttribute("data-done", "yes");
+      await phone.scrollIntoViewIfNeeded();
+      await shot(page, "checklist-kept");
+      await page.locator('[data-tk="checklist-undo"]').click();
+      await expect(phone).toHaveAttribute("data-done", "no");
+
+      const junk = page.locator('[data-tk="check-junk-ads"]');
+      await junk.getByRole("button", { name: `Not junk: ${marker}` }).click();
+      await expect(page.locator('[data-tk="checklist-note"]')).toContainText("is no longer flagged as junk");
+      await expect.poll(async () => (await withLocalDb((db) => db.collection("listings").findOne({ _id: adId }, { projection: { notJunkAt: 1 } })))?.notJunkAt ?? null).not.toBeNull();
+      await page.locator('[data-tk="checklist-undo"]').click();
+      await expect.poll(async () => (await withLocalDb((db) => db.collection("listings").findOne({ _id: adId }, { projection: { notJunkAt: 1 } })))?.notJunkAt ?? null).toBeNull();
+    } finally {
+      await withLocalDb((db) => db.collection("listings").deleteOne({ _id: adId }));
+      await withLocalDb((db) => db.collection("sites").updateMany({}, { $unset: { "launchChecklist.supportPhoneKept": "" } }));
+    }
   });
 });

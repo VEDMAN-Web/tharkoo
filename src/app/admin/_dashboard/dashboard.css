@@ -22,6 +22,11 @@ a.adm-d-row:hover { background: #fafbfd; }
 .adm-d-num { flex: none; font-size: 20px; font-weight: 800; font-variant-numeric: tabular-nums; }
 .adm-d-empty { margin: 0; padding: 20px; color: var(--adm-muted); }
 .adm-d-error { margin: 0; padding: 10px 20px; color: var(--adm-danger); font-weight: 600; }
+.adm-d-note { margin: 0; padding: 10px 20px; color: var(--adm-text); font-weight: 600; }
+.adm-d-keep { display: inline-flex; align-items: center; min-height: 32px; margin-top: 4px; padding: 0 12px; border: 1px solid var(--adm-border); border-radius: var(--adm-r-input); background: #fff; color: var(--adm-text); font: inherit; font-size: 13px; font-weight: 700; cursor: pointer; justify-self: start; }
+.adm-d-keep:hover { border-color: #c9cddb; }
+.adm-d-keep:focus-visible { outline: 2px solid var(--adm-primary); outline-offset: 2px; }
+.adm-d-keep:disabled { opacity: 0.6; cursor: default; }
 .adm-d-tick { position: relative; display: grid; place-items: center; flex: none; width: 24px; height: 24px; padding: 0; border: 2px solid #c9cddb; border-radius: 50%; background: #fff; color: #fff; cursor: pointer; }
 button.adm-d-tick::after { content: ""; position: absolute; inset: -10px; }
 .adm-d-tick.is-done { border-color: var(--adm-success); background: var(--adm-success); }
@@ -38,7 +43,7 @@ button.adm-d-tick::after { content: ""; position: absolute; inset: -10px; }
 @media (max-width: 767px) {
   .adm-d-row { padding: 10px 16px; min-height: 64px; }
   .adm-d-head { padding: 14px 16px; }
-  .adm-d-open, .adm-d-link { min-height: 44px; }
+  .adm-d-open, .adm-d-link, .adm-d-keep { min-height: 44px; }
   .adm-d-fig { padding: 12px 16px 16px; }
 }
 @media (prefers-reduced-motion: reduce) {

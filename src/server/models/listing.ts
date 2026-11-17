@@ -49,6 +49,8 @@ export interface ListingDoc {
   /** "Video verified" badge (H6.5): set for 90 days after a completed live tour. */
   videoVerifiedUntil?: Date | null;
   lastModerationAt?: Date;
+  /** Set when staff say, on the launch checklist, that a title that looks like junk is fine. The checklist stops naming the ad. */
+  notJunkAt?: Date | null;
   demoEndedBatch?: string;
   seoNoindex?: boolean;
   /** Admin only: the ad stays reachable by URL but is skipped in feeds. */
@@ -180,6 +182,7 @@ const listingSchema = new Schema<ListingDoc>(
     expiresAt: { type: Date },
     videoVerifiedUntil: { type: Date, default: null },
     lastModerationAt: { type: Date },
+    notJunkAt: { type: Date, default: null },
     demoEndedBatch: { type: String },
     seoNoindex: { type: Boolean, default: true },
     feedHidden: { type: Boolean, default: false },

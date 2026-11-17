@@ -1,3 +1,4 @@
+import { Types } from "mongoose";
 import { connectDb } from "@/lib/db";
 import { phoneDigits, SUPPORT_PHONE } from "@/lib/support";
 import { TRUST } from "@/content/trust";
@@ -13,6 +14,10 @@ import { NotFoundError } from "@/server/http";
 
 export const MANUAL_KEYS = ["junkAdsChecked", "bannerChecked", "paidPostingDecided"] as const;
 export type ManualKey = (typeof MANUAL_KEYS)[number];
+/** Rows that cannot be ticked by hand, but where staff can say "Keep as is" (stored on the same record, audited, with Undo). */
+export const KEEP_KEYS = ["supportPhoneKept"] as const;
+export type KeepKey = (typeof KEEP_KEYS)[number];
+type TickKey = ManualKey | KeepKey;
 
 export type ChecklistRow = {
   id: string;
@@ -21,6 +26,10 @@ export type ChecklistRow = {
   done: boolean;
   href: string;
   manual: ManualKey | null;
+  /** "Keep as is" on a row that can never be ticked by a real check. */
+  keep?: { key: KeepKey; kept: boolean };
+  /** The first ad that looks like junk, so "Not junk" can name it. */
+  junkAd?: { id: string; title: string };
 };
 
 export type ChecklistInputs = {
@@ -30,6 +39,8 @@ export type ChecklistInputs = {
   postingFee: number;
   demoActive: number;
   junkTitles: string[];
+  /** The ids of the ads in junkTitles, in the same order. Ads marked "Not junk" are left out of both lists. */
+  junkIds?: string[];
   supportPhone: string;
   placeholderPages: string[];
   grievancePublished: boolean;
@@ -38,7 +49,7 @@ export type ChecklistInputs = {
   picturesToCheck: number;
   loginCodeWarning: string | null;
   siteHidden: boolean;
-  ticks: Partial<Record<ManualKey, { at?: Date; by?: string } | null>>;
+  ticks: Partial<Record<TickKey, { at?: Date; by?: string } | null>>;
 };
 
 const DAY_WORDS = { day: "numeric", month: "short" } as const;
@@ -66,7 +77,8 @@ export function placeholderPagesIn(pages: { name: string; text: string }[]): str
 export function buildChecklist(input: ChecklistInputs): ChecklistRow[] {
   const national = nationalDigits(input.supportPhone);
   const junk = input.junkTitles.filter(looksLikeJunk);
-  const tick = (key: ManualKey) => Boolean(input.ticks[key]);
+  const firstJunk = input.junkTitles.findIndex(looksLikeJunk);
+  const tick = (key: TickKey) => Boolean(input.ticks[key]);
   const placeholders = input.placeholderPages;
   return [
     {
@@ -105,17 +117,19 @@ export function buildChecklist(input: ChecklistInputs): ChecklistRow[] {
       id: "junk-ads",
       title: "Remove junk test ads",
       detail: junk.length ? `${junk.length} look like junk, for example “${junk[0].slice(0, 30)}”` : "None look like junk",
-      done: tick("junkAdsChecked"),
+      done: tick("junkAdsChecked") || input.junkIds !== undefined && junk.length === 0,
       href: "/admin/ads/",
       manual: "junkAdsChecked",
+      ...(firstJunk >= 0 && input.junkIds?.[firstJunk] ? { junkAd: { id: input.junkIds[firstJunk], title: input.junkTitles[firstJunk] } } : {}),
     },
     {
       id: "support-phone",
       title: "Real 10-digit support phone",
       detail: `Now ${input.supportPhone} (${national.length} digits)`,
-      done: national.length === 10,
+      done: national.length === 10 || tick("supportPhoneKept"),
       href: "/admin/settings/",
       manual: null,
+      keep: { key: "supportPhoneKept", kept: national.length !== 10 && tick("supportPhoneKept") },
     },
     {
       id: "banner",
@@ -171,7 +185,7 @@ export async function loadChecklistInputs(): Promise<ChecklistInputs> {
     readMoneySettings(),
     demoAdCounts(),
     User.find({ roles: { $in: [...STAFF_ROLE_NAMES] }, status: "active" }).select("displayName").sort({ createdAt: 1 }).limit(8).lean<{ displayName?: string }[]>(),
-    Listing.find({ ...real, status: { $in: ["active", "pending"] } }).sort({ createdAt: -1 }).limit(JUNK_SCAN).select("title").lean<{ title?: string }[]>(),
+    Listing.find({ ...real, status: { $in: ["active", "pending"] }, notJunkAt: null }).sort({ createdAt: -1 }).limit(JUNK_SCAN).select("title").lean<{ _id: unknown; title?: string }[]>(),
     Page.find({ status: "published" }).select("slug body").lean<{ slug?: string; body?: string }[]>(),
     Site.findOne({ key: SITE_KEY }).select("launchChecklist").lean<{ launchChecklist?: ChecklistInputs["ticks"] } | null>(),
     SiteMedia.countDocuments({ trashedAt: null }),
@@ -189,6 +203,7 @@ export async function loadChecklistInputs(): Promise<ChecklistInputs> {
     postingFee: money.postingFeeCredits,
     demoActive: demoCounts.active,
     junkTitles: recent.map((row) => row.title ?? ""),
+    junkIds: recent.map((row) => String(row._id)),
     supportPhone: SUPPORT_PHONE,
     placeholderPages: placeholderPagesIn(texts),
     grievancePublished: pages.some((page) => page.slug === "grievance"),
@@ -206,29 +221,69 @@ export async function getLaunchChecklist(): Promise<ChecklistRow[]> {
   return buildChecklist(await loadChecklistInputs());
 }
 
-const TICK_LABELS: Record<ManualKey, string> = {
+const TICK_LABELS: Record<TickKey, string> = {
   junkAdsChecked: "junk test ads checked",
   bannerChecked: "banner picture checked",
   paidPostingDecided: "paid posting decided",
+  supportPhoneKept: "support phone kept as is",
 };
 
+type Doc = Record<string, unknown>;
+const plain = <T,>(value: T): T => JSON.parse(JSON.stringify(value ?? null)) as T;
+
+/** Ticks or unticks one row of the launch checklist. One audited write; Undo puts the whole checklist record back as it was. */
 export async function tickChecklist(ctx: AdminCtx, key: string, done: boolean) {
-  if (!(MANUAL_KEYS as readonly string[]).includes(key)) throw new NotFoundError("This row cannot be ticked");
-  const manual = key as ManualKey;
+  const known = [...MANUAL_KEYS, ...KEEP_KEYS] as readonly string[];
+  if (!known.includes(key)) throw new NotFoundError("This row cannot be ticked");
+  const manual = key as TickKey;
   const label = TICK_LABELS[manual];
   await connectDb();
+  const start = plain((await Site.findOne({ key: SITE_KEY }).select("launchChecklist").lean<{ launchChecklist?: Doc } | null>())?.launchChecklist);
   return adminWrite(ctx, {
     perm: "settings.edit",
     action: done ? "launch.tick" : "launch.untick",
     target: { type: "site", id: "launch-checklist", label: "Launch checklist" },
-    before: async () => {
-      const site = await Site.findOne({ key: SITE_KEY }).select("launchChecklist").lean<{ launchChecklist?: Record<string, unknown> } | null>();
-      return { [manual]: site?.launchChecklist?.[manual] ?? null };
-    },
+    undo: { kind: "record.restore", windowKey: "edits" },
+    before: async () => ({ [manual]: (start as Doc | null)?.[manual] ?? null }),
     apply: async () => {
       const value = done ? { at: new Date(), by: ctx.email } : null;
       await Site.updateOne({ key: SITE_KEY }, { $set: { [`launchChecklist.${manual}`]: value } }, { upsert: true, strict: false });
-      return { after: { [manual]: value ? { by: ctx.email } : null }, result: { key: manual, done }, summary: `${done ? "Ticked" : "Unticked"} the “${label}” row` };
+      const site = await Site.findOne({ key: SITE_KEY }).select("launchChecklist").lean<{ _id: unknown; launchChecklist?: Doc } | null>();
+      const now = plain(site?.launchChecklist);
+      return {
+        after: { [manual]: value ? { by: ctx.email } : null },
+        result: { key: manual, done },
+        summary: `${done ? "Ticked" : "Unticked"} the “${label}” row`,
+        undoData: { model: "Site", id: String(site?._id), restore: start ? { launchChecklist: start } : {}, unset: start ? [] : ["launchChecklist"], expect: { launchChecklist: now } },
+      };
+    },
+  });
+}
+
+/** Says an ad is not junk, so the launch checklist stops naming it. Stored on the ad, audited, and Undo takes the mark off. */
+export async function markNotJunk(ctx: AdminCtx, listingId: string, notJunk: boolean) {
+  await connectDb();
+  if (!Types.ObjectId.isValid(listingId)) throw new NotFoundError("Ad not found");
+  const row = await Listing.findById(listingId).select("title notJunkAt").lean<{ title?: string; notJunkAt?: Date | null } | null>();
+  if (!row) throw new NotFoundError("Ad not found");
+  const title = row.title ?? "";
+  const was = row.notJunkAt ? new Date(row.notJunkAt).toISOString() : null;
+  return adminWrite(ctx, {
+    perm: "settings.edit",
+    action: notJunk ? "launch.not-junk" : "launch.junk-again",
+    target: { type: "listing", id: listingId, label: title },
+    undo: { kind: "record.restore", windowKey: "edits" },
+    before: async () => ({ notJunkAt: was }),
+    apply: async () => {
+      const at = notJunk ? new Date() : null;
+      await Listing.updateOne({ _id: listingId }, { $set: { notJunkAt: at } });
+      const now = plain((await Listing.findById(listingId).select("notJunkAt").lean<{ notJunkAt?: Date | null } | null>())?.notJunkAt ?? null);
+      return {
+        after: { notJunkAt: at ? at.toISOString() : null },
+        result: { title },
+        summary: `${notJunk ? "Marked" : "Took the mark off"} the ad “${title.slice(0, 40)}” ${notJunk ? "as not junk" : "(not junk)"}`,
+        undoData: { model: "Listing", id: listingId, restore: { notJunkAt: was }, unset: [], expect: { notJunkAt: now } },
+      };
     },
   });
 }
