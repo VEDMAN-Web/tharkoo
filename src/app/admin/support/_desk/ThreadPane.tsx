@@ -9,11 +9,11 @@ import { postForm } from "@/components/support/request";
 import { api, friendlyError, type ApiError } from "@/lib/ui/api";
 import type { MessageView, TicketSummary } from "@/server/support/records";
 import type { TicketOrder } from "./data";
+import { overLabel } from "./age";
 import { REPLY_TEMPLATES, fillTemplate } from "./templates";
 
 type Staff = { id: string; name: string };
 type Outcome = { kind: "info" | "error"; text: string } | null;
-const OVER_HOURS = 4;
 
 type Answer = { ok: true; data: unknown } | { ok: false; error: ApiError };
 
@@ -52,8 +52,7 @@ export function ThreadPane({
   const [assignee, setAssignee] = useState("");
   const area = useRef<HTMLTextAreaElement>(null);
   const closed = ticket.status === "closed";
-  const hoursWaiting = (now - new Date(ticket.lastCustomerMessageAt).getTime()) / 3_600_000;
-  const over = ticket.status === "waiting_for_support" && hoursWaiting >= OVER_HOURS;
+  const over = overLabel(ticket.status, ticket.lastCustomerMessageAt, now);
 
   async function send(andClose: boolean) {
     if (busy) return;
@@ -143,7 +142,7 @@ export function ThreadPane({
           <p className="adm-k-help">{`${customer} · opened ${formatWhen(ticket.lastMessageAt)} · #${ticket.number}`}</p>
         </div>
         <div className="adm-sd-tbadges">
-          {over ? <Badge tone="bad">{`Over ${OVER_HOURS} h`}</Badge> : null}
+          {over ? <Badge tone="bad">{over}</Badge> : null}
           <StatusChip status={ticket.status} label={ticket.statusLabel} />
           <label className="adm-k-sr" htmlFor="desk-assign">Assigned to</label>
           <select id="desk-assign" className="adm-k-select" value={assignee} onChange={(event) => void assign(event.target.value)} disabled={busy || closed}>

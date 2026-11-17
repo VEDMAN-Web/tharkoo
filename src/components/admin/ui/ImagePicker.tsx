@@ -22,7 +22,7 @@ const toRef = (row: PickerRow): ImageRef => ({ assetId: row.id, src: row.url, al
  * choose / replace from the library, upload a new banner, remove the banner.
  * H7.8: `rule` puts the size help under the label with an (i) button, and refuses a file that is too big or the wrong type.
  */
-export function ImagePicker({ label, value, onChange, banner = false, rule }: { label: string; value?: ImageRef | null; onChange: (next: ImageRef | null) => void; banner?: boolean; rule?: UploadRule }) {
+export function ImagePicker({ label, value, onChange, banner = false, rule, hideLabel = false, hidePreview = false }: { label: string; value?: ImageRef | null; onChange: (next: ImageRef | null) => void; banner?: boolean; rule?: UploadRule; hideLabel?: boolean; hidePreview?: boolean }) {
   const uid = useId();
   const [dialog, setDialog] = useState<PickerTab | null>(null);
 
@@ -33,7 +33,7 @@ export function ImagePicker({ label, value, onChange, banner = false, rule }: { 
 
   return (
     <div className="adm-field">
-      <span className="adm-field-label" id={`${uid}-label`}>{label}</span>
+      <span className="adm-field-label" id={`${uid}-label`} style={hideLabel ? { position: "absolute", width: 1, height: 1, overflow: "hidden", clipPath: "inset(50%)", whiteSpace: "nowrap" } : undefined}>{label}</span>
       {rule ? (
         <>
           <p className="adm-field-help" id={`${uid}-line`}>{rule.line}</p>
@@ -47,7 +47,7 @@ export function ImagePicker({ label, value, onChange, banner = false, rule }: { 
           </InfoPopover>
         </>
       ) : null}
-      {value ? (
+      {value && !hidePreview ? (
         <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src={value.src} alt={value.alt} width={72} height={54} style={{ objectFit: "cover", borderRadius: 8 }} />
@@ -74,10 +74,15 @@ export function ImagePicker({ label, value, onChange, banner = false, rule }: { 
           ) : null}
         </div>
       ) : (
-        <div>
+        <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
           <button type="button" className="adm-btn adm-btn-ghost" onClick={() => setDialog("library")}>
             {value ? "Change image" : "Choose image"}
           </button>
+          {value && hidePreview ? (
+            <button type="button" className="adm-btn adm-btn-quiet" onClick={() => onChange(null)}>
+              Remove image
+            </button>
+          ) : null}
         </div>
       )}
       {dialog ? <ImagePickerDialog label={label} value={value} rule={rule} startTab={dialog} onPick={pick} onClose={() => setDialog(null)} /> : null}

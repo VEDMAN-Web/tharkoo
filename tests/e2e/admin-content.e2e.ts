@@ -13,14 +13,15 @@ test.describe("6 Admin: content screens", () => {
     const key = "listing.filters.verified";
     const text = `Verified e2e ${Date.now() % 100000}`;
     await page.goto("/admin/ui-text/");
-    const field = page.getByLabel(key, { exact: true });
+    await page.getByRole("tab", { name: "Listing pages" }).click();
+    const field = page.getByLabel("Filters verified", { exact: true });
     await expect(field).toBeVisible();
     await field.fill(text);
-    await page.getByRole("button", { name: "Publish", exact: true }).click();
-    await expect(page.getByText(/Saved 1 text/)).toBeVisible();
+    await page.getByRole("button", { name: "Save changes", exact: true }).click();
+    await expect(page.getByText(/Saved 1 text/).first()).toBeVisible();
     await expect.poll(async () => (await (await request.get("/dating/bengaluru/")).text()).includes(text), POLL).toBe(true);
 
-    await field.locator("xpath=ancestor::div[contains(@style, \"display:grid\")][1]").getByRole("button", { name: "Reset to default" }).click();
+    await page.locator('[data-tk="text-row"]', { has: field }).getByRole("button", { name: "Back to standard text" }).click();
     await expect(page.getByText("Back to the default text.")).toBeVisible();
     await expect.poll(async () => (await (await request.get("/dating/bengaluru/")).text()).includes(text), POLL).toBe(false);
   });

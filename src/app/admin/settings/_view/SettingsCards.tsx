@@ -88,6 +88,10 @@ export function PostModerationCard({ since, canEdit }: { since: string | null; c
 
 /** Undo windows: how many days staff can undo each kind of change. Payments, refunds and sent emails can never be undone. */
 export function UndoWindowsCard({ windows, canEdit }: { windows: UndoWindows; canEdit: boolean }) {
+  return <UndoWindowsForm key={UNDO_WINDOW_KEYS.map((key) => windows[key]).join("-")} windows={windows} canEdit={canEdit} />;
+}
+
+function UndoWindowsForm({ windows, canEdit }: { windows: UndoWindows; canEdit: boolean }) {
   const answer = useAnswer();
   const [values, setValues] = useState<Record<string, string>>(Object.fromEntries(UNDO_WINDOW_KEYS.map((key) => [key, String(windows[key])])));
   const [error, setError] = useState("");
