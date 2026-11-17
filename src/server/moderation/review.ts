@@ -62,9 +62,10 @@ async function tabFilter(tab: ReviewTab): Promise<QueryFilter<Record<string, unk
 }
 
 /** What each ad's posting fee stands at now: credits paid and not given back (0 when free or already given back). */
-async function paidCreditsFor(ids: string[]): Promise<Map<string, number>> {
+export async function paidCreditsFor(ids: string[]): Promise<Map<string, number>> {
   const result = new Map<string, number>();
   if (ids.length === 0) return result;
+  await connectDb();
   const rows = await WalletEntry.find({ refType: { $in: [FEE_REF, FEE_REFUND_REF] }, refId: { $regex: `^(${ids.join("|")}):` } })
     .sort({ _id: 1 })
     .select("refType refId delta")
