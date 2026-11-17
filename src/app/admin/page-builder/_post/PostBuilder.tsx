@@ -254,7 +254,7 @@ function Inner() {
         </aside>
       </div>
 
-      <div className="adm-k-savebar" role="region" aria-label="Save changes" data-tk="save-bar" data-dirty={dirty ? "yes" : "no"}>
+      <div className="adm-k-savebar adm-pb-savebar" role="region" aria-label="Save changes" data-tk="save-bar" data-dirty={dirty ? "yes" : "no"}>
         <span className={`adm-k-savedot${dirty ? " is-dirty" : ""}`} aria-hidden="true" />
         <span className="adm-k-savetext" aria-live="polite">
           <strong>{savedLabel}</strong> <span>{dirty ? `${changes} ${changes === 1 ? "change" : "changes"} not saved` : ""}</span>
