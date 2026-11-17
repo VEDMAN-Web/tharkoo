@@ -94,7 +94,7 @@ test.describe("A33 ad edit", () => {
       await expect(drawer).toContainText("v1");
       await shot(page, "ad-history");
       await drawer.getByText("v2").first().click();
-      await expect(drawer).toContainText("Restore v2");
+      await expect(page.getByRole("button", { name: "Restore v2" })).toBeVisible();
       await shot(page, "ad-history-restore");
       await page.getByRole("button", { name: "Restore v2" }).click();
       await expect(page.getByText(/Went back to v2/)).toBeVisible();
