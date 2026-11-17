@@ -162,7 +162,7 @@ test.describe("Plus: security sweep", () => {
   });
 
   test("POST routes refuse a missing or foreign Origin", async ({ request, baseURL }) => {
-    const routes = ["/api/auth/login/", "/api/auth/register/", "/api/listings/", "/api/wallet/packs/", "/api/coupons/redeem/", "/api/promotions/", "/api/admin/mutate/"];
+    const routes = ["/api/auth/login/", "/api/auth/register/", "/api/listings/", "/api/wallet/packs/", "/api/coupons/redeem/", "/api/promotions/", "/api/admin/verifications/000000000000000000000000/decision/"];
     for (const path of routes) {
       const none = await request.post(path, { data: {} });
       expect(none.status(), `${path} without Origin`).toBe(403);

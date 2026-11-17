@@ -1,0 +1,13 @@
+{
+  "branchPrefix": "haiku/h8.9c",
+  "globs": [
+    "docs/ownership/H8.9c.json",
+    "progress/H8.9c.md",
+    "src/app/api/admin/list/**",
+    "src/app/api/admin/mutate/**",
+    "src/lib/admin-model-access.ts",
+    "tests/e2e/roles.e2e.ts",
+    "tests/e2e/quality.e2e.ts",
+    "tests/server/auth/auth.test.ts"
+  ]
+}

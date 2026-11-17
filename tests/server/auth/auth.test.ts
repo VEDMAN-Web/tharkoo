@@ -3,7 +3,7 @@ import path from "node:path";
 import mongoose from "mongoose";
 import { NextRequest } from "next/server";
 import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
-import { GET as adminList } from "@/app/api/admin/list/route";
+import { GET as adminVerifications } from "@/app/api/admin/verifications/[[...slug]]/route";
 import { DELETE, GET, POST } from "@/app/api/auth/[[...slug]]/route";
 import { sessionCookieHeader } from "@/server/auth/http";
 import { bootstrapAdmin } from "@/server/auth/service";
@@ -269,15 +269,15 @@ describe("auth routes", () => {
       await call("POST", "verify-email", { token: mailToken(logs) });
       return cookieOf(await call("POST", "login", { email, password }));
     });
-    const denied = await adminList(new NextRequest(`${origin}/api/admin/list`, { headers: { cookie } }));
+    const denied = await adminVerifications(new NextRequest(`${origin}/api/admin/verifications`, { headers: { cookie } }));
     expect(denied.status).toBe(403);
 
     await User.updateOne({ email }, { $set: { roles: ["superadmin"] } });
     const staffCookie = cookieOf(await call("POST", "login", { email, password }));
-    const allowed = await adminList(
-      new NextRequest(`${origin}/api/admin/list`, { headers: { cookie: staffCookie } }),
+    const allowed = await adminVerifications(
+      new NextRequest(`${origin}/api/admin/verifications`, { headers: { cookie: staffCookie } }),
     );
-    expect(allowed.status).toBe(400);
+    expect(allowed.status).toBe(200);
   });
 
   it("bootstraps one superadmin and does not store the password in the audit log", async () => {

@@ -1,6 +1,6 @@
 import { readdirSync, existsSync } from "node:fs";
 import { join } from "node:path";
-import { expect, loginApi, loginUi, newApi, originHeaders, registerApi, setRoles, test, uniqueEmail, visibleText } from "./helpers";
+import { adminApi, expect, loginApi, loginUi, newApi, originHeaders, registerApi, setRoles, test, uniqueEmail, visibleText } from "./helpers";
 
 /** Every admin screen that exists as a route (static segments only). */
 function adminRoutes() {
@@ -13,7 +13,7 @@ function adminRoutes() {
   return routes;
 }
 
-const ADMIN_API_GET = ["/api/admin/list/?model=Listing", "/api/admin/list/?model=Coupon", "/api/admin/verifications/"];
+const ADMIN_API_GET = ["/api/admin/verifications/"];
 
 test.describe("8 Roles", () => {
   test("a normal user sees no admin content on any /admin route", async ({ baseURL }) => {
@@ -48,11 +48,6 @@ test.describe("8 Roles", () => {
       const res = await api.get(path);
       expect(res.status(), path).toBe(403);
     }
-    const mutate = await api.post("/api/admin/mutate/", {
-      headers: originHeaders(baseURL!, "/admin/"),
-      data: { model: "Coupon", op: "create", data: {} },
-    });
-    expect(mutate.status()).toBe(403);
     const decide = await api.post("/api/admin/verifications/000000000000000000000000/decision/", {
       headers: originHeaders(baseURL!, "/admin/"),
       data: { decision: "approved" },
@@ -67,11 +62,6 @@ test.describe("8 Roles", () => {
       const res = await api.get(path);
       expect([401, 403], path).toContain(res.status());
     }
-    const mutate = await api.post("/api/admin/mutate/", {
-      headers: originHeaders(baseURL!, "/admin/"),
-      data: { model: "Coupon", op: "create", data: {} },
-    });
-    expect([401, 403]).toContain(mutate.status());
     await api.dispose();
   });
 
@@ -109,16 +99,12 @@ test.describe("8 Roles", () => {
     await api.dispose();
   });
 
-  test("a seo_editor cannot write coupons through /api/admin/mutate", async ({ baseURL }) => {
-    const email = uniqueEmail("seoapi");
-    const api = await newApi(baseURL!);
-    await registerApi(api, baseURL!, email);
-    await setRoles(email, ["seo_editor"]);
-    await loginApi(api, baseURL!, email);
+  test("the old generic /api/admin/list and /api/admin/mutate routes are gone for every role", async ({ baseURL }) => {
+    const api = await adminApi(baseURL!);
     const list = await api.get("/api/admin/list/?model=Coupon");
-    expect(list.status()).toBe(403);
-    const res = await api.post("/api/admin/mutate/", { headers: originHeaders(baseURL!, "/admin/"), data: { model: "Coupon", op: "create", data: {} } });
-    expect(res.status()).toBe(403);
+    expect(list.status()).toBe(404);
+    const mutate = await api.post("/api/admin/mutate/", { headers: originHeaders(baseURL!, "/admin/"), data: { model: "Coupon", op: "create", data: {} } });
+    expect(mutate.status()).toBe(404);
     await api.dispose();
   });
 });
