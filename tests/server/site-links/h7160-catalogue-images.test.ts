@@ -42,6 +42,18 @@ describe("merging the new pictures with the old rows", () => {
   });
 });
 
+describe("a new band brings its own phone band", () => {
+  it("a partner who sets only the computer band does not keep the old row's phone picture; the old phone band stays when only the card photo is new", () => {
+    const old = [row("category", "dating", { photo: "/uploads/old-card.png", band: "/uploads/old-band.png", bandPhone: "/uploads/old-phone.png" })];
+    const onlyBand = mergeCatalogueImages(old, [row("category", "dating", { band: "/uploads/new-band.png", bandFocusX: 10, bandFocusY: 20 })]);
+    expect(onlyBand[0]).toMatchObject({ band: "/uploads/new-band.png", bandPhone: "", photo: "/uploads/old-card.png", bandFocusX: 10, bandFocusY: 20 });
+    const withPhone = mergeCatalogueImages(old, [row("category", "dating", { band: "/uploads/new-band.png", bandPhone: "/uploads/new-phone.png" })]);
+    expect(withPhone[0].bandPhone).toBe("/uploads/new-phone.png");
+    const onlyCard = mergeCatalogueImages(old, [row("category", "dating", { photo: "/uploads/new-card.png" })]);
+    expect(onlyCard[0]).toMatchObject({ photo: "/uploads/new-card.png", band: "/uploads/old-band.png", bandPhone: "/uploads/old-phone.png" });
+  });
+});
+
 describe("what the public pages read", () => {
   it("reads the pictures of categories and cities from the new fields, and ignores a picture in the Trash and rows of other kinds", async () => {
     const card = await picture("/uploads/dating-card.png");

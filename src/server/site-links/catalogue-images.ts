@@ -30,8 +30,8 @@ export function mergeCatalogueImages(old: readonly ShellImage[], fresh: readonly
     out[at] = {
       ...was,
       ...(row.photo ? { photo: row.photo, focusX: row.focusX, focusY: row.focusY } : {}),
-      ...(row.band ? { band: row.band, bandFocusX: row.bandFocusX, bandFocusY: row.bandFocusY } : {}),
-      ...(row.bandPhone ? { bandPhone: row.bandPhone } : {}),
+      // A new band brings its own phone band (empty means phones use the band itself), never the old row's phone picture.
+      ...(row.band ? { band: row.band, bandPhone: row.bandPhone, bandFocusX: row.bandFocusX, bandFocusY: row.bandFocusY } : {}),
     };
   }
   return out;
