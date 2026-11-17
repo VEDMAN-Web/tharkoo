@@ -1,0 +1,13 @@
+{
+  "branchPrefix": "haiku/h8.46",
+  "globs": [
+    "docs/ownership/H8.46.json",
+    "src/app/admin/team/**",
+    "src/server/admin/team.ts",
+    "src/server/admin/undo/handlers/team-roles.ts",
+    "src/server/admin/undo/registry.ts",
+    "tests/server/admin/a46-*.test.ts",
+    "tests/server/admin/a3-write.test.ts",
+    "tests/e2e/a46-team.e2e.ts"
+  ]
+}

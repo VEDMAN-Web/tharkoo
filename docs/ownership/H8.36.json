@@ -1,0 +1,16 @@
+{
+  "branchPrefix": "haiku/h8.36",
+  "globs": [
+    "docs/ownership/H8.36.json",
+    "src/app/admin/_records/**",
+    "src/app/admin/banned-words/**",
+    "src/app/admin/broadcasts/**",
+    "src/app/admin/flags/**",
+    "src/app/admin/help-sections/**",
+    "src/server/admin/records.ts",
+    "src/lib/admin/record-kinds.ts",
+    "src/lib/admin/screens.ts",
+    "tests/server/admin/a36-*.test.ts",
+    "tests/e2e/a36-forms.e2e.ts"
+  ]
+}

@@ -1,0 +1,35 @@
+/* H8.46: Team and roles only. The shared kit stays in src/styles/admin-kit.css. */
+.adm-tm-grid { display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr); gap: 16px; align-items: start; }
+.adm-tm-staff, .adm-tm-guide { padding: 0; overflow: clip; }
+.adm-tm-head { display: flex; justify-content: space-between; align-items: baseline; padding: 14px 20px; border-bottom: 1px solid var(--adm-line2); }
+.adm-tm-head h2, .adm-tm-guide h2 { margin: 0; font-size: 16px; font-weight: 800; }
+.adm-tm-guide h2 { padding: 14px 20px; border-bottom: 1px solid var(--adm-line2); }
+.adm-tm-cols, .adm-tm-row { display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(0, 1.3fr) 110px 110px; gap: 12px; align-items: center; }
+.adm-tm-cols { padding: 8px 20px; background: #fafbfd; color: var(--adm-kmuted); font-size: 11.5px; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; }
+.adm-tm-rows { margin: 0; padding: 0; list-style: none; }
+.adm-tm-row { width: 100%; padding: 12px 20px; border: 0; border-bottom: 1px solid var(--adm-line2); background: transparent; text-align: left; font: inherit; color: inherit; cursor: pointer; }
+.adm-tm-row:hover { background: #fafbfd; }
+.adm-tm-row[aria-current="true"] { background: #fff7fa; box-shadow: inset 3px 0 0 var(--adm-pri); }
+.adm-tm-person { display: grid; gap: 2px; min-width: 0; }
+.adm-tm-person small { color: var(--adm-kmuted); font-size: 12.5px; overflow-wrap: anywhere; }
+.adm-tm-badges { display: flex; gap: 6px; flex-wrap: wrap; }
+.adm-tm-last { color: var(--adm-kmuted); font-size: 13px; }
+.adm-tm-change { justify-self: end; pointer-events: none; }
+.adm-tm-guide ul { margin: 0; padding: 0; list-style: none; }
+.adm-tm-guide li { display: grid; gap: 2px; padding: 12px 20px; border-bottom: 1px solid var(--adm-line2); }
+.adm-tm-guide li span { color: var(--adm-kmuted); font-size: 13.5px; }
+.adm-tm-guide > p { padding: 12px 20px; margin: 0; }
+.adm-tm-roles { display: grid; gap: 8px; margin: 0; padding: 0; border: 0; min-width: 0; }
+.adm-tm-choice { display: grid; grid-template-columns: 24px minmax(0, 1fr); gap: 10px; align-items: start; min-height: 44px; padding: 8px 0; }
+.adm-tm-choice small { display: block; color: var(--adm-kmuted); font-size: 12.5px; }
+.adm-tm-end { display: grid; gap: 8px; padding-top: 12px; border-top: 1px solid var(--adm-line2); }
+.adm-tm-end .adm-k-btn { justify-self: start; }
+@media (max-width: 1023px) {
+  .adm-tm-grid { grid-template-columns: minmax(0, 1fr); }
+}
+@media (max-width: 767px) {
+  .adm-tm-cols { display: none; }
+  .adm-tm-row { grid-template-columns: minmax(0, 1fr); gap: 6px; padding: 14px 16px; }
+  .adm-tm-change { display: none; }
+  .adm-tm-guide li, .adm-tm-head, .adm-tm-guide h2, .adm-tm-guide > p { padding-left: 16px; padding-right: 16px; }
+}
