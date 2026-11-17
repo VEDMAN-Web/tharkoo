@@ -24,9 +24,13 @@ beforeEach(async () => {
 });
 
 describe("no placeholder text reaches a visitor (H7.126)", () => {
-  it("the trust copy still holds a placeholder, so the filter is what keeps it off the pages", () => {
-    const raw = Object.values(TRUST).flatMap((page) => page.paragraphs);
-    expect(raw.some((paragraph) => paragraph.toLowerCase().includes("[placeholder"))).toBe(true);
+  it("the trust copy holds no placeholder and no postal address line at all", () => {
+    for (const [key, page] of Object.entries(TRUST)) {
+      const raw = page.paragraphs.join(" ").toLowerCase();
+      expect(raw, key).not.toContain("[placeholder");
+      expect(raw, key).not.toContain("postal address");
+      expect(raw, key).not.toContain("ved to confirm");
+    }
   });
 
   it("every trust page keeps no placeholder after the public filter", () => {

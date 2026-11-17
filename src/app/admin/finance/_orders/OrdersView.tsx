@@ -3,7 +3,8 @@
 import { useEffect, useRef, useState } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { ExternalLink, SearchX } from "lucide-react";
-import { Badge, Button, Drawer, FilterBar, KpiCard, Notice, PageHeader, ServerTable, Tabs, type TableColumn } from "@/components/admin/ui";
+import { Badge, Button, Drawer, FilterBar, KpiCard, Notice, PageHeader, ServerTable, Tabs, ToastProvider, type TableColumn } from "@/components/admin/ui";
+import { OrderActions } from "@/app/admin/finance/_actions/OrderActions";
 import { BlockedRefunds, type BlockedRefundRow } from "@/app/admin/finance/BlockedRefunds";
 import { PayoutsQueue, type PayoutRow } from "@/app/admin/finance/PayoutsQueue";
 import { TaxSettingsForm } from "@/app/admin/finance/TaxSettingsForm";
@@ -106,6 +107,7 @@ export function OrdersView({ list, payouts, blocked }: { list: OrderList; payout
 
   const searching = query.q !== "";
   return (
+    <ToastProvider>
     <div className="adm-k" data-tk="orders-screen">
       <PageHeader
         crumbs={[{ label: "Money" }]}
@@ -210,9 +212,11 @@ export function OrdersView({ list, payouts, blocked }: { list: OrderList; payout
                 </div>
               ))}
             </dl>
+            <OrderActions key={open.id} row={open} />
           </div>
         ) : null}
       </Drawer>
     </div>
+    </ToastProvider>
   );
 }
