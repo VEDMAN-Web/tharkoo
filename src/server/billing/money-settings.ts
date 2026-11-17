@@ -50,7 +50,7 @@ function pickKeys(doc: Record<string, unknown> | null, keys: string[]) {
 
 /**
  * Saves some of the four money settings through adminWrite (admin permission, audit, 30 day undo that restores only from the saved values).
- * Asks the public pages to refresh (after #289 a failed refresh is logged with this function as the caller).
+ * Asks the public pages to refresh; a failed refresh is logged with the name "money settings".
  */
 export async function saveMoneyValues(ctx: AdminCtx, rawValues: unknown) {
   const values = parseInput(moneySettingsBodySchema, rawValues);
@@ -77,7 +77,7 @@ export async function saveMoneyValues(ctx: AdminCtx, rawValues: unknown) {
       };
     },
   });
-  await refreshPublicCache();
+  await refreshPublicCache("money settings");
   return { settings: written.result, eventId: written.eventId, undoUntil: written.undoUntil };
 }
 

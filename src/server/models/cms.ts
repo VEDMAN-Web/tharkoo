@@ -151,6 +151,7 @@ export interface CouponDoc extends BaseDoc {
   perUserLimit?: number | null;
   redeemedCount?: number;
   expiresAt?: Date | null;
+  startsAt?: Date | null;
 }
 
 export interface BannedWordDoc extends BaseDoc {
@@ -361,6 +362,7 @@ const couponSchema = new Schema<CouponDoc>(
     perUserLimit: { type: Number, default: null },
     redeemedCount: { type: Number, default: 0 },
     expiresAt: { type: Date, default: null },
+    startsAt: { type: Date, default: null },
   },
   { timestamps: true, collection: collectionName("coupons", "Coupon") },
 );
