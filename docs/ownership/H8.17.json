@@ -1,0 +1,19 @@
+{
+  "branchPrefix": "haiku/h8.17",
+  "globs": [
+    "docs/ownership/H8.17.json",
+    "src/app/admin/prices/**",
+    "src/server/billing/plans-admin.ts",
+    "src/server/billing/money-settings.ts",
+    "src/server/billing/catalog.ts",
+    "src/server/billing/service.ts",
+    "src/server/models/cms.ts",
+    "src/server/admin/undo/handlers/record-restore.ts",
+    "src/app/admin/settings/money/**",
+    "src/components/admin/MockPaymentsBanner.tsx",
+    "tests/server/billing/a17-*.test.ts",
+    "tests/e2e/a17-prices.e2e.ts",
+    "tests/e2e/h7-102-money.e2e.ts",
+    "tests/e2e/h7-120-small.e2e.ts"
+  ]
+}

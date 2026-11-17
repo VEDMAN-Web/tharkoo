@@ -1,0 +1,21 @@
+/* H8.17: Prices & plans only. The shared kit stays in src/styles/admin-kit.css. */
+.adm-p-card { padding: 0; margin-bottom: 16px; overflow: clip; }
+.adm-p-row { display: grid; grid-template-columns: minmax(180px, 280px) minmax(0, 1fr); gap: 24px; padding: 20px; }
+.adm-p-row-line { border-top: 1px solid var(--adm-line2); }
+.adm-p-side h2 { margin: 0 0 4px; font-size: 15px; font-weight: 800; }
+.adm-p-side p { margin: 0; color: var(--adm-kmuted); font-size: 13px; }
+.adm-p-main { display: grid; gap: 12px; align-content: start; min-width: 0; }
+.adm-p-fields { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
+.adm-p-actions { display: flex; gap: 8px; justify-content: flex-end; }
+.adm-p-head { display: flex; align-items: center; gap: 12px; padding: 16px 20px; }
+.adm-p-head h2 { margin: 0; font-size: 15px; font-weight: 800; flex: 1; }
+.adm-p-wrap { border: 0; border-radius: 0; box-shadow: none; border-top: 1px solid var(--adm-line2); }
+.adm-p-sub { display: block; color: var(--adm-kmuted); font-size: 12.5px; }
+.adm-p-form { display: grid; gap: 14px; padding: 16px; }
+[data-tk="prices-screen"] .adm-notice { margin-bottom: 16px; }
+@media (max-width: 767px) {
+  .adm-p-row { grid-template-columns: minmax(0, 1fr); gap: 12px; padding: 16px 12px; }
+  .adm-p-fields { grid-template-columns: minmax(0, 1fr); }
+  .adm-p-head { padding: 12px; flex-wrap: wrap; }
+  .adm-p-actions .adm-k-btn { flex: 1; }
+}

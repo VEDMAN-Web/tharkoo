@@ -84,3 +84,9 @@ export function boostsDue(code: string, durationDays: number, startsAt: Date, no
   if (elapsed >= window) return rule.boosts;
   return Math.min(rule.boosts, Math.floor(elapsed / rule.intervalMs) + 1);
 }
+
+/** Plans in the saved order; plans not in the list yet follow by price. */
+export function orderPlans<T extends { code: string; amount: number }>(plans: T[], order: readonly string[]): T[] {
+  const rank = new Map(order.map((code, index) => [code, index] as const));
+  return [...plans].sort((a, b) => (rank.get(a.code) ?? 1e6) - (rank.get(b.code) ?? 1e6) || a.amount - b.amount);
+}

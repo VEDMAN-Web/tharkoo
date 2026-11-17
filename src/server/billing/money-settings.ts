@@ -2,12 +2,12 @@ import { z } from "zod";
 import { connectDb } from "@/lib/db";
 import { refreshPublicCache } from "@/lib/cache";
 import { isAdminRole } from "@/lib/ui/site-content";
-import { AuditRepository } from "@/server/audit";
+import type { AdminCtx } from "@/server/admin/context";
+import { adminWrite } from "@/server/admin/write";
 import { ForbiddenError, parseInput } from "@/server/http";
 import { Site } from "@/server/models";
 
-const SITE_KEY = "default";
-const audit = new AuditRepository();
+export const SITE_KEY = "default";
 
 export const MONEY_DEFAULTS = { postingFeeCredits: 30, creditPriceInr: 10, mockPaymentsOn: true, paidPostingOn: false } as const;
 
@@ -44,23 +44,54 @@ export function effectivePostingFee(settings: MoneySettings): number {
   return settings.paidPostingOn ? settings.postingFeeCredits : 0;
 }
 
-export async function setMoneySettings(input: { actorId: string; roles: readonly string[]; values: unknown; requestId: string }) {
-  if (!isAdminRole([...input.roles])) throw new ForbiddenError("Only an admin can change this setting");
-  const values = parseInput(moneySettingsBodySchema, input.values);
+function pickKeys(doc: Record<string, unknown> | null, keys: string[]) {
+  return Object.fromEntries(keys.filter((key) => doc && key in doc).map((key) => [key, (doc as Record<string, unknown>)[key]]));
+}
+
+/**
+ * Saves some of the four money settings through adminWrite (admin permission, audit, 30 day undo that restores only from the saved values).
+ * Asks the public pages to refresh (after #289 a failed refresh is logged with this function as the caller).
+ */
+export async function saveMoneyValues(ctx: AdminCtx, rawValues: unknown) {
+  const values = parseInput(moneySettingsBodySchema, rawValues);
   await connectDb();
-  const before = await readMoneySettings();
-  await Site.updateOne({ key: SITE_KEY }, { $set: values }, { upsert: true, strict: false });
-  const after = await readMoneySettings();
-  await audit.append({
-    actorId: input.actorId,
-    actorType: "admin",
+  const keys = Object.keys(values);
+  const written = await adminWrite(ctx, {
+    perm: "prices.edit",
     action: "settings.money.update",
-    targetType: "site",
-    targetId: SITE_KEY,
-    requestId: input.requestId,
-    before,
-    after,
+    target: { type: "site", id: SITE_KEY },
+    undo: keys.length ? { kind: "record.restore", windowKey: "settings" } : undefined,
+    before: async () => ({ ...(await readMoneySettings()) }),
+    apply: async () => {
+      const was = (await Site.findOne({ key: SITE_KEY }).lean()) as Record<string, unknown> | null;
+      if (keys.length) await Site.updateOne({ key: SITE_KEY }, { $set: values }, { upsert: true });
+      const site = (await Site.findOne({ key: SITE_KEY }).lean()) as Record<string, unknown> | null;
+      const after = await readMoneySettings();
+      return {
+        after: { ...after },
+        result: after,
+        summary: keys.length ? `Changed ${keys.join(", ")}` : "No money setting changed",
+        undoData: site
+          ? { model: "Site", id: String(site._id), restore: pickKeys(was, keys), unset: keys.filter((key) => !was || !(key in was)), expect: pickKeys(site, keys) }
+          : undefined,
+      };
+    },
   });
   await refreshPublicCache();
-  return after;
+  return { settings: written.result, eventId: written.eventId, undoUntil: written.undoUntil };
+}
+
+/** Kept for the callers that only have an actor id and roles (tests, scripts). Same rules as saveMoneyValues. */
+export async function setMoneySettings(input: { actorId: string; roles: readonly string[]; values: unknown; requestId: string }) {
+  await connectDb();
+  if (!isAdminRole([...input.roles])) throw new ForbiddenError("Only an admin can change this setting");
+  const saved = await saveMoneyValues({ actorId: input.actorId, email: "", roles: [...input.roles], requestId: input.requestId }, input.values);
+  return saved.settings;
+}
+
+/** The saved order of promotion plans (their codes), or an empty list. */
+export async function readPlanOrder(): Promise<string[]> {
+  await connectDb();
+  const site = await Site.findOne({ key: SITE_KEY }).select("planOrder").lean<{ planOrder?: string[] } | null>();
+  return Array.isArray(site?.planOrder) ? site.planOrder.map(String) : [];
 }
