@@ -2,7 +2,7 @@
   "branchPrefix": "haiku/h8.33",
   "globs": [
     "docs/ownership/H8.33.json",
-    "src/app/admin/ads/[[]id[]]/**",
+    "src/app/admin/ads/[id]/**",
     "src/server/listings/staff-edit.ts",
     "src/server/listings/service.ts",
     "src/server/admin/undo/handlers/listing-edit.ts",
