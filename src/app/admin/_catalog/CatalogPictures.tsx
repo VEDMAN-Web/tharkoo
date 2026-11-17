@@ -1,9 +1,12 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useRef, useState } from "react";
+import { useState } from "react";
 import "./pictures.css";
-import { Button, MediaPicker, Notice, type MediaPickerHandle, type MediaValue } from "@/components/admin/ui";
+import { FocalPicker } from "@/components/admin/FocalPicker";
+import { Badge, Button, Notice } from "@/components/admin/ui";
+import { ImagePicker, type ImageRef } from "@/components/admin/ui/ImagePicker";
+import { UPLOAD_RULES } from "@/components/upload/rules";
 import type { PictureInput, PicturesView } from "@/server/layout/catalog-pictures";
 
 export type PictureItem = { id: string; name: string; sub: string; pictures: PicturesView };
@@ -12,56 +15,91 @@ export type UndoAnswer = { ok: boolean; message: string };
 
 const ALT_MIN = 3;
 const ALT_MAX = 125;
-const NO_IMAGE: MediaValue = { image: null, phone: null, focusX: 50, focusY: 50 };
 
-function photoValue(item: PictureItem): MediaValue {
-  const photo = item.pictures.photo;
-  return photo ? { image: photo.image, phone: null, focusX: photo.focusX, focusY: photo.focusY } : NO_IMAGE;
+type Slot = { image: ImageRef | null; alt: string; focusX: number; focusY: number };
+const EMPTY: Slot = { image: null, alt: "", focusX: 50, focusY: 50 };
+
+function slotOf(view: PicturesView["photo"] | PicturesView["band"]): Slot {
+  return view ? { image: view.image, alt: view.image.alt, focusX: view.focusX, focusY: view.focusY } : EMPTY;
 }
 
-function bandValue(item: PictureItem): MediaValue {
-  const band = item.pictures.band;
-  return band ? { image: band.image, phone: band.phone, focusX: band.focusX, focusY: band.focusY } : NO_IMAGE;
-}
-
-function altProblem(value: MediaValue): string | undefined {
-  if (!value.image) return undefined;
-  const length = value.image.alt.trim().length;
+function altProblem(slot: Slot): string {
+  if (!slot.image) return "";
+  const length = slot.alt.trim().length;
   if (length < ALT_MIN) return "Describe the picture in a few words.";
   if (length > ALT_MAX) return `Use at most ${ALT_MAX} characters.`;
-  return undefined;
+  return "";
+}
+
+/** One clear box for one picture: its name, what it is for, the picker with the size help (i), the description and the point that must stay in view. */
+function PictureBox({ title, purpose, rule, aspect, slot, onChange, noAlt, noFocus, error }: {
+  title: string;
+  purpose: string;
+  rule: (typeof UPLOAD_RULES)[keyof typeof UPLOAD_RULES];
+  aspect: string;
+  slot: Slot;
+  onChange: (next: Slot) => void;
+  noAlt?: boolean;
+  noFocus?: boolean;
+  error?: string;
+}) {
+  return (
+    <section className="adm-pics-box" aria-label={title} data-tk="picture-box" data-slot={title}>
+      <h4 className="adm-pics-boxtitle">{title}</h4>
+      <p className="adm-field-help">{purpose}</p>
+      <ImagePicker
+        label={`${title} picture`}
+        rule={rule}
+        value={slot.image}
+        onChange={(image) => onChange(image ? { ...slot, image, alt: slot.alt || image.alt.slice(0, ALT_MAX) } : EMPTY)}
+      />
+      {slot.image && !noAlt ? (
+        <div className="adm-k-field">
+          <label className="adm-k-label adm-k-lab" htmlFor={`alt-${title}`}>
+            <span>Describe the picture <span className="adm-k-req" aria-hidden="true">*</span></span>
+            <span className="adm-k-count">{slot.alt.length} / {ALT_MAX}</span>
+          </label>
+          <input id={`alt-${title}`} className="adm-k-input" value={slot.alt} maxLength={ALT_MAX + 40} required aria-invalid={error ? true : undefined} onChange={(event) => onChange({ ...slot, alt: event.target.value })} />
+          <p className="adm-k-help">Say what the picture shows, for people who cannot see it.</p>
+          {error ? <p className="adm-k-err" role="alert">{error}</p> : null}
+        </div>
+      ) : null}
+      {slot.image && !noFocus ? <FocalPicker label={`${title}: the part that must stay in view`} aspect={aspect} src={slot.image.src} x={slot.focusX} y={slot.focusY} onChange={(point) => onChange({ ...slot, focusX: point.x, focusY: point.y })} /> : null}
+    </section>
+  );
 }
 
 function Editor({ item, noun, save, undo, onSaved }: { item: PictureItem; noun: string; onSaved: (pictures: PicturesView) => void; save: (input: { id: string } & PictureInput) => Promise<PictureAnswer>; undo: (eventId: string) => Promise<UndoAnswer> }) {
   const router = useRouter();
-  const [photo, setPhoto] = useState<MediaValue>(photoValue(item));
-  const [band, setBand] = useState<MediaValue>(bandValue(item));
+  const [photo, setPhoto] = useState<Slot>(slotOf(item.pictures.photo));
+  const [band, setBand] = useState<Slot>(slotOf(item.pictures.band));
+  const [phone, setPhone] = useState<ImageRef | null>(item.pictures.band?.phone ?? null);
   const [busy, setBusy] = useState(false);
+  const [tried, setTried] = useState(false);
   const [note, setNote] = useState<{ kind: "info" | "error"; text: string; eventId?: string } | null>(null);
-  const photoRef = useRef<MediaPickerHandle>(null);
-  const bandRef = useRef<MediaPickerHandle>(null);
-  const photoAlt = altProblem(photo);
-  const bandAlt = altProblem(band);
+  const photoProblem = altProblem(photo);
+  const bandProblem = altProblem(band);
+  const phoneProblem = phone && !band.image ? `Add the wide ${noun} band first. The phone picture goes with it.` : "";
 
   async function onSave() {
     setNote(null);
-    if (photoAlt || bandAlt) {
-      setNote({ kind: "error", text: "Add a picture description before saving." });
-      (photoAlt ? photoRef : bandRef).current?.focusProblem();
+    setTried(true);
+    if (photoProblem || bandProblem || phoneProblem) {
+      setNote({ kind: "error", text: phoneProblem || "Add a picture description before saving." });
       return;
     }
     setBusy(true);
     const answer = await save({
       id: item.id,
-      photo: photo.image ? { assetId: photo.image.assetId, alt: photo.image.alt, focusX: photo.focusX, focusY: photo.focusY } : null,
-      band: band.image ? { assetId: band.image.assetId, phoneAssetId: band.phone?.assetId ?? null, alt: band.image.alt, focusX: band.focusX, focusY: band.focusY } : null,
+      photo: photo.image ? { assetId: photo.image.assetId, alt: photo.alt.trim(), focusX: photo.focusX, focusY: photo.focusY } : null,
+      band: band.image ? { assetId: band.image.assetId, phoneAssetId: phone?.assetId ?? null, alt: band.alt.trim(), focusX: band.focusX, focusY: band.focusY } : null,
     });
     setBusy(false);
     setNote(answer.ok ? { kind: "info", text: answer.message, eventId: answer.eventId } : { kind: "error", text: answer.message });
     if (answer.ok) {
       onSaved({
-        photo: photo.image ? { image: photo.image, focusX: photo.focusX, focusY: photo.focusY } : null,
-        band: band.image ? { image: band.image, phone: band.phone, focusX: band.focusX, focusY: band.focusY } : null,
+        photo: photo.image ? { image: { ...photo.image, alt: photo.alt.trim() }, focusX: photo.focusX, focusY: photo.focusY } : null,
+        band: band.image ? { image: { ...band.image, alt: band.alt.trim() }, phone, focusX: band.focusX, focusY: band.focusY } : null,
       });
       router.refresh();
     }
@@ -75,16 +113,20 @@ function Editor({ item, noun, save, undo, onSaved }: { item: PictureItem; noun: 
 
   return (
     <div className="adm-pics-editor" data-tk="catalog-pictures-editor">
-      <h3 className="adm-pics-name">{item.name}</h3>
       <div className="adm-pics-grid">
-        <section aria-label={`Photo of ${item.name}`}>
-          <p className="adm-field-help">The photo shows on the home page card and on the {noun} page. It is cropped around the focus point.</p>
-          <MediaPicker ref={photoRef} label="Photo" value={photo} onChange={setPhoto} aspect="4 / 3" withPhone={false} error={photoAlt ? { alt: photoAlt } : undefined} />
-        </section>
-        <section aria-label={`Band of ${item.name}`}>
-          <p className="adm-field-help">The band is the wide picture at the top of the {noun} page. A phone picture is optional.</p>
-          <MediaPicker ref={bandRef} label="Band" value={band} onChange={setBand} aspect="1920 / 700" withPhone error={bandAlt ? { alt: bandAlt } : undefined} />
-        </section>
+        <PictureBox title="Card photo" purpose={`Shows on the home page card and in the ${noun} lists. Cropped to a 3:2 card (4:5 on phones).`} rule={UPLOAD_RULES.categoryCard} aspect="3 / 2" slot={photo} onChange={setPhoto} error={tried ? photoProblem : ""} />
+        <PictureBox title="Band, computers" purpose={`The wide picture at the top of the ${noun} page on computers.`} rule={UPLOAD_RULES.categoryBand} aspect="1600 / 500" slot={band} onChange={setBand} error={tried ? bandProblem : ""} />
+        <PictureBox
+          title="Band, phones"
+          purpose="Optional. A tall picture phones show instead of the wide one. Without it, phones crop the wide picture."
+          rule={UPLOAD_RULES.categoryBandPhone}
+          aspect="4 / 5"
+          slot={{ image: phone, alt: "", focusX: 50, focusY: 50 }}
+          onChange={(next) => setPhone(next.image)}
+          noAlt
+          noFocus
+          error={tried ? phoneProblem : ""}
+        />
       </div>
       {note ? (
         <Notice kind={note.kind}>
@@ -104,7 +146,11 @@ function Editor({ item, noun, save, undo, onSaved }: { item: PictureItem; noun: 
   );
 }
 
-/** Photo and band pickers for a category or a place (H8.39). The pictures come from the media library, so deleting one that is used is refused. */
+function Status({ done, label }: { done: boolean; label: string }) {
+  return <Badge tone={done ? "ok" : "neutral"}>{`${label}: ${done ? "set" : "missing"}`}</Badge>;
+}
+
+/** The picture boxes for categories or places (H8.39): one row for each, with what is set and what is missing, and three clear boxes when you open it. */
 export function CatalogPictures({
   title,
   intro,
@@ -123,10 +169,9 @@ export function CatalogPictures({
   search?: (query: string) => Promise<PictureItem[]>;
 }) {
   const [pool, setPool] = useState<PictureItem[]>(items);
-  const [chosen, setChosen] = useState("");
+  const [open, setOpen] = useState("");
   const [query, setQuery] = useState("");
   const [busy, setBusy] = useState(false);
-  const item = pool.find((entry) => entry.id === chosen) ?? null;
 
   async function find() {
     if (!search) return;
@@ -134,7 +179,7 @@ export function CatalogPictures({
     const found = await search(query.trim());
     setBusy(false);
     setPool(found);
-    setChosen(found[0]?.id ?? "");
+    setOpen("");
   }
 
   return (
@@ -150,27 +195,42 @@ export function CatalogPictures({
           <Button type="submit" busy={busy}>Search</Button>
         </form>
       ) : null}
-      <label className="adm-field" style={{ maxWidth: 360 }}>
-        <span className="adm-field-label">{`Choose a ${noun}`}</span>
-        <select className="adm-input" value={chosen} onChange={(event) => setChosen(event.target.value)}>
-          <option value="">{pool.length ? `Choose a ${noun}` : `No ${noun} found`}</option>
-          {pool.map((entry) => (
-            <option key={entry.id} value={entry.id}>
-              {entry.sub ? `${entry.name} (${entry.sub})` : entry.name}
-            </option>
-          ))}
-        </select>
-      </label>
-      {item ? (
-        <Editor
-          key={item.id}
-          item={item}
-          noun={noun}
-          save={save}
-          undo={undo}
-          onSaved={(pictures) => setPool((current) => current.map((entry) => (entry.id === item.id ? { ...entry, pictures } : entry)))}
-        />
-      ) : null}
+      {pool.length === 0 ? <p className="adm-field-help" data-tk="pictures-none">{`No ${noun} found.`}</p> : null}
+      <ul className="adm-pics-list">
+        {pool.map((entry) => {
+          const isOpen = open === entry.id;
+          return (
+            <li key={entry.id} className="adm-pics-row" data-tk="pictures-row" data-open={isOpen ? "yes" : "no"}>
+              <div className="adm-pics-rowhead">
+                <span className="adm-pics-rowname">
+                  <strong>{entry.name}</strong>
+                  {entry.sub ? <small>{entry.sub}</small> : null}
+                </span>
+                <span className="adm-pics-status">
+                  <Status done={Boolean(entry.pictures.photo)} label="Card" />
+                  <Status done={Boolean(entry.pictures.band)} label="Band" />
+                  <Status done={Boolean(entry.pictures.band?.phone)} label="Phone" />
+                </span>
+                <Button size="sm" aria-expanded={isOpen} aria-controls={`pics-${entry.id}`} onClick={() => setOpen(isOpen ? "" : entry.id)}>
+                  {isOpen ? "Close" : "Edit pictures"}
+                </Button>
+              </div>
+              {isOpen ? (
+                <div id={`pics-${entry.id}`}>
+                  <Editor
+                    key={entry.id}
+                    item={entry}
+                    noun={noun}
+                    save={save}
+                    undo={undo}
+                    onSaved={(pictures) => setPool((current) => current.map((row) => (row.id === entry.id ? { ...row, pictures } : row)))}
+                  />
+                </div>
+              ) : null}
+            </li>
+          );
+        })}
+      </ul>
     </section>
   );
 }

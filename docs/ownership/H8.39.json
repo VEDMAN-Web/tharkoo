@@ -9,6 +9,7 @@
     "src/server/locations/manage.ts",
     "src/server/layout/catalog-pictures.ts",
     "src/server/models/catalog.ts",
+    "src/components/upload/rules.ts",
     "tests/server/layout/a39-*.test.ts",
     "tests/e2e/a39-photos.e2e.ts"
   ]

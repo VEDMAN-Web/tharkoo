@@ -1,10 +1,23 @@
-.adm-pics-editor { display: grid; gap: 14px; margin-top: 14px; }
-.adm-pics-name { margin: 0; font-size: 15px; font-weight: 800; }
-.adm-pics-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 20px; align-items: start; }
+.adm-pics-list { margin: 12px 0 0; padding: 0; list-style: none; display: grid; gap: 8px; }
+.adm-pics-row { border: 1px solid var(--adm-line2, #e6e8ef); border-radius: 10px; overflow: clip; }
+.adm-pics-row[data-open="yes"] { border-color: var(--adm-pri, #c2185b); }
+.adm-pics-rowhead { display: flex; gap: 12px; align-items: center; justify-content: space-between; flex-wrap: wrap; padding: 10px 14px; }
+.adm-pics-rowname { display: grid; gap: 2px; min-width: 0; }
+.adm-pics-rowname small { color: var(--adm-kmuted, #6b7280); font-size: 12.5px; }
+.adm-pics-status { display: flex; gap: 6px; flex-wrap: wrap; flex: 1; justify-content: flex-end; }
+.adm-pics-editor { display: grid; gap: 14px; padding: 4px 14px 14px; }
+.adm-pics-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; align-items: start; }
+.adm-pics-box { display: grid; gap: 10px; padding: 14px; border: 1px solid var(--adm-line2, #e6e8ef); border-radius: 10px; min-width: 0; }
+.adm-pics-boxtitle { margin: 0; font-size: 15px; font-weight: 800; }
 .adm-pics-actions { display: flex; justify-content: flex-end; }
-.adm-pics-search { display: flex; flex-wrap: wrap; gap: 10px; align-items: end; margin-bottom: 10px; }
+.adm-pics-search { display: flex; flex-wrap: wrap; gap: 10px; align-items: end; margin: 10px 0; }
 .adm-pics-undo { background: none; border: 0; padding: 4px 6px; min-height: 24px; font: inherit; font-weight: 700; text-decoration: underline; cursor: pointer; color: inherit; }
+@media (max-width: 1199px) {
+  .adm-pics-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
 @media (max-width: 899px) {
   .adm-pics-grid { grid-template-columns: minmax(0, 1fr); }
   .adm-pics-actions .adm-k-btn { width: 100%; }
+  .adm-pics-status { justify-content: flex-start; flex-basis: 100%; }
+  .adm-pics-rowhead .adm-k-btn { width: 100%; }
 }

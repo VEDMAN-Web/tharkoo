@@ -5,6 +5,8 @@ import { undoEvent } from "@/server/admin/undo/core";
 import { categoryPictureItems, setCategoryPictures } from "@/server/categories/manage";
 import { ForbiddenError, NotFoundError, ValidationError } from "@/server/http";
 import { findPlacesForPictures, setPlacePictures } from "@/server/locations/manage";
+import { deleteSiteMedia } from "@/server/layout/media";
+import { trashMedia } from "@/server/layout/media-admin";
 import { AuditEvent, Category, Location, SiteMedia } from "@/server/models";
 import { clearMemoryMongo, connectMemoryMongo, disconnectMemoryMongo } from "../../setup/mongo";
 
@@ -109,5 +111,27 @@ describe("pictures of a place", () => {
     expect((await findPlacesForPictures("surat"))[0].pictures.photo?.image.alt).toBe("The Surat skyline");
     await undoEvent(admin, done.eventId);
     expect((await Location.findById(surat._id).lean())?.photo ?? null).toBeNull();
+  });
+});
+
+describe("a picture that a category or a place uses cannot be deleted", () => {
+  it("is refused (delete and Trash) while the card photo, the band or the phone band uses it, naming the category, and works after the picture is taken off", async () => {
+    const cat = await category();
+    const card = await picture("Card");
+    const wide = await picture("Wide");
+    const tall = await picture("Tall");
+    const free = await picture("Free");
+    const done = await setCategoryPictures(admin, String(cat._id), { photo: photo(card), band: band(wide, tall) });
+    for (const id of [card, wide, tall]) {
+      await expect(deleteSiteMedia(id, "admin@example.com", ["admin"])).rejects.toThrow(/still used.*Property/);
+      await expect(trashMedia(admin, id)).rejects.toThrow(/still used/);
+      expect(await SiteMedia.countDocuments({ _id: id })).toBe(1);
+    }
+    const surat = await Location.create({ type: "city", slug: "surat", name: "Surat", enabled: true });
+    await setPlacePictures(admin, String(surat._id), { photo: photo(free), band: null });
+    await expect(deleteSiteMedia(free, "admin@example.com", ["admin"])).rejects.toThrow(/still used.*Surat/);
+    await undoEvent(admin, done.eventId);
+    await expect(deleteSiteMedia(wide, "admin@example.com", ["admin"])).resolves.toBeDefined();
+    await expect(deleteSiteMedia(card, "admin@example.com", ["admin"])).resolves.toBeDefined();
   });
 });
