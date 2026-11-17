@@ -34,7 +34,12 @@ test.describe("H8.58 built-in blog posts and help topics", () => {
         const list = page.locator('[data-tk="built-in-list"]');
         await expect(list).toBeVisible();
         await expect(list.getByRole("heading", { name: "Built in, live on the site now" })).toBeVisible();
-        expect(await list.locator('[data-tk="built-in-row"]').count()).toBeGreaterThanOrEqual(1);
+        const built = await list.locator('[data-tk="built-in-row"]').count();
+        expect(built).toBeGreaterThanOrEqual(1);
+        await expect(list.getByText("Built in", { exact: true })).toHaveCount(built);
+        await expect(page.getByText(/^No (posts|articles) here$/)).toHaveCount(0);
+        const label = (await page.getByRole("tab", { name: tab === "help" ? /^Help/ : /^Blog/ }).innerText()).replace(/\D/g, "");
+        expect(Number(label)).toBeGreaterThanOrEqual(built);
         expect(await hasHorizontalScroll(page)).toBe(false);
         expect(await serious(page)).toEqual([]);
         await shot(page, `studio-${tab}`);

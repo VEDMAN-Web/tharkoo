@@ -141,9 +141,9 @@ export function ContentView(props: StudioProps) {
                 ))}
               </div>
             </div>
-            {rows.length === 0 ? (
+            {rows.length === 0 && (props.builtIns.length === 0 || q || status) ? (
               <EmptyState title={`No ${tab === "blog" ? "posts" : "articles"} here`} why={q || status ? "Nothing matches these filters." : `Start the first ${word} with the button above.`} />
-            ) : (
+            ) : rows.length === 0 ? null : (
               <ul className="adm-st-rows">
                 {rows.map((row) => (
                   <li key={row.id}>
@@ -168,6 +168,7 @@ export function ContentView(props: StudioProps) {
                       <Link className="adm-st-row" data-tk="built-in-row" href={`${props.builtInScreen}?open=${row.id}`}>
                         <strong>{row.title}</strong>
                         <span className="adm-st-rowmeta">
+                          <Badge tone="info">Built in</Badge>
                           <Badge tone={row.status === "published" ? "ok" : "neutral"}>{row.status === "published" ? "Published" : "Draft"}</Badge>
                           <small>{[row.group, `/${row.slug}/`].filter(Boolean).join(" · ")}</small>
                         </span>

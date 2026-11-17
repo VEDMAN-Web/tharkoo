@@ -14,6 +14,13 @@ function rowOf(doc: Lean, group: string): BuiltInRow {
   return { id: String(doc._id), title: doc.title || "Untitled", slug: doc.slug ?? "", status: doc.status === "draft" ? "draft" : "published", group };
 }
 
+/** How many of each kind exist, for the tab counts. */
+export async function builtInCounts(): Promise<Record<StudioKind, number>> {
+  await connectDb();
+  const [blog, help] = await Promise.all([BlogPost.countDocuments({}), HelpArticle.countDocuments({})]);
+  return { blog, help };
+}
+
 export const builtInScreen = (kind: StudioKind) => (kind === "blog" ? "/admin/blog-posts/" : "/admin/help-topics/");
 
 /** The older records of one kind, in the order the site shows them. */
