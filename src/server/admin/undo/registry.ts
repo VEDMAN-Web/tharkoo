@@ -15,6 +15,7 @@ export const UNDO_KINDS = [
   "media.trash",
   "layout.publish",
   "content.publish",
+  "team.roles",
 ] as const;
 
 export type UndoKind = (typeof UNDO_KINDS)[number];
@@ -106,6 +107,7 @@ const LOADERS: Record<UndoKind, Loader> = {
   "media.trash": () => import("./handlers/media-trash"),
   "layout.publish": () => import("./handlers/layout-publish"),
   "content.publish": () => import("./handlers/content-publish"),
+  "team.roles": () => import("./handlers/team-roles"),
 };
 
 const overrides = new Map<UndoKind, UndoHandler>();
