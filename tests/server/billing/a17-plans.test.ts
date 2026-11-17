@@ -196,7 +196,7 @@ describe("plans in hours (H7.168)", () => {
     expect(old).toMatchObject({ hours: 168, lasts: "168 hours", tooLong: true, notOffered: false });
     expect((await readPricesData()).plans.find((plan) => plan.code === "bump")).toMatchObject({ notOffered: false });
     await PromotionProduct.create({ code: "free", name: "Free", description: "A standard listing with no promotion charge.", amount: 0, currency: "INR", durationDays: 1 });
-    expect((await readPricesData()).plans.find((plan) => plan.code === "free")).toMatchObject({ notOffered: true });
+    expect((await readPricesData()).plans.find((plan) => plan.code === "free")).toMatchObject({ notOffered: true, tooLong: false, lasts: "Not offered" });
     const flash = (await readPricesData()).plans.find((plan) => plan.code === "flash");
     expect(flash).toMatchObject({ hours: 4, lasts: "4 hours", tooLong: false });
   });

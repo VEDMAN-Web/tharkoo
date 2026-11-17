@@ -39,7 +39,7 @@ test.describe("H7.167 Kinds manager", () => {
       await drawer.getByRole("button", { name: "Add a kind" }).click();
       await drawer.getByLabel("Name").fill(name);
       await drawer.getByLabel(/^Max photos/).fill("6");
-      await drawer.getByRole("switch", { name: "Show the map" }).click();
+      await expect(drawer.getByRole("switch", { name: "Show the map" })).toHaveCount(0);
       await drawer.getByRole("switch", { name: "Live video tours allowed" }).click();
       await shot(page, "kinds-add");
       await drawer.getByRole("button", { name: "Add kind", exact: true }).click();
@@ -48,7 +48,7 @@ test.describe("H7.167 Kinds manager", () => {
       await expect(row).toContainText("No category uses it");
 
       await row.getByRole("button", { name: "Edit" }).click();
-      await expect(row.getByRole("switch", { name: "Show the map" })).toHaveAttribute("aria-checked", "false");
+      await expect(row.getByRole("switch", { name: "Show the price on the ad page" })).toHaveAttribute("aria-checked", "true");
       await expect(row.getByRole("switch", { name: "Live video tours allowed" })).toHaveAttribute("aria-checked", "true");
       await row.getByRole("button", { name: "Remove" }).click();
       await expect(drawer.locator('[data-tk="kind-row"]', { hasText: name })).toHaveCount(0);

@@ -35,7 +35,6 @@ function Form({ draft, locked, onChange }: { draft: Draft; locked: boolean; onCh
         <input className="adm-k-input" type="number" min={1} max={30} placeholder="10" value={draft.maxPhotos} onChange={(event) => set({ maxPhotos: event.target.value })} />
       </label>
       <Toggle label="Show the price on the ad page" checked={draft.showPrice} onChange={(showPrice) => set({ showPrice })} />
-      <Toggle label="Show the map" checked={draft.showMap} onChange={(showMap) => set({ showMap })} />
       <Toggle label="Show the contact buttons" checked={draft.showContact} onChange={(showContact) => set({ showContact })} />
       <Toggle label="Live video tours allowed" checked={locked ? false : draft.videoTours} disabled={locked} onChange={(videoTours) => set({ videoTours })} />
       {locked ? <p className="adm-k-help" data-tk="video-never">{VIDEO_NEVER_FOR_PEOPLE}</p> : null}
