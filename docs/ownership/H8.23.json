@@ -1,0 +1,13 @@
+{
+  "branchPrefix": "haiku/h8.23",
+  "globs": [
+    "docs/ownership/H8.23.json",
+    "progress/H8.23.md",
+    "src/app/admin/kyc/**",
+    "src/server/verification/service.ts",
+    "src/server/admin/undo/handlers/id-decision.ts",
+    "tests/server/verification/a23-*.test.ts",
+    "tests/server/admin/a3-write.test.ts",
+    "tests/e2e/a23-id.e2e.ts"
+  ]
+}
