@@ -82,7 +82,7 @@ export function buildChecklist(input: ChecklistInputs): ChecklistRow[] {
       title: "Test payments OFF and a real gateway connected",
       detail: input.mockPaymentsOn ? "Test payments are ON today" : "Test payments are off",
       done: !input.mockPaymentsOn,
-      href: "/admin/settings/money/",
+      href: "/admin/prices/",
       manual: null,
     },
     {
@@ -90,7 +90,7 @@ export function buildChecklist(input: ChecklistInputs): ChecklistRow[] {
       title: "Decide paid posting",
       detail: input.paidPostingOn ? `${input.postingFee} credits for each new ad, on now` : "Posting is free now",
       done: tick("paidPostingDecided"),
-      href: "/admin/settings/money/",
+      href: "/admin/prices/",
       manual: "paidPostingDecided",
     },
     {
