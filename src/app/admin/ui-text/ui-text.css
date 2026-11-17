@@ -1,0 +1,20 @@
+.adm-ut { display: grid; gap: 16px; padding-bottom: 80px; }
+.adm-ut-bar { display: grid; gap: 12px; }
+.adm-ut-search { max-width: 460px; }
+.adm-ut-areas { display: flex; gap: 6px; flex-wrap: wrap; }
+.adm-ut-area { display: inline-flex; align-items: center; gap: 6px; min-height: 40px; padding: 0 14px; border: 1px solid var(--adm-line); border-radius: 999px; background: #fff; font: inherit; font-size: 13.5px; font-weight: 700; cursor: pointer; }
+.adm-ut-area[aria-selected="true"] { border-color: var(--adm-pri); color: var(--adm-pri); background: var(--adm-pri-soft, #fdecf3); }
+.adm-ut-badge { min-width: 20px; padding: 0 6px; border-radius: 999px; background: var(--adm-pri); color: #fff; font-size: 12px; text-align: center; }
+.adm-ut-h { margin: 0; font-size: 16px; font-weight: 800; }
+.adm-ut-where { margin: 2px 0 14px; font-size: 12.5px; color: var(--adm-kmuted); }
+.adm-ut-rows { display: grid; gap: 18px; }
+.adm-ut-row { display: grid; gap: 6px; justify-items: start; min-width: 0; }
+.adm-ut-row > :first-child { width: 100%; }
+.adm-ut-empty { text-align: center; display: grid; gap: 6px; padding: 32px 16px; }
+.adm-ut-empty h2 { margin: 0; font-size: 16px; }
+.adm-ut-empty p { margin: 0; color: var(--adm-kmuted); }
+.adm-ut-save { position: sticky; bottom: 0; }
+@media (max-width: 767px) {
+  .adm-ut-areas { flex-wrap: nowrap; overflow-x: auto; padding-bottom: 4px; }
+  .adm-ut-area { white-space: nowrap; }
+}

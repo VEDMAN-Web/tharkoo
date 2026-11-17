@@ -2,13 +2,13 @@ import type { Model as MongooseModel } from "mongoose";
 import { connectDb } from "@/lib/db";
 import { canUseModel } from "@/lib/admin-model-access";
 import { MODEL_MAP, type ModelName } from "@/lib/models";
-import { PromotionProduct } from "@/server/models";
+import { PromotionProduct, UiText } from "@/server/models";
 import type { UndoHandler } from "../registry";
 
 type Doc = Record<string, unknown>;
 
 /** Models the generic admin editor does not offer, but whose own screens save an undo that restores through here (H8.17). */
-const UNDO_ONLY_MODELS: Record<string, unknown> = { PromotionProduct };
+const UNDO_ONLY_MODELS: Record<string, unknown> = { PromotionProduct, UiText };
 
 function modelOf(name: string) {
   if (UNDO_ONLY_MODELS[name]) return UNDO_ONLY_MODELS[name] as MongooseModel<Doc>;
