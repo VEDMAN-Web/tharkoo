@@ -9,7 +9,7 @@ import { codeOnlyLoginEnabled } from "@/server/auth/code-only";
 import { readAwayHours } from "@/server/availability/service";
 import { idCheckRequired } from "@/server/settings/id-check";
 import { readLogos } from "@/server/settings/logo";
-import { readRawSite, readSettingsData } from "@/server/settings/settings-admin";
+import { readSettingsData } from "@/server/settings/settings-admin";
 import { readWatermarkSettings } from "@/server/settings/watermark";
 import { newDesignOn } from "@/server/site-links/new-design";
 import { AwayHoursSetting } from "./AwayHoursSetting";
@@ -23,7 +23,7 @@ export const dynamic = "force-dynamic";
 
 /**
  * H8.25 (A25): Settings essentials. Emergency switches, posting rules, undo windows and search engine status are new here; the older
- * switches keep their own components. The raw site record is read only and only for a superadmin (no editor).
+ * switches keep their own components. The raw site record sits behind an Advanced switch for a superadmin, loaded only when it is turned on (read only, no editor).
  */
 export default async function Page() {
   const identity = await getStaffFromHeaders();
@@ -42,9 +42,8 @@ export default async function Page() {
   }
   const isSuperadmin = roles.includes("superadmin");
   const isAdmin = isAdminRole(roles);
-  const [data, rawJson, codeOnly, idCheck, watermark, logos, away, newDesign] = await Promise.all([
+  const [data, codeOnly, idCheck, watermark, logos, away, newDesign] = await Promise.all([
     readSettingsData(),
-    can(roles, "raw.json") ? readRawSite(roles) : Promise.resolve(null),
     isSuperadmin ? codeOnlyLoginEnabled() : Promise.resolve(false),
     isSuperadmin ? idCheckRequired() : Promise.resolve(false),
     isSuperadmin ? readWatermarkSettings() : Promise.resolve(null),
@@ -58,13 +57,8 @@ export default async function Page() {
       <IdCheckSwitch initial={idCheck} />
     </>
   ) : null;
-  const photos =
-    watermark || logos ? (
-      <>
-        {watermark ? <WatermarkSettings initial={watermark} /> : null}
-        {logos ? <LogoSettings light={logos.light} dark={logos.dark} /> : null}
-      </>
-    ) : null;
+  const photos = watermark ? <WatermarkSettings initial={watermark} /> : null;
+  const logo = logos ? <LogoSettings light={logos.light} dark={logos.dark} /> : null;
   const site = (
     <>
       {isSuperadmin ? <NewDesignSwitch initial={newDesign} /> : null}
@@ -73,7 +67,7 @@ export default async function Page() {
   );
   return (
     <AdminShell title="Settings" hasHeader>
-      <SettingsView data={data} canEmergency={can(roles, "settings.emergency")} canEdit={can(roles, "settings.edit")} signIn={signIn} photos={photos} site={site} rawJson={rawJson} />
+      <SettingsView data={data} canEmergency={can(roles, "settings.emergency")} canEdit={can(roles, "settings.edit")} signIn={signIn} photos={photos} logo={logo} site={site} advanced={isSuperadmin && can(roles, "raw.json")} />
     </AdminShell>
   );
 }

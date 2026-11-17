@@ -1,9 +1,10 @@
 "use client";
 
 import { useState } from "react";
-import { Notice } from "@/components/admin/ui";
+import { Button, Notice } from "@/components/admin/ui";
 import { AWAY_HOURS_MAX, AWAY_HOURS_MIN } from "@/server/availability/status";
 import { saveAwayHoursAction } from "./availability-actions";
+import { SettingItem } from "./_view/SettingItem";
 
 type Banner = { kind: "error" | "info"; text: string };
 
@@ -24,15 +25,16 @@ export function AwayHoursSetting({ initial }: { initial: number }) {
   }
 
   return (
-    <section className="mb-3" aria-labelledby="away-hours-title">
-      <h2 className="t-h3" id="away-hours-title">Available now: Away after</h2>
-      <p className="t-small text-muted">
-        A seller who turns on &quot;Available now&quot; shows Online now until this many hours pass with no activity, then Away. Chat still works when Away. Calls pause.
-      </p>
-      <label className="flex flex-col t-small">
-        Hours ({AWAY_HOURS_MIN} to {AWAY_HOURS_MAX})
+    <SettingItem
+      id="away-hours-title"
+      title="Available now: Away after"
+      help='A seller who turns on "Available now" shows Online now until this many hours pass with no activity, then Away. Chat still works when Away. Calls pause.'
+    >
+      <div className="adm-k-field">
+        <label className="adm-k-label" htmlFor="away-hours">Hours ({AWAY_HOURS_MIN} to {AWAY_HOURS_MAX})</label>
         <input
-          className="adm-input"
+          id="away-hours"
+          className="adm-k-input"
           type="number"
           min={AWAY_HOURS_MIN}
           max={AWAY_HOURS_MAX}
@@ -42,11 +44,11 @@ export function AwayHoursSetting({ initial }: { initial: number }) {
           disabled={busy}
           onChange={(event) => setHours(event.target.value)}
         />
-      </label>
-      <button type="button" className="adm-btn mt-2" onClick={save} disabled={busy}>
-        {busy ? "Saving..." : "Save hours"}
-      </button>
+      </div>
+      <div className="adm-s-actions">
+        <Button kind="primary" busy={busy} onClick={() => void save()}>Save hours</Button>
+      </div>
       {notice ? <Notice kind={notice.kind}>{notice.text}</Notice> : null}
-    </section>
+    </SettingItem>
   );
 }

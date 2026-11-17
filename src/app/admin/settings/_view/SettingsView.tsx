@@ -4,7 +4,7 @@ import type { ReactNode } from "react";
 import Link from "next/link";
 import { PageHeader, ToastProvider } from "@/components/admin/ui";
 import type { SettingsData } from "@/server/settings/settings-admin";
-import { EmergencyCard, PostModerationCard, SearchEnginesCard, UndoWindowsCard } from "./SettingsCards";
+import { AdvancedCard, EmergencyCard, PostModerationCard, SearchEnginesCard, UndoWindowsCard } from "./SettingsCards";
 import "./settings.css";
 
 export type SettingsSection = { id: string; label: string };
@@ -19,26 +19,29 @@ export function SettingsView({
   canEdit,
   signIn,
   photos,
+  logo,
   site,
-  rawJson,
+  advanced,
 }: {
   data: SettingsData;
   canEmergency: boolean;
   canEdit: boolean;
   signIn: ReactNode;
   photos: ReactNode;
+  logo: ReactNode;
   site: ReactNode;
-  rawJson: string | null;
+  advanced: boolean;
 }) {
   const sections: SettingsSection[] = [
     { id: "emergency", label: "Emergency switches" },
     ...(signIn ? [{ id: "sign-in", label: "Sign-in and safety" }] : []),
     { id: "posting", label: "Posting rules" },
     ...(photos ? [{ id: "photos", label: "Photos and watermark" }] : []),
+    ...(logo ? [{ id: "logo", label: "Logo" }] : []),
     { id: "undo", label: "Undo windows" },
     { id: "site", label: "Site and chat" },
     { id: "search", label: "Search engines" },
-    ...(rawJson !== null ? [{ id: "raw", label: "Raw site record" }] : []),
+    ...(advanced ? [{ id: "advanced", label: "Advanced" }] : []),
   ];
   return (
     <ToastProvider>
@@ -76,6 +79,14 @@ export function SettingsView({
                 <div className="adm-s-body adm-s-blocks">{photos}</div>
               </section>
             ) : null}
+            {logo ? (
+              <section className="adm-card adm-s-card" id="logo" aria-labelledby="logo-title" data-tk="logo-settings">
+                <header className="adm-s-head">
+                  <h2 id="logo-title">Logo</h2>
+                </header>
+                <div className="adm-s-body adm-s-blocks">{logo}</div>
+              </section>
+            ) : null}
             <UndoWindowsCard key={JSON.stringify(data.undoWindows)} windows={data.undoWindows} canEdit={canEdit} />
             <section className="adm-card adm-s-card" id="site" aria-labelledby="site-title">
               <header className="adm-s-head">
@@ -83,27 +94,16 @@ export function SettingsView({
               </header>
               <div className="adm-s-body adm-s-blocks">
                 {site}
-                <p className="adm-k-help">
-                  Live video tours: <Link href="/admin/settings/video-tours/">switch on per category and set the credit price</Link>. Support chat text and buttons:{" "}
-                  <Link href="/admin/settings/chat/">edit the live chat</Link>. Header and footer: <Link href="/admin/menus/">menus and footer</Link>. Money: <Link href="/admin/prices/">Prices &amp; plans</Link>.
-                </p>
+                <ul className="adm-s-links" data-tk="settings-links">
+                  <li><Link href="/admin/settings/video-tours/">Live video tours</Link>: switch on per category and set the credit price.</li>
+                  <li><Link href="/admin/settings/chat/">Live chat</Link>: support chat text and buttons.</li>
+                  <li><Link href="/admin/menus/">Menus and footer</Link>: header and footer.</li>
+                  <li><Link href="/admin/prices/">Prices &amp; plans</Link>: money.</li>
+                </ul>
               </div>
             </section>
             <SearchEnginesCard hidden={data.hiddenFromSearch} />
-            {rawJson !== null ? (
-              <section className="adm-card adm-s-card" id="raw" aria-labelledby="raw-title" data-tk="raw-site">
-                <header className="adm-s-head">
-                  <h2 id="raw-title">Raw site record</h2>
-                  <span className="adm-k-help">Read only</span>
-                </header>
-                <div className="adm-s-body">
-                  <details>
-                    <summary>Show the saved record</summary>
-                    <pre className="adm-s-raw" tabIndex={0}>{rawJson}</pre>
-                  </details>
-                </div>
-              </section>
-            ) : null}
+            {advanced ? <AdvancedCard /> : null}
           </div>
         </div>
       </div>

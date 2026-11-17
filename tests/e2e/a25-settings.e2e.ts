@@ -86,7 +86,7 @@ test.describe("H8.25 Settings", () => {
     await staff.close();
   });
 
-  test("the raw site record is read only: shown to a superadmin inside a closed panel, with no editor", async ({ browser, baseURL }) => {
+  test("the raw site record is read only: behind the Advanced switch for a superadmin, with no editor", async ({ browser, baseURL }) => {
     test.setTimeout(120_000);
     const staff = await browser.newContext({ baseURL });
     const page = await staff.newPage();
@@ -94,7 +94,8 @@ test.describe("H8.25 Settings", () => {
     await page.goto("/admin/settings/");
     const raw = page.locator("[data-tk=raw-site]");
     await expect(raw).toBeVisible();
-    await raw.getByText("Show the saved record").click();
+    await expect(raw.locator("pre")).toHaveCount(0);
+    await raw.getByRole("switch", { name: "Show the raw site record" }).click();
     await expect(raw.locator("pre")).toContainText('"key": "default"');
     await expect(raw.getByRole("textbox")).toHaveCount(0);
     await staff.close();

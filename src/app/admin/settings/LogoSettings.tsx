@@ -27,12 +27,11 @@ export function LogoSettings({ light, dark }: { light: string; dark: string }) {
 
   const ref = (src: string, fallback: string): ImageRef | null => (src && src !== fallback ? { assetId: "", src, alt: "Tharkoo logo", width: 0, height: 0 } : null);
   return (
-    <section className="mb-3" aria-labelledby="logo-settings-title">
-      <h2 className="t-h3" id="logo-settings-title">Logo</h2>
-      <p className="t-small text-muted">The Tharkoo logo in the header and footer. Remove a picture to go back to the logo that ships with the site.</p>
+    <>
+      <p className="adm-k-help">The Tharkoo logo in the header and footer. Remove a picture to go back to the logo that ships with the site.</p>
       <ImagePicker label="Logo (light backgrounds)" value={ref(values.light, LOGO_LIGHT_DEFAULT)} onChange={(next) => void change("light", next)} rule={LOGO_RULE} />
       <ImagePicker label="Logo (dark backgrounds)" value={ref(values.dark, LOGO_DARK_DEFAULT)} onChange={(next) => void change("dark", next)} rule={LOGO_RULE} />
-      {message ? <p className="adm-field-help" role="status">{message}</p> : null}
-    </section>
+      {message ? <p className="adm-k-help" role="status">{message}</p> : null}
+    </>
   );
 }

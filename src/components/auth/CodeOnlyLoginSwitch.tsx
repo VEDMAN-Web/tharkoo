@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { Notice, Toggle } from "@/components/admin/ui";
 import { saveCodeOnlyLoginAction } from "@/components/auth/code-only-actions";
+import { SettingItem } from "@/app/admin/settings/_view/SettingItem";
 
 type Banner = { kind: "error" | "info"; text: string };
 
@@ -28,14 +29,13 @@ export function CodeOnlyLoginSwitch({ initial }: { initial: boolean }) {
   }
 
   return (
-    <section className="mb-3" aria-labelledby="code-only-title">
-      <h2 className="t-h3" id="code-only-title">Code-only login</h2>
-      <p className="t-small text-muted">
-        When on, users and sellers sign in with a one-time emailed code and never with a password. Staff and admin passwords are not changed.
-        Every change is recorded in the audit log.
-      </p>
+    <SettingItem
+      id="code-only-title"
+      title="Code-only login"
+      help="When on, users and sellers sign in with a one-time emailed code and never with a password. Staff and admin passwords are not changed. Every change is recorded in the audit log."
+    >
       <Toggle checked={on} onChange={change} label="Code-only login for users and sellers" disabled={busy} />
       {notice ? <Notice kind={notice.kind}>{notice.text}</Notice> : null}
-    </section>
+    </SettingItem>
   );
 }
