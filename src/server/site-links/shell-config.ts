@@ -48,6 +48,7 @@ export async function readStoredShellConfig(): Promise<ShellConfig> {
  * The pictures set in the new boxes on Categories and Cities (H8.39) come first, slot by slot; the old rows fill what they leave empty (H7.160).
  */
 export async function readShellConfig(): Promise<ShellConfig> {
+  await connectDb();
   const stored = await readStoredShellConfig();
   let fresh: Awaited<ReturnType<typeof loadCatalogueImages>> = [];
   try {
