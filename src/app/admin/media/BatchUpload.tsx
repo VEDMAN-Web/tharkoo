@@ -169,13 +169,13 @@ export function BatchUpload({ enabled, onDone }: { enabled: boolean; onDone: () 
             ))}
           </ul>
           <p className="adm-k-help" style={{ margin: 0 }} aria-live="polite">
-            {doneCount} uploaded, {failed.length} failed, {queued.length} ready
+            {doneCount} uploaded, {failed.length} failed, {queued.length} waiting
           </p>
         </>
       ) : null}
       <div className="adm-ml-up-actions">
         <button type="button" className="adm-btn adm-btn-primary" disabled={running || queued.length === 0} onClick={() => void run(queued)}>
-          {running ? "Uploading..." : `Upload ${queued.length} picture${queued.length === 1 ? "" : "s"}`}
+          {running ? "Uploading..." : `Upload ${queued.length} image${queued.length === 1 ? "" : "s"}`}
         </button>
         {failed.length > 0 && !running ? (
           <button type="button" className="adm-btn adm-btn-quiet" onClick={() => void run(failed)}>

@@ -59,13 +59,13 @@ test.describe("H8.57 Media library", () => {
       await expect(rows).toHaveCount(3);
       await expect(rows.locator("img")).toHaveCount(2);
       await expect(rows.nth(2)).toContainText("Only jpeg, png or webp images");
-      await expect(box.getByRole("button", { name: "Upload 2 pictures" })).toBeEnabled();
+      await expect(box.getByRole("button", { name: "Upload 2 images" })).toBeEnabled();
       expect(await hasHorizontalScroll(page)).toBe(false);
       expect(await serious(page)).toEqual([]);
       await shot(page, "upload-previews");
       await page.getByRole("button", { name: "Take balcony.png off the list" }).click();
       await expect(rows).toHaveCount(2);
-      await expect(box.getByRole("button", { name: "Upload 1 picture" })).toBeEnabled();
+      await expect(box.getByRole("button", { name: "Upload 1 image" })).toBeEnabled();
     }
   });
 
