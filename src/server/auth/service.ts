@@ -46,6 +46,7 @@ const ROLE_PERMISSIONS: Record<string, readonly string[]> = {
   seo_editor: ["admin", "seo"],
   finance: ["admin", "finance"],
   blog_editor: ["admin", "content"],
+  content_editor: ["admin", "content"],
 };
 
 /** What a signed-in person may see about their seller profile. Date of birth is never included. */

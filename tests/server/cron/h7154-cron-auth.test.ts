@@ -96,7 +96,8 @@ describe("vercel.json schedules", () => {
 
   it("calls every route once a day (so the deploy cannot fail on any Vercel plan), each on a route that exists", () => {
     const byPath = Object.fromEntries(crons.map((row) => [row.path, row.schedule]));
-    expect(Object.keys(byPath).sort()).toEqual(["/api/cron/boost", "/api/cron/content-publish", "/api/cron/expire", "/api/cron/media-purge"]);
+    expect(Object.keys(byPath).sort()).toEqual(["/api/cron/boost", "/api/cron/content-publish", "/api/cron/expire", "/api/cron/media-purge", "/api/cron/seo-audit"]);
+    expect(byPath["/api/cron/seo-audit"]).toBe("0 22 * * *");
     expect(byPath["/api/cron/expire"]).toBe("0 21 * * *");
     expect(byPath["/api/cron/boost"]).toBe("15 21 * * *");
     for (const path of Object.keys(byPath)) expect(byPath[path]).toMatch(/^\d+ \d+ \* \* \*$/);

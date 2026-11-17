@@ -2,7 +2,7 @@ import { randomUUID } from "node:crypto";
 import { Types } from "mongoose";
 import { refreshPublicCache } from "@/lib/cache";
 import { connectDb } from "@/lib/db";
-import { isAdminRole } from "@/lib/ui/site-content";
+import { canEditSite } from "@/lib/ui/site-content";
 import { validateSlug } from "@/lib/urls";
 import { AuditRepository } from "@/server/audit";
 import { ForbiddenError, NotFoundError, ValidationError } from "@/server/http";
@@ -33,7 +33,7 @@ interface Actor {
 }
 
 function requireAdmin(actor: Actor) {
-  if (!isAdminRole(actor.roles)) throw new ForbiddenError("Only an admin can edit places");
+  if (!canEditSite(actor.roles)) throw new ForbiddenError("Only an admin can edit places");
 }
 
 function cleanName(value: unknown) {

@@ -8,7 +8,12 @@ const READ_ROLES = new Map<string, readonly string[]>([
 ]);
 
 /** Roles that may create, update or delete a model through the admin mutate action (besides the all-model roles). */
-const WRITE_ROLES = new Map<string, readonly string[]>([["SeoTemplate", ["seo_editor"]]]);
+const WRITE_ROLES = new Map<string, readonly string[]>([
+  ["SeoTemplate", ["seo_editor"]],
+  ["Category", ["content_editor"]],
+  ["Location", ["content_editor"]],
+  ["UiText", ["content_editor"]],
+]);
 
 export type ModelAccess = "read" | "write";
 

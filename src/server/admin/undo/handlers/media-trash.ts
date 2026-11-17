@@ -23,7 +23,7 @@ function fieldsOf(row: Record<string, unknown>): Fields {
  */
 const handler: UndoHandler = {
   canUndo(ctx) {
-    return can(ctx.roles, "settings.edit");
+    return can(ctx.roles, "media.library");
   },
 
   async conflict(event) {

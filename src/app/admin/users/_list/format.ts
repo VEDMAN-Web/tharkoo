@@ -67,6 +67,7 @@ const ROLE_LABELS: Record<string, string> = {
   finance: "Finance",
   seo_editor: "SEO editor",
   blog_editor: "Blog editor",
+  content_editor: "Content editor",
 };
 
 /** The staff role names of a user, in words. Empty for a normal user. */

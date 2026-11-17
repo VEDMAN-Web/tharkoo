@@ -4,7 +4,7 @@ import { AdminShell } from "@/components/admin/AdminShell";
 import { Notice } from "@/components/admin/ui/Notice";
 import { getStaffFromHeaders } from "@/lib/admin-auth";
 import { canonical } from "@/lib/seo";
-import { isAdminRole } from "@/lib/ui/site-content";
+import { canEditSite } from "@/lib/ui/site-content";
 import { HomeSeoSection } from "./HomeSeoSection";
 import { ListingBandSwitch } from "./ListingBandSwitch";
 import { LoginImageField } from "./LoginImageField";
@@ -18,7 +18,7 @@ export const dynamic = "force-dynamic";
  */
 export default async function HomepageAdminPage() {
   const identity = await getStaffFromHeaders();
-  if (!isAdminRole(identity.roles)) {
+  if (!canEditSite(identity.roles)) {
     return (
       <AdminShell title="Home page">
         <p>Only an admin can edit the home page.</p>

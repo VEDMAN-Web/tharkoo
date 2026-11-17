@@ -1,7 +1,7 @@
 import { randomUUID } from "node:crypto";
 import { invalidateTags, purgeNext } from "@/lib/cache";
 import { connectDb } from "@/lib/db";
-import { isAdminRole } from "@/lib/ui/site-content";
+import { canEditSite } from "@/lib/ui/site-content";
 import { AuditRepository } from "@/server/audit";
 import { ConflictError, ForbiddenError, NotFoundError, ValidationError } from "@/server/http";
 import { PageLayout, PageLayoutRevision, User } from "@/server/models";
@@ -26,7 +26,7 @@ async function refreshPages(key: PageKey) {
 }
 
 function requireAdmin(roles: string[]) {
-  if (!isAdminRole(roles)) throw new ForbiddenError("Only an admin can edit page layouts");
+  if (!canEditSite(roles)) throw new ForbiddenError("Only an admin can edit page layouts");
 }
 
 export function assertKeyAndScope(key: string, scope: string): asserts key is PageKey {

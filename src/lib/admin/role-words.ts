@@ -7,6 +7,7 @@ export const ROLE_WORDS: Record<string, string> = {
   finance: "Finance",
   seo_editor: "SEO editor",
   blog_editor: "Blog editor",
+  content_editor: "Content editor",
 };
 
 export function roleWords(roles: readonly string[]): string {
