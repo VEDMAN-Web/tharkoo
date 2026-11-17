@@ -108,13 +108,14 @@ export default async function SearchPage({ searchParams }: { searchParams: Promi
           placeName,
         },
         ownSlugs: feed.items.map((ad) => ad.slug || "").filter(Boolean),
+        t,
       })
     : [];
   const empty = feed.total === 0;
   const lead = empty
     ? {
-        text: placeName ? `No ads in ${placeName} yet. Here are ads close by.` : "No ads match your search yet. Here are ads close by.",
-        button: placeName ? `Post the first ad in ${placeName}` : "Post an ad",
+        text: placeName ? t("listing.empty.leadPlace", { place: placeName }) : t("listing.empty.leadSearch"),
+        button: placeName ? t("listing.empty.buttonPlace", { place: placeName }) : t("listing.empty.buttonPost"),
         href: postAdPath(paths),
       }
     : undefined;

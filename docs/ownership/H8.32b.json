@@ -1,0 +1,19 @@
+{
+  "branchPrefix": "haiku/h8.32b",
+  "globs": [
+    "docs/ownership/H8.32b.json",
+    "progress/H8.32b.md",
+    "src/app/[category]/page.tsx",
+    "src/app/[category]/[location]/page.tsx",
+    "src/app/[category]/[location]/[district]/page.tsx",
+    "src/app/[category]/[location]/[district]/sub-hub.tsx",
+    "src/app/[category]/tag/[tag]/page.tsx",
+    "src/app/cities/[city]/page.tsx",
+    "src/app/search/page.tsx",
+    "src/components/new/ListingLinkNav.tsx",
+    "src/lib/fallback-ads.ts",
+    "src/lib/ui/text.ts",
+    "tests/server/content/a32-ui-text.test.ts",
+    "tests/e2e/a32b-listing-blocks.e2e.ts"
+  ]
+}
