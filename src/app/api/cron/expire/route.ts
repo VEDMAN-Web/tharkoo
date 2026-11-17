@@ -14,6 +14,7 @@ import { watermarkExistingAdMedia } from "@/server/media/watermark-migration";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
+export const maxDuration = 60;
 
 async function readBody(request: Request) {
   try {

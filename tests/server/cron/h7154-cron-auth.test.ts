@@ -94,12 +94,12 @@ describe("vercel.json schedules", () => {
   const config = JSON.parse(readFileSync(join(process.cwd(), "vercel.json"), "utf8")) as { crons?: { path: string; schedule: string }[] };
   const crons = config.crons ?? [];
 
-  it("calls expire and boost often and content-publish and media-purge once a day, each on a route that exists", () => {
+  it("calls every route once a day (so the deploy cannot fail on any Vercel plan), each on a route that exists", () => {
     const byPath = Object.fromEntries(crons.map((row) => [row.path, row.schedule]));
     expect(Object.keys(byPath).sort()).toEqual(["/api/cron/boost", "/api/cron/content-publish", "/api/cron/expire", "/api/cron/media-purge"]);
-    expect(byPath["/api/cron/expire"]).toBe("*/15 * * * *");
-    expect(byPath["/api/cron/boost"]).toBe("*/15 * * * *");
-    for (const path of ["/api/cron/content-publish", "/api/cron/media-purge"]) expect(byPath[path]).toMatch(/^\d+ \d+ \* \* \*$/);
+    expect(byPath["/api/cron/expire"]).toBe("0 21 * * *");
+    expect(byPath["/api/cron/boost"]).toBe("15 21 * * *");
+    for (const path of Object.keys(byPath)) expect(byPath[path]).toMatch(/^\d+ \d+ \* \* \*$/);
     for (const row of crons) expect(Object.keys(ROUTES)).toContain(row.path.replace("/api/cron/", ""));
     for (const row of crons) expect(row.schedule.split(" ")).toHaveLength(5);
   });
