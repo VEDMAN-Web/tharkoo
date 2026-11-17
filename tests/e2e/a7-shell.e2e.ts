@@ -51,7 +51,7 @@ test.describe("A7 admin shell", () => {
         { timeout: 60_000, intervals: [2_000] },
       )
       .toBe(before + 1);
-    await expect(page.locator('[data-tk="bell"]')).toHaveAttribute("aria-label", /things waiting/);
+    await expect(page.locator('[data-tk="bell"]')).toHaveAttribute("aria-label", /^Notifications, /);
   });
 
   test("the counts route is for staff only, never cached, and hides what the role cannot see", async ({ page, baseURL }) => {
