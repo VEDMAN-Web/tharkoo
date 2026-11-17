@@ -22,6 +22,15 @@ async function staffPage(page: Page, baseURL: string, role: string) {
   return true;
 }
 
+async function openSearch(page: Page) {
+  const input = page.getByPlaceholder("Find an ad, user, page");
+  await expect(async () => {
+    await page.keyboard.press("/");
+    await expect(input).toBeFocused({ timeout: 1500 });
+  }).toPass({ timeout: 20_000 });
+  return input;
+}
+
 test.describe("A49 admin global search", () => {
   test.beforeEach(({}, testInfo) => {
     test.skip(testInfo.project.name !== "desktop-1440", "sets its own sizes");
@@ -87,8 +96,7 @@ test.describe("A49 admin global search", () => {
     await page.setViewportSize({ width: 1440, height: 900 });
     const asSupport = await staffPage(page, baseURL!, "support");
     test.skip(!asSupport, "Needs the in-memory Mongo URI written by tests/e2e/server.mjs (E2E_MONGO_URI_FILE).");
-    const input = page.getByPlaceholder("Find an ad, user, page");
-    await page.keyboard.press("/");
+    const input = await openSearch(page);
     await input.fill(ref);
     await expect(page.locator('[data-tk="search-empty"]')).toBeVisible();
     await expect(page.locator('[data-tk="search-group-orders"]')).toHaveCount(0);
@@ -98,8 +106,8 @@ test.describe("A49 admin global search", () => {
     await page.context().clearCookies();
 
     await staffPage(page, baseURL!, "finance");
-    await page.keyboard.press("/");
-    await page.getByPlaceholder("Find an ad, user, page").fill(ref);
+    const financeInput = await openSearch(page);
+    await financeInput.fill(ref);
     await expect(page.locator('[data-tk="search-group-orders"]')).toContainText(ref);
   });
 });
