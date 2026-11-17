@@ -92,7 +92,6 @@ export const LEGACY_ROUTES: readonly LegacyRoute[] = [
   { href: "/admin/blog/", view: "content.write" },
   { href: "/admin/help/", view: "content.write" },
   { href: "/admin/tags/", view: "catalogue.seo" },
-  { href: "/admin/templates/", view: "seo.edit" },
   { href: "/admin/urls/", view: "seo.edit" },
   { href: "/admin/ui-text/", view: "sitetext.edit" },
   { href: "/admin/homepage/", view: "pages.edit" },
@@ -102,7 +101,6 @@ export const LEGACY_ROUTES: readonly LegacyRoute[] = [
   { href: "/admin/credit-packs/", view: "prices.view" },
   { href: "/admin/promotions/", view: "prices.view" },
   { href: "/admin/settings/money/", view: "prices.edit" },
-  { href: "/admin/admins/", view: "team.edit" },
   { href: "/admin/flags/", view: "raw.json" },
 ];
 
