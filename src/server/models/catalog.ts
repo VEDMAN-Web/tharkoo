@@ -50,6 +50,7 @@ export interface CatalogBandDoc {
   phoneMediaId?: Types.ObjectId;
   focusX: number;
   focusY: number;
+  alt?: string;
 }
 
 export interface CategoryDoc {
@@ -122,7 +123,7 @@ const catalogPhotoSchema = new Schema<CatalogPhotoDoc>(
   { _id: false },
 );
 const catalogBandSchema = new Schema<CatalogBandDoc>(
-  { mediaId: { type: Schema.Types.ObjectId, required: true }, phoneMediaId: { type: Schema.Types.ObjectId }, focusX: focusPoint, focusY: focusPoint },
+  { mediaId: { type: Schema.Types.ObjectId, required: true }, phoneMediaId: { type: Schema.Types.ObjectId }, focusX: focusPoint, focusY: focusPoint, alt: { type: String } },
   { _id: false },
 );
 

@@ -55,6 +55,11 @@ export const UPLOAD_RULES = {
     line: "1600 x 500 px for computers, 800 x 1000 px for phones, up to 8 MB.",
     details: ["Formats: JPG, PNG or WEBP.", "Computers: 1600 x 500 px.", "Phones: 800 x 1000 px.", "Up to 8 MB."],
   },
+  categoryBandPhone: {
+    ...PHOTO_BASE,
+    line: "800 x 1000 px (4:5), shown on phones instead of the wide picture.",
+    details: ["Formats: JPG, PNG or WEBP.", "Best size: 800 x 1000 px (4:5, tall).", "Shown below 600 px wide, instead of the wide picture.", "Optional: without it phones crop the wide picture.", "Up to 8 MB."],
+  },
   homeBanner: {
     ...PHOTO_BASE,
     line: "1920 x 700 px for computers, 900 x 1200 px for phones.",
