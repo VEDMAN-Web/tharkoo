@@ -55,3 +55,6 @@
   .adm-sd-order { margin: 0 12px; flex-wrap: wrap; }
   .adm-sd-sendbar .adm-k-btn { flex: 1; }
 }
+
+/* H7.163: the number on the Open tab is the tickets nobody has opened yet, so it is red. The total beside the name stays plain text. */
+.adm-sd-list #desk-open .adm-k-tab-count { background: var(--adm-bad); color: #fff; margin-left: 6px; }

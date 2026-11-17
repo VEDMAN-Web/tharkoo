@@ -27,6 +27,8 @@ export interface SupportTicketDoc {
   unreadForStaff: boolean;
   closedBy: Types.ObjectId | null;
   closedAt: Date | null;
+  /** When any staff member last opened the ticket in the desk. A ticket is unseen while this is empty or older than the customer's newest message. */
+  lastStaffViewAt?: Date | null;
   /** Guest tickets only. Name and one contact; email and phone are both kept when both were given. */
   guestName?: string;
   guestEmail?: string;
@@ -63,6 +65,7 @@ const ticketSchema = new Schema<SupportTicketDoc>(
     unreadForStaff: { type: Boolean, default: true },
     closedBy: { type: Schema.Types.ObjectId, default: null },
     closedAt: { type: Date, default: null },
+    lastStaffViewAt: { type: Date, default: null },
     guestName: { type: String, maxlength: 80 },
     guestEmail: { type: String, maxlength: 120 },
     guestPhone: { type: String, maxlength: 24 },

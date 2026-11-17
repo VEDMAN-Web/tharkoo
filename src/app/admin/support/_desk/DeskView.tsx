@@ -18,7 +18,7 @@ const SEARCH_DEBOUNCE_MS = 350;
 export type OpenThread = { ticket: TicketSummary; customer: string; messages: MessageView[]; staff: { id: string; name: string }[]; card: Card | null; order: TicketOrder | null };
 
 /** The support desk (H8.43): tickets on the left, the open ticket in the middle, the customer on the right. Tab, search and the open ticket live in the address. */
-export function DeskView({ tab, counts, items, now, q, ticketId, thread, viewerId }: { tab: DeskTab; counts: Record<DeskTab, number>; items: QueueItem[]; now: number; q: string; ticketId: string; thread: OpenThread | null; viewerId: string }) {
+export function DeskView({ tab, counts, unseen, items, now, q, ticketId, thread, viewerId }: { tab: DeskTab; counts: Record<DeskTab, number>; unseen: number; items: QueueItem[]; now: number; q: string; ticketId: string; thread: OpenThread | null; viewerId: string }) {
   const router = useRouter();
   const pathname = usePathname();
   const params = useSearchParams();
@@ -55,7 +55,12 @@ export function DeskView({ tab, counts, items, now, q, ticketId, thread, viewerI
               idPrefix="desk"
               label="Ticket lists"
               active={tab}
-              items={(Object.keys(TAB_LABELS) as DeskTab[]).map((key) => ({ key, label: TAB_LABELS[key], count: counts[key] || undefined }))}
+              items={(Object.keys(TAB_LABELS) as DeskTab[]).map((key) =>
+                key === "open"
+                  ? // The total is plain grey text; only the red number is what nobody has opened yet.
+                    { key, label: counts.open ? `Open ${counts.open}` : "Open", count: unseen || undefined }
+                  : { key, label: TAB_LABELS[key], count: counts[key] || undefined },
+              )}
               onChange={(key) => go({ tab: key === "open" ? null : key, ticket: null })}
             />
             <div role="tabpanel" id={`desk-panel-${tab}`} aria-labelledby={`desk-${tab}`}>

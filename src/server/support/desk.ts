@@ -9,6 +9,7 @@ import { assertDeskActor, canWorkDesk, type DeskActor } from "@/server/support/a
 import { storeScreenshots, type Screenshot } from "@/server/support/attachments";
 import { notifyGuestOfReply } from "@/server/support/guest";
 import { notifyOwnerOfReply } from "@/server/support/notify";
+import { clearCountsCache, markSeen } from "@/server/support/unseen";
 import { assertObjectId, isClosed, messageView, summarize, type MessageRow, type TicketRow } from "@/server/support/records";
 import type { QueueQuery, ReplyInput } from "@/server/support/schemas";
 
@@ -104,6 +105,7 @@ export async function deskThread(actor: DeskActor | null, ticketId: string, requ
     ? { displayName: ticket.guestName || "Guest", email: ticket.guestEmail || "", phone: ticket.guestPhone || "" }
     : await User.findById(ticket.ownerId).select("displayName email").lean<{ displayName?: string; email?: string; phone?: string } | null>();
   if (ticket.unreadForStaff) await SupportTicket.updateOne({ _id: ticket._id }, { $set: { unreadForStaff: false } });
+  await markSeen(ticket._id);
   await audit.append({
     actorId: actor.id,
     actorType: "admin",
@@ -255,7 +257,9 @@ export async function deskClose(actor: DeskActor | null, ticketId: string, reque
     after: { status: "closed" },
     requestId,
   });
-  return { status: "closed" as const };
+  clearCountsCache();
+  // The earlier status goes back with the answer, so Undo can put the ticket where it was.
+  return { status: "closed" as const, before: ticket.status };
 }
 
 export async function deskReopen(actor: DeskActor | null, ticketId: string, requestId: string) {
