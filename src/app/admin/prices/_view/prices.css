@@ -12,6 +12,7 @@
 .adm-p-wrap { border: 0; border-radius: 0; box-shadow: none; border-top: 1px solid var(--adm-line2); }
 .adm-p-sub { display: block; color: var(--adm-kmuted); font-size: 12.5px; }
 .adm-p-form { display: grid; gap: 14px; padding: 16px; }
+.adm-p-foot { padding: 10px 20px 14px; margin: 0; }
 [data-tk="prices-screen"] .adm-notice { margin-bottom: 16px; }
 @media (max-width: 767px) {
   .adm-p-row { grid-template-columns: minmax(0, 1fr); gap: 12px; padding: 16px 12px; }

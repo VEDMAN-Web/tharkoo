@@ -1,0 +1,16 @@
+{
+  "branchPrefix": "haiku/h8.20",
+  "globs": [
+    "docs/ownership/H8.20.json",
+    "src/app/admin/prices/**",
+    "src/server/billing/plans-admin.ts",
+    "src/server/billing/packs-admin.ts",
+    "src/server/billing/coupons-admin.ts",
+    "src/server/billing/pack-tags.ts",
+    "src/server/billing/money-settings.ts",
+    "src/server/billing/coupons.ts",
+    "src/server/models/cms.ts",
+    "tests/server/billing/a20-*.test.ts",
+    "tests/e2e/a20-packs.e2e.ts"
+  ]
+}
