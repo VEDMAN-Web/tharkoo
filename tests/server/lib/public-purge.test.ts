@@ -10,6 +10,8 @@ import { saveUiText } from "@/app/admin/ui-text/store";
 import { normaliseSeoSettings } from "@/app/admin/seo/settings/rules";
 import { saveSeoSettings } from "@/app/admin/seo/settings/store";
 import { setMoneySettings } from "@/server/billing/money-settings";
+import { publish, restore, saveDraft } from "@/server/layout/service";
+import { PageLayout, PageLayoutRevision } from "@/server/models";
 import { createCategory } from "@/server/categories/manage";
 import { TEXT_DEFAULTS } from "@/lib/ui/text";
 import { clearMemoryMongo, connectMemoryMongo, disconnectMemoryMongo } from "../../setup/mongo";
@@ -27,6 +29,8 @@ beforeAll(async () => {
   if (mongoose.connection.readyState !== 0) await mongoose.disconnect();
   delete process.env.MONGODB_URI;
   await connectMemoryMongo();
+  await PageLayout.init();
+  await PageLayoutRevision.init();
 });
 afterAll(async () => {
   await disconnectMemoryMongo();
@@ -90,6 +94,23 @@ describe("each kind of caller reaches the public site", () => {
     await saveSeoSettings({ email: "", roles: ["admin"] }, normaliseSeoSettings(undefined));
     expect(tagsAsked()).toEqual(expect.arrayContaining(["site"]));
     expect(layoutAsked()).toBe(true);
+  });
+
+  it("page layout: publish, also after restoring an older version into the draft", async () => {
+    const admin = { email: "admin@example.test", roles: ["admin"] };
+    const block = (body: string) => ({ type: "richText", visible: true, props: { body } });
+    await saveDraft({ key: "home", scope: "default", blocks: [block("<p>One</p>")], ...admin });
+    await publish({ key: "home", scope: "default", ...admin });
+    expect(tagsAsked()).toContain("layout:home");
+    expect(layoutAsked()).toBe(true);
+    // Restore only changes the draft, so nothing public is purged until the next publish.
+    await restore({ key: "home", scope: "default", version: 1, ...admin });
+    revalidateTag.mockClear();
+    revalidatePath.mockClear();
+    await publish({ key: "home", scope: "default", ...admin });
+    expect(tagsAsked()).toContain("layout:home");
+    expect(layoutAsked()).toBe(true);
+    expect(purgeFailureLog).toEqual([]);
   });
 
   it("site text: saveUiText", async () => {
