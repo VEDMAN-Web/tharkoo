@@ -1,0 +1,13 @@
+{
+  "branchPrefix": "haiku/h7.170",
+  "globs": [
+    "docs/ownership/H7.170.json",
+    "progress/H7.170.md",
+    "src/app/admin/settings/*.tsx",
+    "src/app/admin/settings/_view/**",
+    "src/app/admin/settings/_actions/**",
+    "src/components/auth/CodeOnlyLoginSwitch.tsx",
+    "tests/e2e/h7-170-settings.e2e.ts",
+    "tests/e2e/a25-settings.e2e.ts"
+  ]
+}

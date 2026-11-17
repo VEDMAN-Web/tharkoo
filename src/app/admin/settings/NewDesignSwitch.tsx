@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { Notice, Toggle } from "@/components/admin/ui";
 import { saveNewDesignAction } from "./new-design-actions";
+import { SettingItem } from "./_view/SettingItem";
 
 type Banner = { kind: "error" | "info"; text: string };
 
@@ -28,13 +29,9 @@ export function NewDesignSwitch({ initial }: { initial: boolean }) {
   }
 
   return (
-    <section className="mb-3" aria-labelledby="new-design-title">
-      <h2 className="t-h3" id="new-design-title">New design</h2>
-      <p className="t-small text-muted">
-        The new header, footer and live chat. Off is the old design and a one-click rollback. Every change is recorded in the audit log.
-      </p>
+    <SettingItem id="new-design-title" title="New design" help="The new header, footer and live chat. Off is the old design and a one-click rollback. Every change is recorded in the audit log.">
       <Toggle checked={on} onChange={change} label="Show the New design to visitors" disabled={busy} />
       {notice ? <Notice kind={notice.kind}>{notice.text}</Notice> : null}
-    </section>
+    </SettingItem>
   );
 }

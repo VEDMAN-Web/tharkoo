@@ -1,9 +1,10 @@
 "use client";
 
 import { useState } from "react";
-import { Notice, Toggle } from "@/components/admin/ui";
+import { Button, Notice, Toggle } from "@/components/admin/ui";
 import { WATERMARK_OPACITY_MAX, WATERMARK_OPACITY_MIN, WATERMARK_POSITIONS, type WatermarkPosition, type WatermarkSettings } from "@/server/settings/watermark-rules";
 import { saveWatermarkAction } from "./watermark-actions";
+import { SettingItem } from "./_view/SettingItem";
 
 const POSITION_LABEL: Record<WatermarkPosition, string> = {
   north_west: "Top left",
@@ -32,17 +33,18 @@ export function WatermarkSettings({ initial }: { initial: WatermarkSettings }) {
   }
 
   return (
-    <section className="mb-3" aria-labelledby="watermark-title">
-      <h2 className="t-h3" id="watermark-title">Watermark on ad photos and videos</h2>
-      <p className="t-small text-muted">
-        Adds the text &quot;tharkoo.com&quot; to every ad photo and video, inside the file itself. It is about a fifth of the width. Site images are not marked.
-      </p>
+    <SettingItem
+      id="watermark-title"
+      title="Watermark on ad photos and videos"
+      help='Adds the text "tharkoo.com" to every ad photo and video, inside the file itself. It is about a fifth of the width. Site images are not marked.'
+    >
       <Toggle checked={draft.enabled} onChange={(next) => setDraft({ ...draft, enabled: next })} label="Add the watermark" disabled={busy} />
-      <div className="mt-2 flex flex-wrap gap-3">
-        <label className="flex flex-col t-small">
-          Position
+      <div className="adm-s-grid">
+        <div className="adm-k-field">
+          <label className="adm-k-label" htmlFor="watermark-position">Position</label>
           <select
-            className="adm-input"
+            id="watermark-position"
+            className="adm-k-select"
             value={draft.position}
             disabled={busy || !draft.enabled}
             onChange={(event) => setDraft({ ...draft, position: event.target.value as WatermarkPosition })}
@@ -51,10 +53,11 @@ export function WatermarkSettings({ initial }: { initial: WatermarkSettings }) {
               <option key={value} value={value}>{POSITION_LABEL[value]}</option>
             ))}
           </select>
-        </label>
-        <label className="flex flex-col t-small">
-          Opacity: {draft.opacity}%
+        </div>
+        <div className="adm-k-field">
+          <label className="adm-k-label" htmlFor="watermark-opacity">Opacity: {draft.opacity}%</label>
           <input
+            id="watermark-opacity"
             type="range"
             min={WATERMARK_OPACITY_MIN}
             max={WATERMARK_OPACITY_MAX}
@@ -63,12 +66,12 @@ export function WatermarkSettings({ initial }: { initial: WatermarkSettings }) {
             disabled={busy || !draft.enabled}
             onChange={(event) => setDraft({ ...draft, opacity: Number(event.target.value) })}
           />
-        </label>
+        </div>
       </div>
-      <button type="button" className="adm-btn mt-2" onClick={save} disabled={busy}>
-        {busy ? "Saving..." : "Save watermark"}
-      </button>
+      <div className="adm-s-actions">
+        <Button kind="primary" busy={busy} onClick={() => void save()}>Save watermark</Button>
+      </div>
       {notice ? <Notice kind={notice.kind}>{notice.text}</Notice> : null}
-    </section>
+    </SettingItem>
   );
 }

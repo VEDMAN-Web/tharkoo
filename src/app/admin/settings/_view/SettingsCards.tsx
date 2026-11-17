@@ -1,12 +1,11 @@
 "use client";
 
 import { useState } from "react";
-import Link from "next/link";
 import { Globe } from "lucide-react";
 import { Badge, Button, ReasonDialog, Toggle } from "@/components/admin/ui";
 import { EMERGENCY_KEYS, EMERGENCY_LABELS, type EmergencyKey, type EmergencyState } from "@/server/settings/emergency-labels";
 import { UNDO_WINDOW_KEYS, UNDO_WINDOW_LABELS, type UndoWindows } from "@/server/settings/undo-window-labels";
-import { saveUndoWindowsAction, setEmergencyAction, setPostModerationAction } from "../_actions/actions";
+import { readRawSiteAction, saveUndoWindowsAction, setEmergencyAction, setPostModerationAction } from "../_actions/actions";
 import { useAnswer } from "./useAnswer";
 
 /** Emergency switches: each acts at once. Turning one on asks to confirm first; turning it off needs no confirm. */
@@ -150,6 +149,38 @@ function UndoWindowsForm({ windows, canEdit }: { windows: UndoWindows; canEdit: 
   );
 }
 
+/** Advanced, superadmin only: a switch that loads the whole site record, read only, when it is turned on. Nothing is sent to the page before that. */
+export function AdvancedCard() {
+  const [json, setJson] = useState<string | null>(null);
+  const [error, setError] = useState("");
+  const [busy, setBusy] = useState(false);
+
+  async function change(on: boolean) {
+    if (!on) return setJson(null);
+    setBusy(true);
+    setError("");
+    const result = await readRawSiteAction();
+    setBusy(false);
+    if (!result.ok) return setError(result.message);
+    setJson(result.json);
+  }
+
+  return (
+    <section className="adm-card adm-s-card" id="advanced" data-tk="raw-site" aria-labelledby="advanced-title">
+      <header className="adm-s-head">
+        <h2 id="advanced-title">Advanced</h2>
+        <span className="adm-k-help">Superadmin only</span>
+      </header>
+      <div className="adm-s-body">
+        <Toggle checked={json !== null} disabled={busy} label="Show the raw site record" onChange={(on) => void change(on)} />
+        <p className="adm-k-help">The whole saved site record, read only. It is loaded only when you turn this on.</p>
+        {error ? <p className="adm-k-err" role="alert" data-tk="raw-error">{error}</p> : null}
+        {json !== null ? <pre className="adm-s-raw" tabIndex={0}>{json}</pre> : null}
+      </div>
+    </section>
+  );
+}
+
 /** Search engines: display only. The switch is a server setting and the SEO screen explains it. */
 export function SearchEnginesCard({ hidden }: { hidden: boolean }) {
   return (
@@ -162,9 +193,7 @@ export function SearchEnginesCard({ hidden }: { hidden: boolean }) {
         <p className="adm-k-help" style={{ flex: 1 }}>
           {hidden ? "The site is hidden on purpose until launch. The setting is on the server and stays on until the launch checklist is done." : "Search engines may list the site. Rules for what they may list are in SEO."}
         </p>
-        <Link href="/admin/seo/" className="adm-btn adm-btn-quiet">
-          <Globe aria-hidden="true" size={16} /> Open SEO
-        </Link>
+        <Button kind="quiet" icon={Globe} href="/admin/seo/">Open SEO</Button>
       </div>
     </section>
   );

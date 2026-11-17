@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { Notice, Toggle } from "@/components/admin/ui";
 import { api, friendlyError } from "@/lib/ui/api";
+import { SettingItem } from "./_view/SettingItem";
 
 type Banner = { kind: "error" | "info"; text: string };
 
@@ -31,13 +32,9 @@ export function IdCheckSwitch({ initial }: { initial: boolean }) {
   }
 
   return (
-    <section className="mb-3" aria-labelledby="id-check-title">
-      <h2 className="t-h3" id="id-check-title">ID check before posting</h2>
-      <p className="t-small text-muted">
-        Off by the site default. When on, post-ad asks for an approved ID check first. The ID check page stays available either way.
-      </p>
+    <SettingItem id="id-check-title" title="ID check before posting" help="Off by the site default. When on, post-ad asks for an approved ID check first. The ID check page stays available either way.">
       <Toggle checked={on} onChange={change} label="Require ID check before posting" disabled={busy} />
       {notice ? <Notice kind={notice.kind}>{notice.text}</Notice> : null}
-    </section>
+    </SettingItem>
   );
 }

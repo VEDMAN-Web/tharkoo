@@ -14,6 +14,11 @@
 .adm-s-switch { display: grid; gap: 4px; }
 .adm-s-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
 .adm-s-actions { display: flex; gap: 8px; justify-content: flex-end; }
+.adm-s-item { display: grid; gap: 8px; }
+.adm-s-item + .adm-s-item { padding-top: 14px; border-top: 1px solid var(--adm-line2); }
+.adm-s-item-h { margin: 0; font-size: 14px; font-weight: 800; }
+.adm-s-links { margin: 0; padding-left: 18px; display: grid; gap: 6px; font-size: 14px; }
+.adm-s-links a { display: inline-flex; align-items: center; min-height: 24px; font-weight: 700; }
 .adm-s-row { display: flex; gap: 14px; align-items: center; flex-wrap: wrap; }
 .adm-s-raw { margin: 10px 0 0; max-height: 360px; overflow: auto; padding: 12px; border: 1px solid var(--adm-line2); border-radius: 8px; background: #fafbfd; font-size: 12px; white-space: pre-wrap; overflow-wrap: anywhere; }
 @media (max-width: 1023px) {
