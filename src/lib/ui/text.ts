@@ -636,6 +636,7 @@ export const TEXT_DEFAULTS = {
   "chrome.account.menuFor": "Account menu for {name}",
   "chrome.account.my": "My account",
   "chrome.account.ads": "My ads",
+  "chrome.account.chats": "Chats",
   "chrome.account.saved": "Saved ads",
   "chrome.account.help": "Help and support",
   "chrome.account.settings": "Settings",

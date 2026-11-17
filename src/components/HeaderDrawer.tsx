@@ -78,7 +78,7 @@ export function HeaderDrawer({
           {signedIn ? (
             <>
               <Link href="/u/account/" className="tkn-btn tkn-btn-ghost" data-tk="drawer-account" onClick={onClose}>
-                My account
+                {t("chrome.account.my")}
               </Link>
               <LogoutButton className="tkn-btn tkn-btn-ghost" onClick={onClose}>{t("chrome.account.logout")}</LogoutButton>
             </>

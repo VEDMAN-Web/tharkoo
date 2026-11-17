@@ -1,0 +1,10 @@
+{
+  "branchPrefix": "haiku/h7.159",
+  "globs": [
+    "docs/ownership/H7.159.json",
+    "src/lib/ui/text.ts",
+    "src/components/HeaderNew.tsx",
+    "src/components/HeaderDrawer.tsx",
+    "tests/server/layout/a47b-*.test.ts"
+  ]
+}
