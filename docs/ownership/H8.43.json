@@ -1,0 +1,11 @@
+{
+  "branchPrefix": "haiku/h8.43",
+  "globs": [
+    "docs/ownership/H8.43.json",
+    "src/app/admin/support/**",
+    "src/server/billing/staff-credits.ts",
+    "tests/server/support/a43-*.test.ts",
+    "tests/e2e/a43-desk.e2e.ts",
+    "tests/e2e/support.e2e.ts"
+  ]
+}

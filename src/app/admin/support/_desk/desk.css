@@ -1,0 +1,57 @@
+/* H8.43: the support desk only. The shared kit stays in src/styles/admin-kit.css. */
+.adm-sd-grid { display: grid; grid-template-columns: 340px minmax(0, 1fr) 300px; gap: 16px; align-items: start; }
+.adm-sd-list { padding: 0; overflow: clip; }
+.adm-sd-rows { margin: 0; padding: 0; list-style: none; }
+.adm-sd-row { display: grid; gap: 4px; width: 100%; padding: 12px 16px; border: 0; border-bottom: 1px solid var(--adm-line2); background: transparent; text-align: left; cursor: pointer; font: inherit; color: inherit; }
+.adm-sd-row:hover { background: #fafbfd; }
+.adm-sd-row[aria-current="true"] { background: #fff7fa; box-shadow: inset 3px 0 0 var(--adm-pri); }
+.adm-sd-rowtitle { display: flex; gap: 8px; align-items: flex-start; justify-content: space-between; }
+.adm-sd-row small { color: var(--adm-kmuted); font-size: 12.5px; }
+.adm-sd-mid { display: grid; gap: 8px; min-width: 0; }
+.adm-sd-back { display: none; align-items: center; gap: 4px; min-height: 44px; border: 0; background: transparent; color: var(--adm-kmuted); font: inherit; font-weight: 700; cursor: pointer; }
+.adm-sd-thread { display: grid; gap: 14px; padding: 0; overflow: clip; }
+.adm-sd-thead { display: flex; gap: 12px; justify-content: space-between; flex-wrap: wrap; padding: 16px 20px; border-bottom: 1px solid var(--adm-line2); }
+.adm-sd-ttitle h2 { margin: 0 0 2px; font-size: 18px; font-weight: 800; overflow-wrap: anywhere; }
+.adm-sd-ttitle p { margin: 0; }
+.adm-sd-tbadges { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.adm-sd-messages { margin: 0; padding: 0 20px; list-style: none; display: grid; gap: 10px; }
+.adm-sd-msg { display: grid; gap: 4px; max-width: 80%; padding: 10px 14px; border-radius: 12px; background: #f1f2f6; }
+.adm-sd-msg[data-from="staff"] { justify-self: end; background: #eaf0fe; }
+.adm-sd-msg[data-internal="true"] { background: #fef4e6; border: 1px dashed #e0b377; }
+.adm-sd-msg p { margin: 0; white-space: pre-wrap; overflow-wrap: anywhere; }
+.adm-sd-msg small { color: var(--adm-kmuted); font-size: 12px; }
+.adm-sd-files { display: flex; gap: 8px; flex-wrap: wrap; }
+.adm-sd-files img { width: 140px; max-width: 100%; height: auto; border-radius: 8px; }
+.adm-sd-order { display: flex; gap: 12px; align-items: center; justify-content: space-between; margin: 0 20px; padding: 10px 14px; border-radius: 10px; background: #eaf0fe; color: #1d4ed8; font-size: 13.5px; }
+.adm-sd-thread > .adm-notice { margin: 0 20px; }
+.adm-sd-compose, .adm-sd-closed { display: grid; gap: 10px; padding: 0 20px 16px; }
+.adm-sd-chips { display: flex; gap: 8px; flex-wrap: wrap; }
+.adm-sd-sendbar { display: flex; gap: 8px; align-items: center; padding-top: 6px; }
+.adm-sd-sendbar .adm-k-sp { flex: 1; }
+.adm-sd-shots summary { cursor: pointer; font-weight: 700; font-size: 13px; }
+.adm-sd-card { display: grid; gap: 12px; }
+.adm-sd-card h2 { margin: 0; font-size: 16px; font-weight: 800; }
+.adm-sd-kvs { margin: 0; display: grid; }
+.adm-sd-kvs > div { display: grid; grid-template-columns: 110px minmax(0, 1fr); gap: 8px; padding: 6px 0; font-size: 13.5px; }
+.adm-sd-kvs dt { color: var(--adm-kmuted); }
+.adm-sd-kvs dd { margin: 0; font-weight: 600; }
+.adm-sd-actions { display: grid; gap: 8px; }
+.adm-sd-actions .adm-k-btn { width: 100%; justify-content: center; }
+.adm-sd-empty { display: grid; place-items: center; min-height: 240px; grid-column: span 2; }
+@media (max-width: 1279px) {
+  .adm-sd-grid { grid-template-columns: 300px minmax(0, 1fr); }
+  .adm-sd-grid > .adm-sd-card { grid-column: 1 / -1; }
+}
+@media (max-width: 1023px) {
+  .adm-sd-grid { grid-template-columns: minmax(0, 1fr); }
+  [data-tk="desk"][data-open="yes"] .adm-sd-list { display: none; }
+  .adm-sd-back { display: inline-flex; }
+  .adm-sd-msg { max-width: 92%; }
+  .adm-sd-empty { grid-column: auto; }
+}
+@media (max-width: 767px) {
+  .adm-sd-thead, .adm-sd-compose, .adm-sd-closed { padding-left: 12px; padding-right: 12px; }
+  .adm-sd-messages { padding: 0 12px; }
+  .adm-sd-order { margin: 0 12px; flex-wrap: wrap; }
+  .adm-sd-sendbar .adm-k-btn { flex: 1; }
+}

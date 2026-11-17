@@ -83,12 +83,15 @@ test("support ticket: create, reply, staff reply and note, close, reopen", async
   });
   await signIn(agentContext, (await agent.api.storageState()).cookies);
   const desk = await agentContext.newPage();
-  await desk.goto("/admin/support/");
-  await expect(desk.getByRole("link", { name: new RegExp(subject) })).toBeVisible();
+  // The agent has already answered, so the ticket waits on the customer: it sits under "Waiting on user" (H8.43).
+  await desk.goto("/admin/support/?tab=waiting");
+  await expect(desk.locator("[data-tk=desk-row]", { hasText: subject })).toBeVisible();
   await shot(desk, project, "03-desk-queue");
   expect(await hasHorizontalScroll(desk)).toBe(false);
-  await desk.getByRole("link", { name: new RegExp(subject) }).click();
-  await desk.waitForURL(`**/admin/support/${ticketId}/`);
+  // H8.43: a row opens the three-pane desk; this spec keeps working on the full ticket page, which still exists.
+  await desk.locator("[data-tk=desk-row]", { hasText: subject }).click();
+  await desk.waitForURL(`**/admin/support/?tab=waiting&ticket=${ticketId}`);
+  await desk.goto(`/admin/support/${ticketId}/`);
   await expect(desk.getByText("Secret internal note about the ad limit")).toBeVisible();
   await desk.getByRole("button", { name: "Close ticket" }).click();
   await desk.getByRole("button", { name: "Confirm close" }).click();
