@@ -29,6 +29,14 @@ test.describe("A32 part 2: listing blocks and UI-text words", () => {
     expect(await links.count()).toBeGreaterThan(0);
     expect(await links.count()).toBeLessThanOrEqual(5);
     expect(await links.first().getAttribute("href")).toMatch(/^\/education\/[a-z0-9-]+\/$/);
+    await expect(links.first()).toHaveClass(/tk-pill/);
+    const title = nearby.locator(".tk-link-nav-title");
+    expect(await title.evaluate((node) => getComputedStyle(node).fontSize)).toBe("13px");
+    expect(Number(await title.evaluate((node) => getComputedStyle(node).fontWeight))).toBeGreaterThanOrEqual(700);
+    const row = await nearby.locator(".tk-pills").evaluate((node) => getComputedStyle(node).columnGap);
+    expect(row).toBe("8px");
+    expect((await links.first().boundingBox())!.height).toBeGreaterThanOrEqual(24);
+    expect((await title.boundingBox())!.y).toBeLessThan((await links.first().boundingBox())!.y);
     expect(await hasHorizontalScroll(page)).toBe(false);
     expect(await serious(page)).toEqual([]);
     await nearby.scrollIntoViewIfNeeded();
@@ -40,6 +48,7 @@ test.describe("A32 part 2: listing blocks and UI-text words", () => {
     await page.goto("/education/");
     await nearby.scrollIntoViewIfNeeded();
     expect(await hasHorizontalScroll(page)).toBe(false);
+    expect((await nearby.getByRole("link").first().boundingBox())!.height).toBeGreaterThanOrEqual(44);
     if (SHOTS) await page.screenshot({ path: `${SHOTS}/education-links-390x844.png` });
   });
 
