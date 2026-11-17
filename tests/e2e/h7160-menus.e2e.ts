@@ -135,6 +135,14 @@ test.describe("H7.160 menus pictures moved and vendor note", () => {
         return await site.locator(".tkn-ls-band").first().evaluate((el, isPhone) => getComputedStyle(el, isPhone ? "::before" : null).backgroundImage, phone);
       }, { timeout: 60_000 })
       .toContain(phone ? urls.phone : urls.band);
+    const shots = process.env.H7161_SHOTS ?? "";
+    if (shots) {
+      const size = site.viewportSize();
+      await site.screenshot({ path: `${shots}/h7161-dating-band-${size?.width}x${size?.height}.png` });
+      await site.goto("/");
+      await site.locator("a[href*='dating'] img.tkh-cat-photo").first().scrollIntoViewIfNeeded();
+      await site.screenshot({ path: `${shots}/h7161-home-dating-tile-${size?.width}x${size?.height}.png` });
+    }
 
     // Clearing the new pictures brings the old row back.
     await row.getByRole("button", { name: "Remove" }).first().click();
