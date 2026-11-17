@@ -1,0 +1,10 @@
+{
+  "branchPrefix": "haiku/h8.9b",
+  "globs": [
+    "docs/ownership/H8.9b.json",
+    "progress/H8.9b.md",
+    "src/app/admin/growth-actions.ts",
+    "src/app/admin/url-actions.ts",
+    "tests/server/admin/a9-growth-url.test.ts"
+  ]
+}
