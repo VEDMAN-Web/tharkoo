@@ -3,6 +3,12 @@
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { ExternalLink, Search, Send } from "lucide-react";
+import { CardWidthForm } from "@/app/admin/listing-pages/CardWidthForm";
+import { PageTitleEditor } from "@/components/admin/PageTitleEditor";
+import { LayoutEditor } from "@/components/admin/layout-editor/LayoutEditor";
+import { typesForPage } from "@/server/layout/blocks";
+import type { CardWidth } from "@/server/listings/card-width-config";
+import { Preview } from "../_home/Preview";
 import { undoAction } from "@/app/admin/undo-actions";
 import { Badge } from "@/components/admin/ui/Badge";
 import { Button } from "@/components/admin/ui/Button";
@@ -11,22 +17,20 @@ import { Skeleton } from "@/components/admin/ui/Skeleton";
 import { TextField } from "@/components/admin/ui/TextField";
 import { ToastProvider, useToast } from "@/components/admin/ui/Toast";
 import { Toggle } from "@/components/admin/ui/Toggle";
-import { explainAddressAction, loadListingHeaderAction, publishListingHeaderAction, saveListingHeaderAction } from "./actions";
+import { explainAddressAction, loadListingHeaderAction, loadListingTitleAction, publishListingHeaderAction, saveListingHeaderAction } from "./actions";
 import { FIELD_WORDS, H1_MAX, HEADER_VARIABLES, INTRO_MAX, SOURCE_WORDS, previewHeader, sameHeader, scopeOf, type HeaderProps } from "./model";
-import type { ExplainedAddress, ListingHeaderState } from "./server";
+import type { ExplainedAddress, ListingHeaderState, ListingTitleState } from "./server";
 import "./listing.css";
 
 export type CategoryOption = { slug: string; name: string };
 
-function HeaderCard({ categories }: { categories: CategoryOption[] }) {
+function HeaderCard({ scope }: { scope: string }) {
   const toast = useToast();
-  const [category, setCategory] = useState("");
   const [state, setState] = useState<ListingHeaderState | null>(null);
   const [error, setError] = useState("");
   const [header, setHeader] = useState<HeaderProps | null>(null);
   const [saved, setSaved] = useState<HeaderProps | null>(null);
   const [busy, setBusy] = useState<"" | "save" | "publish">("");
-  const scope = scopeOf(category);
 
   const load = useCallback(async (nextScope: string) => {
     setError("");
@@ -99,20 +103,7 @@ function HeaderCard({ categories }: { categories: CategoryOption[] }) {
         <h2 id="lb-header-h">Heading and intro</h2>
         {statusBadge}
       </div>
-      <p className="adm-k-help">The words at the top of the category, city and area pages. Pick all listing pages, or one category that needs its own wording.</p>
-      <div className="adm-k-field adm-lb-scope">
-        <label className="adm-k-label" htmlFor="lb-scope">Applies to</label>
-        <select id="lb-scope" className="adm-k-select" value={category} onChange={(event) => {
-            setState(null);
-            setHeader(null);
-            setCategory(event.target.value);
-          }} disabled={busy !== ""}>
-          <option value="">All listing pages (default)</option>
-          {categories.map((row) => (
-            <option key={row.slug} value={row.slug}>{row.name}</option>
-          ))}
-        </select>
-      </div>
+      <p className="adm-k-help">The words at the top of the category, city and area pages for the pages chosen above.</p>
       {error ? <Notice kind="error">{error}</Notice> : null}
       {!header || !state ? (
         error ? null : <Skeleton lines={4} />
@@ -205,14 +196,95 @@ function ExplainCard() {
   );
 }
 
-/** The Listing tab of the Page builder (H8.44): the heading and intro of the listing pages, and which source each address uses. */
-export function ListingBuilder({ categories }: { categories: CategoryOption[] }) {
+const URL_CHOICE = "__url";
+const URL_SHAPE = /^\/[a-zA-Z0-9\-._~/]{1,300}$/;
+
+/** One choice for the whole tab: which pages the heading, the Google text, the layout and the preview below are for. */
+function ScopeCard({ categories, choice, address, onChoice, onAddress }: { categories: CategoryOption[]; choice: string; address: string; onChoice: (next: string) => void; onAddress: (next: string) => void }) {
+  const bad = choice === URL_CHOICE && address !== "" && !URL_SHAPE.test(address);
+  return (
+    <section className="adm-card adm-lb-card" aria-labelledby="lb-scope-h" data-tk="listing-scope-card">
+      <h2 id="lb-scope-h">Which pages</h2>
+      <div className="adm-lb-scoperow">
+        <div className="adm-k-field adm-lb-scope">
+          <label className="adm-k-label" htmlFor="lb-scope">Applies to</label>
+          <select id="lb-scope" className="adm-k-select" value={choice} onChange={(event) => onChoice(event.target.value)}>
+            <option value="">All listing pages (default)</option>
+            {categories.map((row) => (
+              <option key={row.slug} value={row.slug}>{row.name}</option>
+            ))}
+            <option value={URL_CHOICE}>One exact address...</option>
+          </select>
+        </div>
+        {choice === URL_CHOICE ? (
+          <div className="adm-k-field adm-lb-scope">
+            <label className="adm-k-label" htmlFor="lb-scope-url">Address</label>
+            <input id="lb-scope-url" className="adm-k-input" value={address} placeholder="/property/surat/" maxLength={300} aria-invalid={bad ? true : undefined} onChange={(event) => onAddress(event.target.value)} />
+            {bad ? <p className="adm-k-err" role="alert">Type a page address such as /property/surat/.</p> : null}
+          </div>
+        ) : null}
+      </div>
+      <p className="adm-k-help">A layout for an exact address wins over a category layout, which wins over the default.</p>
+    </section>
+  );
+}
+
+function TitleCard({ scope }: { scope: string }) {
+  const [state, setState] = useState<ListingTitleState | null>(null);
+  const [error, setError] = useState("");
+
+  useEffect(() => {
+    let live = true;
+    void loadListingTitleAction(scope).then((res) => {
+      if (!live) return;
+      if (res.ok) setState(res.title);
+      else setError(res.error);
+    });
+    return () => {
+      live = false;
+    };
+  }, [scope]);
+
+  return (
+    <section className="adm-lb-titlewrap" aria-label="Google title and description" data-tk="listing-title-card">
+      {error ? <Notice kind="warn">{error}</Notice> : null}
+      {!state ? (
+        error ? null : <Skeleton lines={3} />
+      ) : (
+        <PageTitleEditor key={JSON.stringify(state.target)} target={state.target} initial={state.initial} siteLabel={state.siteLabel} previewVars={state.previewVars} help={state.help} />
+      )}
+      <p className="adm-k-help">The same title and description are in <Link href="/admin/seo/page-titles/">SEO, Page titles</Link>, with every other page.</p>
+    </section>
+  );
+}
+
+/** The Listing tab of the Page builder (H8.44, H8.55): everything the old Listing pages screen had, for one choice of pages, with a preview beside it. */
+export function ListingBuilder({ categories, initialCategory = "", initialAddress = "", cardWidth }: { categories: CategoryOption[]; initialCategory?: string; initialAddress?: string; cardWidth: CardWidth }) {
+  const [choice, setChoice] = useState(initialAddress ? URL_CHOICE : initialCategory);
+  const [address, setAddress] = useState(initialAddress);
+  const urlOk = choice === URL_CHOICE && URL_SHAPE.test(address);
+  const scope = choice === URL_CHOICE ? (urlOk ? `url:${address.endsWith("/") ? address : `${address}/`}` : "default") : scopeOf(choice);
+  const live = choice === URL_CHOICE ? (urlOk ? address : "/") : `/${choice || categories[0]?.slug || ""}/`;
+  const exact = choice === URL_CHOICE;
   return (
     <ToastProvider>
-      <div className="adm-lb" data-tk="listing-builder">
-        <HeaderCard categories={categories} />
-        <ExplainCard />
-        <p className="adm-k-help">The filters, the ads, the nearby cities and the other blocks are still edited in <Link href="/admin/listing-pages/">Listing pages</Link>.</p>
+      <div className="adm-lb-grid" data-tk="listing-builder">
+        <div className="adm-lb">
+          <ScopeCard categories={categories} choice={choice} address={address} onChoice={(next) => { setChoice(next); if (next !== URL_CHOICE) setAddress(""); }} onAddress={setAddress} />
+          {exact ? <Notice kind="info">An exact address has no heading and intro template of its own. Its layout and its Google text are below.</Notice> : <HeaderCard key={scope} scope={scope} />}
+          <TitleCard scope={scope} />
+          <section className="adm-lb-layout" aria-label="Page layout" data-tk="listing-layout">
+            <LayoutEditor key={scope} pageKey="listing" scope={scope} allowedTypes={typesForPage("listing")} previewHref={live} />
+          </section>
+          <CardWidthForm initial={cardWidth} />
+          <ExplainCard />
+        </div>
+        <aside className="adm-lb-side" aria-label="Preview">
+          <section className="adm-card adm-lb-card" aria-labelledby="lb-preview-h" data-tk="listing-preview">
+            <h2 id="lb-preview-h">Preview</h2>
+            <Preview device="laptop" version={0} reloadKey={0} src={live} note={`The live page ${live}. A change shows here after you publish it.`} />
+          </section>
+        </aside>
       </div>
     </ToastProvider>
   );

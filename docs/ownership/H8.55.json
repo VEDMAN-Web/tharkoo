@@ -1,0 +1,14 @@
+{
+  "branchPrefix": "haiku/h8.55",
+  "globs": [
+    "docs/ownership/H8.55.json",
+    "progress/H8.55.md",
+    "src/app/admin/layout-actions.ts",
+    "src/app/admin/page-builder/**",
+    "src/app/admin/listing-pages/**",
+    "src/app/admin/seo/page-titles/page.tsx",
+    "tests/server/layout/h8-55-*.test.ts",
+    "tests/e2e/h8-55-listing-tab.e2e.ts",
+    "tests/e2e/a44-listing-tab.e2e.ts"
+  ]
+}

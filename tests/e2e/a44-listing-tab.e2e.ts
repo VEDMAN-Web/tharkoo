@@ -23,12 +23,12 @@ test.describe("H8.44 Page builder, Listing tab", () => {
     await page.goto("/admin/page-builder/");
     await page.getByRole("tab", { name: "Listing pages" }).click();
     const card = page.locator("[data-tk=listing-header-card]");
-    await expect(card.getByLabel("Applies to")).toBeVisible();
+    await expect(page.getByLabel("Applies to")).toBeVisible();
     await expect(card.getByLabel(/^Heading template/)).toHaveValue("{h1}");
     await expect(page.locator("h1")).toHaveCount(1);
     expect(await hasHorizontalScroll(page)).toBe(false);
 
-    const select = card.getByLabel("Applies to");
+    const select = page.getByLabel("Applies to");
     // Each screen size uses its own category, so a run on one size does not change what the other starts from.
     const slug = await select.locator("option").nth(test.info().project.name.startsWith("phone") ? 1 : 2).getAttribute("value");
     expect(slug).toBeTruthy();
