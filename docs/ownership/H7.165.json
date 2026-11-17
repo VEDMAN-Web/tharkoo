@@ -4,6 +4,7 @@
     "docs/ownership/H7.165.json",
     "src/app/admin/categories/[slug]/page.tsx",
     "src/app/admin/categories/fields-service.ts",
+    "src/app/admin/categories/page.tsx",
     "src/app/admin/content-actions.ts",
     "src/app/admin/homepage/page.tsx",
     "src/app/admin/layout-actions.ts",
@@ -41,7 +42,7 @@
     "tests/server/admin/h7165-content-editor.test.ts",
     "tests/server/cron/h7154-cron-auth.test.ts",
     "tests/server/cron/h7165-seo-cron.test.ts",
-    "vercel.json",
-    "tests/server/models/h8-1-schema.test.ts"
+    "tests/server/models/h8-1-schema.test.ts",
+    "vercel.json"
   ]
 }
