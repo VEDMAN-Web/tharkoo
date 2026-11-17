@@ -50,6 +50,7 @@ export function UserDrawer({ detail, credits, onClose, access }: { detail: UserD
       <div className="adm-k-hist" data-tk="user-drawer">
         <Tabs
           idPrefix="user"
+          wrap
           label="About this user"
           active={section}
           onChange={(key) => setSection(key as Section)}

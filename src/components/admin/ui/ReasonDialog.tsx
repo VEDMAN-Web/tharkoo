@@ -20,6 +20,8 @@ export function ReasonDialog({
   body,
   reasons = [],
   requireReason = false,
+  reasonLabel = "Reason",
+  reasonError,
   textLabel,
   requireText = false,
   paidAd,
@@ -36,6 +38,10 @@ export function ReasonDialog({
   body?: React.ReactNode;
   reasons?: readonly string[];
   requireReason?: boolean;
+  /** What the choice group is called. "Extend by" for a length of time. Defaults to "Reason". */
+  reasonLabel?: string;
+  /** The message when nothing is picked. Defaults to "Choose a reason." */
+  reasonError?: string;
   /** Label for the free text box, for example "Tell the advertiser why". Leave out for no text box. */
   textLabel?: string;
   requireText?: boolean;
@@ -125,7 +131,7 @@ export function ReasonDialog({
           {reasons.length > 0 ? (
             <fieldset className="adm-k-opts" aria-describedby={errors.reason ? `${id}-re` : undefined}>
               <legend className="adm-k-label">
-                Reason{requireReason ? <span className="adm-k-req" aria-hidden="true"> *</span> : null}
+                {reasonLabel}{requireReason ? <span className="adm-k-req" aria-hidden="true"> *</span> : null}
               </legend>
               {reasons.map((reason) => (
                 <label key={reason} className="adm-k-opt">
@@ -133,7 +139,7 @@ export function ReasonDialog({
                   {reason}
                 </label>
               ))}
-              {errors.reason ? <p className="adm-k-err" id={`${id}-re`}>{errors.reason}</p> : null}
+              {errors.reason ? <p className="adm-k-err" id={`${id}-re`}>{reasonError ?? errors.reason}</p> : null}
             </fieldset>
           ) : null}
           {textLabel ? (

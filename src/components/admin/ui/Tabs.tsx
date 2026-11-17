@@ -15,6 +15,7 @@ export function Tabs({
   onChange,
   label = "Sections",
   idPrefix = "tab",
+  wrap = false,
 }: {
   items: TabItem[];
   active: string;
@@ -22,6 +23,8 @@ export function Tabs({
   label?: string;
   /** Panels use `${idPrefix}-panel-${key}` and aria-labelledby `${idPrefix}-${key}`. */
   idPrefix?: string;
+  /** Wrap onto a second row instead of scrolling sideways (a narrow drawer with many tabs). */
+  wrap?: boolean;
 }) {
   const strip = useRef<HTMLDivElement>(null);
 
@@ -40,7 +43,7 @@ export function Tabs({
   }
 
   return (
-    <div className="adm-k-tabs" role="tablist" aria-label={label} ref={strip}>
+    <div className={`adm-k-tabs${wrap ? " is-wrap" : ""}`} role="tablist" aria-label={label} ref={strip}>
       {items.map((item, index) => {
         const selected = item.key === active;
         return (

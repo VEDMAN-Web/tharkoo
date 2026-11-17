@@ -76,7 +76,7 @@ export function MoreMenu({ items, phoneItems = [], placement = "down" }: { items
   }
 
   return (
-    <div className="adm-k-more" ref={box}>
+    <div className={`adm-k-more${items.length === 0 ? " is-phone-only" : ""}`} ref={box}>
       <Button icon={Ellipsis} aria-haspopup="menu" aria-expanded={open} aria-controls={open ? menuId : undefined} onClick={() => setOpen((value) => !value)}>
         More
       </Button>

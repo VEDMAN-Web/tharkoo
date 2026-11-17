@@ -170,6 +170,19 @@ describe("one change and one record (A26)", () => {
   });
 });
 
+describe("earlier changes (H7.164)", () => {
+  it("lists only the changes made before the one that is open, newest first, never a later one", async () => {
+    await event({ summary: "First edit", action: "listing.edit", targetType: "listing", targetId: "ad9", createdAt: ago(5 * HOUR) });
+    await event({ summary: "Second edit", action: "listing.edit", targetType: "listing", targetId: "ad9", createdAt: ago(4 * HOUR) });
+    const middle = await event({ summary: "Third edit", action: "listing.edit", targetType: "listing", targetId: "ad9", createdAt: ago(3 * HOUR) });
+    await event({ summary: "Fourth edit", action: "listing.edit", targetType: "listing", targetId: "ad9", createdAt: ago(1 * HOUR) });
+    const detail = await historyDetail(admin(), String(middle._id), NOW);
+    expect(detail?.earlier.map((item) => item.title)).toEqual(["Second edit", "First edit"]);
+    const oldest = await event({ summary: "Very first", action: "listing.edit", targetType: "listing", targetId: "ad9", createdAt: ago(9 * HOUR) });
+    expect((await historyDetail(admin(), String(oldest._id), NOW))?.earlier).toEqual([]);
+  });
+});
+
 describe("export (A26)", () => {
   it("writes the filtered list as CSV and quotes a cell that starts like a formula", async () => {
     await event({ summary: "=SUM(A1)", targetLabel: 'He said "hi", ok', lock: "money_sent" });

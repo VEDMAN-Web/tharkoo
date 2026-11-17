@@ -8,6 +8,7 @@ import { ageLabel } from "@/components/support/labels";
 import type { QueueItem } from "@/server/support/desk";
 import type { MessageView, TicketSummary } from "@/server/support/records";
 import type { DeskTab, TicketOrder, UserCard as Card } from "./data";
+import { overLabel } from "./age";
 import { ThreadPane } from "./ThreadPane";
 import { UserCard } from "./UserCard";
 import "./desk.css";
@@ -15,7 +16,7 @@ import "./desk.css";
 const TAB_LABELS: Record<DeskTab, string> = { open: "Open", waiting: "Waiting on user", closed: "Closed" };
 const SEARCH_DEBOUNCE_MS = 350;
 
-export type OpenThread = { ticket: TicketSummary; customer: string; messages: MessageView[]; staff: { id: string; name: string }[]; card: Card | null; order: TicketOrder | null };
+export type OpenThread = { ticket: TicketSummary; customer: string; messages: MessageView[]; staff: { id: string; name: string }[]; card: Card | null; order: TicketOrder | null; guest: { email: string; phone: string } | null };
 
 /** The support desk (H8.43): tickets on the left, the open ticket in the middle, the customer on the right. Tab, search and the open ticket live in the address. */
 export function DeskView({ tab, counts, unseen, items, now, q, ticketId, thread, viewerId }: { tab: DeskTab; counts: Record<DeskTab, number>; unseen: number; items: QueueItem[]; now: number; q: string; ticketId: string; thread: OpenThread | null; viewerId: string }) {
@@ -70,13 +71,13 @@ export function DeskView({ tab, counts, unseen, items, now, q, ticketId, thread,
             ) : (
               <ul className="adm-sd-rows">
                 {items.map((item) => {
-                  const hours = (now - new Date(item.lastCustomerMessageAt).getTime()) / 3_600_000;
+                  const over = overLabel(item.status, item.lastCustomerMessageAt, now);
                   return (
                     <li key={item.id}>
                       <button type="button" className="adm-sd-row" data-tk="desk-row" aria-current={item.id === ticketId ? "true" : undefined} onClick={() => go({ ticket: item.id })}>
                         <span className="adm-sd-rowtitle">
                           <strong>{item.subject}</strong>
-                          {item.status === "waiting_for_support" && hours >= 4 ? <Badge tone="bad">{`Over ${Math.floor(hours)} h`}</Badge> : item.status === "waiting_for_support" ? <Badge tone="warn">Waiting</Badge> : item.unread ? <Badge tone="info">New</Badge> : null}
+                          {over ? <Badge tone="bad">{over}</Badge> : item.status === "waiting_for_support" ? <Badge tone="warn">Waiting</Badge> : item.unread ? <Badge tone="info">New</Badge> : null}
                         </span>
                         <small>{`${item.ownerName} · ${item.topicLabel} · ${ageLabel(item.waitingSince, now)}`}</small>
                       </button>
@@ -95,7 +96,7 @@ export function DeskView({ tab, counts, unseen, items, now, q, ticketId, thread,
                 </button>
                 <ThreadPane key={thread.ticket.id} ticket={thread.ticket} customer={thread.customer} messages={thread.messages} staff={thread.staff} viewerId={viewerId} order={thread.order} now={now} />
               </div>
-              <UserCard card={thread.card} order={thread.order} guestName={thread.customer} />
+              <UserCard card={thread.card} order={thread.order} guestName={thread.customer} guest={thread.guest} />
             </>
           ) : (
             <section className="adm-card adm-sd-empty" data-tk="desk-pick">

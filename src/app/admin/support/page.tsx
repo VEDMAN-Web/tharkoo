@@ -40,6 +40,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<Par
         messages: opened.messages,
         staff: opened.staff,
         card: await userCard(owner?.ownerId ?? null, actor.roles),
+        guest: owner?.kind === "guest" ? { email: opened.owner.email, phone: opened.owner.phone } : null,
         order: opened.ticket.topic === "coins_payments" ? await latestOrder(owner?.ownerId ?? null, actor.roles) : null,
       };
     } catch (error) {

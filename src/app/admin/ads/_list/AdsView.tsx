@@ -329,6 +329,8 @@ function Screen({ list, access, demoPanel }: { list: AdsList; access: AdsAccess;
         body="Each ad ends later by the time you choose, counted from its current end (or from now, if it has already passed). Credits are not charged. You can undo this."
         reasons={EXTEND_CHOICES.map((choice) => choice.label)}
         requireReason
+        reasonLabel="Extend by"
+        reasonError="Choose how long to extend by."
         confirmLabel="Extend"
         onCancel={() => setExtending(false)}
         onConfirm={(result) => {

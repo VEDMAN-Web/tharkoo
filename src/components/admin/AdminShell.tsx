@@ -168,8 +168,12 @@ export function AdminShell({ title, hasHeader = false, children }: { title: stri
 
   const openSearch = useCallback(() => {
     setSearching(true);
-    window.setTimeout(() => search.current?.focus(), 0);
+    search.current?.focus();
   }, []);
+
+  useEffect(() => {
+    if (searching && document.activeElement !== search.current) search.current?.focus();
+  }, [searching]);
 
   useEffect(() => {
     function onKey(event: KeyboardEvent) {
@@ -213,7 +217,7 @@ export function AdminShell({ title, hasHeader = false, children }: { title: stri
             <label className={`adm-search ${searching ? "is-open" : ""}`}>
               <span className="adm-sr">Find an ad, user, page</span>
               <Search aria-hidden="true" focusable="false" size={16} className="adm-search-icon" />
-              <input ref={search} type="search" value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Find an ad, user, page" autoComplete="off" onBlur={() => setSearching(false)} />
+              <input ref={search} type="search" value={query} onChange={(event) => { setQuery(event.target.value); setSearching(true); }} onFocus={() => setSearching(true)} placeholder="Find an ad, user, page" autoComplete="off" onBlur={() => setSearching(false)} />
               <kbd aria-hidden="true">/</kbd>
             </label>
             <AdminSearchPanel query={query} input={search} open={searching} onClose={() => { setSearching(false); setQuery(""); search.current?.blur(); }} />
