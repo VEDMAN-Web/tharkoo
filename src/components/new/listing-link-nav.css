@@ -1,0 +1,8 @@
+/* H8.32b: the related searches and nearby cities rows under a listing page. The pills are the shared .tk-pill. */
+.tk-link-nav { margin-top: 20px; }
+.tk-link-nav-title { margin: 0 0 8px; font-size: 13px; font-weight: 700; line-height: 1.4; color: var(--ink, #1e0b38); }
+.tk-link-nav .tk-pills { gap: 8px; }
+.tk-link-nav .tk-pills .tk-pill, .tkn-ls .tk-link-nav .tk-pills .tk-pill { min-height: 24px; }
+@media (max-width: 767px) {
+  .tk-link-nav .tk-pills .tk-pill, .tkn-ls .tk-link-nav .tk-pills .tk-pill { min-height: 44px; }
+}

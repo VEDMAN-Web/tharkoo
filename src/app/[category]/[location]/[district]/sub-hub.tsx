@@ -129,11 +129,12 @@ export async function SubHub({ params, page }: { params: SubHubParams; page: num
     ? await loadFallbackSections({
         scope: { categorySlug: hub.cat.slug || catSlug, categoryName: hub.cat.name || undefined, stateSlug: hub.city.stateSlug || undefined, placeName: hub.city.name },
         ownSlugs: feed.items.map((ad) => ad.slug || "").filter(Boolean),
+        t,
       })
     : [];
   const lead =
     feed.total === 0
-      ? { text: `No ads in ${hub.city.name} yet. Here are ads close by.`, button: `Post the first ad in ${hub.city.name}`, href: postAdPath(paths) }
+      ? { text: t("listing.empty.leadPlace", { place: hub.city.name || "" }), button: t("listing.empty.buttonPlace", { place: hub.city.name || "" }), href: postAdPath(paths) }
       : undefined;
   const labels = listingLabels(t);
   const homeContent = await getHomepageContent();
