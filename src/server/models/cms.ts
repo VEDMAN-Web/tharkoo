@@ -52,7 +52,7 @@ export interface SiteDoc extends BaseDoc {
   landings?: unknown;
   tags?: { slug?: string; label?: string; replaces?: string }[];
   freeAdsPerWeek?: number;
-  /** How long an ad stays live before it is gone (410). Default 72 hours (H6.7). */
+  /** How long an ad stays live before it is gone (410). Not read since H7.158: the lifetime is the code constant (48 hours). */
   adLifetimeHours?: number;
   paths?: unknown;
   /** Indexing rules (H4.6): thresholds, switched-off categories and cities. */
@@ -226,7 +226,7 @@ const siteSchema = new Schema<SiteDoc>(
     landings: Schema.Types.Mixed,
     tags: { type: [{ slug: String, label: String, replaces: String }], default: [] },
     freeAdsPerWeek: { type: Number },
-    adLifetimeHours: { type: Number, default: 72 },
+    adLifetimeHours: { type: Number },
     paths: Schema.Types.Mixed,
     seoIndexing: Schema.Types.Mixed,
     seoSettings: Schema.Types.Mixed,

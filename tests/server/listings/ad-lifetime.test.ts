@@ -4,7 +4,7 @@ import { boostFitsBeforeExpiry } from "@/server/billing/boost-window";
 import { clampLifetimeHours, lifetimeMs, DEFAULT_AD_LIFETIME_HOURS } from "@/server/listings/lifetime";
 import { renewListing } from "@/server/listings/service";
 import { listingVisibility } from "@/server/listings/visibility";
-import { Listing, Site, User } from "@/server/models";
+import { Listing, User } from "@/server/models";
 import { SEED_USER_EMAIL } from "@/server/seed/data";
 import { refreshDemoAds } from "@/server/seed/refresh-demo-ads";
 import { shardEntries } from "@/lib/seo/sitemaps";
@@ -44,13 +44,13 @@ async function ownedAd(ownerId: mongoose.Types.ObjectId, expiresAt: Date, status
 }
 
 describe("ad lifetime setting", () => {
-  it("defaults to 72 hours and clamps the admin value to 1 to 720 hours", () => {
-    expect(DEFAULT_AD_LIFETIME_HOURS).toBe(72);
+  it("defaults to 48 hours and clamps the admin value to 1 to 720 hours", () => {
+    expect(DEFAULT_AD_LIFETIME_HOURS).toBe(48);
     expect(lifetimeMs(72)).toBe(72 * HOUR);
     expect(clampLifetimeHours(0)).toBe(1);
     expect(clampLifetimeHours(9999)).toBe(720);
-    expect(clampLifetimeHours("nonsense")).toBe(72);
-    expect(clampLifetimeHours(undefined)).toBe(72);
+    expect(clampLifetimeHours("nonsense")).toBe(48);
+    expect(clampLifetimeHours(undefined)).toBe(48);
   });
 });
 
@@ -74,24 +74,22 @@ describe("expiry is exact: an ad is live until its expiry and gone at it", () =>
   });
 });
 
-describe("renewal follows the admin lifetime", () => {
-  it("adds the configured lifetime to the current expiry", async () => {
+describe("renewal uses the 48 hour lifetime", () => {
+  it("adds the lifetime to the current expiry", async () => {
     const owner = new mongoose.Types.ObjectId();
     const expiresAt = new Date(Date.now() + 10 * HOUR);
     const id = await ownedAd(owner, expiresAt);
-    await Site.create({ key: "default", adLifetimeHours: 24, tags: [] });
     const renewed = await renewListing(id, String(owner), req);
     const next = new Date(renewed.expiresAt ?? 0).getTime();
-    expect(Math.abs(next - (expiresAt.getTime() + 24 * HOUR))).toBeLessThan(2000);
+    expect(Math.abs(next - (expiresAt.getTime() + 48 * HOUR))).toBeLessThan(2000);
   });
 
   it("an expired ad renews from now", async () => {
     const owner = new mongoose.Types.ObjectId();
     const id = await ownedAd(owner, new Date(Date.now() - HOUR), "expired");
-    await Site.create({ key: "default", adLifetimeHours: 72, tags: [] });
     const renewed = await renewListing(id, String(owner), req);
     expect(renewed.status).toBe("active");
-    expect(new Date(renewed.expiresAt ?? 0).getTime()).toBeGreaterThan(Date.now() + 70 * HOUR);
+    expect(new Date(renewed.expiresAt ?? 0).getTime()).toBeGreaterThan(Date.now() + 46 * HOUR);
   });
 });
 
@@ -122,7 +120,6 @@ describe("sitemap and demo ads", () => {
     });
     const demo = await ownedAd(seed._id, new Date(Date.now() - HOUR), "expired");
     const real = await ownedAd(new mongoose.Types.ObjectId(), new Date(Date.now() - HOUR), "expired");
-    await Site.create({ key: "default", adLifetimeHours: 72, tags: [] });
     const result = await refreshDemoAds({ actorId: String(new mongoose.Types.ObjectId()), roles: ["superadmin"], requestId: req });
     expect(result.refreshed).toBe(1);
     expect((await Listing.findById(demo))?.status).toBe("active");

@@ -40,7 +40,7 @@ describe("support links", () => {
     expect(TEXT_DEFAULTS["home.utility.live"]).toBe("Advertisers online now");
     expect(TEXT_DEFAULTS["home.utility.verified"]).toBe("Photo verified badges");
     expect(TEXT_DEFAULTS["home.utility.ticker1"]).toBe("Chat with advertisers for free");
-    expect(TEXT_DEFAULTS["home.utility.ticker2"]).toBe("Fresh ads, live for 72 hours");
+    expect(TEXT_DEFAULTS["home.utility.ticker2"]).toBe("Fresh ads, live for 48 hours");
     expect(Object.values(TEXT_DEFAULTS).join(" ")).not.toMatch(/\[YOUR (PHONE|WHATSAPP|TELEGRAM)/);
   });
 });

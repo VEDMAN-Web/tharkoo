@@ -1,5 +1,6 @@
 "use client";
 
+import { DEFAULT_AD_LIFETIME_HOURS } from "@/lib/ads/lifetime-rules";
 import Link from "next/link";
 import { useState } from "react";
 import { Notice } from "@/components/admin/ui";
@@ -259,7 +260,7 @@ export function CreateAdForm({ options, canPublish }: { options: AdFormOptions; 
         ) : (
           <p className="adm-field-help">This ad goes to the moderation queue. Only a superadmin can publish at once.</p>
         )}
-        <p className="adm-field-help">The ad lasts 72 hours, like any other ad.</p>
+        <p className="adm-field-help">{`The ad lasts ${DEFAULT_AD_LIFETIME_HOURS} hours, like any other ad.`}</p>
         {error ? <Notice kind="error">{error}</Notice> : null}
         <div>
           <button type="button" className="adm-btn" disabled={busy || !category} onClick={() => void submit()}>

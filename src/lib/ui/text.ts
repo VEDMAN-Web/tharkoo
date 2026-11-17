@@ -13,7 +13,7 @@ export const TEXT_DEFAULTS = {
   "home.utility.verified": "Photo verified badges",
   "home.utility.private": "Private & safe",
   "home.utility.ticker1": "Chat with advertisers for free",
-  "home.utility.ticker2": "Fresh ads, live for 72 hours",
+  "home.utility.ticker2": "Fresh ads, live for 48 hours",
   "home.utility.ticker3": "Post your ad in 2 minutes",
   "home.utility.phone": SUPPORT_PHONE,
   "home.banner.sub": "Free ads across India. Chat with advertisers online and verify on a video call.",

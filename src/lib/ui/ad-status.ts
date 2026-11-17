@@ -11,7 +11,7 @@ export interface OwnAdStatus {
 }
 
 /**
- * An ad that ends within this many milliseconds shows "Ending soon". Ads run for 72 hours by default (lifetime.ts),
+ * An ad that ends within this many milliseconds shows "Ending soon". Ads run for 48 hours by default (lifetime-rules.ts),
  * so the window is the last day of the run; a three-day window would mark every new ad as ending soon.
  */
 export const ENDING_SOON_MS = 24 * 60 * 60 * 1000;
