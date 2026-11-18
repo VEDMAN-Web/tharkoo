@@ -33,7 +33,6 @@ export type HomeAdLabels = {
   photoPrev: string;
   photoNext: string;
   chat: string;
-  viewAd: string;
   age: string;
 };
 

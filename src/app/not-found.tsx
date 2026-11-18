@@ -38,7 +38,6 @@ async function latestAds(categoryNames: Map<string, string>): Promise<NotFoundAd
     photoPrev: t("home.ads.photoPrev"),
     photoNext: t("home.ads.photoNext"),
     chat: t("home.ads.chat"),
-    viewAd: t("home.ads.viewAd"),
     age: t("home.ads.age"),
     row: rowLabels(t),
   },

@@ -1,0 +1,13 @@
+{
+  "branchPrefix": "haiku/h14.2c",
+  "globs": [
+    "docs/ownership/H14.2c.json",
+    "progress/H14.2c.md",
+    "src/app/not-found.tsx",
+    "src/components/new/HomeAdCard.tsx",
+    "src/components/new/ListingCards.tsx",
+    "src/components/new/NewAdDetail.tsx",
+    "src/components/new/home-blocks/labels.ts",
+    "tests/e2e/h14-2c-row-cards.e2e.ts"
+  ]
+}
