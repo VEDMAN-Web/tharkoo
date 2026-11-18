@@ -11,7 +11,7 @@ export interface PromotionProductDoc {
   amount: number;
   currency: string;
   durationDays: number;
-  /** H7.168: how long the plan lasts, in hours (1 to 48, never longer than an ad lives). Plans saved before it have days only. */
+  /** H7.168: how long the plan lasts, in hours (1 to 72; a plan that runs past its ad moves the ad's end). Plans saved before it have days only. */
   durationHours?: number;
   enabled?: boolean;
   seedBatch?: string;

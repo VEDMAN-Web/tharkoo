@@ -27,7 +27,7 @@ async function shot(page: Page, name: string) {
 
 async function setPaidPosting(on: boolean) {
   await withLocalDb((db) =>
-    db.collection("sites").updateOne({ key: "default" }, { $set: { paidPostingOn: on, postingFeeCredits: 30, creditPriceInr: 10, mockPaymentsOn: true } }, { upsert: true }),
+    db.collection("sites").updateOne({ key: "default" }, { $set: { paidPostingOn: on, postingFeeCredits: 30, creditPriceInr: 10, mockPaymentsOn: true, freeAdsPerAccount: 0 } }, { upsert: true }),
   );
 }
 

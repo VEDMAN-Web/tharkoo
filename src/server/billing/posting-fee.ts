@@ -2,7 +2,8 @@ import { connectDb } from "@/lib/db";
 import { insufficientCreditsLine } from "@/lib/ui/publish-errors";
 import { PaymentRequiredError } from "@/server/http";
 import { creditWallet, debitWallet, readyBilling, walletBalance } from "@/server/billing/ledger";
-import { effectivePostingFee, readMoneySettings } from "@/server/billing/money-settings";
+import { postingPlanOf } from "@/server/billing/free-ads";
+import { readMoneySettings } from "@/server/billing/money-settings";
 import { WalletEntry } from "@/server/models";
 
 export const FEE_REF = "listing_fee";
@@ -30,8 +31,10 @@ export function insufficientCreditsMessage(short: number): string {
 
 export async function postingFeeStatus(userId: string) {
   await connectDb();
-  const [money, balance] = await Promise.all([readMoneySettings(), walletBalance(userId)]);
-  const fee = effectivePostingFee(money);
+  const money = await readMoneySettings();
+  // H11.1: the fee of the NEXT ad of this account: 0 while it is inside the free ads, else the posting fee.
+  const [balance, plan] = await Promise.all([walletBalance(userId), postingPlanOf(userId, { money })]);
+  const fee = plan.fee;
   const short = Math.max(0, fee - balance);
   return {
     fee,
@@ -41,6 +44,12 @@ export async function postingFeeStatus(userId: string) {
     enough: short === 0,
     creditPriceInr: money.creditPriceInr,
     mockPaymentsOn: money.mockPaymentsOn,
+    paidPostingOn: money.paidPostingOn,
+    postingFeeCredits: money.postingFeeCredits,
+    free: plan.free,
+    adNumber: plan.adNumber,
+    freeAds: plan.allowance,
+    freeLeft: plan.freeLeft,
   };
 }
 
@@ -64,7 +73,8 @@ export type PostingCharge = { charged: number; balance: number; refId: string | 
 
 export async function chargePostingFee(input: { userId: string; listingId: string; requestId: string }): Promise<PostingCharge> {
   await connectDb();
-  const fee = effectivePostingFee(await readMoneySettings());
+  // H11.1: an ad inside the account's free ads costs nothing; from the next one the posting fee applies.
+  const fee = (await postingPlanOf(input.userId, { listingId: input.listingId })).fee;
   const { debits, refunds } = await feeRows(input.listingId);
   if (fee <= 0 || debits > refunds) return { charged: 0, balance: await walletBalance(input.userId), refId: null };
   const balance = await walletBalance(input.userId);

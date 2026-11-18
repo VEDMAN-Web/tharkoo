@@ -58,7 +58,7 @@ export function PlansCard({ plans, freeCodes, creditPriceInr, canEdit }: { plans
                 </td>
                 <td className="adm-k-hide-phone">
                   {plan.lasts}
-                  {plan.tooLong ? <small className="adm-p-sub" data-tk="plan-too-long">Longer than an ad lasts ({MAX_PLAN_HOURS} hours). Edit it before it can be used.</small> : null}
+                  {plan.tooLong ? <small className="adm-p-sub" data-tk="plan-too-long">Longer than the longest plan ({MAX_PLAN_HOURS} hours). Edit it before it can be used.</small> : null}
                 </td>
                 <td>
                   <strong>{creditsText(plan.amount)}</strong>
@@ -165,7 +165,7 @@ function PlanDrawer({ plan, freeCodes, creditPriceInr, onClose, onSaved }: { pla
           ) : (
             <>
               <input id="plan-hours" className="adm-k-input" inputMode="numeric" autoComplete="off" value={form.hours} onChange={(event) => change({ hours: event.target.value })} />
-              <p className="adm-k-help">{`A whole number of hours, 1 to ${MAX_PLAN_HOURS}. An ad lasts ${MAX_PLAN_HOURS} hours and a plan cannot last longer.`}</p>
+              <p className="adm-k-help">{`A whole number of hours, 1 to ${MAX_PLAN_HOURS}. If the plan runs past the end of an ad, the ad's end moves to the plan's end.`}</p>
             </>
           )}
         </div>
