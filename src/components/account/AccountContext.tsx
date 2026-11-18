@@ -1,7 +1,7 @@
 "use client";
 
 import { createContext, useCallback, useContext, useEffect, useRef, useState, type ReactNode } from "react";
-import { usePathname } from "next/navigation";
+import { useSitePath } from "@/components/useSitePath";
 import { api, hasSessionHint } from "@/lib/ui/api";
 
 export type AccountUser = { displayName?: string; email?: string; verificationStatus?: string; roles?: string[] };
@@ -20,7 +20,7 @@ const UNREAD_POLL_MS = 20000;
 const AccountContext = createContext<AccountState>(IDLE);
 
 export function AccountProvider({ children }: { children: ReactNode }) {
-  const path = usePathname();
+  const path = useSitePath();
   const [state, setState] = useState<AccountState>(IDLE);
   const started = useRef(false);
   const mounted = useRef(true);

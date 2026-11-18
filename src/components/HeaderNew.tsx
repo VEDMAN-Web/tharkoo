@@ -4,7 +4,7 @@ import Link from "next/link";
 import dynamic from "next/dynamic";
 import { BrandLogo } from "./BrandLogo";
 import { LOGO_LIGHT_DEFAULT } from "@/lib/brand";
-import { usePathname } from "next/navigation";
+import { useSitePath } from "@/components/useSitePath";
 import { ChevronDown, Menu } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { HeaderCountry } from "./HeaderCountry";
@@ -51,7 +51,7 @@ export function HeaderNew({
   categories: Cat[];
   texts?: UiTextMap;
 }) {
-  const path = usePathname() || "/";
+  const path = useSitePath();
   const t = makeT(texts);
   const paths = useUrlPaths();
   const [menuOpen, setMenuOpen] = useState(false);

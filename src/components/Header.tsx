@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { usePathname } from "next/navigation";
+import { useSitePath } from "@/components/useSitePath";
 import { LayoutDashboard, List, LogOut, Menu, Search, Settings, ShieldCheck, User, Wallet, X, MessageCircle, CircleHelp } from "lucide-react";
 import dynamic from "next/dynamic";
 import { Logo } from "./Logo";
@@ -50,7 +50,7 @@ export function Header({
   social?: Social[];
   chrome?: Chrome;
 }) {
-  const path = usePathname() || "/";
+  const path = useSitePath();
   const paths = useUrlPaths();
   const { city } = useCity();
   const [search, setSearch] = useState(false);
