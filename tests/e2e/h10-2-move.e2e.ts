@@ -101,4 +101,55 @@ test.describe("H10.2 Move to category", () => {
       await db.collection("categories").deleteMany({ slug: { $in: [`h102-from-${tag}`, `h102-to-${tag}`] } });
     });
   });
+
+  test("the people rules show in the dialog: people ads cannot leave for a non-people category, ads without an 18+ age cannot enter a people category, and nothing changes", async ({ page, context, baseURL }) => {
+    test.setTimeout(120_000);
+    await signInAdminContext(context, baseURL!);
+    const tag = String(Date.now() % 1_000_000);
+    const made = await withLocalDb(async (db) => {
+      const now = new Date();
+      const people = await db.collection("categories").insertOne({ slug: `h102-people-${tag}`, name: `H102 People ${tag}`, kind: "people", enabled: true, order: 910, createdAt: now, updatedAt: now });
+      const goods = await db.collection("categories").insertOne({ slug: `h102-goods-${tag}`, name: `H102 Goods ${tag}`, kind: "goods", enabled: true, order: 911, createdAt: now, updatedAt: now });
+      const owner = new ObjectId();
+      const base = { ownerId: owner, description: "A description that is long enough for the test.", status: "active", createdAt: now, updatedAt: now, expiresAt: new Date(now.getTime() + 40 * 3_600_000) };
+      await db.collection("listings").insertOne({ ...base, categoryId: people.insertedId, title: `H102 people ad ${tag}`, slug: `h102-pp-${tag}`, attributes: { age: 30 } });
+      await db.collection("listings").insertOne({ ...base, categoryId: goods.insertedId, title: `H102 goods ad ${tag}`, slug: `h102-gg-${tag}` });
+      return { people: String(people.insertedId), goods: String(goods.insertedId) };
+    });
+    expect(made).not.toBeNull();
+    const { people, goods } = made!;
+    const where = async (slug: string) => String((await withLocalDb((db) => db.collection("listings").findOne({ slug }, { projection: { categoryId: 1 } })))?.categoryId);
+    await page.setViewportSize({ width: 1440, height: 900 });
+
+    await page.goto(`/admin/ads/?cat=${people}`);
+    await page.getByRole("checkbox", { name: `Select H102 people ad ${tag}` }).check();
+    await page.locator('[data-tk="bulk-bar"]').getByRole("button", { name: "Move to category..." }).click();
+    let dialog = page.getByRole("dialog");
+    await dialog.getByLabel("Move to").selectOption(goods);
+    await dialog.getByRole("button", { name: "Move 1 ad" }).click();
+    await expect(dialog.locator('[data-tk="move-error"]')).toHaveText("These ads are about people, so they can only move to another people category.");
+    await shot(page, "people-out-refused");
+    expect(await where(`h102-pp-${tag}`)).toBe(people);
+
+    await page.goto(`/admin/ads/?cat=${goods}`);
+    await page.getByRole("checkbox", { name: `Select H102 goods ad ${tag}` }).check();
+    await page.locator('[data-tk="bulk-bar"]').getByRole("button", { name: "Move to category..." }).click();
+    dialog = page.getByRole("dialog");
+    await dialog.getByLabel("Move to").selectOption(people);
+    await dialog.getByRole("button", { name: "Move 1 ad" }).click();
+    await expect(dialog.locator('[data-tk="move-error"]')).toContainText("1 of the 1 ads coming from a non-people category have no age of 18 or more");
+    await shot(page, "people-in-refused");
+    expect(await where(`h102-gg-${tag}`)).toBe(goods);
+    const events = await withLocalDb((db) => db.collection("audit_events").countDocuments({ action: "listing.move_category", targetLabel: { $regex: tag } }));
+    expect(events ?? 0).toBe(0);
+    await page.setViewportSize({ width: 390, height: 844 });
+    expect(await hasHorizontalScroll(page)).toBe(false);
+    expect(await serious(page)).toEqual([]);
+    await shot(page, "people-in-refused");
+
+    await withLocalDb(async (db) => {
+      await db.collection("listings").deleteMany({ slug: { $in: [`h102-pp-${tag}`, `h102-gg-${tag}`] } });
+      await db.collection("categories").deleteMany({ slug: { $in: [`h102-people-${tag}`, `h102-goods-${tag}`] } });
+    });
+  });
 });

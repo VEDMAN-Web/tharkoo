@@ -27,7 +27,7 @@ beforeEach(async () => {
 
 async function world(count = 3) {
   const from = await Category.create({ slug: "transgender", name: "Transgender", enabled: true, order: 0 });
-  const to = await Category.create({ slug: "friendship", name: "Friendship", enabled: true, order: 1 });
+  const to = await Category.create({ slug: "classifieds", name: "Classifieds", enabled: true, order: 1 });
   const sub = oid();
   const owner = oid();
   const ads = await Listing.create(
@@ -40,7 +40,7 @@ describe("H10.2 move ads to another category", () => {
   it("moves the selected ads, clears the sub-category, writes ONE audit row, and one Undo puts everything back", async () => {
     const { from, to, sub, ads } = await world(3);
     const done = await moveAdsToCategory(admin, { categoryId: String(to._id), scope: "selected", ids: ads.map((ad) => String(ad._id)) });
-    expect(done).toMatchObject({ moved: 3, alreadyThere: 0, categoryName: "Friendship" });
+    expect(done).toMatchObject({ moved: 3, alreadyThere: 0, categoryName: "Classifieds" });
     for (const ad of ads) {
       const row = await Listing.findById(ad._id).lean();
       expect(String(row?.categoryId)).toBe(String(to._id));
@@ -81,7 +81,49 @@ describe("H10.2 move ads to another category", () => {
     await expect(moveAdsToCategory(support, { categoryId: String(to._id), scope: "selected", ids })).rejects.toBeInstanceOf(ForbiddenError);
     expect(await Listing.countDocuments({ categoryId: to._id })).toBe(0);
     await moveAdsToCategory(admin, { categoryId: String(to._id), scope: "selected", ids });
-    await expect(moveAdsToCategory(admin, { categoryId: String(to._id), scope: "selected", ids })).rejects.toThrow("already in Friendship");
+    await expect(moveAdsToCategory(admin, { categoryId: String(to._id), scope: "selected", ids })).rejects.toThrow("already in Classifieds");
+  });
+
+  it("refuses to move ads out of a people category into a non-people category, by kind, by slug and by an age field; nothing moves", async () => {
+    const people = await Category.create({ slug: "my-group", name: "My group", kind: "people", enabled: true, order: 0 });
+    const bySlug = await Category.create({ slug: "dating", name: "Dating", enabled: true, order: 1 });
+    const byAge = await Category.create({ slug: "circle", name: "Circle", enabled: true, order: 2, fields: [{ key: "age", label: "Age", type: "number", min: 18 }] });
+    const goods = await Category.create({ slug: "classifieds", name: "Classifieds", enabled: true, order: 3 });
+    for (const from of [people, bySlug, byAge]) {
+      const ad = await Listing.create({ ownerId: oid(), categoryId: from._id, title: `Ad in ${from.name}`, description: "A description that is long enough", slug: `p-${from.slug}`, status: "active" as const, attributes: { age: 30 } });
+      await expect(moveAdsToCategory(admin, { categoryId: String(goods._id), scope: "selected", ids: [String(ad._id)] })).rejects.toThrow("These ads are about people, so they can only move to another people category.");
+      expect(String((await Listing.findById(ad._id).lean())?.categoryId)).toBe(String(from._id));
+    }
+    expect(await AuditEvent.countDocuments({ action: "listing.move_category" })).toBe(0);
+    // One people ad among the ads is enough to refuse the whole move; the goods ad stays where it is.
+    const goodsAd = await Listing.create({ ownerId: oid(), categoryId: goods._id, title: "A goods ad", description: "A description that is long enough", slug: "mixed-goods", status: "active" as const });
+    const tools = await Category.create({ slug: "tools", name: "Tools", enabled: true, order: 4 });
+    const peopleAd = await Listing.findOne({ slug: "p-my-group" }).lean();
+    await expect(moveAdsToCategory(admin, { categoryId: String(tools._id), scope: "selected", ids: [String(goodsAd._id), String(peopleAd?._id)] })).rejects.toThrow("only move to another people category");
+    expect(String((await Listing.findById(goodsAd._id).lean())?.categoryId)).toBe(String(goods._id));
+    expect(await AuditEvent.countDocuments({ action: "listing.move_category" })).toBe(0);
+  });
+
+  it("allows people to people, and non-people into people only when every ad has an age of 18 or more; otherwise refuses and says how many lack it", async () => {
+    const people = await Category.create({ slug: "my-group", name: "My group", kind: "people", enabled: true, order: 0 });
+    const people2 = await Category.create({ slug: "friendship", name: "Friendship", enabled: true, order: 1 });
+    const goods = await Category.create({ slug: "classifieds", name: "Classifieds", enabled: true, order: 2 });
+    const make = (slug: string, categoryId: mongoose.Types.ObjectId, attributes?: Record<string, unknown>) =>
+      Listing.create({ ownerId: oid(), categoryId, title: slug, description: "A description that is long enough", slug, status: "active" as const, ...(attributes ? { attributes } : {}) });
+    const adult = await make("adult", goods._id, { age: 25 });
+    const adultText = await make("adult-text", goods._id, { age: "40" });
+    const noAge = await make("no-age", goods._id);
+    const young = await make("young", goods._id, { age: 17 });
+    const inPeople = await make("in-people", people._id);
+    // People to people is allowed, even when the ad has no age.
+    expect(await moveAdsToCategory(admin, { categoryId: String(people2._id), scope: "selected", ids: [String(inPeople._id)] })).toMatchObject({ moved: 1 });
+    // Non-people into people: refused when some ads have no age of 18 or more, and the number is said.
+    await expect(moveAdsToCategory(admin, { categoryId: String(people._id), scope: "selected", ids: [adult, adultText, noAge, young].map((ad) => String(ad._id)) })).rejects.toThrow("2 of the 4 ads");
+    expect(await Listing.countDocuments({ categoryId: people._id })).toBe(0);
+    // Allowed when every ad has an age of 18 or more (a number, or digits).
+    const done = await moveAdsToCategory(admin, { categoryId: String(people._id), scope: "selected", ids: [adult, adultText].map((ad) => String(ad._id)) });
+    expect(done.moved).toBe(2);
+    expect(await Listing.countDocuments({ categoryId: people._id })).toBe(2);
   });
 
   it("Undo refuses when one of the ads was moved again since, and leaves every ad where it is", async () => {
