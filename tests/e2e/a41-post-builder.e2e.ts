@@ -1,7 +1,7 @@
 import { mkdirSync } from "node:fs";
 import AxeBuilder from "@axe-core/playwright";
-import type { Page } from "@playwright/test";
-import { expect, hasHorizontalScroll, loginUi, newApi, registerApi, setIdCheckSwitch, signInAdminContext, test, uniqueEmail, withLocalDb } from "./helpers";
+import type { BrowserContext, Page } from "@playwright/test";
+import { expect, hasHorizontalScroll, loginUi, newApi, registerApi, resetPageLayouts, setIdCheckSwitch, signInAdminContext, test, uniqueEmail, withLocalDb } from "./helpers";
 
 const SHOTS = process.env.A41_SHOTS_DIR || "";
 const BUILDER = "/admin/page-builder/";
@@ -18,8 +18,26 @@ async function openPostTab(page: Page) {
   await expect(page.locator('[data-tk="post-builder"]')).toBeVisible();
 }
 
+const MONEY_FIELDS = ["paidPostingOn", "postingFeeCredits", "freeAdsPerAccount"] as const;
+
 async function setMoney(paid: boolean) {
   await withLocalDb((db) => db.collection("sites").updateOne({ key: "default" }, { $set: { paidPostingOn: paid, postingFeeCredits: 30, freeAdsPerAccount: 0 } }, { upsert: true }));
+}
+
+/** What the money settings were before the test, so the test can put them back exactly (a field that was not set is removed again). */
+async function moneyNow() {
+  const row = await withLocalDb((db) => db.collection("sites").findOne({ key: "default" }, { projection: { paidPostingOn: 1, postingFeeCredits: 1, freeAdsPerAccount: 1 } }));
+  return row ?? {};
+}
+
+async function restoreMoney(before: Record<string, unknown>) {
+  const set: Record<string, unknown> = {};
+  const unset: Record<string, ""> = {};
+  for (const field of MONEY_FIELDS) {
+    if (field in before) set[field] = before[field];
+    else unset[field] = "";
+  }
+  await withLocalDb((db) => db.collection("sites").updateOne({ key: "default" }, { ...(Object.keys(set).length ? { $set: set } : {}), ...(Object.keys(unset).length ? { $unset: unset } : {}) }));
 }
 
 test.describe("A41 page builder, Post-ad tab", () => {
@@ -69,6 +87,9 @@ test.describe("A41 page builder, Post-ad tab", () => {
     test.setTimeout(420_000);
     await signInAdminContext(context, baseURL!);
     await page.setViewportSize({ width: 1440, height: 900 });
+    const moneyBefore = await moneyNow();
+    let visitor: BrowserContext | null = null;
+    let seen: Page | null = null;
     await setMoney(true);
     try {
       await openPostTab(page);
@@ -79,32 +100,44 @@ test.describe("A41 page builder, Post-ad tab", () => {
       await page.getByRole("dialog").getByRole("button", { name: "Publish now" }).click();
       await expect(page.locator('[data-tk="builder-status"]')).toContainText(/Live: version \d+/);
 
-      const visitor = await browser.newContext({ baseURL });
-      const seen = await visitor.newPage();
+      const context2 = await browser.newContext({ baseURL });
+      const seen2 = await context2.newPage();
+      visitor = context2;
+      seen = seen2;
       const api = await newApi(baseURL!);
       const email = uniqueEmail("a41");
       await registerApi(api, baseURL!, email);
       await api.dispose();
-      await loginUi(seen, email, undefined, "/u/post-insert/");
+      await loginUi(seen2, email, undefined, "/u/post-insert/");
       await expect(async () => {
-        await seen.goto("/u/post-insert/");
-        await expect(seen.locator('[data-tk="step-help"], .tkp-help').first()).toContainText("Posting costs 30 credits to start.", { timeout: 3_000 });
+        await seen2.goto("/u/post-insert/");
+        await expect(seen2.locator('[data-tk="step-help"], .tkp-help').first()).toContainText("Posting costs 30 credits to start.", { timeout: 3_000 });
       }).toPass({ timeout: 240_000, intervals: [5_000] });
-      if (SHOTS) await seen.screenshot({ path: `${SHOTS}/post-page-fee-1440x900.png` });
+      if (SHOTS) await seen2.screenshot({ path: `${SHOTS}/post-page-fee-1440x900.png` });
 
       await setIdCheckSwitch(baseURL!, true);
       try {
         await expect(async () => {
-          await seen.goto("/u/post-insert/");
-          await expect(seen.locator('[data-tk="id-check-first"] h1')).toHaveText("Send us your ID first", { timeout: 3_000 });
+          await seen2.goto("/u/post-insert/");
+          await expect(seen2.locator('[data-tk="id-check-first"] h1')).toHaveText("Send us your ID first", { timeout: 3_000 });
         }).toPass({ timeout: 240_000, intervals: [5_000] });
-        await expect(seen.locator('[data-tk="verify-id"]')).toHaveText("Verify ID");
+        await expect(seen2.locator('[data-tk="verify-id"]')).toHaveText("Verify ID");
       } finally {
         await setIdCheckSwitch(baseURL!, false);
       }
-      await visitor.close();
     } finally {
-      await setMoney(false);
+      await restoreMoney(moneyBefore);
+      // Leave no published Post-ad layout behind: "Posting costs {fee} credits to start" would show on every later post-ad test.
+      await resetPageLayouts("post");
+      // The site keeps the live layout for a short while; wait until the standard text is back before the next test.
+      if (seen) {
+        const page = seen;
+        await expect(async () => {
+          await page.goto("/u/post-insert/");
+          await expect(page.locator('[data-tk="step-help"], .tkp-help').first()).not.toContainText("Posting costs", { timeout: 3_000 });
+        }).toPass({ timeout: 180_000, intervals: [5_000] });
+      }
+      await visitor?.close();
     }
   });
 });

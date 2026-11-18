@@ -34,6 +34,7 @@ jobs:
         env:
           CI: "true"
           E2E_WORKERS: "2"
+          E2E_RETRIES: "1"
           E2E_PORT: "4342"
         run: unset MONGODB_URI && npx playwright test
       - name: Keep the failure screenshots and server logs

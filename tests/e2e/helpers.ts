@@ -309,17 +309,20 @@ export async function setSellerAvailable(slug: string, available: boolean) {
 }
 
 /**
- * Puts the Listing pages layouts back to "never published" (drafts, live copy and saved versions) in the test database.
- * Tests that start from "Not published yet" call this first, so they do not depend on which other tests ran before them.
+ * Puts the layouts of one page ("listing" or "post") back to "never published" (drafts, live copy and saved versions)
+ * in the test database. A test that publishes a layout calls this when it is done, and a test that starts from
+ * "Not published yet" calls it first, so neither depends on which other tests ran before it.
  */
-export async function resetListingLayouts() {
+export async function resetPageLayouts(key: "listing" | "post") {
   const done = await withLocalDb(async (db) => {
-    await db.collection("page_layouts").deleteMany({ key: "listing" });
-    await db.collection("page_layout_revisions").deleteMany({ key: "listing" });
+    await db.collection("page_layouts").deleteMany({ key });
+    await db.collection("page_layout_revisions").deleteMany({ key });
     return true;
   });
   expect(done, "E2E_MONGO_URI_FILE must point at the in-memory database").toBe(true);
 }
+
+export const resetListingLayouts = () => resetPageLayouts("listing");
 
 /** The folder the site under test saves uploads in. A worker's own server keeps it inside its own copy of the app. */
 export function uploadsDir() {

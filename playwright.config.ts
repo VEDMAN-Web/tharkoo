@@ -18,7 +18,8 @@ export default defineConfig({
   outputDir: ".shots/e2e-results",
   fullyParallel: false,
   forbidOnly: !!process.env.CI,
-  retries: 0,
+  // The nightly run sets E2E_RETRIES=1: a test that only passes on the second try is reported as flaky, never as a pass.
+  retries: Math.max(0, Number(process.env.E2E_RETRIES || "0") || 0),
   workers,
   timeout: 60_000,
   expect: { timeout: 10_000 },
