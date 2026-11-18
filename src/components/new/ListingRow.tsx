@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo } from "react";
+import { useMemo, useRef } from "react";
 import Link from "next/link";
 import { Camera, Check, Eye, Hand } from "lucide-react";
 import { SaveButton } from "@/components/ui/SaveButton";
@@ -12,10 +12,14 @@ import type { HomeAdLabels } from "./HomeAdCard";
 import { cardSlides } from "./card-slides";
 import { SlideNav, SlideTrack } from "./CardSlides";
 import { rowLabels, type ListingRowData, type RowLabels } from "./listing-row-data";
+import { ListingPopout } from "./ListingPopout";
+import { useCardHover } from "./use-card-hover";
 import { useCardSlider } from "./use-card-slider";
 import "./home-ads.css";
 import "./listing-grid.css";
 
+const HOVER_DELAY_MS = 150;
+const POPOUT_MIN_WIDTH_PX = 768;
 const DEFAULT_ROW_LABELS = rowLabels(makeT());
 
 export type ListingRowLabels = HomeAdLabels & { row?: RowLabels };
@@ -42,7 +46,10 @@ export function ListingRow({ ad, labels, order = 0 }: { ad: ListingRowData; labe
   const photos = ad.photos;
   const slides = useMemo(() => cardSlides(photos, ad.videoUrl, ad.videoPoster), [photos, ad.videoUrl, ad.videoPoster]);
   const online = Boolean(seller && seller.chatOn && seller.status === "online");
-  const { cardRef, trackRef, videoRef, index, calm, onScroll, step } = useCardSlider({ slug: ad.slug, slides, order });
+  const cardRef = useRef<HTMLElement>(null);
+  const popVideoRef = useRef<HTMLVideoElement | null>(null);
+  const { anchor, cardHandlers, popHandlers } = useCardHover(cardRef, HOVER_DELAY_MS, POPOUT_MIN_WIDTH_PX);
+  const { trackRef, videoRef, index, setIndex, calm, onScroll, step } = useCardSlider({ cardRef, slug: ad.slug, slides, order, anchored: Boolean(anchor), popVideoRef });
   const counts = useShownCounts(ad.slug);
   const tier = tierText(ad.tier, row);
   const place = ad.area ? `${ad.city}, ${ad.area}` : ad.city;
@@ -51,7 +58,7 @@ export function ListingRow({ ad, labels, order = 0 }: { ad: ListingRowData; labe
   };
 
   return (
-    <article ref={cardRef} className="tk-row" data-tk="listing-row" data-slide={index} data-tier={ad.tier || undefined}>
+    <article ref={cardRef} className={anchor ? "tk-row is-open" : "tk-row"} data-tk="listing-row" data-slide={index} data-tier={ad.tier || undefined} {...cardHandlers}>
       <div className="tk-row-photo">
         <SlideTrack slides={slides} href={ad.href} trackRef={trackRef} videoRef={videoRef} onScroll={onScroll} onTouch={calm} onClicked={clicked} />
         {tier ? <span className="tk-row-tier" data-tier={ad.tier}>{tier}</span> : null}
@@ -108,6 +115,25 @@ export function ListingRow({ ad, labels, order = 0 }: { ad: ListingRowData; labe
           </span>
         </div>
       </div>
+      {anchor ? (
+        <ListingPopout
+          ad={ad}
+          labels={labels}
+          row={row}
+          anchor={anchor}
+          online={online}
+          chatOn={Boolean(seller?.chatOn)}
+          slides={slides}
+          index={index}
+          onIndex={(position) => {
+            calm();
+            setIndex(position);
+          }}
+          videoRef={popVideoRef}
+          onEnter={popHandlers.onEnter}
+          onLeave={popHandlers.onLeave}
+        />
+      ) : null}
     </article>
   );
 }

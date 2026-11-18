@@ -34,6 +34,7 @@ async function styles(page: Page) {
       photoWidth: photo?.width ?? 0,
       photoHeight: photo?.height ?? 0,
       cardWidth: card.getBoundingClientRect().width,
+      cardHeight: card.getBoundingClientRect().height,
       bodyPadding: css(".tk-row-body", "padding"),
       bodyGap: css(".tk-row-body", "rowGap"),
       titleSize: css(".tk-row-title", "fontSize"),
@@ -98,7 +99,9 @@ test.describe("H14.1 listing rows", () => {
       } else {
         expect(s.direction).toBe("row");
         expect(Math.round(s.photoWidth)).toBe(200);
-        expect(s.photoHeight / s.photoWidth).toBeGreaterThanOrEqual(1.24);
+        // H14.1b: the photo column is 200 px wide, as tall as the card, never shorter than 200 px (no fixed 4:5).
+        expect(s.photoHeight).toBeGreaterThanOrEqual(199);
+        expect(Math.abs(s.photoHeight - s.cardHeight + 2)).toBeLessThanOrEqual(2);
         const listWidth = await page.locator('[data-tk="listing-grid"]').evaluate((el) => el.getBoundingClientRect().width);
         expect(listWidth).toBeLessThanOrEqual(880.5);
       }
