@@ -1,0 +1,32 @@
+{
+  "branchPrefix": "haiku/h11.1",
+  "globs": [
+    "docs/ownership/H11.1.json",
+    "src/lib/price-list.ts",
+    "src/lib/ads/lifetime-rules.ts",
+    "src/lib/admin/history-words.ts",
+    "src/server/billing/free-ads.ts",
+    "src/server/billing/price-list.ts",
+    "src/server/billing/boost-window.ts",
+    "src/server/billing/money-settings.ts",
+    "src/server/billing/posting-fee.ts",
+    "src/server/billing/service.ts",
+    "src/server/billing/plans-admin.ts",
+    "src/server/listings/service.ts",
+    "src/server/models/cms.ts",
+    "src/server/models/identity.ts",
+    "src/server/models/billing.ts",
+    "src/server/admin/user-free-ads.ts",
+    "src/server/admin/undo/handlers/record-restore.ts",
+    "src/app/admin/prices/_view/PlansCard.tsx",
+    "src/app/admin/prices/_view/prices-format.ts",
+    "tests/server/billing/h111-free-ads.test.ts",
+    "tests/server/billing/posting-fee.test.ts",
+    "tests/server/billing/a17-plans.test.ts",
+    "tests/server/settings/a25-settings.test.ts",
+    "tests/e2e/a41-post-builder.e2e.ts",
+    "tests/e2e/h7-112-recharge-flow.e2e.ts",
+    "tests/e2e/h7-118-edit-ad.e2e.ts",
+    "tests/e2e/h7-120-small.e2e.ts"
+  ]
+}

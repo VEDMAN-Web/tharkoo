@@ -10,9 +10,10 @@ import { Site } from "@/server/models";
 
 export const SITE_KEY = "default";
 
-export const MONEY_DEFAULTS = { postingFeeCredits: 30, creditPriceInr: 10, mockPaymentsOn: true, paidPostingOn: false } as const;
+export const MONEY_DEFAULTS = { postingFeeCredits: 30, creditPriceInr: 10, mockPaymentsOn: true, paidPostingOn: false, freeAdsPerAccount: 3 } as const;
 
-export type MoneySettings = { postingFeeCredits: number; creditPriceInr: number; mockPaymentsOn: boolean; paidPostingOn: boolean };
+/** freeAdsPerAccount (H11.1): how many of an account's first ads cost nothing when Paid posting is on. */
+export type MoneySettings = { postingFeeCredits: number; creditPriceInr: number; mockPaymentsOn: boolean; paidPostingOn: boolean; freeAdsPerAccount: number };
 
 export const moneySettingsBodySchema = z
   .object({
@@ -20,6 +21,7 @@ export const moneySettingsBodySchema = z
     creditPriceInr: z.number().int().min(1).max(100_000),
     mockPaymentsOn: z.boolean(),
     paidPostingOn: z.boolean(),
+    freeAdsPerAccount: z.number().int().min(0).max(1000),
   })
   .partial()
   .strict();
@@ -31,13 +33,14 @@ function whole(value: unknown, fallback: number, min: number): number {
 export async function readMoneySettings(): Promise<MoneySettings> {
   await connectDb();
   const site = await Site.findOne({ key: SITE_KEY })
-    .select("postingFeeCredits creditPriceInr mockPaymentsOn paidPostingOn")
+    .select("postingFeeCredits creditPriceInr mockPaymentsOn paidPostingOn freeAdsPerAccount")
     .lean<Partial<MoneySettings> | null>();
   return {
     postingFeeCredits: whole(site?.postingFeeCredits, MONEY_DEFAULTS.postingFeeCredits, 0),
     creditPriceInr: whole(site?.creditPriceInr, MONEY_DEFAULTS.creditPriceInr, 1),
     mockPaymentsOn: typeof site?.mockPaymentsOn === "boolean" ? site.mockPaymentsOn : MONEY_DEFAULTS.mockPaymentsOn,
     paidPostingOn: typeof site?.paidPostingOn === "boolean" ? site.paidPostingOn : MONEY_DEFAULTS.paidPostingOn,
+    freeAdsPerAccount: whole(site?.freeAdsPerAccount, MONEY_DEFAULTS.freeAdsPerAccount, 0),
   };
 }
 
@@ -50,7 +53,7 @@ function pickKeys(doc: Record<string, unknown> | null, keys: string[]) {
 }
 
 /**
- * Saves some of the four money settings through adminWrite (admin permission, audit, 30 day undo that restores only from the saved values).
+ * Saves some of the five money settings through adminWrite (admin permission, audit, 30 day undo that restores only from the saved values).
  * Asks the public pages to refresh; a failed refresh is logged with the name "money settings".
  */
 export async function saveMoneyValues(ctx: AdminCtx, rawValues: unknown) {

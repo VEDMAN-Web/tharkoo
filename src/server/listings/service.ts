@@ -41,7 +41,8 @@ import { parsePrice } from "@/server/listings/price";
 import { attributeDenied, categoryDenied, textDenied } from "@/server/shared/policy";
 import { adLifetimeMs } from "@/server/listings/lifetime";
 import { evaluatePublishGate } from "@/server/shared/publish-gate";
-import { effectivePostingFee, readMoneySettings } from "@/server/billing/money-settings";
+import { postingPlanOf } from "@/server/billing/free-ads";
+import { readMoneySettings } from "@/server/billing/money-settings";
 import { chargePostingFee, refundPostingFee } from "@/server/billing/posting-fee";
 import { assertNotPaused, isEmergencyOn, isNewAccount } from "@/server/settings/emergency";
 import { walletBalance } from "@/server/billing/ledger";
@@ -634,12 +635,15 @@ export async function submitListing(
   });
   const site = await Site.findOne({ key: "default" }).select("freeAdsPerWeek").lean<{ freeAdsPerWeek?: number }>();
   const limit = typeof site?.freeAdsPerWeek === "number" ? site.freeAdsPerWeek : intEnv("FREE_ADS_PER_WEEK", 3);
-  const fee = effectivePostingFee(await readMoneySettings());
+  // H11.1: the first ads of an account are free (setting plus extra free ads); after them the posting fee. Paid posting off: everything is free.
+  const money = await readMoneySettings();
+  const fee = (await postingPlanOf(userId, { listingId: listing._id, money })).fee;
   // H8.25: the emergency switches. They stop a NEW posting; saving an edit of a live ad is never blocked.
   if (!isEdit && isNewAccount(user.createdAt)) await assertNotPaused("pauseNewAccounts24h");
   if (!isEdit && fee > 0) await assertNotPaused("pausePaidPosting");
   const held = !isEdit && !wasPaused && (await isEmergencyOn("holdNewAds"));
-  if (!isEdit && !already && used >= limit && fee <= 0) {
+  // The weekly free limit only applies while Paid posting is off.
+  if (!isEdit && !already && used >= limit && !money.paidPostingOn) {
     const retryAfter = Math.max(1, Math.ceil((weekStart().getTime() + 7 * 24 * 60 * 60 * 1000 - Date.now()) / 1000));
     throw new FreeLimitError(retryAfter);
   }

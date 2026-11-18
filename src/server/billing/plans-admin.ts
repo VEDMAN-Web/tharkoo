@@ -116,7 +116,7 @@ function cleanPlan(code: string, input: PlanInput, current: { days: number; hour
   const fixed = FIXED_LENGTH.has(code);
   const requested = Number(input.durationHours);
   if (!fixed && (!Number.isInteger(requested) || requested < 1 || requested > MAX_PLAN_HOURS)) {
-    throw new ValidationError(`Hours is a whole number from 1 to ${MAX_PLAN_HOURS}. A plan cannot last longer than the ad it is bought for, and an ad lasts ${MAX_PLAN_HOURS} hours.`);
+    throw new ValidationError(`Hours is a whole number from 1 to ${MAX_PLAN_HOURS}. A plan that runs past the end of an ad moves the ad's end to the plan's end.`);
   }
   if (typeof input.shown !== "boolean") throw new ValidationError("Choose Shown or Hidden.");
   const durationDays = fixed ? current.days : Math.max(1, Math.ceil(requested / 24));

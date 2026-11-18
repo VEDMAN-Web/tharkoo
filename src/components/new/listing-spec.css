@@ -133,8 +133,9 @@
   border: 1.5px solid var(--line); background: #fff; color: var(--muted); font-size: 13px; font-weight: 600; cursor: pointer;
 }
 .tkn-ls-opt input {
-  position: absolute; width: 1px; height: 1px; margin: 0; opacity: 0; pointer-events: none;
+  position: absolute; inset: 0; width: 100%; height: 100%; margin: 0; opacity: 0; cursor: pointer;
 }
+.tkn-ls-opt > span, .tkn-ls .tkn-ls-chipline > span, .tkn-ls .tkn-ls-chipline > svg { position: relative; }
 .tkn-ls-opt:has(input:checked) { background: var(--deep); border-color: var(--deep); color: #fff; }
 .tkn-ls-opt:has(input:focus-visible) { outline: 3px solid #7c3aed; outline-offset: 2px; }
 .tkn-ls-bottom {
@@ -295,7 +296,7 @@
 }
 .tkn-ls .tkn-ls-chipline > span { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
 .tkn-ls .tkn-ls-chipline > svg { flex: none; }
-.tkn-ls .tkn-ls-chipline input { position: absolute; width: 1px; height: 1px; margin: 0; opacity: 0; pointer-events: none; }
+.tkn-ls .tkn-ls-chipline input { position: absolute; inset: 0; width: 100%; height: 100%; margin: 0; opacity: 0; cursor: pointer; }
 .tkn-ls .tkn-ls-chipline:has(input:checked) { background: var(--deep); border-color: var(--deep); color: #fff; }
 .tkn-ls .tkn-ls-chipline:has(input:focus-visible) { outline: 3px solid #7c3aed; outline-offset: 2px; }
 .tkn-ls .tkn-ls-range { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; padding: 2px 12px 12px; box-sizing: border-box; }

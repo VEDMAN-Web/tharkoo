@@ -16,5 +16,5 @@ export function lifetimeMs(hours: number): number {
   return clampLifetimeHours(hours) * HOUR_MS;
 }
 
-/** A promotion plan can never last longer than the ad it is bought for (H7.168). */
-export const MAX_PLAN_HOURS = DEFAULT_AD_LIFETIME_HOURS;
+/** The longest a promotion plan can last (H11.1: 72 hours). A plan that runs past the end of its ad moves the ad's end to the plan's end. */
+export const MAX_PLAN_HOURS = 72;
