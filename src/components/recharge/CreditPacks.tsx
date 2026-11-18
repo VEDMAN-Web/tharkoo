@@ -95,7 +95,7 @@ export function CreditPacks({ data, shortfall = 0, returnTo, onChoice }: { data:
               <span className="tkp-pay tkp-rs" data-tk="pack-rupees">{rupees(pack.price)}</span>
               <span className="tkp-get" data-tk="pack-get">
                 {t("recharge.get")}{" "}
-                <strong>{`${pack.total.toLocaleString("en-IN")} ${t("recharge.credits")}`}</strong>
+                <strong>{pack.total.toLocaleString("en-IN")}</strong> {t("recharge.credits")}
                 {pack.bonus > 0 ? <em className="tkp-bonus">{t("recharge.bonus", { count: pack.bonus.toLocaleString("en-IN") })}</em> : null}
               </span>
               {parts.length ? (
