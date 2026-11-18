@@ -1,0 +1,20 @@
+{
+  "branchPrefix": "haiku/h14.1b",
+  "globs": [
+    "docs/ownership/H14.1b.json",
+    "progress/H14.1b.md",
+    "src/components/new/HomeAdCard.tsx",
+    "src/components/new/HomeAdPopout.tsx",
+    "src/components/new/ListingPopout.tsx",
+    "src/components/new/ListingRow.tsx",
+    "src/components/new/listing-grid.css",
+    "src/components/new/listing-row-data.ts",
+    "src/components/new/use-card-hover.ts",
+    "src/components/new/use-card-slider.ts",
+    "src/lib/ui/text.ts",
+    "tests/e2e/h14-1-listing-rows.e2e.ts",
+    "tests/e2e/h14-1b-row-popout.e2e.ts",
+    "tests/e2e/h14-2c-row-cards.e2e.ts",
+    "tests/e2e/h7-131-chat-flows.e2e.ts"
+  ]
+}

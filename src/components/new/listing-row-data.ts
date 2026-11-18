@@ -32,6 +32,7 @@ export type RowLabels = {
   viewOne: string;
   clicks: string;
   clickOne: string;
+  saveAd: string;
 };
 
 const PRICED_PEOPLE = new Set(["wellness"]);
@@ -48,6 +49,7 @@ export function rowLabels(t: TextFn): RowLabels {
     viewOne: t("home.ads.viewOne"),
     clicks: t("card.clicks"),
     clickOne: t("card.clickOne"),
+    saveAd: t("card.saveAd"),
   };
 }
 

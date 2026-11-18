@@ -234,6 +234,7 @@ export const TEXT_DEFAULTS = {
   "card.photoVerified": "Photo verified",
   "card.clicks": "{count} clicks",
   "card.clickOne": "{count} click",
+  "card.saveAd": "Save ad",
   "card.contact.call": "Call",
   "card.contact.whatsapp": "WhatsApp",
   "card.contact.none": "No number shared",

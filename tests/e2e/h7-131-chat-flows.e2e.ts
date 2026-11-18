@@ -197,18 +197,17 @@ test.describe("H7.131 chat flows", () => {
     test.setTimeout(240_000);
     const phone = info.project.name === "phone-390";
     const { context, page, problems } = await visitor(browser, baseURL!, phone);
-    // H14.1 part 1: the listing rows have no pop-out yet (part 2 adds it and puts /jobs/mumbai/ back here).
-    for (const path of ["/"]) {
+    for (const path of ["/", "/jobs/mumbai/"]) {
       await expect
         .poll(
           async () => {
             await page.goto(path);
-            return page.locator(`.tkh-ad:has(a[href="${shared.adHref}"])`).count();
+            return page.locator(`:is(.tkh-ad, .tk-row):has(a[href="${shared.adHref}"])`).count();
           },
           { timeout: 120_000, intervals: [4_000] },
         )
         .toBeGreaterThan(0);
-      const card = page.locator(`.tkh-ad:has(a[href="${shared.adHref}"])`).first();
+      const card = page.locator(`:is(.tkh-ad, .tk-row):has(a[href="${shared.adHref}"])`).first();
       await card.scrollIntoViewIfNeeded();
       if (phone) {
         await expect(page.locator(".tkh-pop")).toHaveCount(0);

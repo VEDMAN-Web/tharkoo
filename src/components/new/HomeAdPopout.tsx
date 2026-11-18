@@ -44,9 +44,6 @@ export function HomeAdPopout({
   const [top, setTop] = useState(anchor.top - TOP_GROW_PX);
   const width = anchor.width + SIDE_GROW_PX * 2;
   const left = Math.min(Math.max(anchor.left - SIDE_GROW_PX, EDGE_PX), window.innerWidth - width - EDGE_PX);
-  const photos = ad.photos;
-  const current = slides[index] ?? null;
-  const posterOf = (slide: CardSlide) => (slide.kind === "video" ? slide.poster : slide.src);
 
   useLayoutEffect(() => {
     const el = ref.current;
@@ -67,39 +64,7 @@ export function HomeAdPopout({
       onPointerEnter={onEnter}
       onPointerLeave={onLeave}
     >
-      <div className="tkh-pop-photo">
-        {current?.kind === "video" ? (
-          <video ref={videoRef} src={current.src} poster={current.poster ?? undefined} muted playsInline preload="none" data-tk="popout-video" />
-        ) : current ? (
-          <img src={current.src} alt="" draggable={false} />
-        ) : (
-          <span className="tkh-ad-empty" />
-        )}
-        {slides.length > 1 ? (
-          <span className="tkh-ad-count" aria-hidden="true">{index + 1}/{slides.length}</span>
-        ) : null}
-        {ad.slug ? (
-          <SaveButton item={{ id: ad.slug, slug: ad.slug, title: ad.title, place: ad.city, photo: photos[0] ?? null, at: 0 }} className="tkh-heart" />
-        ) : null}
-        {slides.length > 1 ? (
-          <>
-            <button type="button" className="tkh-photo-arrow is-prev is-shown" aria-label={labels.photoPrev} onClick={() => onIndex((index - 1 + slides.length) % slides.length)}>
-              <ChevronLeft size={16} aria-hidden />
-            </button>
-            <button type="button" className="tkh-photo-arrow is-next is-shown" aria-label={labels.photoNext} onClick={() => onIndex((index + 1) % slides.length)}>
-              <ChevronRight size={16} aria-hidden />
-            </button>
-            <div className="tkh-pop-thumbs">
-              {slides.slice(0, 5).map((slide, position) => (
-                <button key={slide.src + position} type="button" className={position === index ? "is-on" : undefined} aria-label={`${position + 1}`} onClick={() => onIndex(position)}>
-                  {posterOf(slide) ? <img src={posterOf(slide) ?? ""} alt="" draggable={false} /> : null}
-                </button>
-              ))}
-            </div>
-          </>
-        ) : null}
-        <span className="tkh-ad-watermark" aria-hidden>{labels.watermark}</span>
-      </div>
+      <PopPhoto ad={ad} labels={labels} slides={slides} index={index} onIndex={onIndex} videoRef={videoRef} />
       <div className="tkh-pop-body">
         <p className="tkh-pop-title">
           <Link href={ad.href} prefetch={false} className="tkh-pop-link" onClick={() => (ad.slug ? recordAdClick(ad.slug) : undefined)}>
@@ -127,4 +92,62 @@ export function HomeAdPopout({
   );
 
   return createPortal(body, document.body);
+}
+
+/** The photo side of a pop-out: current slide, count, heart, arrows, thumbnails and the mark. Shared with the listing row pop-out. */
+export function PopPhoto({
+  ad,
+  labels,
+  slides,
+  index,
+  onIndex,
+  videoRef,
+  heart = true,
+}: {
+  ad: Pick<HomeAdCardData, "photos" | "slug" | "title" | "city">;
+  labels: Pick<HomeAdLabels, "photoPrev" | "photoNext" | "watermark">;
+  slides: CardSlide[];
+  index: number;
+  onIndex: (position: number) => void;
+  videoRef: MutableRefObject<HTMLVideoElement | null>;
+  heart?: boolean;
+}) {
+  const photos = ad.photos;
+  const current = slides[index] ?? null;
+  const posterOf = (slide: CardSlide) => (slide.kind === "video" ? slide.poster : slide.src);
+  return (
+    <div className="tkh-pop-photo">
+      {current?.kind === "video" ? (
+        <video ref={videoRef} src={current.src} poster={current.poster ?? undefined} muted playsInline preload="none" data-tk="popout-video" />
+      ) : current ? (
+        <img src={current.src} alt="" draggable={false} />
+      ) : (
+        <span className="tkh-ad-empty" />
+      )}
+      {slides.length > 1 ? (
+        <span className="tkh-ad-count" aria-hidden="true">{index + 1}/{slides.length}</span>
+      ) : null}
+      {heart && ad.slug ? (
+        <SaveButton item={{ id: ad.slug, slug: ad.slug, title: ad.title, place: ad.city, photo: photos[0] ?? null, at: 0 }} className="tkh-heart" />
+      ) : null}
+      {slides.length > 1 ? (
+        <>
+          <button type="button" className="tkh-photo-arrow is-prev is-shown" aria-label={labels.photoPrev} onClick={() => onIndex((index - 1 + slides.length) % slides.length)}>
+            <ChevronLeft size={16} aria-hidden />
+          </button>
+          <button type="button" className="tkh-photo-arrow is-next is-shown" aria-label={labels.photoNext} onClick={() => onIndex((index + 1) % slides.length)}>
+            <ChevronRight size={16} aria-hidden />
+          </button>
+          <div className="tkh-pop-thumbs">
+            {slides.slice(0, 5).map((slide, position) => (
+              <button key={slide.src + position} type="button" className={position === index ? "is-on" : undefined} aria-label={`${position + 1}`} onClick={() => onIndex(position)}>
+                {posterOf(slide) ? <img src={posterOf(slide) ?? ""} alt="" draggable={false} /> : null}
+              </button>
+            ))}
+          </div>
+        </>
+      ) : null}
+      <span className="tkh-ad-watermark" aria-hidden>{labels.watermark}</span>
+    </div>
+  );
 }
