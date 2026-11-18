@@ -143,6 +143,7 @@ export const TEXT_DEFAULTS = {
   "panel.dash.adsBoost": "Boost",
   "panel.dash.adsBump": "Bump",
   "panel.dash.adsImprove": "Improve ad",
+  "panel.dash.adsRenew": "Renew",
   "panel.dash.goalTitle": "This week’s goal",
   "panel.dash.goalChange": "Change goal",
   "panel.dash.goalRing": "{views} / {goal} views",

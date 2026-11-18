@@ -97,7 +97,7 @@ export function UserPanelHome({
     </>
   );
   return (
-    <UserPanelShell active="home" summary={summary} aside={aside} below={<FreshAds />}>
+    <UserPanelShell active="home" summary={summary} aside={aside} below={dashboard ? undefined : <FreshAds />}>
       {summary.signedIn ? null : (
         <SignedOutPanel next="/u/account/dashboard/" title="Log in to see your panel" body="Your saved ads, chats and credits show here after you log in." />
       )}
@@ -165,7 +165,7 @@ export function UserPanelHome({
           <PackPicker returnTo="/u/account/" />
         </section>
       ) : null}
-      <SavedAdsRail />
+      {dashboard ? null : <SavedAdsRail />}
     </UserPanelShell>
   );
 }

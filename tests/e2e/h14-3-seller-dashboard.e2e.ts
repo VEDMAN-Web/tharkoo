@@ -52,6 +52,13 @@ async function checkDashboard(page: Page, ids: string[], phone: boolean, goal: n
   const views = await page.locator('[data-tk="ad-views"]').allTextContents();
   expect(views.map((value) => value.trim())).toEqual(["25", "3", "0"]);
   await expect(page.locator('[data-tk="dash-lift"]')).toHaveAttribute("data-state", "empty");
+  const renew = page.locator('[data-tk="dash-ad"]').first().locator('[data-tk="dash-renew"]');
+  await expect(renew, "a live ad that ends within 3 days offers Renew").toHaveText("Renew");
+  await expect(renew).toHaveAttribute("href", "/u/account/ads/");
+  await expect(page.locator('[data-tk="discover"]'), "no Fresh ads on the seller dashboard").toHaveCount(0);
+  await expect(page.getByRole("heading", { name: "Saved ads" }), "no Saved ads on the seller dashboard").toHaveCount(0);
+  await expect(page.getByRole("heading", { name: "Your profile" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Buy credits" })).toBeVisible();
   expect(await text(page, '[data-tk="goal-numbers"]')).toMatch(new RegExp(`^\\d+ / ${goal} views$`));
   await expect(page.locator('[data-tk="milestone"]')).toHaveCount(4);
   expect(await page.locator('[data-tk="milestone"][data-done="yes"]').count()).toBe(1);

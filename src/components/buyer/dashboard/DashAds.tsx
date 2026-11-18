@@ -59,7 +59,11 @@ function Row({ ad, t, bumpPlanId }: { ad: DashboardAd; t: TextFn; bumpPlanId: st
             {t("panel.dash.adsBoost")}
           </PromoteButton>
         ) : null}
-        {ad.second === "bump" && ad.status === "live" ? (
+        {ad.status === "live" && ad.endsInDays !== null ? (
+          <Link href="/u/account/ads/" className="up-dash-btn up-dash-btn-alt" data-tk="dash-renew" prefetch={false}>
+            {t("panel.dash.adsRenew")}
+          </Link>
+        ) : ad.second === "bump" && ad.status === "live" ? (
           <PromoteButton listingId={ad.id} title={ad.title} planId={bumpPlanId} className="up-dash-btn up-dash-btn-alt">
             {t("panel.dash.adsBump")}
           </PromoteButton>
