@@ -3,6 +3,7 @@ import { existsSync, mkdirSync, readFileSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import { expect, request, test as base, type APIRequestContext, type Page } from "@playwright/test";
 import { MongoClient, ObjectId, type Db } from "mongodb";
+import { startWorkerServer, type WorkerServer } from "./worker-server";
 
 export const ADMIN_EMAIL = process.env.ADMIN_BOOTSTRAP_EMAIL || "homepage-admin@example.test";
 export const ADMIN_PASSWORD = process.env.ADMIN_BOOTSTRAP_PASSWORD || "HomepageAdmin1!";
@@ -14,7 +15,6 @@ export const PNG = Buffer.from(
   "base64",
 );
 
-/** Same as the stock test, but the age gate and cookie banner never block a page. */
 /**
  * Each test gets its own client address: the site limits registrations per address (20 per 15 minutes)
  * and trusts the last X-Forwarded-For entry, so a fresh one keeps the suite independent of earlier runs.
@@ -29,7 +29,37 @@ export function newApi(baseURL: string) {
   return request.newContext({ baseURL, extraHTTPHeaders: { "x-forwarded-for": freshIp() } });
 }
 
-export const test = base.extend({
+/**
+ * H10.5b: with more than one worker, each worker serves its own seeded copy of the site (own database, own port, own
+ * uploads), so no test can change what another worker sees. With one worker the shared server from the config is used.
+ * Tests read the address and the database file from the environment of their worker, never from a fixed port.
+ */
+const isolated = base.extend<object, { workerServer: WorkerServer | null }>({
+  workerServer: [
+    async ({}, provide, workerInfo) => {
+      const basePort = Number(process.env.E2E_PORT || "4342");
+      const wanted = workerInfo.config.workers > 1 && !process.env.E2E_BASE_URL;
+      const server = wanted ? await startWorkerServer(workerInfo.parallelIndex, basePort) : null;
+      if (server) {
+        process.env.E2E_BASE_URL = server.url;
+        process.env.E2E_MONGO_URI_FILE = server.mongoUriFile;
+        process.env.E2E_APP_DIR = server.appDir;
+      }
+      await provide(server);
+      await server?.stop();
+    },
+    { scope: "worker", auto: true, timeout: 300_000 },
+  ],
+  baseURL: async ({ baseURL, workerServer }, provide) => {
+    await provide(workerServer?.url ?? baseURL);
+  },
+});
+
+/** The stock test with the worker's own server, and no age gate or cookie banner bypass (for tests of those two). */
+export const cleanTest = isolated;
+
+/** Same as the stock test, but the age gate and cookie banner never block a page. */
+export const test = isolated.extend({
   extraHTTPHeaders: async ({}, provide) => {
     await provide({ "x-forwarded-for": freshIp() });
   },
@@ -53,7 +83,7 @@ export function originHeaders(baseURL: string, referer = "/") {
 }
 
 export function baseUrlOf(page: Page) {
-  const url = new URL(page.url() === "about:blank" ? "http://127.0.0.1:4342" : page.url());
+  const url = new URL(page.url() === "about:blank" ? process.env.E2E_BASE_URL || `http://127.0.0.1:${process.env.E2E_PORT || "4342"}` : page.url());
   return url.origin;
 }
 
@@ -87,7 +117,8 @@ export async function setIdCheckSwitch(baseURL: string, required: boolean) {
  * saved to .shots/e2e/ and reused while it still works.
  */
 export async function adminApi(baseURL: string) {
-  const file = resolve(".shots/e2e/admin-state.json");
+  // One saved session per server: a session from one worker's database means nothing to another worker's.
+  const file = resolve(`.shots/e2e/admin-state-${new URL(baseURL).port || "80"}.json`);
   if (existsSync(file)) {
     const saved = await request.newContext({ baseURL, storageState: file, extraHTTPHeaders: { "x-forwarded-for": freshIp() } });
     const me = await saved.get("/api/auth/me");
@@ -116,7 +147,7 @@ export async function newUserApi(baseURL: string, prefix = "user") {
  * browser context's cookies, so the session carries into the page.
  */
 export async function loginUi(page: Page, email: string, password = USER_PASSWORD, next = "") {
-  const base = String(test.info().project.use.baseURL || "http://127.0.0.1:4342");
+  const base = String(process.env.E2E_BASE_URL || test.info().project.use.baseURL || "http://127.0.0.1:4342");
   const res = await page.request.post("/api/auth/login", { headers: originHeaders(base, "/u/login/"), data: { email, password } });
   expect(res.status(), await res.text()).toBe(200);
   // H7.2b: with the New design on, posting an ad needs a saved seller profile first.
@@ -275,6 +306,27 @@ export async function setSellerAvailable(slug: string, available: boolean) {
     return true;
   });
   expect(done, "E2E_MONGO_URI_FILE must point at the in-memory database").toBe(true);
+}
+
+/**
+ * Puts the layouts of one page ("listing" or "post") back to "never published" (drafts, live copy and saved versions)
+ * in the test database. A test that publishes a layout calls this when it is done, and a test that starts from
+ * "Not published yet" calls it first, so neither depends on which other tests ran before it.
+ */
+export async function resetPageLayouts(key: "listing" | "post") {
+  const done = await withLocalDb(async (db) => {
+    await db.collection("page_layouts").deleteMany({ key });
+    await db.collection("page_layout_revisions").deleteMany({ key });
+    return true;
+  });
+  expect(done, "E2E_MONGO_URI_FILE must point at the in-memory database").toBe(true);
+}
+
+export const resetListingLayouts = () => resetPageLayouts("listing");
+
+/** The folder the site under test saves uploads in. A worker's own server keeps it inside its own copy of the app. */
+export function uploadsDir() {
+  return resolve(process.env.E2E_APP_DIR || ".", "public", "uploads");
 }
 
 /** The ad slug from its public path, e.g. /ad/in00012/ gives in00012. */

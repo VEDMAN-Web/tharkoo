@@ -108,7 +108,7 @@ test.describe("H8.8 admin Users", () => {
     await expect(rowFor(page, person.name)).toHaveCount(0);
     const rows = page.locator("[data-tk=server-table] tbody tr");
     expect(await rows.count()).toBeGreaterThan(0);
-    for (const text of await rows.allInnerTexts()) expect(text.toLowerCase()).toMatch(/superadmin|admin|moderator|trust and safety|support|finance|seo editor|blog editor/);
+    for (const text of await rows.allInnerTexts()) expect(text.toLowerCase()).toMatch(/superadmin|admin|moderator|trust and safety|support|finance|seo editor|blog editor|content editor/);
   });
 
   test("support reads the screen and the drawer has no action buttons; finance is told it has no access", async ({ page, baseURL, browser }) => {

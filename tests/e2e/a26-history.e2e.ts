@@ -19,7 +19,8 @@ async function seed(): Promise<Seeded> {
   const email = uniqueEmail("a26banned");
   const userId = new ObjectId();
   const stamp = Date.now();
-  const at = (minutes: number) => new Date(stamp - minutes * 60_000);
+  // The list shows the newest 200 changes. Keep these just behind "now" so they stay on it, however many changes other tests made.
+  const at = (minutes: number) => new Date(stamp - minutes * 100);
   const row = (extra: Record<string, unknown>) => ({ actorType: "admin", actorRole: "moderator", targetType: "user", requestId: "e2e", createdAt: at(10), ...extra });
   await withLocalDb(async (db) => {
     await db.collection("users").insertOne({ _id: userId, email, passwordHash: "x", displayName: "Spam Bot", dateOfBirth: new Date("1990-01-01"), attestedAdultAt: new Date(), roles: ["user"], status: "suspended", createdAt: new Date(), updatedAt: new Date() });

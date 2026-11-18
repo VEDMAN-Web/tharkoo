@@ -1,5 +1,6 @@
 import AxeBuilder from "@axe-core/playwright";
-import { expect, test } from "@playwright/test";
+import { expect } from "@playwright/test";
+import { cleanTest as test } from "./helpers";
 
 const SHOTS = process.env.POST_SHOTS ?? "";
 

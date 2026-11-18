@@ -1,7 +1,7 @@
 import { mkdirSync } from "node:fs";
 import AxeBuilder from "@axe-core/playwright";
 import type { Page } from "@playwright/test";
-import { expect, hasHorizontalScroll, signInAdminContext, test } from "./helpers";
+import { expect, hasHorizontalScroll, resetListingLayouts, signInAdminContext, test } from "./helpers";
 
 /** H8.55: the Listing pages tab of the Page builder holds everything the old Listing pages screen had. */
 
@@ -58,6 +58,7 @@ test.describe("H8.55 Page builder, Listing pages tab", () => {
 
   test("everything is in the tab: pages choice, heading, Google title and description, the layout that starts from what the pages show today, card width, the source of the words and a preview; axe clean and no sideways scroll at 1440 and 390", async ({ page, context, baseURL }) => {
     test.setTimeout(300_000);
+    await resetListingLayouts();
     await signInAdminContext(context, baseURL!);
     for (const size of [{ width: 1440, height: 900 }, { width: 390, height: 844 }]) {
       await page.setViewportSize(size);

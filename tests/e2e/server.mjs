@@ -7,11 +7,13 @@
 
 import { spawn } from "node:child_process";
 import { mkdirSync, rmSync, writeFileSync } from "node:fs";
-import { dirname, resolve } from "node:path";
+import { dirname, join, resolve } from "node:path";
 import { MongoMemoryServer } from "mongodb-memory-server";
 
 const PORT = process.env.E2E_PORT || "4342";
 const uriFile = resolve(process.env.E2E_MONGO_URI_FILE || ".shots/e2e/mongo-uri.txt");
+// A worker-private copy of the build (tests/e2e/worker-server.ts) is served from here; by default the project itself.
+const appDir = resolve(process.env.E2E_APP_DIR || ".");
 
 const mongod = await MongoMemoryServer.create({ instance: { dbName: "tharkoo" } });
 const uri = mongod.getUri("tharkoo");
@@ -37,9 +39,9 @@ const env = {
   NODE_ENV: "production",
 };
 
-function run(cmd, args) {
+function run(cmd, args, cwd = process.cwd()) {
   return new Promise((res, rej) => {
-    const child = spawn(cmd, args, { stdio: "inherit", shell: process.platform === "win32", env });
+    const child = spawn(cmd, args, { stdio: "inherit", shell: process.platform === "win32", env, cwd });
     child.on("exit", (code) => (code === 0 ? res() : rej(new Error(`${cmd} ${args.join(" ")} exited ${code}`))));
   });
 }
@@ -57,7 +59,7 @@ process.on("SIGTERM", stop);
 console.log("[e2e-server] seeding in-memory MongoDB");
 await run("npx", ["tsx", "scripts/seed.ts"]);
 // The data cache on disk holds ids from a previous in-memory database; drop it.
-rmSync(".next/cache", { recursive: true, force: true });
+rmSync(join(appDir, ".next/cache"), { recursive: true, force: true });
 console.log(`[e2e-server] starting http://127.0.0.1:${PORT}`);
-await run("npx", ["next", "start", "-p", PORT, "-H", "127.0.0.1"]);
+await run("npx", ["next", "start", "-p", PORT, "-H", "127.0.0.1"], appDir);
 await stop();

@@ -4,10 +4,9 @@ import { resolve } from "node:path";
 import AxeBuilder from "@axe-core/playwright";
 import type { Page } from "@playwright/test";
 import { ObjectId } from "mongodb";
-import { expect, hasHorizontalScroll, isPhone, slugFromAdPath, test, withLocalDb } from "./helpers";
+import { expect, hasHorizontalScroll, isPhone, slugFromAdPath, test, uploadsDir, withLocalDb } from "./helpers";
 
 const SHOTS = process.env.GALLERY_SHOTS_DIR || "";
-const UPLOADS = resolve("public/uploads");
 
 async function datingAdAt(page: Page, position: number) {
   await page.goto("/dating/bengaluru/");
@@ -135,8 +134,8 @@ test.describe("H7.99 ad gallery", () => {
     const clip = await makeClip(page);
     expect(clip.length).toBeGreaterThan(1000);
     const name = `${randomBytes(12).toString("hex")}.webm`;
-    mkdirSync(UPLOADS, { recursive: true });
-    const file = resolve(UPLOADS, name);
+    mkdirSync(uploadsDir(), { recursive: true });
+    const file = resolve(uploadsDir(), name);
     const assetId = new ObjectId();
     let slug = "";
     try {

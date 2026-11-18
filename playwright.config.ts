@@ -8,6 +8,9 @@ import { defineConfig, devices } from "@playwright/test";
 const port = process.env.E2E_PORT || "4342";
 const external = process.env.E2E_BASE_URL;
 const baseURL = external || `http://127.0.0.1:${port}`;
+// H10.5b: E2E_WORKERS=2 runs two workers. Each worker then serves its own seeded copy of the site (tests/e2e/worker-server.ts),
+// so the shared server below is not needed. `--workers=N` on the command line works the same way.
+const workers = Math.max(1, Number(process.env.E2E_WORKERS || "1") || 1);
 
 export default defineConfig({
   testDir: "tests/e2e",
@@ -15,8 +18,9 @@ export default defineConfig({
   outputDir: ".shots/e2e-results",
   fullyParallel: false,
   forbidOnly: !!process.env.CI,
-  retries: 0,
-  workers: 1,
+  // The nightly run sets E2E_RETRIES=1: a test that only passes on the second try is reported as flaky, never as a pass.
+  retries: Math.max(0, Number(process.env.E2E_RETRIES || "0") || 0),
+  workers,
   timeout: 60_000,
   expect: { timeout: 10_000 },
   reporter: [["list"]],
@@ -29,7 +33,7 @@ export default defineConfig({
     { name: "phone-390", use: { ...devices["Desktop Chrome"], viewport: { width: 390, height: 844 } } },
     { name: "desktop-1440", use: { ...devices["Desktop Chrome"], viewport: { width: 1440, height: 900 } } },
   ],
-  webServer: external
+  webServer: external || workers > 1
     ? undefined
     : {
         command: "node tests/e2e/server.mjs",
