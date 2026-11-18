@@ -164,7 +164,9 @@ async function tabFilter(tab: AdsTab): Promise<QueryFilter<ListingDoc>> {
   return { status: { $in: TAB_STATUSES[tab] ?? [] } };
 }
 
-async function filterFor(query: AdsQuery): Promise<QueryFilter<ListingDoc>> {
+/** The database filter for what the All ads list shows with these tab, search and filters. Bulk actions on "all ads that match" use the same one. */
+export async function filterFor(query: AdsQuery): Promise<QueryFilter<ListingDoc>> {
+  await connectDb();
   const parts: QueryFilter<ListingDoc>[] = [await tabFilter(query.tab)];
   if (query.q) parts.push(await searchFilter(query.q));
   if (query.junk) parts.push({ $or: JUNK_PATTERN_SOURCES.map((source) => ({ title: { $regex: source, $options: "i" } })) });

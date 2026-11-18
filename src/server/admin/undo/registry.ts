@@ -17,6 +17,7 @@ export const UNDO_KINDS = [
   "content.publish",
   "team.roles",
   "user.edit",
+  "ads.move",
 ] as const;
 
 export type UndoKind = (typeof UNDO_KINDS)[number];
@@ -110,6 +111,7 @@ const LOADERS: Record<UndoKind, Loader> = {
   "content.publish": () => import("./handlers/content-publish"),
   "team.roles": () => import("./handlers/team-roles"),
   "user.edit": () => import("./handlers/user-edit"),
+  "ads.move": () => import("./handlers/ads-move"),
 };
 
 const overrides = new Map<UndoKind, UndoHandler>();

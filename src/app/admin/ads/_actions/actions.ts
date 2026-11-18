@@ -3,6 +3,8 @@
 import { revalidatePath } from "next/cache";
 import { adminContext } from "@/server/admin/context";
 import { BULK_ACTIONS, bulkChangeAds, undoAdsBatch, type BulkAction, type BulkSkip } from "@/server/admin/ads-bulk";
+import { parseAdsQuery } from "@/server/admin/ads-list";
+import { moveAdsToCategory } from "@/server/admin/ads-move";
 import { HttpError } from "@/server/http";
 
 export type BulkAnswer = { ok: true; batchId: string; changed: number; skipped: BulkSkip[]; eventIds: string[] } | { ok: false; message: string };
@@ -27,6 +29,22 @@ export async function undoAdsBatchAction(input: { batchId: string; eventIds: str
     revalidatePath("/admin/ads/");
     if (done.failed.length === 0) return { ok: true, message: `Undone. ${done.restored} ${done.restored === 1 ? "ad is" : "ads are"} back as before.` };
     return { ok: done.restored > 0, message: `${done.restored} undone, ${done.failed.length} could not be: ${done.failed[0]}` };
+  } catch (error) {
+    if (error instanceof HttpError) return { ok: false, message: error.message };
+    throw error;
+  }
+}
+
+export type MoveAnswer = { ok: true; moved: number; alreadyThere: number; categoryName: string; eventId: string } | { ok: false; message: string };
+
+/** Moves the selected ads, or every ad that matches the filters in `search` (the address query of the list), to one category. One Undo. */
+export async function moveAdsAction(input: { categoryId: string; scope: string; ids: string[]; search: string; confirm?: string }): Promise<MoveAnswer> {
+  try {
+    const scope = input.scope === "filter" ? "filter" : "selected";
+    const query = parseAdsQuery(Object.fromEntries(new URLSearchParams(String(input.search ?? ""))));
+    const done = await moveAdsToCategory(await adminContext(), { categoryId: String(input.categoryId), scope, ids: Array.isArray(input.ids) ? input.ids.map(String) : [], query, confirm: String(input.confirm ?? "") });
+    revalidatePath("/admin/ads/");
+    return { ok: true, ...done };
   } catch (error) {
     if (error instanceof HttpError) return { ok: false, message: error.message };
     throw error;
