@@ -15,6 +15,7 @@ import { safePhoto } from "@/lib/media";
 import { getCategory, getListingBySlug, getRelated, getSite } from "@/lib/queries";
 import { canonical, fillTemplate } from "@/lib/seo";
 import { listingJsonLd } from "@/lib/seo/schema";
+import { adMetaDescription } from "@/lib/seo/ad-description";
 import { getSeoSettings } from "@/app/admin/seo/settings/store";
 import { siteUrl } from "@/lib/utils";
 import { listingVisibility } from "@/server/listings/visibility";
@@ -65,7 +66,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     category: ad.categorySlug,
     site: site.name,
   });
-  const description = (ad.description || title).slice(0, 160);
+  const description = adMetaDescription({ title: displayTitle(ad.title), category: prettyPlace(ad.categorySlug), city: prettyPlace(ad.citySlug), site: site.name || "Tharkoo" });
   const image = safePhoto(ad.photos?.[0]) || "/brand/og-default.png";
   const paths = await getPaths();
   const path = adPath(paths, ad.slug || slug);
