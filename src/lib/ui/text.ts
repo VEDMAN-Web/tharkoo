@@ -470,9 +470,9 @@ export const TEXT_DEFAULTS = {
   // H12.4: the same card when the ad is one of the account's free ads: nothing to pay, so it only says Publish.
   "post.pay.titleFree": "Publish",
   // H12.4: the How it works answer to "What does it cost to post?" follows the live posting rule.
-  "howitworks.cost.free": "Posting an ad is free. Chatting and calling the advertiser are free. Video calls and optional boosts use credits.",
-  "howitworks.cost.freeThenFee": "Your first {free} ads are free. After that each ad costs {credits} ({rupees}), shown before you publish. Chatting and calling the advertiser are free. Video calls and optional boosts use credits.",
-  "howitworks.cost.fee": "Each ad costs {credits} ({rupees}), shown before you publish. Chatting and calling the advertiser are free. Video calls and optional boosts use credits.",
+  "howitworks.cost.free": "Posting an ad is free. Chatting and calling the advertiser are free. Video calls and boosts use credits.",
+  "howitworks.cost.freeThenFee": "Your first {free} ads are free. After that each ad costs {credits} ({rupees}), shown before you publish. Video calls and boosts use credits.",
+  "howitworks.cost.fee": "Each ad costs {credits} ({rupees}), shown before you publish. Chatting and calling are free. Video calls and boosts use credits.",
   "post.pay.fee": "Ad posting fee",
   "post.pay.yourBalance": "Your balance",
   "post.pay.after": "After posting",

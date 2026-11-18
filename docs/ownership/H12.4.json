@@ -27,6 +27,7 @@
     "src/app/how-it-works/page.tsx",
     "src/lib/ui/text.ts",
     "src/lib/ui/cost-answer.ts",
-    "tests/e2e/h11-1-prices.e2e.ts"
+    "tests/e2e/h11-1-prices.e2e.ts",
+    "src/lib/ui/text-labels.ts"
   ]
 }
