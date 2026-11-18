@@ -1,3 +1,4 @@
+import { fieldLabel } from "@/lib/admin/history-words";
 import { z } from "zod";
 import { connectDb } from "@/lib/db";
 import { refreshPublicCache } from "@/lib/cache";
@@ -70,7 +71,7 @@ export async function saveMoneyValues(ctx: AdminCtx, rawValues: unknown) {
       return {
         after: { ...after },
         result: after,
-        summary: keys.length ? `Changed ${keys.join(", ")}` : "No money setting changed",
+        summary: keys.length ? `Changed ${keys.map(fieldLabel).join(", ")}` : "No money setting changed",
         undoData: site
           ? { model: "Site", id: String(site._id), restore: pickKeys(was, keys), unset: keys.filter((key) => !was || !(key in was)), expect: pickKeys(site, keys) }
           : undefined,

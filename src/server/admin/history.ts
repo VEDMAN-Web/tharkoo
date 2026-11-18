@@ -1,6 +1,7 @@
 import type { QueryFilter, Types } from "mongoose";
 import { connectDb } from "@/lib/db";
 import { can } from "@/lib/admin/perms";
+import { actionWords as plainAction, targetWords } from "@/lib/admin/history-words";
 import { roleWords } from "@/lib/admin/role-words";
 import type { AdminCtx } from "@/server/admin/context";
 import { isUndoKind, loadUndoHandler, safeUndoData, undoSourceOf, UndoNotBuiltError, type LockReason } from "@/server/admin/undo/registry";
@@ -163,8 +164,8 @@ async function toRows(ctx: AdminCtx, rows: Row[], now: Date): Promise<HistoryRow
     }
     out.push({
       id,
-      title: row.summary || row.action,
-      label: row.targetLabel ?? "",
+      title: row.summary || plainAction(row.action),
+      label: row.targetLabel || (row.targetType ? targetWords(row.targetType) : ""),
       who: row.actorId ? (names.get(String(row.actorId)) ?? "Staff") : row.actorType === "system" ? "The system" : row.actorType === "admin" ? "Staff" : "A visitor",
       role: row.actorRole ? roleWords([row.actorRole]) : "",
       at: (row.createdAt ?? now).toISOString(),
@@ -264,8 +265,8 @@ export async function historyCsv(ctx: AdminCtx, query: HistoryQuery, now: Date =
         (row.createdAt ?? now).toISOString(),
         row.actorId ? (names.get(String(row.actorId)) ?? "Staff") : row.actorType,
         row.actorRole ?? "",
-        row.summary || row.action,
-        row.targetLabel || row.targetId,
+        row.summary || plainAction(row.action),
+        row.targetLabel || (row.targetType ? targetWords(row.targetType) : ""),
         typeOfAction(row.action),
         row.reason ?? "",
         row.lock ? LOCK_LABELS[row.lock] : "",
