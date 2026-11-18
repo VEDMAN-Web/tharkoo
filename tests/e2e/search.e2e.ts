@@ -21,7 +21,7 @@ test.describe("2 Search", () => {
     await expect(page).toHaveURL(/\/search\/\?.*q=coffee/);
     await expect(modal).toBeHidden();
     await expect(page.locator("h1")).toHaveCount(1);
-    await expect(page.locator(":is([data-tk=card], [data-tk=home-ad])").first()).toBeVisible();
+    await expect(page.locator(":is([data-tk=card], [data-tk=home-ad], [data-tk=listing-row])").first()).toBeVisible();
   });
 
   test("pop-up closes with the X and Escape", async ({ page }) => {
@@ -40,7 +40,7 @@ test.describe("2 Search", () => {
     await modal.locator("[data-tk=search-submit]").click();
     await expect(page).toHaveURL(/\/dating\/mumbai\/$/);
     await expect(page.locator("h1")).toContainText(/mumbai/i);
-    expect(await page.locator(":is([data-tk=card], [data-tk=home-ad])").count()).toBeGreaterThan(0);
+    expect(await page.locator(":is([data-tk=card], [data-tk=home-ad], [data-tk=listing-row])").count()).toBeGreaterThan(0);
   });
 
   test("search by city alone keeps the city in the query", async ({ page }) => {

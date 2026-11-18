@@ -82,32 +82,28 @@ export function ListingRow({ ad, labels, order = 0 }: { ad: ListingRowData; labe
           ) : null}
         </div>
         {ad.description ? <p className="tk-row-desc" data-tk="row-desc">{ad.description}</p> : null}
-        <p className="tk-row-tags">
-          {ad.verified ? (
-            <span className="tk-row-tag is-ok" data-tk="row-verified">
-              <Check size={12} aria-hidden />
-              {row.photoVerified}
-            </span>
-          ) : null}
-          <Link href={ad.categoryHref} prefetch={false} className="tk-row-tag is-cat">{ad.categoryName}</Link>
-          {place ? <Link href={ad.cityHref} prefetch={false} className="tk-row-tag is-place">{place}</Link> : null}
-        </p>
         <div className="tk-row-foot">
-          {ad.showPrice ? (
-            <span className={ad.price ? "tk-row-price" : "tk-row-price is-request"} data-tk="card-price">{ad.price || row.priceRequest}</span>
-          ) : (
-            <span />
-          )}
+          <div className="tk-row-foot-main">
+            {ad.showPrice && ad.price ? <span className="tk-row-price" data-tk="card-price">{ad.price}</span> : null}
+            <p className="tk-row-tags">
+              {ad.verified ? (
+                <span className="tk-row-tag is-ok" data-tk="row-verified">
+                  <Check size={12} aria-hidden />
+                  {row.photoVerified}
+                </span>
+              ) : null}
+              <Link href={ad.categoryHref} prefetch={false} className="tk-row-tag is-cat">{ad.categoryName}</Link>
+              {place ? <Link href={ad.cityHref} prefetch={false} className="tk-row-tag is-place">{place}</Link> : null}
+            </p>
+          </div>
           <span className="tk-row-stats" data-tk="row-stats" data-ready={counts ? "true" : "false"}>
-            <span className="tk-row-stat" data-tk="row-views" title={counts ? countText(counts.views, row.viewOne, row.views) : undefined}>
+            <span className="tk-row-stat" data-tk="row-views">
               <Eye size={15} aria-hidden />
-              <span aria-hidden="true">{counts ? formatIndianCount(counts.views) : "0"}</span>
-              <span className="sr-only">{counts ? countText(counts.views, row.viewOne, row.views) : ""}</span>
+              {countText(counts?.views ?? 0, row.viewOne, row.views)}
             </span>
-            <span className="tk-row-stat" data-tk="row-clicks" title={counts ? countText(counts.clicks, row.clickOne, row.clicks) : undefined}>
+            <span className="tk-row-stat" data-tk="row-clicks">
               <Hand size={15} aria-hidden />
-              <span aria-hidden="true">{counts ? formatIndianCount(counts.clicks) : "0"}</span>
-              <span className="sr-only">{counts ? countText(counts.clicks, row.clickOne, row.clicks) : ""}</span>
+              {countText(counts?.clicks ?? 0, row.clickOne, row.clicks)}
             </span>
           </span>
         </div>

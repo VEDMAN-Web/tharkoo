@@ -3,7 +3,7 @@ import type { Page } from "@playwright/test";
 import { expect, hasHorizontalScroll, signInAdminContext, test } from "./helpers";
 
 const PAGES = ["/search/?category=dating", "/dating/", "/dating/surat/", "/jobs/", "/vehicles/gujarat/", "/cities/surat/"];
-const CARD = '[data-tk="home-ad"]';
+const CARD = '[data-tk="listing-row"]';
 
 async function cardTops(page: Page) {
   return page.locator(CARD).evaluateAll((cards) => cards.map((card) => Math.round(card.getBoundingClientRect().top + window.scrollY)));
@@ -34,11 +34,10 @@ test.describe("H7.104: one listing template for every listing page", () => {
       await expect(page.locator('[data-tk="card"]')).toHaveCount(0);
       const cards = page.locator(CARD);
       expect(await cards.count()).toBeGreaterThan(0);
-      const text = (await cards.allInnerTexts()).join(" ").toLowerCase();
-      expect(text).not.toMatch(/\bstar\b|super top|\btop\b/);
       const tops = await cardTops(page);
       expect(tops[0], "first card top").toBeLessThanOrEqual(260);
-      if (tops.length >= 3) expect(tops.filter((top) => top === tops[0]).length, "3 cards in the first row").toBe(3);
+      // H14.1: the approved design stacks one row card under another.
+      expect(new Set(tops).size, "every row card on its own line").toBe(tops.length);
       expect(await hasHorizontalScroll(page)).toBe(false);
     });
   }
@@ -66,7 +65,7 @@ test.describe("H7.104: one listing template for every listing page", () => {
     expect((await page.locator('[data-tk="active-chips"] .tkn-sr-chip').allInnerTexts()).map((text) => text.replace(/\s*×\s*$/, ""))).toEqual(chips.map((text) => text.replace(/\s*×\s*$/, "")));
   });
 
-  test("on a phone every listing page has the sticky Filters bar, two cards per row and no sideways scroll", async ({ page }) => {
+  test("on a phone every listing page has the sticky Filters bar, one row card per line and no sideways scroll", async ({ page }) => {
     await page.setViewportSize({ width: 390, height: 844 });
     for (const path of PAGES) {
       await page.goto(path);
@@ -74,7 +73,8 @@ test.describe("H7.104: one listing template for every listing page", () => {
       await expect(page.locator('[data-tk="listing-band"]'), path).toHaveCount(0);
       const tops = await cardTops(page);
       expect(tops.length, path).toBeGreaterThan(0);
-      if (tops.length >= 2) expect(tops.filter((top) => top === tops[0]).length, `${path} two per row`).toBe(2);
+      // H14.1: the approved design is one row card under another, also on a phone.
+      expect(new Set(tops).size, `${path} one per line`).toBe(tops.length);
       expect(await hasHorizontalScroll(page), path).toBe(false);
     }
   });

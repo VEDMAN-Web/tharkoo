@@ -97,9 +97,10 @@ test.describe("H7.127 public UX rules", () => {
     expect(href).toBeTruthy();
     await page.goto(href!);
     await page.waitForTimeout(600);
-    expect((await fontSizes(page, ".tkh-ad-watermark")).length).toBeGreaterThan(0);
-    for (const size of await fontSizes(page, ".tkh-ad-watermark, .tkh-pill")) expect(size).toBeGreaterThanOrEqual(MIN_TEXT);
-    for (const selector of [".tkh-ad-link", ".tkh-pill", ".tkc-banner a"]) {
+    // H14.1: the similar ads are row cards: their tags (12 px) replace the pills; the small photo mark is 10 px in the approved design.
+    expect((await fontSizes(page, ".tk-row-tag")).length).toBeGreaterThan(0);
+    for (const size of await fontSizes(page, ".tk-row-tag, .tkh-pill")) expect(size).toBeGreaterThanOrEqual(MIN_TEXT);
+    for (const selector of [".tkh-ad-link", ".tk-row-tag", ".tkc-banner a"]) {
       for (const box of await heights(page, selector)) expect(box.height, `${selector} "${box.text}"`).toBeGreaterThanOrEqual(MIN_TARGET);
     }
     await shot(page, "h7-127-ad-page");
@@ -109,7 +110,8 @@ test.describe("H7.127 public UX rules", () => {
   test("on a phone a card title may take two lines, on a desktop it stays one", async ({ browser, baseURL }, info) => {
     const phone = info.project.name === "phone-390";
     const { context, page } = await freshVisit(browser, baseURL!, phone ? { width: 390, height: 844 } : { width: 1440, height: 900 });
-    await page.goto("/dating/");
+    // H14.1: listing pages show row cards (titles of up to two lines); the Home card keeps this rule.
+    await page.goto("/");
     await page.waitForTimeout(500);
     const lines = await page.locator(".tkh-ad-title").evaluateAll((nodes) =>
       nodes.map((node) => {

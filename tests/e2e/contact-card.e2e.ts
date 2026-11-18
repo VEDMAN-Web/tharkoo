@@ -65,7 +65,7 @@ const PHONE_TOUR_LABELS = ["WhatsApp", "Chat", `Video · ${TOUR_COINS} credits`]
  */
 async function anyAdPath(page: Page, feed: string, index = 0) {
   await page.goto(feed);
-  const link = page.locator(":is([data-tk=card], [data-tk=home-ad]) a[href*=\"/ad/\"]").nth(index);
+  const link = page.locator(":is([data-tk=card], [data-tk=home-ad], [data-tk=listing-row]) a[href*=\"/ad/\"]").nth(index);
   await link.waitFor({ state: "attached" });
   return (await link.getAttribute("href")) as string;
 }

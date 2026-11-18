@@ -45,7 +45,7 @@ test.describe("6 Admin: content screens", () => {
   test("listing order: pin an ad to position 1, it shows first", async ({ page, request }) => {
     test.setTimeout(240_000);
     await page.goto("/dating/bengaluru/");
-    const hrefs = await page.locator(":is([data-tk=card], [data-tk=home-ad]) a[href*='/ad/']").evaluateAll((els) => els.map((el) => el.getAttribute("href") || ""));
+    const hrefs = await page.locator(":is([data-tk=card], [data-tk=home-ad], [data-tk=listing-row]) a[href*='/ad/']").evaluateAll((els) => els.map((el) => el.getAttribute("href") || ""));
     const target = hrefs.filter(Boolean).at(-1)!;
     expect(target).toMatch(/^\/ad\//);
 
@@ -67,8 +67,8 @@ test.describe("6 Admin: content screens", () => {
     await expect
       .poll(async () => {
         const html = await (await request.get("/dating/bengaluru/")).text();
-        // Listing pages draw the Home ad card (H7.104b); the first card is the first ad in the ordered list.
-        const cards = html.split('data-tk="home-ad"').slice(1);
+        // Listing pages draw the approved row card (H14.1); the first card is the first ad in the ordered list.
+        const cards = html.split('data-tk="listing-row"').slice(1);
         return cards[0]?.match(/href="(\/ad\/[^"]+)"/)?.[1];
       }, POLL)
       .toBe(target);

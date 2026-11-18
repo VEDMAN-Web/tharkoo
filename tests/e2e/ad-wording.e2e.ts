@@ -5,7 +5,7 @@ const ALIAS = /\b([A-Z][a-z]+)\s*\/\s*\1 (City|District|Urban)\b/;
 test.describe("H7.89 ad page words", () => {
   test("no city alias under the title or in the last crumb, and no demo seller name", async ({ page }) => {
     await page.goto("/dating/");
-    const hrefs = await page.locator(':is([data-tk=card], [data-tk=home-ad]) a[href*="/ad/"]').evaluateAll((links) => [...new Set(links.map((link) => link.getAttribute("href") || ""))].slice(0, 6));
+    const hrefs = await page.locator(':is([data-tk=card], [data-tk=home-ad], [data-tk=listing-row]) a[href*="/ad/"]').evaluateAll((links) => [...new Set(links.map((link) => link.getAttribute("href") || ""))].slice(0, 6));
     expect(hrefs.length).toBeGreaterThan(0);
     for (const href of hrefs) {
       await page.goto(href);

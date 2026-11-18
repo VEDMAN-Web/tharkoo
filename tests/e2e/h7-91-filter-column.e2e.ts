@@ -203,11 +203,15 @@ test.describe("H7.91: sticky, instant filter column and phone sheet", () => {
     await expect(choice.locator(".tkn-ls-row-btn")).toContainText("· 1");
   });
 
-  test("a list card shows no views or clicks and no tier label on the photo", async ({ page }) => {
+  // H14.1: Vedant's approved row shows views and clicks (real counters) and the plan badge, so this test now checks that.
+  test("a list card shows its real views and clicks with icons, and no owner counts", async ({ page }) => {
     await page.setViewportSize({ width: 1440, height: 900 });
     await page.goto("/search/?category=dating");
-    const card = page.locator('[data-tk="home-ad"]').first();
+    const card = page.locator('[data-tk="listing-row"]').first();
     await expect(page.locator('[data-tk="ad-counts"]')).toHaveCount(0);
-    await expect(card).not.toContainText(/views?|clicks?|star|super top/i);
+    await expect(card.locator('[data-tk="row-views"] svg')).toHaveCount(1);
+    await expect(card.locator('[data-tk="row-clicks"] svg')).toHaveCount(1);
+    await expect(card.locator('[data-tk="row-stats"]')).toHaveAttribute("data-ready", "true", { timeout: 40_000 });
+    await expect(card.locator('[data-tk="row-views"]')).toContainText(/\d/);
   });
 });

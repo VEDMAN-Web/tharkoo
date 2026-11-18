@@ -28,7 +28,6 @@ export type RowLabels = {
   tierSuperTop: string;
   tierFeatured: string;
   photoVerified: string;
-  priceRequest: string;
   views: string;
   viewOne: string;
   clicks: string;
@@ -36,6 +35,7 @@ export type RowLabels = {
 };
 
 const PRICED_PEOPLE = new Set(["wellness"]);
+const PEOPLE_CATEGORIES = new Set(["dating", "friendship", "meetups", "personal-ads"]);
 
 export function rowLabels(t: TextFn): RowLabels {
   return {
@@ -44,7 +44,6 @@ export function rowLabels(t: TextFn): RowLabels {
     tierSuperTop: t("card.tier.supertop"),
     tierFeatured: t("ad.pill.featured"),
     photoVerified: t("card.photoVerified"),
-    priceRequest: t("ad.price.request"),
     views: t("home.ads.views"),
     viewOne: t("home.ads.viewOne"),
     clicks: t("card.clicks"),
@@ -69,9 +68,9 @@ export function tierOf(variant?: string): RowTier {
   }
 }
 
-/** A people ad carries an age; it never plays video on a card and does not show a price. */
+/** A people ad (an age, or a people category) never plays video on a card and does not show a price. */
 function isPeopleAd(ad: ListingDoc) {
-  return typeof ad.age === "number" && ad.age > 0;
+  return (typeof ad.age === "number" && ad.age > 0) || PEOPLE_CATEGORIES.has(ad.categorySlug || "");
 }
 
 export function listingRowData(ad: ListingDoc, categoryNames: Map<string, string>, paths: UrlPaths, fallbackTitle: string): ListingRowData {

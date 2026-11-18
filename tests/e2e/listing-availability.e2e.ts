@@ -24,9 +24,9 @@ test.describe("H7.5 Online now and Away on cards and the ad page", () => {
     await expect(page.locator("[data-tk=chat]:visible").first()).toBeEnabled();
 
     await page.goto(PEOPLE_FEED);
-    await expect(page.locator(":is([data-tk=card], [data-tk=home-ad])").first()).toBeVisible();
-    await expect(page.locator(":is([data-tk=card], [data-tk=home-ad]) [data-tk=call]")).toHaveCount(0);
-    await expect(page.locator(`[data-tk=home-ad]:has(a[href*="${slugFromAdPath(path)}"]) [data-tk=availability]`).first()).toBeAttached();
+    await expect(page.locator(":is([data-tk=card], [data-tk=home-ad], [data-tk=listing-row])").first()).toBeVisible();
+    await expect(page.locator(":is([data-tk=card], [data-tk=home-ad], [data-tk=listing-row]) [data-tk=call]")).toHaveCount(0);
+    await expect(page.locator(`:is([data-tk=home-ad], [data-tk=listing-row]):has(a[href*="${slugFromAdPath(path)}"]) [data-tk=availability]`).first()).toBeAttached();
   });
 
   test("a job ad keeps its Call button whether the seller is online or Away", async ({ page, baseURL }) => {
@@ -70,13 +70,13 @@ test.describe("H7.5 Online now and Away on cards and the ad page", () => {
     await setSellerAvailable(slug, true);
 
     await page.goto(`/search/?q=${encodeURIComponent(ad.title)}`);
-    const card = page.locator(":is([data-tk=card], [data-tk=home-ad])").filter({ hasText: ad.title }).first();
+    const card = page.locator(":is([data-tk=card], [data-tk=home-ad], [data-tk=listing-row])").filter({ hasText: ad.title }).first();
     await expect(card).toBeVisible();
     await expect(card.locator("[data-tk=availability]")).toHaveAttribute("data-status", "online");
 
     await setSellerAvailable(slug, false);
     await page.goto(`/search/?q=${encodeURIComponent(ad.title)}`);
-    const away = page.locator(":is([data-tk=card], [data-tk=home-ad])").filter({ hasText: ad.title }).first();
+    const away = page.locator(":is([data-tk=card], [data-tk=home-ad], [data-tk=listing-row])").filter({ hasText: ad.title }).first();
     await expect(away).toBeVisible();
     await expect(away.locator("[data-tk=availability]")).toHaveCount(0);
   });

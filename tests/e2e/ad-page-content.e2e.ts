@@ -17,7 +17,7 @@ const GAP_MAX = 56;
 
 async function adAt(page: Page, feed: string, position = 0) {
   await page.goto(feed);
-  const link = page.locator(':is([data-tk=card], [data-tk=home-ad]) a[href*="/ad/"]').nth(position);
+  const link = page.locator(':is([data-tk=card], [data-tk=home-ad], [data-tk=listing-row]) a[href*="/ad/"]').nth(position);
   await link.waitFor({ state: "attached" });
   return (await link.getAttribute("href")) as string;
 }
@@ -142,45 +142,43 @@ test.describe("H7.99b ad page content", () => {
     await expect(page.locator('[data-tk="security-tips"]').getByRole("link", { name: "More safety tips" })).toBeVisible();
   });
 
-  test("similar ads are a compact row of Home cards, at most 12, and end 48 px above the footer", async ({ page }, testInfo) => {
+  // H14.1: the similar ads are the approved row cards (views, clicks, tags), two across on a wide screen, in the same carousel.
+  test("similar ads are row cards in a carousel, at most 12, and end 48 px above the footer", async ({ page }, testInfo) => {
     await page.goto(await adAt(page, "/property/bengaluru/"));
     const section = page.locator('[data-tk="similar-ads"]');
     await expect(section.getByRole("heading", { level: 2 })).toHaveText("Similar ads near you");
     await expect(section.getByRole("heading", { level: 2 })).toHaveCSS("font-size", "22px");
     await expect(section.getByRole("link", { name: /^See all in/ })).toBeVisible();
-    const cards = section.locator('[data-tk="home-ad"]');
+    const cards = section.locator('[data-tk="listing-row"]');
     const count = await cards.count();
     expect(count).toBeGreaterThan(0);
     expect(count).toBeLessThanOrEqual(12);
-    await expect(section.locator(".tkh-heart").first()).toBeVisible();
-    await expect(section.locator(".tkh-pill").first()).toBeVisible();
-    await expect(section).not.toContainText(/views|clicks/i);
-    await expect(section.locator(".tkh-ad-title").first()).toHaveCSS("font-size", "14px");
-    await expect(section.locator(".tkh-heart").first()).toHaveCSS("width", "32px");
-    const rowBox = (await section.locator('[data-tk="similar-row"]').boundingBox())!;
-    const firstRow = (await cards.evaluateAll((els) => els.map((el) => el.getBoundingClientRect().right))).filter((right) => right <= rowBox.x + rowBox.width + 4).length;
+    await expect(section.locator(".tk-row-save").first()).toBeVisible();
+    await expect(section.locator(".tk-row-tag.is-cat").first()).toBeVisible();
+    await expect(section.locator('[data-tk="row-stats"]').first()).toHaveCount(1);
+    await expect(section.locator(".tk-row-title").first()).toHaveCSS("font-size", "18px");
+    await expect(section.locator(".tk-row-save").first()).toHaveCSS("width", "38px");
     const first = (await cards.first().boundingBox())!;
+    const scroller = section.locator('[data-tk="similar-row"]');
+    const rowWidth = await scroller.evaluate((node) => node.clientWidth);
     if (testInfo.project.name === "desktop-1440") {
-      expect(first.width).toBeLessThanOrEqual(200);
-      expect(first.width).toBeGreaterThanOrEqual(170);
-      expect(firstRow).toBe(Math.min(6, count));
-      const photo = (await cards.first().locator(".tkh-ad-photo").boundingBox())!;
-      expect(Math.round(photo.height)).toBeGreaterThanOrEqual(210);
-      if (count > 6) {
+      expect(first.width / rowWidth).toBeGreaterThan(0.45);
+      expect(first.width / rowWidth).toBeLessThan(0.52);
+      const photo = (await cards.first().locator(".tk-row-photo").boundingBox())!;
+      expect(Math.round(photo.width)).toBe(200);
+      if (count > 2) {
         const next = section.locator('[data-tk="similar-next"]');
         await expect(next).toBeVisible();
-        const before = await section.locator('[data-tk="similar-row"]').evaluate((node) => node.scrollLeft);
+        const before = await scroller.evaluate((node) => node.scrollLeft);
         await next.click();
-        await expect.poll(() => section.locator('[data-tk="similar-row"]').evaluate((node) => node.scrollLeft)).toBeGreaterThan(before);
+        await expect.poll(() => scroller.evaluate((node) => node.scrollLeft)).toBeGreaterThan(before);
       } else {
         await expect(section.locator('[data-tk="similar-next"]')).toHaveCount(0);
       }
     } else {
-      const scroller = section.locator('[data-tk="similar-row"]');
-      expect(await scroller.evaluate((node) => node.scrollWidth > node.clientWidth)).toBe(true);
-      const share = first.width / (await scroller.evaluate((node) => node.clientWidth));
-      expect(share).toBeGreaterThan(0.38);
-      expect(share).toBeLessThan(0.48);
+      expect(first.width / rowWidth).toBeGreaterThan(0.9);
+      const photo = (await cards.first().locator(".tk-row-photo").boundingBox())!;
+      expect(Math.abs(photo.width - first.width)).toBeLessThanOrEqual(2);
     }
     await section.scrollIntoViewIfNeeded();
     await page.evaluate(() => window.scrollTo(0, document.documentElement.scrollHeight));
@@ -325,7 +323,7 @@ test.describe("H7.99b ad page content", () => {
 
   test("the Featured pill sits in the pills row and the main photo carries no tier badge", async ({ page }) => {
     await page.goto("/dating/bengaluru/");
-    const hrefs = await page.locator(':is([data-tk=card], [data-tk=home-ad]) a[href*="/ad/"]').evaluateAll((els) => els.slice(0, 10).map((el) => (el as HTMLAnchorElement).getAttribute("href")));
+    const hrefs = await page.locator(':is([data-tk=card], [data-tk=home-ad], [data-tk=listing-row]) a[href*="/ad/"]').evaluateAll((els) => els.slice(0, 10).map((el) => (el as HTMLAnchorElement).getAttribute("href")));
     let featured = 0;
     for (const href of hrefs) {
       await page.goto(href!);
@@ -372,7 +370,7 @@ test.describe("H7.99b ad page content", () => {
     let checked = 0;
     for (const feed of ["/dating/bengaluru/", "/friendship/bengaluru/", "/meetups/bengaluru/", "/personal-ads/bengaluru/"]) {
       await page.goto(feed);
-      const link = page.locator(':is([data-tk=card], [data-tk=home-ad]) a[href*="/ad/"]').first();
+      const link = page.locator(':is([data-tk=card], [data-tk=home-ad], [data-tk=listing-row]) a[href*="/ad/"]').first();
       if (!(await link.count())) continue;
       await page.goto((await link.getAttribute("href"))!);
       await expect(page.locator(".tkn-contact-panel")).toBeAttached();

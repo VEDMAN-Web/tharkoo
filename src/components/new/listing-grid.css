@@ -53,6 +53,8 @@
   overflow: hidden;
   box-shadow: 0 2px 14px rgba(45, 18, 72, 0.07);
   transition: transform 0.25s, box-shadow 0.25s, border-color 0.25s;
+  /* H14.1 (#374): the whole card is the link: the title link is stretched over it with ::after, the controls sit above. */
+  cursor: pointer;
 }
 @media (hover: hover) and (pointer: fine) {
   .tk-row:hover {
@@ -64,11 +66,11 @@
     opacity: 1;
   }
 }
-.tk-row:has(:focus-visible) {
+.tk-row:focus-within {
   outline: 3px solid #7c3aed;
   outline-offset: 2px;
 }
-.tk-row:has(:focus-visible) .tkh-photo-arrow {
+.tk-row:focus-within .tkh-photo-arrow {
   opacity: 1;
 }
 .tk-row-photo {
@@ -82,6 +84,11 @@
 .tk-row-photo .tkh-ad-track {
   position: absolute;
   inset: 0;
+  /* Above the stretched link, so the photo can be swiped; each slide is itself a link to the same ad. */
+  z-index: 2;
+}
+.tk-row-photo .tkh-ad-dots {
+  z-index: 3;
 }
 .tk-row-photo .tkh-ad-dots {
   bottom: 14px;
@@ -186,14 +193,15 @@
   overflow: hidden;
 }
 .tk-row-tags {
-  position: relative;
-  z-index: 2;
   margin: 0;
   display: flex;
   flex-wrap: wrap;
   gap: 6px;
+  min-width: 0;
 }
 .tk-row-tag {
+  position: relative;
+  z-index: 2;
   display: inline-flex;
   align-items: center;
   gap: 4px;
@@ -228,22 +236,30 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  gap: 12px;
+  gap: 8px 12px;
   flex-wrap: wrap;
+}
+.tk-row-foot-main {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 12px;
 }
 .tk-row-price {
   color: #c2185b;
   font-size: 17px;
   font-weight: 800;
 }
-.tk-row-price.is-request {
-  font-size: 14px;
-  font-weight: 700;
-}
 .tk-row-stats {
   display: inline-flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  max-width: 100%;
   align-items: center;
-  gap: 14px;
+  gap: 4px 14px;
+  margin-left: auto;
   color: #6b4a8a;
   font-size: 13px;
 }
@@ -251,11 +267,18 @@
   visibility: hidden;
 }
 .tk-row-stat {
+  white-space: nowrap;
   display: inline-flex;
   align-items: center;
   gap: 5px;
 }
 @media (max-width: 600px) {
+  .tk-row-foot-main {
+    flex-basis: 100%;
+  }
+  .tk-rows {
+    padding-bottom: 72px;
+  }
   .tk-row {
     flex-direction: column;
   }

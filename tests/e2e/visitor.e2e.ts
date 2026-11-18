@@ -11,29 +11,29 @@ test.describe("1 Visitor", () => {
     await cards.filter({ hasText: "Dating" }).first().locator("a").click();
     await expect(page).toHaveURL(/\/dating\/$/);
     await expect(page.locator("h1")).toHaveCount(1);
-    expect(await page.locator(":is([data-tk=card], [data-tk=home-ad])").count()).toBeGreaterThan(3);
+    expect(await page.locator(":is([data-tk=card], [data-tk=home-ad], [data-tk=listing-row])").count()).toBeGreaterThan(3);
     // city page, reached through the city links on the page or the URL
     await page.goto(FEED);
     await expect(page.locator("h1")).toContainText(/bengaluru/i);
-    expect(await page.locator(":is([data-tk=card], [data-tk=home-ad])").count()).toBeGreaterThan(3);
+    expect(await page.locator(":is([data-tk=card], [data-tk=home-ad], [data-tk=listing-row])").count()).toBeGreaterThan(3);
     expect(await hasHorizontalScroll(page)).toBe(false);
   });
 
   test("filters: verified and with photos", async ({ page }) => {
     await page.goto(FEED);
-    const all = await page.locator(":is([data-tk=card], [data-tk=home-ad])").count();
+    const all = await page.locator(":is([data-tk=card], [data-tk=home-ad], [data-tk=listing-row])").count();
     const aside = page.locator(".tkn-ls-aside");
     if (isPhone(page)) await page.locator('[data-tk="results-bar"] .tkn-ls-filter-btn').click();
     await aside.getByText("Verified", { exact: true }).click();
     await expect(page).toHaveURL(/verified=1/);
     await expect(page.locator('[data-chip="verified"]')).toBeVisible();
-    const verified = await page.locator(":is([data-tk=card], [data-tk=home-ad])").count();
+    const verified = await page.locator(":is([data-tk=card], [data-tk=home-ad], [data-tk=listing-row])").count();
     expect(verified).toBeGreaterThan(0);
     expect(verified).toBeLessThanOrEqual(all);
     await aside.getByText("With photos", { exact: true }).click();
     await expect(page).toHaveURL(/photos=1/);
     await expect(page).toHaveURL(/verified=1/);
-    expect(await page.locator(":is([data-tk=card], [data-tk=home-ad])").count()).toBeGreaterThan(0);
+    expect(await page.locator(":is([data-tk=card], [data-tk=home-ad], [data-tk=listing-row])").count()).toBeGreaterThan(0);
     await aside.getByText("Verified", { exact: true }).click();
     await expect(page).not.toHaveURL(/verified=1/);
   });
