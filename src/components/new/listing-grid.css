@@ -319,7 +319,16 @@
 }
 .tk-pop .tkh-pop-photo {
   aspect-ratio: auto;
-  min-height: 320px;
+  min-height: 340px;
+  height: 100%;
+}
+/* The picture fills the photo box without deciding its height, so the pop-out has the same height before and after the picture loads. */
+.tk-pop .tkh-pop-photo > img,
+.tk-pop .tkh-pop-photo > video,
+.tk-pop .tkh-pop-photo > .tkh-ad-empty {
+  position: absolute;
+  inset: 0;
+  width: 100%;
   height: 100%;
 }
 .tk-pop-body {
@@ -367,9 +376,10 @@
   margin-top: 0;
 }
 .tk-pop-acts .tkh-pop-btn {
-  flex: 1 1 0;
+  flex: 0 0 auto;
+  min-width: 140px;
   gap: 6px;
-  padding: 0 14px;
+  padding: 0 18px;
   cursor: pointer;
 }
 .tk-pop .tk-pop-save {

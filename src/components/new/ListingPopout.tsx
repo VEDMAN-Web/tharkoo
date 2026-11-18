@@ -63,9 +63,16 @@ export function ListingPopout({
   useLayoutEffect(() => {
     const el = ref.current;
     if (!el) return;
-    const height = el.getBoundingClientRect().height;
-    const wanted = anchor.top + anchor.height / 2 - height / 2;
-    setTop(Math.max(EDGE_PX, Math.min(wanted, window.innerHeight - height - EDGE_PX)));
+    const place = () => {
+      const height = el.getBoundingClientRect().height;
+      const wanted = anchor.top + anchor.height / 2 - height / 2;
+      setTop(Math.max(EDGE_PX, Math.min(wanted, window.innerHeight - height - EDGE_PX)));
+    };
+    place();
+    if (typeof ResizeObserver === "undefined") return;
+    const watcher = new ResizeObserver(place);
+    watcher.observe(el);
+    return () => watcher.disconnect();
   }, [anchor, index]);
 
   const originX = anchor.left + anchor.width / 2 - left;

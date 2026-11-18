@@ -28,6 +28,9 @@ async function watchClicks(page: Page) {
 }
 
 async function middle(page: Page, target: Locator) {
+  // H14.1b: a row has a hover pop-out. Park the mouse outside first so no pop-out from an earlier step lies over the target.
+  await page.mouse.move(1, 1);
+  await expect(page.locator(".tkh-pop")).toHaveCount(0);
   const box = (await target.boundingBox())!;
   await page.mouse.click(box.x + box.width / 2, box.y + box.height / 2);
 }
@@ -47,6 +50,7 @@ async function checkRows(page: Page, rows: () => Locator, clicks: () => Promise<
   // The heart saves; it does not open the ad.
   const heart = first().locator(".tk-row-save");
   await heart.click();
+  await page.mouse.move(1, 1);
   expect(page.url(), `${name}: the heart does not open the ad`).toBe(here);
   await heart.click();
 

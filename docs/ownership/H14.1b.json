@@ -14,6 +14,7 @@
     "src/lib/ui/text.ts",
     "tests/e2e/h14-1-listing-rows.e2e.ts",
     "tests/e2e/h14-1b-row-popout.e2e.ts",
+    "tests/e2e/h14-2c-row-cards.e2e.ts",
     "tests/e2e/h7-131-chat-flows.e2e.ts"
   ]
 }
