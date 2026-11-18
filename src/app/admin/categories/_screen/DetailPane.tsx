@@ -5,7 +5,7 @@ import { ArrowLeft, ExternalLink, Trash2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import { undoAction } from "@/app/admin/undo-actions";
-import { Badge, Button, ConfirmDialog, MoreMenu, Tabs, Toggle, useToast } from "@/components/admin/ui";
+import { Badge, Button, ConfirmDialog, MoreMenu, ReasonDialog, Tabs, Toggle, useToast } from "@/components/admin/ui";
 import { CategoryFieldsEditor, type EditorField, type FieldsControl } from "@/components/admin/category-fields/CategoryFieldsEditor";
 import type { CategoryDetailView } from "@/server/categories/screen";
 import { deleteCategoryAction, updateCategoryAction } from "../manage-actions";
@@ -56,6 +56,7 @@ export function DetailPane({
   const [busy, setBusy] = useState(false);
   const [saved, setSaved] = useState(false);
   const [removing, setRemoving] = useState(false);
+  const [askingPeopleOff, setAskingPeopleOff] = useState(false);
   const [fieldsState, setFieldsState] = useState<FieldsControl | null>(null);
 
   const detailsDirty = !same(details, baseDetails);
@@ -92,7 +93,17 @@ export function DetailPane({
     router.refresh();
   }
 
-  async function save(): Promise<boolean> {
+  async function undoKind(kindId: string, picturesId: string) {
+    const outcome = await undoAction(kindId);
+    const second = outcome.ok && picturesId ? await undoAction(picturesId) : outcome;
+    toast.show(second.ok ? { kind: "success", message: "Undone. The old kind is back." } : { kind: "error", message: second.message });
+    router.refresh();
+  }
+
+  /** Leaving People turns off the adults-only check and the no-video rule, so the admin is asked first (H10.1). */
+  const leavingPeople = baseDetails.kind === "people" && details.kind !== "people";
+
+  async function save(confirmedPeopleOff = false): Promise<boolean> {
     setTried(true);
     const detailProblem = detailsProblems(details);
     const pictureProblem = picturesProblems(pictures);
@@ -106,8 +117,13 @@ export function DetailPane({
       toast.show({ kind: "error", message: Object.values(pictureProblem)[0] as string });
       return false;
     }
+    if (detailsDirty && leavingPeople && !confirmedPeopleOff) {
+      setAskingPeopleOff(true);
+      return false;
+    }
     setBusy(true);
     let slug = detail.slug;
+    let kindEventId = "";
     if (detailsDirty) {
       const result = await updateCategoryAction(detail.id, {
         name: details.name,
@@ -118,6 +134,7 @@ export function DetailPane({
         seoIntro: details.seoIntro,
         description: details.homeLine,
         enabled: details.enabled,
+        confirmPeopleOff: confirmedPeopleOff,
       });
       if (!result.ok) {
         setBusy(false);
@@ -125,6 +142,7 @@ export function DetailPane({
         return false;
       }
       slug = (result.data as { slug?: string } | undefined)?.slug ?? slug;
+      kindEventId = (result.data as { kindEventId?: string } | undefined)?.kindEventId ?? "";
       setBaseDetails({ ...details, slug });
       setDetails((current) => ({ ...current, slug }));
     }
@@ -147,14 +165,15 @@ export function DetailPane({
     setTried(false);
     setSaved(true);
     const message = "Saved. Live on the site in a few seconds.";
-    toast.show(eventId ? { kind: "undo", message, onUndo: () => void undoPictures(eventId) } : { kind: "success", message });
+    if (kindEventId) toast.show({ kind: "undo", message, onUndo: () => void undoKind(kindEventId, eventId) });
+    else toast.show(eventId ? { kind: "undo", message, onUndo: () => void undoPictures(eventId) } : { kind: "success", message });
     if (slug !== detail.slug) router.replace(urlFor(slug, tab));
     router.refresh();
     return true;
   }
 
-  async function saveAll() {
-    if ((detailsDirty || picturesDirty) && !(await save())) return;
+  async function saveAll(confirmedPeopleOff = false) {
+    if ((detailsDirty || picturesDirty) && !(await save(confirmedPeopleOff))) return;
     if (fieldsDirty) fieldsState?.save();
   }
 
@@ -223,6 +242,18 @@ export function DetailPane({
           onSave={() => void saveAll()}
         />
       ) : null}
+      <ReasonDialog
+        open={askingPeopleOff}
+        title="Change this category's kind?"
+        body={<p>This turns off the adults-only check and the no-video rule for this category. Continue?</p>}
+        confirmLabel="Continue"
+        danger
+        onCancel={() => setAskingPeopleOff(false)}
+        onConfirm={() => {
+          setAskingPeopleOff(false);
+          void saveAll(true);
+        }}
+      />
       <ConfirmDialog
         open={removing}
         title={`Remove ${detail.name}?`}

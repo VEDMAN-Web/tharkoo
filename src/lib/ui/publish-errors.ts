@@ -6,6 +6,7 @@ import type { PublishBlockReason } from "@/server/shared/publish-gate";
  */
 export const PUBLISH_MESSAGES: Record<PublishBlockReason, string> = {
   UNDERAGE: "You must be 18 or older to post an ad.",
+  AGE_REQUIRED: "Enter your age (18 or over) to post in this category.",
   ADULT_ATTESTATION_REQUIRED: "Please confirm that you are 18 or older before you post.",
   ACCOUNT_NOT_ACTIVE: "Your account cannot post right now. Please contact support.",
   VERIFICATION_REQUIRED: "Verify your ID to publish.",

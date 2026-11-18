@@ -7,6 +7,7 @@ export type AccountStatus = "active" | "suspended" | "deleted";
 
 export type PublishBlockReason =
   | "UNDERAGE"
+  | "AGE_REQUIRED"
   | "ADULT_ATTESTATION_REQUIRED"
   | "ACCOUNT_NOT_ACTIVE"
   | "VERIFICATION_REQUIRED"
@@ -28,6 +29,8 @@ export interface PublishGateInput {
   attributes: Record<string, unknown>;
   /** The "Require ID check before posting" switch (H6.14). When off, the approved-ID step is skipped. */
   idCheckRequired: boolean;
+  /** True for a people listing (H10.1): its ad must carry a listed age of 18 or more, whatever form fields the category has. */
+  peopleListing?: boolean;
   now?: Date;
 }
 
@@ -71,6 +74,9 @@ export function evaluatePublishGate(input: PublishGateInput): PublishGateResult 
     return { ok: false, reason: "CATEGORY_DISABLED" };
   }
   const age = listedAge(input.attributes);
+  if (input.peopleListing && age === undefined) {
+    return { ok: false, reason: "AGE_REQUIRED", detail: "age" };
+  }
   if (age !== undefined && age < 18) {
     return { ok: false, reason: "UNDERAGE", detail: "age" };
   }

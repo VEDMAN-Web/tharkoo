@@ -13,7 +13,7 @@ import { useUrlPaths } from "./UrlPaths";
 import { useT } from "./help/UiTextProvider";
 import { HelpCard } from "./ui/HelpCard";
 import { AdCard } from "./ui/AdCard";
-import { POST_COPY_DEFAULTS, wizardFields, type CtaCopy, type PostCopy } from "./post/copy";
+import { BUILT_IN_AGE_FIELD, POST_COPY_DEFAULTS, wizardFields, type CtaCopy, type PostCopy } from "./post/copy";
 import { newStepCopy, newSuccessCopy } from "./post/newCopy";
 import { SelectField, Switch, TextField } from "./post/FormFields";
 import { ContactFields } from "./post/ContactFields";
@@ -150,7 +150,8 @@ export function PostWizard({
   }
   const subOptions = subsByCategory[categoryId] ?? [];
   const fields = useMemo(() => wizardFields(category?.fields), [category]);
-  const ageField = fields.find((field) => field.key === "age" || field.type === "number" && /age/i.test(field.label));
+  // A people category always asks for the age (18 or over), even when its form has no age field (H10.1).
+  const ageField = fields.find((field) => field.key === "age" || field.type === "number" && /age/i.test(field.label)) ?? (people ? BUILT_IN_AGE_FIELD : undefined);
   const extra = fields.filter((field) => field.key !== "age" && !/age/i.test(field.label));
   const split = newDesign && needsMoreStep(extra);
   const moreKeys = useMemo(() => (split ? extra.map((field) => field.key) : []), [split, extra]);

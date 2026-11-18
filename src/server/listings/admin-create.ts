@@ -4,7 +4,7 @@ import { Types } from "mongoose";
 import { z } from "zod";
 import { connectDb } from "@/lib/db";
 import { AuditRepository } from "@/server/audit";
-import { kindMaxPhotos } from "@/server/categories/kinds";
+import { isPeopleListing, kindMaxPhotos } from "@/server/categories/kinds";
 import { categoryNeedsSubcategory } from "@/server/categories/public";
 import { isSiteMediaType, readImageSize } from "@/server/layout/media";
 import { ConflictError, ForbiddenError, NotFoundError, PolicyViolationError, ValidationError } from "@/server/http";
@@ -211,6 +211,7 @@ function gateErrors(owner: Owner, category: CategoryRow, attributes: Record<stri
     categoryEnabled: category.enabled !== false,
     mediaCleared: true,
     attributes,
+    peopleListing: isPeopleListing(category),
   });
   if (!gate.ok) errors.push(`Cannot be published: ${gate.reason}`);
 }

@@ -1,0 +1,24 @@
+{
+  "branchPrefix": "haiku/h10.1",
+  "globs": [
+    "docs/ownership/H10.1.json",
+    "progress/H10.1.md",
+    "src/server/categories/manage.ts",
+    "src/server/categories/people-age.ts",
+    "src/server/shared/publish-gate.ts",
+    "src/server/listings/service.ts",
+    "src/server/listings/import.ts",
+    "src/server/listings/admin-create.ts",
+    "src/lib/ui/publish-errors.ts",
+    "src/components/PostWizard.tsx",
+    "src/components/post/copy.ts",
+    "src/app/admin/categories/manage-actions.ts",
+    "src/app/admin/categories/_screen/DetailPane.tsx",
+    "tests/server/categories/h10-1-*.test.ts",
+    "tests/server/billing/posting-fee.test.ts",
+    "tests/server/media/clear-photos.test.ts",
+    "tests/server/settings/a25-settings.test.ts",
+    "tests/server/ui/publish-errors.test.ts",
+    "tests/e2e/h10-1-people-protection.e2e.ts"
+  ]
+}

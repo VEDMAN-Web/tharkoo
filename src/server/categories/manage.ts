@@ -7,7 +7,8 @@ import { canEditSite } from "@/lib/ui/site-content";
 import { validateSlug } from "@/lib/urls";
 import { AuditRepository } from "@/server/audit";
 import { ForbiddenError, NotFoundError, ValidationError } from "@/server/http";
-import { isPeopleListing, requireKind } from "@/server/categories/kinds";
+import { isPeopleListing, PEOPLE_KEY, requireKind } from "@/server/categories/kinds";
+import { adminWrite } from "@/server/admin/write";
 import type { AdminCtx } from "@/server/admin/context";
 import { picturesOf, setCatalogPictures, type PictureInput, type PicturesView } from "@/server/layout/catalog-pictures";
 import { Category, Listing, User } from "@/server/models";
@@ -40,6 +41,8 @@ export interface CategoryInput {
   icon?: string;
   /** Photos for an ad made by staff or imported (1 to 30). Blank means the default of 10. */
   importMaxPhotos?: number | string | null;
+  /** Needed when the kind changes away from People: the admin has been asked and said yes (H10.1). */
+  confirmPeopleOff?: boolean;
 }
 
 export interface SubcategoryInput extends CategoryInput {
@@ -142,6 +145,44 @@ export async function createCategory(actor: Actor, input: CategoryInput) {
   return { id: String(doc._id), slug };
 }
 
+export const PEOPLE_OFF_QUESTION = "This turns off the adults-only check and the no-video rule for this category. Continue?";
+
+/** Changing a category's kind away from People is only done after the admin was asked and said yes. */
+function assertPeopleOffConfirmed(from: string | undefined, to: string, confirmed: boolean) {
+  if (from === PEOPLE_KEY && to !== PEOPLE_KEY && !confirmed) throw new ValidationError(PEOPLE_OFF_QUESTION);
+}
+
+/**
+ * Changes only the kind of a category, as one audited write that can be undone for the usual window (H10.1).
+ * Away from People needs `confirmPeopleOff`; a people category (by slug or an age field) still counts as people whatever its kind.
+ */
+export async function changeCategoryKind(ctx: AdminCtx, id: string, kind: unknown, options: { confirmPeopleOff?: boolean } = {}) {
+  await connectDb();
+  if (!canEditSite(ctx.roles)) throw new ForbiddenError("Only an admin can edit categories");
+  const next = await requireKind(kind);
+  const current = await Category.findById(objectId(id, "Category")).lean();
+  if (!current || current.deletedAt) throw new NotFoundError("Category not found");
+  if (current.kind === next) return { changed: false as const, eventId: "" };
+  assertPeopleOffConfirmed(current.kind, next, options.confirmPeopleOff === true);
+  const restore = { kind: current.kind ?? null, videoTourEnabled: current.videoTourEnabled ?? false };
+  const written = await adminWrite<{ id: string }>(ctx, {
+    perm: "catalogue.edit",
+    action: "category.kind",
+    target: { type: "category", id, label: current.name },
+    texts: [current.name],
+    undo: { kind: "record.restore", windowKey: "edits" },
+    before: async () => restore,
+    apply: async () => {
+      await Category.updateOne({ _id: current._id }, { $set: { kind: next, ...(isPeopleListing({ slug: current.slug, kind: next, fields: current.fields }) ? { videoTourEnabled: false } : {}) } });
+      const now = await Category.findById(current._id).select("kind videoTourEnabled").lean();
+      const after = { kind: now?.kind ?? null, videoTourEnabled: now?.videoTourEnabled ?? false };
+      return { after, result: { id }, summary: `Changed the kind of ${current.name} from ${current.kind ?? "none"} to ${next}`, undoData: { model: "Category", id, restore, unset: [], expect: after } };
+    },
+  });
+  await refreshPublicCache();
+  return { changed: true as const, eventId: written.eventId };
+}
+
 export async function updateCategory(actor: Actor, id: string, input: CategoryInput) {
   requireAdmin(actor);
   await connectDb();
@@ -156,7 +197,9 @@ export async function updateCategory(actor: Actor, id: string, input: CategoryIn
   if (input.seoIntro !== undefined) doc.introHtml = cleanText(input.seoIntro, "SEO intro", MAX_INTRO, false);
   if (input.description !== undefined) doc.description = cleanText(input.description, "Home tile line", MAX_HOME_LINE, false);
   if (input.kind !== undefined) {
-    doc.kind = await requireKind(input.kind);
+    const next = await requireKind(input.kind);
+    if (next !== doc.kind) assertPeopleOffConfirmed(doc.kind, next, input.confirmPeopleOff === true);
+    doc.kind = next;
   }
   // A people listing can never keep live tours on, whatever kind it has (H6.5, H7.167).
   if (isPeopleListing({ slug: doc.slug, kind: doc.kind, fields: doc.fields })) doc.videoTourEnabled = false;
