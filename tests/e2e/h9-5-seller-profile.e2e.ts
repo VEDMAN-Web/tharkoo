@@ -60,9 +60,10 @@ test.describe("H9.5 Seller profile", () => {
         const box = await boxes.nth(index).boundingBox();
         expect(box?.width ?? 0, `checkbox ${index} width`).toBeGreaterThanOrEqual(24);
         expect(box?.height ?? 0, `checkbox ${index} height`).toBeGreaterThanOrEqual(24);
-        expect(await boxes.nth(index).evaluate((node) => Boolean(node.closest(".up-check"))), `checkbox ${index} uses .up-check`).toBe(true);
+        // The switches look and work like the ones on the Account home; the age box is a plain checkbox in the .up-check style.
+        expect(await boxes.nth(index).evaluate((node) => Boolean(node.closest(".up-check, .tkv-avail"))), `checkbox ${index} is a switch row or .up-check`).toBe(true);
       }
-      const small = await form.locator(".tk-sp-switch-text small").evaluateAll((nodes) => nodes.map((node) => parseFloat(getComputedStyle(node).fontSize)));
+      const small = await form.locator(".tkv-avail-help").evaluateAll((nodes) => nodes.map((node) => parseFloat(getComputedStyle(node).fontSize)));
       expect(Math.min(...small)).toBeGreaterThanOrEqual(12);
       // One primary button.
       const save = form.getByRole("button", { name: "Save and continue", exact: true });

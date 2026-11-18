@@ -34,19 +34,22 @@ function isExpired(coupon: CouponQuote, now = new Date()) {
   return false;
 }
 
+/** What a person sees when a code is wrong, switched off or not usable. */
+export const COUPON_NOT_FOUND = "We couldn't find that coupon. Check the code and try again.";
+
 async function findCoupon(code: string) {
   const pattern = new RegExp(`^${escapeRegex(code.trim())}$`, "i");
   return Coupon.findOne({ code: pattern });
 }
 
 async function assertUsable(coupon: CouponQuote, userId: string) {
-  if (coupon.status !== "active") throw new NotFoundError("Coupon is invalid");
-  if (coupon.kind !== "percent" && coupon.kind !== "credits") throw new NotFoundError("Coupon is invalid");
+  if (coupon.status !== "active") throw new NotFoundError(COUPON_NOT_FOUND);
+  if (coupon.kind !== "percent" && coupon.kind !== "credits") throw new NotFoundError(COUPON_NOT_FOUND);
   if (coupon.kind === "percent" && (coupon.percent == null || coupon.percent <= 0 || coupon.percent > 100)) {
-    throw new NotFoundError("Coupon is invalid");
+    throw new NotFoundError(COUPON_NOT_FOUND);
   }
   if (coupon.kind === "credits" && (coupon.credits == null || coupon.credits <= 0)) {
-    throw new NotFoundError("Coupon is invalid");
+    throw new NotFoundError(COUPON_NOT_FOUND);
   }
   if (coupon.startsAt && coupon.startsAt.getTime() > Date.now()) throw new ConflictError("Coupon is not active yet");
   if (isExpired(coupon)) throw new ConflictError("Coupon is expired");
@@ -67,7 +70,7 @@ export async function validateCoupon(code: string, userId: string) {
   await connectDb();
   await readyBilling();
   const coupon = await findCoupon(code);
-  if (!coupon) throw new NotFoundError("Coupon is invalid");
+  if (!coupon) throw new NotFoundError(COUPON_NOT_FOUND);
   await assertUsable(coupon, userId);
   return coupon;
 }

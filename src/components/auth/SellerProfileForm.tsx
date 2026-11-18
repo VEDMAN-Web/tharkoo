@@ -97,20 +97,8 @@ export function SellerProfileForm({ next, initial, askDateOfBirth, initialLiveCh
       </label>
 
       <div className="tk-sp-switches" data-tk="sp-switches">
-        <label className="up-check tk-sp-switch">
-          <input type="checkbox" role="switch" checked={availableNow} onChange={(event) => setAvailableNow(event.target.checked)} aria-describedby="tk-sp-now-help" />
-          <span className="tk-sp-switch-text">
-            <span>Available now</span>
-            <small id="tk-sp-now-help">People see Online now on your ads.</small>
-          </span>
-        </label>
-        <label className="up-check tk-sp-switch">
-          <input type="checkbox" role="switch" checked={liveChat} onChange={(event) => setLiveChat(event.target.checked)} aria-describedby="tk-sp-chat-help" />
-          <span className="tk-sp-switch-text">
-            <span>Live chat</span>
-            <small id="tk-sp-chat-help">People can chat with you on Tharkoo. Your ads show Online now or Away.</small>
-          </span>
-        </label>
+        <SwitchRow id="tk-sp-now" checked={availableNow} onChange={setAvailableNow} title="Available now" help="People see Online now on your ads." />
+        <SwitchRow id="tk-sp-chat" checked={liveChat} onChange={setLiveChat} title="Live chat" help="People can chat with you on Tharkoo. Your ads show Online now or Away." />
       </div>
 
       {askDateOfBirth ? (
@@ -134,6 +122,20 @@ export function SellerProfileForm({ next, initial, askDateOfBirth, initialLiveCh
   );
 }
 
+/** The same switch as the Available now and Live chat switches on the Account home: a real checkbox (role switch) over a track, so it works with the keyboard and a screen reader. */
+function SwitchRow({ id, checked, onChange, title, help }: { id: string; checked: boolean; onChange: (next: boolean) => void; title: string; help: string }) {
+  return (
+    <label className={`tkv-avail tk-sp-switch${checked ? " is-on" : ""}`} data-tk="sp-switch">
+      <span className="tkv-avail-text">
+        <span className="tkv-avail-title">{title}</span>
+        <span className="tkv-avail-help" id={`${id}-help`}>{help}</span>
+      </span>
+      <input id={id} className="tk-sp-sw" type="checkbox" role="switch" checked={checked} onChange={(event) => onChange(event.target.checked)} aria-describedby={`${id}-help`} />
+      <span className="tkv-switch" aria-hidden="true"><i /></span>
+    </label>
+  );
+}
+
 const PROFILE_CSS = `
 .tk-sp{box-sizing:border-box;width:100%;max-width:640px;display:grid;gap:14px;color:#1E0B38}
 .tk-sp-title{margin:0;font-size:20px;font-weight:800;letter-spacing:-.01em;color:#1E0B38}
@@ -142,11 +144,10 @@ const PROFILE_CSS = `
 .tk-sp-label-text{padding:0}
 .tk-sp-fieldset{display:grid;gap:10px;margin:0;padding:0;border:0}
 .tk-sp-input{width:100%;box-sizing:border-box;min-height:48px;border:1.5px solid #EAD8F0;border-radius:12px;padding:0 14px;font:inherit;font-size:16px;color:#1E0B38;background:#fff}
-.tk-sp-switches{display:grid;gap:4px}
-.tk-sp-switch{align-items:flex-start;padding:6px 0}
-.tk-sp-switch input{margin-top:2px}
-.tk-sp-switch-text{display:grid;gap:2px}
-.tk-sp-switch-text small{font-size:13px;font-weight:500;line-height:1.45;color:#4A2870}
+.tk-sp-switches{display:grid;gap:10px}
+.tk-sp-switch{position:relative;padding:10px 16px;min-height:60px}
+.tk-sp-sw{position:absolute;inset:0;width:100%;height:100%;margin:0;opacity:0;cursor:pointer}
+.tk-sp-switch:has(.tk-sp-sw:focus-visible){outline:3px solid #7C3AED;outline-offset:2px}
 .tk-sp-input:focus-visible,.up-check input:focus-visible,.tk-sp-primary:focus-visible{outline:3px solid #7C3AED;outline-offset:2px}
 .tk-sp-primary{min-height:48px;border:0;border-radius:999px;background:linear-gradient(135deg,#D1137A,#A8124F);color:#fff;font:inherit;font-size:15px;font-weight:700;cursor:pointer}
 .tk-sp-primary:disabled{opacity:.55;cursor:not-allowed}
