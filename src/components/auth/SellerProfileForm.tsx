@@ -63,9 +63,8 @@ export function SellerProfileForm({ next, initial, askDateOfBirth, initialLiveCh
   const dobError = errors.dateOfBirth?.[0];
 
   return (
-    <form className="tk-sp" onSubmit={save} noValidate aria-labelledby="tk-sp-title">
+    <form className="tk-sp up-glass up-panel" onSubmit={save} noValidate aria-labelledby="tk-sp-title" data-tk="seller-profile">
       <style>{PROFILE_CSS}</style>
-      <p className="tk-sp-eyebrow">About you</p>
       <h1 id="tk-sp-title" className="tk-sp-title">About you</h1>
       <p className="tk-sp-help">This is what people see on your ads. You can change it any time.</p>
 
@@ -78,8 +77,8 @@ export function SellerProfileForm({ next, initial, askDateOfBirth, initialLiveCh
       <label className="tk-sp-label">
         <span>City</span>
         {cities.length ? (
-          <select className="tk-sp-input" name="city" autoComplete="address-level2" value={city} onChange={(event) => setCity(event.target.value)} aria-invalid={Boolean(cityError)} aria-describedby={cityError ? "tk-sp-city-err" : undefined} required>
-            <option value="">Select city</option>
+          <select className="tk-sp-input" name="city" autoComplete="off" value={city} onChange={(event) => setCity(event.target.value)} aria-invalid={Boolean(cityError)} aria-describedby={cityError ? "tk-sp-city-err" : undefined} required>
+            <option value="" disabled>Choose your city</option>
             {!known && saved ? <option value={saved}>{saved}</option> : null}
             {cities.map((item) => (
               <option key={item.id} value={item.name}>{item.name}</option>
@@ -97,23 +96,29 @@ export function SellerProfileForm({ next, initial, askDateOfBirth, initialLiveCh
         {whatsappError ? <span id="tk-sp-wa-err" className="tk-sp-error">{whatsappError}</span> : null}
       </label>
 
-      <label className="tk-sp-check">
-        <input type="checkbox" checked={availableNow} onChange={(event) => setAvailableNow(event.target.checked)} />
-        <span>Available now (people see Online now)</span>
-      </label>
-
-      <label className="tk-sp-check">
-        <input type="checkbox" checked={liveChat} onChange={(event) => setLiveChat(event.target.checked)} />
-        <span>Turn on live chat?</span>
-      </label>
-      <p className="tk-sp-help">People can chat with you on Tharkoo. Your ads then show Online now or Away, and get a Chat online now button.</p>
+      <div className="tk-sp-switches" data-tk="sp-switches">
+        <label className="up-check tk-sp-switch">
+          <input type="checkbox" role="switch" checked={availableNow} onChange={(event) => setAvailableNow(event.target.checked)} aria-describedby="tk-sp-now-help" />
+          <span className="tk-sp-switch-text">
+            <span>Available now</span>
+            <small id="tk-sp-now-help">People see Online now on your ads.</small>
+          </span>
+        </label>
+        <label className="up-check tk-sp-switch">
+          <input type="checkbox" role="switch" checked={liveChat} onChange={(event) => setLiveChat(event.target.checked)} aria-describedby="tk-sp-chat-help" />
+          <span className="tk-sp-switch-text">
+            <span>Live chat</span>
+            <small id="tk-sp-chat-help">People can chat with you on Tharkoo. Your ads show Online now or Away.</small>
+          </span>
+        </label>
+      </div>
 
       {askDateOfBirth ? (
         <fieldset className="tk-sp-fieldset">
           <legend className="tk-sp-label-text">Date of birth</legend>
           <p className="tk-sp-help">Asked once, only for posting ads. Never shown on your ads.</p>
           <input className="tk-sp-input" name="dateOfBirth" type="date" value={dateOfBirth} onChange={(event) => setDateOfBirth(event.target.value)} aria-label="Date of birth" aria-invalid={Boolean(dobError)} aria-describedby={dobError ? "tk-sp-dob-err" : undefined} required />
-          <label className="tk-sp-check">
+          <label className="up-check">
             <input type="checkbox" checked={adultConfirmed} onChange={(event) => setAdultConfirmed(event.target.checked)} required />
             <span>I am 18 or older and I will follow the posting rules.</span>
           </label>
@@ -122,7 +127,7 @@ export function SellerProfileForm({ next, initial, askDateOfBirth, initialLiveCh
       ) : null}
 
       <button type="submit" className="tk-sp-primary" disabled={busy}>
-        {busy ? "Saving" : askDateOfBirth ? "Continue to post your ad" : "Save and continue"}
+        {busy ? "Saving" : "Save and continue"}
       </button>
       <p aria-live="polite" className="tk-sp-error">{message}</p>
     </form>
@@ -130,17 +135,19 @@ export function SellerProfileForm({ next, initial, askDateOfBirth, initialLiveCh
 }
 
 const PROFILE_CSS = `
-.tk-sp{box-sizing:border-box;width:100%;max-width:520px;margin:24px auto;padding:32px 28px 28px;display:grid;gap:14px;border-radius:20px;background:rgba(255,255,255,.92);border:1px solid #fff;box-shadow:0 24px 64px rgba(45,18,72,.18);color:#1E0B38;font-family:'Plus Jakarta Sans',system-ui,sans-serif}
-.tk-sp-eyebrow{margin:0;font-size:12px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:#A8124F}
-.tk-sp-title{margin:0;font-size:24px;letter-spacing:-.02em;color:#110520}
+.tk-sp{box-sizing:border-box;width:100%;max-width:640px;display:grid;gap:14px;color:#1E0B38}
+.tk-sp-title{margin:0;font-size:20px;font-weight:800;letter-spacing:-.01em;color:#1E0B38}
 .tk-sp-help{margin:0;font-size:14px;line-height:1.55;color:#4A2870}
 .tk-sp-label,.tk-sp-label-text{display:grid;gap:8px;font-size:14px;font-weight:700}
 .tk-sp-label-text{padding:0}
 .tk-sp-fieldset{display:grid;gap:10px;margin:0;padding:0;border:0}
 .tk-sp-input{width:100%;box-sizing:border-box;min-height:48px;border:1.5px solid #EAD8F0;border-radius:12px;padding:0 14px;font:inherit;font-size:16px;color:#1E0B38;background:#fff}
-.tk-sp-check{display:flex;align-items:center;gap:10px;min-height:44px;font-size:14px;font-weight:600;color:#1E0B38}
-.tk-sp-check input{width:22px;height:22px;accent-color:#A8124F}
-.tk-sp-input:focus-visible,.tk-sp-check input:focus-visible,.tk-sp-primary:focus-visible{outline:3px solid #7C3AED;outline-offset:2px}
+.tk-sp-switches{display:grid;gap:4px}
+.tk-sp-switch{align-items:flex-start;padding:6px 0}
+.tk-sp-switch input{margin-top:2px}
+.tk-sp-switch-text{display:grid;gap:2px}
+.tk-sp-switch-text small{font-size:13px;font-weight:500;line-height:1.45;color:#4A2870}
+.tk-sp-input:focus-visible,.up-check input:focus-visible,.tk-sp-primary:focus-visible{outline:3px solid #7C3AED;outline-offset:2px}
 .tk-sp-primary{min-height:48px;border:0;border-radius:999px;background:linear-gradient(135deg,#D1137A,#A8124F);color:#fff;font:inherit;font-size:15px;font-weight:700;cursor:pointer}
 .tk-sp-primary:disabled{opacity:.55;cursor:not-allowed}
 .tk-sp-error{font-size:14px;color:#A8124F}

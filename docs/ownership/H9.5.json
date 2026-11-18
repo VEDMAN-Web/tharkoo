@@ -1,0 +1,9 @@
+{
+  "branchPrefix": "haiku/h9.5",
+  "globs": [
+    "docs/ownership/H9.5.json",
+    "src/components/auth/SellerProfileForm.tsx",
+    "src/app/u/seller-profile/page.tsx",
+    "tests/e2e/h9-5-seller-profile.e2e.ts"
+  ]
+}
