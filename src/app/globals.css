@@ -718,6 +718,13 @@ input, select, textarea { font-size: 16px; }
 .tk-card[data-variant="highlight"] .tk-card-title { color: #7a5812; }
 .tk-card[data-variant="supertop"], .tk-card[data-variant="star"] { border: 1.5px solid var(--rose); }
 .tk-card-link { display: flex; min-width: 0; flex: 1; color: inherit; }
+/* H14.2: the whole tile card opens the ad. The body link is stretched over the card; the photo arrows, the contact circles and the owner buttons sit above it. */
+.tk-card { cursor: pointer; }
+.tk-card-link::after { content: ""; position: absolute; inset: 0; z-index: 1; }
+.tk-card:has(.tk-card-link:focus-visible) { outline: 3px solid #7c3aed; outline-offset: 2px; }
+.tk-card-link:focus-visible { outline: none; }
+.tk-card .tkp-owner-actions { position: relative; z-index: 2; }
+.tk-card .tkp-card-avail { position: relative; z-index: 2; }
 .tk-card-photo {
   position: relative;
   width: 180px;

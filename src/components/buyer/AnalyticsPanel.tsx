@@ -1,13 +1,14 @@
 import Link from "next/link";
 import { BarChart3 } from "lucide-react";
 import { displayTitle } from "@/lib/format";
-import { ownAdStatus } from "@/lib/ui/ad-status";
+import { draftPath, ownAdStatus } from "@/lib/ui/ad-status";
+import { adPath, type UrlPaths } from "@/lib/urls";
 import type { listOwnCards } from "@/server/listings/owner-cards";
 import { EmptyIcon } from "./UserPanelShell";
 
 type Cards = Awaited<ReturnType<typeof listOwnCards>>;
 
-export function AnalyticsPanel({ cards }: { cards: Cards }) {
+export function AnalyticsPanel({ cards, paths }: { cards: Cards; paths: UrlPaths }) {
   if (cards.total === 0) {
     return (
       <section aria-labelledby="analytics-title" className="up-glass up-panel up-empty" data-tk="analytics-empty">
@@ -37,7 +38,11 @@ export function AnalyticsPanel({ cards }: { cards: Cards }) {
           <tbody>
             {cards.items.map((item) => (
               <tr key={item.id} data-tk="analytics-row">
-                <td>{displayTitle(item.title || "") || "Untitled ad"}</td>
+                <td>
+                  <Link href={item.slug ? adPath(paths, item.slug) : draftPath(item.id ?? "")} prefetch={false} className="up-row-link" data-tk="analytics-link">
+                    {displayTitle(item.title || "") || "Untitled ad"}
+                  </Link>
+                </td>
                 <td>{ownAdStatus(item.status, item.expiresAt).label}</td>
                 <td>{item.shown.views}</td>
                 <td>{item.shown.clicks}</td>
