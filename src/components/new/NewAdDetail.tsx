@@ -142,7 +142,6 @@ export function NewAdDetail({
     photoPrev: t("home.ads.photoPrev"),
     photoNext: t("home.ads.photoNext"),
     chat: t("home.ads.chat"),
-    viewAd: t("home.ads.viewAd"),
     age: t("home.ads.age"),
     row: rowLabels(t),
   };
