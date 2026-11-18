@@ -87,15 +87,23 @@ export function PostModerationCard({ since, canEdit }: { since: string | null; c
 
 /** Undo windows: how many days staff can undo each kind of change. Payments, refunds and sent emails can never be undone. */
 export function UndoWindowsCard({ windows, canEdit }: { windows: UndoWindows; canEdit: boolean }) {
-  return <UndoWindowsForm key={UNDO_WINDOW_KEYS.map((key) => windows[key]).join("-")} windows={windows} canEdit={canEdit} />;
+  return <UndoWindowsForm windows={windows} canEdit={canEdit} />;
 }
 
+const asText = (windows: UndoWindows): Record<string, string> => Object.fromEntries(UNDO_WINDOW_KEYS.map((key) => [key, String(windows[key])]));
+
+/**
+ * The form keeps the last saved values itself, instead of being rebuilt from the page after every save and Undo.
+ * Rebuilding from the page depended on which page refresh the browser applied last: an Undo clicked right after a save
+ * could leave the box showing the new value although the database had the old one (H10.5c-a).
+ */
 function UndoWindowsForm({ windows, canEdit }: { windows: UndoWindows; canEdit: boolean }) {
   const answer = useAnswer();
-  const [values, setValues] = useState<Record<string, string>>(Object.fromEntries(UNDO_WINDOW_KEYS.map((key) => [key, String(windows[key])])));
+  const [saved, setSaved] = useState<Record<string, string>>(() => asText(windows));
+  const [values, setValues] = useState<Record<string, string>>(() => asText(windows));
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
-  const dirty = UNDO_WINDOW_KEYS.some((key) => values[key] !== String(windows[key]));
+  const dirty = UNDO_WINDOW_KEYS.some((key) => values[key] !== saved[key]);
 
   async function save() {
     for (const key of UNDO_WINDOW_KEYS) {
@@ -107,7 +115,13 @@ function UndoWindowsForm({ windows, canEdit }: { windows: UndoWindows; canEdit: 
     const result = await saveUndoWindowsAction(values);
     setBusy(false);
     if (!result.ok) return setError(result.message);
-    answer(result, "Undo windows saved.");
+    const previous = saved;
+    setSaved({ ...values });
+    answer(result, "Undo windows saved.", () => {
+      setSaved(previous);
+      setValues(previous);
+      setError("");
+    });
   }
 
   return (
@@ -140,7 +154,7 @@ function UndoWindowsForm({ windows, canEdit }: { windows: UndoWindows; canEdit: 
         {error ? <p className="adm-k-err" role="alert" data-tk="undo-error">{error}</p> : null}
         {canEdit && dirty ? (
           <div className="adm-s-actions">
-            <Button kind="quiet" onClick={() => { setValues(Object.fromEntries(UNDO_WINDOW_KEYS.map((key) => [key, String(windows[key])]))); setError(""); }}>Discard</Button>
+            <Button kind="quiet" onClick={() => { setValues(saved); setError(""); }}>Discard</Button>
             <Button kind="primary" busy={busy} onClick={() => void save()}>Save undo windows</Button>
           </div>
         ) : null}

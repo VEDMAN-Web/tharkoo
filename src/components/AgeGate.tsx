@@ -1,9 +1,11 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { Users } from "lucide-react";
 import { useFocusTrap } from "./ui/useFocusTrap";
+
+const AGE_LINK_CSS = ".tk-age .tk-age-terms { display: inline; box-decoration-break: clone; -webkit-box-decoration-break: clone; } .tk-age .tk-age-terms:focus-visible { outline: 2px solid #7c3aed; outline-offset: 2px; border-radius: 2px; }";
 
 export function AgeGate({
   title = "Please confirm your age before continuing",
@@ -26,6 +28,11 @@ export function AgeGate({
 }) {
   const [open, setOpen] = useState(false);
   const ref = useFocusTrap(open, () => {});
+  const acceptRef = useRef<HTMLButtonElement>(null);
+
+  useEffect(() => {
+    if (open) acceptRef.current?.focus();
+  }, [open]);
 
   useEffect(() => {
     const id = window.setTimeout(() => {
@@ -41,19 +48,25 @@ export function AgeGate({
   if (!open) return null;
   return (
     <div className="tk-age-back" style={{ backdropFilter: "blur(8px)", background: "rgba(74, 33, 58, 0.35)" }}>
+      <style>{AGE_LINK_CSS}</style>
       <div className="tk-age" data-tk="age-gate" role="dialog" aria-modal="true" aria-labelledby="age-title" ref={ref}>
         <div className="tk-age-icon" aria-hidden>
           <Users size={22} color="#A8124F" />
           <span className="tk-age-pill">18+</span>
         </div>
-        <h2 id="age-title">{title}</h2>
+        <h2 id="age-title" style={{ fontWeight: 600 }}>
+          {title}
+        </h2>
         <p>
           <strong>{lead}</strong> {rest}
         </p>
         <p>
-          I have read and accept the <Link href="/terms/">{terms}</Link>
+          I have read and accept the <Link href="/terms/" className="tk-age-terms">
+            {terms}
+          </Link>
         </p>
         <button
+          ref={acceptRef}
           type="button"
           className="tk-btn tk-btn-cta"
           data-tk="age-accept"

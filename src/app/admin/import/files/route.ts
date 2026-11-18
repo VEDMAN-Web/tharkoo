@@ -3,7 +3,8 @@ import { requireStaffRequest } from "@/lib/admin-auth";
 import { assertOrigin } from "@/server/auth/http";
 import { HttpError } from "@/server/http";
 import { recordImportPhoto, recordImportVideo } from "@/server/import/job";
-import { MAX_BYTES, VIDEO_MAX_BYTES, optionalCloudinary } from "@/server/media/config";
+import { optionalCloudinary } from "@/server/media/config";
+import { LEGACY_TOO_BIG, LEGACY_UPLOAD_MAX_BYTES } from "@/server/media/staff-upload";
 import { prepareLocalAdFile } from "@/server/media/watermark";
 import { connectDb } from "@/lib/db";
 import { User } from "@/server/models";
@@ -23,10 +24,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ ok: false, error: "Choose a photo or video file" }, { status: 400 });
     }
     const isVideo = form.get("kind") === "video";
-    if (file.size > (isVideo ? VIDEO_MAX_BYTES : MAX_BYTES)) {
-      const error = isVideo ? "Videos can be at most 10 MB" : "Images can be at most 8 MB";
-      return NextResponse.json({ ok: false, error }, { status: 413 });
-    }
+    if (file.size > LEGACY_UPLOAD_MAX_BYTES) return NextResponse.json({ ok: false, error: LEGACY_TOO_BIG }, { status: 413 });
     await connectDb();
     const user = await User.findOne({ email: staff.email }).select("_id").lean<{ _id: { toString(): string } }>();
     if (!user) return NextResponse.json({ ok: false, error: "Sign in as staff to import files" }, { status: 403 });

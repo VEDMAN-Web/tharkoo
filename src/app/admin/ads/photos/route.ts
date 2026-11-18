@@ -4,7 +4,7 @@ import { requireStaffRequest } from "@/lib/admin-auth";
 import { assertOrigin } from "@/server/auth/http";
 import { HttpError } from "@/server/http";
 import { actorForStaff, storeAdminMedia } from "@/server/listings/admin-create";
-import { VIDEO_MAX_BYTES } from "@/server/media/config";
+import { LEGACY_TOO_BIG, LEGACY_UPLOAD_MAX_BYTES } from "@/server/media/staff-upload";
 
 export const dynamic = "force-dynamic";
 
@@ -24,7 +24,7 @@ export async function POST(request: NextRequest) {
     const kind = form.get("kind") === "video" ? "video" : "image";
     const ownerEmail = String(form.get("ownerEmail") ?? "");
     if (!(file instanceof File)) return NextResponse.json({ ok: false, error: "Choose a file" }, { status: 400 });
-    if (file.size > VIDEO_MAX_BYTES) return NextResponse.json({ ok: false, error: "Files can be at most 10 MB" }, { status: 413 });
+    if (file.size > LEGACY_UPLOAD_MAX_BYTES) return NextResponse.json({ ok: false, error: LEGACY_TOO_BIG }, { status: 413 });
     const result = await storeAdminMedia(
       actor,
       ownerEmail,

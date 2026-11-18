@@ -84,3 +84,9 @@
 @media (max-width: 900px) {
   .h714-help-list, .h714-help-card { grid-column: 1 / -1; }
 }
+.h714 .h714-search { flex-wrap: wrap; }
+.h714 .h714-search-go { width: 100%; min-height: 48px; height: 48px; }
+@media (min-width: 768px) {
+  .h714 .h714-search { flex-wrap: nowrap !important; }
+  .h714 .h714-search-go { width: auto; flex: none; }
+}

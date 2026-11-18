@@ -1,6 +1,7 @@
 /** Client-side checks and upload for the create-ad screen. The server repeats every rule. */
 
 import { fileProblem, UPLOAD_RULES, videoProblem } from "@/components/upload/rules";
+import { uploadStaffFile } from "@/components/upload/staff-upload";
 
 export type MediaKind = "image" | "video";
 
@@ -37,42 +38,21 @@ export function videoSeconds(file: File): Promise<number> {
 export type UploadOutcome = { ok: true; mediaId: string } | { ok: false; error: string };
 
 /**
- * Sends one file to the staff upload route. `ownerEmail` is blank for the staff account itself.
+ * Sends one file straight to Cloudinary with a signed request (H13.1), so a normal phone photo is not stopped by the host's 4.5 MB request limit.
+ * `ownerEmail` is blank for the staff account itself; `categoryId` lets the server refuse a video on a people listing.
+ * Where Cloudinary is not set up (local development) the old route /admin/ads/photos/ takes the file.
  * `onProgress` reports the share sent (0 to 1) as the file goes up.
  */
-export async function uploadAdMedia(file: File, kind: MediaKind, ownerEmail: string, onProgress?: (ratio: number) => void): Promise<UploadOutcome> {
-  const form = new FormData();
-  form.set("file", file);
-  form.set("kind", kind);
-  form.set("ownerEmail", ownerEmail);
-  try {
-    const body = await sendWithProgress("/admin/ads/photos/", form, onProgress);
-    if (body.ok && body.mediaId) return { ok: true, mediaId: body.mediaId };
-    return { ok: false, error: body.error || "Upload failed" };
-  } catch {
-    return { ok: false, error: "Connection problem. Remove this file and add it again." };
-  }
-}
-
-type RouteAnswer = { ok: boolean; mediaId?: string; error?: string };
-
-/** POSTs the form with XMLHttpRequest so the browser can report how much has gone up. */
-function sendWithProgress(url: string, form: FormData, onProgress?: (ratio: number) => void): Promise<RouteAnswer> {
-  return new Promise((resolve, reject) => {
-    const xhr = new XMLHttpRequest();
-    xhr.open("POST", url);
-    xhr.withCredentials = true;
-    xhr.upload.onprogress = (event) => {
-      if (onProgress && event.lengthComputable && event.total > 0) onProgress(event.loaded / event.total);
-    };
-    xhr.onload = () => {
-      try {
-        resolve(JSON.parse(xhr.responseText) as RouteAnswer);
-      } catch {
-        reject(new Error("The answer could not be read"));
-      }
-    };
-    xhr.onerror = () => reject(new Error("Connection problem"));
-    xhr.send(form);
+export async function uploadAdMedia(file: File, kind: MediaKind, ownerEmail: string, onProgress?: (ratio: number) => void, categoryId?: string): Promise<UploadOutcome> {
+  const result = await uploadStaffFile<{ mediaId?: string }>({
+    purpose: "ad",
+    kind,
+    file,
+    ownerEmail,
+    categoryId,
+    legacy: { url: "/admin/ads/photos/", fields: { kind, ownerEmail } },
+    onProgress,
   });
+  if (result.ok && result.data.mediaId) return { ok: true, mediaId: result.data.mediaId };
+  return { ok: false, error: result.ok ? "Upload failed" : result.error };
 }

@@ -1,0 +1,32 @@
+{
+  "branchPrefix": "haiku/h12.2",
+  "globs": [
+    "docs/ownership/H12.2.json",
+    "progress/H12.2.md",
+    "src/components/new/ListingHead.tsx",
+    "src/components/new/SortSelect.tsx",
+    "src/components/new/ListingFilterPanel.tsx",
+    "src/components/new/listing-filters.ts",
+    "src/components/new/listing-page.css",
+    "src/components/new/listing-grid.css",
+    "src/components/new/listing-spec.css",
+    "src/components/new/HomeAdCard.tsx",
+    "src/components/new/ListingCards.tsx",
+    "src/components/new/home-ads.css",
+    "src/components/ui/AdCard.tsx",
+    "src/components/new/UtilityStrip.tsx",
+    "src/components/new/utility-strip.css",
+    "src/components/blocks/TrustBlock.tsx",
+    "src/components/blocks/blocks.css",
+    "src/components/h714/HelpView.tsx",
+    "src/components/h714/CategoriesView.tsx",
+    "src/components/h714/CitiesView.tsx",
+    "src/components/h714/h714.css",
+    "src/components/chat/SupportChat.tsx",
+    "src/components/AgeGate.tsx",
+    "src/app/globals.css",
+    "tests/e2e/h7-75-search-body.e2e.ts",
+    "tests/server/ui/h12-2-*.test.ts",
+    "tests/e2e/h12-2-shared-layout.e2e.ts"
+  ]
+}

@@ -1,0 +1,24 @@
+{
+  "branchPrefix": "haiku/h13.1",
+  "globs": [
+    "docs/ownership/H13.1.json",
+    "progress/H13.1.md",
+    "src/app/admin/ads/create/AdMediaPicker.tsx",
+    "src/app/admin/ads/create/CreateAdForm.tsx",
+    "src/app/admin/ads/create/ad-upload.ts",
+    "src/app/admin/ads/create/useAdMedia.ts",
+    "src/app/admin/ads/photos/route.ts",
+    "src/app/admin/media/BatchUpload.tsx",
+    "src/app/admin/media/upload/route.ts",
+    "src/app/admin/import/files/route.ts",
+    "src/app/admin/import/ImportForm.tsx",
+    "src/components/admin/ui/ImagePickerDialog.tsx",
+    "src/app/api/media/[[...slug]]/route.ts",
+    "src/server/media/staff-upload.ts",
+    "src/server/media/client.ts",
+    "src/server/layout/media.ts",
+    "src/components/upload/staff-upload.ts",
+    "tests/server/media/h13-1-staff-upload.test.ts",
+    "tests/e2e/h13-1-staff-upload.e2e.ts"
+  ]
+}

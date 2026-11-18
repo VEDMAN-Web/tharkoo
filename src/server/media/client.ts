@@ -8,6 +8,10 @@ export interface RemoteAsset {
   format: string;
   /** Play length in seconds. Only set for videos. */
   duration?: number;
+  /** Picture size and address, set by the live client (H13.1: the Media library needs them after a direct upload). */
+  width?: number;
+  height?: number;
+  url?: string;
 }
 
 export type ResourceKind = "image" | "video";
@@ -45,10 +49,16 @@ function liveClient(): CloudinaryClient {
           bytes?: number;
           format?: string;
           duration?: number;
+          width?: number;
+          height?: number;
+          secure_url?: string;
         };
         return {
           bytes: Number(found.bytes) || 0,
           format: String(found.format || ""),
+          ...(found.width ? { width: Number(found.width) } : {}),
+          ...(found.height ? { height: Number(found.height) } : {}),
+          ...(found.secure_url ? { url: String(found.secure_url) } : {}),
           ...(resourceType === "video" ? { duration: Number(found.duration) || 0 } : {}),
         };
       } catch (error) {
@@ -122,17 +132,26 @@ export async function uploadToCloudinary(data: Buffer, options: UploadOptions) {
   return stored;
 }
 
-async function uploadRaw(data: Buffer, options: UploadOptions): Promise<UploadedAsset> {
-  configure();
-  const result = await cloudinary.uploader.upload(`data:${options.contentType};base64,${data.toString("base64")}`, {
+/**
+ * The options handed to cloudinary.uploader.upload. An incoming transformation is a STRING of steps ("fl_strip_profile/l_text:..."), so it goes
+ * in as `raw_transformation`: the SDK reads a string given as `transformation` as the NAME of a saved transformation ("t_..."), which does not exist,
+ * and every upload that had one failed (H13.0).
+ */
+export function uploadCallOptions(options: UploadOptions) {
+  return {
     resource_type: options.resourceType ?? "image",
     type: "upload",
     folder: options.folder,
     public_id: options.publicId,
     overwrite: options.overwrite ?? false,
     ...(options.overwrite ? { invalidate: true } : {}),
-    ...(options.transformation ? { transformation: options.transformation } : {}),
-  });
+    ...(options.transformation ? { raw_transformation: options.transformation } : {}),
+  };
+}
+
+async function uploadRaw(data: Buffer, options: UploadOptions): Promise<UploadedAsset> {
+  configure();
+  const result = await cloudinary.uploader.upload(`data:${options.contentType};base64,${data.toString("base64")}`, uploadCallOptions(options));
   return { url: result.secure_url, publicId: result.public_id } as UploadedAsset;
 }
 

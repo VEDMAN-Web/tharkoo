@@ -1,0 +1,11 @@
+{
+  "branchPrefix": "haiku/h10.5c",
+  "globs": [
+    "docs/ownership/H10.5c.json",
+    "progress/H10.5c.md",
+    "src/app/admin/settings/_view/SettingsCards.tsx",
+    "src/app/admin/settings/_view/SettingsView.tsx",
+    "src/app/admin/settings/_view/useAnswer.tsx",
+    "tests/e2e/h10-5c-undo-settings.e2e.ts"
+  ]
+}

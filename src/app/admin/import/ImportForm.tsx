@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { DataTable, Notice, TextField, type Column } from "@/components/admin/ui";
 import { clipSeconds } from "@/components/post/mediaUpload";
+import { uploadStaffFile } from "@/components/upload/staff-upload";
 import { BATCH_PARALLEL, checkBatch, imageTypeOf } from "@/server/media/batch";
 import { runLimited } from "@/server/media/run-limited";
 import { readZipImages } from "@/server/media/zip-images";
@@ -72,17 +73,9 @@ function pendingFor(job: JobSummary, images: File[], clips: ChosenClip[]) {
 }
 
 async function uploadFile(jobId: string, item: PendingFile): Promise<{ ok: true } | { ok: false; reason: string }> {
-  const form = new FormData();
-  form.set("jobId", jobId);
-  form.set("file", item.file);
-  form.set("kind", item.kind);
-  try {
-    const res = await fetch("/admin/import/files/", { method: "POST", body: form });
-    const body = (await res.json()) as { ok: boolean; error?: string };
-    return body.ok ? { ok: true } : { ok: false, reason: body.error || "Upload failed" };
-  } catch {
-    return { ok: false, reason: "Connection problem. Use Retry to send it again." };
-  }
+  // H13.1: straight to Cloudinary with a signed request, so a normal phone photo is not stopped by the host's request limit.
+  const result = await uploadStaffFile({ purpose: "import", kind: item.kind, file: item.file, jobId, legacy: { url: "/admin/import/files/", fields: { jobId, kind: item.kind } } });
+  return result.ok ? { ok: true } : { ok: false, reason: result.error };
 }
 
 export function ImportForm({ canPublish }: { canPublish: boolean }) {
