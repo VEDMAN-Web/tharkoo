@@ -73,3 +73,5 @@
   .adm-ml-todo-edit { flex-direction: column; }
   .adm-ml-bulk { padding: 10px 12px; }
 }
+/* H12.3: the Ad videos title and its empty-state text are both left-aligned, like the other sections. */
+.adm-vr .adm-empty { justify-items: start; text-align: left; }

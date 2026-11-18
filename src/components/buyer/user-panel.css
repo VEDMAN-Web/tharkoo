@@ -339,3 +339,17 @@
   .up-hist td.up-hist-last { justify-content: flex-end; }
   .up-hist td.up-hist-last::before { content: none; }
 }
+
+/* H12.3: the three seller numbers are one height (the label may take two lines in every box); the alerts form fills a phone;
+   the photo and video filter chips are one size and shape. */
+.up-stat-label { display: block; min-height: 2.6em; line-height: 1.3; }
+.up-chip-link {
+  display: inline-flex; align-items: center; justify-content: center; min-height: 44px; padding: 0 18px; border-radius: 999px; box-sizing: border-box;
+  border: 1.5px solid #ead8f0; background: #fff; color: #a8124f; font: inherit; font-size: 14px; font-weight: 700; text-decoration: none;
+}
+.up-chip-link[aria-current="page"] { background: #a8124f; border-color: #a8124f; color: #fff; }
+@media (max-width: 640px) {
+  .up-panel-tight { padding: 14px; }
+  .up-filters-stack > .up-label { flex: 1 1 100%; }
+  .up-filters-stack .up-select, .up-filters-stack .up-btn { width: 100%; }
+}
