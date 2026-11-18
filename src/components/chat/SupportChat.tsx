@@ -23,6 +23,7 @@ const BODY_MIN = 10;
 const REPLY_POLL_MS = 8000;
 const BACK_TO_TOP_AFTER = 300;
 const SWIPE_CLOSE_PX = 60;
+const PHONE_FLOAT_CSS = "@media (max-width: 767px) { .tkn-float .tkn-chat-bubble { width: 48px; height: 48px; } body { padding-bottom: 72px; } }";
 const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const PHONE = /^\+?[\d\s-]{8,20}$/;
 
@@ -254,6 +255,7 @@ export function SupportChat({ chat, texts, hours = "" }: { chat: Chat; texts?: U
 
   return (
     <div className={floatClass} ref={float}>
+      <style>{PHONE_FLOAT_CSS}</style>
       {open ? (
         <section aria-label={chat.title} className="tkn-chatbox" id="tkn-chat-panel" data-tk="support-chat">
           <div

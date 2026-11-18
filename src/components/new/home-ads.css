@@ -534,3 +534,10 @@
     font-size: 14px;
   }
 }
+
+/* H12.2: the tags sit on the bottom edge, and on a phone the title keeps two lines of height, so cards in a row end together. */
+.tkh-ad .tkh-ad-body { flex: 1; display: flex; flex-direction: column; }
+.tkh-ad .tkh-ad-body > .tkh-ad-pills { margin-top: auto; padding-top: 10px; }
+@media (max-width: 639px) {
+  .tkh-ad .tkh-ad-title { min-height: 2.7em; }
+}

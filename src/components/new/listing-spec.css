@@ -146,7 +146,7 @@
 @media (min-width: 1024px) { .tkn-ls-bottom { display: none; } }
 
 /* Ad rows */
-.tkn-ls-main { min-width: 0; max-width: 904px; }
+.tkn-ls-main { min-width: 0; max-width: 936px; }
 .tkn-ls-main .tk-feed { display: flex; flex-direction: column; gap: 16px; max-width: 880px; }
 .tkn-ls .tkn-ls-card {
   position: relative; display: flex; background: rgba(255, 255, 255, 0.88); border: 1px solid var(--line); border-radius: 16px;
@@ -289,12 +289,12 @@
   width: 100%; height: 40px; box-sizing: border-box; border-radius: 10px; border: 1.5px solid var(--line); background: #fff;
   padding: 0 8px; font: inherit; font-size: 14px; color: var(--ink); text-overflow: ellipsis;
 }
-.tkn-ls .tkn-ls-fixed { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+.tkn-ls .tkn-ls-fixed { display: flex; flex-wrap: wrap; gap: 8px; }
 .tkn-ls .tkn-ls-chipline {
-  position: relative; height: 36px; min-width: 0; display: inline-flex; align-items: center; gap: 5px; padding: 0 8px; border-radius: 999px; box-sizing: border-box;
+  position: relative; height: 36px; flex: 1 1 auto; min-width: 0; display: inline-flex; align-items: center; gap: 5px; padding: 0 8px; border-radius: 999px; box-sizing: border-box;
   border: 1.5px solid var(--line); background: #fff; color: var(--muted); font-size: 13px; font-weight: 600; cursor: pointer; white-space: nowrap;
 }
-.tkn-ls .tkn-ls-chipline > span { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+.tkn-ls .tkn-ls-chipline > span { min-width: max-content; overflow: visible; white-space: nowrap; }
 .tkn-ls .tkn-ls-chipline > svg { flex: none; }
 .tkn-ls .tkn-ls-chipline input { position: absolute; inset: 0; width: 100%; height: 100%; margin: 0; opacity: 0; cursor: pointer; }
 .tkn-ls .tkn-ls-chipline:has(input:checked) { background: var(--deep); border-color: var(--deep); color: #fff; }
@@ -391,4 +391,14 @@
   .tkn-sr-meta { flex-wrap: wrap; column-gap: 8px; row-gap: 6px; }
   .tkn-sr-count { min-width: 0; white-space: normal; font-size: 13px; line-height: 1.3; }
   .tkn-sr-sort { flex: none; margin-left: auto; }
+}
+
+/* H12.2: on a phone the count has its own line; Filters (left) and Sort (right) share one row of one 44 px height. */
+@media (max-width: 599px) {
+  .tkn-sr-bar { flex-wrap: wrap; row-gap: 8px; padding-left: 0; padding-right: 0; }
+  .tkn-sr-bar .tkn-sr-meta { display: contents; }
+  .tkn-sr-bar .tkn-sr-count { order: 1; flex: 1 1 100%; }
+  .tkn-sr-bar .tkn-ls-filter-btn { order: 2; height: 44px; min-height: 44px; box-sizing: border-box; }
+  .tkn-sr-bar .tkn-sr-sort { order: 3; margin-left: auto; }
+  .tkn-sr-bar .tkn-sr-sort select { height: 44px; min-height: 44px; }
 }

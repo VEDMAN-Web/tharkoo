@@ -2229,3 +2229,12 @@ body:has([data-tk="bottom-bar"]) .tkn-float { bottom: 104px; }
 .tkn-account { position: relative; }
 .tkn-avatar-dot { position: absolute; top: -4px; right: -4px; pointer-events: none; min-width: 18px; height: 18px; padding: 0 5px; box-sizing: border-box; border-radius: 9px; background: #c2185b; color: #fff; font-size: 12px; font-weight: 800; line-height: 18px; text-align: center; }
 .tkn-menu-badge { margin-left: 8px; min-width: 20px; padding: 0 6px; border-radius: 10px; background: #c2185b; color: #fff; font-size: 12px; font-weight: 800; line-height: 20px; text-align: center; display: inline-block; }
+
+/* H12.2: one sideways chip row. Phones scroll it with a 24 px fade on the right edge; chips never shrink or cut their text. */
+.tk-chips-scroll { display: flex; flex-wrap: nowrap; gap: 8px; overflow-x: auto; scroll-snap-type: x proximity; scrollbar-width: none; -webkit-mask-image: linear-gradient(90deg, #000 calc(100% - 24px), transparent); mask-image: linear-gradient(90deg, #000 calc(100% - 24px), transparent); }
+.tk-chips-scroll::-webkit-scrollbar { display: none; }
+.tk-chips-scroll > * { flex: none; scroll-snap-align: start; white-space: nowrap; }
+@media (max-width: 600px) {
+  .tkh-trust, .tkn-sr-chips, .h714-chips { scroll-snap-type: x proximity; scrollbar-width: none; padding-right: 24px; -webkit-mask-image: linear-gradient(90deg, #000 calc(100% - 24px), transparent); mask-image: linear-gradient(90deg, #000 calc(100% - 24px), transparent); }
+  .tkh-trust > *, .tkn-sr-chips > *, .h714-chips > * { flex: none; scroll-snap-align: start; white-space: nowrap; }
+}
