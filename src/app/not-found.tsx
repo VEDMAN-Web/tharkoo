@@ -3,7 +3,7 @@ import { EmptyState } from "@/components/ui/EmptyState";
 import { NotFoundBeacon } from "@/app/admin/urls/NotFoundBeacon";
 import { NotFoundView, type NotFoundAds } from "@/components/new/NotFoundView";
 import { commonCity } from "@/components/new/home-copy";
-import { homeAdCardData } from "@/components/new/home-ad-data";
+import { listingRowData, rowLabels } from "@/components/new/listing-row-data";
 import { prettyPlace } from "@/lib/format";
 import { getCategories, getFeed } from "@/lib/queries";
 import { searchPath } from "@/lib/urls";
@@ -40,8 +40,9 @@ async function latestAds(categoryNames: Map<string, string>): Promise<NotFoundAd
     chat: t("home.ads.chat"),
     viewAd: t("home.ads.viewAd"),
     age: t("home.ads.age"),
+    row: rowLabels(t),
   },
-    cards: shown.map((ad) => homeAdCardData(ad, categoryNames, paths, t("card.fallbackTitle"))),
+    cards: shown.map((ad) => listingRowData(ad, categoryNames, paths, t("card.fallbackTitle"))),
   };
 }
 

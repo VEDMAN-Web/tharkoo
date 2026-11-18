@@ -1,7 +1,7 @@
 import type { ListingDoc } from "@/lib/models";
 import type { UrlPaths } from "@/lib/urls";
-import { HomeAdCard, type HomeAdLabels } from "./HomeAdCard";
-import { homeAdCardData } from "./home-ad-data";
+import { ListingRow, type ListingRowLabels } from "./ListingRow";
+import { listingRowData } from "./listing-row-data";
 import { SimilarRow } from "./SimilarRow";
 
 export const SIMILAR_ADS_MAX = 12;
@@ -31,14 +31,14 @@ export function SimilarAds({
   prevLabel: string;
   nextLabel: string;
   fallbackTitle: string;
-  labels: HomeAdLabels;
+  labels: ListingRowLabels;
 }) {
   const names = new Map([[categorySlug, categoryName]]);
   return (
     <SimilarRow title={title} allText={allText} allHref={allHref} listLabel={listLabel} prevLabel={prevLabel} nextLabel={nextLabel}>
       {ads.slice(0, SIMILAR_ADS_MAX).map((ad) => (
         <li key={ad.slug}>
-          <HomeAdCard ad={homeAdCardData(ad, names, paths, fallbackTitle)} labels={labels} />
+          <ListingRow ad={listingRowData(ad, names, paths, fallbackTitle)} labels={labels} />
         </li>
       ))}
     </SimilarRow>

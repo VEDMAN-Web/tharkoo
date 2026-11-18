@@ -1,0 +1,117 @@
+"use client";
+
+import { useMemo } from "react";
+import Link from "next/link";
+import { Camera, Check, Eye, Hand } from "lucide-react";
+import { SaveButton } from "@/components/ui/SaveButton";
+import { recordAdClick, useShownCounts } from "@/components/ad/adCountStore";
+import { formatIndianCount } from "@/components/ad/counts-format";
+import { useSellerStatus } from "@/components/availability/sellerStatus";
+import { fillText, makeT } from "@/lib/ui/text";
+import type { HomeAdLabels } from "./HomeAdCard";
+import { cardSlides } from "./card-slides";
+import { SlideNav, SlideTrack } from "./CardSlides";
+import { rowLabels, type ListingRowData, type RowLabels } from "./listing-row-data";
+import { useCardSlider } from "./use-card-slider";
+import "./home-ads.css";
+import "./listing-grid.css";
+
+const DEFAULT_ROW_LABELS = rowLabels(makeT());
+
+export type ListingRowLabels = HomeAdLabels & { row?: RowLabels };
+
+function tierText(tier: ListingRowData["tier"], row: RowLabels) {
+  if (tier === "new") return row.tierNew;
+  if (tier === "top") return row.tierTop;
+  if (tier === "supertop") return row.tierSuperTop;
+  if (tier === "featured") return row.tierFeatured;
+  return "";
+}
+
+function countText(count: number, one: string, many: string) {
+  return fillText(count === 1 ? one : many, { count: formatIndianCount(count) });
+}
+
+/**
+ * H14.1: the listing card in the approved design: a row with the photo on the left and the text on the right.
+ * Used everywhere except the Home page. The photo slider and video are the Home card's (use-card-slider).
+ */
+export function ListingRow({ ad, labels, order = 0 }: { ad: ListingRowData; labels: ListingRowLabels; order?: number }) {
+  const row = labels.row ?? DEFAULT_ROW_LABELS;
+  const seller = useSellerStatus(ad.slug || undefined);
+  const photos = ad.photos;
+  const slides = useMemo(() => cardSlides(photos, ad.videoUrl, ad.videoPoster), [photos, ad.videoUrl, ad.videoPoster]);
+  const online = Boolean(seller && seller.chatOn && seller.status === "online");
+  const { cardRef, trackRef, videoRef, index, calm, onScroll, step } = useCardSlider({ slug: ad.slug, slides, order });
+  const counts = useShownCounts(ad.slug);
+  const tier = tierText(ad.tier, row);
+  const place = ad.area ? `${ad.city}, ${ad.area}` : ad.city;
+  const clicked = () => {
+    if (ad.slug) recordAdClick(ad.slug);
+  };
+
+  return (
+    <article ref={cardRef} className="tk-row" data-tk="listing-row" data-slide={index} data-tier={ad.tier || undefined}>
+      <div className="tk-row-photo">
+        <SlideTrack slides={slides} href={ad.href} trackRef={trackRef} videoRef={videoRef} onScroll={onScroll} onTouch={calm} onClicked={clicked} />
+        {tier ? <span className="tk-row-tier" data-tier={ad.tier}>{tier}</span> : null}
+        {slides.length ? (
+          <span className="tk-row-count" data-tk="row-media-count" aria-hidden="true">
+            <Camera size={12} aria-hidden />
+            {slides.length}
+          </span>
+        ) : null}
+        <SlideNav slides={slides} index={index} photoPrev={labels.photoPrev} photoNext={labels.photoNext} onStep={step} />
+        {online ? (
+          <span className="tkh-ad-online tk-row-online" data-tk="availability" data-status="online">
+            <span aria-hidden />
+            {labels.online}
+          </span>
+        ) : null}
+        <span className="tk-row-mark" aria-hidden>{labels.watermark}</span>
+      </div>
+      <div className="tk-row-body">
+        <div className="tk-row-titlerow">
+          <h3 className="tk-row-title">
+            <Link href={ad.href} prefetch={false} className="tkh-ad-link" onClick={clicked}>
+              {ad.title}
+            </Link>
+          </h3>
+          {ad.slug ? (
+            <SaveButton item={{ id: ad.slug, slug: ad.slug, title: ad.title, place, photo: photos[0] ?? null, at: 0 }} className="tk-row-save" />
+          ) : null}
+        </div>
+        {ad.description ? <p className="tk-row-desc" data-tk="row-desc">{ad.description}</p> : null}
+        <p className="tk-row-tags">
+          {ad.verified ? (
+            <span className="tk-row-tag is-ok" data-tk="row-verified">
+              <Check size={12} aria-hidden />
+              {row.photoVerified}
+            </span>
+          ) : null}
+          <Link href={ad.categoryHref} prefetch={false} className="tk-row-tag is-cat">{ad.categoryName}</Link>
+          {place ? <Link href={ad.cityHref} prefetch={false} className="tk-row-tag is-place">{place}</Link> : null}
+        </p>
+        <div className="tk-row-foot">
+          {ad.showPrice ? (
+            <span className={ad.price ? "tk-row-price" : "tk-row-price is-request"} data-tk="card-price">{ad.price || row.priceRequest}</span>
+          ) : (
+            <span />
+          )}
+          <span className="tk-row-stats" data-tk="row-stats" data-ready={counts ? "true" : "false"}>
+            <span className="tk-row-stat" data-tk="row-views" title={counts ? countText(counts.views, row.viewOne, row.views) : undefined}>
+              <Eye size={15} aria-hidden />
+              <span aria-hidden="true">{counts ? formatIndianCount(counts.views) : "0"}</span>
+              <span className="sr-only">{counts ? countText(counts.views, row.viewOne, row.views) : ""}</span>
+            </span>
+            <span className="tk-row-stat" data-tk="row-clicks" title={counts ? countText(counts.clicks, row.clickOne, row.clicks) : undefined}>
+              <Hand size={15} aria-hidden />
+              <span aria-hidden="true">{counts ? formatIndianCount(counts.clicks) : "0"}</span>
+              <span className="sr-only">{counts ? countText(counts.clicks, row.clickOne, row.clicks) : ""}</span>
+            </span>
+          </span>
+        </div>
+      </div>
+    </article>
+  );
+}

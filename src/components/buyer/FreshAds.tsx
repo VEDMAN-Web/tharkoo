@@ -2,14 +2,13 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { AdCard } from "../ui/AdCard";
 import { ListingCard, ListingGrid } from "../new/ListingCards";
 import { displayTitle } from "@/lib/format";
 import { api } from "@/lib/ui/api";
 import type { ListingDoc } from "@/lib/models";
 import type { DiscoverPage, FeedCard } from "@/server/discover/feed";
 
-/** H7.17: six fresh ads on the user panel home and the chats screen, as the Home or Listing vertical card. */
+/** H7.17: six fresh ads on the user panel home and the chats screen. H14.1: as the approved listing row. */
 
 const SHOWN = 6;
 
@@ -29,8 +28,7 @@ function toAdDoc(card: FeedCard): ListingDoc {
   } as unknown as ListingDoc;
 }
 
-/** `standardCards`: the Home "Latest ads" card (Chats uses it); the default is the panel card. */
-export function FreshAds({ title = "Fresh ads for you", standardCards = false }: { title?: string; standardCards?: boolean }) {
+export function FreshAds({ title = "Fresh ads for you" }: { title?: string }) {
   const [items, setItems] = useState<FeedCard[] | null>(null);
   useEffect(() => {
     let live = true;
@@ -49,23 +47,13 @@ export function FreshAds({ title = "Fresh ads for you", standardCards = false }:
         <h2 id="fresh-heading" className="up-h2">{title}</h2>
         <Link href="/search/" className="up-link">See all ads</Link>
       </div>
-      {standardCards ? (
-        <ListingGrid label={title}>
-          {items.map((card, position) => (
-            <li key={card.slug}>
-              <ListingCard ad={toAdDoc(card)} order={position} />
-            </li>
-          ))}
-        </ListingGrid>
-      ) : (
-        <ul className="up-cards3">
-          {items.map((card) => (
-            <li key={card.slug}>
-              <AdCard ad={toAdDoc(card)} />
-            </li>
-          ))}
-        </ul>
-      )}
+      <ListingGrid label={title}>
+        {items.map((card, position) => (
+          <li key={card.slug}>
+            <ListingCard ad={toAdDoc(card)} order={position} />
+          </li>
+        ))}
+      </ListingGrid>
     </section>
   );
 }
