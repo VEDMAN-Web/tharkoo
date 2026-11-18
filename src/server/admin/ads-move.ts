@@ -23,7 +23,7 @@ export type MoveInput = {
   scope: "selected" | "filter";
   ids?: string[];
   query?: AdsQuery;
-  /** The number of ads, typed, when 20 or more move at once. */
+  /** The number of ads, typed, when 50 or more move at once. */
   confirm?: string;
 };
 

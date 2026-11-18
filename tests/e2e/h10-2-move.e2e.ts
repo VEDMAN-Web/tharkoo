@@ -20,7 +20,7 @@ async function serious(page: Page) {
   return result.violations.filter((item) => item.impact === "serious" || item.impact === "critical").map((item) => `${item.id}: ${item.nodes[0]?.target.join(" ")}`);
 }
 
-/** Two categories of their own and 30 ads in the first, so the list has more than one page of ads that match one filter. */
+/** Two categories of their own and 60 ads in the first, so the list has more than one page of ads that match one filter. */
 async function seed(tag: string) {
   const ids = await withLocalDb(async (db) => {
     const now = new Date();
@@ -29,7 +29,7 @@ async function seed(tag: string) {
     const owner = new ObjectId();
     const sub = new ObjectId();
     await db.collection("listings").insertMany(
-      Array.from({ length: 30 }, (_, index) => ({
+      Array.from({ length: 60 }, (_, index) => ({
         ownerId: owner,
         categoryId: from.insertedId,
         subcategoryId: sub,
@@ -53,7 +53,7 @@ test.describe("H10.2 Move to category", () => {
     test.skip(testInfo.project.name !== "desktop-1440", "sets its own sizes");
   });
 
-  test("select one ad, choose every ad that matches the filter, type the number, move 30 ads to another category, and Undo puts them back (1440 and 390)", async ({ page, context, baseURL }) => {
+  test("select one ad, choose every ad that matches the filter, type the number, move 60 ads to another category, and Undo puts them back (1440 and 390)", async ({ page, context, baseURL }) => {
     test.setTimeout(240_000);
     await signInAdminContext(context, baseURL!);
     const tag = String(Date.now() % 1_000_000);
@@ -71,10 +71,10 @@ test.describe("H10.2 Move to category", () => {
     await dialog.getByRole("button", { name: "Move 1 ad" }).click();
     await expect(dialog.locator('[data-tk="move-error"]')).toContainText("Choose the category");
     await dialog.getByLabel("Move to").selectOption(to);
-    await dialog.getByLabel(/^All 30 ads that match the current filters/).check();
-    await expect(dialog.getByRole("button", { name: "Move 30 ads" })).toBeVisible();
-    await dialog.getByRole("button", { name: "Move 30 ads" }).click();
-    await expect(dialog.locator('[data-tk="move-error"]')).toContainText("Type 30");
+    await dialog.getByLabel(/^All 60 ads that match the current filters/).check();
+    await expect(dialog.getByRole("button", { name: "Move 60 ads" })).toBeVisible();
+    await dialog.getByRole("button", { name: "Move 60 ads" }).click();
+    await expect(dialog.locator('[data-tk="move-error"]')).toContainText("Type 60");
     await shot(page, "move-dialog");
     // The same dialog on a phone.
     await page.setViewportSize({ width: 390, height: 844 });
@@ -83,16 +83,16 @@ test.describe("H10.2 Move to category", () => {
     expect(await serious(page)).toEqual([]);
     await shot(page, "move-dialog");
     await page.setViewportSize({ width: 1440, height: 900 });
-    await dialog.getByLabel("Type 30 to confirm").fill("30");
-    await dialog.getByRole("button", { name: "Move 30 ads" }).click();
-    await expect(page.locator('[data-tk="toast"]')).toContainText(`Moved 30 ads to H102 New ${tag}.`);
-    await expect.poll(async () => await count(to)).toBe(30);
+    await dialog.getByLabel("Type 60 to confirm").fill("60");
+    await dialog.getByRole("button", { name: "Move 60 ads" }).click();
+    await expect(page.locator('[data-tk="toast"]')).toContainText(`Moved 60 ads to H102 New ${tag}.`);
+    await expect.poll(async () => await count(to)).toBe(60);
     expect(await count(from)).toBe(0);
     const moved = await withLocalDb((db) => db.collection("listings").findOne({ slug: `h102-${tag}-3` }, { projection: { subcategoryId: 1 } }));
     expect(moved?.subcategoryId ?? null).toBeNull();
     await shot(page, "moved");
     await page.locator('[data-tk="toast"]').getByRole("button", { name: "Undo" }).click();
-    await expect.poll(async () => await count(from)).toBe(30);
+    await expect.poll(async () => await count(from)).toBe(60);
     expect(await count(to)).toBe(0);
     const back = await withLocalDb((db) => db.collection("listings").findOne({ slug: `h102-${tag}-3` }, { projection: { subcategoryId: 1 } }));
     expect(back?.subcategoryId ?? null).not.toBeNull();

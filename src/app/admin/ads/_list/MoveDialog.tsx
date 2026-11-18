@@ -11,7 +11,7 @@ type Category = { id: string; name: string };
 
 /**
  * "Move to category": pick where the ads go, and whether it is the selected ads or every ad that matches the current filters.
- * Twenty or more at once ask for the number to be typed. The move is one change with one Undo.
+ * Fifty or more at once ask for the number to be typed. The move is one change with one Undo.
  */
 export function MoveDialog({
   open,
