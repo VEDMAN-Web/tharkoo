@@ -106,7 +106,7 @@ test.describe("H9.2 advertiser account home", () => {
       const section = page.locator('[data-tk="discover"]');
       await expect.poll(async () => await section.count(), { timeout: 20_000 }).toBeLessThanOrEqual(1);
       if ((await section.count()) === 1) {
-        const cards = section.locator(".tk-card");
+        const cards = section.locator('[data-tk="listing-row"]');
         expect(await cards.count()).toBeGreaterThan(0);
         // Every card is on the page and visible at once, not faded out until it is scrolled to.
         const faded = await cards.evaluateAll((nodes) => nodes.filter((node) => Number(getComputedStyle(node.closest("[data-reveal]") ?? node).opacity) < 0.99).length);
@@ -117,7 +117,7 @@ test.describe("H9.2 advertiser account home", () => {
         expect(box?.height ?? 0).toBeGreaterThan(120);
         // The section is only as tall as its cards: no blank space under them.
         const gap = await section.evaluate((node) => {
-          const last = Array.from(node.querySelectorAll(".tk-card")).pop()?.getBoundingClientRect().bottom ?? 0;
+          const last = Array.from(node.querySelectorAll('[data-tk="listing-row"]')).pop()?.getBoundingClientRect().bottom ?? 0;
           return node.getBoundingClientRect().bottom - last;
         });
         expect(gap).toBeLessThan(120);
