@@ -8,17 +8,13 @@ import { EmptyIcon } from "./UserPanelShell";
 
 type Cards = Awaited<ReturnType<typeof listOwnCards>>;
 
-<<<<<<< HEAD
 /** H14.3: the real numbers (never the ones an admin sets for display): all-time per ad, and the last 7 days in total. */
 export type RealNumbers = { byAd: Record<string, { views: number; clicks: number }>; week: { views: number; clicks: number } };
 
-export function AnalyticsPanel({ cards, real }: { cards: Cards; real: RealNumbers }) {
+export function AnalyticsPanel({ cards, real, paths }: { cards: Cards; real: RealNumbers; paths: UrlPaths }) {
   const all = Object.values(real.byAd);
   const totalViews = all.reduce((sum, row) => sum + row.views, 0);
   const totalClicks = all.reduce((sum, row) => sum + row.clicks, 0);
-=======
-export function AnalyticsPanel({ cards, paths }: { cards: Cards; paths: UrlPaths }) {
->>>>>>> github/main
   if (cards.total === 0) {
     return (
       <section aria-labelledby="analytics-title" className="up-glass up-panel up-empty" data-tk="analytics-empty">
