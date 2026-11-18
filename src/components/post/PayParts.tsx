@@ -39,8 +39,8 @@ export function PayCard({ fee, price, balance, short, onRecharge, freeAd = null 
   const low = short > 0;
   if (freeAd) {
     return (
-      <section className="tkp-pay is-free" data-tk="pay-card" data-state="free" aria-label={t("post.pay.title")}>
-        <h2 className="tkp-pay-title">{t("post.pay.title")}</h2>
+      <section className="tkp-pay is-free" data-tk="pay-card" data-state="free" aria-label={t("post.pay.titleFree")}>
+        <h2 className="tkp-pay-title">{t("post.pay.titleFree")}</h2>
         <p className="tkp-pay-headline is-free" data-tk="pay-headline">{t("post.pay.free", { number: freeAd.adNumber, total: freeAd.freeAds })}</p>
         <dl className="tkp-pay-rows">
           <div><dt>{t("post.pay.yourBalance")}</dt><dd data-tk="pay-balance">{balance === null ? "..." : creditsText(balance)}</dd></div>

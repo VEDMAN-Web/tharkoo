@@ -5,6 +5,10 @@ import { getPaths } from "@/server/urls/service";
 import { postAdPath } from "@/lib/urls";
 import { DEFAULT_AD_LIFETIME_HOURS } from "@/lib/ads/lifetime-rules";
 import { HowItWorksView } from "@/components/h714/HowItWorksView";
+import { textOverrides } from "@/app/admin/ui-text/store";
+import { readMoneySettings } from "@/server/billing/money-settings";
+import { makeT } from "@/lib/ui/text";
+import { costAnswer } from "@/lib/ui/cost-answer";
 
 const copy = TRUST["how-it-works"];
 
@@ -17,10 +21,6 @@ export const metadata = pageMetadata({
 });
 
 const FAQS = [
-  {
-    q: "What does it cost to post?",
-    a: "Posting an ad costs credits, and the fee is shown before you publish. Chatting and calling the advertiser are free. Video calls and optional boosts use credits.",
-  },
   {
     q: "Do I need a password?",
     a: "No. Enter your email and we send you a 6-digit code. Type it in and you are logged in. Nothing to remember.",
@@ -45,7 +45,8 @@ function packsText(prices: number[]) {
 }
 
 export default async function HowItWorksPage() {
-  const [packs, paths] = await Promise.all([getCreditPacks().catch(() => []), getPaths()]);
+  const [packs, paths, money, texts] = await Promise.all([getCreditPacks().catch(() => []), getPaths(), readMoneySettings(), textOverrides()]);
+  const faqs = [{ q: "What does it cost to post?", a: costAnswer(makeT(texts), money) }, ...FAQS];
   const prices = packs.map((pack) => pack.price).filter((price): price is number => typeof price === "number" && Number.isFinite(price) && price > 0);
-  return <HowItWorksView postAdHref={postAdPath(paths)} faqs={FAQS} packsText={packsText(prices)} />;
+  return <HowItWorksView postAdHref={postAdPath(paths)} faqs={faqs} packsText={packsText(prices)} />;
 }

@@ -23,6 +23,10 @@
     "src/components/h714/HowItWorksView.tsx",
     "src/components/admin/RowFlash.tsx",
     "src/app/admin/layout.tsx",
-    "tests/server/layout/a6-home-baseline.json"
+    "tests/server/layout/a6-home-baseline.json",
+    "src/app/how-it-works/page.tsx",
+    "src/lib/ui/text.ts",
+    "src/lib/ui/cost-answer.ts",
+    "tests/e2e/h11-1-prices.e2e.ts"
   ]
 }
