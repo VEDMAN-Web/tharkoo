@@ -1,0 +1,11 @@
+{
+  "branchPrefix": "haiku/h13.2",
+  "globs": [
+    "docs/ownership/H13.2.json",
+    "src/components/post/copy.ts",
+    "src/lib/ui/text.ts",
+    "src/app/admin/import/ImportForm.tsx",
+    "src/app/admin/media/BatchUpload.tsx",
+    "tests/server/ui/h13-2-photo-wording.test.ts"
+  ]
+}

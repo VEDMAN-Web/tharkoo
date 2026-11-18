@@ -275,7 +275,7 @@ export function ImportForm({ canPublish }: { canPublish: boolean }) {
             <p className="adm-field-help">
               {images.length || clips.length
                 ? `${images.length} photo${images.length === 1 ? "" : "s"} and ${clips.length} video${clips.length === 1 ? "" : "s"} chosen. Name each file in the photos or videos column of the CSV, for example flat1-a.jpg|flat1-b.jpg.`
-                : "Name each file in the photos or videos column of the CSV. Photos up to 8 MB each. Videos mp4, webm or mov, up to 10 MB and 30 seconds each."}
+                : "Name each file in the photos or videos column of the CSV. Photos of any size. Videos mp4, webm or mov, up to 10 MB and 30 seconds each."}
             </p>
             {refused.length ? <Notice kind="warn" title="Not chosen">{refused.slice(0, 8).join("; ")}</Notice> : null}
           </div>
