@@ -1,5 +1,6 @@
 import Link from "next/link";
-import { Icon, PageBand } from "./PageParts";
+import { PageBand } from "./PageParts";
+import "./new-design.css";
 import { bodyParagraphs, readingMinutes } from "./legal-copy";
 import type { BlogCoverData } from "./blog-cover-data";
 
@@ -76,10 +77,12 @@ export function BlogList({
 
       {feature ? (
         <section className="tkp-section" aria-label="Featured article">
-          <Link href={feature.href} className="tkp-feature">
-            <div className="tkp-feature-cover" aria-hidden={feature.cover ? undefined : "true"}>
-              <CoverImage cover={feature.cover} />
-            </div>
+          <Link href={feature.href} className={feature.cover ? "tkp-feature" : "tkp-feature tkp-feature-plain"}>
+            {feature.cover ? (
+              <div className="tkp-feature-cover">
+                <CoverImage cover={feature.cover} />
+              </div>
+            ) : null}
             <div className="tkp-feature-body">
               {feature.category ? <span className="tkp-tag">{feature.category}</span> : null}
               <h2 className="tkp-feature-title">{feature.title}</h2>
@@ -88,9 +91,7 @@ export function BlogList({
                 {feature.date ? `${feature.date} · ` : ""}
                 {feature.minutes} min read
               </span>
-              <span className="tkp-read">
-                Read the article <Icon name="arrow" size={16} color="#C2185B" width={2.4} />
-              </span>
+              <span className="tkp-post-more tkp-post-more-feature">Read article</span>
             </div>
           </Link>
         </section>
@@ -105,9 +106,11 @@ export function BlogList({
           <div className="tkp-grid3">
             {rest.map((card) => (
               <article key={card.href} className="tkp-blog-card m-lift" data-reveal>
-                <div className="tkp-post-cover" aria-hidden={card.cover ? undefined : "true"}>
-                  <CoverImage cover={card.cover} />
-                </div>
+                {card.cover ? (
+                  <div className="tkp-post-cover">
+                    <CoverImage cover={card.cover} />
+                  </div>
+                ) : null}
                 <div className="tkp-post-body">
                   {card.category ? <span className="tkp-post-tag">{card.category}</span> : null}
                   <h3 className="tkp-post-title">{card.title}</h3>

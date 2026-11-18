@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { Icon, PageBand, type IconName } from "./PageParts";
 import { ContactForm } from "./ContactForm";
+import "./new-design.css";
 import { telHref, telegramHref, whatsappHref } from "@/lib/support";
 
 export type ContactInfo = {

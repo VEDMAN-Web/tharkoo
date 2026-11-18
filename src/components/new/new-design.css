@@ -149,3 +149,15 @@
   .tkn .tkn-cat { transition: none; }
   .tkn .tkn-cat:hover { transform: none; }
 }
+
+/* H12.1: public page fixes. Headings use the site weight; blog cards without a cover are text cards; one header pattern. */
+.tkn h1.tkp-h1, .tkn h2.tkp-h2, .tkn .tkp-side-card h3, .tkn .tkp-feature .tkp-feature-title { font-weight: 700; }
+.tkn .tkp-feature.tkp-feature-plain { grid-template-columns: minmax(0, 1fr); }
+.tkn .tkp-feature .tkp-post-more-feature { display: inline-flex; padding: 11px 24px; }
+.tkn .tkp-blog-card .tkp-post-date { display: block; margin-bottom: 14px; }
+.tkn .tkp-blog-card .tkp-post-more { margin-top: auto; }
+.tkn .tkp-after-article { max-width: 1280px; margin: 18px auto 0; padding: 0 24px; box-sizing: border-box; font-size: 15px; font-weight: 700; }
+.tkn .tkp-after-article a { color: #c2185b; }
+@media (max-width: 640px) {
+  .tkn .tkp-after-article { padding: 0 16px; }
+}

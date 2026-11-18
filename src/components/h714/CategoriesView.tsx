@@ -1,6 +1,9 @@
 import Image from "next/image";
 import Link from "next/link";
+import { BlockIcon } from "@/components/blocks/BlockIcon";
 import { H714Page } from "./H714Page";
+
+const CATEGORY_ICONS: Record<string, string> = { dating: "heart", friendship: "heart", "personal-ads": "heart", meetups: "map-pin", jobs: "clock", wellness: "shield" };
 
 export type CategoryCard = { slug: string; name: string; summary: string; href: string; photo: string; photoFocus?: string };
 
@@ -49,19 +52,22 @@ export function CategoriesView({
         <section className="h714-pad" style={{ maxWidth: "1280px", margin: "0 auto", padding: "28px 24px 0", boxSizing: "border-box" }}>
           <div className="h714-g4">
               {categories.map((cat) => (
-                <Link key={cat.slug} href={cat.href} className="h714-cat" style={{ display: "flex", flexDirection: "column", borderRadius: "16px", overflow: "hidden", background: "#fff", border: "1px solid #EAD8F0", textDecoration: "none", boxShadow: "0 2px 14px rgba(45,18,72,.07)" }}>
-                  {" "}
-                  <span className="h714-catimg" style={{ position: "relative", display: "block", background: "linear-gradient(145deg, #FCE4F0, #EDE9FF)" }}>
-                    {cat.photo ? <Image src={cat.photo} alt="" fill sizes="(max-width: 600px) 50vw, 25vw" unoptimized className="h714-photo" style={cat.photoFocus ? { objectPosition: cat.photoFocus } : undefined} /> : null}
-                  </span>
-                  {" "}
-                  <span style={{ display: "flex", alignItems: "center", gap: "12px", padding: "14px 16px", background: "linear-gradient(135deg, #FFF0F7, #FFFFFF)" }}>
-                    <span style={{ flex: "1", minWidth: "0" }}>
-                      <span style={{ display: "block", fontSize: "16px", fontWeight: "700", color: "#110520" }}>{cat.name}</span>
-                      <span style={{ display: "block", fontSize: "12px", color: "#4A2870", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{cat.summary}</span>
+                <Link key={cat.slug} href={cat.href} className="h714-cat" style={{ background: "#fff", border: "1px solid #EAD8F0", boxShadow: "0 2px 14px rgba(45,18,72,.07)" }}>
+                  {cat.photo ? (
+                    <span className="h714-catimg" style={{ position: "relative", display: "block", background: "linear-gradient(145deg, #FCE4F0, #EDE9FF)" }}>
+                      <Image src={cat.photo} alt="" fill sizes="(max-width: 600px) 50vw, 25vw" unoptimized className="h714-photo" style={cat.photoFocus ? { objectPosition: cat.photoFocus } : undefined} />
                     </span>
-                    {" "}
-                    <span style={{ width: "36px", height: "36px", flex: "none", borderRadius: "50%", background: "#fff", display: "flex", alignItems: "center", justifyContent: "center", boxShadow: "0 2px 8px rgba(45,18,72,.08)" }}>
+                  ) : (
+                    <span className="h714-catico" style={{ background: "linear-gradient(145deg, #FCE4F0, #EDE9FF)" }}>
+                      <BlockIcon name={CATEGORY_ICONS[cat.slug] ?? "star"} />
+                    </span>
+                  )}
+                  <span className="h714-catbody" style={{ background: "linear-gradient(135deg, #FFF0F7, #FFFFFF)" }}>
+                    <span className="h714-cattext">
+                      <span className="h714-name">{cat.name}</span>
+                      <span className="h714-desc">{cat.summary}</span>
+                    </span>
+                    <span className="h714-arrow">
                       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#C2185B" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                         <path d="M5 12h14M13 6l6 6-6 6"></path>
                       </svg>

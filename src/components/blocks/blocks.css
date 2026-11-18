@@ -6,7 +6,7 @@
   .tk-only-desktop { display: block; }
 }
 .tk-block { margin: 24px 0; }
-.tk-block h2 { margin: 0 0 12px; font-size: 22px; line-height: 1.25; }
+.tk-block h2 { margin: 0 0 12px; font-size: 22px; line-height: 1.25; font-weight: 700; }
 .tk-block-rich { color: var(--text); line-height: 1.6; }
 .tk-block-rich p { margin: 0 0 12px; }
 .tk-block-rich ul, .tk-block-rich ol { margin: 0 0 12px; padding-left: 22px; }

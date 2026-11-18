@@ -1,4 +1,5 @@
 import mongoose from "mongoose";
+import type { ReactElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 import { invalidateTags } from "@/lib/cache";
@@ -9,6 +10,12 @@ import { Page } from "@/server/models";
 import ProhibitedPage from "@/app/prohibited-items/page";
 import SafetyPage from "@/app/safety/page";
 import { clearMemoryMongo, connectMemoryMongo, disconnectMemoryMongo } from "../../setup/mongo";
+
+async function htmlOf(Page: () => ReactElement): Promise<string> {
+  const element = Page();
+  const render = element.type as (props: unknown) => ReactElement | Promise<ReactElement>;
+  return renderToStaticMarkup(typeof render === "function" ? await render(element.props) : element);
+}
 
 beforeAll(async () => {
   if (mongoose.connection.readyState !== 0) await mongoose.disconnect();
@@ -40,9 +47,9 @@ describe("no placeholder text reaches a visitor (H7.126)", () => {
     }
   });
 
-  it("the Safety and Prohibited items pages render no placeholder", () => {
+  it("the Safety and Prohibited items pages render no placeholder", async () => {
     for (const Page of [SafetyPage, ProhibitedPage]) {
-      const html = renderToStaticMarkup(Page());
+      const html = await htmlOf(Page);
       expect(html.toLowerCase()).not.toContain("[placeholder");
       expect(html.toLowerCase()).not.toContain("ved to confirm");
     }

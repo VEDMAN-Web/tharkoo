@@ -1,6 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import type { CSSProperties, ReactNode } from "react";
+import { BlockIcon } from "@/components/blocks/BlockIcon";
 import { H714Page } from "./H714Page";
 
 export type CityCard = { slug: string; name: string; summary: string; href: string; photo: string; photoFocus?: string };
@@ -10,8 +11,8 @@ export type StateLetter = { letter: string; href: string };
 const CARD_STYLE: CSSProperties = { padding: "20px", borderRadius: "16px", border: "1px solid #EAD8F0", boxShadow: "0 2px 14px rgba(45,18,72,.07)" };
 const CARD_BACKGROUNDS = ["linear-gradient(135deg, #FFF0F7, #FFFFFF)", "linear-gradient(135deg, #F5F0FF, #FFFFFF)", "linear-gradient(135deg, #FFF8EC, #FFFFFF)", "linear-gradient(135deg, #F0FDF4, #FFFFFF)", "linear-gradient(135deg, #F0F9FF, #FFFFFF)", "linear-gradient(135deg, #FFF0F7, #FFFFFF)"];
 const HEAD_STYLE: CSSProperties = { display: "flex", justifyContent: "space-between", alignItems: "baseline", gap: "10px" };
-const H3_STYLE: CSSProperties = { margin: "0", fontSize: "18px", color: "#110520" };
-const COUNT_STYLE: CSSProperties = { fontSize: "12px", fontWeight: "700", color: "#C2185B", background: "#FDF0F7", borderRadius: "999px", padding: "3px 10px" };
+const H3_STYLE: CSSProperties = { margin: "0", minWidth: "0", fontSize: "18px", color: "#110520" };
+const COUNT_STYLE: CSSProperties = { flex: "none", whiteSpace: "nowrap", fontSize: "12px", fontWeight: "700", color: "#C2185B", background: "#FDF0F7", borderRadius: "999px", padding: "3px 10px" };
 const CHIPS_STYLE: CSSProperties = { display: "flex", gap: "6px", flexWrap: "wrap", margin: "14px 0 16px" };
 const CITY_CHIP_STYLE: CSSProperties = { minHeight: "34px", display: "inline-flex", alignItems: "center", padding: "0 14px", borderRadius: "999px", background: "#fff", border: "1px solid #EAD8F0", color: "#4A2870", fontSize: "13px", fontWeight: "600", textDecoration: "none" };
 const ALL_STYLE: CSSProperties = { display: "inline-flex", alignItems: "center", gap: "6px", minHeight: "32px", fontSize: "14px", fontWeight: "700", textDecoration: "none" };
@@ -80,19 +81,22 @@ export function CitiesView({
           </div>
           <div className="h714-g4">
               {topCities.map((city) => (
-                <Link key={city.slug} href={city.href} className="h714-cat" style={{ display: "flex", flexDirection: "column", borderRadius: "16px", overflow: "hidden", background: "#fff", border: "1px solid #EAD8F0", textDecoration: "none", boxShadow: "0 2px 14px rgba(45,18,72,.07)" }}>
-                  {" "}
-                  <span className="h714-catimg" style={{ position: "relative", display: "block", background: "linear-gradient(145deg, #ECFDF5, #E0F2FE)" }}>
-                    {city.photo ? <Image src={city.photo} alt="" fill sizes="(max-width: 600px) 50vw, 25vw" unoptimized className="h714-photo" style={city.photoFocus ? { objectPosition: city.photoFocus } : undefined} /> : null}
-                  </span>
-                  {" "}
-                  <span style={{ display: "flex", alignItems: "center", gap: "12px", padding: "14px 16px", background: "linear-gradient(135deg, #F0FDF4, #FFFFFF)" }}>
-                    <span style={{ flex: "1", minWidth: "0" }}>
-                      <span style={{ display: "block", fontSize: "16px", fontWeight: "700", color: "#110520" }}>{city.name}</span>
-                      <span style={{ display: "block", fontSize: "12px", color: "#4A2870", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{city.summary}</span>
+                <Link key={city.slug} href={city.href} className="h714-cat" style={{ background: "#fff", border: "1px solid #EAD8F0", boxShadow: "0 2px 14px rgba(45,18,72,.07)" }}>
+                  {city.photo ? (
+                    <span className="h714-catimg" style={{ position: "relative", display: "block", background: "linear-gradient(145deg, #ECFDF5, #E0F2FE)" }}>
+                      <Image src={city.photo} alt="" fill sizes="(max-width: 600px) 50vw, 25vw" unoptimized className="h714-photo" style={city.photoFocus ? { objectPosition: city.photoFocus } : undefined} />
                     </span>
-                    {" "}
-                    <span style={{ width: "36px", height: "36px", flex: "none", borderRadius: "50%", background: "#fff", display: "flex", alignItems: "center", justifyContent: "center", boxShadow: "0 2px 8px rgba(45,18,72,.08)" }}>
+                  ) : (
+                    <span className="h714-catico" style={{ background: "linear-gradient(145deg, #ECFDF5, #E0F2FE)" }}>
+                      <BlockIcon name={"map-pin"} />
+                    </span>
+                  )}
+                  <span className="h714-catbody" style={{ background: "linear-gradient(135deg, #F0FDF4, #FFFFFF)" }}>
+                    <span className="h714-cattext">
+                      <span className="h714-name">{city.name}</span>
+                      <span className="h714-desc">{city.summary}</span>
+                    </span>
+                    <span className="h714-arrow">
                       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#C2185B" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                         <path d="M5 12h14M13 6l6 6-6 6"></path>
                       </svg>
