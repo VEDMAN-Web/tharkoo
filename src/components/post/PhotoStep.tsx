@@ -222,7 +222,9 @@ export function PhotoStep({
               }}
             />
           </label>
-          <label className="tkp-btn tkp-btn-camera" aria-disabled={busy}>
+        </div>
+        <div className="tkp-drop-more" data-tk="photo-more">
+          <label className="tkp-btn tkp-btn-small tkp-btn-camera" aria-disabled={busy}>
             <Camera size={18} aria-hidden="true" focusable="false" />
             {t("post.photo.takePhoto")}
             <input
@@ -239,7 +241,7 @@ export function PhotoStep({
               }}
             />
           </label>
-          <label className="tkp-btn" aria-disabled={busy || atLimit}>
+          <label className="tkp-btn tkp-btn-small" aria-disabled={busy || atLimit}>
             {t("post.photo.addVideo")}
             <input
               type="file"
@@ -255,20 +257,15 @@ export function PhotoStep({
             />
           </label>
         </div>
-        <p className="tkp-drop-rule">
+        <p className="tkp-drop-rule" data-tk="photo-rule">
           {copy.photoRules.items[0] ?? t("post.photo.photoRuleFallback")}
-          <InfoPopover id="post-photos" label={t("post.photo.photoRulesLabel")}>
+          <InfoPopover id="post-rules" label={t("post.photo.rulesLabel")}>
             <strong>{t("post.photo.photoRulesTitle")}</strong>
             <ul>
               {UPLOAD_RULES.adPhotos.details.map((row) => (
                 <li key={row}>{row}</li>
               ))}
             </ul>
-          </InfoPopover>
-        </p>
-        <p className="tkp-drop-rule" data-tk="video-rule">
-          <span>{t("post.photo.videoRule")}</span>
-          <InfoPopover id="post-videos" label={t("post.photo.videoRulesLabel")}>
             <strong>{t("post.photo.videoRulesTitle")}</strong>
             <ul>
               {UPLOAD_RULES.postVideos.details.map((row) => (
