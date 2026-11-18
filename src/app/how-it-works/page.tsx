@@ -5,6 +5,9 @@ import { getPaths } from "@/server/urls/service";
 import { postAdPath } from "@/lib/urls";
 import { DEFAULT_AD_LIFETIME_HOURS } from "@/lib/ads/lifetime-rules";
 import { HowItWorksView } from "@/components/h714/HowItWorksView";
+import { taggedPicture } from "@/server/layout/page-picture";
+
+const PICTURE_TAG = "how-it-works";
 
 const copy = TRUST["how-it-works"];
 
@@ -45,7 +48,7 @@ function packsText(prices: number[]) {
 }
 
 export default async function HowItWorksPage() {
-  const [packs, paths] = await Promise.all([getCreditPacks().catch(() => []), getPaths()]);
+  const [packs, paths, photo] = await Promise.all([getCreditPacks().catch(() => []), getPaths(), taggedPicture(PICTURE_TAG).catch(() => null)]);
   const prices = packs.map((pack) => pack.price).filter((price): price is number => typeof price === "number" && Number.isFinite(price) && price > 0);
-  return <HowItWorksView postAdHref={postAdPath(paths)} faqs={FAQS} packsText={packsText(prices)} />;
+  return <HowItWorksView postAdHref={postAdPath(paths)} faqs={FAQS} packsText={packsText(prices)} photo={photo} />;
 }

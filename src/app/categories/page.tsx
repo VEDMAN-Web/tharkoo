@@ -5,6 +5,7 @@ import { getCategories, listingCountsByCategoryCity } from "@/lib/queries";
 import { categoriesPath, categoryPath, postAdPath, searchPath } from "@/lib/urls";
 import { pageMetadata } from "@/lib/ui/meta";
 import { getPaths } from "@/server/urls/service";
+import { withCategoryIcons } from "@/server/categories/icons";
 import { readShellConfig } from "@/server/site-links/shell-config";
 import { photoFocusOf, photoOf } from "@/components/h714/photo";
 import { CategoriesView, type CategoryCard } from "@/components/h714/CategoriesView";
@@ -19,7 +20,7 @@ export const metadata = pageMetadata({
 
 export default async function CategoriesPage() {
   const [categories, counts, paths, shell] = await Promise.all([
-    getCategories().catch(() => []),
+    getCategories().then(withCategoryIcons).catch(() => []),
     listingCountsByCategoryCity().catch(() => []),
     getPaths(),
     readShellConfig(),
@@ -34,7 +35,7 @@ export default async function CategoriesPage() {
       const slug = cat.slug as string;
       const blurb = (cat.homeBlurb || cat.description || "").replace(/\s+/g, " ").trim();
       const ads = `${(adsByCategory.get(slug) ?? 0).toLocaleString("en-IN")} ads`;
-      return { slug, name: cat.name || slug, summary: [blurb, ads].filter(Boolean).join(" · "), href: categoryPath(slug), photo: photoOf(shell, "category", slug), photoFocus: photoFocusOf(shell, "category", slug) };
+      return { slug, name: cat.name || slug, icon: cat.icon, summary: [blurb, ads].filter(Boolean).join(" · "), href: categoryPath(slug), photo: photoOf(shell, "category", slug), photoFocus: photoFocusOf(shell, "category", slug) };
     });
   const crumbs = [
     { name: "Tharkoo India", path: "/" },

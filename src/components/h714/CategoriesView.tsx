@@ -1,11 +1,18 @@
+import { createElement } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { BlockIcon } from "@/components/blocks/BlockIcon";
+import { categoryIconFor } from "@/lib/category-icons";
 import { H714Page } from "./H714Page";
 
-const CATEGORY_ICONS: Record<string, string> = { dating: "heart", friendship: "heart", "personal-ads": "heart", meetups: "map-pin", jobs: "clock", wellness: "shield" };
+export type CategoryCard = { slug: string; name: string; icon?: string; summary: string; href: string; photo: string; photoFocus?: string };
 
-export type CategoryCard = { slug: string; name: string; summary: string; href: string; photo: string; photoFocus?: string };
+function CategoryIcon({ icon }: { icon?: string }) {
+  return (
+    <span className="tk-block-icon" aria-hidden="true">
+      {createElement(categoryIconFor(icon, ""), { size: 20 })}
+    </span>
+  );
+}
 
 export function CategoriesView({
   categories,
@@ -59,7 +66,7 @@ export function CategoriesView({
                     </span>
                   ) : (
                     <span className="h714-catico" style={{ background: "linear-gradient(145deg, #FCE4F0, #EDE9FF)" }}>
-                      <BlockIcon name={CATEGORY_ICONS[cat.slug] ?? "star"} />
+                      <CategoryIcon icon={cat.icon} />
                     </span>
                   )}
                   <span className="h714-catbody" style={{ background: "linear-gradient(135deg, #FFF0F7, #FFFFFF)" }}>
