@@ -13,7 +13,7 @@ export function StepsBlock({ title, items = [] }: { title?: string; items?: Item
       {title ? <h2>{title}</h2> : null}
       <ol>
         {items.map((item) => (
-          <li key={item.title}>
+          <li key={item.title} data-reveal>
             <BlockIcon name={item.icon} />
             <span>
               <strong>{item.title}</strong>

@@ -72,7 +72,7 @@ export async function CategoryGridBlock({ title, intro, items = [], columnsDeskt
           const picks = picksFor(item, cat);
           const photo = item.image ? safeHref(item.image.src) : "";
           return (
-            <article key={item.categorySlug} className="tk-home-card" data-tk="home-card">
+            <article key={item.categorySlug} className="tk-home-card m-lift" data-tk="home-card">
               <Link href={categoryPath(cat.slug || "")} className="tk-home-photo" data-focus={item.focus ?? "center"} prefetch={false}>
                 <SmartImage
                   src={photo || `/placeholders/${cat.slug}/01.webp`}

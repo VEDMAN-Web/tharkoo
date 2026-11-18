@@ -217,8 +217,12 @@ test.describe("H11.1b clear prices", () => {
         await page.goto("/u/account/");
         await expect(page.locator('[data-tk="coin-price-line"]')).toHaveText("3 free ads left, then ₹200 per ad");
         await shot(page, "account-home");
-        await page.evaluate(() => window.dispatchEvent(new CustomEvent("tk-recharge-open", { detail: {} })));
         const sheet = page.locator("[data-tk=recharge-sheet]");
+        // The opener listens once the page has hydrated; a single early event is lost, so send it again until the sheet shows.
+        await expect(async () => {
+          await page.evaluate(() => window.dispatchEvent(new CustomEvent("tk-recharge-open", { detail: {} })));
+          await expect(sheet).toBeVisible({ timeout: 1500 });
+        }).toPass({ timeout: 20_000 });
         await expect(sheet.locator('[data-tk="recharge-price-line"]')).toHaveText("3 free ads left, then ₹200 per ad");
         await expect(sheet.locator('[data-tk="pack-ads"]').first()).toContainText("Enough for");
         expect(await hasHorizontalScroll(page)).toBe(false);
