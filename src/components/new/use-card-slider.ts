@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState, type MutableRefObject } from "react";
+import { useCallback, useEffect, useRef, useState, type MutableRefObject, type RefObject } from "react";
 import { watchAdCard } from "@/components/ad/adCountStore";
 import { CALM_MS, VIDEO_CAP_MS, VISIBLE_SHARE, nextSlide, slideDelay, type CardSlide } from "./card-slides";
 import { releaseVideo, takeVideo } from "./card-video-slots";
@@ -24,19 +24,20 @@ function dataSaver() {
  * `anchored`: the hover pop-out is open; its video element (`popVideoRef`) plays instead of the card's own.
  */
 export function useCardSlider({
+  cardRef,
   slug,
   slides,
   order,
   anchored = false,
   popVideoRef,
 }: {
+  cardRef: RefObject<HTMLElement | null>;
   slug: string;
   slides: CardSlide[];
   order: number;
   anchored?: boolean;
   popVideoRef?: MutableRefObject<HTMLVideoElement | null>;
 }) {
-  const cardRef = useRef<HTMLElement>(null);
   const trackRef = useRef<HTMLDivElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
   const settleTimer = useRef<number | null>(null);
@@ -51,7 +52,7 @@ export function useCardSlider({
     const el = cardRef.current;
     if (!el || !slug) return;
     return watchAdCard(el, slug);
-  }, [slug]);
+  }, [cardRef, slug]);
 
   useEffect(() => {
     const el = cardRef.current;
@@ -59,7 +60,7 @@ export function useCardSlider({
     const observer = new IntersectionObserver(([entry]) => setInView(Boolean(entry?.isIntersecting)), { threshold: VISIBLE_SHARE });
     observer.observe(el);
     return () => observer.disconnect();
-  }, []);
+  }, [cardRef]);
 
   useEffect(() => {
     const onVisibility = () => setTabHidden(document.visibilityState === "hidden");
@@ -144,5 +145,5 @@ export function useCardSlider({
     [calm, slides.length],
   );
 
-  return { cardRef, trackRef, videoRef, index, setIndex, calm, onScroll, step };
+  return { trackRef, videoRef, index, setIndex, calm, onScroll, step };
 }
