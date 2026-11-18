@@ -1,0 +1,13 @@
+{
+  "branchPrefix": "haiku/h9.6b",
+  "globs": [
+    "docs/ownership/H9.6b.json",
+    "progress/H9.6b.md",
+    "src/components/account/AccountTools.tsx",
+    "src/components/ui/HelpCard.tsx",
+    "src/components/PathChrome.tsx",
+    "tests/e2e/h9-6b-coupons.e2e.ts",
+    "tests/e2e/money.e2e.ts",
+    "tests/e2e/h7-112-history.e2e.ts"
+  ]
+}

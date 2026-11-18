@@ -1,16 +1,15 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { Ticket } from "lucide-react";
 import { api, friendlyError, hasSessionHint } from "@/lib/ui/api";
 import { VendorShell } from "../vendor/VendorShell";
+import { FaqList } from "../h714/FaqList";
 import { EmptyState } from "../ui/EmptyState";
 import { HelpCard } from "../ui/HelpCard";
 
 export function CouponRedeem() {
   const [code, setCode] = useState("");
   const [message, setMessage] = useState("");
-  const [open, setOpen] = useState("");
   async function redeem(event: React.FormEvent) {
     event.preventDefault();
     const res = await api("/api/coupons/redeem", { method: "POST", body: JSON.stringify({ code }) });
@@ -18,8 +17,8 @@ export function CouponRedeem() {
   }
   const faqs = useMemo(
     () => [
-      ["How to use a coupon?", "Use the coupon box on this page or on the Buy Credits page."],
-      ["Where do I see my coupons?", "Coupon credit appears in the wallet history."],
+      { q: "How do I use a coupon?", a: "Type the code in the box on this page and press Apply." },
+      { q: "Where do I see my coupon credit?", a: "Coupon credit appears in your credits history." },
     ],
     [],
   );
@@ -29,22 +28,15 @@ export function CouponRedeem() {
         <h1 id="coupons-heading" className="up-h2">Coupons</h1>
       </div>
       <form onSubmit={redeem}>
-        <p className="t-small"><Ticket size={14} /> Do you have a Coupon?</p>
+        <label htmlFor="coupon-code" className="t-small" style={{ display: "block", marginBottom: 6, fontWeight: 700 }}>Have a coupon?</label>
         <div style={{ display: "flex", gap: 8 }}>
-          <input aria-label="Insert coupon code" placeholder="Insert coupon code" value={code} onChange={(event) => setCode(event.target.value)} style={{ flex: 1, minHeight: 44, border: "1px solid var(--border)", borderRadius: 8, padding: "0 12px" }} />
-          <button type="submit" className="tk-btn tk-btn-outline-primary" data-tk="apply-coupon">APPLY</button>
+          <input id="coupon-code" placeholder="Coupon code" autoComplete="off" value={code} onChange={(event) => setCode(event.target.value)} style={{ flex: 1, minHeight: 44, border: "1px solid var(--border)", borderRadius: 8, padding: "0 12px" }} />
+          <button type="submit" className="tk-btn tk-btn-outline-primary" data-tk="apply-coupon">Apply</button>
         </div>
         <p aria-live="polite" className="t-small">{message}</p>
       </form>
-      <p style={{ textAlign: "center", marginTop: 50, color: "var(--muted)" }}>Frequently asked questions</p>
-      {faqs.map(([q, a]) => (
-        <div key={q}>
-          <button type="button" className="tk-acc" aria-expanded={open === q} onClick={() => setOpen(open === q ? "" : q)}>
-            {q} <span>{open === q ? "▴" : "▾"}</span>
-          </button>
-          {open === q ? <p className="t-small">{a}</p> : null}
-        </div>
-      ))}
+      <h2 className="up-h2" style={{ fontSize: 16, marginTop: 24 }}>Frequently asked questions</h2>
+      <FaqList items={faqs} />
       <HelpCard />
     </section>
   );
