@@ -213,7 +213,7 @@ export type VendorView = {
 };
 
 export type UserDetail = {
-  user: UserRow & { phone: string | null; seller: boolean; whatsapp: string | null };
+  user: UserRow & { phone: string | null; seller: boolean; whatsapp: string | null; extraFreeAds: number };
   vendor: VendorView | null;
   /** null when the viewer may not see money. */
   balance: number | null;
@@ -257,6 +257,7 @@ export async function getUserDetail(id: string, roles: readonly string[]): Promi
       phone: phone?.phone ?? null,
       seller: Boolean(doc.sellerProfile),
       whatsapp: doc.sellerProfile?.whatsapp ?? null,
+      extraFreeAds: typeof doc.extraFreeAds === "number" ? doc.extraFreeAds : 0,
     },
     balance,
     ads: ads.map((ad) => ({ id: String(ad._id), title: ad.title, status: ad.status, slug: ad.slug ?? null, createdAt: ad.createdAt ? new Date(ad.createdAt).toISOString() : null })),

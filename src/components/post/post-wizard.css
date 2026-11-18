@@ -344,6 +344,9 @@ body:has(.tkp-post) .tkn-footer, body:has(.tkp-post) .tkn-chat-bubble { display:
 .tkn .tkp-post .tkp-pay { padding: 10px 14px; border: 1.5px solid #ead8f0; border-radius: 14px; background: #fff; }
 .tkn .tkp-post .tkp-pay.is-low { border-color: #f59e0b; background: #fffbeb; }
 .tkn .tkp-post .tkp-pay-title { margin: 0 0 4px; font-size: 14px; font-weight: 700; color: #1e0b38; }
+.tkn .tkp-post .tkp-pay-headline { margin: 2px 0 8px; font-size: 22px; line-height: 28px; font-weight: 800; color: #110520; }
+.tkn .tkp-post .tkp-pay-headline.is-free { color: #0b6b3c; }
+.tkn .tkp-post .tkp-pay.is-free { border-color: #a7e3c4; background: #effaf4; }
 .tkn .tkp-post .tkp-pay-rows { margin: 0; }
 .tkn .tkp-post .tkp-pay-rows > div { display: flex; justify-content: space-between; gap: 12px; padding: 3px 0; font-size: 14px; }
 .tkn .tkp-post .tkp-pay-rows dt { color: #4a2870; }

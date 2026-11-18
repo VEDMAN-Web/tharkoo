@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { adminContext } from "@/server/admin/context";
 import { closeAccount, editProfile, editVendor, removeVerifiedBadge, type EditResult, type VendorInput } from "@/server/admin/user-profile";
+import { setExtraFreeAds } from "@/server/admin/user-free-ads";
 import { HttpError } from "@/server/http";
 
 /** H7.156: server actions behind the profile, vendor, badge and close account buttons of the Users drawer. Each answers { ok } and never throws a stack. */
@@ -51,4 +52,12 @@ export async function removeBadgeAction(input: { userId: string; reason: string 
 
 export async function closeAccountAction(input: { userId: string; reason: string; confirm: string }): Promise<ProfileResult> {
   return run((ctx) => closeAccount(ctx, { userId: String(input.userId), reason: String(input.reason ?? ""), confirm: String(input.confirm ?? "") }));
+}
+
+/** H11.1b: "Extra free ads" for one person, on top of the site setting. Admin only (the server checks the permission), audited, one Undo. */
+export async function setExtraFreeAdsAction(input: { userId: string; extra: number }): Promise<ProfileResult> {
+  return run(async (ctx) => {
+    const done = await setExtraFreeAds(ctx, { userId: String(input.userId), extra: Number(input.extra) });
+    return { eventId: done.eventId, undoUntil: done.undoUntil, summary: `Extra free ads set to ${done.extra}.` };
+  });
 }

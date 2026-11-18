@@ -33,6 +33,7 @@ export function UserPanelHome({
   packs,
   profile = null,
   adsLeft = null,
+  priceLine = null,
 }: {
   summary: PanelSummary;
   ads: Ads | null;
@@ -40,6 +41,8 @@ export function UserPanelHome({
   profile?: ReturnType<typeof profileProgress> | null;
   /** Whole ads the credits pay for, or null while posting is free. */
   adsLeft?: number | null;
+  /** "2 free ads left, then ₹200 per ad", or null while posting is free for everyone. */
+  priceLine?: string | null;
 }) {
   const headline = ads ? homeHeadline(ads) : null;
   const coinsCard = (
@@ -48,6 +51,7 @@ export function UserPanelHome({
         {summary.signedIn ? (
           <>
             <p className="up-coins-value" data-tk="coin-balance">{t("panel.coins.balance", { count: summary.balance })}</p>
+            {priceLine ? <p className="up-coins-worth" data-tk="coin-price-line">{priceLine}</p> : null}
             {adsLeft !== null ? <p className="up-coins-worth" data-tk="coin-ads">{`About ${adsLeft} ${adsLeft === 1 ? "ad" : "ads"}`}</p> : null}
           </>
         ) : (

@@ -1,0 +1,40 @@
+/* H11.1b: the "What things cost" card. Big readable prices (22 px and up), short words, and the same pink and green as the pack picker. */
+.tkc { box-sizing: border-box; padding: 20px; border: 1px solid #f1d5e6; border-radius: 20px; background: #fff; color: #1e0b38; box-shadow: 0 6px 24px rgba(194, 24, 91, 0.06); font-family: var(--tkn-font, "Plus Jakarta Sans", system-ui, sans-serif); }
+.tkc-title { margin: 0 0 14px; font-size: 20px; line-height: 26px; font-weight: 800; color: #110520; }
+.tkc-list { margin: 0; padding: 0; list-style: none; }
+.tkc-row { display: grid; grid-template-columns: 52px minmax(0, 1fr) auto; gap: 12px; align-items: center; padding: 14px 0; border-top: 1px solid #f1d5e6; }
+.tkc-row:first-child { border-top: 0; padding-top: 0; }
+.tkc-ic { width: 52px; height: 52px; border-radius: 16px; display: grid; place-items: center; background: #fdf2f8; color: #c2185b; }
+.tkc-name { margin: 0; font-size: 17px; line-height: 22px; font-weight: 800; }
+.tkc-what { margin: 2px 0 0; font-size: 14px; line-height: 19px; color: #5b3d7a; }
+.tkc-amt { display: flex; flex-direction: column; align-items: flex-end; text-align: right; }
+.tkc-rs { font-size: 22px; line-height: 28px; font-weight: 800; white-space: nowrap; }
+.tkc-cr { font-size: 13px; line-height: 18px; color: #5b3d7a; white-space: nowrap; }
+.tkc-free { display: inline-block; padding: 3px 12px; border-radius: 999px; background: #e8f7ef; color: #0b6b3c; font-size: 16px; line-height: 24px; font-weight: 800; }
+.tkc-left { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 8px; margin: 8px 0 0; font-size: 14px; line-height: 19px; font-weight: 700; color: #0b6b3c; }
+.tkc-dots { display: inline-flex; gap: 5px; }
+.tkc-dot { width: 14px; height: 14px; border-radius: 50%; background: #0f8a4f; }
+.tkc-dot.is-used { background: #cfc3d8; }
+.tkc-rate { margin: 14px 0 0; padding: 10px 14px; border-radius: 14px; background: #fdf2f8; text-align: center; font-size: 15px; line-height: 22px; font-weight: 700; }
+
+/* The pack picker and the price card side by side on a computer, the card first on a phone. */
+.tkc-wrap { container: tkc / inline-size; }
+.tkc-duo { display: grid; gap: 18px; }
+@container tkc (min-width: 720px) {
+  .tkc-duo.has-card { grid-template-columns: minmax(0, 1fr) minmax(0, 1.15fr); align-items: start; }
+}
+
+/* The packs: rupees first, then what you get, then what it buys. */
+.tkp .tkr-pack.is-rich { min-height: 44px; gap: 4px; padding: 14px 16px; border-radius: 18px; }
+.tkp .tkr-pack.is-rich .tkp-pay { font-size: 24px; line-height: 30px; font-weight: 800; color: #110520; }
+.tkp .tkr-pack.is-rich .tkp-get { font-size: 15px; line-height: 21px; color: #5b3d7a; }
+.tkp .tkr-pack.is-rich .tkp-get strong { color: #110520; }
+.tkp .tkr-pack.is-rich .tkp-bonus { margin-left: 6px; font-style: normal; font-weight: 800; color: #0b6b3c; }
+.tkp .tkr-pack.is-rich .tkp-enough { margin-top: 4px; font-size: 13px; line-height: 18px; color: #5b3d7a; }
+.tkp .tkr-pack.is-rich .tkp-enough strong { color: #110520; }
+@media (max-width: 599px) {
+  .tkp .tkr-packs { grid-template-columns: minmax(0, 1fr); gap: 12px; }
+  .tkc-row { grid-template-columns: 44px minmax(0, 1fr) auto; gap: 10px; }
+  .tkc-ic { width: 44px; height: 44px; border-radius: 14px; }
+}
+.tkr-line { margin: 4px 0 0; font-size: 14px; line-height: 20px; font-weight: 700; color: #0b6b3c; }

@@ -1,3 +1,4 @@
+import type { ReactNode } from "react";
 import Link from "next/link";
 import { H714Page } from "./H714Page";
 import { Prose } from "@/components/ui/Prose";
@@ -13,6 +14,7 @@ export function HelpArticleView({
   related,
   body,
   contactHref,
+  extra = null,
 }: {
   helpRoot: string;
   section: string;
@@ -22,6 +24,8 @@ export function HelpArticleView({
   related: RelatedArticle[];
   body: string;
   contactHref: string;
+  /** Live content shown after the article text, such as the "What things cost" card on the credits help page. */
+  extra?: ReactNode;
 }) {
   return (
     <H714Page>
@@ -58,6 +62,7 @@ export function HelpArticleView({
           </aside>
           <article className="h714-art" style={{ padding: "32px 36px", borderRadius: "20px", background: "#fff", border: "1px solid #EAD8F0", boxShadow: "0 2px 14px rgba(45,18,72,.07)", maxWidth: "760px" }}>
             <Prose className="whitespace-pre-wrap">{body}</Prose>
+            {extra ? <div style={{ marginTop: "24px" }} data-tk="help-extra">{extra}</div> : null}
             {" "}
             <div style={{ marginTop: "30px", padding: "18px 20px", borderRadius: "16px", background: "#FDF6FB", border: "1px solid #F3E8F7", display: "flex", justifyContent: "space-between", alignItems: "center", gap: "12px", flexWrap: "wrap" }}>
               <span style={{ fontSize: "15px", fontWeight: "600", color: "#3B1F55" }}>Was this helpful?</span>

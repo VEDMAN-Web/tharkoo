@@ -21,7 +21,7 @@ export function CoinsPanel({ summary, packs }: { summary: PanelSummary; packs: P
     );
   }
 
-  const aside = (
+  const balanceCard = (
     <section aria-labelledby="coins-heading" className="up-coins-card">
       <h2 id="coins-heading" className="up-coins-label">{t("panel.coins.title")}</h2>
       <p className="up-coins-value" data-tk="coin-balance">{t("panel.coins.balance", { count: balance })}</p>
@@ -30,12 +30,13 @@ export function CoinsPanel({ summary, packs }: { summary: PanelSummary; packs: P
   );
 
   return (
-    <UserPanelShell active="coins" summary={summary} aside={aside}>
+    <UserPanelShell active="coins" summary={summary}>
+      {balanceCard}
       <section aria-labelledby="buy-heading" className="up-glass up-panel">
         <div className="up-panel-head">
           <h1 id="buy-heading" className="up-h2">{t("panel.coins.buy")}</h1>
         </div>
-        {packs.length === 0 ? <p className="up-muted">{t("recharge.empty")}</p> : <PackPicker returnTo="/u/account/credits/" />}
+        {packs.length === 0 ? <p className="up-muted">{t("recharge.empty")}</p> : <PackPicker returnTo="/u/account/credits/" withPrices />}
       </section>
     </UserPanelShell>
   );

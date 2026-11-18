@@ -12,12 +12,15 @@ export function MoneyCard({ initial, canEdit }: { initial: MoneySettings; canEdi
   const answer = useAnswer();
   const [fee, setFee] = useState(String(initial.postingFeeCredits));
   const [price, setPrice] = useState(String(initial.creditPriceInr));
-  const [errors, setErrors] = useState<{ feeError?: string; priceError?: string }>({});
+  const [free, setFree] = useState(String(initial.freeAdsPerAccount));
+  const [errors, setErrors] = useState<{ feeError?: string; priceError?: string; freeError?: string }>({});
   const [busy, setBusy] = useState(false);
   const [confirmOff, setConfirmOff] = useState(false);
 
-  const dirty = fee !== String(initial.postingFeeCredits) || price !== String(initial.creditPriceInr);
+  const dirty = fee !== String(initial.postingFeeCredits) || price !== String(initial.creditPriceInr) || free !== String(initial.freeAdsPerAccount);
   const parsed = checkNumbers(fee, price);
+  const freeValue = Number(free.trim());
+  const freeOk = free.trim() !== "" && Number.isInteger(freeValue) && freeValue >= 0 && freeValue <= 1000;
 
   async function save(values: Partial<MoneySettings>, message: string) {
     setBusy(true);
@@ -27,17 +30,18 @@ export function MoneyCard({ initial, canEdit }: { initial: MoneySettings; canEdi
   }
 
   async function saveNumbers() {
-    if (!parsed.ok) {
-      setErrors({ feeError: parsed.feeError, priceError: parsed.priceError });
+    if (!parsed.ok || !freeOk) {
+      setErrors({ feeError: parsed.ok ? undefined : parsed.feeError, priceError: parsed.ok ? undefined : parsed.priceError, freeError: freeOk ? undefined : "Enter a whole number from 0 to 1000." });
       return;
     }
     setErrors({});
-    await save({ postingFeeCredits: parsed.fee, creditPriceInr: parsed.price }, "Posting fee and credit price saved.");
+    await save({ postingFeeCredits: parsed.fee, creditPriceInr: parsed.price, freeAdsPerAccount: freeValue }, "Posting fee, credit price and free ads saved.");
   }
 
   function discard() {
     setFee(String(initial.postingFeeCredits));
     setPrice(String(initial.creditPriceInr));
+    setFree(String(initial.freeAdsPerAccount));
     setErrors({});
   }
 
@@ -72,9 +76,16 @@ export function MoneyCard({ initial, canEdit }: { initial: MoneySettings; canEdi
               <input id="price-credit" className="adm-k-input" inputMode="numeric" autoComplete="off" disabled={!canEdit} value={price} aria-invalid={errors.priceError ? true : undefined} aria-describedby="price-credit-help" onChange={(event) => { setPrice(event.target.value); setErrors({}); }} />
               {errors.priceError ? <p className="adm-k-err" id="price-credit-help" role="alert">{errors.priceError}</p> : <p className="adm-k-help" id="price-credit-help">Used to show rupee values. Each pack has its own price.</p>}
             </div>
+            <div className="adm-k-field">
+              <label className="adm-k-label" htmlFor="price-free-ads">
+                Free ads for each account<span className="adm-k-req" aria-hidden="true"> *</span>
+              </label>
+              <input id="price-free-ads" className="adm-k-input" inputMode="numeric" autoComplete="off" disabled={!canEdit} value={free} aria-invalid={errors.freeError ? true : undefined} aria-describedby="price-free-ads-help" onChange={(event) => { setFree(event.target.value); setErrors({}); }} />
+              {errors.freeError ? <p className="adm-k-err" id="price-free-ads-help" role="alert">{errors.freeError}</p> : <p className="adm-k-help" id="price-free-ads-help">The first ads of every account cost nothing. You can give one person more in Users.</p>}
+            </div>
           </div>
           {canEdit && dirty ? (
-            <div className="adm-p-actions" role="group" aria-label="Save posting fee and credit price">
+            <div className="adm-p-actions" role="group" aria-label="Save posting fee, credit price and free ads">
               <Button kind="quiet" onClick={discard}>Discard</Button>
               <Button kind="primary" busy={busy} onClick={() => void saveNumbers()}>Save changes</Button>
             </div>
