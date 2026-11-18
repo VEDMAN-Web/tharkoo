@@ -1,7 +1,7 @@
 "use client";
 
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
-import { usePathname } from "next/navigation";
+import { useSitePath } from "@/components/useSitePath";
 
 type City = { slug: string; name: string };
 type CityCtx = { city?: string; citySlug?: string; setCity: (name?: string, slug?: string) => void };
@@ -31,7 +31,7 @@ const RESERVED = new Set([
 ]);
 
 export function CityProvider({ children, cities }: { children: React.ReactNode; cities: City[] }) {
-  const path = usePathname() || "/";
+  const path = useSitePath();
   const [override, setOverride] = useState<City | undefined>();
   const [picked, setPicked] = useState<City | null | undefined>(undefined);
   const fromPath = useMemo(() => {

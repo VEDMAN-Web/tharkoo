@@ -1,0 +1,18 @@
+{
+  "branchPrefix": "haiku/h10.3b",
+  "globs": [
+    "docs/ownership/H10.3b.json",
+    "src/components/CityContext.tsx",
+    "src/components/Header.tsx",
+    "src/components/HeaderNew.tsx",
+    "src/components/PathChrome.tsx",
+    "src/components/account/AccountContext.tsx",
+    "src/components/chat/SupportChat.tsx",
+    "src/components/recharge/CreditPacks.tsx",
+    "src/components/recharge/RechargeHost.tsx",
+    "src/components/useSitePath.ts",
+    "src/lib/site-path.ts",
+    "tests/e2e/h10-3-hydration.e2e.ts",
+    "tests/server/ui/h10-3b-site-path.test.ts"
+  ]
+}
