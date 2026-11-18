@@ -19,7 +19,7 @@ export default async function Page() {
   if (await newDesignOn()) {
     const summary = await loadPanelSummary((await cookies()).get(SESSION_COOKIE)?.value);
     return (
-      <UserPanelShell active="chats" summary={summary} below={<FreshAds title="More ads you may like" />}>
+      <UserPanelShell active="chats" summary={summary} below={<FreshAds title="More ads you may like" standardCards />}>
         <section aria-labelledby="chats-title" className="up-glass up-panel">
           <div className="up-panel-head">
             <div>

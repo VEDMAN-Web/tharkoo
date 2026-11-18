@@ -67,6 +67,8 @@ export function ChecklistCard({ rows }: { rows: ChecklistRow[] }) {
               <strong>{row.title}</strong>
               <small>{row.keep?.kept ? "Kept as is" : row.detail}</small>
               <span className="adm-sr">{row.done ? "Done" : "Not done yet"}</span>
+            </span>
+            <span className="adm-d-actions">
               {row.keep && !row.done ? (
                 <button type="button" className="adm-d-keep" data-tk="keep-as-is" disabled={pending} onClick={() => act(() => tickChecklistAction(row.keep!.key, true), "Kept as is. The row is done.")}>
                   Keep as is
@@ -77,8 +79,8 @@ export function ChecklistCard({ rows }: { rows: ChecklistRow[] }) {
                   {`Not junk: ${row.junkAd.title.slice(0, 30)}`}
                 </button>
               ) : null}
+              <Link href={row.href} className="adm-d-open">{row.done ? "View" : "Open"}</Link>
             </span>
-            <Link href={row.href} className="adm-d-open">{row.done ? "View" : "Open"}</Link>
           </li>
         ))}
       </ul>
