@@ -1,7 +1,7 @@
 import { mkdirSync } from "node:fs";
 import AxeBuilder from "@axe-core/playwright";
 import type { Page } from "@playwright/test";
-import { expect, hasHorizontalScroll, loginUi, newUserApi, test } from "./helpers";
+import { expect, hasHorizontalScroll, loginUi, newUserApi, test, withLocalDb } from "./helpers";
 
 /** H9.5: the seller profile page sits in the account panel, has one heading, no preselected city, switches with one benefit line each, and Save and continue. */
 
@@ -28,6 +28,8 @@ test.describe("H9.5 Seller profile", () => {
     test.setTimeout(240_000);
     const { email } = await newUserApi(baseURL!, "h95form");
     await loginUi(page, email, undefined, "/u/seller-profile/?next=/u/account/");
+    // An account that has not given its date of birth yet is asked once, so the age box is on the page too.
+    await withLocalDb((db) => db.collection("users").updateOne({ email: email.toLowerCase() }, { $unset: { dateOfBirth: "" } }));
     for (const size of [{ width: 1440, height: 900 }, { width: 390, height: 844 }]) {
       await page.setViewportSize(size);
       await page.goto("/u/seller-profile/?next=/u/account/");
@@ -79,6 +81,8 @@ test.describe("H9.5 Seller profile", () => {
     test.setTimeout(240_000);
     const { email } = await newUserApi(baseURL!, "h95save");
     await loginUi(page, email, undefined, "/u/seller-profile/?next=/u/account/");
+    await withLocalDb((db) => db.collection("users").updateOne({ email: email.toLowerCase() }, { $unset: { dateOfBirth: "" } }));
+    await page.goto("/u/seller-profile/?next=/u/account/");
     await page.setViewportSize({ width: 1440, height: 900 });
     const form = page.locator('[data-tk="seller-profile"]');
     await form.locator("input[name=name]").fill("Asha");
