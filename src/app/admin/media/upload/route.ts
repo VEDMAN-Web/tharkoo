@@ -2,7 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { requireStaffRequest } from "@/lib/admin-auth";
 import { assertOrigin } from "@/server/auth/http";
 import { HttpError } from "@/server/http";
-import { SITE_MEDIA_MAX_BYTES, uploadSiteMedia } from "@/server/layout/media";
+import { uploadSiteMedia } from "@/server/layout/media";
+import { LEGACY_TOO_BIG, LEGACY_UPLOAD_MAX_BYTES } from "@/server/media/staff-upload";
 
 export const dynamic = "force-dynamic";
 
@@ -15,7 +16,7 @@ export async function POST(request: NextRequest) {
     const form = await request.formData();
     const file = form.get("file");
     if (!(file instanceof File)) return NextResponse.json({ ok: false, error: "Choose an image file" }, { status: 400 });
-    if (file.size > SITE_MEDIA_MAX_BYTES) return NextResponse.json({ ok: false, error: "Images can be at most 8 MB" }, { status: 413 });
+    if (file.size > LEGACY_UPLOAD_MAX_BYTES) return NextResponse.json({ ok: false, error: LEGACY_TOO_BIG }, { status: 413 });
     const item = await uploadSiteMedia({
       file: { type: file.type, data: Buffer.from(await file.arrayBuffer()) },
       alt: form.get("alt"),

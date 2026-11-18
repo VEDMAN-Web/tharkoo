@@ -4,6 +4,7 @@ import { ImagePlus, X } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { Notice } from "@/components/admin/ui/Notice";
 import { TextField } from "@/components/admin/ui/TextField";
+import { STAFF_FILE_FAILED, uploadStaffFile } from "@/components/upload/staff-upload";
 import { BATCH_PARALLEL, checkBatch } from "@/server/media/batch";
 import { runLimited } from "@/server/media/run-limited";
 
@@ -27,23 +28,24 @@ let counter = 0;
 const newId = () => `row-${(counter += 1)}`;
 const kb = (bytes: number) => (bytes >= 1024 * 1024 ? `${(bytes / 1024 / 1024).toFixed(1)} MB` : `${Math.max(1, Math.round(bytes / 1024))} KB`);
 
-/** Sends one image. A network failure is retried once; a refusal from the server is shown as the reason. */
+/** Sends one image straight to Cloudinary (H13.1). A network failure is retried once; a refusal from the server is shown as the reason. */
 async function sendOne(file: File, tags: string): Promise<{ ok: true; alt: string } | { ok: false; reason: string }> {
+  let last = "Upload failed";
   for (let attempt = 1; attempt <= 2; attempt += 1) {
-    const form = new FormData();
-    form.set("file", file);
-    form.set("auto_alt", "1");
-    form.set("tags", tags);
-    try {
-      const res = await fetch("/admin/media/upload/", { method: "POST", body: form });
-      const body = (await res.json()) as { ok: boolean; error?: string; item?: { alt: string } };
-      if (body.ok && body.item) return { ok: true, alt: body.item.alt };
-      return { ok: false, reason: body.error || "Upload failed" };
-    } catch {
-      if (attempt === 2) return { ok: false, reason: "Connection problem. Use Retry failed to try again." };
-    }
+    const result = await uploadStaffFile<{ alt?: string; item?: { alt: string } }>({
+      purpose: "library",
+      kind: "image",
+      file,
+      tags,
+      autoAlt: true,
+      alt: "",
+      legacy: { url: "/admin/media/upload/", fields: { auto_alt: "1", tags } },
+    });
+    if (result.ok) return { ok: true, alt: result.data.item?.alt ?? result.data.alt ?? "" };
+    last = result.error;
+    if (result.error !== STAFF_FILE_FAILED) break;
   }
-  return { ok: false, reason: "Upload failed" };
+  return { ok: false, reason: last };
 }
 
 /**

@@ -155,8 +155,8 @@ export function CreateAdForm({ options, canPublish }: { options: AdFormOptions; 
   const ownerKey = form.ownerMode === "other" ? form.ownerEmail.trim() : "";
   const category = options.categories.find((row) => row.id === form.categoryId);
   const photoLimit = category?.photoLimit ?? DEFAULT_PHOTO_LIMIT;
-  const photos = useAdMedia("image", photoLimit, ownerKey);
-  const videos = useAdMedia("video", AD_MEDIA_MAX, ownerKey);
+  const photos = useAdMedia("image", photoLimit, ownerKey, form.categoryId);
+  const videos = useAdMedia("video", AD_MEDIA_MAX, ownerKey, form.categoryId);
   // Each picker takes only what is left after the other kind.
   // H7.8: a refused file does not count toward the limit.
   const mediaRoom = AD_MEDIA_MAX - photos.counted - videos.counted;
@@ -227,6 +227,7 @@ export function CreateAdForm({ options, canPublish }: { options: AdFormOptions; 
       <Details form={form} options={options} onChange={change} />
       <section className="adm-card" aria-labelledby="ad-photos-h" style={section}>
         <Heading id="ad-photos-h">4. Photos</Heading>
+        {category ? null : <p className="adm-field-help" data-tk="photos-need-category" role="status">Pick a category first, then add photos.</p>}
         <AdMediaPicker
           kind="image"
           items={photos.items}

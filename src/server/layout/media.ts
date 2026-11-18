@@ -227,6 +227,48 @@ export async function uploadSiteMedia(input: {
   return item;
 }
 
+/**
+ * H13.1: the tail of uploadSiteMedia for a picture that went straight to Cloudinary (a signed upload): the same alt, tags and audit rows.
+ * The checks of type, size and scan are done by the staff upload completion before this is called.
+ */
+export async function saveSiteMediaFromCloud(input: {
+  url: string;
+  publicId: string;
+  width: number;
+  height: number;
+  bytes: number;
+  contentType: SiteMediaType;
+  alt: unknown;
+  fileName?: string;
+  autoAlt?: boolean;
+  tags?: unknown;
+  email: string;
+  roles: string[];
+}) {
+  requireAdmin(input.roles);
+  const typedAlt = typeof input.alt === "string" ? input.alt.trim() : "";
+  const autoAlt = input.autoAlt === true && typedAlt === "";
+  const alt = validateAlt(autoAlt ? altFromFileName(input.fileName ?? "") : input.alt);
+  const tags = cleanTags(input.tags);
+  if (!(input.width >= 1) || !(input.height >= 1)) throw new ValidationError("This file is not a valid jpeg, png or webp image");
+  await connectDb();
+  const doc = await SiteMedia.create({
+    url: input.url,
+    objectKey: input.publicId,
+    alt,
+    width: input.width,
+    height: input.height,
+    bytes: input.bytes,
+    contentType: input.contentType,
+    tags,
+    uploadedBy: input.email,
+    altAuto: autoAlt,
+  });
+  const item = present(doc.toObject() as SiteMediaDoc & { _id: unknown });
+  await record("media.site.upload", input.email, item.id, null, { url: item.url, alt, tags, bytes: item.bytes, autoAlt });
+  return item;
+}
+
 const UNUSED_SCAN_LIMIT = 5000;
 
 export interface MediaFilter {
