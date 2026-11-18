@@ -20,6 +20,7 @@
     "src/components/new/NotFoundView.tsx",
     "src/components/new/home-spec.css",
     "src/components/new/new-design.css",
+    "tests/server/seo/no-placeholder-text.test.ts",
     "tests/server/ui/h12-1-*.test.ts",
     "tests/e2e/h12-1-public-layout.e2e.ts"
   ]
