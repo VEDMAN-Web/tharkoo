@@ -1,3 +1,4 @@
+import { fieldLabel } from "@/lib/admin/history-words";
 import mongoose, { type Types } from "mongoose";
 import { connectDb } from "@/lib/db";
 import { refreshPublicCache } from "@/lib/cache";
@@ -149,7 +150,7 @@ export async function updateCoupon(ctx: AdminCtx, input: { id: string } & Omit<C
       return {
         after: pick(doc, KEYS),
         result: null,
-        summary: changed.length ? `Changed coupon ${code}: ${changed.join(", ")}` : `Coupon ${code} saved, nothing changed`,
+        summary: changed.length ? `Changed coupon ${code}: ${changed.map(fieldLabel).join(", ")}` : `Coupon ${code} saved, nothing changed`,
         undoData: { model: "Coupon", id: String(current._id), restore: pick(was, KEYS), unset: KEYS.filter((key) => !was || !(key in was)), expect: pick(doc, KEYS) },
       };
     },
