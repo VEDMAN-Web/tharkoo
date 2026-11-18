@@ -1,3 +1,4 @@
+import { shrinkPhoto } from "@/lib/image-shrink";
 import { api, type ApiError } from "@/lib/ui/api";
 
 /**
@@ -75,8 +76,18 @@ async function call<T>(path: string, body: unknown) {
   }
 }
 
+/** The photo limit of the server (8 MB): a bigger photo is made smaller in the browser first. */
+const PHOTO_LIMIT_BYTES = 8 * 1024 * 1024;
+
 export async function uploadStaffFile<T = Record<string, unknown>>(options: StaffUploadOptions): Promise<StaffUploadResult<T>> {
-  const { purpose, kind, file } = options;
+  const { purpose, kind } = options;
+  let file = options.file;
+  // H13.1 part 2: a photo of any size is accepted. It is made smaller here when it is over the limit or over 2560 px; one that fits is sent as it is.
+  if (kind === "image") {
+    const shrunk = await shrinkPhoto(file, PHOTO_LIMIT_BYTES);
+    if (!shrunk.ok) return { ok: false, error: shrunk.error };
+    file = shrunk.file;
+  }
   const signed = await call<Signed>("/api/media/staff-sign", { purpose, kind, contentType: file.type, byteSize: file.size, ownerEmail: options.ownerEmail, jobId: options.jobId, categoryId: options.categoryId });
   if (!signed.ok) return { ok: false, error: plain(signed.error) };
 

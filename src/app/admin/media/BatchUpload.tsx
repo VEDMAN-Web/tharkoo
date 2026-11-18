@@ -73,7 +73,7 @@ export function BatchUpload({ enabled, onDone }: { enabled: boolean; onDone: () 
     if (running) return;
     previews.current.forEach((url) => URL.revokeObjectURL(url));
     previews.current = [];
-    const check = checkBatch(Array.from(list));
+    const check = checkBatch(Array.from(list), undefined, { anySize: true });
     const accepted: Row[] = check.accepted.map((file) => {
       const preview = URL.createObjectURL(file);
       previews.current.push(preview);

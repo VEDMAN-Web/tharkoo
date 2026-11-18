@@ -1,0 +1,21 @@
+{
+  "branchPrefix": "haiku/h13.1b",
+  "globs": [
+    "docs/ownership/H13.1b.json",
+    "progress/H13.1b.md",
+    "src/lib/image-shrink.ts",
+    "src/components/post/mediaUpload.ts",
+    "src/components/upload/staff-upload.ts",
+    "src/components/upload/rules.ts",
+    "src/server/media/batch.ts",
+    "src/app/admin/ads/create/ad-upload.ts",
+    "src/app/admin/media/BatchUpload.tsx",
+    "src/app/admin/import/ImportForm.tsx",
+    "src/components/admin/ui/ImagePickerDialog.tsx",
+    "tests/server/media/h13-1b-image-shrink.test.ts",
+    "tests/e2e/h13-1b-photo-shrink.e2e.ts",
+    "tests/e2e/h78-uploader.e2e.ts",
+    "tests/e2e/h7-100-posting.e2e.ts",
+    "tests/e2e/h13-1-staff-upload.e2e.ts"
+  ]
+}

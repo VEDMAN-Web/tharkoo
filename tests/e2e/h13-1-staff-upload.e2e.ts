@@ -10,7 +10,32 @@ import { ADMIN_EMAIL, expect, hasHorizontalScroll, signInAdminContext, test, wit
 
 const MB = 1024 * 1024;
 const SHOTS = process.env.H131_SHOTS_DIR ?? "";
-const JPEG = Buffer.concat([Buffer.from([0xff, 0xd8, 0xff, 0xe0]), Buffer.alloc(6 * MB)]);
+
+/** Chooses a REAL JPEG made in the page (a picture of noise, about 6 MB, 2400 x 1800): the browser now reads every photo before it sends it. Returns its size in bytes. */
+async function chooseRealJpeg(page: Page, inputSelector: string): Promise<number> {
+  return page.evaluate(async (selector) => {
+    const canvas = document.createElement("canvas");
+    canvas.width = 2400;
+    canvas.height = 1800;
+    const context = canvas.getContext("2d")!;
+    const image = context.createImageData(2400, 1800);
+    for (let index = 0; index < image.data.length; index += 4) {
+      image.data[index] = Math.random() * 255;
+      image.data[index + 1] = Math.random() * 255;
+      image.data[index + 2] = Math.random() * 255;
+      image.data[index + 3] = 255;
+    }
+    context.putImageData(image, 0, 0);
+    const blob: Blob = await new Promise((resolve) => canvas.toBlob((value) => resolve(value!), "image/jpeg", 0.92));
+    const file = new File([blob], "phone.jpg", { type: "image/jpeg" });
+    const transfer = new DataTransfer();
+    transfer.items.add(file);
+    const input = document.querySelector<HTMLInputElement>(selector)!;
+    input.files = transfer.files;
+    input.dispatchEvent(new Event("change", { bubbles: true }));
+    return file.size;
+  }, inputSelector);
+}
 
 async function shot(page: Page, name: string) {
   if (!SHOTS) return;
@@ -80,11 +105,11 @@ test.describe("H13.1 staff direct upload", () => {
     await page.goto("/admin/ads/create/");
     const photos = page.locator("section[aria-labelledby='ad-photos-h']");
     await page.getByLabel("Category *").selectOption({ index: 1 });
-    await photos.locator("input[type=file]").setInputFiles({ name: "phone.jpg", mimeType: "image/jpeg", buffer: JPEG });
-    await expect(photos.locator("[data-state=ready]")).toHaveCount(1, { timeout: 30_000 });
+    const size = await chooseRealJpeg(page, "section[aria-labelledby='ad-photos-h'] input[type=file]");
+    await expect(photos.locator("[data-state=ready]")).toHaveCount(1, { timeout: 60_000 });
     await expect(photos.locator("li", { hasText: "phone.jpg" }).locator("img")).toBeVisible();
     expect(seen.signs).toHaveLength(1);
-    expect(seen.signs[0]).toMatchObject({ purpose: "ad", kind: "image", contentType: "image/jpeg", byteSize: JPEG.length });
+    expect(seen.signs[0]).toMatchObject({ purpose: "ad", kind: "image", contentType: "image/jpeg", byteSize: size });
     expect(seen.cloudinary).toBe(1);
     expect(seen.legacy).toBe(0);
     await shot(page, "create-ad-photo-6mb-ready");
@@ -101,13 +126,13 @@ test.describe("H13.1 staff direct upload", () => {
     await page.setViewportSize({ width: 1440, height: 900 });
     await page.goto("/admin/media/");
     await page.getByRole("button", { name: "Upload pictures" }).first().click();
-    const input = page.getByLabel("Choose pictures to upload");
-    await input.setInputFiles({ name: "phone.jpg", mimeType: "image/jpeg", buffer: JPEG });
+    await expect(page.getByLabel("Choose pictures to upload")).toBeAttached();
+    const size = await chooseRealJpeg(page, "input[aria-label='Choose pictures to upload']");
     const send = page.getByRole("button", { name: /^Upload \d+ images?$/ });
     await send.click();
     await expect.poll(() => seen.cloudinary, { timeout: 30_000 }).toBe(1);
     await expect(page.getByText("1 uploaded, 0 failed, 0 waiting")).toBeVisible({ timeout: 30_000 });
-    expect(seen.signs[0]).toMatchObject({ purpose: "library", kind: "image", byteSize: JPEG.length });
+    expect(seen.signs[0]).toMatchObject({ purpose: "library", kind: "image", byteSize: size });
     expect(seen.cloudinary).toBe(1);
     expect(seen.legacy).toBe(0);
     await shot(page, "media-library-6mb");
@@ -121,7 +146,7 @@ test.describe("H13.1 staff direct upload", () => {
     await page.goto("/admin/ads/create/");
     const photos = page.locator("section[aria-labelledby='ad-photos-h']");
     await page.getByLabel("Category *").selectOption({ index: 1 });
-    await photos.locator("input[type=file]").setInputFiles({ name: "phone.jpg", mimeType: "image/jpeg", buffer: JPEG });
+    await chooseRealJpeg(page, "section[aria-labelledby='ad-photos-h'] input[type=file]");
     await expect(photos.getByText("This file could not be uploaded (too big or a network problem). Try a smaller photo.")).toBeVisible({ timeout: 30_000 });
     expect(await photos.innerText()).not.toContain("Connection problem");
   });

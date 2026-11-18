@@ -8,7 +8,7 @@ export type MediaKind = "image" | "video";
 /** H7.8: the reason one file is refused, in plain words, or null when it may be uploaded. Limits come from the upload rules. */
 export async function refusalFor(file: File, kind: MediaKind): Promise<string | null> {
   const rule = kind === "image" ? UPLOAD_RULES.adPhotos : UPLOAD_RULES.adVideos;
-  const problem = fileProblem(file, rule);
+  const problem = fileProblem(file, rule, { anySize: kind === "image" });
   if (problem || kind === "image") return problem;
   try {
     return videoProblem(await videoSeconds(file), rule);
