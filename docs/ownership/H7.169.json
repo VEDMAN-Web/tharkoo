@@ -1,0 +1,16 @@
+{
+  "branchPrefix": "haiku/h7.169",
+  "globs": [
+    "docs/ownership/H7.169.json",
+    "src/app/admin/history/_view/RowDrawer.tsx",
+    "src/app/admin/ui-text/store.ts",
+    "src/lib/admin/history-words.ts",
+    "src/server/admin/history.ts",
+    "src/server/billing/coupons-admin.ts",
+    "src/server/billing/money-settings.ts",
+    "src/server/billing/packs-admin.ts",
+    "src/server/billing/plans-admin.ts",
+    "tests/e2e/h7-169-history-plain.e2e.ts",
+    "tests/server/admin/h7169-history-words.test.ts"
+  ]
+}

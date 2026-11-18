@@ -1,3 +1,4 @@
+import { fieldLabel } from "@/lib/admin/history-words";
 import mongoose, { type Types } from "mongoose";
 import { connectDb } from "@/lib/db";
 import { refreshPublicCache } from "@/lib/cache";
@@ -97,7 +98,7 @@ export async function updatePack(ctx: AdminCtx, input: { id: string } & PackInpu
       return {
         after: pick(doc, KEYS),
         result: null,
-        summary: changed.length ? `Changed the ${label} pack: ${changed.join(", ")}` : `The ${label} pack saved, nothing changed`,
+        summary: changed.length ? `Changed the ${label} pack: ${changed.map(fieldLabel).join(", ")}` : `The ${label} pack saved, nothing changed`,
         undoData: { model: "CreditPack", id: String(current._id), restore: pick(was, KEYS), unset: KEYS.filter((key) => !was || !(key in was)), expect: pick(doc, KEYS) },
       };
     },

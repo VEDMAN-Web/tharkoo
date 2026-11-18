@@ -3,6 +3,7 @@ import { connectDb } from "@/lib/db";
 import { refreshPublicCache } from "@/lib/cache";
 import type { AdminCtx } from "@/server/admin/context";
 import { adminWrite } from "@/server/admin/write";
+import { fieldLabel } from "@/lib/admin/history-words";
 import { MAX_PLAN_HOURS } from "@/lib/ads/lifetime-rules";
 import { orderPlans, promotionRule } from "@/server/billing/catalog";
 import { SITE_KEY, readMoneySettings, readPlanOrder, type MoneySettings } from "@/server/billing/money-settings";
@@ -152,7 +153,7 @@ export async function updatePlan(ctx: AdminCtx, input: { id: string } & PlanInpu
       return {
         after: pick(doc, PLAN_KEYS),
         result: null,
-        summary: changed.length ? `Changed ${current.name}: ${changed.join(", ")}` : `${current.name} saved, nothing changed`,
+        summary: changed.length ? `Changed ${current.name}: ${changed.filter((key) => key !== "durationDays").map(fieldLabel).join(", ") || fieldLabel("durationDays")}` : `${current.name} saved, nothing changed`,
         undoData: { model: "PromotionProduct", id: String(current._id), restore: pick(was, PLAN_KEYS), unset: PLAN_KEYS.filter((key) => !was || !(key in was)), expect: pick(doc, PLAN_KEYS) },
       };
     },

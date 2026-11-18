@@ -1,3 +1,4 @@
+import { textLabel } from "@/lib/ui/text-labels";
 import { cached, invalidateTags, purgeNext } from "@/lib/cache";
 import { connectDb } from "@/lib/db";
 import { canEditSite } from "@/lib/ui/site-content";
@@ -115,14 +116,14 @@ export async function saveUiTextAs(ctx: AdminCtx, input: { key: string; value: u
       const before = current?.value ?? null;
       if (value === fallback) {
         if (current) await UiText.deleteOne({ key: input.key });
-        return { after: { value: null }, result: { value }, summary: `Text back to the default: ${input.key}` };
+        return { after: { value: null }, result: { value }, summary: `Text back to the default: ${textLabel(input.key)}` };
       }
       if (before !== value) await UiText.updateOne({ key: input.key }, { $set: { value, updatedBy: ctx.email } }, { upsert: true });
       const doc = await UiText.findOne({ key: input.key }).select("_id").lean<{ _id: unknown } | null>();
       return {
         after: { value },
         result: { value },
-        summary: `Changed the text: ${input.key}`,
+        summary: `Changed the text: ${textLabel(input.key)}`,
         undoData: doc ? { model: "UiText", id: String(doc._id), restore: { value: before ?? fallback }, expect: { value } } : undefined,
       };
     },
@@ -142,7 +143,7 @@ export async function resetUiTextAs(ctx: AdminCtx, key: string): Promise<{ key: 
     before: async () => ({ value: (await UiText.findOne({ key }).lean<{ value?: string } | null>())?.value ?? null }),
     apply: async () => {
       await UiText.deleteOne({ key });
-      return { after: { value: null }, result: null, summary: `Text back to the default: ${key}` };
+      return { after: { value: null }, result: null, summary: `Text back to the default: ${textLabel(key)}` };
     },
   });
   await refresh();

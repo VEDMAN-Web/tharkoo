@@ -3,6 +3,7 @@
 import { Undo2 } from "lucide-react";
 import { Badge, Button, DiffView, Drawer, LockBadge } from "@/components/admin/ui";
 import { diffFields, type DiffRow } from "@/components/admin/ui/kit-helpers";
+import { fieldLabel, plainValue } from "@/lib/admin/history-words";
 import type { HistoryDetail } from "@/server/admin/history";
 import { STATE_BADGE, whenLabel, whoLine } from "./format";
 
@@ -10,7 +11,7 @@ const VALUE_MAX = 240;
 
 function shown(rows: DiffRow[]): DiffRow[] {
   const cut = (text: string) => (text.length > VALUE_MAX ? `${text.slice(0, VALUE_MAX)}...` : text);
-  return rows.map((row) => ({ ...row, before: cut(row.before), after: cut(row.after) }));
+  return rows.map((row) => ({ ...row, before: cut(plainValue(row.before)), after: cut(plainValue(row.after)) }));
 }
 
 /** One change in detail: what changed field by field, the reason, the record's earlier changes, and the undo button (H8.26). */
@@ -42,7 +43,7 @@ export function RowDrawer({ detail, busy, onClose, onUndo }: { detail: HistoryDe
           </p>
           {row.reason ? <p><strong>Reason:</strong> {row.reason}</p> : null}
           <h3>What changed</h3>
-          <DiffView rows={rows} empty="This change did not save field values." />
+          <DiffView rows={rows} labels={Object.fromEntries(rows.map((item) => [item.path, fieldLabel(item.path)]))} empty="Nothing more is recorded about this change." />
           {detail && detail.earlier.length > 0 ? (
             <>
               <h3>Earlier changes to this record</h3>
