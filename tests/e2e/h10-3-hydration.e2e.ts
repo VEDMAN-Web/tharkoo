@@ -1,5 +1,5 @@
 import type { Page } from "@playwright/test";
-import { expect, loginUi, newUserApi, test } from "./helpers";
+import { expect, loginUi, newUserApi, test, withLocalDb } from "./helpers";
 
 /** H10.3: no page may log a hydration problem (React error 418, 423, 425 or "did not match") when it loads. */
 
@@ -10,11 +10,11 @@ function watch(page: Page) {
   page.on("console", (message) => {
     if (message.type() === "error" || message.type() === "warning") {
       const text = message.text();
-      if (HYDRATION.test(text)) found.push(text.slice(0, 300));
+      if (HYDRATION.test(text)) found.push(`[${page.url()}] ${text.slice(0, 300)}`);
     }
   });
   page.on("pageerror", (error) => {
-    if (HYDRATION.test(String(error))) found.push(String(error).slice(0, 300));
+    if (HYDRATION.test(String(error))) found.push(`[${page.url()}] ${String(error).slice(0, 300)}`);
   });
   return found;
 }
@@ -42,6 +42,48 @@ test.describe("H10.3 no hydration warnings", () => {
       });
     }
   }
+
+  test("the server page says the same address as the browser: Home and a list page carry the Home strip, the current menu link and the right page address", async ({ request }) => {
+    const home = await (await request.get("/")).text();
+    expect(home).toContain('data-tk="top-bar"');
+    expect(home).toContain('"@type":"WebPage","name":"Tharkoo"');
+    expect(home).not.toContain("/index\"");
+    const categories = await (await request.get("/categories/")).text();
+    expect(categories).toContain("href=\"/categories/\"");
+    expect(categories).toMatch(/aria-current="page"[^>]*href="[/]categories[/]"/);
+    expect(categories).not.toContain('data-tk="top-bar"');
+  });
+
+  test("a first visit with live-like data (ads posted a few seconds, minutes, hours and a day ago) loads clean at both sizes", async ({ browser, baseURL }) => {
+    test.setTimeout(240_000);
+    const offsets = [59_000, 60_000, 61_000, 3_599_000, 3_600_000, 86_399_000, 86_400_000];
+    const before = await withLocalDb(async (db) => {
+      const rows = await db.collection("listings").find({ status: "active" }).sort({ _id: 1 }).limit(offsets.length).project({ publishedAt: 1, createdAt: 1, updatedAt: 1 }).toArray();
+      const now = Date.now();
+      for (const [index, row] of rows.entries()) {
+        const at = new Date(now - offsets[index]);
+        await db.collection("listings").updateOne({ _id: row._id }, { $set: { publishedAt: at, createdAt: at, updatedAt: at } });
+      }
+      return rows;
+    });
+    try {
+      for (const size of [{ width: 1440, height: 900 }, { width: 390, height: 844 }]) {
+        const context = await browser.newContext({ baseURL, viewport: size });
+        const page = await context.newPage();
+        const found = watch(page);
+        await page.goto("/", { waitUntil: "networkidle" });
+        await page.waitForTimeout(1500);
+        await expect(page.getByText("Please confirm your age before continuing")).toBeVisible();
+        expect(found.join(" | "), `live-like first visit at ${size.width}`).toBe("");
+        await context.close();
+      }
+    } finally {
+      await withLocalDb(async (db) => {
+        for (const row of before ?? []) await db.collection("listings").updateOne({ _id: row._id }, { $set: { publishedAt: row.publishedAt, createdAt: row.createdAt, updatedAt: row.updatedAt } });
+        return true;
+      });
+    }
+  });
 
   test("a first visit (age gate and cookie notice shown), a visitor with saved and recent ads, and a signed-in visitor all load the Home page clean", async ({ browser, baseURL }) => {
     test.setTimeout(240_000);

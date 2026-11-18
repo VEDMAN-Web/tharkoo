@@ -21,8 +21,16 @@ type Method = "card" | "crypto";
 type Loaded = { packs: PackLike[]; all?: PackLike[]; creditPriceInr: number; fee: number; available: boolean; testPayments?: boolean; prices?: PriceListData };
 
 /** Loads the packs once for a signed-in person. `shortfall` makes the pack that covers it start selected. */
-export function useCreditPacks(shortfall = 0): { data: CreditPackData | null; error: string; signedIn: boolean } {
-  const [signedIn] = useState(() => hasSessionHint());
+/**
+ * signedIn is null until the browser has looked at the sign-in cookie. The server cannot see it, so reading it while the page is
+ * first drawn would make the server and the browser disagree (React error 418); it is read after the page is drawn (H10.3b).
+ */
+export function useCreditPacks(shortfall = 0): { data: CreditPackData | null; error: string; signedIn: boolean | null } {
+  const [signedIn, setSignedIn] = useState<boolean | null>(null);
+  useEffect(() => {
+    const id = window.setTimeout(() => setSignedIn(hasSessionHint()), 0);
+    return () => window.clearTimeout(id);
+  }, []);
   const [data, setData] = useState<CreditPackData | null>(null);
   const [error, setError] = useState("");
   useEffect(() => {
@@ -143,6 +151,7 @@ export function CreditPacks({ data, shortfall = 0, returnTo, onChoice }: { data:
 export function CreditPacksPanel({ returnTo, withPrices = false }: { returnTo?: string; withPrices?: boolean }) {
   const t = useT();
   const { data, error, signedIn } = useCreditPacks();
+  if (signedIn === null) return <p className="tkp-note" role="status">{t("recharge.loading")}</p>;
   if (!signedIn) return <p className="tkp-note">{t("recharge.login")} <Link className="tkr-link" href="/u/login/">{t("recharge.loginLink")}</Link></p>;
   if (!data) return <p className="tkp-note" role="status">{error || t("recharge.loading")}</p>;
   if (data.packs.length === 0) return <p className="tkp-note">{t("recharge.empty")}</p>;
