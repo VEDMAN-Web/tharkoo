@@ -1,7 +1,7 @@
 import { mkdirSync } from "node:fs";
 import AxeBuilder from "@axe-core/playwright";
 import type { Page } from "@playwright/test";
-import { expect, hasHorizontalScroll, signInAdminContext, test } from "./helpers";
+import { expect, hasHorizontalScroll, resetListingLayouts, signInAdminContext, test } from "./helpers";
 
 /** H8.44 (A44): the Listing tab of the Page builder. Heading and intro template per category, and which source an address uses. */
 
@@ -17,6 +17,7 @@ async function shot(page: Page, name: string) {
 test.describe("H8.44 Page builder, Listing tab", () => {
   test("write a heading for one category, see the sample, save the draft, publish, and the address shows where its words come from", async ({ browser, baseURL }) => {
     test.setTimeout(180_000);
+    await resetListingLayouts();
     const staff = await browser.newContext({ baseURL });
     const page = await staff.newPage();
     await signInAdminContext(staff, baseURL!);

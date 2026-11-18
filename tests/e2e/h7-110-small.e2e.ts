@@ -1,5 +1,5 @@
-import { chromium, expect as plainExpect, test as plainTest } from "@playwright/test";
-import { expect, loginUi, newUserApi, test, withLocalDb } from "./helpers";
+import { chromium, expect as plainExpect } from "@playwright/test";
+import { cleanTest as plainTest, expect, loginUi, newUserApi, test, withLocalDb } from "./helpers";
 
 const SHOTS = process.env.POST_SHOTS ?? "";
 

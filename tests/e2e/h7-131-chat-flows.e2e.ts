@@ -88,6 +88,11 @@ async function closeChecks(page: Page, open: () => Promise<void>, root: string) 
 test.describe.configure({ mode: "serial" });
 
 test.describe("H7.131 chat flows", () => {
+  // The first test sets the ad up and the others read it from `shared`. Run on their own they would post an empty email and the sign-up answers 400 "email: invalid input", so say what is wrong instead.
+  test.beforeEach(({}, info) => {
+    if (!info.title.startsWith("setup:")) expect(shared.sellerEmail, "run this whole file: its first test posts the ad the others use").toBeTruthy();
+  });
+
   test("setup: an ad whose advertiser takes live chat, and the Help link on the success screen", async ({ page, baseURL }) => {
     test.setTimeout(240_000);
     const ad = await createLiveAd(page, baseURL!, "chatflow");
