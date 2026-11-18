@@ -16,7 +16,7 @@ async function liveAd(api: APIRequestContext, base: string, slug: string, title:
     if (res.status() === 201) {
       const id = ((await res.json()).data as { id: string }).id;
       const { ObjectId } = await import("mongodb");
-      await withLocalDb((db) => db.collection("listings").updateOne({ _id: new ObjectId(id) }, { $set: { status: "active", slug, publishedAt: new Date(), expiresAt: new Date(Date.now() + 86_400_000) } }));
+      await withLocalDb((db) => db.collection("listings").updateOne({ _id: new ObjectId(id) }, { $set: { status: "active", slug, price: 4500, publishedAt: new Date(), expiresAt: new Date(Date.now() + 86_400_000) } }));
       return id;
     }
   }
@@ -37,7 +37,7 @@ async function shots(page: Page, name: string) {
 }
 
 test.describe("H7.82 chats and the profile card", () => {
-  test("a chat row shows the ad picture, the person, the last text, the time and an unread dot; opening it shows View ad", async ({ page, baseURL }) => {
+  test("a chat row shows the ad picture, the person, the last text, the time and an unread dot; opening it shows the ad card", async ({ page, baseURL }) => {
     test.setTimeout(180_000);
     const slug = `inbox-desk-${Date.now()}`;
     const title = `Inbox desk ${Date.now()}`;
@@ -68,7 +68,8 @@ test.describe("H7.82 chats and the profile card", () => {
 
     await row.click();
     await expect(page.locator("[data-tk=chat-thread]")).toBeVisible();
-    await expect(page.locator("[data-tk=chat-view-ad]")).toHaveAttribute("href", new RegExp(`/ad/${slug}/$`));
+    await expect(page.locator("[data-tk=chat-ad-card] [data-tk=mini-ad-link]")).toHaveAttribute("href", new RegExp(`/ad/${slug}/$`));
+    await expect(page.getByText("View ad", { exact: true })).toHaveCount(0);
     await expect(page.locator("[data-tk=chat-thread] [role=log]")).toContainText("Is it still available?");
     if (isPhone(page)) {
       await expect(page.locator("[data-tk=chat-back]")).toBeVisible();
@@ -83,6 +84,13 @@ test.describe("H7.82 chats and the profile card", () => {
     await row.click();
     expect(await serious(page)).toEqual([]);
     await shots(page, "thread");
+    // H14.2: the whole ad card in the thread header opens the ad (photo, price and the empty space as well as the title); it shows the price.
+    const adCard = page.locator("[data-tk=chat-ad-card]");
+    await expect(adCard).toContainText("₹4,500");
+    // A real mouse click on the photo: the stretched title link is over it, which is the point (Playwright's own click refuses a covered target).
+    const photo = (await adCard.locator(".tk-mini-ad-photo").boundingBox())!;
+    await page.mouse.click(photo.x + photo.width / 2, photo.y + photo.height / 2);
+    await expect(page).toHaveURL(new RegExp(`/ad/${slug}/$`));
     await buyer.api.dispose();
     await owner.api.dispose();
   });

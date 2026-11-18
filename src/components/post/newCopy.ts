@@ -15,8 +15,6 @@ export const ABOUT_YOU_TITLE = TEXT_DEFAULTS["post.stepCopy.aboutYouTitle"];
 export const ABOUT_YOU_HELP = TEXT_DEFAULTS["post.stepCopy.aboutYouHelp"];
 
 const LEGACY_PUBLISH = "PUBLISH";
-const MY_ADS_PATH = "/u/account/ads/";
-const LEGACY_SUCCESS_LABEL = "Your ads";
 
 const isUntouched = (base: StepCopy, stock: StepCopy) => base.title === stock.title && base.help === stock.help && base.backLabel === stock.backLabel;
 
@@ -54,14 +52,12 @@ export function newStepCopy(step: NewPostStep, copy: PostCopy, aboutYou: boolean
 export type SuccessCopy = {
   title: string;
   text: string;
-  primary: CtaCopy;
   secondary: CtaCopy;
 };
 
 export function newSuccessCopy(copy: PostCopy, live: boolean, saved = false, t: TextFn = makeT()): SuccessCopy {
-  const { title, text, primaryCta, secondaryCta } = copy.success;
-  const primary = primaryCta && primaryCta.label !== LEGACY_SUCCESS_LABEL ? primaryCta : { label: t("post.stepCopy.viewMyAds"), href: primaryCta?.href || MY_ADS_PATH };
+  const { title, text, secondaryCta } = copy.success;
   const secondary = secondaryCta ?? { label: t("post.stepCopy.postAnother"), href: "" };
-  if (saved) return { title: t("post.stepCopy.savedTitle"), text: t("post.stepCopy.savedText"), primary, secondary };
-  return { title: live ? title : t("post.stepCopy.inReview"), text, primary, secondary };
+  if (saved) return { title: t("post.stepCopy.savedTitle"), text: t("post.stepCopy.savedText"), secondary };
+  return { title: live ? title : t("post.stepCopy.inReview"), text, secondary };
 }

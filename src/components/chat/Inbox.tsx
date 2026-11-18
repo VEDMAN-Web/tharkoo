@@ -8,6 +8,7 @@ import { chatTime } from "@/lib/ui/chat-time";
 import { adPath } from "@/lib/urls";
 import { EmptyIcon } from "@/components/buyer/UserPanelShell";
 import { useUrlPaths } from "@/components/UrlPaths";
+import { MiniAdCard } from "@/components/ui/MiniAdCard";
 import { ChatThread } from "./ChatThread";
 
 type Row = {
@@ -22,6 +23,7 @@ type Row = {
   cover: string | null;
   adSlug: string | null;
   adLive: boolean;
+  adPrice: number | null;
 };
 
 function Thumb({ row }: { row: Row }) {
@@ -103,14 +105,22 @@ export function Inbox() {
               <ArrowLeft size={18} aria-hidden="true" focusable="false" />
               All chats
             </button>
-            <Thumb row={open} />
-            <div className="up-chat-main">
-              <strong className="up-chat-name">{open.peerName}</strong>
-              <span className="up-chat-ad">{open.listingTitle || "Ad"}</span>
-            </div>
             {open.adSlug && open.adLive ? (
-              <Link href={adPath(paths, open.adSlug)} className="up-btn-ghost" data-tk="chat-view-ad">View ad</Link>
-            ) : null}
+              <>
+                <div className="up-chat-main">
+                  <strong className="up-chat-name">{open.peerName}</strong>
+                </div>
+                <MiniAdCard href={adPath(paths, open.adSlug)} title={open.listingTitle || "Ad"} photo={open.cover} price={open.adPrice} dataTk="chat-ad-card" />
+              </>
+            ) : (
+              <>
+                <Thumb row={open} />
+                <div className="up-chat-main">
+                  <strong className="up-chat-name">{open.peerName}</strong>
+                  <span className="up-chat-ad">{open.listingTitle || "Ad"}</span>
+                </div>
+              </>
+            )}
           </div>
           <div className="up-thread-body">
             <ChatThread key={open.id} conversationId={open.id} hideTitle />
