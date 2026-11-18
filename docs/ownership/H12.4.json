@@ -1,0 +1,27 @@
+{
+  "branchPrefix": "haiku/h12.4",
+  "globs": [
+    "docs/ownership/H12.4.json",
+    "progress/H12.4.md",
+    "src/styles/motion.css",
+    "src/styles/admin-kit.css",
+    "src/components/ui/MotionInit.tsx",
+    "src/components/new/HomeAdCard.tsx",
+    "src/components/new/ListingCards.tsx",
+    "src/components/new/AdActions.tsx",
+    "src/components/ui/AdCard.tsx",
+    "src/components/ui/SmartImage.tsx",
+    "src/components/blocks/CategoryGridBlock.tsx",
+    "src/components/blocks/StepsBlock.tsx",
+    "src/components/post/**",
+    "src/components/buyer/**",
+    "src/components/vendor/**",
+    "src/app/admin/kit/**",
+    "tests/server/ui/h12-4-*.test.ts",
+    "tests/e2e/h12-4-motion.e2e.ts",
+    "src/components/PostWizard.tsx",
+    "src/components/h714/HowItWorksView.tsx",
+    "src/components/admin/RowFlash.tsx",
+    "src/app/admin/layout.tsx"
+  ]
+}

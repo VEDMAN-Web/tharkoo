@@ -2,6 +2,7 @@ import { getStaffFromHeaders, isStaff } from "@/lib/admin-auth";
 import { AdminLoginForm } from "@/components/admin/AdminLoginForm";
 import { AdminViewerProvider } from "@/components/admin/AdminShell";
 import { MockPaymentsBanner } from "@/components/admin/MockPaymentsBanner";
+import { RowFlash } from "@/components/admin/RowFlash";
 import { pageMetadata } from "@/lib/ui/meta";
 import { getAdminCounts } from "@/server/admin/counts";
 import "@/styles/admin.css";
@@ -23,6 +24,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
   return (
     <AdminViewerProvider name={identity.name} roles={identity.roles} counts={counts} banner={<MockPaymentsBanner />}>
       {children}
+      <RowFlash />
     </AdminViewerProvider>
   );
 }

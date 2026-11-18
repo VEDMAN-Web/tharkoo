@@ -54,7 +54,6 @@
   .m-lift {
     transition: transform var(--m-base) var(--m-ease), box-shadow var(--m-base) var(--m-ease);
   }
-  .m-lift:hover,
   .m-lift:focus-visible {
     transform: translateY(-4px);
     box-shadow: 0 14px 36px rgba(45, 18, 72, 0.14);
@@ -62,9 +61,18 @@
   .m-lift img {
     transition: transform var(--m-base) var(--m-ease);
   }
-  .m-lift:hover img,
   .m-lift:focus-visible img {
     transform: scale(1.04);
+  }
+  /* A touch screen has no hover: a tap would leave the card lifted (H12.4). */
+  @media (hover: hover) {
+    .m-lift:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 14px 36px rgba(45, 18, 72, 0.14);
+    }
+    .m-lift:hover img {
+      transform: scale(1.04);
+    }
   }
 
   .tk-motion .tk-rv:not(.is-in) {
@@ -114,7 +122,7 @@
   }
 
   .m-heart {
-    animation: m-pop 260ms var(--m-ease);
+    animation: m-pop var(--m-base) var(--m-ease);
   }
 
   .tkn-account-menu,
@@ -143,6 +151,68 @@
     pointer-events: none;
     animation: m-ring 8s ease-out infinite;
   }
+
+  /* H12.4 6: chips and filter tabs fade their selected colour (colour only, no movement). */
+  .tkp-chip,
+  .tk-chip,
+  .tkn-chip,
+  .tkv-tab,
+  .tk-tabs button {
+    transition: background-color var(--m-fast) ease, border-color var(--m-fast) ease, color var(--m-fast) ease;
+  }
+
+  /* H12.4 7: the post-ad steps slide in 12 px with a fade; Back slides the other way. data-dir stays empty until the first step change. */
+  .tkp-main[data-dir="fwd"] > .tkp-scroll {
+    animation: m-step-fwd var(--m-base) var(--m-ease) both;
+  }
+  .tkp-main[data-dir="back"] > .tkp-scroll {
+    animation: m-step-back var(--m-base) var(--m-ease) both;
+  }
+
+  /* H12.4 8: the chosen pack or plan grows a little and a soft ring fades in around it. */
+  .tkr-pack,
+  .tkpr-plan {
+    position: relative;
+    transition: transform var(--m-fast) var(--m-ease);
+  }
+  .tkr-pack::after,
+  .tkpr-plan::after {
+    content: "";
+    position: absolute;
+    inset: -4px;
+    border-radius: inherit;
+    border: 3px solid rgba(209, 19, 122, 0.22);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity var(--m-fast) ease;
+  }
+  .tkr-pack[aria-checked="true"],
+  .tkpr-plan[aria-checked="true"] {
+    transform: scale(1.02);
+  }
+  .tkr-pack[aria-checked="true"]::after,
+  .tkpr-plan[aria-checked="true"]::after {
+    opacity: 1;
+  }
+
+  /* H12.4 9: toasts slide up 12 px while they fade in. */
+  .tkr-toast,
+  .tkp-toast {
+    animation: m-toast-in var(--m-base) var(--m-ease) both;
+  }
+  .adm-k-toast {
+    animation: m-rise-sm var(--m-base) var(--m-ease) both;
+  }
+
+  /* H12.4 10: the tabs of My ads and the like. The pill colour fades (see 6); the active tab also settles with a tiny scale. */
+  .tkv-tab.on,
+  .tk-tabs button[aria-selected="true"] {
+    transform: scale(1.02);
+  }
+  .tkv-tab,
+  .tk-tabs button {
+    transition: background-color var(--m-fast) ease, border-color var(--m-fast) ease, color var(--m-fast) ease, transform var(--m-fast) var(--m-ease);
+  }
 }
 
 @keyframes m-rise {
@@ -160,7 +230,7 @@
     transform: scale(1);
   }
   50% {
-    transform: scale(1.2);
+    transform: scale(1.18);
   }
   100% {
     transform: scale(1);
@@ -203,5 +273,45 @@
   100% {
     transform: scale(1.6);
     opacity: 0;
+  }
+}
+@keyframes m-step-fwd {
+  from {
+    opacity: 0;
+    transform: translate3d(12px, 0, 0);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@keyframes m-step-back {
+  from {
+    opacity: 0;
+    transform: translate3d(-12px, 0, 0);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@keyframes m-toast-in {
+  from {
+    opacity: 0;
+    transform: translate(-50%, 12px);
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, 0);
+  }
+}
+@keyframes m-rise-sm {
+  from {
+    opacity: 0;
+    transform: translate3d(0, 12px, 0);
+  }
+  to {
+    opacity: 1;
+    transform: none;
   }
 }
