@@ -86,9 +86,9 @@ export function AlertsPanel({
         )}
       </section>
 
-      <section aria-labelledby="alerts-new" className={`up-panel up-glass`}>
+      <section aria-labelledby="alerts-new" className={`up-panel up-panel-tight up-glass`}>
         <h2 id="alerts-new" className="up-h2">Save a new search</h2>
-        <form onSubmit={create} className="up-filters" style={{ marginTop: 12 }}>
+        <form onSubmit={create} className="up-filters up-filters-stack" style={{ marginTop: 12 }}>
           <label className="up-label">
             Words
             <input name="q" maxLength={120} placeholder="Any words" className="up-select" />

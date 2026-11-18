@@ -23,7 +23,7 @@ a.adm-d-row:hover { background: #fafbfd; }
 .adm-d-empty { margin: 0; padding: 20px; color: var(--adm-muted); }
 .adm-d-error { margin: 0; padding: 10px 20px; color: var(--adm-danger); font-weight: 600; }
 .adm-d-note { margin: 0; padding: 10px 20px; color: var(--adm-text); font-weight: 600; }
-.adm-d-keep { display: inline-flex; align-items: center; min-height: 32px; margin-top: 4px; padding: 0 12px; border: 1px solid var(--adm-border); border-radius: var(--adm-r-input); background: #fff; color: var(--adm-text); font: inherit; font-size: 13px; font-weight: 700; cursor: pointer; justify-self: start; }
+.adm-d-keep { display: inline-flex; align-items: center; min-height: 32px; padding: 0 12px; border: 1px solid var(--adm-border); border-radius: var(--adm-r-input); background: #fff; color: var(--adm-text); font: inherit; font-size: 13px; font-weight: 700; cursor: pointer; }
 .adm-d-keep:hover { border-color: #c9cddb; }
 .adm-d-keep:focus-visible { outline: 2px solid var(--adm-primary); outline-offset: 2px; }
 .adm-d-keep:disabled { opacity: 0.6; cursor: default; }
@@ -48,4 +48,10 @@ button.adm-d-tick::after { content: ""; position: absolute; inset: -10px; }
 }
 @media (prefers-reduced-motion: reduce) {
   .adm-d-tick { transition: none; }
+}
+/* H12.3: a checklist row's buttons sit in one row on the right, the same height; the words wrap on the left. */
+.adm-d-actions { display: flex; align-items: center; justify-content: flex-end; flex: none; flex-wrap: wrap; gap: 8px; max-width: 55%; }
+.adm-d-actions .adm-d-keep, .adm-d-actions .adm-d-open { min-height: 32px; }
+@media (max-width: 767px) {
+  .adm-d-actions .adm-d-keep, .adm-d-actions .adm-d-open { min-height: 44px; }
 }

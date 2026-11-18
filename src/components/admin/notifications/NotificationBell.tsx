@@ -102,7 +102,7 @@ export function NotificationBell() {
         aria-haspopup="dialog"
         aria-expanded={open}
         aria-controls={open ? `${id}-panel` : undefined}
-        aria-label={unread ? `Notifications, ${unread} unread` : "Notifications, none unread"}
+        aria-label={unread ? `Notifications, ${bellBadge(unread)} unread` : "Notifications, none unread"}
         onClick={() => setOpen((value) => !value)}
       >
         <Bell aria-hidden="true" focusable="false" size={18} />
