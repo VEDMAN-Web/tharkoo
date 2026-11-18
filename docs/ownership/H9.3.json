@@ -6,6 +6,7 @@
     "src/components/buyer/UserPanelShell.tsx",
     "src/app/u/account/media/page.tsx",
     "tests/e2e/h9-3-my-ads.e2e.ts",
-    "tests/e2e/my-ads.e2e.ts"
+    "tests/e2e/my-ads.e2e.ts",
+    "tests/e2e/account-pages.e2e.ts"
   ]
 }

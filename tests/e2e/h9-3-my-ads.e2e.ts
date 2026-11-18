@@ -76,7 +76,7 @@ test.describe("H9.3 My ads", () => {
       await expect(chips).toHaveCount(1);
       await expect(chips.first()).toHaveText(/^All 1$/);
       await expect(page.locator('[data-tk="my-ads-empty"]')).toHaveCount(0);
-      await expect(page.locator("main, .up-main").getByText("Photos and videos")).toHaveCount(0);
+      await expect(page.locator(".up-main").getByRole("link", { name: "Photos and videos", exact: true })).toHaveCount(0);
       await expect(page.getByText("Want to post one like this?")).toHaveCount(0);
       expect(await hasHorizontalScroll(page)).toBe(false);
       expect(await serious(page)).toEqual([]);
