@@ -5,7 +5,7 @@
     "next.config.ts",
     "src/app/admin/urls/NotFoundBeacon.tsx",
     "src/app/admin/urls/notfound-beacon.ts",
-    "src/app/api/notfound",
+    "src/app/api/notfound/**",
     "src/app/not-found.tsx",
     "src/lib/admin/history-words.ts",
     "src/server/admin/ads-bulk.ts",
