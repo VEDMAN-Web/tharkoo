@@ -354,3 +354,11 @@
   .up-filters-stack > .up-label { flex: 1 1 100%; }
   .up-filters-stack .up-select, .up-filters-stack .up-btn { width: 100%; }
 }
+
+/* H14.2: a table row that is an ad opens it: the title link is stretched over the row. */
+.up-table tbody tr { position: relative; cursor: pointer; }
+.up-table tbody tr:hover { background: #fdf6fb; }
+.up-row-link { color: inherit; font-weight: 600; text-decoration: none; }
+.up-row-link::after { content: ""; position: absolute; inset: 0; z-index: 1; }
+.up-table tbody tr:has(.up-row-link:focus-visible) { outline: 3px solid #7c3aed; outline-offset: -3px; }
+.up-row-link:focus-visible { outline: none; }

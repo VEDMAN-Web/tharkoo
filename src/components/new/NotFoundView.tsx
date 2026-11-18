@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { categoriesPath, categoryPath } from "@/lib/urls";
-import { HomeAdCard, type HomeAdCardData, type HomeAdLabels } from "./HomeAdCard";
+import { ListingRow, type ListingRowLabels } from "./ListingRow";
+import type { ListingRowData } from "./listing-row-data";
 import "./home-spec.css";
 import "./p10-p13.css";
 
@@ -11,8 +12,8 @@ export type NotFoundAds = {
   title: string;
   seeAll: string;
   seeAllHref: string;
-  labels: HomeAdLabels;
-  cards: HomeAdCardData[];
+  labels: ListingRowLabels;
+  cards: ListingRowData[];
 };
 
 export function NotFoundView({ categories, ads }: { categories: NotFoundCategory[]; ads: NotFoundAds | null }) {
@@ -58,10 +59,10 @@ export function NotFoundView({ categories, ads }: { categories: NotFoundCategory
               {ads.seeAll}
             </Link>
           </div>
-          <ul className="tkh-ads" aria-label={ads.title}>
-            {ads.cards.map((ad) => (
+          <ul className="tk-rows" aria-label={ads.title}>
+            {ads.cards.map((ad, position) => (
               <li key={ad.slug}>
-                <HomeAdCard ad={ad} labels={ads.labels} />
+                <ListingRow ad={ad} labels={ads.labels} order={position} />
               </li>
             ))}
           </ul>

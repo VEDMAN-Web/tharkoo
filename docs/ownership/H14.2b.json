@@ -1,0 +1,12 @@
+{
+  "branchPrefix": "haiku/h14.2b",
+  "globs": [
+    "docs/ownership/H14.2b.json",
+    "progress/H14.2b.md",
+    "src/app/globals.css",
+    "src/components/buyer/AnalyticsPanel.tsx",
+    "src/components/buyer/user-panel.css",
+    "src/app/u/account/analytics/page.tsx",
+    "tests/e2e/h14-2b-panel-cards.e2e.ts"
+  ]
+}

@@ -1,12 +1,14 @@
 import Link from "next/link";
 import { BarChart3 } from "lucide-react";
 import { displayTitle } from "@/lib/format";
-import { ownAdStatus } from "@/lib/ui/ad-status";
+import { draftPath, ownAdStatus } from "@/lib/ui/ad-status";
+import { adPath, type UrlPaths } from "@/lib/urls";
 import type { listOwnCards } from "@/server/listings/owner-cards";
 import { EmptyIcon } from "./UserPanelShell";
 
 type Cards = Awaited<ReturnType<typeof listOwnCards>>;
 
+<<<<<<< HEAD
 /** H14.3: the real numbers (never the ones an admin sets for display): all-time per ad, and the last 7 days in total. */
 export type RealNumbers = { byAd: Record<string, { views: number; clicks: number }>; week: { views: number; clicks: number } };
 
@@ -14,6 +16,9 @@ export function AnalyticsPanel({ cards, real }: { cards: Cards; real: RealNumber
   const all = Object.values(real.byAd);
   const totalViews = all.reduce((sum, row) => sum + row.views, 0);
   const totalClicks = all.reduce((sum, row) => sum + row.clicks, 0);
+=======
+export function AnalyticsPanel({ cards, paths }: { cards: Cards; paths: UrlPaths }) {
+>>>>>>> github/main
   if (cards.total === 0) {
     return (
       <section aria-labelledby="analytics-title" className="up-glass up-panel up-empty" data-tk="analytics-empty">
@@ -45,7 +50,11 @@ export function AnalyticsPanel({ cards, real }: { cards: Cards; real: RealNumber
           <tbody>
             {cards.items.map((item) => (
               <tr key={item.id} data-tk="analytics-row">
-                <td>{displayTitle(item.title || "") || "Untitled ad"}</td>
+                <td>
+                  <Link href={item.slug ? adPath(paths, item.slug) : draftPath(item.id ?? "")} prefetch={false} className="up-row-link" data-tk="analytics-link">
+                    {displayTitle(item.title || "") || "Untitled ad"}
+                  </Link>
+                </td>
                 <td>{ownAdStatus(item.status, item.expiresAt).label}</td>
                 <td data-tk="row-views">{real.byAd[item.id ?? ""]?.views ?? 0}</td>
                 <td data-tk="row-clicks">{real.byAd[item.id ?? ""]?.clicks ?? 0}</td>

@@ -14,6 +14,7 @@ import { CitySync } from "@/components/CityContext";
 import { BadgeCheck, ShieldCheck } from "lucide-react";
 import { AdSellerRow } from "./AdLiveBits";
 import { SIMILAR_ADS_MAX, SimilarAds } from "./SimilarAds";
+import { rowLabels } from "./listing-row-data";
 import { PictureHeight } from "./PictureHeight";
 import { ReadMoreText } from "./ReadMoreText";
 import { AdActions } from "./AdActions";
@@ -143,6 +144,7 @@ export function NewAdDetail({
     chat: t("home.ads.chat"),
     viewAd: t("home.ads.viewAd"),
     age: t("home.ads.age"),
+    row: rowLabels(t),
   };
   const categoryCrumb = crumbs[1]?.path;
   const cityCrumb = crumbs.find((crumb) => crumb.name === `${city} ${categoryName}`)?.path;

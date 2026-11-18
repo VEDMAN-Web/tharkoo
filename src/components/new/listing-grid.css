@@ -29,3 +29,282 @@
 .tkn-ls-main .tkh-ad-title {
   font-size: 16px;
 }
+
+/* H14.1: the listing row card of the approved design (SiteListing artboard). Everywhere except the Home page. */
+.tkn-grid.tk-rows,
+.tk-rows {
+  list-style: none;
+  margin: 0;
+  padding: 8px 0 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  max-width: 880px;
+}
+.tk-rows > li {
+  min-width: 0;
+}
+.tk-row {
+  position: relative;
+  display: flex;
+  background: rgba(255, 255, 255, 0.88);
+  border: 1px solid #ead8f0;
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 2px 14px rgba(45, 18, 72, 0.07);
+  transition: transform 0.25s, box-shadow 0.25s, border-color 0.25s;
+  /* H14.1 (#374): the whole card is the link: the title link is stretched over it with ::after, the controls sit above. */
+  cursor: pointer;
+}
+@media (hover: hover) and (pointer: fine) {
+  .tk-row:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 14px 36px rgba(233, 30, 140, 0.13);
+    border-color: rgba(233, 30, 140, 0.25);
+  }
+  .tk-row:hover .tkh-photo-arrow {
+    opacity: 1;
+  }
+}
+.tk-row:focus-within {
+  outline: 3px solid #7c3aed;
+  outline-offset: 2px;
+}
+.tk-row:focus-within .tkh-photo-arrow {
+  opacity: 1;
+}
+.tk-row-photo {
+  position: relative;
+  flex: none;
+  width: 200px;
+  aspect-ratio: 4 / 5;
+  overflow: hidden;
+  background: linear-gradient(135deg, #fff0f7, #ede9ff);
+}
+.tk-row-photo .tkh-ad-track {
+  position: absolute;
+  inset: 0;
+  /* Above the stretched link, so the photo can be swiped; each slide is itself a link to the same ad. */
+  z-index: 2;
+}
+.tk-row-photo .tkh-ad-dots {
+  z-index: 3;
+}
+.tk-row-photo .tkh-ad-dots {
+  bottom: 14px;
+}
+.tk-row-tier {
+  position: absolute;
+  left: 10px;
+  top: 10px;
+  z-index: 2;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: linear-gradient(135deg, #b45309, #92400e);
+  color: #fff;
+  font-size: 10px;
+  font-weight: 700;
+  pointer-events: none;
+}
+.tk-row-count {
+  position: absolute;
+  left: 10px;
+  bottom: 10px;
+  z-index: 2;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 9px;
+  border-radius: 999px;
+  background: rgba(30, 11, 56, 0.55);
+  -webkit-backdrop-filter: blur(6px);
+  backdrop-filter: blur(6px);
+  color: #fff;
+  font-size: 11px;
+  font-weight: 700;
+  pointer-events: none;
+}
+.tk-row-mark {
+  position: absolute;
+  right: 8px;
+  bottom: 10px;
+  z-index: 2;
+  color: rgba(255, 255, 255, 0.85);
+  font-size: 10px;
+  font-weight: 800;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.35);
+  pointer-events: none;
+}
+.tkh-ad-online.tk-row-online {
+  left: auto;
+  right: 10px;
+  top: 10px;
+  bottom: auto;
+}
+.tk-row-body {
+  flex: 1;
+  min-width: 0;
+  padding: 18px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.tk-row-titlerow {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+}
+.tk-row-title {
+  margin: 0;
+  min-width: 0;
+  color: #110520;
+  font-size: 18px;
+  font-weight: 700;
+  line-height: 1.3;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.tk-row .tk-row-save {
+  position: relative;
+  z-index: 2;
+  flex: none;
+  width: 38px;
+  height: 38px;
+  min-width: 38px;
+  min-height: 38px;
+  padding: 0;
+  border: 1.5px solid #ead8f0;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: none;
+  color: #c2185b;
+}
+.tk-row-desc {
+  margin: 0;
+  color: #4a2870;
+  font-size: 14px;
+  line-height: 1.55;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.tk-row-tags {
+  margin: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  min-width: 0;
+}
+.tk-row-tag {
+  position: relative;
+  z-index: 2;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  min-height: 24px;
+  box-sizing: border-box;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 600;
+  text-decoration: none;
+}
+.tk-row-tag.is-ok {
+  color: #047857;
+  background: #ecfdf5;
+}
+.tk-row-tag.is-cat {
+  color: #c2185b;
+  background: #fdf0f7;
+}
+.tk-row-tag.is-place {
+  color: #5b21b6;
+  background: #f5f0ff;
+}
+.tk-row-tag:focus-visible {
+  outline: 3px solid #7c3aed;
+  outline-offset: 2px;
+}
+.tk-row-foot {
+  margin-top: auto;
+  padding-top: 12px;
+  border-top: 1px solid #f3e8f7;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px 12px;
+  flex-wrap: wrap;
+}
+.tk-row-foot-main {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 12px;
+}
+.tk-row-price {
+  color: #c2185b;
+  font-size: 17px;
+  font-weight: 800;
+}
+.tk-row-stats {
+  display: inline-flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  max-width: 100%;
+  align-items: center;
+  gap: 4px 14px;
+  margin-left: auto;
+  color: #6b4a8a;
+  font-size: 13px;
+}
+.tk-row-stats[data-ready="false"] {
+  visibility: hidden;
+}
+.tk-row-stat {
+  white-space: nowrap;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+@media (max-width: 600px) {
+  .tk-row-foot-main {
+    flex-basis: 100%;
+  }
+  .tk-rows {
+    padding-bottom: 72px;
+  }
+  .tk-row {
+    flex-direction: column;
+  }
+  .tk-row-photo {
+    width: 100%;
+    aspect-ratio: 4 / 3;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .tk-row {
+    transition: none;
+  }
+  .tk-row:hover {
+    transform: none;
+  }
+}
+
+/* H14.1: similar ads on the ad page are the same rows, two across on a wide screen, one on a smaller one. */
+.tkn .tkn-similar .tkn-similar-grid {
+  --visible: 1;
+}
+.tkn .tkn-similar .tkn-similar-grid > li {
+  flex-basis: calc((100% - var(--gap) * (var(--visible) - 1)) / var(--visible));
+}
+@media (min-width: 1100px) {
+  .tkn .tkn-similar .tkn-similar-grid {
+    --visible: 2;
+  }
+}

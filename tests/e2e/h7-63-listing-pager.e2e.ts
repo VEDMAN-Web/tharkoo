@@ -2,7 +2,7 @@ import type { Page } from "@playwright/test";
 import { expect, hasHorizontalScroll, test } from "./helpers";
 
 async function slugs(page: Page) {
-  return page.locator(':is([data-tk=card], [data-tk=home-ad]) a[href*="/ad/"]').evaluateAll((links) => links.map((link) => link.getAttribute("href") || ""));
+  return page.locator(':is([data-tk=card], [data-tk=home-ad], [data-tk=listing-row]) a[href*="/ad/"]').evaluateAll((links) => links.map((link) => link.getAttribute("href") || ""));
 }
 
 test.describe("H7.63: listing pager", () => {

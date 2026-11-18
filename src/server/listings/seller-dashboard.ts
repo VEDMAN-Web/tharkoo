@@ -22,7 +22,7 @@ const LIFT_LOOKBACK_DAYS = 30;
 const RANK_PAGES = 3;
 const RANK_PAGE_SIZE = 100;
 const STAR_SHOWN = 6;
-const TOP_CODE = "top";
+const TOP_CODES = ["top", "super-top"];
 
 export type DashboardDay = { key: string; label: string; views: number; clicks: number; topOn: boolean };
 export type DashboardTrend = { kind: "boost"; times: number } | { kind: "percent"; percent: number } | null;
@@ -83,7 +83,7 @@ async function dailyCounts(ids: Types.ObjectId[], from: Date, now: Date) {
 }
 
 async function topWindows(ids: Types.ObjectId[], since: Date) {
-  const products = await PromotionProduct.find({ code: TOP_CODE }).select("_id").lean<{ _id: Types.ObjectId }[]>();
+  const products = await PromotionProduct.find({ code: { $in: TOP_CODES } }).select("_id").lean<{ _id: Types.ObjectId }[]>();
   if (products.length === 0) return [];
   const orders = await PromotionOrder.find({ listingId: { $in: ids }, productId: { $in: products.map((row) => row._id) }, status: "active", endsAt: { $gt: since } })
     .select("listingId startsAt endsAt")

@@ -8,6 +8,7 @@ import { realCountsFor } from "@/server/analytics/counts";
 import { listOwnCards } from "@/server/listings/owner-cards";
 import { sellerDashboard } from "@/server/listings/seller-dashboard";
 import { loadPanelSummary } from "@/server/notifications/summary";
+import { getPaths } from "@/server/urls/service";
 
 export const dynamic = "force-dynamic";
 
@@ -21,6 +22,7 @@ export const metadata = pageMetadata({
 export default async function Page() {
   const summary = await loadPanelSummary((await cookies()).get(SESSION_COOKIE)?.value);
   const cards = summary.signedIn ? await listOwnCards(summary.userId, { page: 1, pageSize: 50 }) : null;
+<<<<<<< HEAD
   // H14.3: the same real numbers as the dashboard: AdEvent and the real counters, never viewsSet or clicksSet.
   const counts = cards ? await realCountsFor(cards.items.flatMap((item) => (item.id ? [new Types.ObjectId(item.id)] : []))) : null;
   const week = cards && summary.signedIn ? await sellerDashboard(summary.userId) : null;
@@ -28,6 +30,12 @@ export default async function Page() {
   return (
     <PanelPage active="ads" next="/u/account/analytics/" title="Log in to see your analytics" body="Views and clicks for your ads appear here after you log in.">
       {cards ? <AnalyticsPanel cards={cards} real={real} /> : null}
+=======
+  const paths = await getPaths();
+  return (
+    <PanelPage active="ads" next="/u/account/analytics/" title="Log in to see your analytics" body="Views and clicks for your ads appear here after you log in.">
+      {cards ? <AnalyticsPanel cards={cards} paths={paths} /> : null}
+>>>>>>> github/main
     </PanelPage>
   );
 }
