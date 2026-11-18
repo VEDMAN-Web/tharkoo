@@ -45,6 +45,9 @@ export function usePostingMoney() {
   const [balance, setBalance] = useState<number | null>(null);
   const [ready, setReady] = useState(false);
   const [added, setAdded] = useState<number | null>(null);
+  /** H11.1b: posting costs credits for this site, and where this ad sits in the account's free ads. */
+  const [paidOn, setPaidOn] = useState(false);
+  const [place, setPlace] = useState<{ adNumber: number; freeAds: number } | null>(null);
 
   const refresh = useCallback(async () => {
     // H7.131: a visitor who is not signed in has no balance to ask for; asking would only log a 401 on every page that shows the post strip.
@@ -52,11 +55,15 @@ export function usePostingMoney() {
       setReady(true);
       return;
     }
-    const res = await api<{ fee: number; balance: number; creditPriceInr?: number }>(POSTING_FEE_PATH);
+    const res = await api<{ fee: number; balance: number; creditPriceInr?: number; paidPostingOn?: boolean; free?: boolean; adNumber?: number; freeAds?: number }>(POSTING_FEE_PATH);
     const charged = res.ok && Number(res.data?.fee) > 0;
+    // A site that charges for posting (an older answer without the flag counts as charging when the fee is above 0).
+    const on = res.ok && (typeof res.data?.paidPostingOn === "boolean" ? res.data.paidPostingOn : charged);
+    setPaidOn(on);
     setFee(charged ? Number(res.data.fee) : 0);
-    setBalance(charged ? Number(res.data.balance) : null);
-    if (charged && typeof res.data.creditPriceInr === "number") setPrice(res.data.creditPriceInr);
+    setBalance(on ? Number(res.data.balance) : null);
+    setPlace(on && res.ok && Number(res.data?.adNumber) > 0 && Number(res.data?.freeAds) > 0 ? { adNumber: Number(res.data.adNumber), freeAds: Number(res.data.freeAds) } : null);
+    if (on && typeof res.data.creditPriceInr === "number") setPrice(res.data.creditPriceInr);
     setReady(true);
   }, []);
 
@@ -81,5 +88,5 @@ export function usePostingMoney() {
     return () => window.clearTimeout(id);
   }, [added]);
 
-  return { fee, price, paid: fee > 0, balance, ready, added, refresh };
+  return { fee, price, paid: fee > 0, paidOn, free: paidOn && fee === 0, place, balance, ready, added, refresh };
 }

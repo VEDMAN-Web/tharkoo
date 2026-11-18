@@ -47,6 +47,8 @@ export default async function Page({ searchParams }: { searchParams: Promise<Rec
     edit: can(identity.roles, "users.edit"),
     badge: can(identity.roles, "id.decide"),
     close: can(identity.roles, "users.ban"),
+    // H11.1b: extra free ads is a money setting, so admins only (the server checks prices.edit again).
+    freeAds: can(identity.roles, "prices.edit"),
   };
   return (
     <AdminShell title="Users" hasHeader>

@@ -7,6 +7,7 @@ import { json, readJson, segmentsOf } from "@/server/billing/http";
 import { NotFoundError, handle, parseInput, requestIdFrom } from "@/server/http";
 import { chooseCoin, confirmMockPayment, listOwnPayments, readOwnPayment, rechargePacks, startRecharge, mockPaymentsAvailable, sheetPacks } from "@/server/billing/recharge";
 import { postingFeeStatus } from "@/server/billing/posting-fee";
+import { readPriceList } from "@/server/billing/price-list";
 import { readMoneySettings } from "@/server/billing/money-settings";
 import { walletBalance } from "@/server/billing";
 import { pageQuerySchema } from "@/server/shared/schemas/common";
@@ -60,9 +61,9 @@ async function dispatch(request: Request) {
   const user = await requireUser(readCookie(request, SESSION_COOKIE));
   const ip = clientKey(request.headers);
   if (request.method === "GET" && path === "packs") {
-    const [packs, balance, fee, available, money] = await Promise.all([rechargePacks(), walletBalance(user.user.id), postingFeeStatus(user.user.id), mockPaymentsAvailable(), readMoneySettings()]);
+    const [packs, balance, fee, available, money, prices] = await Promise.all([rechargePacks(), walletBalance(user.user.id), postingFeeStatus(user.user.id), mockPaymentsAvailable(), readMoneySettings(), readPriceList(user.user.id)]);
     const shortfall = Math.max(0, Math.floor(Number(new URL(request.url).searchParams.get("shortfall")) || 0));
-    return json({ packs: sheetPacks(packs, shortfall), all: packs, allPacks: packs.length, balance, fee: fee.fee, creditPriceInr: fee.creditPriceInr, available, testPayments: money.mockPaymentsOn }, requestId);
+    return json({ packs: sheetPacks(packs, shortfall), all: packs, allPacks: packs.length, balance, fee: fee.fee, creditPriceInr: fee.creditPriceInr, available, testPayments: money.mockPaymentsOn, prices }, requestId);
   }
   if (request.method === "GET" && path === "history") {
     const query = parseInput(pageQuerySchema, Object.fromEntries(new URL(request.url).searchParams));

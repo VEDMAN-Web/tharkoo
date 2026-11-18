@@ -996,7 +996,7 @@ export function PostWizard({
                   hasPhoto={Boolean(coverUrl)}
                   byline={byline}
                   note={editing ? (draftStatus === "paused" ? t("post.note.paused") : t("post.note.saved")) : t("post.note.publish")}
-                  pay={alreadyPaid || !chargesFee ? undefined : <PayCard fee={money.fee} balance={shownBalance} short={short} onRecharge={() => openRecharge({ shortfall: short })} />}
+                  pay={alreadyPaid || !(chargesFee || (money.free && money.place)) ? undefined : <PayCard fee={money.fee} price={money.price} balance={shownBalance} short={short} freeAd={money.free ? money.place : null} onRecharge={() => openRecharge({ shortfall: short })} />}
                   terms={terms}
                   adult={adult}
                   termsError={errors.terms}

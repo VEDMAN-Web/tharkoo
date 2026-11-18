@@ -157,7 +157,7 @@ export function CoinWallet({ initialTab = "buy", hasEarnings = false }: { initia
           </button>
         ))}
       </nav>
-      {tab === "buy" ? <CreditPacksPanel returnTo="/u/account/wallet/" /> : null}
+      {tab === "buy" ? <CreditPacksPanel returnTo="/u/account/wallet/" withPrices /> : null}
       {tab === "earnings" ? <VendorEarnings onSignedOut={signOut} /> : null}
       {tab === "history" ? <HistoryTab /> : null}
       <p className="t-small" style={{ color: "var(--muted)", margin: 0 }}>

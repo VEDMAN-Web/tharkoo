@@ -9,7 +9,7 @@ import { closeAccountAction } from "../_profile/actions";
 import { CLOSE_WORD } from "@/server/admin/close-word";
 import { banPreviewAction, banUserAction, logoutEverywhereAction, unbanUserAction, type ActionResult } from "./actions";
 
-export type UserAccess = { ban: boolean; logout: boolean; credits: boolean; adjust: boolean; edit: boolean; badge: boolean; close: boolean };
+export type UserAccess = { ban: boolean; logout: boolean; credits: boolean; adjust: boolean; edit: boolean; badge: boolean; close: boolean; freeAds: boolean };
 
 const CLOSE_REASONS = ["The user asked us to", "Fraud or abuse", "Duplicate account", "Other"] as const;
 const BAN_REASONS = ["Spam", "Fake or junk ads", "Abusive messages", "Other"] as const;

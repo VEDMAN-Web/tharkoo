@@ -7,6 +7,7 @@ import type { CreditsTab as CreditsData } from "@/server/billing/staff-credits";
 import { CreditsDialog } from "../_credits/CreditsDialog";
 import type { CreditsStart } from "../_credits/credits-format";
 import { CreditsTab } from "../_credits/CreditsTab";
+import { FreeAdsCard } from "../_profile/FreeAdsCard";
 import { UserActions, type UserAccess } from "../_actions/UserActions";
 import { BadgeCard } from "../_profile/BadgeCard";
 import { ProfileTab } from "../_profile/ProfileTab";
@@ -88,6 +89,7 @@ export function UserDrawer({ detail, credits, onClose, access }: { detail: UserD
                 <Row label="Joined">{dateLabel(user.createdAt, now)}</Row>
               </dl>
               {staff.length === 0 ? <BadgeCard detail={detail} canRemove={access.badge} /> : null}
+              {staff.length === 0 && access.freeAds ? <FreeAdsCard key={`${user.id}-${user.extraFreeAds}`} detail={detail} /> : null}
             </>
           ) : null}
           {section === "profile" ? <ProfileTab key={`${user.id}-${user.name}-${user.city}-${user.phone}`} detail={detail} canEdit={access.edit && staff.length === 0} /> : null}

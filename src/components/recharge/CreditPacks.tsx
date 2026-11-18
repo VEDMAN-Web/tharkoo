@@ -4,7 +4,9 @@ import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { useT } from "@/components/ui/AdCard";
 import { api, friendlyError, hasSessionHint, idempotencyKey } from "@/lib/ui/api";
-import { adsFor, adsWord, bestValueId, firstPacks, popularId, preselectedId, rupees, type PackLike } from "@/lib/credit-pack-view";
+import { bestValueId, firstPacks, popularId, preselectedId, rupees, type PackLike } from "@/lib/credit-pack-view";
+import { enoughFor, enoughParts, type PriceListData } from "@/lib/price-list";
+import { PriceCard } from "./PriceCard";
 import { BitcoinMark, EthereumMark, MastercardMark, UsdcMark, UsdtMark, VisaMark } from "./PayMarks";
 import "./recharge.css";
 
@@ -14,9 +16,9 @@ import "./recharge.css";
  */
 
 export type PackChoice = { pack: PackLike; method: "card" | "crypto" };
-export type CreditPackData = { packs: PackLike[]; creditPriceInr: number; fee: number; available: boolean; testPayments: boolean };
+export type CreditPackData = { packs: PackLike[]; creditPriceInr: number; fee: number; available: boolean; testPayments: boolean; prices: PriceListData | null };
 type Method = "card" | "crypto";
-type Loaded = { packs: PackLike[]; all?: PackLike[]; creditPriceInr: number; fee: number; available: boolean; testPayments?: boolean };
+type Loaded = { packs: PackLike[]; all?: PackLike[]; creditPriceInr: number; fee: number; available: boolean; testPayments?: boolean; prices?: PriceListData };
 
 /** Loads the packs once for a signed-in person. `shortfall` makes the pack that covers it start selected. */
 /**
@@ -37,8 +39,8 @@ export function useCreditPacks(shortfall = 0): { data: CreditPackData | null; er
     api<Loaded>(`/api/payments/packs${shortfall > 0 ? `?shortfall=${shortfall}` : ""}`).then((res) => {
       if (!live) return;
       if (!res.ok) return setError(friendlyError(res.error));
-      const { packs, all, creditPriceInr, fee, available, testPayments } = res.data;
-      setData({ packs: all ?? packs, creditPriceInr, fee, available, testPayments: Boolean(testPayments) });
+      const { packs, all, creditPriceInr, fee, available, testPayments, prices } = res.data;
+      setData({ packs: all ?? packs, creditPriceInr, fee, available, testPayments: Boolean(testPayments), prices: prices ?? null });
     });
     return () => {
       live = false;
@@ -84,19 +86,29 @@ export function CreditPacks({ data, shortfall = 0, returnTo, onChoice }: { data:
     <div className="tkp" data-tk="credit-packs">
       <div role="radiogroup" aria-label={t("recharge.packs")} className="tkr-packs tkp-packs">
         {shown.map((pack) => {
-          const ads = adsFor(pack.total, data.fee);
+          // Only while posting costs credits: with free posting there is no "enough for" to say (the h9-1 pack test keeps this line away then).
+          const parts = data.prices && data.prices.paidPostingOn ? enoughParts(enoughFor(pack.total, data.prices), data.prices) : [];
           const badge = pack.id === popular ? "popular" : pack.id === best ? "best" : null;
           return (
-            <button key={pack.id} type="button" role="radio" aria-checked={pack.id === chosen?.id} className="tkr-pack" data-tk="recharge-pack" onClick={() => setSelected(pack.id)}>
+            <button key={pack.id} type="button" role="radio" aria-checked={pack.id === chosen?.id} className="tkr-pack is-rich" data-tk="recharge-pack" onClick={() => setSelected(pack.id)}>
               {badge ? <span className={`tkr-badge is-${badge}`}>{t(badge === "popular" ? "recharge.badge.popular" : "recharge.badge.best")}</span> : null}
-              <span className="tkr-credits">
+              <span className="tkp-pay tkp-rs" data-tk="pack-rupees">{rupees(pack.price)}</span>
+              <span className="tkp-get" data-tk="pack-get">
+                {t("recharge.get")}{" "}
                 <strong>{pack.total.toLocaleString("en-IN")}</strong> {t("recharge.credits")}
+                {pack.bonus > 0 ? <em className="tkp-bonus">{t("recharge.bonus", { count: pack.bonus.toLocaleString("en-IN") })}</em> : null}
               </span>
-              <span className="tkr-price">
-                <span className="tkp-rs">{rupees(pack.price)}</span>
-                {pack.bonus > 0 ? <em>{t("recharge.bonus", { count: pack.bonus.toLocaleString("en-IN") })}</em> : null}
-              </span>
-              {ads !== null ? <span className="tkp-ads" data-tk="pack-ads">{adsWord(ads)}</span> : null}
+              {parts.length ? (
+                <span className="tkp-enough" data-tk="pack-ads">
+                  {t("recharge.enough")}{" "}
+                  {parts.map((part, index) => (
+                    <span key={part.text}>
+                      {index > 0 ? ", or " : ""}
+                      {part.strong ? <strong>{part.text}</strong> : part.text}
+                    </span>
+                  ))}
+                </span>
+              ) : null}
             </button>
           );
         })}
@@ -136,12 +148,22 @@ export function CreditPacks({ data, shortfall = 0, returnTo, onChoice }: { data:
 }
 
 /** The packs with their own loading, signed-out and empty words, for the account pages. */
-export function CreditPacksPanel({ returnTo }: { returnTo?: string }) {
+export function CreditPacksPanel({ returnTo, withPrices = false }: { returnTo?: string; withPrices?: boolean }) {
   const t = useT();
   const { data, error, signedIn } = useCreditPacks();
   if (signedIn === null) return <p className="tkp-note" role="status">{t("recharge.loading")}</p>;
   if (!signedIn) return <p className="tkp-note">{t("recharge.login")} <Link className="tkr-link" href="/u/login/">{t("recharge.loginLink")}</Link></p>;
   if (!data) return <p className="tkp-note" role="status">{error || t("recharge.loading")}</p>;
   if (data.packs.length === 0) return <p className="tkp-note">{t("recharge.empty")}</p>;
+  if (withPrices && data.prices) {
+    return (
+      <div className="tkc-wrap">
+        <div className="tkc-duo has-card" data-tk="credit-duo">
+          <PriceCard data={data.prices} />
+          <CreditPacks data={data} returnTo={returnTo} />
+        </div>
+      </div>
+    );
+  }
   return <CreditPacks data={data} returnTo={returnTo} />;
 }

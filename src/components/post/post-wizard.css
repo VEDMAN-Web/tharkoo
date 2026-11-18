@@ -341,11 +341,14 @@ body:has(.tkp-post) .tkn-footer, body:has(.tkp-post) .tkn-chat-bubble { display:
 .tkn .tkp-post .tkp-credits-line { margin: 0; font-weight: 600; }
 .tkn .tkp-post .tkp-credits-link { padding: 0; border: 0; background: none; color: #a8124f; font: inherit; font-weight: 700; text-decoration: underline; cursor: pointer; min-height: 24px; }
 .tkn .tkp-post .tkp-credits-link:focus-visible { outline: 3px solid #7c3aed; outline-offset: 2px; }
-.tkn .tkp-post .tkp-pay { padding: 10px 14px; border: 1.5px solid #ead8f0; border-radius: 14px; background: #fff; }
+.tkn .tkp-post .tkp-pay { padding: 8px 14px; border: 1.5px solid #ead8f0; border-radius: 14px; background: #fff; }
 .tkn .tkp-post .tkp-pay.is-low { border-color: #f59e0b; background: #fffbeb; }
-.tkn .tkp-post .tkp-pay-title { margin: 0 0 4px; font-size: 14px; font-weight: 700; color: #1e0b38; }
+.tkn .tkp-post .tkp-pay-title { margin: 0 0 2px; font-size: 14px; font-weight: 700; color: #1e0b38; }
+.tkn .tkp-post .tkp-pay-headline { margin: 0 0 2px; font-size: 22px; line-height: 24px; font-weight: 800; color: #110520; }
+.tkn .tkp-post .tkp-pay-headline.is-free { color: #0b6b3c; }
+.tkn .tkp-post .tkp-pay.is-free { border-color: #a7e3c4; background: #effaf4; }
 .tkn .tkp-post .tkp-pay-rows { margin: 0; }
-.tkn .tkp-post .tkp-pay-rows > div { display: flex; justify-content: space-between; gap: 12px; padding: 3px 0; font-size: 14px; }
+.tkn .tkp-post .tkp-pay-rows > div { display: flex; justify-content: space-between; gap: 12px; padding: 1px 0; font-size: 14px; }
 .tkn .tkp-post .tkp-pay-rows dt { color: #4a2870; }
 .tkn .tkp-post .tkp-pay-rows dd { margin: 0; font-weight: 700; color: #1e0b38; }
 .tkn .tkp-post .tkp-pay-note { margin: 6px 0 0; font-size: 14px; font-weight: 700; color: #92400e; }
@@ -481,7 +484,7 @@ body:has(.tkp-post) .tkn-footer, body:has(.tkp-post) .tkn-chat-bubble { display:
   .tkn .tkp-post .tkp-summary dt, .tkn .tkp-post .tkp-summary dd { font-size: 15px; }
   .tkn .tkp-post .tkp-scroll > .tkp-fields, .tkn .tkp-post .tkp-scroll > .tkp-photos { gap: 18px; }
   .tkn .tkp-post .tkp-consent label { font-size: 15px; }
-  .tkn .tkp-post .tkp-pay { padding: 14px 18px; }
+  .tkn .tkp-post .tkp-pay { padding: 6px 18px; }
   .tkn .tkp-post .tkp-pay-rows dt, .tkn .tkp-post .tkp-pay-rows > div { font-size: 15px; }
   .tkn .tkp-post .tkp-aside { padding: 20px; gap: 12px; }
   .tkn .tkp-post .tkp-aside-label { font-size: 13px; }

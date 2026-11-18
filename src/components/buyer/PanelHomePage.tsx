@@ -4,7 +4,9 @@ import { SESSION_COOKIE } from "@/server/auth/http";
 import { userFromToken } from "@/server/auth/service";
 import { readOwnPresence } from "@/server/availability/service";
 import { profileProgress } from "@/lib/ui/profile-progress";
+import { priceOneLine } from "@/lib/price-list";
 import { readMoneySettings } from "@/server/billing/money-settings";
+import { readPriceList } from "@/server/billing/price-list";
 import { listOwnCards } from "@/server/listings/owner-cards";
 import { loadPacks, loadPanelSummary, type PackRow } from "@/server/notifications/summary";
 
@@ -36,5 +38,7 @@ export async function PanelHomePage() {
   const seller = summary.signedIn && summary.seller;
   const money = seller ? await readMoneySettings() : null;
   const adsLeft = summary.signedIn && money && money.paidPostingOn && money.postingFeeCredits > 0 ? Math.floor(summary.balance / money.postingFeeCredits) : null;
-  return <UserPanelHome summary={summary} ads={ads} packs={homePacks(packs)} profile={profile} adsLeft={adsLeft} />;
+  // H11.1b: "2 free ads left, then ₹200 per ad": one line from the live settings, for an account that can post.
+  const priceLine = seller ? priceOneLine(await readPriceList(summary.userId)) : null;
+  return <UserPanelHome summary={summary} ads={ads} packs={homePacks(packs)} profile={profile} adsLeft={adsLeft} priceLine={priceLine} />;
 }

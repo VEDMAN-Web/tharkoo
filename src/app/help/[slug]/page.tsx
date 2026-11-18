@@ -6,6 +6,8 @@ import { helpPath } from "@/lib/urls";
 import { withUrlSeo, urlHeading } from "@/lib/seo/override";
 import { getPaths } from "@/server/urls/service";
 import { HelpArticleView } from "@/components/h714/HelpArticleView";
+import { PriceCard } from "@/components/recharge/PriceCard";
+import { readPriceList } from "@/server/billing/price-list";
 
 export const revalidate = 300;
 
@@ -62,6 +64,7 @@ export default async function HelpArticlePage({ params }: { params: Promise<{ sl
       related={related}
       body={stripDevNotes(article.body || "")}
       contactHref="/contact/"
+      extra={(article.slug || slug) === "credits" ? <PriceCard data={await readPriceList()} /> : null}
     />
   );
 }

@@ -5,6 +5,7 @@ import { Lock, X } from "lucide-react";
 import { useT } from "@/components/ui/AdCard";
 import { hasSessionHint } from "@/lib/ui/api";
 import { preselectedId } from "@/lib/credit-pack-view";
+import { priceOneLine } from "@/lib/price-list";
 import type { RechargePack } from "@/server/billing/recharge";
 import { CreditPacks, useCreditPacks, type PackChoice } from "./CreditPacks";
 import { openSupportWith, rechargeLine, type RechargeOptions } from "./openRecharge";
@@ -53,6 +54,7 @@ export function RechargeSheet({ options, onClose }: { options: RechargeOptions; 
           <div>
             <h2 id="tkr-title">{t("recharge.title")}</h2>
             <p className="tkr-rate">{t("recharge.rate", { price: data?.creditPriceInr ?? 10 })}</p>
+            {data?.prices && priceOneLine(data.prices) ? <p className="tkr-line" data-tk="recharge-price-line">{priceOneLine(data.prices)}</p> : null}
           </div>
           <button type="button" className="tkr-x" aria-label={t("recharge.close")} onClick={onClose}>
             <X size={20} aria-hidden />
