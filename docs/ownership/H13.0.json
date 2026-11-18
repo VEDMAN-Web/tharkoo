@@ -1,0 +1,9 @@
+{
+  "branchPrefix": "haiku/h13.0",
+  "globs": [
+    "docs/ownership/H13.0.json",
+    "progress/H13.0.md",
+    "src/server/media/client.ts",
+    "tests/server/media/h13-0-*.test.ts"
+  ]
+}

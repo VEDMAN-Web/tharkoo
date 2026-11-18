@@ -58,10 +58,14 @@ const TOUR_LABEL = `Video call and verify · ${TOUR_COINS} credits`;
 const PHONE_PEOPLE_LABELS = ["Call", "WhatsApp", "Chat"];
 const PHONE_TOUR_LABELS = ["WhatsApp", "Chat", `Video · ${TOUR_COINS} credits`];
 
-/** The first ad on a city feed. (firstAdPath needs a super-top card, which the property feed may not have.) */
-async function anyAdPath(page: Page, feed: string) {
+/**
+ * An ad on a city feed: the first one, or the `index`th. (firstAdPath needs a super-top card, which the property feed may not have.)
+ * The chat round trip moves its ad to another account for a while, so it takes a different ad per project: two workers run the phone and
+ * the desktop project at the same time, and they must never use the same ad.
+ */
+async function anyAdPath(page: Page, feed: string, index = 0) {
   await page.goto(feed);
-  const link = page.locator(":is([data-tk=card], [data-tk=home-ad]) a[href*=\"/ad/\"]").first();
+  const link = page.locator(":is([data-tk=card], [data-tk=home-ad]) a[href*=\"/ad/\"]").nth(index);
   await link.waitFor({ state: "attached" });
   return (await link.getAttribute("href")) as string;
 }
@@ -181,17 +185,21 @@ test.describe("H6.8 contact card on a property ad with live tours on", () => {
     page.on("request", (request) => {
       if (request.url().includes("/api/tours/request") && request.method() === "POST") requests.push(request.url());
     });
+    // The popup asks for the balance when it opens. With the answer in, a visitor without coins is sent to Buy without any tour request;
+    // clicking before it arrives sends the request and the server answers 402 (also fine, but then a request was sent).
     await contactScope(page).locator("[data-tk=tour]").click();
     const popup = page.locator("[data-tk=ad-popup]");
     await expect(popup).toBeVisible();
     await expect(popup).toHaveAttribute("data-step", "call");
+    // The balance tile shows "…" until the popup knows the balance.
+    await expect(popup.locator(".tkn-pop-tile strong").nth(1)).not.toHaveText("…");
     await popup.locator(".tkn-pop-btn").click();
     await expect(popup).toHaveAttribute("data-step", "buy");
     await expect(page.getByRole("status").filter({ hasText: "Request sent" })).toHaveCount(0);
     expect(requests).toEqual([]);
   });
 
-  test("chat round trip: a buyer's message reaches the advertiser, and the reply comes back", async ({ page, baseURL }) => {
+  test("chat round trip: a buyer's message reaches the advertiser, and the reply comes back", async ({ page, baseURL }, info) => {
     test.setTimeout(240_000);
     const base = baseURL!;
     const advertiser = await newUserApi(base, "advertiser");
@@ -199,22 +207,25 @@ test.describe("H6.8 contact card on a property ad with live tours on", () => {
     const buyerEmail = buyer.email;
     await buyer.api.dispose();
 
-    const adPath = await anyAdPath(page, PROPERTY_FEED);
-    const slug = adPath.split("/").filter(Boolean)[1];
-    // The advertiser must own the ad to answer it: move the ad to the second test user in the test database.
+    // The advertiser must own the ad to answer it. The test makes its OWN ad (a copy of the first one, owned by the advertiser) instead of
+    // moving a shared one: the phone and the desktop project run at the same time on two workers, and no other test may ever see this ad.
+    const templatePath = await anyAdPath(page, PROPERTY_FEED);
+    const templateSlug = templatePath.split("/").filter(Boolean)[1];
     const moved = await withLocalDb(async (db) => {
       const user = await db.collection("users").findOne({ email: advertiser.email.toLowerCase() }, { projection: { _id: 1 } });
-      const listing = await db.collection("listings").findOne({ slug }, { projection: { ownerId: 1 } });
-      if (!user || !listing) return null;
-      await db.collection("listings").updateOne({ _id: listing._id }, { $set: { ownerId: user._id } });
-      return { listingId: String(listing._id), previousOwner: listing.ownerId as ObjectId };
+      const template = await db.collection("listings").findOne({ slug: templateSlug });
+      if (!user || !template) return null;
+      const id = new ObjectId();
+      const slug = `chat-roundtrip-${info.project.name}-${Date.now()}`;
+      await db.collection("listings").insertOne({ ...template, _id: id, slug, title: `Chat round trip ${Date.now()}`, ownerId: user._id });
+      return { listingId: String(id), slug };
     });
     expect(moved, "the advertiser and the ad are in the test database").not.toBeNull();
 
     try {
       await signInUi(page, buyerEmail);
       await page.waitForURL(/\/u\/account\/dashboard\//);
-      await page.goto(adPath);
+      await page.goto(`/ad/${moved!.slug}/`);
       await contactScope(page).locator("[data-tk=chat]").click();
       const panel = page.locator("[data-tk=chat-panel]");
       await expect(panel).toBeVisible();
@@ -250,9 +261,7 @@ test.describe("H6.8 contact card on a property ad with live tours on", () => {
       expect(sent.ok(), await sent.text()).toBe(true);
       await expect(panel.getByRole("log").getByText(reply)).toBeVisible({ timeout: 20_000 });
     } finally {
-      await withLocalDb((db) =>
-        db.collection("listings").updateOne({ slug }, { $set: { ownerId: moved!.previousOwner } }),
-      );
+      await withLocalDb((db) => db.collection("listings").deleteOne({ slug: moved!.slug }));
       await advertiser.api.dispose();
     }
   });

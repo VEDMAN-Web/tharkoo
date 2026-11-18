@@ -33,7 +33,11 @@ async function checkPicker(page: Page) {
   await expect(picker.locator('[data-tk="recharge-pay"]')).toBeEnabled();
   await expect(picker.locator('[data-tk="packs-purpose"]')).toHaveText("Credits pay for posting and promoting ads.");
   await expect(picker.locator('[data-tk="packs-test"]')).toBeVisible();
-  await expect(picker.locator('[data-tk="pack-ads"]')).toHaveCount(0);
+  // The "Enough for ..." line shows only while posting costs credits (H11.1b). Another spec can switch paid posting on at the same time
+  // (two workers share one database), so read what the server says now instead of assuming posting is free.
+  const paidOn = await page.evaluate(async () => (await (await fetch("/api/payments/packs")).json())?.data?.prices?.paidPostingOn === true);
+  if (paidOn) await expect(picker.locator('[data-tk="pack-ads"]').first()).toContainText("Enough for");
+  else await expect(picker.locator('[data-tk="pack-ads"]')).toHaveCount(0);
   const text = await picker.innerText();
   expect(text).not.toMatch(/Extra credits|Best deal|Choose a pack|\.00/);
   expect(text).toMatch(/\+\d+ free/);
