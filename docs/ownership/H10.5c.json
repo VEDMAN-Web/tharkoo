@@ -6,6 +6,9 @@
     "src/app/admin/settings/_view/SettingsCards.tsx",
     "src/app/admin/settings/_view/SettingsView.tsx",
     "src/app/admin/settings/_view/useAnswer.tsx",
-    "tests/e2e/h10-5c-undo-settings.e2e.ts"
+    "tests/e2e/h10-5c-undo-settings.e2e.ts",
+    "progress/H10.5c-b.md",
+    "tests/e2e/h9-1-credit-packs.e2e.ts",
+    "tests/e2e/contact-card.e2e.ts"
   ]
 }
