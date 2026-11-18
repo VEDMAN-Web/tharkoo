@@ -338,7 +338,7 @@ export const TEXT_DEFAULTS = {
   "post.photo.addPhotos": "Add photos",
   "post.photo.takePhoto": "Take a photo",
   "post.photo.addVideo": "Add video",
-  "post.photo.photoRuleFallback": "JPG, PNG or WebP, 8 MB each.",
+  "post.photo.photoRuleFallback": "JPG, PNG or WEBP, any size. Big photos are made smaller for you.",
   "post.photo.photoRulesLabel": "Photo rules",
   "post.photo.rulesLabel": "Photo and video rules",
   "post.photo.photoRulesTitle": "Your photos",
