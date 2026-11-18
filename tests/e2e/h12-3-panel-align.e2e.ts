@@ -46,8 +46,8 @@ test.describe("H12.3 panel and admin alignment", () => {
       const phone = size.width < 768;
 
       await page.goto("/u/account/");
-      await expect(page.locator('[data-tk="seller-stats"]')).toBeVisible();
-      const stats = await boxes(page, '[data-tk="seller-stats"] .up-stat');
+      await expect(page.locator('[data-tk="dash-tiles"]')).toBeVisible();
+      const stats = await boxes(page, '[data-tk="dash-tiles"] .up-dash-kpi');
       expect(stats.length).toBe(3);
       expect(equal(stats.map((box) => box.height)), `number boxes at ${size.width}: ${JSON.stringify(stats)}`).toBe(true);
       expect(await hasHorizontalScroll(page)).toBe(false);
