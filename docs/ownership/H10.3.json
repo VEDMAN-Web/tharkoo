@@ -1,0 +1,22 @@
+{
+  "branchPrefix": "haiku/h10.3",
+  "globs": [
+    "docs/ownership/H10.3.json",
+    "next.config.ts",
+    "src/app/admin/urls/NotFoundBeacon.tsx",
+    "src/app/admin/urls/notfound-beacon.ts",
+    "src/app/api/notfound",
+    "src/app/not-found.tsx",
+    "src/lib/admin/history-words.ts",
+    "src/server/admin/ads-bulk.ts",
+    "src/server/admin/history.ts",
+    "src/server/admin/takedown.ts",
+    "src/server/admin/users.ts",
+    "tests/e2e/h10-3-hydration.e2e.ts",
+    "tests/e2e/h10-3-qa.e2e.ts",
+    "tests/e2e/h7-169-history-plain.e2e.ts",
+    "tests/server/admin/h7-158b-ad-end-times.test.ts",
+    "tests/server/admin/h7169-history-words.test.ts",
+    "tests/server/seo/notfound.test.ts"
+  ]
+}
