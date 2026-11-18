@@ -241,6 +241,11 @@ export const TEXT_DEFAULTS = {
   "price.superTop": "The very first spot on the list for {hours}.",
   "price.allFree": "Every ad",
   "price.allFreeText": "Posting an ad is free for now.",
+  // H12.3: the line on My ads when there are no ads yet; it follows the live posting rule.
+  "myads.cost.free": "Posting an ad is free.",
+  "myads.cost.freeLeftOne": "You have {count} free ad left.",
+  "myads.cost.freeLeft": "You have {count} free ads left.",
+  "myads.cost.paid": "Each ad costs {rupees} ({credits}) to post.",
   "price.leftDots": "Free ads left",
   "post.pay.free": "This ad is FREE (free ad {number} of {total})",
   "post.pay.costs": "This ad costs {rupees} ({credits})",

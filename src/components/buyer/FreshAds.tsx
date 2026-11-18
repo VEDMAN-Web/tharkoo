@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { AdCard } from "../ui/AdCard";
+import { ListingCard, ListingGrid } from "../new/ListingCards";
 import { displayTitle } from "@/lib/format";
 import { api } from "@/lib/ui/api";
 import type { ListingDoc } from "@/lib/models";
@@ -28,7 +29,8 @@ function toAdDoc(card: FeedCard): ListingDoc {
   } as unknown as ListingDoc;
 }
 
-export function FreshAds({ title = "Fresh ads for you" }: { title?: string }) {
+/** `standardCards`: the Home "Latest ads" card (Chats uses it); the default is the panel card. */
+export function FreshAds({ title = "Fresh ads for you", standardCards = false }: { title?: string; standardCards?: boolean }) {
   const [items, setItems] = useState<FeedCard[] | null>(null);
   useEffect(() => {
     let live = true;
@@ -47,13 +49,23 @@ export function FreshAds({ title = "Fresh ads for you" }: { title?: string }) {
         <h2 id="fresh-heading" className="up-h2">{title}</h2>
         <Link href="/search/" className="up-link">See all ads</Link>
       </div>
-      <ul className="up-cards3">
-        {items.map((card) => (
-          <li key={card.slug}>
-            <AdCard ad={toAdDoc(card)} />
-          </li>
-        ))}
-      </ul>
+      {standardCards ? (
+        <ListingGrid label={title}>
+          {items.map((card, position) => (
+            <li key={card.slug}>
+              <ListingCard ad={toAdDoc(card)} order={position} />
+            </li>
+          ))}
+        </ListingGrid>
+      ) : (
+        <ul className="up-cards3">
+          {items.map((card) => (
+            <li key={card.slug}>
+              <AdCard ad={toAdDoc(card)} />
+            </li>
+          ))}
+        </ul>
+      )}
     </section>
   );
 }

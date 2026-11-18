@@ -75,3 +75,5 @@
   .adm-pb-body { padding: 14px 16px 18px; }
   .adm-pb-slot { flex-wrap: wrap; }
 }
+/* H12.3: every card header is one height, so titles in a row start at the same top. */
+.adm-pb-head { min-height: 66px; box-sizing: border-box; }
