@@ -87,7 +87,7 @@ export function SettingsView({
                 <div className="adm-s-body adm-s-blocks">{logo}</div>
               </section>
             ) : null}
-            <UndoWindowsCard key={JSON.stringify(data.undoWindows)} windows={data.undoWindows} canEdit={canEdit} />
+            <UndoWindowsCard windows={data.undoWindows} canEdit={canEdit} />
             <section className="adm-card adm-s-card" id="site" aria-labelledby="site-title">
               <header className="adm-s-head">
                 <h2 id="site-title">Site and chat</h2>
