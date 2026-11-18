@@ -32,7 +32,7 @@ test.describe("H12.4 light motion", () => {
       await page.mouse.move(40, 40);
       await page.waitForTimeout(400);
       const found = await page.evaluate(() => {
-        const running = document.getAnimations().filter((item) => item.playState === "running" || item.playState === "pending").map((item) => `${(item.effect as KeyframeEffect | null)?.target?.tagName ?? "?"}.${String((item.effect as KeyframeEffect | null)?.target?.className ?? "").slice(0, 30)}`);
+        const running = document.getAnimations().filter((item) => item.playState === "running" || item.pending).map((item) => `${(item.effect as KeyframeEffect | null)?.target?.tagName ?? "?"}.${String((item.effect as KeyframeEffect | null)?.target?.className ?? "").slice(0, 30)}`);
         const slow: string[] = [];
         for (const node of Array.from(document.querySelectorAll("*"))) {
           const seconds = getComputedStyle(node).transitionDuration.split(",").map((part) => (part.trim().endsWith("ms") ? parseFloat(part) / 1000 : parseFloat(part)));
