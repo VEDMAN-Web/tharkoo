@@ -1945,6 +1945,14 @@ input.tk-field:focus-visible, select.tk-field:focus-visible, textarea.tk-field:f
 }
 .tkn-sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
 @media (max-width: 600px) { .tkn-float { right: 16px; bottom: 16px; } }
+/* H12.4b: the up arrow keeps its place while it is not shown, so it appearing on scroll does not change the size of the chat column. */
+.tkn-top-away { visibility: hidden; }
+/* H12.4b: the phone size of the chat button is in the stylesheet that loads with the page. It used to be added by the chat component
+   after the page loaded, so the button changed size (52 to 48 px) a moment after the first paint: a layout shift. */
+@media (max-width: 767px) {
+  .tkn-float .tkn-chat-bubble { width: 48px; height: 48px; }
+  body:has(.tkn-float) { padding-bottom: 72px; }
+}
 @media (max-width: 599px) {
   .tkn-chat-bubble { width: 52px; height: 52px; }
   .tkn-brand-tag { display: none; }

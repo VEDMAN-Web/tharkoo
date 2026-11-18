@@ -23,7 +23,6 @@ const BODY_MIN = 10;
 const REPLY_POLL_MS = 8000;
 const BACK_TO_TOP_AFTER = 300;
 const SWIPE_CLOSE_PX = 60;
-const PHONE_FLOAT_CSS = "@media (max-width: 767px) { .tkn-float .tkn-chat-bubble { width: 48px; height: 48px; } body { padding-bottom: 72px; } }";
 const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const PHONE = /^\+?[\d\s-]{8,20}$/;
 
@@ -255,7 +254,6 @@ export function SupportChat({ chat, texts, hours = "" }: { chat: Chat; texts?: U
 
   return (
     <div className={floatClass} ref={float}>
-      <style>{PHONE_FLOAT_CSS}</style>
       {open ? (
         <section aria-label={chat.title} className="tkn-chatbox" id="tkn-chat-panel" data-tk="support-chat">
           <div
@@ -322,8 +320,9 @@ export function SupportChat({ chat, texts, hours = "" }: { chat: Chat; texts?: U
           </form>
         </section>
       ) : null}
-      {showTop && !open ? (
-        <button type="button" className="tkn-top" aria-label={t("chat.backToTop")} onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}>
+      {!open ? (
+        // Always in the page, hidden until the visitor has scrolled: its box is reserved, so showing it moves nothing (no layout shift).
+        <button type="button" className={showTop ? "tkn-top" : "tkn-top tkn-top-away"} aria-label={t("chat.backToTop")} aria-hidden={showTop ? undefined : true} tabIndex={showTop ? undefined : -1} onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}>
           <ArrowUp size={18} aria-hidden="true" focusable="false" />
         </button>
       ) : null}
