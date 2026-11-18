@@ -1,0 +1,26 @@
+{
+  "branchPrefix": "haiku/h12.1",
+  "globs": [
+    "docs/ownership/H12.1.json",
+    "progress/H12.1.md",
+    "src/app/safety/page.tsx",
+    "src/components/new/TrustLegalPage.tsx",
+    "src/content/trust.ts",
+    "src/components/h714/HowItWorksView.tsx",
+    "src/components/h714/CitiesView.tsx",
+    "src/components/h714/CategoriesView.tsx",
+    "src/components/h714/h714.css",
+    "src/components/blocks/CategoryGridBlock.tsx",
+    "src/components/blocks/CityLinksBlock.tsx",
+    "src/components/blocks/StepsBlock.tsx",
+    "src/components/blocks/blocks.css",
+    "src/components/new/BlogView.tsx",
+    "src/components/new/BlogCover.tsx",
+    "src/components/new/ContactView.tsx",
+    "src/components/new/NotFoundView.tsx",
+    "src/components/new/home-spec.css",
+    "src/components/new/new-design.css",
+    "tests/server/ui/h12-1-*.test.ts",
+    "tests/e2e/h12-1-public-layout.e2e.ts"
+  ]
+}

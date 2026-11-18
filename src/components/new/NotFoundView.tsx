@@ -47,14 +47,14 @@ export function NotFoundView({ categories, ads }: { categories: NotFoundCategory
 
       {ads && ads.cards.length ? (
         <section className="tkp-section" style={{ paddingTop: 64 }} aria-labelledby="latest-ads">
-          <div className="tkp-ads-head">
+          <div className="tkh-head">
             <div>
-              <p className="tkp-eyebrow">{ads.eyebrow}</p>
-              <h2 id="latest-ads" className="tkp-h2">
+              <p className="tkh-eyebrow tkh-eyebrow-lavender">{ads.eyebrow}</p>
+              <h2 id="latest-ads" className="tkh-h2">
                 {ads.title}
               </h2>
             </div>
-            <Link className="tkp-more-link" href={ads.seeAllHref}>
+            <Link className="tkh-more" href={ads.seeAllHref}>
               {ads.seeAll}
             </Link>
           </div>

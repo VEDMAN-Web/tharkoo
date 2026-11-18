@@ -1,3 +1,4 @@
+import Image from "next/image";
 import Link from "next/link";
 import { H714Page } from "./H714Page";
 import { FaqList, type FaqItem } from "./FaqList";
@@ -6,10 +7,12 @@ export function HowItWorksView({
   postAdHref,
   faqs,
   packsText,
+  photo,
 }: {
   postAdHref: string;
   faqs: FaqItem[];
   packsText: string;
+  photo?: { src: string; alt: string } | null;
 }) {
   return (
     <H714Page>
@@ -106,10 +109,12 @@ export function HowItWorksView({
           </div>
         </section>
         <section className="h714-pad" style={{ maxWidth: "1280px", margin: "0 auto", padding: "72px 24px 0", boxSizing: "border-box" }}>
-          <div className="h714-2e">
-            <div style={{ position: "relative", borderRadius: "20px", overflow: "hidden", aspectRatio: "16/10", background: "linear-gradient(120deg, #FCE4F0 0%, #EDE9FF 45%, #E0F2FE 80%, #FFF5E6 100%)" }}>
-              <span style={{ position: "absolute", left: "50%", top: "50%", transform: "translate(-50%, -50%)", fontSize: "13px", fontWeight: "600", color: "rgba(30,11,56,.45)" }}>Video call photo</span>
-            </div>
+          <div className="h714-2e" style={photo ? undefined : { gridTemplateColumns: "minmax(0, 1fr)", maxWidth: "760px" }}>
+            {photo ? (
+              <div style={{ position: "relative", borderRadius: "20px", overflow: "hidden", aspectRatio: "16/10", background: "linear-gradient(120deg, #FCE4F0 0%, #EDE9FF 45%, #E0F2FE 80%, #FFF5E6 100%)" }}>
+                <Image src={photo.src} alt={photo.alt} fill sizes="(max-width: 900px) 100vw, 50vw" unoptimized style={{ objectFit: "cover" }} />
+              </div>
+            ) : null}
             {" "}
             <div>
               <p style={{ display: "inline-block", margin: "0 0 10px", fontSize: "12px", fontWeight: "700", letterSpacing: ".12em", textTransform: "uppercase", color: "#5B21B6", background: "#F5F0FF", borderRadius: "999px", padding: "6px 14px" }}>Credits</p>
