@@ -227,7 +227,10 @@ body:has(.tkp-post) .tkn-footer, body:has(.tkp-post) .tkn-chat-bubble { display:
   .tkn .tkp-post .tkp-grid { grid-template-columns: 180px minmax(0, 1fr) 300px; gap: 24px; }
 }
 @media (max-width: 1023px) {
-  .tkn .tkp-post { padding: 8px 16px calc(96px + env(safe-area-inset-bottom)); }
+  .tkn .tkp-post { padding: 8px 16px calc(112px + env(safe-area-inset-bottom)); scroll-padding-bottom: 120px; }
+  .tkn .tkp-post .tkp-progress { display: none; }
+  body:has(.tkp-post:not([data-tk="post-success"])) [data-tk="post-ad"] { display: none; }
+  html:has(.tkp-post) { scroll-padding-bottom: 120px; }
   .tkn .tkp-post .tkp-grid { grid-template-columns: minmax(0, 1fr); gap: 12px; }
   .tkn .tkp-post .tkp-rail { position: static; }
   .tkn .tkp-post .tkp-kicker-plain { display: none; }

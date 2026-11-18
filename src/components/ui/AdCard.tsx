@@ -73,7 +73,7 @@ export function AdCard({
   const superTop = variant === "supertop" || variant === "star";
   const [shown, setShown] = useState("");
   const [note, setNote] = useState("");
-  const city = prettyPlace(ad.citySlug);
+  const city = prettyPlace(ad.citySlug) || (ad as { cityLabel?: string }).cityLabel || "";
   const area = ad.place && !isCityAlias(city, ad.place) ? ad.place : "";
   const place = `${city}${area ? `/ ${area}` : ""}`.slice(0, 22);
   const tier = variant in TIER_KEYS ? t(TIER_KEYS[variant as keyof typeof TIER_KEYS]) : "";

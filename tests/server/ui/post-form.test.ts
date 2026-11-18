@@ -33,7 +33,8 @@ describe("post form", () => {
 
   it("requires the dating looking-for field and names it", () => {
     const missing = validatePost({ ...base, attrs: {} });
-    expect(missing["looking-for"]).toMatch(/fill in this field/i);
+    expect(missing["looking-for"]).toBe("Fill this in.");
+    expect(validatePost({ ...base, attrs: {}, fields: [{ key: "looking-for", label: "Looking for", required: true, pick: "one" }] })["looking-for"]).toBe("Pick one.");
     const filled = validatePost(base);
     expect(filled["looking-for"]).toBeUndefined();
   });

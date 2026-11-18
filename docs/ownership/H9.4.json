@@ -1,0 +1,17 @@
+{
+  "branchPrefix": "haiku/h9.4",
+  "globs": [
+    "docs/ownership/H9.4.json",
+    "progress/H9.4.md",
+    "src/lib/ui/post-form.ts",
+    "src/lib/ui/text.ts",
+    "src/components/PostWizard.tsx",
+    "src/components/post/PostPreview.tsx",
+    "src/components/post/post-wizard.css",
+    "src/components/ui/AdCard.tsx",
+    "tests/server/ui/post-form.test.ts",
+    "tests/server/ui/post-wizard-copy.test.ts",
+    "tests/e2e/h9-4-posting-polish.e2e.ts",
+    "tests/e2e/post-step-5.e2e.ts"
+  ]
+}
