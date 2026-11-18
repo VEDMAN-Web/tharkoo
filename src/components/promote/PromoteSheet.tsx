@@ -1,6 +1,5 @@
 "use client";
 
-import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Check, X } from "lucide-react";
@@ -124,9 +123,6 @@ export function PromoteSheet({ options, onClose }: { options: PromoteOptions; on
             <p className="tkpr-done-title">{t("promote.done", { name: done.name })}</p>
             {done.endsAt ? <p className="tkpr-muted">{t("promote.until", { date: new Date(done.endsAt).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" }) })}</p> : null}
             <p className="tkpr-muted" data-tk="promote-left">{t("promote.left", { count: money(done.balance) })}</p>
-            <div className="tkpr-actions">
-              <Link href="/u/account/ads/" className="tkr-pay tkpr-link-btn" onClick={onClose}>{t("promote.viewAds")}</Link>
-            </div>
           </div>
         ) : !signedIn ? (
           <p className="tkr-note">

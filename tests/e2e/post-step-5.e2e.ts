@@ -144,14 +144,16 @@ test.describe("H7.86 post an ad, step 5 and the success screen", () => {
 
     await expect(page.locator("[data-tk=what-next] li")).toHaveCount(3);
     await expect(page.locator("[data-tk=what-next]")).toContainText("Mumbai Dating");
-    await expect(page.locator("[data-tk=view-my-ads]")).toHaveText("View my ads");
+    await expect(page.locator("[data-tk=view-my-ads]")).toHaveCount(0);
+    await expect(page.getByText("View my ads", { exact: true })).toHaveCount(0);
     await expect(page.locator("[data-tk=post-another]")).toHaveText("Post another ad");
     await expect(page.locator("[data-tk=post-success] [data-tk=post-preview]")).toContainText(edited);
     expect(page.url()).not.toContain("draft=");
     expect(await overflow(page)).toBeLessThanOrEqual(0);
     await shot(page, `${prefix}-07-success`);
 
-    await page.locator("[data-tk=view-my-ads]").click();
+    // H14.2: no View my ads button any more; go to My ads from the menu address.
+    await page.goto("/u/account/ads/");
     await page.waitForURL(/\/u\/account\/ads\//);
     const mine = page.locator("[data-tk=card]").filter({ hasText: edited }).first();
     await expect(mine).toBeVisible();
@@ -478,12 +480,16 @@ test.describe("H7.86 post an ad, step 5 and the success screen", () => {
     await consentAndPublish(page);
     await expect(page.locator("[data-tk=receipt]")).toHaveText("30 credits paid · Balance 70 credits");
     await expect(page.locator("[data-tk=view-ad]")).toHaveAttribute("href", /^\/ad\//);
+    await expect(page.getByText("View your ad", { exact: true })).toHaveCount(0);
     await expect(page.locator("[data-tk=upsell]")).toContainText("Get more views");
     expect(await page.locator("[data-tk=upsell-plan]").count()).toBeGreaterThan(0);
     await expect(page.locator("[data-tk=post-another]")).toBeVisible();
     expect(await overflow(page)).toBeLessThanOrEqual(0);
     await shot(page, `${prefix}-C-success`);
     expect(draft).toBeTruthy();
+    // H14.2: the whole posted-ad card opens the ad.
+    await page.locator("[data-tk=post-success] .tkp-success-card").click({ position: { x: 30, y: 30 } });
+    await expect(page).toHaveURL(/\/ad\//);
   });
 
   test("with no posting-fee endpoint, a user with 0 credits sees no fee anywhere and publishes normally", async ({ page, baseURL }) => {
@@ -501,7 +507,8 @@ test.describe("H7.86 post an ad, step 5 and the success screen", () => {
     await expect(page.locator(".tkp-nav [data-tk=go-on]")).toHaveText("Publish ad");
     await consentAndPublish(page);
     await expect(page.locator("[data-tk=receipt]")).toHaveCount(0);
-    await expect(page.locator("[data-tk=view-my-ads]")).toBeVisible();
+    await expect(page.locator("[data-tk=post-another]")).toBeVisible();
+    await expect(page.locator("[data-tk=view-my-ads]")).toHaveCount(0);
   });
 
   test("a posting-fee answer of 0 means posting is free as well", async ({ page, baseURL }) => {

@@ -168,7 +168,9 @@ test.describe("H7.84 home ad cards", () => {
     const pop = page.locator('[data-tk="home-ad-popout"]');
     await expect(pop).toBeVisible({ timeout: 3000 });
     if (await card.locator('[data-tk="availability"]').count()) await expect(pop.getByRole("link", { name: "Chat" })).toBeVisible();
-    await expect(pop.getByRole("link", { name: "View ad" })).toBeVisible();
+    // H14.2: no View ad button; the whole pop-out opens the ad through its title link.
+    await expect(pop.getByRole("link", { name: "View ad" })).toHaveCount(0);
+    await expect(pop.locator(".tkh-pop-link")).toBeVisible();
     await page.mouse.move(5, 5);
     await expect(pop).toHaveCount(0);
   });

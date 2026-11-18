@@ -62,10 +62,10 @@ describe("wording of steps 4 and 5 (H7.86)", () => {
 });
 
 describe("the success screen wording (H7.86)", () => {
-  it("says live and offers View my ads and Post another ad", () => {
+  it("says live and offers only Post another ad (H14.2: no View my ads button)", () => {
     const copy = newSuccessCopy(POST_COPY_DEFAULTS, true);
     expect(copy.title).toBe("Your ad is live");
-    expect(copy.primary).toEqual({ label: "View my ads", href: "/u/account/ads/" });
+    expect(copy).not.toHaveProperty("primary");
     expect(copy.secondary.label).toBe("Post another ad");
   });
 
@@ -73,9 +73,9 @@ describe("the success screen wording (H7.86)", () => {
     expect(newSuccessCopy(POST_COPY_DEFAULTS, false).title).toBe("Your ad is in review");
   });
 
-  it("keeps a button an admin wrote", () => {
+  it("no longer shows a first button, even when an admin wrote one", () => {
     const copy = { ...POST_COPY_DEFAULTS, success: { ...POST_COPY_DEFAULTS.success, primaryCta: { label: "See my page", href: "/u/account/ads/" } } };
-    expect(newSuccessCopy(copy, true).primary.label).toBe("See my page");
+    expect(newSuccessCopy(copy, true)).not.toHaveProperty("primary");
   });
 });
 

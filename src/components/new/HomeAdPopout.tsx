@@ -4,6 +4,7 @@ import { useLayoutEffect, useRef, useState, type MutableRefObject } from "react"
 import { createPortal } from "react-dom";
 import Link from "next/link";
 import { ChevronLeft, ChevronRight } from "lucide-react";
+import { recordAdClick } from "@/components/ad/adCountStore";
 import { SaveButton } from "@/components/ui/SaveButton";
 import { fillText } from "@/lib/ui/text";
 import type { HomeAdCardData, HomeAdLabels } from "./HomeAdCard";
@@ -100,7 +101,11 @@ export function HomeAdPopout({
         <span className="tkh-ad-watermark" aria-hidden>{labels.watermark}</span>
       </div>
       <div className="tkh-pop-body">
-        <p className="tkh-pop-title">{ad.title}</p>
+        <p className="tkh-pop-title">
+          <Link href={ad.href} prefetch={false} className="tkh-pop-link" onClick={() => (ad.slug ? recordAdClick(ad.slug) : undefined)}>
+            {ad.title}
+          </Link>
+        </p>
         {online || ad.age ? (
           <p className="tkh-pop-meta">
             {online ? <span className="is-online">● {labels.online}</span> : null}
@@ -112,10 +117,11 @@ export function HomeAdPopout({
           <Link href={ad.categoryHref} prefetch={false} className="tkh-pill tkh-pill-rose">{ad.categoryName}</Link>
           {ad.city ? <Link href={ad.cityHref} prefetch={false} className="tkh-pill tkh-pill-lavender">{ad.city}</Link> : null}
         </p>
-        <div className="tkh-pop-acts">
-          {chatOn ? <Link href={`${ad.href}${ad.href.includes("?") ? "&" : "?"}chat=1`} prefetch={false} className="tkh-pop-btn" data-tk="pop-chat">{labels.chat}</Link> : null}
-          <Link href={ad.href} prefetch={false} className="tkh-pop-btn is-main">{labels.viewAd}</Link>
-        </div>
+        {chatOn ? (
+          <div className="tkh-pop-acts">
+            <Link href={`${ad.href}${ad.href.includes("?") ? "&" : "?"}chat=1`} prefetch={false} className="tkh-pop-btn" data-tk="pop-chat">{labels.chat}</Link>
+          </div>
+        ) : null}
       </div>
     </div>
   );
