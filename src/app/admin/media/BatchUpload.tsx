@@ -129,7 +129,7 @@ export function BatchUpload({ enabled, onDone }: { enabled: boolean; onDone: () 
       >
         <ImagePlus aria-hidden="true" size={28} />
         <strong>Drop pictures here, or choose them</strong>
-        <small>Up to 50 at a time, each up to 8 MB. JPEG, PNG or WebP.</small>
+        <small>Up to 50 at a time, any size. JPEG, PNG or WebP.</small>
         <input
           className="adm-ml-file"
           type="file"
