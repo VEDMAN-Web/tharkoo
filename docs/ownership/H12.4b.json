@@ -1,0 +1,11 @@
+{
+  "branchPrefix": "haiku/h12.4b",
+  "globs": [
+    "docs/ownership/H12.4b.json",
+    "progress/H12.4b.md",
+    "src/components/chat/SupportChat.tsx",
+    "src/app/globals.css",
+    "tests/e2e/h7-102-money.e2e.ts",
+    "tests/e2e/h12-4-motion.e2e.ts"
+  ]
+}

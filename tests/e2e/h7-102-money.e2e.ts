@@ -28,7 +28,7 @@ test.describe("H7.102 money settings and wording", () => {
 
     await section.getByLabel("Posting fee (credits)").fill("40");
     await section.getByRole("button", { name: "Save changes" }).click();
-    await expect(page.getByText("Posting fee and credit price saved.")).toBeVisible();
+    await expect(page.getByText("Posting fee, credit price and free ads saved.")).toBeVisible();
     await page.reload();
     await expect(page.locator('[data-tk="money-settings"]').getByLabel("Posting fee (credits)")).toHaveValue("40");
 
@@ -41,7 +41,7 @@ test.describe("H7.102 money settings and wording", () => {
     await expect(page.getByText("Test payments are on. No money is taken.")).toBeVisible();
     await page.locator('[data-tk="money-settings"]').getByLabel("Posting fee (credits)").fill("30");
     await page.locator('[data-tk="money-settings"]').getByRole("button", { name: "Save changes" }).click();
-    await expect(page.getByText("Posting fee and credit price saved.")).toBeVisible();
+    await expect(page.getByText("Posting fee, credit price and free ads saved.")).toBeVisible();
     await page.goto("/admin/");
     await expect(page.locator('[data-tk="mock-payments-banner"]')).toHaveText(BANNER);
   });

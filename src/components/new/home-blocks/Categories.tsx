@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
+import { categoryIconFor } from "@/lib/category-icons";
 import { applyPrefixes, categoryPath, type UrlPaths } from "@/lib/urls";
 import type { ShellConfig } from "@/server/site-links/shell-config-rules";
 import { SectionHead } from "./SectionHead";
@@ -42,13 +43,18 @@ export function HomeCategories({
         {cats.map((cat) => {
           const slug = cat.slug || "";
           const photo = photos.get(slug);
+          const Icon = categoryIconFor(cat.icon, cat.kind);
           return (
             <li key={slug} data-reveal>
               <Link className="tkh-cat m-lift" href={applyPrefixes(categoryPath(slug), paths)} prefetch={false}>
                 {photo ? (
                   <img className="tkh-cat-photo" src={photo.src} alt="" width={480} height={320} loading="lazy" style={{ objectPosition: photo.focus }} />
                 ) : (
-                  <span className="tkh-cat-photo tkh-cat-empty" aria-hidden="true" />
+                  <span className="tkh-cat-photo tkh-cat-empty" aria-hidden="true">
+                    <span className="tkh-cat-icon">
+                      <Icon size={20} />
+                    </span>
+                  </span>
                 )}
                 <span className="tkh-cat-strip">
                   <span className="tkh-cat-text">

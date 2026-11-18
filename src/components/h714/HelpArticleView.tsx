@@ -27,6 +27,7 @@ export function HelpArticleView({
   /** Live content shown after the article text, such as the "What things cost" card on the credits help page. */
   extra?: ReactNode;
 }) {
+  const showSection = section.trim() !== "" && section.trim().toLowerCase() !== "help";
   return (
     <H714Page>
         {" "}
@@ -37,10 +38,15 @@ export function HelpArticleView({
               {" "}
               <span aria-hidden="true">/</span>
               {" "}
-              <span style={{ textDecoration: "none" }}>{section}</span>
-              {" "}
-              <span aria-hidden="true">/</span>
-              {" "}{title}
+              {showSection ? (
+                <>
+                  <span style={{ textDecoration: "none" }}>{section}</span>
+                  {" "}
+                  <span aria-hidden="true">/</span>
+                  {" "}
+                </>
+              ) : null}
+              {title}
             </nav>
             <h1 className="h714-h1" style={{ margin: "0 0 6px", fontSize: "38px", letterSpacing: "-.03em", color: "#110520" }}>{title}</h1>
             <p style={{ margin: "0", fontSize: "15px", lineHeight: "1.55", color: "#4A2870", maxWidth: "640px" }}></p>

@@ -322,8 +322,9 @@ export function SupportChat({ chat, texts, hours = "" }: { chat: Chat; texts?: U
           </form>
         </section>
       ) : null}
-      {showTop && !open ? (
-        <button type="button" className="tkn-top" aria-label={t("chat.backToTop")} onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}>
+      {!open ? (
+        // Always in the page, hidden until the visitor has scrolled: its box is reserved, so showing it moves nothing (no layout shift).
+        <button type="button" className={showTop ? "tkn-top" : "tkn-top tkn-top-away"} aria-label={t("chat.backToTop")} aria-hidden={showTop ? undefined : true} tabIndex={showTop ? undefined : -1} onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}>
           <ArrowUp size={18} aria-hidden="true" focusable="false" />
         </button>
       ) : null}

@@ -23,6 +23,7 @@ import { NewHome } from "@/components/new/NewHome";
 import { HomeBlocksV2 } from "@/components/new/home-blocks/HomeBlocksV2";
 import type { BlockBase } from "@/server/models/layout";
 import { countryPlaces } from "@/server/locations/site-country";
+import { withCategoryIcons } from "@/server/categories/icons";
 
 export const revalidate = 60;
 
@@ -50,7 +51,7 @@ async function newHome(texts: ReturnType<typeof pickTexts>, layout?: BlockBase[]
   const [content, paths, categories, countries, feed, shell, site] = await Promise.all([
     getHomepageContent(),
     getPaths(),
-    getCategories(),
+    getCategories().then(withCategoryIcons),
     countryPlaces(),
     getHomeAds(),
     readShellConfig(),
