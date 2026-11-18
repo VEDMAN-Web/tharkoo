@@ -5,6 +5,7 @@ import "@/styles/admin-kit.css";
 import "@/styles/admin-picker.css";
 import { listMediaAction } from "@/app/admin/media/actions";
 import { fileProblem, fileSize, type UploadRule } from "@/components/upload/rules";
+import { uploadStaffFile } from "@/components/upload/staff-upload";
 import type { ImageRef } from "./ImagePicker";
 import { Tabs } from "./Tabs";
 import { TextField } from "./TextField";
@@ -191,16 +192,12 @@ function UploadTab({ rule, onPick, onError }: { rule: UploadRule; onPick: (row: 
     if (!file || problem) return;
     setBusy(true);
     onError("");
-    const form = new FormData();
-    form.set("file", file);
-    form.set("alt", alt);
     try {
-      const res = await fetch("/admin/media/upload/", { method: "POST", body: form });
-      const body = (await res.json()) as { ok: boolean; error?: string; item?: PickerRow };
-      if (!body.ok || !body.item) onError(body.error || "Upload failed");
-      else onPick(body.item);
-    } catch {
-      onError("Upload failed. Check your connection and try again.");
+      // H13.1: straight to Cloudinary with a signed request (the old route stays for local development).
+      const result = await uploadStaffFile<{ item?: PickerRow } & Partial<PickerRow>>({ purpose: "library", kind: "image", file, alt, legacy: { url: "/admin/media/upload/", fields: { alt } } });
+      const item = result.ok ? (result.data.item ?? (result.data.id ? (result.data as PickerRow) : null)) : null;
+      if (!result.ok || !item) onError(result.ok ? "Upload failed" : result.error);
+      else onPick(item);
     } finally {
       setBusy(false);
     }

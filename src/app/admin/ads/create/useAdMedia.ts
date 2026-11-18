@@ -24,7 +24,7 @@ const countsToward = (item: MediaItem) => item.state !== "failed";
  * The photo or video list of the create-ad form. Files upload one at a time as they are chosen.
  * The first photo is the cover. `ownerEmail` is the account the files belong to.
  */
-export function useAdMedia(kind: MediaKind, limit: number, ownerEmail: string) {
+export function useAdMedia(kind: MediaKind, limit: number, ownerEmail: string, categoryId = "") {
   const [items, setItems] = useState<MediaItem[]>([]);
   const [note, setNote] = useState("");
   const counter = useRef(0);
@@ -53,11 +53,11 @@ export function useAdMedia(kind: MediaKind, limit: number, ownerEmail: string) {
           patch(entry.item.key, { state: "failed", error: refusal });
           continue;
         }
-        const result = await uploadAdMedia(entry.file, kind, ownerEmail, (ratio) => patch(entry.item.key, { progress: ratio }));
+        const result = await uploadAdMedia(entry.file, kind, ownerEmail, (ratio) => patch(entry.item.key, { progress: ratio }), categoryId);
         patch(entry.item.key, result.ok ? { state: "ready", mediaId: result.mediaId } : { state: "failed", error: result.error });
       }
     },
-    [items, kind, limit, ownerEmail, patch],
+    [items, kind, limit, ownerEmail, categoryId, patch],
   );
 
   const remove = useCallback(

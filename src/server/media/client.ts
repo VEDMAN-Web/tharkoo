@@ -8,6 +8,10 @@ export interface RemoteAsset {
   format: string;
   /** Play length in seconds. Only set for videos. */
   duration?: number;
+  /** Picture size and address, set by the live client (H13.1: the Media library needs them after a direct upload). */
+  width?: number;
+  height?: number;
+  url?: string;
 }
 
 export type ResourceKind = "image" | "video";
@@ -45,10 +49,16 @@ function liveClient(): CloudinaryClient {
           bytes?: number;
           format?: string;
           duration?: number;
+          width?: number;
+          height?: number;
+          secure_url?: string;
         };
         return {
           bytes: Number(found.bytes) || 0,
           format: String(found.format || ""),
+          ...(found.width ? { width: Number(found.width) } : {}),
+          ...(found.height ? { height: Number(found.height) } : {}),
+          ...(found.secure_url ? { url: String(found.secure_url) } : {}),
           ...(resourceType === "video" ? { duration: Number(found.duration) || 0 } : {}),
         };
       } catch (error) {
