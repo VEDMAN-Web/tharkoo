@@ -54,7 +54,7 @@ export function VideoReview() {
   }
 
   return (
-    <section className="adm-card" style={{ display: "grid", gap: 12 }} aria-label="Ad videos">
+    <section className="adm-card adm-vr" style={{ display: "grid", gap: 12 }} aria-label="Ad videos">
       <h2 style={{ fontSize: 16, fontWeight: 800 }}>Ad videos{rows ? ` (${rows.length})` : ""}</h2>
       {error ? <Notice kind="error">{error}</Notice> : null}
       {rows === null ? (

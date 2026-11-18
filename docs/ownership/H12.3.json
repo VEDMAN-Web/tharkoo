@@ -1,0 +1,30 @@
+{
+  "branchPrefix": "haiku/h12.3",
+  "globs": [
+    "docs/ownership/H12.3.json",
+    "progress/H12.3.md",
+    "src/components/vendor/VendorScreens.tsx",
+    "src/components/vendor/MyAdsBoard.tsx",
+    "src/components/buyer/SellerHomeAds.tsx",
+    "src/components/buyer/AlertsPanel.tsx",
+    "src/components/buyer/FreshAds.tsx",
+    "src/components/buyer/user-panel.css",
+    "src/components/vendor/*.css",
+    "src/app/u/account/media/MediaLibrary.tsx",
+    "src/app/u/account/messages/page.tsx",
+    "src/app/admin/_dashboard/ChecklistCard.tsx",
+    "src/app/admin/_dashboard/dashboard.css",
+    "src/app/admin/content/_studio/ContentView.tsx",
+    "src/app/admin/content/_studio/studio.css",
+    "src/app/admin/page-builder/**",
+    "src/app/admin/media/VideoReview.tsx",
+    "src/app/admin/media/media.css",
+    "src/components/admin/ui/Skeleton.tsx",
+    "src/components/admin/notifications/NotificationBell.tsx",
+    "src/styles/admin-kit.css",
+    "src/lib/ui/text.ts",
+    "tests/server/ui/h12-3-*.test.ts",
+    "tests/e2e/h12-3-panel-align.e2e.ts",
+    "tests/e2e/h9-3-my-ads.e2e.ts"
+  ]
+}

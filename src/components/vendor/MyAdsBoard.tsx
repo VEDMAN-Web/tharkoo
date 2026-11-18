@@ -9,7 +9,8 @@ import type { ListingDoc } from "@/lib/models";
 import { displayTitle } from "@/lib/format";
 import { OwnerActions } from "./OwnerActions";
 import { usePresenceActivity } from "./AvailabilityControls";
-import { creditsText, usePostingMoney } from "@/components/post/credits";
+import { creditsText, rupeesText, usePostingMoney } from "@/components/post/credits";
+import { useT } from "@/components/help/UiTextProvider";
 import { EmptyIcon } from "@/components/buyer/UserPanelShell";
 import { Megaphone } from "lucide-react";
 
@@ -52,6 +53,7 @@ export function MyAdsBoard({ initialTab = "all" }: { initialTab?: Tab }) {
   const [note, setNote] = useState("");
   usePresenceActivity();
   const money = usePostingMoney();
+  const t = useT();
 
   const loadPage = useCallback(async (nextTab: Tab, nextPage: number, replace: boolean) => {
     const group = TABS.find((item) => item.key === nextTab)?.group;
@@ -81,7 +83,15 @@ export function MyAdsBoard({ initialTab = "all" }: { initialTab?: Tab }) {
   const hasMore = pageData ? items.length < pageData.total : false;
   // No ads at all: one card with the next step, and no filter chips. A chip with nothing behind it is hidden too.
   const noAds = pageData !== null && pageData.counts.all === 0;
-  const costLine = !money.ready ? "" : money.paid ? `Each ad costs ${creditsText(money.fee)} to post.` : "Posting an ad is free.";
+  // The live posting rule: free ads left, then the fee in rupees and credits; paid posting off means free.
+  const freeLeft = money.place ? money.place.freeAds - money.place.adNumber + 1 : 0;
+  const costLine = !money.ready
+    ? ""
+    : money.paid
+      ? t("myads.cost.paid", { rupees: rupeesText(money.fee, money.price), credits: creditsText(money.fee) })
+      : money.free && freeLeft > 0
+        ? t(freeLeft === 1 ? "myads.cost.freeLeftOne" : "myads.cost.freeLeft", { count: freeLeft })
+        : t("myads.cost.free");
 
   return (
     <section className="up-glass up-panel" aria-labelledby="tkv-ads-title">
