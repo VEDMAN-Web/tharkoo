@@ -1,0 +1,12 @@
+{
+  "branchPrefix": "haiku/h14.3",
+  "globs": [
+    "docs/ownership/H14.3.json",
+    "progress/H14.3.md",
+    "src/server/listings/dashboard-math.ts",
+    "src/server/listings/seller-dashboard.ts",
+    "src/server/models/ad-event.ts",
+    "src/server/models/identity.ts",
+    "tests/server/listings/h14-3-*.test.ts"
+  ]
+}

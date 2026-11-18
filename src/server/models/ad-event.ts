@@ -48,6 +48,8 @@ const adEventSchema = new Schema<AdEventDoc>(
   },
 );
 adEventSchema.index({ listingId: 1, visitorKey: 1, type: 1 }, { unique: true });
+/** H14.3: the seller dashboard counts events by ad, type and day. This keeps that range query off the unique index's visitor part. */
+adEventSchema.index({ listingId: 1, type: 1, createdAt: 1 });
 
 const adCounterSchema = new Schema<AdCounterDoc>(
   {
