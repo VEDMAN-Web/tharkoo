@@ -1,0 +1,11 @@
+{
+  "branchPrefix": "haiku/h10.5",
+  "globs": [
+    "docs/ownership/H10.5.json",
+    "tests/e2e/h6-features.e2e.ts",
+    "tests/e2e/post-strip.e2e.ts",
+    "tests/e2e/h7-120-small.e2e.ts",
+    "tests/e2e/h7-172-lists.e2e.ts",
+    "tests/e2e/h7-169-history-plain.e2e.ts"
+  ]
+}
