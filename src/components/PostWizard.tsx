@@ -142,6 +142,12 @@ export function PostWizard({
 
   const category = categories.find((item) => item._id === categoryId);
   const people = Boolean(category?.people) || category?.kind === "people";
+
+  /** A people listing never starts with the account name: it is the name people see, so the person types it. */
+  function pickedPeople(id: string) {
+    const picked = categories.find((item) => item._id === id);
+    if ((picked?.people || picked?.kind === "people") && defaultName && nickname === defaultName.slice(0, 20)) setNickname("");
+  }
   const subOptions = subsByCategory[categoryId] ?? [];
   const fields = useMemo(() => wizardFields(category?.fields), [category]);
   const ageField = fields.find((field) => field.key === "age" || field.type === "number" && /age/i.test(field.label));
@@ -263,7 +269,7 @@ export function PostWizard({
       terms,
       adult,
       attrs,
-      fields: extra.map((field) => ({ key: field.key, label: field.label, required: field.required })),
+      fields: extra.map((field) => ({ key: field.key, label: field.label, required: field.required, pick: field.options.length && (field.type === "select" || field.type === "multiselect") ? (field.type === "multiselect" ? "many" as const : "one" as const) : undefined })),
     });
     if (phone && contactMode !== "email" && !/^\+91[6-9]\d{9}$/.test(normalPhone(phone))) next.phone = t("post.error.phone");
     if (newDesign && price.trim() && !/^\d{1,9}$/.test(priceDigits)) next.price = t("post.error.price");
@@ -537,6 +543,7 @@ export function PostWizard({
     districtName: shownDistrict,
     price: people || !priceDigits ? null : Number(priceDigits),
     cover: coverUrl,
+    cityFallback: !cityId,
   }, t);
   const byline = people ? [nickname.trim(), age.trim()].filter(Boolean).join(", ") : "";
 
@@ -886,7 +893,7 @@ export function PostWizard({
             <div className="tkp-scroll" onKeyDown={moveOnEnter}>
               {current === "category" ? (
                 <>
-                  <CategoryTiles categories={categories} selectedId={categoryId} locked={editing} onPick={(id) => { setCategoryId(id); setSubcategoryId(""); }} />
+                  <CategoryTiles categories={categories} selectedId={categoryId} locked={editing} onPick={(id) => { setCategoryId(id); setSubcategoryId(""); pickedPeople(id); }} />
                   {errors.category ? <p className="tk-error" data-tk="field-error">{errors.category}</p> : null}
                   {subOptions.length > 0 ? (
                     <>
@@ -927,6 +934,7 @@ export function PostWizard({
                     <TextField id="nickname" label={t("post.field.nickname")} required value={nickname} error={err("nickname")} onBlur={blur("nickname")} placeholder={t("post.field.nicknameShort")} onChange={(value) => setNickname(value.slice(0, 20))} />
                     {ageField ? <TextField id="age" label={t("post.field.age")} required={ageField.required} value={age} error={err("age")} onBlur={blur("age")} inputMode="numeric" placeholder={t("post.field.agePlaceholder")} onChange={(value) => setAge(value.replace(/\D/g, "").slice(0, 2))} /> : people ? <span /> : priceField}
                   </div>
+                  {people ? <p className="tkp-quiet" data-tk="nickname-hint" style={{ margin: "-6px 0 0" }}>{t("post.field.nicknameHint")}</p> : null}
                   <TextField id="title" label={t("post.field.adTitle")} required value={title} error={err("title")} onBlur={blur("title")} note={`${title.length} / 70`} placeholder={hints.title} onChange={(value) => setTitle(value.slice(0, 70))} />
                   <TextField id="text" label={t("post.field.description")} required area rows={4} value={text} error={err("text")} onBlur={blur("text")} note={t("post.field.descriptionNote")} placeholder={hints.text} onChange={setText} />
                   {people || !ageField ? null : priceField}

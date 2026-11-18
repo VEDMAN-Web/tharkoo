@@ -43,7 +43,7 @@ describe("post-ad copy and hints (H7.83)", () => {
   it("accepts ages 18 to 99 only", () => {
     expect(validatePost({ ...base, age: "18" }).age).toBeUndefined();
     expect(validatePost({ ...base, age: "99" }).age).toBeUndefined();
-    expect(validatePost({ ...base, age: "17" }).age).toBe("Invalid field");
-    expect(validatePost({ ...base, age: "100" }).age).toBe("Invalid field");
+    expect(validatePost({ ...base, age: "17" }).age).toBe("Enter your age (18 or over).");
+    expect(validatePost({ ...base, age: "100" }).age).toBe("Enter your age (18 or over).");
   });
 });

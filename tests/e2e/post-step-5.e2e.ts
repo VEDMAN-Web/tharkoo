@@ -213,7 +213,8 @@ test.describe("H7.86 post an ad, step 5 and the success screen", () => {
     await expect(page.locator(".tkp-tile").first()).toBeVisible();
     await page.locator(".tkp-tile", { hasText: "Dating" }).click();
     await page.locator("[data-tk=go-on]").click();
-    await expect(page.locator("#nickname")).toHaveValue("Asha");
+    await expect(page.locator("#nickname")).toHaveValue("");
+    await page.locator("#nickname").fill("Asha");
     await page.locator("#title").fill(`Second ad ${Date.now()}`);
     await page.locator("#text").fill("Another friendly walk with coffee on a quiet weekday evening.");
     await page.locator("#age").fill("28");

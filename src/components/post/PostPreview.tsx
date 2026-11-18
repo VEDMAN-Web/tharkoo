@@ -16,6 +16,8 @@ export type PreviewInput = {
   districtName: string;
   price: number | null;
   cover: string | null;
+  /** True while no city is chosen: the card says "Your city" instead of a blank place. */
+  cityFallback?: boolean;
 };
 
 export function previewAd(input: PreviewInput, t: TextFn): ListingDoc {
@@ -30,6 +32,7 @@ export function previewAd(input: PreviewInput, t: TextFn): ListingDoc {
     price: input.price,
     photos: input.cover ? [input.cover] : [],
     variant: "free",
+    ...(input.cityFallback ? { cityLabel: t("post.previewCard.cityFallback") } : {}),
   } as ListingDoc;
 }
 

@@ -1,6 +1,10 @@
 import { isAtLeast18, parseDateOnly } from "@/server/shared/age";
 
-export type PostField = { key: string; label: string; required?: boolean };
+export type PostField = { key: string; label: string; required?: boolean; /** Set for a field answered by picking chips: "one" for one pick, "many" for a list. */ pick?: "one" | "many" };
+
+/** The words under a field that is not filled in. Short and friendly; the same on every step. */
+export const FILL_THIS_IN = "Fill this in.";
+export const AGE_WORDS = "Enter your age (18 or over).";
 
 /** Chip answers: one value for a pick-one field, a list for a pick-many field. */
 export type PostAttrs = Record<string, string | string[]>;
@@ -47,23 +51,23 @@ export type PostDraftInput = {
 
 export function validatePost(input: PostDraftInput) {
   const next: Record<string, string> = {};
-  if (!input.categoryId) next.category = "Please, fill in this field";
-  if (input.needsSubcategory && !input.subcategoryId) next.subcategory = "Please, fill in this field";
-  if (!input.cityId) next.city = "Please, fill in this field";
-  if (!input.nickname.trim()) next.nickname = "Name / Nickname is required";
+  if (!input.categoryId) next.category = FILL_THIS_IN;
+  if (input.needsSubcategory && !input.subcategoryId) next.subcategory = FILL_THIS_IN;
+  if (!input.cityId) next.city = FILL_THIS_IN;
+  if (!input.nickname.trim()) next.nickname = FILL_THIS_IN;
   const alnum = (input.title.match(/[a-z0-9]/gi) || []).length;
-  if (input.title.trim().length < 5 || alnum < 5) next.title = "You must enter at least 5 alphanumeric characters (a,b,c...z,0,1,2,3...)";
-  if (input.text.trim().length < 20) next.text = "You must enter at least 20 characters";
-  if (input.contactMode !== "email" && !input.phone.replace(/[\s-]/g, "")) next.phone = "If you want to be contacted by phone, please fill in this field";
-  if (input.ageRequired && !input.age.trim()) next.age = "Please, fill in this field";
-  else if (input.age && (Number(input.age) < 18 || Number(input.age) > 99)) next.age = "Invalid field";
-  if (!input.terms) next.terms = "Please, fill in this field";
-  if (!input.adult) next.adult = "Please, fill in this field";
+  if (input.title.trim().length < 5 || alnum < 5) next.title = "Write a title of at least 5 letters or numbers.";
+  if (input.text.trim().length < 20) next.text = "Write at least 20 characters.";
+  if (input.contactMode !== "email" && !input.phone.replace(/[\s-]/g, "")) next.phone = FILL_THIS_IN;
+  if (input.ageRequired && !input.age.trim()) next.age = AGE_WORDS;
+  else if (input.age && (Number(input.age) < 18 || Number(input.age) > 99)) next.age = AGE_WORDS;
+  if (!input.terms) next.terms = FILL_THIS_IN;
+  if (!input.adult) next.adult = FILL_THIS_IN;
   for (const field of input.fields) {
     if (!field.required || field.key === "age") continue;
     const answer = input.attrs[field.key];
     const empty = Array.isArray(answer) ? answer.length === 0 : textOf(answer).trim() === "";
-    if (empty) next[field.key] = "Please, fill in this field";
+    if (empty) next[field.key] = field.pick === "one" ? "Pick one." : field.pick === "many" ? "Pick at least one." : FILL_THIS_IN;
   }
   return next;
 }
