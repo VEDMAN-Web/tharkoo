@@ -2,13 +2,15 @@
 
 import { useEffect, useRef, useState } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { CalendarClock, CalendarPlus, ImageOff, Pause, Play, Plus, Trash2 } from "lucide-react";
+import { CalendarClock, CalendarPlus, FolderInput, ImageOff, Pause, Play, Plus, Trash2 } from "lucide-react";
 import { SearchX } from "lucide-react";
 import { Badge, Button, FilterBar, PageHeader, ReasonDialog, ServerTable, Tabs, ToastProvider, useToast, type BadgeTone, type FilterChip, type TableColumn } from "@/components/admin/ui";
 import type { AdRow, AdsList, AdsSort, AdsTab } from "@/server/admin/ads-list";
 import { BULK_TYPED_FROM, EXTEND_CHOICES, extendWord } from "@/lib/admin/ads-bulk-rules";
 import { endsIn, istDateTime, istInputToIso, istInputValue } from "@/lib/admin/ad-ends";
+import { undoAction } from "@/app/admin/undo-actions";
 import { bulkAdsAction, undoAdsBatchAction } from "../_actions/actions";
+import { MoveDialog } from "./MoveDialog";
 import "./ads.css";
 
 export type AdsAccess = { edit: boolean; decide: boolean; create: boolean; pins: boolean };
@@ -82,6 +84,7 @@ function Screen({ list, access, demoPanel }: { list: AdsList; access: AdsAccess;
   const [cityText, setCityText] = useState(query.city);
   const [now] = useState(() => Date.now());
   const [extending, setExtending] = useState(false);
+  const [moving, setMoving] = useState(false);
   const [settingEnd, setSettingEnd] = useState(false);
   const [endValue, setEndValue] = useState("");
   const [endError, setEndError] = useState("");
@@ -110,6 +113,12 @@ function Screen({ list, access, demoPanel }: { list: AdsList; access: AdsAccess;
   async function undo(batchId: string, eventIds: string[]) {
     const answer = await undoAdsBatchAction({ batchId, eventIds });
     toast.show({ kind: answer.ok ? "success" : "error", message: answer.message });
+    router.refresh();
+  }
+
+  async function undoMove(eventId: string) {
+    const outcome = await undoAction(eventId);
+    toast.show({ kind: outcome.ok ? "success" : "error", message: outcome.ok ? "Undone. The ads are back in their old category." : outcome.message });
     router.refresh();
   }
 
@@ -297,6 +306,7 @@ function Screen({ list, access, demoPanel }: { list: AdsList; access: AdsAccess;
                     <Button icon={Play} busy={busy} onClick={() => void run("resume")}>Resume</Button>
                     <Button icon={CalendarPlus} busy={busy} onClick={() => setExtending(true)}>Extend...</Button>
                     <Button icon={CalendarClock} busy={busy} onClick={() => { setEndValue(""); setEndError(""); setSettingEnd(true); }}>Set end...</Button>
+                    <Button icon={FolderInput} busy={busy} onClick={() => setMoving(true)}>Move to category...</Button>
                   </>
                 ) : null}
                 {access.decide ? (
@@ -330,6 +340,21 @@ function Screen({ list, access, demoPanel }: { list: AdsList; access: AdsAccess;
           />
         </div>
       </div>
+      <MoveDialog
+        key={moving ? "move-open" : "move-closed"}
+        open={moving}
+        categories={list.categories}
+        selected={selected}
+        matching={list.total}
+        search={params.toString()}
+        onClose={() => setMoving(false)}
+        onMoved={(answer) => {
+          setSelected([]);
+          const there = answer.alreadyThere ? ` ${answer.alreadyThere} ${answer.alreadyThere === 1 ? "was" : "were"} already there.` : "";
+          toast.show({ kind: "undo", message: `Moved ${answer.moved.toLocaleString("en-IN")} ${answer.moved === 1 ? "ad" : "ads"} to ${answer.categoryName}.${there}`, onUndo: () => void undoMove(answer.eventId) });
+          router.refresh();
+        }}
+      />
       <ReasonDialog
         key={extending ? "extend-open" : "extend-closed"}
         open={extending}

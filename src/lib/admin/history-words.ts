@@ -135,6 +135,7 @@ const ACTION_WORDS: Record<string, string> = {
   "content.publish": "A page or post was published",
   "layout.publish": "A page layout was published",
   "media.trash": "A picture was moved to the Trash",
+  "listing.move_category": "Ads were moved to another category",
   "media.update": "A picture's details were changed",
   "media.restore": "A picture was taken out of the Trash",
   "plan.update": "A promotion plan was changed",

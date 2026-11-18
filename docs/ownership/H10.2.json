@@ -1,0 +1,17 @@
+{
+  "branchPrefix": "haiku/h10.2",
+  "globs": [
+    "docs/ownership/H10.2.json",
+    "src/server/admin/ads-move.ts",
+    "src/server/admin/ads-list.ts",
+    "src/server/admin/undo/registry.ts",
+    "src/server/admin/undo/handlers/ads-move.ts",
+    "src/lib/admin/history-words.ts",
+    "src/app/admin/ads/_actions/actions.ts",
+    "src/app/admin/ads/_list/AdsView.tsx",
+    "src/app/admin/ads/_list/MoveDialog.tsx",
+    "tests/server/admin/a3-write.test.ts",
+    "tests/server/admin/h102-ads-move.test.ts",
+    "tests/e2e/h10-2-move.e2e.ts"
+  ]
+}
