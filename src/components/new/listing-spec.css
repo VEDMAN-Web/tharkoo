@@ -135,6 +135,7 @@
 .tkn-ls-opt input {
   position: absolute; inset: 0; width: 100%; height: 100%; margin: 0; opacity: 0; cursor: pointer;
 }
+.tkn-ls-opt > span, .tkn-ls .tkn-ls-chipline > span, .tkn-ls .tkn-ls-chipline > svg { position: relative; }
 .tkn-ls-opt:has(input:checked) { background: var(--deep); border-color: var(--deep); color: #fff; }
 .tkn-ls-opt:has(input:focus-visible) { outline: 3px solid #7c3aed; outline-offset: 2px; }
 .tkn-ls-bottom {
