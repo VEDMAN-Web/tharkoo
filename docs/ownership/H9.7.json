@@ -5,6 +5,7 @@
     "src/components/auth/SellerProfileForm.tsx",
     "src/server/billing/coupons.ts",
     "tests/server/billing/billing.test.ts",
+    "tests/server/billing/a20-packs-coupons.test.ts",
     "tests/server/billing/h97-coupon-text.test.ts",
     "tests/e2e/h9-5-seller-profile.e2e.ts",
     "tests/e2e/h9-7-switch-coupon.e2e.ts"

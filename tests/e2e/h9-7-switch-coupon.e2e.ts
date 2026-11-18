@@ -49,8 +49,8 @@ test.describe("H9.7 switches and the coupon sentence", () => {
       await page.keyboard.press("Space");
       await expect(now).toBeChecked();
       await expect(rows.first()).toHaveClass(/is-on/);
-      const on = await rows.first().locator(".tkv-switch").evaluate((node) => getComputedStyle(node).backgroundColor);
-      expect(on).toBe("rgb(4, 120, 87)");
+      // The track turns green (it fades, so wait for it).
+      await expect.poll(async () => await rows.first().locator(".tkv-switch").evaluate((node) => getComputedStyle(node).backgroundColor)).toBe("rgb(4, 120, 87)");
       await page.keyboard.press("Space");
       await expect(now).not.toBeChecked();
       await expect(rows.first()).not.toHaveClass(/is-on/);
