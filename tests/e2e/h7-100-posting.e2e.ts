@@ -59,8 +59,9 @@ test.describe("H7.100: posting works end to end", () => {
     const api = await startAd(page, baseURL!, "tiles");
     await toPhotos(page, `Tiles ${Date.now()}`);
 
+    // H13.1 part 2: a photo of any size is accepted. This 9 MB file is not a picture (all zeros), so it is refused as unreadable, never as too big.
     await page.locator("[data-tk=photo-input]").setInputFiles({ name: "huge.png", mimeType: "image/png", buffer: Buffer.alloc(9 * MB) });
-    await expect(page.locator('[data-tk=photo-tile][data-state="failed"] [data-tk=media-reason]')).toHaveText("This photo is too big (max 8 MB).");
+    await expect(page.locator('[data-tk=photo-tile][data-state="failed"] [data-tk=media-reason]')).toHaveText("This photo could not be read. Try another photo or take a screenshot of it.");
     await page.locator("[data-tk=photo-input]").setInputFiles({ name: "pic.gif", mimeType: "image/gif", buffer: PNG });
     await expect(page.locator('[data-tk=photo-tile][data-state="failed"] [data-tk=media-reason]').last()).toHaveText("Use a JPG, PNG or WebP photo.");
 

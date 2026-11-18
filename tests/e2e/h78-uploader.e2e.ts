@@ -25,33 +25,33 @@ test.describe("H7.8 shared uploader", () => {
     await expect(info).toHaveAttribute("aria-expanded", "false");
     await expect(info).toBeFocused();
 
-    // Three files at once, plus one photo that is too big. The too-big file gets its own message; the others upload.
+    // Three files at once, plus one big photo. H13.1 part 2: a photo of any size is accepted (it is made smaller before it is sent), so all four upload.
     const big = Buffer.concat([PNG, Buffer.alloc(9 * MB)]);
     await photos.locator("input[type=file]").setInputFiles([
       { name: "photo-1.png", mimeType: "image/png", buffer: PNG },
       { name: "photo-2.png", mimeType: "image/png", buffer: PNG },
       { name: "photo-3.png", mimeType: "image/png", buffer: PNG },
       { name: "too-big.png", mimeType: "image/png", buffer: big },
+      { name: "wrong-type.gif", mimeType: "image/gif", buffer: PNG },
     ]);
-    await expect(photos.getByText("This photo is 9 MB. The limit is 8 MB.")).toBeVisible();
-    await expect(photos.locator("[data-state=ready]")).toHaveCount(3, { timeout: 30_000 });
-    // The refused file does not count: three photos are counted, not four.
-    await expect(photos.locator("[data-tk=upload-count]")).toHaveText(/^3 of \d+$/);
+    await expect(photos.locator("[data-state=ready]")).toHaveCount(4, { timeout: 60_000 });
+    await expect(photos.getByText(/The limit is 8 MB/)).toHaveCount(0);
+    await expect(photos.locator("[data-tk=upload-count]")).toHaveText(/^4 of \d+$/);
     await expect(photos.locator(".upl-cover")).toHaveText("Cover");
     await expect(photos.locator("li", { hasText: "photo-1.png" }).getByText(/ · Ready$/)).toBeVisible();
 
-    // A refused tile has only Remove: no move or cover buttons.
-    const refused = photos.locator("li", { hasText: "too-big.png" });
-    await expect(refused.getByRole("button", { name: "Move too-big.png earlier" })).toHaveCount(0);
-    await expect(refused.getByRole("button", { name: "Make too-big.png the cover" })).toHaveCount(0);
-    await expect(refused.getByRole("button", { name: "Remove too-big.png" })).toBeVisible();
+    // A refused tile (here a file of the wrong type) has only Remove: no move or cover buttons.
+    const refused = photos.locator("li", { hasText: "wrong-type.gif" });
+    await expect(refused.getByRole("button", { name: "Move wrong-type.gif earlier" })).toHaveCount(0);
+    await expect(refused.getByRole("button", { name: "Make wrong-type.gif the cover" })).toHaveCount(0);
+    await expect(refused.getByRole("button", { name: "Remove wrong-type.gif" })).toBeVisible();
 
     // Remove one, then move the last photo earlier.
     await photos.getByRole("button", { name: "Remove photo-2.png" }).click();
-    await expect(photos.locator("[data-tk=upload-count]")).toHaveText(/^2 of \d+$/);
+    await expect(photos.locator("[data-tk=upload-count]")).toHaveText(/^3 of \d+$/);
     await photos.getByRole("button", { name: "Move photo-3.png earlier" }).click();
     const names = await photos.locator(".upl-name").allTextContents();
-    expect(names).toEqual(["photo-3.png", "photo-1.png", "too-big.png"]);
+    expect(names).toEqual(["photo-3.png", "photo-1.png", "too-big.png", "wrong-type.gif"]);
     await photos.screenshot({ path: `${SHOTS}/h7.8-admin-photos-after-${testInfo.project.name}.png` });
 
     expect(await hasHorizontalScroll(page)).toBe(false);

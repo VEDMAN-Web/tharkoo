@@ -179,7 +179,7 @@ function UploadTab({ rule, onPick, onError }: { rule: UploadRule; onPick: (row: 
     previewUrl.current = next ? URL.createObjectURL(next) : "";
     setPreview(previewUrl.current);
     setFile(next);
-    setProblem(next ? (fileProblem(next, rule) ?? "") : "");
+    setProblem(next ? (fileProblem(next, rule, { anySize: true }) ?? "") : "");
   }
 
   function onDrop(event: DragEvent<HTMLLabelElement>) {

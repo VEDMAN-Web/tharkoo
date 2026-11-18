@@ -25,7 +25,8 @@ export function imageTypeOf(file: Pick<BatchCandidate, "name" | "type">): string
 }
 
 /** Splits a chosen list into files to upload and files refused before any upload. Nothing is sent here. */
-export function checkBatch<T extends BatchCandidate>(files: readonly T[], maxFiles = BATCH_MAX_FILES): BatchCheck<T> {
+/** `anySize` (H13.1 part 2): the screens that shrink a photo in the browser before sending it do not refuse a big one here. */
+export function checkBatch<T extends BatchCandidate>(files: readonly T[], maxFiles = BATCH_MAX_FILES, options: { anySize?: boolean } = {}): BatchCheck<T> {
   const accepted: T[] = [];
   const rejected: Array<{ name: string; reason: string }> = [];
   for (const file of files) {
@@ -33,7 +34,7 @@ export function checkBatch<T extends BatchCandidate>(files: readonly T[], maxFil
       rejected.push({ name: file.name, reason: `Only ${maxFiles} files per batch. Upload this one in the next batch.` });
     } else if (!imageTypeOf(file)) {
       rejected.push({ name: file.name, reason: "Only jpeg, png or webp images" });
-    } else if (file.size > BATCH_MAX_BYTES) {
+    } else if (!options.anySize && file.size > BATCH_MAX_BYTES) {
       rejected.push({ name: file.name, reason: "Larger than 8 MB" });
     } else if (file.size === 0) {
       rejected.push({ name: file.name, reason: "The file is empty" });
