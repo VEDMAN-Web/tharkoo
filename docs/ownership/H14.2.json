@@ -1,0 +1,25 @@
+{
+  "branchPrefix": "haiku/h14.2",
+  "globs": [
+    "docs/ownership/H14.2.json",
+    "progress/H14.2.md",
+    "src/components/new/HomeAdPopout.tsx",
+    "src/components/new/home-ads.css",
+    "src/components/ui/MiniAdCard.tsx",
+    "src/components/ui/mini-ad-card.css",
+    "src/components/chat/Inbox.tsx",
+    "src/server/chat/service.ts",
+    "src/components/buyer/user-panel.css",
+    "src/components/post/PostSuccess.tsx",
+    "src/components/post/newCopy.ts",
+    "src/components/post/post-wizard.css",
+    "src/components/promote/PromoteSheet.tsx",
+    "tests/server/ui/a38-post-text.test.ts",
+    "tests/server/ui/post-step-5.test.ts",
+    "tests/e2e/h14-2-whole-card-link.e2e.ts",
+    "tests/e2e/inbox-profile.e2e.ts",
+    "tests/e2e/post-step-5.e2e.ts",
+    "tests/e2e/h7-116-promote.e2e.ts",
+    "tests/e2e/home-ad-cards.e2e.ts"
+  ]
+}

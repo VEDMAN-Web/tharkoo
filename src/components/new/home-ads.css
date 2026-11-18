@@ -25,6 +25,12 @@
   border: 1px solid #f3e8f7;
   background: #fff;
   box-shadow: 0 8px 28px rgba(45, 18, 72, 0.07);
+  cursor: pointer;
+}
+/* H14.2: the whole card opens the ad (the title link is stretched over it); when that link has keyboard focus the card shows the ring. */
+.tkh-ad:has(.tkh-ad-link:focus-visible) {
+  outline: 3px solid #7c3aed;
+  outline-offset: 2px;
 }
 .tkh-ad.is-lifted {
   transform: translateY(-4px);
@@ -249,8 +255,7 @@
   z-index: 1;
 }
 .tkh-ad-link:focus-visible {
-  outline: 3px solid #7c3aed;
-  outline-offset: 2px;
+  outline: none;
 }
 .tkh-ad-pills {
   position: relative;
@@ -297,6 +302,36 @@
   border-radius: 22px;
   background: #fff;
   box-shadow: 0 30px 70px rgba(45, 18, 72, 0.32), 0 0 0 1px rgba(234, 216, 240, 0.9);
+  cursor: pointer;
+}
+/* H14.2: the whole pop-out opens the ad (no View button). Heart, arrows, thumbnails, pills and Chat sit above the stretched title link. */
+.tkh-pop-link {
+  color: inherit;
+  text-decoration: none;
+}
+.tkh-pop-link::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+}
+.tkh-pop:has(.tkh-pop-link:focus-visible) {
+  outline: 3px solid #7c3aed;
+  outline-offset: -3px;
+}
+.tkh-pop-link:focus-visible {
+  outline: none;
+}
+.tkh-pop .tkh-heart,
+.tkh-pop .tkh-photo-arrow,
+.tkh-pop .tkh-pop-thumbs,
+.tkh-pop .tkh-ad-pills,
+.tkh-pop .tkh-pop-acts {
+  z-index: 3;
+}
+.tkh-pop .tkh-ad-pills,
+.tkh-pop .tkh-pop-acts {
+  position: relative;
 }
 .tkh-pop-photo {
   position: relative;
@@ -381,7 +416,7 @@
 }
 .tkh-pop-acts {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: 1fr;
   gap: 8px;
   margin-top: 12px;
 }

@@ -115,7 +115,10 @@
 .tkn .tkp-post .tkp-success { max-width: 560px; margin: 8px auto 0; padding: 24px 24px 28px; box-sizing: border-box; display: flex; flex-direction: column; align-items: center; gap: 14px; text-align: center; border-radius: 20px; background: rgba(255, 255, 255, 0.92); border: 1px solid #ead8f0; box-shadow: 0 8px 32px rgba(45, 18, 72, 0.08); }
 .tkn .tkp-post .tkp-success-mark { width: 56px; height: 56px; border-radius: 50%; display: flex; align-items: center; justify-content: center; background: #ecfdf5; color: #047857; }
 .tkn .tkp-post[data-state="review"] .tkp-success-mark { background: #fff7ed; color: #b45309; }
-.tkn .tkp-post .tkp-success-card { width: 100%; max-width: 360px; text-align: left; }
+.tkn .tkp-post .tkp-success-card { position: relative; width: 100%; max-width: 360px; text-align: left; }
+.tkn .tkp-post .tkp-success-card.is-link { cursor: pointer; }
+.tkn .tkp-post .tkp-card-link { position: absolute; inset: 0; z-index: 2; border-radius: 16px; }
+.tkn .tkp-post .tkp-card-link:focus-visible { outline: 3px solid #7c3aed; outline-offset: 2px; }
 .tkn .tkp-post .tkp-success-card .tkn-ls.tkp-previewbox .tkn-ls-photo, .tkn .tkp-post .tkp-review-card .tkn-ls.tkp-previewbox .tkn-ls-photo { aspect-ratio: 16 / 9; }
 @media (min-width: 600px) {
   .tkn .tkp-post .tkp-success-card { max-width: 100%; }
