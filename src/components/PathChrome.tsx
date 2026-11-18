@@ -1,7 +1,7 @@
 "use client";
 
 import { Suspense } from "react";
-import { usePathname } from "next/navigation";
+import { useSitePath } from "@/components/useSitePath";
 import { JsonLd } from "@/lib/jsonld";
 import { canonical } from "@/lib/seo";
 import { safeHref } from "@/lib/sanitize";
@@ -61,7 +61,7 @@ export type ChromeData = {
 };
 
 export function PathChrome({ shell, paths, children }: { shell: ChromeData; paths: UrlPaths; children: React.ReactNode }) {
-  const path = usePathname() || "/";
+  const path = useSitePath();
   if (path.startsWith("/admin") || path.startsWith("/styleguide/admin")) {
     return (
       <UrlPathProvider paths={paths}>

@@ -1,7 +1,8 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
+import { useSitePath } from "@/components/useSitePath";
 import { useT } from "@/components/ui/AdCard";
 import { RechargeSheet } from "./RechargeSheet";
 import { RECHARGE_EVENT, openRecharge, openSupportWith, rechargeLine, type RechargeOptions } from "./openRecharge";
@@ -12,7 +13,7 @@ type Result = { kind: "paid" | "failed"; credits: number };
 export function RechargeHost() {
   const t = useT();
   const router = useRouter();
-  const path = usePathname() || "/";
+  const path = useSitePath();
   const params = useSearchParams();
   const [options, setOptions] = useState<RechargeOptions | null>(null);
   const [result, setResult] = useState<Result | null>(null);

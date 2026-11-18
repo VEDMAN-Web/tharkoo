@@ -3,7 +3,7 @@
 import { ArrowUp, MessageCircle, Phone, Send, X } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { FormEvent, TouchEvent } from "react";
-import { usePathname } from "next/navigation";
+import { useSitePath } from "@/components/useSitePath";
 import { useUrlPaths } from "@/components/UrlPaths";
 import { safeHref } from "@/lib/sanitize";
 import { useDismiss } from "@/components/ui/useDismiss";
@@ -39,7 +39,7 @@ function ticketBody(parts: string[], topic: SupportTopic) {
 export function SupportChat({ chat, texts, hours = "" }: { chat: Chat; texts?: UiTextMap; hours?: string }) {
   const t = useMemo(() => makeT(texts), [texts]);
   const supportHours = useMemo(() => parseSupportHours(hours), [hours]);
-  const path = usePathname() || "/";
+  const path = useSitePath();
   const paths = useUrlPaths();
   const section = path.split("/")[1];
   const pageBars = section === "u" || section === paths.ad;
