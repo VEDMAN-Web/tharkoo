@@ -134,7 +134,7 @@ describe("coupons", () => {
     const user = String(new mongoose.Types.ObjectId());
     await expect(validateCoupon("later", user)).rejects.toThrow(/not active yet/);
     await expect(validateCoupon("oldone", user)).rejects.toThrow(/expired/);
-    await expect(validateCoupon("switched", user)).rejects.toThrow(/invalid/i);
+    await expect(validateCoupon("switched", user)).rejects.toThrow(/couldn.t find that coupon/i);
     await expect(validateCoupon("nownow", user)).resolves.toMatchObject({ code: "NOWNOW" });
   });
 
