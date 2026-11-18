@@ -12,6 +12,7 @@
     "src/components/new/home-spec.css",
     "src/server/categories/icons.ts",
     "src/server/layout/page-picture.ts",
+    "tests/server/layout/a6-home-baseline.json",
     "tests/server/ui/h12-2b-*.test.ts",
     "tests/e2e/h12-2b-tile-icons.e2e.ts"
   ]
