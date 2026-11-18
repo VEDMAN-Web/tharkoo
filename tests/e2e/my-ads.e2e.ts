@@ -67,7 +67,7 @@ test.describe("H7.61 my ads and support form", () => {
     await expect(page.locator('[data-tk="owner-card"]')).toHaveCount(0);
     await page.goto("/u/account/ads/");
     await expect(page.locator('[data-tk="owner-card"]')).toHaveCount(0);
-    await expect(page.getByText("No ads here yet.")).toBeVisible();
+    await expect(page.locator('[data-tk="my-ads-empty"]')).toContainText("You have no ads yet");
   });
 
   test("Finish your ad opens the last step of the draft", async ({ page, baseURL }) => {

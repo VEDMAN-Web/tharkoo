@@ -1,13 +1,13 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
-import { Bell, Heart, House, LifeBuoy, LogIn, Megaphone, MessageSquare, Search, Settings, Wallet, type LucideIcon } from "lucide-react";
+import { Bell, Heart, House, Images, LifeBuoy, LogIn, Megaphone, MessageSquare, Search, Settings, Wallet, type LucideIcon } from "lucide-react";
 import { makeT } from "@/lib/ui/text";
 import type { PanelSummary } from "@/server/notifications/summary";
 import "./user-panel.css";
 
 /** H7.6, H7.17: the panel frame for every /u/account page: left menu (the mockup's "My account") and the page body. */
 
-export type PanelKey = "home" | "ads" | "saved" | "chats" | "coins" | "notifications" | "alerts" | "support" | "settings";
+export type PanelKey = "home" | "ads" | "media" | "saved" | "chats" | "coins" | "notifications" | "alerts" | "support" | "settings";
 
 type NavItem = { key: PanelKey; label: string; href: string; icon: LucideIcon };
 
@@ -16,6 +16,7 @@ const t = makeT();
 const MAIN_LINKS: NavItem[] = [
   { key: "home", label: "Home", href: "/u/account/", icon: House },
   { key: "ads", label: "My ads", href: "/u/account/ads/", icon: Megaphone },
+  { key: "media", label: "Photos and videos", href: "/u/account/media/", icon: Images },
   { key: "chats", label: "Chats", href: "/u/account/messages/", icon: MessageSquare },
   { key: "saved", label: "Saved ads", href: "/u/account/saved/", icon: Heart },
 ];

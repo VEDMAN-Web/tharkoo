@@ -28,7 +28,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<Rec
     adHref: row.adStatus === "active" && row.adSlug ? adPath(paths, row.adSlug) : `/u/post-insert/?draft=${row.listingId}&step=photos`,
   }));
   return (
-    <PanelPage active="ads" next="/u/account/media/" title="Log in to see your photos" body="Photos and videos for your ads appear here after you log in.">
+    <PanelPage active="media" next="/u/account/media/" title="Log in to see your photos" body="Photos and videos for your ads appear here after you log in.">
       <section aria-labelledby="media-title" className="up-glass up-panel up-stack">
         <div>
           <h1 id="media-title" className="up-h2">My photos &amp; videos</h1>

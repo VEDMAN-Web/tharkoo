@@ -6,7 +6,7 @@ const SHOTS = process.env.POST_SHOTS ?? "";
 
 const PAGES: { path: string; active: string; heading: RegExp; shot: string }[] = [
   { path: "/u/account/kyc/", active: "Settings", heading: /^Identity check$/, shot: "kyc" },
-  { path: "/u/account/media/", active: "My ads", heading: /^My photos & videos$/, shot: "media" },
+  { path: "/u/account/media/", active: "Photos and videos", heading: /^My photos & videos$/, shot: "media" },
   { path: "/u/account/edit-account/", active: "Settings", heading: /^Settings$/, shot: "settings" },
   { path: "/u/account/delete/", active: "Settings", heading: /^Delete your account$/, shot: "delete" },
 ];
