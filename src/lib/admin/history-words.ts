@@ -78,13 +78,24 @@ export function fieldLabel(path: string): string {
   return `${lead}: ${last.charAt(0).toLowerCase()}${last.slice(1)}`;
 }
 
-function istWords(iso: string): string {
-  const shifted = new Date(new Date(iso).getTime() + IST_MS);
-  const time = `${String(shifted.getUTCHours()).padStart(2, "0")}:${String(shifted.getUTCMinutes()).padStart(2, "0")}`;
-  return `${shifted.getUTCDate()} ${MONTHS[shifted.getUTCMonth()]} ${shifted.getUTCFullYear()}, ${time}`;
+/** A date and time in Indian time, the way staff say it: "19 Nov, 11:52 am". The year is added only when it is not this year. */
+export function dateWords(value: Date | string, now: Date = new Date()): string {
+  const shifted = new Date(new Date(value).getTime() + IST_MS);
+  if (Number.isNaN(shifted.getTime())) return String(value);
+  const hour = shifted.getUTCHours();
+  const clock = `${hour % 12 === 0 ? 12 : hour % 12}:${String(shifted.getUTCMinutes()).padStart(2, "0")} ${hour < 12 ? "am" : "pm"}`;
+  const year = shifted.getUTCFullYear() === new Date(now.getTime() + IST_MS).getUTCFullYear() ? "" : ` ${shifted.getUTCFullYear()}`;
+  return `${shifted.getUTCDate()} ${MONTHS[shifted.getUTCMonth()]}${year}, ${clock}`;
 }
 
 const ISO = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d+)?Z$/;
+const ISO_IN_TEXT = /\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?Z/g;
+
+/** A sentence with every raw date in it written as an Indian-time date: "Extended, ends 19 Nov, 11:52 am". */
+export function plainSentence(text: string, now: Date = new Date()): string {
+  return text.replace(ISO_IN_TEXT, (found) => dateWords(found, now));
+}
+
 const OBJECT_ID = /^[a-f0-9]{24}$/i;
 
 /** How a saved value reads to a person: Yes and No, dates in Indian time, lists as words, ids as "a record". */
@@ -93,7 +104,7 @@ export function plainValue(text: string): string {
   if (value === "true") return "Yes";
   if (value === "false") return "No";
   if (value === "null" || value === "undefined") return "";
-  if (ISO.test(value)) return istWords(value);
+  if (ISO.test(value)) return dateWords(value);
   if (OBJECT_ID.test(value)) return "a record";
   if (value.startsWith("[") && value.endsWith("]")) {
     try {

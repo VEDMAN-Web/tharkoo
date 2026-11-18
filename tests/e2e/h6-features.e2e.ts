@@ -97,8 +97,13 @@ test.describe("H6.3 video rule on the post form", () => {
     await page.waitForURL(/\/u\/post-insert\//);
     await fillAdInformation(page, `E2E video rule ${Date.now()}`);
     await page.locator("[data-tk=photo-input]").waitFor({ state: "attached" });
-    // H6.18 wording: one limit of 10 for photos and videos together.
-    await expect(page.getByText("Videos: max 100 MB and 60 seconds each. Photos and videos: up to 10 in total.", { exact: true })).toBeVisible();
+    // Today the limits sit behind the "Photo and video rules" info button: one limit of 10 for photos and videos together.
+    await expect(page.locator("[data-tk=photo-count]")).toHaveText("0 of 10 photos and videos");
+    await page.getByRole("button", { name: "About Photo and video rules" }).click();
+    const rules = page.getByText("Your videos").locator("xpath=following-sibling::ul[1]");
+    await expect(rules).toContainText("Up to 100 MB per video.");
+    await expect(rules).toContainText("Up to 60 seconds per video.");
+    await expect(rules).toContainText("Videos count toward the 10 photos and videos.");
   });
 });
 

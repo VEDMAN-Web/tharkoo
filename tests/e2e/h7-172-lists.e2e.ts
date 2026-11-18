@@ -34,7 +34,14 @@ test.describe("H7.172 lists, part 1", () => {
       await expect(rows.first()).toBeVisible();
       const count = await rows.count();
       expect(await page.locator('[data-tk="ad-thumb"], [data-tk="ad-nothumb"]').count()).toBe(count);
-      if (size.width > 767) await expect(rows.first().getByText("Demo", { exact: true }).first()).toBeVisible();
+      if (size.width > 767) {
+        // Newer ads from other tests come first, so the first row is not always a demo ad: open the Demo ads tab and find a Demo row.
+        await page.goto("/admin/ads/?tab=demo");
+        await expect(rows.first()).toBeVisible();
+        await expect(rows.filter({ has: page.getByText("Demo", { exact: true }) }).first()).toBeVisible();
+        await page.goto("/admin/ads/");
+        await expect(rows.first()).toBeVisible();
+      }
       expect(await hasHorizontalScroll(page)).toBe(false);
       expect(await serious(page)).toEqual([]);
       await shot(page, "all-ads");
@@ -55,7 +62,8 @@ test.describe("H7.172 lists, part 1", () => {
     await signInAdminContext(context, baseURL!);
     for (const size of [{ width: 1440, height: 900 }, { width: 390, height: 844 }]) {
       await page.setViewportSize(size);
-      await page.goto("/admin/users/");
+      // The built-in demo account is the oldest user, so search for it by its sign-in address instead of hoping it is on the first page.
+      await page.goto("/admin/users/?q=seed%40tharkoo.local");
       await expect(page.locator('[data-tk="server-table"] tbody').getByText("Demo", { exact: true })).toBeVisible();
       await expect(page.locator('[data-tk="server-table"] tbody').getByText("Seed", { exact: true })).toHaveCount(0);
       if (size.width > 767) {
