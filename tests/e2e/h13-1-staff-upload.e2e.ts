@@ -99,12 +99,14 @@ test.describe("H13.1 staff direct upload", () => {
     const mediaId = new ObjectId().toHexString();
     const seen = await mockDirectUpload(page, mediaId, { id: mediaId, url: "/uploads/x.png", alt: "Phone", width: 4000, height: 3000, bytes: 6 * MB });
     await page.setViewportSize({ width: 1440, height: 900 });
-    await page.goto("/admin/media/?tab=upload");
+    await page.goto("/admin/media/");
+    await page.getByRole("button", { name: "Upload pictures" }).first().click();
     const input = page.getByLabel("Choose pictures to upload");
     await input.setInputFiles({ name: "phone.jpg", mimeType: "image/jpeg", buffer: JPEG });
-    const send = page.getByRole("button", { name: /^Upload/ }).first();
+    const send = page.getByRole("button", { name: /^Upload \d+ images?$/ });
     await send.click();
-    await expect(page.getByText("Done").first()).toBeVisible({ timeout: 30_000 });
+    await expect.poll(() => seen.cloudinary, { timeout: 30_000 }).toBe(1);
+    await expect(page.getByText("1 uploaded, 0 failed, 0 waiting")).toBeVisible({ timeout: 30_000 });
     expect(seen.signs[0]).toMatchObject({ purpose: "library", kind: "image", byteSize: JPEG.length });
     expect(seen.cloudinary).toBe(1);
     expect(seen.legacy).toBe(0);
