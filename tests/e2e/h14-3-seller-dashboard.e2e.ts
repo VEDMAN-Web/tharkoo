@@ -2,7 +2,7 @@ import { mkdirSync } from "node:fs";
 import type { Page } from "@playwright/test";
 import { ObjectId } from "mongodb";
 import { expect, hasHorizontalScroll, loginUi, newApi, registerApi, test, uniqueEmail, USER_PASSWORD, withLocalDb } from "./helpers";
-import { createLiveAd, fillNewPostAd } from "./flows";
+import { createLiveAd } from "./flows";
 
 const DAY = 86_400_000;
 const SHOTS = process.env.H143_SHOTS ?? "";
@@ -28,7 +28,7 @@ async function text(page: Page, selector: string) {
   return ((await page.locator(selector).first().textContent()) ?? "").replace(/\s+/g, " ").trim();
 }
 
-async function checkDashboard(page: Page, ids: string[], phone: boolean) {
+async function checkDashboard(page: Page, ids: string[], phone: boolean, goal: number) {
   await page.goto("/u/account/", { waitUntil: "networkidle" });
   const dash = page.locator('[data-tk="seller-dashboard"]');
   await expect(dash).toBeVisible();
@@ -52,7 +52,7 @@ async function checkDashboard(page: Page, ids: string[], phone: boolean) {
   const views = await page.locator('[data-tk="ad-views"]').allTextContents();
   expect(views.map((value) => value.trim())).toEqual(["25", "3", "0"]);
   await expect(page.locator('[data-tk="dash-lift"]')).toHaveAttribute("data-state", "empty");
-  expect(await text(page, '[data-tk="goal-numbers"]')).toMatch(/^\d+ \/ 100 views$/);
+  expect(await text(page, '[data-tk="goal-numbers"]')).toMatch(new RegExp(`^\\d+ / ${goal} views$`));
   await expect(page.locator('[data-tk="milestone"]')).toHaveCount(4);
   expect(await page.locator('[data-tk="milestone"][data-done="yes"]').count()).toBe(1);
 
@@ -82,12 +82,14 @@ test.describe("H14.3 seller dashboard", () => {
   test("D3: a seller with 3 ads sees the real numbers at 1440 and 390, the switches live in Settings, the ticket box is gone", async ({ page, baseURL }) => {
     test.setTimeout(540_000);
     const first = await createLiveAd(page, baseURL!, "dash");
-    for (const label of ["two", "three"]) {
-      await page.goto("/u/post-insert/");
-      await fillNewPostAd(page, baseURL!, { title: `E2E dash ${label} ${Date.now()}` });
-    }
     const mine = await withLocalDb(async (db) => {
       const row = await db.collection("listings").findOne({ _id: new ObjectId(first.listingId) });
+      const { _id, ...rest } = row!;
+      void _id;
+      for (const label of ["two", "three"]) {
+        const now = new Date(Date.now() + 1000);
+        await db.collection("listings").insertOne({ ...rest, title: `E2E dash ${label} ${Date.now()}`, slug: `e2e-dash-${label}-${Date.now()}`, createdAt: now, updatedAt: now });
+      }
       return db.collection("listings").find({ ownerId: row!.ownerId, status: "active" }).sort({ createdAt: 1 }).toArray();
     });
     expect(mine).toHaveLength(3);
@@ -103,10 +105,13 @@ test.describe("H14.3 seller dashboard", () => {
     await withLocalDb((db) => db.collection("ad_counters").insertOne({ listingId: new ObjectId(a), realViews: 120, realClicks: 7, viewsSet: 55555, viewsRealAtSet: 0, clicksSet: 44444, clicksRealAtSet: 0, updatedAt: new Date() }));
 
     await page.setViewportSize({ width: 1440, height: 900 });
-    await checkDashboard(page, [a, b, c], false);
+    await checkDashboard(page, [a, b, c], false, 100);
     await shot(page, "dashboard");
 
-    await page.locator('[data-tk="dash-ad"]').first().locator(".up-dash-ad-where").click();
+    const where = page.locator('[data-tk="dash-ad"]').first().locator(".up-dash-ad-where");
+    await where.scrollIntoViewIfNeeded();
+    const spot = (await where.boundingBox())!;
+    await page.mouse.click(spot.x + 6, spot.y + spot.height / 2);
     await expect(page).toHaveURL(/\/ad\//);
     await page.goBack();
     await page.locator('[data-tk="dash-promote"]').first().click();
@@ -122,7 +127,7 @@ test.describe("H14.3 seller dashboard", () => {
     await expect.poll(() => text(page, '[data-tk="goal-numbers"]')).toMatch(/\/ 300 views$/);
 
     await page.setViewportSize({ width: 390, height: 844 });
-    await checkDashboard(page, [a, b, c], true);
+    await checkDashboard(page, [a, b, c], true, 300);
     await shot(page, "dashboard");
 
     await page.goto("/u/account/edit-account/", { waitUntil: "networkidle" });

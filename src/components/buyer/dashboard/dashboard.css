@@ -13,6 +13,7 @@
 .up-dash-gold, .up-dash-pink { display: inline-flex; align-items: center; justify-content: center; gap: 10px; min-height: 48px; box-sizing: border-box; padding: 0 22px; border-radius: 999px; border: 0; cursor: pointer; font: inherit; font-weight: 800; font-size: 16px; text-decoration: none; color: #fff; }
 .up-dash-gold { background: linear-gradient(135deg, #7a5600 0%, #b8860b 40%, #d4a52a 55%, #a67c00 75%, #7a5600 100%); box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.45), 0 8px 20px rgba(166, 124, 0, 0.3); text-shadow: 0 1px 1px rgba(0, 0, 0, 0.25); }
 .up-dash-pink { background: linear-gradient(135deg, #d1137a 0%, #a0105a 100%); box-shadow: 0 8px 20px rgba(209, 19, 122, 0.28); }
+.up-dash-gold { white-space: nowrap; }
 .up-dash-gold:hover, .up-dash-pink:hover { color: #fff; filter: brightness(1.06); }
 
 .up-dash-kpis { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; }
@@ -119,7 +120,7 @@
   .up-dash-row2 { grid-template-columns: minmax(0, 1fr); }
   .up-dash-miles { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .up-dash-adhead { display: none; }
-  .up-dash-ad { grid-template-columns: repeat(3, minmax(0, 1fr)); border: 1px solid #f3e8f7; border-radius: 16px; margin-bottom: 12px; padding: 16px; background: #fff; }
+  .up-dash-ad { grid-template-columns: repeat(2, minmax(0, 1fr)); border: 1px solid #f3e8f7; border-radius: 16px; margin-bottom: 12px; padding: 16px; background: #fff; }
   .up-dash-ad-main, .up-dash-btns { grid-column: 1 / -1; }
   .up-dash-ad-where-cell { grid-column: 1 / -1; }
   .up-dash-btns { flex-direction: row; }
@@ -128,6 +129,9 @@
 }
 @media (max-width: 600px) {
   .up-dash { gap: 16px; }
+  .up-dash-lift { order: -1; }
+  .up-dash-gold { padding: 0 16px; font-size: 15px; }
+  .up-dash-day-n { display: none; }
   .up-dash-card { padding: 18px; }
   .up-dash-h1 { font-size: 28px; }
   .up-dash-sub { font-size: 14px; }

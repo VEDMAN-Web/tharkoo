@@ -28,7 +28,10 @@ export function DashChart({ days, t }: { days: SellerDashboard["days"]; t: TextF
       </ol>
       <ol className="up-dash-days" aria-hidden="true">
         {days.map((day) => (
-          <li key={day.key}>{day.label}</li>
+          <li key={day.key}>
+            {day.label.split(" ")[0]}
+            <span className="up-dash-day-n"> {day.label.split(" ")[1]}</span>
+          </li>
         ))}
       </ol>
     </section>
