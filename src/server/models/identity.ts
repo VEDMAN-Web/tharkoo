@@ -45,6 +45,8 @@ export interface UserDoc {
   roles: string[];
   verificationStatus: "unsubmitted" | "pending_review" | "approved" | "rejected";
   extraFreeAds?: number;
+  /** H14.3: the views a seller wants in a week, set on the dashboard (50 to 1,000,000). Empty means the default from last week. */
+  weeklyViewsGoal?: number;
   verificationId?: Types.ObjectId;
   status: "active" | "suspended" | "deleted";
   createdAt?: Date;
@@ -130,6 +132,7 @@ const userSchema = new Schema<UserDoc>(
     status: { type: String, enum: ["active", "suspended", "deleted"], default: "active" },
     // H11.1: free ads an admin gave this one person, on top of the site setting.
     extraFreeAds: { type: Number, min: 0, max: 1000, default: undefined },
+    weeklyViewsGoal: { type: Number, min: 50, max: 1_000_000, default: undefined },
   },
   { timestamps: true, collection: collectionName("users", "User") },
 );
