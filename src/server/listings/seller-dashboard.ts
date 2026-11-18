@@ -54,6 +54,8 @@ export type SellerDashboard = {
   ads: DashboardAd[];
   goal: Goal;
   milestones: MilestoneRow[];
+  /** The id of the Bump plan, so the Bump button can open the promote sheet with it chosen. Null when there is none. */
+  bumpPlanId: string | null;
 };
 
 type OwnRow = { _id: Types.ObjectId; title: string; slug?: string; status: string; expiresAt?: Date | null; publishedAt?: Date | null; createdAt?: Date };
@@ -156,11 +158,12 @@ export async function sellerDashboard(userId: string, now: Date = new Date()): P
   };
   if (rows.length === 0) return emptyDashboard(counts, now);
 
-  const [byAd, windows, counters, user] = await Promise.all([
+  const [byAd, windows, counters, user, bump] = await Promise.all([
     dailyCounts(ids, days[0].start, now),
     topWindows(ids, days[0].start),
     AdCounter.find({ listingId: { $in: ids } }).select("realViews realClicks").lean<{ realViews?: number; realClicks?: number }[]>(),
     User.findById(owner).select("weeklyViewsGoal").lean<{ weeklyViewsGoal?: number } | null>(),
+    PromotionProduct.findOne({ code: "bump", enabled: { $ne: false } }).select("_id").lean<{ _id: Types.ObjectId } | null>(),
   ]);
   const total = new Map<string, Cell>();
   for (const ad of byAd.values()) {
@@ -196,6 +199,7 @@ export async function sellerDashboard(userId: string, now: Date = new Date()): P
     ads: top,
     goal: goalProgress({ saved: user?.weeklyViewsGoal, weekViews: inRange(weekStart, weekStart + 7 * DAY, "views"), lastWeekViews: inRange(lastWeekStart, weekStart, "views"), now }),
     milestones: milestonesFor({ views: counters.reduce((acc, row) => acc + (row.realViews ?? 0), 0), clicks: counters.reduce((acc, row) => acc + (row.realClicks ?? 0), 0) }),
+    bumpPlanId: bump ? String(bump._id) : null,
   };
 }
 
@@ -211,6 +215,7 @@ function emptyDashboard(counts: SellerDashboard["counts"], now: Date): SellerDas
     ads: [],
     goal: goalProgress({ saved: null, weekViews: 0, lastWeekViews: 0, now }),
     milestones: milestonesFor({ views: 0, clicks: 0 }),
+    bumpPlanId: null,
   };
 }
 

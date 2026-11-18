@@ -27,11 +27,13 @@ function availableNow(page: Page) {
 }
 
 test.describe("H7.5 seller panel, New design", () => {
-  test("the panel shows the switch, the numbers and My ads; no sideways scroll", async ({ page, baseURL }) => {
+  test("the panel shows the numbers and My ads, and Settings holds the switch; no sideways scroll", async ({ page, baseURL }) => {
     test.setTimeout(120_000);
     await signedInSeller(page, baseURL!, "panel");
     await expect(page.getByRole("navigation", { name: "My account" })).toBeVisible();
     await expect(page.locator("h1")).toHaveCount(1);
+    await expect(availableNow(page)).toHaveCount(0);
+    await page.goto("/u/account/edit-account/");
     await expect(availableNow(page)).toHaveAttribute("aria-pressed", /^(true|false)$/);
     await page.goto("/u/account/ads/");
     await expect(page.locator("#tkv-ads-title")).toHaveText("My ads");
@@ -41,6 +43,7 @@ test.describe("H7.5 seller panel, New design", () => {
   test("Available now drives the status buyers see, and turns back off", async ({ page, baseURL }) => {
     test.setTimeout(120_000);
     await signedInSeller(page, baseURL!, "avail");
+    await page.goto("/u/account/edit-account/");
     const me = await page.request.get("/api/auth/me");
     const userId = ((await me.json()).data?.user?.id || "") as string;
     expect(userId).toBeTruthy();

@@ -7,7 +7,13 @@ import { EmptyIcon } from "./UserPanelShell";
 
 type Cards = Awaited<ReturnType<typeof listOwnCards>>;
 
-export function AnalyticsPanel({ cards }: { cards: Cards }) {
+/** H14.3: the real numbers (never the ones an admin sets for display): all-time per ad, and the last 7 days in total. */
+export type RealNumbers = { byAd: Record<string, { views: number; clicks: number }>; week: { views: number; clicks: number } };
+
+export function AnalyticsPanel({ cards, real }: { cards: Cards; real: RealNumbers }) {
+  const all = Object.values(real.byAd);
+  const totalViews = all.reduce((sum, row) => sum + row.views, 0);
+  const totalClicks = all.reduce((sum, row) => sum + row.clicks, 0);
   if (cards.total === 0) {
     return (
       <section aria-labelledby="analytics-title" className="up-glass up-panel up-empty" data-tk="analytics-empty">
@@ -26,8 +32,10 @@ export function AnalyticsPanel({ cards }: { cards: Cards }) {
       </div>
       <div className="up-stats">
         <div className="up-stat"><span className="up-stat-num">{cards.counts.live}</span><span className="up-stat-label">Live ads</span></div>
-        <div className="up-stat"><span className="up-stat-num" data-tk="total-views">{cards.totals.views}</span><span className="up-stat-label">Views</span></div>
-        <div className="up-stat"><span className="up-stat-num" data-tk="total-clicks">{cards.totals.clicks}</span><span className="up-stat-label">Clicks</span></div>
+        <div className="up-stat"><span className="up-stat-num" data-tk="total-views">{totalViews}</span><span className="up-stat-label">Views, all time</span></div>
+        <div className="up-stat"><span className="up-stat-num" data-tk="total-clicks">{totalClicks}</span><span className="up-stat-label">Clicks, all time</span></div>
+        <div className="up-stat"><span className="up-stat-num" data-tk="week-views">{real.week.views}</span><span className="up-stat-label">Views, last 7 days</span></div>
+        <div className="up-stat"><span className="up-stat-num" data-tk="week-clicks">{real.week.clicks}</span><span className="up-stat-label">Clicks, last 7 days</span></div>
       </div>
       <div className="up-table-wrap">
         <table className="up-table">
@@ -39,8 +47,8 @@ export function AnalyticsPanel({ cards }: { cards: Cards }) {
               <tr key={item.id} data-tk="analytics-row">
                 <td>{displayTitle(item.title || "") || "Untitled ad"}</td>
                 <td>{ownAdStatus(item.status, item.expiresAt).label}</td>
-                <td>{item.shown.views}</td>
-                <td>{item.shown.clicks}</td>
+                <td data-tk="row-views">{real.byAd[item.id ?? ""]?.views ?? 0}</td>
+                <td data-tk="row-clicks">{real.byAd[item.id ?? ""]?.clicks ?? 0}</td>
               </tr>
             ))}
           </tbody>
