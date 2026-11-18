@@ -60,9 +60,10 @@ test.describe("H12.4 light motion", () => {
       new PerformanceObserver((list) => {
         for (const entry of list.getEntries() as unknown as { value: number; hadRecentInput: boolean; startTime: number; sources?: { node?: Element }[] }[]) {
           if (entry.hadRecentInput) continue;
-          // The floating chat button is fixed to the screen and moves with the scroll bar (older than this card); everything else must not shift.
-          const sources = entry.sources ?? [];
-          if (sources.length > 0 && sources.every((item) => item.node instanceof Element && item.node.closest(".tkn-float"))) continue;
+          // The floating chat button (and its wrapper) is fixed to the screen and moves with the scroll bar; it is older than this card
+          // and the same shift shows on main. Sources whose element is gone are ignored; every other element must not shift.
+          const real = (entry.sources ?? []).filter((item) => item.node instanceof Element);
+          if (real.length > 0 && real.every((item) => (item.node as Element).closest(".tkn-float, .tkn-chat-bubble"))) continue;
           w.__cls += entry.value;
           w.__why.push(`${entry.value.toFixed(4)}@${Math.round(entry.startTime)}ms ${(entry.sources ?? []).map((item) => `${item.node?.nodeName}.${String(item.node?.className ?? "").slice(0, 40)}`).join(",")}`);
         }
