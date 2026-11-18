@@ -45,35 +45,34 @@ export function ContactFields(props: Props) {
       {mode !== "phone" && maskedEmail ? <p className="tkp-quiet" data-tk="account-email">{t("post.contactBox.accountEmail", { email: maskedEmail })}</p> : null}
       {showPhone ? (
         <>
-          <div className="tkp-two tkp-two-keep tkp-end">
-            <TextField id="phone" label={t("post.contactBox.phoneLabel")} required value={phone} error={error("phone")} onBlur={onBlur("phone")} inputMode="tel" placeholder="+91 81234 56789" onChange={props.onPhone} />
-            <div className="tkp-toggle-row tkp-wrap" data-tk="whatsapp-options">
-              <span>{t("post.contactBox.whatsapp")}</span>
-              <Switch on={whatsapp} onClick={props.onWhatsapp} label={t("post.contactBox.whatsapp")} />
-              {whatsapp ? (
-                <span className="tkp-same">
-                  <input id="whatsapp-same" type="checkbox" className="tk-check" checked={whatsappSame} onChange={props.onWhatsappSame} />
-                  <label htmlFor="whatsapp-same">{t("post.contactBox.whatsappSame")}</label>
-                </span>
-              ) : null}
-            </div>
-          </div>
-          {whatsapp && !whatsappSame ? (
-            <div className="tkp-two tkp-two-keep">
-              <TextField id="whatsapp-number" label={t("post.contactBox.whatsappNumber")} required value={whatsappNumber} error={error("whatsapp")} onBlur={onBlur("whatsapp")} inputMode="tel" placeholder="+91 81234 56789" onChange={props.onWhatsappNumber} />
-              <span />
-            </div>
-          ) : null}
+          <TextField id="phone" label={t("post.contactBox.phoneLabel")} required value={phone} error={error("phone")} onBlur={onBlur("phone")} inputMode="tel" placeholder="+91 81234 56789" onChange={props.onPhone} />
+          <p className="tkp-quiet" data-tk="phone-hint" style={{ margin: "-6px 0 0" }}>{t("post.contactBox.phoneHint")}</p>
         </>
       ) : null}
-      <div className="tkp-two tkp-two-keep tkp-end">
-        <div className="tkp-toggle-row"><span>{t("post.contactBox.telegram")}</span><Switch on={telegramOn} onClick={props.onTelegramOn} label={t("post.contactBox.telegram")} /></div>
-        {telegramOn ? (
-          <TextField id="telegram" label={t("post.contactBox.telegramUsername")} required value={telegram} error={error("telegram")} onBlur={onBlur("telegram")} placeholder={t("post.contactBox.telegramPlaceholder")} onChange={props.onTelegram} />
-        ) : (
-          <span />
-        )}
+      <div className="tkp-switch-row" data-tk="reach-switches">
+        {showPhone ? (
+          <div className="tkp-toggle-row" data-tk="whatsapp-options">
+            <span>{t("post.contactBox.whatsapp")}</span>
+            <Switch on={whatsapp} onClick={props.onWhatsapp} label={t("post.contactBox.whatsapp")} />
+          </div>
+        ) : null}
+        <div className="tkp-toggle-row" data-tk="telegram-option">
+          <span>{t("post.contactBox.telegram")}</span>
+          <Switch on={telegramOn} onClick={props.onTelegramOn} label={t("post.contactBox.telegram")} />
+        </div>
       </div>
+      {showPhone && whatsapp ? (
+        <span className="tkp-same">
+          <input id="whatsapp-same" type="checkbox" className="tk-check" checked={whatsappSame} onChange={props.onWhatsappSame} />
+          <label htmlFor="whatsapp-same">{t("post.contactBox.whatsappSame")}</label>
+        </span>
+      ) : null}
+      {showPhone && whatsapp && !whatsappSame ? (
+        <TextField id="whatsapp-number" label={t("post.contactBox.whatsappNumber")} required value={whatsappNumber} error={error("whatsapp")} onBlur={onBlur("whatsapp")} inputMode="tel" placeholder="+91 81234 56789" onChange={props.onWhatsappNumber} />
+      ) : null}
+      {telegramOn ? (
+        <TextField id="telegram" label={t("post.contactBox.telegramUsername")} required value={telegram} error={error("telegram")} onBlur={onBlur("telegram")} placeholder={t("post.contactBox.telegramPlaceholder")} onChange={props.onTelegram} />
+      ) : null}
     </>
   );
 }

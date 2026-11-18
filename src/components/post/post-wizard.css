@@ -170,6 +170,12 @@
 .tkn .tkp-post .tkp-drop-line { margin: 0; max-width: 46ch; font-size: 14px; line-height: 1.5; color: #4a2870; }
 .tkn .tkp-post .tkp-drop-buttons { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; }
 .tkn .tkp-post .tkp-btn-camera { display: none; gap: 8px; }
+.tkn .tkp-post .tkp-switch-row { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+.tkn .tkp-post .tkp-switch-row > .tkp-toggle-row { min-height: 48px; gap: 8px; padding: 8px 10px; font-size: 14px; }
+.tkn .tkp-post .tkp-switch-row > .tkp-toggle-row > span:first-child { white-space: nowrap; }
+.tkn .tkp-post .tkp-drop-more { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; }
+.tkn .tkp-post .tkp-btn-small { min-height: 40px; padding: 0 14px; font-size: 14px; font-weight: 600; }
+.tkn .tkp-post .tkp-drop-more:empty { display: none; }
 .tkn .tkp-post .tkp-drop-rule { margin: 0; display: inline-flex; align-items: center; justify-content: center; flex-wrap: wrap; gap: 6px; font-size: 12px; color: #6b4a8a; }
 .tkn .tkp-post .tkp-count-row { display: flex; flex-wrap: wrap; align-items: baseline; gap: 2px 12px; }
 .tkn .tkp-post .tkp-count { margin: 0; font-size: 13px; font-weight: 600; color: #4a2870; }
@@ -229,6 +235,8 @@ body:has(.tkp-post) .tkn-footer, body:has(.tkp-post) .tkn-chat-bubble { display:
 @media (max-width: 1023px) {
   .tkn .tkp-post { padding: 8px 16px calc(112px + env(safe-area-inset-bottom)); scroll-padding-bottom: 120px; }
   .tkn .tkp-post .tkp-progress { display: none; }
+  .tkn .tkp-post .tkp-pay-slot { order: -2; }
+  .tkn .tkp-post .tkp-review-card { order: -1; }
   body:has(.tkp-post:not([data-tk="post-success"])) [data-tk="post-ad"] { display: none; }
   html:has(.tkp-post) { scroll-padding-bottom: 120px; }
   .tkn .tkp-post .tkp-grid { grid-template-columns: minmax(0, 1fr); gap: 12px; }

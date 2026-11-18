@@ -382,6 +382,45 @@ test.describe("H7.86 post an ad, step 5 and the success screen", () => {
     }
   });
 
+  test("H9.4b: steps 3 to 5: one primary photo button, a smaller row, one info line, even switches with the phone hint, the pay box before the preview", async ({ page, baseURL }, info) => {
+    const phone = info.project.name === "phone-390";
+    test.setTimeout(240_000);
+    await stubPostingFee(page);
+    await newPoster(page, baseURL!, "h94p", true, 0);
+    await chooseDating(page, "h94p");
+    await fillDetails(page, `Phone layout ${Date.now()}`, "h94p");
+    await stepOf(page, 3);
+    await expect(page.locator(".tkp-drop-buttons label")).toHaveCount(1);
+    await expect(page.locator(".tkp-drop-buttons label")).toHaveText("Add photos");
+    if (phone) await expect(page.locator("[data-tk=photo-more]").getByText("Take a photo")).toBeVisible();
+    await expect(page.locator("[data-tk=photo-more]").getByText("Add video")).toBeVisible();
+    await expect(page.locator(".tkp-drop-buttons").getByText("Add video")).toHaveCount(0);
+    await expect(page.locator(".tkp-photos .upl-info")).toHaveCount(1);
+    await shot(page, "h94-03-photos");
+    await addPhoto(page, "h94p");
+    await expect(page.locator("[data-tk=phone-hint]")).toHaveText("Shown on your ad so people can reach you.");
+    const toggles = await page.locator(".tkp-switch-row > .tkp-toggle-row").evaluateAll((nodes) => nodes.map((node) => { const box = node.getBoundingClientRect(); return { x: box.x, y: box.y, w: box.width }; }));
+    expect(toggles).toHaveLength(2);
+    expect(Math.abs(toggles[0].y - toggles[1].y)).toBeLessThan(2);
+    expect(Math.abs(toggles[0].w - toggles[1].w)).toBeLessThan(2);
+    expect(toggles[1].x + toggles[1].w).toBeLessThanOrEqual(page.viewportSize()!.width);
+    const labels = await page.locator(".tkp-switch-row > .tkp-toggle-row > span:first-child").evaluateAll((nodes) => nodes.map((node) => node.getBoundingClientRect().height));
+    expect(Math.max(...labels)).toBeLessThan(24);
+    await shot(page, "h94-04-contact");
+    await page.locator("#phone").fill("9876543210");
+    await page.locator("[data-tk=go-on]").click();
+    await stepOf(page, 5);
+    await expect(page.locator("[data-tk=pay-slot]")).toBeVisible();
+    if (phone) {
+      const pay = (await page.locator("[data-tk=pay-slot]").boundingBox())!;
+      const preview = (await page.locator("[data-tk=review-preview]").boundingBox())!;
+      expect(pay.y + pay.height).toBeLessThanOrEqual(preview.y + 1);
+    }
+    expect(await overflow(page)).toBeLessThanOrEqual(0);
+    expect(await serious(page)).toEqual([]);
+    await shot(page, "h94-05-review");
+  });
+
   test("paid posting: the price is clear early, step 5 turns amber with no credits, a recharge turns it back, and the receipt shows after publishing", async ({ page, baseURL }, info) => {
     test.setTimeout(240_000);
     const prefix = `paid${info.project.name === "phone-390" ? "390" : "1440"}`;

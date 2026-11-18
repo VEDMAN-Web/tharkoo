@@ -42,7 +42,7 @@ export function ReviewStep({ rows, ad, hasPhoto, byline, note, pay, terms, adult
         ))}
       </dl>
       <p className="tkp-note">{note}</p>
-      {pay}
+      {pay ? <div className="tkp-pay-slot" data-tk="pay-slot">{pay}</div> : null}
       <div className={`tkp-consent ${termsError ? "is-bad" : ""}`}>
         <input id="consent-terms" type="checkbox" className="tk-check" checked={terms} onChange={onTerms} aria-invalid={Boolean(termsError)} />
         <label htmlFor="consent-terms">

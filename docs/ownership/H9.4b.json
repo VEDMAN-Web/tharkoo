@@ -1,0 +1,14 @@
+{
+  "branchPrefix": "haiku/h9.4b",
+  "globs": [
+    "docs/ownership/H9.4b.json",
+    "progress/H9.4b.md",
+    "src/lib/ui/text.ts",
+    "src/components/PostWizard.tsx",
+    "src/components/post/PhotoStep.tsx",
+    "src/components/post/ContactFields.tsx",
+    "src/components/post/ReviewStep.tsx",
+    "src/components/post/post-wizard.css",
+    "tests/e2e/post-step-5.e2e.ts"
+  ]
+}
