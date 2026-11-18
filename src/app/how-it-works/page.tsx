@@ -5,6 +5,10 @@ import { getPaths } from "@/server/urls/service";
 import { postAdPath } from "@/lib/urls";
 import { DEFAULT_AD_LIFETIME_HOURS } from "@/lib/ads/lifetime-rules";
 import { HowItWorksView } from "@/components/h714/HowItWorksView";
+import { textOverrides } from "@/app/admin/ui-text/store";
+import { readMoneySettings } from "@/server/billing/money-settings";
+import { makeT } from "@/lib/ui/text";
+import { costAnswer } from "@/lib/ui/cost-answer";
 import { taggedPicture } from "@/server/layout/page-picture";
 
 const PICTURE_TAG = "how-it-works";
@@ -20,10 +24,6 @@ export const metadata = pageMetadata({
 });
 
 const FAQS = [
-  {
-    q: "What does it cost to post?",
-    a: "Posting an ad costs credits, and the fee is shown before you publish. Chatting and calling the advertiser are free. Video calls and optional boosts use credits.",
-  },
   {
     q: "Do I need a password?",
     a: "No. Enter your email and we send you a 6-digit code. Type it in and you are logged in. Nothing to remember.",
@@ -48,7 +48,14 @@ function packsText(prices: number[]) {
 }
 
 export default async function HowItWorksPage() {
-  const [packs, paths, photo] = await Promise.all([getCreditPacks().catch(() => []), getPaths(), taggedPicture(PICTURE_TAG).catch(() => null)]);
+  const [packs, paths, money, texts, photo] = await Promise.all([
+    getCreditPacks().catch(() => []),
+    getPaths(),
+    readMoneySettings(),
+    textOverrides(),
+    taggedPicture(PICTURE_TAG).catch(() => null),
+  ]);
+  const faqs = [{ q: "What does it cost to post?", a: costAnswer(makeT(texts), money) }, ...FAQS];
   const prices = packs.map((pack) => pack.price).filter((price): price is number => typeof price === "number" && Number.isFinite(price) && price > 0);
-  return <HowItWorksView postAdHref={postAdPath(paths)} faqs={FAQS} packsText={packsText(prices)} photo={photo} />;
+  return <HowItWorksView postAdHref={postAdPath(paths)} faqs={faqs} packsText={packsText(prices)} photo={photo} />;
 }
