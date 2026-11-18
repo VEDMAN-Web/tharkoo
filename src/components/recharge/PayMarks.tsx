@@ -4,7 +4,7 @@ export function VisaMark({ size = 36 }: MarkProps) {
   return (
     <svg width={size} height={(size * 24) / 36} viewBox="0 0 36 24" role="img" aria-label="Visa">
       <rect width="36" height="24" rx="4" fill="#1A1F71" />
-      <text x="18" y="16.5" textAnchor="middle" fontFamily="Arial, Helvetica, sans-serif" fontSize="11" fontWeight="800" fontStyle="italic" fill="#fff">VISA</text>
+      <text x="18" y="16.5" textAnchor="middle" fontFamily="Arial, Helvetica, sans-serif" fontSize="12" fontWeight="800" fontStyle="italic" fill="#fff">VISA</text>
     </svg>
   );
 }

@@ -2039,7 +2039,7 @@ body:has([data-tk="bottom-bar"]) .tkn-float { bottom: 104px; }
 .tkp-avail-dot { width: 7px; height: 7px; border-radius: 50%; background: currentColor; }
 .tkp-owner { display: flex; flex-direction: column; gap: 10px; padding: 12px; border-top: 1px solid #f3e8f7; background: #fff; }
 .tkp-owner-row { display: flex; justify-content: space-between; align-items: center; gap: 8px; flex-wrap: wrap; }
-.tkp-owner-status { font-size: 11px; font-weight: 700; border-radius: 999px; padding: 3px 9px; }
+.tkp-owner-status { font-size: 12px; font-weight: 700; border-radius: 999px; padding: 3px 9px; }
 .tkp-owner-counts { font-size: 12px; color: #6b4a8a; }
 .tkp-owner-actions { display: flex; flex-wrap: wrap; gap: 6px; }
 

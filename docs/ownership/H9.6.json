@@ -1,0 +1,17 @@
+{
+  "branchPrefix": "haiku/h9.6",
+  "globs": [
+    "docs/ownership/H9.6.json",
+    "progress/H9.6.md",
+    "src/components/buyer/user-panel.css",
+    "src/components/recharge/recharge.css",
+    "src/components/recharge/PayMarks.tsx",
+    "src/components/account/AccountTools.tsx",
+    "src/components/wallet/CoinWallet.tsx",
+    "src/components/wallet/format.ts",
+    "src/app/globals.css",
+    "src/app/u/account/coupons/page.tsx",
+    "src/app/u/account/media/MediaLibrary.tsx",
+    "tests/e2e/h9-6-account-consistency.e2e.ts"
+  ]
+}

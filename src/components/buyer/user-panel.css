@@ -43,7 +43,7 @@
 .up-nav-link svg { flex: none; }
 .up-nav-badge {
   margin-left: auto; min-width: 22px; padding: 2px 8px; border-radius: 999px; text-align: center;
-  background: #c2185b; color: #fff; font-size: 11px; font-weight: 700;
+  background: #c2185b; color: #fff; font-size: 12px; font-weight: 700;
 }
 
 .up-hero {
@@ -98,7 +98,7 @@
 .up-pack-on, .up-pack-on:hover { border-color: #d1137a; background: #fff5fa; }
 .up-pay-row { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; margin-top: 16px; }
 .up-btn:disabled { opacity: 0.5; cursor: not-allowed; }
-.up-pack-tag { align-self: flex-start; font-size: 11px; font-weight: 700; color: #fff; background: #7c3aed; border-radius: 999px; padding: 2px 8px; margin-bottom: 4px; }
+.up-pack-tag { align-self: flex-start; font-size: 12px; font-weight: 700; color: #fff; background: #7c3aed; border-radius: 999px; padding: 2px 8px; margin-bottom: 4px; }
 
 .up-coins-card {
   background: linear-gradient(160deg, #2d1248, #5b21b6); color: #fff; border-radius: 20px; padding: 22px; box-sizing: border-box;
@@ -124,7 +124,7 @@
 .up-stack { display: flex; flex-direction: column; gap: 16px; min-width: 0; }
 .up-stat-row { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 6px 0; font-size: 14px; }
 .up-pill {
-  font-size: 11px; font-weight: 700; border-radius: 999px; padding: 3px 9px; background: #c2185b; color: #fff; white-space: nowrap;
+  font-size: 12px; font-weight: 700; border-radius: 999px; padding: 3px 9px; background: #c2185b; color: #fff; white-space: nowrap;
 }
 .up-reply { display: flex; gap: 10px; align-items: center; padding: 10px; border-radius: 12px; background: #fdf0f7; }
 .up-reply-text { font-size: 13px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
@@ -136,7 +136,7 @@
 .up-tickets { display: grid; grid-template-columns: 320px minmax(0, 1fr); gap: 24px; align-items: stretch; min-width: 0; }
 .up-ticket-list { padding: 12px; display: flex; flex-direction: column; gap: 4px; }
 .up-ticket-ul { display: flex; flex-direction: column; gap: 4px; margin: 0; padding: 0; list-style: none; }
-.up-ticket-label { margin: 6px 8px 8px; font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase; color: #6b4a8a; font-weight: 700; }
+.up-ticket-label { margin: 6px 8px 8px; font-size: 12px; letter-spacing: 0.14em; text-transform: uppercase; color: #6b4a8a; font-weight: 700; }
 .up-ticket {
   text-align: left; width: 100%; border: 0; border-radius: 14px; padding: 12px; background: transparent; font: inherit; color: #1e0b38;
   cursor: pointer; display: flex; flex-direction: column; gap: 6px; box-sizing: border-box; text-decoration: none; transition: background 0.2s;
@@ -147,7 +147,7 @@
 .up-ticket-ref { font-size: 12px; color: #6b4a8a; }
 .up-ticket-title { font-size: 14px; font-weight: 700; color: #1e0b38; }
 .up-ticket-meta { font-size: 12px; color: #4a2870; }
-.up-status { font-size: 11px; font-weight: 700; border-radius: 999px; padding: 3px 9px; background: #f3f4f6; color: #374151; white-space: nowrap; }
+.up-status { font-size: 12px; font-weight: 700; border-radius: 999px; padding: 3px 9px; background: #f3f4f6; color: #374151; white-space: nowrap; }
 .up-status-wait { background: #fdf0f7; color: #a8124f; }
 .up-status-open { background: #f5f0ff; color: #5b21b6; }
 .up-thread { min-width: 0; display: flex; flex-direction: column; min-height: 640px; }
@@ -159,13 +159,13 @@
 .up-bubble-row-mine { align-items: flex-end; }
 .up-bubble { max-width: 78%; padding: 12px 16px; border-radius: 16px; background: #f5f0ff; color: #1e0b38; font-size: 14px; line-height: 1.55; }
 .up-bubble-mine { background: linear-gradient(135deg, #d1137a, #a8124f); color: #fff; }
-.up-bubble-meta { margin-top: 4px; font-size: 11px; color: #6b4a8a; }
+.up-bubble-meta { margin-top: 4px; font-size: 12px; color: #6b4a8a; }
 .up-reply-box { padding: 16px 24px 22px; border-top: 1px solid #f3e8f7; }
 .up-reply-row { display: flex; gap: 10px; align-items: flex-end; }
 
-.up-empty { padding: 28px; text-align: center; display: flex; flex-direction: column; align-items: center; gap: 10px; }
+.up-empty { padding: 22px; text-align: center; display: flex; flex-direction: column; align-items: center; gap: 10px; }
 .up-empty-icon { width: 72px; height: 72px; border-radius: 50%; display: flex; align-items: center; justify-content: center; background: #fce4f0; color: #a8124f; flex: none; }
-.up-empty-title { margin: 0; font-size: 18px; font-weight: 800; color: #1e0b38; }
+.up-empty-title { margin: 0; font-size: 20px; font-weight: 800; color: #1e0b38; }
 .up-empty-body { margin: 0 0 6px; font-size: 14px; color: #4a2870; }
 .up-error { color: #9f1239; font-size: 14px; margin: 0; }
 .up-skeleton {
@@ -215,7 +215,7 @@
   .up-skeleton { animation: none; }
   .up-nav-link, .up-pack, .up-ticket { transition: none; }
 }
-.up-sec { margin: 14px 8px 6px; font-size: 11px; font-weight: 800; letter-spacing: 0.14em; text-transform: uppercase; color: #8a6aa6; list-style: none; }
+.up-sec { margin: 14px 8px 6px; font-size: 12px; font-weight: 800; letter-spacing: 0.14em; text-transform: uppercase; color: #8a6aa6; list-style: none; }
 .up-stats { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; }
 .up-stats-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
 .up-stat { padding: 16px; border-radius: 16px; background: #fff; border: 1px solid #f3e8f7; min-width: 0; }
@@ -308,7 +308,7 @@
 .up-tour-line svg { color: #a8124f; flex: none; }
 .up-tour-line strong { color: #1e0b38; }
 .up-check { display: flex; align-items: center; gap: 10px; min-height: 44px; font-size: 14px; font-weight: 600; color: #1e0b38; }
-.up-check input { width: 22px; height: 22px; accent-color: #c2185b; flex: none; }
+.up-check input { width: 24px; height: 24px; accent-color: #c2185b; flex: none; }
 .up-table-wrap { overflow-x: auto; }
 .up-table { width: 100%; border-collapse: collapse; font-size: 14px; color: #1e0b38; }
 .up-table th { text-align: left; font-size: 12px; font-weight: 700; color: #6b4a8a; padding: 8px 10px; border-bottom: 1px solid #ead8f0; }

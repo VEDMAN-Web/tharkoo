@@ -24,12 +24,14 @@ export function CouponRedeem() {
     [],
   );
   return (
-    <VendorShell>
-      <h1 className="tk-page-h1">Coupons</h1>
+    <section className="up-glass up-panel up-stack" aria-labelledby="coupons-heading">
+      <div className="up-panel-head">
+        <h1 id="coupons-heading" className="up-h2">Coupons</h1>
+      </div>
       <form onSubmit={redeem}>
         <p className="t-small"><Ticket size={14} /> Do you have a Coupon?</p>
         <div style={{ display: "flex", gap: 8 }}>
-          <input aria-label="Insert coupon code" placeholder="Insert coupon code" value={code} onChange={(event) => setCode(event.target.value)} style={{ flex: 1, height: 32, border: "1px solid var(--border)", borderRadius: 4, padding: "0 8px" }} />
+          <input aria-label="Insert coupon code" placeholder="Insert coupon code" value={code} onChange={(event) => setCode(event.target.value)} style={{ flex: 1, minHeight: 44, border: "1px solid var(--border)", borderRadius: 8, padding: "0 12px" }} />
           <button type="submit" className="tk-btn tk-btn-outline-primary" data-tk="apply-coupon">APPLY</button>
         </div>
         <p aria-live="polite" className="t-small">{message}</p>
@@ -44,7 +46,7 @@ export function CouponRedeem() {
         </div>
       ))}
       <HelpCard />
-    </VendorShell>
+    </section>
   );
 }
 
