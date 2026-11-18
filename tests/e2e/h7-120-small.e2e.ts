@@ -160,8 +160,12 @@ test.describe("H7.120 small list", () => {
     const { api, email } = await newUserApi(baseURL!, "rupee");
     await api.dispose();
     await loginUi(page, email, undefined, "/u/account/credits/");
-    await page.evaluate(() => window.dispatchEvent(new CustomEvent("tk-recharge-open", { detail: {} })));
     const sheet = page.locator("[data-tk=recharge-sheet]");
+    // The sheet listens for this event once the page has loaded; send it until the sheet answers, so a slow load cannot miss it.
+    await expect(async () => {
+      await page.evaluate(() => window.dispatchEvent(new CustomEvent("tk-recharge-open", { detail: {} })));
+      await expect(sheet).toBeVisible({ timeout: 1500 });
+    }).toPass({ timeout: 20_000 });
     await expect(sheet).toContainText("1 credit = ₹10");
     await expect(sheet.locator("[data-tk=recharge-pack]").first()).toContainText("₹");
     await expect(sheet.locator("[data-tk=recharge-pay]")).toHaveText(/^Pay ₹[0-9,]+$/);

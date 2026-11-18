@@ -40,6 +40,13 @@ const nextConfig: NextConfig = {
     imageSizes: [64, 96, 160, 256],
     remotePatterns: [{ protocol: "https", hostname: "res.cloudinary.com" }],
   },
+  async redirects() {
+    return [
+      { source: "/login", destination: "/u/login/", permanent: true },
+      { source: "/signup", destination: "/u/register/", permanent: true },
+      { source: "/register", destination: "/u/register/", permanent: true },
+    ];
+  },
   async rewrites() {
     return {
       beforeFiles: [{ source: "/sitemap/:shard.xml", destination: "/sitemap/:shard/" }],

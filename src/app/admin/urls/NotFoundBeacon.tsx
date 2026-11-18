@@ -2,7 +2,6 @@
 
 import { usePathname } from "next/navigation";
 import { useEffect, useRef } from "react";
-import { recordNotFoundAction } from "./notfound-beacon";
 
 /** Counts this 404 once per page view (each visit counts; a re-render does not). Renders nothing. */
 export function NotFoundBeacon() {
@@ -11,7 +10,7 @@ export function NotFoundBeacon() {
   useEffect(() => {
     if (!pathname || sent.current === pathname) return;
     sent.current = pathname;
-    void recordNotFoundAction(pathname, document.referrer).catch(() => undefined);
+    void fetch("/api/notfound/", { method: "POST", keepalive: true, headers: { "content-type": "application/json" }, body: JSON.stringify({ path: pathname, referrer: document.referrer }) }).catch(() => undefined);
   }, [pathname]);
   return null;
 }

@@ -32,7 +32,7 @@ async function shots(page: Page, name: string) {
 }
 
 test.describe("3-5 the Want to post one like this strip", () => {
-  test("the ad page and My ads end with a neutral strip: no free claim, a Post your ad button, and the fee only when posting is paid", async ({ page, baseURL }, info) => {
+  test("the ad page ends with a neutral strip: no free claim, a Post your ad button, and the fee only when posting is paid; My ads no longer has the strip", async ({ page, baseURL }, info) => {
     test.setTimeout(180_000);
     const slug = `strip-desk-${Date.now()}`;
     const owner = await newUserApi(baseURL!, "stripowner");
@@ -54,11 +54,9 @@ test.describe("3-5 the Want to post one like this strip", () => {
 
     await stubPostingFee(page);
     await loginUi(page, owner.email, undefined, "/u/account/ads/");
-    const mine = page.locator("[data-tk=post-strip]");
-    await expect(mine).toBeVisible();
-    await expect(mine.locator("[data-tk=post-strip-fee]")).toHaveText("It costs 30 credits.");
-    await expect(mine).not.toContainText(/free/i);
-    await shots(page, "myads");
+    // My ads is the owner's own list now: it lists the ad and has no "post one like this" strip (the strip lives on the ad page only).
+    await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
+    await expect(page.locator("[data-tk=post-strip]")).toHaveCount(0);
 
     await page.goto(`/ad/${slug}/`);
     await expect(page.locator("[data-tk=post-strip] [data-tk=post-strip-fee]")).toHaveText("It costs 30 credits.");

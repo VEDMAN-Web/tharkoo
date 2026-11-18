@@ -12,8 +12,10 @@ import { textOverrides } from "@/app/admin/ui-text/store";
 import { getPaths } from "@/server/urls/service";
 import { defaultNewDesign, newDesignOn } from "@/server/site-links/new-design";
 
+const NOT_FOUND_TITLE = "Page not found | Tharkoo";
+
 export const metadata: Metadata = {
-  title: "Page not found | Tharkoo",
+  title: NOT_FOUND_TITLE,
   description: "That page is not on Tharkoo. Go back to the home page and choose a category.",
   robots: { index: false, follow: false },
 };
@@ -54,6 +56,7 @@ export default async function NotFound() {
     const ads = await latestAds(categoryNames).catch(() => null);
     return (
       <>
+        <title>{NOT_FOUND_TITLE}</title>
         <NotFoundBeacon />
         <NotFoundView categories={categories} ads={ads} />
       </>
@@ -61,6 +64,7 @@ export default async function NotFound() {
   }
   return (
     <>
+      <title>{NOT_FOUND_TITLE}</title>
       <NotFoundBeacon />
       <EmptyState
         heading="h1"

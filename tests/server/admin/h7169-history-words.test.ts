@@ -1,6 +1,6 @@
 import mongoose from "mongoose";
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
-import { actionWords, fieldLabel, plainValue, targetWords } from "@/lib/admin/history-words";
+import { actionWords, dateWords, fieldLabel, plainSentence, plainValue, targetWords } from "@/lib/admin/history-words";
 import type { AdminCtx } from "@/server/admin/context";
 import { historyCsv, historyDetail, listHistory, parseHistoryQuery } from "@/server/admin/history";
 import { updatePlan } from "@/server/billing/plans-admin";
@@ -35,10 +35,29 @@ describe("History & undo in plain words (H7.169)", () => {
     expect(plainValue("true")).toBe("Yes");
     expect(plainValue("false")).toBe("No");
     expect(plainValue("null")).toBe("");
-    expect(plainValue("2026-06-15T10:00:00.000Z")).toBe("15 Jun 2026, 15:30");
+    expect(plainValue("2026-06-15T10:00:00.000Z")).toBe("15 Jun, 3:30 pm");
     expect(plainValue('["admin","support"]')).toBe("admin, support");
     expect(plainValue("507f1f77bcf86cd799439011")).toBe("a record");
     expect(plainValue("Hello there")).toBe("Hello there");
+  });
+
+  it("writes a date and time in Indian time as a person says it, and a raw date inside a sentence the same way", () => {
+    const now = new Date("2026-11-18T05:00:00.000Z");
+    expect(dateWords("2026-11-19T06:22:12.469Z", now)).toBe("19 Nov, 11:52 am");
+    expect(dateWords("2026-06-15T18:35:00.000Z", now)).toBe("16 Jun, 12:05 am");
+    expect(dateWords("2027-01-02T06:30:00.000Z", now)).toBe("2 Jan 2027, 12:00 pm");
+    expect(plainSentence("Extended, ends 2026-11-19T06:22:12.469Z: Honda", now)).toBe("Extended, ends 19 Nov, 11:52 am: Honda");
+    expect(plainSentence("No date here", now)).toBe("No date here");
+  });
+
+  it("an old audit row that still carries a raw date reads plainly in the list and the CSV", async () => {
+    const row = await AuditEvent.create({ actorType: "admin", actorId: admin.actorId, action: "listing.extend", summary: "Extended, ends 2026-11-19T06:22:12.469Z: Honda", targetType: "listing", targetId: "a1", targetLabel: "Honda", requestId: "r9" });
+    const list = await listHistory(admin, parseHistoryQuery({ tab: "audit", days: "0" }));
+    expect(list.rows[0].title).toMatch(/^Extended, ends 19 Nov( 2026)?, 11:52 am: Honda$/);
+    expect(list.rows[0].title).not.toContain("T06:22");
+    const csv = await historyCsv(admin, parseHistoryQuery({ tab: "audit", days: "0" }));
+    expect(csv).not.toContain("2026-11-19T06:22");
+    expect(String(row._id)).toBeTruthy();
   });
 
   it("says an audit action as a sentence: known ones by name, others as their words", () => {
