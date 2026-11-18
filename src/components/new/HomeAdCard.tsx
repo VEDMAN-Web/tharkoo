@@ -227,7 +227,7 @@ export function HomeAdCard({ ad, labels, order = 0 }: { ad: HomeAdCardData; labe
   return (
     <article
       ref={cardRef}
-      className={anchor ? "tkh-ad is-lifted" : "tkh-ad"}
+      className={anchor ? "tkh-ad is-lifted m-lift" : "tkh-ad m-lift"}
       data-tk="home-ad"
       data-slide={index}
       onPointerEnter={pointerEnter}

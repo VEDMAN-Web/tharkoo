@@ -80,6 +80,9 @@ export function PostWizard({
   const t = useT();
   const paths = useUrlPaths();
   const [step, setStep] = useState(1);
+  /** H12.4 7: which way the last step change went, so the new step slides in from the right (on) or the left (back). Empty until the first change. */
+  const [stepMove, setStepMove] = useState<{ from: number; dir: "" | "fwd" | "back" }>({ from: 1, dir: "" });
+  if (stepMove.from !== step) setStepMove({ from: step, dir: step > stepMove.from ? "fwd" : "back" });
   const pendingStep = useRef<string | null>(null);
   const [startReady, setStartReady] = useState(false);
   const [categories, setCategories] = useState<Cat[]>(initialCategories ?? []);
@@ -880,7 +883,7 @@ export function PostWizard({
           >
             {chargesFee ? <CreditsCard fee={alreadyPaid ? 0 : money.fee} price={money.price} balance={shownBalance} ready={money.ready} onTopUp={() => openRecharge({ shortfall: short })} /> : null}
           </PostRail>
-          <section className="tkp-main" data-step={current} aria-labelledby="post-step-title" onFocusCapture={keepFocusedFieldVisible}>
+          <section className="tkp-main" data-step={current} data-dir={stepMove.dir || undefined} aria-labelledby="post-step-title" onFocusCapture={keepFocusedFieldVisible}>
             <div className="tkp-head">
               <p className="tkp-kicker" data-tk="step-of">{t("post.step.of", { step, total: flow.length })}</p>
               <h1 id="post-step-title" className="tkp-h1" data-tk="step-title">{stepCopy.title}</h1>
@@ -891,7 +894,7 @@ export function PostWizard({
                 {banner === PUBLISH_MESSAGES.VERIFICATION_REQUIRED ? <Link href="/u/account/kyc/" data-tk="verify-id">{t("post.banner.verifyId")}</Link> : null}
               </div>
             </div>
-            <div className="tkp-scroll" onKeyDown={moveOnEnter}>
+            <div className="tkp-scroll" key={current} onKeyDown={moveOnEnter}>
               {current === "category" ? (
                 <>
                   <CategoryTiles categories={categories} selectedId={categoryId} locked={editing} onPick={(id) => { setCategoryId(id); setSubcategoryId(""); pickedPeople(id); }} />

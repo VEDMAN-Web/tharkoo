@@ -312,3 +312,15 @@ li[data-current="yes"] .adm-k-hdot { border-color: var(--adm-pri); background: v
   .adm-k-savebar .adm-k-btn { flex: 1; }
   .adm-k-media .adm-btn, .adm-k-media .adm-input, .adm-k-media input { min-height: 44px; }
 }
+
+/* ---- H12.4 light motion (transform and opacity only; all of it off with reduced motion) ---- */
+@media (prefers-reduced-motion: no-preference) {
+  .adm-k-drawer { animation: adm-k-drawer-in var(--m-base, 220ms) var(--m-ease, ease-out) both; }
+  .adm-k-savebar { animation: adm-k-bar-in var(--m-base, 220ms) var(--m-ease, ease-out) both; }
+  /* A row that was just saved flashes a soft highlight once (an overlay that fades, so no layout work). */
+  .adm-k-flash { position: relative; }
+  .adm-k-flash::after { content: ""; position: absolute; inset: 0; background: rgba(209, 19, 122, 0.14); opacity: 0; pointer-events: none; animation: adm-k-flash 600ms ease-out 1 both; }
+}
+@keyframes adm-k-drawer-in { from { opacity: 0; transform: translate3d(16px, 0, 0); } to { opacity: 1; transform: none; } }
+@keyframes adm-k-bar-in { from { opacity: 0; transform: translate3d(0, 12px, 0); } to { opacity: 1; transform: none; } }
+@keyframes adm-k-flash { 0% { opacity: 1; } 100% { opacity: 0; } }
