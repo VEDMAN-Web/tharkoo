@@ -101,7 +101,7 @@ describe("each switch blocks its own path with a clear message", () => {
     const user = await member(OLD);
     const live = await draftFor(String(user._id));
     await submitListing(live.id, String(user._id), attest, "r");
-    await setMoneySettings({ actorId: admin.actorId, roles: ["admin"], values: { paidPostingOn: true, postingFeeCredits: 0 }, requestId: "r" });
+    await setMoneySettings({ actorId: admin.actorId, roles: ["admin"], values: { paidPostingOn: true, postingFeeCredits: 0, freeAdsPerAccount: 0 }, requestId: "r" });
     await setEmergencySwitch(admin, { key: "pausePaidPosting", on: true });
     // Paid posting on but the fee is 0: nothing is charged, so nothing is paused.
     expect(await submitListing((await draftFor(String(user._id))).id, String(user._id), attest, "r")).toMatchObject({ status: "active" });

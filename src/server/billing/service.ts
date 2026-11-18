@@ -29,7 +29,7 @@ import {
   PromotionProduct,
   WalletEntry,
 } from "@/server/models";
-import { boostFitsBeforeExpiry } from "@/server/billing/boost-window";
+import { extendedAdEnd } from "@/server/billing/boost-window";
 import { assertNotPaused } from "@/server/settings/emergency";
 import { productCodeDenied } from "@/server/shared/policy";
 import { randomToken, sha256 } from "@/server/shared/crypto";
@@ -402,9 +402,8 @@ async function placePromotion(input: {
   }
   const startsAt = requested.getTime() < now.getTime() ? now : requested;
   const endsAt = new Date(startsAt.getTime() + rule.durationMs);
-  if (!boostFitsBeforeExpiry(endsAt, listing.expiresAt)) {
-    throw new ConflictError("This boost would run past the ad's expiry. Renew the ad first or choose a shorter boost.");
-  }
+  // H11.1: a plan that runs past the end of the ad moves the ad's end to the plan's end (set after the payment settles, below).
+  const adEndMovesTo = extendedAdEnd(endsAt, listing.expiresAt);
   const orderId = new Types.ObjectId();
   let payment;
   try {
@@ -458,6 +457,7 @@ async function placePromotion(input: {
     }
     payment.status = "paid";
     await payment.save();
+    if (adEndMovesTo) await moveAdEnd({ listingId, userId: input.userId, from: listing.expiresAt ?? null, to: adEndMovesTo, plan: product.code, requestId: input.requestId });
     await audit.append({
       actorId: input.userId,
       actorType: "user",
@@ -623,6 +623,21 @@ export async function runBoostCron(requestId: string, now = new Date()) {
   return { boosted, expired };
 }
 
+/** Moves an ad's end to the end of the plan bought for it. Audited, so History shows why the ad lasts longer. */
+async function moveAdEnd(input: { listingId: Types.ObjectId | string; userId: string; from: Date | null; to: Date; plan: string; requestId: string }) {
+  await Listing.collection.updateOne({ _id: new Types.ObjectId(String(input.listingId)) }, { $set: { expiresAt: input.to } });
+  await audit.append({
+    actorId: input.userId,
+    actorType: "user",
+    action: "listing.extend_for_plan",
+    targetType: "listing",
+    targetId: String(input.listingId),
+    requestId: input.requestId,
+    before: { expiresAt: input.from ? new Date(input.from).toISOString() : null },
+    after: { expiresAt: input.to.toISOString(), plan: input.plan },
+  });
+}
+
 export async function renewDuePromotions(requestId: string) {
   await connectDb();
   await readyBilling();
@@ -630,10 +645,11 @@ export async function renewDuePromotions(requestId: string) {
   let renewed = 0;
   for (const order of due) {
     const product = await PromotionProduct.findById(order.productId);
-    const adRow = await Listing.findById(order.listingId).select("expiresAt").lean<{ expiresAt?: Date | null }>();
+    const adRow = await Listing.findById(order.listingId).select("expiresAt status").lean<{ expiresAt?: Date | null; status?: string }>();
     const renewRule = product ? promotionRule(product.code, order.durationDays, product.durationDays, product.durationHours) : null;
-    const fits = renewRule ? boostFitsBeforeExpiry(new Date(Date.now() + renewRule.durationMs), adRow?.expiresAt) : false;
-    if (!product || !adRow || !fits) {
+    // H11.1: a plan that runs past the end of the ad moves the ad's end, so only an ad that is no longer live stops the renewal.
+    const adIsLive = Boolean(adRow) && adRow?.status === "active" && (!adRow?.expiresAt || new Date(adRow.expiresAt).getTime() > Date.now());
+    if (!product || !adRow || !renewRule || !adIsLive) {
       order.autoRenew = false;
       await order.save();
       continue;
@@ -662,6 +678,8 @@ export async function renewDuePromotions(requestId: string) {
       order.startsAt = start;
       order.endsAt = new Date(start.getTime() + rule.durationMs);
       await order.save();
+      const moved = extendedAdEnd(order.endsAt, adRow.expiresAt);
+      if (moved) await moveAdEnd({ listingId: order.listingId, userId: String(order.userId), from: adRow.expiresAt ?? null, to: moved, plan: product.code, requestId });
       if (product.code === "bump") {
         await Listing.collection.updateOne({ _id: order.listingId }, { $set: { bumpedAt: start } });
       }

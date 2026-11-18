@@ -56,7 +56,7 @@ async function draftFor(userId: string, slug = "dating") {
 }
 
 async function fee(value: number) {
-  await setMoneySettings({ ...admin, values: { postingFeeCredits: value, paidPostingOn: true } });
+  await setMoneySettings({ ...admin, values: { postingFeeCredits: value, paidPostingOn: true, freeAdsPerAccount: 0 } });
 }
 
 async function topUp(userId: string, amount: number, ref = "topup-1") {
@@ -65,8 +65,8 @@ async function topUp(userId: string, amount: number, ref = "topup-1") {
 
 describe("money settings", () => {
   it("default to a 30 credit fee, Rs 10 per credit, mock payments on and paid posting OFF", async () => {
-    expect(MONEY_DEFAULTS).toEqual({ postingFeeCredits: 30, creditPriceInr: 10, mockPaymentsOn: true, paidPostingOn: false });
-    expect(await readMoneySettings()).toEqual({ postingFeeCredits: 30, creditPriceInr: 10, mockPaymentsOn: true, paidPostingOn: false });
+    expect(MONEY_DEFAULTS).toEqual({ postingFeeCredits: 30, creditPriceInr: 10, mockPaymentsOn: true, paidPostingOn: false, freeAdsPerAccount: 3 });
+    expect(await readMoneySettings()).toEqual({ postingFeeCredits: 30, creditPriceInr: 10, mockPaymentsOn: true, paidPostingOn: false, freeAdsPerAccount: 3 });
   });
 
   it("are for admins only, validate the numbers and write an audit row", async () => {
@@ -74,7 +74,7 @@ describe("money settings", () => {
     await expect(setMoneySettings({ ...admin, values: { postingFeeCredits: -1 } })).rejects.toThrow();
     await expect(setMoneySettings({ ...admin, values: { somethingElse: 1 } })).rejects.toThrow();
     const after = await setMoneySettings({ ...admin, values: { postingFeeCredits: 40, creditPriceInr: 12, mockPaymentsOn: false, paidPostingOn: true } });
-    expect(after).toEqual({ postingFeeCredits: 40, creditPriceInr: 12, mockPaymentsOn: false, paidPostingOn: true });
+    expect(after).toEqual({ postingFeeCredits: 40, creditPriceInr: 12, mockPaymentsOn: false, paidPostingOn: true, freeAdsPerAccount: 3 });
     const rows = await AuditEvent.find({ action: "settings.money.update" }).lean();
     expect(rows).toHaveLength(1);
   });
@@ -92,7 +92,7 @@ describe("paid posting OFF (the default)", () => {
 
   it("starts charging when the admin turns it on", async () => {
     await setMoneySettings({ ...admin, values: { postingFeeCredits: 30 } });
-    await setMoneySettings({ ...admin, values: { paidPostingOn: true } });
+    await setMoneySettings({ ...admin, values: { paidPostingOn: true, freeAdsPerAccount: 0 } });
     const user = await member();
     await topUp(user.id, 50);
     expect(await postingFeeStatus(user.id)).toMatchObject({ fee: 30, balance: 50, after: 20, enough: true });
@@ -237,7 +237,7 @@ describe("the routes", () => {
     await topUp(user.id, 12);
     const res = await walletGet(new Request(`${origin}/api/wallet/posting-fee`, { headers: { origin, cookie } }));
     const body = (await res.json()) as { ok: boolean; data: Record<string, unknown> };
-    expect(body.data).toEqual({ fee: 30, balance: 12, after: 0, short: 18, enough: false, creditPriceInr: 10, mockPaymentsOn: true });
+    expect(body.data).toEqual({ fee: 30, balance: 12, after: 0, short: 18, enough: false, creditPriceInr: 10, mockPaymentsOn: true, paidPostingOn: true, postingFeeCredits: 30, free: false, adNumber: 1, freeAds: 0, freeLeft: 0 });
     expect(await postingFeeStatus(user.id)).toEqual(body.data);
   });
 

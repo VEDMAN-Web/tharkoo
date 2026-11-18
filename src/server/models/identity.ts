@@ -44,6 +44,7 @@ export interface UserDoc {
   emailVerifiedAt?: Date;
   roles: string[];
   verificationStatus: "unsubmitted" | "pending_review" | "approved" | "rejected";
+  extraFreeAds?: number;
   verificationId?: Types.ObjectId;
   status: "active" | "suspended" | "deleted";
   createdAt?: Date;
@@ -127,6 +128,8 @@ const userSchema = new Schema<UserDoc>(
     },
     verificationId: { type: Schema.Types.ObjectId },
     status: { type: String, enum: ["active", "suspended", "deleted"], default: "active" },
+    // H11.1: free ads an admin gave this one person, on top of the site setting.
+    extraFreeAds: { type: Number, min: 0, max: 1000, default: undefined },
   },
   { timestamps: true, collection: collectionName("users", "User") },
 );

@@ -19,7 +19,7 @@ async function openPostTab(page: Page) {
 }
 
 async function setMoney(paid: boolean) {
-  await withLocalDb((db) => db.collection("sites").updateOne({ key: "default" }, { $set: { paidPostingOn: paid, postingFeeCredits: 30 } }, { upsert: true }));
+  await withLocalDb((db) => db.collection("sites").updateOne({ key: "default" }, { $set: { paidPostingOn: paid, postingFeeCredits: 30, freeAdsPerAccount: 0 } }, { upsert: true }));
 }
 
 test.describe("A41 page builder, Post-ad tab", () => {

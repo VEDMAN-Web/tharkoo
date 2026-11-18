@@ -24,6 +24,8 @@ export interface SiteDoc extends BaseDoc {
   creditPriceInr?: number;
   mockPaymentsOn?: boolean;
   paidPostingOn?: boolean;
+  /** H11.1: how many of an account's first ads are free when Paid posting is on. */
+  freeAdsPerAccount?: number;
   planOrder?: string[];
   name?: string;
   tagline?: string;
@@ -268,6 +270,7 @@ const siteSchema = new Schema<SiteDoc>(
     creditPriceInr: { type: Number, min: 1 },
     mockPaymentsOn: { type: Boolean },
     paidPostingOn: { type: Boolean },
+    freeAdsPerAccount: { type: Number, min: 0 },
     planOrder: { type: [String], default: undefined },
     listingCopySource: { type: String, enum: ["legacy", "content"], default: "legacy" },
     launchChecklist: {

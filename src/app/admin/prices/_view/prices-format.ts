@@ -31,7 +31,7 @@ export function checkPlanForm(input: { name: string; description: string; amount
   if (input.amount.trim() === "" || !Number.isInteger(amount) || amount < 0 || amount > 100_000) return "The price is a whole number of credits, 0 or more.";
   if (!input.fixedLength) {
     const hours = Number(input.hours.trim());
-    if (input.hours.trim() === "" || !Number.isInteger(hours) || hours < 1 || hours > MAX_PLAN_HOURS) return `Hours is a whole number from 1 to ${MAX_PLAN_HOURS}: a plan cannot last longer than the ad it is bought for.`;
+    if (input.hours.trim() === "" || !Number.isInteger(hours) || hours < 1 || hours > MAX_PLAN_HOURS) return `Hours is a whole number from 1 to ${MAX_PLAN_HOURS}. A plan that runs past the end of an ad moves the ad's end to the plan's end.`;
   }
   return null;
 }

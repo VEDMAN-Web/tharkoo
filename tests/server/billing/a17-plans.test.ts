@@ -111,7 +111,7 @@ describe("promotion plans", () => {
     expect((await listProducts()).products.map((item) => item.code)).toContain("top");
   });
 
-  it("checks the form: name, price, hours (1 to 48, never longer than an ad), blocked words, and keeps a fixed length for Flash", async () => {
+  it("checks the form: name, price, hours (1 to 72), blocked words, and keeps a fixed length for Flash", async () => {
     const ids = await seed();
     const bad = async (patch: Record<string, unknown>, id = ids.bump) => expect(updatePlan(admin, { id, ...PLAN, ...patch })).rejects.toBeInstanceOf(ValidationError);
     await bad({ name: "  " });
@@ -121,7 +121,7 @@ describe("promotion plans", () => {
     await bad({ amount: 1.5 });
     await bad({ amount: 100_001 });
     await bad({ durationHours: 0 });
-    await bad({ durationHours: 49 });
+    await bad({ durationHours: 73 });
     await bad({ durationHours: 1.5 });
     await bad({ description: "a blockedword here" });
     await bad({ name: "<b>Bump</b>" });
@@ -167,7 +167,7 @@ describe("promotion plans", () => {
 });
 
 describe("plans in hours (H7.168)", () => {
-  it("saves a plan in hours, keeps whole hours for buyers, and a plan can never be longer than the ad's 48 hours", async () => {
+  it("saves a plan in hours, keeps whole hours for buyers, and a plan lasts at most 72 hours (H11.1: it moves the ad's end when it runs past it)", async () => {
     const ids = await seed();
     await updatePlan(admin, { id: ids.bump, ...PLAN, durationHours: 36 });
     const saved = await PromotionProduct.findById(ids.bump).lean();
@@ -177,8 +177,9 @@ describe("plans in hours (H7.168)", () => {
     const product = (await listProducts()).products.find((item) => item.code === "bump");
     expect(product).toMatchObject({ durationHours: 36 });
     expect(product?.schedule.durationMs).toBe(36 * 3_600_000);
-    await expect(updatePlan(admin, { id: ids.bump, ...PLAN, durationHours: 49 })).rejects.toThrow(/1 to 48/);
-    await expect(updatePlan(admin, { id: ids.bump, ...PLAN, durationHours: 72 })).rejects.toThrow(/cannot last longer than the ad/);
+    await expect(updatePlan(admin, { id: ids.bump, ...PLAN, durationHours: 73 })).rejects.toThrow(/1 to 72/);
+    await updatePlan(admin, { id: ids.bump, ...PLAN, durationHours: 72 });
+    expect(await PromotionProduct.findById(ids.bump).lean()).toMatchObject({ durationHours: 72, durationDays: 3 });
   });
 
   it("TOP is set in hours too, with no 1, 3 or 7 days, and boosts in proportion", async () => {
