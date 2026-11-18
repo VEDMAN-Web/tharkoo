@@ -49,6 +49,8 @@ function nextSteps(t: TextFn, live: boolean, where: string, saved = false, pause
 export function PostSuccess({ copy, live, where, ad, hasPhoto, byline, anotherHref, adHref, receipt, plans, planNote, onPlan, saved = false, paused = false }: Props) {
   const t = useT();
   const Mark = live ? CircleCheck : Clock;
+  // H14.2: once the ad is live the whole posted-ad card opens it (no View ad or View my ads button).
+  const cardHref = adHref && live && !paused ? adHref : "";
   return (
     <div className="tkp-post" data-design="post-new" data-tk="post-success" data-state={saved ? "saved" : live ? "live" : "review"}>
       <div className="tkp-progress" aria-hidden><i style={{ width: "100%" }} /></div>
@@ -58,8 +60,9 @@ export function PostSuccess({ copy, live, where, ad, hasPhoto, byline, anotherHr
         {copy.text ? <p className="tkp-help">{copy.text}</p> : null}
         <div className="tkp-success-cols">
           <div className="tkp-success-col">
-            <div className="tkp-success-card">
+            <div className={cardHref ? "tkp-success-card is-link" : "tkp-success-card"}>
               <PostPreviewCard ad={ad} label={t("post.success.adLabel")} hasPhoto={hasPhoto} byline={byline} />
+              {cardHref ? <Link href={cardHref} prefetch={false} className="tkp-card-link" data-tk="view-ad" aria-label={ad.title || t("post.success.adLabel")} /> : null}
             </div>
             <ul className="tkp-next" data-tk="what-next">
               {nextSteps(t, live, where, saved, paused).map((line) => (
@@ -69,7 +72,6 @@ export function PostSuccess({ copy, live, where, ad, hasPhoto, byline, anotherHr
           </div>
           <div className="tkp-success-col">
             {receipt ? <p className="tkp-receipt" data-tk="receipt">{receipt}</p> : null}
-            {adHref && live && !paused ? <Link href={adHref} className="tkp-ad-link" data-tk="view-ad">{t("post.success.viewAd")}</Link> : null}
             {plans.length && !saved ? (
               <section className="tkp-upsell" data-tk="upsell" aria-label={t("post.success.moreViews")}>
                 <h2 className="tkp-upsell-title">{t("post.success.moreViews")}</h2>
@@ -88,8 +90,7 @@ export function PostSuccess({ copy, live, where, ad, hasPhoto, byline, anotherHr
               </section>
             ) : null}
             <div className="tkp-success-actions">
-              <Link href={copy.primary.href} className="tkp-btn tkp-btn-primary" data-tk="view-my-ads">{copy.primary.label}</Link>
-              <a href={anotherHref} className="tkp-btn" data-tk="post-another">{copy.secondary.label}</a>
+              <a href={anotherHref} className="tkp-btn tkp-btn-primary" data-tk="post-another">{copy.secondary.label}</a>
             </div>
             <button type="button" className="tkp-help-link" data-tk="success-help" onClick={() => openSupportWith("")}>{t("post.success.help")}</button>
           </div>

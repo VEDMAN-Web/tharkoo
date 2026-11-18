@@ -101,8 +101,9 @@ test.describe("H7.116 Promote an ad", () => {
     await expect(sheet.locator("[data-tk=promote-left]")).toContainText(`Credits left: ${(rich - 499).toLocaleString("en-IN")}`);
     expect(await walletBalance(page)).toBe(rich - 499);
     await shot(page, "h7-116-sheet-done");
-    await sheet.getByRole("link", { name: "See my ads" }).click();
-    await expect(page).toHaveURL(/\/u\/account\/ads\/$/);
+    // H14.2: no See my ads link any more; the sheet closes with its X.
+    await expect(sheet.getByRole("link", { name: "See my ads" })).toHaveCount(0);
+    await sheet.getByRole("button", { name: "Close" }).click();
     await expect(sheet).toHaveCount(0);
   });
 

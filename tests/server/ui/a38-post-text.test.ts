@@ -124,6 +124,7 @@ describe("the step wording shows what an admin saved", () => {
     const own = makeT({ "post.stepCopy.savedTitle": "Done", "post.stepCopy.inReview": "We are checking it" });
     expect(newSuccessCopy(POST_COPY_DEFAULTS, true, true, own).title).toBe("Done");
     expect(newSuccessCopy(POST_COPY_DEFAULTS, false, false, own).title).toBe("We are checking it");
-    expect(newSuccessCopy(POST_COPY_DEFAULTS, true).primary.label).toBe("View my ads");
+    // H14.2: no View my ads button on the success screen any more; only Post another ad.
+    expect(newSuccessCopy(POST_COPY_DEFAULTS, true)).not.toHaveProperty("primary");
   });
 });
