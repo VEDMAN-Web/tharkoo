@@ -29,7 +29,8 @@ test.describe("H7.75: every search and listing page has the shared body", () => 
       const main = (await page.locator(".tkn-ls-main").first().boundingBox())!;
       expect(Math.round(aside.width)).toBe(272);
       expect(main.x).toBeGreaterThan(aside.x + aside.width);
-      expect(Math.round(main.width)).toBeLessThanOrEqual(904);
+      const header = (await page.locator('[data-tk="results-header"]').boundingBox())!;
+      expect(Math.abs(main.x + main.width - (header.x + header.width))).toBeLessThanOrEqual(2);
       expect(Math.round(main.width)).toBeGreaterThanOrEqual(760);
       expect(await page.locator('[data-tk="home-ad"]').count()).toBeGreaterThan(0);
       const pagesNote = await page.locator('[data-tk="pager"] .tkp-showing').count();
