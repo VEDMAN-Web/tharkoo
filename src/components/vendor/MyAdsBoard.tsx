@@ -9,10 +9,9 @@ import type { ListingDoc } from "@/lib/models";
 import { displayTitle } from "@/lib/format";
 import { OwnerActions } from "./OwnerActions";
 import { usePresenceActivity } from "./AvailabilityControls";
-import { PostStrip } from "../ui/PostStrip";
-import { makeT } from "@/lib/ui/text";
-
-const t = makeT();
+import { creditsText, usePostingMoney } from "@/components/post/credits";
+import { EmptyIcon } from "@/components/buyer/UserPanelShell";
+import { Megaphone } from "lucide-react";
 
 type OwnItem = {
   id: string;
@@ -52,6 +51,7 @@ export function MyAdsBoard({ initialTab = "all" }: { initialTab?: Tab }) {
   const [items, setItems] = useState<OwnItem[]>([]);
   const [note, setNote] = useState("");
   usePresenceActivity();
+  const money = usePostingMoney();
 
   const loadPage = useCallback(async (nextTab: Tab, nextPage: number, replace: boolean) => {
     const group = TABS.find((item) => item.key === nextTab)?.group;
@@ -79,13 +79,17 @@ export function MyAdsBoard({ initialTab = "all" }: { initialTab?: Tab }) {
 
   const counts = pageData?.counts ?? null;
   const hasMore = pageData ? items.length < pageData.total : false;
+  // No ads at all: one card with the next step, and no filter chips. A chip with nothing behind it is hidden too.
+  const noAds = pageData !== null && pageData.counts.all === 0;
+  const costLine = !money.ready ? "" : money.paid ? `Each ad costs ${creditsText(money.fee)} to post.` : "Posting an ad is free.";
 
   return (
     <section className="up-glass up-panel" aria-labelledby="tkv-ads-title">
       <div className="tkv-card-head">
         <h1 id="tkv-ads-title" className="up-h2">My ads</h1>
+        {noAds ? null : (
         <div className="tkv-tabs" role="group" aria-label="Filter ads">
-          {TABS.map((item) => (
+          {TABS.filter((item) => item.key === tab || item.key === "all" || !counts || counts[item.key] > 0).map((item) => (
             <button
               key={item.key}
               type="button"
@@ -101,9 +105,17 @@ export function MyAdsBoard({ initialTab = "all" }: { initialTab?: Tab }) {
             </button>
           ))}
         </div>
+        )}
       </div>
-      {items.length === 0 && pageData ? (
-        <p className="tkv-empty-line">No ads here yet. <Link href="/u/post-insert/">Post an ad</Link></p>
+      {noAds ? (
+        <div className="up-empty" data-tk="my-ads-empty">
+          <EmptyIcon icon={Megaphone} />
+          <h2 className="up-empty-title">You have no ads yet</h2>
+          {costLine ? <p className="up-empty-body" data-tk="my-ads-cost">{costLine}</p> : null}
+          <Link href="/u/post-insert/" className="up-btn" data-tk="my-ads-post">Post your first ad</Link>
+        </div>
+      ) : items.length === 0 && pageData ? (
+        <p className="tkv-empty-line">No ads in this list.</p>
       ) : null}
       <div className="tkv-feed">
         {items.map((item) => {
@@ -134,8 +146,6 @@ export function MyAdsBoard({ initialTab = "all" }: { initialTab?: Tab }) {
         </p>
       ) : null}
       <p className="tkv-note" aria-live="polite">{note}</p>
-      <p className="up-muted"><Link href="/u/account/media/" className="up-link">Photos and videos</Link></p>
-      <PostStrip text={t("post.strip.text")} button={t("post.strip.button")} feeText={t("post.strip.fee")} />
     </section>
   );
 }
