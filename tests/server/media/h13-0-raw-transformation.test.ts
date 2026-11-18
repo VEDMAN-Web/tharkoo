@@ -60,7 +60,7 @@ describe("H13.0 the real server-side upload path", () => {
     try {
       await uploadToCloudinary(Buffer.from("x"), { ...base, transformation: "fl_strip_profile" });
       expect(spy).toHaveBeenCalledTimes(1);
-      const given = spy.mock.calls[0][1] as Record<string, unknown>;
+      const given = spy.mock.calls[0][1] as unknown as Record<string, unknown>;
       expect(given).not.toHaveProperty("transformation");
       const built = build_upload_params(given);
       expect(String(built.transformation)).toContain("fl_strip_profile");
