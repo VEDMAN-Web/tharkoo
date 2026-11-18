@@ -305,7 +305,7 @@ describe("billing", () => {
     const expired = await bodyOf(await post("/api/coupons/redeem", { code: "gone" }, user.cookie));
     expect(expired.error).toMatchObject({ code: "CONFLICT", message: "Coupon is expired" });
     const missing = await bodyOf(await post("/api/coupons/redeem", { code: "nope" }, user.cookie));
-    expect(missing.error).toMatchObject({ code: "NOT_FOUND", message: "Coupon is invalid" });
+    expect(missing.error).toMatchObject({ code: "NOT_FOUND", message: "We couldn't find that coupon. Check the code and try again." });
     const first = await bodyOf(await post("/api/coupons/redeem", { code: "once" }, user.cookie));
     expect(first.data).toMatchObject({ credit: 15 });
     const secondUser = await bodyOf(await post("/api/coupons/redeem", { code: "once" }, other.cookie));
