@@ -1,10 +1,10 @@
+import { shrinkPhoto } from "@/lib/image-shrink";
 import { api, friendlyError } from "@/lib/ui/api";
 
 export const PHOTO_TYPES = ["image/jpeg", "image/png", "image/webp"];
 export const PHOTO_MAX_BYTES = 8 * 1024 * 1024;
-export const PHOTO_RULE_NOTE = "Use a JPG, PNG, or WebP photo up to 8 MB.";
+export const PHOTO_RULE_NOTE = "Use a JPG, PNG or WebP photo. Any size: a big photo is made smaller for you.";
 export const PHOTO_BAD_TYPE = "Use a JPG, PNG or WebP photo.";
-export const PHOTO_TOO_BIG = "This photo is too big (max 8 MB).";
 export const UPLOAD_FAILED = "Upload failed, tap to retry.";
 export const VIDEO_TYPES = ["video/mp4", "video/webm", "video/quicktime"];
 export const VIDEO_MAX_BYTES = 100 * 1024 * 1024;
@@ -26,10 +26,9 @@ type Signed = {
   params?: Record<string, string | number>;
 };
 
-/** Checks a photo before anything is sent. Returns the note to show, or null when it is fine. */
+/** Checks a photo before anything is sent. Returns the note to show, or null when it is fine. The size is not checked: a big photo is made smaller before it is sent (H13.1 part 2). */
 export function checkPhoto(file: File): string | null {
-  if (!PHOTO_TYPES.includes(file.type)) return PHOTO_BAD_TYPE;
-  return file.size <= PHOTO_MAX_BYTES ? null : PHOTO_TOO_BIG;
+  return PHOTO_TYPES.includes(file.type) ? null : PHOTO_BAD_TYPE;
 }
 
 /** Reads the clip length in the browser. NaN when the browser cannot read the file. */
@@ -94,7 +93,14 @@ export async function uploadMedia(options: {
   kind: "image" | "video";
   onProgress: (ratio: number) => void;
 }): Promise<UploadResult> {
-  const { listingId, file, kind, onProgress } = options;
+  const { listingId, kind, onProgress } = options;
+  let file = options.file;
+  // H13.1 part 2: a photo of any size is accepted. It is made smaller when it is over the limit or over 2560 px; a photo that fits is sent as it is.
+  if (kind === "image") {
+    const shrunk = await shrinkPhoto(file, PHOTO_MAX_BYTES);
+    if (!shrunk.ok) return { ok: false, error: shrunk.error };
+    file = shrunk.file;
+  }
   const signed = await api<Signed>("/api/media/sign", {
     method: "POST",
     body: JSON.stringify({ listingId, contentType: file.type, byteSize: file.size, kind }),

@@ -102,7 +102,7 @@ export function ImportForm({ canPublish }: { canPublish: boolean }) {
   /** Photos are checked here (type and size). Videos are kept whatever they are: the dry run reports each problem on its row. */
   async function chooseFiles(list: File[]) {
     const chosen = list.map(typed);
-    const check = checkBatch(chosen.filter((file) => !isVideoFile(file)), 500);
+    const check = checkBatch(chosen.filter((file) => !isVideoFile(file)), 500, { anySize: true });
     setImages(check.accepted);
     setRefused(check.rejected.map((item) => `${item.name}: ${item.reason}`));
     setClips(await Promise.all(chosen.filter((file) => isVideoFile(file)).map(describeVideo)));

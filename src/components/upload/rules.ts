@@ -29,8 +29,8 @@ const PHOTO_BASE = { noun: "photo", accept: PHOTO_TYPES, formats: "JPG, PNG or W
 export const UPLOAD_RULES = {
   adPhotos: {
     ...PHOTO_BASE,
-    line: "Up to 10 photos and videos. Photos: JPG, PNG or WEBP, up to 8 MB, best 1200 x 1500 px (tall).",
-    details: ["Formats: JPG, PNG or WEBP.", "Up to 8 MB per photo.", "Best size: 1200 x 1500 px (tall).", "Up to 10 photos and videos in total.", "Photos get a tharkoo.com watermark."],
+    line: "Up to 10 photos and videos. Photos: JPG, PNG or WEBP, any size, best 1200 x 1500 px (tall).",
+    details: ["Formats: JPG, PNG or WEBP.", "Any size: a big photo is made smaller for you.", "Best size: 1200 x 1500 px (tall).", "Up to 10 photos and videos in total.", "Photos get a tharkoo.com watermark."],
   },
   adVideos: {
     noun: "video",
@@ -101,10 +101,11 @@ export function fileSize(bytes: number): string {
 }
 
 /** The reason one file cannot be uploaded to this box, or null when the type and size are fine. Length is checked by `videoProblem`. */
-export function fileProblem(file: { name: string; type: string; size: number }, rule: UploadRule): string | null {
+export function fileProblem(file: { name: string; type: string; size: number }, rule: UploadRule, options: { anySize?: boolean } = {}): string | null {
   if (!rule.accept.includes(file.type)) return `This ${rule.noun} is not ${rule.formats} (${file.name}).`;
   if (file.size <= 0) return `This ${rule.noun} is empty (${file.name}).`;
-  if (file.size > rule.maxBytes) return `This ${rule.noun} is ${megabytes(file.size)}. The limit is ${megabytes(rule.maxBytes)}.`;
+  // H13.1 part 2: a photo of any size is accepted (the browser makes it smaller before it is sent), so the size is not checked here.
+  if (!options.anySize && file.size > rule.maxBytes) return `This ${rule.noun} is ${megabytes(file.size)}. The limit is ${megabytes(rule.maxBytes)}.`;
   return null;
 }
 
