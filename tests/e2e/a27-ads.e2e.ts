@@ -88,6 +88,8 @@ test.describe("A27 All ads", () => {
     await expect(rows).toHaveCount(1);
     await expect(rows.first()).toContainText("Looks like junk");
     await page.getByRole("searchbox", { name: "Search ads" }).fill("");
+    // The cleared search navigates after a short pause; wait for it, or it can overwrite the filter picked next.
+    await expect(page).not.toHaveURL(/[?&]q=/);
     await page.getByRole("button", { name: "Add filter" }).click();
     await page.getByRole("menuitem", { name: "Looks like junk" }).click();
     await expect(page.locator('[data-tk="filter-chip"]')).toContainText("Looks like junk");

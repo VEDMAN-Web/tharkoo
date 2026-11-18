@@ -1,0 +1,48 @@
+name: nightly-e2e
+
+# The full browser suite (phone-390 and desktop-1440) against a production build, with two workers.
+# Each worker serves its own seeded in-memory copy of the site (tests/e2e/worker-server.ts), so tests never share state.
+# Runs every night and on demand. It never touches a real database: the server starts its own in-memory MongoDB.
+
+on:
+  schedule:
+    - cron: "30 20 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: nightly-e2e
+  cancel-in-progress: false
+
+jobs:
+  e2e-full:
+    runs-on: ubuntu-latest
+    timeout-minutes: 150
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - run: npx playwright install --with-deps chromium
+      - name: Build
+        run: unset MONGODB_URI && npm run build
+      - name: Full e2e suite, two workers
+        env:
+          CI: "true"
+          E2E_WORKERS: "2"
+          E2E_PORT: "4342"
+        run: unset MONGODB_URI && npx playwright test
+      - name: Keep the failure screenshots and server logs
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: e2e-failures
+          path: |
+            .shots/e2e-results
+            .shots/e2e/worker-*.log
+          retention-days: 7
+          if-no-files-found: ignore

@@ -113,7 +113,8 @@ test.describe("H7.156 user and vendor management", () => {
     expect(await withLocalDb((db) => db.collection("listings").countDocuments({ ownerId: owner!._id, status: "active" }))).toBe(0);
     await page.locator("[data-tk=toast-undo]").last().click();
     await expect.poll(async () => (await userDoc(seller.id))?.status).toBe("active");
-    expect(await withLocalDb((db) => db.collection("listings").countDocuments({ ownerId: owner!._id, status: "active" }))).toBe(1);
+    // The ads come back a moment after the account does, so wait for them.
+    await expect.poll(async () => withLocalDb((db) => db.collection("listings").countDocuments({ ownerId: owner!._id, status: "active" }))).toBe(1);
 
     // The list filters.
     await page.goto(`/admin/users/?q=${encodeURIComponent(seller.email)}&ads=1`);

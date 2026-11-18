@@ -1,0 +1,10 @@
+{
+  "branchPrefix": "haiku/h10.5b",
+  "globs": [
+    "docs/ownership/H10.5b.json",
+    "progress/H10.5b.md",
+    "playwright.config.ts",
+    ".github/workflows/nightly-e2e.yml",
+    "tests/e2e/**"
+  ]
+}

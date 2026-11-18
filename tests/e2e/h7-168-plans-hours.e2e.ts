@@ -2,7 +2,7 @@ import { mkdirSync } from "node:fs";
 import type { Page } from "@playwright/test";
 import { expect, hasHorizontalScroll, signInAdminContext, test, withLocalDb } from "./helpers";
 
-/** H7.168: promotion plans last a number of hours, and never more than the 48 hours an ad lives. */
+/** H7.168: promotion plans last a number of hours, and never more than the 72 hours of the longest plan (H11.1 raised the limit from 48). */
 
 const SHOTS = process.env.H7168_SHOTS ?? "";
 const row = (page: Page, code: string) => page.locator(`[data-tk="plan-row"][data-code="${code}"]`);
@@ -19,7 +19,7 @@ test.describe("H7.168 plans in hours", () => {
   });
 
   for (const size of [{ width: 1440, height: 900 }, { width: 390, height: 844 }]) {
-    test(`the plan form asks for hours, refuses more than 48, saves and undoes, at ${size.width}`, async ({ page, context, baseURL }) => {
+    test(`the plan form asks for hours, refuses more than 72, saves and undoes, at ${size.width}`, async ({ page, context, baseURL }) => {
       test.setTimeout(180_000);
       await signInAdminContext(context, baseURL!);
       await page.setViewportSize(size);
@@ -30,9 +30,9 @@ test.describe("H7.168 plans in hours", () => {
       const drawer = page.locator("[data-tk=drawer]");
       await expect(drawer.getByLabel("Lasts (hours)")).toBeVisible();
       await expect(drawer).not.toContainText("Days");
-      await drawer.getByLabel("Lasts (hours)").fill("49");
+      await drawer.getByLabel("Lasts (hours)").fill("73");
       await drawer.getByRole("button", { name: "Save plan" }).click();
-      await expect(drawer.getByRole("alert")).toContainText("1 to 48");
+      await expect(drawer.getByRole("alert")).toContainText("1 to 72");
       await drawer.getByLabel("Lasts (hours)").fill("36");
       await shot(page, "plan-drawer");
       await drawer.getByRole("button", { name: "Save plan" }).click();
@@ -48,7 +48,7 @@ test.describe("H7.168 plans in hours", () => {
     });
   }
 
-  test("a plan saved in days before this change is shown in hours and flagged when longer than an ad", async ({ page, context, baseURL }) => {
+  test("a plan saved in days before this change is shown in hours and flagged when longer than the longest plan", async ({ page, context, baseURL }) => {
     test.setTimeout(180_000);
     await signInAdminContext(context, baseURL!);
     const before = await withLocalDb((db) => db.collection("promotion_products").findOne({ code: "new" }, { projection: { durationDays: 1, durationHours: 1 } }));
@@ -58,7 +58,7 @@ test.describe("H7.168 plans in hours", () => {
       await page.setViewportSize({ width: 1440, height: 900 });
       await page.goto("/admin/prices/");
       await expect(row(page, "new")).toContainText("168 hours");
-      await expect(row(page, "new").locator('[data-tk="plan-too-long"]')).toContainText("Longer than an ad lasts (48 hours)");
+      await expect(row(page, "new").locator('[data-tk="plan-too-long"]')).toContainText("Longer than the longest plan (72 hours)");
       await shot(page, "plan-too-long");
     } finally {
       await withLocalDb((db) => db.collection("promotion_products").updateOne({ code: "new" }, { $set: { durationDays: before!.durationDays, ...(before!.durationHours ? { durationHours: before!.durationHours } : {}) } }));

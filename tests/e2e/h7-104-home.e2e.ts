@@ -2,7 +2,7 @@ import { mkdirSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { ObjectId } from "mongodb";
 import type { Locator, Page } from "@playwright/test";
-import { expect, hasHorizontalScroll, test, withLocalDb } from "./helpers";
+import { expect, hasHorizontalScroll, test, uploadsDir, withLocalDb } from "./helpers";
 
 const CARD = '[data-tk="home-ad"]';
 const SLIDE_WAIT = 9_000;
@@ -35,12 +35,12 @@ async function recordWebm(page: Page): Promise<Buffer> {
 
 async function addVideos(page: Page, slugs: string[]) {
   const bytes = await recordWebm(page);
-  mkdirSync(join(process.cwd(), "public", "uploads"), { recursive: true });
+  mkdirSync(uploadsDir(), { recursive: true });
   const files: string[] = [];
   const ids: ObjectId[] = [];
   for (const slug of slugs) {
     const name = `${new ObjectId().toHexString()}.webm`;
-    writeFileSync(join(process.cwd(), "public", "uploads", name), bytes);
+    writeFileSync(join(uploadsDir(), name), bytes);
     files.push(name);
     const id = await withLocalDb(async (db) => {
       const listing = await db.collection("listings").findOne({ slug });
@@ -52,7 +52,7 @@ async function addVideos(page: Page, slugs: string[]) {
     ids.push(id!);
   }
   return async () => {
-    for (const name of files) rmSync(join(process.cwd(), "public", "uploads", name), { force: true });
+    for (const name of files) rmSync(join(uploadsDir(), name), { force: true });
     await withLocalDb((db) => db.collection("media_assets").deleteMany({ _id: { $in: ids } }));
   };
 }
