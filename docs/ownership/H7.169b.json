@@ -1,0 +1,8 @@
+{
+  "branchPrefix": "haiku/h7.169b",
+  "globs": [
+    "docs/ownership/H7.169b.json",
+    "src/lib/admin/history-words.ts",
+    "tests/server/admin/h7169-history-words.test.ts"
+  ]
+}

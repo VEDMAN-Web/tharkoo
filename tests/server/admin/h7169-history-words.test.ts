@@ -44,6 +44,8 @@ describe("History & undo in plain words (H7.169)", () => {
   it("says an audit action as a sentence: known ones by name, others as their words", () => {
     expect(actionWords("listing.contact_reveal")).toBe("A visitor showed a phone number");
     expect(actionWords("some.new_thing.happened")).toBe("Some new thing happened");
+    expect(actionWords("admin.bootstrap")).toBe("The first admin account was set up");
+    expect(actionWords("settings.id_check.default")).toBe("ID check before posting set to its default");
     expect(targetWords("support_ticket")).toBe("A support ticket");
     expect(targetWords("odd_record")).toBe("Odd record");
   });

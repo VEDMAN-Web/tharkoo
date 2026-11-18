@@ -147,6 +147,8 @@ const ACTION_WORDS: Record<string, string> = {
   "auth.login_code.locked": "A sign-in was locked after wrong codes",
   "verification.decision": "An ID check was decided",
   "verification.view": "An ID check was opened",
+  "admin.bootstrap": "The first admin account was set up",
+  "settings.id_check.default": "ID check before posting set to its default",
   "category_kind.create": "A kind was added",
   "category_kind.update": "A kind was changed",
   "category_kind.remove": "A kind was removed",
