@@ -4,6 +4,7 @@ import { PUBLISH_MESSAGES, publishMessage } from "@/lib/ui/publish-errors";
 
 const REASONS = [
   "UNDERAGE",
+  "AGE_REQUIRED",
   "ADULT_ATTESTATION_REQUIRED",
   "ACCOUNT_NOT_ACTIVE",
   "VERIFICATION_REQUIRED",

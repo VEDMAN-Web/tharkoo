@@ -165,6 +165,9 @@ export interface WizardField {
   maxPicks: number | null;
 }
 
+/** The age field every people category gets when its own form has none (H10.1): required, 18 to 99. */
+export const BUILT_IN_AGE_FIELD: WizardField = { key: "age", label: "Age", type: "number", required: true, options: [], placeholder: "", help: "", maxPicks: null };
+
 interface RawField {
   key?: unknown;
   label?: unknown;

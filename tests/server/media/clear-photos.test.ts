@@ -41,6 +41,7 @@ async function draftFor(userId: string) {
     status: "draft",
     cityId: new mongoose.Types.ObjectId(),
     contact: { phone: "9876543210" },
+    attributes: { age: 28 },
   });
 }
 

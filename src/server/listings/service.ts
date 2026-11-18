@@ -47,6 +47,8 @@ import { assertNotPaused, isEmergencyOn, isNewAccount } from "@/server/settings/
 import { walletBalance } from "@/server/billing/ledger";
 import { idCheckRequired } from "@/server/settings/id-check";
 import { toSlug } from "@/server/shared/slug";
+import { isPeopleListing } from "@/server/categories/kinds";
+import { withPeopleAge } from "@/server/categories/people-age";
 
 const REVEAL_WINDOW_MS = 60 * 60 * 1000;
 const REVEAL_TTL_MS = 15 * 60 * 1000;
@@ -240,7 +242,7 @@ export async function requirePlace(id: string | undefined, field: string) {
 }
 
 export function fieldDefs(category: CategoryDoc): FieldDefinition[] {
-  return (category.fields ?? []).map((field) => ({
+  return withPeopleAge(category, (category.fields ?? []).map((field) => ({
     key: field.key,
     label: field.label,
     type: field.type,
@@ -255,7 +257,7 @@ export function fieldDefs(category: CategoryDoc): FieldDefinition[] {
     shownOnCard: field.shownOnCard,
     placeholder: field.placeholder ?? "",
     optionLabels: field.optionLabels,
-  }));
+  })));
 }
 
 export async function promoted(listing: ListingRow) {
@@ -607,6 +609,7 @@ export async function submitListing(
     mediaCleared: mediaIds.length === 0 || mediaCleared,
     attributes,
     idCheckRequired: await idCheckRequired(),
+    peopleListing: isPeopleListing(category),
   });
   if (!gate.ok) {
     if (gate.reason === "VERIFICATION_REQUIRED") throw new VerificationRequiredError("Identity verification is required");

@@ -7,7 +7,8 @@ import { ForbiddenError, HttpError, NotFoundError, ValidationError } from "@/ser
 import { adLifetimeMs } from "@/server/listings/lifetime";
 import { parsePrice } from "@/server/listings/price";
 import { parseCsv } from "@/server/listings/csv";
-import { kindMaxPhotos } from "@/server/categories/kinds";
+import { isPeopleListing, kindMaxPhotos } from "@/server/categories/kinds";
+import { withPeopleAge } from "@/server/categories/people-age";
 import { resolveSubcategory, categoryNeedsSubcategory } from "@/server/categories/public";
 import { createDraft, patchListing } from "@/server/listings/service";
 import {
@@ -210,7 +211,7 @@ export async function findPartner(email: string) {
 }
 
 export function fieldDefs(category: CategoryDoc): FieldDefinition[] {
-  return (category.fields ?? []).map((field) => ({
+  return withPeopleAge(category, (category.fields ?? []).map((field) => ({
     key: field.key,
     label: field.label,
     type: field.type,
@@ -225,7 +226,7 @@ export function fieldDefs(category: CategoryDoc): FieldDefinition[] {
     shownOnCard: field.shownOnCard,
     placeholder: field.placeholder ?? "",
     optionLabels: field.optionLabels,
-  }));
+  })));
 }
 
 function toValue(def: FieldDefinition | undefined, raw: string): unknown {
@@ -464,6 +465,7 @@ async function planRow(
       mediaCleared: true,
       attributes,
       idCheckRequired: lookups.requireIdCheck,
+      peopleListing: isPeopleListing(category),
     });
     if (!gate.ok) errors.push(`Cannot be published: ${gate.reason}`);
   }

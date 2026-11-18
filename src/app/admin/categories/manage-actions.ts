@@ -1,12 +1,14 @@
 "use server";
 
 import { getStaffFromHeaders } from "@/lib/admin-auth";
+import { adminContext } from "@/server/admin/context";
 import {
   createCategory,
   createSubcategory,
   deleteCategory,
   deleteSubcategory,
   reorder,
+  changeCategoryKind,
   updateCategory,
   updateSubcategory,
   type CategoryInput,
@@ -28,7 +30,16 @@ export async function createCategoryAction(input: CategoryInput) {
   return run((actor) => createCategory(actor, input));
 }
 export async function updateCategoryAction(id: string, input: CategoryInput) {
-  return run((actor) => updateCategory(actor, id, input));
+  return run(async (actor) => {
+    const { kind, confirmPeopleOff, ...rest } = input;
+    let kindEventId = "";
+    if (kind !== undefined) {
+      const changed = await changeCategoryKind(await adminContext(), id, kind, { confirmPeopleOff });
+      kindEventId = changed.eventId;
+    }
+    const done = await updateCategory(actor, id, rest);
+    return { ...done, kindEventId };
+  });
 }
 export async function deleteCategoryAction(id: string) {
   return run((actor) => deleteCategory(actor, id));

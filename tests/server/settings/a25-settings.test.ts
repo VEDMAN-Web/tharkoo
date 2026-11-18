@@ -41,7 +41,7 @@ async function member(createdAt?: Date) {
 
 async function draftFor(userId: string) {
   const category = (await Category.findOne({ slug: "dating" })) ?? (await Category.create({ slug: "dating", name: "dating", enabled: true }));
-  return Listing.create({ ownerId: userId, categoryId: category._id, title: "Coffee and a walk", description: "Looking to meet for coffee and a walk.", status: "draft", cityId: new mongoose.Types.ObjectId(), contact: { phone: "9876543210" } });
+  return Listing.create({ ownerId: userId, categoryId: category._id, title: "Coffee and a walk", description: "Looking to meet for coffee and a walk.", status: "draft", cityId: new mongoose.Types.ObjectId(), contact: { phone: "9876543210" }, attributes: { age: 28 } });
 }
 
 const OLD = new Date(Date.now() - 3 * 24 * 60 * 60 * 1000);
