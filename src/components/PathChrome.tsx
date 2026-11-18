@@ -121,7 +121,7 @@ export function PathChrome({ shell, paths, children }: { shell: ChromeData; path
           <div
             id="tk-facts"
             hidden
-            data-hours={content.support.hours || site.supportHours || "Monday through Friday"}
+            data-hours={content.support.hours || site.supportHours || ""}
             data-wa={content.support.whatsapp || SUPPORT_PHONE}
             data-tg={content.support.telegram || SUPPORT_TELEGRAM}
           />

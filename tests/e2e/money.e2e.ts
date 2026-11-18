@@ -67,7 +67,7 @@ test.describe("5 Money (mock provider)", () => {
     await loginUi(page, email);
     await page.waitForURL(/\/u\/account\/dashboard\//);
     await page.goto("/u/account/coupons/");
-    await page.getByLabel("Insert coupon code").fill("NO-SUCH-COUPON");
+    await page.getByLabel("Have a coupon?").fill("NO-SUCH-COUPON");
     await page.locator("[data-tk=apply-coupon]").click();
     const note = page.locator("[aria-live=polite]").last();
     await expect(note).not.toHaveText("");

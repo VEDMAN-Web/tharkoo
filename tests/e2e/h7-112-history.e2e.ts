@@ -60,7 +60,7 @@ test.describe("H7.112 credits history in the account panel", () => {
     await expect(page.locator("[data-tk=history-empty]")).toContainText("No credits used yet.");
     await expect(page.getByText("Transaction History")).toHaveCount(0);
     await expect(page.getByText(/Do you need help/i)).toHaveCount(0);
-    await expect(page.getByText("CONTACT US")).toHaveCount(0);
+    await expect(page.locator("[data-tk=help-card]")).toHaveCount(0);
     expect(await hasHorizontalScroll(page)).toBe(false);
   });
 

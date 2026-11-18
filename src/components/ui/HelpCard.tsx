@@ -6,13 +6,13 @@ import { Headset, Mail } from "lucide-react";
 import { telegramHref, whatsappHref } from "@/lib/support";
 
 export function HelpCard() {
-  const [facts, setFacts] = useState({ hours: "Monday through Friday", wa: "", tg: "" });
+  const [facts, setFacts] = useState({ hours: "", wa: "", tg: "" });
   useEffect(() => {
     const id = window.setTimeout(() => {
       const node = document.getElementById("tk-facts");
       if (!node) return;
       setFacts({
-        hours: node.getAttribute("data-hours") || "Monday through Friday",
+        hours: node.getAttribute("data-hours") || "",
         wa: node.getAttribute("data-wa") || "",
         tg: node.getAttribute("data-tg") || "",
       });
@@ -30,12 +30,12 @@ export function HelpCard() {
         For <strong>information</strong> or <strong>technical support</strong>, click the button below.
       </p>
       <Link href="/contact/" className="tk-btn tk-btn-outline-primary" style={{ width: "100%" }}>
-        <Mail size={14} /> CONTACT US
+        <Mail size={14} /> Contact us
       </Link>
       {wa || tg ? (
         <>
           <p>
-            We are also available on <strong>WhatsApp</strong> or <strong>Telegram</strong> Monday through Friday, excluding holidays, from {facts.hours}.
+            We are also available on <strong>WhatsApp</strong> or <strong>Telegram</strong>.{facts.hours ? ` Support hours: ${facts.hours}.` : ""}
           </p>
           <div className="tk-help-actions">
             {wa ? <a className="tk-btn tk-btn-outline-primary" href={wa}>WhatsApp</a> : null}
@@ -43,7 +43,7 @@ export function HelpCard() {
           </div>
         </>
       ) : (
-        <p>Support hours: {facts.hours}, excluding holidays.</p>
+        facts.hours ? <p>Support hours: {facts.hours}.</p> : null
       )}
     </section>
   );
