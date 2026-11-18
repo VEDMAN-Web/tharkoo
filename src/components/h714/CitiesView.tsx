@@ -14,7 +14,7 @@ const H3_STYLE: CSSProperties = { margin: "0", fontSize: "18px", color: "#110520
 const COUNT_STYLE: CSSProperties = { fontSize: "12px", fontWeight: "700", color: "#C2185B", background: "#FDF0F7", borderRadius: "999px", padding: "3px 10px" };
 const CHIPS_STYLE: CSSProperties = { display: "flex", gap: "6px", flexWrap: "wrap", margin: "14px 0 16px" };
 const CITY_CHIP_STYLE: CSSProperties = { minHeight: "34px", display: "inline-flex", alignItems: "center", padding: "0 14px", borderRadius: "999px", background: "#fff", border: "1px solid #EAD8F0", color: "#4A2870", fontSize: "13px", fontWeight: "600", textDecoration: "none" };
-const ALL_STYLE: CSSProperties = { display: "inline-flex", alignItems: "center", gap: "6px", fontSize: "14px", fontWeight: "700", textDecoration: "none" };
+const ALL_STYLE: CSSProperties = { display: "inline-flex", alignItems: "center", gap: "6px", minHeight: "32px", fontSize: "14px", fontWeight: "700", textDecoration: "none" };
 const LETTER_STYLE: CSSProperties = { width: "36px", height: "36px", borderRadius: "10px", display: "inline-flex", alignItems: "center", justifyContent: "center", fontSize: "13px", fontWeight: "700", textDecoration: "none", flex: "none", background: "rgba(255,255,255,.85)", border: "1px solid #EAD8F0", color: "#4A2870" };
 const LETTERS_STYLE: CSSProperties = { marginBottom: "22px" };
 
@@ -60,7 +60,7 @@ export function CitiesView({
                   <path d="M20 20l-4-4"></path>
                 </svg>
                 <span style={{ position: "absolute", left: "-9999px" }}>{searchHint(bandChips)}</span>
-                <input name="q" placeholder={searchHint(bandChips)} style={{ border: "0", outline: "none", font: "inherit", fontSize: "15px", width: "100%", background: "transparent" }} />
+                <input name="q" placeholder={searchHint(bandChips)} style={{ border: "0", outline: "none", font: "inherit", fontSize: "15px", width: "100%", minHeight: "32px", background: "transparent" }} />
               </label>
               <button type="submit" className="h714-b" style={{ minHeight: "48px", padding: "0 24px", border: "0", borderRadius: "12px", background: "linear-gradient(135deg, #D1137A, #A8124F)", color: "#fff", fontWeight: "700", textDecoration: "none", boxShadow: "0 8px 24px rgba(209,19,122,.3)", font: "inherit", cursor: "pointer" }}>Search</button>
             </form>

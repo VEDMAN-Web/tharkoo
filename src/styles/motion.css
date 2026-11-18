@@ -71,6 +71,10 @@
     opacity: 0;
     transform: translate3d(0, 16px, 0);
   }
+  /* A block with paragraphs slides in but never fades, so its text keeps full contrast at every moment of the reveal (H10.4). */
+  .tk-motion .tk-rv:has(> p):not(.is-in) {
+    opacity: 1;
+  }
   .tk-rv {
     transition: opacity var(--m-reveal) var(--m-ease) var(--tk-d, 0ms), transform var(--m-reveal) var(--m-ease) var(--tk-d, 0ms);
   }

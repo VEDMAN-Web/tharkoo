@@ -1,0 +1,17 @@
+{
+  "branchPrefix": "haiku/h10.4",
+  "globs": [
+    "docs/ownership/H10.4.json",
+    "progress/H10.4.md",
+    "src/lib/seo/ad-description.ts",
+    "src/app/ad/[slug]/page.tsx",
+    "src/styles/motion.css",
+    "src/app/globals.css",
+    "src/components/new/listing-spec.css",
+    "src/components/h714/CitiesView.tsx",
+    "src/components/auth/sign-in-css.ts",
+    "src/components/post/post-wizard.css",
+    "tests/server/ui/h10-4-*.test.ts",
+    "tests/e2e/h10-4-phone-polish.e2e.ts"
+  ]
+}
