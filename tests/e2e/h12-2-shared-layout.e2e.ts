@@ -78,7 +78,7 @@ test.describe("H12.2 shared layout", () => {
   test("A2: ad cards in a row end on the same line and their tag rows end on the same line", async ({ page }) => {
     for (const [path, size] of [["/dating/", SIZES[2]], ["/", SIZES[0]]] as const) {
       await open(page, path, size);
-      const rows = await page.locator(".tkh-ad").evaluateAll((nodes) => {
+      const rows = await page.locator(".tkh-ad, .tk-row").evaluateAll((nodes) => {
         const map = new Map<number, { bottom: number; pills: number }[]>();
         for (const node of nodes) {
           const rect = node.getBoundingClientRect();
@@ -112,12 +112,14 @@ test.describe("H12.2 shared layout", () => {
     expect(count.y).toBeGreaterThanOrEqual(heading.bottom - 1);
   });
 
-  test("A4: at 1440 the listing grid lines up with the header on the right", async ({ page }) => {
+  test("A4: at 1440 the listing grid ends inside the header on the right (880 px list)", async ({ page }) => {
     for (const path of ["/dating/", "/search/?q=coffee"]) {
       await open(page, path, SIZES[2]);
       const header = await boxOf(page, ".tkn-sr-head");
       const grid = await boxOf(page, ".tkn-grid");
-      expect(Math.abs(grid.right - header.right), `${path}: grid ${grid.right} header ${header.right}`).toBeLessThanOrEqual(2);
+      // H14.1: the approved design caps the list of row cards at 880 px, so it ends at or before the header's right edge.
+      expect(grid.right, `${path}: grid ${grid.right} header ${header.right}`).toBeLessThanOrEqual(header.right + 2);
+      expect(grid.width, `${path}: list width`).toBeLessThanOrEqual(880.5);
     }
   });
 
@@ -149,7 +151,7 @@ test.describe("H12.2 shared layout", () => {
     await page.waitForTimeout(300);
     const clash = await page.evaluate(() => {
       const bubbleRect = document.querySelector(".tkn-chat-bubble")!.getBoundingClientRect();
-      const cards = [...document.querySelectorAll(".tkh-ad")];
+      const cards = [...document.querySelectorAll(".tkh-ad, .tk-row")];
       const last = cards[cards.length - 1]?.getBoundingClientRect();
       if (!last) return false;
       return !(last.right < bubbleRect.left || last.left > bubbleRect.right || last.bottom < bubbleRect.top || last.top > bubbleRect.bottom);

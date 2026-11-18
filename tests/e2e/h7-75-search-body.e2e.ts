@@ -32,7 +32,7 @@ test.describe("H7.75: every search and listing page has the shared body", () => 
       const header = (await page.locator('[data-tk="results-header"]').boundingBox())!;
       expect(Math.abs(main.x + main.width - (header.x + header.width))).toBeLessThanOrEqual(2);
       expect(Math.round(main.width)).toBeGreaterThanOrEqual(760);
-      expect(await page.locator('[data-tk="home-ad"]').count()).toBeGreaterThan(0);
+      expect(await page.locator('[data-tk="listing-row"]').count()).toBeGreaterThan(0);
       const pagesNote = await page.locator('[data-tk="pager"] .tkp-showing').count();
       if (pagesNote) await expect(page.locator('[data-tk="pager"] .tkp-showing')).toHaveText(/^Showing 1-\d+ of \d+ ads$/);
       expect(await hasHorizontalScroll(page)).toBe(false);

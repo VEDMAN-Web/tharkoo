@@ -10,7 +10,7 @@ const SHOTS = process.env.GALLERY_SHOTS_DIR || "";
 
 async function datingAdAt(page: Page, position: number) {
   await page.goto("/dating/bengaluru/");
-  const link = page.locator(':is([data-tk=card], [data-tk=home-ad]) a[href*="/ad/"]').nth(position);
+  const link = page.locator(':is([data-tk=card], [data-tk=home-ad], [data-tk=listing-row]) a[href*="/ad/"]').nth(position);
   await link.waitFor({ state: "attached" });
   return (await link.getAttribute("href")) as string;
 }

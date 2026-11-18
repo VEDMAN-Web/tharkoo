@@ -13,7 +13,7 @@ test.describe("H7.90: compact search results page", () => {
     await expect(header.locator("h1")).toHaveText("All ads in India");
     await expect(page.locator('[data-tk="results-count"]')).toHaveText(/^[\d,]+ ads$/);
     expect((await header.boundingBox())!.height).toBeLessThanOrEqual(140);
-    const firstCard = (await page.locator(':is([data-tk=card], [data-tk=home-ad])').first().boundingBox())!;
+    const firstCard = (await page.locator(':is([data-tk=card], [data-tk=home-ad], [data-tk=listing-row])').first().boundingBox())!;
     expect(firstCard.y).toBeLessThan(768);
     expect(await hasHorizontalScroll(page)).toBe(false);
   });
@@ -52,7 +52,7 @@ test.describe("H7.90: compact search results page", () => {
     await page.locator(".tkn-sr-sort select").selectOption("verified");
     await expect(page).toHaveURL(/category=dating&sort=verified$/);
     await expect(page.locator(".tkn-sr-sort select")).toHaveValue("verified");
-    await expect(page.locator(':is([data-tk=card], [data-tk=home-ad])').first()).toBeVisible();
+    await expect(page.locator(':is([data-tk=card], [data-tk=home-ad], [data-tk=listing-row])').first()).toBeVisible();
   });
 
   test("keyword suggestions are at most six and work with the keyboard", async ({ page }) => {

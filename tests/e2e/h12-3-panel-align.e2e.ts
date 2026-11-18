@@ -77,7 +77,7 @@ test.describe("H12.3 panel and admin alignment", () => {
       await shot(page, "media");
 
       await page.goto("/u/account/messages/");
-      await expect(page.locator('[data-tk="discover"] [data-tk="home-ad"]').first()).toBeVisible({ timeout: 30_000 });
+      await expect(page.locator('[data-tk="discover"] [data-tk="listing-row"]').first()).toBeVisible({ timeout: 30_000 });
       await expect(page.locator('[data-tk="discover"] [data-tk="card"]')).toHaveCount(0);
       expect(await hasHorizontalScroll(page)).toBe(false);
       await shot(page, "chats");

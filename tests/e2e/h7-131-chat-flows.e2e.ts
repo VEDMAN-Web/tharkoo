@@ -197,7 +197,8 @@ test.describe("H7.131 chat flows", () => {
     test.setTimeout(240_000);
     const phone = info.project.name === "phone-390";
     const { context, page, problems } = await visitor(browser, baseURL!, phone);
-    for (const path of ["/", "/jobs/mumbai/"]) {
+    // H14.1 part 1: the listing rows have no pop-out yet (part 2 adds it and puts /jobs/mumbai/ back here).
+    for (const path of ["/"]) {
       await expect
         .poll(
           async () => {
