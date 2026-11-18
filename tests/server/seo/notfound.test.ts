@@ -106,12 +106,15 @@ describe("create 301 from a 404", () => {
 
 describe("404 beacon", () => {
   it("logs the path sent by the browser, not request headers", async () => {
-    const { recordNotFoundAction } = await import("@/app/admin/urls/notfound-beacon");
-    await recordNotFoundAction("/browser-sent/?x=1", "https://ref.example/page");
+    const { POST } = await import("@/app/api/notfound/route");
+    const send = (path: string, referrer: string) =>
+      POST(new Request("http://localhost/api/notfound/", { method: "POST", headers: { origin: "http://localhost", host: "localhost", "content-type": "application/json", "user-agent": "Mozilla/5.0 Chrome/140" }, body: JSON.stringify({ path, referrer }) }));
+    expect((await send("/browser-sent/?x=1", "https://ref.example/page")).status).toBe(204);
     const rows = await listNotFound(7);
     expect(rows.map((row) => row.path)).toContain("/browser-sent/");
     expect(rows.find((row) => row.path === "/browser-sent/")?.refDomain).toBe("ref.example");
-    await recordNotFoundAction("/_next/static/x.js", "");
+    await send("/_next/static/x.js", "");
+    expect((await POST(new Request("http://localhost/api/notfound/", { method: "POST", headers: { origin: "http://localhost", host: "localhost" }, body: "not json" }))).status).toBe(400);
     expect((await listNotFound(7)).some((row) => row.path.startsWith("/_next"))).toBe(false);
   });
 });

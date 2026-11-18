@@ -1,5 +1,6 @@
 import { Types } from "mongoose";
 import { connectDb } from "@/lib/db";
+import { dateWords } from "@/lib/admin/history-words";
 import { can, type Perm } from "@/lib/admin/perms";
 import { BULK_MAX, BULK_TYPED_FROM, EXTEND_HOURS, EXPIRE_IN_HOURS, SET_END_MAX_DAYS } from "@/lib/admin/ads-bulk-rules";
 import type { AdminCtx } from "@/server/admin/context";
@@ -147,7 +148,7 @@ export async function bulkChangeAds(ctx: AdminCtx, input: { action: BulkAction; 
           return {
             after: { status: listing.status, expiresAt: iso(listing.expiresAt) },
             result: null,
-            summary: touchesEnd ? `${rule.word}, ends ${iso(listing.expiresAt)}: ${listing.title}` : `${rule.word}: ${listing.title}`,
+            summary: touchesEnd ? `${rule.word}, ends ${listing.expiresAt ? dateWords(listing.expiresAt) : NO_EXPIRY}: ${listing.title}` : `${rule.word}: ${listing.title}`,
             undoData: { id, from: listing.status, to: was.status, refund: null, ...(touchesEnd ? { expiresTo: iso(was.expiresAt) } : {}) },
           };
         },

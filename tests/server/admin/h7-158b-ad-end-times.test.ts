@@ -101,6 +101,14 @@ describe("the Extend choices (H7.158)", () => {
     for (const [index, id] of ids.entries()) expect(await endOf(id)).toBe(before[index]);
   });
 
+  it("writes the new end in a plain Indian-time date in the History sentence, not as a raw ISO date", async () => {
+    const id = await ad("Plain end", "active", 5);
+    const done = await bulkChangeAds(moderator, { action: "extend", ids: [id], hours: 24 });
+    const row = await AuditEvent.findOne({ batchId: done.batchId, action: "listing.extend" }).lean();
+    expect(row?.summary).toMatch(/^Extended, ends [0-9]{1,2} [A-Z][a-z]{2}( [0-9]{4})?, [0-9]{1,2}:[0-9]{2} (am|pm): Plain end$/);
+    expect(row?.summary).not.toMatch(/[0-9]{4}-[0-9]{2}-[0-9]{2}T/);
+  });
+
   it("is for staff who may edit ads, and moves no credits", async () => {
     const id = await ad("Money", "active", 5);
     await expect(bulkChangeAds(support, { action: "extend", ids: [id], hours: 24 })).rejects.toBeInstanceOf(ForbiddenError);

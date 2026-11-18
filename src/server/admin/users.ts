@@ -1,4 +1,5 @@
 import mongoose, { type QueryFilter, type Types } from "mongoose";
+import { actionWords, plainSentence } from "@/lib/admin/history-words";
 import { connectDb } from "@/lib/db";
 import { can } from "@/lib/admin/perms";
 import { normalizePhone, PhoneIdentity } from "@/server/auth/phone";
@@ -260,7 +261,7 @@ export async function getUserDetail(id: string, roles: readonly string[]): Promi
     balance,
     ads: ads.map((ad) => ({ id: String(ad._id), title: ad.title, status: ad.status, slug: ad.slug ?? null, createdAt: ad.createdAt ? new Date(ad.createdAt).toISOString() : null })),
     tickets: tickets.map((ticket) => ({ id: String(ticket._id), number: ticket.number, subject: ticket.subject, status: ticket.status, lastMessageAt: ticket.lastMessageAt ? new Date(ticket.lastMessageAt).toISOString() : null })),
-    history: events.map((event) => ({ id: String(event._id), summary: event.summary || event.action, actorRole: event.actorRole ?? null, at: event.createdAt ? new Date(event.createdAt).toISOString() : null })),
+    history: events.map((event) => ({ id: String(event._id), summary: plainSentence(event.summary || actionWords(event.action)), actorRole: event.actorRole ?? null, at: event.createdAt ? new Date(event.createdAt).toISOString() : null })),
   };
 }
 

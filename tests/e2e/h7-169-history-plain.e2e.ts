@@ -61,7 +61,7 @@ test.describe("H7.169 History & undo in plain words", () => {
       await expect(diff).toContainText("Shown");
       await expect(diff).toContainText("Yes");
       await expect(diff).toContainText("No");
-      await expect(diff).toContainText("15 Jun 2026, 15:30");
+      await expect(diff).toContainText("15 Jun, 3:30 pm");
       await expect(diff).toContainText("admin, support");
       for (const code of ["durationHours", "homeOrder", "startsAt", "true", "false", "T10:00:00"]) await expect(diff).not.toContainText(code);
       expect(await hasHorizontalScroll(page)).toBe(false);

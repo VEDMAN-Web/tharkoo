@@ -1,4 +1,5 @@
 import { Types } from "mongoose";
+import { dateWords } from "@/lib/admin/history-words";
 import { connectDb } from "@/lib/db";
 import type { AdminCtx } from "@/server/admin/context";
 import { adminWrite } from "@/server/admin/write";
@@ -63,7 +64,7 @@ export async function addTakedown(ctx: AdminCtx, input: TakedownInput): Promise<
         slaAckDueAt: dueAt,
         createdAt: receivedAt,
       });
-      return { after: { askedBy, channel: input.channel, receivedAt: receivedAt.toISOString(), dueAt: dueAt.toISOString() }, result: { id: String(created._id) }, summary: `Added a legal takedown request on “${label}”, due ${dueAt.toISOString()}` };
+      return { after: { askedBy, channel: input.channel, receivedAt: receivedAt.toISOString(), dueAt: dueAt.toISOString() }, result: { id: String(created._id) }, summary: `Added a legal takedown request on “${label}”, due ${dateWords(dueAt)}` };
     },
   });
   return { id: written.result.id, eventId: written.eventId };
