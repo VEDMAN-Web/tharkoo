@@ -1,8 +1,8 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useState, useTransition } from "react";
-import { DataTable, Notice, SaveBar, SortableList, Toggle, type Column, type SortableItem } from "@/components/admin/ui";
+import { useMemo, useState, useTransition } from "react";
+import { AdminSearchSelect, DataTable, Notice, SaveBar, SortableList, Toggle, type Column, type SortableItem } from "@/components/admin/ui";
 import type { loadListingOrder } from "@/server/ranking/admin";
 import { scopeFromParts } from "@/server/ranking/scope";
 import { addPinAction, previewAction, removePinAction, saveSettingsAction, setHiddenAction } from "./actions";
@@ -42,6 +42,7 @@ export function ListingOrderEditor({ initial, categories, cities, districts }: {
   const [dirty, setDirty] = useState(false);
   const [category, setCategory] = useState("");
   const [city, setCity] = useState("");
+  const cityChoices = useMemo(() => cities.map((item) => ({ value: item.slug, label: item.name })), [cities]);
   const [district, setDistrict] = useState("");
   const [rows, setRows] = useState<PreviewRow[] | null>(null);
   const [message, setMessage] = useState("");
@@ -151,12 +152,7 @@ export function ListingOrderEditor({ initial, categories, cities, districts }: {
           </label>
           <label className="adm-field">
             <span className="adm-field-label">City</span>
-            <select className="adm-input" value={city} disabled={!category} onChange={(event) => { setCity(event.target.value); setDistrict(""); setRows(null); }}>
-              <option value="">All cities</option>
-              {cities.map((item) => (
-                <option key={item.slug} value={item.slug}>{item.name}</option>
-              ))}
-            </select>
+            <AdminSearchSelect value={city} disabled={!category} firstLabel="All cities" options={cityChoices} onChange={(next) => { setCity(next); setDistrict(""); setRows(null); }} />
           </label>
           <label className="adm-field">
             <span className="adm-field-label">District</span>

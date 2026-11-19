@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { ChevronRight, Search, SlidersHorizontal, X } from "lucide-react";
 import { useFocusTrap } from "./ui/useFocusTrap";
+import { SEARCH_FROM, SearchSelect, placeChoices } from "./ui/SearchSelect";
 import { api } from "@/lib/ui/api";
 import { searchPath } from "@/lib/urls";
 import { useUrlPaths } from "./UrlPaths";
@@ -67,6 +68,7 @@ export function SearchModal({
     () => cities.filter((item) => !region || item.stateSlug === region),
     [cities, region],
   );
+  const cityChoices = useMemo(() => placeChoices(cityOptions, (item) => item.slug), [cityOptions]);
 
   useEffect(() => {
     if (!city) {
@@ -173,12 +175,16 @@ export function SearchModal({
                   <option key={item.slug} value={item.slug}>{item.name}</option>
                 ))}
               </select>
-              <select data-tk="search-city" aria-label="All the cities" value={city} onChange={(event) => setCity(event.target.value)}>
-                <option value="">All the cities</option>
-                {cityOptions.map((item) => (
-                  <option key={item.slug} value={item.slug}>{item.name}</option>
-                ))}
-              </select>
+              {cityOptions.length > SEARCH_FROM ? (
+                <SearchSelect id="search-city" dataTk="search-city" ariaLabel="All the cities" value={city} options={cityChoices} placeholder="All the cities (type to search)" emptyText="No city matches. Keep typing." onChange={setCity} />
+              ) : (
+                <select data-tk="search-city" aria-label="All the cities" value={city} onChange={(event) => setCity(event.target.value)}>
+                  <option value="">All the cities</option>
+                  {cityOptions.map((item) => (
+                    <option key={item.slug} value={item.slug}>{item.name}</option>
+                  ))}
+                </select>
+              )}
               <select data-tk="search-district" aria-label="Select District" value={district} disabled={!city} onChange={(event) => setDistrict(event.target.value)}>
                 <option value="">Select District</option>
                 {districts.map((item) => (

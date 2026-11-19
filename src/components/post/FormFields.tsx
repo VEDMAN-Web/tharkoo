@@ -1,3 +1,5 @@
+import { SEARCH_FROM, SearchSelect, type SearchOption } from "@/components/ui/SearchSelect";
+
 export function SelectField({
   id,
   label,
@@ -9,6 +11,9 @@ export function SelectField({
   onBlur,
   onChange,
   children,
+  searchOptions,
+  searchPlaceholder,
+  searchEmpty,
 }: {
   id: string;
   label: string;
@@ -20,7 +25,21 @@ export function SelectField({
   onBlur?: () => void;
   onChange: (value: string) => void;
   children: React.ReactNode;
+  /** H16.1c: a long list (more than SEARCH_FROM choices) is a type-ahead box instead of a drop-down; a short one stays a select. */
+  searchOptions?: readonly SearchOption[];
+  searchPlaceholder?: string;
+  searchEmpty?: string;
 }) {
+  if (searchOptions && searchOptions.length > SEARCH_FROM) {
+    return (
+      <div className={`tk-field ${error ? "is-bad" : ""}`}>
+        <label htmlFor={id}>{required ? "* " : ""}{label}</label>
+        <SearchSelect id={id} value={value} options={searchOptions} placeholder={searchPlaceholder} emptyText={searchEmpty} disabled={disabled} invalid={Boolean(error)} onBlur={onBlur} onChange={onChange} />
+        {help ? <span className="t-caption" style={{ color: "var(--muted)" }}>{help}</span> : null}
+        {error ? <span className="tk-error" data-tk="field-error">{error}</span> : null}
+      </div>
+    );
+  }
   return (
     <label className={`tk-field ${error ? "is-bad" : ""}`} htmlFor={id}>
       <span>{required ? "* " : ""}{label}</span>

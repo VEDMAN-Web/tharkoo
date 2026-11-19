@@ -18,9 +18,11 @@ export function DashChart({ days, t }: { days: SellerDashboard["days"]; t: TextF
       <ol className="up-dash-cols">
         {days.map((day) => (
           <li key={day.key} className="up-dash-col" data-tk="chart-day" data-top={day.topOn ? "on" : "off"} data-views={day.views} data-clicks={day.clicks} aria-label={`${day.label}: ${day.views} views, ${day.clicks} clicks`}>
-            <span className="up-dash-col-value">{num(day.views)}</span>
             <div className="up-dash-bars" aria-hidden="true">
-              <span className="up-dash-bar up-dash-bar-views" style={{ height: `${Math.round((day.views / max) * 100)}%` }} />
+              <span className="up-dash-barwrap" style={{ height: `${Math.round((day.views / max) * 100)}%` }}>
+                <span className="up-dash-col-value">{num(day.views)}</span>
+                <span className="up-dash-bar up-dash-bar-views" />
+              </span>
               <span className="up-dash-bar up-dash-bar-clicks" style={{ height: `${Math.round((day.clicks / max) * 100)}%` }} />
             </div>
           </li>
