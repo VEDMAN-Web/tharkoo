@@ -1,7 +1,7 @@
 import { randomUUID } from "node:crypto";
 import type { Types } from "mongoose";
 import { connectDb } from "@/lib/db";
-import { refreshPublicCache } from "@/lib/cache";
+import { cached, refreshPublicCache } from "@/lib/cache";
 import { isAdminRole } from "@/lib/ui/site-content";
 import { can } from "@/lib/admin/perms";
 import type { AdminCtx } from "@/server/admin/context";
@@ -18,6 +18,20 @@ export function isDemoAd(ownerEmail: string | undefined, slug: string | undefine
 }
 
 export const DEMO_END_STATUS = "expired";
+
+/** The id of the account that owns every demo ad, or null when there is none. Cached a minute: it is read on every list query. */
+export async function demoOwnerId(): Promise<string | null> {
+  return cached(
+    "demo-owner",
+    60_000,
+    async () => {
+      await connectDb();
+      const seed = await User.findOne({ email: SEED_USER_EMAIL }).select("_id").lean<{ _id: Types.ObjectId } | null>();
+      return seed ? String(seed._id) : null;
+    },
+    ["site"],
+  );
+}
 const SAMPLE = 20;
 
 export async function demoFilter(): Promise<{ ownerId: Types.ObjectId; slug: { $regex: string } } | null> {

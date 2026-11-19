@@ -57,9 +57,9 @@ export function IndexingForm({ initial, categories, cities }: Props) {
   return (
     <div className="adm-stack">
       <section className="adm-card" style={{ display: "grid", gap: 12 }}>
-        <h2 style={{ margin: 0, fontSize: 18 }}>Minimum ads before a page is indexed</h2>
+        <h2 style={{ margin: 0, fontSize: 18 }}>Minimum ads before a page is indexed (not used now)</h2>
         <p className="adm-field-help" style={{ margin: 0 }}>
-          A city page with fewer ads than the minimum is set to noindex and left out of the sitemap. Empty means today&apos;s default (3 for city pages, 10 for district pages).
+          Not used now: every listing page is indexed and in the sitemap, even with sample ads or none yet. The switches for a category or a city below still turn pages off.
         </p>
         <div style={{ display: "grid", gap: 12, gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))" }}>
           <label className="adm-field">

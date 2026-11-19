@@ -222,6 +222,10 @@
   color: #c2185b;
   background: #fdf0f7;
 }
+.tk-row-tag.is-sample {
+  color: #475569;
+  background: #eef2f7;
+}
 .tk-row-tag.is-place {
   color: #5b21b6;
   background: #f5f0ff;

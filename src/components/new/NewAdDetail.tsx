@@ -5,7 +5,7 @@ import type { AdChannel } from "@/server/listings/contact-channels";
 import { ContactButtons, ContactProvider, type ContactPopupInfo } from "@/components/ContactButtons";
 import { UiTextProvider } from "@/components/ui/AdCard";
 import { TrackView } from "@/components/ui/RecentlyViewed";
-import { adPath, type UrlPaths } from "@/lib/urls";
+import { adPath, postAdPath, type UrlPaths } from "@/lib/urls";
 import { isCityAlias } from "@/lib/seo/district-alias";
 import { makeT, type UiTextMap } from "@/lib/ui/text";
 import { PostStrip } from "@/components/ui/PostStrip";
@@ -150,11 +150,12 @@ export function NewAdDetail({
   const barChannels = channelsFor(peopleAd ? ["phone", "whatsapp"] : ["whatsapp"], contactChannels);
   const barClass = barClassOf(barChannels.length + 1 + (tour && !peopleAd ? 1 : 0), peopleAd);
   const showPrice = features.price && (!peopleAd || PRICED_PEOPLE.has(ad.categorySlug || ""));
+  const sampleNote = ad.sample ? { message: t("demo.message"), button: t("demo.postButton"), href: postAdPath(paths) } : null;
   const actionProps = { slug: ad.slug || "", publicId: ad.publicId || "", title, place: placeText };
 
   return (
     <UiTextProvider texts={texts}>
-      <ContactProvider listingSlug={ad.slug} listingId={listingId} tour={tour} peopleAd={peopleAd} info={popupInfo}>
+      <ContactProvider listingSlug={ad.slug} listingId={listingId} tour={tour} peopleAd={peopleAd} info={popupInfo} sample={sampleNote}>
         <div className="tkn-page tkn-ad" data-tk="new-ad">
           <TrackView ad={ad} />
           <CitySync name={city} slug={ad.citySlug} />
@@ -179,6 +180,7 @@ export function NewAdDetail({
                 <div className="tkn-ad-subrow">
                   <p className="tkn-ad-meta">{t("ad.meta.simple", { place: placeText, date })}</p>
                   <ul className="tkn-ad-pills" aria-label={t("ad.details")}>
+                    {ad.sample ? <li className="is-sample" data-tk="sample-pill">{t("demo.pill")}</li> : null}
                     {GOLD_TIERS.has(tier.key) ? <li className="is-featured">{t("ad.pill.featured")}</li> : null}
                     <li>{categoryName}</li>
                     {city ? <li>{city}</li> : null}
@@ -190,6 +192,12 @@ export function NewAdDetail({
                     ) : null}
                   </ul>
                 </div>
+                {sampleNote ? (
+                  <aside className="tkn-ad-sample" data-tk="sample-banner">
+                    <p>{sampleNote.message}</p>
+                    <a className="tk-btn" href={sampleNote.href}>{sampleNote.button}</a>
+                  </aside>
+                ) : null}
                 <hr className="tkn-ad-rule" />
                 <section aria-labelledby="tkn-about">
                   <h2 id="tkn-about">{personal ? t("ad.aboutMe") : t("ad.about")}</h2>

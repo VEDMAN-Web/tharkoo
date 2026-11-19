@@ -21,6 +21,7 @@ export function ListingCard({ ad, order, texts }: { ad: ListingDoc; order: numbe
     photoNext: t("home.ads.photoNext"),
     chat: t("home.ads.chat"),
     age: t("home.ads.age"),
+    sample: t("demo.pill"),
     row: rowLabels(t),
   };
   return <ListingRow ad={listingRowData(ad, NO_NAMES, paths, t("card.fallbackTitle"))} labels={labels} order={order} />;

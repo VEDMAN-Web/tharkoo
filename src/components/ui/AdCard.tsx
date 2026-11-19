@@ -145,6 +145,7 @@ export function AdCard({
           {byline ? <p className="tkn-ls-by">{byline}</p> : null}
           {ad.description ? <p className="tkn-ls-desc">{ad.description}</p> : null}
           <div className="tkn-ls-pills">
+            {ad.sample ? <span className="tkn-ls-pill-sample" data-tk="sample-pill">{t("demo.pill")}</span> : null}
             {verifiedText ? <span className="tkn-ls-pill-ok">{verifiedText}</span> : null}
             {ad.categorySlug ? <span className="tkn-ls-pill-cat">{prettyPlace(ad.categorySlug)}</span> : null}
             {placeText ? <span className="tkn-ls-pill-place">{placeText}</span> : null}
@@ -204,6 +205,11 @@ export function AdCard({
                   <span>{item}</span>
                 </span>
               ))}
+            </span>
+          ) : null}
+          {ad.sample ? (
+            <span className="tk-chip" data-tk="sample-pill" style={{ alignSelf: "flex-start", background: "#eef2f7", color: "#475569" }}>
+              {t("demo.pill")}
             </span>
           ) : null}
           {videoVerified ? (

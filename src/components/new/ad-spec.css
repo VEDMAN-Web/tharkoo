@@ -24,6 +24,9 @@
   display: inline-flex; align-items: center; gap: 6px; min-height: 28px; padding: 0 12px; border-radius: 999px;
   background: #f5f0ff; font-size: 13px; font-weight: 600; color: #3b1f5e;
 }
+.tkn .tkn-ad-pills li.is-sample { background: #eef2f7; color: #475569; }
+.tkn .tkn-ad-sample { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 16px; margin: 12px 0 0; padding: 12px 14px; border-radius: 12px; background: #f6f8fb; border: 1px solid #dde4ee; color: #334155; font-size: 14px; }
+.tkn .tkn-ad-sample p { margin: 0; flex: 1 1 260px; }
 .tkn .tkn-ad-pills li.is-featured { background: #fde7f3; color: #a8124f; }
 .tkn .tkn-ad-pills li.is-verified { background: #e7f7ef; color: #065f46; }
 .tkn .tkn-ad-rule { border: 0; border-top: 1px solid rgba(17, 5, 32, 0.08); margin: 16px 0; }

@@ -93,6 +93,7 @@ export function ListingRow({ ad, labels, order = 0 }: { ad: ListingRowData; labe
           <div className="tk-row-foot-main">
             {ad.showPrice && ad.price ? <span className="tk-row-price" data-tk="card-price">{ad.price}</span> : null}
             <p className="tk-row-tags">
+              {ad.sample && labels.sample ? <span className="tk-row-tag is-sample" data-tk="sample-pill">{labels.sample}</span> : null}
               {ad.verified ? (
                 <span className="tk-row-tag is-ok" data-tk="row-verified">
                   <Check size={12} aria-hidden />

@@ -74,7 +74,7 @@ export function explainIndexability(input: ExplainInput): Explanation {
   }
   if (input.pageType === "ad") {
     if (input.adEnded) return no("noindex: this ad has ended");
-    if (input.demoAd) return no("noindex: demo ad (placeholder content is never indexed)");
+    if (input.demoAd) return { indexable: true, reasons: ["Sample (demo) ad: indexed like a real ad, with the Sample ad label"], editor };
     if (input.adNoindex) return no("noindex: this ad is not set to be indexed");
     return { indexable: true, reasons: ["Live ad that is set to be indexed"], editor };
   }
@@ -86,10 +86,8 @@ export function explainIndexability(input: ExplainInput): Explanation {
   const hub = input.pageType === "category" || input.pageType === "city" || input.pageType === "district" || input.pageType === "tag";
   if (!hub) return { indexable: true, reasons: ["Standard page, no thin-content rule applies"], editor };
   const count = input.count ?? 0;
-  const minimum = input.minimum ?? (input.pageType === "district" ? DEFAULT_MIN_DISTRICT : DEFAULT_MIN_HUB);
   if (input.filtered && count === 0) return no("noindex: filter parameters with no results");
-  if (count < minimum) return no(`noindex: ${count} ${count === 1 ? "ad" : "ads"} < minimum ${minimum}`);
-  const reasons = [`${count} ads >= minimum ${minimum}`];
+  const reasons = [`${count} ${count === 1 ? "ad" : "ads"}: a listing page is indexed even with sample ads or none yet`];
   if (input.filtered) reasons.push("filter parameters are present; the page is indexable while the filter has results");
   return { indexable: true, reasons, editor };
 }

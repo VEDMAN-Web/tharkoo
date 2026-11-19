@@ -3,7 +3,7 @@ import { cached } from "@/lib/cache";
 import { connectDb } from "@/lib/db";
 import type { ListingDoc as LegacyListing } from "@/lib/models";
 import { listingPhotos } from "@/lib/media";
-import { isDemoAd } from "@/server/listings/demo-ads";
+import { demoOwnerId, DEMO_SLUG, isDemoAd } from "@/server/listings/demo-ads";
 import { adPhotoUrl } from "@/server/media/photo-url";
 import { onlineOwnerIds } from "@/server/availability/listings";
 import { firstAdVideos } from "@/server/media/video";
@@ -542,6 +542,7 @@ export async function presentRows(docs: Row[], promotions: Map<string, RankPromo
     const photoList = listingPhotos(categorySlug, publicId, photos.get(id) ?? [], isDemoAd(person?.email, doc.slug));
     const people = category?.kind === "people" || kindFor(categorySlug, category?.fields) === "people";
     const trust = trustMarks(person?.verificationStatus, verified, photoList.length, people);
+    const isSample = isDemoAd(person?.email, doc.slug ?? undefined);
     const age = ageOf(doc.attributes);
     const price = cleanPrice(doc.price);
     const video = videos.get(id);
@@ -578,6 +579,7 @@ export async function presentRows(docs: Row[], promotions: Map<string, RankPromo
       variant,
       verified,
       trust,
+      sample: isSample,
       lastBumpedAt: bumped ? new Date(bumped) : undefined,
       publishedAt: doc.publishedAt,
       videoVerifiedUntil: doc.videoVerifiedUntil ?? null,
@@ -633,6 +635,12 @@ export async function queryListings(input: ListingQuery): Promise<SearchResult> 
     const onlineIds = input.prefer === "online" ? new Set(await onlineOwnerIds()) : null;
     const preferred = (doc: Row) => (onlineIds ? Boolean(doc.ownerId && onlineIds.has(String(doc.ownerId))) : doc.badges?.includes("verified") === true);
     ranked.sort((a, b) => Number(preferred(b.doc)) - Number(preferred(a.doc)));
+  }
+  // H16.5: a real ad always sorts above a sample (demo) ad, whatever the sort.
+  const seedOwner = await demoOwnerId();
+  if (seedOwner) {
+    const isSample = (doc: Row) => String(doc.ownerId ?? "") === seedOwner && DEMO_SLUG.test(doc.slug ?? "");
+    ranked.sort((a, b) => Number(isSample(a.doc)) - Number(isSample(b.doc)));
   }
   const scope = (input.sort ?? "ranked") === "ranked" ? pinScopeOf(input) : null;
   const pins = scope ? await loadActivePins(scope, now) : [];

@@ -7,6 +7,14 @@ import { assertSeoEditor, recordSeo, type SeoActor } from "@/app/admin/seo/staff
 /** Today's built-in thresholds (a hub needs this many ads before it is indexed). */
 export const DEFAULT_HUB_MINIMUM = 3;
 export const DEFAULT_DISTRICT_MINIMUM = 10;
+/**
+ * H16.5: a public listing page is indexable whatever its ads (sample ads, few ads or none yet). Only the Indexing rules switches
+ * (category off, city off) turn a hub off, and they do it by returning NEVER as the minimum. The numbers are no longer a rule.
+ */
+export function isHubOn(minimum: number) {
+  return minimum !== NEVER;
+}
+
 /** Used as a minimum so that `isThin(count, NEVER)` is always true: the page is noindex and out of the sitemap. */
 export const NEVER = Number.MAX_SAFE_INTEGER;
 export const MAX_MINIMUM = 1000;
