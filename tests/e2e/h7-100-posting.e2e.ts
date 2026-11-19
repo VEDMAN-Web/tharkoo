@@ -46,6 +46,27 @@ async function toPhotos(page: Page, title: string) {
   await page.locator("[data-tk=photo-input]").waitFor({ state: "attached" });
 }
 
+/**
+ * FIX-1: a listing about people (Dating) never holds a video, so the video rules are walked on a Jobs ad (an ordinary category).
+ * The same steps as the Dating draft above: category, details (with the role), then the photos step.
+ */
+async function toPhotosJobs(page: Page, title: string) {
+  await page.locator(".tkp-tile", { hasText: "Jobs" }).click();
+  await page.locator("[data-tk=go-on]").click();
+  await page.locator("#city").selectOption({ label: "Mumbai" });
+  await page.locator("#nickname").fill("Asha");
+  const roleHere = (await page.locator("#role").count()) > 0;
+  if (roleHere) await page.locator("#role").fill("Office assistant");
+  await page.locator("#title").fill(title);
+  await page.locator("#text").fill("A weekday office role with a clear description of the work and the hours.");
+  await page.locator("[data-tk=go-on]").click();
+  if (!roleHere) {
+    await page.locator("#role").fill("Office assistant");
+    await page.locator("[data-tk=go-on]").click();
+  }
+  await page.locator("[data-tk=photo-input]").waitFor({ state: "attached" });
+}
+
 test.describe("H7.100: posting works end to end", () => {
   test.beforeEach(async ({}, testInfo) => {
     test.skip(testInfo.project.name !== "desktop-1440", "sets its own viewports");
@@ -57,7 +78,7 @@ test.describe("H7.100: posting works end to end", () => {
     test.setTimeout(240_000);
     mkdirSync(SHOTS, { recursive: true });
     const api = await startAd(page, baseURL!, "tiles");
-    await toPhotos(page, `Tiles ${Date.now()}`);
+    await toPhotosJobs(page, `Tiles ${Date.now()}`);
 
     // H13.1 part 2: a photo of any size is accepted. This 9 MB file is not a picture (all zeros), so it is refused as unreadable, never as too big.
     await page.locator("[data-tk=photo-input]").setInputFiles({ name: "huge.png", mimeType: "image/png", buffer: Buffer.alloc(9 * MB) });
@@ -97,7 +118,7 @@ test.describe("H7.100: posting works end to end", () => {
   test("a video of 45 seconds uploads, and a dropped connection keeps the tile with Tap to retry", async ({ page, baseURL }) => {
     test.setTimeout(240_000);
     const api = await startAd(page, baseURL!, "video");
-    await toPhotos(page, `Video ${Date.now()}`);
+    await toPhotosJobs(page, `Video ${Date.now()}`);
 
     let drops = 1;
     await page.route("**/api/media/local", async (route) => {
@@ -119,12 +140,12 @@ test.describe("H7.100: posting works end to end", () => {
     await api.dispose();
   });
 
-  test("a full Dating post with 3 photos and a video publishes and shows on its city page, with plain words if publishing is refused", async ({ page, baseURL }) => {
+  test("a full Jobs post with 3 photos and a video publishes and shows on its city page, with plain words if publishing is refused", async ({ page, baseURL }) => {
     test.setTimeout(300_000);
     mkdirSync(SHOTS, { recursive: true });
     const api = await startAd(page, baseURL!, "full");
-    const title = `Coffee walk ${Date.now()}`;
-    await toPhotos(page, title);
+    const title = `Office role ${Date.now()}`;
+    await toPhotosJobs(page, title);
     await page.locator("[data-tk=photo-input]").setInputFiles(
       [1, 2, 3].map((index) => ({ name: `p${index}.png`, mimeType: "image/png", buffer: PNG })),
     );
@@ -172,7 +193,7 @@ test.describe("H7.100: posting works end to end", () => {
     const rows = ((await own.json()).data?.items || []) as { id: string; title: string; slug?: string; status?: string }[];
     const row = rows.find((item) => item.title.includes(title));
     expect(row?.status).toBe("active");
-    await page.goto("/dating/mumbai/");
+    await page.goto("/jobs/mumbai/");
     await expect(page.locator(`a[href="/ad/${row!.slug}/"]`).first()).toBeAttached({ timeout: 30_000 });
     await page.goto(`/ad/${row!.slug}/`);
     await expect(page.locator("h1")).toContainText(title);
