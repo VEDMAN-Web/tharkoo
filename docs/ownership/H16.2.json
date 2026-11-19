@@ -34,6 +34,7 @@
     "tests/e2e/h7-131-chat-flows.e2e.ts",
     "tests/e2e/post-step-5.e2e.ts",
     "tests/e2e/h17-11-analytics.e2e.ts",
-    "tests/e2e/h17-2-moderation-now.e2e.ts"
+    "tests/e2e/h17-2-moderation-now.e2e.ts",
+    "tests/server/seo/h17-2-sitemaps.test.ts"
   ]
 }
