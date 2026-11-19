@@ -362,3 +362,7 @@
 .up-row-link::after { content: ""; position: absolute; inset: 0; z-index: 1; }
 .up-table tbody tr:has(.up-row-link:focus-visible) { outline: 3px solid #7c3aed; outline-offset: -3px; }
 .up-row-link:focus-visible { outline: none; }
+
+/* H15.7: Remove under a saved ad. */
+.up-saved-item { display: flex; flex-direction: column; gap: 8px; }
+.up-saved-remove { align-self: stretch; }

@@ -1,0 +1,13 @@
+{
+  "branchPrefix": "haiku/h15.7",
+  "globs": [
+    "docs/ownership/H15.7.json",
+    "progress/H15.7.md",
+    "src/app/api/saved/route.ts",
+    "src/components/ui/SaveButton.tsx",
+    "src/components/buyer/SavedPanel.tsx",
+    "src/components/buyer/SavedAdsRail.tsx",
+    "src/components/buyer/user-panel.css",
+    "tests/e2e/h15-7-saved-account.e2e.ts"
+  ]
+}
