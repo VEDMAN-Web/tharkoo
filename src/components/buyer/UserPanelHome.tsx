@@ -3,13 +3,15 @@ import { FreshAds } from "./FreshAds";
 import { PackPicker } from "./PackPicker";
 import { MyAdsList } from "./MyAdsList";
 import { SellerHomeAds } from "./SellerHomeAds";
+import { SellerDashboardView } from "./dashboard/SellerDashboard";
 import { SavedAdsRail } from "./SavedAdsRail";
 import { ProfileCard } from "./ProfileCard";
 import type { profileProgress } from "@/lib/ui/profile-progress";
 import { SectionHelp } from "@/components/help/SectionHelp";
 import { SignedOutPanel, UserPanelShell } from "./UserPanelShell";
 import { howItWorksPath } from "@/lib/urls";
-import { makeT } from "@/lib/ui/text";
+import { makeT, type UiTextMap } from "@/lib/ui/text";
+import type { SellerDashboard } from "@/server/listings/seller-dashboard";
 import type { listOwnCards } from "@/server/listings/owner-cards";
 import type { PackRow, PanelSummary } from "@/server/notifications/summary";
 
@@ -34,6 +36,7 @@ export function UserPanelHome({
   profile = null,
   adsLeft = null,
   priceLine = null,
+  dashboard = null,
 }: {
   summary: PanelSummary;
   ads: Ads | null;
@@ -43,6 +46,8 @@ export function UserPanelHome({
   adsLeft?: number | null;
   /** "2 free ads left, then ₹200 per ad", or null while posting is free for everyone. */
   priceLine?: string | null;
+  /** H14.3: the dashboard numbers for an advertiser with ads. Null keeps the older seller home. */
+  dashboard?: { data: SellerDashboard; texts: UiTextMap } | null;
 }) {
   const headline = ads ? homeHeadline(ads) : null;
   const coinsCard = (
@@ -84,7 +89,7 @@ export function UserPanelHome({
   );
   // An advertiser sees the order: ads, credits, profile, then help. So credits and profile sit right under the ads, on every screen size.
   const isSeller = summary.signedIn && summary.seller;
-  const aside = isSeller ? helpCard : (
+  const aside = dashboard ? undefined : isSeller ? helpCard : (
     <>
       {coinsCard}
       {profileCard}
@@ -92,11 +97,16 @@ export function UserPanelHome({
     </>
   );
   return (
-    <UserPanelShell active="home" summary={summary} aside={aside} below={<FreshAds />}>
+    <UserPanelShell active="home" summary={summary} aside={aside} below={dashboard ? undefined : <FreshAds />}>
       {summary.signedIn ? null : (
         <SignedOutPanel next="/u/account/dashboard/" title="Log in to see your panel" body="Your saved ads, chats and credits show here after you log in." />
       )}
-      {summary.signedIn && summary.seller ? (
+      {summary.signedIn && summary.seller && dashboard ? (
+        <>
+          <SellerDashboardView dash={dashboard.data} name={summary.displayName} balance={summary.balance} texts={dashboard.texts} />
+          {profileCard}
+        </>
+      ) : summary.signedIn && summary.seller ? (
         <>
           <SellerHomeAds name={summary.displayName} ads={ads} />
           {coinsCard}
@@ -155,7 +165,7 @@ export function UserPanelHome({
           <PackPicker returnTo="/u/account/" />
         </section>
       ) : null}
-      <SavedAdsRail />
+      {dashboard ? null : <SavedAdsRail />}
     </UserPanelShell>
   );
 }

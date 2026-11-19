@@ -70,7 +70,7 @@ test.describe("H9.2 advertiser account home", () => {
     }
   });
 
-  test("with an ad that ends soon the one step is Renew, and the Ending soon number counts it (1440 and 390)", async ({ page, baseURL }) => {
+  test("with an ad that ends soon the dashboard counts it in the Live ads tile and lists the ad (1440 and 390)", async ({ page, baseURL }) => {
     test.setTimeout(240_000);
     const { api, email } = await newUserApi(baseURL!, "h92end");
     const title = `H92 ending ${Date.now() % 100000}`;
@@ -82,12 +82,10 @@ test.describe("H9.2 advertiser account home", () => {
     for (const size of [{ width: 1440, height: 900 }, { width: 390, height: 844 }]) {
       await page.setViewportSize(size);
       await page.goto("/u/account/");
-      await expect(page.locator('[data-tk="seller-lead"]')).toHaveText("1 ad ends soon. Renew to keep it showing.");
-      await expect(page.locator('[data-tk="seller-stats"] .up-stat-num')).toHaveText(["1", "0", "1"]);
-      const action = page.locator('[data-tk="seller-action"]');
-      await expect(action).toHaveText("Renew");
-      await expect(action).toHaveAttribute("href", "/u/account/ads/");
-      await expect(page.locator('[data-tk="seller-ads"]').getByText(title).first()).toBeVisible();
+      await expect(page.locator('[data-tk="seller-dashboard"]')).toBeVisible();
+      await expect(page.locator('[data-tk="tile-live-value"]')).toHaveText("1");
+      await expect(page.locator('[data-tk="tile-live"] .up-dash-pill')).toHaveText("1 ends soon");
+      await expect(page.locator('[data-tk="dash-ads"]').getByText(title).first()).toBeVisible();
       expect(await hasHorizontalScroll(page)).toBe(false);
       expect(await serious(page)).toEqual([]);
       await shot(page, "seller-home-renew");

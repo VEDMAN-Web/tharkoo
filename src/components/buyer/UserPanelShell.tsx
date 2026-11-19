@@ -29,14 +29,14 @@ const ACCOUNT_LINKS: NavItem[] = [
   { key: "settings", label: "Settings", href: "/u/account/edit-account/", icon: Settings },
 ];
 
-function renderLink(item: NavItem, count: number, active: PanelKey) {
+function renderLink(item: NavItem, count: number, active: PanelKey, seller = false) {
   const Icon = item.icon;
   const on = item.key === active;
   return (
     <li key={item.key}>
       <Link href={item.href} className={on ? "up-nav-link up-nav-link-on" : "up-nav-link"} aria-current={on ? "page" : undefined}>
         <Icon size={18} aria-hidden="true" focusable="false" />
-        {item.label}
+        {item.key === "home" && seller ? t("panel.nav.dashboard") : item.label}
         {count > 0 ? <span className="up-nav-badge">{count}</span> : null}
       </Link>
     </li>
@@ -69,7 +69,7 @@ export function UserPanelShell({ active, summary, aside, below, children }: { ac
               </div>
             </div>
             <ul className="up-nav-list">
-              {MAIN_LINKS.map((item) => renderLink(item, badgeFor(item.key, summary), active))}
+              {MAIN_LINKS.map((item) => renderLink(item, badgeFor(item.key, summary), active, summary.signedIn && summary.seller))}
               <li className="up-sec">Account</li>
               {ACCOUNT_LINKS.map((item) => renderLink(item, badgeFor(item.key, summary), active))}
             </ul>

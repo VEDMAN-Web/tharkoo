@@ -1,6 +1,5 @@
 import Link from "next/link";
 import { makeT } from "@/lib/ui/text";
-import { AvailabilityControls } from "@/components/vendor/AvailabilityControls";
 import { TourInbox } from "@/components/vendor/TourInbox";
 import type { listOwnCards } from "@/server/listings/owner-cards";
 import { MyAdsList } from "./MyAdsList";
@@ -42,7 +41,6 @@ export function SellerHomeAds({ name, ads }: { name: string; ads: Ads | null }) 
           <Link href={line.href} className="up-btn" data-tk="seller-action">{line.action}</Link>
         </div>
       </section>
-      <AvailabilityControls />
       <section aria-labelledby="my-ads-heading" className="up-glass up-panel" data-tk="seller-ads">
         <div className="up-panel-head">
           <h2 id="my-ads-heading" className="up-h2">My ads</h2>

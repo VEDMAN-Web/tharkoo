@@ -2,7 +2,11 @@
 
 import Link from "next/link";
 import type { PanelSummary } from "@/server/notifications/summary";
+import { AvailabilityControls } from "@/components/vendor/AvailabilityControls";
+import { makeT } from "@/lib/ui/text";
 import { SignedOutPanel, UserPanelShell } from "./UserPanelShell";
+
+const t = makeT();
 
 export function SettingsPanel({ summary }: { summary: PanelSummary }) {
   if (!summary.signedIn) {
@@ -41,6 +45,12 @@ export function SettingsPanel({ summary }: { summary: PanelSummary }) {
           <Link href="/u/account/delete/" className="up-muted-link">Delete account</Link>
         </p>
       </section>
+      {summary.seller ? (
+        <div className="up-stack" data-tk="chat-availability">
+          <h2 className="up-h2">{t("panel.settings.chatTitle")}</h2>
+          <AvailabilityControls />
+        </div>
+      ) : null}
     </UserPanelShell>
   );
 }

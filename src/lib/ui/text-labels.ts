@@ -57,6 +57,8 @@ const WHERE: Record<string, string> = {
   "panel.coins": "Account panel, credits",
   "panel.menu": "Account panel, the menu",
   "panel.home": "Account panel, the home page",
+  "panel.dash": "Account panel, the seller dashboard",
+  "panel.settings": "Account panel, settings",
   "card.fallbackTitle": "Ad card, when an ad has no title",
   "card.tier": "Ad card, the promotion badge",
   "card.age": "Ad card, the age line",
