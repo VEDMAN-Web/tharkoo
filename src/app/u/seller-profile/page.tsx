@@ -39,7 +39,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<Rec
   const user = session.user;
   const summary = await loadPanelSummary((await cookies()).get(SESSION_COOKIE)?.value);
   const [presence, cityRows] = await Promise.all([readOwnPresence(user.id), getCities()]);
-  const cities = cityRows.map((row) => ({ id: row.id, name: row.name, slug: row.slug })).sort((a, b) => a.name.localeCompare(b.name));
+  const cities = cityRows.map((row) => ({ id: row.id, name: row.name, slug: row.slug, stateSlug: row.stateSlug })).sort((a, b) => a.name.localeCompare(b.name));
   return (
     <UserPanelShell active="settings" summary={summary}>
       <SellerProfileForm next={next} initial={user.seller} askDateOfBirth={!user.dateOfBirth} initialLiveChat={presence.liveChat} cities={cities} />

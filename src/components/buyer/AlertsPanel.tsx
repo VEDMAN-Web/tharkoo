@@ -1,8 +1,9 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { SectionHelp } from "@/components/help/SectionHelp";
+import { SEARCH_FROM, SearchSelect } from "@/components/ui/SearchSelect";
 import { api, friendlyError } from "@/lib/ui/api";
 import type { SavedSearchRow } from "@/server/alerts/saved-searches";
 
@@ -32,6 +33,8 @@ export function AlertsPanel({
   const router = useRouter();
   const [note, setNote] = useState("");
   const [busy, setBusy] = useState(false);
+  const [cityValue, setCityValue] = useState("");
+  const cityChoices = useMemo(() => cities.map((option) => ({ value: option.slug, label: option.name })), [cities]);
   // The form is kept by a ref: the event's own currentTarget is already gone when the server answers.
   const formRef = useRef<HTMLFormElement>(null);
 
@@ -60,6 +63,7 @@ export function AlertsPanel({
     setNote(res.ok ? "Alert saved. We will email you when a new ad matches." : friendlyError(res.error));
     if (res.ok) {
       formRef.current?.reset();
+      setCityValue("");
       router.refresh();
     }
   }
@@ -106,12 +110,16 @@ export function AlertsPanel({
           </label>
           <label className="up-label">
             City
-            <select name="city" className="up-select" defaultValue="">
-              <option value="">All cities</option>
-              {cities.map((option) => (
-                <option key={option.slug} value={option.slug}>{option.name}</option>
-              ))}
-            </select>
+            {cities.length > SEARCH_FROM ? (
+              <SearchSelect id="alert-city" inputClassName="up-select" name="city" value={cityValue} options={cityChoices} placeholder="All cities (type to search)" emptyText="No city matches. Keep typing." onChange={setCityValue} />
+            ) : (
+              <select name="city" className="up-select" defaultValue="">
+                <option value="">All cities</option>
+                {cities.map((option) => (
+                  <option key={option.slug} value={option.slug}>{option.name}</option>
+                ))}
+              </select>
+            )}
           </label>
           <button type="submit" className="up-btn" disabled={busy || !email}>
             Save search
