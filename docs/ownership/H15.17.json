@@ -1,0 +1,10 @@
+{
+  "branchPrefix": "haiku/h15.17",
+  "globs": [
+    "docs/ownership/H15.17.json",
+    "progress/H15.17.md",
+    "src/components/new/listing-spec.css",
+    "src/components/new/listing-grid.css",
+    "tests/e2e/h9-6-account-consistency.e2e.ts"
+  ]
+}
