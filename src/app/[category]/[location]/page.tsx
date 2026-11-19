@@ -1,3 +1,4 @@
+import { sampleNoteText } from "@/lib/seo/sample-note";
 import { notFound, permanentRedirect } from "next/navigation";
 import type { Metadata } from "next";
 import { resolveListingLayout } from "@/components/blocks/ListingLayout";
@@ -55,7 +56,7 @@ export const revalidate = 300;
 
 function landingFor(
   site: { name?: string; landings?: Record<string, Partial<LandingCopy>> },
-  input: { category: string; city: string; count: number; indexable?: boolean; districts?: string[]; updated?: string },
+  input: { category: string; city: string; count: number; indexable?: boolean; districts?: string[]; updated?: string; sampleNote?: string },
 ) {
   const fallback = fallbackLanding({ ...input, site: site.name });
   return mergeLanding(fallback, site.landings?.[`${input.category.toLowerCase()}|${input.city.toLowerCase()}`]);
@@ -82,7 +83,7 @@ export async function generateMetadata({ params, searchParams }: Props): Promise
     category: cat.name,
     city: loc.name,
     state: loc.kind === "state" ? loc.name : loc.stateSlug,
-    count: feed.total,
+    count: feed.realTotal,
     site: site.name,
     year: new Date().getFullYear(),
     districtPref: "",
@@ -90,8 +91,9 @@ export async function generateMetadata({ params, searchParams }: Props): Promise
   const copy = landingFor(site as { name?: string; landings?: Record<string, Partial<LandingCopy>> }, {
     category: cat.name || category,
     city: loc.name || location,
-    count: feed.total,
+    count: feed.realTotal,
     indexable: !!isHubOn(hubMin),
+    sampleNote: await sampleNoteText(),
   });
   const resolved =
     (site as { listingCopySource?: string }).listingCopySource === "content"
@@ -102,7 +104,7 @@ export async function generateMetadata({ params, searchParams }: Props): Promise
           category: cat.name || category,
           place: loc.name || location,
           state: String(vars.state ?? ""),
-          count: feed.total,
+          count: feed.realTotal,
           indexable: !!isHubOn(hubMin),
           mode: "content",
         })
@@ -178,7 +180,7 @@ export default async function LocationPage({ params, searchParams }: Props) {
     category: cat.name,
     city: loc.name,
     state: stateName,
-    count: feed.total,
+    count: feed.realTotal,
     site: site.name,
     year: new Date().getFullYear(),
     districtPref: "",
@@ -190,8 +192,9 @@ export default async function LocationPage({ params, searchParams }: Props) {
   const copy = landingFor(site as { name?: string; landings?: Record<string, Partial<LandingCopy>> }, {
     category: cat.name || category,
     city: loc.name || location,
-    count: feed.total,
+    count: feed.realTotal,
     indexable: !!isHubOn(hubMin),
+    sampleNote: await sampleNoteText(),
     districts: districts.map((row) => row.name || "").filter(Boolean).slice(0, 3),
     updated: feed.items[0]?.publishedAt ? new Date(feed.items[0].publishedAt).toLocaleDateString("en-IN", { day: "numeric", month: "long", year: "numeric" }) : undefined,
   });
@@ -206,7 +209,7 @@ export default async function LocationPage({ params, searchParams }: Props) {
           category: cat.name || category,
           place: loc.name || location,
           state: stateName,
-          count: feed.total,
+          count: feed.realTotal,
           indexable: !!isHubOn(hubMin),
           districts: districts.map((row) => row.name || "").filter(Boolean).slice(0, 3),
           updated: feed.items[0]?.publishedAt ? new Date(feed.items[0].publishedAt).toLocaleDateString("en-IN", { day: "numeric", month: "long", year: "numeric" }) : undefined,

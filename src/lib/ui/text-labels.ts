@@ -42,6 +42,7 @@ const WHERE: Record<string, string> = {
   "listing.band": "Listing pages, the picture band at the top",
   "listing.panel": "Listing pages, the side panel",
   "listing.count": "Listing pages, the number of ads",
+  "listing.sampleCount": "Listing pages, the words used instead of 0 live ads while only sample ads show",
   "listing.updated": "Listing pages, the updated line",
   "listing.empty": "Listing pages, when there are no ads",
   "listing.fallback": "Listing pages, when a title or text is missing",

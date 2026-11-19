@@ -226,7 +226,7 @@ export function NewAdDetail({
                 <div className="tkn-contact-panel" data-tk="contact-card">
                   {!showPrice ? null : <p className={priceText ? "tkn-ad-price" : "tkn-ad-price is-request"}>{priceText || t("ad.price.request")}</p>}
                   <AdSellerRow name={seller} verified={Boolean(ad.verified)} since={since} />
-                  {features.contact ? <ContactButtons channels={channelsFor(["phone", "whatsapp"], contactChannels)} /> : null}
+                  {features.contact && !ad.sample ? <ContactButtons channels={channelsFor(["phone", "whatsapp"], contactChannels)} /> : null}
                   <AdActions {...actionProps} />
                 </div>
                 <section className="tkn-safe" data-tk="security-tips">
@@ -259,7 +259,7 @@ export function NewAdDetail({
             />
           ) : null}
           <PostStrip text={t("post.strip.text")} button={t("post.strip.button")} feeText={t("post.strip.fee")} />
-          {features.contact ? (
+          {features.contact && !ad.sample ? (
             <div className={`tkn-ad-bar${barClass}`} data-tk="bottom-bar">
               <ContactButtons sticky channels={barChannels} />
             </div>

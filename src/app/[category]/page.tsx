@@ -1,3 +1,4 @@
+import { sampleNoteText } from "@/lib/seo/sample-note";
 import Link from "next/link";
 import { notFound, permanentRedirect } from "next/navigation";
 import type { Metadata } from "next";
@@ -107,13 +108,13 @@ export default async function CategoryHub({ params, searchParams }: Props) {
   const homeContent = await getHomepageContent();
   const vars = { category: cat.name, site: site.name, year: new Date().getFullYear() };
   const copy = mergeLanding(
-    fallbackLanding({ category: cat.name || category, count: feed.total, site: site.name }),
+    fallbackLanding({ category: cat.name || category, count: feed.realTotal, site: site.name, sampleNote: await sampleNoteText() }),
     (site as { landings?: Record<string, Partial<LandingCopy>> }).landings?.[`${category}|india`],
   );
   // H8.32: with the switch "content" the words come from the listing copy resolver (the content editor first); otherwise from today's sources.
   const resolved =
     (site as { listingCopySource?: string }).listingCopySource === "content"
-      ? await resolveListingCopy({ kind: "category", path: categoryPath(cat.slug || category), categorySlug: cat.slug || category, category: cat.name || category, count: feed.total, mode: "content" })
+      ? await resolveListingCopy({ kind: "category", path: categoryPath(cat.slug || category), categorySlug: cat.slug || category, category: cat.name || category, count: feed.realTotal, mode: "content" })
       : null;
   const hub = resolved ? { intro: resolved.intro, faqs: resolved.faqs } : await hubCopy(categoryPath(cat.slug || category), { intro: copy.intro || fillTemplate(seo?.intro || "", vars), faqs: copy.faqs });
   const allowed = new Set(counts.filter((row) => row._id.categorySlug === category && row.n > 0).map((row) => row._id.citySlug));
@@ -122,7 +123,7 @@ export default async function CategoryHub({ params, searchParams }: Props) {
     ...(page === 1 ? stars : []),
     ...orderFeed(feed.items.filter((ad) => !stars.some((star) => star.slug && star.slug === ad.slug)), hourSeed()),
   ];
-  const layout = await resolveListingLayout({ path: categoryPath(cat.slug || category), category: cat.slug || category, vars: { ...vars, count: feed.total } });
+  const layout = await resolveListingLayout({ path: categoryPath(cat.slug || category), category: cat.slug || category, vars: { ...vars, count: feed.realTotal } });
   const headerBlock = layout.blocks.find((block) => block.type === "listingHeader");
   const h1Text = resolved ? resolved.h1 : listingHeading(String(headerBlock?.props.h1Template ?? ""), heading, { ...layout.vars, h1: heading });
   const wrap = (id: string, devices: Parameters<typeof deviceClass>[0], content: React.ReactNode) => {

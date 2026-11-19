@@ -3,6 +3,7 @@ import { Types } from "mongoose";
 import { connectDb } from "@/lib/db";
 import { Category, Listing, Location } from "@/server/models";
 import { Subcategory, type SubcategoryDoc } from "@/server/models/subcategory";
+import { demoFilter } from "@/server/listings/demo-ads";
 import { presentRows } from "@/server/search/query";
 
 /** A sub-category page is indexable only with at least this many real active ads (3, same thin-page rule at every level). */
@@ -117,6 +118,9 @@ export async function subcategoryFeed(input: { categoryId: string; cityId: strin
     subcategoryId: new Types.ObjectId(input.subcategoryId),
   };
   const total = await Listing.countDocuments(filter);
+  // H17.1: the words of the page count the real ads only; sample (demo) ads are shown but not counted.
+  const sample = await demoFilter();
+  const realTotal = sample ? await Listing.countDocuments({ $and: [filter, { $nor: [{ ownerId: sample.ownerId, slug: sample.slug }] }] }) : total;
   const page = Math.max(1, input.page);
   const rows = await Listing.find(filter)
     .sort({ publishedAt: -1, _id: -1 })
@@ -124,7 +128,7 @@ export async function subcategoryFeed(input: { categoryId: string; cityId: strin
     .limit(SUBCATEGORY_PAGE_SIZE)
     .lean();
   const presented = await presentRows(rows as unknown as Parameters<typeof presentRows>[0], new Map(), new Date());
-  return { items: presented.legacy, total, page, pages: Math.max(1, Math.ceil(total / SUBCATEGORY_PAGE_SIZE)) };
+  return { items: presented.legacy, total, realTotal, page, pages: Math.max(1, Math.ceil(total / SUBCATEGORY_PAGE_SIZE)) };
 }
 
 /** Indexable only with enough real ads; otherwise noindex and out of the sitemap. */
