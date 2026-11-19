@@ -1,7 +1,9 @@
+import type { Types } from "mongoose";
 import { SESSION_COOKIE, assertOrigin, readCookie } from "@/server/auth/http";
 import { requireUser } from "@/server/auth/service";
 import { connectDb } from "@/lib/db";
-import { Favourite, Listing } from "@/server/models";
+import { Favourite, Listing, Location, MediaAsset } from "@/server/models";
+import { previewUrlOf } from "@/server/media/mine";
 import { handle, requestIdFrom, success, ValidationError } from "@/server/http";
 
 export const runtime = "nodejs";
@@ -18,10 +20,30 @@ async function dispatch(request: Request) {
   if (request.method === "GET") {
     await connectDb();
     const rows = await Favourite.find({ userId: user.user.id }).sort({ createdAt: -1 }).limit(100).lean();
-    const listings = await Listing.find({ _id: { $in: rows.map((row) => row.listingId) }, status: "active" })
-      .select("slug title")
-      .lean();
-    return Response.json(success({ items: listings.map((row) => ({ slug: row.slug, title: row.title })) }, requestId));
+    const listings = (await Listing.find({ _id: { $in: rows.map((row) => row.listingId) }, status: "active" })
+      .select("slug title cityId coverMediaId mediaIds")
+      .lean()) as { _id: unknown; slug?: string; title?: string; cityId?: unknown; coverMediaId?: unknown; mediaIds?: unknown[] }[];
+    // H15.7: the account's own list, with what a saved card shows (photo and place), newest first, the same on every device.
+    const coverIds = listings.map((row) => row.coverMediaId ?? row.mediaIds?.[0]).filter(Boolean) as Types.ObjectId[];
+    const assets = coverIds.length ? await MediaAsset.find({ _id: { $in: coverIds }, kind: "image" }).select("kind objectKey").lean() : [];
+    const photos = new Map(assets.map((asset) => [String(asset._id), previewUrlOf(asset).url] as const));
+    const cityIds = listings.map((row) => row.cityId).filter(Boolean) as Types.ObjectId[];
+    const cities = cityIds.length ? await Location.find({ _id: { $in: cityIds } }).select("name").lean() : [];
+    const cityNames = new Map(cities.map((city) => [String(city._id), String((city as { name?: string }).name ?? "")] as const));
+    const byId = new Map(listings.map((row) => [String(row._id), row] as const));
+    const items = rows.flatMap((row) => {
+      const listing = byId.get(String(row.listingId));
+      if (!listing?.slug) return [];
+      const cover = listing.coverMediaId ?? listing.mediaIds?.[0];
+      return [{
+        slug: listing.slug,
+        title: listing.title ?? "",
+        place: listing.cityId ? cityNames.get(String(listing.cityId)) ?? "" : "",
+        photo: cover ? photos.get(String(cover)) ?? null : null,
+        at: new Date(row.createdAt as unknown as string | Date).getTime() || 0,
+      }];
+    });
+    return Response.json(success({ items }, requestId));
   }
   assertOrigin(request);
   const body = (await request.json().catch(() => null)) as { slug?: string } | null;

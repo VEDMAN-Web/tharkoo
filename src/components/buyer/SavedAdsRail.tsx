@@ -4,18 +4,29 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { AdCard } from "../ui/AdCard";
 import { SectionHelp } from "@/components/help/SectionHelp";
-import { readSaved, type SavedItem } from "../ui/SaveButton";
+import { loadAccountSaved, readSaved, type SavedItem } from "../ui/SaveButton";
 import { displayTitle } from "@/lib/format";
 import type { ListingDoc } from "@/lib/models";
 
-/** H7.6: the saved ads panel. Saved ads are kept on this device (the Save button), so the count is this device's. */
+/** H7.6: the saved ads panel. A visitor who is not signed in keeps saved ads on this device; a signed-in one sees the account's list. */
 const SHOWN = 4;
 
 export function SavedAdsRail() {
   const [items, setItems] = useState<SavedItem[] | null>(null);
   useEffect(() => {
+    let live = true;
     const id = window.setTimeout(() => setItems(readSaved()), 0);
-    return () => window.clearTimeout(id);
+    // A signed-in visitor sees the account's list (H15.7), the same on every device.
+    void loadAccountSaved().then((list) => {
+      if (live && list) setItems(list);
+    });
+    const onChange = () => setItems(readSaved());
+    window.addEventListener("tk-saved", onChange);
+    return () => {
+      live = false;
+      window.clearTimeout(id);
+      window.removeEventListener("tk-saved", onChange);
+    };
   }, []);
 
   const count = items?.length ?? 0;
