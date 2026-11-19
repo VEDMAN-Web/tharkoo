@@ -63,7 +63,6 @@ async function newHome(texts: ReturnType<typeof pickTexts>, layout?: BlockBase[]
         data={homeSiteNodes(
           await siteOrganizationNode(site.name || "Tharkoo", {
             logo: canonical("/brand/logo-mark-512.png"),
-            sameAs: content.socials.map((item) => item.href),
           }),
           site.name || "Tharkoo",
           searchPath(paths),

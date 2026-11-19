@@ -13,7 +13,7 @@ import { hubCopy } from "@/lib/seo-site";
 import { withSeoDefaults } from "@/lib/ui/meta-defaults";
 import { Breadcrumbs } from "@/components/Breadcrumbs";
 import { JsonLd, breadcrumbJsonLd } from "@/lib/jsonld";
-import { faqPage, itemListNode } from "@/lib/seo/schema";
+import { itemListNode, webPageNode } from "@/lib/seo/schema";
 import { canonical } from "@/lib/seo";
 import { AdCard, UiTextProvider } from "@/components/ui/AdCard";
 import { ListingCard, ListingGrid } from "@/components/new/ListingCards";
@@ -261,16 +261,15 @@ export default async function CategoryHub({ params, searchParams }: Props) {
             { name: t("listing.crumb.home"), path: "/" },
             { name: cat.name || category, path: categoryPath(cat.slug || category) },
           ]),
+          webPageNode({ name: h1Text, path: categoryPath(cat.slug || category), siteName: site.name || "Tharkoo" }),
           itemListNode({
             url: canonical(categoryPath(cat.slug || category)),
-            total: feed.total,
             items: ads.slice(0, 12).map((ad, index) => ({
               url: canonical(adPath(paths, ad.slug || "")),
               name: ad.title || "Ad",
               position: index + 1,
             })),
           }),
-          faqPage(hub.faqs),
         ]}
       />
       {frame ? (

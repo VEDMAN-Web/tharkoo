@@ -2,7 +2,7 @@ import { JsonLd } from "@/lib/jsonld";
 import { canonical } from "@/lib/seo";
 import { websiteNode } from "@/lib/seo/schema";
 import { siteOrganizationNode } from "@/lib/seo-site";
-import { getHomepageContent, getSite } from "@/lib/queries";
+import { getSite } from "@/lib/queries";
 import { searchPath } from "@/lib/urls";
 import { getPaths } from "@/server/urls/service";
 import type { BlockBase } from "@/server/models/layout";
@@ -21,7 +21,7 @@ export function pickH1(blocks: BlockBase[]): { blockId?: string; hidden: boolean
 
 /** Renders the home page from blocks, plus the site-wide JSON-LD that the built-in home page also writes. */
 export async function HomeLayout({ blocks }: { blocks: BlockBase[] }) {
-  const [site, content, paths] = await Promise.all([getSite(), getHomepageContent(), getPaths()]);
+  const [site, paths] = await Promise.all([getSite(), getPaths()]);
   const h1 = pickH1(blocks);
   return (
     <>
@@ -29,7 +29,6 @@ export async function HomeLayout({ blocks }: { blocks: BlockBase[] }) {
         data={[
           await siteOrganizationNode(site.name || "Tharkoo", {
             logo: canonical("/brand/logo-mark-512.png"),
-            sameAs: content.socials.map((item) => item.href),
           }),
           websiteNode(site.name || "Tharkoo", searchPath(paths)),
         ]}

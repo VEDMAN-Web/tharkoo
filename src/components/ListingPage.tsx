@@ -7,7 +7,9 @@ import { UiTextProvider } from "./ui/AdCard";
 import { ListingCard, ListingGrid } from "./new/ListingCards";
 import { EmptyState } from "./ui/EmptyState";
 import { JsonLd, breadcrumbJsonLd } from "@/lib/jsonld";
-import { faqPage } from "@/lib/seo/schema";
+import { itemListNode, webPageNode } from "@/lib/seo/schema";
+
+const SITE_NAME = "Tharkoo";
 import { canonical } from "@/lib/seo";
 import { displayTitle } from "@/lib/format";
 import type { ListingDoc } from "@/lib/models";
@@ -43,6 +45,7 @@ export function ListingPageView({
   texts,
   fallback,
   hideEmpty = false,
+  pageName,
 }: {
   h2?: string;
   intro?: string;
@@ -70,6 +73,8 @@ export function ListingPageView({
   fallback?: React.ReactNode;
   /** H7.32: leave out the built-in empty state, for a page that draws its own under the fallback. */
   hideEmpty?: boolean;
+  /** H17.5: the page's heading, the name of its WebPage node. Without it no WebPage node is written. */
+  pageName?: string;
 }) {
   const t = makeT(texts);
   const paths = useUrlPaths();
@@ -213,19 +218,15 @@ export function ListingPageView({
       <JsonLd
         data={[
           breadcrumbJsonLd(crumbs),
-          {
-            "@context": "https://schema.org",
-            "@type": "ItemList",
-            numberOfItems: total,
+          ...(pageName ? [webPageNode({ name: pageName, path: clear, siteName: SITE_NAME })] : []),
+          itemListNode({
             url: canonical(clear),
-            itemListElement: items.map((ad, i) => ({
-              "@type": "ListItem",
-              position: (page - 1) * 25 + i + 1,
+            items: items.map((ad, i) => ({
+              position: (page - 1) * LISTING_PAGE_SIZE + i + 1,
               url: canonical(adPath(paths, ad.slug || "")),
               name: displayTitle(ad.title),
             })),
-          },
-          ...(faqs.length ? [faqPage(faqs)] : []),
+          }),
         ]}
       />
       {blocks.map((block, index) => (
