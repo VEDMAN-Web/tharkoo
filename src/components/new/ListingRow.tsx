@@ -75,7 +75,7 @@ export function ListingRow({ ad, labels, order = 0 }: { ad: ListingRowData; labe
       <div className="tk-row-body">
         <div className="tk-row-titlerow">
           <h3 className="tk-row-title">
-            <Link href={ad.href} prefetch={false} className="tkh-ad-link" onClick={clicked}>
+            <Link href={ad.href} prefetch={false} className="tkh-ad-link" onClick={clicked} data-ad-link>
               {ad.title}
             </Link>
           </h3>

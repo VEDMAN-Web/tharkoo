@@ -4,6 +4,7 @@ import { displayTitle } from "@/lib/format";
 import { AuditRepository } from "@/server/audit";
 import { NotFoundError, PolicyViolationError } from "@/server/http";
 import { Listing, MediaAsset, type MediaAssetDoc, type MediaStatus } from "@/server/models";
+import { addressesFor } from "@/server/listings/ad-code";
 import { deleteMedia } from "@/server/media/service";
 import { AD_MEDIA_MAX, optionalCloudinary, AD_VIDEO_RULE_MESSAGE } from "@/server/media/config";
 import { videoUrls } from "@/server/media/video";
@@ -33,6 +34,8 @@ export interface MyMediaRow {
   listingId: string;
   adTitle: string;
   adSlug: string | null;
+  /** H16.2: the public address of the ad, or null while it has none. */
+  adAddress: string | null;
   adStatus: string;
 }
 
@@ -62,9 +65,10 @@ type AssetLean = MediaAssetDoc & { _id: mongoose.Types.ObjectId; createdAt?: Dat
 async function rowsFor(userId: string, assets: AssetLean[]): Promise<MyMediaRow[]> {
   const listingIds = [...new Set(assets.map((asset) => asset.listingId?.toString()).filter((id): id is string => Boolean(id)))];
   const listings = listingIds.length
-    ? await Listing.find({ _id: { $in: listingIds }, ownerId: userId }).select("title slug status coverMediaId").lean()
+    ? await Listing.find({ _id: { $in: listingIds }, ownerId: userId }).select("title slug status coverMediaId code categoryId cityId").lean()
     : [];
   const byId = new Map(listings.map((listing) => [String(listing._id), listing]));
+  const addresses = await addressesFor(listings);
   const rows: MyMediaRow[] = [];
   for (const asset of assets) {
     const listing = asset.listingId ? byId.get(asset.listingId.toString()) : undefined;
@@ -83,6 +87,7 @@ async function rowsFor(userId: string, assets: AssetLean[]): Promise<MyMediaRow[
       listingId: String(listing._id),
       adTitle: displayTitle(listing.title) || "Untitled ad",
       adSlug: listing.slug ?? null,
+      adAddress: addresses.get(String(listing._id)) ?? null,
       adStatus: listing.status ?? "",
     });
   }

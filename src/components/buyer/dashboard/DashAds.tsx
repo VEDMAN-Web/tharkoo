@@ -27,7 +27,7 @@ function Row({ ad, t, bumpPlanId }: { ad: DashboardAd; t: TextFn; bumpPlanId: st
       <div className="up-dash-ad-main">
         {ad.photo ? <img className="up-dash-thumb" src={ad.photo} alt="" width={72} height={72} loading="lazy" /> : <span className="up-dash-thumb" aria-hidden="true" />}
         <div className="up-dash-ad-text">
-          <Link href={ad.slug ? `/ad/${ad.slug}/` : draftPath(ad.id)} className="up-dash-ad-title" prefetch={false}>
+          <Link href={ad.slug ? ad.address || `/ad/${ad.slug}/` : draftPath(ad.id)} className="up-dash-ad-title" prefetch={false}>
             {ad.title}
           </Link>
           <span className="up-dash-ad-where">{ad.where}</span>

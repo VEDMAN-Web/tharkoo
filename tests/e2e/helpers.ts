@@ -255,9 +255,27 @@ export function isPhone(page: Page) {
 /** The first listing path (one that has a contact method) found on a city feed, e.g. /ad/demo-0352/. */
 export async function firstAdPath(page: Page, feed = "/dating/bengaluru/") {
   await page.goto(feed);
-  const link = page.locator(":is([data-tk=card], [data-tk=home-ad], [data-tk=listing-row]) a[href*=\"/ad/\"]").first();
+  const link = page.locator(":is([data-tk=card], [data-tk=home-ad], [data-tk=listing-row]) a[data-ad-link]").first();
   await link.waitFor({ state: "attached" });
-  return (await link.getAttribute("href")) as string;
+  return oldAdPath((await link.getAttribute("href")) as string);
+}
+
+/**
+ * H16.2: ads now live at /<category>/<city>/<title>-<code>/. Many specs still think in the old /ad/<slug>/ form (which
+ * forwards), so this turns a link from a card into that form. Returns the link unchanged when it is old already.
+ */
+export async function oldAdPath(href: string) {
+  const code = /-([a-z0-9]{5})\/$/.exec(href)?.[1];
+  if (!code || href.startsWith("/ad/")) return href;
+  const row = await withLocalDb((db) => db.collection("listings").findOne({ code }, { projection: { slug: 1 } }));
+  return row?.slug ? `/ad/${row.slug}/` : href;
+}
+
+/** H16.2: matches the address an ad has now, for toHaveURL. The ad is found by its old slug. */
+export async function adAddressPattern(slug: string) {
+  const row = await withLocalDb((db) => db.collection("listings").findOne({ slug }, { projection: { code: 1 } }));
+  if (!row?.code) throw new Error(`No code for local ad ${slug}`);
+  return new RegExp(`-${row.code}/$`);
 }
 
 export const WEBHOOK_SECRET = process.env.PAYMENT_WEBHOOK_SECRET || "e2e-webhook-secret-not-real";
@@ -360,13 +378,6 @@ export function uploadsDir() {
 /** The ad slug from its public path, e.g. /ad/in00012/ gives in00012. */
 export function slugFromAdPath(path: string) {
   return path.replace(/^\/ad\//, "").replace(/\/$/, "");
-}
-
-/** H16.2: matches the address an ad has now, for toHaveURL. The ad is found by its old slug. */
-export async function adAddressPattern(slug: string) {
-  const row = await withLocalDb((db) => db.collection("listings").findOne({ slug }, { projection: { code: 1 } }));
-  if (!row?.code) throw new Error(`No code for local ad ${slug}`);
-  return new RegExp(`-${row.code}/$`);
 }
 
 /**

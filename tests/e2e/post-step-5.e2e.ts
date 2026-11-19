@@ -157,7 +157,7 @@ test.describe("H7.86 post an ad, step 5 and the success screen", () => {
     await page.waitForURL(/\/u\/account\/ads\//);
     const mine = page.locator("[data-tk=card]").filter({ hasText: edited }).first();
     await expect(mine).toBeVisible();
-    const adHref = await mine.locator('a[href*="/ad/"]').first().getAttribute("href");
+    const adHref = await mine.locator('a[data-ad-link]').first().getAttribute("href");
     expect(adHref).toBeTruthy();
     expect((await page.request.get(adHref!)).status()).toBe(200);
     await shot(page, `${prefix}-08-my-ads`);
@@ -179,7 +179,7 @@ test.describe("H7.86 post an ad, step 5 and the success screen", () => {
     await expect(page.locator("[data-tk=step-title]")).toHaveText("Changes saved");
     await page.goto("/u/account/ads/");
     await expect(page.locator("[data-tk=card]").filter({ hasText: final }).first()).toBeVisible();
-    const finalHref = await page.locator("[data-tk=card]").filter({ hasText: final }).first().locator('a[href*="/ad/"]').first().getAttribute("href");
+    const finalHref = await page.locator("[data-tk=card]").filter({ hasText: final }).first().locator('a[data-ad-link]').first().getAttribute("href");
     expect(finalHref).toBeTruthy();
     const finalPage = await page.request.get(finalHref!);
     expect(finalPage.status()).toBe(200);

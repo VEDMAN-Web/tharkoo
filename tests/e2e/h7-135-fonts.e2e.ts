@@ -28,7 +28,7 @@ test.describe("H7.135 fonts never fall back to a serif", () => {
   test("body text and the H1 start with the intended font on Home, a listing page, an ad page and the staff sign-in", async ({ page }) => {
     test.setTimeout(240_000);
     await page.goto("/dating/");
-    const ad = await page.locator('a[href*="/ad/"]').first().getAttribute("href");
+    const ad = await page.locator('a[data-ad-link]').first().getAttribute("href");
     expect(ad).toBeTruthy();
     for (const [width, height] of SIZES) {
       await page.setViewportSize({ width, height });

@@ -256,7 +256,7 @@ function Screen({ ad, history }: { ad: StaffAd; history: AdHistory }) {
         title={ad.values.title || "Untitled"}
         purpose={`${look.text} · posted by ${ad.seller.name}. Changes are saved as a new version you can undo for 30 days.`}
         secondary={[
-          ...(ad.slug ? [{ key: "view", label: "View on site", icon: ExternalLink, href: `/ad/${ad.slug}/` }] : []),
+          ...(ad.slug ? [{ key: "view", label: "View on site", icon: ExternalLink, href: ad.address || `/ad/${ad.slug}/` }] : []),
           { key: "history", label: "History", icon: History, onClick: () => setShowHistory(true) },
         ]}
       />
