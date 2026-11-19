@@ -74,7 +74,7 @@ export function explainIndexability(input: ExplainInput): Explanation {
   }
   if (input.pageType === "ad") {
     if (input.adEnded) return no("noindex: this ad has ended");
-    if (input.demoAd) return { indexable: true, reasons: ["Sample (demo) ad: indexed like a real ad, with the Sample ad label"], editor };
+    if (input.demoAd) return no("noindex, follow: Sample (demo) ad. Sample ads are left out of Google and out of the ads sitemap; the pages that list them stay indexable");
     if (input.adNoindex) return no("noindex: this ad is not set to be indexed");
     return { indexable: true, reasons: ["Live ad that is set to be indexed"], editor };
   }

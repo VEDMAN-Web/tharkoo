@@ -44,14 +44,15 @@ describe("H16.5 robots on listing pages and sample ad pages", () => {
     expect(robotsOf(filtered)?.index).toBe(false);
   });
 
-  it("a live sample ad page is index,follow like a real ad that is set to be indexed; a real ad not set to be indexed is not", async () => {
+  // H17.8 (Vedant's decision, 19 Nov): a sample ad page is noindex,follow. A real ad is unchanged.
+  it("a live sample ad page is noindex,follow; a real ad that is set to be indexed is index; a real ad not set to be indexed is not", async () => {
     const w = await world();
     const make = (slug: string, owner: mongoose.Types.ObjectId, noindex: boolean) =>
       Listing.create({ ownerId: owner, categoryId: w.jobs._id, stateId: w.state._id, cityId: w.surat._id, title: `Office role ${slug}`, description: "A description that is long enough to be a listing.", slug, status: "active", seoNoindex: noindex, publishedAt: new Date(), expiresAt: new Date(Date.now() + 86_400_000) });
     await make("demo-0002", w.seed._id, true);
     await make("real-role-k7q2", new mongoose.Types.ObjectId(), false);
     await make("hidden-role-k7q3", new mongoose.Types.ObjectId(), true);
-    expect(robotsOf(await adMetadata({ params: Promise.resolve({ slug: "demo-0002" }) }))?.index).toBe(true);
+    expect(robotsOf(await adMetadata({ params: Promise.resolve({ slug: "demo-0002" }) }))).toMatchObject({ index: false, follow: true });
     expect(robotsOf(await adMetadata({ params: Promise.resolve({ slug: "real-role-k7q2" }) }))?.index).toBe(true);
     expect(robotsOf(await adMetadata({ params: Promise.resolve({ slug: "hidden-role-k7q3" }) }))?.index).toBe(false);
   });
