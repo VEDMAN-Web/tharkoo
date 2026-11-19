@@ -1,0 +1,210 @@
+// ===== tests/e2e/e1c-red-visible.e2e.ts (kept out of the PR: these fail on main until the bug named in the title is fixed) =====
+import type { Page } from "@playwright/test";
+import { expect, signInAdminContext, test, withLocalDb } from "./helpers";
+import { expectPageHealthy, watchConsole } from "./e1c-checks";
+
+/** E1-C: the admin ad journeys: post a JOB ad, send ads to moderation and approve or reject them, remove an ad and put it back. */
+
+async function openCreateAd(page: Page) {
+  await page.goto("/admin/ads/create/", { waitUntil: "networkidle" });
+  await expect(page.getByRole("heading", { name: "1. Who is the ad for" })).toBeVisible();
+}
+
+/** Fills the Jobs form (the staff account owns it, Mumbai) and chooses what happens to the ad. */
+async function fillJobAd(page: Page, title: string, publishNow: boolean) {
+  const place = page.locator('section[aria-labelledby="ad-place-h"] select');
+  await place.nth(0).selectOption({ label: "India" });
+  await place.nth(1).selectOption({ label: "Maharashtra" });
+  await place.nth(2).selectOption({ label: "Mumbai" });
+  await page.getByLabel("Category *").selectOption({ label: "Jobs" });
+  await page.getByLabel("Title *").fill(title);
+  await page.getByLabel("Description *").fill("A weekday office role with a clear description of the work and the hours.");
+  await page.locator("label", { hasText: /^Role/ }).locator("input").first().fill("Office assistant");
+  await page.locator("label", { hasText: /^Work mode/ }).locator("select").first().selectOption({ label: "Office" });
+  await page.getByRole("radio", { name: publishNow ? "Publish now" : "Send to moderation (default)" }).check();
+}
+
+async function createJobAd(page: Page, title: string, publishNow: boolean) {
+  await openCreateAd(page);
+  await fillJobAd(page, title, publishNow);
+  await page.getByRole("button", { name: "Create ad" }).click();
+  await expect(page.getByText(publishNow ? "The ad is live now." : "The ad is in the moderation queue.")).toBeVisible();
+}
+
+const listingByTitle = (title: string) => withLocalDb((db) => db.collection("listings").findOne({ title }, { projection: { slug: 1, status: 1 } }));
+const publicStatus = async (page: Page, slug: string) => (await page.goto(`/ad/${slug}/`))?.status();
+/** What a visitor with no account gets for an ad address. */
+const visitorStatus = async (baseURL: string, slug: string) => (await fetch(`${baseURL}/ad/${slug}/`)).status;
+const auditCount = (id: unknown) => withLocalDb((db) => db.collection("audit_events").countDocuments({ targetId: String(id) }));
+
+test.describe("E1-C known red: E1-C2", () => {
+  test("an ad that a visitor looked at while it was in review is public soon after it is approved", async ({ page, context, baseURL }) => {
+    test.setTimeout(300_000);
+    await signInAdminContext(context, baseURL!);
+    const title = `E1C seen ${Date.now()}`;
+    await createJobAd(page, title, false);
+    const row = await listingByTitle(title);
+    expect(await visitorStatus(baseURL!, row!.slug as string), "an ad in review is not public").not.toBe(200);
+    await page.goto("/admin/moderation/", { waitUntil: "networkidle" });
+    await page.getByRole("tab", { name: /Held by rules/ }).click();
+    await page.locator('[data-tk="server-table"] tr', { hasText: title }).getByRole("button", { name: "Approve", exact: true }).click();
+    await expect.poll(async () => (await listingByTitle(title))?.status, { timeout: 20_000 }).toBe("active");
+    const started = Date.now();
+    let status = await visitorStatus(baseURL!, row!.slug as string);
+    while (status !== 200 && Date.now() - started < 200_000) {
+      await page.waitForTimeout(5_000);
+      status = await visitorStatus(baseURL!, row!.slug as string);
+    }
+    test.info().annotations.push({ type: "seconds-until-public", description: String(Math.round((Date.now() - started) / 1000)) });
+    expect(status).toBe(200);
+    expect(Date.now() - started, "public within 60 seconds").toBeLessThan(60_000);
+  });
+  test("an approved ad is public for a visitor within 10 seconds", async ({ page, context, baseURL }) => {
+    test.setTimeout(240_000);
+    await signInAdminContext(context, baseURL!);
+    const title = `E1C approve fast ${Date.now()}`;
+    await createJobAd(page, title, false);
+    const row = await listingByTitle(title);
+    await page.goto("/admin/moderation/", { waitUntil: "networkidle" });
+    await page.getByRole("tab", { name: /Held by rules/ }).click();
+    await page.locator('[data-tk="server-table"] tr', { hasText: title }).getByRole("button", { name: "Approve", exact: true }).click();
+    await expect.poll(async () => (await listingByTitle(title))?.status, { timeout: 20_000 }).toBe("active");
+    await expect.poll(() => visitorStatus(baseURL!, row!.slug as string), { timeout: 10_000 }).toBe(200);
+  });
+
+  test("a restored ad is public for a visitor within 10 seconds", async ({ page, context, baseURL }) => {
+    test.setTimeout(240_000);
+    await signInAdminContext(context, baseURL!);
+    const title = `E1C restore fast ${Date.now()}`;
+    await createJobAd(page, title, true);
+    const row = await listingByTitle(title);
+    expect(await visitorStatus(baseURL!, row!.slug as string)).toBe(200);
+    await page.goto(`/admin/ads/?q=${encodeURIComponent(title)}`, { waitUntil: "networkidle" });
+    await page.getByRole("checkbox", { name: `Select ${title}` }).check();
+    await page.getByRole("button", { name: "Remove..." }).click();
+    const dialog = page.locator('[data-tk="reason-dialog"]');
+    await dialog.getByRole("radio").first().check();
+    await dialog.getByRole("button", { name: /^Remove 1 ad/ }).click();
+    await expect.poll(async () => (await listingByTitle(title))?.status, { timeout: 20_000 }).toBe("removed");
+    await expect.poll(() => visitorStatus(baseURL!, row!.slug as string), { timeout: 10_000 }).not.toBe(200);
+    await page.goto("/admin/history/");
+    await page.locator('[data-tk="history-screen"] tr, [data-tk="history-screen"] li').filter({ hasText: `Removed: ${title}` }).first().getByRole("button", { name: /Undo|Restore|Put back/ }).first().click();
+    await expect.poll(async () => (await listingByTitle(title))?.status, { timeout: 20_000 }).toBe("active");
+    await expect.poll(() => visitorStatus(baseURL!, row!.slug as string), { timeout: 10_000 }).toBe(200);
+  });
+});
+
+// ===== tests/e2e/e1c-red-audit.e2e.ts (kept out of the PR: these fail on main until the bug named in the title is fixed) =====
+import { appendFileSync, mkdirSync } from "node:fs";
+import type { Page } from "@playwright/test";
+import { ADMIN_EMAIL, expect, signInAdminContext, test, withLocalDb } from "./helpers";
+import { expectPageHealthy, watchConsole } from "./e1c-checks";
+
+/**
+ * E1-C: one admin write per screen, and each one must leave an audit entry that says WHO (actor and role), WHAT (action and
+ * a summary or label) and WHEN (a time that falls inside the write). The table goes to .shots/e1/audit-table.md.
+ */
+
+const TABLE = ".shots/e1/audit-table.md";
+
+type Entry = { action?: string; actorId?: unknown; actorRole?: string; actorType?: string; summary?: string; targetLabel?: string; targetType?: string; createdAt?: Date };
+
+async function adminId() {
+  const row = await withLocalDb((db) => db.collection("users").findOne({ email: ADMIN_EMAIL.toLowerCase() }, { projection: { _id: 1 } }));
+  expect(row, "the admin account exists").toBeTruthy();
+  return String(row!._id);
+}
+
+async function auditSince(since: Date): Promise<Entry[]> {
+  const rows = await withLocalDb((db) => db.collection("audit_events").find({ createdAt: { $gte: since } }).sort({ createdAt: 1 }).toArray());
+  return (rows ?? []) as Entry[];
+}
+
+/** After a write: at least one new entry by this admin, with an action, a role, a readable label and a time inside the write. */
+async function expectAudited(screen: string, write: string, since: Date, adminKey: string) {
+  await expect.poll(async () => (await auditSince(since)).length, { timeout: 15_000, message: `${screen}: an audit entry after "${write}"` }).toBeGreaterThan(0);
+  const entries = await auditSince(since);
+  const mine = entries.filter((entry) => String(entry.actorId) === adminKey);
+  expect(mine.length, `${screen}: an entry whose actor is the admin (${entries.map((entry) => `${entry.action}/${entry.actorType}`).join(", ")})`).toBeGreaterThan(0);
+  const entry = mine[mine.length - 1];
+  expect(entry.action, `${screen}: the action is named`).toBeTruthy();
+  expect(entry.actorRole, `${screen}: the role is kept`).toBeTruthy();
+  expect(entry.summary || entry.targetLabel, `${screen}: says what changed`).toBeTruthy();
+  expect(entry.createdAt && entry.createdAt.getTime() >= since.getTime() - 1000 && entry.createdAt.getTime() <= Date.now() + 5000, `${screen}: the time is inside the write`).toBe(true);
+  mkdirSync(".shots/e1", { recursive: true });
+  appendFileSync(TABLE, `| ${screen} | ${write} | ${entry.action} | ${entry.actorRole} | ${entry.summary || entry.targetLabel} | ${entry.createdAt?.toISOString()} |\n`);
+}
+
+test.describe("E1-C known red: E1-C4", () => {
+  test.beforeEach(({}, testInfo) => {
+    test.skip(testInfo.project.name !== "desktop-1440", "desktop only");
+  });
+
+  test("cities: a new city leaves an audit entry with who, what and when", async ({ page, context, baseURL }) => {
+    test.setTimeout(240_000);
+    const errors = watchConsole(page);
+    const admin = await adminId();
+    await signInAdminContext(context, baseURL!);
+    await page.goto("/admin/locations/", { waitUntil: "networkidle" });
+    await expectPageHealthy(page, "cities");
+    const since = new Date();
+    await page.getByRole("button", { name: "New place" }).click();
+    const dialog = page.getByRole("dialog");
+    const name = `E1C Town ${String(Date.now()).slice(-5)}`;
+    await dialog.locator("#new-place-kind").selectOption("city");
+    await dialog.getByLabel("Name").fill(name);
+    await dialog.locator("#new-place-parent").selectOption({ index: 1 });
+    await dialog.getByRole("button", { name: "Create place" }).click();
+    await expect(page.getByRole("heading", { name })).toBeVisible({ timeout: 20_000 });
+    await expectAudited("Cities & areas", `city ${name} added`, since, admin);
+    expect(errors, "no console errors").toEqual([]);
+  });
+  test("categories: a new category leaves an audit entry with who, what and when", async ({ page, context, baseURL }) => {
+    test.setTimeout(240_000);
+    const errors = watchConsole(page);
+    const admin = await adminId();
+    await signInAdminContext(context, baseURL!);
+    await page.goto("/admin/categories/", { waitUntil: "networkidle" });
+    await expectPageHealthy(page, "categories");
+    const since = new Date();
+    const stamp = String(Date.now()).slice(-6);
+    await page.getByRole("button", { name: "New category" }).click();
+    const dialog = page.getByRole("dialog");
+    await dialog.getByRole("textbox", { name: /^Name/ }).fill(`E1C Cat ${stamp}`);
+    await dialog.getByLabel(/^Kind/).selectOption("goods");
+    await dialog.getByRole("button", { name: "Create category" }).click();
+    await expect(page.getByRole("heading", { name: `E1C Cat ${stamp}` })).toBeVisible({ timeout: 20_000 });
+    await expectAudited("Categories", `category E1C Cat ${stamp} added`, since, admin);
+
+    expect(errors, "no console errors").toEqual([]);
+  });
+  test("SEO center: a saved title template leaves an audit entry with who, what and when", async ({ page, context, baseURL }) => {
+    test.setTimeout(240_000);
+    page.on("dialog", (dialog) => void dialog.accept());
+    const errors = watchConsole(page);
+    const admin = await adminId();
+    await signInAdminContext(context, baseURL!);
+    const stamp = String(Date.now()).slice(-6);
+    await page.goto("/admin/seo/templates/", { waitUntil: "networkidle" });
+    const since = new Date();
+    const selects = page.locator("select");
+    await selects.nth(0).selectOption({ label: "Category hub" });
+    await selects.nth(1).selectOption({ label: "Dating only" });
+    await page.getByLabel("Title", { exact: true }).fill(`E1C${stamp} {category} ads in {city} | {site}`);
+    await page.getByLabel("Description", { exact: true }).fill("Browse {category} notices in {city} on {site}. Updated daily with clear photos and honest details.");
+    await page.getByRole("button", { name: /Save/ }).first().click();
+    await expect(page.getByText(/Saved\./)).toBeVisible();
+    await expectAudited("SEO center", "a category page title template saved", since, admin);
+    await page.getByRole("button", { name: "Delete this category template" }).click();
+    expect(errors, "no console errors").toEqual([]);
+  });
+});
+
+// ===== tests/e2e/e1c-red-roles.e2e.ts (kept out of the PR: these fail on main until the bug named in the title is fixed) =====
+import { test } from "./helpers";
+import { roleTests } from "./e1c-roles-core";
+
+test.describe("E1-C known red: E1-C1", () => {
+  roleTests(["blog_editor", "seo_editor"]);
+});
+

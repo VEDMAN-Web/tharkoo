@@ -1,4 +1,5 @@
 import { randomUUID } from "node:crypto";
+import { CHAT_AD_NOT_LIVE } from "@/lib/chat-text";
 import mongoose, { type Types } from "mongoose";
 import { connectDb } from "@/lib/db";
 import { touchOwnPresence } from "@/server/availability/service";
@@ -105,6 +106,15 @@ export async function startConversation(userId: string, listingId: string) {
   }
 }
 
+export { CHAT_AD_NOT_LIVE };
+
+/** An ad takes chat only while it is active and its end date has not passed. */
+async function adIsLive(listingId: Types.ObjectId | string, now = new Date()) {
+  const ad = await Listing.findById(listingId).select("status expiresAt").lean<{ status?: string; expiresAt?: Date } | null>();
+  if (!ad || ad.status !== "active") return false;
+  return !ad.expiresAt || ad.expiresAt.getTime() > now.getTime();
+}
+
 /** 30 messages per 10 minutes per user. Counted from stored messages, so it holds across server instances. */
 async function assertUnderRateLimit(userId: string, now: Date) {
   const since = new Date(now.getTime() - CHAT_RATE_WINDOW_MS);
@@ -121,6 +131,7 @@ export async function sendMessage(
   await connectDb();
   const conv = await participantConversation(userId, conversationId);
   if (conv.blocked) throw new ForbiddenError("You can no longer message in this conversation");
+  if (!(await adIsLive(conv.listingId, now))) throw new ForbiddenError(CHAT_AD_NOT_LIVE);
   const text = cleanChatText(input.text);
   if (!text && !input.image) throw new ValidationError("Write a message or add a photo");
   await assertUnderRateLimit(userId, now);
@@ -152,6 +163,7 @@ export async function listMessages(userId: string, conversationId: string, optio
       role: conv.sellerId.toString() === userId ? ("seller" as const) : ("buyer" as const),
       blocked: conv.blocked,
       reported: Boolean(conv.reportedAt),
+      adLive: await adIsLive(conv.listingId),
     },
     messages: rows.map((row) => viewOf(row, userId)),
   };

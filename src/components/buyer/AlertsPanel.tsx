@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { SectionHelp } from "@/components/help/SectionHelp";
 import { api, friendlyError } from "@/lib/ui/api";
@@ -32,6 +32,8 @@ export function AlertsPanel({
   const router = useRouter();
   const [note, setNote] = useState("");
   const [busy, setBusy] = useState(false);
+  // The form is kept by a ref: the event's own currentTarget is already gone when the server answers.
+  const formRef = useRef<HTMLFormElement>(null);
 
   async function remove(id: string) {
     setBusy(true);
@@ -57,7 +59,7 @@ export function AlertsPanel({
     setBusy(false);
     setNote(res.ok ? "Alert saved. We will email you when a new ad matches." : friendlyError(res.error));
     if (res.ok) {
-      event.currentTarget.reset();
+      formRef.current?.reset();
       router.refresh();
     }
   }
@@ -88,7 +90,7 @@ export function AlertsPanel({
 
       <section aria-labelledby="alerts-new" className={`up-panel up-panel-tight up-glass`}>
         <h2 id="alerts-new" className="up-h2">Save a new search</h2>
-        <form onSubmit={create} className="up-filters up-filters-stack" style={{ marginTop: 12 }}>
+        <form ref={formRef} onSubmit={create} className="up-filters up-filters-stack" style={{ marginTop: 12 }}>
           <label className="up-label">
             Words
             <input name="q" maxLength={120} placeholder="Any words" className="up-select" />
