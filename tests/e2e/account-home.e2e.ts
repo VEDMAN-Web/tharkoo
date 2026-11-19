@@ -54,10 +54,18 @@ test.describe("H7.73 one account home", () => {
     await expect(page.getByRole("navigation", { name: "My account" })).toBeVisible();
     // H9.2: an advertiser has no buyer headline; the home starts with Your ads.
     await expect(page.locator("h1")).toHaveText("Your ads");
-    await expect(page.locator('[data-tk="availability"]')).toBeVisible();
+    // H14.3 moved the Available now and Live chat switches to Settings; the home no longer carries them.
+    await expect(page.locator('[data-tk="availability"]')).toHaveCount(0);
+    await page.goto("/u/account/edit-account/", { waitUntil: "networkidle" });
+    await expect(page.locator('[data-tk="chat-availability"]')).toBeVisible();
+    await expect(page.getByRole("button", { name: /^Available now/ })).toBeVisible();
+    await expect(page.getByRole("button", { name: /^Live chat/ })).toBeVisible();
     await page.goto("/u/account/dashboard/");
     await expect(page.locator("h1")).toHaveText("Your ads");
-    await expect(page.getByRole("navigation", { name: "My account" }).getByRole("link", { name: /^Home/ })).toHaveAttribute("aria-current", "page");
+    // H14.3: for an advertiser the first item of the menu is called Dashboard (it still goes to /u/account/); it is the active one.
+    const homeLink = page.getByRole("navigation", { name: "My account" }).getByRole("link", { name: /^(Home|Dashboard)/ });
+    await expect(homeLink).toHaveAttribute("href", "/u/account/");
+    await expect(homeLink).toHaveAttribute("aria-current", "page");
     expect(await hasHorizontalScroll(page)).toBe(false);
   });
 
