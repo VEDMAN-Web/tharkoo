@@ -23,8 +23,8 @@ describe("H12.4 (d): the step 5 card title", () => {
 describe("H12.4 (e): How it works, what does it cost to post", () => {
   const money = { paidPostingOn: true, postingFeeCredits: 30, creditPriceInr: 10, freeAdsPerAccount: 3 };
 
-  it("says posting is free when paid posting is off", () => {
-    expect(costAnswer(t, { ...money, paidPostingOn: false })).toMatch(/^Posting an ad is free\./);
+  it("says the first 3 ads are free when paid posting is off (H17.9 one message)", () => {
+    expect(costAnswer(t, { ...money, paidPostingOn: false })).toMatch(/^Your first 3 ads are free\./);
   });
 
   it("says the first ads are free, then the fee in credits and rupees, read from the settings", () => {

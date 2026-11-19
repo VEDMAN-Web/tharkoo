@@ -1,3 +1,4 @@
+import { sampleNoteText } from "@/lib/seo/sample-note";
 import { notFound, permanentRedirect } from "next/navigation";
 import type { Metadata } from "next";
 import { resolveListingLayout } from "@/components/blocks/ListingLayout";
@@ -46,7 +47,7 @@ type Props = {
   searchParams: Promise<ListingParams>;
 };
 
-export const revalidate = 60;
+export const revalidate = 300;
 
 export async function generateMetadata({ params, searchParams }: Props): Promise<Metadata> {
   const { category, location, district } = await params;
@@ -78,10 +79,11 @@ export async function generateMetadata({ params, searchParams }: Props): Promise
     category: cat.name || category,
     city: city.name || location,
     district: dist.name || district,
-    count: feedForCopy.total,
+    count: feedForCopy.realTotal,
     site: site.name,
+    sampleNote: await sampleNoteText(),
   });
-  const counted = { ...vars, count: feedForCopy.total };
+  const counted = { ...vars, count: feedForCopy.realTotal };
   const title = fillTemplate(seo?.title || copy.title, counted);
   const rawDescription = fillTemplate(seo?.description || copy.description, counted);
   const description = rawDescription.length <= 160 ? rawDescription : `${rawDescription.slice(0, 157).replace(/\s+\S*$/, "")}`;
@@ -153,8 +155,9 @@ export default async function DistrictPage({ params, searchParams }: Props) {
     category: cat.name || category,
     city: city.name || location,
     district: dist.name || district,
-    count: feed.total,
+    count: feed.realTotal,
     site: site.name,
+    sampleNote: await sampleNoteText(),
     indexable: !thin,
     updated: feed.items[0]?.publishedAt
       ? new Date(feed.items[0].publishedAt).toLocaleDateString("en-IN", { day: "numeric", month: "long", year: "numeric" })
@@ -166,7 +169,7 @@ export default async function DistrictPage({ params, searchParams }: Props) {
     district: dist.name,
     districtPref: ` / ${dist.name}`,
     site: site.name,
-    count: feed.total,
+    count: feed.realTotal,
     year: new Date().getFullYear(),
   };
   const layout = await resolveListingLayout({ path: canonicalPath, category: cat.slug || category, vars });
@@ -256,6 +259,7 @@ export default async function DistrictPage({ params, searchParams }: Props) {
     <ListingPageView
       texts={texts}
       layout={layout}
+      pageName={h1}
       faqs={districtCopy.faqs}
       popular={tags.slice(0, 4).map((tag) => ({ href: tagPath(paths, cat.slug || category, tag.slug), label: `${dist.name} ${tag.label}` }))}
       h2={fillTemplate(seo?.h2 || "", vars)}

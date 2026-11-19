@@ -32,6 +32,8 @@
     "tests/e2e/h14-2b-panel-cards.e2e.ts",
     "tests/e2e/inbox-profile.e2e.ts",
     "tests/e2e/h7-131-chat-flows.e2e.ts",
-    "tests/e2e/post-step-5.e2e.ts"
+    "tests/e2e/post-step-5.e2e.ts",
+    "tests/e2e/h17-11-analytics.e2e.ts",
+    "tests/e2e/h17-2-moderation-now.e2e.ts"
   ]
 }

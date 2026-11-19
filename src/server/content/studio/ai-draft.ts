@@ -37,7 +37,7 @@ export type AiDraftInput = { topic: string; city?: string; category?: string; ke
 export type AiDraftDeps = { fetcher?: typeof fetch };
 
 export const SYSTEM_PROMPT = [
-  "You write a first draft of a helpful local guide for Tharkoo, a free classifieds website in India.",
+  "You write a first draft of a helpful local guide for Tharkoo, a classifieds website in India.",
   "Write in clear, friendly English for people in India, in the style of a useful local guide.",
   "Do not invent statistics, prices, addresses, phone numbers, opening hours, dates or names of real businesses or people. Wherever a real fact is needed, write [ADD FACT] and let a person fill it in.",
   "Do not use any adult or sexual wording, hints or topics, and nothing about paying for company or for meetings.",

@@ -1,5 +1,6 @@
 "use client";
 
+import { trackEvent } from "@/lib/analytics/ga";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { api, fieldErrors, friendlyError } from "@/lib/ui/api";
@@ -355,6 +356,7 @@ export function PostWizard({
     const created = existing
       ? await api(`/api/listings/${existing}`, { method: "PATCH", body: JSON.stringify({ stage: "basics", ...basics }) })
       : await api<{ id: string }>("/api/listings", { method: "POST", body: JSON.stringify(basics) });
+    if (created.ok && !existing) trackEvent("post_ad_start");
     if (!created.ok) {
       if (quiet) {
         setSaveState("idle");
@@ -517,6 +519,7 @@ export function PostWizard({
     }
     const outcome = (res.data ?? {}) as { status?: string; charged?: number; balance?: number };
     setPublishedStatus(String(outcome.status ?? "active"));
+    trackEvent("post_ad_published");
     window.dispatchEvent(new CustomEvent(CREDITS_ADDED_EVENT, { detail: { added: 0 } }));
     if (newDesign) {
       const charged = typeof outcome.charged === "number" ? outcome.charged : alreadyPaid ? 0 : money.fee;

@@ -3,9 +3,8 @@
 import { useLayoutEffect, useRef, useState, type MutableRefObject } from "react";
 import { createPortal } from "react-dom";
 import Link from "next/link";
-import { Check, Eye, Hand } from "lucide-react";
-import { recordAdClick, useShownCounts } from "@/components/ad/adCountStore";
-import { formatIndianCount } from "@/components/ad/counts-format";
+import { Check } from "lucide-react";
+import { recordAdClick } from "@/components/ad/adCountStore";
 import { SaveButton } from "@/components/ui/SaveButton";
 import { fillText } from "@/lib/ui/text";
 import { PopPhoto } from "./HomeAdPopout";
@@ -16,10 +15,6 @@ import type { ListingRowLabels } from "./ListingRow";
 const GROW_PX = 28;
 const EDGE_PX = 8;
 const MIN_WIDTH_PX = 720;
-
-function countText(count: number, one: string, many: string) {
-  return fillText(count === 1 ? one : many, { count: formatIndianCount(count) });
-}
 
 /**
  * H14.1b: the hover pop-out of a listing row, laid out sideways: the bigger photo on the left with its thumbnails and arrows,
@@ -55,7 +50,6 @@ export function ListingPopout({
 }) {
   const ref = useRef<HTMLDivElement>(null);
   const [top, setTop] = useState(anchor.top - GROW_PX);
-  const counts = useShownCounts(ad.slug);
   const width = Math.min(Math.max(anchor.width + GROW_PX * 2, MIN_WIDTH_PX), window.innerWidth - EDGE_PX * 2);
   const left = Math.min(Math.max(anchor.left - GROW_PX, EDGE_PX), window.innerWidth - width - EDGE_PX);
   const place = ad.area ? `${ad.city}, ${ad.area}` : ad.city;
@@ -115,16 +109,6 @@ export function ListingPopout({
         </p>
         <div className="tk-pop-foot">
           {ad.showPrice && ad.price ? <span className="tk-row-price">{ad.price}</span> : null}
-          <span className="tk-row-stats" data-ready={counts ? "true" : "false"}>
-            <span className="tk-row-stat">
-              <Eye size={15} aria-hidden />
-              {countText(counts?.views ?? 0, row.viewOne, row.views)}
-            </span>
-            <span className="tk-row-stat">
-              <Hand size={15} aria-hidden />
-              {countText(counts?.clicks ?? 0, row.clickOne, row.clicks)}
-            </span>
-          </span>
         </div>
         <div className="tkh-pop-acts tk-pop-acts">
           {chatOn ? <Link href={`${ad.href}${ad.href.includes("?") ? "&" : "?"}chat=1`} prefetch={false} className="tkh-pop-btn" data-tk="pop-chat">{labels.chat}</Link> : null}

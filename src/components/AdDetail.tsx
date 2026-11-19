@@ -128,7 +128,14 @@ export function AdDetail({
             <aside className="tk-ad-side">
               <div className="tk-contact-card" data-tk="contact-card">
                 <h2>Contact</h2>
-                <ContactButtons />
+                {ad.sample ? (
+                  <aside data-tk="sample-banner">
+                    <p>{makeT()("demo.message")}</p>
+                    <Link className="tk-btn" href="/u/post-insert/" prefetch={false}>{makeT()("demo.postButton")}</Link>
+                  </aside>
+                ) : (
+                  <ContactButtons />
+                )}
               </div>
             </aside>
             <div className="tk-ad-rest">
@@ -206,9 +213,11 @@ export function AdDetail({
             </div>
           </div>
         </div>
-        <div className="tk-bottom" data-tk="bottom-bar">
-          <ContactButtons sticky />
-        </div>
+        {ad.sample ? null : (
+          <div className="tk-bottom" data-tk="bottom-bar">
+            <ContactButtons sticky />
+          </div>
+        )}
       </div>
     </ContactProvider>
   );

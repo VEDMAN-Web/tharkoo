@@ -172,13 +172,21 @@ export interface OrganizationSettings {
 }
 
 /** Organization schema with the SEO-center fields on top of the built-in ones. */
-export function organizationFromSettings(defaultName: string, base: { logo?: string; sameAs?: string[] }, settings?: OrganizationSettings | null) {
+export function organizationFromSettings(
+  defaultName: string,
+  base: { logo?: string },
+  settings?: OrganizationSettings | null,
+  /** The support contact the site shows, used for the contact point when the settings have none. */
+  fallbackContact?: { email?: string; phone?: string },
+) {
+  // H17.5: the social links come only from the admin list (empty by default), never from the footer.
   const node = organizationNode(settings?.name?.trim() || defaultName, {
     logo: settings?.logo?.trim() || base.logo,
-    sameAs: settings?.sameAs?.length ? settings.sameAs : base.sameAs,
+    sameAs: settings?.sameAs,
   });
-  const email = settings?.email?.trim();
-  const phone = settings?.phone?.trim();
+  const fromSettings = Boolean(settings?.email?.trim() || settings?.phone?.trim());
+  const email = (fromSettings ? settings?.email : fallbackContact?.email)?.trim();
+  const phone = (fromSettings ? settings?.phone : fallbackContact?.phone)?.trim();
   return email || phone
     ? { ...node, contactPoint: { "@type": "ContactPoint", contactType: "customer support", ...(email ? { email } : {}), ...(phone ? { telephone: phone } : {}) } }
     : node;
@@ -192,13 +200,32 @@ export function contactPageNode(name: string, path = "/contact/") {
   return { "@context": "https://schema.org", "@type": "ContactPage", name, url: canonical(path) };
 }
 
+const DATE_ONLY = /^\d{4}-\d{2}-\d{2}$/;
+const MONTH_ONLY = /^[A-Za-z]+\.? \d{4}$/;
+const DATE_TIME = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}/;
+
+/** An ISO 8601 date for a stored date: a Date, a date already in ISO form, or a written date like "March 3, 2026". Nothing when it cannot be read. */
+export function isoDate(value?: string | Date | null): string | undefined {
+  if (!value) return undefined;
+  if (value instanceof Date) return Number.isNaN(value.getTime()) ? undefined : value.toISOString();
+  const text = value.trim();
+  if (!text) return undefined;
+  if (DATE_ONLY.test(text) || DATE_TIME.test(text)) return Number.isNaN(Date.parse(text)) ? undefined : text;
+  const parsed = new Date(text);
+  if (Number.isNaN(parsed.getTime())) return undefined;
+  const pad = (n: number) => String(n).padStart(2, "0");
+  const month = `${parsed.getFullYear()}-${pad(parsed.getMonth() + 1)}`;
+  // "November 2026" names a month, not a day: ISO 8601 allows the month alone.
+  return MONTH_ONLY.test(text) ? month : `${month}-${pad(parsed.getDate())}`;
+}
+
 export function blogPostingNode(input: { headline: string; datePublished?: string; dateModified?: string; author?: string; image?: string; url: string }) {
   return {
     "@context": "https://schema.org",
     "@type": "BlogPosting",
     headline: input.headline,
-    datePublished: input.datePublished || input.dateModified,
-    dateModified: input.dateModified || input.datePublished,
+    ...(input.datePublished || input.dateModified ? { datePublished: input.datePublished || input.dateModified } : {}),
+    ...(input.dateModified || input.datePublished ? { dateModified: input.dateModified || input.datePublished } : {}),
     author: { "@type": input.author && input.author !== "Tharkoo" ? "Person" : "Organization", name: input.author || "Tharkoo" },
     publisher: { "@type": "Organization", name: "Tharkoo", logo: canonical("/brand/logo-mark-512.png") },
     mainEntityOfPage: input.url,
@@ -207,11 +234,12 @@ export function blogPostingNode(input: { headline: string; datePublished?: strin
   };
 }
 
-export function itemListNode(input: { url: string; total: number; items: { url: string; name: string; position: number }[] }) {
+/** An ItemList whose count is the number of items written in it, so it never claims more than it lists. */
+export function itemListNode(input: { url: string; items: { url: string; name: string; position: number }[] }) {
   return {
     "@context": "https://schema.org",
     "@type": "ItemList",
-    numberOfItems: input.total,
+    numberOfItems: input.items.length,
     url: input.url,
     itemListElement: input.items.map((item) => ({
       "@type": "ListItem",
@@ -220,6 +248,44 @@ export function itemListNode(input: { url: string; total: number; items: { url: 
       name: item.name,
     })),
   };
+}
+
+/** A blog post as a BlogPosting: ISO dates, the cover (or the default image) and the author. A date that cannot be read is left out. */
+export function blogPostingFromPost(
+  post: { title: string; date?: string | null; updatedAt?: Date | string | null; author?: string | null; cover?: string | null },
+  url: string,
+  defaultImage: string,
+) {
+  const cover = (post.cover || "").trim();
+  const published = isoDate(post.date);
+  return blogPostingNode({
+    headline: post.title,
+    datePublished: published,
+    dateModified: isoDate(post.updatedAt) || published,
+    author: post.author || undefined,
+    image: /^https:\/\/[^\s"'<>]+$/.test(cover) ? cover : defaultImage,
+    url,
+  });
+}
+
+/** A WebPage node named by the page's title (never its path). */
+export function webPageNode(input: { name: string; path: string; siteName: string }) {
+  return {
+    "@context": "https://schema.org",
+    "@type": "WebPage",
+    name: input.name,
+    url: canonical(input.path),
+    isPartOf: { "@type": "WebSite", name: input.siteName, url: canonical("/") },
+  };
+}
+
+/** The JSON-LD of an ad page: a breadcrumb that ends with the ad, and the ad's own node unless it is a sample (demo) ad, which never claims an offer, product, job or rating. */
+export function adJsonLdNodes(input: { crumbs: Crumb[]; title: string; path: string; sample: boolean; listing: ListingSchemaInput }) {
+  const nodes: Record<string, unknown>[] = [breadcrumbList([...input.crumbs, { name: input.title, path: input.path }])];
+  if (input.sample) return nodes;
+  const own = listingJsonLd(input.listing);
+  if (own) nodes.push(own);
+  return nodes;
 }
 
 export function faqPage(items: { q: string; a: string }[]) {
