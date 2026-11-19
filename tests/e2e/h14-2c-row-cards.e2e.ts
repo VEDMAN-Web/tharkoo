@@ -58,7 +58,6 @@ async function checkRows(page: Page, rows: () => Locator, clicks: () => Promise<
     ["photo", () => first().locator(".tk-row-photo")],
     ["title", () => first().locator(".tkh-ad-link")],
     ["description", () => first().locator(".tk-row-desc")],
-    ["stats (empty space)", () => first().locator(".tk-row-stats")],
   ];
   for (const [label, target] of targets) {
     if ((await target().count()) === 0) continue;

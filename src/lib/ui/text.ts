@@ -168,6 +168,7 @@ export const TEXT_DEFAULTS = {
   "listing.panel.noFilters": "No filters for this category yet.",
   "listing.count": "{count} ads",
   "listing.updated": "Updated {date}",
+  "listing.sampleCount": "Sample ads shown until local ads are posted",
   "listing.empty.title": "No listings yet",
   "listing.empty.search": "Try another word, or post the first ad.",
   "listing.empty.nearby": "Try a nearby city, or be the first to post.",

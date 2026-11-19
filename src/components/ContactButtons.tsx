@@ -101,7 +101,8 @@ export function ContactProvider({
   const [tourRequested, setTourRequested] = useState(false);
   const [popup, setPopup] = useState<PopupKind | null>(null);
   const [signedIn, setSignedIn] = useState(false);
-  const seller = useSellerStatus(listingSlug);
+  // H17.1: a sample ad has nobody behind it, so there is no Online now or Away to show.
+  const seller = useSellerStatus(sample ? undefined : listingSlug);
   const people = peopleAd || seller?.people === true;
 
   function showSample() {
