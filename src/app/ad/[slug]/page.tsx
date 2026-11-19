@@ -78,8 +78,8 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const image = safePhoto(ad.photos?.[0]) || "/brand/og-default.png";
   const paths = await getPaths();
   const path = (await addressForSlug(ad.slug || slug)) || adPath(paths, ad.slug || slug);
-  // H16.5: a live ad that is set to be indexed, and every live sample (demo) ad, is indexable and in the ads sitemap.
-  return withUrlSeo(path, { title, description, path, image, index: access === "live" && (record?.seoNoindex === false || sample) }, adPath(paths, ad.slug || slug));
+  // H17.8: a sample (demo) ad page is always noindex,follow (it replaces the H16.5 rule that indexed it). A live real ad that is set to be indexed is indexable.
+  return withUrlSeo(path, { title, description, path, image, index: access === "live" && !sample && record?.seoNoindex === false }, adPath(paths, ad.slug || slug));
 }
 
 function listedPrice(attributes: unknown) {
