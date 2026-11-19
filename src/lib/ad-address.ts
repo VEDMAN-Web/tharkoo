@@ -50,3 +50,16 @@ export function parseAdRoute(x: string, districtSlugs: ReadonlySet<string>): AdR
   const parts = splitAdSegment(x);
   return parts ? { kind: "ad", ...parts } : { kind: "other" };
 }
+
+/** True for /<category>/<city>/<title>-<code>/, the shape of an ad address. Used by page chrome that treats ad pages alike. */
+export function isAdAddressPath(path: string): boolean {
+  const parts = path.split("?")[0].split("/").filter(Boolean);
+  return parts.length === 3 && splitAdSegment(parts[2]) !== null;
+}
+
+/** The ad code at the end of an address or link (a full URL, a path or just the last part), or "" when there is none. */
+export function adCodeOf(text: string): string {
+  const clean = String(text ?? "").trim().split(/[?#]/)[0];
+  const last = clean.split("/").filter(Boolean).pop() ?? "";
+  return splitAdSegment(last)?.code ?? "";
+}

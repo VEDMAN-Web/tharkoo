@@ -18,6 +18,19 @@
     "src/lib/seo/sitemaps.ts",
     "tests/server/listings/h16-2-sitemap.test.ts",
     "tests/server/listings/h16-5-showcase-demo.test.ts",
-    "tests/server/urls/urls.test.ts"
+    "tests/server/urls/urls.test.ts",
+    "src/components/PathChrome.tsx",
+    "src/components/chat/SupportChat.tsx",
+    "tests/e2e/helpers.ts",
+    "tests/e2e/a15-review.e2e.ts",
+    "tests/e2e/a18-decisions.e2e.ts",
+    "tests/e2e/a21-reports.e2e.ts",
+    "tests/e2e/h14-3-seller-dashboard.e2e.ts",
+    "tests/e2e/h16-6-dashboard-align.e2e.ts",
+    "tests/e2e/h16-5-showcase-demo.e2e.ts",
+    "tests/e2e/contact-card.e2e.ts",
+    "tests/e2e/h14-2b-panel-cards.e2e.ts",
+    "tests/e2e/inbox-profile.e2e.ts",
+    "tests/e2e/h7-131-chat-flows.e2e.ts"
   ]
 }

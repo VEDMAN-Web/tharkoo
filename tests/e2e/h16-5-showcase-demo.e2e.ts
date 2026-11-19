@@ -1,5 +1,5 @@
 import { ObjectId } from "mongodb";
-import { expect, hasHorizontalScroll, test, withLocalDb } from "./helpers";
+import { expect, hasHorizontalScroll, test, withLocalDb, withoutAddress } from "./helpers";
 
 /**
  * H16.5: sample (demo) ads are labelled, their Chat and contact buttons show the sample message instead of contacting anyone,
@@ -52,7 +52,7 @@ test.describe("H16.5 sample ads", () => {
       await db.collection("users").insertOne({ _id: owner, email: `${slug}@example.test`, displayName: "H165 Seller", status: "active", roles: ["user"], createdAt: new Date() });
       const { _id: _unused, ...rest } = source!;
       void _unused;
-      await db.collection("listings").insertOne({ ...rest, _id: new ObjectId(), ownerId: owner, slug, title: `H165 real ad ${slug}`, seoNoindex: false });
+      await db.collection("listings").insertOne({ ...withoutAddress(rest), _id: new ObjectId(), ownerId: owner, slug, title: `H165 real ad ${slug}`, seoNoindex: false });
     });
     await expect.poll(async () => (await page.goto(`/ad/${slug}/`))?.status(), { timeout: 60_000, intervals: [2_000] }).toBe(200);
     await expect(page.locator(SAMPLE_PILL)).toHaveCount(0);

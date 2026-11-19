@@ -1,6 +1,6 @@
 import { mkdirSync } from "node:fs";
 import { ObjectId } from "mongodb";
-import { expect, hasHorizontalScroll, loginUi, newApi, registerApi, setRoles, test, uniqueEmail, withLocalDb } from "./helpers";
+import { expect, hasHorizontalScroll, loginUi, newApi, registerApi, setRoles, test, uniqueEmail, withLocalDb, withoutAddress } from "./helpers";
 
 const SHOTS = process.env.A18_SHOTS_DIR || "";
 const DAY_MS = 24 * 60 * 60 * 1000;
@@ -19,7 +19,7 @@ async function seed() {
       void _id;
       void lastModerationAt;
       const now = new Date(Date.now() - (2 - index) * 60_000);
-      const row = await db.collection("listings").insertOne({ ...rest, ownerId: owner, title, status: title === "Held paid ad" ? "pending" : "active", slug: `a18-${index}-${Date.now()}`, publishedAt: now, createdAt: now, updatedAt: now });
+      const row = await db.collection("listings").insertOne({ ...withoutAddress(rest), ownerId: owner, title, status: title === "Held paid ad" ? "pending" : "active", slug: `a18-${index}-${Date.now()}`, publishedAt: now, createdAt: now, updatedAt: now });
       ids[title] = row.insertedId;
     }
     const entry = (delta: number, refType: string, refId: string, balanceAfter: number) => ({

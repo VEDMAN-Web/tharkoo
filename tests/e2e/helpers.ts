@@ -333,3 +333,22 @@ export function uploadsDir() {
 export function slugFromAdPath(path: string) {
   return path.replace(/^\/ad\//, "").replace(/\/$/, "");
 }
+
+/** H16.2: matches the address an ad has now, for toHaveURL. The ad is found by its old slug. */
+export async function adAddressPattern(slug: string) {
+  const row = await withLocalDb((db) => db.collection("listings").findOne({ slug }, { projection: { code: 1 } }));
+  if (!row?.code) throw new Error(`No code for local ad ${slug}`);
+  return new RegExp(`-${row.code}/$`);
+}
+
+/**
+ * H16.2: every ad has its own unique code and address. A spec that makes a new ad by copying a seeded one must not copy those
+ * fields, or the copy would clash with the original. Use this on the copy.
+ */
+export function withoutAddress<T extends Record<string, unknown>>(listing: T): Omit<T, "code" | "addressPath" | "previousPaths"> {
+  const { code, addressPath, previousPaths, ...rest } = listing;
+  void code;
+  void addressPath;
+  void previousPaths;
+  return rest;
+}

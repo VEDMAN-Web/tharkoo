@@ -2,6 +2,7 @@
 
 import { Suspense } from "react";
 import { useSitePath } from "@/components/useSitePath";
+import { isAdAddressPath } from "@/lib/ad-address";
 import { JsonLd } from "@/lib/jsonld";
 import { canonical } from "@/lib/seo";
 import { safeHref } from "@/lib/sanitize";
@@ -81,7 +82,7 @@ export function PathChrome({ shell, paths, children }: { shell: ChromeData; path
     <UiTextProvider texts={texts}>
     <CityProvider cities={cities}>
     <AccountProvider>
-      {path.startsWith(`/${paths.ad.replace(/^\/|\/$/g, "")}/`) ? null : (
+      {path.startsWith(`/${paths.ad.replace(/^\/|\/$/g, "")}/`) || isAdAddressPath(path) ? null : (
         <JsonLd
           data={{
             "@context": "https://schema.org",

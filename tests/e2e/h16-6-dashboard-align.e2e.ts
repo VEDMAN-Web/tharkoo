@@ -1,7 +1,7 @@
 import { mkdirSync } from "node:fs";
 import type { Page } from "@playwright/test";
 import { ObjectId } from "mongodb";
-import { expect, hasHorizontalScroll, test, withLocalDb } from "./helpers";
+import { expect, hasHorizontalScroll, test, withLocalDb, withoutAddress } from "./helpers";
 import { createLiveAd } from "./flows";
 
 /**
@@ -176,7 +176,7 @@ test.describe("H16.6 seller dashboard alignment", () => {
       void _id;
       for (const label of ["two", "three"]) {
         const now = new Date(Date.now() + 1000);
-        await db.collection("listings").insertOne({ ...rest, title: `E2E align ${label} ${Date.now()}`, slug: `e2e-align-${label}-${Date.now()}`, createdAt: now, updatedAt: now });
+        await db.collection("listings").insertOne({ ...withoutAddress(rest), title: `E2E align ${label} ${Date.now()}`, slug: `e2e-align-${label}-${Date.now()}`, createdAt: now, updatedAt: now });
       }
       return db.collection("listings").find({ ownerId: row!.ownerId, status: "active" }).sort({ createdAt: 1 }).toArray();
     });

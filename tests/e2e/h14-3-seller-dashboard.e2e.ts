@@ -1,7 +1,7 @@
 import { mkdirSync } from "node:fs";
 import type { Page } from "@playwright/test";
 import { ObjectId } from "mongodb";
-import { expect, hasHorizontalScroll, loginUi, newApi, registerApi, test, uniqueEmail, USER_PASSWORD, withLocalDb } from "./helpers";
+import { expect, hasHorizontalScroll, loginUi, newApi, registerApi, test, uniqueEmail, USER_PASSWORD, withLocalDb, withoutAddress } from "./helpers";
 import { createLiveAd } from "./flows";
 
 const DAY = 86_400_000;
@@ -95,7 +95,7 @@ test.describe("H14.3 seller dashboard", () => {
       void _id;
       for (const label of ["two", "three"]) {
         const now = new Date(Date.now() + 1000);
-        await db.collection("listings").insertOne({ ...rest, title: `E2E dash ${label} ${Date.now()}`, slug: `e2e-dash-${label}-${Date.now()}`, createdAt: now, updatedAt: now });
+        await db.collection("listings").insertOne({ ...withoutAddress(rest), title: `E2E dash ${label} ${Date.now()}`, slug: `e2e-dash-${label}-${Date.now()}`, createdAt: now, updatedAt: now });
       }
       return db.collection("listings").find({ ownerId: row!.ownerId, status: "active" }).sort({ createdAt: 1 }).toArray();
     });

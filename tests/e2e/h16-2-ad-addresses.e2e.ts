@@ -65,15 +65,16 @@ test.describe("H16.2 new ad addresses", () => {
   });
 
   test("areas of a city still open as before", async ({ page }) => {
-    await page.goto("/dating/bengaluru/");
-    const area = page.locator('a[href^="/dating/bengaluru/"]').filter({ hasNot: page.locator("[data-tk=card]") });
-    const hrefs = await area.evaluateAll((links) =>
-      [...new Set(links.map((link) => link.getAttribute("href") || ""))].filter((href) => /^\/dating\/bengaluru\/[a-z0-9-]+\/$/.test(href)),
-    );
-    expect(hrefs.length).toBeGreaterThan(0);
-    for (const href of hrefs.slice(0, 3)) {
-      const res = await page.request.get(href, { maxRedirects: 0 });
-      expect([200, 308], href).toContain(res.status());
+    const slugs = await withLocalDb(async (db) => {
+      const city = await db.collection("locations").findOne({ type: "city", slug: "bengaluru" }, { projection: { _id: 1 } });
+      if (!city) return [];
+      const rows = await db.collection("locations").find({ type: "district", parentId: city._id, enabled: { $ne: false } }, { projection: { slug: 1 } }).limit(3).toArray();
+      return rows.map((row) => String(row.slug));
+    });
+    expect((slugs ?? []).length).toBeGreaterThan(0);
+    for (const slug of slugs ?? []) {
+      const res = await page.request.get(`/dating/bengaluru/${slug}/`, { maxRedirects: 0 });
+      expect([200, 308], slug).toContain(res.status());
     }
   });
 

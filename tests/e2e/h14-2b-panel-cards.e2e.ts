@@ -1,6 +1,6 @@
 import { mkdirSync } from "node:fs";
 import type { APIRequestContext, Locator, Page } from "@playwright/test";
-import { expect, hasHorizontalScroll, loginUi, newUserApi, originHeaders, test, withLocalDb } from "./helpers";
+import { adAddressPattern, expect, hasHorizontalScroll, loginUi, newUserApi, originHeaders, test, withLocalDb } from "./helpers";
 
 /** H14.2 part 2: the whole ad card is the link in the user panel (My ads, Saved ads, Analytics rows). */
 
@@ -68,7 +68,7 @@ test.describe("H14.2 the whole ad card is the link, in the panel", () => {
 
     const open = async (where: () => Promise<void>) => {
       await where();
-      await expect(page).toHaveURL(new RegExp(`/ad/${slug}/$`));
+      await expect(page).toHaveURL(await adAddressPattern(slug));
       await page.goBack();
       await expect(card).toBeVisible();
     };
@@ -113,7 +113,7 @@ test.describe("H14.2 the whole ad card is the link, in the panel", () => {
     expect(ring.width).toBeGreaterThanOrEqual(2);
     await shot(page, "my-ads-focus");
     await page.keyboard.press("Enter");
-    await expect(page).toHaveURL(new RegExp(`/ad/${slug}/$`));
+    await expect(page).toHaveURL(await adAddressPattern(slug));
     await owner.api.dispose();
   });
 
@@ -130,11 +130,11 @@ test.describe("H14.2 the whole ad card is the link, in the panel", () => {
     // Any cell of the row: the Views number, far from the title.
     const last = (await row.locator("td").last().boundingBox())!;
     await page.mouse.click(last.x + last.width / 2, last.y + last.height / 2);
-    await expect(page).toHaveURL(new RegExp(`/ad/${slug}/$`));
+    await expect(page).toHaveURL(await adAddressPattern(slug));
     await page.goBack();
     await row.getByRole("link").focus();
     await page.keyboard.press("Enter");
-    await expect(page).toHaveURL(new RegExp(`/ad/${slug}/$`));
+    await expect(page).toHaveURL(await adAddressPattern(slug));
     await owner.api.dispose();
   });
 

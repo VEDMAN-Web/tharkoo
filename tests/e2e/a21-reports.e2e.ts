@@ -1,6 +1,6 @@
 import { mkdirSync } from "node:fs";
 import { ObjectId } from "mongodb";
-import { expect, hasHorizontalScroll, loginUi, newApi, registerApi, setRoles, test, uniqueEmail, withLocalDb } from "./helpers";
+import { expect, hasHorizontalScroll, loginUi, newApi, registerApi, setRoles, test, uniqueEmail, withLocalDb, withoutAddress } from "./helpers";
 
 const SHOTS = process.env.A21_SHOTS_DIR || "";
 const FEE = 30;
@@ -17,7 +17,7 @@ async function seed() {
       void _id;
       void lastModerationAt;
       const now = new Date(Date.now() - (index + 1) * HOUR_MS);
-      return (await db.collection("listings").insertOne({ ...rest, ownerId: owner, title, status: "active", slug: `a21-${index}-${Date.now()}`, publishedAt: now, createdAt: now, updatedAt: now })).insertedId;
+      return (await db.collection("listings").insertOne({ ...withoutAddress(rest), ownerId: owner, title, status: "active", slug: `a21-${index}-${Date.now()}`, publishedAt: now, createdAt: now, updatedAt: now })).insertedId;
     };
     const fake = await make("Fake photos ad", 0);
     const wrong = await make("Wrong price ad", 1);
