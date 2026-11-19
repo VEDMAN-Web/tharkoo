@@ -125,6 +125,7 @@ export async function paidAdIds(): Promise<Types.ObjectId[]> {
 
 /** Ads in a people category that have a video of any state (an upload that is not cleared yet counts). */
 export async function peopleVideoAdIds(): Promise<Types.ObjectId[]> {
+  await connectDb();
   const [withVideo, categories] = await Promise.all([
     MediaAsset.distinct("listingId", { kind: "video", listingId: { $exists: true, $ne: null } }),
     Category.find().select("_id kind slug fields").lean<{ _id: Types.ObjectId; kind?: string; slug?: string; fields?: unknown }[]>(),
