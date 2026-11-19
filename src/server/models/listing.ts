@@ -216,11 +216,18 @@ listingSchema.index({ title: "text", description: "text" });
 const MAX_PREVIOUS_PATHS = 10;
 const CODE_TRIES = 20;
 
-/** H16.2: a code no other ad uses. The unique index is the final guard against two saves racing. */
+/** Codes handed out by this process that may not be saved yet (a big insertMany makes many at once). */
+const handedOut = new Set<string>();
+const HANDED_OUT_MAX = 100_000;
+
+/** H16.2: a code no other ad uses. The unique index is the final guard against two processes racing. */
 export async function freeAdCode(): Promise<string> {
   for (let i = 0; i < CODE_TRIES; i += 1) {
     const code = generateAdCode();
-    if (!(await Listing.exists({ code }))) return code;
+    if (handedOut.has(code) || (await Listing.exists({ code }))) continue;
+    if (handedOut.size >= HANDED_OUT_MAX) handedOut.clear();
+    handedOut.add(code);
+    return code;
   }
   throw new Error("Could not make a free ad code");
 }

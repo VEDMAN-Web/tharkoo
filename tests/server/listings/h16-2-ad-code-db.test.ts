@@ -53,8 +53,8 @@ describe("H16.2 the code is saved once per ad", () => {
 
   it("gives every ad its own code", async () => {
     const w = await world();
-    const ads = await Listing.insertMany(Array.from({ length: 40 }, (_, i) => base(w, { slug: `ad-${i}`, title: `Ad ${i}` })));
-    expect(new Set(ads.map((ad) => ad.code)).size).toBe(40);
+    const ads = await Listing.insertMany(Array.from({ length: 400 }, (_, i) => base(w, { slug: `ad-${i}`, title: `Ad ${i}` })));
+    expect(new Set(ads.map((ad) => ad.code)).size).toBe(400);
   });
 
   it("finds an ad by its code and nothing else", async () => {
