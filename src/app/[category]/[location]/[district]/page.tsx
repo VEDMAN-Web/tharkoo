@@ -25,17 +25,19 @@ import {
   getSite,
   getStarListings,
   getStates,
+  listingCountsByCategoryCity,
   pageOutOfRange,
 } from "@/lib/queries";
 import { prettyPlace } from "@/lib/format";
 import { canonical, fillTemplate } from "@/lib/seo";
 import { isCityAlias } from "@/lib/seo/district-alias";
 import { districtMinimum, getIndexing, isHubOn } from "@/server/seo/indexing";
-import { placePath, postAdPath, tagPath } from "@/lib/urls";
+import { placePath, postAdPath } from "@/lib/urls";
 import { activeFilterKeys, listingCanonicalSuffix, type ListingParams } from "@/server/search/filter-seo";
 import { withUrlSeo, urlHeading } from "@/lib/seo/override";
 import { fallbackLanding, visibleHeading } from "@/lib/seo/landing";
-import { getPaths, publicTags } from "@/server/urls/service";
+import { getPaths } from "@/server/urls/service";
+import { popularSearches } from "@/lib/seo/local-links";
 import { withPagination } from "@/lib/seo/pagination";
 import { SubHub, subHubMetadata } from "./sub-hub";
 
@@ -121,14 +123,14 @@ export default async function DistrictPage({ params, searchParams }: Props) {
   const canonicalPath = placePath(cat.slug || category, city.slug || location, dist.slug || district);
   const { picks, toggles, filter: narrow } = narrowFromParams(sp, cat.fields);
   const filter: Record<string, unknown> = { categorySlug: category, citySlug: location, districtSlug: district, ...narrow };
-  const [seo, site, stars, feed, districts, paths, tags, heading, shell, hero, categories, states, cities, cardWidth] = await Promise.all([
+  const [seo, site, stars, feed, districts, paths, counts, heading, shell, hero, categories, states, cities, cardWidth] = await Promise.all([
     getSeoFor("district", category, "location"),
     getSite(),
     getStarListings(filter),
     getFeed(filter, page),
     getDistricts(city.slug || location),
     getPaths(),
-    publicTags(),
+    listingCountsByCategoryCity().catch(() => []),
     urlHeading(canonicalPath, ""),
     readShellConfig(),
     getHomepageContent().then(heroBandFrom),
@@ -247,7 +249,7 @@ export default async function DistrictPage({ params, searchParams }: Props) {
       texts={texts}
       layout={layout}
       faqs={districtCopy.faqs}
-      popular={tags.slice(0, 4).map((tag) => ({ href: tagPath(paths, cat.slug || category, tag.slug), label: `${dist.name} ${tag.label}` }))}
+      popular={popularSearches(counts, new Map(categories.map((row) => [row.slug || "", row.name || ""])), new Map(cities.map((row) => [row.slug || "", row.name || ""])), { excludePage: { categorySlug: cat.slug || category, citySlug: city.slug || location }, max: 4 }).map((link) => ({ href: placePath(link.categorySlug, link.citySlug), label: t("listing.link.in", { name: link.categoryName, place: link.cityName }) }))}
       h2={fillTemplate(seo?.h2 || "", vars)}
       intro={districtCopy.intro || fillTemplate(seo?.intro || "", vars)}
       crumbs={crumbs}
