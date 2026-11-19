@@ -43,8 +43,8 @@ export async function revalidateListingsById(ids: readonly string[]) {
   try {
     await connectDb();
     const rows = await Listing.find({ _id: { $in: ids.slice(0, MAX_REVALIDATE) } })
-      .select("slug cityId districtId categoryId")
-      .lean<{ slug?: string; cityId?: unknown; districtId?: unknown; categoryId?: unknown }[]>();
+      .select("slug title code cityId districtId categoryId")
+      .lean<{ slug?: string; title?: string; code?: string; cityId?: unknown; districtId?: unknown; categoryId?: unknown }[]>();
     const categories = await Category.find({ _id: { $in: rows.map((row) => row.categoryId) as never[] } })
       .select("slug")
       .lean<{ _id: unknown; slug?: string }[]>();
