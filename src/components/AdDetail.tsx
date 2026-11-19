@@ -180,7 +180,7 @@ export function AdDetail({
               <a className="tk-share-btn" href={`https://wa.me/?text=${encodeURIComponent(shareUrl)}`} target="_blank" rel="noopener noreferrer" aria-label="Share on WhatsApp"><MessageCircle size={18} /></a>
               <CopyLinkButton />
             </div>
-            <Link className="tk-report" href={`/submit-report/?ad=${ad.publicId || ad.slug || ""}`}><Flag size={14} /> Report</Link>
+            <Link className="tk-report" href={`/submit-report/?ad=${encodeURIComponent(ad.slug || ad.publicId || "")}`}><Flag size={14} /> Report</Link>
           </div>
           <p className="tk-all">
             All ads in <Link href={listHref}><strong>{categoryName} in {city}</strong></Link> ›

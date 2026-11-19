@@ -1,0 +1,10 @@
+{
+  "branchPrefix": "haiku/h15.2",
+  "globs": [
+    "docs/ownership/H15.2.json",
+    "progress/H15.2.md",
+    "src/components/new/AdActions.tsx",
+    "src/components/AdDetail.tsx",
+    "tests/e2e/h15-2-report-ad.e2e.ts"
+  ]
+}
