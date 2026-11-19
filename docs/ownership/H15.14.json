@@ -1,0 +1,14 @@
+{
+  "branchPrefix": "haiku/h15.14",
+  "globs": [
+    "docs/ownership/H15.14.json",
+    "progress/H15.14.md",
+    "src/server/admin/write.ts",
+    "src/server/locations/manage.ts",
+    "src/server/categories/manage.ts",
+    "src/app/admin/seo/staff.ts",
+    "tests/server/admin/h15-14-audit-role-summary.test.ts",
+    "tests/e2e/e1c-audit.e2e.ts",
+    "progress/E1-C-known-bugs.e2e.ts.txt"
+  ]
+}

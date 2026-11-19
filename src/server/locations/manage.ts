@@ -1,18 +1,16 @@
-import { randomUUID } from "node:crypto";
 import { Types } from "mongoose";
 import { refreshPublicCache } from "@/lib/cache";
 import { connectDb } from "@/lib/db";
 import { canEditSite } from "@/lib/ui/site-content";
 import { validateSlug } from "@/lib/urls";
-import { AuditRepository } from "@/server/audit";
 import { ForbiddenError, NotFoundError, ValidationError } from "@/server/http";
 import type { AdminCtx } from "@/server/admin/context";
+import { changeSentence, recordAdminChange } from "@/server/admin/write";
 import { picturesOf, setCatalogPictures, type PictureInput, type PicturesView } from "@/server/layout/catalog-pictures";
-import { Listing, Location, User, type LocationLevel } from "@/server/models";
+import { Listing, Location, type LocationLevel } from "@/server/models";
 import { textDenied } from "@/server/shared/policy";
 import { renameLocation } from "@/server/urls/service";
 
-const audit = new AuditRepository();
 const MANAGED: LocationLevel[] = ["country", "state", "city"];
 const PARENT_OF: Record<string, LocationLevel | null> = { country: null, state: "country", city: "state" };
 const MAX_NAME = 80;
@@ -56,17 +54,14 @@ function cleanOrder(value: unknown) {
   return Math.trunc(order);
 }
 
-async function record(actor: Actor, action: string, id: string, before: unknown, after: unknown) {
-  const user = actor.email ? await User.findOne({ email: actor.email }).select("_id") : null;
-  await audit.append({
-    actorId: user?._id?.toString() ?? null,
-    actorType: "admin",
+async function record(actor: Actor, action: string, id: string, before: unknown, after: unknown, place: { type?: string; name?: string }) {
+  const verb = action.endsWith(".create") ? "Added" : action.endsWith(".delete") ? "Removed" : "Changed";
+  await recordAdminChange(actor, {
     action,
-    targetType: "location",
-    targetId: id,
-    before: before as Record<string, unknown>,
-    after: after as Record<string, unknown>,
-    requestId: randomUUID(),
+    target: { type: "location", id, label: place.name },
+    before: before as Record<string, unknown> | null,
+    after: after as Record<string, unknown> | null,
+    summary: changeSentence(verb, place.type ?? "place", place.name, before, after),
   });
 }
 
@@ -99,7 +94,7 @@ export async function createPlace(actor: Actor, input: PlaceInput) {
     enabled: input.enabled !== false,
     countryCode: type === "country" ? code : undefined,
   });
-  await record(actor, "location.create", String(doc._id), null, { type, slug: parsed.slug, name });
+  await record(actor, "location.create", String(doc._id), null, { type, slug: parsed.slug, name }, { type, name });
   await refreshPublicCache();
   return { id: String(doc._id) };
 }
@@ -125,7 +120,7 @@ export async function updatePlace(actor: Actor, id: string, input: PlaceInput) {
     order: after?.order,
     enabled: after?.enabled,
     countryCode: after?.countryCode,
-  });
+  }, { type: doc.type, name: after?.name ?? doc.name });
   await refreshPublicCache();
   return { ok: true as const };
 }
@@ -145,7 +140,7 @@ export async function deletePlace(actor: Actor, id: string) {
     throw new ValidationError("This place has ads. Hide it instead of removing it.");
   }
   await Location.deleteOne({ _id: doc._id });
-  await record(actor, "location.delete", id, { type: doc.type, slug: doc.slug, name: doc.name }, null);
+  await record(actor, "location.delete", id, { type: doc.type, slug: doc.slug, name: doc.name }, null, { type: doc.type, name: doc.name });
   await refreshPublicCache();
   return { ok: true as const };
 }

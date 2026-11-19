@@ -1,23 +1,20 @@
-import { randomUUID } from "node:crypto";
 import { Types } from "mongoose";
 import { refreshPublicCache } from "@/lib/cache";
 import { isCategoryIconKey } from "@/lib/category-icons";
 import { connectDb } from "@/lib/db";
 import { canEditSite } from "@/lib/ui/site-content";
 import { validateSlug } from "@/lib/urls";
-import { AuditRepository } from "@/server/audit";
 import { ForbiddenError, NotFoundError, ValidationError } from "@/server/http";
 import { isPeopleListing, PEOPLE_KEY, requireKind } from "@/server/categories/kinds";
-import { adminWrite } from "@/server/admin/write";
+import { adminWrite, changeSentence, recordAdminChange } from "@/server/admin/write";
 import type { AdminCtx } from "@/server/admin/context";
 import { picturesOf, setCatalogPictures, type PictureInput, type PicturesView } from "@/server/layout/catalog-pictures";
-import { Category, Listing, User } from "@/server/models";
+import { Category, Listing } from "@/server/models";
 import type { CategoryKind } from "@/server/models/catalog";
 import { Subcategory } from "@/server/models/subcategory";
 import { textDenied } from "@/server/shared/policy";
 import { renameCategory } from "@/server/urls/service";
 
-const audit = new AuditRepository();
 const MAX_NAME = 80;
 const MAX_INTRO = 600;
 const MAX_HOME_LINE = 160;
@@ -89,16 +86,15 @@ function objectId(id: string, what: string) {
 }
 
 async function record(actor: Actor, action: string, targetType: string, id: string, before: unknown, after: unknown) {
-  const user = actor.email ? await User.findOne({ email: actor.email }).select("_id") : null;
-  await audit.append({
-    actorId: user?._id?.toString() ?? null,
-    actorType: "admin",
+  const named = (value: unknown) => (value && typeof value === "object" ? ((value as { name?: unknown }).name as string | undefined) : undefined);
+  const name = named(after) ?? named(before);
+  const verb = action.endsWith(".create") ? "Added" : action.endsWith(".delete") ? "Removed" : action.endsWith(".reorder") ? "Reordered" : "Changed";
+  await recordAdminChange(actor, {
     action,
-    targetType,
-    targetId: id,
-    before: before as Record<string, unknown>,
-    after: after as Record<string, unknown>,
-    requestId: randomUUID(),
+    target: { type: targetType, id, label: name },
+    before: before as Record<string, unknown> | null,
+    after: after as Record<string, unknown> | null,
+    summary: verb === "Reordered" ? `Reordered the ${targetType} list` : changeSentence(verb, targetType, name, before, after),
   });
 }
 
