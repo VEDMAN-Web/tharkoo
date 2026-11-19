@@ -197,7 +197,7 @@ test.describe("H11.1b clear prices", () => {
       await expect(page.locator('[data-tk="pack-ads"]').first()).not.toContainText("Super Top");
       await withLocalDb((db) => db.collection("sites").updateOne({ key: "default" }, { $set: { paidPostingOn: false } }));
       await page.goto("/u/account/credits/");
-      await expect(page.locator('[data-tk="price-row-all"]')).toContainText("Posting an ad is free for now.");
+      await expect(page.locator('[data-tk="price-row-all"]')).toContainText("Your first 3 ads are free.");
       await expect(page.locator('[data-tk="price-row-ad"]')).toHaveCount(0);
     } finally {
       await restore();

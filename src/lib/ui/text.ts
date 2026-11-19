@@ -5,6 +5,9 @@
  */
 import { SUPPORT_PHONE } from "@/lib/support";
 
+/** H17.9: the one message about the price of posting. Every default that talks about it uses this text; the admin can change each key on Site text. */
+export const FIRST_ADS_FREE = "Your first 3 ads are free.";
+
 export const TEXT_DEFAULTS = {
   // Home
   "home.card.alt": "{title} classifieds",
@@ -16,7 +19,7 @@ export const TEXT_DEFAULTS = {
   "home.utility.ticker2": "Fresh ads, live for 48 hours",
   "home.utility.ticker3": "Post your ad in 2 minutes",
   "home.utility.phone": SUPPORT_PHONE,
-  "home.banner.sub": "Free ads across India. Chat with advertisers online and verify on a video call.",
+  "home.banner.sub": `${FIRST_ADS_FREE} Chat with advertisers online and verify on a video call.`,
   "home.search.keyword": "What are you looking for?",
   "home.search.state": "State",
   "home.search.allStates": "All states",
@@ -244,7 +247,7 @@ export const TEXT_DEFAULTS = {
   "ad.chat": "Chat online now",
   // H16.5: sample (demo) ads
   "demo.pill": "Sample ad",
-  "demo.message": "This is a sample ad showing how ads look on Tharkoo. Post yours free",
+  "demo.message": `This is a sample ad showing how ads look on Tharkoo. ${FIRST_ADS_FREE}`,
   "demo.postButton": "Post an ad",
   "ad.safe.title": "Stay safe",
   "ad.safe.body": "Never pay a deposit before you have seen the place. Use the video call to check first.",
@@ -312,9 +315,9 @@ export const TEXT_DEFAULTS = {
   "price.top": "Your ad shows near the top of the list for {hours}.",
   "price.superTop": "The very first spot on the list for {hours}.",
   "price.allFree": "Every ad",
-  "price.allFreeText": "Posting an ad is free for now.",
+  "price.allFreeText": FIRST_ADS_FREE,
   // H12.3: the line on My ads when there are no ads yet; it follows the live posting rule.
-  "myads.cost.free": "Posting an ad is free.",
+  "myads.cost.free": FIRST_ADS_FREE,
   "myads.cost.freeLeftOne": "You have {count} free ad left.",
   "myads.cost.freeLeft": "You have {count} free ads left.",
   "myads.cost.paid": "Each ad costs {rupees} ({credits}) to post.",
@@ -552,7 +555,7 @@ export const TEXT_DEFAULTS = {
   "scam.reportAd": "Saw something wrong? Open the ad and press Report this ad. Pick a reason and send. Our team reads every report.",
   "scam.contact": "Need help right now? Contact support and include the link to the ad.",
   // H12.4: the How it works answer to "What does it cost to post?" follows the live posting rule.
-  "howitworks.cost.free": "Posting an ad is free. Chatting and calling the advertiser are free. Video calls and boosts use credits.",
+  "howitworks.cost.free": `${FIRST_ADS_FREE} Chatting and calling the advertiser are free. Video calls and boosts use credits.`,
   "howitworks.cost.freeThenFee": "Your first {free} ads are free. After that each ad costs {credits} ({rupees}), shown before you publish. Video calls and boosts use credits.",
   "howitworks.cost.fee": "Each ad costs {credits} ({rupees}), shown before you publish. Chatting and calling are free. Video calls and boosts use credits.",
   "post.pay.fee": "Ad posting fee",
