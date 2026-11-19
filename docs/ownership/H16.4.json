@@ -1,0 +1,19 @@
+{
+  "branchPrefix": "haiku/h16.4",
+  "globs": [
+    "docs/ownership/H16.4.json",
+    "progress/H16.4.md",
+    "src/app/ad/[slug]/page.tsx",
+    "src/components/AdEnded.tsx",
+    "src/lib/seo/ad-seo.ts",
+    "src/lib/ui/meta.ts",
+    "src/lib/ui/text.ts",
+    "src/server/listings/ended-ad.ts",
+    "src/server/listings/revalidate.ts",
+    "src/server/listings/visibility.ts",
+    "tests/server/listings/h16-4-ad-seo.test.ts",
+    "tests/server/listings/ad-lifetime.test.ts",
+    "tests/server/ui/seo-delta.test.ts",
+    "tests/e2e/h16-4-ad-seo.e2e.ts"
+  ]
+}

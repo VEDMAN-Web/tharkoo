@@ -242,6 +242,10 @@ export const TEXT_DEFAULTS = {
   "ad.seller.online": "Online now \u00b7 replies fast",
   "ad.seller.away": "Away right now",
   "ad.chat": "Chat online now",
+  // H16.4: an ad that has ended
+  "ad.ended.title": "This ad is no longer available",
+  "ad.ended.text": "The advertiser took it down or it has run out. These ads are close to it.",
+  "ad.ended.more": "See more {category} ads in {place}",
   // H16.5: sample (demo) ads
   "demo.pill": "Sample ad",
   "demo.message": "This is a sample ad showing how ads look on Tharkoo. Post yours free",

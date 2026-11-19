@@ -16,6 +16,8 @@ export type PageMeta = {
   path: string;
   index?: boolean;
   follow?: boolean;
+  /** Keep the page text in search but its pictures out of image search. */
+  noImageIndex?: boolean;
   image?: string;
   canonicalUrl?: string;
 };
@@ -33,7 +35,7 @@ export function pageMetadata(opts: PageMeta): Metadata {
       canonical: url,
       languages: { "en-IN": url, "x-default": url },
     },
-    robots: { index, follow },
+    robots: { index, follow, ...(opts.noImageIndex ? { noimageindex: true } : {}) },
     openGraph: {
       title: opts.title,
       description: opts.description,

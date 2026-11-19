@@ -38,6 +38,17 @@ async function retireSampleAds(listing: PublishedListing) {
   }
 }
 
+/** H16.4: an ad that goes live, changes or ends is sent to the search engines (IndexNow, only when INDEXNOW_KEY is set). The ad page address comes from the first path. */
+async function pingIndexNow(listing: PublishedListing) {
+  if (!listing.slug) return;
+  try {
+    const { queueIndexNow } = await import("@/server/indexnow/ping");
+    queueIndexNow([`/ad/${listing.slug}/`]);
+  } catch (error) {
+    console.error("IndexNow could not be queued", error instanceof Error ? error.message : error);
+  }
+}
+
 /**
  * Clears the shared caches and asks Next to rebuild each page that lists the ad, so it shows at once instead of after
  * the 60 second revalidate. Safe outside a Next request (scripts, unit tests): it then does nothing.
@@ -45,6 +56,7 @@ async function retireSampleAds(listing: PublishedListing) {
 export async function revalidateListingPages(listing: PublishedListing, categorySlug?: string | null) {
   await connectDb();
   await retireSampleAds(listing);
+  await pingIndexNow(listing);
   try {
     const { purgeNext, refreshPublicCache } = await import("@/lib/cache");
     await refreshPublicCache("listing pages");
