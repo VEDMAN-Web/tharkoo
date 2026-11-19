@@ -1,0 +1,11 @@
+{
+  "branchPrefix": "haiku/h16.1a",
+  "globs": [
+    "docs/ownership/H16.1a.json",
+    "progress/H16.1a.md",
+    "data/locations/india-cities.csv",
+    "data/locations/india-areas.csv",
+    "src/server/locations/import-csv.ts",
+    "tests/server/locations/h16-1-csv.test.ts"
+  ]
+}
