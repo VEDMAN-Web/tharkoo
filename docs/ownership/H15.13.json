@@ -1,0 +1,18 @@
+{
+  "branchPrefix": "haiku/h15.13",
+  "globs": [
+    "docs/ownership/H15.13.json",
+    "progress/H15.13.md",
+    "src/lib/admin/screens.ts",
+    "src/components/admin/ui/Button.tsx",
+    "src/components/admin/ui/PageHeader.tsx",
+    "src/app/admin/history/_view/HistoryView.tsx",
+    "next.config.ts",
+    "tests/e2e/e1c-checks.ts",
+    "tests/e2e/a5-roles.e2e.ts",
+    "tests/e2e/roles.e2e.ts",
+    "tests/server/admin/a5-screens.test.ts",
+    "tests/server/admin/a46-team.test.ts",
+    "tests/e2e/h15-13-admin-small.e2e.ts"
+  ]
+}

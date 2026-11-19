@@ -15,7 +15,7 @@ type Common = {
 };
 
 type AsButton = Common & Omit<React.ButtonHTMLAttributes<HTMLButtonElement>, "className" | "children"> & { href?: undefined };
-type AsLink = Common & { href: string; target?: string; rel?: string; disabled?: boolean; onClick?: React.MouseEventHandler<HTMLAnchorElement> };
+type AsLink = Common & { href: string; target?: string; rel?: string; disabled?: boolean; onClick?: React.MouseEventHandler<HTMLAnchorElement>; /** A file to download: a plain link, so the browser never prefetches it as a page. */ download?: boolean };
 
 export function buttonClass({ kind = "secondary", size = "md", icon = false, className = "" }: { kind?: ButtonKind; size?: "md" | "sm"; icon?: boolean; className?: string }) {
   return ["adm-k-btn", kind === "secondary" ? "" : `adm-k-btn-${kind}`, size === "sm" ? "adm-k-btn-sm" : "", icon ? "adm-k-btn-icon" : "", className].filter(Boolean).join(" ");
@@ -35,7 +35,14 @@ export function Button(props: AsButton | AsLink) {
   );
   const cls = buttonClass({ kind, size, className });
   if (props.href !== undefined) {
-    const { href, target, rel, disabled, onClick } = props;
+    const { href, target, rel, disabled, onClick, download } = props;
+    if (download) {
+      return (
+        <a href={href} className={cls} download aria-disabled={disabled || undefined} onClick={onClick}>
+          {inner}
+        </a>
+      );
+    }
     return (
       <Link href={href} className={cls} target={target} rel={rel} aria-disabled={disabled || undefined} onClick={onClick}>
         {inner}
