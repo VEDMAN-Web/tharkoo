@@ -1,0 +1,14 @@
+{
+  "branchPrefix": "haiku/h17.8",
+  "globs": [
+    "docs/ownership/H17.8.json",
+    "progress/H17.8.md",
+    "src/app/ad/[slug]/page.tsx",
+    "src/lib/seo/sitemaps.ts",
+    "src/server/seo/explain.ts",
+    "tests/server/seo/h17-8-sample-noindex.test.ts",
+    "tests/server/seo/explain.test.ts",
+    "tests/server/listings/h16-5-robots.test.ts",
+    "tests/server/listings/h16-5-showcase-demo.test.ts"
+  ]
+}

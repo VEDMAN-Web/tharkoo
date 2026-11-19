@@ -34,10 +34,13 @@ describe("explainIndexability", () => {
     expect(explainIndexability({ pageType: "city", count: 0, minimum: 3, filtered: true }).reasons[0]).toContain("filter parameters with no results");
   });
 
-  it("H16.5: indexes a sample (demo) ad like a real one", () => {
-    const out = explainIndexability({ pageType: "ad", demoAd: true, adNoindex: true });
-    expect(out.indexable).toBe(true);
-    expect(out.reasons[0]).toContain("Sample (demo) ad");
+  // H17.8 (Vedant's decision, 19 Nov) replaces the H16.5 rule that indexed a sample ad like a real one.
+  it("H17.8: a sample (demo) ad is noindex,follow and not in the sitemap, even if it is set to be indexed", () => {
+    for (const adNoindex of [true, false]) {
+      const out = explainIndexability({ pageType: "ad", demoAd: true, adNoindex });
+      expect(out.indexable).toBe(false);
+      expect(out.reasons[0]).toContain("Sample (demo) ad");
+    }
   });
 
   it("indexes a live ad that is allowed, and not-indexes ended or flagged ads", () => {
