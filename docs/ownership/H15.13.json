@@ -3,6 +3,7 @@
   "globs": [
     "docs/ownership/H15.13.json",
     "progress/H15.13.md",
+    "progress/E1-C-known-bugs.e2e.ts.txt",
     "src/lib/admin/screens.ts",
     "src/components/admin/ui/Button.tsx",
     "src/components/admin/ui/PageHeader.tsx",
