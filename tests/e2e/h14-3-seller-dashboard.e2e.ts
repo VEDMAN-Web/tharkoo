@@ -119,7 +119,7 @@ test.describe("H14.3 seller dashboard", () => {
     await where.scrollIntoViewIfNeeded();
     const spot = (await where.boundingBox())!;
     await page.mouse.click(spot.x + 6, spot.y + spot.height / 2);
-    await expect(page).toHaveURL(/\/ad\//);
+    await expect(page).toHaveURL(/-[a-z0-9]{5}\/$/);
     await page.goBack();
     await page.locator('[data-tk="dash-promote"]').first().click();
     await expect(page.getByRole("dialog")).toBeVisible();

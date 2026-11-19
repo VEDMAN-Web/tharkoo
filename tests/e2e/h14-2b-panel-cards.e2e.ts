@@ -154,7 +154,7 @@ test.describe("H14.2 the whole ad card is the link, in the panel", () => {
     expect(await hasHorizontalScroll(page)).toBe(false);
     const body = (await card.locator(".tk-card-body").boundingBox())!;
     await page.mouse.click(body.x + 20, body.y + 20);
-    await expect(page).toHaveURL(/\/ad\//);
+    await expect(page).toHaveURL(/-[a-z0-9]{5}\/$/);
     await page.waitForTimeout(400);
     expect(await clicks(), "one click event for opening the saved card").toBe(1);
     await owner.api.dispose();

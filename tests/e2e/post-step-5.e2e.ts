@@ -490,7 +490,7 @@ test.describe("H7.86 post an ad, step 5 and the success screen", () => {
     expect(draft).toBeTruthy();
     // H14.2: the whole posted-ad card opens the ad.
     await page.locator("[data-tk=post-success] .tkp-success-card").click({ position: { x: 30, y: 30 } });
-    await expect(page).toHaveURL(/\/ad\//);
+    await expect(page).toHaveURL(/-[a-z0-9]{5}\/$/);
   });
 
   test("with no posting-fee endpoint, a user with 0 credits sees no fee anywhere and publishes normally", async ({ page, baseURL }) => {

@@ -31,6 +31,7 @@
     "tests/e2e/contact-card.e2e.ts",
     "tests/e2e/h14-2b-panel-cards.e2e.ts",
     "tests/e2e/inbox-profile.e2e.ts",
-    "tests/e2e/h7-131-chat-flows.e2e.ts"
+    "tests/e2e/h7-131-chat-flows.e2e.ts",
+    "tests/e2e/post-step-5.e2e.ts"
   ]
 }
