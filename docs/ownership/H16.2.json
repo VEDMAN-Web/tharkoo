@@ -16,6 +16,8 @@
     "src/lib/seo/override.ts",
     "tests/server/listings/h16-2-seo-override.test.ts",
     "src/lib/seo/sitemaps.ts",
-    "tests/server/listings/h16-2-sitemap.test.ts"
+    "tests/server/listings/h16-2-sitemap.test.ts",
+    "tests/server/listings/h16-5-showcase-demo.test.ts",
+    "tests/server/urls/urls.test.ts"
   ]
 }

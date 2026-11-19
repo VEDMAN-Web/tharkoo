@@ -15,6 +15,7 @@ export type AdAddressMatch = { slug: string } | { redirect: string } | null;
 export async function resolveAdAddress(category: string, location: string, x: string): Promise<AdAddressMatch> {
   const parts = splitAdSegment(x);
   if (!parts) return null;
+  await connectDb();
   const districts = await getDistricts(location);
   if (districts.some((row) => row.slug === x)) return null;
   const ad = await resolveAdByCode(parts.code);

@@ -98,10 +98,12 @@ describe("H16.5 every listing page is indexable and in the sitemaps", () => {
     const realIndexed = await ad(w, { owner: "real", category: "jobs", city: "surat", noindex: false });
     const realHidden = await ad(w, { owner: "real", category: "jobs", city: "surat", noindex: true });
     const urls = (await shardEntries("ads")).map((row) => row.loc);
-    expect(urls.some((url) => url.includes(sample.slug as string))).toBe(true);
-    expect(urls.some((url) => url.includes(realIndexed.slug as string))).toBe(true);
-    expect(urls.some((url) => url.includes(ended.slug as string))).toBe(false);
-    expect(urls.some((url) => url.includes(realHidden.slug as string))).toBe(false);
+    // H16.2: each ad is listed at its own address, which ends in the ad's code.
+    const listed = (doc: { code?: string }) => urls.some((url) => url.endsWith(`-${doc.code}/`));
+    expect(listed(sample)).toBe(true);
+    expect(listed(realIndexed)).toBe(true);
+    expect(listed(ended)).toBe(false);
+    expect(listed(realHidden)).toBe(false);
   });
 
   it("explains a sample ad page as indexable and a listing page with no ads as indexable", () => {

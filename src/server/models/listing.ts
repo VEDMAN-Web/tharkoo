@@ -1,5 +1,6 @@
 import { Schema, type Types } from "mongoose";
 import { adAddress, generateAdCode } from "@/lib/ad-address";
+import { connectDb } from "@/lib/db";
 import { appendOnlyPlugin, lockBulkWrites } from "@/server/audit/append-only";
 import { Category, Location } from "@/server/models/catalog";
 import { collectionName, modelName } from "@/server/models/names";
@@ -222,12 +223,14 @@ const HANDED_OUT_MAX = 100_000;
 
 /** H16.2: a code no other ad uses. The unique index is the final guard against two processes racing. */
 export async function freeAdCode(): Promise<string> {
+  await connectDb();
   for (let i = 0; i < CODE_TRIES; i += 1) {
     const code = generateAdCode();
-    if (handedOut.has(code) || (await Listing.exists({ code }))) continue;
+    // Claim the code before the database check, so two saves running at once cannot both take it.
+    if (handedOut.has(code)) continue;
     if (handedOut.size >= HANDED_OUT_MAX) handedOut.clear();
     handedOut.add(code);
-    return code;
+    if (!(await Listing.exists({ code }))) return code;
   }
   throw new Error("Could not make a free ad code");
 }
@@ -235,6 +238,7 @@ export async function freeAdCode(): Promise<string> {
 /** H16.2: the public address of an ad, or "" while it lacks a code, a category or a city. */
 export async function listingAddressPath(ad: { categoryId?: Types.ObjectId; cityId?: Types.ObjectId; title?: string; code?: string }): Promise<string> {
   if (!ad.code || !ad.categoryId || !ad.cityId || !ad.title) return "";
+  await connectDb();
   const [category, city] = await Promise.all([
     Category.findById(ad.categoryId).select("slug").lean<{ slug?: string } | null>(),
     Location.findById(ad.cityId).select("slug").lean<{ slug?: string } | null>(),

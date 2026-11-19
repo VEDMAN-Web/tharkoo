@@ -27,6 +27,7 @@ const NO_CODE = [{ code: { $exists: false } }, { code: null }, { code: "" }];
 
 /** Writes one code (and the address, once the ad has a slug) to an ad that has none. Returns true when it wrote. */
 export async function fillAdCode(ad: Missing): Promise<boolean> {
+  await connectDb();
   const code = await freeAdCode();
   const addressPath = ad.slug ? await listingAddressPath({ categoryId: ad.categoryId, cityId: ad.cityId, title: ad.title, code }) : "";
   const result = await Listing.collection.updateOne({ _id: ad._id as never, $or: NO_CODE }, { $set: { code, ...(addressPath ? { addressPath } : {}) } });
@@ -69,6 +70,7 @@ export async function addressesFor(ads: readonly AddressSource[]): Promise<Map<s
 
 /** H16.2: the public path of each ad for IndexNow and cache purges: its address, or the old /ad/<slug>/ link while it has none. */
 export async function publicPathsOf(ads: readonly (AddressSource & { slug?: string })[]): Promise<string[]> {
+  await connectDb();
   const addresses = await addressesFor(ads);
   return ads.flatMap((ad) => {
     const address = addresses.get(String(ad._id));

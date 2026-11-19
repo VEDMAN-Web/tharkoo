@@ -57,6 +57,12 @@ describe("H16.2 the code is saved once per ad", () => {
     expect(new Set(ads.map((ad) => ad.code)).size).toBe(400);
   });
 
+  it("never hands the same code to two saves that run at the same time", async () => {
+    const { freeAdCode } = await import("@/server/models/listing");
+    const codes = await Promise.all(Array.from({ length: 6000 }, () => freeAdCode()));
+    expect(new Set(codes).size).toBe(6000);
+  });
+
   it("finds an ad by its code and nothing else", async () => {
     const w = await world();
     const ad = await Listing.create(base(w, { slug: "coffee-and-long-walks" }));
