@@ -144,6 +144,7 @@ export default async function TagPage({ params, searchParams }: Props) {
     >
       <ListingPageView
         texts={texts}
+        pageName={heading}
         crumbs={crumbs}
         path={`${path}${filterQs ? `?${filterQs}` : ""}`}
         stars={[]}

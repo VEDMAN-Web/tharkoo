@@ -1,5 +1,6 @@
 "use client";
 
+import { isAdAddressPath } from "@/lib/ad-address";
 import { ArrowUp, MessageCircle, Phone, Send, X } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { FormEvent, TouchEvent } from "react";
@@ -43,7 +44,7 @@ export function SupportChat({ chat, texts, hours = "" }: { chat: Chat; texts?: U
   const path = useSitePath();
   const paths = useUrlPaths();
   const section = path.split("/")[1];
-  const pageBars = section === "u" || section === paths.ad;
+  const pageBars = section === "u" || section === paths.ad || isAdAddressPath(path);
   const [open, setOpen] = useState(false);
   const [online, setOnline] = useState(false);
   const [session, setSession] = useState<Session>("unknown");

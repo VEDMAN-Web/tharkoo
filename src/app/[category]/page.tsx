@@ -1,3 +1,4 @@
+import { sampleNoteText } from "@/lib/seo/sample-note";
 import Link from "next/link";
 import { notFound, permanentRedirect } from "next/navigation";
 import type { Metadata } from "next";
@@ -14,7 +15,7 @@ import { hubCopy } from "@/lib/seo-site";
 import { withSeoDefaults } from "@/lib/ui/meta-defaults";
 import { Breadcrumbs } from "@/components/Breadcrumbs";
 import { JsonLd, breadcrumbJsonLd } from "@/lib/jsonld";
-import { faqPage, itemListNode } from "@/lib/seo/schema";
+import { itemListNode, webPageNode } from "@/lib/seo/schema";
 import { canonical } from "@/lib/seo";
 import { AdCard, UiTextProvider } from "@/components/ui/AdCard";
 import { ListingCard, ListingGrid } from "@/components/new/ListingCards";
@@ -107,13 +108,13 @@ export default async function CategoryHub({ params, searchParams }: Props) {
   const homeContent = await getHomepageContent();
   const vars = { category: cat.name, site: site.name, year: new Date().getFullYear() };
   const copy = mergeLanding(
-    fallbackLanding({ category: cat.name || category, count: feed.total, site: site.name }),
+    fallbackLanding({ category: cat.name || category, count: feed.realTotal, site: site.name, sampleNote: await sampleNoteText() }),
     (site as { landings?: Record<string, Partial<LandingCopy>> }).landings?.[`${category}|india`],
   );
   // H8.32: with the switch "content" the words come from the listing copy resolver (the content editor first); otherwise from today's sources.
   const resolved =
     (site as { listingCopySource?: string }).listingCopySource === "content"
-      ? await resolveListingCopy({ kind: "category", path: categoryPath(cat.slug || category), categorySlug: cat.slug || category, category: cat.name || category, count: feed.total, mode: "content" })
+      ? await resolveListingCopy({ kind: "category", path: categoryPath(cat.slug || category), categorySlug: cat.slug || category, category: cat.name || category, count: feed.realTotal, mode: "content" })
       : null;
   const hub = resolved ? { intro: resolved.intro, faqs: resolved.faqs } : await hubCopy(categoryPath(cat.slug || category), { intro: copy.intro || fillTemplate(seo?.intro || "", vars), faqs: copy.faqs });
   // H17.4: Popular searches are real category + city pages that have ads, in other categories (this category's own cities are the Nearby list).
@@ -124,7 +125,7 @@ export default async function CategoryHub({ params, searchParams }: Props) {
     ...(page === 1 ? stars : []),
     ...orderFeed(feed.items.filter((ad) => !stars.some((star) => star.slug && star.slug === ad.slug)), hourSeed()),
   ];
-  const layout = await resolveListingLayout({ path: categoryPath(cat.slug || category), category: cat.slug || category, vars: { ...vars, count: feed.total } });
+  const layout = await resolveListingLayout({ path: categoryPath(cat.slug || category), category: cat.slug || category, vars: { ...vars, count: feed.realTotal } });
   const headerBlock = layout.blocks.find((block) => block.type === "listingHeader");
   const h1Text = resolved ? resolved.h1 : listingHeading(String(headerBlock?.props.h1Template ?? ""), heading, { ...layout.vars, h1: heading });
   const wrap = (id: string, devices: Parameters<typeof deviceClass>[0], content: React.ReactNode) => {
@@ -263,16 +264,15 @@ export default async function CategoryHub({ params, searchParams }: Props) {
             { name: t("listing.crumb.home"), path: "/" },
             { name: cat.name || category, path: categoryPath(cat.slug || category) },
           ]),
+          webPageNode({ name: h1Text, path: categoryPath(cat.slug || category), siteName: site.name || "Tharkoo" }),
           itemListNode({
             url: canonical(categoryPath(cat.slug || category)),
-            total: feed.total,
             items: ads.slice(0, 12).map((ad, index) => ({
               url: canonical(adPath(paths, ad.slug || "")),
               name: ad.title || "Ad",
               position: index + 1,
             })),
           }),
-          faqPage(hub.faqs),
         ]}
       />
       {frame ? (

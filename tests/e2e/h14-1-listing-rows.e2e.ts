@@ -51,11 +51,11 @@ async function styles(page: Page) {
       priceSize: price && !price.classList.contains("is-request") ? getComputedStyle(price).fontSize : null,
       priceWeight: price && !price.classList.contains("is-request") ? getComputedStyle(price).fontWeight : null,
       priceColor: price ? getComputedStyle(price).color : null,
-      statsColor: css(".tk-row-stats", "color"),
-      statsSize: css(".tk-row-stats", "fontSize"),
       hasCount: Boolean(card.querySelector(".tk-row-count")),
       hasMark: Boolean(card.querySelector(".tk-row-mark")),
-      hasStats: Boolean(card.querySelector('[data-tk="row-views"] svg') && card.querySelector('[data-tk="row-clicks"] svg')),
+      // H17.1: the public card shows no views and no clicks (they stay in the seller dashboard).
+      hasStats: Boolean(card.querySelector('.tk-row-stats, [data-tk="row-views"], [data-tk="row-clicks"]')),
+      cardText: card.textContent ?? "",
     };
   });
 }
@@ -65,7 +65,6 @@ test.describe("H14.1 listing rows", () => {
     test(`${path}: the card matches the approved design`, async ({ page }, testInfo) => {
       await page.goto(path);
       await page.locator(ROW).first().waitFor();
-      await page.locator('[data-tk="row-stats"][data-ready="true"]').first().waitFor({ timeout: 40_000 }).catch(() => undefined);
       const s = await styles(page);
       expect(s.display).toBe("flex");
       expect(s.radius).toBe("16px");
@@ -84,9 +83,9 @@ test.describe("H14.1 listing rows", () => {
       expect(s.catColor).toEqual(["rgb(194, 24, 91)", "rgb(253, 240, 247)"]);
       expect(s.placeColor).toEqual(["rgb(91, 33, 182)", "rgb(245, 240, 255)"]);
       expect(s.footBorder).toContain("rgb(243, 232, 247)");
-      expect(s.statsColor).toBe("rgb(107, 74, 138)");
-      expect(s.statsSize).toBe("13px");
-      expect(s.hasCount && s.hasMark && s.hasStats).toBe(true);
+      expect(s.hasCount && s.hasMark).toBe(true);
+      expect(s.hasStats, "no views or clicks on a public card (H17.1)").toBe(false);
+      expect(s.cardText).not.toMatch(/\b\d[\d,]*\s+(views?|clicks?)\b/i);
       if (s.priceSize) {
         expect(s.priceSize).toBe("17px");
         expect(s.priceWeight).toBe("800");
@@ -245,33 +244,18 @@ test.describe("H14.1 listing rows", () => {
     await page.keyboard.press("Enter");
     await page.waitForURL(`**${href}`, { timeout: 15_000 });
   });
-  // #375: the numbers read "1 view", "5 views", "1 click", "5 clicks" once each, and the footer is never cut off.
-  test("views and clicks read with their word once, singular for 1, and the footer fits", async ({ page }) => {
-    const answer = (views: number, clicks: number) => async (route: import("@playwright/test").Route) => {
+  // H17.1 (was #375): the public row card shows NO views and NO clicks, whatever the counters say; they stay in the seller dashboard.
+  test("a row card shows no views and no clicks, and its footer fits", async ({ page }) => {
+    await page.route("**/api/views/counts/**", async (route) => {
       const slugs = new URL(route.request().url()).searchParams.get("slugs")?.split(",") ?? [];
-      await route.fulfill({ json: { ok: true, data: { items: Object.fromEntries(slugs.map((slug) => [slug, { views, clicks }])) } } });
-    };
-    for (const [views, clicks, viewsText, clicksText] of [
-      [1, 1, "1 view", "1 click"],
-      [5, 5, "5 views", "5 clicks"],
-      [1248, 86, "1,248 views", "86 clicks"],
-      [0, 0, "0 views", "0 clicks"],
-    ] as const) {
-      await page.route("**/api/views/counts/**", answer(views, clicks));
-      await page.goto("/dating/");
-      const card = page.locator(ROW).first();
-      await expect(card.locator('[data-tk="row-stats"]')).toHaveAttribute("data-ready", "true", { timeout: 30_000 });
-      await expect(card.locator('[data-tk="row-views"]')).toHaveText(viewsText);
-      await expect(card.locator('[data-tk="row-clicks"]')).toHaveText(clicksText);
-      const fit = await card.locator(".tk-row-foot").evaluate((foot) => {
-        const box = foot.getBoundingClientRect();
-        const stats = foot.querySelector(".tk-row-stats")!.getBoundingClientRect();
-        return { overflow: foot.scrollWidth - foot.clientWidth, right: stats.right - box.right, left: stats.left - box.left };
-      });
-      expect(fit.overflow, "footer scrollWidth <= clientWidth").toBeLessThanOrEqual(0);
-      expect(fit.right).toBeLessThanOrEqual(1);
-      expect(fit.left).toBeGreaterThanOrEqual(-1);
-      await page.unroute("**/api/views/counts/**");
-    }
+      await route.fulfill({ json: { ok: true, data: { items: Object.fromEntries(slugs.map((slug) => [slug, { views: 1248, clicks: 86 }])) } } });
+    });
+    await page.goto("/dating/");
+    const card = page.locator(ROW).first();
+    await expect(card).toBeVisible();
+    await expect(card.locator('.tk-row-stats, [data-tk="row-views"], [data-tk="row-clicks"]')).toHaveCount(0);
+    await expect(card).not.toContainText(/\bviews?\b|\bclicks?\b/i);
+    const fit = await card.locator(".tk-row-foot").evaluate((foot) => foot.scrollWidth - foot.clientWidth);
+    expect(fit, "footer scrollWidth <= clientWidth").toBeLessThanOrEqual(0);
   });
 });

@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { getSeoSettings } from "@/app/admin/seo/settings/store";
 import { DEFAULT_SEO_SETTINGS, type SeoSettings } from "@/app/admin/seo/settings/rules";
 import { organizationFromSettings } from "@/lib/seo/schema";
+import { SUPPORT_EMAIL } from "@/lib/support";
 import { urlFaqs, urlIntro } from "@/lib/seo/override";
 import { cleanPath } from "@/lib/urls";
 
@@ -22,9 +23,9 @@ async function settingsOrDefault(): Promise<SeoSettings> {
 }
 
 /** Organization JSON-LD node using the name, logo, contact and links from /admin/seo/settings, with built-in values when empty. */
-export async function siteOrganizationNode(defaultName: string, base: { logo?: string; sameAs?: string[] }) {
+export async function siteOrganizationNode(defaultName: string, base: { logo?: string }) {
   const settings = await settingsOrDefault();
-  return organizationFromSettings(defaultName, base, settings.organization);
+  return organizationFromSettings(defaultName, base, settings.organization, { email: SUPPORT_EMAIL });
 }
 
 /** The default social image set in the SEO settings, or an empty string. */

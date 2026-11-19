@@ -1,3 +1,4 @@
+import { sampleNoteText } from "@/lib/seo/sample-note";
 import { notFound, permanentRedirect } from "next/navigation";
 import type { Metadata } from "next";
 import { resolveListingLayout } from "@/components/blocks/ListingLayout";
@@ -40,16 +41,21 @@ import { getPaths } from "@/server/urls/service";
 import { popularSearches } from "@/lib/seo/local-links";
 import { withPagination } from "@/lib/seo/pagination";
 import { SubHub, subHubMetadata } from "./sub-hub";
+import AdPage, { generateMetadata as adMetadata } from "@/app/ad/[slug]/page";
+import { resolveAdAddress } from "@/server/listings/ad-route";
 
 type Props = {
   params: Promise<{ category: string; location: string; district: string }>;
   searchParams: Promise<ListingParams>;
 };
 
-export const revalidate = 60;
+export const revalidate = 300;
 
 export async function generateMetadata({ params, searchParams }: Props): Promise<Metadata> {
   const { category, location, district } = await params;
+  // H16.2: an ad address is /<category>/<city>/<title>-<code>/. A known area of the city is checked first inside.
+  const adMatch = await resolveAdAddress(category, location, district);
+  if (adMatch) return "slug" in adMatch ? adMetadata({ params: Promise.resolve({ slug: adMatch.slug }) }) : {};
   const sp = await searchParams;
   const [cat, city, districtRows, seo, site] = await Promise.all([
     getCategory(category),
@@ -75,10 +81,11 @@ export async function generateMetadata({ params, searchParams }: Props): Promise
     category: cat.name || category,
     city: city.name || location,
     district: dist.name || district,
-    count: feedForCopy.total,
+    count: feedForCopy.realTotal,
     site: site.name,
+    sampleNote: await sampleNoteText(),
   });
-  const counted = { ...vars, count: feedForCopy.total };
+  const counted = { ...vars, count: feedForCopy.realTotal };
   const title = fillTemplate(seo?.title || copy.title, counted);
   const rawDescription = fillTemplate(seo?.description || copy.description, counted);
   const description = rawDescription.length <= 160 ? rawDescription : `${rawDescription.slice(0, 157).replace(/\s+\S*$/, "")}`;
@@ -103,6 +110,11 @@ export async function generateMetadata({ params, searchParams }: Props): Promise
 
 export default async function DistrictPage({ params, searchParams }: Props) {
   const { category, location, district } = await params;
+  const adMatch = await resolveAdAddress(category, location, district);
+  if (adMatch) {
+    if ("redirect" in adMatch) permanentRedirect(adMatch.redirect);
+    return AdPage({ params: Promise.resolve({ slug: adMatch.slug }) });
+  }
   const sp = await searchParams;
   const rawPage = typeof sp.page === "string" ? sp.page : undefined;
   if (sp.page !== undefined && (rawPage === undefined || !/^[1-9]\d*$/.test(rawPage))) notFound();
@@ -145,8 +157,9 @@ export default async function DistrictPage({ params, searchParams }: Props) {
     category: cat.name || category,
     city: city.name || location,
     district: dist.name || district,
-    count: feed.total,
+    count: feed.realTotal,
     site: site.name,
+    sampleNote: await sampleNoteText(),
     indexable: !thin,
     updated: feed.items[0]?.publishedAt
       ? new Date(feed.items[0].publishedAt).toLocaleDateString("en-IN", { day: "numeric", month: "long", year: "numeric" })
@@ -158,7 +171,7 @@ export default async function DistrictPage({ params, searchParams }: Props) {
     district: dist.name,
     districtPref: ` / ${dist.name}`,
     site: site.name,
-    count: feed.total,
+    count: feed.realTotal,
     year: new Date().getFullYear(),
   };
   const layout = await resolveListingLayout({ path: canonicalPath, category: cat.slug || category, vars });
@@ -248,6 +261,7 @@ export default async function DistrictPage({ params, searchParams }: Props) {
     <ListingPageView
       texts={texts}
       layout={layout}
+      pageName={h1}
       faqs={districtCopy.faqs}
       popular={popularSearches(counts, new Map(categories.map((row) => [row.slug || "", row.name || ""])), new Map(cities.map((row) => [row.slug || "", row.name || ""])), { excludePage: { categorySlug: cat.slug || category, citySlug: city.slug || location }, max: 4 }).map((link) => ({ href: placePath(link.categorySlug, link.citySlug), label: t("listing.link.in", { name: link.categoryName, place: link.cityName }) }))}
       h2={fillTemplate(seo?.h2 || "", vars)}

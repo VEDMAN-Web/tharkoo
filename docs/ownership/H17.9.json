@@ -1,0 +1,18 @@
+{
+  "branchPrefix": "haiku/h17.9",
+  "globs": [
+    "docs/ownership/H17.9.json",
+    "progress/H17.9.md",
+    "src/lib/ui/text.ts",
+    "src/content/trust.ts",
+    "src/server/content/studio/ai-draft.ts",
+    "tests/server/ui/h17-9-posting-price.test.ts",
+    "tests/server/ui/h12-4-cost-text.test.ts",
+    "tests/server/layout/a6-home-baseline.json",
+    "tests/e2e/e1a-visitor-journeys.e2e.ts",
+    "tests/e2e/h11-1-prices.e2e.ts",
+    "tests/e2e/h12-3-panel-align.e2e.ts",
+    "tests/e2e/h16-5-showcase-demo.e2e.ts",
+    "tests/e2e/h9-3-my-ads.e2e.ts"
+  ]
+}

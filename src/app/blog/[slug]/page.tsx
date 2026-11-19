@@ -4,7 +4,8 @@ import type { Metadata } from "next";
 import { JsonLd } from "@/lib/jsonld";
 import { getBlog } from "@/lib/queries";
 import { canonical } from "@/lib/seo";
-import { blogPostingNode } from "@/lib/seo/schema";
+import { blogPostingFromPost, webPageNode } from "@/lib/seo/schema";
+import { defaultOgImage } from "@/lib/seo-site";
 import { blogDescription } from "@/lib/seo/home-blog";
 import { Container } from "@/components/ui/Container";
 import { Prose } from "@/components/ui/Prose";
@@ -43,15 +44,13 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
   if (!post) notFound();
   const path = blogPath(paths, post.slug || slug);
   const heading = await urlHeading(path, post.title || "Blog");
+  const fallbackImage = (await defaultOgImage()) || canonical("/brand/og-default.png");
   const jsonLd = (
     <JsonLd
-      data={blogPostingNode({
-        headline: heading,
-        datePublished: post.date,
-        dateModified: post.date,
-        author: post.author,
-        url: canonical(path),
-      })}
+      data={[
+        webPageNode({ name: heading, path, siteName: "Tharkoo" }),
+        blogPostingFromPost({ title: heading, date: post.date, updatedAt: post.updatedAt, author: post.author, cover: post.cover }, canonical(path), fallbackImage),
+      ]}
     />
   );
   if (newDesign) {
