@@ -58,10 +58,12 @@ Itanagar,Arunachal Pradesh,itanagar,yes,,https://en.wikipedia.org/wiki/Itanagar
 Khonsa,Arunachal Pradesh,khonsa,yes,,https://www.wikidata.org/wiki/Q2231406
 Koloriang,Arunachal Pradesh,koloriang,yes,,https://www.wikidata.org/wiki/Q2729438
 Lemmi,Arunachal Pradesh,lemmi,yes,,https://www.wikidata.org/wiki/Q99930130
+Likhabali,Arunachal Pradesh,likhabali,yes,,https://en.wikipedia.org/wiki/Lower_Siang_district
 Namsai,Arunachal Pradesh,namsai,yes,,https://www.wikidata.org/wiki/Q2484068
 Palin,Arunachal Pradesh,palin,yes,,https://www.wikidata.org/wiki/Q13651144
 Pangin,Arunachal Pradesh,pangin,yes,,https://www.wikidata.org/wiki/Q25247765
 Pasighat,Arunachal Pradesh,pasighat,yes,,https://www.wikidata.org/wiki/Q1936930
+Raga,Arunachal Pradesh,raga,yes,,https://en.wikipedia.org/wiki/Kamle_district
 Roing,Arunachal Pradesh,roing,yes,,https://www.wikidata.org/wiki/Q2483845
 Seppa,Arunachal Pradesh,seppa,yes,,https://www.wikidata.org/wiki/Q2228888
 Tato,Arunachal Pradesh,tato,yes,,https://www.wikidata.org/wiki/Q117373333
@@ -100,6 +102,7 @@ Silchar,Assam,silchar,yes,172830,https://en.wikipedia.org/wiki/List_of_cities_in
 Sivasagar,Assam,sivasagar,yes,,https://www.wikidata.org/wiki/Q1284453
 Sonari,Assam,sonari,yes,,https://www.wikidata.org/wiki/Q2737021
 Sribhumi,Assam,sribhumi,yes,,https://www.wikidata.org/wiki/Q1729385
+Tamulpur,Assam,tamulpur,yes,,https://en.wikipedia.org/wiki/Tamulpur_district
 Tezpur,Assam,tezpur,yes,100437,https://www.wikidata.org/wiki/Q1021162
 Tinsukia,Assam,tinsukia,yes,,https://www.wikidata.org/wiki/Q2249428
 Udalguri,Assam,udalguri,yes,,https://www.wikidata.org/wiki/Q2726152
@@ -171,6 +174,7 @@ Kondagaon,Chhattisgarh,kondagaon,yes,,https://www.wikidata.org/wiki/Q2234676
 Korba,Chhattisgarh,korba,yes,363390,https://en.wikipedia.org/wiki/List_of_cities_in_India_by_population https://www.wikidata.org/wiki/Q2008189
 Mahasamund,Chhattisgarh,mahasamund,yes,,https://www.wikidata.org/wiki/Q2237531
 Manendragarh,Chhattisgarh,manendragarh,yes,,https://www.wikidata.org/wiki/Q2625568
+Mohla,Chhattisgarh,mohla,yes,,https://en.wikipedia.org/wiki/Mohla-Manpur-Ambagarh_Chowki_district
 Mungeli,Chhattisgarh,mungeli,yes,,https://www.wikidata.org/wiki/Q2452734
 Naila Janjgir,Chhattisgarh,naila-janjgir,yes,,https://www.wikidata.org/wiki/Q2483881
 Narayanpur,Chhattisgarh,narayanpur,yes,,https://www.wikidata.org/wiki/Q3870388
@@ -195,6 +199,7 @@ New Delhi,Delhi,new-delhi,yes,257803,https://en.wikipedia.org/wiki/List_of_citie
 Sultan Pur Majra,Delhi,sultan-pur-majra,no,181554,https://en.wikipedia.org/wiki/List_of_cities_in_India_by_population
 Margao,Goa,margao,yes,,https://www.wikidata.org/wiki/Q515117
 Panaji,Goa,panaji,yes,,https://www.wikidata.org/wiki/Q214681
+Quepem,Goa,quepem,yes,,https://en.wikipedia.org/wiki/Kushavati_district
 Ahmedabad,Gujarat,ahmedabad,yes,5577940,https://en.wikipedia.org/wiki/List_of_cities_in_India_by_population https://www.wikidata.org/wiki/Q1070
 Ahwa,Gujarat,ahwa,yes,,https://www.wikidata.org/wiki/Q1964214
 Amreli,Gujarat,amreli,yes,,https://www.wikidata.org/wiki/Q589163
@@ -241,6 +246,7 @@ Charkhi Dadri,Haryana,charkhi-dadri,yes,,https://www.wikidata.org/wiki/Q888946
 Faridabad,Haryana,faridabad,yes,1414050,https://en.wikipedia.org/wiki/List_of_cities_in_India_by_population https://www.wikidata.org/wiki/Q200663
 Fatehabad,Haryana,fatehabad,yes,,https://www.wikidata.org/wiki/Q1320989
 Gurgaon,Haryana,gurgaon,yes,876969,https://en.wikipedia.org/wiki/List_of_cities_in_India_by_population https://www.wikidata.org/wiki/Q238508
+Hansi,Haryana,hansi,yes,,https://en.wikipedia.org/wiki/Hansi_district
 Hisar,Haryana,hisar,yes,301383,https://en.wikipedia.org/wiki/List_of_cities_in_India_by_population https://www.wikidata.org/wiki/Q1772825
 Jhajjar,Haryana,jhajjar,yes,,https://www.wikidata.org/wiki/Q2304016
 Jind,Haryana,jind,yes,167592,https://en.wikipedia.org/wiki/List_of_cities_in_India_by_population https://www.wikidata.org/wiki/Q1807935
@@ -529,11 +535,14 @@ Dimapur,Nagaland,dimapur,yes,,https://www.wikidata.org/wiki/Q867111
 Kiphire,Nagaland,kiphire,yes,,https://www.wikidata.org/wiki/Q3815556
 Kohima,Nagaland,kohima,yes,,https://www.wikidata.org/wiki/Q234056
 Longleng,Nagaland,longleng,yes,,https://www.wikidata.org/wiki/Q3836657
+Meluri,Nagaland,meluri,yes,,https://en.wikipedia.org/wiki/Meluri_district
 Mokokchung,Nagaland,mokokchung,yes,,https://www.wikidata.org/wiki/Q2483909
 Mon,Nagaland,mon,yes,,https://www.wikidata.org/wiki/Q3860362
+Niuland,Nagaland,niuland,yes,,https://en.wikipedia.org/wiki/Niuland_district
 Noklak,Nagaland,noklak,yes,,https://www.wikidata.org/wiki/Q48731962
 Peren,Nagaland,peren,yes,,https://www.wikidata.org/wiki/Q3899774
 Phek,Nagaland,phek,yes,,https://www.wikidata.org/wiki/Q2726376
+Shamator,Nagaland,shamator,yes,,https://en.wikipedia.org/wiki/Shamator_district
 Tseminyu,Nagaland,tseminyu,yes,,https://www.wikidata.org/wiki/Q29467378
 Tuensang,Nagaland,tuensang,yes,,https://www.wikidata.org/wiki/Q2726329
 Wokha,Nagaland,wokha,yes,,https://www.wikidata.org/wiki/Q783836
