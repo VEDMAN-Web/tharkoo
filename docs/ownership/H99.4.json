@@ -1,0 +1,9 @@
+{
+  "branchPrefix": "haiku/h99.4",
+  "globs": [
+    "docs/ownership/H99.4.json",
+    "progress/E1-C.md",
+    "progress/E1-C-known-bugs.e2e.ts.txt",
+    "tests/e2e/h15-4-approve-visible.e2e.ts"
+  ]
+}
