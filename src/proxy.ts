@@ -50,6 +50,17 @@ async function newAddressIsGone(pathname: string) {
   return doc ? listingVisibility(doc) === "gone" : false;
 }
 
+/** H16.2: the new address for an old /<ad prefix>/<slug>/ link, or "". Gives an older ad its code the first time it is opened. */
+async function legacyAdTarget(pathname: string) {
+  const { getPaths } = await import("@/server/urls/service");
+  const prefix = `/${(await getPaths()).ad.replace(/^\/|\/$/g, "")}/`;
+  if (!pathname.startsWith(prefix)) return "";
+  const slug = pathname.slice(prefix.length).replace(/\/$/, "");
+  if (!slug || slug.includes("/") || slug === "video") return "";
+  const { legacyAdRedirect } = await import("@/server/listings/ad-route");
+  return (await legacyAdRedirect(slug)) ?? "";
+}
+
 async function adIsGone(pathname: string) {
   const { getPaths } = await import("@/server/urls/service");
   const { Listing } = await import("@/server/models");
@@ -124,6 +135,12 @@ export async function proxy(req: NextRequest) {
     }
     if (process.env.MONGODB_URI) {
       try {
+        const forwardTo = await legacyAdTarget(rewriteTo || path);
+        if (forwardTo) {
+          const url = req.nextUrl.clone();
+          url.pathname = forwardTo;
+          return NextResponse.redirect(url, 308);
+        }
         if (await adIsGone(rewriteTo || path)) {
           return new NextResponse("This listing has been removed.", { status: 410, headers: { "content-type": "text/plain; charset=utf-8" } });
         }

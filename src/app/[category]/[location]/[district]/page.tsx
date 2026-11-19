@@ -39,7 +39,7 @@ import { fallbackLanding, visibleHeading } from "@/lib/seo/landing";
 import { getPaths, publicTags } from "@/server/urls/service";
 import { withPagination } from "@/lib/seo/pagination";
 import { SubHub, subHubMetadata } from "./sub-hub";
-import { AdView, adViewMetadata } from "@/app/ad/[slug]/AdView";
+import AdPage, { generateMetadata as adMetadata } from "@/app/ad/[slug]/page";
 import { resolveAdAddress } from "@/server/listings/ad-route";
 
 type Props = {
@@ -53,7 +53,7 @@ export async function generateMetadata({ params, searchParams }: Props): Promise
   const { category, location, district } = await params;
   // H16.2: an ad address is /<category>/<city>/<title>-<code>/. A known area of the city is checked first inside.
   const adMatch = await resolveAdAddress(category, location, district);
-  if (adMatch) return "slug" in adMatch ? adViewMetadata(adMatch.slug) : {};
+  if (adMatch) return "slug" in adMatch ? adMetadata({ params: Promise.resolve({ slug: adMatch.slug }) }) : {};
   const sp = await searchParams;
   const [cat, city, districtRows, seo, site] = await Promise.all([
     getCategory(category),
@@ -110,7 +110,7 @@ export default async function DistrictPage({ params, searchParams }: Props) {
   const adMatch = await resolveAdAddress(category, location, district);
   if (adMatch) {
     if ("redirect" in adMatch) permanentRedirect(adMatch.redirect);
-    return AdView({ slug: adMatch.slug });
+    return AdPage({ params: Promise.resolve({ slug: adMatch.slug }) });
   }
   const sp = await searchParams;
   const rawPage = typeof sp.page === "string" ? sp.page : undefined;
