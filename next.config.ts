@@ -29,6 +29,8 @@ const nextConfig: NextConfig = {
   // bots and browsers by default). Canonical/robots must be in the first HTML for SEO.
   htmlLimitedBots: /.*/,
   output: "standalone",
+  // H16.1: the Import cities and areas screen reads the built-in lists in data/locations/, so the standalone build must carry them.
+  outputFileTracingIncludes: { "/admin/locations": ["./data/locations/*.csv"] },
   cacheMaxMemorySize: 16 * 1024 * 1024,
   experimental: {
     imgOptConcurrency: 1,
