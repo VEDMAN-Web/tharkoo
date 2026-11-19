@@ -1,0 +1,144 @@
+import { mkdirSync } from "node:fs";
+import AxeBuilder from "@axe-core/playwright";
+import type { APIRequestContext, Page } from "@playwright/test";
+import { expect, firstAdPath, hasHorizontalScroll, isPhone, newUserApi, originHeaders, test, uniqueEmail, withLocalDb } from "./helpers";
+
+/**
+ * E1-A journeys for the visitor and support areas that the older specs do not cover:
+ * save without login, report an ad, share, the 404 page, How it works, the legal pages, filters and sort on a category plus city
+ * listing (with the phone filter sheet), the hover pop-out (computer only, never on a phone), the 18+ notice on a people category,
+ * and a guest support ticket. Each journey runs at 1440 and at 390 and ends by asserting no console errors.
+ */
+
+const SHOTS = process.env.E1_SHOTS_DIR ?? "";
+const LISTING = "/dating/bengaluru/";
+
+async function shot(page: Page, name: string) {
+  if (!SHOTS) return;
+  mkdirSync(SHOTS, { recursive: true });
+  const size = page.viewportSize();
+  await page.screenshot({ path: `${SHOTS}/${name}-${size?.width}x${size?.height}.png`, fullPage: true });
+}
+
+async function serious(page: Page) {
+  const result = await new AxeBuilder({ page }).withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa"]).analyze();
+  return result.violations.filter((item) => item.impact === "serious" || item.impact === "critical").map((item) => `${item.id}: ${item.nodes[0]?.target.join(" ")}`);
+}
+
+/** Console errors and uncaught page errors seen while a journey runs. Every journey ends by asserting there are none. */
+function watchConsole(page: Page) {
+  const problems: string[] = [];
+  page.on("console", (message) => {
+    if (message.type() === "error") problems.push(`console: ${message.text().slice(0, 200)}`);
+  });
+  page.on("pageerror", (error) => problems.push(`pageerror: ${error.message.slice(0, 200)}`));
+  return problems;
+}
+
+async function oneHeading(page: Page, where: string) {
+  await expect(page.getByRole("heading", { level: 1 }), `${where}: exactly one h1`).toHaveCount(1);
+}
+
+
+/** A live ad of a real account (not a demo ad), made through the API and switched on in the test database. */
+async function realLiveAd(api: APIRequestContext, base: string, slug: string, title: string) {
+  const categories = (await (await api.get("/api/categories")).json()).data.categories as { _id: string }[];
+  const cities = (await (await api.get("/api/locations?type=city")).json()).data.locations as { id: string; name: string }[];
+  const city = cities.find((item) => item.name === "Mumbai") ?? cities[0];
+  for (const category of categories) {
+    const res = await api.post("/api/listings", {
+      headers: originHeaders(base, "/u/post-insert/"),
+      data: { categoryId: category._id, cityId: city.id, title, description: "A wooden desk in good condition for the whole family." },
+    });
+    if (res.status() === 201) {
+      const id = ((await res.json()).data as { id: string }).id;
+      const { ObjectId } = await import("mongodb");
+      await withLocalDb((db) => db.collection("listings").updateOne({ _id: new ObjectId(id) }, { $set: { status: "active", slug, price: 4500, publishedAt: new Date(), expiresAt: new Date(Date.now() + 86_400_000) } }));
+      return id;
+    }
+  }
+  throw new Error("No category accepted a draft ad");
+}
+
+test.describe("E1-A visitor journeys: FAILING today (see progress/E1-A.md)", () => {
+  test("J1b the place line of a saved card has no stray slash (E1-A3)", async ({ page }) => {
+    test.setTimeout(120_000);
+    await page.goto(LISTING);
+    await page.waitForLoadState("networkidle");
+    const row = page.locator('[data-tk="listing-row"]').first();
+    await row.locator(".tk-row-save").click();
+    await page.goto("/u/account/saved/");
+    await page.waitForLoadState("networkidle");
+    const place = (await page.locator('[data-tk="card"] .tk-card-meta').allInnerTexts()).join(" | ");
+    expect(place, "the place line of a saved card has no stray slash").not.toMatch(/(^|\|)\s*\//);
+  });
+
+  test("J2s sending a report on a demo ad says thank you (E1-A1)", async ({ page }) => {
+    test.setTimeout(120_000);
+    const problems = watchConsole(page);
+    const path = await firstAdPath(page);
+    await page.goto(path);
+    await page.waitForLoadState("networkidle");
+    const report = page.getByRole("link", { name: /report/i }).first();
+    await expect(report, "the ad page has a Report link").toBeVisible();
+    await shot(page, "j2-ad-page");
+    await report.click();
+    await expect(page).toHaveURL(/\/submit-report\/\?ad=/);
+    await oneHeading(page, "report page");
+    const form = page.getByRole("form", { name: "Report this ad" });
+    await form.getByRole("button", { name: /send|submit/i }).click();
+    expect(await form.locator("select").evaluate((node) => (node as HTMLSelectElement).validity.valueMissing), "a reason is required").toBe(true);
+    await expect(page.getByText("Thank you. Our team reviews every report.")).toHaveCount(0);
+    await form.locator("select").selectOption("fake");
+    await form.getByRole("textbox").first().fill("E1 test report: please ignore.");
+    await shot(page, "j2-report-form");
+    expect(await hasHorizontalScroll(page)).toBe(false);
+    await form.getByRole("button", { name: /send|submit/i }).click();
+    await expect(page.getByText("Thank you. Our team reviews every report.")).toBeVisible();
+    expect(problems, "no console errors").toEqual([]);
+  });
+
+  test("J2b report an ad of a real account: the same journey on an ad that is not a demo ad", async ({ page, baseURL }) => {
+    test.setTimeout(180_000);
+    const problems = watchConsole(page);
+    const slug = `e1a-real-${Date.now()}`;
+    const owner = await newUserApi(baseURL!, "e1areal");
+    await realLiveAd(owner.api, baseURL!, slug, `E1A real desk ${Date.now()}`);
+    await page.goto(`/ad/${slug}/`);
+    await page.waitForLoadState("networkidle");
+    await page.getByRole("link", { name: /report/i }).first().click();
+    await expect(page).toHaveURL(/\/submit-report\/\?ad=/);
+    const form = page.getByRole("form", { name: "Report this ad" });
+    await form.locator("select").selectOption("spam");
+    const sent = page.waitForResponse((res) => res.url().includes("/api/reports"));
+    await form.getByRole("button", { name: /send|submit/i }).click();
+    const answer = await sent;
+    console.log("PROBE", page.url(), answer.status(), (await answer.text()).slice(0, 200));
+    await expect(page.getByText("Thank you. Our team reviews every report.")).toBeVisible();
+    expect(problems, "no console errors").toEqual([]);
+    await owner.api.dispose();
+  });
+
+  test("J3 share (E1-A2): the ad page has a Copy link or Share button that says it copied", async ({ page, context }) => {
+    test.setTimeout(120_000);
+    await context.grantPermissions(["clipboard-read", "clipboard-write"]).catch(() => undefined);
+    const problems = watchConsole(page);
+    const path = await firstAdPath(page);
+    await page.goto(path);
+    await page.waitForLoadState("networkidle");
+    const copy = page.getByRole("button", { name: /copy link|share/i }).first();
+    await expect(copy, "the ad page has a Share or Copy link button").toBeVisible();
+    await copy.click();
+    await expect(page.getByText(/copied|copy the address bar/i).first()).toBeVisible();
+    await shot(page, "j3-share");
+    expect(problems, "no console errors").toEqual([]);
+  });
+
+  test("J6s /scam-report/ has real text (E1-A4)", async ({ page }) => {
+    test.setTimeout(120_000);
+    await page.goto("/scam-report/");
+    await page.waitForLoadState("networkidle");
+    const text = (await page.locator("main").innerText()).trim();
+    expect(text.length, "/scam-report/ has real text").toBeGreaterThan(200);
+  });
+});
