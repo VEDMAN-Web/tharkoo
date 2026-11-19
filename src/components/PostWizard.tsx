@@ -668,7 +668,7 @@ export function PostWizard({
         </>
       ) : null}
       {step === 2 ? (
-        <PhotoStep listingId={draftId} copy={copy} onBack={() => remember(draftId, 1)} onNext={() => remember(draftId, 3)} />
+        <PhotoStep listingId={draftId} copy={copy} allowVideo={!people} onBack={() => remember(draftId, 1)} onNext={() => remember(draftId, 3)} />
       ) : null}
       {step === 3 ? (
         <>
@@ -949,7 +949,7 @@ export function PostWizard({
               {current === "more" ? <div className="tkp-fields">{renderNewExtras(err, blur)}</div> : null}
 
               {current === "photos" ? (
-                <PhotoStep listingId={draftId} copy={copy} onMedia={handleMedia} onBusy={setPhotoBusy} />
+                <PhotoStep listingId={draftId} copy={copy} allowVideo={!people} onMedia={handleMedia} onBusy={setPhotoBusy} />
               ) : null}
 
               {current === "contact" ? (

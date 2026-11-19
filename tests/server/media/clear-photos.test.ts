@@ -31,8 +31,9 @@ async function member() {
   });
 }
 
-async function draftFor(userId: string) {
-  const category = await Category.create({ slug: "dating", name: "Dating", enabled: true });
+/** FIX-1: video rules are tested on an ordinary category now, because a people category (Dating) never holds a video. */
+async function draftFor(userId: string, slug = "dating") {
+  const category = await Category.create({ slug, name: slug === "dating" ? "Dating" : "Classifieds", enabled: true, ...(slug === "dating" ? {} : { kind: "goods" }) });
   return Listing.create({
     ownerId: userId,
     categoryId: category._id,
@@ -121,7 +122,7 @@ describe("videos up to 100 MB and 60 seconds (H7.100 c)", () => {
 
   it("clears a 40 MB, 45 second video and asks Cloudinary for a 720p mp4", async () => {
     const user = await member();
-    const draft = await draftFor(user.id);
+    const draft = await draftFor(user.id, "classifieds");
     const signed = await video(user.id, draft.id, 40 * 1024 * 1024, 45);
     expect(String((signed.params as Record<string, string>).eager)).toContain("h_720");
     expect(await completeMedia(user.id, signed.mediaId, "r")).toEqual({ status: "cleared" });
@@ -129,7 +130,7 @@ describe("videos up to 100 MB and 60 seconds (H7.100 c)", () => {
 
   it("says in plain words why a video is refused", async () => {
     const user = await member();
-    const draft = await draftFor(user.id);
+    const draft = await draftFor(user.id, "classifieds");
     await expect(signMedia(user.id, { listingId: draft.id, contentType: "video/mp4", byteSize: 120 * 1024 * 1024, kind: "video" }, "r")).rejects.toThrow(
       "This file is too big (max 100 MB).",
     );
