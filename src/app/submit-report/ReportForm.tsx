@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import "./report.css";
 
 const REASONS: [string, string][] = [
   ["prohibited_content", "Prohibited content"],
@@ -47,13 +48,13 @@ export function ReportForm({ ad }: { ad: string }) {
     }
   }
 
-  if (sent) return <p role="status" className="t-body mt-4">{message?.text}</p>;
+  if (sent) return <p role="status" className="rp-done">{message?.text}</p>;
 
   return (
-    <form onSubmit={submit} className="mt-6 grid max-w-[560px] gap-4" aria-label="Report this ad">
-      <label className="grid gap-2">
-        <span className="t-small font-semibold">Why are you reporting this ad? *</span>
-        <select className="tk-input" value={reason} onChange={(event) => setReason(event.target.value)} required>
+    <form onSubmit={submit} className="rp-form" aria-label="Report this ad">
+      <label className="rp-field">
+        <span className="rp-label">Why are you reporting this ad? *</span>
+        <select className="rp-input" value={reason} onChange={(event) => setReason(event.target.value)} required>
           <option value="">Choose a reason</option>
           {REASONS.map(([value, label]) => (
             <option key={value} value={value}>
@@ -62,20 +63,20 @@ export function ReportForm({ ad }: { ad: string }) {
           ))}
         </select>
       </label>
-      <label className="grid gap-2">
-        <span className="t-small font-semibold">More details (optional)</span>
+      <label className="rp-field">
+        <span className="rp-label">More details (optional)</span>
         <textarea
-          className="tk-input"
+          className="rp-input"
           rows={5}
           maxLength={1000}
           value={details}
           onChange={(event) => setDetails(event.target.value)}
           placeholder="What is wrong with this ad? Up to 1000 characters."
         />
-        <span className="t-caption text-muted">{details.length} / 1000</span>
+        <span className="rp-count">{details.length} / 1000</span>
       </label>
       {message ? (
-        <p role={message.kind === "error" ? "alert" : "status"} className={message.kind === "error" ? "t-small text-danger" : "t-small"}>
+        <p role={message.kind === "error" ? "alert" : "status"} className={message.kind === "error" ? "rp-message is-error" : "rp-message"}>
           {message.text}
         </p>
       ) : null}
