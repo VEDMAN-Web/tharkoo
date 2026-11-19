@@ -25,13 +25,12 @@ import {
   getSite,
   getStarListings,
   getStates,
-  isThin,
   pageOutOfRange,
 } from "@/lib/queries";
 import { prettyPlace } from "@/lib/format";
 import { canonical, fillTemplate } from "@/lib/seo";
 import { isCityAlias } from "@/lib/seo/district-alias";
-import { districtMinimum, getIndexing } from "@/server/seo/indexing";
+import { districtMinimum, getIndexing, isHubOn } from "@/server/seo/indexing";
 import { placePath, postAdPath, tagPath } from "@/lib/urls";
 import { activeFilterKeys, listingCanonicalSuffix, type ListingParams } from "@/server/search/filter-seo";
 import { withUrlSeo, urlHeading } from "@/lib/seo/override";
@@ -99,7 +98,7 @@ export async function generateMetadata({ params, searchParams }: Props): Promise
     description,
     path: `${path}${suffix}`,
     canonicalUrl: canonical(`${path}${suffix}`),
-    index: pageNo === 1 && !filtered && !isThin(feed.total, distMin),
+    index: pageNo === 1 && !filtered && !!isHubOn(distMin),
     follow: true,
   });
   return filtered ? meta : withPagination(meta, path, pageNo, feed.pages);
@@ -149,7 +148,7 @@ export default async function DistrictPage({ params, searchParams }: Props) {
     loadCardWidth(),
   ]);
   if (pageOutOfRange(rawPage, feed.pages)) notFound();
-  const thin = isThin(feed.total, distMin);
+  const thin = !isHubOn(distMin);
   const districtCopy = fallbackLanding({
     category: cat.name || category,
     city: city.name || location,

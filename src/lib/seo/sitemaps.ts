@@ -1,16 +1,21 @@
+import type { Types } from "mongoose";
 import { connectDb } from "@/lib/db";
-import { getBlogPosts, getCategories, getCities, getHelpArticles } from "@/lib/queries";
+import { getBlogPosts, getCategories, getCities, getHelpArticles, getStates } from "@/lib/queries";
 import { siteUrl } from "@/lib/utils";
-import { blogPath, categoriesPath, categoryPath, citiesPath, cmsPath, contactPath, helpPath, howItWorksPath, placePath, prohibitedPath, safetyPath } from "@/lib/urls";
+import { adPath, blogPath, categoriesPath, categoryPath, citiesPath, cmsPath, contactPath, helpPath, howItWorksPath, joinPath, placePath, prohibitedPath, safetyPath } from "@/lib/urls";
 import { Listing, Location, Page } from "@/server/models";
 import { getPaths } from "@/server/urls/service";
 import { subcategorySitemapEntries } from "@/server/seo/subcategory-sitemap";
 import { isCityAlias } from "@/lib/seo/district-alias";
-import { districtMinimum, getIndexing, hubMinimum, isCategoryOn } from "@/server/seo/indexing";
+import { addressesFor } from "@/server/listings/ad-code";
+import { demoOwnerId, DEMO_SLUG } from "@/server/listings/demo-ads";
+import { getIndexing, isCategoryOn, isCityOn } from "@/server/seo/indexing";
 
 /** Listing shards hold only the three indexable page types (category, category+city, category+city+area). */
 export const SITEMAP_SHARDS = ["categories", "cities", "districts", "ads", "content"] as const;
 export type SitemapShard = (typeof SITEMAP_SHARDS)[number];
+
+const AD_SITEMAP_MAX = 50_000;
 
 export interface SitemapEntry {
   loc: string;
@@ -91,72 +96,60 @@ export async function shardEntries(shard: SitemapShard): Promise<SitemapEntry[]>
     $or: [{ expiresAt: { $exists: false } }, { expiresAt: null }, { expiresAt: { $gt: new Date() } }],
   };
   if (shard === "categories" || shard === "cities" || shard === "districts") {
-    const [categories, cities, counted, districtDocs] = await Promise.all([
+    // H16.5: every public listing page is in the sitemap, even with sample ads or none yet. Only the Indexing rules switches leave one out.
+    const [categories, cities, states, counted, districtDocs] = await Promise.all([
       getCategories(),
       getCities(),
-      Listing.aggregate<{ _id: { categoryId: string; cityId: string; districtId: string }; n: number; last: Date | null }>([
+      getStates().catch(() => []),
+      Listing.aggregate<{ _id: { categoryId: string; cityId: string }; last: Date | null }>([
         { $match: liveMatch },
         {
           $group: {
-            _id: {
-              categoryId: { $toString: "$categoryId" },
-              cityId: { $toString: "$cityId" },
-              districtId: { $ifNull: [{ $toString: "$districtId" }, ""] },
-            },
-            n: { $sum: 1 },
+            _id: { categoryId: { $toString: "$categoryId" }, cityId: { $toString: "$cityId" } },
             last: { $max: { $ifNull: ["$updatedAt", "$publishedAt"] } },
           },
         },
       ]),
-      Location.find({ type: "district" }).select("slug").lean(),
+      Location.find({ type: "district" }).select("slug parentId enabled").lean(),
     ]);
     const indexing = await getIndexing();
-    const citySlug = new Map(cities.map((city) => [city.id, city.slug]));
-    const districtSlug = new Map(districtDocs.map((row) => [String(row._id), row.slug || ""]));
-    const categoryById = new Map(categories.filter((cat) => cat.slug).map((cat) => [String(cat._id), cat]));
-    if (shard === "categories") {
-      const totals = new Map<string, { n: number; last: Date | null }>();
-      for (const row of counted) {
-        const current = totals.get(row._id.categoryId) || { n: 0, last: null };
-        current.n += row.n;
-        if (row.last && (!current.last || row.last > current.last)) current.last = row.last;
-        totals.set(row._id.categoryId, current);
-      }
-      return [...categoryById.entries()].flatMap(([id, cat]) => {
-        const total = totals.get(id);
-        if (!total || !cat.slug || !isCategoryOn(indexing, cat.slug) || total.n < (indexing.categories[cat.slug]?.hub ?? indexing.hub ?? cat.minListingsIndex ?? 3)) return [];
-        return [{ loc: loc(categoryPath(cat.slug)), lastmod: stamp(total.last) }];
-      });
-    }
+    const cats = categories.filter((cat) => cat.slug && isCategoryOn(indexing, cat.slug));
+    const onCities = cities.filter((city) => city.slug && isCityOn(indexing, city.slug));
+    const lastBy = new Map<string, Date | null>();
+    for (const row of counted) lastBy.set(`${row._id.categoryId}|${row._id.cityId}`, row.last);
     const urls: SitemapEntry[] = [];
-    const rolled = new Map<string, { n: number; last: Date | null; category: string; city: string }>();
-    for (const row of counted) {
-      const cat = categoryById.get(row._id.categoryId);
-      const city = citySlug.get(row._id.cityId);
-      if (!cat?.slug || !city) continue;
-      if (shard === "districts" && row._id.districtId) {
-        const district = districtSlug.get(row._id.districtId);
-        if (district && !isCityAlias(city, district) && row.n >= districtMinimum(indexing, cat, city)) {
-          urls.push({ loc: loc(placePath(cat.slug, city, district)), lastmod: stamp(row.last) });
-        }
-      }
-      const key = `${cat.slug}|${city}`;
-      const current = rolled.get(key) || { n: 0, last: null, category: cat.slug, city };
-      current.n += row.n;
-      if (row.last && (!current.last || row.last > current.last)) current.last = row.last;
-      rolled.set(key, current);
+    if (shard === "categories") {
+      for (const cat of cats) urls.push({ loc: loc(categoryPath(cat.slug!)), lastmod: now });
+      return urls;
     }
     if (shard === "cities") {
-      for (const row of rolled.values()) {
-        const cat = categories.find((item) => item.slug === row.category);
-        if (cat && row.n >= hubMinimum(indexing, cat, row.city)) urls.push({ loc: loc(placePath(row.category, row.city)), lastmod: stamp(row.last) });
+      for (const cat of cats) {
+        for (const state of states) if (state.slug) urls.push({ loc: loc(placePath(cat.slug!, state.slug)), lastmod: now });
+        for (const city of onCities) urls.push({ loc: loc(placePath(cat.slug!, city.slug!)), lastmod: stamp(lastBy.get(`${String(cat._id)}|${city.id}`)) });
       }
+      for (const city of onCities) urls.push({ loc: loc(joinPath(citiesPath(paths), city.slug)), lastmod: now });
+      return urls;
     }
-    if (shard === "districts") {
-      for (const entry of await subcategorySitemapEntries(loc)) urls.push({ loc: entry.loc, lastmod: entry.lastmod ?? stamp() });
+    const cityById = new Map(onCities.map((city) => [city.id, city]));
+    for (const row of districtDocs) {
+      const city = cityById.get(String(row.parentId));
+      if (!city?.slug || !row.slug || row.enabled === false || isCityAlias(city.slug, row.slug)) continue;
+      for (const cat of cats) urls.push({ loc: loc(placePath(cat.slug!, city.slug, row.slug)), lastmod: stamp(lastBy.get(`${String(cat._id)}|${city.id}`)) });
     }
+    for (const entry of await subcategorySitemapEntries(loc)) urls.push({ loc: entry.loc, lastmod: entry.lastmod ?? stamp() });
     return urls;
   }
-  // H6.7: ad pages are not in the sitemap. They live about 3 days; hubs, cities and sub-categories carry the SEO.
-  return [];
+  // H16.5: the ads shard lists every live ad that is set to be indexed, and every live sample (demo) ad. At most 50,000 (the sitemap limit).
+  const seedOwner = await demoOwnerId();
+  const indexable = [{ seoNoindex: false }, ...(seedOwner ? [{ ownerId: seedOwner, slug: { $regex: DEMO_SLUG.source } }] : [])];
+  const ads = await Listing.find({ $and: [liveMatch, { $or: indexable }] })
+    .select("slug updatedAt publishedAt title categoryId cityId code")
+    .sort({ _id: 1 })
+    .limit(AD_SITEMAP_MAX)
+    .lean<{ _id: unknown; slug?: string; updatedAt?: Date; publishedAt?: Date; title?: string; categoryId?: Types.ObjectId; cityId?: Types.ObjectId; code?: string }[]>();
+  // H16.2: each ad is listed at its own address (/<category>/<city>/<title>-<code>/); an ad that has no code yet keeps its old link, which forwards.
+  const addresses = await addressesFor(ads);
+  return ads
+    .filter((ad) => ad.slug)
+    .map((ad) => ({ loc: loc(addresses.get(String(ad._id)) ?? adPath(paths, ad.slug!)), lastmod: stamp(ad.updatedAt ?? ad.publishedAt) }));
 }

@@ -17,12 +17,15 @@ const ChatPanel = dynamic(() => import("@/components/chat/ChatPanel").then((mod)
 type Channel = "phone" | "whatsapp" | "telegram";
 type Reveal = { value: string; href?: string };
 type Action = Channel | "chat" | "tour";
-type Notice = { text: string; signIn?: boolean };
+type Notice = { text: string; signIn?: boolean; post?: { label: string; href: string } };
 /** Set only when the server says a live video tour can be requested on this ad (H6.5). */
 export type AdTour = { listingId: string; coins: number };
 
 /** Shown instead of a coin purchase until a real coin provider is set in production. */
 export const COIN_PURCHASE_SOON = "Credit purchases open soon. No credits were used.";
+
+/** H16.5: on a sample (demo) ad every contact button shows this message and a Post an ad button; nobody is contacted. */
+export type SampleNote = { message: string; button: string; href: string };
 
 export type ContactPopupInfo = {
   sellerName: string;
@@ -78,6 +81,7 @@ export function ContactProvider({
   tour = null,
   peopleAd = false,
   info = NO_INFO,
+  sample = null,
   children,
 }: {
   listingSlug?: string;
@@ -86,6 +90,7 @@ export function ContactProvider({
   /** H7.5: the ad is in a people category (server check). No video call button; Call, WhatsApp and chat stay. */
   peopleAd?: boolean;
   info?: ContactPopupInfo;
+  sample?: SampleNote | null;
   children: React.ReactNode;
 }) {
   const [shown, setShown] = useState<Partial<Record<Channel, Reveal>>>({});
@@ -99,7 +104,14 @@ export function ContactProvider({
   const seller = useSellerStatus(listingSlug);
   const people = peopleAd || seller?.people === true;
 
+  function showSample() {
+    if (!sample) return false;
+    setNotice({ text: sample.message, post: { label: sample.button, href: sample.href } });
+    return true;
+  }
+
   async function open(channel: Channel) {
+    if (showSample()) return;
     if (shown[channel]) return;
     setBusy(channel);
     setNotice(null);
@@ -149,12 +161,14 @@ export function ContactProvider({
   }
 
   function openCall() {
+    if (showSample()) return;
     setNotice(null);
     setSignedIn(hasSessionHint());
     setPopup("call");
   }
 
   async function openChatFlow() {
+    if (showSample()) return;
     const ready = hasSessionHint();
     setSignedIn(ready);
     if (!ready) return setPopup("chat");
@@ -228,8 +242,16 @@ export function useContact() {
 function NoticeLine({ notice, sticky }: { notice: Notice | null; sticky?: boolean }) {
   if (!notice) return null;
   return (
-    <p role="status" className={sticky ? "tk-bar-note" : "t-caption"} style={sticky ? undefined : { gridColumn: "1 / -1" }}>
+    <p role="status" data-tk={notice.post ? "sample-note" : undefined} className={sticky ? "tk-bar-note" : "t-caption"} style={sticky ? undefined : { gridColumn: "1 / -1" }}>
       {notice.text}
+      {notice.post ? (
+        <>
+          {" "}
+          <a className="tk-btn" data-tk="sample-post" href={notice.post.href} style={{ marginTop: 6 }}>
+            {notice.post.label}
+          </a>
+        </>
+      ) : null}
       {notice.signIn ? (
         <>
           {" "}
