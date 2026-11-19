@@ -51,7 +51,7 @@ test.describe("H9.3 My ads", () => {
       await expect(post).toHaveAttribute("href", "/u/post-insert/");
       const box = await post.boundingBox();
       expect(box?.height ?? 0).toBeGreaterThanOrEqual(24);
-      await expect(page.locator('[data-tk="my-ads-cost"]')).toHaveText(/^(Each ad costs ₹[\d,]+ \(.+\) to post\.|You have \d+ free ads? left\.|Posting an ad is free\.)$/);
+      await expect(page.locator('[data-tk="my-ads-cost"]')).toHaveText(/^(Each ad costs ₹[\d,]+ \(.+\) to post\.|You have \d+ free ads? left\.|Your first 3 ads are free\.)$/);
       await expect(page.getByRole("group", { name: "Filter ads" })).toHaveCount(0);
       await expect(page.getByText("Want to post one like this?")).toHaveCount(0);
       await expect(page.locator('[data-tk="post-strip"]')).toHaveCount(0);
