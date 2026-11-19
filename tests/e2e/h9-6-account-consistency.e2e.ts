@@ -58,7 +58,9 @@ async function problems(page: Page) {
     if (/₹[0-9,]*\.[0-9]{2}\b/.test(main.textContent || "")) found.push("rupee decimals");
     for (const panel of document.querySelectorAll("section.up-panel")) {
       const style = getComputedStyle(panel);
-      if (style.borderRadius !== "20px" || style.paddingTop !== "22px") found.push(`panel ${style.borderRadius} ${style.paddingTop}`);
+      // H12.3 made the alerts form card tight on a phone (14 px) on purpose, so its inputs fill 90 percent of the card; every other panel keeps 22 px.
+      const tightOnPhone = panel.classList.contains("up-panel-tight") && window.innerWidth <= 820;
+      if (style.borderRadius !== "20px" || style.paddingTop !== (tightOnPhone ? "14px" : "22px")) found.push(`panel ${style.borderRadius} ${style.paddingTop}`);
     }
     return found;
   });
