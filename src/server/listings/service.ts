@@ -37,7 +37,7 @@ import { assertVerified } from "@/server/verification/service";
 import { hashIp } from "@/server/shared/crypto";
 import { choiceProblems, parseListingAttributes, type FieldDefinition } from "@/server/shared/fields";
 import { withPickLimits } from "@/server/fields/service";
-import { revalidateListingPages } from "@/server/listings/revalidate";
+import { revalidateListingPages, revalidateListingsById } from "@/server/listings/revalidate";
 import { parsePrice } from "@/server/listings/price";
 import { attributeDenied, categoryDenied, textDenied } from "@/server/shared/policy";
 import { adLifetimeMs } from "@/server/listings/lifetime";
@@ -679,6 +679,7 @@ async function move(id: string, userId: string, to: ListingStatus, action: strin
   assertTransition(listing.status, to);
   listing.status = to;
   await listing.save();
+  await revalidateListingsById([String(listing._id)]);
   if (listing.slug && (to === "removed" || to === "expired" || to === "deleted")) notifyIndexNow([`/ad/${listing.slug}/`]);
   await record(userId, "user", action, listing._id.toString(), requestId, { status: to });
   return listing;
@@ -699,6 +700,7 @@ export async function resumeListing(id: string, userId: string, requestId: strin
   listing.status = "active";
   if (!listing.publishedAt) listing.publishedAt = new Date();
   await listing.save();
+  await revalidateListingsById([String(listing._id)]);
   await record(userId, "user", "listing.resume", listing._id.toString(), requestId, { status: "active" });
   return ownerView(listing);
 }
@@ -717,6 +719,7 @@ export async function renewListing(id: string, userId: string, requestId: string
     if (!listing.publishedAt) listing.publishedAt = new Date();
   }
   await listing.save();
+  await revalidateListingsById([String(listing._id)]);
   await record(userId, "user", "listing.renew", listing._id.toString(), requestId, { status: listing.status });
   return ownerView(listing);
 }
@@ -811,12 +814,13 @@ export async function revealContact(
 
 export async function expireDue(requestId: string) {
   await connectDb();
-  const due = await Listing.find({ status: "active", expiresAt: { $lte: new Date() } }).select("slug").limit(200).lean<{ slug?: string }[]>();
+  const due = await Listing.find({ status: "active", expiresAt: { $lte: new Date() } }).select("slug").limit(200).lean<{ _id: unknown; slug?: string }[]>();
   const result = await Listing.updateMany(
     { status: "active", expiresAt: { $lte: new Date() } },
     { $set: { status: "expired" } },
   );
   const expired = result.modifiedCount;
+  await revalidateListingsById(due.map((row) => String(row._id)));
   notifyIndexNow(due.flatMap((row) => (row.slug ? [`/ad/${row.slug}/`] : [])));
   await record(null, "system", "listing.expire", "cron", requestId, { expired });
   return { expired };
