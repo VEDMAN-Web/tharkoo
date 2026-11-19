@@ -1,14 +1,26 @@
 "use client";
 
 import Link from "next/link";
+import { useEffect, useState } from "react";
 import type { PanelSummary } from "@/server/notifications/summary";
 import { AvailabilityControls } from "@/components/vendor/AvailabilityControls";
+import { api } from "@/lib/ui/api";
 import { makeT } from "@/lib/ui/text";
 import { SignedOutPanel, UserPanelShell } from "./UserPanelShell";
 
 const t = makeT();
 
+/** What the Identity check row says for each real status (E1-B8). Before the status is known, or when there is none, it says when a check is needed. */
+const ID_WORDS: Record<string, string> = { approved: "Verified", pending_review: "Being checked", rejected: "Needs another look" };
+const ID_NEEDED = "Needed for some categories";
+
 export function SettingsPanel({ summary }: { summary: PanelSummary }) {
+  const [idStatus, setIdStatus] = useState("");
+  useEffect(() => {
+    if (!summary.signedIn) return;
+    void api<{ status?: string }>("/api/verification/status").then((res) => setIdStatus(res.ok ? res.data.status || "" : ""));
+  }, [summary.signedIn]);
+
   if (!summary.signedIn) {
     return (
       <UserPanelShell active="settings" summary={summary}>
@@ -37,7 +49,7 @@ export function SettingsPanel({ summary }: { summary: PanelSummary }) {
         <div className="up-setting" data-tk="setting-id">
           <div>
             <p className="up-name">Identity check</p>
-            <p className="up-muted">Needed for some categories</p>
+            <p className="up-muted" data-tk="setting-id-line">{ID_WORDS[idStatus] ?? ID_NEEDED}</p>
           </div>
           <Link href="/u/account/kyc/" className="up-btn-ghost">View</Link>
         </div>

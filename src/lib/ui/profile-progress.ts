@@ -16,7 +16,7 @@ export function profileSteps(input: ProfileInput): ProfileStep[] {
     { key: "whatsapp", label: "Add your WhatsApp number", href: "/u/seller-profile/", done: input.whatsapp },
     { key: "id", label: "Check your ID", href: "/u/account/kyc/", done: input.idChecked },
     { key: "ad", label: "Post your first ad", href: "/u/post-insert/", done: input.hasAd },
-    { key: "chat", label: "Turn on live chat", href: "/u/seller-profile/", done: input.liveChat },
+    { key: "chat", label: "Turn on live chat", href: "/u/account/edit-account/", done: input.liveChat },
   ];
 }
 

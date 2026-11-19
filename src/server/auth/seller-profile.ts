@@ -17,13 +17,13 @@ const WHATSAPP_MAX_DIGITS = 15;
 
 export const sellerProfileBodySchema = z
   .object({
-    name: z.string().trim().min(2).max(60),
-    city: z.string().trim().min(2).max(60),
-    whatsapp: z.string().trim().max(20).regex(/^[+0-9 ()-]*$/).default(""),
+    name: z.string().trim().min(2, "Add your name, at least 2 letters.").max(60, "Use a shorter name, 60 letters at most."),
+    city: z.string().trim().min(2, "Choose your city.").max(60, "Choose your city."),
+    whatsapp: z.string().trim().max(20, "Use a shorter number.").regex(/^[+0-9 ()-]*$/, "Use digits only, with a + at the start if you like.").default(""),
     availableNow: z.boolean().default(false),
     /** H7.4c: the Live chat switch, asked in step 2 ("Turn on live chat?"). Left out means no change. */
     liveChat: z.boolean().optional(),
-    dateOfBirth: z.string().trim().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
+    dateOfBirth: z.string().trim().regex(/^\d{4}-\d{2}-\d{2}$/, "Enter your date of birth.").optional(),
     adultConfirmed: z.boolean().optional(),
   })
   .strict();
