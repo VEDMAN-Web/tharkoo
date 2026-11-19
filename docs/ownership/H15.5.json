@@ -1,0 +1,9 @@
+{
+  "branchPrefix": "haiku/h15.5",
+  "globs": [
+    "docs/ownership/H15.5.json",
+    "progress/H15.5.md",
+    "src/components/buyer/AlertsPanel.tsx",
+    "tests/e2e/h15-5-alerts-form.e2e.ts"
+  ]
+}
