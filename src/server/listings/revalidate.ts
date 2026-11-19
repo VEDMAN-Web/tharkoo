@@ -3,6 +3,8 @@ import { connectDb } from "@/lib/db";
 
 interface PublishedListing {
   slug?: string | null;
+  status?: string | null;
+  categoryId?: unknown;
   cityId?: unknown;
   districtId?: unknown;
 }
@@ -25,12 +27,24 @@ export async function listingPagePaths(listing: PublishedListing, categorySlug?:
   return [...paths];
 }
 
+/** H16.5: a real ad that goes live can fill its category and city (15 real ads), and then that place's sample ads are ended. */
+async function retireSampleAds(listing: PublishedListing) {
+  if (listing.status !== "active" || !listing.categoryId || !listing.cityId) return;
+  try {
+    const { retireDemoAdsFor } = await import("@/server/listings/demo-retire");
+    await retireDemoAdsFor({ categoryId: String(listing.categoryId), cityId: String(listing.cityId) });
+  } catch (error) {
+    console.error("sample ads could not be checked", error instanceof Error ? error.message : error);
+  }
+}
+
 /**
  * Clears the shared caches and asks Next to rebuild each page that lists the ad, so it shows at once instead of after
  * the 60 second revalidate. Safe outside a Next request (scripts, unit tests): it then does nothing.
  */
 export async function revalidateListingPages(listing: PublishedListing, categorySlug?: string | null) {
   await connectDb();
+  await retireSampleAds(listing);
   try {
     const { purgeNext, refreshPublicCache } = await import("@/lib/cache");
     await refreshPublicCache("listing pages");

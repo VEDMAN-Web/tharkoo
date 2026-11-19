@@ -17,12 +17,11 @@ import {
   getSiblingCities,
   getSite,
   getStarListings,
-  isThin,
   listingCountsByCategoryCity,
   pageOutOfRange,
 } from "@/lib/queries";
 import { prettyPlace } from "@/lib/format";
-import { getIndexing, hubMinimum } from "@/server/seo/indexing";
+import { getIndexing, hubMinimum, isHubOn } from "@/server/seo/indexing";
 import { canonical, fillTemplate } from "@/lib/seo";
 import { placePath, postAdPath, searchPath, tagPath } from "@/lib/urls";
 import { activeFilterKeys, listingCanonicalSuffix } from "@/server/search/filter-seo";
@@ -92,7 +91,7 @@ export async function generateMetadata({ params, searchParams }: Props): Promise
     category: cat.name || category,
     city: loc.name || location,
     count: feed.total,
-    indexable: !isThin(feed.total, hubMin),
+    indexable: !!isHubOn(hubMin),
   });
   const resolved =
     (site as { listingCopySource?: string }).listingCopySource === "content"
@@ -104,7 +103,7 @@ export async function generateMetadata({ params, searchParams }: Props): Promise
           place: loc.name || location,
           state: String(vars.state ?? ""),
           count: feed.total,
-          indexable: !isThin(feed.total, hubMin),
+          indexable: !!isHubOn(hubMin),
           mode: "content",
         })
       : null;
@@ -112,7 +111,7 @@ export async function generateMetadata({ params, searchParams }: Props): Promise
   const description = resolved?.description ?? fillTemplate(seo?.description || copy.description, vars);
   const pageNo = Math.max(1, Number(sp.page) || 1);
   const filtered = activeFilterKeys(sp).length > 0;
-  const thin = isThin(feed.total, hubMin);
+  const thin = !isHubOn(hubMin);
   const clean = placePath(cat.slug || category, loc.slug || location);
   const suffix = listingCanonicalSuffix(sp, pageNo);
   // Filter URLs are noindex, follow, and their canonical is the clean page (see filter-seo.ts).
@@ -192,7 +191,7 @@ export default async function LocationPage({ params, searchParams }: Props) {
     category: cat.name || category,
     city: loc.name || location,
     count: feed.total,
-    indexable: !isThin(feed.total, hubMin),
+    indexable: !!isHubOn(hubMin),
     districts: districts.map((row) => row.name || "").filter(Boolean).slice(0, 3),
     updated: feed.items[0]?.publishedAt ? new Date(feed.items[0].publishedAt).toLocaleDateString("en-IN", { day: "numeric", month: "long", year: "numeric" }) : undefined,
   });
@@ -208,7 +207,7 @@ export default async function LocationPage({ params, searchParams }: Props) {
           place: loc.name || location,
           state: stateName,
           count: feed.total,
-          indexable: !isThin(feed.total, hubMin),
+          indexable: !!isHubOn(hubMin),
           districts: districts.map((row) => row.name || "").filter(Boolean).slice(0, 3),
           updated: feed.items[0]?.publishedAt ? new Date(feed.items[0].publishedAt).toLocaleDateString("en-IN", { day: "numeric", month: "long", year: "numeric" }) : undefined,
           mode: "content",
@@ -279,7 +278,7 @@ export default async function LocationPage({ params, searchParams }: Props) {
       page={feed.page}
       pages={feed.pages}
       total={feed.total}
-      noindex={isThin(feed.total, hubMin) || page > 1 || (filtered && feed.total === 0)}
+      noindex={!isHubOn(hubMin) || page > 1 || (filtered && feed.total === 0)}
       siblingLinks={siblingLinks}
       emptyNearby={siblings.slice(0, 6).map((c) => ({ href: placePath(cat.slug || category, c.slug || ""), label: c.name! }))}
       hideEmpty={feed.total === 0}

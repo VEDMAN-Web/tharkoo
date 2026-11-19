@@ -89,6 +89,8 @@ export interface ListingDoc extends BaseDoc {
   videoUrl?: string;
   videoPoster?: string;
   trust?: string[];
+  /** A showcase (demo) ad: shown with a Sample ad label, contact buttons open the sample message, never contacts anyone. */
+  sample?: boolean;
   subscriber?: boolean;
   lastBumpedAt?: Date;
   publishedAt?: Date;
