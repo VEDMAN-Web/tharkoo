@@ -1,6 +1,6 @@
 import { appendFileSync, mkdirSync } from "node:fs";
 import type { Page } from "@playwright/test";
-import { ADMIN_EMAIL, expect, signInAdminContext, test, withLocalDb } from "./helpers";
+import { ADMIN_EMAIL, expect, newApi, registerApi, signInAdminContext, test, uniqueEmail, withLocalDb } from "./helpers";
 import { expectPageHealthy, watchConsole } from "./e1c-checks";
 
 /**
@@ -48,8 +48,8 @@ test.describe("E1-C audit log: one write per screen", () => {
   test("prices: free ads per account, a recharge pack and a coupon", async ({ page, context, baseURL }) => {
     test.setTimeout(240_000);
     const errors = watchConsole(page);
-    const admin = await adminId();
     await signInAdminContext(context, baseURL!);
+    const admin = await adminId();
     await page.goto("/admin/prices/", { waitUntil: "networkidle" });
     await expectPageHealthy(page, "prices");
 
@@ -87,8 +87,8 @@ test.describe("E1-C audit log: one write per screen", () => {
   test("site text: a text changed on the admin screen shows on the public Home page and is audited", async ({ page, context, baseURL }) => {
     test.setTimeout(240_000);
     const errors = watchConsole(page);
-    const admin = await adminId();
     await signInAdminContext(context, baseURL!);
+    const admin = await adminId();
     await page.goto("/admin/ui-text/", { waitUntil: "networkidle" });
     await expectPageHealthy(page, "site text");
     await page.getByRole("tab", { name: /^Home page/ }).click();
@@ -116,12 +116,18 @@ test.describe("E1-C audit log: one write per screen", () => {
   test("users: extra free ads on one account", async ({ page, context, baseURL }) => {
     test.setTimeout(240_000);
     const errors = watchConsole(page);
-    const admin = await adminId();
     await signInAdminContext(context, baseURL!);
+    const admin = await adminId();
+    const member = uniqueEmail("e1caudit");
+    const api = await newApi(baseURL!);
+    await registerApi(api, baseURL!, member);
+    await api.dispose();
 
-    await page.goto("/admin/users/", { waitUntil: "networkidle" });
+    await page.goto(`/admin/users/?q=${encodeURIComponent(member)}`, { waitUntil: "networkidle" });
     await expectPageHealthy(page, "users");
-    await page.locator('[data-tk="server-table"] tbody tr', { hasText: /memberActive/ }).first().locator(".adm-k-rowlink").click();
+    const found = page.locator('[data-tk="server-table"] tbody tr');
+    await expect(found).toHaveCount(1);
+    await found.first().locator(".adm-k-rowlink").click();
     const extra = page.locator("#user-extra-free");
     await expect(page.locator("[data-tk=drawer]")).toBeVisible();
     await expect(extra).toBeVisible();
@@ -136,8 +142,8 @@ test.describe("E1-C audit log: one write per screen", () => {
   test("page builder: a published headline", async ({ page, context, baseURL }) => {
     test.setTimeout(300_000);
     const errors = watchConsole(page);
-    const admin = await adminId();
     await signInAdminContext(context, baseURL!);
+    const admin = await adminId();
 
     await page.goto("/admin/page-builder/", { waitUntil: "networkidle" });
     await expect(page.locator('[data-tk="home-builder"]')).toBeVisible();
@@ -150,6 +156,66 @@ test.describe("E1-C audit log: one write per screen", () => {
     await expect(page.locator('[data-tk="toast"]')).toContainText("Published as version");
     await expectAudited("Page builder", "Home headline published", since, admin);
 
+    expect(errors, "no console errors").toEqual([]);
+  });
+
+  test("cities: a new city leaves an audit entry with who, what and when", async ({ page, context, baseURL }) => {
+    test.setTimeout(240_000);
+    const errors = watchConsole(page);
+    await signInAdminContext(context, baseURL!);
+    const admin = await adminId();
+    await page.goto("/admin/locations/", { waitUntil: "networkidle" });
+    await expectPageHealthy(page, "cities");
+    const since = new Date();
+    await page.getByRole("button", { name: "New place" }).click();
+    const dialog = page.getByRole("dialog");
+    const name = `E1C Town ${String(Date.now()).slice(-5)}`;
+    await dialog.locator("#new-place-kind").selectOption("city");
+    await dialog.getByLabel("Name").fill(name);
+    await dialog.locator("#new-place-parent").selectOption({ index: 1 });
+    await dialog.getByRole("button", { name: "Create place" }).click();
+    await expect(page.getByRole("heading", { name })).toBeVisible({ timeout: 20_000 });
+    await expectAudited("Cities & areas", `city ${name} added`, since, admin);
+    expect(errors, "no console errors").toEqual([]);
+  });
+
+  test("categories: a new category leaves an audit entry with who, what and when", async ({ page, context, baseURL }) => {
+    test.setTimeout(240_000);
+    const errors = watchConsole(page);
+    await signInAdminContext(context, baseURL!);
+    const admin = await adminId();
+    await page.goto("/admin/categories/", { waitUntil: "networkidle" });
+    await expectPageHealthy(page, "categories");
+    const since = new Date();
+    const stamp = String(Date.now()).slice(-6);
+    await page.getByRole("button", { name: "New category" }).click();
+    const dialog = page.getByRole("dialog");
+    await dialog.getByRole("textbox", { name: /^Name/ }).fill(`E1C Cat ${stamp}`);
+    await dialog.getByLabel(/^Kind/).selectOption("goods");
+    await dialog.getByRole("button", { name: "Create category" }).click();
+    await expect(page.getByRole("heading", { name: `E1C Cat ${stamp}` })).toBeVisible({ timeout: 20_000 });
+    await expectAudited("Categories", `category E1C Cat ${stamp} added`, since, admin);
+    expect(errors, "no console errors").toEqual([]);
+  });
+
+  test("SEO center: a saved title template leaves an audit entry with who, what and when", async ({ page, context, baseURL }) => {
+    test.setTimeout(240_000);
+    page.on("dialog", (dialog) => void dialog.accept());
+    const errors = watchConsole(page);
+    await signInAdminContext(context, baseURL!);
+    const admin = await adminId();
+    const stamp = String(Date.now()).slice(-6);
+    await page.goto("/admin/seo/templates/", { waitUntil: "networkidle" });
+    const since = new Date();
+    const selects = page.locator("select");
+    await selects.nth(0).selectOption({ label: "Category hub" });
+    await selects.nth(1).selectOption({ label: "Dating only" });
+    await page.getByLabel("Title", { exact: true }).fill(`E1C${stamp} {category} ads in {city} | {site}`);
+    await page.getByLabel("Description", { exact: true }).fill("Browse {category} notices in {city} on {site}. Updated daily with clear photos and honest details.");
+    await page.getByRole("button", { name: /Save/ }).first().click();
+    await expect(page.getByText(/Saved\./)).toBeVisible();
+    await expectAudited("SEO center", "a category page title template saved", since, admin);
+    await page.getByRole("button", { name: "Delete this category template" }).click();
     expect(errors, "no console errors").toEqual([]);
   });
 });

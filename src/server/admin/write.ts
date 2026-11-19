@@ -4,6 +4,7 @@ import { AuditRepository, redact } from "@/server/audit";
 import type { AdminCtx } from "@/server/admin/context";
 import { safeUndoData, undoWindowDays, type LockReason, type UndoKind, type UndoWindowKey } from "@/server/admin/undo/registry";
 import { ForbiddenError, ValidationError } from "@/server/http";
+import { User } from "@/server/models";
 import { textDenied } from "@/server/shared/policy";
 
 const audit = new AuditRepository();
@@ -25,7 +26,7 @@ export interface AdminWriteSpec<T> {
   batchId?: string;
 }
 
-function roleOf(ctx: AdminCtx): string | undefined {
+function roleOf(ctx: { roles: readonly string[] }): string | undefined {
   return STAFF_ROLES.find((role) => ctx.roles.includes(role)) ?? ctx.roles[0];
 }
 
@@ -103,4 +104,53 @@ export async function adminWrite<T>(ctx: AdminCtx, spec: AdminWriteSpec<T>): Pro
     console.error("admin.audit.missing", { action: spec.action, targetId: spec.target.id, error: error instanceof Error ? error.message : error });
     return { result: applied.result, eventId: "", undoUntil: null };
   }
+}
+
+export interface ChangeActor {
+  email: string;
+  roles: readonly string[];
+  actorId?: string;
+  requestId?: string;
+  ipHash?: string;
+}
+
+export interface ChangeRecord {
+  action: string;
+  target: { type: string; id: string; label?: string };
+  before?: Record<string, unknown> | null;
+  after?: Record<string, unknown> | null;
+  summary: string;
+}
+
+/**
+ * Writes the audit entry for a change that was already made, with the same fields adminWrite gives: who (id and role),
+ * what (action, label, a plain sentence) and when. For the older screens that do their own write and permission check.
+ */
+export async function recordAdminChange(actor: ChangeActor, change: ChangeRecord) {
+  await connectDb();
+  const user = actor.actorId ? null : actor.email ? await User.findOne({ email: actor.email }).select("_id") : null;
+  await audit.append({
+    actorId: actor.actorId ?? user?._id?.toString() ?? null,
+    actorType: "admin",
+    actorRole: roleOf(actor),
+    action: change.action,
+    targetType: change.target.type,
+    targetId: change.target.id,
+    targetLabel: change.target.label,
+    before: redact(change.before ?? {}),
+    after: redact(change.after ?? {}),
+    summary: change.summary.slice(0, SUMMARY_MAX),
+    requestId: actor.requestId ?? crypto.randomUUID(),
+    ipHash: actor.ipHash,
+  });
+}
+
+/** "Added", "Changed" or "Removed" the thing, with its name, and for a change the fields that differ. */
+export function changeSentence(verb: "Added" | "Changed" | "Removed" | "Reordered", noun: string, name: string | undefined, before?: unknown, after?: unknown): string {
+  const label = name ? ` "${name}"` : "";
+  if (verb !== "Changed") return `${verb} the ${noun}${label}`;
+  const was = (before ?? {}) as Record<string, unknown>;
+  const now = (after ?? {}) as Record<string, unknown>;
+  const fields = Object.keys(now).filter((key) => JSON.stringify(was[key]) !== JSON.stringify(now[key]));
+  return fields.length ? `Changed the ${noun}${label}: ${fields.join(", ")}` : `Saved the ${noun}${label}, nothing changed`;
 }

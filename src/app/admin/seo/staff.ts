@@ -1,13 +1,10 @@
-import { AuditRepository } from "@/server/audit";
+import { recordAdminChange } from "@/server/admin/write";
 import { ForbiddenError } from "@/server/http";
-import { User } from "@/server/models";
 
 export interface SeoActor {
   roles: string[];
   email: string;
 }
-
-const audit = new AuditRepository();
 
 /** seo_editor and above may use the SEO center; settings that change robots need superadmin. */
 export function assertSeoEditor(actor: SeoActor) {
@@ -20,16 +17,23 @@ export function assertSuperadmin(actor: SeoActor) {
   if (!actor.roles.includes("superadmin")) throw new ForbiddenError("Only a superadmin can change this");
 }
 
+const SEO_WORDS: Record<string, string> = {
+  "seo.template.save": "Saved the SEO template",
+  "seo.template.delete": "Removed the SEO template",
+  "seo.audit.run": "Ran the SEO check",
+  "seo.settings.save": "Saved the SEO settings",
+  "seo.redirect.create": "Added a redirect from",
+  "seo.override.save": "Saved the SEO override for",
+  "seo.override.delete": "Removed the SEO override for",
+};
+
 export async function recordSeo(actor: SeoActor, action: string, targetType: string, targetId: string, before: unknown, after: unknown) {
-  const user = actor.email ? await User.findOne({ email: actor.email }).select("_id") : null;
-  await audit.append({
-    actorId: user?._id?.toString() ?? null,
-    actorType: "admin",
+  const words = SEO_WORDS[action] ?? `Changed SEO (${action})`;
+  await recordAdminChange(actor, {
     action,
-    targetType,
-    targetId,
+    target: { type: targetType, id: targetId, label: targetId },
     before: (before ?? {}) as Record<string, unknown>,
     after: (after ?? {}) as Record<string, unknown>,
-    requestId: crypto.randomUUID(),
+    summary: action === "seo.audit.run" || action === "seo.settings.save" ? words : `${words}: ${targetId}`,
   });
 }
