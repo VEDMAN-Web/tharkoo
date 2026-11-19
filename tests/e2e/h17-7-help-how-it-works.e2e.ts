@@ -35,6 +35,10 @@ test.describe("H17.7 Help hub", () => {
       expect(html, `the answer "${answer}" is in the page text`).toContain(answer);
     }
     await page.goto("/how-it-works/");
+    // Every question has its answer panel in the page (the closed ones are only hidden), not just the open one.
+    const panels = page.locator('[id^="faq-panel-"]');
+    await expect(panels).toHaveCount(5);
+    expect(await panels.evaluateAll((nodes) => nodes.map((node) => (node as HTMLElement).textContent?.trim().length ?? 0))).not.toContain(0);
     const open = page.locator('button[aria-expanded="true"]');
     await expect(open).toHaveCount(1);
     await expect(page.getByText("6-digit code")).toBeHidden();
