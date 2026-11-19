@@ -21,6 +21,8 @@ import { siteUrl } from "@/lib/utils";
 import { listingVisibility } from "@/server/listings/visibility";
 import { isSampleListing } from "@/server/listings/demo-ads";
 import { adPath, categoryPath, placePath } from "@/lib/urls";
+import { adAddress } from "@/lib/ad-address";
+import { addressForSlug } from "@/server/listings/ad-route";
 import { withUrlSeo, urlHeading } from "@/lib/seo/override";
 import { plain } from "@/lib/plain";
 import { isCityAlias } from "@/lib/seo/district-alias";
@@ -55,12 +57,13 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const sample = await isSampleListing(record);
   if (access === "ended") {
     const paths = await getPaths();
-    return withUrlSeo(adPath(paths, slug), {
+    const endedPath = (await addressForSlug(slug)) || adPath(paths, slug);
+    return withUrlSeo(endedPath, {
       title: "This listing has ended | Tharkoo",
       description: "This Tharkoo listing has ended and is no longer open for new replies.",
-      path: adPath(paths, slug),
+      path: endedPath,
       index: false,
-    });
+    }, adPath(paths, slug));
   }
   const [ad, site] = await Promise.all([getListingBySlug(slug), getSite()]);
   if (!ad) return {};
@@ -73,9 +76,9 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const description = adMetaDescription({ title: displayTitle(ad.title), category: prettyPlace(ad.categorySlug), city: prettyPlace(ad.citySlug), site: site.name || "Tharkoo" });
   const image = safePhoto(ad.photos?.[0]) || "/brand/og-default.png";
   const paths = await getPaths();
-  const path = adPath(paths, ad.slug || slug);
+  const path = (await addressForSlug(ad.slug || slug)) || adPath(paths, ad.slug || slug);
   // H17.8: a sample (demo) ad page is always noindex,follow (it replaces the H16.5 rule that indexed it). A live real ad that is set to be indexed is indexable.
-  return withUrlSeo(path, { title, description, path, image, index: access === "live" && !sample && record?.seoNoindex === false });
+  return withUrlSeo(path, { title, description, path, image, index: access === "live" && !sample && record?.seoNoindex === false }, adPath(paths, ad.slug || slug));
 }
 
 function listedPrice(attributes: unknown) {
@@ -107,7 +110,7 @@ export default async function AdPage({ params }: Props) {
   if (access === "gone" || access === "missing") notFound();
   if (access === "ended") {
     const paths = await getPaths();
-    const publicAd = adPath(paths, slug);
+    const publicAd = (await addressForSlug(slug)) || adPath(paths, slug);
     return (
       <article className="tk-container" style={{ paddingTop: 16, paddingBottom: 24 }}>
         <h1>{displayTitle(record?.title) || "Listing"}</h1>
@@ -119,8 +122,9 @@ export default async function AdPage({ params }: Props) {
   }
   const ad = await getListingBySlug(slug);
   if (!ad) notFound();
-  const row = (await Listing.findOne({ slug: ad.slug }).select("_id attributes publishedAt expiresAt ownerId +contact").lean()) as {
+  const row = (await Listing.findOne({ slug: ad.slug }).select("_id attributes publishedAt expiresAt ownerId code +contact").lean()) as {
     contact?: { phone?: string; whatsapp?: string };
+    code?: string;
     _id?: unknown;
     ownerId?: unknown;
     attributes?: unknown;
@@ -143,9 +147,12 @@ export default async function AdPage({ params }: Props) {
   const adView = { ...plain(ad), details: adDetailRows(row?.attributes, cat?.fields) };
   const cover = safePhoto(ad.photos?.[0]);
   const paths = await getPaths();
-  const publicAd = adPath(paths, ad.slug || slug);
+  const publicAd =
+    row?.code && ad.categorySlug && ad.citySlug && ad.title
+      ? adAddress({ categorySlug: ad.categorySlug, citySlug: ad.citySlug, title: ad.title, code: row.code })
+      : adPath(paths, ad.slug || slug);
   const shareUrl = canonical(publicAd);
-  const heading = await urlHeading(publicAd, displayTitle(ad.title) || "Listing");
+  const heading = await urlHeading(publicAd, displayTitle(ad.title) || "Listing", adPath(paths, ad.slug || slug));
   const image = cover ? (cover.startsWith("http") ? cover : `${siteUrl().replace(/\/$/, "")}${cover}`) : undefined;
   const city = prettyPlace(ad.citySlug);
   const catName = cat?.name || ad.categorySlug || "";

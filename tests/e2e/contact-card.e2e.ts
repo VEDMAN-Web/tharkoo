@@ -2,7 +2,7 @@ import { createHmac, randomInt } from "node:crypto";
 import AxeBuilder from "@axe-core/playwright";
 import type { Page } from "@playwright/test";
 import { ObjectId } from "mongodb";
-import { expect, firstAdPath, hasHorizontalScroll, isPhone, newUserApi, originHeaders, realAdPath, setSellerAvailable, slugFromAdPath, test, withLocalDb } from "./helpers";
+import { expect, firstAdPath, hasHorizontalScroll, isPhone, newUserApi, originHeaders, realAdPath, setSellerAvailable, slugFromAdPath, test, withLocalDb, withoutAddress } from "./helpers";
 
 const E2E_SESSION_SECRET = "local-only-session-secret-not-real-0001";
 
@@ -216,7 +216,7 @@ test.describe("H6.8 contact card on a property ad with live tours on", () => {
       if (!user || !template) return null;
       const id = new ObjectId();
       const slug = `chat-roundtrip-${info.project.name}-${Date.now()}`;
-      await db.collection("listings").insertOne({ ...template, _id: id, slug, title: `Chat round trip ${Date.now()}`, ownerId: user._id });
+      await db.collection("listings").insertOne({ ...withoutAddress(template), _id: id, slug, title: `Chat round trip ${Date.now()}`, ownerId: user._id });
       return { listingId: String(id), slug };
     });
     expect(moved, "the advertiser and the ad are in the test database").not.toBeNull();

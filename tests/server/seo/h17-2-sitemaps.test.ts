@@ -60,7 +60,7 @@ describe("H17.2 sitemap lastmod is the record's real date", () => {
   });
 
   it("category, state, city and ad pages carry the date of their own records", async () => {
-    await world();
+    const { ad } = await world();
     const categories = await shardEntries("categories");
     expect(find(categories, "/jobs/")?.lastmod).toBe(D1.toISOString());
     const cities = await shardEntries("cities");
@@ -68,7 +68,8 @@ describe("H17.2 sitemap lastmod is the record's real date", () => {
     expect(find(cities, "/cities/surat/")?.lastmod).toBe(D2.toISOString());
     expect(find(cities, "/jobs/surat/")?.lastmod).toBe(D3.toISOString());
     const ads = await shardEntries("ads");
-    expect(find(ads, "/office-role-k7q2/")?.lastmod).toBe(D3.toISOString());
+    // H16.2: the ad is listed at its own address, which ends in its code.
+    expect(find(ads, `-${ad.code}/`)?.lastmod).toBe(D3.toISOString());
   });
 
   it("a page with no real date has no lastmod: the fixed pages never get today's date", async () => {

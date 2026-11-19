@@ -218,7 +218,7 @@ test.describe("H7.131 chat flows", () => {
       await expect(chat).toBeVisible();
       await shot(page, `popout-${path === "/" ? "home" : "listing"}`);
       await chat.click();
-      await expect(page).toHaveURL(new RegExp(`${shared.slug}/?$`));
+      await expect(page).toHaveURL(new RegExp(`${shared.slug}(-[a-z0-9]{5})?/?$`));
       await expect(page.locator("[data-tk=ad-popup]")).toHaveAttribute("data-step", "login");
       expect(page.url()).not.toContain("chat=1");
     }

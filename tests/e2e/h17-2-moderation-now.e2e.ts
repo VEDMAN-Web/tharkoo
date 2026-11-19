@@ -1,5 +1,5 @@
 import { ObjectId } from "mongodb";
-import { expect, loginApi, loginUi, newApi, originHeaders, registerApi, setRoles, test, uniqueEmail, withLocalDb } from "./helpers";
+import { expect, loginApi, loginUi, newApi, originHeaders, registerApi, setRoles, test, uniqueEmail, withLocalDb, withoutAddress } from "./helpers";
 
 /**
  * H17.2: pages are stored for 300 seconds, but a moderation change must show on the very next request.
@@ -27,7 +27,7 @@ async function placeAd(label: string, ownerId: ObjectId): Promise<Placed | null>
     const slug = `h172-${label}-${stamp}`;
     const title = `Zqh172${label}x${stamp}`;
     const now = new Date();
-    const row = await db.collection("listings").insertOne({ ...rest, ownerId, title, slug, status: "active", sample: false, publishedAt: now, createdAt: now, updatedAt: now, expiresAt: new Date(stamp + 3 * 86_400_000) });
+    const row = await db.collection("listings").insertOne({ ...withoutAddress(rest), ownerId, title, slug, status: "active", sample: false, publishedAt: now, createdAt: now, updatedAt: now, expiresAt: new Date(stamp + 3 * 86_400_000) });
     return { id: row.insertedId, slug, title, category: String(category?.slug), city: String(city?.slug) };
   });
 }

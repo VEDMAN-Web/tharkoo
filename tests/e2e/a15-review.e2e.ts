@@ -1,6 +1,6 @@
 import { mkdirSync } from "node:fs";
 import { ObjectId } from "mongodb";
-import { expect, hasHorizontalScroll, loginUi, newApi, registerApi, setRoles, test, uniqueEmail, withLocalDb } from "./helpers";
+import { expect, hasHorizontalScroll, loginUi, newApi, registerApi, setRoles, test, uniqueEmail, withLocalDb, withoutAddress } from "./helpers";
 
 const SHOTS = process.env.A15_SHOTS_DIR || "";
 const DAY_MS = 24 * 60 * 60 * 1000;
@@ -17,7 +17,7 @@ async function seedLiveAds(titles: string[]) {
       void _id;
       void lastModerationAt;
       const now = new Date(Date.now() - (titles.length - index) * 60_000);
-      await db.collection("listings").insertOne({ ...rest, ownerId: owner, title, slug: `a15-${index}-${Date.now()}`, publishedAt: now, createdAt: now, updatedAt: now });
+      await db.collection("listings").insertOne({ ...withoutAddress(rest), ownerId: owner, title, slug: `a15-${index}-${Date.now()}`, publishedAt: now, createdAt: now, updatedAt: now });
     }
     return true;
   });

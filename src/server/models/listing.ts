@@ -1,5 +1,8 @@
 import { Schema, type Types } from "mongoose";
+import { adAddress, generateAdCode } from "@/lib/ad-address";
+import { connectDb } from "@/lib/db";
 import { appendOnlyPlugin, lockBulkWrites } from "@/server/audit/append-only";
+import { Category, Location } from "@/server/models/catalog";
 import { collectionName, modelName } from "@/server/models/names";
 import { registerModel } from "@/server/models/register";
 
@@ -33,6 +36,12 @@ export interface ListingDoc {
   localityId?: Types.ObjectId;
   title: string;
   slug?: string;
+  /** H16.2: 5 lowercase base36 characters with a digit, set once. The last part of the public address. */
+  code?: string;
+  /** H16.2: the current public address, /<category>/<city>/<title-slug>-<code>/. */
+  addressPath?: string;
+  /** H16.2: earlier public addresses of this ad (newest last, at most 10). Each one answers with a permanent redirect. */
+  previousPaths?: string[];
   description: string;
   attributes?: Record<string, unknown>;
   /** Asking price in whole rupees (INR). A real field, not an attribute. */
@@ -163,6 +172,9 @@ const listingSchema = new Schema<ListingDoc>(
     localityId: { type: Schema.Types.ObjectId },
     title: { type: String, required: true },
     slug: { type: String },
+    code: { type: String },
+    addressPath: { type: String },
+    previousPaths: { type: [String], default: undefined },
     description: { type: String, required: true },
     attributes: { type: Schema.Types.Mixed, default: {} },
     price: { type: Number, min: 0 },
@@ -193,6 +205,7 @@ const listingSchema = new Schema<ListingDoc>(
   { timestamps: true, collection: collectionName("listings", "Listing") },
 );
 listingSchema.index({ slug: 1 }, { unique: true, sparse: true });
+listingSchema.index({ code: 1 }, { unique: true, sparse: true });
 listingSchema.index({ status: 1, categoryId: 1, cityId: 1, publishedAt: -1 });
 listingSchema.index({ status: 1, stateId: 1, publishedAt: -1 });
 listingSchema.index({ status: 1, cityId: 1, publishedAt: -1 });
@@ -200,6 +213,62 @@ listingSchema.index({ status: 1, publishedAt: -1 });
 listingSchema.index({ ownerId: 1, status: 1 });
 listingSchema.index({ status: 1, lastModerationAt: 1, publishedAt: -1 });
 listingSchema.index({ title: "text", description: "text" });
+
+const MAX_PREVIOUS_PATHS = 10;
+const CODE_TRIES = 20;
+
+/** Codes handed out by this process that may not be saved yet (a big insertMany makes many at once). */
+const handedOut = new Set<string>();
+const HANDED_OUT_MAX = 100_000;
+
+/** H16.2: a code no other ad uses. The unique index is the final guard against two processes racing. */
+export async function freeAdCode(): Promise<string> {
+  await connectDb();
+  for (let i = 0; i < CODE_TRIES; i += 1) {
+    const code = generateAdCode();
+    // Claim the code before the database check, so two saves running at once cannot both take it.
+    if (handedOut.has(code)) continue;
+    if (handedOut.size >= HANDED_OUT_MAX) handedOut.clear();
+    handedOut.add(code);
+    if (!(await Listing.exists({ code }))) return code;
+  }
+  throw new Error("Could not make a free ad code");
+}
+
+/** H16.2: the public address of an ad, or "" while it lacks a code, a category or a city. */
+export async function listingAddressPath(ad: { categoryId?: Types.ObjectId; cityId?: Types.ObjectId; title?: string; code?: string }): Promise<string> {
+  if (!ad.code || !ad.categoryId || !ad.cityId || !ad.title) return "";
+  await connectDb();
+  const [category, city] = await Promise.all([
+    Category.findById(ad.categoryId).select("slug").lean<{ slug?: string } | null>(),
+    Location.findById(ad.cityId).select("slug").lean<{ slug?: string } | null>(),
+  ]);
+  if (!category?.slug || !city?.slug) return "";
+  return adAddress({ categorySlug: category.slug, citySlug: city.slug, title: ad.title, code: ad.code });
+}
+
+/** H16.2: every ad gets its code on its first save. */
+listingSchema.pre("validate", async function () {
+  if (!this.code) this.code = await freeAdCode();
+});
+
+/**
+ * H16.2: once an ad has a slug (it was posted), keep its public address up to date. When a change of title, category or
+ * city moves the address, the old one is kept in previousPaths so it can redirect. Moves done with bulk writes skip this;
+ * those addresses still redirect because the code, not the path, finds the ad.
+ */
+listingSchema.pre("save", async function () {
+  if (!this.slug || !this.code) return;
+  const needs = this.isNew || !this.addressPath || this.isModified("title") || this.isModified("categoryId") || this.isModified("cityId");
+  if (!needs) return;
+  const next = await listingAddressPath(this);
+  if (!next || next === this.addressPath) return;
+  if (this.addressPath) {
+    const kept = (this.previousPaths ?? []).filter((path) => path !== this.addressPath && path !== next);
+    this.previousPaths = [...kept, this.addressPath].slice(-MAX_PREVIOUS_PATHS);
+  }
+  this.addressPath = next;
+});
 
 const listingVersionSchema = new Schema<ListingVersionDoc>(
   {

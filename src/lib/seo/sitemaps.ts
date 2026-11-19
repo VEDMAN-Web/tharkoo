@@ -1,3 +1,4 @@
+import type { Types } from "mongoose";
 import { connectDb } from "@/lib/db";
 import { getBlogPosts, getCategories, getCities, getHelpArticles, getStates } from "@/lib/queries";
 import { siteUrl } from "@/lib/utils";
@@ -6,6 +7,7 @@ import { Category, Listing, Location, Page } from "@/server/models";
 import { getPaths } from "@/server/urls/service";
 import { subcategorySitemapEntries } from "@/server/seo/subcategory-sitemap";
 import { isCityAlias } from "@/lib/seo/district-alias";
+import { addressesFor } from "@/server/listings/ad-code";
 import { demoOwnerId, DEMO_SLUG } from "@/server/listings/demo-ads";
 import { getIndexing, isCategoryOn, isCityOn } from "@/server/seo/indexing";
 
@@ -138,9 +140,13 @@ export async function shardEntries(shard: SitemapShard): Promise<SitemapEntry[]>
   const seedOwner = await demoOwnerId();
   const notSample = seedOwner ? [{ $nor: [{ ownerId: seedOwner, slug: { $regex: DEMO_SLUG.source } }] }] : [];
   const ads = await Listing.find({ $and: [liveMatch, { seoNoindex: false }, ...notSample] })
-    .select("slug updatedAt publishedAt")
+    .select("slug updatedAt publishedAt title categoryId cityId code")
     .sort({ _id: 1 })
     .limit(AD_SITEMAP_MAX)
-    .lean<{ slug?: string; updatedAt?: Date; publishedAt?: Date }[]>();
-  return ads.filter((ad) => ad.slug).map((ad) => ({ loc: loc(adPath(paths, ad.slug!)), lastmod: stamp(ad.updatedAt ?? ad.publishedAt) }));
+    .lean<{ _id: unknown; slug?: string; updatedAt?: Date; publishedAt?: Date; title?: string; categoryId?: Types.ObjectId; cityId?: Types.ObjectId; code?: string }[]>();
+  // H16.2: each ad is listed at its own address (/<category>/<city>/<title>-<code>/); an ad that has no code yet keeps its old link, which forwards.
+  const addresses = await addressesFor(ads);
+  return ads
+    .filter((ad) => ad.slug)
+    .map((ad) => ({ loc: loc(addresses.get(String(ad._id)) ?? adPath(paths, ad.slug!)), lastmod: stamp(ad.updatedAt ?? ad.publishedAt) }));
 }

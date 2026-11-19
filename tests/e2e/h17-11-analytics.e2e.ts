@@ -1,6 +1,6 @@
 import { ObjectId } from "mongodb";
 import type { Page } from "@playwright/test";
-import { ADMIN_EMAIL, ADMIN_PASSWORD, cleanTest as test, expect, loginUi, withLocalDb } from "./helpers";
+import { ADMIN_EMAIL, ADMIN_PASSWORD, cleanTest as test, expect, loginUi, withLocalDb, withoutAddress } from "./helpers";
 
 /**
  * H17.11: Google Analytics. Google is never called: every request to a Google host is answered by a stub here.
@@ -119,7 +119,7 @@ test.describe("H17.11 Google Analytics", () => {
       await db.collection("users").insertOne({ _id: owner, email: `h1711-${Date.now()}@example.test`, displayName: "H1711 Seller", status: "active", roles: ["user"], createdAt: new Date() });
       const slug = `h1711-real-${Date.now()}`;
       const now = new Date();
-      await db.collection("listings").insertOne({ ...rest, ownerId: owner, title: `Zqh1711 real ${Date.now()}`, slug, status: "active", sample: false, publishedAt: now, createdAt: now, updatedAt: now, expiresAt: new Date(Date.now() + 3 * 86_400_000), contact: { phone: "9000000011", whatsapp: "9000000022" } });
+      await db.collection("listings").insertOne({ ...withoutAddress(rest), ownerId: owner, title: `Zqh1711 real ${Date.now()}`, slug, status: "active", sample: false, publishedAt: now, createdAt: now, updatedAt: now, expiresAt: new Date(Date.now() + 3 * 86_400_000), contact: { phone: "9000000011", whatsapp: "9000000022" } });
       return slug;
     });
     expect((await request.get(`/ad/${real}/`)).status()).toBe(200);

@@ -1,6 +1,6 @@
 import AxeBuilder from "@axe-core/playwright";
 import type { APIRequestContext, Page } from "@playwright/test";
-import { becomeSeller, expect, hasHorizontalScroll, isPhone, loginUi, newUserApi, originHeaders, test, withLocalDb } from "./helpers";
+import { adAddressPattern, becomeSeller, expect, hasHorizontalScroll, isPhone, loginUi, newUserApi, originHeaders, test, withLocalDb } from "./helpers";
 
 const SHOTS = process.env.POST_SHOTS ?? "";
 
@@ -90,7 +90,7 @@ test.describe("H7.82 chats and the profile card", () => {
     // A real mouse click on the photo: the stretched title link is over it, which is the point (Playwright's own click refuses a covered target).
     const photo = (await adCard.locator(".tk-mini-ad-photo").boundingBox())!;
     await page.mouse.click(photo.x + photo.width / 2, photo.y + photo.height / 2);
-    await expect(page).toHaveURL(new RegExp(`/ad/${slug}/$`));
+    await expect(page).toHaveURL(await adAddressPattern(slug));
     await buyer.api.dispose();
     await owner.api.dispose();
   });
