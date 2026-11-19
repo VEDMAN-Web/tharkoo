@@ -58,6 +58,8 @@
     "tests/e2e/inbox-profile.e2e.ts",
     "tests/e2e/post-step-5.e2e.ts",
     "tests/e2e/public-words.e2e.ts",
-    "tests/server/listings/h16-2b-links.test.ts"
+    "tests/server/listings/h16-2b-links.test.ts",
+    "tests/e2e/h16-2b-crawl.e2e.ts",
+    "src/server/seo/page-titles.ts"
   ]
 }
