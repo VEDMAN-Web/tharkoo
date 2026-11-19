@@ -1,0 +1,9 @@
+{
+  "branchPrefix": "haiku/h16.6b",
+  "globs": [
+    "docs/ownership/H16.6b.json",
+    "progress/H16.6b.md",
+    "src/components/buyer/dashboard/dashboard.css",
+    "tests/e2e/h16-6b-dashboard-bottom.e2e.ts"
+  ]
+}

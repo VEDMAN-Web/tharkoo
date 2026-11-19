@@ -122,7 +122,10 @@ test.describe("H7.104 Home: four categories, eight smaller cards, auto-swipe", (
     await card.evaluate((el) => el.scrollIntoView({ block: "center" }));
     await page.mouse.move(2, 2);
     await card.hover();
-    const next = card.getByRole("button", { name: "Next photo" });
+    // The hover pop-out opens after 350 ms and covers the card's own arrow, so a visitor clicks the pop-out's arrow. Clicking the covered one made the browser scroll the card half out of view, and a card that is less than half on screen does not swipe by design.
+    const pop = page.locator(".tkh-pop");
+    await expect(pop).toBeVisible();
+    const next = pop.getByRole("button", { name: "Next photo" });
     const before = await slideOf(card);
     await next.click();
     const after = await slideOf(card);
