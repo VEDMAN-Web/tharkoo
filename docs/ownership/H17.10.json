@@ -1,0 +1,19 @@
+{
+  "branchPrefix": "haiku/h17.10",
+  "globs": [
+    "docs/ownership/H17.10.json",
+    "progress/H17.10.md",
+    "src/server/listings/demo-text.ts",
+    "src/server/listings/demo-text-refresh.ts",
+    "src/server/listings/demo-ads.ts",
+    "src/server/admin/undo/handlers/demo-text.ts",
+    "src/server/admin/undo/registry.ts",
+    "src/app/admin/ads/DemoAds.tsx",
+    "src/app/admin/ads/demo-actions.ts",
+    "src/lib/ui/site-content.ts",
+    "src/server/seed/data.ts",
+    "tests/server/admin/a3-write.test.ts",
+    "tests/server/listings/h17-10-demo-text.test.ts",
+    "tests/e2e/h17-10-demo-text.e2e.ts"
+  ]
+}

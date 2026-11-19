@@ -154,15 +154,16 @@ export async function restoreDemoAds(ctx: AdminCtx): Promise<{ restored: number 
   return written.result;
 }
 
-export type DemoPanelData = { total: number; active: number; onHome: number; ended: EndedDemoBatch | null };
+export type DemoPanelData = { total: number; active: number; onHome: number; ended: EndedDemoBatch | null; /** H17.10: sample ads in a category with new text (the number to type for Refresh sample ad text). */ textCandidates: number };
 
 export async function demoPanelData(): Promise<DemoPanelData> {
   await connectDb();
   const filter = await demoFilter();
-  const [counts, onHome, ended] = await Promise.all([
+  const [counts, onHome, ended, textCandidates] = await Promise.all([
     demoAdCounts(),
     filter ? Listing.countDocuments({ ...filter, status: "active", homeShow: true }) : 0,
     lastEndedDemoBatch(),
+    import("./demo-text-refresh").then((module) => module.demoTextCandidates()),
   ]);
-  return { ...counts, onHome, ended };
+  return { ...counts, onHome, ended, textCandidates };
 }

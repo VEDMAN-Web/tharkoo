@@ -108,10 +108,10 @@ const POST = "/u/post-insert/";
 
 const CARD_FALLBACKS: { slug: string; blurb: string }[] = [
   { slug: "dating", blurb: "Meet people near you. Clear profiles, honest details, and manual ID checks." },
-  { slug: "wellness", blurb: "Spa, yoga, fitness and therapeutic massage bookings from verified providers." },
+  { slug: "wellness", blurb: "Yoga, fitness and wellness classes from trusted local providers." },
   { slug: "friendship", blurb: "Make friends and find company for coffee, trips and hobbies." },
   { slug: "meetups", blurb: "Join local meetups, classes and group activities in your city." },
-  { slug: "personal-ads", blurb: "Short personal notices for dating, friendship and activities." },
+  { slug: "personal-ads", blurb: "Find hobby, sport and activity partners near you." },
 ];
 
 function link(label: string, href: string): NavLink {
