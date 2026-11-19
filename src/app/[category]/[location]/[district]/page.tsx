@@ -44,7 +44,7 @@ type Props = {
   searchParams: Promise<ListingParams>;
 };
 
-export const revalidate = 60;
+export const revalidate = 300;
 
 export async function generateMetadata({ params, searchParams }: Props): Promise<Metadata> {
   const { category, location, district } = await params;
