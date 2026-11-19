@@ -112,7 +112,7 @@ test.describe("E1-A visitor journeys", () => {
     await page.waitForLoadState("networkidle");
     await oneHeading(page, "how it works");
     await expect(page.getByText("What does it cost to post?")).toBeVisible();
-    await expect(page.getByText(/Posting an ad is free|ads are free|Each ad costs/).first()).toBeVisible();
+    await expect(page.getByText(/Your first 3 ads are free|ads are free|Each ad costs/).first()).toBeVisible();
     await expect(page.getByRole("link", { name: /post/i }).first()).toBeVisible();
     expect(await hasHorizontalScroll(page)).toBe(false);
     expect(await serious(page)).toEqual([]);

@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { TrackEvent } from "@/components/analytics/TrackEvent";
 import { notFound } from "next/navigation";
 import { ListingPageView } from "@/components/ListingPage";
 import { FallbackAds } from "@/components/FallbackAds";
@@ -179,6 +180,8 @@ export default async function SearchPage({ searchParams }: { searchParams: Promi
   });
   return (
     <div data-card-width={cardWidth}>
+      {/* H17.11: the search event carries the category and city only, never the words typed. */}
+      {q ? <TrackEvent name="search" params={{ category: category?.slug, city }} /> : null}
       <ListingFrame
         labels={labels}
         filters={frame.filters}

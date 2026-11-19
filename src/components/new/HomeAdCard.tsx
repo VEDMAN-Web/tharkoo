@@ -48,7 +48,8 @@ export function HomeAdCard({ ad, labels, order = 0 }: { ad: HomeAdCardData; labe
   const { anchor, cardHandlers, popHandlers } = useCardHover(cardRef, HOVER_DELAY_MS);
   const photos = ad.photos;
   const slides = useMemo(() => cardSlides(photos, ad.videoUrl, ad.videoPoster), [photos, ad.videoUrl, ad.videoPoster]);
-  const online = Boolean(seller && seller.chatOn && seller.status === "online");
+  // H17.1: a sample ad is not online and has no chat: nobody is behind it.
+  const online = !ad.sample && Boolean(seller && seller.chatOn && seller.status === "online");
   const { trackRef, videoRef, index, setIndex, calm, onScroll, step } = useCardSlider({ cardRef, slug: ad.slug, slides, order, anchored: Boolean(anchor), popVideoRef });
 
   const clicked = () => {

@@ -12,6 +12,7 @@ import { countryChoices } from "@/server/locations/site-country";
 import { readShellConfig } from "@/server/site-links/shell-config";
 import { normaliseShellConfig, type ShellConfig, type ShellLink } from "@/server/site-links/shell-config-rules";
 import { MotionInit } from "./ui/MotionInit";
+import { cleanGaId } from "@/lib/analytics/ga";
 import { SUPPORT_PHONE, SUPPORT_TELEGRAM, telegramHref, whatsappHref } from "@/lib/support";
 import { PathChrome, type ChromeData } from "./PathChrome";
 
@@ -46,6 +47,7 @@ type SiteFields = {
   homepage?: unknown;
   footerLinks?: unknown;
   socialLinks?: unknown;
+  googleAnalyticsId?: string;
 };
 
 /**
@@ -87,6 +89,7 @@ function chromeData(shell: Shell, signIn: ChromeData["signIn"]): ChromeData {
       supportHours: site.supportHours,
       logoText: site.logoText,
       logos: siteLogos(site),
+      analyticsId: cleanGaId(site.googleAnalyticsId),
     },
     content: { hero, header, socials, support, footer, age, cookies },
     footerLinks: plain(navLinks(site.footerLinks)),
@@ -98,7 +101,7 @@ function chromeData(shell: Shell, signIn: ChromeData["signIn"]): ChromeData {
     user,
     newDesign: shell.newDesign,
     // H7.8: the header and live chat words from the UI-text store (only those keys reach the client).
-    texts: pickTexts(shell.texts, "header.", "chrome.", "chat.", "help.", "home.utility.", "panel."),
+    texts: pickTexts(shell.texts, "header.", "chrome.", "cookie.", "chat.", "help.", "home.utility.", "panel."),
     signIn,
     shell: plain(
       shellWithFallbacks(normaliseShellConfig(shell.shell), {

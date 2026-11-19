@@ -2,7 +2,18 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { CONSENT_EVENT, CONSENT_KEY } from "@/lib/analytics/ga";
 import "./CookieBanner.css";
+
+/** Saves the choice and tells the page (H17.11: the analytics tag loads only after Accept). */
+function choose(value: "all" | "necessary") {
+  try {
+    localStorage.setItem(CONSENT_KEY, value);
+  } catch {
+    /* a blocked store only means the notice shows again */
+  }
+  window.dispatchEvent(new Event(CONSENT_EVENT));
+}
 
 export function CookieBanner({
   body,
@@ -42,7 +53,7 @@ export function CookieBanner({
           type="button"
           className="tkc-accept"
           onClick={() => {
-            localStorage.setItem("nl-cookies", "all");
+            choose("all");
             setOpen(false);
           }}
         >
@@ -52,7 +63,7 @@ export function CookieBanner({
           type="button"
           className="tkc-necessary"
           onClick={() => {
-            localStorage.setItem("nl-cookies", "necessary");
+            choose("necessary");
             setOpen(false);
           }}
         >

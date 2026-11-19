@@ -2,7 +2,7 @@ import { createHmac, randomInt } from "node:crypto";
 import AxeBuilder from "@axe-core/playwright";
 import type { Page } from "@playwright/test";
 import { ObjectId } from "mongodb";
-import { expect, firstAdPath, hasHorizontalScroll, isPhone, newUserApi, originHeaders, setSellerAvailable, slugFromAdPath, test, withLocalDb } from "./helpers";
+import { expect, firstAdPath, hasHorizontalScroll, isPhone, newUserApi, originHeaders, realAdPath, setSellerAvailable, slugFromAdPath, test, withLocalDb } from "./helpers";
 
 const E2E_SESSION_SECRET = "local-only-session-secret-not-real-0001";
 
@@ -63,11 +63,9 @@ const PHONE_TOUR_LABELS = ["WhatsApp", "Chat", `Video · ${TOUR_COINS} credits`]
  * The chat round trip moves its ad to another account for a while, so it takes a different ad per project: two workers run the phone and
  * the desktop project at the same time, and they must never use the same ad.
  */
-async function anyAdPath(page: Page, feed: string, index = 0) {
-  await page.goto(feed);
-  const link = page.locator(":is([data-tk=card], [data-tk=home-ad], [data-tk=listing-row]) a[href*=\"/ad/\"]").nth(index);
-  await link.waitFor({ state: "attached" });
-  return (await link.getAttribute("href")) as string;
+/** H17.1: these tests are about the contact buttons, which a sample ad does not have, so every page here is a REAL ad (realAdPath). */
+async function anyAdPath(page: Page, feed: string) {
+  return realAdPath(page, feed);
 }
 
 type TourSwitch = { enabled: boolean; coins: number };
@@ -118,7 +116,7 @@ async function expectTapTargets(page: Page) {
 
 test.describe("H6.8 contact card on a dating ad (people, no tour)", () => {
   test("people ad: Call, WhatsApp and Chat online now, and no video call", async ({ page }) => {
-    await page.goto(await firstAdPath(page, DATING_FEED));
+    await page.goto(await realAdPath(page, DATING_FEED));
     await expect(page.locator("h1")).toHaveCount(1);
     expect(await buttonLabels(page)).toEqual(isPhone(page) ? PHONE_PEOPLE_LABELS : PEOPLE_LABELS);
     await expect(contactScope(page).locator("[data-tk=tour]")).toHaveCount(0);
@@ -165,7 +163,8 @@ test.describe("H6.8 contact card on a property ad with live tours on", () => {
   });
 
   test("a signed-out visitor who taps the video call is asked to sign in", async ({ page }) => {
-    await page.goto(await anyAdPath(page, PROPERTY_FEED));
+    // H17.1: a sample ad has no video call button, so this is a real ad.
+    await page.goto(await realAdPath(page, PROPERTY_FEED));
     await contactScope(page).locator("[data-tk=tour]").click();
     const note = page.getByRole("status").filter({ hasText: "Sign in to request a live video tour." });
     await expect(note).toBeVisible();
@@ -178,7 +177,7 @@ test.describe("H6.8 contact card on a property ad with live tours on", () => {
     await api.dispose();
     await signInUi(page, email);
     await page.waitForURL(/\/u\/account\/dashboard\//);
-    const path = await anyAdPath(page, PROPERTY_FEED);
+    const path = await realAdPath(page, PROPERTY_FEED);
     await setSellerAvailable(slugFromAdPath(path), true);
     await page.goto(path);
     const requests: string[] = [];
@@ -209,7 +208,7 @@ test.describe("H6.8 contact card on a property ad with live tours on", () => {
 
     // The advertiser must own the ad to answer it. The test makes its OWN ad (a copy of the first one, owned by the advertiser) instead of
     // moving a shared one: the phone and the desktop project run at the same time on two workers, and no other test may ever see this ad.
-    const templatePath = await anyAdPath(page, PROPERTY_FEED);
+    const templatePath = await firstAdPath(page, PROPERTY_FEED);
     const templateSlug = templatePath.split("/").filter(Boolean)[1];
     const moved = await withLocalDb(async (db) => {
       const user = await db.collection("users").findOne({ email: advertiser.email.toLowerCase() }, { projection: { _id: 1 } });

@@ -1,5 +1,6 @@
 "use client";
 
+import { trackEvent } from "@/lib/analytics/ga";
 import { useEffect, useRef, useState, type ClipboardEvent, type FormEvent, type KeyboardEvent } from "react";
 import { X } from "lucide-react";
 import { api, friendlyError } from "@/lib/ui/api";
@@ -417,6 +418,7 @@ function CodeStep({
     });
     setBusy(false);
     if (!res.ok) return setError(friendlyError(res.error));
+    trackEvent("login", { method: channel === "phone" ? "phone" : "email" });
     onVerified();
   }
 

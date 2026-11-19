@@ -22,6 +22,8 @@ export interface LandingInput {
   priceMin?: number;
   priceMax?: number;
   updated?: string;
+  /** H17.1: said instead of "0 live ads" when only sample ads are shown (the UI-text key listing.sampleCount). */
+  sampleNote?: string;
 }
 
 export function wordCount(text: string) {
@@ -77,7 +79,9 @@ export function fallbackLanding(input: LandingInput): LandingCopy {
   const count = input.count ?? 0;
   const opener = OPENERS[hash(`${input.category}|${place}`) % OPENERS.length] || OPENERS[0];
   const introLine = opener.replaceAll("{place}", place).replaceAll("{category}", input.category.toLowerCase()).replaceAll("{site}", site);
-  const description = `${h1}. ${count} live ads. Open a listing to see photos and contact the person who posted.`;
+  const sampleNote = (input.sampleNote ?? "Sample ads shown until local ads are posted").trim().replace(/[.]+$/, "");
+  const none = count === 0;
+  const description = none ? `${h1}. ${sampleNote}. Open a listing to see how ads look.` : `${h1}. ${count} live ads. Open a listing to see photos and contact the person who posted.`;
   const districts = (input.districts || []).filter(Boolean).slice(0, 3);
   const price =
     input.priceMin && input.priceMax
@@ -85,11 +89,11 @@ export function fallbackLanding(input: LandingInput): LandingCopy {
       : " Prices appear on an ad only when the person who posted added one.";
   const area = districts.length ? ` Districts with ads include ${districts.join(", ")}.` : "";
   const updated = input.updated ? ` The newest ad on this page was updated on ${input.updated}.` : "";
-  const opening = `${place} currently has ${count} live ${input.category.toLowerCase()} ads on ${site}. Start with the newest card if you want what changed today, then filter by district when the list is longer than you need. Promoted ads stay above the rest only for the days that were paid.`;
+  const opening = `${none ? `${sampleNote} in ${place}.` : `${place} currently has ${count} live ${input.category.toLowerCase()} ads on ${site}.`} Start with the newest card if you want what changed today, then filter by district when the list is longer than you need. Promoted ads stay above the rest only for the days that were paid.`;
   const detail = `${introLine}${area}${price}${updated}`;
   const intro = input.indexable
     ? fitIntro(`${input.category}|${place}|rich`, opening, detail)
-    : `${introLine} ${count} ${input.category.toLowerCase()} ads are live in ${place}.`;
+    : `${introLine} ${none ? `${sampleNote}.` : `${count} ${input.category.toLowerCase()} ads are live in ${place}.`}`;
   return {
     h1,
     title: `${h1} classifieds | ${site}`,
@@ -106,7 +110,7 @@ export function fallbackLanding(input: LandingInput): LandingCopy {
       },
       {
         q: `Which ${input.category.toLowerCase()} ads in ${place} appear first?`,
-        a: `Promoted ${input.category.toLowerCase()} ads in ${place} stay at the top for the days you buy. The other ${count} live ads follow the latest refresh. A short page stays out of the index until more ads are live.`,
+        a: `Promoted ${input.category.toLowerCase()} ads in ${place} stay at the top for the days you buy. ${none ? `${sampleNote}.` : `The other ${count} live ads follow the latest refresh.`} A short page stays out of the index until more ads are live.`,
       },
     ],
   };

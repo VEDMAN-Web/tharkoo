@@ -1,5 +1,6 @@
 "use client";
 
+import { trackEvent } from "@/lib/analytics/ga";
 import { type FormEvent, type MouseEvent, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { CodeBoxes } from "@/components/auth/CodeBoxes";
@@ -135,6 +136,7 @@ export function SignInSheet({ mode, initialNext = null, showMobile = false, imag
       rootRef.current?.querySelector<HTMLElement>("[data-focus]")?.focus();
       return;
     }
+    trackEvent("login", { method: channel === "phone" ? "phone" : "email" });
     finish(res.data.user.roles);
   }
 

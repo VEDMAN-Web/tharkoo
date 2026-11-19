@@ -107,7 +107,7 @@ test.describe("H12.3 panel and admin alignment", () => {
       await withLocalDb((db) => db.collection("sites").updateOne({ key: "default" }, { $set: { freeAdsPerAccount: 0 } }));
       await expectLine(/^Each ad costs ₹300 \(30 credits\) to post\.$/);
       await withLocalDb((db) => db.collection("sites").updateOne({ key: "default" }, { $set: { paidPostingOn: false } }));
-      await expectLine(/^Posting an ad is free\.$/);
+      await expectLine(/^Your first 3 ads are free\.$/);
     } finally {
       const fields = ["paidPostingOn", "postingFeeCredits", "freeAdsPerAccount"] as const;
       const set: Record<string, unknown> = {};
