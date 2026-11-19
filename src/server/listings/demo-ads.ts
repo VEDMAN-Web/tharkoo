@@ -21,6 +21,7 @@ export const DEMO_END_STATUS = "expired";
 
 /** True for a sample (demo) ad: owned by the demo account and with a demo slug. */
 export async function isSampleListing(record: { ownerId?: unknown; slug?: string } | null | undefined): Promise<boolean> {
+  await connectDb();
   const owner = await demoOwnerId();
   return Boolean(owner && record && String(record.ownerId ?? "") === owner && DEMO_SLUG.test(record.slug ?? ""));
 }
