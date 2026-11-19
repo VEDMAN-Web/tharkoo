@@ -20,7 +20,7 @@ import { checkFields, fieldTexts } from "./fields";
 
 export const AI_DRAFT_KEY_NAME = "ANTHROPIC_API_KEY";
 export const AI_DRAFT_MODEL_NAME = "AI_DRAFT_MODEL";
-export const AI_DRAFT_DEFAULT_MODEL = "claude-sonnet-4-5";
+export const AI_DRAFT_DEFAULT_MODEL = "claude-sonnet-5-5";
 export const AI_DRAFT_KEY_MISSING = "AI drafts need ANTHROPIC_API_KEY on the server";
 export const AI_DRAFT_BANNER = "AI draft - check every fact before publishing";
 /** How many AI drafts one staff member may ask for in 24 hours (failed tries count too, they cost money). */

@@ -118,6 +118,7 @@ describe("H16.3 AI draft", () => {
     await createAiDraft(blog, { topic: "Buying a used bike" }, { fetcher });
     const [, init] = fetcher.mock.calls[0] as unknown as [string, RequestInit];
     expect((JSON.parse(String(init.body)) as { model: string }).model).toBe(AI_DRAFT_DEFAULT_MODEL);
+    expect(AI_DRAFT_DEFAULT_MODEL).toBe("claude-sonnet-5-5");
   });
 
   it("cleans the text: no dashes, no markup, no links, and [ADD FACT] stays", () => {
