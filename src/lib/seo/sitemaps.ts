@@ -137,10 +137,10 @@ export async function shardEntries(shard: SitemapShard): Promise<SitemapEntry[]>
     for (const entry of await subcategorySitemapEntries(loc)) urls.push({ loc: entry.loc, lastmod: entry.lastmod ?? stamp() });
     return urls;
   }
-  // H16.5: the ads shard lists every live ad that is set to be indexed, and every live sample (demo) ad. At most 50,000 (the sitemap limit).
+  // H17.8: the ads shard lists every live REAL ad that is set to be indexed. Sample (demo) ads are never listed; with none, the shard is empty and still valid. At most 50,000 (the sitemap limit).
   const seedOwner = await demoOwnerId();
-  const indexable = [{ seoNoindex: false }, ...(seedOwner ? [{ ownerId: seedOwner, slug: { $regex: DEMO_SLUG.source } }] : [])];
-  const ads = await Listing.find({ $and: [liveMatch, { $or: indexable }] })
+  const notSample = seedOwner ? [{ $nor: [{ ownerId: seedOwner, slug: { $regex: DEMO_SLUG.source } }] }] : [];
+  const ads = await Listing.find({ $and: [liveMatch, { seoNoindex: false }, ...notSample] })
     .select("slug updatedAt publishedAt")
     .sort({ _id: 1 })
     .limit(AD_SITEMAP_MAX)
