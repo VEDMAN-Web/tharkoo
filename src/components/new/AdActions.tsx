@@ -10,7 +10,8 @@ import { reportPath } from "@/lib/urls";
 export function AdActions({ slug, publicId, title, place, icons = false }: { slug: string; publicId: string; title: string; place: string; icons?: boolean }) {
   const t = useT();
   const paths = useUrlPaths();
-  const href = `${reportPath(paths)}?ad=${publicId || slug}`;
+  // The report API finds an ad by its whole address (slug) or a stored public id. The public id shown on the page is only the number at the end of the address, so the address goes first.
+  const href = `${reportPath(paths)}?ad=${encodeURIComponent(slug || publicId)}`;
   const item = { id: slug || title, slug, title, place, at: 0 };
   if (icons) {
     return (
