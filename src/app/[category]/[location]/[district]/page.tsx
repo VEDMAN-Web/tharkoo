@@ -246,6 +246,7 @@ export default async function DistrictPage({ params, searchParams }: Props) {
     <ListingPageView
       texts={texts}
       layout={layout}
+      pageName={h1}
       faqs={districtCopy.faqs}
       popular={tags.slice(0, 4).map((tag) => ({ href: tagPath(paths, cat.slug || category, tag.slug), label: `${dist.name} ${tag.label}` }))}
       h2={fillTemplate(seo?.h2 || "", vars)}

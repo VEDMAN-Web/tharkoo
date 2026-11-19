@@ -19,6 +19,12 @@ export function isDemoAd(ownerEmail: string | undefined, slug: string | undefine
 
 export const DEMO_END_STATUS = "expired";
 
+/** True for a sample (demo) ad: owned by the demo account and with a demo slug. */
+export async function isSampleListing(record: { ownerId?: unknown; slug?: string } | null | undefined): Promise<boolean> {
+  const owner = await demoOwnerId();
+  return Boolean(owner && record && String(record.ownerId ?? "") === owner && DEMO_SLUG.test(record.slug ?? ""));
+}
+
 /** The id of the account that owns every demo ad, or null when there is none. Cached a minute: it is read on every list query. */
 export async function demoOwnerId(): Promise<string | null> {
   return cached(

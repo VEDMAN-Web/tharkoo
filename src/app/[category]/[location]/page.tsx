@@ -265,6 +265,7 @@ export default async function LocationPage({ params, searchParams }: Props) {
     <ListingPageView
       layout={layout}
       texts={texts}
+      pageName={h1}
       h2={fillTemplate(seo?.h2 || "", vars)}
       intro={hub.intro}
       faqs={hub.faqs}

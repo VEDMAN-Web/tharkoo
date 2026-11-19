@@ -53,7 +53,6 @@ export default async function CategoriesPage() {
             url: canonical(categoriesPath()),
             mainEntity: itemListNode({
               url: canonical(categoriesPath()),
-              total: cards.length,
               items: cards.map((cat, index) => ({
                 position: index + 1,
                 name: cat.name,

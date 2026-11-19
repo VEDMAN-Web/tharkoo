@@ -3,7 +3,7 @@
 import { Suspense } from "react";
 import { useSitePath } from "@/components/useSitePath";
 import { JsonLd } from "@/lib/jsonld";
-import { canonical } from "@/lib/seo";
+import { webPageNode } from "@/lib/seo/schema";
 import { safeHref } from "@/lib/sanitize";
 import type { SiteContent } from "@/lib/ui/site-content";
 import { LOGO_DARK_DEFAULT, LOGO_LIGHT_DEFAULT, type SiteLogos } from "@/lib/brand";
@@ -81,17 +81,7 @@ export function PathChrome({ shell, paths, children }: { shell: ChromeData; path
     <UiTextProvider texts={texts}>
     <CityProvider cities={cities}>
     <AccountProvider>
-      {path.startsWith(`/${paths.ad.replace(/^\/|\/$/g, "")}/`) ? null : (
-        <JsonLd
-          data={{
-            "@context": "https://schema.org",
-            "@type": "WebPage",
-            name: path === "/" ? site.name || "Tharkoo" : path,
-            url: canonical(path),
-            isPartOf: { "@type": "WebSite", name: site.name || "Tharkoo", url: canonical("/") },
-          }}
-        />
-      )}
+      {path === "/" ? <JsonLd data={webPageNode({ name: site.name || "Tharkoo", path, siteName: site.name || "Tharkoo" })} /> : null}
       {newDesign ? (
         <div className="tkn" data-design="new">
           <HeaderNew siteName={siteName} logo={logos.light} shell={config} cities={cities} countries={countries} categories={categories} texts={texts} />

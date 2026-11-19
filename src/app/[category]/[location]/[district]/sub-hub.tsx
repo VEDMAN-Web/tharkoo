@@ -197,6 +197,7 @@ export async function SubHub({ params, page }: { params: SubHubParams; page: num
     <ListingPageView
       layout={layout}
       texts={texts}
+      pageName={h1}
       faqs={copy.faqs}
       intro={copy.intro}
       crumbs={crumbs}

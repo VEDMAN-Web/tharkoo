@@ -1,0 +1,27 @@
+{
+  "branchPrefix": "haiku/h17.5",
+  "globs": [
+    "docs/ownership/H17.5.json",
+    "progress/H17.5.md",
+    "src/lib/seo/schema.ts",
+    "src/lib/seo-site.ts",
+    "src/components/ListingPage.tsx",
+    "src/components/PathChrome.tsx",
+    "src/components/HomeBlocks.tsx",
+    "src/components/blocks/HomeLayout.tsx",
+    "src/app/page.tsx",
+    "src/app/categories/page.tsx",
+    "src/app/blog/[slug]/page.tsx",
+    "src/app/ad/[slug]/page.tsx",
+    "src/app/[category]/page.tsx",
+    "src/app/[category]/[location]/page.tsx",
+    "src/app/[category]/[location]/[district]/page.tsx",
+    "src/app/[category]/[location]/[district]/sub-hub.tsx",
+    "src/app/[category]/tag/[tag]/page.tsx",
+    "src/server/listings/demo-ads.ts",
+    "tests/server/seo/h17-5-structured-data.test.ts",
+    "tests/server/seo/hub-settings.test.ts",
+    "tests/server/ui/seo-schema.test.ts",
+    "tests/e2e/h17-5-structured-data.e2e.ts"
+  ]
+}

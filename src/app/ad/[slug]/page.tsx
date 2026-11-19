@@ -14,12 +14,12 @@ import { Listing } from "@/lib/models";
 import { safePhoto } from "@/lib/media";
 import { getCategory, getListingBySlug, getRelated, getSite } from "@/lib/queries";
 import { canonical, fillTemplate } from "@/lib/seo";
-import { listingJsonLd } from "@/lib/seo/schema";
+import { adJsonLdNodes } from "@/lib/seo/schema";
 import { adMetaDescription } from "@/lib/seo/ad-description";
 import { getSeoSettings } from "@/app/admin/seo/settings/store";
 import { siteUrl } from "@/lib/utils";
 import { listingVisibility } from "@/server/listings/visibility";
-import { demoOwnerId, DEMO_SLUG } from "@/server/listings/demo-ads";
+import { isSampleListing } from "@/server/listings/demo-ads";
 import { adPath, categoryPath, placePath } from "@/lib/urls";
 import { withUrlSeo, urlHeading } from "@/lib/seo/override";
 import { plain } from "@/lib/plain";
@@ -52,8 +52,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     slug?: string;
   } | null;
   const access = listingVisibility(record);
-  const sampleOwner = await demoOwnerId();
-  const sample = Boolean(sampleOwner && record && String(record.ownerId ?? "") === sampleOwner && DEMO_SLUG.test(record.slug ?? ""));
+  const sample = await isSampleListing(record);
   if (access === "ended") {
     const paths = await getPaths();
     return withUrlSeo(adPath(paths, slug), {
@@ -160,23 +159,30 @@ export default async function AdPage({ params }: Props) {
     ...(district && !isCityAlias(city, district) ? [{ name: `${district} ${catName}`, path: placePath(ad.categorySlug || "", ad.citySlug || "", ad.districtSlug || "") }] : []),
   ];
   const seoSettings = await getSeoSettings().catch(() => null);
-  const structured = listingJsonLd({
-    mapping: seoSettings?.adSchema[ad.categorySlug || ""],
-    category: ad.categorySlug || "",
-    name: displayTitle(ad.title),
-    description: (ad.description || displayTitle(ad.title)).slice(0, 300),
-    url: shareUrl,
-    image,
-    city,
-    price: listedPrice(row?.attributes),
-    datePosted: row?.publishedAt ? new Date(row.publishedAt).toISOString() : undefined,
-    validThrough: row?.expiresAt ? new Date(row.expiresAt).toISOString() : undefined,
-    hiringOrganization: textAttr(row?.attributes, "company") || textAttr(row?.attributes, "hiringOrganization"),
-    jobLocation: city || undefined,
+  // H17.5: the breadcrumb in the markup ends with the ad; a sample ad never claims an offer, product, job or rating.
+  const structured = adJsonLdNodes({
+    crumbs,
+    title: displayTitle(ad.title) || "Listing",
+    path: publicAd,
+    sample: await isSampleListing({ ownerId: row?.ownerId, slug: ad.slug || slug }),
+    listing: {
+      mapping: seoSettings?.adSchema[ad.categorySlug || ""],
+      category: ad.categorySlug || "",
+      name: displayTitle(ad.title),
+      description: (ad.description || displayTitle(ad.title)).slice(0, 300),
+      url: shareUrl,
+      image,
+      city,
+      price: listedPrice(row?.attributes),
+      datePosted: row?.publishedAt ? new Date(row.publishedAt).toISOString() : undefined,
+      validThrough: row?.expiresAt ? new Date(row.expiresAt).toISOString() : undefined,
+      hiringOrganization: textAttr(row?.attributes, "company") || textAttr(row?.attributes, "hiringOrganization"),
+      jobLocation: city || undefined,
+    },
   });
   return (
     <>
-      <JsonLd data={structured ? [breadcrumbJsonLd(crumbs), structured] : [breadcrumbJsonLd(crumbs)]} />
+      <JsonLd data={structured} />
       {newDesign ? (
         <NewAdDetail
           ad={adView}
