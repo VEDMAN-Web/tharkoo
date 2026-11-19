@@ -59,7 +59,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       description: "This Tharkoo listing has ended and is no longer open for new replies.",
       path: endedPath,
       index: false,
-    });
+    }, adPath(paths, slug));
   }
   const [ad, site] = await Promise.all([getListingBySlug(slug), getSite()]);
   if (!ad) return {};
@@ -74,7 +74,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const paths = await getPaths();
   const path = (await addressForSlug(ad.slug || slug)) || adPath(paths, ad.slug || slug);
   // H6.7: a live ad is noindex, follow (follow comes from the default). It is not in the sitemap.
-  return withUrlSeo(path, { title, description, path, image, index: false });
+  return withUrlSeo(path, { title, description, path, image, index: false }, adPath(paths, ad.slug || slug));
 }
 
 function listedPrice(attributes: unknown) {
@@ -148,7 +148,7 @@ export default async function AdPage({ params }: Props) {
       ? adAddress({ categorySlug: ad.categorySlug, citySlug: ad.citySlug, title: ad.title, code: row.code })
       : adPath(paths, ad.slug || slug);
   const shareUrl = canonical(publicAd);
-  const heading = await urlHeading(publicAd, displayTitle(ad.title) || "Listing");
+  const heading = await urlHeading(publicAd, displayTitle(ad.title) || "Listing", adPath(paths, ad.slug || slug));
   const image = cover ? (cover.startsWith("http") ? cover : `${siteUrl().replace(/\/$/, "")}${cover}`) : undefined;
   const city = prettyPlace(ad.citySlug);
   const catName = cat?.name || ad.categorySlug || "";

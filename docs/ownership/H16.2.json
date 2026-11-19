@@ -12,6 +12,8 @@
     "src/app/api/cron/expire/route.ts",
     "src/proxy.ts",
     "tests/server/listings/h16-2-*.test.ts",
-    "tests/e2e/h16-2-ad-addresses.e2e.ts"
+    "tests/e2e/h16-2-ad-addresses.e2e.ts",
+    "src/lib/seo/override.ts",
+    "tests/server/listings/h16-2-seo-override.test.ts"
   ]
 }
