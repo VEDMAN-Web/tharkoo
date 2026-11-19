@@ -41,6 +41,8 @@ export interface ContentItemDoc {
   reviewNote?: string;
   authorUserId?: Types.ObjectId;
   lastEditedBy?: string;
+  /** H16.3: the first text was written by the AI draft tool. The editor shows a banner until the item is published. */
+  aiDraft?: boolean;
   createdAt?: Date;
   updatedAt?: Date;
 }
@@ -75,6 +77,7 @@ const contentItemSchema = new Schema<ContentItemDoc>(
     reviewNote: { type: String },
     authorUserId: { type: Schema.Types.ObjectId },
     lastEditedBy: { type: String, default: "" },
+    aiDraft: { type: Boolean },
   },
   { timestamps: true, collection: collectionName("content_items", "ContentItem") },
 );
