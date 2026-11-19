@@ -37,6 +37,7 @@
     "src/server/listings/demo-retire.ts",
     "tests/e2e/h16-5-showcase-demo.e2e.ts",
     "tests/server/listings/h16-5-robots.test.ts",
-    "tests/server/listings/h16-5-showcase-demo.test.ts"
+    "tests/server/listings/h16-5-showcase-demo.test.ts",
+    "tests/server/urls/urls.test.ts"
   ]
 }
