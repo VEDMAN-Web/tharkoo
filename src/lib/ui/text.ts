@@ -748,6 +748,10 @@ export const TEXT_DEFAULTS = {
   // H7.8: the header's short button label (under 420 px) and the live chat (bubble, panel and guest form)
   "header.postShort": "Post ad",
   // H8.47: the header, the phone menu and the footer
+  "cookie.analytics.body": "We use cookies to run the site. If you accept, we also use Google Analytics to count visits. We never send your name, phone, email or search words.",
+  "cookie.analytics.accept": "Accept",
+  "cookie.analytics.necessary": "Only necessary",
+  "cookie.analytics.notice": "Cookie notice",
   "chrome.nav.main": "Main",
   "chrome.account.menu": "Account menu",
   "chrome.account.menuFor": "Account menu for {name}",

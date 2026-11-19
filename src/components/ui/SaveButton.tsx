@@ -1,5 +1,6 @@
 "use client";
 
+import { trackEvent } from "@/lib/analytics/ga";
 import { useEffect, useState } from "react";
 import { Heart } from "lucide-react";
 import { api, hasSessionHint } from "@/lib/ui/api";
@@ -79,7 +80,10 @@ export function SaveButton({
       className={cn("inline-flex min-h-11 min-w-11 items-center justify-center gap-1 rounded-full bg-white px-2 text-[#c2185b] shadow-[0_2px_8px_rgba(45,18,72,0.12)]", className)}
       onClick={() => {
         const next = readSaved().filter((row) => !sameAd(row, item));
-        if (!on) next.unshift({ ...item, at: Date.now(), acct: hasSessionHint() });
+        if (!on) {
+          next.unshift({ ...item, at: Date.now(), acct: hasSessionHint() });
+          trackEvent("save_ad");
+        }
         writeSaved(next);
         setOn(!on);
         setPopping(true);
