@@ -298,6 +298,7 @@ function Screen({ list, access, demoPanel }: { list: AdsList; access: AdsAccess;
             onPage={(page) => go({ page: page === 1 ? null : String(page) })}
             onPageSize={(size) => go({ size: size === 25 ? null : String(size), page: null })}
             selectable={access.edit || access.decide}
+            phoneSelect
             selected={selected}
             onSelected={setSelected}
             bulkActions={

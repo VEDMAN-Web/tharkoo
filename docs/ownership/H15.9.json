@@ -1,0 +1,15 @@
+{
+  "branchPrefix": "haiku/h15.9",
+  "globs": [
+    "docs/ownership/H15.9.json",
+    "progress/H15.9.md",
+    "src/app/submit-report/ReportForm.tsx",
+    "src/app/submit-report/page.tsx",
+    "src/app/submit-report/report.css",
+    "src/components/ui/AdCard.tsx",
+    "src/app/scam-report/page.tsx",
+    "src/lib/ui/text.ts",
+    "src/lib/ui/text-labels.ts",
+    "tests/e2e/h15-9-report-pages.e2e.ts"
+  ]
+}
