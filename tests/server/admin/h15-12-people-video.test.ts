@@ -51,12 +51,16 @@ describe("H15.12 People ads with a video (a read-only All ads filter)", () => {
     expect(bare).toBeTruthy();
   });
 
-  it("finds a people ad by its age rule even when the category kind was left empty", async () => {
-    const aged = await Category.create({ slug: "meetups", name: "Meetups", enabled: true, order: 0 });
-    const row = await ad(aged._id, "Meetup with video");
-    await clip(row._id, "video");
+  it("finds a people ad by its people slug, and one that is people only by its adults-only age field", async () => {
+    const bySlug = await Category.create({ slug: "meetups", name: "Meetups", enabled: true, order: 0 });
+    const byAge = await Category.create({ slug: "night-out", name: "Night out", kind: "goods", enabled: true, order: 1, fields: [{ key: "age", label: "Age", type: "number", min: 18 }] });
+    const kidsAge = await Category.create({ slug: "toys", name: "Toys", kind: "goods", enabled: true, order: 2, fields: [{ key: "age", label: "Age", type: "number", min: 3 }] });
+    const slugAd = await ad(bySlug._id, "Meetup with video");
+    const ageAd = await ad(byAge._id, "Adults only age field with video");
+    const toyAd = await ad(kidsAge._id, "Toy with video");
+    for (const row of [slugAd, ageAd, toyAd]) await clip(row._id, "video");
     const found = await Listing.find(await filterFor(parseAdsQuery({ pvideo: "1" }))).select("title").lean();
-    expect(found.map((item) => item.title)).toEqual(["Meetup with video"]);
+    expect(found.map((item) => item.title).sort()).toEqual(["Adults only age field with video", "Meetup with video"]);
   });
 
   it("changes nothing: every ad keeps its status", async () => {

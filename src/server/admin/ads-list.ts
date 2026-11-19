@@ -7,7 +7,7 @@ import { ForbiddenError } from "@/server/http";
 import { demoFilter, DEMO_SLUG } from "@/server/listings/demo-ads";
 import { paidCreditsFor } from "@/server/moderation/review";
 import { previewUrlOf } from "@/server/media/mine";
-import { isPeopleCategory } from "@/server/availability/people";
+import { isPeopleListing } from "@/server/categories/kinds";
 import { Category, Listing, Location, MediaAsset, PromotionOrder, User, WalletEntry } from "@/server/models";
 import { normalizePhone, PhoneIdentity } from "@/server/auth/phone";
 import type { ListingDoc } from "@/server/models/listing";
@@ -131,7 +131,7 @@ export async function peopleVideoAdIds(): Promise<Types.ObjectId[]> {
     Category.find().select("_id kind slug fields").lean<{ _id: Types.ObjectId; kind?: string; slug?: string; fields?: unknown }[]>(),
   ]);
   if (withVideo.length === 0) return [];
-  const peopleCategories = categories.filter((row) => isPeopleCategory(row)).map((row) => row._id);
+  const peopleCategories = categories.filter((row) => isPeopleListing(row)).map((row) => row._id);
   if (peopleCategories.length === 0) return [];
   return Listing.distinct("_id", { _id: { $in: withVideo }, categoryId: { $in: peopleCategories } });
 }
