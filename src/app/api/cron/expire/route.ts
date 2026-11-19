@@ -10,6 +10,7 @@ import { repairDashes, repairDemoListingDashes } from "@/server/content/dash-rep
 import { convertHeroLayouts } from "@/server/layout/hero-migration";
 import { ensureIdCheckSetting } from "@/server/settings/id-check";
 import { ensureNewDesignSetting } from "@/server/site-links/new-design";
+import { backfillAdCodes } from "@/server/listings/ad-code";
 import { watermarkExistingAdMedia } from "@/server/media/watermark-migration";
 
 export const runtime = "nodejs";
@@ -45,6 +46,8 @@ async function dispatch(request: Request) {
   const newDesign = await ensureNewDesignSetting(requestId);
   // H6.18: ad photos and videos uploaded before the watermark get it, a few per run. A file already marked is skipped.
   const watermark = await watermarkExistingAdMedia(requestId);
+  // H16.2: ads saved before ad codes existed get a code and address, 200 per run. Idempotent; stops changing anything when none are left.
+  const adCodes = await backfillAdCodes(200);
   return Response.json(
     success(
       {
@@ -61,6 +64,8 @@ async function dispatch(request: Request) {
         newDesignSettingSet: newDesign.updated,
         adMediaWatermarked: watermark.processed,
         adMediaWatermarkFailed: watermark.failed,
+        adCodesFilled: adCodes.filled,
+        adCodesRemaining: adCodes.remaining,
       },
       requestId,
     ),

@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { splitAdSegment } from "@/lib/ad-address";
 import { canOpenAdminPath } from "@/lib/admin-gate";
 import { forbiddenHtml } from "@/lib/admin/forbidden";
 import { allowRequest, clientKey, limitBucket, type LimitBucket } from "@/lib/rate-limit";
@@ -38,13 +39,24 @@ function nextWithPath(req: NextRequest) {
   return NextResponse.next({ request: { headers } });
 }
 
+/** H16.2: /<category>/<city>/<title>-<code>/ of an ad that has been removed or has expired answers 410, like its old link did. */
+async function newAddressIsGone(pathname: string) {
+  const parts = pathname.split("/").filter(Boolean);
+  const found = parts.length === 3 ? splitAdSegment(parts[2]) : null;
+  if (!found) return false;
+  const { Listing } = await import("@/server/models");
+  const { listingVisibility } = await import("@/server/listings/visibility");
+  const doc = await Listing.findOne({ code: found.code }).select("status expiresAt").lean<{ status?: string; expiresAt?: Date | null }>();
+  return doc ? listingVisibility(doc) === "gone" : false;
+}
+
 async function adIsGone(pathname: string) {
   const { getPaths } = await import("@/server/urls/service");
   const { Listing } = await import("@/server/models");
   const { listingVisibility } = await import("@/server/listings/visibility");
   const paths = await getPaths();
   const prefix = `/${paths.ad.replace(/^\/|\/$/g, "")}/`;
-  if (!pathname.startsWith(prefix)) return false;
+  if (!pathname.startsWith(prefix)) return newAddressIsGone(pathname);
   const slug = pathname.slice(prefix.length).replace(/\/$/, "");
   if (!slug || slug.includes("/")) return false;
   const doc = await Listing.findOne({ slug }).select("status expiresAt").lean<{ status?: string; expiresAt?: Date | null }>();

@@ -1,0 +1,17 @@
+{
+  "branchPrefix": "haiku/h16.2",
+  "globs": [
+    "docs/ownership/H16.2.json",
+    "progress/H16.2.md",
+    "src/lib/ad-address.ts",
+    "src/server/models/listing.ts",
+    "src/server/listings/ad-code.ts",
+    "src/server/listings/ad-route.ts",
+    "src/app/ad/[slug]/**",
+    "src/app/[category]/[location]/[district]/page.tsx",
+    "src/app/api/cron/expire/route.ts",
+    "src/proxy.ts",
+    "tests/server/listings/h16-2-*.test.ts",
+    "tests/e2e/h16-2-ad-addresses.e2e.ts"
+  ]
+}
