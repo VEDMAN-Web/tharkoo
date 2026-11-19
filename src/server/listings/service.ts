@@ -32,6 +32,7 @@ import { categoryNeedsSubcategory } from "@/server/categories/public";
 import { Subcategory } from "@/server/models/subcategory";
 import { AD_MEDIA_LIMIT_MESSAGE, AD_MEDIA_MAX } from "@/server/media/config";
 import { adVideoCount } from "@/server/media/limit";
+import { PEOPLE_NO_VIDEO } from "@/server/media/people-video";
 import { assertVerified } from "@/server/verification/service";
 import { hashIp } from "@/server/shared/crypto";
 import { choiceProblems, parseListingAttributes, type FieldDefinition } from "@/server/shared/fields";
@@ -598,6 +599,8 @@ export async function submitListing(
     assets.length === mediaIds.length &&
     assets.every((asset) => asset.ownerId.toString() === userId && asset.status === "cleared" && asset.kind !== "id_document");
   if (mediaIds.length + (await adVideoCount(listing._id)) > AD_MEDIA_MAX) throw new PolicyViolationError(AD_MEDIA_LIMIT_MESSAGE);
+  // FIX-1: a listing about people never goes live with a video, even one saved before the rule.
+  if (isPeopleListing(category) && (await adVideoCount(listing._id)) > 0) throw new PolicyViolationError(PEOPLE_NO_VIDEO);
   const gate = evaluatePublishGate({
     // H7.2b: a code account without a seller profile has no date of birth, and the gate refuses it.
     dateOfBirth: user.dateOfBirth ?? null,

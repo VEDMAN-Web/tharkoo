@@ -51,7 +51,9 @@ test.describe("H7.85 post an ad, steps 3 and 4", () => {
     await expect(page.getByText(/item or place/)).toHaveCount(0);
     await expect(page.locator("[data-tk=photo-input]")).toHaveAttribute("accept", "image/*");
     await expect(page.locator("[data-tk=camera-input]")).toHaveAttribute("capture", "environment");
-    for (const name of ["Add photos", "Add video"]) {
+    // FIX-1: Dating is a people category, which never holds a video, so there is no Add video button here.
+    await expect(page.locator("label.tkp-btn", { hasText: "Add video" })).toHaveCount(0);
+    for (const name of ["Add photos"]) {
       const button = page.locator("label.tkp-btn", { hasText: name });
       await expect(button).toBeVisible();
       expect(await button.evaluate((node) => getComputedStyle(node).textTransform)).toBe("none");

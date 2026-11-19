@@ -12,6 +12,7 @@ import { CLOUDINARY_FOLDER, EAGER, MAX_BYTES, STRIP_EXIF, UPLOAD_NEEDS_CLOUDINAR
 import { csamScannerFromEnv } from "@/server/media/csam";
 import { signUploadParams } from "@/server/media/sign";
 import { markWatermarked, watermarkTransformationFor } from "@/server/media/watermark";
+import { PEOPLE_NO_VIDEO } from "@/server/media/people-video";
 import { AuditEvent, Category, MediaAsset, User } from "@/server/models";
 
 /**
@@ -49,7 +50,7 @@ const audit = new AuditRepository();
 export const LEGACY_UPLOAD_MAX_BYTES = 4 * 1024 * 1024;
 export const LEGACY_TOO_BIG = "This file could not be uploaded (too big or a network problem). Try a smaller photo.";
 export const STAFF_PHOTO_REFUSED = "Only jpeg, png and webp photos up to 8 MB are allowed";
-export const STAFF_PEOPLE_NO_VIDEO = "Videos are not allowed on people listings.";
+export const STAFF_PEOPLE_NO_VIDEO = PEOPLE_NO_VIDEO;
 export const STAFF_NOT_SIGNED = "This upload was not started by you. Choose the file again.";
 
 function isAdmin(roles: string[]) {
