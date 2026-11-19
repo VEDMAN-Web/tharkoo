@@ -2,7 +2,7 @@
 
 import { useEffect, useLayoutEffect, useSyncExternalStore } from "react";
 import Script from "next/script";
-import { usePathname } from "next/navigation";
+import { useSitePath } from "@/components/useSitePath";
 import { CONSENT_EVENT, CONSENT_KEY, GA_READY_EVENT, cleanGaId, cleanPageLocation, flushGaQueue, gaInitScript, gaMayLoad, gaScriptSrc, isPublicPath, markGaWanted } from "@/lib/analytics/ga";
 
 type GaWindow = Window & { gtag?: (command: string, ...args: unknown[]) => void; __tkGa?: boolean };
@@ -32,7 +32,7 @@ function onReady(callback: () => void) {
  */
 export function GoogleAnalytics({ measurementId }: { measurementId: string }) {
   const id = cleanGaId(measurementId);
-  const pathname = usePathname() || "/";
+  const pathname = useSitePath() || "/";
   // The server renders nothing (no choice known); the browser reads the saved choice and follows the notice.
   const consent = useSyncExternalStore(onConsent, readConsent, () => null);
   const ready = useSyncExternalStore(onReady, () => Boolean((window as GaWindow).__tkGa), () => false);
