@@ -32,6 +32,8 @@ export type EditorItem = {
   publishedAt: string | null;
   scheduledAt: string | null;
   revisions: number;
+  /** The text was first written by the AI draft tool and has not been published yet. */
+  aiDraft: boolean;
   media: Record<string, { src: string; alt: string }>;
 };
 
@@ -105,6 +107,7 @@ export async function readEditorItem(itemId: string): Promise<EditorItem | null>
     publishedAt: item.publishedAt ? new Date(item.publishedAt).toISOString() : null,
     scheduledAt: item.scheduled?.at ? new Date(item.scheduled.at).toISOString() : null,
     revisions: await ContentRevision.countDocuments({ itemId: item._id }),
+    aiDraft: item.aiDraft === true,
     media: Object.fromEntries(docs.map((doc) => [String(doc._id), { src: doc.url, alt: doc.alt }])),
   };
 }

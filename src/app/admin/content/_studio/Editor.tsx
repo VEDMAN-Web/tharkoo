@@ -161,6 +161,7 @@ export function Editor({ item, authors, categories, host, prefix, canPublish, ca
           </span>
           <span className="adm-k-help" role="status" data-tk="save-state">{label}</span>
         </div>
+        {item.aiDraft ? <p className="adm-k-note" role="note" data-tk="ai-banner">AI draft - check every fact before publishing</p> : null}
         {problem ? (
           <div className="adm-k-notice-err" role="alert" data-tk="problem" tabIndex={-1}>
             <strong>{problem.message}</strong>
