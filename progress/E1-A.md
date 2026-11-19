@@ -75,11 +75,11 @@ Actual: one sentence (156 characters) under the heading.
 Suspected: `src/app/scam-report/page.tsx` and the content it reads.
 Screenshot: `e1a4-scam-report-1440.png`. Test: J6s in the attachment.
 
-**E1-A5 (test fragility, existing spec): the Home pop-out test can fail on leftover data.**
-`tests/e2e/home-ad-cards.e2e.ts:170` looks for a link named "Chat" inside the pop-out. The pop-out's title is also a link, and when the first Home ad is titled "E2E chatflow ..." (left by an earlier spec in the same database) both match and the check stops (strict mode). Rate: 1 of 1 in the full run, 0 of 3 when run alone. Fix idea: `getByRole("link", { name: "Chat", exact: true })`.
+**E1-A5 (TEST ISOLATION, existing spec): the Home pop-out test can fail on leftover data.**
+`tests/e2e/home-ad-cards.e2e.ts:170` looks for a link named "Chat" inside the pop-out. The pop-out's title is also a link, and when the first Home ad is titled "E2E chatflow ..." (left by an earlier spec in the same database) both match and the check stops (strict mode). Rate: 1 of 1 in the full run, 0 of 3 when run alone. Test fix, per Opus: `getByRole("link", { name: "Chat", exact: true })` and no dependence on which ad is first.
 
 **E1-A6 (stale test, existing spec): H6.13 category card photo shape.**
-`tests/e2e/home-cards.e2e.ts:28` expects a 4:5 photo at 360 px; the category tiles are now an icon strip 64 px tall (H12.2 and H12.2b design), so it measures 0.42. The tiles look right (`e1a6-category-tiles-1440.png`). Fails 3 of 3. The fix belongs to the test (or retire the check).
+`tests/e2e/home-cards.e2e.ts:28` expects a 4:5 photo at 360 px; the first category tile has no photo, and its box is now a 64 px strip (0.42). Checked on two builds: it PASSES at 344d832 (main just before H12.1) and FAILS at 6366c9f, so it broke at H12.1 (#392, 0756f08): that PR made `.tkh-cat-photo.tkh-cat-empty` `aspect-ratio: auto; min-height: 56px` and did not update this test. It is not a H14 effect. The tiles look right (`e1a6-category-tiles-1440.png`). Fails 3 of 3. The fix belongs to the test (use a tile that has a photo, or accept the empty-tile box).
 
 ## Notes for Opus (not bugs)
 1. "Save without login -> login prompt" does not match the product: a visitor's saved ads are kept on the device by design (the list says "N saved on this device") and no login is asked. If a login prompt is wanted, that is a product decision. The saved list also shows the account menu (My ads, Photos and videos) to a signed-out visitor.
