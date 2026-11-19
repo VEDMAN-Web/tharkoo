@@ -1,0 +1,12 @@
+{
+  "branchPrefix": "haiku/h15.3",
+  "globs": [
+    "docs/ownership/H15.3.json",
+    "progress/FIX3.md",
+    "src/lib/chat-text.ts",
+    "src/server/chat/service.ts",
+    "src/components/chat/ChatThread.tsx",
+    "tests/server/chat/h15-3-readonly.test.ts",
+    "tests/e2e/fix3-chat-readonly.e2e.ts"
+  ]
+}
