@@ -1,0 +1,23 @@
+{
+  "branchPrefix": "haiku/h16.1c",
+  "globs": [
+    "docs/ownership/H16.1c.json",
+    "progress/H16.1c.md",
+    "src/components/ui/SearchSelect.tsx",
+    "src/components/ui/search-select.css",
+    "src/components/admin/ui/AdminSearchSelect.tsx",
+    "src/components/admin/ui/index.ts",
+    "src/components/post/FormFields.tsx",
+    "src/components/PostWizard.tsx",
+    "src/components/SearchModal.tsx",
+    "src/components/auth/SellerProfileForm.tsx",
+    "src/components/buyer/AlertsPanel.tsx",
+    "src/app/admin/listing-order/ListingOrderEditor.tsx",
+    "src/app/admin/seo/templates/TemplatesEditor.tsx",
+    "src/app/u/post-insert/page.tsx",
+    "src/app/u/seller-profile/page.tsx",
+    "src/lib/ui/text.ts",
+    "tests/server/layout/h16-1c-search-select.test.ts",
+    "tests/e2e/h16-1c-city-pickers.e2e.ts"
+  ]
+}

@@ -1,7 +1,8 @@
 "use client";
 
-import { useState, type FormEvent } from "react";
+import { useMemo, useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
+import { SEARCH_FROM, SearchSelect, placeChoices } from "@/components/ui/SearchSelect";
 import { api, fieldErrors, friendlyError } from "@/lib/ui/api";
 import type { SellerView } from "@/server/auth/service";
 
@@ -14,7 +15,7 @@ interface Props {
   /** H7.4c: the Live chat switch as it is saved now. Off for existing sellers. */
   initialLiveChat?: boolean;
   /** The cities of the post-ad form. The city is picked from this list by its display name. */
-  cities?: { id: string; name: string; slug: string }[];
+  cities?: { id: string; name: string; slug: string; stateSlug?: string }[];
 }
 
 /** H7.2b: the seller profile, shown once before the first ad. Name and city show on ads. Date of birth never shows. */
@@ -24,6 +25,7 @@ export function SellerProfileForm({ next, initial, askDateOfBirth, initialLiveCh
   const saved = (initial?.city ?? "").trim();
   const known = cities.find((item) => item.slug.toLowerCase() === saved.toLowerCase() || item.name.toLowerCase() === saved.toLowerCase());
   const [city, setCity] = useState(known?.name ?? saved);
+  const cityChoices = useMemo(() => placeChoices(cities, (item) => item.name), [cities]);
   const [whatsapp, setWhatsapp] = useState(initial?.whatsapp ?? "");
   const [availableNow, setAvailableNow] = useState(initial?.availableNow ?? false);
   const [liveChat, setLiveChat] = useState(initialLiveChat);
@@ -76,7 +78,9 @@ export function SellerProfileForm({ next, initial, askDateOfBirth, initialLiveCh
 
       <label className="tk-sp-label">
         <span>City</span>
-        {cities.length ? (
+        {cities.length > SEARCH_FROM ? (
+          <SearchSelect id="tk-sp-city" inputClassName="tk-sp-input" name="city" value={city} options={cityChoices} placeholder="Type your city" emptyText="No city matches. Keep typing." invalid={Boolean(cityError)} onChange={setCity} />
+        ) : cities.length ? (
           <select className="tk-sp-input" name="city" autoComplete="off" value={city} onChange={(event) => setCity(event.target.value)} aria-invalid={Boolean(cityError)} aria-describedby={cityError ? "tk-sp-city-err" : undefined} required>
             <option value="" disabled>Choose your city</option>
             {!known && saved ? <option value={saved}>{saved}</option> : null}

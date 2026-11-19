@@ -1,3 +1,4 @@
+export { AdminSearchSelect } from "./AdminSearchSelect";
 export { BarList } from "./BarList";
 export { Badge, type BadgeTone } from "./Badge";
 export { BottomBar, type BottomBarItem } from "./BottomBar";

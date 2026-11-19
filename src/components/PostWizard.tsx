@@ -30,11 +30,12 @@ import { hintsFor, photoHelp } from "./post/placeholders";
 import { listDraftMediaAction } from "./post/mediaActions";
 import type { DraftMedia } from "@/server/media/mine";
 import { PostPreviewCard, PreviewSheet, previewAd } from "./post/PostPreview";
+import { placeChoices } from "@/components/ui/SearchSelect";
 import "./post/post-wizard.css";
 import type { ListingDoc } from "@/lib/models";
 
 type Cat = { _id: string; name: string; slug: string; people?: boolean; kind?: string; fields?: Record<string, unknown>[] };
-type Place = { id: string; name: string; slug: string; parentId?: string | null };
+type Place = { id: string; name: string; slug: string; parentId?: string | null; stateSlug?: string };
 
 /** Step number of the photo step in each design. `?step=photos` in the URL means this step. */
 const OLD_PHOTO_STEP = 2;
@@ -167,6 +168,7 @@ export function PostWizard({
     ? plans.filter((plan) => copy.promotion.products.some((code) => code === plan.id || code === plan.code))
     : plans;
   const cityName = cities.find((item) => item.id === cityId)?.name ?? "";
+  const cityChoices = useMemo(() => placeChoices(cities, (city) => city.id), [cities]);
   const districtName = districts.find((item) => item.id === districtId)?.name ?? "";
   const priceDigits = priceDigitsOf(price);
 
@@ -635,7 +637,7 @@ export function PostWizard({
                 ))}
               </SelectField>
             ) : null}
-            <SelectField id="city" label={t("post.select.city")} required value={cityId} error={errors.city} onChange={(value) => { setCityId(value); setDistrictId(""); }}>
+            <SelectField id="city" label={t("post.select.city")} required value={cityId} error={errors.city} searchOptions={cityChoices} searchPlaceholder={t("post.select.cityType")} searchEmpty={t("post.select.cityNone")} onChange={(value) => { setCityId(value); setDistrictId(""); }}>
               <option value="">{t("post.select.city")}</option>
               {cities.map((city) => (
                 <option key={city.id} value={city.id}>{city.name}</option>
@@ -921,7 +923,7 @@ export function PostWizard({
               {current === "details" ? (
                 <div className="tkp-fields">
                   <div className="tkp-two tkp-two-keep">
-                    <SelectField id="city" label={t("post.field.city")} required value={cityId} error={err("city")} onBlur={blur("city")} onChange={(value) => { setCityId(value); setDistrictId(""); }}>
+                    <SelectField id="city" label={t("post.field.city")} required value={cityId} error={err("city")} onBlur={blur("city")} searchOptions={cityChoices} searchPlaceholder={t("post.select.cityType")} searchEmpty={t("post.select.cityNone")} onChange={(value) => { setCityId(value); setDistrictId(""); }}>
                       <option value="">{t("post.select.city")}</option>
                       {cities.map((city) => (
                         <option key={city.id} value={city.id}>{city.name}</option>
