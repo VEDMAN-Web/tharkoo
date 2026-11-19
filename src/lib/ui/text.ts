@@ -595,6 +595,8 @@ export const TEXT_DEFAULTS = {
   "post.select.category": "Select category",
   "post.select.subcategory": "Select sub-category",
   "post.select.city": "Select city",
+  "post.select.cityType": "Type a city name",
+  "post.select.cityNone": "No city matches. Keep typing.",
   "post.select.district": "Select district",
   "post.field.address": "Address",
   "post.field.postalCode": "Postal code",

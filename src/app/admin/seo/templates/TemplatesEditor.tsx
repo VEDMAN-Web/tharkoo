@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState, useTransition } from "react";
-import { Notice, SaveBar, SerpPreview, TextField } from "@/components/admin/ui";
+import { AdminSearchSelect, Notice, SaveBar, SerpPreview, TextField } from "@/components/admin/ui";
 import {
   TEMPLATE_FIELDS,
   TEMPLATE_LIMITS,
@@ -135,13 +135,7 @@ export function TemplatesEditor({
         </label>
         <label className="adm-field">
           <span className="adm-field-label">Sample city for the preview</span>
-          <select className="adm-input" value={sampleCity} onChange={(event) => setSampleCity(event.target.value)}>
-            {cities.map((city) => (
-              <option key={city} value={city}>
-                {city}
-              </option>
-            ))}
-          </select>
+          <AdminSearchSelect value={sampleCity} options={cities.map((city) => ({ value: city, label: city }))} onChange={setSampleCity} />
         </label>
       </section>
 
