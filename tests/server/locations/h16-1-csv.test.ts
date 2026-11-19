@@ -84,6 +84,20 @@ describe("H16.1 data files", () => {
     expect(by.get("mumbai")?.state).toBe("Maharashtra");
   });
 
+  it("renamed cities appear once, under the new official name: no Maharashtra city is called Aurangabad or Osmanabad, and the Aurangabad of Bihar stays", () => {
+    const table = readCityTable(file("india-cities.csv"));
+    if (!table.ok) throw new Error(table.message);
+    const maharashtra = table.rows.filter((row) => row.state === "Maharashtra").map((row) => row.name);
+    expect(maharashtra).not.toContain("Aurangabad");
+    expect(maharashtra).not.toContain("Osmanabad");
+    expect(maharashtra).toEqual(expect.arrayContaining(["Chhatrapati Sambhajinagar", "Dharashiv", "Ahilyanagar"]));
+    expect(table.rows.find((row) => row.state === "Bihar" && row.name === "Aurangabad")).toBeTruthy();
+    const slugs = table.rows.map((row) => row.slug);
+    expect(slugs).toContain("chhatrapati-sambhajinagar");
+    expect(slugs).toContain("dharashiv");
+    expect(slugs).not.toContain("osmanabad");
+  });
+
   it("india-areas.csv: every area names a city of india-cities.csv, with a valid slug, unique inside its city", () => {
     const cities = readCityTable(file("india-cities.csv"));
     const areas = readAreaTable(file("india-areas.csv"));
@@ -93,7 +107,7 @@ describe("H16.1 data files", () => {
     const perCity = new Map<string, number>();
     for (const row of areas.rows) {
       expect(shapeProblem(row, (value) => validateSlug(value)), `line ${row.line}`).toBe("");
-      expect(citySlugs.has(row.city), `line ${row.line}: city ${row.city}`).toBe(true);
+      expect(citySlugs.has(row.city), `line ${row.line}: the city key ${row.city} is not in india-cities.csv`).toBe(true);
       const id = `${row.city}|${row.slug}`;
       expect(seen.has(id), `line ${row.line}: repeated area ${id}`).toBe(false);
       seen.add(id);
