@@ -227,7 +227,7 @@ describe("remove access", () => {
 
 describe("what each role can open", () => {
   it("is worked out from the real menu rules", () => {
-    expect(guideFor("blog_editor")).toMatchObject({ opens: "Content studio, Media library", label: "Blog editor" });
+    expect(guideFor("blog_editor")).toMatchObject({ opens: "Content studio", label: "Blog editor" });
     expect(guideFor("superadmin").opens).toBe("Everything");
     expect(guideFor("admin").opens).toBe("Everything except Settings, Team & roles");
     expect(guideFor("support").opens).toContain("Support desk");

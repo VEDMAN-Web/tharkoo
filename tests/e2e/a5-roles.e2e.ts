@@ -10,8 +10,8 @@ const EXPECTED: Record<string, { labels: string[]; closed: string[] }> = {
     closed: ["/admin/prices/", "/admin/page-builder/", "/admin/content/", "/admin/team/", "/admin/settings/", "/admin/seo/"],
   },
   blog_editor: {
-    labels: ["Dashboard", "History & undo", "Content studio", "Media library"],
-    closed: ["/admin/moderation/", "/admin/reports/", "/admin/users/", "/admin/prices/", "/admin/seo/", "/admin/settings/", "/admin/team/"],
+    labels: ["Dashboard", "History & undo", "Content studio"],
+    closed: ["/admin/media/", "/admin/moderation/", "/admin/reports/", "/admin/users/", "/admin/prices/", "/admin/seo/", "/admin/settings/", "/admin/team/"],
   },
   content_editor: {
     labels: ["Dashboard", "History & undo", "Page builder", "Content studio", "Media library", "Menus & site text", "Categories & fields", "Cities & areas"],

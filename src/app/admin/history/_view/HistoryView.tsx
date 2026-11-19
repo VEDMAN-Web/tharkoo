@@ -108,7 +108,7 @@ function Screen({ list, detail, windows }: { list: HistoryList; detail: HistoryD
         crumbs={[{ label: "Today" }]}
         title="History & undo"
         purpose="Every change by staff, newest first. Undo puts things back and is logged too."
-        secondary={[{ key: "export", label: "Export", icon: Download, href: `/admin/history/export/${params.toString() ? `?${params.toString()}` : ""}` }]}
+        secondary={[{ key: "export", label: "Export", icon: Download, download: true, href: `/admin/history/export/${params.toString() ? `?${params.toString()}` : ""}` }]}
       />
       <div className="adm-card adm-h-flat">
         <Tabs

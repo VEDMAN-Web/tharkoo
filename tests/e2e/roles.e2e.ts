@@ -82,7 +82,7 @@ test.describe("8 Roles", () => {
     await loginUi(page, email, undefined, "/admin/seo/");
     await expect(page.locator(".adm-nav").first()).toBeAttached();
     const links = await page.locator(".adm-nav .adm-link-label").allTextContents();
-    expect(links).toEqual(["Dashboard", "History & undo", "Content studio", "Media library", "SEO"]);
+    expect(links).toEqual(["Dashboard", "History & undo", "Content studio", "SEO"]);
   });
 
   test("a seo_editor cannot open money or system screens by URL", async ({ baseURL }) => {

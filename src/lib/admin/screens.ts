@@ -76,7 +76,7 @@ export const SCREENS: readonly Screen[] = [
   { id: "prices", group: "money", label: "Prices & plans", href: "/admin/prices/", view: "prices.view", icon: "coin" },
   { id: "page-builder", group: "website", label: "Page builder", href: "/admin/page-builder/", view: "pages.edit", icon: "layers" },
   { id: "content", group: "website", label: "Content studio", href: "/admin/content/", view: "content.write", icon: "page", counts: ["contentReview"] },
-  { id: "media", group: "website", label: "Media library", href: "/admin/media/", view: "media.upload", icon: "image" },
+  { id: "media", group: "website", label: "Media library", href: "/admin/media/", view: "media.library", icon: "image" },
   { id: "menus", group: "website", label: "Menus & site text", href: "/admin/menus/", view: "menus.edit", icon: "menu" },
   { id: "categories", group: "catalogue", label: "Categories & fields", href: "/admin/categories/", view: "catalogue.edit", icon: "grid" },
   { id: "cities", group: "catalogue", label: "Cities & areas", href: "/admin/locations/", view: "catalogue.edit", icon: "pin" },
