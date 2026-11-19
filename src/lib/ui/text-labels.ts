@@ -18,6 +18,7 @@ export const TEXT_AREAS: TextArea[] = [
   { id: "chat", label: "Live chat", where: "The chat box on the site", prefixes: ["chat."] },
   { id: "header", label: "Header and footer", where: "The top and the bottom of every page", prefixes: ["header.", "chrome."] },
   { id: "myads", label: "My ads", where: "The My ads page of the account", prefixes: ["myads."] },
+  { id: "scam", label: "Scam report page", where: "The How to report a scam help page", prefixes: ["scam."] },
   { id: "howitworks", label: "How it works", where: "The How it works page", prefixes: ["howitworks."] },
   { id: "help", label: "Help texts", where: "The help lines on the account pages", prefixes: ["help."] },
 ];
@@ -88,6 +89,7 @@ const WHERE: Record<string, string> = {
   "ad.buy": "Ad page, buying credits to contact",
   "ad.calling": "Ad page, while a call is starting",
   "myads.cost": "My ads, the line about what posting costs",
+  "scam.title": "How to report a scam page, the heading",
   "howitworks.cost": "How it works, the answer about what posting costs",
   "post.idcheck": "Post your ad, the ID check step",
   "post.pay": "Post your ad, the payment step",
