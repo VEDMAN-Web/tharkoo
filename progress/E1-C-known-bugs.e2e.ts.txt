@@ -1,8 +1,1 @@
-// ===== tests/e2e/e1c-red-roles.e2e.ts (kept out of the PR: these fail on main until the bug named in the title is fixed) =====
-import { test } from "./helpers";
-import { roleTests } from "./e1c-roles-core";
-
-test.describe("E1-C known red: E1-C1", () => {
-  roleTests(["blog_editor", "seo_editor"]);
-});
-
+// No known-red journeys left: E1-C1 is fixed in tests/e2e/h15-13-admin-small.e2e.ts and E1-C4 in tests/e2e/e1c-audit.e2e.ts.

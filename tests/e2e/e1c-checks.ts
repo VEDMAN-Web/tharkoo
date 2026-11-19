@@ -4,8 +4,7 @@ import { expect, hasHorizontalScroll } from "./helpers";
 
 /** E1-C: the checks every admin journey makes on each page it lands on (Opus E1 plan: console, h1, scroll, a11y). */
 
-/** E1-C5: the page-builder preview frame trips a report-only frame-ancestors notice; it is reported as a bug and ignored here so the rest of the page is still checked. */
-const IGNORED = [/report-only Content Security Policy directive: "frame-ancestors/i, /Failed to load resource.*(403|404|410)/i, /favicon/i, /ERR_BLOCKED_BY_CLIENT/i];
+const IGNORED = [/Failed to load resource.*(403|404|410)/i, /favicon/i, /ERR_BLOCKED_BY_CLIENT/i];
 
 export function watchConsole(page: Page) {
   const errors: string[] = [];

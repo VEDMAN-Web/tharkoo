@@ -30,6 +30,7 @@ const STATUS_LOOK: Record<string, { tone: BadgeTone; text: string }> = {
 };
 const ADD_FILTERS = [
   { key: "junk", label: "Looks like junk" },
+  { key: "pvideo", label: "People ads with a video" },
   { key: "cat", label: "Category" },
   { key: "city", label: "City" },
   { key: "paid", label: "Paid or free" },
@@ -149,6 +150,7 @@ function Screen({ list, access, demoPanel }: { list: AdsList; access: AdsAccess;
   const categoryName = list.categories.find((item) => item.id === query.category)?.name ?? "";
   const chips: FilterChip[] = [];
   if (query.junk) chips.push({ key: "junk", label: "Looks like junk" });
+  if (query.peopleVideo) chips.push({ key: "pvideo", label: "People ads with a video" });
   if (query.category) chips.push({ key: "cat", label: "Category", value: categoryName || "unknown" });
   if (query.city) chips.push({ key: "city", label: "City", value: query.city });
   if (query.paid !== "all") chips.push({ key: "paid", label: "Paid or free", value: query.paid === "paid" ? "Paid" : "Free" });
@@ -164,7 +166,7 @@ function Screen({ list, access, demoPanel }: { list: AdsList; access: AdsAccess;
   }
 
   function addFilter(key: string) {
-    if (key === "junk" || key === "home") go({ [key]: "1", page: null });
+    if (key === "junk" || key === "home" || key === "pvideo") go({ [key]: "1", page: null });
     else if (key === "ends") go({ ends: "24", page: null });
     else setAdding(key as FilterKey);
   }
@@ -296,6 +298,7 @@ function Screen({ list, access, demoPanel }: { list: AdsList; access: AdsAccess;
             onPage={(page) => go({ page: page === 1 ? null : String(page) })}
             onPageSize={(size) => go({ size: size === 25 ? null : String(size), page: null })}
             selectable={access.edit || access.decide}
+            phoneSelect
             selected={selected}
             onSelected={setSelected}
             bulkActions={
@@ -329,7 +332,7 @@ function Screen({ list, access, demoPanel }: { list: AdsList; access: AdsAccess;
                       setSearch("");
                       sentSearch.current = "";
                       setCityText("");
-                      go({ q: null, junk: null, cat: null, city: null, paid: null, home: null, kind: null, page: null });
+                      go({ q: null, junk: null, pvideo: null, cat: null, city: null, paid: null, home: null, kind: null, page: null });
                     }}
                   >
                     Clear search and filters

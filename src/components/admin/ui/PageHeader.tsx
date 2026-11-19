@@ -7,8 +7,8 @@ import "@/styles/admin-kit.css";
 import { Button, type ButtonKind } from "./Button";
 
 export type Crumb = { label: string; href?: string };
-export type MoreItem = { key: string; label: string; icon?: LucideIcon; href?: string; onSelect?: () => void; danger?: boolean };
-export type HeaderAction = { key: string; label: string; icon?: LucideIcon; href?: string; onClick?: () => void; kind?: ButtonKind; busy?: boolean; disabled?: boolean };
+export type MoreItem = { key: string; label: string; icon?: LucideIcon; href?: string; download?: boolean; onSelect?: () => void; danger?: boolean };
+export type HeaderAction = { key: string; label: string; icon?: LucideIcon; href?: string; download?: boolean; onClick?: () => void; kind?: ButtonKind; busy?: boolean; disabled?: boolean };
 
 /** The overflow menu: a button with a list. Esc and a click outside close it; the arrow keys move between items. */
 export function MoreMenu({ items, phoneItems = [], placement = "down" }: { items: MoreItem[]; phoneItems?: MoreItem[]; placement?: "down" | "up" }) {
@@ -52,6 +52,13 @@ export function MoreMenu({ items, phoneItems = [], placement = "down" }: { items
         {item.label}
       </>
     );
+    if (item.href && item.download) {
+      return (
+        <a key={item.key} role="menuitem" href={item.href} download className={cls || undefined} onClick={() => setOpen(false)}>
+          {content}
+        </a>
+      );
+    }
     if (item.href) {
       return (
         <Link key={item.key} role="menuitem" href={item.href} className={cls || undefined} onClick={() => setOpen(false)}>
@@ -114,11 +121,11 @@ export function PageHeader({
 }) {
   const Heading = level === 1 ? "h1" : "h2";
   const sec = secondary.slice(0, 2);
-  const phoneItems: MoreItem[] = sec.map((action) => ({ key: `sec-${action.key}`, label: action.label, icon: action.icon, href: action.href, onSelect: action.onClick }));
+  const phoneItems: MoreItem[] = sec.map((action) => ({ key: `sec-${action.key}`, label: action.label, icon: action.icon, href: action.href, download: action.download, onSelect: action.onClick }));
   const showMore = more.length > 0 || phoneItems.length > 0;
   const toButton = (action: HeaderAction, kind: ButtonKind) =>
     action.href ? (
-      <Button key={action.key} kind={action.kind ?? kind} icon={action.icon} href={action.href} disabled={action.disabled}>
+      <Button key={action.key} kind={action.kind ?? kind} icon={action.icon} href={action.href} download={action.download} disabled={action.disabled}>
         {action.label}
       </Button>
     ) : (

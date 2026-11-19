@@ -212,18 +212,22 @@ export function AdCard({
             </span>
           ) : null}
           <span className="tk-card-meta">
-            <p>
-              <Calendar size={12} aria-hidden />
-              <strong>{ad.age ? t("card.age", { age: ad.age }) : prettyPlace(ad.categorySlug)}</strong>
-            </p>
-            <p>
-              <MapPin size={12} aria-hidden />
-              <span>
-                <strong>{city}</strong>
-                {area ? `/ ${area}` : ""}
-                {place.length >= 22 ? "..." : ""}
-              </span>
-            </p>
+            {ad.age || ad.categorySlug ? (
+              <p>
+                <Calendar size={12} aria-hidden />
+                <strong>{ad.age ? t("card.age", { age: ad.age }) : prettyPlace(ad.categorySlug)}</strong>
+              </p>
+            ) : null}
+            {city || area ? (
+              <p>
+                <MapPin size={12} aria-hidden />
+                <span>
+                  <strong>{city || area}</strong>
+                  {city && area ? ` / ${area}` : ""}
+                  {place.length >= 22 ? "..." : ""}
+                </span>
+              </p>
+            ) : null}
           </span>
         </span>
       </a>

@@ -7,6 +7,7 @@ import { ForbiddenError } from "@/server/http";
 import { demoFilter, DEMO_SLUG } from "@/server/listings/demo-ads";
 import { paidCreditsFor } from "@/server/moderation/review";
 import { previewUrlOf } from "@/server/media/mine";
+import { isPeopleListing } from "@/server/categories/kinds";
 import { Category, Listing, Location, MediaAsset, PromotionOrder, User, WalletEntry } from "@/server/models";
 import { normalizePhone, PhoneIdentity } from "@/server/auth/phone";
 import type { ListingDoc } from "@/server/models/listing";
@@ -49,6 +50,8 @@ export type AdsQuery = {
   sort: AdsSort;
   /** Only live or paused ads that end within the next 24 hours. */
   endsSoon: boolean;
+  /** Only ads in a people category that have a video. A read-only look: nothing is changed by it. */
+  peopleVideo: boolean;
 };
 
 export type AdRow = {
@@ -105,6 +108,7 @@ export function parseAdsQuery(params: Record<string, string | string[] | undefin
     city: one("city").trim().slice(0, 60),
     sort: (ADS_SORTS as readonly string[]).includes(one("sort")) ? (one("sort") as AdsSort) : "new",
     endsSoon: one("ends") === "24",
+    peopleVideo: one("pvideo") === "1",
   };
 }
 
@@ -117,6 +121,19 @@ export async function paidAdIds(): Promise<Types.ObjectId[]> {
     { $match: { net: { $lt: 0 } } },
   ]);
   return rows.filter((row) => /^[a-f0-9]{24}$/i.test(row._id)).map((row) => row._id as unknown as Types.ObjectId);
+}
+
+/** Ads in a people category that have a video of any state (an upload that is not cleared yet counts). */
+export async function peopleVideoAdIds(): Promise<Types.ObjectId[]> {
+  await connectDb();
+  const [withVideo, categories] = await Promise.all([
+    MediaAsset.distinct("listingId", { kind: "video", listingId: { $exists: true, $ne: null } }),
+    Category.find().select("_id kind slug fields").lean<{ _id: Types.ObjectId; kind?: string; slug?: string; fields?: unknown }[]>(),
+  ]);
+  if (withVideo.length === 0) return [];
+  const peopleCategories = categories.filter((row) => isPeopleListing(row)).map((row) => row._id);
+  if (peopleCategories.length === 0) return [];
+  return Listing.distinct("_id", { _id: { $in: withVideo }, categoryId: { $in: peopleCategories } });
 }
 
 async function promotedIds(): Promise<Types.ObjectId[]> {
@@ -171,6 +188,7 @@ export async function filterFor(query: AdsQuery): Promise<QueryFilter<ListingDoc
   if (query.q) parts.push(await searchFilter(query.q));
   if (query.junk) parts.push({ $or: JUNK_PATTERN_SOURCES.map((source) => ({ title: { $regex: source, $options: "i" } })) });
   if (query.home) parts.push({ homeShow: true });
+  if (query.peopleVideo) parts.push({ _id: { $in: await peopleVideoAdIds() } });
   if (query.endsSoon) parts.push({ status: { $in: ["active", "paused"] }, expiresAt: { $gt: new Date(), $lte: new Date(Date.now() + ENDS_SOON_HOURS * 3_600_000) } });
   if (query.category) parts.push({ $or: [{ categoryId: query.category }, { subcategoryId: query.category }] } as QueryFilter<ListingDoc>);
   if (query.city) parts.push(await cityFilter(query.city));

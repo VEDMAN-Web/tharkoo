@@ -538,6 +538,15 @@ export const TEXT_DEFAULTS = {
   "post.pay.title": "Pay and publish",
   // H12.4: the same card when the ad is one of the account's free ads: nothing to pay, so it only says Publish.
   "post.pay.titleFree": "Publish",
+  // H15.9: the "How to report a scam" help page.
+  "scam.title": "How to report a scam",
+  "scam.section": "Safety",
+  "scam.intro": "Most scams ask you to pay before you have seen anything. A few habits keep you safe.",
+  "scam.dontPay": "Never pay a deposit, booking fee or advance to someone you have not met. A real advertiser can wait until you meet.",
+  "scam.videoCall": "Use the video call on the ad to see that the person or place is real before you meet.",
+  "scam.meetSafely": "Meet in a public place and tell a friend where you are going. Never share OTPs or card details.",
+  "scam.reportAd": "Saw something wrong? Open the ad and press Report this ad. Pick a reason and send. Our team reads every report.",
+  "scam.contact": "Need help right now? Contact support and include the link to the ad.",
   // H12.4: the How it works answer to "What does it cost to post?" follows the live posting rule.
   "howitworks.cost.free": "Posting an ad is free. Chatting and calling the advertiser are free. Video calls and boosts use credits.",
   "howitworks.cost.freeThenFee": "Your first {free} ads are free. After that each ad costs {credits} ({rupees}), shown before you publish. Video calls and boosts use credits.",
