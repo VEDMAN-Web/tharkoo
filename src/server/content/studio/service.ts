@@ -128,7 +128,7 @@ export async function publishItem(ctx: AdminCtx, input: { itemId: string; note?:
   const item = await load(input.itemId);
   requirePublish(ctx, item.kind);
   const fields = checkFields(toPlain(item.draft));
-  if (placeholderIn(fields)) throw new ValidationError("This text still has a [placeholder ...] marker. Replace it before publishing.");
+  if (placeholderIn(fields)) throw new ValidationError("This text still has a [placeholder ...] or [ADD FACT] marker. Replace it with the real fact before publishing.");
   const before = beforeStateOf(item);
   const now = new Date();
   const written = await adminWrite(ctx, {
@@ -142,7 +142,7 @@ export async function publishItem(ctx: AdminCtx, input: { itemId: string; note?:
     apply: async () => {
       const claimed = await ContentItem.findOneAndUpdate(
         { _id: item._id, version: item.version },
-        { $set: { published: fields, status: "published", publishedAt: item.publishedAt ?? now, updatedVisibleAt: now, unpublish: null, scheduled: null, lastEditedBy: ctx.email }, $inc: { version: 1 } },
+        { $set: { aiDraft: false, published: fields, status: "published", publishedAt: item.publishedAt ?? now, updatedVisibleAt: now, unpublish: null, scheduled: null, lastEditedBy: ctx.email }, $inc: { version: 1 } },
         { returnDocument: "after" },
       ).lean();
       if (!claimed) throw new ConflictError("Someone changed this a moment ago. Open it again and publish once more.");

@@ -5,6 +5,7 @@ import { can } from "@/lib/admin/perms";
 import { siteUrl } from "@/lib/utils";
 import { builtInCounts, builtInScreen, listBuiltIns } from "@/server/content/studio/builtin";
 import { listContent, options, parseKind, parseStatus, readEditorItem, tabCounts } from "@/server/content/studio/admin";
+import { AI_DRAFT_KEY_MISSING, aiDraftConfigured } from "@/server/content/studio/ai-draft";
 import { canPublishKind } from "@/server/content/studio/service";
 import { getPaths } from "@/server/urls/service";
 import { ContentView } from "./_studio/ContentView";
@@ -68,6 +69,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<Par
         canPublish={canPublishKind(viewer.roles, tab)}
         canWrite={can(viewer.roles, "content.write")}
         problem={problem}
+        aiNote={aiDraftConfigured() ? "" : AI_DRAFT_KEY_MISSING}
       />
     </AdminShell>
   );
