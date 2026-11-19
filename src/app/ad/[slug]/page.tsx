@@ -19,6 +19,7 @@ import { adMetaDescription } from "@/lib/seo/ad-description";
 import { getSeoSettings } from "@/app/admin/seo/settings/store";
 import { siteUrl } from "@/lib/utils";
 import { listingVisibility } from "@/server/listings/visibility";
+import { demoOwnerId, DEMO_SLUG } from "@/server/listings/demo-ads";
 import { adPath, categoryPath, placePath } from "@/lib/urls";
 import { withUrlSeo, urlHeading } from "@/lib/seo/override";
 import { plain } from "@/lib/plain";
@@ -43,12 +44,16 @@ export const revalidate = 60;
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params;
   await connectDb();
-  const record = (await Listing.findOne({ slug }).select("status expiresAt seoNoindex").lean()) as {
+  const record = (await Listing.findOne({ slug }).select("status expiresAt seoNoindex ownerId slug").lean()) as {
     status?: string;
     expiresAt?: Date | null;
     seoNoindex?: boolean;
+    ownerId?: unknown;
+    slug?: string;
   } | null;
   const access = listingVisibility(record);
+  const sampleOwner = await demoOwnerId();
+  const sample = Boolean(sampleOwner && record && String(record.ownerId ?? "") === sampleOwner && DEMO_SLUG.test(record.slug ?? ""));
   if (access === "ended") {
     const paths = await getPaths();
     return withUrlSeo(adPath(paths, slug), {
@@ -70,8 +75,8 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const image = safePhoto(ad.photos?.[0]) || "/brand/og-default.png";
   const paths = await getPaths();
   const path = adPath(paths, ad.slug || slug);
-  // H6.7: a live ad is noindex, follow (follow comes from the default). It is not in the sitemap.
-  return withUrlSeo(path, { title, description, path, image, index: false });
+  // H16.5: a live ad that is set to be indexed, and every live sample (demo) ad, is indexable and in the ads sitemap.
+  return withUrlSeo(path, { title, description, path, image, index: access === "live" && (record?.seoNoindex === false || sample) });
 }
 
 function listedPrice(attributes: unknown) {

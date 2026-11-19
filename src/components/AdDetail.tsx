@@ -1,3 +1,4 @@
+import { makeT } from "@/lib/ui/text";
 import Link from "next/link";
 import { Flag, Heart, MapPin, MessageCircle, Shield, Smile, User } from "lucide-react";
 import type { ListingDoc } from "@/lib/models";
@@ -64,7 +65,7 @@ export function AdDetail({
   const nick = ad.displayName && ad.displayName !== title ? ad.displayName : "";
 
   return (
-    <ContactProvider listingSlug={ad.slug} listingId={listingId} tour={tour} peopleAd={peopleAd}>
+    <ContactProvider listingSlug={ad.slug} listingId={listingId} tour={tour} peopleAd={peopleAd} sample={ad.sample ? { message: makeT()("demo.message"), button: makeT()("demo.postButton"), href: "/u/post-insert/" } : null}>
       <div className="tk-ad">
         <TrackView ad={ad} />
         <CitySync name={city} slug={ad.citySlug} />
