@@ -43,7 +43,7 @@ test.describe("FIX-6: profile and settings text and links", () => {
     await expect(page.locator("main")).not.toContainText(/expected string|>=\s*2|Too small/i);
   });
 
-  test("E1-B8: Settings reads the real identity status: needed, being checked, verified, needs another look", async ({ page, baseURL }) => {
+  test("E1-B8: Settings reads the real identity status: needed, being checked, ID checked, needs another look", async ({ page, baseURL }) => {
     test.setTimeout(240_000);
     const line = page.locator('[data-tk="setting-id-line"]');
     const approved = await newUserApi(baseURL!, "fix6ok");
@@ -55,7 +55,7 @@ test.describe("FIX-6: profile and settings text and links", () => {
     await expect(line).toHaveText("Being checked");
     await decide(baseURL!, approved.email, "approved");
     await page.goto("/u/account/edit-account/");
-    await expect(line).toHaveText("Verified");
+    await expect(line).toHaveText("ID checked");
 
     const refused = await newUserApi(baseURL!, "fix6no");
     await refused.api.dispose();

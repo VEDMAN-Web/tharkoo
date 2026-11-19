@@ -11,7 +11,7 @@ import { SignedOutPanel, UserPanelShell } from "./UserPanelShell";
 const t = makeT();
 
 /** What the Identity check row says for each real status (E1-B8). Before the status is known, or when there is none, it says when a check is needed. */
-const ID_WORDS: Record<string, string> = { approved: "Verified", pending_review: "Being checked", rejected: "Needs another look" };
+const ID_WORDS: Record<string, string> = { approved: "ID checked", pending_review: "Being checked", rejected: "Needs another look" };
 const ID_NEEDED = "Needed for some categories";
 
 export function SettingsPanel({ summary }: { summary: PanelSummary }) {
