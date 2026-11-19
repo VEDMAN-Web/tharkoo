@@ -208,7 +208,7 @@ export default async function AdPage({ params }: Props) {
       ) : (
         <AdDetail ad={adView} categoryName={catName} related={plain(related)} listingId={listingId} crumbs={crumbs} shareUrl={shareUrl} heading={heading} tour={tour} peopleAd={peopleAd} />
       )}
-      <AdCountsBar slug={ad.slug || slug} />
+      <AdCountsBar slug={ad.slug || slug} category={ad.categorySlug} city={ad.citySlug} sample={Boolean(ad.sample)} />
       {newDesign ? null : <AdVideos videos={videos} title={displayTitle(ad.title) || "Listing"} />}
     </>
   );

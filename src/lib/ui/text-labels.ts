@@ -17,6 +17,7 @@ export const TEXT_AREAS: TextArea[] = [
   { id: "credits", label: "Credits and payments", where: "Adding credits, checkout, receipts and credit history", prefixes: ["recharge.", "checkout.", "history.", "receipt."] },
   { id: "panel", label: "Account panel", where: "The signed-in menu and the account home", prefixes: ["panel."] },
   { id: "chat", label: "Live chat", where: "The chat box on the site", prefixes: ["chat."] },
+  { id: "cookie", label: "Cookie notice", where: "The cookie notice, when Google Analytics is on", prefixes: ["cookie."] },
   { id: "header", label: "Header and footer", where: "The top and the bottom of every page", prefixes: ["header.", "chrome."] },
   { id: "myads", label: "My ads", where: "The My ads page of the account", prefixes: ["myads."] },
   { id: "scam", label: "Scam report page", where: "The How to report a scam help page", prefixes: ["scam."] },

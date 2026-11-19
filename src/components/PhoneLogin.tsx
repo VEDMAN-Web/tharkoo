@@ -1,5 +1,6 @@
 "use client";
 
+import { trackEvent } from "@/lib/analytics/ga";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { api, friendlyError, isStaffRole } from "@/lib/ui/api";
@@ -34,6 +35,7 @@ export function PhoneLogin({ next }: { next: string | null }) {
     const res = await api<{ user: { roles?: string[] } }>("/api/auth/otp/verify", { method: "POST", body: JSON.stringify({ phone, code }) });
     setBusy(false);
     if (!res.ok) return setMessage(friendlyError(res.error));
+    trackEvent("login", { method: "phone" });
     router.push(next || (isStaffRole(res.data.user?.roles) ? "/admin/" : "/u/account/dashboard/"));
     router.refresh();
   }

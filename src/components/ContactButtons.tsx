@@ -1,5 +1,6 @@
 "use client";
 
+import { trackEvent } from "@/lib/analytics/ga";
 import { createContext, useContext, useEffect, useRef, useState } from "react";
 import dynamic from "next/dynamic";
 import { MessageCircle, Phone, Video } from "lucide-react";
@@ -113,6 +114,8 @@ export function ContactProvider({
 
   async function open(channel: Channel) {
     if (showSample()) return;
+    // H17.11: a real ad only (a sample ad returned above). Telegram is not one of the counted methods.
+    if (channel !== "telegram") trackEvent("contact_click", { method: channel === "phone" ? "call" : channel });
     if (shown[channel]) return;
     setBusy(channel);
     setNotice(null);
@@ -170,6 +173,7 @@ export function ContactProvider({
 
   async function openChatFlow() {
     if (showSample()) return;
+    trackEvent("contact_click", { method: "chat" });
     const ready = hasSessionHint();
     setSignedIn(ready);
     if (!ready) return setPopup("chat");
