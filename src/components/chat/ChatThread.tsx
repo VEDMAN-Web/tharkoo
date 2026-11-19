@@ -130,8 +130,9 @@ export function ChatThread({
           maxWidth: "85%",
           padding: "8px 12px",
           borderRadius: 12,
-          background: mine ? "var(--accent)" : "var(--bg-soft)",
-          color: mine ? "#1a1405" : "var(--text)",
+          // FIX-8 (E1-B9): the own bubble is the same deep pink as the panel bubble, with white text (at least 5:1), not dark text on the accent.
+          background: mine ? "linear-gradient(135deg, #d1137a, #a8124f)" : "var(--bg-soft)",
+          color: mine ? "#fff" : "var(--text)",
           overflowWrap: "anywhere" as const,
           whiteSpace: "pre-wrap" as const,
         };
