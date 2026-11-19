@@ -9,6 +9,7 @@ export function cardLabelsOf(t: TextFn): HomeAdLabels {
     photoNext: t("home.ads.photoNext"),
     chat: t("home.ads.chat"),
     age: t("home.ads.age"),
+    sample: t("demo.pill"),
   };
 }
 

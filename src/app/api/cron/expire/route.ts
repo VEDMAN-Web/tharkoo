@@ -6,6 +6,7 @@ import { assertCronAuth } from "@/server/shared/cron-auth";
 import { cronBodySchema } from "@/server/shared/schemas/common";
 import { repairCategoryKinds } from "@/server/categories/kind";
 import { expireDueTours } from "@/server/tours/service";
+import { retireFullDemoPlaces } from "@/server/listings/demo-retire";
 import { repairDashes, repairDemoListingDashes } from "@/server/content/dash-repair";
 import { convertHeroLayouts } from "@/server/layout/hero-migration";
 import { ensureIdCheckSetting } from "@/server/settings/id-check";
@@ -32,6 +33,8 @@ async function dispatch(request: Request) {
   const renewed = await renewDuePromotions(requestId);
   const alerts = await sendSavedSearchDigests(requestId);
   const tours = await expireDueTours(requestId);
+  // H16.5: a category in a city with 15 real live ads has its sample (demo) ads ended.
+  const sampleAds = await retireFullDemoPlaces();
   // Keeps the people rule on every database, even one that was never reseeded (H6.5, relay #40).
   const kinds = await repairCategoryKinds();
   // Keeps stored text free of em and en dashes, on every run (H5.9b, relay #43). Both repairs are idempotent.
@@ -52,6 +55,8 @@ async function dispatch(request: Request) {
         ...renewed,
         ...alerts,
         ...tours,
+        demoPlacesRetired: sampleAds.places,
+        demoAdsRetired: sampleAds.ended,
         kindsUpdated: kinds.updated,
         categoriesWithoutKind: kinds.withoutKind.length,
         dashesUpdated: dashes.updated,

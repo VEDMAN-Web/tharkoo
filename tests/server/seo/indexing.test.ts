@@ -68,7 +68,12 @@ async function seed() {
   return { category, state, cities };
 }
 
-const cityUrls = async () => (await shardEntries("cities")).map((entry) => new URL(entry.loc).pathname).sort();
+/** The category and city pages of the Jobs category (H16.5: the state page and the city hubs are listed too, they are not what these tests are about). */
+const cityUrls = async () =>
+  (await shardEntries("cities"))
+    .map((entry) => new URL(entry.loc).pathname)
+    .filter((path) => path.startsWith("/jobs/") && path !== "/jobs/india/")
+    .sort();
 
 describe("indexing settings", () => {
   it("falls back to today's behaviour for empty or broken settings", () => {
@@ -124,15 +129,13 @@ describe("indexing rules reach the sitemap and the explainer", () => {
     expect(pune).toMatchObject({ indexable: true });
   });
 
-  it("moves pages out and back when the threshold changes", async () => {
+  it("H16.5: a minimum no longer keeps a page out of the sitemap or makes it noindex", async () => {
     await seed();
     await saveIndexing(editor, { hub: 4 });
-    expect(await cityUrls()).toEqual([]);
-    expect(await explainUrl("/jobs/pune/")).toMatchObject({ indexable: false, reasons: ["noindex: 3 ads < minimum 4"] });
+    expect(await cityUrls()).toEqual(["/jobs/goa/", "/jobs/pune/"]);
+    expect(await explainUrl("/jobs/pune/")).toMatchObject({ indexable: true });
     await saveIndexing(editor, { hub: 3 });
     expect(await cityUrls()).toEqual(["/jobs/goa/", "/jobs/pune/"]);
-    await saveIndexing(editor, { categories: { jobs: { hub: 2 } } });
-    expect(await explainUrl("/jobs/pune/")).toMatchObject({ indexable: true });
   });
 
   it("drops a switched-off category from every shard", async () => {

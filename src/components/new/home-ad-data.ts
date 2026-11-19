@@ -26,5 +26,6 @@ export function homeAdCardData(ad: ListingDoc, categoryNames: Map<string, string
     city: prettyPlace(ad.citySlug),
     cityHref: ad.citySlug ? applyPrefixes(placePath(categorySlug, ad.citySlug), paths) : categoryHref,
     href: adPath(paths, ad.slug || ""),
+    sample: ad.sample === true,
   };
 }

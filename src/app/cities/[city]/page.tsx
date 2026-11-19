@@ -9,6 +9,7 @@ import { withUrlSeo } from "@/lib/seo/override";
 import { withSeoDefaults } from "@/lib/ui/meta-defaults";
 import { JsonLd, breadcrumbJsonLd } from "@/lib/jsonld";
 import { getPaths } from "@/server/urls/service";
+import { getIndexing, isCityOn } from "@/server/seo/indexing";
 import { readShellConfig } from "@/server/site-links/shell-config";
 import { textOverrides } from "@/app/admin/ui-text/store";
 import { makeT, pickTexts } from "@/lib/ui/text";
@@ -64,8 +65,8 @@ export async function generateMetadata({ params, searchParams }: Props): Promise
       description: `Pick an area of ${data.name} to browse classifieds near you on Tharkoo. Every area lists its own ads and photos.`,
       path: `${path}${suffix}`,
       canonicalUrl: canonical(`${path}${suffix}`),
-      // H7.32: a city with no ads of its own stays noindex (fallback ads do not count as its content).
-      index: data.areas.length > 0 && data.total > 0,
+      // H16.5: a city hub is indexed even with sample ads or none yet; only the Indexing rules switch turns it off.
+      index: isCityOn(await getIndexing(), city),
       follow: true,
     }),
   );

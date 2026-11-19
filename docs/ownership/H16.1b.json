@@ -1,0 +1,17 @@
+{
+  "branchPrefix": "haiku/h16.1b",
+  "globs": [
+    "docs/ownership/H16.1b.json",
+    "progress/H16.1b.md",
+    "next.config.ts",
+    "src/server/locations/import.ts",
+    "src/server/admin/undo/registry.ts",
+    "src/server/admin/undo/handlers/locations-import.ts",
+    "src/app/admin/locations/import-actions.ts",
+    "src/app/admin/locations/_screen/ImportDialog.tsx",
+    "src/app/admin/locations/_screen/PlacesScreen.tsx",
+    "tests/server/admin/a3-write.test.ts",
+    "tests/server/locations/h16-1-import.test.ts",
+    "tests/e2e/h16-1-import.e2e.ts"
+  ]
+}

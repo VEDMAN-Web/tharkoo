@@ -6,17 +6,19 @@ import { explainIndexability } from "@/server/seo/explain";
 import { clearMemoryMongo, connectMemoryMongo, disconnectMemoryMongo } from "../../setup/mongo";
 
 describe("explainIndexability", () => {
-  it("marks a thin hub noindex and says by how much", () => {
-    const out = explainIndexability({ pageType: "city", count: 2, minimum: 3 });
-    expect(out.indexable).toBe(false);
-    expect(out.reasons).toEqual(["noindex: 2 ads < minimum 3"]);
-    expect(out.editor.href).toBe("/admin/seo/templates/");
+  it("H16.5: indexes a listing page with few ads or none, and points the editor at the template", () => {
+    for (const count of [0, 1, 2]) {
+      const out = explainIndexability({ pageType: "city", count, minimum: 3 });
+      expect(out.indexable).toBe(true);
+      expect(out.reasons[0]).toContain("indexed even with sample ads or none yet");
+      expect(out.editor.href).toBe("/admin/seo/templates/");
+    }
   });
 
-  it("indexes a hub that meets the minimum, using the district default of 10", () => {
+  it("H16.5: indexes city and district hubs whatever the count", () => {
     expect(explainIndexability({ pageType: "city", count: 3, minimum: 3 }).indexable).toBe(true);
-    expect(explainIndexability({ pageType: "district", count: 9 }).indexable).toBe(false);
-    expect(explainIndexability({ pageType: "district", count: 10 }).indexable).toBe(true);
+    expect(explainIndexability({ pageType: "district", count: 9 }).indexable).toBe(true);
+    expect(explainIndexability({ pageType: "district", count: 0 }).indexable).toBe(true);
   });
 
   it("never indexes page 2 or later", () => {
@@ -32,10 +34,10 @@ describe("explainIndexability", () => {
     expect(explainIndexability({ pageType: "city", count: 0, minimum: 3, filtered: true }).reasons[0]).toContain("filter parameters with no results");
   });
 
-  it("never indexes a demo ad, even when its flag allows it", () => {
-    const out = explainIndexability({ pageType: "ad", demoAd: true, adNoindex: false });
-    expect(out.indexable).toBe(false);
-    expect(out.reasons[0]).toContain("demo ad");
+  it("H16.5: indexes a sample (demo) ad like a real one", () => {
+    const out = explainIndexability({ pageType: "ad", demoAd: true, adNoindex: true });
+    expect(out.indexable).toBe(true);
+    expect(out.reasons[0]).toContain("Sample (demo) ad");
   });
 
   it("indexes a live ad that is allowed, and not-indexes ended or flagged ads", () => {

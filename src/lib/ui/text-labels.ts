@@ -10,6 +10,7 @@ export const TEXT_AREAS: TextArea[] = [
   { id: "home", label: "Home page", where: "The home page", prefixes: ["home."] },
   { id: "listing", label: "Listing pages", where: "The pages that list ads: a category, a city, a search", prefixes: ["listing.", "search."] },
   { id: "card", label: "Ad cards", where: "The small card that shows one ad in a list", prefixes: ["card."] },
+  { id: "demo", label: "Sample ads", where: "The label and message on the sample ads that show how ads look", prefixes: ["demo."] },
   { id: "ad", label: "Ad page", where: "The page of one ad", prefixes: ["ad."] },
   { id: "post", label: "Post your ad", where: "The steps for posting an ad", prefixes: ["post."] },
   { id: "promote", label: "Promote an ad", where: "The box where a seller promotes an ad", prefixes: ["promote."] },
@@ -25,6 +26,9 @@ export const TEXT_AREAS: TextArea[] = [
 
 /** Where a group of words appears, by the first two parts of the key. A group without a line here uses the line of its area. */
 const WHERE: Record<string, string> = {
+  "demo.pill": "Sample ads, the small label on a card, a row and the ad page",
+  "demo.message": "Sample ads, the message when someone taps Chat or Call",
+  "demo.postButton": "Sample ads, the button under the message",
   "home.card": "Home page, category cards",
   "home.utility": "Home page, the strip under the header",
   "home.banner": "Home page, banner",

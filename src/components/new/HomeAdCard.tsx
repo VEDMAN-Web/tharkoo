@@ -25,6 +25,8 @@ export type HomeAdCardData = {
   city: string;
   cityHref: string;
   href: string;
+  /** A sample (demo) ad: it shows a Sample ad label. */
+  sample?: boolean;
 };
 
 export type HomeAdLabels = {
@@ -34,6 +36,7 @@ export type HomeAdLabels = {
   photoNext: string;
   chat: string;
   age: string;
+  sample?: string;
 };
 
 const HOVER_DELAY_MS = 350;
@@ -82,6 +85,7 @@ export function HomeAdCard({ ad, labels, order = 0 }: { ad: HomeAdCardData; labe
           </Link>
         </h3>
         <p className="tkh-ad-pills">
+          {ad.sample && labels.sample ? <span className="tkh-pill tkh-pill-sample" data-tk="sample-pill">{labels.sample}</span> : null}
           <Link href={ad.categoryHref} prefetch={false} className="tkh-pill tkh-pill-rose">{ad.categoryName}</Link>
           {ad.city ? (
             <Link href={ad.cityHref} prefetch={false} className="tkh-pill tkh-pill-lavender">{ad.city}</Link>
