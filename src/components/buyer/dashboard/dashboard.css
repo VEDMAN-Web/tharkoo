@@ -6,6 +6,8 @@
 /* The cards under the dashboard (profile, credits) share its rhythm: one gap, one padding, one heading style. */
 .up-main:has(> .up-dash) { gap: 24px; }
 .up-main:has(> .up-dash) > .up-panel { padding: 24px; border-radius: 20px; }
+/* H16.6b: under the last card the space to the footer is one section gap, then the footer's own margin. The page padding of the other account pages (64 px) added a second, empty band. */
+.up-page:has(.up-main > .up-dash) { padding-bottom: 24px; }
 .up-main:has(> .up-dash) > .up-panel .up-panel-head { align-items: center; min-height: 44px; margin-bottom: 8px; }
 .up-main:has(> .up-dash) > .up-panel .up-h2 { font-size: 19px; line-height: 24px; color: #110520; }
 .up-dash-link { font-size: 14px; font-weight: 700; color: #c2185b; text-decoration: none; display: inline-flex; align-items: center; min-height: 44px; }
@@ -138,6 +140,7 @@
 @media (max-width: 600px) {
   .up-dash { gap: 16px; }
   .up-main:has(> .up-dash) { gap: 16px; }
+  .up-page:has(.up-main > .up-dash) { padding-bottom: 16px; }
   .up-main:has(> .up-dash) > .up-panel { padding: 18px; }
   .up-dash-lift { order: -1; }
   .up-dash-gold { padding: 0 16px; font-size: 15px; }
