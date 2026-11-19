@@ -1,0 +1,565 @@
+city,name,slug,source
+mumbai,Amrut Nagar,amrut-nagar,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Mumbai
+mumbai,Anushakti Nagar,anushakti-nagar,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Mumbai
+mumbai,Aram Nagar,aram-nagar,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Mumbai
+mumbai,Asalpha,asalpha,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Mumbai
+mumbai,Ballard Estate,ballard-estate,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Mumbai
+mumbai,Bangur Nagar,bangur-nagar,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Mumbai
+mumbai,Breach Candy,breach-candy,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Mumbai
+mumbai,Byculla,byculla,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Mumbai
+mumbai,Chinchpokli,chinchpokli,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Mumbai
+mumbai,Churchgate,churchgate,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Mumbai
+mumbai,Colaba,colaba,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Mumbai
+mumbai,Cuffe Parade,cuffe-parade,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Mumbai
+mumbai,Dadar,dadar,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Mumbai
+mumbai,Dadar Parsi Colony,dadar-parsi-colony,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Mumbai
+mumbai,Deonar,deonar,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Mumbai
+mumbai,Dharavi,dharavi,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Mumbai
+mumbai,Four Bungalows,four-bungalows,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Mumbai
+mumbai,Gorai,gorai,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Mumbai
+mumbai,Gowalia Tank,gowalia-tank,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Mumbai
+mumbai,I.C. Colony,i-c-colony,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Mumbai
+mumbai,Kala Ghoda,kala-ghoda,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Mumbai
+mumbai,Kamathipura,kamathipura,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Mumbai
+mumbai,Khar Danda,khar-danda,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Mumbai
+mumbai,Kherwadi,kherwadi,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Mumbai
+mumbai,Mahim,mahim,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Mumbai
+mumbai,Mahul,mahul,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Mumbai
+mumbai,Marine Drive,marine-drive,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Mumbai
+mumbai,Marol,marol,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Mumbai
+mumbai,Matunga,matunga,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Mumbai
+mumbai,Nariman Point,nariman-point,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Mumbai
+mumbai,Navy Nagar,navy-nagar,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Mumbai
+mumbai,Orlem,orlem,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Mumbai
+mumbai,Parel,parel,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Mumbai
+mumbai,Sewri,sewri,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Mumbai
+mumbai,Shivaji Park,shivaji-park,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Mumbai
+mumbai,Sunder Nagar,sunder-nagar,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Mumbai
+mumbai,Versova,versova,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Mumbai
+mumbai,Wadala,wadala,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Mumbai
+mumbai,Walkeshwar,walkeshwar,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Mumbai
+mumbai,Worli,worli,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Mumbai
+delhi,Badarpur,badarpur,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Delhi
+delhi,Bawana,bawana,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Delhi
+delhi,Chanakyapuri,chanakyapuri,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Delhi
+delhi,Chandni Chowk,chandni-chowk,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Delhi
+delhi,Connaught Place,connaught-place,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Delhi
+delhi,Daryaganj,daryaganj,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Delhi
+delhi,Defence Colony,defence-colony,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Delhi
+delhi,Dwarka,dwarka,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Delhi
+delhi,Gole Market,gole-market,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Delhi
+delhi,Green Park,green-park,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Delhi
+delhi,Guru Tegh Bahadur Nagar,guru-tegh-bahadur-nagar,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Delhi
+delhi,Hauz Khas,hauz-khas,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Delhi
+delhi,Janakpuri,janakpuri,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Delhi
+delhi,JJ Colony Madanpur Khadar,jj-colony-madanpur-khadar,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Delhi
+delhi,Karol Bagh,karol-bagh,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Delhi
+delhi,Keshav Puram,keshav-puram,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Delhi
+delhi,Khari Baoli,khari-baoli,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Delhi
+delhi,Lajpat Nagar,lajpat-nagar,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Delhi
+delhi,Lutyens' Delhi,lutyens-delhi,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Delhi
+delhi,Mahipalpur,mahipalpur,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Delhi
+delhi,Majnu Ka Tilla,majnu-ka-tilla,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Delhi
+delhi,Mayapuri,mayapuri,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Delhi
+delhi,Mayur Vihar,mayur-vihar,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Delhi
+delhi,Mehrauli,mehrauli,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Delhi
+delhi,Najafgarh,najafgarh,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Delhi
+delhi,Narela,narela,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Delhi
+delhi,New Delhi,new-delhi,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Delhi
+delhi,New Moti Bagh,new-moti-bagh,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Delhi
+delhi,Okhla,okhla,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Delhi
+delhi,Paharganj,paharganj,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Delhi
+delhi,Palam,palam,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Delhi
+delhi,Pitam Pura,pitam-pura,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Delhi
+delhi,Sadar Bazaar,sadar-bazaar,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Delhi
+delhi,Sarita Vihar,sarita-vihar,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Delhi
+delhi,Sarojini Nagar,sarojini-nagar,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Delhi
+delhi,Shaheen Bagh,shaheen-bagh,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Delhi
+delhi,Shahjahanabad,shahjahanabad,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Delhi
+delhi,Tees Hazari,tees-hazari,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Delhi
+delhi,Vasant Kunj,vasant-kunj,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Delhi
+delhi,Yamuna Pushta,yamuna-pushta,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Delhi
+bengaluru,Aavalahalli,aavalahalli,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Bengaluru
+bengaluru,Akshay Nagar,akshay-nagar,https://www.wikidata.org/wiki/Q108872415
+bengaluru,Anjanapura,anjanapura,https://www.wikidata.org/wiki/Q30595043
+bengaluru,Baiyyappanahalli,baiyyappanahalli,https://www.wikidata.org/wiki/Q104878786
+bengaluru,Baiyyappanahalli Manavarthe Kaval,baiyyappanahalli-manavarthe-kaval,https://www.wikidata.org/wiki/Q104879039
+bengaluru,Banashankari,banashankari,https://www.wikidata.org/wiki/Q4853948
+bengaluru,Battarahalli,battarahalli,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Bengaluru
+bengaluru,Binnamangala,binnamangala,https://www.wikidata.org/wiki/Q104879582
+bengaluru,Binnamangala Manavarthe Kaval,binnamangala-manavarthe-kaval,https://www.wikidata.org/wiki/Q104879578
+bengaluru,Byrathi,byrathi,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Bengaluru
+bengaluru,G. M. Palya,g-m-palya,https://www.wikidata.org/wiki/Q104879876
+bengaluru,Halasuru,halasuru,https://www.wikidata.org/wiki/Q7334412
+bengaluru,Jakkur,jakkur,https://www.wikidata.org/wiki/Q48724991
+bengaluru,Jayanagar,jayanagar,https://www.wikidata.org/wiki/Q3429967
+bengaluru,Kadugodi,kadugodi,https://www.wikidata.org/wiki/Q5321074
+bengaluru,Kodigehalli,kodigehalli,https://www.wikidata.org/wiki/Q6425315
+bengaluru,Mariyannapalya,mariyannapalya,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Bengaluru
+bengaluru,Nagavara,nagavara,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Bengaluru
+bengaluru,Rajarajeshwari Nagar,rajarajeshwari-nagar,https://www.wikidata.org/wiki/Q5320813
+bengaluru,Ramamurthy Nagar,ramamurthy-nagar,https://www.wikidata.org/wiki/Q15271532
+bengaluru,S. G. Palya,s-g-palya,https://www.wikidata.org/wiki/Q24928003
+bengaluru,Whitefield,whitefield,https://www.wikidata.org/wiki/Q5321082
+hyderabad,Abids,abids,"https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Hyderabad,_India"
+hyderabad,Alwal,alwal,"https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Hyderabad,_India"
+hyderabad,Amberpet,amberpet,"https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Hyderabad,_India"
+hyderabad,Ameenpur,ameenpur,"https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Hyderabad,_India"
+hyderabad,Ameerpet,ameerpet,"https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Hyderabad,_India"
+hyderabad,Asif Nagar,asif-nagar,"https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Hyderabad,_India"
+hyderabad,Bowenpally,bowenpally,"https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Hyderabad,_India"
+hyderabad,Dar-ul-Shifa,dar-ul-shifa,"https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Hyderabad,_India"
+hyderabad,Gachibowli,gachibowli,"https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Hyderabad,_India"
+hyderabad,IDA Bollaram,ida-bollaram,"https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Hyderabad,_India"
+hyderabad,Khairatabad,khairatabad,"https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Hyderabad,_India"
+hyderabad,Khajaguda,khajaguda,"https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Hyderabad,_India"
+hyderabad,Kompally,kompally,"https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Hyderabad,_India"
+hyderabad,Koti,koti,"https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Hyderabad,_India"
+hyderabad,Kukatpally,kukatpally,"https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Hyderabad,_India"
+hyderabad,Madhapur,madhapur,"https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Hyderabad,_India"
+hyderabad,Maktha Mahaboobpet,maktha-mahaboobpet,"https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Hyderabad,_India"
+hyderabad,Malakpet,malakpet,"https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Hyderabad,_India"
+hyderabad,Malkajgiri,malkajgiri,"https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Hyderabad,_India"
+hyderabad,Mallepally,mallepally,"https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Hyderabad,_India"
+hyderabad,Manikonda,manikonda,"https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Hyderabad,_India"
+hyderabad,Mehdipatnam,mehdipatnam,"https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Hyderabad,_India"
+hyderabad,Moazzam Jahi Market,moazzam-jahi-market,"https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Hyderabad,_India"
+hyderabad,Musheerabad,musheerabad,"https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Hyderabad,_India"
+hyderabad,Nacharam,nacharam,"https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Hyderabad,_India"
+hyderabad,Nampally,nampally,"https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Hyderabad,_India"
+hyderabad,Pragathi Nagar,pragathi-nagar,"https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Hyderabad,_India"
+hyderabad,Raidurg,raidurg,"https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Hyderabad,_India"
+hyderabad,Safilguda,safilguda,"https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Hyderabad,_India"
+hyderabad,Sainikpuri,sainikpuri,"https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Hyderabad,_India"
+hyderabad,Sanathnagar,sanathnagar,"https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Hyderabad,_India"
+hyderabad,Saroornagar,saroornagar,"https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Hyderabad,_India"
+hyderabad,Secunderabad,secunderabad,"https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Hyderabad,_India"
+hyderabad,Serilingampally,serilingampally,"https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Hyderabad,_India"
+hyderabad,Somajiguda,somajiguda,"https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Hyderabad,_India"
+hyderabad,Sultan Bazar,sultan-bazar,"https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Hyderabad,_India"
+hyderabad,Tarnaka,tarnaka,"https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Hyderabad,_India"
+hyderabad,Tirumalagiri,tirumalagiri,"https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Hyderabad,_India"
+hyderabad,Warsiguda,warsiguda,"https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Hyderabad,_India"
+hyderabad,Yakutpura,yakutpura,"https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Hyderabad,_India"
+ahmedabad,Ambawadi,ambawadi,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Ahmedabad
+ahmedabad,Amraiwadi,amraiwadi,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Ahmedabad
+ahmedabad,Bapunagar,bapunagar,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Ahmedabad
+ahmedabad,Bopal,bopal,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Ahmedabad
+ahmedabad,Chaloda,chaloda,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Ahmedabad
+ahmedabad,Chandkheda,chandkheda,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Ahmedabad
+ahmedabad,Dabhoda,dabhoda,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Ahmedabad
+ahmedabad,Detroj,detroj,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Ahmedabad
+ahmedabad,Ghatlodiya,ghatlodiya,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Ahmedabad
+ahmedabad,Isanpur,isanpur,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Ahmedabad
+ahmedabad,Jagatpur,jagatpur,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Ahmedabad
+ahmedabad,Jamalpur,jamalpur,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Ahmedabad
+ahmedabad,Jawahar Chowk,jawahar-chowk,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Ahmedabad
+ahmedabad,Jodhpur,jodhpur,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Ahmedabad
+ahmedabad,Juhapura,juhapura,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Ahmedabad
+ahmedabad,Kalupur,kalupur,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Ahmedabad
+ahmedabad,Khadia,khadia,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Ahmedabad
+ahmedabad,Khokhra,khokhra,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Ahmedabad
+ahmedabad,Lambha,lambha,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Ahmedabad
+ahmedabad,Makarba,makarba,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Ahmedabad
+ahmedabad,Maninagar,maninagar,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Ahmedabad
+ahmedabad,Memnagar,memnagar,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Ahmedabad
+ahmedabad,Mithakali,mithakali,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Ahmedabad
+ahmedabad,Motera,motera,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Ahmedabad
+ahmedabad,Naroda,naroda,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Ahmedabad
+ahmedabad,Navarangpura,navarangpura,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Ahmedabad
+ahmedabad,Odhav,odhav,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Ahmedabad
+ahmedabad,Polarpur,polarpur,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Ahmedabad
+ahmedabad,Ramol,ramol,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Ahmedabad
+ahmedabad,Ranip,ranip,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Ahmedabad
+ahmedabad,Sarkhej,sarkhej,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Ahmedabad
+ahmedabad,Shahibaug,shahibaug,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Ahmedabad
+ahmedabad,Shahpur,shahpur,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Ahmedabad
+ahmedabad,Sukhrampura,sukhrampura,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Ahmedabad
+ahmedabad,Thakkar Bapanagar,thakkar-bapanagar,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Ahmedabad
+ahmedabad,Thaltej,thaltej,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Ahmedabad
+ahmedabad,Usmanpura,usmanpura,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Ahmedabad
+ahmedabad,Vastral,vastral,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Ahmedabad
+ahmedabad,Vastrapur,vastrapur,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Ahmedabad
+ahmedabad,Vejalpur,vejalpur,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Ahmedabad
+chennai,Adambakkam,adambakkam,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Chennai
+chennai,Adyar,adyar,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Chennai
+chennai,Alandur,alandur,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Chennai
+chennai,Ambattur,ambattur,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Chennai
+chennai,Anna Nagar,anna-nagar,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Chennai
+chennai,Ashok Nagar,ashok-nagar,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Chennai
+chennai,Egmore,egmore,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Chennai
+chennai,Erukkanchery,erukkanchery,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Chennai
+chennai,Kaviyarasu Kannadhasan Nagar,kaviyarasu-kannadhasan-nagar,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Chennai
+chennai,Kodambakkam,kodambakkam,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Chennai
+chennai,Kolathur,kolathur,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Chennai
+chennai,Koyambedu,koyambedu,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Chennai
+chennai,Madhavaram,madhavaram,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Chennai
+chennai,Manali,manali,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Chennai
+chennai,Mathur,mathur,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Chennai
+chennai,Meenambakkam,meenambakkam,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Chennai
+chennai,Mogappair,mogappair,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Chennai
+chennai,Moolakadai,moolakadai,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Chennai
+chennai,Mylapore,mylapore,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Chennai
+chennai,Nandambakkam,nandambakkam,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Chennai
+chennai,Nanganallur,nanganallur,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Chennai
+chennai,Nungambakkam,nungambakkam,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Chennai
+chennai,Padi,padi,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Chennai
+chennai,Pallikaranai,pallikaranai,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Chennai
+chennai,Pammal,pammal,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Chennai
+chennai,Perambur,perambur,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Chennai
+chennai,Porur,porur,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Chennai
+chennai,Royapettah,royapettah,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Chennai
+chennai,Saidapet,saidapet,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Chennai
+chennai,Sholinganallur,sholinganallur,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Chennai
+chennai,Sowcarpet,sowcarpet,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Chennai
+chennai,St. Thomas Mount,st-thomas-mount,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Chennai
+chennai,T. Nagar,t-nagar,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Chennai
+chennai,Thiru. Vi. Ka. Nagar,thiru-vi-ka-nagar,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Chennai
+chennai,Thirumullaivoyal,thirumullaivoyal,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Chennai
+chennai,Thuraipakkam,thuraipakkam,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Chennai
+chennai,Tiruverkadu,tiruverkadu,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Chennai
+chennai,Velachery,velachery,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Chennai
+chennai,Virugambakkam,virugambakkam,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Chennai
+chennai,West Mambalam,west-mambalam,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Chennai
+kolkata,Ballygunge,ballygunge,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Kolkata
+kolkata,Bandel,bandel,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Kolkata
+kolkata,Baranagar,baranagar,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Kolkata
+kolkata,Barasat,barasat,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Kolkata
+kolkata,Barrackpore,barrackpore,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Kolkata
+kolkata,Baruipur,baruipur,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Kolkata
+kolkata,Behala,behala,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Kolkata
+kolkata,Bhatpara,bhatpara,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Kolkata
+kolkata,Bidhannagar,bidhannagar,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Kolkata
+kolkata,Budge Budge,budge-budge,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Kolkata
+kolkata,Champdani,champdani,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Kolkata
+kolkata,Chandannagar,chandannagar,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Kolkata
+kolkata,Dakshineswar,dakshineswar,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Kolkata
+kolkata,Dankuni,dankuni,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Kolkata
+kolkata,Dum Dum,dum-dum,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Kolkata
+kolkata,Garulia,garulia,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Kolkata
+kolkata,Halisahar,halisahar,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Kolkata
+kolkata,Hugli-Chuchura,hugli-chuchura,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Kolkata
+kolkata,Jadavpur,jadavpur,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Kolkata
+kolkata,Jaynagar Majilpur,jaynagar-majilpur,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Kolkata
+kolkata,Kalyani,kalyani,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Kolkata
+kolkata,Kamarhati,kamarhati,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Kolkata
+kolkata,Kanchrapara,kanchrapara,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Kolkata
+kolkata,Khardaha,khardaha,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Kolkata
+kolkata,Liluah,liluah,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Kolkata
+kolkata,Madhyamgram,madhyamgram,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Kolkata
+kolkata,Maheshtala,maheshtala,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Kolkata
+kolkata,Naihati,naihati,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Kolkata
+kolkata,North Barrackpur,north-barrackpur,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Kolkata
+kolkata,North Dum Dum,north-dum-dum,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Kolkata
+kolkata,Panihati,panihati,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Kolkata
+kolkata,Pujali,pujali,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Kolkata
+kolkata,Rajpur Sonarpur,rajpur-sonarpur,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Kolkata
+kolkata,Santosh Mitra Square,santosh-mitra-square,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Kolkata
+kolkata,Sealdah,sealdah,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Kolkata
+kolkata,Serampore,serampore,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Kolkata
+kolkata,Shyamnagar,shyamnagar,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Kolkata
+kolkata,Sonagachi,sonagachi,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Kolkata
+kolkata,South Dum Dum,south-dum-dum,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Kolkata
+kolkata,Titagarh,titagarh,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Kolkata
+surat,Agnovad,agnovad,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Surat
+surat,Amroli,amroli,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Surat
+surat,Athwalines,athwalines,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Surat
+surat,Bajipura,bajipura,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Surat
+surat,Bamroli,bamroli,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Surat
+surat,Bedkuvadoor,bedkuvadoor,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Surat
+surat,Bhadbhuja,bhadbhuja,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Surat
+surat,Bhagal,bhagal,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Surat
+surat,Bhavanivad,bhavanivad,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Surat
+surat,Bhimrad,bhimrad,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Surat
+surat,Godsamba,godsamba,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Surat
+surat,Gopipura,gopipura,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Surat
+surat,Hazira,hazira,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Surat
+surat,Kanpura,kanpura,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Surat
+surat,Katargam,katargam,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Surat
+surat,Kathor,kathor,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Surat
+surat,Kholvad,kholvad,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Surat
+surat,Kukarmunda,kukarmunda,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Surat
+surat,Lajpor,lajpor,https://www.wikidata.org/wiki/Q6474495
+surat,Mahidharpura,mahidharpura,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Surat
+surat,Mahuvaria,mahuvaria,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Surat
+surat,Mosali,mosali,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Surat
+surat,Naldhara,naldhara,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Surat
+surat,Pandesara,pandesara,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Surat
+surat,Piplod,piplod,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Surat
+surat,Puna,puna,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Surat
+surat,Raniamba,raniamba,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Surat
+surat,Udhna,udhna,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Surat
+surat,Ukai,ukai,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Surat
+surat,Vankal,vankal,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Surat
+surat,Varachha,varachha,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Surat
+surat,Vedachhi,vedachhi,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Surat
+surat,Vesu,vesu,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Surat
+pune,Appa Balwant Chowk,appa-balwant-chowk,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Pune
+pune,Aundh,aundh,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Pune
+pune,Balewadi,balewadi,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Pune
+pune,Baner,baner,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Pune
+pune,Bavdhan,bavdhan,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Pune
+pune,Chakan,chakan,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Pune
+pune,Chandni Chowk,chandni-chowk,https://www.wikidata.org/wiki/Q31746708
+pune,Charholi Budruk,charholi-budruk,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Pune
+pune,Deccan Gymkhana,deccan-gymkhana,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Pune
+pune,Dhankawadi,dhankawadi,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Pune
+pune,Dhayari,dhayari,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Pune
+pune,Erandwane,erandwane,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Pune
+pune,Fatimanagar,fatimanagar,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Pune
+pune,Hadapsar,hadapsar,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Pune
+pune,Kalyani Nagar,kalyani-nagar,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Pune
+pune,Karvenagar,karvenagar,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Pune
+pune,Katraj,katraj,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Pune
+pune,Khadki,khadki,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Pune
+pune,Kharadi,kharadi,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Pune
+pune,Kondhwa Budruk,kondhwa-budruk,https://www.wikidata.org/wiki/Q13116603
+pune,Koregaon Park,koregaon-park,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Pune
+pune,Kothrud,kothrud,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Pune
+pune,Lohagaon,lohagaon,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Pune
+pune,Maan,maan,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Pune
+pune,Magarpatta,magarpatta,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Pune
+pune,Mukund Nagar,mukund-nagar,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Pune
+pune,Nana Peth,nana-peth,https://www.wikidata.org/wiki/Q16877410
+pune,Nanded,nanded,https://www.wikidata.org/wiki/Q65122970
+pune,Pashan,pashan,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Pune
+pune,Pune Camp,pune-camp,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Pune
+pune,Shivajinagar,shivajinagar,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Pune
+pune,Sopan Baug,sopan-baug,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Pune
+pune,Sus,sus,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Pune
+pune,Swargate,swargate,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Pune
+pune,Tambat Aali,tambat-aali,https://www.wikidata.org/wiki/Q83109400
+pune,Vadgaon Budruk,vadgaon-budruk,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Pune
+pune,Vimannagar,vimannagar,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Pune
+pune,Vishrantwadi,vishrantwadi,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Pune
+pune,Warje,warje,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Pune
+pune,Yerawada,yerawada,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Pune
+lucknow,Aishbagh,aishbagh,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Lucknow
+lucknow,Alambagh,alambagh,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Lucknow
+lucknow,Amaniganj,amaniganj,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Lucknow
+lucknow,Amina Hamza Bazaar,amina-hamza-bazaar,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Lucknow
+lucknow,Ashiyana,ashiyana,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Lucknow
+lucknow,Badshah Nagar,badshah-nagar,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Lucknow
+lucknow,Cis-Gomti area,cis-gomti-area,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Lucknow
+lucknow,Dilkusha,dilkusha,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Lucknow
+lucknow,Dugawan,dugawan,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Lucknow
+lucknow,Golaganj,golaganj,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Lucknow
+lucknow,Gomti Nagar,gomti-nagar,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Lucknow
+lucknow,Hazratganj,hazratganj,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Lucknow
+lucknow,Indira Nagar,indira-nagar,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Lucknow
+lucknow,Kanausi,kanausi,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Lucknow
+lucknow,Krishna Nagar,krishna-nagar,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Lucknow
+lucknow,Martin Purwa,martin-purwa,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Lucknow
+lucknow,Maulviganj,maulviganj,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Lucknow
+lucknow,Mehndiganj,mehndiganj,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Lucknow
+lucknow,Rajendra Nagar,rajendra-nagar,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Lucknow
+lucknow,Sarvodaya Nagar,sarvodaya-nagar,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Lucknow
+lucknow,Shivpuri colony,shivpuri-colony,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Lucknow
+lucknow,Trans-Gomti area,trans-gomti-area,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Lucknow
+lucknow,Ujariyaon,ujariyaon,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Lucknow
+lucknow,Usman Enclave,usman-enclave,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Lucknow
+kanpur,Barra,barra,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Kanpur
+kanpur,Becon Ganj,becon-ganj,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Kanpur
+kanpur,Bhitargaon,bhitargaon,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Kanpur
+kanpur,Bithoor,bithoor,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Kanpur
+kanpur,Chaman Ganj,chaman-ganj,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Kanpur
+kanpur,Chobepur,chobepur,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Kanpur
+kanpur,Dada Nagar,dada-nagar,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Kanpur
+kanpur,Dev Nagar,dev-nagar,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Kanpur
+kanpur,Govind Nagar,govind-nagar,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Kanpur
+kanpur,Kakadeo,kakadeo,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Kanpur
+kanpur,Kalyanpur,kalyanpur,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Kanpur
+kanpur,Kidwai Nagar,kidwai-nagar,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Kanpur
+kanpur,McRobertganj,mcrobertganj,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Kanpur
+kanpur,Naramau,naramau,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Kanpur
+kanpur,Padri Lalpur,padri-lalpur,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Kanpur
+kanpur,Panki,panki,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Kanpur
+kanpur,Ratan Lal Nagar,ratan-lal-nagar,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Kanpur
+kanpur,Rawatpur,rawatpur,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Kanpur
+kanpur,Sachendi,sachendi,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Kanpur
+indore,Azad Nagar,azad-nagar,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Indore
+indore,Bhanwarkuan,bhanwarkuan,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Indore
+indore,Bijalpur,bijalpur,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Indore
+indore,Chandan Nagar,chandan-nagar,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Indore
+indore,Dewas Naka,dewas-naka,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Indore
+indore,Indore G.P.O.,indore-g-p-o,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Indore
+indore,Khandwa Naka,khandwa-naka,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Indore
+indore,L.I.G. Colony,l-i-g-colony,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Indore
+indore,Mahalaxmi,mahalaxmi,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Indore
+indore,Navlakha,navlakha,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Indore
+indore,Palasia,palasia,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Indore
+indore,Rajendra Nagar,rajendra-nagar,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Indore
+indore,Rau Colony,rau-colony,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Indore
+indore,Satya Sai Chouraha,satya-sai-chouraha,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Indore
+indore,Sukhliya,sukhliya,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Indore
+indore,Vijay Nagar,vijay-nagar,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Indore
+thane,Chandanwadi,chandanwadi,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Thane
+thane,Kalwa,kalwa,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Thane
+thane,Kasarvadavali,kasarvadavali,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Thane
+thane,Kharegaon,kharegaon,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Thane
+thane,Khopat,khopat,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Thane
+thane,Kopri,kopri,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Thane
+thane,Lokmanya Nagar,lokmanya-nagar,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Thane
+thane,Mumbra,mumbra,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Thane
+thane,Panchpakhadi,panchpakhadi,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Thane
+thane,Patlipada,patlipada,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Thane
+thane,Piramal Vaikunth,piramal-vaikunth,https://www.wikidata.org/wiki/Q140034056
+thane,The Rutu Estate,the-rutu-estate,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Thane
+thane,Tikuji-Ni-Wadi,tikuji-ni-wadi,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Thane
+thane,Vartak Nagar,vartak-nagar,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Thane
+thane,Waghbil,waghbil,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Thane
+thane,Wagle Estate,wagle-estate,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Thane
+thane,Yeoor,yeoor,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Thane
+bhopal,Arera Colony,arera-colony,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Bhopal
+bhopal,Barkheda,barkheda,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Bhopal
+bhopal,Berasia,berasia,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Bhopal
+bhopal,BHEL Township,bhel-township,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Bhopal
+bhopal,Govindpura,govindpura,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Bhopal
+bhopal,Habibganj,habibganj,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Bhopal
+bhopal,Indrapuri,indrapuri,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Bhopal
+bhopal,Kalpana Nagar,kalpana-nagar,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Bhopal
+bhopal,Kolar,kolar,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Bhopal
+bhopal,Mandideep,mandideep,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Bhopal
+bhopal,Misrod,misrod,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Bhopal
+bhopal,Piplani,piplani,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Bhopal
+bhopal,Saket Nagar,saket-nagar,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Bhopal
+visakhapatnam,Adarsh Nagar,adarsh-nagar,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Visakhapatnam
+visakhapatnam,Aganampudi,aganampudi,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Visakhapatnam
+visakhapatnam,Akkayyapalem,akkayyapalem,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Visakhapatnam
+visakhapatnam,Anandapuram,anandapuram,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Visakhapatnam
+visakhapatnam,Arilova,arilova,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Visakhapatnam
+visakhapatnam,Bheemunipatnam,bheemunipatnam,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Visakhapatnam
+visakhapatnam,Chinnamushidiwada,chinnamushidiwada,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Visakhapatnam
+visakhapatnam,Dondaparthy,dondaparthy,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Visakhapatnam
+visakhapatnam,Duvvada,duvvada,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Visakhapatnam
+visakhapatnam,Gajuwaka,gajuwaka,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Visakhapatnam
+visakhapatnam,Gambhiram,gambhiram,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Visakhapatnam
+visakhapatnam,Gangavaram,gangavaram,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Visakhapatnam
+visakhapatnam,Gopalapatnam,gopalapatnam,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Visakhapatnam
+visakhapatnam,Kancharapalem,kancharapalem,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Visakhapatnam
+visakhapatnam,Kommadi,kommadi,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Visakhapatnam
+visakhapatnam,Kurmannapalem,kurmannapalem,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Visakhapatnam
+visakhapatnam,Lankelapalem,lankelapalem,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Visakhapatnam
+visakhapatnam,Lawsons Bay Colony,lawsons-bay-colony,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Visakhapatnam
+visakhapatnam,Madhurawada,madhurawada,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Visakhapatnam
+visakhapatnam,Maharanipeta,maharanipeta,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Visakhapatnam
+visakhapatnam,Malkapuram,malkapuram,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Visakhapatnam
+visakhapatnam,Mulagada,mulagada,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Visakhapatnam
+visakhapatnam,MVP Colony,mvp-colony,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Visakhapatnam
+visakhapatnam,Padmanabham,padmanabham,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Visakhapatnam
+visakhapatnam,Parawada,parawada,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Visakhapatnam
+visakhapatnam,Peda Waltair,peda-waltair,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Visakhapatnam
+visakhapatnam,Pedagantyada,pedagantyada,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Visakhapatnam
+visakhapatnam,Pendurthi,pendurthi,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Visakhapatnam
+visakhapatnam,Pothinamallayya Palem,pothinamallayya-palem,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Visakhapatnam
+visakhapatnam,Prahaladapuram,prahaladapuram,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Visakhapatnam
+visakhapatnam,Rushikonda,rushikonda,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Visakhapatnam
+visakhapatnam,Scindia,scindia,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Visakhapatnam
+visakhapatnam,Seethammadhara,seethammadhara,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Visakhapatnam
+visakhapatnam,Sheela Nagar,sheela-nagar,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Visakhapatnam
+visakhapatnam,Sriharipuram,sriharipuram,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Visakhapatnam
+visakhapatnam,Sujatha Nagar,sujatha-nagar,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Visakhapatnam
+visakhapatnam,Tagarapuvalasa,tagarapuvalasa,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Visakhapatnam
+visakhapatnam,Tunglam,tunglam,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Visakhapatnam
+visakhapatnam,Velampeta,velampeta,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Visakhapatnam
+visakhapatnam,Vepagunta,vepagunta,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Visakhapatnam
+patna,Ashok Rajpath,ashok-rajpath,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Patna
+patna,Badalpura,badalpura,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Patna
+patna,Bakhtiyarpur,bakhtiyarpur,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Patna
+patna,Bankipore,bankipore,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Patna
+patna,Barh,barh,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Patna
+patna,Beer Chand Patel Path,beer-chand-patel-path,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Patna
+patna,Bihta,bihta,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Patna
+patna,Buddha Colony,buddha-colony,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Patna
+patna,Dak Bungalow Crossing,dak-bungalow-crossing,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Patna
+patna,Danapur,danapur,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Patna
+patna,Daroga Prasad Rai Path,daroga-prasad-rai-path,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Patna
+patna,Digha,digha,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Patna
+patna,Fatuha,fatuha,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Patna
+patna,Gaighat,gaighat,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Patna
+patna,Gulzarbagh,gulzarbagh,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Patna
+patna,Indrapuri,indrapuri,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Patna
+patna,Kankarbagh,kankarbagh,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Patna
+patna,Khagaul,khagaul,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Patna
+patna,Khusrupur,khusrupur,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Patna
+patna,Kidwaipuri,kidwaipuri,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Patna
+patna,Kumhrar,kumhrar,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Patna
+patna,Masaurhi,masaurhi,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Patna
+patna,Mokama,mokama,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Patna
+patna,New Karbigahiya,new-karbigahiya,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Patna
+patna,Nohsa,nohsa,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Patna
+patna,Paliganj,paliganj,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Patna
+patna,Pataliputra Housing Colony,pataliputra-housing-colony,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Patna
+patna,Phulwari Sharif,phulwari-sharif,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Patna
+patna,Rajendra Nagar,rajendra-nagar,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Patna
+patna,Saidpura,saidpura,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Patna
+patna,Sampatchak,sampatchak,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Patna
+patna,Shivpuri,shivpuri,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Patna
+agra,Dayalbagh,dayalbagh,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Agra
+agra,Idgah,idgah,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Agra
+agra,Kala Mahal,kala-mahal,https://www.wikidata.org/wiki/Q64217566
+agra,Loha Mandi,loha-mandi,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Agra
+agra,Nand Ram Ka Tila,nand-ram-ka-tila,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Agra
+agra,Paliwal Park,paliwal-park,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Agra
+agra,Raja ki mandi,raja-ki-mandi,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Agra
+agra,Rawatpara,rawatpara,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Agra
+agra,Sadar Bazaar,sadar-bazaar,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Agra
+agra,Sanjay Place,sanjay-place,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Agra
+agra,Taj Ganj,taj-ganj,https://www.wikidata.org/wiki/Q102293079
+srinagar,Bagh e Mehtab,bagh-e-mehtab,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Srinagar
+srinagar,Batamaloo,batamaloo,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Srinagar
+srinagar,Bemina,bemina,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Srinagar
+srinagar,Hazratbal,hazratbal,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Srinagar
+srinagar,Hyderpora,hyderpora,https://www.wikidata.org/wiki/Q106991519
+srinagar,Indira Nagar,indira-nagar,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Srinagar
+srinagar,Jawahar Nagar,jawahar-nagar,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Srinagar
+srinagar,Karan Nagar,karan-nagar,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Srinagar
+srinagar,Lal Bazar,lal-bazar,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Srinagar
+srinagar,Lal Chowk,lal-chowk,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Srinagar
+srinagar,Maisuma,maisuma,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Srinagar
+srinagar,New Theed,new-theed,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Srinagar
+srinagar,Nishat,nishat,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Srinagar
+srinagar,Nowhatta,nowhatta,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Srinagar
+srinagar,Nowshera,nowshera,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Srinagar
+srinagar,Rajbagh,rajbagh,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Srinagar
+srinagar,Shalimar Bagh,shalimar-bagh,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Srinagar
+srinagar,Sonwar Bagh,sonwar-bagh,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Srinagar
+srinagar,Vichar Nag,vichar-nag,https://www.wikidata.org/wiki/Q17143732
+dhanbad,Angarpathar,angarpathar,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Dhanbad
+dhanbad,Baliari,baliari,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Dhanbad
+dhanbad,Basaria,basaria,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Dhanbad
+dhanbad,Bastacola,bastacola,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Dhanbad
+dhanbad,Bhagatdih,bhagatdih,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Dhanbad
+dhanbad,Bhowrah,bhowrah,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Dhanbad
+dhanbad,Bhuli,bhuli,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Dhanbad
+dhanbad,Bokapahari,bokapahari,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Dhanbad
+dhanbad,Chandaur,chandaur,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Dhanbad
+dhanbad,Chasnala,chasnala,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Dhanbad
+dhanbad,Chhatatanr,chhatatanr,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Dhanbad
+dhanbad,Chhotaputki,chhotaputki,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Dhanbad
+dhanbad,Damodarpur,damodarpur,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Dhanbad
+dhanbad,Dhaunsar,dhaunsar,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Dhanbad
+dhanbad,Godhar,godhar,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Dhanbad
+dhanbad,Jamadoba,jamadoba,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Dhanbad
+dhanbad,Jealgora,jealgora,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Dhanbad
+dhanbad,Jeenagora,jeenagora,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Dhanbad
+dhanbad,Jharia,jharia,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Dhanbad
+dhanbad,Jharia Khas,jharia-khas,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Dhanbad
+dhanbad,Jogta,jogta,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Dhanbad
+dhanbad,Jorapokhar,jorapokhar,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Dhanbad
+dhanbad,Kailudih,kailudih,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Dhanbad
+dhanbad,Katras,katras,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Dhanbad
+dhanbad,Kenduadih,kenduadih,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Dhanbad
+dhanbad,Kustai,kustai,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Dhanbad
+dhanbad,Lakarka,lakarka,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Dhanbad
+dhanbad,Lodna,lodna,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Dhanbad
+dhanbad,Loyabad,loyabad,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Dhanbad
+dhanbad,Pathardih,pathardih,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Dhanbad
+dhanbad,Putki,putki,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Dhanbad
+dhanbad,Rohraband,rohraband,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Dhanbad
+dhanbad,Saraidhela,saraidhela,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Dhanbad
+dhanbad,Sijua,sijua,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Dhanbad
+dhanbad,Sudamdih,sudamdih,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Dhanbad
+dhanbad,Tetulmari,tetulmari,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Dhanbad
+dhanbad,Tisra,tisra,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Dhanbad
+dhanbad,Wasseypur,wasseypur,https://en.wikipedia.org/wiki/Category:Neighbourhoods_in_Dhanbad
