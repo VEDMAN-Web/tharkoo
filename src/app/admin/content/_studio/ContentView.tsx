@@ -3,12 +3,12 @@
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { ChevronLeft, Plus } from "lucide-react";
+import { ChevronLeft, Plus, Sparkles } from "lucide-react";
 import { Badge, Button, Drawer, EmptyState, PageHeader, Tabs, ToastProvider, type BadgeTone } from "@/components/admin/ui";
 import type { EditorItem, ListRow, Option, StudioKind } from "@/server/content/studio/admin";
 import type { BuiltInRow } from "@/server/content/studio/builtin";
 import type { ContentStatus } from "@/server/models/content";
-import { createItemAction } from "../actions";
+import { aiDraftAction, createItemAction } from "../actions";
 import { Editor } from "./Editor";
 import "./studio.css";
 
@@ -46,6 +46,8 @@ export type StudioProps = {
   canPublish: boolean;
   canWrite: boolean;
   problem: string;
+  /** H16.3: empty when the AI draft is ready; otherwise the sentence that says what the server is missing. */
+  aiNote: string;
 };
 
 function NewDrawer({ kind, onClose, onCreated }: { kind: StudioKind; onClose: () => void; onCreated: (id: string) => void }) {
@@ -86,6 +88,59 @@ function NewDrawer({ kind, onClose, onCreated }: { kind: StudioKind; onClose: ()
   );
 }
 
+function AiDraftDrawer({ note, onClose, onCreated }: { note: string; onClose: () => void; onCreated: (id: string) => void }) {
+  const [topic, setTopic] = useState("");
+  const [city, setCity] = useState("");
+  const [category, setCategory] = useState("");
+  const [keywords, setKeywords] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState("");
+  async function write() {
+    if (topic.trim().length < 3) return setError("Write a topic of at least 3 characters.");
+    setBusy(true);
+    setError("");
+    const result = await aiDraftAction({ topic, city, category, keywords });
+    setBusy(false);
+    if (!result.ok) return setError(result.message);
+    onCreated(result.itemId);
+  }
+  return (
+    <Drawer
+      open
+      title="AI draft"
+      subtitle="The AI writes a first draft of a blog post. It is saved as a draft and never goes live by itself."
+      onClose={onClose}
+      footer={
+        <>
+          <Button kind="quiet" onClick={onClose}>Cancel</Button>
+          <span className="adm-k-sp" />
+          <Button kind="primary" busy={busy} disabled={Boolean(note)} onClick={() => void write()}>Write the draft</Button>
+        </>
+      }
+    >
+      {note ? <p className="adm-k-note" role="status" data-tk="ai-missing">{note}</p> : null}
+      {error ? <p className="adm-k-err" role="alert" data-tk="ai-error">{error}</p> : null}
+      <p className="adm-k-help">Check every fact before publishing. The AI leaves [ADD FACT] where it needs a real fact, and a post with [ADD FACT] in it cannot be published.</p>
+      <div className="adm-k-field">
+        <label className="adm-k-label" htmlFor="st-ai-topic">Topic <span className="adm-k-req" aria-hidden="true">*</span></label>
+        <input id="st-ai-topic" className="adm-k-input" required maxLength={200} value={topic} onChange={(event) => setTopic(event.target.value)} />
+      </div>
+      <div className="adm-k-field">
+        <label className="adm-k-label" htmlFor="st-ai-city">City (optional)</label>
+        <input id="st-ai-city" className="adm-k-input" maxLength={80} value={city} onChange={(event) => setCity(event.target.value)} />
+      </div>
+      <div className="adm-k-field">
+        <label className="adm-k-label" htmlFor="st-ai-category">Category (optional)</label>
+        <input id="st-ai-category" className="adm-k-input" maxLength={80} value={category} onChange={(event) => setCategory(event.target.value)} />
+      </div>
+      <div className="adm-k-field">
+        <label className="adm-k-label" htmlFor="st-ai-keywords">Keywords (optional)</label>
+        <input id="st-ai-keywords" className="adm-k-input" maxLength={200} value={keywords} onChange={(event) => setKeywords(event.target.value)} />
+      </div>
+    </Drawer>
+  );
+}
+
 /** The content studio (H8.31): blog and help lists, the editor in the middle, search and publishing on the right. Tab, filter, search and the open item live in the address. */
 export function ContentView(props: StudioProps) {
   const { tab, status, q, rows, counts, item } = props;
@@ -94,6 +149,7 @@ export function ContentView(props: StudioProps) {
   const params = useSearchParams();
   const [search, setSearch] = useState(q);
   const [creating, setCreating] = useState(false);
+  const [aiOpen, setAiOpen] = useState(false);
   const sent = useRef(q);
 
   function go(changes: Record<string, string | null>) {
@@ -125,6 +181,7 @@ export function ContentView(props: StudioProps) {
           title="Content studio"
           purpose="Blog and help articles. Review before anything goes live."
           primary={props.canWrite ? { key: "new", label: tab === "blog" ? "New post" : "New article", icon: Plus, onClick: () => setCreating(true) } : undefined}
+          secondary={props.canWrite && tab === "blog" ? [{ key: "ai-draft", label: "AI draft", icon: Sparkles, onClick: () => setAiOpen(true) }] : undefined}
         />
         <section className="adm-card adm-st-tabs">
           <Tabs idPrefix="studio" label="Content types" active={tab} items={(Object.keys(TAB_LABELS) as StudioKind[]).map((key) => ({ key, label: TAB_LABELS[key], count: counts[key] }))} onChange={(key) => go({ tab: key === "blog" ? null : key, item: null, status: null, q: null })} />
@@ -194,6 +251,7 @@ export function ContentView(props: StudioProps) {
             </section>
           )}
         </div>
+        {aiOpen ? <AiDraftDrawer note={props.aiNote} onClose={() => setAiOpen(false)} onCreated={(id) => { setAiOpen(false); go({ item: id }); }} /> : null}
         {creating ? <NewDrawer kind={tab} onClose={() => setCreating(false)} onCreated={(id) => { setCreating(false); go({ item: id }); }} /> : null}
       </div>
     </ToastProvider>
