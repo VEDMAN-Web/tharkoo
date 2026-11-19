@@ -167,7 +167,12 @@ test.describe("H7.84 home ad cards", () => {
     await card.hover();
     const pop = page.locator('[data-tk="home-ad-popout"]');
     await expect(pop).toBeVisible({ timeout: 3000 });
-    if (await card.locator('[data-tk="availability"]').count()) await expect(pop.getByRole("link", { name: "Chat" })).toBeVisible();
+    if (await card.locator('[data-tk="availability"]').count()) {
+      // The pop-out's own Chat button, not any link whose name contains "chat" (an ad titled "chatflow ..." has one).
+      const chat = pop.locator('[data-tk="pop-chat"]');
+      await expect(chat).toBeVisible();
+      await expect(chat).toHaveText("Chat");
+    }
     // H14.2: no View ad button; the whole pop-out opens the ad through its title link.
     await expect(pop.getByRole("link", { name: "View ad" })).toHaveCount(0);
     await expect(pop.locator(".tkh-pop-link")).toBeVisible();
