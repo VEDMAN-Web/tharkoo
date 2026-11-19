@@ -1,0 +1,11 @@
+{
+  "branchPrefix": "haiku/h15.15",
+  "globs": [
+    "docs/ownership/H15.15.json",
+    "progress/FIX15.md",
+    "src/components/admin/ui/ServerTable.tsx",
+    "src/app/admin/ads/_list/AdsView.tsx",
+    "src/styles/admin-kit.css",
+    "tests/e2e/fix15-allads-bulk-phone.e2e.ts"
+  ]
+}

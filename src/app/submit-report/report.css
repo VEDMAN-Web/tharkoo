@@ -1,0 +1,19 @@
+/* H15.9: the report page in the site's own look (it used old utility classes that no longer exist, so it showed unstyled). */
+.rp-page { max-width: 680px; padding: 28px 16px 56px; box-sizing: border-box; }
+.rp-h1 { margin: 0 0 8px; font-family: var(--font-sans), Manrope, sans-serif; font-size: 30px; font-weight: 800; letter-spacing: -0.02em; line-height: 1.2; color: #1e0b38; }
+.rp-lead { margin: 0 0 20px; max-width: 62ch; font-size: 15px; line-height: 1.6; color: #4a2870; }
+.rp-link { color: #a8124f; text-decoration: underline; }
+.rp-form { display: grid; gap: 18px; max-width: 560px; }
+.rp-field { display: grid; gap: 6px; min-width: 0; }
+.rp-label { font-size: 14px; font-weight: 700; color: #4a2870; }
+.rp-input {
+  display: block; width: 100%; min-height: 44px; padding: 10px 12px; box-sizing: border-box; border: 1.5px solid #ead8f0; border-radius: 12px;
+  background: #fff; color: #1e0b38; font: inherit; font-size: 15px;
+}
+textarea.rp-input { min-height: 120px; resize: vertical; line-height: 1.5; }
+.rp-input:focus { border-color: #d1137a; box-shadow: 0 0 0 4px rgba(233, 30, 140, 0.14); outline: none; }
+.rp-count { font-size: 12px; color: #6b4a8a; }
+.rp-message { margin: 0; font-size: 14px; color: #4a2870; }
+.rp-message.is-error { color: #b3261e; }
+.rp-done { margin: 20px 0 0; padding: 14px 16px; max-width: 560px; border-radius: 12px; background: #fdf6fb; border: 1px solid #f3e8f7; font-size: 15px; color: #1e0b38; }
+.rp-form .tk-btn { justify-self: start; }

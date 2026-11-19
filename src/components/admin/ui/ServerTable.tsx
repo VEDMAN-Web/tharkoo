@@ -37,6 +37,7 @@ export function ServerTable<T>({
   loadingText = "Loading",
   empty,
   selectable = false,
+  phoneSelect = false,
   selected = [],
   onSelected,
   bulkActions,
@@ -60,6 +61,8 @@ export function ServerTable<T>({
   /** Shown instead of the rows when there are none: use an EmptyState with one action. */
   empty?: React.ReactNode;
   selectable?: boolean;
+  /** FIX-15: keep the tick boxes on a phone (each card gets a 44 px box in its corner). Off by default; the All ads screen turns it on. */
+  phoneSelect?: boolean;
   selected?: string[];
   onSelected?: (ids: string[]) => void;
   /** Buttons for the bulk bar, destructive one rightmost. */
@@ -100,7 +103,7 @@ export function ServerTable<T>({
         </div>
       ) : null}
       <div className="adm-k-tablescroll">
-        <table className="adm-k-table" aria-label={label}>
+        <table className="adm-k-table" aria-label={label} data-phone-select={selectable && phoneSelect ? "yes" : undefined}>
           <thead hidden={hasSelection}>
             <tr>
               {selectable ? (
