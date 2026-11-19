@@ -39,7 +39,7 @@ import { contactChannelsOf } from "@/server/listings/contact-channels";
 
 type Props = { params: Promise<{ slug: string }> };
 
-export const revalidate = 60;
+export const revalidate = 300;
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params;

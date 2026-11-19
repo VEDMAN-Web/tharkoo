@@ -17,7 +17,6 @@ const NOT_FOUND_TITLE = "Page not found | Tharkoo";
 export const metadata: Metadata = {
   title: NOT_FOUND_TITLE,
   description: "That page is not on Tharkoo. Go back to the home page and choose a category.",
-  robots: { index: false, follow: false },
 };
 
 async function latestAds(categoryNames: Map<string, string>): Promise<NotFoundAds | null> {

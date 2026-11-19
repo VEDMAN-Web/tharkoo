@@ -1,4 +1,8 @@
-type Entry = { exp: number; value: unknown; tags: string[] };
+/** `exp`: fresh until. `stale`: still served (while a refresh runs in the background) until. */
+type Entry = { exp: number; stale: number; value: unknown; tags: string[] };
+
+/** H17.2: an entry past its time is still served for this long (at most ten times its time) while it is refreshed, so no visitor waits for a cold load. */
+export const STALE_LIMIT_MS = 10 * 60_000;
 
 /**
  * One store for the whole server process. Next builds each route (a page, a server action) as its own bundle, and a plain module-level Map
@@ -9,19 +13,23 @@ const store = (shared.__tkCacheStore ??= new Map<string, Entry>());
 const inflight = (shared.__tkCacheInflight ??= new Map<string, Promise<unknown>>());
 const PUBLIC_TAGS = ["site", "categories", "locations", "feed", "listings", "counts"];
 
+/** H17.2: 20 was too few for a site with hundreds of category and city pages: each page's feed has its own key and was pushed out by the next page. */
+const MAX_ENTRIES = 120;
+
 function remember(key: string, ttlMs: number, value: unknown, tags: string[]) {
-  if (store.size > 20) {
+  if (store.size > MAX_ENTRIES) {
     const now = Date.now();
     for (const [k, v] of store) {
-      if (v.exp <= now) store.delete(k);
+      if (v.stale <= now) store.delete(k);
     }
-    while (store.size > 20) {
+    while (store.size > MAX_ENTRIES) {
       const oldest = store.keys().next().value;
       if (!oldest) break;
       store.delete(oldest);
     }
   }
-  store.set(key, { exp: Date.now() + ttlMs, value, tags });
+  const now = Date.now();
+  store.set(key, { exp: now + ttlMs, stale: now + ttlMs + Math.min(STALE_LIMIT_MS, ttlMs * 10), value, tags });
 }
 
 async function durableLoad<T>(key: string, ttlMs: number, tags: string[], fn: () => Promise<T>): Promise<T> {
@@ -45,18 +53,28 @@ export async function cached<T>(
   durable = false,
 ): Promise<T> {
   const hit = store.get(key);
-  if (hit && hit.exp > Date.now()) return hit.value as T;
+  const now = Date.now();
+  if (hit && hit.exp > now) return hit.value as T;
   const running = inflight.get(key);
+  const refresh = () => {
+    const job = (async () => {
+      const value = durable ? await durableLoad(key, ttlMs, tags, fn) : await fn();
+      remember(key, ttlMs, value, tags);
+      return value;
+    })().finally(() => {
+      inflight.delete(key);
+    });
+    inflight.set(key, job);
+    return job;
+  };
+  // Past its time but still inside the stale window: answer now with what is held and refresh once in the background.
+  // A change that clears the tags (invalidateTags) removes the entry, so a change is never answered from an old copy.
+  if (hit && hit.stale > now) {
+    if (!running) void refresh().catch(() => undefined);
+    return hit.value as T;
+  }
   if (running) return running as Promise<T>;
-  const job = (async () => {
-    const value = durable ? await durableLoad(key, ttlMs, tags, fn) : await fn();
-    remember(key, ttlMs, value, tags);
-    return value;
-  })().finally(() => {
-    inflight.delete(key);
-  });
-  inflight.set(key, job);
-  return job as Promise<T>;
+  return refresh() as Promise<T>;
 }
 
 /** Drop every cached entry that carries one of these tags. */
