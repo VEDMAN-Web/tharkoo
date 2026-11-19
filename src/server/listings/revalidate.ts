@@ -41,7 +41,7 @@ export async function revalidateListingsById(ids: readonly string[]) {
     const rows = await Listing.find({ _id: { $in: ids.slice(0, MAX_REVALIDATE) } })
       .select("slug cityId districtId categoryId")
       .lean<{ slug?: string; cityId?: unknown; districtId?: unknown; categoryId?: unknown }[]>();
-    const categories = await Category.find({ _id: { $in: rows.map((row) => row.categoryId) } })
+    const categories = await Category.find({ _id: { $in: rows.map((row) => row.categoryId) as never[] } })
       .select("slug")
       .lean<{ _id: unknown; slug?: string }[]>();
     const slugs = new Map(categories.map((category) => [String(category._id), category.slug]));
