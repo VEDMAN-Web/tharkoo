@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import { CHAT_AD_NOT_LIVE } from "@/lib/chat-text";
 import { api, friendlyError } from "@/lib/ui/api";
 
 export const CHAT_POLL_MS = 5000;
@@ -8,7 +9,7 @@ const MAX_IMAGE_BYTES = 5 * 1024 * 1024;
 const IMAGE_TYPES = ["image/jpeg", "image/png", "image/webp"];
 
 type Message = { id: string; mine: boolean; text: string; imageUrl: string | null; createdAt: string; read: boolean; deleted: boolean };
-type Info = { listingTitle: string; blocked: boolean; reported: boolean; role: "buyer" | "seller" };
+type Info = { listingTitle: string; blocked: boolean; reported: boolean; role: "buyer" | "seller"; adLive?: boolean };
 type Loaded = { conversation: Info; messages: Message[] };
 export type CreateResult = { id: string } | { error: string };
 
@@ -120,7 +121,10 @@ export function ChatThread({
     if (res.ok) await load();
   }
 
-  const closed = info?.blocked ?? false;
+  const blocked = info?.blocked ?? false;
+  // FIX-3: a chat about an ad that is not live (removed, expired, paused) can be read but not written to.
+  const adGone = info?.adLive === false;
+  const closed = blocked || adGone;
   const panel = variant === "panel";
   const bubbleStyle = (mine: boolean) =>
     panel
@@ -143,8 +147,8 @@ export function ChatThread({
           <button type="button" className="tk-btn tk-btn-outline-primary" style={buttonStyle} onClick={() => void report()} disabled={info?.reported}>
             {info?.reported ? "Reported" : "Report"}
           </button>
-          <button type="button" className="tk-btn tk-btn-outline-primary" style={buttonStyle} onClick={() => void block()} disabled={closed}>
-            {closed ? "Blocked" : "Block"}
+          <button type="button" className="tk-btn tk-btn-outline-primary" style={buttonStyle} onClick={() => void block()} disabled={blocked}>
+            {blocked ? "Blocked" : "Block"}
           </button>
         </div>
       )}
@@ -173,6 +177,7 @@ export function ChatThread({
         style={panel ? undefined : { display: "grid", gap: 6, padding: 12, borderTop: "1px solid var(--border)" }}
       >
         {note ? <p role="status" className="t-small" data-tk="chat-note">{note}</p> : null}
+        {adGone && !blocked ? <p role="status" className="t-small" data-tk="chat-readonly">{CHAT_AD_NOT_LIVE}</p> : null}
         <textarea
           className={panel ? "tkn-thread-input" : "tk-input"}
           rows={2}
@@ -180,7 +185,7 @@ export function ChatThread({
           value={text}
           disabled={closed}
           aria-label="Your message"
-          placeholder={closed ? "This conversation is blocked" : "Write a message"}
+          placeholder={blocked ? "This conversation is blocked" : adGone ? "This ad is no longer live" : "Write a message"}
           onChange={(event) => setText(event.target.value)}
           style={panel ? undefined : { fontSize: 16 }}
         />
@@ -194,8 +199,8 @@ export function ChatThread({
               <button type="button" className="tkn-thread-link" onClick={() => void report()} disabled={info?.reported}>
                 {info?.reported ? "Reported" : "Report"}
               </button>
-              <button type="button" className="tkn-thread-link" onClick={() => void block()} disabled={closed}>
-                {closed ? "Blocked" : "Block"}
+              <button type="button" className="tkn-thread-link" onClick={() => void block()} disabled={blocked}>
+                {blocked ? "Blocked" : "Block"}
               </button>
             </>
           ) : null}
