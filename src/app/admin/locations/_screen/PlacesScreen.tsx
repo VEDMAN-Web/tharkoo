@@ -1,12 +1,13 @@
 "use client";
 
 import Link from "next/link";
-import { Plus, Search } from "lucide-react";
+import { Plus, Search, Upload } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
 import "@/app/admin/_catalog/catalog.css";
 import { Button, PageHeader, ToastProvider, useToast } from "@/components/admin/ui";
 import type { PlaceRowView, PlacesScreenData } from "@/server/locations/screen";
+import { ImportDialog } from "./ImportDialog";
 import { NewPlaceDialog } from "./NewPlaceDialog";
 import { PlaceDetailPane } from "./PlaceDetailPane";
 import { PlaceList } from "./PlaceList";
@@ -21,6 +22,7 @@ function Screen({ data, tab: startTab }: { data: PlacesScreenData; tab: TabKey }
   const [local, setLocal] = useState<{ base: string; ids: string[] } | null>(null);
   const [tab, setTab] = useState<TabKey>(startTab);
   const [creating, setCreating] = useState(false);
+  const [importing, setImporting] = useState(false);
   const [search, setSearch] = useState(data.q);
   const sent = useRef(data.q);
   const dirty = useRef(false);
@@ -83,6 +85,7 @@ function Screen({ data, tab: startTab }: { data: PlacesScreenData; tab: TabKey }
         title="Cities & areas"
         purpose="Cities, states and countries, their pictures, and the districts inside each city."
         primary={{ key: "new", label: "New place", icon: Plus, kind: "primary", onClick: () => setCreating(true) }}
+        secondary={[{ key: "import", label: "Import cities and areas (CSV)", icon: Upload, onClick: () => setImporting(true) }]}
       />
       <div className="adm-cat" data-view={data.chosen ? "detail" : "list"} data-tk="places-layout">
         <section className="adm-card adm-cat-listcard" aria-labelledby="place-list-title">
@@ -118,6 +121,14 @@ function Screen({ data, tab: startTab }: { data: PlacesScreenData; tab: TabKey }
           </section>
         )}
       </div>
+      <ImportDialog
+        open={importing}
+        onClose={() => setImporting(false)}
+        onDone={(message) => {
+          toast.show({ kind: "success", message });
+          router.refresh();
+        }}
+      />
       <NewPlaceDialog open={creating} choices={data.choices} onClose={() => setCreating(false)} onCreated={(id) => { setCreating(false); router.push(urlFor({ q: "", page: 1 }, id, "details")); router.refresh(); }} />
     </div>
   );
