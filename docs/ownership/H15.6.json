@@ -1,0 +1,12 @@
+{
+  "branchPrefix": "haiku/h15.6",
+  "globs": [
+    "docs/ownership/H15.6.json",
+    "progress/FIX6.md",
+    "src/lib/ui/profile-progress.ts",
+    "src/components/buyer/SettingsPanel.tsx",
+    "src/server/auth/seller-profile.ts",
+    "tests/server/auth/h15-6-profile-text.test.ts",
+    "tests/e2e/fix6-profile-settings.e2e.ts"
+  ]
+}
