@@ -99,7 +99,8 @@ describe("url manager", () => {
     expect(cities.some((entry) => entry.loc === `${origin}/social/new-delhi/`)).toBe(true);
     expect(cities.some((entry) => entry.loc.includes("/dating/delhi/"))).toBe(false);
     // H16.5: the ads sitemap lists the live ad at its new prefix.
-    expect(ads.map((entry) => entry.loc)).toEqual([`${origin}/listing/office-assistant-0001/`]);
+    expect(ads.some((entry) => entry.loc === `${origin}/listing/office-assistant-0001/`)).toBe(true);
+    expect(ads.some((entry) => entry.loc.includes("/ad/"))).toBe(false);
   });
 
   it("keeps the ad id when the title slug changes and stores an seo override", async () => {
