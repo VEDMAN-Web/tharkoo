@@ -395,7 +395,8 @@ test.describe("H7.86 post an ad, step 5 and the success screen", () => {
     await expect(page.locator(".tkp-drop-buttons label")).toHaveCount(1);
     await expect(page.locator(".tkp-drop-buttons label")).toHaveText("Add photos");
     if (phone) await expect(page.locator("[data-tk=photo-more]").getByText("Take a photo")).toBeVisible();
-    await expect(page.locator("[data-tk=photo-more]").getByText("Add video")).toBeVisible();
+    // FIX-1: Dating is a people category, which never holds a video.
+    await expect(page.locator("[data-tk=photo-more]").getByText("Add video")).toHaveCount(0);
     await expect(page.locator(".tkp-drop-buttons").getByText("Add video")).toHaveCount(0);
     await expect(page.locator(".tkp-photos .upl-info")).toHaveCount(1);
     await shot(page, "h94-03-photos");

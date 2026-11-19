@@ -1,0 +1,20 @@
+{
+  "branchPrefix": "haiku/h15.1",
+  "globs": [
+    "docs/ownership/H15.1.json",
+    "progress/FIX1.md",
+    "src/server/media/people-video.ts",
+    "src/server/media/service.ts",
+    "src/server/media/staff-upload.ts",
+    "src/server/listings/service.ts",
+    "src/components/post/PhotoStep.tsx",
+    "src/components/PostWizard.tsx",
+    "src/lib/ui/text.ts",
+    "tests/server/media/fix1-people-no-video.test.ts",
+    "tests/server/media/clear-photos.test.ts",
+    "tests/e2e/fix1-people-no-video.e2e.ts",
+    "tests/e2e/h7-100-posting.e2e.ts",
+    "tests/e2e/post-steps-3-4.e2e.ts",
+    "tests/e2e/post-step-5.e2e.ts"
+  ]
+}

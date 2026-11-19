@@ -10,6 +10,7 @@ import { cloudinaryClient, type Delivery } from "@/server/media/client";
 import { csamScannerFromEnv, type CsamScanner } from "@/server/media/csam";
 import { AD_MEDIA_LIMIT_MESSAGE, AD_MEDIA_MAX, EAGER, ID_URL_TTL_SECONDS, AD_VIDEO_BAD_TYPE, AD_VIDEO_EAGER, AD_VIDEO_MAX_BYTES, AD_VIDEO_MAX_SECONDS, AD_VIDEO_NEEDS_DRAFT, AD_VIDEO_TOO_BIG, AD_VIDEO_TOO_LONG, AD_VIDEO_UNREADABLE, VIDEO_FORMAT_MIME, VIDEO_TYPES, UPLOAD_NEEDS_CLOUDINARY, onVercel, MAX_BYTES, ORPHAN_AGE_MS, STRIP_EXIF, cloudinaryEnv, optionalCloudinary } from "@/server/media/config";
 import { adVideoCount, assertAdMediaRoom } from "@/server/media/limit";
+import { assertNoVideoOnPeople } from "@/server/media/people-video";
 import { assertLocalVideoAllowed, markWatermarked, prepareLocalAdFile, watermarkTransformationFor } from "@/server/media/watermark";
 import { signUploadParams } from "@/server/media/sign";
 import { videoSeconds } from "@/server/media/duration";
@@ -111,6 +112,7 @@ async function saveLocalVideo(
   file: { type: string; data: Buffer },
   requestId: string,
 ) {
+  await refuseVideoOnPeople(asset);
   const seconds = (VIDEO_TYPES as readonly string[]).includes(file.type) ? videoSeconds(file.data, file.type) : null;
   const problem = videoProblem(file.type, file.data.length, seconds);
   if (problem) {
@@ -142,15 +144,28 @@ function videoProblem(contentType: string, bytes: number, seconds: number | null
   return seconds > AD_VIDEO_MAX_SECONDS ? AD_VIDEO_TOO_LONG : null;
 }
 
+/** A video slot that was made before the people rule cannot be filled either: the asset is closed and the sentence is returned. */
+async function refuseVideoOnPeople(asset: InstanceType<typeof MediaAsset>) {
+  try {
+    await assertNoVideoOnPeople(asset.listingId);
+  } catch (error) {
+    asset.status = "rejected_policy";
+    await asset.save();
+    throw error;
+  }
+}
+
 async function assertVideoAllowed(userId: string, input: { listingId?: string; contentType: string; byteSize: number }) {
   const problem = videoProblem(input.contentType, input.byteSize, undefined);
   if (problem) throw new PolicyViolationError(problem);
   if (!input.listingId) throw new PolicyViolationError(AD_VIDEO_NEEDS_DRAFT);
   const listing = await ownedListing(input.listingId, userId);
+  await assertNoVideoOnPeople(listing._id);
   await assertAdMediaRoom(listing._id);
 }
 
 async function completeVideo(userId: string, asset: InstanceType<typeof MediaAsset>, requestId: string) {
+  await refuseVideoOnPeople(asset);
   const client = cloudinaryClient();
   const remote = await client.resource(asset.objectKey, "upload", "video");
   if (!remote) throw new NotFoundError("Upload was not found");

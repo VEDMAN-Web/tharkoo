@@ -29,6 +29,7 @@ export function PhotoStep({
   onNext,
   onMedia,
   onBusy,
+  allowVideo = true,
 }: {
   listingId: string;
   copy: PostCopy;
@@ -36,6 +37,8 @@ export function PhotoStep({
   onNext?: () => void;
   onMedia?: (media: DraftMedia) => void;
   onBusy?: (busy: boolean) => void;
+  /** FIX-1: false for a listing about people, which never holds a video. */
+  allowVideo?: boolean;
 }) {
   const t = useT();
   const [draft, setDraft] = useState<DraftMedia | null>(null);
@@ -241,22 +244,25 @@ export function PhotoStep({
               }}
             />
           </label>
-          <label className="tkp-btn tkp-btn-small" aria-disabled={busy || atLimit}>
-            {t("post.photo.addVideo")}
-            <input
-              type="file"
-              accept="video/mp4,video/webm,video/quicktime"
-              data-tk="video-input"
-              hidden
-              disabled={busy || atLimit}
-              onChange={(event) => {
-                const file = event.target.files?.[0];
-                event.target.value = "";
-                if (file) void addVideo(file);
-              }}
-            />
-          </label>
+          {allowVideo ? (
+            <label className="tkp-btn tkp-btn-small" aria-disabled={busy || atLimit}>
+              {t("post.photo.addVideo")}
+              <input
+                type="file"
+                accept="video/mp4,video/webm,video/quicktime"
+                data-tk="video-input"
+                hidden
+                disabled={busy || atLimit}
+                onChange={(event) => {
+                  const file = event.target.files?.[0];
+                  event.target.value = "";
+                  if (file) void addVideo(file);
+                }}
+              />
+            </label>
+          ) : null}
         </div>
+        {allowVideo ? null : <p className="tkp-quiet" data-tk="no-video">{t("post.photo.noVideo")}</p>}
         <p className="tkp-drop-rule" data-tk="photo-rule">
           {copy.photoRules.items[0] ?? t("post.photo.photoRuleFallback")}
           <InfoPopover id="post-rules" label={t("post.photo.rulesLabel")}>
