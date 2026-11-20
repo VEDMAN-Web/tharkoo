@@ -162,6 +162,7 @@ export async function listMessages(userId: string, conversationId: string, optio
       listingTitle: conv.listingTitle,
       role: conv.sellerId.toString() === userId ? ("seller" as const) : ("buyer" as const),
       blocked: conv.blocked,
+      blockedByMe: Boolean(conv.blocked && conv.blockedBy && conv.blockedBy.toString() === userId),
       reported: Boolean(conv.reportedAt),
       adLive: await adIsLive(conv.listingId),
     },
@@ -255,6 +256,17 @@ export async function blockConversation(userId: string, conversationId: string, 
   await Conversation.updateOne({ _id: conv._id }, { $set: { blocked: true, blockedBy: userId, blockedAt: new Date() } });
   await audit.append({ actorId: userId, actorType: "user", action: "chat.block", targetType: "conversation", targetId: conv._id.toString(), requestId });
   return { blocked: true as const };
+}
+
+/** Only the person who blocked can undo it. The other side stays blocked and cannot lift it. */
+export async function unblockConversation(userId: string, conversationId: string, requestId: string = randomUUID()) {
+  await connectDb();
+  const conv = await participantConversation(userId, conversationId);
+  if (!conv.blocked) throw new ConflictError("This conversation is not blocked.");
+  if (!conv.blockedBy || conv.blockedBy.toString() !== userId) throw new ForbiddenError("Only the person who blocked this conversation can unblock it.");
+  await Conversation.updateOne({ _id: conv._id }, { $set: { blocked: false }, $unset: { blockedBy: "", blockedAt: "" } });
+  await audit.append({ actorId: userId, actorType: "user", action: "chat.unblock", targetType: "conversation", targetId: conv._id.toString(), requestId });
+  return { blocked: false as const };
 }
 
 /** Reporting flags the conversation so staff may read it. Reports never expose the chat to anyone else. */

@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
+import { X } from "lucide-react";
 import { useSitePath } from "@/components/useSitePath";
 import { useT } from "@/components/ui/AdCard";
 import { RechargeSheet } from "./RechargeSheet";
@@ -68,7 +69,7 @@ export function RechargeHost() {
               </p>
             </>
           )}
-          <button type="button" className="tkr-toast-x" aria-label={t("recharge.close")} onClick={() => setResult(null)}>×</button>
+          <button type="button" className="tkr-toast-x" aria-label={t("recharge.close")} onClick={() => setResult(null)}><X size={18} aria-hidden="true" focusable="false" /></button>
         </div>
       ) : null}
     </>

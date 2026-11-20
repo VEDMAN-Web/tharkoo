@@ -54,14 +54,21 @@ function isActive(pathname: string, entry: NavItem) {
 /** The live numbers: what the page was drawn with, then a fresh read every 60 s and when the window is focused again. */
 function useLiveCounts(initial: AdminCounts) {
   const [counts, setCounts] = useState(initial);
+  const busy = useRef(false);
   const refresh = useCallback(async () => {
+    // One read at a time: focus and visibilitychange fire together, and a slow read must not pile up behind itself.
+    if (busy.current) return;
+    busy.current = true;
     try {
-      const res = await fetch("/api/admin/counts", { credentials: "same-origin", cache: "no-store" });
+      // Trailing slash: the site uses trailingSlash, so a bare path costs a 308 redirect and a second request.
+      const res = await fetch("/api/admin/counts/", { credentials: "same-origin", cache: "no-store" });
       if (!res.ok) return;
       const body = (await res.json()) as { data?: { counts?: AdminCounts } };
       if (body.data?.counts) setCounts(body.data.counts);
     } catch {
       return;
+    } finally {
+      busy.current = false;
     }
   }, []);
   useEffect(() => {

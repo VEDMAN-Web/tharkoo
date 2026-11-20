@@ -14,6 +14,7 @@ import { readSaved, type SavedItem } from "../ui/SaveButton";
 import { RecentlyViewedRail } from "../ui/RecentlyViewed";
 import { AdCard } from "../ui/AdCard";
 import { HelpCard } from "../ui/HelpCard";
+import { ConfirmDialog } from "../ui/ConfirmDialog";
 import { TourInbox } from "./TourInbox";
 import type { ListingDoc } from "@/lib/models";
 
@@ -148,6 +149,8 @@ function AdsInner() {
   const [rows, setRows] = useState<Own["items"] | null>(null);
   const [signedOut, setSignedOut] = useState(false);
   const [note, setNote] = useState("");
+  const [deleting, setDeleting] = useState<string | null>(null);
+  const [deleteBusy, setDeleteBusy] = useState(false);
 
   useEffect(() => {
     const id = window.setTimeout(() => {
@@ -168,7 +171,6 @@ function AdsInner() {
   const shown = tab === "active" ? active : hidden;
 
   async function act(id: string, action: "pause" | "resume" | "renew" | "duplicate" | "delete") {
-    if (action === "delete" && !window.confirm("Delete this ad?")) return;
     const res = action === "delete"
       ? await api(`/api/listings/${id}`, { method: "DELETE" })
       : await api(`/api/listings/${id}/${action}`, { method: "POST", body: "{}" });
@@ -211,7 +213,7 @@ function AdsInner() {
                     <button type="button" style={{ color: "var(--accent)", background: "none", border: 0 }} onClick={() => act(row.id, row.status === "active" ? "pause" : "resume")}>Pause</button>
                     <button type="button" style={{ color: "var(--accent)", background: "none", border: 0 }} onClick={() => act(row.id, "renew")}>Renew</button>
                     <button type="button" style={{ color: "var(--accent)", background: "none", border: 0 }} onClick={() => act(row.id, "duplicate")}>Duplicate</button>
-                    <button type="button" style={{ color: "var(--accent)", background: "none", border: 0 }} onClick={() => act(row.id, "delete")}>Delete</button>
+                    <button type="button" style={{ color: "var(--accent)", background: "none", border: 0 }} onClick={() => setDeleting(row.id)}>Delete</button>
                   </p>
                 </div>
               ))}
@@ -219,6 +221,23 @@ function AdsInner() {
           )}
           <p aria-live="polite" className="t-small">{note}</p>
           <HelpCard />
+          <ConfirmDialog
+            open={deleting !== null}
+            title="Delete this ad?"
+            text="The ad is removed from the site. This cannot be undone."
+            confirmLabel="Delete"
+            tone="danger"
+            busy={deleteBusy}
+            onConfirm={() => {
+              if (!deleting) return;
+              setDeleteBusy(true);
+              void act(deleting, "delete").finally(() => {
+                setDeleteBusy(false);
+                setDeleting(null);
+              });
+            }}
+            onCancel={() => setDeleting(null)}
+          />
         </>
       )}
     </VendorShell>

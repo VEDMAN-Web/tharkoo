@@ -1,0 +1,90 @@
+/* The drop-down list that replaces the browser's own list for every public <select> (see SelectMenuEnhancer). */
+.tk-sm-pop {
+  position: fixed;
+  z-index: 1000;
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box;
+  overflow: hidden;
+  background: #fff;
+  color: #1e0b38;
+  border: 1.5px solid #ead8f0;
+  border-radius: 14px;
+  box-shadow: 0 18px 50px rgba(45, 18, 72, 0.22);
+  font-family: var(--tkn-font, "Plus Jakarta Sans", system-ui, sans-serif);
+  font-size: 15px;
+}
+.tk-sm-list {
+  flex: 1 1 auto;
+  min-height: 0;
+  margin: 0;
+  padding: 6px;
+  list-style: none;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  outline: none;
+}
+.tk-sm-pop .tk-sm-list:focus, .tk-sm-pop .tk-sm-list:focus-visible { outline: none; }
+/* After a mouse click the select shows no extra keyboard frame (the field around it keeps its own focus ring). */
+select[data-sm-mouse]:focus-visible { outline: none !important; }
+/* Same for the hero field that frames the select: a mouse click leaves no purple frame, the keyboard still gets it. */
+.tkh-field:focus-within:has(select[data-sm-mouse]) { outline: none; }
+.tk-sm-group {
+  padding: 10px 12px 4px;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: #5b21b6;
+}
+.tk-sm-opt {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 44px;
+  padding: 8px 12px;
+  box-sizing: border-box;
+  border-radius: 10px;
+  cursor: pointer;
+}
+.tk-sm-opt-text { flex: 1; min-width: 0; overflow-wrap: anywhere; }
+.tk-sm-opt[data-active="true"] { background: rgba(124, 58, 237, 0.09); }
+.tk-sm-opt[aria-selected="true"] { background: rgba(233, 30, 140, 0.1); color: #a8124f; font-weight: 700; }
+.tk-sm-opt[aria-disabled="true"] { opacity: 0.45; cursor: default; }
+.tk-sm-tick { flex: none; color: #c2185b; }
+.tk-sm-backdrop { position: fixed; inset: 0; z-index: 999; background: rgba(17, 5, 32, 0.45); }
+.tk-sm-title { margin: 0; padding: 16px 18px 4px; font-size: 16px; font-weight: 800; color: #110520; }
+
+/* On a phone the list is a bottom sheet with a dimmed page behind it. */
+@media (max-width: 640px) {
+  .tk-sm-pop.is-sheet {
+    left: 0;
+    right: 0;
+    bottom: 0;
+    top: auto;
+    width: auto;
+    max-height: 70dvh;
+    border: 0;
+    border-radius: 20px 20px 0 0;
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+  .tk-sm-opt { min-height: 48px; font-size: 16px; }
+}
+@media (prefers-reduced-motion: no-preference) {
+  .tk-sm-pop.is-sheet { animation: tk-sm-up 160ms ease-out; }
+  @keyframes tk-sm-up { from { transform: translateY(24px); opacity: 0; } to { transform: none; opacity: 1; } }
+}
+
+/* One drawn arrow for every public select, the same size and place everywhere, always inside the box with room for the text.
+   (The browser's own arrow sits differently in each browser and sometimes outside the border.) Not for the admin or multi-selects. */
+select:not([multiple], [size], [class*="adm-"], .adm-shell *) {
+  -webkit-appearance: none;
+  appearance: none;
+  padding-right: 34px !important;
+  text-overflow: ellipsis;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%232d1248' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E") !important;
+  background-repeat: no-repeat !important;
+  background-position: right 12px center !important;
+  background-size: 12px 12px !important;
+}
+select:not([multiple], [size], [class*="adm-"], .adm-shell *):disabled { opacity: 0.6; }

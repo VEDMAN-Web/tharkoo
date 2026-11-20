@@ -42,9 +42,11 @@
 .up-nav-link-on, .up-nav-link-on:hover { background: linear-gradient(135deg, #d1137a, #a8124f); color: #fff; font-weight: 700; }
 .up-nav-link svg { flex: none; }
 .up-nav-badge {
-  margin-left: auto; min-width: 22px; padding: 2px 8px; border-radius: 999px; text-align: center;
-  background: #c2185b; color: #fff; font-size: 12px; font-weight: 700;
+  margin-left: auto; min-width: 22px; padding: 2px 8px; border-radius: 999px; text-align: center; box-sizing: border-box;
+  background: #c2185b; color: #fff; font-size: 12px; line-height: 18px; font-weight: 700;
 }
+/* On the open (pink) menu item the badge turns white, so it is not pink on pink. */
+.up-nav-link-on .up-nav-badge { background: #fff; color: #a8124f; }
 
 .up-hero {
   padding: 28px; border-radius: 20px; border: 1px solid rgba(255, 255, 255, 0.9); box-shadow: 0 8px 32px rgba(45, 18, 72, 0.08);
@@ -365,4 +367,8 @@
 
 /* H15.7: Remove under a saved ad. */
 .up-saved-item { display: flex; flex-direction: column; gap: 8px; }
-.up-saved-remove { align-self: stretch; }
+/* Every saved card is as tall as the tallest in its row, and Remove sits at the bottom of each, so the buttons line up (a two-line title no longer pushes one down). */
+.up-saved-item > :first-child { flex: 1 1 auto; }
+.up-saved-remove { align-self: stretch; margin-top: auto; }
+/* Ad rows inside an account panel fill the panel, so their right edge lines up with its "See all ads" link (the 880 px cap is for listing pages). */
+.up-panel .tk-rows { max-width: none; }

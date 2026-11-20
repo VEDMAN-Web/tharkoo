@@ -5,7 +5,6 @@ import { parseRich, richBodySchema, richTexts } from "@/lib/content/rich";
 import { DASH_CHARS, DASH_MESSAGE } from "@/server/content/dashes";
 import { ValidationError } from "@/server/http";
 import type { ContentFields } from "@/server/models/content";
-import { textDenied } from "@/server/shared/policy";
 
 /**
  * H8.28: what a content item may contain. `checkFields` turns what an editor sent into stored fields, or says what is wrong.
@@ -103,6 +102,5 @@ export function checkFields(input: unknown): ContentFields {
   const stored = toStored(parsed.data);
   const texts = fieldTexts(stored);
   if (texts.some((value) => DASH_CHARS.test(value))) throw new ValidationError("Check the highlighted fields", { text: [DASH_MESSAGE] });
-  if (texts.some((value) => textDenied(value).denied)) throw new ValidationError("This text is not allowed on Tharkoo");
   return stored;
 }

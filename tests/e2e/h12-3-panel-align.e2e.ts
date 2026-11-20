@@ -179,7 +179,7 @@ test.describe("H12.3 panel and admin alignment", () => {
     test.setTimeout(180_000);
     await signInAdminContext(context, baseURL!);
     // The bell with more than nine unread: its visible badge reads 9+ and the name must say so.
-    await page.route("**/api/admin/notifications?size=*", (route) =>
+    await page.route("**/api/admin/notifications/?size=*", (route) =>
       route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({ ok: true, data: { now: Date.now(), items: [], total: 12, unread: 12, page: 1, pageSize: 10, kinds: [] } }) }),
     );
     await page.goto("/admin/");

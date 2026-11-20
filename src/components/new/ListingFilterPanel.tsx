@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { BadgeCheck, Circle, Image as ImageIcon, ToggleRight, Video } from "lucide-react";
 import { ListingPlaceSelects } from "./ListingPlaceSelects";
 import { KeywordField } from "./KeywordField";
@@ -37,8 +38,13 @@ export function ListingFilterPanel({
   keyword?: KeywordProps;
   total?: number;
 }) {
+  // What the server rendered as on: the form is set to match it whenever it changes (see InstantForm).
+  const syncKey = JSON.stringify([
+    toggles,
+    rows.map((row) => [row.key, row.kind === "range" ? [row.min, row.max] : row.kind === "choice" ? row.options.filter((o) => o.picked).map((o) => o.value) : row.checked]),
+  ]);
   return (
-    <InstantForm action={action} className="tkn-ls-form" label={labels.panelTitle}>
+    <InstantForm action={action} className="tkn-ls-form" label={labels.panelTitle} syncKey={syncKey}>
       {hidden.map((field) => (
         <input key={`${field.name}-${field.value}`} type="hidden" name={field.name} value={field.value} />
       ))}
@@ -48,9 +54,9 @@ export function ListingFilterPanel({
           <span className="tkn-ls-pill" data-tk="filter-count">{activeCount}</span>
         </p>
         {activeCount > 0 ? (
-          <a href={clearHref} className="tkn-ls-clear-link">
+          <Link href={clearHref} prefetch={false} scroll={false} className="tkn-ls-clear-link">
             {labels.clear}
-          </a>
+          </Link>
         ) : null}
       </div>
       {keyword ? <KeywordField {...keyword} /> : null}

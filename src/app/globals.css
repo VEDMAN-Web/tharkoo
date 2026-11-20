@@ -55,6 +55,8 @@ svg.lucide {
 a { color: inherit; text-decoration: none; }
 button, input, select, textarea { font-family: inherit; color: inherit; }
 button { cursor: pointer; }
+/* Anything that opens a drop-down shows the hand cursor, not only buttons. */
+select:not(:disabled), summary, [aria-haspopup]:not(:disabled), .tkh-field-select { cursor: pointer; }
 input, select, textarea { font-size: 16px; }
 
 :focus-visible {
@@ -562,7 +564,6 @@ input, select, textarea { font-size: 16px; }
 .tk-socials { display: flex; gap: 32px; justify-content: center; }
 .tk-socials a { color: var(--primary); }
 .tk-copy { font-size: 12px; color: var(--muted); margin: 0; }
-.tk-rta { display: inline-flex; align-items: center; min-height: 32px; padding: 0 12px; font-size: 12px; color: var(--muted); text-decoration: underline; }
 .tk-top {
   position: absolute;
   top: 0;
@@ -1775,6 +1776,16 @@ input.tk-field:focus-visible, select.tk-field:focus-visible, textarea.tk-field:f
 /* P1: country menu (mockup 00-CountryMenu): search on top, Popular, All countries A to Z, tick or "No ads yet" on the right */
 .tkn-city-arrow { color: var(--tkn-muted); margin-left: 2px; }
 .tkn-pop-country { width: 220px; max-width: 80vw; max-height: min(560px, 70vh); padding: 12px; background: rgba(255, 255, 255, 0.97); overflow-x: hidden; overflow-y: auto; overscroll-behavior: contain; }
+/* One slim rounded scrollbar (no up/down arrow buttons) for every scroll area on the public site: the page, pop-ups, lists, sheets. The admin keeps its own. */
+*:not(.adm-shell *, html:has(.adm-shell))::-webkit-scrollbar { width: 8px; height: 8px; }
+*:not(.adm-shell *, html:has(.adm-shell))::-webkit-scrollbar-button { display: none; width: 0; height: 0; }
+*:not(.adm-shell *, html:has(.adm-shell))::-webkit-scrollbar-track { background: transparent; margin: 8px 0; }
+*:not(.adm-shell *, html:has(.adm-shell))::-webkit-scrollbar-corner { background: transparent; }
+*:not(.adm-shell *, html:has(.adm-shell))::-webkit-scrollbar-thumb { background: rgba(91, 33, 182, 0.28); border-radius: 999px; border: 2px solid transparent; background-clip: content-box; }
+*:not(.adm-shell *, html:has(.adm-shell))::-webkit-scrollbar-thumb:hover { background: rgba(91, 33, 182, 0.5); background-clip: content-box; }
+@supports not selector(::-webkit-scrollbar) {
+  *:not(.adm-shell *, html:has(.adm-shell)) { scrollbar-width: thin; scrollbar-color: rgba(91, 33, 182, 0.35) transparent; }
+}
 .tkn-countrylist-wrap { min-width: 0; max-width: 100%; overflow-x: hidden; }
 /* No sideways scroll in the list: rows are exactly the list width (border-box) */
 .tkn-citylist, .tkn-citylist > li { min-width: 0; max-width: 100%; }
@@ -2247,4 +2258,28 @@ body:has([data-tk="bottom-bar"]) .tkn-float { bottom: 104px; }
 @media (max-width: 600px) {
   .tkh-trust, .tkn-sr-chips, .h714-chips { scroll-snap-type: x proximity; scrollbar-width: none; padding-right: 24px; -webkit-mask-image: linear-gradient(90deg, #000 calc(100% - 24px), transparent); mask-image: linear-gradient(90deg, #000 calc(100% - 24px), transparent); }
   .tkh-trust > *, .tkn-sr-chips > *, .h714-chips > * { flex: none; scroll-snap-align: start; white-space: nowrap; }
+}
+
+/* ConfirmDialog (src/components/ui/ConfirmDialog.tsx): the site's own confirm box. Both buttons share one size. */
+.tk-confirm-actions { display: flex; justify-content: flex-end; gap: 12px; margin-top: 24px; }
+.tk-confirm-btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+  min-width: 112px; height: 44px; padding: 0 22px;
+  border: 1px solid transparent; border-radius: var(--r-btn);
+  font-size: 14px; font-weight: 700; letter-spacing: 0.01em; white-space: nowrap; cursor: pointer;
+  transition: background var(--t-fast) var(--ease), border-color var(--t-fast) var(--ease), filter var(--t-fast) var(--ease);
+}
+.tk-confirm-btn:disabled { opacity: 0.6; cursor: not-allowed; }
+.tk-confirm-btn:focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }
+.tk-confirm-btn--cancel { background: #fff; color: var(--text); border-color: var(--border); }
+.tk-confirm-btn--cancel:hover:not(:disabled) { background: var(--bg-soft); }
+.tk-confirm-btn--primary { background: linear-gradient(135deg, #d1137a, #a8124f); color: #fff; border-color: #a8124f; }
+.tk-confirm-btn--danger { background: var(--danger); color: #fff; border-color: var(--danger); }
+.tk-confirm-btn--primary:hover:not(:disabled), .tk-confirm-btn--danger:hover:not(:disabled) { filter: brightness(1.08); }
+.tk-confirm-btn .tk-confirm-spin { width: 16px; height: 16px; border: 2px solid currentColor; border-top-color: transparent; border-radius: 50%; animation: tk-confirm-spin 700ms linear infinite; }
+@keyframes tk-confirm-spin { to { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) { .tk-confirm-btn .tk-confirm-spin { animation: none; } }
+@media (max-width: 480px) {
+  .tk-confirm-actions { flex-direction: column-reverse; }
+  .tk-confirm-btn { width: 100%; }
 }

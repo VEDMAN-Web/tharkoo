@@ -1,7 +1,9 @@
 "use client";
 
+import { useEffect, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { useSiteCountrySlug } from "@/components/SiteCountry";
+import { setListingBusy } from "./listing-busy";
 import type { ListingLabels, PlaceOption, PlaceSelects } from "./listing-filters";
 
 /**
@@ -21,9 +23,15 @@ export function scopeToCountry(options: PlaceOption[], site: string, value: stri
 export function ListingPlaceSelects({ selects, labels }: { selects: PlaceSelects; labels: Pick<ListingLabels, "category" | "state" | "city" | "area"> }) {
   const router = useRouter();
   const site = useSiteCountrySlug();
+  const [pending, startTransition] = useTransition();
+  useEffect(() => {
+    setListingBusy(pending);
+    return () => setListingBusy(false);
+  }, [pending]);
   const go = (options: PlaceOption[], value: string) => {
     const found = options.find((option) => option.value === value);
-    if (found) router.push(found.href);
+    // Old results stay on screen (dimmed) while the new place loads; no page reload.
+    if (found) startTransition(() => router.push(found.href, { scroll: false }));
   };
   const field = (title: string, options: PlaceOption[], value: string, wide = false) => (
     <div className={wide ? "tkn-ls-select tkn-ls-select-wide" : "tkn-ls-select"}>

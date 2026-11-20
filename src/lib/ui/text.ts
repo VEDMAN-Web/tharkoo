@@ -777,7 +777,6 @@ export const TEXT_DEFAULTS = {
   "chrome.footer.trust": "Trust",
   "chrome.footer.social": "Social links",
   "chrome.footer.legal": "Legal",
-  "chrome.footer.rta": "RTA · Restricted to adults",
   "chat.open": "Open live chat",
   "chat.close": "Close live chat",
   "chat.closePanel": "Close chat",

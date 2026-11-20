@@ -8,7 +8,7 @@ export const SIGN_IN_CSS = `
 .tk-si-side{position:relative;background:linear-gradient(160deg,#FFE4F1 0%,#F3E8FF 50%,#FFF1DE 100%)}
 .tk-si-side img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:50% 20%}
 .tk-si-main{position:relative;padding:28px 32px;display:flex;flex-direction:column;gap:12px;min-width:0}
-.tk-si-close{position:absolute;top:12px;right:12px;min-width:44px;min-height:44px;border:0;background:none;font:inherit;font-size:26px;line-height:1;color:#4A2870;cursor:pointer;border-radius:12px}
+.tk-si-close{position:absolute;top:12px;right:12px;min-width:44px;min-height:44px;display:inline-flex;align-items:center;justify-content:center;padding:0;border:0;background:none;font:inherit;font-size:26px;line-height:1;color:#4A2870;cursor:pointer;border-radius:12px}
 .tk-si-title{margin:0 0 6px;font-size:24px;letter-spacing:-.02em;color:#110520;font-weight:800;line-height:1.2}
 .tk-si-help{margin:0;font-size:14px;line-height:1.55;color:#4A2870}
 .tk-si-stack{display:flex;flex-direction:column;gap:12px}

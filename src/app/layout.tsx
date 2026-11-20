@@ -1,9 +1,9 @@
 import type { Metadata, Viewport } from "next";
 import { SiteShell, loadShell } from "@/components/SiteShell";
+import { SelectMenuEnhancer } from "@/components/ui/SelectMenuEnhancer";
 import { display, sans } from "@/styles/fonts";
 import { Plus_Jakarta_Sans } from "next/font/google";
 import { canonical } from "@/lib/seo";
-import { RTA_LABEL_VALUE } from "@/server/settings/rta-label";
 import { siteUrl } from "@/lib/utils";
 import "./globals.css";
 import "../styles/motion.css";
@@ -52,20 +52,14 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
     await connection();
   }
   const shell = await loadShell();
-  // H17.13: the RTA label, a RATING meta tag in the head of every page, unless an admin turned it off in Settings.
-  const rtaOn = (shell.site as { rtaLabel?: boolean } | null)?.rtaLabel !== false;
   return (
     <html lang="en-IN" className={`${display.variable} ${sans.variable} ${jakarta.variable}`}>
-      {rtaOn ? (
-        <head>
-          <meta name="RATING" content={RTA_LABEL_VALUE} />
-        </head>
-      ) : null}
       <body className="bg-bg text-text font-sans antialiased">
         <a href="#main" className="skip-link">
           Skip to content
         </a>
         <SiteShell shell={shell}>{children}</SiteShell>
+        <SelectMenuEnhancer />
       </body>
     </html>
   );

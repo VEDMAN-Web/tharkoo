@@ -37,23 +37,23 @@ export function HowItWorksView({
         </section>
         <section className="h714-pad" style={{ maxWidth: "1280px", margin: "0 auto", padding: "28px 24px 0", boxSizing: "border-box" }}>
           <div className="h714-g4b">
-            <div data-reveal style={{ padding: "26px", borderRadius: "20px", background: "linear-gradient(160deg, #FFF0F7, #FFFFFF)", backdropFilter: "blur(18px) saturate(170%)", WebkitBackdropFilter: "blur(18px) saturate(170%)", border: "1px solid rgba(255,255,255,.95)", boxShadow: "0 8px 32px rgba(45,18,72,.08)" }}>
-              <span style={{ display: "flex", width: "48px", height: "48px", borderRadius: "14px", alignItems: "center", justifyContent: "center", fontSize: "20px", fontWeight: "800", color: "#fff", background: "linear-gradient(135deg, #D1137A, #A8124F)" }}>1</span>
+            <div data-reveal className="h714-step">
+              <span className="h714-step-n" aria-hidden="true">1</span>
               <h3 style={{ margin: "18px 0 8px", fontSize: "19px", color: "#110520" }}>Search near you</h3>
               <p style={{ margin: "0", fontSize: "15px", lineHeight: "1.6", color: "#4A2870" }}>Pick your city and a category. Filter by Online now or Photo verified.</p>
             </div>
-            <div data-reveal style={{ padding: "26px", borderRadius: "20px", background: "linear-gradient(160deg, #F5F0FF, #FFFFFF)", backdropFilter: "blur(18px) saturate(170%)", WebkitBackdropFilter: "blur(18px) saturate(170%)", border: "1px solid rgba(255,255,255,.95)", boxShadow: "0 8px 32px rgba(45,18,72,.08)" }}>
-              <span style={{ display: "flex", width: "48px", height: "48px", borderRadius: "14px", alignItems: "center", justifyContent: "center", fontSize: "20px", fontWeight: "800", color: "#fff", background: "linear-gradient(135deg, #7C3AED, #5B21B6)" }}>2</span>
+            <div data-reveal className="h714-step">
+              <span className="h714-step-n" aria-hidden="true">2</span>
               <h3 style={{ margin: "18px 0 8px", fontSize: "19px", color: "#110520" }}>Chat for free</h3>
               <p style={{ margin: "0", fontSize: "15px", lineHeight: "1.6", color: "#4A2870" }}>Message the advertiser on Tharkoo or WhatsApp. Ask for more photos.</p>
             </div>
-            <div data-reveal style={{ padding: "26px", borderRadius: "20px", background: "linear-gradient(160deg, #FFF8EC, #FFFFFF)", backdropFilter: "blur(18px) saturate(170%)", WebkitBackdropFilter: "blur(18px) saturate(170%)", border: "1px solid rgba(255,255,255,.95)", boxShadow: "0 8px 32px rgba(45,18,72,.08)" }}>
-              <span style={{ display: "flex", width: "48px", height: "48px", borderRadius: "14px", alignItems: "center", justifyContent: "center", fontSize: "20px", fontWeight: "800", color: "#fff", background: "linear-gradient(135deg, #D1137A, #A8124F)" }}>3</span>
+            <div data-reveal className="h714-step">
+              <span className="h714-step-n" aria-hidden="true">3</span>
               <h3 style={{ margin: "18px 0 8px", fontSize: "19px", color: "#110520" }}>Verify on video</h3>
               <p style={{ margin: "0", fontSize: "15px", lineHeight: "1.6", color: "#4A2870" }}>A short live video call shows the item or place is real.</p>
             </div>
-            <div data-reveal style={{ padding: "26px", borderRadius: "20px", background: "linear-gradient(160deg, #F0FDF4, #FFFFFF)", backdropFilter: "blur(18px) saturate(170%)", WebkitBackdropFilter: "blur(18px) saturate(170%)", border: "1px solid rgba(255,255,255,.95)", boxShadow: "0 8px 32px rgba(45,18,72,.08)" }}>
-              <span style={{ display: "flex", width: "48px", height: "48px", borderRadius: "14px", alignItems: "center", justifyContent: "center", fontSize: "20px", fontWeight: "800", color: "#fff", background: "linear-gradient(135deg, #047857, #065F46)" }}>4</span>
+            <div data-reveal className="h714-step">
+              <span className="h714-step-n" aria-hidden="true">4</span>
               <h3 style={{ margin: "18px 0 8px", fontSize: "19px", color: "#110520" }}>Meet safely</h3>
               <p style={{ margin: "0", fontSize: "15px", lineHeight: "1.6", color: "#4A2870" }}>Meet in a public place and never pay before you have seen it.</p>
             </div>
@@ -62,7 +62,7 @@ export function HowItWorksView({
         <section className="h714-pad" style={{ maxWidth: "1280px", margin: "0 auto", padding: "72px 24px 0", boxSizing: "border-box" }}>
           <div data-reveal style={{ display: "flex", justifyContent: "space-between", alignItems: "end", gap: "16px", flexWrap: "wrap", marginBottom: "26px" }}>
             <div>
-              <p style={{ display: "inline-block", margin: "0 0 10px", fontSize: "12px", fontWeight: "700", letterSpacing: ".12em", textTransform: "uppercase", color: "#047857", background: "#ECFDF5", borderRadius: "999px", padding: "6px 14px" }}>Your safety</p>
+              <p style={{ display: "inline-block", margin: "0 0 10px -14px", fontSize: "12px", fontWeight: "700", letterSpacing: ".12em", textTransform: "uppercase", color: "#047857", background: "#ECFDF5", borderRadius: "999px", padding: "6px 14px" }}>Your safety</p>
               <h2 className="h714-h2" style={{ margin: "0", fontSize: "40px", letterSpacing: "-.035em", lineHeight: "1.1", color: "#110520" }}>Built to keep you safe</h2>
             </div>
           </div>
@@ -117,7 +117,7 @@ export function HowItWorksView({
             ) : null}
             {" "}
             <div>
-              <p style={{ display: "inline-block", margin: "0 0 10px", fontSize: "12px", fontWeight: "700", letterSpacing: ".12em", textTransform: "uppercase", color: "#5B21B6", background: "#F5F0FF", borderRadius: "999px", padding: "6px 14px" }}>Credits</p>
+              <p style={{ display: "inline-block", margin: "0 0 10px -14px", fontSize: "12px", fontWeight: "700", letterSpacing: ".12em", textTransform: "uppercase", color: "#5B21B6", background: "#F5F0FF", borderRadius: "999px", padding: "6px 14px" }}>Credits</p>
               <h2 className="h714-h2" style={{ margin: "0 0 14px", fontSize: "40px", letterSpacing: "-.035em", lineHeight: "1.1", color: "#110520" }}>See it live before you go</h2>
               <p style={{ margin: "0 0 18px", fontSize: "16px", lineHeight: "1.65", color: "#4A2870" }}>
                 Buy a credit pack once. A video call uses 2 credits. Your credits are held until the call ends and go to the advertiser only after a real call. If the advertiser does not answer, the credits come back.
@@ -143,7 +143,7 @@ export function HowItWorksView({
         <section className="h714-pad" style={{ maxWidth: "1280px", margin: "0 auto", padding: "72px 24px 0", boxSizing: "border-box" }}>
           <div data-reveal style={{ display: "flex", justifyContent: "space-between", alignItems: "end", gap: "16px", flexWrap: "wrap", marginBottom: "26px" }}>
             <div>
-              <p style={{ display: "inline-block", margin: "0 0 10px", fontSize: "12px", fontWeight: "700", letterSpacing: ".12em", textTransform: "uppercase", color: "#0369A1", background: "#F0F9FF", borderRadius: "999px", padding: "6px 14px" }}>Questions</p>
+              <p style={{ display: "inline-block", margin: "0 0 10px -14px", fontSize: "12px", fontWeight: "700", letterSpacing: ".12em", textTransform: "uppercase", color: "#0369A1", background: "#F0F9FF", borderRadius: "999px", padding: "6px 14px" }}>Questions</p>
               <h2 className="h714-h2" style={{ margin: "0", fontSize: "40px", letterSpacing: "-.035em", lineHeight: "1.1", color: "#110520" }}>Frequently asked</h2>
             </div>
           </div>

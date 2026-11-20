@@ -8,6 +8,7 @@ import { useSitePath } from "@/components/useSitePath";
 import { ChevronDown, Menu } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { HeaderCountry } from "./HeaderCountry";
+import { useDismiss } from "@/components/ui/useDismiss";
 import type { CountryOption } from "@/server/locations/country-scope";
 import { HeaderDrawer } from "./HeaderDrawer";
 import { isProbablySignedIn, openSignInFromLink } from "./auth/SignInSheet";
@@ -56,10 +57,15 @@ export function HeaderNew({
   const paths = useUrlPaths();
   const [menuOpen, setMenuOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
-  const { phase, user, balance, balanceReady, unread } = useAccount();
+  const { phase, user, balance, balanceReady, unread: unreadChat, unreadSupport } = useAccount();
+  // The dot on the avatar counts everything new: chat messages and support replies.
+  const unread = unreadChat + unreadSupport;
   const signedIn = isSignedInPhase(phase);
   const accountLabel = user ? accountName(user.displayName, user.email || "") : "";
   const [accountOpen, setAccountOpen] = useState(false);
+  const accountRef = useRef<HTMLDivElement>(null);
+  const closeAccount = useCallback(() => setAccountOpen(false), []);
+  useDismiss(accountOpen, accountRef, closeAccount);
   const links = shell.header.navLinks.filter((item) => item.visible && safeHref(item.href));
 
   useEffect(() => {
@@ -124,11 +130,11 @@ export function HeaderNew({
               ) : (
                 <span className="tkn-coin-chip tkn-skel" data-tk="header-coins-wait" aria-hidden="true" />
               )}
-              <div className="tkn-account">
+              <div className="tkn-account" ref={accountRef}>
                 <button
                   type="button"
                   className="tkn-avatar"
-                  aria-label={(user ? t("chrome.account.menuFor", { name: accountLabel }) : t("chrome.account.menu")) + (unread > 0 ? `, ${unread} unread ${unread === 1 ? "chat message" : "chat messages"}` : "")}
+                  aria-label={(user ? t("chrome.account.menuFor", { name: accountLabel }) : t("chrome.account.menu")) + (unread > 0 ? `, ${unread} new ${unread === 1 ? "item" : "items"}` : "")}
                   aria-haspopup="menu"
                   aria-expanded={accountOpen}
                   data-tk="header-avatar"
@@ -145,10 +151,10 @@ export function HeaderNew({
                     ) : null}
                     <Link role="menuitem" href="/u/account/" onClick={() => setAccountOpen(false)}>{t("chrome.account.my")}</Link>
                     <Link role="menuitem" href="/u/account/ads/" onClick={() => setAccountOpen(false)}>{t("chrome.account.ads")}</Link>
-                    <Link role="menuitem" href="/u/account/messages/" onClick={() => setAccountOpen(false)}>{t("chrome.account.chats")}{unread > 0 ? <span className="tkn-menu-badge" data-tk="menu-unread">{unread}</span> : null}</Link>
+                    <Link role="menuitem" href="/u/account/messages/" onClick={() => setAccountOpen(false)}>{t("chrome.account.chats")}{unreadChat > 0 ? <span className="tkn-menu-badge" data-tk="menu-unread">{unreadChat}</span> : null}</Link>
                     <Link role="menuitem" href="/u/account/saved/" onClick={() => setAccountOpen(false)}>{t("chrome.account.saved")}</Link>
                     <Link role="menuitem" href="/u/account/credits/" onClick={() => setAccountOpen(false)}>{t("panel.menu.coins")}</Link>
-                    <Link role="menuitem" href="/u/account/support/" onClick={() => setAccountOpen(false)}>{t("chrome.account.help")}</Link>
+                    <Link role="menuitem" href="/u/account/support/" onClick={() => setAccountOpen(false)}>{t("chrome.account.help")}{unreadSupport > 0 ? <span className="tkn-menu-badge" data-tk="menu-unread-support">{unreadSupport}</span> : null}</Link>
                     <Link role="menuitem" href="/u/account/edit-account/" onClick={() => setAccountOpen(false)}>{t("chrome.account.settings")}</Link>
                     <LogoutButton role="menuitem" onClick={() => setAccountOpen(false)}>{t("chrome.account.logout")}</LogoutButton>
                   </div>

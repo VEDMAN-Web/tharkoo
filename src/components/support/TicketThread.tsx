@@ -1,7 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { useCallback, useEffect, useState, type FormEvent } from "react";
+import { useCallback, useEffect, useRef, useState, type FormEvent } from "react";
+import { CHAT_ACTIVITY_EVENT } from "@/components/account/AccountContext";
 import { api, friendlyError, hasSessionHint, type ApiError } from "@/lib/ui/api";
 import type { MessageView, TicketSummary } from "@/server/support/records";
 import { SCREENSHOT_ACCEPT, SCREENSHOT_LIMIT_TEXT, StatusChip, formatWhen } from "./labels";
@@ -15,6 +16,7 @@ const POLL_MS = 30000;
 export function TicketThread({ ticketId }: { ticketId: string }) {
   const [thread, setThread] = useState<Thread | null>(null);
   const [error, setError] = useState<ApiError | null>(null);
+  const announced = useRef("");
 
   const load = useCallback(async () => {
     if (!hasSessionHint()) {
@@ -25,6 +27,11 @@ export function TicketThread({ ticketId }: { ticketId: string }) {
     if (res.ok) {
       setThread(res.data);
       setError(null);
+      // Opening a ticket marks its reply as read: tell the badges so they drop it at once.
+      if (announced.current !== ticketId) {
+        announced.current = ticketId;
+        window.dispatchEvent(new Event(CHAT_ACTIVITY_EVENT));
+      }
     } else setError(res.error);
   }, [ticketId]);
 

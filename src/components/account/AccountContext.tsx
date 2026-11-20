@@ -6,14 +6,15 @@ import { api, hasSessionHint } from "@/lib/ui/api";
 
 export type AccountUser = { displayName?: string; email?: string; verificationStatus?: string; roles?: string[] };
 export type AccountPhase = "unknown" | "out" | "loading" | "ready";
-export type AccountState = { phase: AccountPhase; user: AccountUser | null; balance: number | null; balanceReady: boolean; unread: number };
+/** `unread` is unread chat messages, `unreadSupport` is support tickets with a reply not yet read. `unreadReady` is true once both were read from the server. */
+export type AccountState = { phase: AccountPhase; user: AccountUser | null; balance: number | null; balanceReady: boolean; unread: number; unreadSupport: number; unreadReady: boolean };
 
 export const SESSION_EVENT = "tk:session-changed";
 /** Same name as CREDITS_ADDED_EVENT in post/credits.ts: sent after a recharge, a publish or a promotion. */
 export const CREDITS_CHANGED_EVENT = "tk:credits-added";
 
-const IDLE: AccountState = { phase: "unknown", user: null, balance: null, balanceReady: false, unread: 0 };
-/** H7.131: sent when chat messages arrive or are read, so the header unread badge refreshes. */
+const IDLE: AccountState = { phase: "unknown", user: null, balance: null, balanceReady: false, unread: 0, unreadSupport: 0, unreadReady: false };
+/** H7.131: sent when chat messages arrive or are read, or a support reply is read, so every unread badge (header and account menu) refreshes at once. */
 export const CHAT_ACTIVITY_EVENT = "tk:chat-activity";
 const UNREAD_POLL_MS = 20000;
 
@@ -82,10 +83,11 @@ export function AccountProvider({ children }: { children: ReactNode }) {
     if (!signedInNow) return;
     function readUnread() {
       if (!hasSessionHint()) return;
-      api<{ unread: number }>("/api/chat/unread").then((res) => {
-        if (!mounted.current || !res.ok) return;
-        const unread = Number(res.data.unread) || 0;
-        setState((prev) => (prev.unread === unread ? prev : { ...prev, unread }));
+      Promise.all([api<{ unread: number }>("/api/chat/unread"), api<{ unread: number }>("/api/support/unread")]).then(([chat, support]) => {
+        if (!mounted.current || !chat.ok) return;
+        const unread = Number(chat.data.unread) || 0;
+        const unreadSupport = support.ok ? Number(support.data.unread) || 0 : 0;
+        setState((prev) => (prev.unreadReady && prev.unread === unread && prev.unreadSupport === unreadSupport ? prev : { ...prev, unread, unreadSupport, unreadReady: true }));
       });
     }
     const first = window.setTimeout(readUnread, 0);
@@ -93,10 +95,13 @@ export function AccountProvider({ children }: { children: ReactNode }) {
       if (document.visibilityState === "visible") readUnread();
     }, UNREAD_POLL_MS);
     window.addEventListener(CHAT_ACTIVITY_EVENT, readUnread);
+    // Coming back to the tab shows what arrived meanwhile, without waiting for the next check.
+    window.addEventListener("focus", readUnread);
     return () => {
       window.clearTimeout(first);
       window.clearInterval(timer);
       window.removeEventListener(CHAT_ACTIVITY_EVENT, readUnread);
+      window.removeEventListener("focus", readUnread);
     };
   }, [signedInNow]);
 

@@ -1,7 +1,6 @@
 import type { Types } from "mongoose";
 import { invalidateTags } from "@/lib/cache";
 import { BlogPost, Category, CreditPack, FeatureFlag, HelpArticle, Listing, Location, Page, PromotionProduct, SeedBackup } from "@/server/models";
-import { attributeKeyDenied, categoryDenied, productCodeDenied, textDenied } from "@/server/shared/policy";
 import { repairCategoryKinds } from "@/server/categories/kind";
 import { seedDemoListings } from "@/server/seed/listings";
 import {
@@ -90,50 +89,6 @@ function tally(bucket: Bucket): SeedTally {
 
 function planSide(bucket: Bucket) {
   return { insert: bucket.inserted, skip: bucket.skipped };
-}
-
-/** Joined deny-list check. Refuses the seed rather than inserting a blocked row. */
-export function assertSeedAllowed(): void {
-  for (const category of CATEGORIES) {
-    if (categoryDenied(category.slug, category.name).denied) {
-      throw new Error(`Seed category refused: ${category.slug}`);
-    }
-    if (textDenied(`${category.name} ${category.description}`).denied) {
-      throw new Error(`Seed category text refused: ${category.slug}`);
-    }
-    for (const field of category.fields) {
-      if (attributeKeyDenied(field.key).denied) {
-        throw new Error(`Seed field refused: ${category.slug}.${field.key}`);
-      }
-      const options = (field.options ?? []).join(" ");
-      if (textDenied(`${field.label} ${options}`).denied) {
-        throw new Error(`Seed field text refused: ${category.slug}.${field.key}`);
-      }
-    }
-  }
-  for (const product of PRODUCTS) {
-    if (productCodeDenied(product.code).denied) {
-      throw new Error(`Seed product refused: ${product.code}`);
-    }
-    if (textDenied(`${product.name} ${product.description}`).denied) {
-      throw new Error(`Seed product text refused: ${product.code}`);
-    }
-  }
-  const names = [
-    "India",
-    ...STATES.map((row) => row[1]),
-    ...CITIES.map((row) => row[1]),
-    ...Object.values(DISTRICTS).flat().map((row) => row[1]),
-  ];
-  for (const name of names) {
-    if (textDenied(name).denied) throw new Error(`Seed place refused: ${name}`);
-  }
-  for (const flag of FEATURE_FLAGS) {
-    if (textDenied(`${flag.key} ${flag.label}`).denied) throw new Error(`Seed flag refused: ${flag.key}`);
-  }
-  for (const pack of creditPackTable()) {
-    if (textDenied(pack.tag).denied) throw new Error(`Seed pack tag refused at order ${pack.order}`);
-  }
 }
 
 async function insertOnly(
@@ -427,7 +382,6 @@ async function snapshot(): Promise<{ backupId: string }> {
 /** Read-only plan. Does not write seed rows or seed_backups. */
 export async function dryRunSeed(): Promise<SeedPlan> {
   await connectDb();
-  assertSeedAllowed();
   const [locations, categories, products, packs, flags, listings] = await Promise.all([
     walkLocations(true),
     walkCategories(true),
@@ -455,7 +409,6 @@ export function formatDryRun(plan: SeedPlan): string {
 /** Insert-only. Snapshots first and inserts nothing if that write fails. */
 export async function runSeed(): Promise<SeedResult> {
   await connectDb();
-  assertSeedAllowed();
   const backup = await snapshot();
   const [locations, categories, products, packs, flags] = await Promise.all([
     walkLocations(false),

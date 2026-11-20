@@ -16,7 +16,6 @@ import {
   ForbiddenError,
   NotFoundError,
   PaymentRequiredError,
-  PolicyViolationError,
   ValidationError,
   isDuplicateKey,
 } from "@/server/http";
@@ -31,7 +30,6 @@ import {
 } from "@/server/models";
 import { extendedAdEnd } from "@/server/billing/boost-window";
 import { assertNotPaused } from "@/server/settings/emergency";
-import { productCodeDenied } from "@/server/shared/policy";
 import { randomToken, sha256 } from "@/server/shared/crypto";
 import { connectDb } from "@/lib/db";
 
@@ -85,7 +83,6 @@ export async function listProducts() {
   const rows = orderPlans(await PromotionProduct.find({ enabled: { $ne: false } }).sort({ amount: 1 }).lean(), await readPlanOrder());
   const products = [];
   for (const row of rows) {
-    if (productCodeDenied(row.code).denied) continue;
     const rule = promotionRule(row.code, undefined, row.durationDays, row.durationHours);
     products.push({
       id: String(row._id),
@@ -375,7 +372,6 @@ async function placePromotion(input: {
   if (listing.status !== "active") throw new ConflictError("Listing is not active");
   const product = await PromotionProduct.findById(productId);
   if (!product || product.enabled === false) throw new NotFoundError("Not found");
-  if (productCodeDenied(product.code).denied) throw new PolicyViolationError("Product is not allowed");
   if (product.code === "star") {
     if (!listing.cityId) throw new ConflictError("Star slots are full");
     if ((await starCount(listing.cityId, product._id)) >= STAR_SLOT_CAP) {

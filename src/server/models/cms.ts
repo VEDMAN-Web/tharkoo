@@ -36,8 +36,6 @@ export interface SiteDoc extends BaseDoc {
   supportTelegram?: string;
   /** H17.11: the Google Analytics measurement ID (G-XXXXXXXXXX). Empty or missing means no tag. Set in Admin > Settings. */
   googleAnalyticsId?: string;
-  /** H17.13: the RTA label (meta tag and footer link). On unless set to false. Set in Admin > Settings. */
-  rtaLabel?: boolean;
   ageGateEnabled?: boolean;
   ageGateTitle?: string;
   ageGateBody?: string;
@@ -213,7 +211,6 @@ const siteSchema = new Schema<SiteDoc>(
     supportWhatsapp: String,
     supportTelegram: String,
     googleAnalyticsId: { type: String },
-    rtaLabel: { type: Boolean },
     ageGateEnabled: { type: Boolean, default: true },
     ageGateTitle: String,
     ageGateBody: String,

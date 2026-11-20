@@ -12,6 +12,7 @@ import {
   reportConversation,
   sendMessage,
   startConversation,
+  unblockConversation,
   unreadCount,
 } from "@/server/chat/service";
 
@@ -56,6 +57,7 @@ async function dispatch(request: Request) {
     const image = input.image ? { type: input.image.type, data: Buffer.from(await input.image.arrayBuffer()) } : null;
     data = await sendMessage(user.id, id, { text: input.text, image });
   } else if (first === "conversations" && id && third === "block" && method === "POST") data = await blockConversation(user.id, id, requestId);
+  else if (first === "conversations" && id && third === "unblock" && method === "POST") data = await unblockConversation(user.id, id, requestId);
   else if (first === "conversations" && id && third === "report" && method === "POST") {
     data = await reportConversation(user.id, id, parseInput(reportSchema, await request.json().catch(() => ({}))), requestId);
   } else if (first === "admin" && id === "reported" && method === "GET") data = await listReportedConversations(staff);

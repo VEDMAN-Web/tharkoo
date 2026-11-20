@@ -17,7 +17,7 @@ import { useCardSlider } from "./use-card-slider";
 import "./home-ads.css";
 import "./listing-grid.css";
 
-const HOVER_DELAY_MS = 150;
+const HOVER_DELAY_MS = 120;
 const POPOUT_MIN_WIDTH_PX = 768;
 const DEFAULT_ROW_LABELS = rowLabels(makeT());
 
@@ -51,9 +51,19 @@ export function ListingRow({ ad, labels, order = 0 }: { ad: ListingRowData; labe
   const clicked = () => {
     if (ad.slug) recordAdClick(ad.slug);
   };
+  // Start loading the pop-out's pictures as soon as the mouse is over the row, so they are there when it opens.
+  const onEnter = (event: React.PointerEvent<HTMLElement>) => {
+    if (event.pointerType === "mouse") {
+      slides.slice(0, 5).forEach((slide) => {
+        const url = slide.kind === "video" ? slide.poster : slide.src;
+        if (url) new window.Image().src = url;
+      });
+    }
+    cardHandlers.onPointerEnter(event);
+  };
 
   return (
-    <article ref={cardRef} className={anchor ? "tk-row is-open" : "tk-row"} data-tk="listing-row" data-slide={index} data-tier={ad.tier || undefined} {...cardHandlers}>
+    <article ref={cardRef} className={anchor ? "tk-row is-open" : "tk-row"} data-tk="listing-row" data-slide={index} data-tier={ad.tier || undefined} {...cardHandlers} onPointerEnter={onEnter}>
       <div className="tk-row-photo">
         <SlideTrack slides={slides} href={ad.href} trackRef={trackRef} videoRef={videoRef} onScroll={onScroll} onTouch={calm} onClicked={clicked} />
         {tier ? <span className="tk-row-tier" data-tier={ad.tier}>{tier}</span> : null}

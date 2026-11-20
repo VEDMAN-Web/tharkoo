@@ -11,6 +11,8 @@ export function Dialog({
   sheet = false,
   scrim = true,
   align = "end",
+  raised = false,
+  narrow = false,
 }: {
   open: boolean;
   title: string;
@@ -19,6 +21,10 @@ export function Dialog({
   sheet?: boolean;
   scrim?: boolean;
   align?: "center" | "end";
+  /** Sits above the chat pop-up and drawers (z 60), for a confirm shown from inside them. */
+  raised?: boolean;
+  /** A small box (about 28rem) for short confirms, instead of the default 36rem. */
+  narrow?: boolean;
 }) {
   const ref = useRef<HTMLDivElement>(null);
   const previous = useRef<HTMLElement | null>(null);
@@ -65,12 +71,13 @@ export function Dialog({
   }, [open, onClose]);
 
   if (!open) return null;
+  const layer = raised ? "z-[70]" : "z-50";
   const node = (
     <div
       className={
         scrim
-          ? `fixed inset-0 z-50 flex justify-center bg-[rgba(31,36,51,0.45)] p-4 ${align === "center" ? "items-center" : "items-end sm:items-center"}`
-          : "fixed inset-x-0 bottom-0 z-50 p-3 sm:inset-0 sm:flex sm:items-end sm:justify-center sm:bg-transparent"
+          ? `fixed inset-0 ${layer} flex justify-center bg-[rgba(31,36,51,0.45)] p-4 ${align === "center" ? "items-center" : "items-end sm:items-center"}`
+          : `fixed inset-x-0 bottom-0 ${layer} p-3 sm:inset-0 sm:flex sm:items-end sm:justify-center sm:bg-transparent`
       }
       onMouseDown={
         scrim
@@ -88,7 +95,7 @@ export function Dialog({
         className={
           sheet
             ? "max-h-[92vh] w-full overflow-auto rounded-t-xl border border-line bg-card p-4 shadow-lg sm:max-w-lg sm:rounded-xl"
-            : "max-h-[92vh] w-full overflow-auto rounded-xl border border-line bg-card p-4 shadow-lg sm:max-w-xl"
+            : `max-h-[92vh] w-full overflow-auto rounded-xl border border-line bg-card shadow-lg ${narrow ? "p-5 sm:max-w-md" : "p-4 sm:max-w-xl"}`
         }
         onMouseDown={(event) => event.stopPropagation()}
       >

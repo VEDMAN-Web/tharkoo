@@ -12,7 +12,6 @@ import { picturesOf, setCatalogPictures, type PictureInput, type PicturesView } 
 import { Category, Listing } from "@/server/models";
 import type { CategoryKind } from "@/server/models/catalog";
 import { Subcategory } from "@/server/models/subcategory";
-import { textDenied } from "@/server/shared/policy";
 import { renameCategory } from "@/server/urls/service";
 
 const MAX_NAME = 80;
@@ -55,7 +54,6 @@ function cleanText(value: unknown, label: string, max: number, required: boolean
   const text = String(value ?? "").replace(/\s+/g, " ").trim();
   if (required && !text) throw new ValidationError(`${label} is required`);
   if (text.length > max) throw new ValidationError(`${label} must be ${max} characters or fewer`);
-  if (text && textDenied(text).denied) throw new ValidationError(`${label} contains a term that is not allowed on Tharkoo`);
   return text;
 }
 

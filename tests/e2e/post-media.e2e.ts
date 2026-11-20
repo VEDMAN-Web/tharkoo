@@ -73,14 +73,14 @@ test.describe("My photos & videos", () => {
     expect(await hasHorizontalScroll(page)).toBe(false);
 
     // Removing the live ad's cover is refused.
-    page.once("dialog", (dialog) => void dialog.accept());
     await items.filter({ has: page.locator("[data-tk=media-cover]") }).locator("[data-tk=media-remove]").click();
+    await page.getByRole("dialog", { name: /Remove this/ }).getByRole("button", { name: "Remove", exact: true }).click();
     await expect(page.locator("[data-tk=media-error]")).toContainText(/keeps its cover photo/i);
     await expect(items).toHaveCount(2);
 
     // Removing the other photo works and the cover stays.
-    page.once("dialog", (dialog) => void dialog.accept());
     await items.filter({ hasNot: page.locator("[data-tk=media-cover]") }).locator("[data-tk=media-remove]").click();
+    await page.getByRole("dialog", { name: /Remove this/ }).getByRole("button", { name: "Remove", exact: true }).click();
     await expect(items).toHaveCount(1);
     await expect(items.locator("[data-tk=media-cover]")).toHaveCount(1);
     expect(await hasHorizontalScroll(page)).toBe(false);

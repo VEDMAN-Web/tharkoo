@@ -8,7 +8,6 @@ import { DASH_CHARS } from "@/server/content/dashes";
 import { ConflictError, ForbiddenError, RateLimitedError, ValidationError } from "@/server/http";
 import { AuditEvent, ContentItem } from "@/server/models";
 import type { ContentFields } from "@/server/models/content";
-import { textDenied } from "@/server/shared/policy";
 import { toSlug } from "@/server/shared/slug";
 import { checkFields, fieldTexts } from "./fields";
 
@@ -144,9 +143,6 @@ function checkInput(input: AiDraftInput): Required<Pick<AiDraftInput, "topic">> 
   const category = clean(input.category, 80);
   const keywords = clean(input.keywords, 200);
   if (topic.length < 3) throw new ValidationError("Write a topic of at least 3 characters.", { topic: ["Write a topic of at least 3 characters."] });
-  for (const value of [topic, city, category, keywords]) {
-    if (value && textDenied(value).denied) throw new ValidationError("This text is not allowed on Tharkoo");
-  }
   return { topic, ...(city ? { city } : {}), ...(category ? { category } : {}), ...(keywords ? { keywords } : {}) };
 }
 

@@ -25,11 +25,19 @@ export function NotificationBell() {
   const panel = useRef<HTMLDivElement>(null);
   const id = useId();
 
+  const busy = useRef(false);
   const refresh = useCallback(async () => {
-    const next = await fetchNotifications(`?size=${PANEL_ITEMS}`);
-    if (next) {
-      setData(next);
-      setNow(Date.now());
+    // One read at a time, so a slow read does not pile up behind itself.
+    if (busy.current) return;
+    busy.current = true;
+    try {
+      const next = await fetchNotifications(`?size=${PANEL_ITEMS}`);
+      if (next) {
+        setData(next);
+        setNow(Date.now());
+      }
+    } finally {
+      busy.current = false;
     }
   }, []);
 

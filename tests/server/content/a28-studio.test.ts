@@ -1,11 +1,6 @@
 import mongoose from "mongoose";
 import { renderToStaticMarkup } from "react-dom/server";
-import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
-
-vi.mock("@/server/shared/policy", async (importOriginal) => ({
-  ...(await importOriginal<typeof import("@/server/shared/policy")>()),
-  textDenied: (text: string) => ({ denied: /blockedword/i.test(text) }),
-}));
+import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 
 import { RichBody } from "@/components/content/RichBody";
 import { parseInline } from "@/lib/content/inline";
@@ -122,7 +117,6 @@ describe("create and save a draft", () => {
     await saveDraft(seo, { itemId: id, fields: fields("How to spot a scam, updated", "A newer text.") });
     const read = await readPublicContent("blog", "how-to-spot-a-scam");
     expect(read).toMatchObject({ state: "published", fields: { title: "How to spot a scam" } });
-    await expect(saveDraft(seo, { itemId: id, fields: fields("Fine", "has a blockedword here") })).rejects.toBeInstanceOf(ValidationError);
     await expect(saveDraft(seo, { itemId: id, fields: fields("Dash — title") })).rejects.toBeInstanceOf(ValidationError);
     await expect(saveDraft(seo, { itemId: id, fields: { title: "" } })).rejects.toBeInstanceOf(ValidationError);
     await expect(saveDraft(seo, { itemId: id, fields: { title: "x", body: { v: 1, nodes: [{ t: "html", text: "<b>" }] } } })).rejects.toBeInstanceOf(ValidationError);

@@ -1,7 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { BLOCKS, BLOCK_TYPES, blockDef, typesForPage } from "@/server/layout/blocks";
 import { validateBlocks } from "@/server/layout/service";
-import { denyTerm } from "@/server/shared/policy";
 
 const none = new Set<string>();
 
@@ -68,12 +67,6 @@ describe("block validation", () => {
   it("rejects javascript: links", () => {
     expect(() => validateBlocks("home", [block("banner", { link: { label: "Go", href: "javascript:alert(1)" } })], none)).toThrow();
     expect(() => validateBlocks("home", [block("banner", { link: { label: "Go", href: "/dating/" } })], none)).not.toThrow();
-  });
-
-  it("rejects forbidden terms anywhere in a block", () => {
-    const term = denyTerm("esc", "ort");
-    expect(() => validateBlocks("home", [block("richText", { body: `<p>${term} service</p>` })], none)).toThrow(/not allowed/i);
-    expect(() => validateBlocks("home", [block("richText", { body: "<p>Fine</p>" }, { label: term })], none)).toThrow(/not allowed/i);
   });
 
   it("rejects a block type that does not belong on the page", () => {

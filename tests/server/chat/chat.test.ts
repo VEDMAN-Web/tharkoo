@@ -15,6 +15,7 @@ import {
   reportConversation,
   sendMessage,
   startConversation,
+  unblockConversation,
   unreadCount,
 } from "@/server/chat/service";
 import { imageMatchesType } from "@/server/chat/image";
@@ -176,6 +177,29 @@ describe("block and report", () => {
     await expect(sendMessage(seller.id, conversationId, { text: "hello" })).rejects.toThrow(/no longer/);
     expect((await listMessages(buyer.id, conversationId)).conversation.blocked).toBe(true);
     expect(await AuditEvent.countDocuments({ action: "chat.block" })).toBe(1);
+  });
+
+  it("lets only the person who blocked unblock, and sending works again", async () => {
+    const { seller, buyer, conversationId } = await chat();
+    await blockConversation(buyer.id, conversationId);
+    expect((await listMessages(buyer.id, conversationId)).conversation).toMatchObject({ blocked: true, blockedByMe: true });
+    expect((await listMessages(seller.id, conversationId)).conversation).toMatchObject({ blocked: true, blockedByMe: false });
+    await expect(unblockConversation(seller.id, conversationId)).rejects.toThrow(/Only the person who blocked/);
+    expect((await listMessages(buyer.id, conversationId)).conversation.blocked).toBe(true);
+    await unblockConversation(buyer.id, conversationId);
+    const after = (await listMessages(buyer.id, conversationId)).conversation;
+    expect(after).toMatchObject({ blocked: false, blockedByMe: false });
+    expect(await Conversation.countDocuments({ _id: conversationId, blockedBy: { $exists: true } })).toBe(0);
+    await sendMessage(seller.id, conversationId, { text: "hello again" });
+    expect(await AuditEvent.countDocuments({ action: "chat.unblock" })).toBe(1);
+  });
+
+  it("refuses to unblock a conversation that is not blocked, and a stranger cannot unblock", async () => {
+    const { buyer, conversationId } = await chat();
+    await expect(unblockConversation(buyer.id, conversationId)).rejects.toThrow(/not blocked/);
+    const stranger = await account("stranger@example.com");
+    await blockConversation(buyer.id, conversationId);
+    await expect(unblockConversation(stranger.id, conversationId)).rejects.toThrow(/not found/i);
   });
 
   it("lets staff read only a reported conversation, audits the read, and deletes messages", async () => {
