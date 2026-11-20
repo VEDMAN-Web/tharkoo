@@ -48,6 +48,7 @@ type SiteFields = {
   footerLinks?: unknown;
   socialLinks?: unknown;
   googleAnalyticsId?: string;
+  rtaLabel?: boolean;
 };
 
 /**
@@ -90,6 +91,7 @@ function chromeData(shell: Shell, signIn: ChromeData["signIn"]): ChromeData {
       logoText: site.logoText,
       logos: siteLogos(site),
       analyticsId: cleanGaId(site.googleAnalyticsId),
+      rtaLabel: site.rtaLabel !== false,
     },
     content: { hero, header, socials, support, footer, age, cookies },
     footerLinks: plain(navLinks(site.footerLinks)),
