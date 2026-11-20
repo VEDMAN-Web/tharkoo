@@ -1,0 +1,13 @@
+{
+  "branchPrefix": "haiku/h17.4",
+  "globs": [
+    "docs/ownership/H17.4.json",
+    "progress/H17.4.md",
+    "src/lib/seo/local-links.ts",
+    "src/app/[category]/page.tsx",
+    "src/app/[category]/[location]/page.tsx",
+    "src/app/[category]/[location]/[district]/page.tsx",
+    "tests/server/layout/h17-4-local-links.test.ts",
+    "tests/e2e/h17-4-local-links.e2e.ts"
+  ]
+}

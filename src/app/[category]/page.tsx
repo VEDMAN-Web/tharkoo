@@ -4,8 +4,9 @@ import { notFound, permanentRedirect } from "next/navigation";
 import type { Metadata } from "next";
 import { MapPin } from "lucide-react";
 import { getCategories, getCategory, getCities, getFeed, getHomepageContent, getSeoFor, getSite, getStarListings, getStates, listingCountsByCategoryCity, pageOutOfRange } from "@/lib/queries";
-import { getPaths, publicTags } from "@/server/urls/service";
-import { adHref, categoryPath, placePath, postAdPath, searchPath, tagPath } from "@/lib/urls";
+import { getPaths } from "@/server/urls/service";
+import { popularSearches } from "@/lib/seo/local-links";
+import { adHref, categoryPath, placePath, postAdPath, searchPath } from "@/lib/urls";
 import { ListingLinkNav } from "@/components/new/ListingLinkNav";
 import { fillTemplate } from "@/lib/seo";
 import { getIndexing, isCategoryOn } from "@/server/seo/indexing";
@@ -87,7 +88,7 @@ export default async function CategoryHub({ params, searchParams }: Props) {
     ...(toggles.video ? { video: true } : {}),
     ...(toggles.online ? { online: true } : {}),
   };
-  const [seo, site, cities, states, counts, feed, stars, paths, heading, cardWidth, allCategories, hero, tags] = await Promise.all([
+  const [seo, site, cities, states, counts, feed, stars, paths, heading, cardWidth, allCategories, hero] = await Promise.all([
     getSeoFor("category", category),
     getSite(),
     getCities(),
@@ -100,7 +101,6 @@ export default async function CategoryHub({ params, searchParams }: Props) {
     loadCardWidth(),
     getCategories().catch(() => []),
     getHomepageContent().then(heroBandFrom),
-    publicTags().catch(() => []),
   ]);
   if (pageOutOfRange(sp.page as string | undefined, feed.pages)) notFound();
   // H7.32: the New design band on every category page, always.
@@ -119,6 +119,8 @@ export default async function CategoryHub({ params, searchParams }: Props) {
       ? await resolveListingCopy({ kind: "category", path: categoryPath(cat.slug || category), categorySlug: cat.slug || category, category: cat.name || category, count: feed.realTotal, mode: "content" })
       : null;
   const hub = resolved ? { intro: resolved.intro, faqs: resolved.faqs } : await hubCopy(categoryPath(cat.slug || category), { intro: copy.intro || fillTemplate(seo?.intro || "", vars), faqs: copy.faqs });
+  // H17.4: Popular searches are real category + city pages that have ads, in other categories (this category's own cities are the Nearby list).
+  const popularLinks = popularSearches(counts, new Map(allCategories.map((row) => [row.slug || "", row.name || ""])), new Map(cities.map((row) => [row.slug || "", row.name || ""])), { excludeCategory: cat.slug || category, max: 6 });
   const allowed = new Set(counts.filter((row) => row._id.categorySlug === category && row.n > 0).map((row) => row._id.citySlug));
   const listed = allowed.size ? cities.filter((city) => allowed.has(city.slug || "")) : cities;
   const ads = [
@@ -200,7 +202,7 @@ export default async function CategoryHub({ params, searchParams }: Props) {
     if (block.type === "listingFeed") return wrap(block.id, block.devices, feedAndText);
     if (block.type === "relatedCategories") {
       const { title, max } = linkProps(block, t("listing.links.popular"), 6);
-      return wrap(block.id, block.devices, <ListingLinkNav title={title} label={t("listing.links.popular")} max={max} links={tags.map((tag) => ({ href: tagPath(paths, cat.slug || category, tag.slug), label: `${cat.name} ${tag.label}` }))} />);
+      return wrap(block.id, block.devices, <ListingLinkNav title={title} label={t("listing.links.popular")} max={max} links={popularLinks.map((link) => ({ href: placePath(link.categorySlug, link.citySlug), label: t("listing.link.in", { name: link.categoryName, place: link.cityName }) }))} />);
     }
     if (block.type === "nearbyCities") {
       const { title, max } = linkProps(block, t("listing.links.nearby"), 5);
