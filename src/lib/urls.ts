@@ -45,6 +45,7 @@ const RESERVED = new Set([
   "maintenance",
   "gone",
   "grievance",
+  "grievance-officer",
   "about",
   "manifest",
   "brand",

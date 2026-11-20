@@ -2,6 +2,7 @@ import mongoose from "mongoose";
 import { z } from "zod";
 import { inlinePlain } from "@/lib/content/inline";
 import { parseRich, richBodySchema, richTexts } from "@/lib/content/rich";
+import { BRACKET_PLACEHOLDER } from "@/lib/content/placeholder";
 import { DASH_CHARS, DASH_MESSAGE } from "@/server/content/dashes";
 import { ValidationError } from "@/server/http";
 import type { ContentFields } from "@/server/models/content";
@@ -103,6 +104,7 @@ export function checkFields(input: unknown): ContentFields {
   const stored = toStored(parsed.data);
   const texts = fieldTexts(stored);
   if (texts.some((value) => DASH_CHARS.test(value))) throw new ValidationError("Check the highlighted fields", { text: [DASH_MESSAGE] });
+  if (texts.some((value) => BRACKET_PLACEHOLDER.test(value))) throw new ValidationError("Check the highlighted fields", { text: ["Replace the bracketed placeholder (for example [Company Name]) with the real text."] });
   if (texts.some((value) => textDenied(value).denied)) throw new ValidationError("This text is not allowed on Tharkoo");
   return stored;
 }
