@@ -36,11 +36,10 @@ export function FaqList({ items }: { items: FaqItem[] }) {
                 </svg>
               </span>
             </button>
-            {open ? (
-              <p id={panelId} style={ANSWER_STYLE}>
-                {item.a}
-              </p>
-            ) : null}
+            {/* H17.7: every answer is in the page text, so a search engine and a reader without scripts get them; a closed one is only hidden. */}
+            <p id={panelId} style={ANSWER_STYLE} hidden={!open}>
+              {item.a}
+            </p>
           </div>
         );
       })}
