@@ -64,10 +64,14 @@ test.describe("H17.5 structured data", () => {
     expect((post?.author as Record<string, unknown>)?.name).toBeTruthy();
   });
 
-  test("a sample ad ends its breadcrumb with the ad and has no Offer, Product, JobPosting or rating", async ({ request }) => {
-    const xml = await (await request.get("/sitemap/ads.xml")).text();
-    const adUrl = [...xml.matchAll(/<loc>([^<]+)<\/loc>/g)].map((match) => new URL(match[1] ?? "").pathname).find((path) => /\/demo-\d+\/$/.test(path));
-    expect(adUrl, "the seeded sample ad is in the ads sitemap").toBeTruthy();
+  test("a sample ad ends its breadcrumb with the ad and has no Offer, Product, JobPosting or rating", async ({ request, page }) => {
+    // Sample ads are no longer in the ads sitemap (H17.8): the seeded sample ad is the first card of a list page.
+    await page.goto("/dating/bengaluru/");
+    const link = page.locator("a[data-ad-link]").first();
+    await link.waitFor({ state: "attached" });
+    const href = await link.getAttribute("href");
+    const adUrl = href ? new URL(href, "http://127.0.0.1").pathname : undefined;
+    expect(adUrl, "the seeded sample ad is the first card of the list page").toBeTruthy();
     const html = await (await request.get(adUrl ?? "/")).text();
     const nodes = nodesOf(html);
     const crumbs = nodes.find((node) => node["@type"] === "BreadcrumbList") as { itemListElement: { name: string; item: string }[] } | undefined;
