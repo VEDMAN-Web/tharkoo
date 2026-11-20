@@ -162,6 +162,14 @@ export function adPath(paths: UrlPaths, slug: string) {
   return joinPath(paths.ad, slug);
 }
 
+/**
+ * H16.2: the link to an ad. Its own address (/<category>/<city>/<title>-<code>/) when the row carries one, else the old
+ * /ad/<slug>/ link, which forwards to the address. Every card, row, pop-out and mini card builds its link with this.
+ */
+export function adHref(paths: UrlPaths, ad: { slug?: string | null; address?: string | null }) {
+  return ad.address || adPath(paths, ad.slug || "");
+}
+
 export function blogPath(paths: UrlPaths, slug?: string) {
   return joinPath(paths.blog, slug);
 }

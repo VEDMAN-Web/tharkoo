@@ -65,6 +65,8 @@ export interface LocationDoc extends BaseDoc {
 export interface ListingDoc extends BaseDoc {
   publicId?: string;
   slug?: string;
+  /** H16.2: the public address of the ad, /<category>/<city>/<title>-<code>/. Left out while the ad has no code. */
+  address?: string;
   title?: string;
   description?: string;
   displayName?: string;

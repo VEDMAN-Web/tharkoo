@@ -93,7 +93,7 @@ test.describe("H7.127 public UX rules", () => {
     const phone = info.project.name === "phone-390";
     const { context, page } = await freshVisit(browser, baseURL!, phone ? { width: 390, height: 844 } : { width: 1440, height: 900 });
     await page.goto("/dating/mumbai/");
-    const href = await page.locator('a[href^="/ad/"]').first().getAttribute("href");
+    const href = await page.locator('a[data-ad-link]').first().getAttribute("href");
     expect(href).toBeTruthy();
     await page.goto(href!);
     await page.waitForTimeout(600);
