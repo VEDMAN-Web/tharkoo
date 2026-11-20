@@ -14,6 +14,10 @@
     "tests/server/listings/h16-4-ad-seo.test.ts",
     "tests/server/listings/ad-lifetime.test.ts",
     "tests/server/ui/seo-delta.test.ts",
-    "tests/e2e/h16-4-ad-seo.e2e.ts"
+    "tests/e2e/h16-4-ad-seo.e2e.ts",
+    "src/lib/seo/schema.ts",
+    "tests/server/seo/h16-4-ad-schema.test.ts",
+    "tests/server/seo/settings.test.ts",
+    "tests/server/seo/h17-5-structured-data.test.ts"
   ]
 }
