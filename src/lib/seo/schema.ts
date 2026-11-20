@@ -66,6 +66,10 @@ export interface ListingSchemaInput {
   jobLocation?: string;
   /** Set in the SEO center for the ad's category; leave out to use the built-in choice. */
   mapping?: AdSchemaMapping;
+  /** H16.4: a people ad (a person is the offer): nothing commercial is ever written for it. */
+  people?: boolean;
+  /** H16.4: the poster has passed the ID check. A JobPosting is written only for a verified poster. */
+  verifiedPoster?: boolean;
 }
 
 /** What Google needs for each schema type; an ad missing any of these is skipped, never published half-filled. */
@@ -97,6 +101,8 @@ export function missingSchemaFields(mapping: AdSchemaMapping, input: ListingSche
 }
 
 function jobPostingNode(input: ListingSchemaInput) {
+  // H16.4: only a real, verified job; never half-filled.
+  if (!input.verifiedPoster) return null;
   if (missingSchemaFields("JobPosting", input).length) return null;
   return {
     "@context": "https://schema.org",
@@ -137,14 +143,32 @@ function productNode(input: ListingSchemaInput, requirePrice: boolean) {
   };
 }
 
+/** A property ad: a RealEstateListing with its posting date and, when it has a price, an Offer. */
+function realEstateNode(input: ListingSchemaInput) {
+  const price = typeof input.price === "number" && input.price > 0 ? input.price : null;
+  return {
+    "@context": "https://schema.org",
+    "@type": "RealEstateListing",
+    name: input.name,
+    description: input.description,
+    url: input.url,
+    ...(input.datePosted ? { datePosted: input.datePosted } : {}),
+    ...(input.image ? { image: [input.image] } : {}),
+    ...(price ? { offers: { "@type": "Offer", price: String(price), priceCurrency: "INR", availability: "https://schema.org/InStock", url: input.url } } : {}),
+  };
+}
+
 export function listingJsonLd(input: ListingSchemaInput) {
   const price = typeof input.price === "number" && input.price > 0 ? input.price : null;
   const image = input.image ? [input.image] : undefined;
+  // H16.4: a person is never an offer: no node at all for a people ad, whatever the category or the SEO mapping says.
+  if (input.people) return null;
   if (input.mapping === "none") return null;
   if (input.mapping === "JobPosting") return jobPostingNode(input);
   if (input.mapping === "Product") return productNode(input, true);
   if (PERSONAL.has(input.category)) return null;
   if (input.category === "jobs") return jobPostingNode(input);
+  if (input.category === "property") return realEstateNode(input);
   if (SERVICES.has(input.category)) {
     return {
       "@context": "https://schema.org",
