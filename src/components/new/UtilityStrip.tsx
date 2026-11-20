@@ -3,7 +3,7 @@
 import { Check, Lock, Phone, Sparkles } from "lucide-react";
 import type { CSSProperties } from "react";
 import { makeT, type UiTextMap } from "@/lib/ui/text";
-import { SUPPORT_PHONE, telHref } from "@/lib/support";
+import { telHref } from "@/lib/support";
 import "./utility-strip.css";
 
 const TICKER_KEYS = ["home.utility.ticker1", "home.utility.ticker2", "home.utility.ticker3"] as const;
@@ -23,7 +23,7 @@ export function UtilityStrip({ texts }: { texts?: UiTextMap }) {
   const lines = TICKER_KEYS.map((key) => (texts && key in texts ? texts[key].trim() : t(key))).filter(Boolean);
   const plan = crawlPlan(lines);
   const phone = t("home.utility.phone");
-  const phoneHref = telHref(phone) || telHref(SUPPORT_PHONE);
+  const phoneHref = telHref(phone);
 
   return (
     <div className="tkh-utility" data-tk="top-bar">
@@ -60,10 +60,12 @@ export function UtilityStrip({ texts }: { texts?: UiTextMap }) {
         ) : (
           <span className="tkh-ub-crawl" aria-hidden="true" />
         )}
-        <a className="tkh-ub-phone" data-tk="top-bar-phone" href={phoneHref}>
-          <Phone size={13} strokeWidth={2.2} aria-hidden="true" focusable="false" />
-          {phone}
-        </a>
+        {phoneHref ? (
+          <a className="tkh-ub-phone" data-tk="top-bar-phone" href={phoneHref}>
+            <Phone size={13} strokeWidth={2.2} aria-hidden="true" focusable="false" />
+            {phone}
+          </a>
+        ) : null}
       </div>
     </div>
   );

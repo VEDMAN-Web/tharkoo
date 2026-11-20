@@ -27,6 +27,7 @@ describe("New design home helpers", () => {
     const homeKeys = TEXT_KEYS.filter((key) => key.startsWith("home."));
     expect(homeKeys.length).toBeGreaterThan(20);
     for (const key of homeKeys) {
+      if (key === "home.utility.phone") continue; // FIX-21: no stand-in number; the strip shows a phone only when one is saved
       expect(TEXT_DEFAULTS[key].trim().length, key).toBeGreaterThan(0);
     }
   });

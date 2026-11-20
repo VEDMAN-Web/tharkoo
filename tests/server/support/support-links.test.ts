@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { SUPPORT_EMAIL, SUPPORT_PHONE, SUPPORT_TELEGRAM, mailtoHref, phoneDigits, telHref, telegramHref, whatsappHref } from "@/lib/support";
+import { SUPPORT_EMAIL, mailtoHref, phoneDigits, telHref, telegramHref, whatsappHref } from "@/lib/support";
 import { TEXT_DEFAULTS } from "@/lib/ui/text";
 
 describe("support links", () => {
@@ -23,11 +23,11 @@ describe("support links", () => {
     expect(telegramHref("")).toBe("");
   });
 
-  it("uses the one support setting for the top bar default and the contact defaults", () => {
-    expect(TEXT_DEFAULTS["home.utility.phone"]).toBe(SUPPORT_PHONE);
-    expect(telHref(SUPPORT_PHONE)).toBe("tel:+91912345678");
-    expect(whatsappHref(SUPPORT_PHONE)).toBe("https://wa.me/91912345678");
-    expect(telegramHref(SUPPORT_TELEGRAM)).toBe("https://t.me/tharkoo_support");
+  it("has no stand-in number or Telegram name: the top bar default is empty and a link needs a saved value", () => {
+    expect(TEXT_DEFAULTS["home.utility.phone"]).toBe("");
+    expect(telHref("")).toBe("");
+    expect(whatsappHref("")).toBe("");
+    expect(telegramHref("")).toBe("");
   });
 
   it("builds the mailto link from the support email and rejects text that is not an address", () => {
