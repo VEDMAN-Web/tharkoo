@@ -35,7 +35,9 @@ export async function generateMetadata() {
     title: "Search classifieds | Tharkoo",
     description: "Search Tharkoo listings by keyword, category, and city.",
     path: searchPath(paths),
+    // H17.3: a search result page is never indexed (also after launch), but its links are followed.
     index: false,
+    follow: true,
   });
 }
 

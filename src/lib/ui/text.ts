@@ -280,6 +280,7 @@ export const TEXT_DEFAULTS = {
   "ad.similar.title": "Similar ads near you",
   "ad.similar.all": "See all in {category}",
   "ad.similar.list": "Similar ads",
+  "ad.moreInCity": "More ads in {city}",
   "promote.button": "Promote",
   "promote.title": "Promote your ad",
   "promote.plans": "Plans",
