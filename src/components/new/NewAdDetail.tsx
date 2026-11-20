@@ -5,7 +5,7 @@ import type { AdChannel } from "@/server/listings/contact-channels";
 import { ContactButtons, ContactProvider, type ContactPopupInfo } from "@/components/ContactButtons";
 import { UiTextProvider } from "@/components/ui/AdCard";
 import { TrackView } from "@/components/ui/RecentlyViewed";
-import { adHref, postAdPath, type UrlPaths } from "@/lib/urls";
+import { adHref, citiesPath, joinPath, postAdPath, type UrlPaths } from "@/lib/urls";
 import { isCityAlias } from "@/lib/seo/district-alias";
 import { makeT, type UiTextMap } from "@/lib/ui/text";
 import { PostStrip } from "@/components/ui/PostStrip";
@@ -13,6 +13,7 @@ import { formatPrice } from "@/components/search/price";
 import { CitySync } from "@/components/CityContext";
 import { BadgeCheck, ShieldCheck } from "lucide-react";
 import { AdSellerRow } from "./AdLiveBits";
+import { MoreInCity } from "./MoreInCity";
 import { SIMILAR_ADS_MAX, SimilarAds } from "./SimilarAds";
 import { rowLabels } from "./listing-row-data";
 import { PictureHeight } from "./PictureHeight";
@@ -258,6 +259,7 @@ export function NewAdDetail({
               labels={cardLabels}
             />
           ) : null}
+          {ad.citySlug && city ? <MoreInCity href={joinPath(citiesPath(paths), ad.citySlug)} text={t("ad.moreInCity", { city })} /> : null}
           <PostStrip text={t("post.strip.text")} button={t("post.strip.button")} feeText={t("post.strip.fee")} />
           {features.contact && !ad.sample ? (
             <div className={`tkn-ad-bar${barClass}`} data-tk="bottom-bar">

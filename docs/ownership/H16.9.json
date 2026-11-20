@@ -1,0 +1,11 @@
+{
+  "branchPrefix": "haiku/h16.9",
+  "globs": [
+    "docs/ownership/H16.9.json",
+    "progress/H16.9.md",
+    "src/components/FooterNew.css",
+    "src/app/globals.css",
+    "tests/e2e/listing-availability.e2e.ts",
+    "tests/e2e/h17-13-rta.e2e.ts"
+  ]
+}

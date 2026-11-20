@@ -80,6 +80,7 @@ const WHERE: Record<string, string> = {
   "ad.details": "Ad page, the details heading",
   "ad.gallery": "Ad page, the photo gallery",
   "ad.similar": "Ad page, similar ads",
+  "ad.moreInCity": "Ad page, link to the city",
   "ad.readMore": "Ad page, the description",
   "ad.readLess": "Ad page, the description",
   "ad.pill": "Ad page, the small badges",
