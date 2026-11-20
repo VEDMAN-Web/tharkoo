@@ -13,11 +13,10 @@ describe("which footer icons are live (H8.54)", () => {
     expect(socialStatus(config([]), []).map((item) => item.name)).toEqual(["WhatsApp", "X", "LinkedIn", "Instagram", "Pinterest", "Telegram"]);
   });
 
-  it("with nothing saved, WhatsApp and Telegram use the support address and the others open nothing", () => {
+  it("with nothing saved, no icon has an address: there is no stand-in WhatsApp or Telegram (FIX-21)", () => {
     const status = socialStatus(config([]), []);
-    expect(status.filter((item) => item.source === "default").map((item) => item.name)).toEqual(["WhatsApp", "Telegram"]);
-    expect(status.filter((item) => item.source === "none").map((item) => item.name)).toEqual(["X", "LinkedIn", "Instagram", "Pinterest"]);
-    expect(status[0].href).toMatch(/^https:\/\/wa\.me\//);
+    expect(status.filter((item) => item.source === "default")).toEqual([]);
+    expect(status.filter((item) => item.source === "none").map((item) => item.name)).toEqual(["WhatsApp", "X", "LinkedIn", "Instagram", "Pinterest", "Telegram"]);
   });
 
   it("a visible link whose text is the network name wins, in any letter case, and an unsafe or hidden one does not", () => {

@@ -1,7 +1,7 @@
 import AxeBuilder from "@axe-core/playwright";
 import { existsSync, readdirSync, readFileSync, statSync } from "node:fs";
 import { join } from "node:path";
-import { SUPPORT_PHONE, SUPPORT_TELEGRAM, phoneDigits, telHref, telegramHref, whatsappHref } from "../../src/lib/support";
+import { phoneDigits, telHref, telegramHref, whatsappHref } from "../../src/lib/support";
 import { expect, hasHorizontalScroll, originHeaders, signInAdminContext, test, uniqueEmail } from "./helpers";
 
 const PUBLIC_PAGES = [
@@ -101,6 +101,9 @@ function walk(dir: string, out: string[] = []) {
   return out;
 }
 
+/** FIX-21: the code has no support number. These are values an admin could save; the sweep must not flag the site's own. */
+const SUPPORT_PHONE = "+91 90000 11111";
+const SUPPORT_TELEGRAM = "@example_support";
 const SITE_SUPPORT_VALUES = [SUPPORT_PHONE, telHref(SUPPORT_PHONE), whatsappHref(SUPPORT_PHONE), telegramHref(SUPPORT_TELEGRAM), SUPPORT_TELEGRAM, phoneDigits(SUPPORT_PHONE)].filter(Boolean);
 
 function withoutSiteSupport(text: string) {

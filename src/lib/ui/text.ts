@@ -4,7 +4,6 @@
  * Placeholders such as {count} are filled with `fillText`.
  */
 import { PRIVACY_EFFECTIVE, TERMS_EFFECTIVE } from "@/content/legal-text";
-import { SUPPORT_PHONE } from "@/lib/support";
 
 /** H17.9: the one message about the price of posting. Every default that talks about it uses this text; the admin can change each key on Site text. */
 export const FIRST_ADS_FREE = "Your first 3 ads are free.";
@@ -19,7 +18,7 @@ export const TEXT_DEFAULTS = {
   "home.utility.ticker1": "Chat with advertisers for free",
   "home.utility.ticker2": "Fresh ads, live for 48 hours",
   "home.utility.ticker3": "Post your ad in 2 minutes",
-  "home.utility.phone": SUPPORT_PHONE,
+  "home.utility.phone": "",
   "home.banner.sub": `${FIRST_ADS_FREE} Chat with advertisers online and verify on a video call.`,
   "home.search.keyword": "What are you looking for?",
   "home.search.state": "State",

@@ -9,7 +9,9 @@ import { withLocalDb } from "./helpers";
 const CONTACTS = [
   { kind: "whatsapp", label: "WhatsApp", value: "+91 90000 11111", href: "", visible: true },
   { kind: "telegram", label: "Telegram", value: "@tharkoo_test", href: "", visible: true },
+  { kind: "phone", label: "Phone", value: "+91 90000 33333", href: "", visible: true },
 ];
+const CHAT = { "config.chat.whatsapp": "https://wa.me/919000011111", "config.chat.telegram": "https://t.me/tharkoo_test" };
 const SOCIALS = [
   { label: "WhatsApp", href: "https://wa.me/919000011111", visible: true, icon: "tag" },
   { label: "Telegram", href: "https://t.me/tharkoo_test", visible: true, icon: "tag" },
@@ -18,8 +20,8 @@ const SOCIALS = [
 const waiting = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
 export async function withFooterAdmin(page: Page, path: string, run: () => Promise<void>): Promise<void> {
-  const saved = await withLocalDb((db) => db.collection("shell_config_settings").findOne({ key: "default" }, { projection: { "config.footer.contacts": 1, "config.footer.socials": 1 } }));
-  await withLocalDb((db) => db.collection("shell_config_settings").updateOne({ key: "default" }, { $set: { "config.footer.contacts": CONTACTS, "config.footer.socials": SOCIALS } }, { upsert: true }));
+  const saved = await withLocalDb((db) => db.collection("shell_config_settings").findOne({ key: "default" }, { projection: { "config.footer.contacts": 1, "config.footer.socials": 1, "config.chat.whatsapp": 1, "config.chat.telegram": 1 } }));
+  await withLocalDb((db) => db.collection("shell_config_settings").updateOne({ key: "default" }, { $set: { "config.footer.contacts": CONTACTS, "config.footer.socials": SOCIALS, ...CHAT } }, { upsert: true }));
   try {
     for (let attempt = 0; attempt < 40; attempt += 1) {
       await page.goto(path);
@@ -28,13 +30,15 @@ export async function withFooterAdmin(page: Page, path: string, run: () => Promi
     }
     await run();
   } finally {
-    const footer = (saved as { config?: { footer?: { contacts?: unknown; socials?: unknown } } } | null)?.config?.footer;
+    const config = (saved as { config?: { footer?: { contacts?: unknown; socials?: unknown }; chat?: { whatsapp?: string; telegram?: string } } } | null)?.config;
+    const footer = config?.footer;
+    const chat = { "config.chat.whatsapp": config?.chat?.whatsapp ?? "", "config.chat.telegram": config?.chat?.telegram ?? "" };
     await withLocalDb((db) =>
       db.collection("shell_config_settings").updateOne(
         { key: "default" },
         footer?.contacts !== undefined || footer?.socials !== undefined
-          ? { $set: { "config.footer.contacts": footer?.contacts ?? [], "config.footer.socials": footer?.socials ?? [] } }
-          : { $unset: { "config.footer.contacts": "", "config.footer.socials": "" } },
+          ? { $set: { "config.footer.contacts": footer?.contacts ?? [], "config.footer.socials": footer?.socials ?? [], ...chat } }
+          : { $unset: { "config.footer.contacts": "", "config.footer.socials": "", "config.chat.whatsapp": "", "config.chat.telegram": "" } },
       ),
     );
   }
