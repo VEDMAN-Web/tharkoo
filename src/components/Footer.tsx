@@ -23,6 +23,7 @@ export function Footer({
   categories,
   social,
   content,
+  rtaText = "",
 }: {
   siteName: string;
   legalName: string;
@@ -31,6 +32,8 @@ export function Footer({
   categories?: { slug: string; name: string }[];
   links?: LinkItem[];
   social: LinkItem[];
+  /** H17.13: the RTA link text (empty = the Settings switch is off, no link). */
+  rtaText?: string;
   content?: {
     about?: string;
     badge?: string;
@@ -104,6 +107,11 @@ export function Footer({
             </div>
           ) : null}
           <p className="tk-legal-line">{legalName}</p>
+          {rtaText ? (
+            <a className="tk-rta" data-tk="rta-label" href="https://www.rtalabel.org/" target="_blank" rel="noopener nofollow">
+              {rtaText}
+            </a>
+          ) : null}
         </div>
         {top ? (
           <button type="button" className="tk-top" data-tk="back-to-top" onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}>
