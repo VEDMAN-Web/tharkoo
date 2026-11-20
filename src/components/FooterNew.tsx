@@ -119,7 +119,7 @@ function LinkColumn({ title, items, className, extra }: { title: string; items: 
   );
 }
 
-export function FooterNew({ siteName, logo = LOGO_LIGHT_DEFAULT, shell, categories }: { siteName: string; logo?: string; shell: ShellConfig; categories: Cat[] }) {
+export function FooterNew({ siteName, logo = LOGO_LIGHT_DEFAULT, shell, categories, rta = false }: { siteName: string; logo?: string; shell: ShellConfig; categories: Cat[]; /** H17.13: show the RTA link (the Settings switch). */ rta?: boolean }) {
   const paths = useUrlPaths();
   const t = useT();
   const f = shell.footer;
@@ -207,6 +207,11 @@ export function FooterNew({ siteName, logo = LOGO_LIGHT_DEFAULT, shell, categori
             {f.copyright}
             {f.adultNotice ? <span className="tkn-adult"> · {f.adultNotice}</span> : null}
           </p>
+          {rta ? (
+            <a className="tkn-rta" data-tk="rta-label" href="https://www.rtalabel.org/" target="_blank" rel="noopener nofollow">
+              {t("chrome.footer.rta")}
+            </a>
+          ) : null}
           <nav aria-label={t("chrome.footer.legal")}>
             <ul className="tkn-legal">
               {legalLinks.map((item) => (

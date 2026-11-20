@@ -45,6 +45,8 @@ export type ChromeData = {
     logos?: SiteLogos;
     /** H17.11: the Google Analytics measurement ID set in Settings; empty means no tag and the plain cookie notice. */
     analyticsId?: string;
+    /** H17.13: show the small RTA link in the footer (the Settings switch; on by default). */
+    rtaLabel?: boolean;
   };
   content: Pick<SiteContent, "hero" | "header" | "socials" | "support" | "footer" | "age" | "cookies">;
   footerLinks: NavLink[];
@@ -90,7 +92,7 @@ export function PathChrome({ shell, paths, children }: { shell: ChromeData; path
         <div className="tkn" data-design="new">
           <HeaderNew siteName={siteName} logo={logos.light} shell={config} cities={cities} countries={countries} categories={categories} texts={texts} />
           <MainInner>{children}</MainInner>
-          <FooterNew siteName={siteName} logo={logos.light} shell={config} categories={categories} />
+          <FooterNew siteName={siteName} logo={logos.light} shell={config} categories={categories} rta={site.rtaLabel !== false} />
           <SupportChat chat={config.chat} texts={texts} hours={content.support.hours || site.supportHours || ""} />
           <Suspense fallback={null}>
             <RechargeHost />
@@ -128,6 +130,7 @@ export function PathChrome({ shell, paths, children }: { shell: ChromeData; path
             links={footerLinks}
             social={content.socials.length ? content.socials : socialLinks}
             content={content.footer}
+            rtaText={site.rtaLabel !== false ? analyticsText("chrome.footer.rta") : ""}
           />
         </>
       )}

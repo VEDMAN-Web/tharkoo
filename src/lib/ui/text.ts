@@ -783,6 +783,7 @@ export const TEXT_DEFAULTS = {
   "chrome.footer.grievance": "Grievance Officer",
   "legal.terms.effective": TERMS_EFFECTIVE,
   "legal.privacy.effective": PRIVACY_EFFECTIVE,
+  "chrome.footer.rta": "RTA · Restricted to adults",
   "chat.open": "Open live chat",
   "chat.close": "Close live chat",
   "chat.closePanel": "Close chat",
