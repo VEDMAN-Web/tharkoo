@@ -4,7 +4,7 @@ import { resolve } from "node:path";
 import AxeBuilder from "@axe-core/playwright";
 import type { Page } from "@playwright/test";
 import { ObjectId } from "mongodb";
-import { expect, hasHorizontalScroll, isPhone, slugFromAdPath, test, uploadsDir, withLocalDb } from "./helpers";
+import { expect, hasHorizontalScroll, isPhone, oldAdPath, slugFromAdPath, test, uploadsDir, withLocalDb } from "./helpers";
 
 const SHOTS = process.env.GALLERY_SHOTS_DIR || "";
 
@@ -12,7 +12,7 @@ async function datingAdAt(page: Page, position: number) {
   await page.goto("/dating/bengaluru/");
   const link = page.locator(':is([data-tk=card], [data-tk=home-ad], [data-tk=listing-row]) a[data-ad-link]').nth(position);
   await link.waitFor({ state: "attached" });
-  return (await link.getAttribute("href")) as string;
+  return oldAdPath((await link.getAttribute("href")) as string);
 }
 
 async function makeClip(page: Page) {

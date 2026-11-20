@@ -1,7 +1,7 @@
 import { mkdirSync } from "node:fs";
 import AxeBuilder from "@axe-core/playwright";
 import type { Page } from "@playwright/test";
-import { expect, hasHorizontalScroll, isPhone, slugFromAdPath, test, withLocalDb, realAdPath } from "./helpers";
+import { expect, hasHorizontalScroll, isPhone, oldAdPath, slugFromAdPath, test, withLocalDb, realAdPath } from "./helpers";
 
 const SHOTS = process.env.AD_PAGE_SHOTS_DIR || "";
 const SIZES = [
@@ -20,7 +20,7 @@ async function adAt(page: Page, feed: string, position = 0) {
   await page.goto(feed);
   const link = page.locator(':is([data-tk=card], [data-tk=home-ad], [data-tk=listing-row]) a[data-ad-link]').nth(position);
   await link.waitFor({ state: "attached" });
-  return (await link.getAttribute("href")) as string;
+  return oldAdPath((await link.getAttribute("href")) as string);
 }
 
 async function shot(page: Page, name: string) {

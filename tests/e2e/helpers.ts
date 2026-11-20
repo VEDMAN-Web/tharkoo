@@ -271,6 +271,13 @@ export async function oldAdPath(href: string) {
   return row?.slug ? `/ad/${row.slug}/` : href;
 }
 
+/** H16.2: the code at the end of an ad's address, found by its old slug. */
+export async function adCodeFor(slug: string) {
+  const row = await withLocalDb((db) => db.collection("listings").findOne({ slug }, { projection: { code: 1 } }));
+  if (!row?.code) throw new Error(`No code for local ad ${slug}`);
+  return String(row.code);
+}
+
 /** H16.2: matches the address an ad has now, for toHaveURL. The ad is found by its old slug. */
 export async function adAddressPattern(slug: string) {
   const row = await withLocalDb((db) => db.collection("listings").findOne({ slug }, { projection: { code: 1 } }));

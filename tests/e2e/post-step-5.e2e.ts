@@ -480,7 +480,7 @@ test.describe("H7.86 post an ad, step 5 and the success screen", () => {
 
     await consentAndPublish(page);
     await expect(page.locator("[data-tk=receipt]")).toHaveText("30 credits paid · Balance 70 credits");
-    await expect(page.locator("[data-tk=view-ad]")).toHaveAttribute("href", /^\/ad\//);
+    await expect(page.locator("[data-tk=view-ad]")).toHaveAttribute("href", /-[a-z0-9]{5}\/$/);
     await expect(page.getByText("View your ad", { exact: true })).toHaveCount(0);
     await expect(page.locator("[data-tk=upsell]")).toContainText("Get more views");
     expect(await page.locator("[data-tk=upsell-plan]").count()).toBeGreaterThan(0);

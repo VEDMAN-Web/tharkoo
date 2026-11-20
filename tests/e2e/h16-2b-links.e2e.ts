@@ -28,7 +28,7 @@ test.describe("H16.2 every ad link is the new address", () => {
     const related = await page.locator("a[data-ad-link]").evaluateAll((els) => els.map((el) => el.getAttribute("href") || ""));
     for (const href of related) expect(href).toMatch(ADDRESS);
 
-    const report = page.locator("a.tkn-report").first();
+    const report = page.locator("a.tkn-report:visible").first();
     await expect(report).toHaveAttribute("href", new RegExp(`\\?ad=${code}$`));
     await report.click();
     await expect(page.getByText(`You are reporting ad ${code}`)).toBeVisible();

@@ -53,6 +53,7 @@
     "tests/e2e/h7-63-listing-pager.e2e.ts",
     "tests/e2e/helpers.ts",
     "tests/e2e/inbox-profile.e2e.ts",
+    "tests/e2e/listing-availability.e2e.ts",
     "tests/e2e/post-step-5.e2e.ts",
     "tests/e2e/public-words.e2e.ts",
     "tests/server/listings/h16-2b-links.test.ts",

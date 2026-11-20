@@ -1,5 +1,5 @@
 import type { Page } from "@playwright/test";
-import { expect, firstAdPath, isPhone, setSellerAvailable, slugFromAdPath, test } from "./helpers";
+import { adCodeFor, expect, firstAdPath, isPhone, setSellerAvailable, slugFromAdPath, test } from "./helpers";
 import { createLiveAd } from "./flows";
 
 /** H7.5: Online now / Away on the listing card and the ad page, and the call button following it. Both widths. */
@@ -26,7 +26,7 @@ test.describe("H7.5 Online now and Away on cards and the ad page", () => {
     await page.goto(PEOPLE_FEED);
     await expect(page.locator(":is([data-tk=card], [data-tk=home-ad], [data-tk=listing-row])").first()).toBeVisible();
     await expect(page.locator(":is([data-tk=card], [data-tk=home-ad], [data-tk=listing-row]) [data-tk=call]")).toHaveCount(0);
-    await expect(page.locator(`:is([data-tk=home-ad], [data-tk=listing-row]):has(a[href*="${slugFromAdPath(path)}"]) [data-tk=availability]`).first()).toBeAttached();
+    await expect(page.locator(`:is([data-tk=home-ad], [data-tk=listing-row]):has(a[href*="-${await adCodeFor(slugFromAdPath(path))}/"]) [data-tk=availability]`).first()).toBeAttached();
   });
 
   test("a job ad keeps its Call button whether the seller is online or Away", async ({ page, baseURL }) => {
