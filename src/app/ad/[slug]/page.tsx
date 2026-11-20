@@ -19,6 +19,9 @@ import { adMetaDescription } from "@/lib/seo/ad-description";
 import { getSeoSettings } from "@/app/admin/seo/settings/store";
 import { siteUrl } from "@/lib/utils";
 import { listingVisibility } from "@/server/listings/visibility";
+import { loadEndedAd } from "@/server/listings/ended-ad";
+import { AdEnded } from "@/components/AdEnded";
+import { adDescriptionFromText, adPageTitle, adRobots } from "@/lib/seo/ad-seo";
 import { isSampleListing } from "@/server/listings/demo-ads";
 import { adPath, categoryPath, placePath } from "@/lib/urls";
 import { adAddress } from "@/lib/ad-address";
@@ -46,9 +49,10 @@ export const revalidate = 300;
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params;
   await connectDb();
-  const record = (await Listing.findOne({ slug }).select("status expiresAt seoNoindex ownerId slug").lean()) as {
+  const record = (await Listing.findOne({ slug }).select("status expiresAt updatedAt seoNoindex ownerId slug").lean()) as {
     status?: string;
     expiresAt?: Date | null;
+    updatedAt?: Date | null;
     seoNoindex?: boolean;
     ownerId?: unknown;
     slug?: string;
@@ -59,26 +63,24 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     const paths = await getPaths();
     const endedPath = (await addressForSlug(slug)) || adPath(paths, slug);
     return withUrlSeo(endedPath, {
-      title: "This listing has ended | Tharkoo",
-      description: "This Tharkoo listing has ended and is no longer open for new replies.",
+      title: "This ad is no longer available | Tharkoo",
+      description: "This ad is no longer available on Tharkoo. See similar ads.",
       path: endedPath,
       index: false,
     }, adPath(paths, slug));
   }
   const [ad, site] = await Promise.all([getListingBySlug(slug), getSite()]);
   if (!ad) return {};
-  const title = fillTemplate("{title}, {city} {category} | {site}", {
-    title: displayTitle(ad.title),
-    city: prettyPlace(ad.citySlug),
-    category: ad.categorySlug,
-    site: site.name,
-  });
-  const description = adMetaDescription({ title: displayTitle(ad.title), category: prettyPlace(ad.categorySlug), city: prettyPlace(ad.citySlug), site: site.name || "Tharkoo" });
+  const title = adPageTitle({ title: displayTitle(ad.title), city: prettyPlace(ad.citySlug), category: prettyPlace(ad.categorySlug), site: site.name });
+  const description = adDescriptionFromText(ad.description, adMetaDescription({ title: displayTitle(ad.title), category: prettyPlace(ad.categorySlug), city: prettyPlace(ad.citySlug), site: site.name || "Tharkoo" }));
   const image = safePhoto(ad.photos?.[0]) || "/brand/og-default.png";
   const paths = await getPaths();
   const path = (await addressForSlug(ad.slug || slug)) || adPath(paths, ad.slug || slug);
-  // H17.8: a sample (demo) ad page is always noindex,follow (it replaces the H16.5 rule that indexed it). A live real ad that is set to be indexed is indexable.
-  return withUrlSeo(path, { title, description, path, image, index: access === "live" && !sample && record?.seoNoindex === false }, adPath(paths, ad.slug || slug));
+  // H17.8: a sample (demo) ad page is always noindex,follow; a live real ad that is set to be indexed is indexable. H16.4: a people ad keeps its photos out of image search.
+  const own = await Listing.findOne({ slug: ad.slug || slug }).select("_id").lean<{ _id: unknown } | null>();
+  const people = own ? await listingIsPeople(String(own._id)) : false;
+  const robots = adRobots({ access, indexed: record?.seoNoindex === false, sample, people });
+  return withUrlSeo(path, { title, description, path, image, index: robots.index, noImageIndex: robots.noimageindex }, adPath(paths, ad.slug || slug));
 }
 
 function listedPrice(attributes: unknown) {
@@ -100,25 +102,17 @@ function textAttr(attributes: unknown, key: string) {
 export default async function AdPage({ params }: Props) {
   const { slug } = await params;
   await connectDb();
-  const record = (await Listing.findOne({ slug }).select("status expiresAt title description").lean()) as {
+  const record = (await Listing.findOne({ slug }).select("status expiresAt updatedAt").lean()) as {
     status?: string;
     expiresAt?: Date | null;
-    title?: string;
-    description?: string;
+    updatedAt?: Date | null;
   } | null;
   const access = listingVisibility(record);
   if (access === "gone" || access === "missing") notFound();
   if (access === "ended") {
-    const paths = await getPaths();
-    const publicAd = (await addressForSlug(slug)) || adPath(paths, slug);
-    return (
-      <article className="tk-container" style={{ paddingTop: 16, paddingBottom: 24 }}>
-        <h1>{displayTitle(record?.title) || "Listing"}</h1>
-        <p role="status">This listing has ended.</p>
-        {record?.description ? <p>{record.description}</p> : null}
-        <JsonLd data={breadcrumbJsonLd([{ name: "Tharkoo India", path: "/" }, { name: displayTitle(record?.title) || "Listing", path: publicAd }])} />
-      </article>
-    );
+    const view = await loadEndedAd(slug);
+    if (!view) notFound();
+    return <AdEnded view={view} texts={await textOverrides()} />;
   }
   const ad = await getListingBySlug(slug);
   if (!ad) notFound();
@@ -143,7 +137,7 @@ export default async function AdPage({ params }: Props) {
   ]);
   const features = await kindFeatures((cat as { kind?: string } | null)?.kind);
   const tour = listingId && tourOffer ? { listingId, coins: tourOffer.coins } : null;
-  const owner = row?.ownerId ? ((await User.findById(row.ownerId).select("displayName createdAt").lean()) as { displayName?: string; createdAt?: Date } | null) : null;
+  const owner = row?.ownerId ? ((await User.findById(row.ownerId).select("displayName createdAt verificationStatus").lean()) as { displayName?: string; createdAt?: Date; verificationStatus?: string } | null) : null;
   const adView = { ...plain(ad), details: adDetailRows(row?.attributes, cat?.fields) };
   const cover = safePhoto(ad.photos?.[0]);
   const paths = await getPaths();
@@ -185,6 +179,8 @@ export default async function AdPage({ params }: Props) {
       validThrough: row?.expiresAt ? new Date(row.expiresAt).toISOString() : undefined,
       hiringOrganization: textAttr(row?.attributes, "company") || textAttr(row?.attributes, "hiringOrganization"),
       jobLocation: city || undefined,
+      people: peopleAd,
+      verifiedPoster: owner?.verificationStatus === "approved",
     },
   });
   return (

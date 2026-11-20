@@ -61,9 +61,10 @@ describe("expiry is exact: an ad is live until its expiry and gone at it", () =>
     expect(listingVisibility({ status: "active", expiresAt: new Date(now + 1) }, now)).toBe("live");
   });
 
-  it("is gone (410) at the expiry instant, with no ended page", () => {
-    expect(listingVisibility({ status: "active", expiresAt: new Date(now) }, now)).toBe("gone");
-    expect(listingVisibility({ status: "expired", expiresAt: new Date(now - 60_000) }, now)).toBe("gone");
+  it("H16.4: is ended (200, noindex) from the expiry instant, and gone (410) after 30 days", () => {
+    expect(listingVisibility({ status: "active", expiresAt: new Date(now) }, now)).toBe("ended");
+    expect(listingVisibility({ status: "expired", expiresAt: new Date(now - 60_000) }, now)).toBe("ended");
+    expect(listingVisibility({ status: "expired", expiresAt: new Date(now - 31 * 24 * HOUR) }, now)).toBe("gone");
   });
 
   it("a boost never ends after the ad's expiry", () => {
