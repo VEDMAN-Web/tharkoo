@@ -3,7 +3,7 @@
  * This file is client-safe (no server imports). The admin can override any key; the code keeps these defaults so a page is never blank.
  * Placeholders such as {count} are filled with `fillText`.
  */
-import { SUPPORT_PHONE } from "@/lib/support";
+import { PRIVACY_EFFECTIVE, TERMS_EFFECTIVE } from "@/content/legal-text";
 
 /** H17.9: the one message about the price of posting. Every default that talks about it uses this text; the admin can change each key on Site text. */
 export const FIRST_ADS_FREE = "Your first 3 ads are free.";
@@ -18,7 +18,7 @@ export const TEXT_DEFAULTS = {
   "home.utility.ticker1": "Chat with advertisers for free",
   "home.utility.ticker2": "Fresh ads, live for 48 hours",
   "home.utility.ticker3": "Post your ad in 2 minutes",
-  "home.utility.phone": SUPPORT_PHONE,
+  "home.utility.phone": "",
   "home.banner.sub": `${FIRST_ADS_FREE} Chat with advertisers online and verify on a video call.`,
   "home.search.keyword": "What are you looking for?",
   "home.search.state": "State",
@@ -246,6 +246,10 @@ export const TEXT_DEFAULTS = {
   "ad.seller.online": "Online now \u00b7 replies fast",
   "ad.seller.away": "Away right now",
   "ad.chat": "Chat online now",
+  // H16.4: an ad that has ended
+  "ad.ended.title": "This ad is no longer available",
+  "ad.ended.text": "The advertiser took it down or it has run out. These ads are close to it.",
+  "ad.ended.more": "See more {category} ads in {place}",
   // H16.5: sample (demo) ads
   "demo.pill": "Sample ad",
   "demo.message": `This is a sample ad showing how ads look on Tharkoo. ${FIRST_ADS_FREE}`,
@@ -777,6 +781,12 @@ export const TEXT_DEFAULTS = {
   "chrome.footer.trust": "Trust",
   "chrome.footer.social": "Social links",
   "chrome.footer.legal": "Legal",
+  "chrome.footer.terms": "Terms and Conditions",
+  "chrome.footer.privacy": "Privacy Policy",
+  "chrome.footer.grievance": "Grievance Officer",
+  "legal.terms.effective": TERMS_EFFECTIVE,
+  "legal.privacy.effective": PRIVACY_EFFECTIVE,
+  "chrome.footer.rta": "RTA · Restricted to adults",
   "chat.open": "Open live chat",
   "chat.close": "Close live chat",
   "chat.closePanel": "Close chat",

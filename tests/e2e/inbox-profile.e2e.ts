@@ -68,7 +68,7 @@ test.describe("H7.82 chats and the profile card", () => {
 
     await row.click();
     await expect(page.locator("[data-tk=chat-thread]")).toBeVisible();
-    await expect(page.locator("[data-tk=chat-ad-card] [data-tk=mini-ad-link]")).toHaveAttribute("href", new RegExp(`/ad/${slug}/$`));
+    await expect(page.locator("[data-tk=chat-ad-card] [data-tk=mini-ad-link]")).toHaveAttribute("href", await adAddressPattern(slug));
     await expect(page.getByText("View ad", { exact: true })).toHaveCount(0);
     await expect(page.locator("[data-tk=chat-thread] [role=log]")).toContainText("Is it still available?");
     if (isPhone(page)) {

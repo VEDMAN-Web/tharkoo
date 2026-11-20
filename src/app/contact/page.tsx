@@ -13,7 +13,6 @@ import { newDesignOn } from "@/server/site-links/new-design";
 import { readShellConfig } from "@/server/site-links/shell-config";
 import type { ContactKind, ShellContact } from "@/server/site-links/shell-config-rules";
 import { readContent } from "@/lib/ui/site-content";
-import { SUPPORT_PHONE, SUPPORT_TELEGRAM } from "@/lib/support";
 
 export const revalidate = 300;
 
@@ -40,9 +39,9 @@ export default async function Contact() {
     const content = readContent((site as { homepage?: unknown }).homepage);
     const info: ContactInfo = {
       email: contactValue(shell.footer.contacts, "email"),
-      phone: contactValue(shell.footer.contacts, "phone") || shell.chat.phone.trim() || SUPPORT_PHONE,
-      whatsapp: contactValue(shell.footer.contacts, "whatsapp") || content.support.whatsapp || SUPPORT_PHONE,
-      telegram: contactValue(shell.footer.contacts, "telegram") || content.support.telegram || SUPPORT_TELEGRAM,
+      phone: contactValue(shell.footer.contacts, "phone") || shell.chat.phone.trim(),
+      whatsapp: contactValue(shell.footer.contacts, "whatsapp") || content.support.whatsapp || "",
+      telegram: contactValue(shell.footer.contacts, "telegram") || content.support.telegram || "",
       hours: content.support.hours || site.supportHours || "",
       office: contactValue(shell.footer.contacts, "address"),
     };

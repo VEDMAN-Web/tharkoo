@@ -5,7 +5,7 @@ import type { AdChannel } from "@/server/listings/contact-channels";
 import { ContactButtons, ContactProvider, type ContactPopupInfo } from "@/components/ContactButtons";
 import { UiTextProvider } from "@/components/ui/AdCard";
 import { TrackView } from "@/components/ui/RecentlyViewed";
-import { adPath, postAdPath, type UrlPaths } from "@/lib/urls";
+import { adHref, postAdPath, type UrlPaths } from "@/lib/urls";
 import { isCityAlias } from "@/lib/seo/district-alias";
 import { makeT, type UiTextMap } from "@/lib/ui/text";
 import { PostStrip } from "@/components/ui/PostStrip";
@@ -71,7 +71,7 @@ export function popupAlternatives(ad: ListingDoc, related: ListingDoc[], paths: 
       const { city, district } = placeOf(item);
       return {
         slug: item.slug || "",
-        href: adPath(paths, item.slug || ""),
+        href: adHref(paths, item),
         title: displayTitle(item.title) || "Listing",
         place: district ? `${city} / ${district}` : city,
         price: formatPrice(item.price),
@@ -151,7 +151,7 @@ export function NewAdDetail({
   const barClass = barClassOf(barChannels.length + 1 + (tour && !peopleAd ? 1 : 0), peopleAd);
   const showPrice = features.price && (!peopleAd || PRICED_PEOPLE.has(ad.categorySlug || ""));
   const sampleNote = ad.sample ? { message: t("demo.message"), button: t("demo.postButton"), href: postAdPath(paths) } : null;
-  const actionProps = { slug: ad.slug || "", publicId: ad.publicId || "", title, place: placeText };
+  const actionProps = { slug: ad.slug || "", publicId: ad.publicId || "", address: ad.address, title, place: placeText };
 
   return (
     <UiTextProvider texts={texts}>

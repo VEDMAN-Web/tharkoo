@@ -13,7 +13,7 @@ import { readShellConfig } from "@/server/site-links/shell-config";
 import { normaliseShellConfig, type ShellConfig, type ShellLink } from "@/server/site-links/shell-config-rules";
 import { MotionInit } from "./ui/MotionInit";
 import { cleanGaId } from "@/lib/analytics/ga";
-import { SUPPORT_PHONE, SUPPORT_TELEGRAM, telegramHref, whatsappHref } from "@/lib/support";
+import { telegramHref, whatsappHref } from "@/lib/support";
 import { PathChrome, type ChromeData } from "./PathChrome";
 
 export async function loadShell() {
@@ -48,6 +48,7 @@ type SiteFields = {
   footerLinks?: unknown;
   socialLinks?: unknown;
   googleAnalyticsId?: string;
+  rtaLabel?: boolean;
 };
 
 /**
@@ -61,7 +62,7 @@ function shellWithFallbacks(config: ShellConfig, legacy: { whatsapp: string; tel
       ...config.chat,
       whatsapp: config.chat.whatsapp || legacy.whatsapp,
       telegram: config.chat.telegram || legacy.telegram,
-      phone: config.chat.phone || SUPPORT_PHONE,
+      phone: config.chat.phone,
     },
     footer: {
       ...config.footer,
@@ -90,6 +91,7 @@ function chromeData(shell: Shell, signIn: ChromeData["signIn"]): ChromeData {
       logoText: site.logoText,
       logos: siteLogos(site),
       analyticsId: cleanGaId(site.googleAnalyticsId),
+      rtaLabel: site.rtaLabel !== false,
     },
     content: { hero, header, socials, support, footer, age, cookies },
     footerLinks: plain(navLinks(site.footerLinks)),
@@ -105,8 +107,8 @@ function chromeData(shell: Shell, signIn: ChromeData["signIn"]): ChromeData {
     signIn,
     shell: plain(
       shellWithFallbacks(normaliseShellConfig(shell.shell), {
-        whatsapp: whatsappHref(support.whatsapp || "") || whatsappHref(SUPPORT_PHONE),
-        telegram: telegramHref(support.telegram || "") || telegramHref(SUPPORT_TELEGRAM),
+        whatsapp: whatsappHref(support.whatsapp || ""),
+        telegram: telegramHref(support.telegram || ""),
         socials: plain(legacySocials),
       }),
     ),

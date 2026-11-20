@@ -1,7 +1,7 @@
 import { mkdirSync } from "node:fs";
 import AxeBuilder from "@axe-core/playwright";
 import type { Page } from "@playwright/test";
-import { expect, hasHorizontalScroll, isPhone, slugFromAdPath, test, withLocalDb, realAdPath } from "./helpers";
+import { expect, hasHorizontalScroll, isPhone, oldAdPath, slugFromAdPath, test, withLocalDb, realAdPath } from "./helpers";
 
 const SHOTS = process.env.AD_PAGE_SHOTS_DIR || "";
 const SIZES = [
@@ -18,9 +18,9 @@ const GAP_MAX = 56;
 /** H17.1: a sample ad has no contact buttons, so the tests of the contact card and the bar open a real ad (realAdPath). */
 async function adAt(page: Page, feed: string, position = 0) {
   await page.goto(feed);
-  const link = page.locator(':is([data-tk=card], [data-tk=home-ad], [data-tk=listing-row]) a[href*="/ad/"]').nth(position);
+  const link = page.locator(':is([data-tk=card], [data-tk=home-ad], [data-tk=listing-row]) a[data-ad-link]').nth(position);
   await link.waitFor({ state: "attached" });
-  return (await link.getAttribute("href")) as string;
+  return oldAdPath((await link.getAttribute("href")) as string);
 }
 
 async function shot(page: Page, name: string) {
@@ -326,7 +326,7 @@ test.describe("H7.99b ad page content", () => {
 
   test("the Featured pill sits in the pills row and the main photo carries no tier badge", async ({ page }) => {
     await page.goto("/dating/bengaluru/");
-    const hrefs = await page.locator(':is([data-tk=card], [data-tk=home-ad], [data-tk=listing-row]) a[href*="/ad/"]').evaluateAll((els) => els.slice(0, 10).map((el) => (el as HTMLAnchorElement).getAttribute("href")));
+    const hrefs = await page.locator(':is([data-tk=card], [data-tk=home-ad], [data-tk=listing-row]) a[data-ad-link]').evaluateAll((els) => els.slice(0, 10).map((el) => (el as HTMLAnchorElement).getAttribute("href")));
     let featured = 0;
     for (const href of hrefs) {
       await page.goto(href!);
@@ -373,7 +373,7 @@ test.describe("H7.99b ad page content", () => {
     let checked = 0;
     for (const feed of ["/dating/bengaluru/", "/friendship/bengaluru/", "/meetups/bengaluru/", "/personal-ads/bengaluru/"]) {
       await page.goto(feed);
-      const link = page.locator(':is([data-tk=card], [data-tk=home-ad], [data-tk=listing-row]) a[href*="/ad/"]').first();
+      const link = page.locator(':is([data-tk=card], [data-tk=home-ad], [data-tk=listing-row]) a[data-ad-link]').first();
       if (!(await link.count())) continue;
       await page.goto((await link.getAttribute("href"))!);
       await expect(page.locator(".tkn-contact-panel")).toBeAttached();

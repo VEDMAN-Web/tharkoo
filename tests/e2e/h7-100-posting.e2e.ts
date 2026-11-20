@@ -194,7 +194,7 @@ test.describe("H7.100: posting works end to end", () => {
     const row = rows.find((item) => item.title.includes(title));
     expect(row?.status).toBe("active");
     await page.goto("/jobs/mumbai/");
-    await expect(page.locator(`a[href="/ad/${row!.slug}/"]`).first()).toBeAttached({ timeout: 30_000 });
+    await expect(page.locator("a[data-ad-link]").filter({ hasText: title }).first()).toBeAttached({ timeout: 30_000 });
     await page.goto(`/ad/${row!.slug}/`);
     await expect(page.locator("h1")).toContainText(title);
     await page.screenshot({ path: join(SHOTS, "ad-live-1536x674.png") });

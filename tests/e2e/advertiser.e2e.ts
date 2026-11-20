@@ -42,7 +42,7 @@ test.describe("4 Advertiser", () => {
     await page.goto("/u/account/ads/");
     const mine = page.locator(":is([data-tk=card], [data-tk=home-ad], [data-tk=listing-row])").filter({ hasText: title });
     await expect(mine.first()).toBeVisible();
-    const adHref = await mine.first().locator('a[href*="/ad/"]').first().getAttribute("href");
+    const adHref = await mine.first().locator('a[data-ad-link]').first().getAttribute("href");
     expect(adHref).toBeTruthy();
 
     // Visible on the ad page and the city feed.

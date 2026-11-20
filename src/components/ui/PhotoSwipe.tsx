@@ -108,7 +108,7 @@ export function PhotoSwipe({
         ))}
       </div>
       {overlay}
-      {href ? <a className="tk-cc-link" href={href} tabIndex={-1} aria-hidden="true" /> : null}
+      {href ? <a className="tk-cc-link" href={href} tabIndex={-1} aria-hidden="true" data-ad-link /> : null}
       {count > 1 ? (
         <>
           <button type="button" className="tk-cc-arrow prev" aria-label="Previous photo" onClick={() => go(-1)}>

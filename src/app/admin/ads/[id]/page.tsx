@@ -43,7 +43,7 @@ export default async function AdEditPage({ params }: { params: Promise<{ id: str
         <div style={{ marginTop: 16 }} data-tk="ad-counts">
           {ad.slug ? (
             <p className="t-small text-muted">
-              <a href={`/ad/${ad.slug}/`} target="_blank" rel="noreferrer">Open the ad</a>
+              <a href={ad.address || `/ad/${ad.slug}/`} target="_blank" rel="noreferrer">Open the ad</a>
             </p>
           ) : null}
           <CountsForm listingId={id} initial={ad.counts} />

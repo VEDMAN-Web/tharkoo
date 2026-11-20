@@ -81,7 +81,7 @@ export function HomeAdCard({ ad, labels, order = 0 }: { ad: HomeAdCardData; labe
       </div>
       <div className="tkh-ad-body">
         <h3 className="tkh-ad-title">
-          <Link href={ad.href} prefetch={false} className="tkh-ad-link" onClick={clicked}>
+          <Link href={ad.href} prefetch={false} className="tkh-ad-link" onClick={clicked} data-ad-link>
             {ad.title}
           </Link>
         </h3>

@@ -13,7 +13,7 @@ const SITE_NAME = "Tharkoo";
 import { canonical } from "@/lib/seo";
 import { displayTitle } from "@/lib/format";
 import type { ListingDoc } from "@/lib/models";
-import { adPath, postAdPath } from "@/lib/urls";
+import { adHref, postAdPath } from "@/lib/urls";
 import { useUrlPaths } from "./UrlPaths";
 import { deviceClass } from "./blocks/device";
 import type { ListingLayout } from "./blocks/ListingLayout";
@@ -223,7 +223,7 @@ export function ListingPageView({
             url: canonical(clear),
             items: items.map((ad, i) => ({
               position: (page - 1) * LISTING_PAGE_SIZE + i + 1,
-              url: canonical(adPath(paths, ad.slug || "")),
+              url: canonical(adHref(paths, ad)),
               name: displayTitle(ad.title),
             })),
           }),

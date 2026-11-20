@@ -1,4 +1,5 @@
 import { createHash } from "node:crypto";
+import { isAdCode } from "@/lib/ad-address";
 import { connectDb } from "@/lib/db";
 import { ValidationError, NotFoundError } from "@/server/http";
 import { Listing, Report } from "@/server/models";
@@ -38,7 +39,7 @@ export function hashReporterIp(ip: string): string {
   return createHash("sha256").update(`report:${ip}`).digest("hex").slice(0, 32);
 }
 
-/** Creates one report for an ad. The ad is found by its slug or public id; the reporter is not stored, only a hash of the IP. */
+/** Creates one report for an ad. The ad is found by its code, slug or public id; the reporter is not stored, only a hash of the IP. */
 export async function fileReport(input: { ad: unknown; reason: unknown; details: unknown; ip: string }) {
   const ad = typeof input.ad === "string" ? input.ad.trim().slice(0, 80) : "";
   if (!ad) throw new ValidationError("Choose the ad you want to report");
@@ -47,7 +48,7 @@ export async function fileReport(input: { ad: unknown; reason: unknown; details:
   }
   const reason = input.reason as AdReportReason;
   await connectDb();
-  const listing = await Listing.findOne({ $or: [{ slug: ad }, { publicId: ad }] }).select("_id").lean();
+  const listing = await Listing.findOne({ $or: [{ slug: ad }, { publicId: ad }, ...(isAdCode(ad) ? [{ code: ad }] : [])] }).select("_id").lean();
   if (!listing) throw new NotFoundError("That ad could not be found");
   if (reason === "video") {
     await VideoReport.create({

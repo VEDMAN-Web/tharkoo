@@ -1,7 +1,7 @@
 import type { ListingDoc } from "@/lib/models";
 import { displayTitle, prettyPlace } from "@/lib/format";
 import { safePhoto } from "@/lib/media";
-import { adPath, applyPrefixes, categoryPath, placePath, type UrlPaths } from "@/lib/urls";
+import { adHref, applyPrefixes, categoryPath, placePath, type UrlPaths } from "@/lib/urls";
 import type { HomeAdCardData } from "./HomeAdCard";
 
 const HOME_AD_PHOTOS_MAX = 6;
@@ -25,7 +25,7 @@ export function homeAdCardData(ad: ListingDoc, categoryNames: Map<string, string
     categoryHref,
     city: prettyPlace(ad.citySlug),
     cityHref: ad.citySlug ? applyPrefixes(placePath(categorySlug, ad.citySlug), paths) : categoryHref,
-    href: adPath(paths, ad.slug || ""),
+    href: adHref(paths, ad),
     sample: ad.sample === true,
   };
 }

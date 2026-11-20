@@ -2,7 +2,7 @@ import { cookies } from "next/headers";
 import { PanelPage } from "@/components/buyer/PanelPage";
 import { SESSION_COOKIE } from "@/server/auth/http";
 import { userFromToken } from "@/server/auth/service";
-import { adPath } from "@/lib/urls";
+import { adHref } from "@/lib/urls";
 import { pageMetadata } from "@/lib/ui/meta";
 import { listMyMedia, type MediaFilter } from "@/server/media/mine";
 import { getPaths } from "@/server/urls/service";
@@ -25,7 +25,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<Rec
   const listed = session ? await listMyMedia(session.user.id, filter) : { rows: [], truncated: false };
   const libraryRows: LibraryRow[] = listed.rows.map((row) => ({
     ...row,
-    adHref: row.adStatus === "active" && row.adSlug ? adPath(paths, row.adSlug) : `/u/post-insert/?draft=${row.listingId}&step=photos`,
+    adHref: row.adStatus === "active" && row.adSlug ? adHref(paths, { slug: row.adSlug, address: row.adAddress }) : `/u/post-insert/?draft=${row.listingId}&step=photos`,
   }));
   return (
     <PanelPage active="media" next="/u/account/media/" title="Log in to see your photos" body="Photos and videos for your ads appear here after you log in.">

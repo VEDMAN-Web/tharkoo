@@ -2,7 +2,7 @@ import Link from "next/link";
 import { BarChart3 } from "lucide-react";
 import { displayTitle } from "@/lib/format";
 import { draftPath, ownAdStatus } from "@/lib/ui/ad-status";
-import { adPath, type UrlPaths } from "@/lib/urls";
+import { adHref, type UrlPaths } from "@/lib/urls";
 import type { listOwnCards } from "@/server/listings/owner-cards";
 import { EmptyIcon } from "./UserPanelShell";
 
@@ -47,7 +47,7 @@ export function AnalyticsPanel({ cards, real, paths }: { cards: Cards; real: Rea
             {cards.items.map((item) => (
               <tr key={item.id} data-tk="analytics-row">
                 <td>
-                  <Link href={item.slug ? adPath(paths, item.slug) : draftPath(item.id ?? "")} prefetch={false} className="up-row-link" data-tk="analytics-link">
+                  <Link href={item.slug ? adHref(paths, { slug: item.slug, address: item.card?.address }) : draftPath(item.id ?? "")} prefetch={false} className="up-row-link" data-tk="analytics-link">
                     {displayTitle(item.title || "") || "Untitled ad"}
                   </Link>
                 </td>
