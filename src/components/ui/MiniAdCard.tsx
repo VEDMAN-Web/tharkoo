@@ -12,7 +12,7 @@ export function MiniAdCard({ href, title, photo, price, dataTk = "ad-card" }: { 
       <span className="tk-mini-ad-photo" aria-hidden="true">
         {photo ? (
           // eslint-disable-next-line @next/next/no-img-element
-          <img src={photo} alt="" loading="lazy" />
+          <img src={photo} alt="" width={56} height={56} loading="lazy" />
         ) : (
           <ImageIcon size={20} focusable="false" />
         )}

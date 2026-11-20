@@ -171,7 +171,7 @@ export function NewAdDetail({
           <div className="tkn-ad-grid">
             <PictureHeight />
             <div className="tkn-ad-main">
-              <NewGallery photos={photos} videos={videos} title={title} isNew={isRecent(ad)} />
+              <NewGallery photos={photos} videos={videos} title={title} place={district || city} isNew={isRecent(ad)} />
               <article className="tkn-ad-card" data-tk="ad-summary">
                 <div className="tkn-ad-titlerow">
                   <h1>{title}</h1>
