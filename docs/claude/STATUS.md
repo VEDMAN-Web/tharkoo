@@ -42,6 +42,7 @@ Opus has access to this folder on Vedant's PC. Messages go through `.relay/` (gi
 | H4.5 | Redirects & 404 monitor | todo | – | – |
 | H4.6 | Indexing rules & sitemaps | todo | – | – |
 | H4.7 | robots, llms & schema settings | todo | – | – |
+| H16.2 PR 3 | New ad addresses, third part | merged (nothing to build: PR 1 and PR 2 did the work) | PR #450, PR #455 | approved by Opus |
 | GATE | Vedant decisions D1–D6 → Opus writes SEO_PLAN v2 + H5 (content) / H6 (redesign) / H7 (launch) cards | waiting | – | – |
 
 Status values: todo · doing · PR open · changes needed · approved · merged · blocked.
