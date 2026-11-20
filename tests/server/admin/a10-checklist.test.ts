@@ -76,6 +76,10 @@ describe("launch checklist rules (A10)", () => {
     expect(row({ ...BASE, supportPhone: "+91 912345678" }, "support-phone")).toMatchObject({ done: false, detail: "Now +91 912345678 (9 digits)" });
   });
 
+  it("with no support phone saved the row says so and stays open", () => {
+    expect(row({ ...BASE, supportPhone: "" }, "support-phone")).toMatchObject({ done: false, detail: "No number saved yet" });
+  });
+
   it("a placeholder on any legal page keeps the legal row open and there is no office address row", () => {
     const pages = placeholderPagesIn([
       { name: "The Safety page", text: "Postal address: [placeholder: add address]." },

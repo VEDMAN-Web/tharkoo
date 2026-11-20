@@ -13,7 +13,7 @@ export type ContactInfo = {
   office: string;
 };
 
-type Card = { icon: IconName; color: string; tint: string; title: string; sub: string; href?: string; action?: string };
+type Card = { icon: IconName; color: string; tint: string; title: string; sub: string; href?: string; action?: string; show?: boolean };
 
 export function ContactView({
   title,
@@ -30,16 +30,17 @@ export function ContactView({
 }) {
   const whatsapp = whatsappHref(info.whatsapp);
   const telegram = telegramHref(info.telegram);
-  const cards: Card[] = [
+  const cards: Card[] = ([
     { icon: "chat", color: "#C2185B", tint: "#FDF0F7", title: "Live chat", sub: "Fastest, about 10 minutes", href: "#contact-form", action: "Send a message" },
     {
       icon: "phone",
       color: "#5B21B6",
       tint: "#F5F0FF",
       title: "WhatsApp",
-      sub: info.whatsapp || "Message us for quick help",
+      sub: info.whatsapp,
       href: whatsapp || undefined,
       action: "Open WhatsApp",
+      show: Boolean(whatsapp),
     },
     {
       icon: "mail",
@@ -58,8 +59,9 @@ export function ContactView({
       sub: info.hours || "Mon to Sat, 9 am to 9 pm",
       href: telHref(info.phone) || undefined,
       action: "Call us",
+      show: Boolean(telHref(info.phone)),
     },
-  ];
+  ] satisfies Card[]).filter((card) => card.show !== false);
 
   return (
     <>

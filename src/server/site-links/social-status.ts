@@ -1,17 +1,16 @@
 import { safeHref } from "@/lib/sanitize";
-import { SUPPORT_PHONE, SUPPORT_TELEGRAM, telegramHref, whatsappHref } from "@/lib/support";
 import { readContent } from "@/lib/ui/site-content";
 import { getSite } from "@/lib/queries";
 import type { ShellConfig } from "@/server/site-links/shell-config-rules";
 
-/** The six social icons the footer draws, in its order, with the address each uses when no link is set for it. */
+/** The six social icons the footer draws, in its order. None has a default address. */
 export const SOCIAL_NETWORKS: { name: string; fallback: string }[] = [
-  { name: "WhatsApp", fallback: whatsappHref(SUPPORT_PHONE) },
+  { name: "WhatsApp", fallback: "" },
   { name: "X", fallback: "" },
   { name: "LinkedIn", fallback: "" },
   { name: "Instagram", fallback: "" },
   { name: "Pinterest", fallback: "" },
-  { name: "Telegram", fallback: telegramHref(SUPPORT_TELEGRAM) },
+  { name: "Telegram", fallback: "" },
 ];
 
 export type SocialSource = "link" | "default" | "none";
@@ -19,8 +18,8 @@ export type SocialStatus = { name: string; source: SocialSource; href: string };
 type Row = { label: string; href: string; visible?: boolean };
 
 /**
- * What each footer icon does on the site today. A visible link whose text is the network name wins; WhatsApp and Telegram
- * otherwise use the support address; the rest then show greyed and open nothing. When no social link is saved here, the site
+ * What each footer icon does on the site today. A visible link whose text is the network name wins; The icons without one
+ * (FIX-21: WhatsApp and Telegram too, there is no stand-in number) show greyed and open nothing. When no social link is saved here, the site
  * falls back to the older social links of the site record (`legacy`), exactly as the footer does.
  */
 export function socialStatus(config: ShellConfig, legacy: Row[]): SocialStatus[] {
