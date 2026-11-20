@@ -3,6 +3,7 @@
  * This file is client-safe (no server imports). The admin can override any key; the code keeps these defaults so a page is never blank.
  * Placeholders such as {count} are filled with `fillText`.
  */
+import { PRIVACY_EFFECTIVE, TERMS_EFFECTIVE } from "@/content/legal-text";
 import { SUPPORT_PHONE } from "@/lib/support";
 
 /** H17.9: the one message about the price of posting. Every default that talks about it uses this text; the admin can change each key on Site text. */
@@ -777,6 +778,11 @@ export const TEXT_DEFAULTS = {
   "chrome.footer.trust": "Trust",
   "chrome.footer.social": "Social links",
   "chrome.footer.legal": "Legal",
+  "chrome.footer.terms": "Terms and Conditions",
+  "chrome.footer.privacy": "Privacy Policy",
+  "chrome.footer.grievance": "Grievance Officer",
+  "legal.terms.effective": TERMS_EFFECTIVE,
+  "legal.privacy.effective": PRIVACY_EFFECTIVE,
   "chrome.footer.rta": "RTA · Restricted to adults",
   "chat.open": "Open live chat",
   "chat.close": "Close live chat",
