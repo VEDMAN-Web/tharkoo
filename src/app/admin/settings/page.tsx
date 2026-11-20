@@ -9,10 +9,14 @@ import { codeOnlyLoginEnabled } from "@/server/auth/code-only";
 import { readAwayHours } from "@/server/availability/service";
 import { idCheckRequired } from "@/server/settings/id-check";
 import { readLogos } from "@/server/settings/logo";
+import { readGoogleAnalyticsId } from "@/server/settings/analytics";
+import { readRtaLabel } from "@/server/settings/rta-label";
 import { readSettingsData } from "@/server/settings/settings-admin";
 import { readWatermarkSettings } from "@/server/settings/watermark";
 import { newDesignOn } from "@/server/site-links/new-design";
 import { AwayHoursSetting } from "./AwayHoursSetting";
+import { GoogleAnalyticsSetting } from "./GoogleAnalyticsSetting";
+import { RtaLabelSwitch } from "./RtaLabelSwitch";
 import { IdCheckSwitch } from "./IdCheckSwitch";
 import { LogoSettings } from "./LogoSettings";
 import { NewDesignSwitch } from "./NewDesignSwitch";
@@ -42,7 +46,7 @@ export default async function Page() {
   }
   const isSuperadmin = roles.includes("superadmin");
   const isAdmin = isAdminRole(roles);
-  const [data, codeOnly, idCheck, watermark, logos, away, newDesign] = await Promise.all([
+  const [data, codeOnly, idCheck, watermark, logos, away, newDesign, analyticsId, rtaLabel] = await Promise.all([
     readSettingsData(),
     isSuperadmin ? codeOnlyLoginEnabled() : Promise.resolve(false),
     isSuperadmin ? idCheckRequired() : Promise.resolve(false),
@@ -50,6 +54,8 @@ export default async function Page() {
     isAdmin ? readLogos() : Promise.resolve(null),
     isAdmin ? readAwayHours() : Promise.resolve(null),
     isSuperadmin ? newDesignOn() : Promise.resolve(false),
+    isAdmin ? readGoogleAnalyticsId() : Promise.resolve(null),
+    isAdmin ? readRtaLabel() : Promise.resolve(null),
   ]);
   const signIn = isSuperadmin ? (
     <>
@@ -63,6 +69,8 @@ export default async function Page() {
     <>
       {isSuperadmin ? <NewDesignSwitch initial={newDesign} /> : null}
       {away ? <AwayHoursSetting initial={away} /> : null}
+      {analyticsId !== null ? <GoogleAnalyticsSetting initial={analyticsId} /> : null}
+      {rtaLabel !== null ? <RtaLabelSwitch initial={rtaLabel} /> : null}
     </>
   );
   return (

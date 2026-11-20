@@ -37,7 +37,9 @@ import { assertVerified } from "@/server/verification/service";
 import { hashIp } from "@/server/shared/crypto";
 import { choiceProblems, parseListingAttributes, type FieldDefinition } from "@/server/shared/fields";
 import { withPickLimits } from "@/server/fields/service";
-import { revalidateListingPages } from "@/server/listings/revalidate";
+import { revalidateListingPages, revalidateListingsById } from "@/server/listings/revalidate";
+import { publicPathsOf } from "@/server/listings/ad-code";
+import { listingAddressPath } from "@/server/models/listing";
 import { parsePrice } from "@/server/listings/price";
 import { attributeDenied, categoryDenied, textDenied } from "@/server/shared/policy";
 import { adLifetimeMs } from "@/server/listings/lifetime";
@@ -410,7 +412,8 @@ export async function readOwned(id: string, userId: string, roles: string[]) {
   await connectDb();
   const listing = await load(id);
   if (listing.ownerId.toString() !== userId && !isStaffRole(roles)) throw new NotFoundError("Not found");
-  return ownerView(listing);
+  // H16.2: the public address (once the ad has a code, category and city), so the "view your ad" link goes straight to it.
+  return { ...ownerView(listing), address: (await listingAddressPath(listing)) || null };
 }
 
 export async function readPublic(key: string, viewerId?: string) {
@@ -670,7 +673,7 @@ export async function submitListing(
   }
   await record(userId, "user", "listing.submit", listing._id.toString(), requestId, { status: listing.status, edit: isEdit, held });
   await revalidateListingPages(listing, category.slug);
-  if (listing.slug && !wasPaused && !held) notifyIndexNow([`/ad/${listing.slug}/`]);
+  if (listing.slug && !wasPaused && !held) notifyIndexNow(await publicPathsOf([listing]));
   return { status: listing.status, charged: charge.charged, balance: charge.balance };
 }
 
@@ -679,7 +682,8 @@ async function move(id: string, userId: string, to: ListingStatus, action: strin
   assertTransition(listing.status, to);
   listing.status = to;
   await listing.save();
-  if (listing.slug && (to === "removed" || to === "expired" || to === "deleted")) notifyIndexNow([`/ad/${listing.slug}/`]);
+  await revalidateListingsById([String(listing._id)]);
+  if (listing.slug && (to === "removed" || to === "expired" || to === "deleted")) notifyIndexNow(await publicPathsOf([listing]));
   await record(userId, "user", action, listing._id.toString(), requestId, { status: to });
   return listing;
 }
@@ -699,6 +703,7 @@ export async function resumeListing(id: string, userId: string, requestId: strin
   listing.status = "active";
   if (!listing.publishedAt) listing.publishedAt = new Date();
   await listing.save();
+  await revalidateListingsById([String(listing._id)]);
   await record(userId, "user", "listing.resume", listing._id.toString(), requestId, { status: "active" });
   return ownerView(listing);
 }
@@ -717,6 +722,7 @@ export async function renewListing(id: string, userId: string, requestId: string
     if (!listing.publishedAt) listing.publishedAt = new Date();
   }
   await listing.save();
+  await revalidateListingsById([String(listing._id)]);
   await record(userId, "user", "listing.renew", listing._id.toString(), requestId, { status: listing.status });
   return ownerView(listing);
 }
@@ -811,13 +817,14 @@ export async function revealContact(
 
 export async function expireDue(requestId: string) {
   await connectDb();
-  const due = await Listing.find({ status: "active", expiresAt: { $lte: new Date() } }).select("slug").limit(200).lean<{ slug?: string }[]>();
+  const due = await Listing.find({ status: "active", expiresAt: { $lte: new Date() } }).select("slug title categoryId cityId code").limit(200).lean<{ _id: Types.ObjectId; slug?: string; title?: string; categoryId?: Types.ObjectId; cityId?: Types.ObjectId; code?: string }[]>();
   const result = await Listing.updateMany(
     { status: "active", expiresAt: { $lte: new Date() } },
     { $set: { status: "expired" } },
   );
   const expired = result.modifiedCount;
-  notifyIndexNow(due.flatMap((row) => (row.slug ? [`/ad/${row.slug}/`] : [])));
+  await revalidateListingsById(due.map((row) => String(row._id)));
+  notifyIndexNow(await publicPathsOf(due));
   await record(null, "system", "listing.expire", "cron", requestId, { expired });
   return { expired };
 }

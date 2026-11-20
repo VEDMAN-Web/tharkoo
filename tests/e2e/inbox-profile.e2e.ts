@@ -1,6 +1,6 @@
 import AxeBuilder from "@axe-core/playwright";
 import type { APIRequestContext, Page } from "@playwright/test";
-import { becomeSeller, expect, hasHorizontalScroll, isPhone, loginUi, newUserApi, originHeaders, test, withLocalDb } from "./helpers";
+import { adAddressPattern, becomeSeller, expect, hasHorizontalScroll, isPhone, loginUi, newUserApi, originHeaders, test, withLocalDb } from "./helpers";
 
 const SHOTS = process.env.POST_SHOTS ?? "";
 
@@ -68,7 +68,7 @@ test.describe("H7.82 chats and the profile card", () => {
 
     await row.click();
     await expect(page.locator("[data-tk=chat-thread]")).toBeVisible();
-    await expect(page.locator("[data-tk=chat-ad-card] [data-tk=mini-ad-link]")).toHaveAttribute("href", new RegExp(`/ad/${slug}/$`));
+    await expect(page.locator("[data-tk=chat-ad-card] [data-tk=mini-ad-link]")).toHaveAttribute("href", await adAddressPattern(slug));
     await expect(page.getByText("View ad", { exact: true })).toHaveCount(0);
     await expect(page.locator("[data-tk=chat-thread] [role=log]")).toContainText("Is it still available?");
     if (isPhone(page)) {
@@ -90,7 +90,7 @@ test.describe("H7.82 chats and the profile card", () => {
     // A real mouse click on the photo: the stretched title link is over it, which is the point (Playwright's own click refuses a covered target).
     const photo = (await adCard.locator(".tk-mini-ad-photo").boundingBox())!;
     await page.mouse.click(photo.x + photo.width / 2, photo.y + photo.height / 2);
-    await expect(page).toHaveURL(new RegExp(`/ad/${slug}/$`));
+    await expect(page).toHaveURL(await adAddressPattern(slug));
     await buyer.api.dispose();
     await owner.api.dispose();
   });

@@ -203,15 +203,14 @@ test.describe("H7.91: sticky, instant filter column and phone sheet", () => {
     await expect(choice.locator(".tkn-ls-row-btn")).toContainText("· 1");
   });
 
-  // H14.1: Vedant's approved row shows views and clicks (real counters) and the plan badge, so this test now checks that.
-  test("a list card shows its real views and clicks with icons, and no owner counts", async ({ page }) => {
+  // H17.1 (was H14.1): a public list card shows NO views and NO clicks and no owner counts; those stay in the seller dashboard.
+  test("a list card shows no views, no clicks and no owner counts", async ({ page }) => {
     await page.setViewportSize({ width: 1440, height: 900 });
     await page.goto("/search/?category=dating");
     const card = page.locator('[data-tk="listing-row"]').first();
+    await expect(card).toBeVisible();
     await expect(page.locator('[data-tk="ad-counts"]')).toHaveCount(0);
-    await expect(card.locator('[data-tk="row-views"] svg')).toHaveCount(1);
-    await expect(card.locator('[data-tk="row-clicks"] svg')).toHaveCount(1);
-    await expect(card.locator('[data-tk="row-stats"]')).toHaveAttribute("data-ready", "true", { timeout: 40_000 });
-    await expect(card.locator('[data-tk="row-views"]')).toContainText(/\d/);
+    await expect(card.locator('.tk-row-stats, [data-tk="row-views"], [data-tk="row-clicks"]')).toHaveCount(0);
+    await expect(card).not.toContainText(/\bviews?\b|\bclicks?\b/i);
   });
 });

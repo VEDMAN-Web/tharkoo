@@ -4,8 +4,16 @@ import { pageMetadata, type PageMeta } from "@/lib/ui/meta";
 import { withSeoDefaults } from "@/lib/ui/meta-defaults";
 import { getUrlOverride } from "@/server/urls/service";
 
-export async function withUrlSeo(path: string, opts: PageMeta): Promise<Metadata> {
-  const over = await getUrlOverride(cleanPath(path));
+/**
+ * The override saved for a path. H16.2: an ad moved from /ad/<slug>/ to its own address; an override saved for the old path
+ * still applies (the new path wins when both exist). Only the ad page passes `legacyPath`.
+ */
+async function overrideFor(path: string, legacyPath?: string) {
+  return (await getUrlOverride(cleanPath(path))) ?? (legacyPath ? await getUrlOverride(cleanPath(legacyPath)) : null);
+}
+
+export async function withUrlSeo(path: string, opts: PageMeta, legacyPath?: string): Promise<Metadata> {
+  const over = await overrideFor(path, legacyPath);
   const canonicalOverride = over?.canonical?.trim();
   return withSeoDefaults(pageMetadata({
     ...opts,
@@ -17,8 +25,8 @@ export async function withUrlSeo(path: string, opts: PageMeta): Promise<Metadata
   }));
 }
 
-export async function urlHeading(path: string, fallback: string) {
-  const over = await getUrlOverride(cleanPath(path));
+export async function urlHeading(path: string, fallback: string, legacyPath?: string) {
+  const over = await overrideFor(path, legacyPath);
   return over?.h1?.trim() || fallback;
 }
 

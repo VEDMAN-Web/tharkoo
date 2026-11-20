@@ -2,10 +2,10 @@
 
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { History, Power } from "lucide-react";
+import { History, Power, RefreshCw } from "lucide-react";
 import { Button, ReasonDialog, useToast } from "@/components/admin/ui";
 import type { DemoPanelData } from "@/server/listings/demo-ads";
-import { endDemoAdsAction, restoreDemoAdsAction, undoEndDemoAdsAction } from "./demo-actions";
+import { endDemoAdsAction, refreshDemoTextAction, restoreDemoAdsAction, undoEndDemoAdsAction, undoRefreshDemoTextAction } from "./demo-actions";
 
 function dayOf(iso: string) {
   return new Date(iso).toLocaleDateString("en-IN", { day: "numeric", month: "short", timeZone: "Asia/Kolkata" });
@@ -16,9 +16,11 @@ export function DemoAds({ panel, canEnd, canRestore }: { panel: DemoPanelData; c
   const router = useRouter();
   const toast = useToast();
   const [ending, setEnding] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
   const [busy, setBusy] = useState(false);
-  const { total, active, onHome, ended } = panel;
+  const { total, active, onHome, ended, textCandidates } = panel;
   const phrase = `END ${active}`;
+  const refreshPhrase = `REFRESH ${textCandidates}`;
 
   async function undo(eventId: string) {
     const answer = await undoEndDemoAdsAction(eventId);
@@ -33,6 +35,22 @@ export function DemoAds({ panel, canEnd, canRestore }: { panel: DemoPanelData; c
     setBusy(false);
     if (!result.ok) toast.show({ kind: "error", message: result.message });
     else toast.show({ kind: "undo", message: `Ended ${result.ended} demo ${result.ended === 1 ? "ad" : "ads"}.`, onUndo: () => void undo(result.eventId) });
+    router.refresh();
+  }
+
+  async function undoText(eventId: string) {
+    const answer = await undoRefreshDemoTextAction(eventId);
+    toast.show({ kind: answer.ok ? "success" : "error", message: answer.message });
+    router.refresh();
+  }
+
+  async function refreshText() {
+    setRefreshing(false);
+    setBusy(true);
+    const result = await refreshDemoTextAction(refreshPhrase);
+    setBusy(false);
+    if (!result.ok) toast.show({ kind: "error", message: result.message });
+    else toast.show({ kind: "undo", message: `Rewrote the text of ${result.rewritten} sample ${result.rewritten === 1 ? "ad" : "ads"}.`, onUndo: () => void undoText(result.eventId) });
     router.refresh();
   }
 
@@ -71,6 +89,11 @@ export function DemoAds({ panel, canEnd, canRestore }: { panel: DemoPanelData; c
             End demo ads...
           </Button>
         ) : null}
+        {canEnd ? (
+          <Button icon={RefreshCw} busy={busy} disabled={textCandidates === 0} data-tk="refresh-demo-text" onClick={() => setRefreshing(true)}>
+            Refresh sample ad text...
+          </Button>
+        ) : null}
         {ended ? (
           <>
             <span data-tk="restore-note">
@@ -88,6 +111,16 @@ export function DemoAds({ panel, canEnd, canRestore }: { panel: DemoPanelData; c
           <span className="adm-ads-demo-muted" data-tk="restore-note">Restore ended demo ads: nothing ended yet.</span>
         )}
       </div>
+      <ReasonDialog
+        key={refreshing ? "refresh-open" : "refresh-closed"}
+        open={refreshing}
+        title={`Rewrite the text of ${textCandidates} sample ${textCandidates === 1 ? "ad" : "ads"}?`}
+        body="Only the title and the text of sample ads in the categories that have new templates change, and they name a real area of the city when there is one. Real ads, prices, photos and addresses are not touched. You can undo this."
+        typedConfirm={refreshPhrase}
+        confirmLabel="Rewrite sample ad text"
+        onCancel={() => setRefreshing(false)}
+        onConfirm={() => void refreshText()}
+      />
       <ReasonDialog
         key={ending ? "open" : "closed"}
         open={ending}

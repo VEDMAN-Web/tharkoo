@@ -1,7 +1,7 @@
 import { mkdirSync } from "node:fs";
 import AxeBuilder from "@axe-core/playwright";
 import type { Page } from "@playwright/test";
-import { expect, hasHorizontalScroll, isPhone, slugFromAdPath, test, withLocalDb } from "./helpers";
+import { expect, hasHorizontalScroll, isPhone, oldAdPath, slugFromAdPath, test, withLocalDb, realAdPath } from "./helpers";
 
 const SHOTS = process.env.AD_PAGE_SHOTS_DIR || "";
 const SIZES = [
@@ -15,11 +15,12 @@ const SIZES = [
 const CARD_MAX = 380;
 const GAP_MAX = 56;
 
+/** H17.1: a sample ad has no contact buttons, so the tests of the contact card and the bar open a real ad (realAdPath). */
 async function adAt(page: Page, feed: string, position = 0) {
   await page.goto(feed);
-  const link = page.locator(':is([data-tk=card], [data-tk=home-ad], [data-tk=listing-row]) a[href*="/ad/"]').nth(position);
+  const link = page.locator(':is([data-tk=card], [data-tk=home-ad], [data-tk=listing-row]) a[data-ad-link]').nth(position);
   await link.waitFor({ state: "attached" });
-  return (await link.getAttribute("href")) as string;
+  return oldAdPath((await link.getAttribute("href")) as string);
 }
 
 async function shot(page: Page, name: string) {
@@ -89,7 +90,7 @@ test.describe("H7.99b ad page content", () => {
     test.skip(testInfo.project.name !== "desktop-1440", "the card is a wide-screen part");
     await setTour(true);
     try {
-      const href = await adAt(page, "/property/bengaluru/");
+      const href = await realAdPath(page, "/property/bengaluru/");
       for (const [width, height] of [
         [1366, 768],
         [1536, 730],
@@ -123,12 +124,14 @@ test.describe("H7.99b ad page content", () => {
 
   test("the right card has the price, the advertiser rows, Call and WhatsApp side by side and a slim Stay safe box", async ({ page }, testInfo) => {
     test.skip(testInfo.project.name !== "desktop-1440", "the card is a wide-screen part");
-    await page.goto(await adAt(page, "/property/bengaluru/"));
+    await page.goto(await realAdPath(page, "/property/bengaluru/"));
     const card = page.locator('[data-tk="contact-card"]');
     const request = await card.locator(".tkn-ad-price").evaluate((node) => node.classList.contains("is-request"));
     await expect(card.locator(".tkn-ad-price")).toHaveCSS("font-size", request ? "20px" : "26px");
     await expect(card.locator(".tkn-seller-avatar")).toHaveCSS("width", "44px");
     await expect(card.locator(".tkn-seller-since")).toContainText("Member since");
+    // The Online now line arrives with the seller's presence and moves the buttons down, so measure after it.
+    await expect(card.locator('[data-tk="availability"]')).toBeVisible();
     const call = (await card.locator("[data-tk=call]").boundingBox())!;
     const chat = (await card.locator("[data-tk=chat]").boundingBox())!;
     const whats = (await card.locator("[data-tk=whatsapp]").boundingBox())!;
@@ -142,7 +145,7 @@ test.describe("H7.99b ad page content", () => {
     await expect(page.locator('[data-tk="security-tips"]').getByRole("link", { name: "More safety tips" })).toBeVisible();
   });
 
-  // H14.1: the similar ads are the approved row cards (views, clicks, tags), two across on a wide screen, in the same carousel.
+  // H14.1: the similar ads are the approved row cards (tags; since H17.1 no views or clicks), two across on a wide screen, in the same carousel.
   test("similar ads are row cards in a carousel, at most 12, and end 48 px above the footer", async ({ page }, testInfo) => {
     await page.goto(await adAt(page, "/property/bengaluru/"));
     const section = page.locator('[data-tk="similar-ads"]');
@@ -155,7 +158,7 @@ test.describe("H7.99b ad page content", () => {
     expect(count).toBeLessThanOrEqual(12);
     await expect(section.locator(".tk-row-save").first()).toBeVisible();
     await expect(section.locator(".tk-row-tag.is-cat").first()).toBeVisible();
-    await expect(section.locator('[data-tk="row-stats"]').first()).toHaveCount(1);
+    await expect(section.locator('[data-tk="row-stats"]')).toHaveCount(0);
     await expect(section.locator(".tk-row-title").first()).toHaveCSS("font-size", "18px");
     await expect(section.locator(".tk-row-save").first()).toHaveCSS("width", "38px");
     const first = (await cards.first().boundingBox())!;
@@ -190,8 +193,8 @@ test.describe("H7.99b ad page content", () => {
 
   test("the picture is as tall as the right column: its bottom lines up with the Stay safe box", async ({ page }, testInfo) => {
     test.skip(testInfo.project.name !== "desktop-1440", "the laptop sizes");
-    const people = await adAt(page, "/dating/bengaluru/");
-    const item = await adAt(page, "/property/bengaluru/");
+    const people = await realAdPath(page, "/dating/bengaluru/");
+    const item = await realAdPath(page, "/property/bengaluru/");
     for (const [kind, href] of [
       ["people", people],
       ["item", item],
@@ -271,7 +274,7 @@ test.describe("H7.99b ad page content", () => {
     test.skip(testInfo.project.name !== "phone-390", "the phone layout");
     for (const width of [390, 360]) {
       await page.setViewportSize({ width, height: 740 });
-      await page.goto(await adAt(page, "/property/bengaluru/"));
+      await page.goto(await realAdPath(page, "/property/bengaluru/"));
       const bar = page.locator('[data-tk="bottom-bar"]');
       await expect(bar).toBeVisible();
       const box = (await bar.boundingBox())!;
@@ -323,7 +326,7 @@ test.describe("H7.99b ad page content", () => {
 
   test("the Featured pill sits in the pills row and the main photo carries no tier badge", async ({ page }) => {
     await page.goto("/dating/bengaluru/");
-    const hrefs = await page.locator(':is([data-tk=card], [data-tk=home-ad], [data-tk=listing-row]) a[href*="/ad/"]').evaluateAll((els) => els.slice(0, 10).map((el) => (el as HTMLAnchorElement).getAttribute("href")));
+    const hrefs = await page.locator(':is([data-tk=card], [data-tk=home-ad], [data-tk=listing-row]) a[data-ad-link]').evaluateAll((els) => els.slice(0, 10).map((el) => (el as HTMLAnchorElement).getAttribute("href")));
     let featured = 0;
     for (const href of hrefs) {
       await page.goto(href!);
@@ -370,7 +373,7 @@ test.describe("H7.99b ad page content", () => {
     let checked = 0;
     for (const feed of ["/dating/bengaluru/", "/friendship/bengaluru/", "/meetups/bengaluru/", "/personal-ads/bengaluru/"]) {
       await page.goto(feed);
-      const link = page.locator(':is([data-tk=card], [data-tk=home-ad], [data-tk=listing-row]) a[href*="/ad/"]').first();
+      const link = page.locator(':is([data-tk=card], [data-tk=home-ad], [data-tk=listing-row]) a[data-ad-link]').first();
       if (!(await link.count())) continue;
       await page.goto((await link.getAttribute("href"))!);
       await expect(page.locator(".tkn-contact-panel")).toBeAttached();

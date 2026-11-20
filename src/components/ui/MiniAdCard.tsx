@@ -18,7 +18,7 @@ export function MiniAdCard({ href, title, photo, price, dataTk = "ad-card" }: { 
         )}
       </span>
       <span className="tk-mini-ad-main">
-        <Link href={href} prefetch={false} className="tk-mini-ad-link" data-tk="mini-ad-link">{title}</Link>
+        <Link href={href} prefetch={false} className="tk-mini-ad-link" data-tk="mini-ad-link" data-ad-link>{title}</Link>
         {typeof price === "number" && price > 0 ? <span className="tk-mini-ad-price">{`₹${price.toLocaleString("en-IN")}`}</span> : null}
       </span>
     </div>

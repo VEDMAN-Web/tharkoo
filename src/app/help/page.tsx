@@ -3,7 +3,6 @@ import { helpPath } from "@/lib/urls";
 import { withUrlSeo } from "@/lib/seo/override";
 import { getPaths } from "@/server/urls/service";
 import { readShellConfig } from "@/server/site-links/shell-config";
-import { SUPPORT_PHONE, SUPPORT_TELEGRAM, telegramHref, whatsappHref } from "@/lib/support";
 import { HelpView, type HelpCard, type HelpRow } from "@/components/h714/HelpView";
 
 export const revalidate = 300;
@@ -75,8 +74,8 @@ export default async function Help({ searchParams }: { searchParams: Promise<{ q
       query={query}
       helpHref={helpRoot}
       chatHref="/contact/"
-      whatsappHref={shell.chat.whatsapp || whatsappHref(SUPPORT_PHONE)}
-      telegramHref={shell.chat.telegram || telegramHref(SUPPORT_TELEGRAM)}
+      whatsappHref={shell.chat.whatsapp}
+      telegramHref={shell.chat.telegram}
       contactHref="/contact/"
     />
   );

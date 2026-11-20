@@ -1,11 +1,11 @@
-import { expect, loginUi, newUserApi, originHeaders, test } from "./helpers";
+import { expect, loginUi, newUserApi, originHeaders, realAdPath, test } from "./helpers";
 import type { Page } from "@playwright/test";
 
 const SLOW_MS = 2500;
 
 async function adPathIn(page: Page, feed: string) {
   await page.goto(feed);
-  const link = page.locator(':is([data-tk=card], [data-tk=home-ad], [data-tk=listing-row]) a[href*="/ad/"]').first();
+  const link = page.locator(':is([data-tk=card], [data-tk=home-ad], [data-tk=listing-row]) a[data-ad-link]').first();
   await link.waitFor({ state: "attached" });
   return (await link.getAttribute("href")) as string;
 }
@@ -96,7 +96,7 @@ test.describe("H7.66 ad page", () => {
       if (route.request().method() === "GET") await new Promise((done) => setTimeout(done, SLOW_MS));
       await route.continue();
     });
-    await page.goto("/ad/demo-1410/");
+    await page.goto(await realAdPath(page, "/dating/bengaluru/"));
     await page.locator("[data-tk=chat]:visible").first().click();
     const panel = page.locator("[data-tk=chat-panel]");
     await expect(panel).toBeVisible({ timeout: 1500 });

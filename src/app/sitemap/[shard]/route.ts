@@ -15,7 +15,7 @@ export async function GET(_request: Request, ctx: { params: Promise<{ shard: str
       },
     });
   } catch {
-    return new Response(sitemapXml([{ loc: siteUrl().replace(/\/$/, "") + "/", lastmod: new Date().toISOString() }]), {
+    return new Response(sitemapXml([{ loc: siteUrl().replace(/\/$/, "") + "/" }]), {
       headers: { "content-type": "application/xml; charset=utf-8" },
     });
   }

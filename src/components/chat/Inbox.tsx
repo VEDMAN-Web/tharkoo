@@ -5,7 +5,7 @@ import { useEffect, useState } from "react";
 import { ArrowLeft, ImageIcon, MessageSquare } from "lucide-react";
 import { api, friendlyError } from "@/lib/ui/api";
 import { chatTime } from "@/lib/ui/chat-time";
-import { adPath } from "@/lib/urls";
+import { adHref } from "@/lib/urls";
 import { EmptyIcon } from "@/components/buyer/UserPanelShell";
 import { useUrlPaths } from "@/components/UrlPaths";
 import { MiniAdCard } from "@/components/ui/MiniAdCard";
@@ -22,6 +22,7 @@ type Row = {
   peerName: string;
   cover: string | null;
   adSlug: string | null;
+  adAddress?: string | null;
   adLive: boolean;
   adPrice: number | null;
 };
@@ -110,7 +111,7 @@ export function Inbox() {
                 <div className="up-chat-main">
                   <strong className="up-chat-name">{open.peerName}</strong>
                 </div>
-                <MiniAdCard href={adPath(paths, open.adSlug)} title={open.listingTitle || "Ad"} photo={open.cover} price={open.adPrice} dataTk="chat-ad-card" />
+                <MiniAdCard href={adHref(paths, { slug: open.adSlug, address: open.adAddress })} title={open.listingTitle || "Ad"} photo={open.cover} price={open.adPrice} dataTk="chat-ad-card" />
               </>
             ) : (
               <>

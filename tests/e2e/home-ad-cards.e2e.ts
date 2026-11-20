@@ -49,7 +49,7 @@ async function openHomeWithPhotoCard(page: Page, pick: (row: Locator) => Locator
 }
 
 test.describe("H7.84 home ad cards", () => {
-  test("eight cards in a grid, no tag, no views, no big button, pills are category and city only", async ({ page }) => {
+  test("eight cards in a grid, no tag, no views, no big button, pills are category and city only, plus the Sample ad pill on sample cards only", async ({ page }) => {
     const row = await openHome(page);
     await expect(row).toHaveAttribute("aria-label", "Latest ads");
     await expect(row.locator(":scope > li")).toHaveCount(8);
@@ -58,8 +58,16 @@ test.describe("H7.84 home ad cards", () => {
     await expect(row.locator(".tkh-ad-more")).toHaveCount(0);
     const text = (await row.innerText()).toLowerCase();
     expect(text).not.toMatch(/super top|\bstar\b|\bviews?\b|view details/);
-    const pills = await row.locator(CARD).evaluateAll((cards) => cards.map((card) => [...card.querySelectorAll(".tkh-ad-body .tkh-pill")].map((pill) => pill.textContent || "")));
-    for (const set of pills) {
+    // H16.5/H17.1: a SAMPLE card (a demo ad) also carries the Sample ad pill; a real card never does. Both show the category and the city only.
+    const cards = await row.locator(CARD).evaluateAll((items) =>
+      items.map((card) => ({
+        sample: /\/ad\/demo-\d+\//.test(card.querySelector<HTMLAnchorElement>("a.tkh-ad-link")?.getAttribute("href") ?? ""),
+        hasSamplePill: Boolean(card.querySelector(".tkh-pill-sample")),
+        pills: [...card.querySelectorAll(".tkh-ad-body .tkh-pill:not(.tkh-pill-sample)")].map((pill) => pill.textContent || ""),
+      })),
+    );
+    for (const { sample, hasSamplePill, pills: set } of cards) {
+      expect(hasSamplePill, "the Sample ad pill is on sample cards and only on them").toBe(sample);
       expect(set.length).toBeGreaterThanOrEqual(1);
       expect(set.length).toBeLessThanOrEqual(2);
       for (const label of set) expect(label).not.toContain("/");

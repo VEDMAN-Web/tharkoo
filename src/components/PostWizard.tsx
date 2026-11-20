@@ -1,5 +1,6 @@
 "use client";
 
+import { trackEvent } from "@/lib/analytics/ga";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { api, fieldErrors, friendlyError } from "@/lib/ui/api";
@@ -131,6 +132,7 @@ export function PostWizard({
   const [publishedStatus, setPublishedStatus] = useState("");
   const [serverShort, setServerShort] = useState<{ need: number; balance: number } | null>(null);
   const [adSlug, setAdSlug] = useState("");
+  const [adAddress, setAdAddress] = useState("");
   const [receipt, setReceipt] = useState("");
   const [planNote, setPlanNote] = useState("");
   const [draftStatus, setDraftStatus] = useState("");
@@ -355,6 +357,7 @@ export function PostWizard({
     const created = existing
       ? await api(`/api/listings/${existing}`, { method: "PATCH", body: JSON.stringify({ stage: "basics", ...basics }) })
       : await api<{ id: string }>("/api/listings", { method: "POST", body: JSON.stringify(basics) });
+    if (created.ok && !existing) trackEvent("post_ad_start");
     if (!created.ok) {
       if (quiet) {
         setSaveState("idle");
@@ -517,13 +520,15 @@ export function PostWizard({
     }
     const outcome = (res.data ?? {}) as { status?: string; charged?: number; balance?: number };
     setPublishedStatus(String(outcome.status ?? "active"));
+    trackEvent("post_ad_published");
     window.dispatchEvent(new CustomEvent(CREDITS_ADDED_EVENT, { detail: { added: 0 } }));
     if (newDesign) {
       const charged = typeof outcome.charged === "number" ? outcome.charged : alreadyPaid ? 0 : money.fee;
       const left = typeof outcome.balance === "number" ? outcome.balance : Math.max(0, (money.balance ?? 0) - charged);
       setReceipt(!chargesFee ? "" : charged > 0 ? t("post.receipt.paid", { paid: creditsText(charged), balance: creditsText(left) }) : t("post.receipt.free", { balance: creditsText(left) }));
-      void api<{ slug?: string }>(`/api/listings/by-id/${draftId}`).then((found) => {
+      void api<{ slug?: string; address?: string | null }>(`/api/listings/by-id/${draftId}`).then((found) => {
         if (found.ok && found.data?.slug) setAdSlug(found.data.slug);
+        if (found.ok && found.data?.address) setAdAddress(found.data.address);
       });
     }
     window.history.replaceState(null, "", postAdPath(paths));
@@ -564,7 +569,7 @@ export function PostWizard({
         hasPhoto={Boolean(coverUrl)}
         byline={byline}
         anotherHref={copy.success.secondaryCta?.href || postAdPath(paths)}
-        adHref={adSlug ? `/ad/${adSlug}/` : ""}
+        adHref={adAddress || (adSlug ? `/ad/${adSlug}/` : "")}
         receipt={receipt}
         plans={visiblePlans.filter((plan) => (plan.amount ?? 0) > 0).slice(0, 2)}
         planNote={planNote}

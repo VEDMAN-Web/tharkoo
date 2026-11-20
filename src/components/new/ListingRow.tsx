@@ -2,12 +2,11 @@
 
 import { useMemo, useRef } from "react";
 import Link from "next/link";
-import { Camera, Check, Eye, Hand } from "lucide-react";
+import { Camera, Check } from "lucide-react";
 import { SaveButton } from "@/components/ui/SaveButton";
-import { recordAdClick, useShownCounts } from "@/components/ad/adCountStore";
-import { formatIndianCount } from "@/components/ad/counts-format";
+import { recordAdClick } from "@/components/ad/adCountStore";
 import { useSellerStatus } from "@/components/availability/sellerStatus";
-import { fillText, makeT } from "@/lib/ui/text";
+import { makeT } from "@/lib/ui/text";
 import type { HomeAdLabels } from "./HomeAdCard";
 import { cardSlides } from "./card-slides";
 import { SlideNav, SlideTrack } from "./CardSlides";
@@ -32,10 +31,6 @@ function tierText(tier: ListingRowData["tier"], row: RowLabels) {
   return "";
 }
 
-function countText(count: number, one: string, many: string) {
-  return fillText(count === 1 ? one : many, { count: formatIndianCount(count) });
-}
-
 /**
  * H14.1: the listing card in the approved design: a row with the photo on the left and the text on the right.
  * Used everywhere except the Home page. The photo slider and video are the Home card's (use-card-slider).
@@ -45,12 +40,12 @@ export function ListingRow({ ad, labels, order = 0 }: { ad: ListingRowData; labe
   const seller = useSellerStatus(ad.slug || undefined);
   const photos = ad.photos;
   const slides = useMemo(() => cardSlides(photos, ad.videoUrl, ad.videoPoster), [photos, ad.videoUrl, ad.videoPoster]);
-  const online = Boolean(seller && seller.chatOn && seller.status === "online");
+  // H17.1: a sample ad is not online and has no chat: nobody is behind it.
+  const online = !ad.sample && Boolean(seller && seller.chatOn && seller.status === "online");
   const cardRef = useRef<HTMLElement>(null);
   const popVideoRef = useRef<HTMLVideoElement | null>(null);
   const { anchor, cardHandlers, popHandlers } = useCardHover(cardRef, HOVER_DELAY_MS, POPOUT_MIN_WIDTH_PX);
   const { trackRef, videoRef, index, setIndex, calm, onScroll, step } = useCardSlider({ cardRef, slug: ad.slug, slides, order, anchored: Boolean(anchor), popVideoRef });
-  const counts = useShownCounts(ad.slug);
   const tier = tierText(ad.tier, row);
   const place = ad.area ? `${ad.city}, ${ad.area}` : ad.city;
   const clicked = () => {
@@ -80,7 +75,7 @@ export function ListingRow({ ad, labels, order = 0 }: { ad: ListingRowData; labe
       <div className="tk-row-body">
         <div className="tk-row-titlerow">
           <h3 className="tk-row-title">
-            <Link href={ad.href} prefetch={false} className="tkh-ad-link" onClick={clicked}>
+            <Link href={ad.href} prefetch={false} className="tkh-ad-link" onClick={clicked} data-ad-link>
               {ad.title}
             </Link>
           </h3>
@@ -104,16 +99,6 @@ export function ListingRow({ ad, labels, order = 0 }: { ad: ListingRowData; labe
               {place ? <Link href={ad.cityHref} prefetch={false} className="tk-row-tag is-place">{place}</Link> : null}
             </p>
           </div>
-          <span className="tk-row-stats" data-tk="row-stats" data-ready={counts ? "true" : "false"}>
-            <span className="tk-row-stat" data-tk="row-views">
-              <Eye size={15} aria-hidden />
-              {countText(counts?.views ?? 0, row.viewOne, row.views)}
-            </span>
-            <span className="tk-row-stat" data-tk="row-clicks">
-              <Hand size={15} aria-hidden />
-              {countText(counts?.clicks ?? 0, row.clickOne, row.clicks)}
-            </span>
-          </span>
         </div>
       </div>
       {anchor ? (
@@ -123,7 +108,7 @@ export function ListingRow({ ad, labels, order = 0 }: { ad: ListingRowData; labe
           row={row}
           anchor={anchor}
           online={online}
-          chatOn={Boolean(seller?.chatOn)}
+          chatOn={!ad.sample && Boolean(seller?.chatOn)}
           slides={slides}
           index={index}
           onIndex={(position) => {

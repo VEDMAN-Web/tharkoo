@@ -30,6 +30,7 @@ import {
   type RankPromotion,
   type RankSettings,
 } from "@/server/ranking";
+import { adAddress } from "@/lib/ad-address";
 import { publicView } from "@/server/listings/service";
 import { pickLimitsByCategory } from "@/server/fields/service";
 import { kindFor } from "@/server/categories/kind";
@@ -101,6 +102,8 @@ interface Row {
   localityId?: Types.ObjectId;
   title: string;
   slug?: string;
+  /** H16.2: the ad code that ends its public address. */
+  code?: string;
   description: string;
   price?: number;
   attributes?: Record<string, unknown>;
@@ -120,6 +123,8 @@ interface Row {
 export interface PublicHit {
   id: string | null;
   slug: string | null;
+  /** H16.2: the public address of the ad, left out while it has no code, category or city. */
+  address?: string;
   title: string;
   description: string;
   status: string;
@@ -163,6 +168,8 @@ export interface SearchResult {
   hits: PublicHit[];
   legacy: LegacyListing[];
   total: number;
+  /** H17.1: the same list without the sample (demo) ads; the words and numbers of a page use this one. */
+  realTotal: number;
   facets: SearchFacets;
 }
 
@@ -535,14 +542,16 @@ export async function presentRows(docs: Row[], promotions: Map<string, RankPromo
     const place = district?.name || city?.name || "";
     const code = bestCode(promotions.get(id) ?? [], now);
     const variant = VARIANT[code.trim().toLowerCase()] ?? "free";
-    const verified = doc.badges?.includes("verified") === true;
     const person = doc.ownerId ? peopleById.get(String(doc.ownerId)) : undefined;
+    const isSample = isDemoAd(person?.email, doc.slug ?? undefined);
+    // H17.1: a sample ad is not verified by anyone, so it never carries a verified badge or a trust mark.
+    const verified = !isSample && doc.badges?.includes("verified") === true;
     const bumped = doc.bumpedAt ? new Date(doc.bumpedAt) : doc.publishedAt;
     const publicId = publicIdOf(doc.slug, id);
+    const address = doc.code && categorySlug && citySlug && doc.title ? adAddress({ categorySlug, citySlug, title: doc.title, code: doc.code }) : undefined;
     const photoList = listingPhotos(categorySlug, publicId, photos.get(id) ?? [], isDemoAd(person?.email, doc.slug));
     const people = category?.kind === "people" || kindFor(categorySlug, category?.fields) === "people";
-    const trust = trustMarks(person?.verificationStatus, verified, photoList.length, people);
-    const isSample = isDemoAd(person?.email, doc.slug ?? undefined);
+    const trust = isSample ? [] : trustMarks(person?.verificationStatus, verified, photoList.length, people);
     const age = ageOf(doc.attributes);
     const price = cleanPrice(doc.price);
     const video = videos.get(id);
@@ -555,6 +564,7 @@ export async function presentRows(docs: Row[], promotions: Map<string, RankPromo
       districtSlug,
       place,
       publicId,
+      ...(address ? { address } : {}),
       photos: photoList,
       verified,
       variant,
@@ -565,6 +575,7 @@ export async function presentRows(docs: Row[], promotions: Map<string, RankPromo
     legacy.push({
       slug: doc.slug,
       publicId,
+      ...(address ? { address } : {}),
       title: doc.title,
       description: doc.description,
       displayName: doc.title,
@@ -595,7 +606,7 @@ export async function queryListings(input: ListingQuery): Promise<SearchResult> 
   const filter = await buildFilter(input);
   const page = Math.max(1, input.page ?? 1);
   const pageSize = Math.min(100, Math.max(1, input.pageSize ?? 20));
-  if (!filter) return { hits: [], legacy: [], total: 0, facets: { categories: [], cities: [] } };
+  if (!filter) return { hits: [], legacy: [], total: 0, realTotal: 0, facets: { categories: [], cities: [] } };
   const docs = await findRows(filter, input.q);
   const now = new Date();
   const promotions = await promotionsFor(
@@ -657,10 +668,14 @@ export async function queryListings(input: ListingQuery): Promise<SearchResult> 
     const slugSlot = new Map(pageDocs.flatMap((doc) => (slotOf.has(String(doc._id)) && doc.slug ? [[doc.slug, slotOf.get(String(doc._id))!] as const] : [])));
     presented.legacy = presented.legacy.map((item) => (item.slug && slugSlot.has(item.slug) ? { ...item, pinPosition: slugSlot.get(item.slug) } : item));
   }
+  // H17.1: the words and the numbers of a listing page count the REAL ads only; sample ads are shown but are not counted.
+  const sampleOwner = seedOwner;
+  const realTotal = sampleOwner ? ordered.filter((doc) => !(String(doc.ownerId ?? "") === sampleOwner && DEMO_SLUG.test(doc.slug ?? ""))).length : ordered.length;
   return {
     hits: presented.hits,
     legacy: presented.legacy,
     total: ordered.length,
+    realTotal,
     facets: facetsFrom(ordered, categoryRows, locationRows),
   };
 }

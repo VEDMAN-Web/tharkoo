@@ -27,7 +27,8 @@ describe("TEXT_DEFAULTS", () => {
     expect(TEXT_KEYS.length).toBeGreaterThan(20);
     for (const key of TEXT_KEYS) {
       const text = TEXT_DEFAULTS[key];
-      expect(text.trim().length, key).toBeGreaterThan(0);
+      // FIX-21: the top strip phone has no stand-in number; it shows only when an admin saves one
+      if (key !== "home.utility.phone") expect(text.trim().length, key).toBeGreaterThan(0);
       expect(text.length, key).toBeLessThanOrEqual(TEXT_MAX);
       expect(textDenied(text).denied, key).toBe(false);
     }

@@ -109,14 +109,18 @@ export function HelpView({
                   </svg>
                   Chat with us
                 </Link>
-                <Link href={whatsappHref} className="h714-btn h714-btn-wa">
-                  <BrandMark name="whatsapp" size={20} />
-                  WhatsApp
-                </Link>
-                <Link href={telegramHref} className="h714-btn h714-btn-tg">
-                  <Send size={18} aria-hidden="true" focusable="false" />
-                  Telegram
-                </Link>
+                {whatsappHref ? (
+                  <Link href={whatsappHref} className="h714-btn h714-btn-wa">
+                    <BrandMark name="whatsapp" size={20} />
+                    WhatsApp
+                  </Link>
+                ) : null}
+                {telegramHref ? (
+                  <Link href={telegramHref} className="h714-btn h714-btn-tg">
+                    <Send size={18} aria-hidden="true" focusable="false" />
+                    Telegram
+                  </Link>
+                ) : null}
                 <Link href={contactHref} className="h714-btn h714-btn-ghost">Send us a message</Link>
               </div>
             </aside>

@@ -1,5 +1,6 @@
 import AxeBuilder from "@axe-core/playwright";
 import type { Locator } from "@playwright/test";
+import { withFooterAdmin } from "./footer-admin";
 import { expect, hasHorizontalScroll, test } from "./helpers";
 
 const WIDTHS = [1440, 1024, 768, 390];
@@ -14,12 +15,8 @@ test.describe("H7.68 footer", () => {
     await page.goto("/");
     const footer = page.locator('[data-tk="footer"]');
     await expect(footer.locator('a[href="#"]')).toHaveCount(0);
-    await expect(footer.getByRole("link", { name: /^WhatsApp *[+]91 912345678/ })).toHaveAttribute("href", "https://wa.me/91912345678");
-    await expect(footer.getByRole("link", { name: /^Telegram *@tharkoo_support/ })).toHaveAttribute("href", "https://t.me/tharkoo_support");
     await expect(footer.getByRole("link", { name: /^Email *support@tharkoo[.]com/ })).toHaveAttribute("href", "mailto:support@tharkoo.com");
     await expect(footer).not.toContainText("[YOUR");
-    await expect(footer.getByRole("link", { name: "Tharkoo on WhatsApp" })).toHaveAttribute("href", "https://wa.me/91912345678");
-    await expect(footer.getByRole("link", { name: "Tharkoo on Telegram" })).toHaveAttribute("href", "https://t.me/tharkoo_support");
     for (const name of ["X", "LinkedIn", "Instagram", "Pinterest"]) {
       await expect(footer.getByRole("img", { name: `Tharkoo on ${name}` })).toBeVisible();
       await expect(footer.getByRole("link", { name: `Tharkoo on ${name}` })).toHaveCount(0);
@@ -83,14 +80,16 @@ test.describe("H7.68 footer", () => {
     await page.goto("/");
     const footer = page.locator('[data-tk="footer"]');
     await footer.scrollIntoViewIfNeeded();
-    const pill = footer.getByRole("link", { name: "Terms" });
+    const pill = footer.getByRole("link", { name: "Terms and Conditions" });
     const before = await pill.evaluate((node) => getComputedStyle(node).color);
     await pill.hover();
     await expect.poll(() => pill.evaluate((node) => getComputedStyle(node).color)).toBe("rgb(255, 255, 255)");
     expect(before).not.toBe("rgb(255, 255, 255)");
-    const tile = footer.getByRole("link", { name: "Tharkoo on WhatsApp" });
-    await tile.hover();
-    await expect.poll(() => tile.evaluate((node) => getComputedStyle(node).backgroundColor)).toBe("rgb(37, 211, 102)");
+    await withFooterAdmin(page, "/", async () => {
+      const tile = footer.getByRole("link", { name: "Tharkoo on WhatsApp" });
+      await tile.hover();
+      await expect.poll(() => tile.evaluate((node) => getComputedStyle(node).backgroundColor)).toBe("rgb(37, 211, 102)");
+    });
   });
 
   test("the footer passes axe with no serious or critical issues", async ({ page }) => {

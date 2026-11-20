@@ -17,12 +17,12 @@ function linkColor(page: Page, name: string) {
 }
 
 test.describe("H7.51 top bar", () => {
-  test("the phone pill calls the support number and the bar never scrolls sideways", async ({ page }) => {
+  test("the bar has no phone pill while no number is saved, and never scrolls sideways", async ({ page }) => {
     await page.goto("/");
     const bar = page.locator('[data-tk="top-bar"]');
     await expect(bar).toBeVisible();
     await expect(bar.getByText("Advertisers online now")).toBeVisible();
-    await expect(bar.locator('[data-tk="top-bar-phone"]')).toHaveAttribute("href", "tel:+91912345678");
+    await expect(bar.locator('[data-tk="top-bar-phone"]')).toHaveCount(0);
     expect(await hasHorizontalScroll(page)).toBe(false);
   });
 
@@ -46,12 +46,12 @@ test.describe("H7.51 top bar", () => {
     expect(Math.abs(barBox!.width - rowBox!.width)).toBeLessThanOrEqual(1);
   });
 
-  test("phones show the first pill and the phone pill only", async ({ page }, testInfo) => {
+  test("phones show the first pill only (no phone pill while no number is saved)", async ({ page }, testInfo) => {
     test.skip(testInfo.project.name !== "phone-390", "phones only");
     await page.goto("/");
     await expect(page.locator(".tkh-ub-pill:visible")).toHaveCount(1);
     await expect(page.locator('[data-tk="top-bar-crawl"]')).toBeHidden();
-    await expect(page.locator('[data-tk="top-bar-phone"]')).toBeVisible();
+    await expect(page.locator('[data-tk="top-bar-phone"]')).toHaveCount(0);
   });
 
   test("the top bar passes axe with no serious or critical issues", async ({ page }) => {
@@ -87,19 +87,19 @@ test.describe("H7.51 island nav", () => {
 });
 
 test.describe("H7.51 support number", () => {
-  test("the footer and the contact page use the support number and the Telegram name", async ({ page }) => {
+  test("the footer and the contact page draw no stand-in number or Telegram name", async ({ page }) => {
     await page.goto("/");
     const footer = page.locator('[data-tk="footer"]');
-    await expect(footer.getByRole("link", { name: /^WhatsApp *[+]91/ })).toHaveAttribute("href", "https://wa.me/91912345678");
-    await expect(footer.getByRole("link", { name: /^Telegram *@/ })).toHaveAttribute("href", "https://t.me/tharkoo_support");
-    await expect(footer).toContainText("+91 912345678");
-    await expect(footer).toContainText("@tharkoo_support");
+    await expect(footer.getByRole("link", { name: /^WhatsApp/ })).toHaveCount(0);
+    await expect(footer.getByRole("link", { name: /^Telegram/ })).toHaveCount(0);
+    await expect(footer).not.toContainText("+91 912345678");
+    await expect(footer).not.toContainText("@tharkoo_support");
     await expect(footer).not.toContainText(/[[]YOUR (PHONE|WHATSAPP|TELEGRAM)/);
 
     await page.goto("/contact/");
-    await expect(page.getByRole("link", { name: /Open WhatsApp/ })).toHaveAttribute("href", "https://wa.me/91912345678");
-    await expect(page.getByRole("link", { name: /Call us/ })).toHaveAttribute("href", "tel:+91912345678");
-    await expect(page.getByRole("link", { name: "@tharkoo_support", exact: true })).toHaveAttribute("href", "https://t.me/tharkoo_support");
+    await expect(page.getByRole("link", { name: /Open WhatsApp/ })).toHaveCount(0);
+    await expect(page.getByRole("link", { name: /Call us/ })).toHaveCount(0);
+    await expect(page.getByRole("link", { name: "@tharkoo_support", exact: true })).toHaveCount(0);
     expect(await hasHorizontalScroll(page)).toBe(false);
   });
 });

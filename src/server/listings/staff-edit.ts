@@ -15,6 +15,7 @@ import { parsePrice } from "@/server/listings/price";
 import { adPhotoUrl } from "@/server/media/photo-url";
 import { paidCreditsFor } from "@/server/moderation/review";
 import { AuditEvent, Category, Listing, ListingVersion, Location, MediaAsset, PromotionOrder, PromotionProduct, User, WalletEntry } from "@/server/models";
+import { listingAddressPath } from "@/server/models/listing";
 import { Subcategory } from "@/server/models/subcategory";
 import { withPickLimits } from "@/server/fields/service";
 import { parseListingAttributes } from "@/server/shared/fields";
@@ -53,6 +54,8 @@ export type StaffAdValues = {
 export type StaffAd = {
   id: string;
   slug: string;
+  /** H16.2: the public address of the ad, or "" while it has none. */
+  address: string;
   status: string;
   values: StaffAdValues;
   fields: AdField[];
@@ -156,6 +159,7 @@ export async function getStaffAd(roles: readonly string[], id: string): Promise<
   return {
     id,
     slug: String(listing.slug ?? ""),
+    address: await listingAddressPath(listing as never),
     status: String(listing.status ?? ""),
     values: valuesOf(plain(listing)),
     fields,

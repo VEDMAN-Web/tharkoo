@@ -157,7 +157,7 @@ test.describe("H7.86 post an ad, step 5 and the success screen", () => {
     await page.waitForURL(/\/u\/account\/ads\//);
     const mine = page.locator("[data-tk=card]").filter({ hasText: edited }).first();
     await expect(mine).toBeVisible();
-    const adHref = await mine.locator('a[href*="/ad/"]').first().getAttribute("href");
+    const adHref = await mine.locator('a[data-ad-link]').first().getAttribute("href");
     expect(adHref).toBeTruthy();
     expect((await page.request.get(adHref!)).status()).toBe(200);
     await shot(page, `${prefix}-08-my-ads`);
@@ -179,7 +179,7 @@ test.describe("H7.86 post an ad, step 5 and the success screen", () => {
     await expect(page.locator("[data-tk=step-title]")).toHaveText("Changes saved");
     await page.goto("/u/account/ads/");
     await expect(page.locator("[data-tk=card]").filter({ hasText: final }).first()).toBeVisible();
-    const finalHref = await page.locator("[data-tk=card]").filter({ hasText: final }).first().locator('a[href*="/ad/"]').first().getAttribute("href");
+    const finalHref = await page.locator("[data-tk=card]").filter({ hasText: final }).first().locator('a[data-ad-link]').first().getAttribute("href");
     expect(finalHref).toBeTruthy();
     const finalPage = await page.request.get(finalHref!);
     expect(finalPage.status()).toBe(200);
@@ -480,7 +480,7 @@ test.describe("H7.86 post an ad, step 5 and the success screen", () => {
 
     await consentAndPublish(page);
     await expect(page.locator("[data-tk=receipt]")).toHaveText("30 credits paid · Balance 70 credits");
-    await expect(page.locator("[data-tk=view-ad]")).toHaveAttribute("href", /^\/ad\//);
+    await expect(page.locator("[data-tk=view-ad]")).toHaveAttribute("href", /-[a-z0-9]{5}\/$/);
     await expect(page.getByText("View your ad", { exact: true })).toHaveCount(0);
     await expect(page.locator("[data-tk=upsell]")).toContainText("Get more views");
     expect(await page.locator("[data-tk=upsell-plan]").count()).toBeGreaterThan(0);
@@ -490,7 +490,7 @@ test.describe("H7.86 post an ad, step 5 and the success screen", () => {
     expect(draft).toBeTruthy();
     // H14.2: the whole posted-ad card opens the ad.
     await page.locator("[data-tk=post-success] .tkp-success-card").click({ position: { x: 30, y: 30 } });
-    await expect(page).toHaveURL(/\/ad\//);
+    await expect(page).toHaveURL(/-[a-z0-9]{5}\/$/);
   });
 
   test("with no posting-fee endpoint, a user with 0 credits sees no fee anywhere and publishes normally", async ({ page, baseURL }) => {

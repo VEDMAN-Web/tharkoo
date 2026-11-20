@@ -1,5 +1,6 @@
 "use client";
 
+import { trackEvent } from "@/lib/analytics/ga";
 import { createContext, useContext, useEffect, useRef, useState } from "react";
 import dynamic from "next/dynamic";
 import { MessageCircle, Phone, Video } from "lucide-react";
@@ -101,7 +102,8 @@ export function ContactProvider({
   const [tourRequested, setTourRequested] = useState(false);
   const [popup, setPopup] = useState<PopupKind | null>(null);
   const [signedIn, setSignedIn] = useState(false);
-  const seller = useSellerStatus(listingSlug);
+  // H17.1: a sample ad has nobody behind it, so there is no Online now or Away to show.
+  const seller = useSellerStatus(sample ? undefined : listingSlug);
   const people = peopleAd || seller?.people === true;
 
   function showSample() {
@@ -112,6 +114,8 @@ export function ContactProvider({
 
   async function open(channel: Channel) {
     if (showSample()) return;
+    // H17.11: a real ad only (a sample ad returned above). Telegram is not one of the counted methods.
+    if (channel !== "telegram") trackEvent("contact_click", { method: channel === "phone" ? "call" : channel });
     if (shown[channel]) return;
     setBusy(channel);
     setNotice(null);
@@ -169,6 +173,7 @@ export function ContactProvider({
 
   async function openChatFlow() {
     if (showSample()) return;
+    trackEvent("contact_click", { method: "chat" });
     const ready = hasSessionHint();
     setSignedIn(ready);
     if (!ready) return setPopup("chat");

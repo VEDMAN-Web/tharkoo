@@ -1,33 +1,26 @@
+import { PRIVACY_MD, TERMS_MD } from "./legal-text";
+
 export type TrustCopy = {
   title: string;
   description: string;
   paragraphs: string[];
 };
 
+/** H17.14: a legal text is markdown; each blank-line block is one paragraph of the page. */
+function legalBlocks(markdown: string): string[] {
+  return markdown.split(/\r?\n\s*\r?\n/).map((block) => block.trim()).filter(Boolean);
+}
+
 export const TRUST: Record<string, TrustCopy> = {
   terms: {
-    title: "Terms of use",
-    description: "The rules for posting and browsing classifieds on Tharkoo in India, including ID checks, promotions, and how we handle reports.",
-    paragraphs: [
-      "Tharkoo is a classifieds board for people in India. These terms cover browsing, posting, promoting, and contacting someone through an ad. By using the site you agree to post only what you have the right to offer, and to treat other people the way you would want to be treated in a public marketplace.",
-      "You must be 18 or older to create an account or to post an ad. We ask for a date of birth at registration and we may ask for an ID check before a listing goes live. An ID check confirms the account holder. It does not mean Tharkoo has inspected the item, the job, or the person in the photos.",
-      "Posting an ad costs a posting fee in credits, shown before you publish. Paid options, such as a star, a bump, or a longer highlight, change where the ad sits and for how long. They do not change these terms, and they do not promise a reply. Prices for those options are shown before you pay.",
-      "You keep ownership of the words and photos you upload. You give Tharkoo permission to display them on the listing, in search, and in the places the site uses to describe a public ad. Do not upload a photo of someone else unless you have their permission, and do not copy another person’s listing.",
-      "We can refuse, pause, or remove an ad that breaks these terms, that we cannot verify, or that a report gives us reason to review. We can also close an account that repeats the same problem. If we remove an ad, the public URL stops working. You can write to us through the contact page if you think that was a mistake.",
-      "These terms apply to every visitor and to every account. If we change them in a way that matters, we update this page, and the new terms apply from the day they are published.",
-    ],
+    title: "Terms and Conditions",
+    description: "The rules for using Tharkoo: adults only, what you may post, how we act on ads and accounts, credits, and how to reach the Grievance Officer.",
+    paragraphs: legalBlocks(TERMS_MD),
   },
   privacy: {
-    title: "Privacy",
-    description: "What Tharkoo stores when you browse, register, or post a classified in India, and how to ask about your account data.",
-    paragraphs: [
-      "This page explains what Tharkoo stores when you browse, register, or post. We keep the account email, a password hash, the date of birth you enter, and the ads you create. If you complete an ID check, we store the result of that check and the document image only for as long as we need it to review the account.",
-      "A public ad shows the title, description, photos, city, and the contact method you choose. It does not show your email. Do not put a phone number or a home address in the description if you do not want strangers to read it. You can delete an ad from your account, and we then stop showing it.",
-      "We use cookies to keep you signed in and to remember the age and cookie choices on this browser. The cookies page lists those choices. We do not sell account lists. If a payment provider is used for a promotion, that provider handles the card details and we store the result, not the full card number.",
-      "Staff can see account and listing records in the admin tools so they can review reports, ID checks, and promotions. Access is limited to people with an admin role. We keep a short audit note when an admin changes the homepage or a public URL.",
-      "You can ask what we hold about your account by writing through the contact page. We will reply to the email on the account. If the law requires us to keep a record, for example a payment or a report, we keep that record even after the ad is gone.",
-      "If you have a question about this note, write to us through the contact page. We read messages on business days and reply to the email on your account. We will update this page when the way we handle data changes, and the date at the top shows the latest version.",
-    ],
+    title: "Privacy Policy",
+    description: "What personal data Tharkoo collects, why, who sees it, how long we keep it, and your rights under India's data protection law.",
+    paragraphs: legalBlocks(PRIVACY_MD),
   },
   cookies: {
     title: "Cookies",
@@ -35,9 +28,9 @@ export const TRUST: Record<string, TrustCopy> = {
     paragraphs: [
       "Tharkoo uses a small number of cookies. A session cookie keeps you signed in after you enter your email and password. Without it, the account pages would ask you to sign in on every visit. The cookie is sent only to this site.",
       "Two choices are saved in this browser: that you confirmed you are 18 or older, and that you closed the cookie note. Those values stay on the device. They are not an account, and clearing the browser data brings the notes back.",
-      "We do not use a cookie to follow you across other websites, and we do not load an advertising network on the public pages. If that changes, this page will name the extra cookie and what it is for before it is switched on.",
+      "We do not use a cookie to follow you across other websites, and we do not load an advertising network on the public pages. Only if you choose Accept on the cookie note, we load Google Analytics, which sets the cookies _ga and _ga_ followed by an identifier to count visits to the public pages. We switch off Google signals and ad personalisation, and we never load it on the admin screens. If you choose Only necessary, Google Analytics is not loaded and sets no cookie. If we add anything else, this page will name the extra cookie and what it is for before it is switched on.",
       "You can block cookies in the browser. If you block the session cookie, you can still read public ads, and you will need to sign in again each time you want to post or to open your account. The age check will also appear again.",
-      "The cookie note at the bottom of the page is there so you can see this explanation before you continue. Choosing OK stores that choice. It does not change the terms or the privacy page.",
+      "The cookie note at the bottom of the page is there so you can see this explanation before you continue. Choosing Accept or Only necessary stores that choice. It does not change the terms or the privacy page.",
       "If you use more than one browser, each one keeps its own choice. A public computer should be signed out when you leave, because the session cookie lasts until you log out or the browser clears it. We do not use the cookie to build a profile of the cities you open.",
       "If you want to change a choice, clear the site data for Tharkoo in your browser settings and the cookie note will appear again on your next visit. The terms and the privacy page explain the rest of how your information is handled.",
     ],
@@ -73,7 +66,7 @@ export const TRUST: Record<string, TrustCopy> = {
     description: "How to browse city pages, post a classified, pass an ID check, and use a promotion on Tharkoo.",
     paragraphs: [
       "Start on the home page or open a category and a city. Each city page lists the ads posted for that category, with promoted ads first while their paid time is running. A district page is the same list narrowed to one area. Search is there when you already know a word in the title.",
-      "Posting starts at the post button. If you are not signed in, we ask you to log in or to register, and then we bring you back to the form. You choose a category, a city, a title, photos you have the right to use, and how you want to be contacted. A free weekly limit applies.",
+      "Posting starts at the post button. If you are not signed in, we ask you to log in or to register, and then we bring you back to the form. You choose a category, a city, a title, photos you have the right to use, and how you want to be contacted. Your first 3 ads are free; after that the price is shown before you publish.",
       "New accounts confirm an email. Before a listing is public we may ask for an ID check. Until that check is approved, the ad stays off the city page. After approval it has a public link, a place in the city list, and a line in the account so you can edit or remove it.",
       "A promotion is optional. A star, a bump, or a highlight changes the order and the badge for a fixed number of days. The price is shown before you pay. When the time ends, the ad returns to the ordinary order. It does not disappear unless it has also expired or you removed it.",
       "City, category, and ad links are built from the public names you see in the address bar. If an admin renames one, the old address points to the new one. You do not need to keep a private copy of the link for it to keep working.",

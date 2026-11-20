@@ -17,6 +17,7 @@ export function LegalView({
   askHref,
   askLabel,
   cover,
+  body,
 }: {
   crumbs: LegalCrumb[];
   title: string;
@@ -29,6 +30,8 @@ export function LegalView({
   askHref: string;
   askLabel: string;
   cover?: ReactNode;
+  /** H17.14: ready-made content (the approved legal text) drawn instead of the sections. */
+  body?: ReactNode;
 }) {
   const withHeadings = sections.filter((section) => section.heading);
   return (
@@ -62,7 +65,7 @@ export function LegalView({
               <strong>In short:</strong> {summary}
             </div>
           ) : null}
-          {sections.map((section) => (
+          {body ?? sections.map((section) => (
             <section key={section.id} id={section.id === "intro" ? undefined : section.id}>
               {section.heading ? <h2>{section.heading}</h2> : null}
               {section.paragraphs.map((paragraph, index) => (

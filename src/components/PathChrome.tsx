@@ -3,17 +3,18 @@
 import { Suspense } from "react";
 import { useSitePath } from "@/components/useSitePath";
 import { JsonLd } from "@/lib/jsonld";
-import { canonical } from "@/lib/seo";
+import { webPageNode } from "@/lib/seo/schema";
 import { safeHref } from "@/lib/sanitize";
 import type { SiteContent } from "@/lib/ui/site-content";
 import { LOGO_DARK_DEFAULT, LOGO_LIGHT_DEFAULT, type SiteLogos } from "@/lib/brand";
-import type { UiTextMap } from "@/lib/ui/text";
+import { makeT, type UiTextMap } from "@/lib/ui/text";
 import type { UrlPaths } from "@/lib/urls";
 import type { ShellConfig } from "@/server/site-links/shell-config-rules";
 import { AgeGate } from "./AgeGate";
 import { CityProvider } from "./CityContext";
 import type { CountryOption } from "@/server/locations/country-scope";
 import { CookieBanner } from "./CookieBanner";
+import { GoogleAnalytics } from "./analytics/GoogleAnalytics";
 import { Footer } from "./Footer";
 import { FooterNew } from "./FooterNew";
 import { Header } from "./Header";
@@ -24,7 +25,6 @@ import { UiTextProvider } from "./help/UiTextProvider";
 import { SupportChat } from "./chat/SupportChat";
 import { RechargeHost } from "./recharge/RechargeHost";
 import { PromoteHost } from "./promote/PromoteHost";
-import { SUPPORT_PHONE, SUPPORT_TELEGRAM } from "@/lib/support";
 import { SignInPopup } from "./auth/SignInPopup";
 import { AccountProvider } from "./account/AccountContext";
 
@@ -42,6 +42,10 @@ export type ChromeData = {
     supportHours?: string;
     logoText?: string;
     logos?: SiteLogos;
+    /** H17.11: the Google Analytics measurement ID set in Settings; empty means no tag and the plain cookie notice. */
+    analyticsId?: string;
+    /** H17.13: show the small RTA link in the footer (the Settings switch; on by default). */
+    rtaLabel?: boolean;
   };
   content: Pick<SiteContent, "hero" | "header" | "socials" | "support" | "footer" | "age" | "cookies">;
   footerLinks: NavLink[];
@@ -76,27 +80,18 @@ export function PathChrome({ shell, paths, children }: { shell: ChromeData; path
   const toolPage = path.startsWith("/styleguide");
   const siteName = site.logoText || site.name || "Tharkoo";
   const logos = site.logos ?? { light: LOGO_LIGHT_DEFAULT, dark: LOGO_DARK_DEFAULT };
+  const analyticsText = makeT(texts);
   return (
     <UrlPathProvider paths={paths}>
     <UiTextProvider texts={texts}>
     <CityProvider cities={cities}>
     <AccountProvider>
-      {path.startsWith(`/${paths.ad.replace(/^\/|\/$/g, "")}/`) ? null : (
-        <JsonLd
-          data={{
-            "@context": "https://schema.org",
-            "@type": "WebPage",
-            name: path === "/" ? site.name || "Tharkoo" : path,
-            url: canonical(path),
-            isPartOf: { "@type": "WebSite", name: site.name || "Tharkoo", url: canonical("/") },
-          }}
-        />
-      )}
+      {path === "/" ? <JsonLd data={webPageNode({ name: site.name || "Tharkoo", path, siteName: site.name || "Tharkoo" })} /> : null}
       {newDesign ? (
         <div className="tkn" data-design="new">
           <HeaderNew siteName={siteName} logo={logos.light} shell={config} cities={cities} countries={countries} categories={categories} texts={texts} />
           <MainInner>{children}</MainInner>
-          <FooterNew siteName={siteName} logo={logos.light} shell={config} categories={categories} />
+          <FooterNew siteName={siteName} logo={logos.light} shell={config} categories={categories} rta={site.rtaLabel !== false} />
           <SupportChat chat={config.chat} texts={texts} hours={content.support.hours || site.supportHours || ""} />
           <Suspense fallback={null}>
             <RechargeHost />
@@ -122,8 +117,8 @@ export function PathChrome({ shell, paths, children }: { shell: ChromeData; path
             id="tk-facts"
             hidden
             data-hours={content.support.hours || site.supportHours || ""}
-            data-wa={content.support.whatsapp || SUPPORT_PHONE}
-            data-tg={content.support.telegram || SUPPORT_TELEGRAM}
+            data-wa={content.support.whatsapp || ""}
+            data-tg={content.support.telegram || ""}
           />
           <Footer
             siteName={site.name || "Tharkoo"}
@@ -134,6 +129,7 @@ export function PathChrome({ shell, paths, children }: { shell: ChromeData; path
             links={footerLinks}
             social={content.socials.length ? content.socials : socialLinks}
             content={content.footer}
+            rtaText={site.rtaLabel !== false ? analyticsText("chrome.footer.rta") : ""}
           />
         </>
       )}
@@ -151,13 +147,14 @@ export function PathChrome({ shell, paths, children }: { shell: ChromeData; path
       )}
       {toolPage ? null : (
       <CookieBanner
-        body={content.cookies.body}
-        accept={content.cookies.accept}
-        necessary={content.cookies.necessary}
-        notice={content.cookies.notice}
+        body={site.analyticsId ? analyticsText("cookie.analytics.body") : content.cookies.body}
+        accept={site.analyticsId ? analyticsText("cookie.analytics.accept") : content.cookies.accept}
+        necessary={site.analyticsId ? analyticsText("cookie.analytics.necessary") : content.cookies.necessary}
+        notice={site.analyticsId ? analyticsText("cookie.analytics.notice") : content.cookies.notice}
         noticeHref={safeHref(content.cookies.noticeHref) || "/cookies/"}
       />
       )}
+      {toolPage || !site.analyticsId ? null : <GoogleAnalytics measurementId={site.analyticsId} />}
     </AccountProvider>
     </CityProvider>
     </UiTextProvider>
