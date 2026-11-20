@@ -27,7 +27,7 @@ export function SlideTrack({
     <div className="tkh-ad-track" ref={trackRef} onScroll={onScroll} onPointerDown={onTouch} onWheel={onTouch}>
       {slides.length ? (
         slides.map((slide, position) => (
-          <Link key={slide.src + position} href={href} prefetch={false} className={slide.kind === "video" ? "tkh-ad-slide tkh-ad-videoslide" : "tkh-ad-slide"} tabIndex={-1} aria-hidden="true" onClick={onClicked}>
+          <Link key={slide.src + position} href={href} prefetch={false} className={slide.kind === "video" ? "tkh-ad-slide tkh-ad-videoslide" : "tkh-ad-slide"} tabIndex={-1} aria-hidden="true" data-ad-link onClick={onClicked}>
             {slide.kind === "video" ? (
               <video ref={videoRef} src={slide.src} poster={slide.poster ?? undefined} muted playsInline preload="none" data-tk="card-video" />
             ) : (
@@ -36,7 +36,7 @@ export function SlideTrack({
           </Link>
         ))
       ) : (
-        <Link href={href} prefetch={false} className="tkh-ad-slide tkh-ad-empty" tabIndex={-1} aria-hidden="true" onClick={onClicked} />
+        <Link href={href} prefetch={false} className="tkh-ad-slide tkh-ad-empty" tabIndex={-1} aria-hidden="true" data-ad-link onClick={onClicked} />
       )}
     </div>
   );

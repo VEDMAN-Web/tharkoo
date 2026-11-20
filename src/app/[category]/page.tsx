@@ -5,7 +5,7 @@ import type { Metadata } from "next";
 import { MapPin } from "lucide-react";
 import { getCategories, getCategory, getCities, getFeed, getHomepageContent, getSeoFor, getSite, getStarListings, getStates, listingCountsByCategoryCity, pageOutOfRange } from "@/lib/queries";
 import { getPaths, publicTags } from "@/server/urls/service";
-import { adPath, categoryPath, placePath, postAdPath, searchPath, tagPath } from "@/lib/urls";
+import { adHref, categoryPath, placePath, postAdPath, searchPath, tagPath } from "@/lib/urls";
 import { ListingLinkNav } from "@/components/new/ListingLinkNav";
 import { fillTemplate } from "@/lib/seo";
 import { getIndexing, isCategoryOn } from "@/server/seo/indexing";
@@ -266,7 +266,7 @@ export default async function CategoryHub({ params, searchParams }: Props) {
           itemListNode({
             url: canonical(categoryPath(cat.slug || category)),
             items: ads.slice(0, 12).map((ad, index) => ({
-              url: canonical(adPath(paths, ad.slug || "")),
+              url: canonical(adHref(paths, ad)),
               name: ad.title || "Ad",
               position: index + 1,
             })),

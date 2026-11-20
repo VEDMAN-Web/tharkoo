@@ -140,7 +140,10 @@ describe("partner import", () => {
     expect(queueIndexNow).not.toHaveBeenCalled();
     await runImport(superadmin, owner.email, file(row("Fresh cycle"), row("Second cycle")), "active", "req-5");
     const pinged = queueIndexNow.mock.calls.flatMap((call) => call[0] as string[]).sort();
-    expect(pinged).toEqual(["/ad/fresh-cycle/", "/ad/second-cycle/"]);
+    // H16.2: each ad is pinged at its own address (category, city, title and code), not the old /ad/ link.
+    expect(pinged).toHaveLength(2);
+    expect(pinged[0]).toMatch(/^\/[a-z0-9-]+\/[a-z0-9-]+\/fresh-cycle-[a-z0-9]{5}\/$/);
+    expect(pinged[1]).toMatch(/^\/[a-z0-9-]+\/[a-z0-9-]+\/second-cycle-[a-z0-9]{5}\/$/);
   });
 
   it("reports a row with a missing required field and does not import it", async () => {

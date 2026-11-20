@@ -1,7 +1,7 @@
 "use client";
 
-import { isAdAddressPath } from "@/lib/ad-address";
 import { ArrowUp, MessageCircle, Phone, Send, X } from "lucide-react";
+import { isAdAddressPath } from "@/lib/ad-address";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { FormEvent, TouchEvent } from "react";
 import { useSitePath } from "@/components/useSitePath";

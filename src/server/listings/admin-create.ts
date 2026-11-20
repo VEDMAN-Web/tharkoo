@@ -46,6 +46,7 @@ import { parseListingAttributes } from "@/server/shared/fields";
 import { withPickLimits } from "@/server/fields/service";
 import { idCheckRequired } from "@/server/settings/id-check";
 import { evaluatePublishGate } from "@/server/shared/publish-gate";
+import { publicPathsOf } from "@/server/listings/ad-code";
 
 const audit = new AuditRepository();
 const OBJECT_ID = /^[a-f0-9]{24}$/i;
@@ -297,8 +298,8 @@ export async function createAdminAd(actor: ImportActor, raw: unknown, requestId:
   });
   if (input.status === "active") {
     await refreshCaches();
-    const slug = (await Listing.findById(id).select("slug").lean<{ slug?: string }>())?.slug;
-    if (slug) await pingIndexNow([`/ad/${slug}/`]);
+    const doc = await Listing.findById(id).select("slug title categoryId cityId code").lean<{ _id: Types.ObjectId; slug?: string; title?: string; categoryId?: Types.ObjectId; cityId?: Types.ObjectId; code?: string }>();
+    if (doc?.slug) await pingIndexNow(await publicPathsOf([doc]));
   }
   return { id, status: input.status, ownerId: owner.id };
 }

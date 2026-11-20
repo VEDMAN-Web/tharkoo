@@ -30,6 +30,8 @@ export type DashboardRank = { position: number; inWhat: string; page: number; ab
 export type DashboardAd = {
   id: string;
   slug: string;
+  /** H16.2: the public address of the ad; left out while it has none. */
+  address?: string;
   title: string;
   photo: string | null;
   where: string;
@@ -263,6 +265,7 @@ async function adRows(
       return {
         id: String(row._id),
         slug: row.slug ?? "",
+        ...(card?.address ? { address: card.address } : {}),
         title: row.title,
         photo: card?.photos?.[0] ?? null,
         where: [category, city].filter(Boolean).join(" · "),

@@ -5,6 +5,7 @@ import type { AdminCtx } from "@/server/admin/context";
 import { adminWrite } from "@/server/admin/write";
 import { NotFoundError, ValidationError } from "@/server/http";
 import { Listing, Report } from "@/server/models";
+import { adCodeOf } from "@/lib/ad-address";
 import { DEFAULT_DUE_HOURS, TAKEDOWN_CHANNELS, adKeyOf, type TakedownChannel } from "@/server/admin/takedown-rules";
 
 /**
@@ -41,7 +42,8 @@ export async function addTakedown(ctx: AdminCtx, input: TakedownInput): Promise<
   if (dueAt.getTime() <= receivedAt.getTime()) throw new ValidationError("The due time must be after it was received.");
   if (receivedAt.getTime() > Date.now() + HOUR_MS) throw new ValidationError("It cannot have been received in the future.");
 
-  const listing = await Listing.findOne(Types.ObjectId.isValid(key) ? { $or: [{ _id: key }, { slug: key }] } : { slug: key }).select("title slug").lean<{ _id: Types.ObjectId; title?: string; slug?: string } | null>();
+  const byCode = adCodeOf(input.ad);
+  const listing = await Listing.findOne(Types.ObjectId.isValid(key) ? { $or: [{ _id: key }, { slug: key }] } : byCode ? { $or: [{ slug: key }, { code: byCode }] } : { slug: key }).select("title slug").lean<{ _id: Types.ObjectId; title?: string; slug?: string } | null>();
   if (!listing) throw new NotFoundError("No ad matches that link or ID.");
   const label = (listing.title ?? listing.slug ?? "ad").slice(0, 60);
 

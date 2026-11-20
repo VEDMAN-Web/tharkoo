@@ -67,7 +67,7 @@ export function HomeAdPopout({
       <PopPhoto ad={ad} labels={labels} slides={slides} index={index} onIndex={onIndex} videoRef={videoRef} />
       <div className="tkh-pop-body">
         <p className="tkh-pop-title">
-          <Link href={ad.href} prefetch={false} className="tkh-pop-link" onClick={() => (ad.slug ? recordAdClick(ad.slug) : undefined)}>
+          <Link href={ad.href} prefetch={false} className="tkh-pop-link" data-ad-link onClick={() => (ad.slug ? recordAdClick(ad.slug) : undefined)}>
             {ad.title}
           </Link>
         </p>

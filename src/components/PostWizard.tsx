@@ -132,6 +132,7 @@ export function PostWizard({
   const [publishedStatus, setPublishedStatus] = useState("");
   const [serverShort, setServerShort] = useState<{ need: number; balance: number } | null>(null);
   const [adSlug, setAdSlug] = useState("");
+  const [adAddress, setAdAddress] = useState("");
   const [receipt, setReceipt] = useState("");
   const [planNote, setPlanNote] = useState("");
   const [draftStatus, setDraftStatus] = useState("");
@@ -525,8 +526,9 @@ export function PostWizard({
       const charged = typeof outcome.charged === "number" ? outcome.charged : alreadyPaid ? 0 : money.fee;
       const left = typeof outcome.balance === "number" ? outcome.balance : Math.max(0, (money.balance ?? 0) - charged);
       setReceipt(!chargesFee ? "" : charged > 0 ? t("post.receipt.paid", { paid: creditsText(charged), balance: creditsText(left) }) : t("post.receipt.free", { balance: creditsText(left) }));
-      void api<{ slug?: string }>(`/api/listings/by-id/${draftId}`).then((found) => {
+      void api<{ slug?: string; address?: string | null }>(`/api/listings/by-id/${draftId}`).then((found) => {
         if (found.ok && found.data?.slug) setAdSlug(found.data.slug);
+        if (found.ok && found.data?.address) setAdAddress(found.data.address);
       });
     }
     window.history.replaceState(null, "", postAdPath(paths));
@@ -567,7 +569,7 @@ export function PostWizard({
         hasPhoto={Boolean(coverUrl)}
         byline={byline}
         anotherHref={copy.success.secondaryCta?.href || postAdPath(paths)}
-        adHref={adSlug ? `/ad/${adSlug}/` : ""}
+        adHref={adAddress || (adSlug ? `/ad/${adSlug}/` : "")}
         receipt={receipt}
         plans={visiblePlans.filter((plan) => (plan.amount ?? 0) > 0).slice(0, 2)}
         planNote={planNote}

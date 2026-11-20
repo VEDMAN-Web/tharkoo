@@ -86,7 +86,7 @@ export function ListingPopout({
       <PopPhoto ad={ad} labels={labels} slides={slides} index={index} onIndex={onIndex} videoRef={videoRef} heart={false} />
       <div className="tkh-pop-body tk-pop-body">
         <p className="tkh-pop-title tk-pop-title">
-          <Link href={ad.href} prefetch={false} className="tkh-pop-link" onClick={() => (ad.slug ? recordAdClick(ad.slug) : undefined)}>
+          <Link href={ad.href} prefetch={false} className="tkh-pop-link" data-ad-link onClick={() => (ad.slug ? recordAdClick(ad.slug) : undefined)}>
             {ad.title}
           </Link>
         </p>
