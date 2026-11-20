@@ -43,7 +43,7 @@ import { loadFallbackSections, showFallback } from "@/lib/fallback-ads";
 import { ListingFrame } from "@/components/new/ListingFrame";
 import { introCategory, listingFrameProps } from "@/components/new/listing-frame-props";
 import { attributePicks, hasFieldPicks, listingFilterQuery, type ListingToggles } from "@/components/new/listing-filters";
-import { withPagination } from "@/lib/seo/pagination";
+import { pagedText, withPagination } from "@/lib/seo/pagination";
 import { listingLabels, placeSelects } from "@/components/new/listing-frame-props";
 import { listingHeading } from "@/lib/layout/listing";
 import { type ListingParams } from "@/server/search/filter-seo";
@@ -110,9 +110,11 @@ export async function generateMetadata({ params, searchParams }: Props): Promise
           mode: "content",
         })
       : null;
-  const title = resolved?.title ?? fillTemplate(seo?.title || copy.title, vars);
+  const baseTitle = resolved?.title ?? fillTemplate(seo?.title || copy.title, vars);
   const description = resolved?.description ?? fillTemplate(seo?.description || copy.description, vars);
   const pageNo = Math.max(1, Number(sp.page) || 1);
+  // H17.3: page 2 and later say so in the title (and in the heading below).
+  const title = pagedText(baseTitle, pageNo);
   const filtered = activeFilterKeys(sp).length > 0;
   const thin = !isHubOn(hubMin);
   const clean = placePath(cat.slug || category, loc.slug || location);
@@ -238,7 +240,7 @@ export default async function LocationPage({ params, searchParams }: Props) {
     ...(loc.stateSlug && loc.stateSlug !== (loc.slug || location) ? [{ name: `${stateName} ${cat.name}`, path: placePath(cat.slug || category, loc.stateSlug) }] : []),
     { name: `${loc.name} ${cat.name}`, path: canonicalPath },
   ];
-  const h1 = resolved ? resolved.h1 : heading || visibleHeading(fillTemplate(seo?.h1 || "", vars), copy.h1);
+  const h1 = pagedText(resolved ? resolved.h1 : heading || visibleHeading(fillTemplate(seo?.h1 || "", vars), copy.h1), page);
   const toggles: ListingToggles = { verified: sp.verified === "1", photos: sp.photos === "1", video: sp.video === "1", online: sp.online === "1" };
   const filterQs = listingFilterQuery(picks, toggles);
   // H7.32 (FIX B): few own ads keep their place, and fallback ads go below them. Nothing is empty.

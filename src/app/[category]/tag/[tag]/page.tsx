@@ -11,7 +11,7 @@ import type { ListingParams } from "@/server/search/filter-seo";
 import { FallbackAds } from "@/components/FallbackAds";
 import { getCategories, getCategory, getCities, getFeed, getHomepageContent, getSite, getStates, pageOutOfRange } from "@/lib/queries";
 import { canonical } from "@/lib/seo";
-import { withPagination } from "@/lib/seo/pagination";
+import { pagedText, withPagination } from "@/lib/seo/pagination";
 import { makeT } from "@/lib/ui/text";
 import { textOverrides } from "@/app/admin/ui-text/store";
 import { readShellConfig } from "@/server/site-links/shell-config";
@@ -46,7 +46,7 @@ export async function generateMetadata({ params, searchParams }: Props): Promise
   const pageNo = Math.max(1, Number(sp.page) || 1);
   const suffix = pageNo > 1 ? `?page=${pageNo}` : "";
   const result = await withUrlSeo(path, {
-    title: `${cat.name}: ${meta.label} ads | Tharkoo`,
+    title: pagedText(`${cat.name}: ${meta.label} ads | Tharkoo`, pageNo),
     description: `Browse ${cat.name} ads tagged ${meta.label} on Tharkoo. Open a listing to see the details, photos, and how to get in touch.`,
     path: `${path}${suffix}`,
     canonicalUrl: canonical(`${path}${suffix}`),
@@ -121,7 +121,7 @@ export default async function TagPage({ params, searchParams }: Props) {
     template: {
       state: { category: { slug: cat.slug || category, name: cat.name || category }, toggles, picks, fields: cat.fields },
       crumbs,
-      h1: heading,
+      h1: pagedText(heading, page),
       total: feed.total,
       nearby: own,
       pagePath: path,
@@ -144,7 +144,7 @@ export default async function TagPage({ params, searchParams }: Props) {
     >
       <ListingPageView
         texts={texts}
-        pageName={heading}
+        pageName={pagedText(heading, page)}
         crumbs={crumbs}
         path={`${path}${filterQs ? `?${filterQs}` : ""}`}
         stars={[]}

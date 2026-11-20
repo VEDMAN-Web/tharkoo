@@ -562,7 +562,7 @@ input, select, textarea { font-size: 16px; }
 .tk-socials { display: flex; gap: 32px; justify-content: center; }
 .tk-socials a { color: var(--primary); }
 .tk-copy { font-size: 12px; color: var(--muted); margin: 0; }
-.tk-rta { display: inline-flex; align-items: center; min-height: 32px; padding: 0 12px; font-size: 12px; color: var(--muted); text-decoration: underline; }
+.tk-rta { display: inline-flex; align-items: center; min-height: 44px; padding: 0 12px; font-size: 12px; color: var(--muted); text-decoration: underline; }
 .tk-top {
   position: absolute;
   top: 0;

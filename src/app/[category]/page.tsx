@@ -34,7 +34,7 @@ import { bandChoice, hasOwnBand, heroBandFrom } from "@/components/new/band-imag
 import { FallbackAds } from "@/components/FallbackAds";
 import { loadFallbackSections, showFallback } from "@/lib/fallback-ads";
 import { ListingFrame } from "@/components/new/ListingFrame";
-import { withPagination } from "@/lib/seo/pagination";
+import { pagedText, withPagination } from "@/lib/seo/pagination";
 import { resolveListingCopy } from "@/server/content/listing-copy";
 import { ListingPager } from "@/components/new/ListingPager";
 import { pageBase, pagerLabels } from "@/components/new/listing-pager";
@@ -55,10 +55,12 @@ export async function generateMetadata({ params, searchParams }: Props): Promise
   const path = categoryPath(cat.slug || category);
   const fromContent = (site as { listingCopySource?: string }).listingCopySource === "content";
   const resolved = fromContent ? await resolveListingCopy({ kind: "category", path, categorySlug: cat.slug || category, category: cat.name || category, count: 0, mode: "content" }) : null;
-  const title = resolved?.title ?? fillTemplate(seo?.title || "{category} classifieds across India | Tharkoo", vars);
+  const baseTitle = resolved?.title ?? fillTemplate(seo?.title || "{category} classifieds across India | Tharkoo", vars);
   const description = resolved?.description ?? fillTemplate(seo?.description || "Browse {category} on Tharkoo: listings from people across Indian cities. Filter by city and district, see photos and contact posters directly.", vars);
   const on = isCategoryOn(await getIndexing(), cat.slug || category);
   const pageNo = Math.max(1, Number(sp.page) || 1);
+  // H17.3: page 2 and later say so in the title (and in the heading below).
+  const title = pagedText(baseTitle, pageNo);
   const suffix = listingCanonicalSuffix(sp, pageNo);
   const meta = await withSeoDefaults(
     await withUrlSeo(path, { title, description, path: `${path}${suffix}`, canonicalUrl: canonical(`${path}${suffix}`), index: on && robots.index, follow: robots.follow }),
@@ -127,7 +129,7 @@ export default async function CategoryHub({ params, searchParams }: Props) {
   ];
   const layout = await resolveListingLayout({ path: categoryPath(cat.slug || category), category: cat.slug || category, vars: { ...vars, count: feed.realTotal } });
   const headerBlock = layout.blocks.find((block) => block.type === "listingHeader");
-  const h1Text = resolved ? resolved.h1 : listingHeading(String(headerBlock?.props.h1Template ?? ""), heading, { ...layout.vars, h1: heading });
+  const h1Text = pagedText(resolved ? resolved.h1 : listingHeading(String(headerBlock?.props.h1Template ?? ""), heading, { ...layout.vars, h1: heading }), page);
   const wrap = (id: string, devices: Parameters<typeof deviceClass>[0], content: React.ReactNode) => {
     const cls = deviceClass(devices);
     return cls ? <div key={id} className={cls}>{content}</div> : <span key={id} style={{ display: "contents" }}>{content}</span>;
