@@ -23,7 +23,7 @@ You give Tharkoo a worldwide, royalty-free licence to host, copy, display, resiz
 
 **6. Prohibited content and conduct.** You must not post, send or offer, and Tharkoo does not allow:
 
-1. any offer of sex or sexual services for money or anything of value, escort or companionship-for-payment services, "massage" offers that hide sexual services, or any wording, price, code or image that suggests them;
+1. any offer, request or hint of paid intimate contact, or any ad that hides one behind another service (for example a massage, a meeting or a friendship offer), including wording, prices, codes or images that suggest it;
 2. nudity, sexually explicit images or video, or any intimate image of a person without their consent;
 3. anything involving a person under 18, including any content that sexualises minors (we report it to the authorities);
 4. trafficking, forced labour, exploitation, or any person offered or controlled by someone else;

@@ -71,17 +71,31 @@ const CONTACT_ROWS: {
   },
 ];
 
-/** H17.14: Terms, Privacy and Grievance Officer are always in the bottom row (words from Site text); the admin list adds the rest. */
-const LEGAL_PATHS = ["/terms/", "/privacy/", "/grievance/", "/grievance-officer/", "/cms/grievance/"];
+/**
+ * H17.14: Terms, Privacy and Grievance Officer are always in the bottom row, with their words from Site text. The admin list keeps its
+ * order; an entry for one of these pages shows the Site text words, and a page the list leaves out is added at the end.
+ */
+const LEGAL_PAGES: { key: string; paths: string[]; link: (t: LegalWords) => ShellLink }[] = [
+  { key: "terms", paths: ["/terms/"], link: (t) => ({ label: t("chrome.footer.terms"), href: "/terms/", visible: true, icon: "shield" }) },
+  { key: "privacy", paths: ["/privacy/"], link: (t) => ({ label: t("chrome.footer.privacy"), href: "/privacy/", visible: true, icon: "shield" }) },
+  { key: "grievance", paths: ["/grievance/", "/grievance-officer/", "/cms/grievance/"], link: (t) => ({ label: t("chrome.footer.grievance"), href: "/grievance/", visible: true, icon: "user" }) },
+];
+type LegalWords = (key: "chrome.footer.terms" | "chrome.footer.privacy" | "chrome.footer.grievance") => string;
 
-function footerLegalLinks(legal: ShellLink[], t: (key: "chrome.footer.terms" | "chrome.footer.privacy" | "chrome.footer.grievance") => string): ShellLink[] {
-  const fixed: ShellLink[] = [
-    { label: t("chrome.footer.terms"), href: "/terms/", visible: true, icon: "shield" },
-    { label: t("chrome.footer.privacy"), href: "/privacy/", visible: true, icon: "shield" },
-    { label: t("chrome.footer.grievance"), href: "/grievance/", visible: true, icon: "user" },
-  ];
-  const extra = legal.filter((item) => item.visible && safeHref(item.href) && !LEGAL_PATHS.includes(item.href.trim().replace(/\/?$/, "/")));
-  return [...fixed, ...extra];
+function footerLegalLinks(legal: ShellLink[], t: LegalWords): ShellLink[] {
+  const used = new Set<string>();
+  const out: ShellLink[] = [];
+  for (const item of legal) {
+    if (!item.visible || !safeHref(item.href)) continue;
+    const page = LEGAL_PAGES.find((candidate) => candidate.paths.includes(item.href.trim().replace(/\/?$/, "/")));
+    if (!page) out.push(item);
+    else if (!used.has(page.key)) {
+      used.add(page.key);
+      out.push(page.link(t));
+    }
+  }
+  for (const page of LEGAL_PAGES) if (!used.has(page.key)) out.push(page.link(t));
+  return out;
 }
 
 function LinkColumn({ title, items, className, extra }: { title: string; items: ShellLink[]; className: string; extra?: ShellLink }) {

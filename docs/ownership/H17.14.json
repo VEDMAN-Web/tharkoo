@@ -1,0 +1,29 @@
+{
+  "branchPrefix": "haiku/h17.14",
+  "globs": [
+    "docs/ownership/H17.14.json",
+    "progress/H17.14.md",
+    "src/content/legal-text.ts",
+    "src/content/trust.ts",
+    "src/components/new/LegalDoc.tsx",
+    "src/components/new/legal-doc.css",
+    "src/components/new/legal-markdown.ts",
+    "src/components/new/LegalView.tsx",
+    "src/components/new/TrustLegalPage.tsx",
+    "src/components/FooterNew.tsx",
+    "src/lib/ui/text.ts",
+    "src/lib/ui/text-labels.ts",
+    "src/lib/urls.ts",
+    "src/lib/content/placeholder.ts",
+    "src/server/content/studio/fields.ts",
+    "src/app/grievance-officer/page.tsx",
+    "src/app/terms/page.tsx",
+    "src/app/privacy/page.tsx",
+    "tests/server/layout/a47b-chrome-text.test.ts",
+    "tests/server/ui/h17-14-legal.test.ts",
+    "tests/e2e/h17-14-legal.e2e.ts",
+    "tests/e2e/footer.e2e.ts",
+    "tests/e2e/top-bar.e2e.ts",
+    "tests/e2e/footer-admin.ts"
+  ]
+}
