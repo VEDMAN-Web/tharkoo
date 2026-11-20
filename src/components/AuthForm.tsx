@@ -1,5 +1,6 @@
 "use client";
 
+import { trackEvent } from "@/lib/analytics/ga";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useMemo, useState } from "react";
@@ -76,6 +77,7 @@ function AuthFormInner({ mode }: { mode: Mode }) {
       if (res.status === 429) return setMessage(res.error.message || "");
       return fail(res.error);
     }
+    trackEvent("login", { method: "email" });
     router.push(next || (isStaffRole(res.data.user?.roles) ? "/admin/" : "/u/account/dashboard/"));
     router.refresh();
   }
@@ -110,6 +112,7 @@ function AuthFormInner({ mode }: { mode: Mode }) {
       setMessage("Account created. Check your inbox to confirm your email.");
       return;
     }
+    trackEvent("sign_up", { method: "email" });
     router.push(next || "/u/account/dashboard/");
     router.refresh();
   }

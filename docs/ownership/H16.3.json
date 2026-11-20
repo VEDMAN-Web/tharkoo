@@ -1,0 +1,18 @@
+{
+  "branchPrefix": "haiku/h16.3",
+  "globs": [
+    "docs/ownership/H16.3.json",
+    "progress/H16.3.md",
+    "src/server/content/studio/ai-draft.ts",
+    "src/server/content/studio/fields.ts",
+    "src/server/content/studio/service.ts",
+    "src/server/content/studio/admin.ts",
+    "src/server/models/content.ts",
+    "src/app/admin/content/actions.ts",
+    "src/app/admin/content/page.tsx",
+    "src/app/admin/content/_studio/ContentView.tsx",
+    "src/app/admin/content/_studio/Editor.tsx",
+    "tests/server/content/h16-3-ai-draft.test.ts",
+    "tests/e2e/h16-3-ai-draft.e2e.ts"
+  ]
+}

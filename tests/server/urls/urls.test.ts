@@ -98,9 +98,10 @@ describe("url manager", () => {
     const origin = siteUrl().replace(/\/$/, "");
     expect(cities.some((entry) => entry.loc === `${origin}/social/new-delhi/`)).toBe(true);
     expect(cities.some((entry) => entry.loc.includes("/dating/delhi/"))).toBe(false);
-    // H16.5: the ads sitemap lists the live ad at its new prefix.
-    expect(ads.some((entry) => entry.loc === `${origin}/listing/office-assistant-0001/`)).toBe(true);
-    expect(ads.some((entry) => entry.loc.includes("/ad/"))).toBe(false);
+    // H16.2: the ads sitemap lists the live ad at its own address (renamed category and city, then title and code); the ad prefix no longer shows.
+    const code = (await Listing.findById(ad._id).select("code").lean<{ code?: string }>())?.code;
+    expect(ads.some((entry) => entry.loc.startsWith(`${origin}/social/new-delhi/`) && entry.loc.endsWith(`-${code}/`))).toBe(true);
+    expect(ads.some((entry) => entry.loc.includes("/ad/") || entry.loc.includes("/listing/"))).toBe(false);
   });
 
   it("keeps the ad id when the title slug changes and stores an seo override", async () => {

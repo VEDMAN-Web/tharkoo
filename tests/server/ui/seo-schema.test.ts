@@ -52,10 +52,10 @@ describe("structured data", () => {
 
     const list = itemListNode({
       url: "https://tharkoo.example/dating/gurgaon/",
-      total: 1,
       items: [{ url: "https://tharkoo.example/ad/demo/", name: "Coffee", position: 1 }],
     });
     expect(list["@type"]).toBe("ItemList");
+    expect(list.numberOfItems).toBe(1);
     expect(list.itemListElement[0]?.["@type"]).toBe("ListItem");
   });
 

@@ -154,6 +154,7 @@ export async function getFeed(filter: Record<string, unknown>, page = 1) {
       return {
         items: result.legacy,
         total: result.total,
+        realTotal: result.realTotal,
         page: safePage,
         pageSize: PAGE_SIZE,
         pages: Math.max(1, Math.ceil(result.total / PAGE_SIZE)),
@@ -310,6 +311,7 @@ export async function searchListings(opts: {
       return {
         items: result.legacy,
         total: result.total,
+        realTotal: result.realTotal,
         page: safePage,
         pageSize: PAGE_SIZE,
         pages: Math.max(1, Math.ceil(result.total / PAGE_SIZE)),
@@ -330,6 +332,7 @@ export async function getCityLatest(citySlug: string, page = 1) {
       return {
         items: result.legacy,
         total: result.total,
+        realTotal: result.realTotal,
         page: safePage,
         pageSize: PAGE_SIZE,
         pages: Math.max(1, Math.ceil(result.total / PAGE_SIZE)),

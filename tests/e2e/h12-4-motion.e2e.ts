@@ -91,7 +91,8 @@ test.describe("H12.4 light motion", () => {
     await page.setViewportSize({ width: 1440, height: 900 });
     await page.goto("/dating/");
     await page.waitForLoadState("networkidle");
-    const card = page.locator(".m-lift").first();
+    // H14.1: the list pages draw the row card (data-tk=listing-row, class tk-row), which has its own lift on hover; .m-lift is on the Home and category tiles.
+    const card = page.locator('[data-tk="listing-row"]').first();
     await card.scrollIntoViewIfNeeded();
     const before = await card.evaluate((node) => getComputedStyle(node).transform);
     await frames(page, "item1-lift", async () => {

@@ -55,9 +55,10 @@ describe("H16.4 title, description and robots", () => {
     expect(adDescriptionFromText(undefined, "generic text")).toBe("generic text");
   });
 
-  it("indexes a live ad that is set to be indexed or a sample ad, never an ended one, and keeps people photos out of image search", () => {
+  // H17.8 (Vedant's decision): a sample ad page is never indexed.
+  it("indexes a live real ad that is set to be indexed, never a sample or an ended one, and keeps people photos out of image search", () => {
     expect(adRobots({ access: "live", indexed: true, sample: false, people: false })).toEqual({ index: true, follow: true, noimageindex: false });
-    expect(adRobots({ access: "live", indexed: false, sample: true, people: false }).index).toBe(true);
+    expect(adRobots({ access: "live", indexed: true, sample: true, people: false }).index).toBe(false);
     expect(adRobots({ access: "live", indexed: false, sample: false, people: false }).index).toBe(false);
     expect(adRobots({ access: "ended", indexed: true, sample: false, people: false }).index).toBe(false);
     expect(adRobots({ access: "live", indexed: true, sample: false, people: true }).noimageindex).toBe(true);
@@ -71,7 +72,8 @@ describe("H16.4 JobPosting", () => {
   const base = { category: "jobs", name: "Office assistant", description: "A weekday office role.", url: "https://tharkoo.example/ad/x/", datePosted: "2026-11-10T00:00:00.000Z", validThrough: "2026-11-13T00:00:00.000Z", hiringOrganization: "Patel Traders", jobLocation: "Surat" };
 
   it("has the JobPosting shape with the ad's end date as validThrough, and only fields the ad really has", () => {
-    const node = listingJsonLd(base) as Record<string, unknown>;
+    // H16.4 (e): a JobPosting is written only for a verified poster.
+    const node = listingJsonLd({ ...base, verifiedPoster: true }) as Record<string, unknown>;
     expect(node).toMatchObject({ "@context": "https://schema.org", "@type": "JobPosting", title: "Office assistant", validThrough: "2026-11-13T00:00:00.000Z", hiringOrganization: { "@type": "Organization", name: "Patel Traders" }, jobLocation: { "@type": "Place", name: "Surat" } });
     expect(Object.keys(node).sort()).toEqual(["@context", "@type", "datePosted", "description", "hiringOrganization", "jobLocation", "title", "url", "validThrough"]);
   });

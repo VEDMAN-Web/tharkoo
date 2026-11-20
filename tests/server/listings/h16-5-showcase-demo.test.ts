@@ -91,21 +91,24 @@ describe("H16.5 every listing page is indexable and in the sitemaps", () => {
     expect(w.jobs).toBeTruthy();
   });
 
-  it("the ads sitemap lists live sample ads and live real ads that are set to be indexed, not ended or noindex ones", async () => {
+  // H17.8 (Vedant's decision, 19 Nov): sample ads are out of Google. This replaces the H16.5 rule that listed them in ads.xml.
+  it("the ads sitemap lists live real ads that are set to be indexed, and no sample ads, no ended ones, no noindex ones", async () => {
     const w = await world();
     const sample = await ad(w, { owner: "seed", category: "jobs", city: "surat" });
     const ended = await ad(w, { owner: "seed", category: "jobs", city: "surat", status: "expired" });
     const realIndexed = await ad(w, { owner: "real", category: "jobs", city: "surat", noindex: false });
     const realHidden = await ad(w, { owner: "real", category: "jobs", city: "surat", noindex: true });
     const urls = (await shardEntries("ads")).map((row) => row.loc);
-    expect(urls.some((url) => url.includes(sample.slug as string))).toBe(true);
-    expect(urls.some((url) => url.includes(realIndexed.slug as string))).toBe(true);
-    expect(urls.some((url) => url.includes(ended.slug as string))).toBe(false);
-    expect(urls.some((url) => url.includes(realHidden.slug as string))).toBe(false);
+    // H16.2: each ad is listed at its own address, which ends in the ad's code. H17.8: a sample ad is not listed.
+    const listed = (doc: { code?: string }) => urls.some((url) => url.endsWith(`-${doc.code}/`));
+    expect(listed(sample)).toBe(false);
+    expect(listed(realIndexed)).toBe(true);
+    expect(listed(ended)).toBe(false);
+    expect(listed(realHidden)).toBe(false);
   });
 
-  it("explains a sample ad page as indexable and a listing page with no ads as indexable", () => {
-    expect(explainIndexability({ pageType: "ad", demoAd: true, adNoindex: true }).indexable).toBe(true);
+  it("explains a sample ad page as not indexable (H17.8) and a listing page with no ads as indexable", () => {
+    expect(explainIndexability({ pageType: "ad", demoAd: true, adNoindex: true }).indexable).toBe(false);
     expect(explainIndexability({ pageType: "city", count: 0 }).indexable).toBe(true);
     expect(explainIndexability({ pageType: "district", count: 1 }).indexable).toBe(true);
     expect(explainIndexability({ pageType: "city", count: 5, page: 2 }).indexable).toBe(false);

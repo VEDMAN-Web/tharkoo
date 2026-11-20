@@ -1,3 +1,4 @@
+import { sampleNoteText } from "@/lib/seo/sample-note";
 import { notFound, permanentRedirect } from "next/navigation";
 import { withPagination } from "@/lib/seo/pagination";
 import type { Metadata } from "next";
@@ -37,8 +38,8 @@ async function resolve({ category, location, district }: SubHubParams) {
   return { cat, city, cityId: String(row._id), ...found };
 }
 
-function copyFor(input: { catName: string; cityName: string; subName: string; subIntro: string; count: number; site?: string; indexable: boolean }) {
-  const base = fallbackLanding({ category: input.subName, city: input.cityName, count: input.count, site: input.site, indexable: input.indexable });
+function copyFor(input: { catName: string; cityName: string; subName: string; subIntro: string; count: number; site?: string; indexable: boolean; sampleNote?: string }) {
+  const base = fallbackLanding({ category: input.subName, city: input.cityName, count: input.count, site: input.site, indexable: input.indexable, sampleNote: input.sampleNote });
   return { ...base, h1: `${input.subName} in ${input.cityName}`, intro: input.subIntro || base.intro };
 }
 
@@ -65,9 +66,10 @@ export async function subHubMetadata(params: SubHubParams, page: number): Promis
     cityName: hub.city.name || params.location,
     subName: hub.sub.name,
     subIntro: hub.sub.seoIntro,
-    count: feed.total,
+    count: feed.realTotal,
     site: site.name,
     indexable: isSubcategoryIndexable(feed.total),
+    sampleNote: await sampleNoteText(),
   });
   const path = placePath(hub.cat.slug || params.category, hub.city.slug || params.location, hub.sub.slug);
   const meta = await withUrlSeo(path, {
@@ -111,11 +113,12 @@ export async function SubHub({ params, page }: { params: SubHubParams; page: num
     cityName: hub.city.name || citySlug,
     subName: hub.sub.name,
     subIntro: hub.sub.seoIntro,
-    count: feed.total,
+    count: feed.realTotal,
     site: site.name,
     indexable: isSubcategoryIndexable(feed.total),
+    sampleNote: await sampleNoteText(),
   });
-  const vars = { category: hub.cat.name, city: hub.city.name, sub: hub.sub.name, site: site.name, count: feed.total, year: new Date().getFullYear() };
+  const vars = { category: hub.cat.name, city: hub.city.name, sub: hub.sub.name, site: site.name, count: feed.realTotal, year: new Date().getFullYear() };
   const layout = await resolveListingLayout({ path: canonicalPath, category: catSlug, vars });
   const crumbs = [
     { name: t("listing.crumb.home"), path: "/" },
@@ -197,6 +200,7 @@ export async function SubHub({ params, page }: { params: SubHubParams; page: num
     <ListingPageView
       layout={layout}
       texts={texts}
+      pageName={h1}
       faqs={copy.faqs}
       intro={copy.intro}
       crumbs={crumbs}

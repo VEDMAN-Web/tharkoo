@@ -3,6 +3,7 @@ import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 import { saveSeoSettings } from "@/app/admin/seo/settings/store";
 import { invalidateTags } from "@/lib/cache";
 import { hubCopy, siteOrganizationNode, defaultOgImage } from "@/lib/seo-site";
+import { SUPPORT_EMAIL } from "@/lib/support";
 import { applyDefaultOgImage, withSeoDefaults } from "@/lib/ui/meta-defaults";
 import { pageMetadata } from "@/lib/ui/meta";
 import { saveUrlOverride } from "@/server/urls/service";
@@ -68,7 +69,9 @@ describe("organization and default image settings", () => {
     const node = (await siteOrganizationNode("Tharkoo", { logo: "https://built.in/logo.svg" })) as Record<string, unknown>;
     expect(node.name).toBe("Tharkoo");
     expect(node.logo).toBe("https://built.in/logo.svg");
-    expect(node.contactPoint).toBeUndefined();
+    expect(node.sameAs).toBeUndefined();
+    // H17.5: with nothing saved, the contact point is the support email the site shows in its footer.
+    expect(node.contactPoint).toEqual({ "@type": "ContactPoint", contactType: "customer support", email: SUPPORT_EMAIL });
   });
 
   it("puts the default OG image on pages that have none, and keeps a page's own image", async () => {

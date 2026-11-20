@@ -291,6 +291,34 @@ export async function signInAdminContext(context: import("@playwright/test").Bro
 }
 
 /**
+ * H17.1: the path of a REAL ad with a photo and contact buttons. A sample (demo) ad has no Call, WhatsApp or Chat button, so the tests of
+ * those buttons need a real one. It is a copy of the first ad of the feed owned by a throwaway real account (a copy of a real ad is used as is).
+ */
+export async function realAdPath(page: Page, feed = "/dating/bengaluru/"): Promise<string> {
+  const first = await firstAdPath(page, feed);
+  const slug = first.replace(/^\/ad\//, "").replace(/\/$/, "");
+  const copied = await withLocalDb(async (db) => {
+    const source = await db.collection("listings").findOne({ slug });
+    if (!source) return null;
+    const owner = await db.collection("users").findOne({ _id: source.ownerId }, { projection: { email: 1 } });
+    if (owner?.email !== "seed@tharkoo.local") return slug;
+    const now = new Date();
+    const stamp = `${now.getTime()}-${Math.floor(Math.random() * 1e6)}`;
+    const user = await db.collection("users").insertOne({ email: `real-${stamp}@example.test`, displayName: "E2E real poster", roles: ["user"], createdAt: now, updatedAt: now });
+    const media = await db.collection("media_assets").insertOne({ kind: "image", status: "cleared", objectKey: "/brand/logo-mark-512.png", ownerId: user.insertedId, createdAt: now, updatedAt: now });
+    const { _id, ...rest } = source;
+    void _id;
+    // feedHidden keeps the copy out of every list, so the other specs still see the same first cards; the page opens by its address.
+    const copy = { ...withoutAddress(rest), ownerId: user.insertedId, slug: `e2e-real-${stamp}`, mediaIds: [media.insertedId], badges: [], feedHidden: true, publishedAt: now, createdAt: now, updatedAt: now };
+    await db.collection("vendor_presence").updateOne({ userId: String(user.insertedId) }, { $set: { available: true, lastActivityAt: now, liveChat: true } }, { upsert: true });
+    await db.collection("listings").insertOne(copy);
+    return copy.slug as string;
+  });
+  expect(copied, "a real ad could be made from the first ad of the feed").toBeTruthy();
+  return `/ad/${copied}/`;
+}
+
+/**
  * H7.5: turns the ad seller's "Available now" switch on or off in the test database, as the seller would from the panel.
  * On sets recent activity, so the seller shows Online now until the admin's hours pass with no activity.
  */
@@ -332,4 +360,23 @@ export function uploadsDir() {
 /** The ad slug from its public path, e.g. /ad/in00012/ gives in00012. */
 export function slugFromAdPath(path: string) {
   return path.replace(/^\/ad\//, "").replace(/\/$/, "");
+}
+
+/** H16.2: matches the address an ad has now, for toHaveURL. The ad is found by its old slug. */
+export async function adAddressPattern(slug: string) {
+  const row = await withLocalDb((db) => db.collection("listings").findOne({ slug }, { projection: { code: 1 } }));
+  if (!row?.code) throw new Error(`No code for local ad ${slug}`);
+  return new RegExp(`-${row.code}/$`);
+}
+
+/**
+ * H16.2: every ad has its own unique code and address. A spec that makes a new ad by copying a seeded one must not copy those
+ * fields, or the copy would clash with the original. Use this on the copy.
+ */
+export function withoutAddress<T extends Record<string, unknown>>(listing: T): Omit<T, "code" | "addressPath" | "previousPaths"> {
+  const { code, addressPath, previousPaths, ...rest } = listing;
+  void code;
+  void addressPath;
+  void previousPaths;
+  return rest;
 }

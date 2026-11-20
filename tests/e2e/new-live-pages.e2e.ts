@@ -1,5 +1,5 @@
 import AxeBuilder from "@axe-core/playwright";
-import { expect, hasHorizontalScroll, isPhone, test } from "./helpers";
+import { expect, hasHorizontalScroll, isPhone, test, realAdPath } from "./helpers";
 
 /**
  * H7.4: the New design live pages (home, listing title band, ad page). The e2e server is staging (SITE_NOINDEX=true),
@@ -54,7 +54,8 @@ test.describe("H7.4 listing header (New design)", () => {
 
 test.describe("H7.4 ad page (New design)", () => {
   test("shows the gallery, details, the contact panel and similar ads without sideways scroll", async ({ page }) => {
-    await page.goto("/ad/demo-0352/");
+    // H17.1: a sample ad has no contact panel, so this is a real ad.
+    await page.goto(await realAdPath(page, "/dating/bengaluru/"));
     await expect(page.locator('[data-tk="new-ad"]')).toBeVisible();
     await expect(page.locator("h1").first()).toBeVisible();
     await expect(page.locator(".tkn-gal")).toBeVisible();

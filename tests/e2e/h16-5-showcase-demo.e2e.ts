@@ -1,5 +1,5 @@
 import { ObjectId } from "mongodb";
-import { expect, hasHorizontalScroll, test, withLocalDb } from "./helpers";
+import { expect, hasHorizontalScroll, test, withLocalDb, withoutAddress } from "./helpers";
 
 /**
  * H16.5: sample (demo) ads are labelled, their Chat and contact buttons show the sample message instead of contacting anyone,
@@ -18,7 +18,7 @@ async function demoCategoryAndCity() {
 }
 
 test.describe("H16.5 sample ads", () => {
-  test("a sample ad shows the Sample ad label on its card, and its page says so and answers Chat with the sample message", async ({ page }) => {
+  test("a sample ad shows the Sample ad label on its card, and its page says so with the sample message and a Post button, and has no Chat, Call or WhatsApp button", async ({ page }) => {
     test.setTimeout(180_000);
     const place = (await demoCategoryAndCity())!;
     await page.goto(`/${place.category}/${place.city}/`);
@@ -29,18 +29,14 @@ test.describe("H16.5 sample ads", () => {
     await card.locator("a.tkh-ad-link").first().click();
     await expect(page.locator(`[data-tk="new-ad"] ${SAMPLE_PILL}`)).toHaveText("Sample ad");
     const banner = page.locator('[data-tk="sample-banner"]');
-    await expect(banner).toContainText("This is a sample ad showing how ads look on Tharkoo. Post yours free");
+    await expect(banner).toContainText("This is a sample ad showing how ads look on Tharkoo. Your first 3 ads are free.");
     await expect(banner.getByRole("link", { name: "Post an ad" })).toBeVisible();
     await expect(page.locator("h1")).toHaveCount(1);
     expect(await hasHorizontalScroll(page)).toBe(false);
 
-    await page.locator('[data-tk="chat"]:visible').first().click();
-    const note = page.locator('[data-tk="sample-note"]:visible').first();
-    await expect(note).toContainText("This is a sample ad showing how ads look on Tharkoo");
-    await expect(note.getByRole("link", { name: "Post an ad" })).toBeVisible();
+    // H17.1: a sample ad has no Chat, Call or WhatsApp button at all (it used to answer them with the sample message); the note and its Post button above stay.
+    await expect(page.locator('[data-tk="chat"], [data-tk="whatsapp"], [data-tk="call"]')).toHaveCount(0);
     await expect(page.getByRole("dialog")).toHaveCount(0);
-    await page.locator('[data-tk="whatsapp"]:visible').first().click();
-    await expect(page.locator('[data-tk="sample-note"]:visible').first()).toBeVisible();
   });
 
   test("a real ad has no label and no sample message", async ({ page }) => {
@@ -52,7 +48,7 @@ test.describe("H16.5 sample ads", () => {
       await db.collection("users").insertOne({ _id: owner, email: `${slug}@example.test`, displayName: "H165 Seller", status: "active", roles: ["user"], createdAt: new Date() });
       const { _id: _unused, ...rest } = source!;
       void _unused;
-      await db.collection("listings").insertOne({ ...rest, _id: new ObjectId(), ownerId: owner, slug, title: `H165 real ad ${slug}`, seoNoindex: false });
+      await db.collection("listings").insertOne({ ...withoutAddress(rest), _id: new ObjectId(), ownerId: owner, slug, title: `H165 real ad ${slug}`, seoNoindex: false });
     });
     await expect.poll(async () => (await page.goto(`/ad/${slug}/`))?.status(), { timeout: 60_000, intervals: [2_000] }).toBe(200);
     await expect(page.locator(SAMPLE_PILL)).toHaveCount(0);

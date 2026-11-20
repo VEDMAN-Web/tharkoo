@@ -1,0 +1,21 @@
+{
+  "branchPrefix": "haiku/h17.2",
+  "globs": [
+    "docs/ownership/H17.2.json",
+    "progress/H17.2.md",
+    "src/lib/cache.ts",
+    "src/lib/seo/sitemaps.ts",
+    "src/app/sitemap/[shard]/route.ts",
+    "src/app/not-found.tsx",
+    "src/app/ad/[slug]/page.tsx",
+    "src/app/[category]/[location]/page.tsx",
+    "src/app/[category]/[location]/[district]/page.tsx",
+    "tests/server/lib/cache-stale.test.ts",
+    "tests/server/seo/h17-2-sitemaps.test.ts",
+    "tests/e2e/h17-2-seo-basics.e2e.ts",
+    "src/server/listings/revalidate.ts",
+    "src/server/listings/service.ts",
+    "tests/server/listings/h17-2-moderation-purge.test.ts",
+    "tests/e2e/h17-2-moderation-now.e2e.ts"
+  ]
+}

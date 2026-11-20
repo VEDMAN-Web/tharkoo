@@ -95,7 +95,7 @@ export const CATEGORIES: SeedCategory[] = [
     slug: "personal-ads",
     kind: "people",
     name: "Personal ads",
-    description: "Short personal notices for dating, friendship, and activities.",
+    description: "Hobby, sport and activity partners near you.",
     order: 3,
     enabled: true,
     fields: fields([["topic", "Topic", "text", { required: true }]]),
@@ -423,9 +423,9 @@ const DEMO_LINES: Record<string, ReadonlyArray<readonly [string, string, Record<
     ["Photography meetup in {city}", "Casual photography walk for beginners in {city}.", { topic: "Photography" }],
   ],
   "personal-ads": [
-    ["New in {city}", "Recently moved to {city} and would like local friends.", { topic: "New in town" }],
-    ["Music fan in {city}", "Looking to share live music plans in {city}.", { topic: "Music" }],
-    ["Cooking club in {city}", "Home cooking notes and recipe swaps in {city}.", { topic: "Cooking" }],
+    ["Badminton partner in {city}", "Looking for a regular badminton partner for early evening games in {city}.", { topic: "Badminton" }],
+    ["Weekend cycling in {city}", "Cycling friends wanted for Sunday morning rides around {city}.", { topic: "Cycling" }],
+    ["Chess partner in {city}", "Would like to play casual chess on weekends in {city}.", { topic: "Chess" }],
   ],
   jobs: [
     ["Office assistant in {city}", "Weekday office assistant role for a local team in {city}.", { role: "Office assistant", "work-mode": "Office" }],

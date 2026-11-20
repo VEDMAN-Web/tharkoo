@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { can } from "@/lib/admin/perms";
 import { adminContext, type AdminCtx } from "@/server/admin/context";
+import { createAiDraft } from "@/server/content/studio/ai-draft";
 import { createItem, publishItem, saveDraft, unpublishItem, type ContentWrite } from "@/server/content/studio/service";
 import { changeSlug } from "@/server/content/studio/slug";
 import { suggestLinks, type LinkSuggestion } from "@/server/content/studio/suggest";
@@ -27,6 +28,14 @@ async function run(work: (ctx: AdminCtx) => Promise<ContentWrite & { redirected?
 
 export async function createItemAction(input: { kind: string; title: string; slug?: string }): Promise<ContentResult> {
   return run((ctx) => createItem(ctx, { kind: String(input.kind), title: String(input.title ?? ""), slug: input.slug ? String(input.slug) : undefined }));
+}
+
+/** H16.3: asks the AI for a first draft of a blog post and saves it as a draft. Needs content.write; the key stays on the server. */
+export async function aiDraftAction(input: { topic: string; city?: string; category?: string; keywords?: string }): Promise<ContentResult> {
+  return run(async (ctx) => {
+    const done = await createAiDraft(ctx, { topic: String(input.topic ?? ""), city: input.city ? String(input.city) : undefined, category: input.category ? String(input.category) : undefined, keywords: input.keywords ? String(input.keywords) : undefined });
+    return { eventId: done.eventId, undoUntil: null, summary: done.summary, itemId: done.itemId };
+  });
 }
 
 export async function saveDraftAction(input: { itemId: string; fields: unknown; expectedVersion?: number }): Promise<ContentResult> {

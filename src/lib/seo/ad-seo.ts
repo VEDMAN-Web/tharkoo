@@ -44,9 +44,9 @@ export function adDescriptionFromText(text: string | undefined | null, fallback:
 export type AdRobots = { index: boolean; follow: true; noimageindex: boolean };
 
 /**
- * Index a live ad that is set to be indexed (and every live sample ad); never an ended one. A people ad keeps its text in search
+ * Index a live real ad that is set to be indexed; never a sample (demo) ad (H17.8) and never an ended one. A people ad keeps its text in search
  * but its photos stay out of image search.
  */
 export function adRobots(input: { access: "live" | "ended" | "gone" | "missing"; indexed: boolean; sample: boolean; people: boolean }): AdRobots {
-  return { index: input.access === "live" && (input.indexed || input.sample), follow: true, noimageindex: input.people };
+  return { index: input.access === "live" && input.indexed && !input.sample, follow: true, noimageindex: input.people };
 }

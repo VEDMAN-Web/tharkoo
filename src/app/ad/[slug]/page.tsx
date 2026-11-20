@@ -14,7 +14,7 @@ import { Listing } from "@/lib/models";
 import { safePhoto } from "@/lib/media";
 import { getCategory, getListingBySlug, getRelated, getSite } from "@/lib/queries";
 import { canonical, fillTemplate } from "@/lib/seo";
-import { listingJsonLd } from "@/lib/seo/schema";
+import { adJsonLdNodes } from "@/lib/seo/schema";
 import { adMetaDescription } from "@/lib/seo/ad-description";
 import { getSeoSettings } from "@/app/admin/seo/settings/store";
 import { siteUrl } from "@/lib/utils";
@@ -22,8 +22,10 @@ import { listingVisibility } from "@/server/listings/visibility";
 import { loadEndedAd } from "@/server/listings/ended-ad";
 import { AdEnded } from "@/components/AdEnded";
 import { adDescriptionFromText, adPageTitle, adRobots } from "@/lib/seo/ad-seo";
-import { demoOwnerId, DEMO_SLUG } from "@/server/listings/demo-ads";
+import { isSampleListing } from "@/server/listings/demo-ads";
 import { adPath, categoryPath, placePath } from "@/lib/urls";
+import { adAddress } from "@/lib/ad-address";
+import { addressForSlug } from "@/server/listings/ad-route";
 import { withUrlSeo, urlHeading } from "@/lib/seo/override";
 import { plain } from "@/lib/plain";
 import { isCityAlias } from "@/lib/seo/district-alias";
@@ -42,7 +44,7 @@ import { contactChannelsOf } from "@/server/listings/contact-channels";
 
 type Props = { params: Promise<{ slug: string }> };
 
-export const revalidate = 60;
+export const revalidate = 300;
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params;
@@ -56,16 +58,16 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     slug?: string;
   } | null;
   const access = listingVisibility(record);
-  const sampleOwner = await demoOwnerId();
-  const sample = Boolean(sampleOwner && record && String(record.ownerId ?? "") === sampleOwner && DEMO_SLUG.test(record.slug ?? ""));
+  const sample = await isSampleListing(record);
   if (access === "ended") {
     const paths = await getPaths();
-    return withUrlSeo(adPath(paths, slug), {
+    const endedPath = (await addressForSlug(slug)) || adPath(paths, slug);
+    return withUrlSeo(endedPath, {
       title: "This ad is no longer available | Tharkoo",
       description: "This ad is no longer available on Tharkoo. See similar ads.",
-      path: adPath(paths, slug),
+      path: endedPath,
       index: false,
-    });
+    }, adPath(paths, slug));
   }
   const [ad, site] = await Promise.all([getListingBySlug(slug), getSite()]);
   if (!ad) return {};
@@ -73,12 +75,12 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const description = adDescriptionFromText(ad.description, adMetaDescription({ title: displayTitle(ad.title), category: prettyPlace(ad.categorySlug), city: prettyPlace(ad.citySlug), site: site.name || "Tharkoo" }));
   const image = safePhoto(ad.photos?.[0]) || "/brand/og-default.png";
   const paths = await getPaths();
-  const path = adPath(paths, ad.slug || slug);
-  // H16.5: a live ad that is set to be indexed, and every live sample (demo) ad, is indexable and in the ads sitemap.
+  const path = (await addressForSlug(ad.slug || slug)) || adPath(paths, ad.slug || slug);
+  // H17.8: a sample (demo) ad page is always noindex,follow; a live real ad that is set to be indexed is indexable. H16.4: a people ad keeps its photos out of image search.
   const own = await Listing.findOne({ slug: ad.slug || slug }).select("_id").lean<{ _id: unknown } | null>();
   const people = own ? await listingIsPeople(String(own._id)) : false;
   const robots = adRobots({ access, indexed: record?.seoNoindex === false, sample, people });
-  return withUrlSeo(path, { title, description, path, image, index: robots.index, noImageIndex: robots.noimageindex });
+  return withUrlSeo(path, { title, description, path, image, index: robots.index, noImageIndex: robots.noimageindex }, adPath(paths, ad.slug || slug));
 }
 
 function listedPrice(attributes: unknown) {
@@ -114,8 +116,9 @@ export default async function AdPage({ params }: Props) {
   }
   const ad = await getListingBySlug(slug);
   if (!ad) notFound();
-  const row = (await Listing.findOne({ slug: ad.slug }).select("_id attributes publishedAt expiresAt ownerId +contact").lean()) as {
+  const row = (await Listing.findOne({ slug: ad.slug }).select("_id attributes publishedAt expiresAt ownerId code +contact").lean()) as {
     contact?: { phone?: string; whatsapp?: string };
+    code?: string;
     _id?: unknown;
     ownerId?: unknown;
     attributes?: unknown;
@@ -134,13 +137,16 @@ export default async function AdPage({ params }: Props) {
   ]);
   const features = await kindFeatures((cat as { kind?: string } | null)?.kind);
   const tour = listingId && tourOffer ? { listingId, coins: tourOffer.coins } : null;
-  const owner = row?.ownerId ? ((await User.findById(row.ownerId).select("displayName createdAt").lean()) as { displayName?: string; createdAt?: Date } | null) : null;
+  const owner = row?.ownerId ? ((await User.findById(row.ownerId).select("displayName createdAt verificationStatus").lean()) as { displayName?: string; createdAt?: Date; verificationStatus?: string } | null) : null;
   const adView = { ...plain(ad), details: adDetailRows(row?.attributes, cat?.fields) };
   const cover = safePhoto(ad.photos?.[0]);
   const paths = await getPaths();
-  const publicAd = adPath(paths, ad.slug || slug);
+  const publicAd =
+    row?.code && ad.categorySlug && ad.citySlug && ad.title
+      ? adAddress({ categorySlug: ad.categorySlug, citySlug: ad.citySlug, title: ad.title, code: row.code })
+      : adPath(paths, ad.slug || slug);
   const shareUrl = canonical(publicAd);
-  const heading = await urlHeading(publicAd, displayTitle(ad.title) || "Listing");
+  const heading = await urlHeading(publicAd, displayTitle(ad.title) || "Listing", adPath(paths, ad.slug || slug));
   const image = cover ? (cover.startsWith("http") ? cover : `${siteUrl().replace(/\/$/, "")}${cover}`) : undefined;
   const city = prettyPlace(ad.citySlug);
   const catName = cat?.name || ad.categorySlug || "";
@@ -154,23 +160,32 @@ export default async function AdPage({ params }: Props) {
     ...(district && !isCityAlias(city, district) ? [{ name: `${district} ${catName}`, path: placePath(ad.categorySlug || "", ad.citySlug || "", ad.districtSlug || "") }] : []),
   ];
   const seoSettings = await getSeoSettings().catch(() => null);
-  const structured = listingJsonLd({
-    mapping: seoSettings?.adSchema[ad.categorySlug || ""],
-    category: ad.categorySlug || "",
-    name: displayTitle(ad.title),
-    description: (ad.description || displayTitle(ad.title)).slice(0, 300),
-    url: shareUrl,
-    image,
-    city,
-    price: listedPrice(row?.attributes),
-    datePosted: row?.publishedAt ? new Date(row.publishedAt).toISOString() : undefined,
-    validThrough: row?.expiresAt ? new Date(row.expiresAt).toISOString() : undefined,
-    hiringOrganization: textAttr(row?.attributes, "company") || textAttr(row?.attributes, "hiringOrganization"),
-    jobLocation: city || undefined,
+  // H17.5: the breadcrumb in the markup ends with the ad; a sample ad never claims an offer, product, job or rating.
+  const structured = adJsonLdNodes({
+    crumbs,
+    title: displayTitle(ad.title) || "Listing",
+    path: publicAd,
+    sample: await isSampleListing({ ownerId: row?.ownerId, slug: ad.slug || slug }),
+    listing: {
+      mapping: seoSettings?.adSchema[ad.categorySlug || ""],
+      category: ad.categorySlug || "",
+      name: displayTitle(ad.title),
+      description: (ad.description || displayTitle(ad.title)).slice(0, 300),
+      url: shareUrl,
+      image,
+      city,
+      price: listedPrice(row?.attributes),
+      datePosted: row?.publishedAt ? new Date(row.publishedAt).toISOString() : undefined,
+      validThrough: row?.expiresAt ? new Date(row.expiresAt).toISOString() : undefined,
+      hiringOrganization: textAttr(row?.attributes, "company") || textAttr(row?.attributes, "hiringOrganization"),
+      jobLocation: city || undefined,
+      people: peopleAd,
+      verifiedPoster: owner?.verificationStatus === "approved",
+    },
   });
   return (
     <>
-      <JsonLd data={structured ? [breadcrumbJsonLd(crumbs), structured] : [breadcrumbJsonLd(crumbs)]} />
+      <JsonLd data={structured} />
       {newDesign ? (
         <NewAdDetail
           ad={adView}
@@ -196,7 +211,7 @@ export default async function AdPage({ params }: Props) {
       ) : (
         <AdDetail ad={adView} categoryName={catName} related={plain(related)} listingId={listingId} crumbs={crumbs} shareUrl={shareUrl} heading={heading} tour={tour} peopleAd={peopleAd} />
       )}
-      <AdCountsBar slug={ad.slug || slug} />
+      <AdCountsBar slug={ad.slug || slug} category={ad.categorySlug} city={ad.citySlug} sample={Boolean(ad.sample)} />
       {newDesign ? null : <AdVideos videos={videos} title={displayTitle(ad.title) || "Listing"} />}
     </>
   );

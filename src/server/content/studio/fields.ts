@@ -47,9 +47,9 @@ export function fieldTexts(fields: Pick<ContentFields, "title" | "h1" | "excerpt
   return out;
 }
 
-/** True when any text still holds the "[placeholder" marker. An item with it cannot be published. */
+/** True when any text still holds a "[placeholder" or "[ADD FACT" marker (the AI draft leaves the second one). An item with it cannot be published. */
 export function placeholderIn(fields: Pick<ContentFields, "title" | "h1" | "excerpt" | "body" | "faq" | "seo">): boolean {
-  return fieldTexts(fields).some((value) => /\[placeholder/i.test(value));
+  return fieldTexts(fields).some((value) => /\[(placeholder|add fact)/i.test(value));
 }
 
 function toId(value: unknown): mongoose.Types.ObjectId | undefined {
