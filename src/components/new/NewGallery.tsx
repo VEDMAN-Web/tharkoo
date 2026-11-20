@@ -4,6 +4,7 @@ import { useRef, useState, type KeyboardEvent, type TouchEvent } from "react";
 import { ChevronLeft, ChevronRight, Maximize2, Play } from "lucide-react";
 import { useContact } from "@/components/ContactButtons";
 import { useT } from "@/components/ui/AdCard";
+import { adPhotoAlt } from "@/lib/ad-photo-alt";
 import type { AdVideo } from "@/server/media/video";
 import { buildGalleryItems, wrapIndex } from "./gallery-items";
 import { GalleryVideo } from "./GalleryVideo";
@@ -12,7 +13,7 @@ import "./gallery.css";
 
 const SWIPE_DISTANCE = 40;
 
-export function NewGallery({ photos, videos = [], title, badge, isNew = false }: { photos: string[]; videos?: AdVideo[]; title: string; badge?: string | null; isNew?: boolean }) {
+export function NewGallery({ photos, videos = [], title, place = "", badge, isNew = false }: { photos: string[]; videos?: AdVideo[]; title: string; place?: string; badge?: string | null; isNew?: boolean }) {
   const t = useT();
   const { seller } = useContact();
   const [index, setIndex] = useState(0);
@@ -70,8 +71,8 @@ export function NewGallery({ photos, videos = [], title, badge, isNew = false }:
         <div className="tkn-gal-main">
           {current.kind === "photo" ? (
             <>
-              <img className="tkn-gal-blur" src={current.src} alt="" aria-hidden="true" />
-              <img className="tkn-gal-img" src={current.src} alt={`${title}, ${label("photo", at + 1)}`} />
+              <img className="tkn-gal-blur" src={current.src} alt="" aria-hidden="true" width={960} height={1200} />
+              <img className="tkn-gal-img" src={current.src} alt={adPhotoAlt(title, place, at + 1 - videoTotal)} width={960} height={1200} decoding="async" />
             </>
           ) : (
             <GalleryVideo key={current.src} item={current} active label={`${title}, ${label("video", at + 1)}`} />
@@ -109,7 +110,7 @@ export function NewGallery({ photos, videos = [], title, badge, isNew = false }:
                 aria-pressed={i === at}
                 onClick={() => setIndex(i)}
               >
-                {item.kind === "photo" ? <img src={item.src} alt="" loading="lazy" /> : item.poster ? <img src={item.poster} alt="" loading="lazy" /> : null}
+                {item.kind === "photo" ? <img src={item.src} alt="" width={120} height={120} loading="lazy" /> : item.poster ? <img src={item.poster} alt="" width={120} height={120} loading="lazy" /> : null}
                 {item.kind === "video" ? (
                   <span className="tkn-thumb-play" aria-hidden="true">
                     <Play size={16} />

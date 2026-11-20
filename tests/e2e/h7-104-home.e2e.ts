@@ -2,7 +2,7 @@ import { mkdirSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { ObjectId } from "mongodb";
 import type { Locator, Page } from "@playwright/test";
-import { expect, hasHorizontalScroll, test, uploadsDir, withLocalDb } from "./helpers";
+import { expect, hasHorizontalScroll, oldAdPath, test, uploadsDir, withLocalDb } from "./helpers";
 
 const CARD = '[data-tk="home-ad"]';
 const SLIDE_WAIT = 9_000;
@@ -152,7 +152,9 @@ test.describe("H7.104 Home: four categories, eight smaller cards, auto-swipe", (
     test.setTimeout(360_000);
     await page.setViewportSize({ width: 1440, height: 900 });
     await page.goto("/");
-    const slugs = (await page.locator(`${CARD} .tkh-ad-title a`).evaluateAll((links) => links.slice(0, 3).map((link) => link.getAttribute("href") ?? ""))).map((href) => href.replace(/^\/ad\//, "").replace(/\/$/, ""));
+    // H16.2: the card links are the ads' own addresses; oldAdPath turns each back into /ad/<slug>/.
+    const hrefs = await page.locator(`${CARD} .tkh-ad-title a`).evaluateAll((links) => links.slice(0, 3).map((link) => link.getAttribute("href") ?? ""));
+    const slugs = (await Promise.all(hrefs.map((href) => oldAdPath(href)))).map((href) => href.replace(/^\/ad\//, "").replace(/\/$/, ""));
     const cleanup = await addVideos(page, slugs);
     try {
       const card = page.locator(CARD).filter({ has: page.locator('[data-tk="card-video"]') }).first();
