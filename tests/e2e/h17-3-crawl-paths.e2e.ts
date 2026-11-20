@@ -1,25 +1,27 @@
 import { expect, firstAdPath, hasHorizontalScroll, test } from "./helpers";
 
 const FEED = "/dating/bengaluru/";
+// A list with more than one page (the category page lists every city).
+const LONG_LIST = "/dating/";
 
 test.describe("H17.3 crawl paths", () => {
   test("the list has numbered page links as real anchors, and page 2 names itself in title, heading and canonical", async ({ page }) => {
-    await page.goto(FEED);
+    await page.goto(LONG_LIST);
     const pager = page.locator("[data-tk=pager] nav a[href*='?page=']");
     await expect(pager.first()).toBeAttached();
     const hrefs = await pager.evaluateAll((links) => links.map((link) => link.getAttribute("href") || ""));
     expect(hrefs.some((href) => /\?page=2$/.test(href))).toBe(true);
     expect(await page.title()).not.toContain("(page");
 
-    await page.goto(`${FEED}?page=2`);
+    await page.goto(`${LONG_LIST}?page=2`);
     expect(await page.title()).toMatch(/\(page 2\)/);
     await expect(page.locator("h1")).toHaveCount(1);
     await expect(page.locator("h1")).toContainText("(page 2)");
     const canonical = await page.locator("link[rel=canonical]").getAttribute("href");
-    expect(canonical).toMatch(/\/dating\/bengaluru\/\?page=2$/);
+    expect(canonical).toMatch(/\/dating\/\?page=2$/);
     // The current page is plain text; the first page and the others are links.
     await expect(page.locator("[data-tk=pager] [aria-current=page]")).toHaveText("2");
-    await expect(page.locator("[data-tk=pager] nav a[rel=prev]")).toHaveAttribute("href", /\/dating\/bengaluru\/$/);
+    await expect(page.locator("[data-tk=pager] nav a[rel=prev]")).toHaveAttribute("href", /\/dating\/$/);
     expect(await hasHorizontalScroll(page)).toBe(false);
   });
 
