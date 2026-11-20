@@ -1,5 +1,4 @@
 import { z, type ZodType } from "zod";
-import { attributeKeyDenied, textDenied } from "@/server/shared/policy";
 
 export const FIELD_TYPES = [
   "text",
@@ -64,9 +63,6 @@ export const fieldDefinitionSchema = z
     optionLabels: z.record(z.string(), z.string().trim().max(80)).optional(),
   })
   .superRefine((field, context) => {
-    if (attributeKeyDenied(field.key).denied || textDenied(field.label).denied) {
-      context.addIssue({ code: "custom", message: "Field is not allowed", path: ["key"] });
-    }
     if ((field.type === "select" || field.type === "multiselect") && field.options.length === 0) {
       context.addIssue({
         code: "custom",

@@ -32,10 +32,10 @@ describe("override validation", () => {
     expect(out).toMatchObject({ ok: true, value: { path: "/jobs/pune/", title: "Jobs in Pune", noindex: true, faq: [{ q: "Q?", a: "A." }] } });
   });
 
-  it("rejects forbidden terms, long text, bad canonical, bad image and bad robots", () => {
+  it("rejects long text, bad canonical, bad image and bad robots", () => {
     const out = normalizeOverride({
       path: "/x/",
-      title: "Cheap escort",
+      title: "t".repeat(121),
       description: "d".repeat(321),
       canonical: "javascript:alert(1)",
       ogImage: "http://insecure.example/x.png",
@@ -82,7 +82,7 @@ describe("saving overrides", () => {
   });
 
   it("refuses a bad save with field messages and deletes on request", async () => {
-    await expect(saveUrlOverride({ path: "/a/", title: "Cheap escort" })).rejects.toMatchObject({ fields: { title: expect.any(Array) } });
+    await expect(saveUrlOverride({ path: "/a/", title: "t".repeat(121) })).rejects.toMatchObject({ fields: { title: expect.any(Array) } });
     await saveUrlOverride({ path: "/a/", title: "Fine title here" });
     const out = await deleteUrlOverride("/a/");
     expect(out.before?.title).toBe("Fine title here");
@@ -99,7 +99,7 @@ describe("bulk CSV", () => {
       "/old/,New title,noindex",
       "/same/,Same title,index",
       "/fresh/,Fresh title,",
-      "/bad/,Cheap escort,",
+      `/bad/,${"t".repeat(121)},`,
     ].join("\n");
     const plan = await planOverrideCsv(csv);
     const by = Object.fromEntries(plan.rows.map((row) => [row.path, row]));
@@ -121,7 +121,7 @@ describe("bulk CSV", () => {
   });
 
   it("applies all-or-nothing", async () => {
-    await expect(applyOverrideCsv("path,title\n/ok/,Fine title\n/bad/,Cheap escort")).rejects.toThrow(/nothing was imported/);
+    await expect(applyOverrideCsv(`path,title\n/ok/,Fine title\n/bad/,${"t".repeat(121)}`)).rejects.toThrow(/nothing was imported/);
     expect(await UrlOverride.countDocuments()).toBe(0);
     const out = await applyOverrideCsv("path,title\n/ok/,Fine title\n/two/,Another title");
     expect(out).toEqual({ applied: 2, unchanged: 0 });

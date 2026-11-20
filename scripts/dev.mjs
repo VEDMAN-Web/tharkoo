@@ -37,6 +37,7 @@ function run(cmd, args, extraEnv = {}) {
   return new Promise((resolve, reject) => {
     const child = spawn(cmd, args, {
       stdio: "inherit",
+      shell: process.platform === "win32",
       env: { ...process.env, ...extraEnv },
     });
     child.on("exit", (code) => {

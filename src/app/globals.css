@@ -2247,3 +2247,27 @@ body:has([data-tk="bottom-bar"]) .tkn-float { bottom: 104px; }
   .tkh-trust, .tkn-sr-chips, .h714-chips { scroll-snap-type: x proximity; scrollbar-width: none; padding-right: 24px; -webkit-mask-image: linear-gradient(90deg, #000 calc(100% - 24px), transparent); mask-image: linear-gradient(90deg, #000 calc(100% - 24px), transparent); }
   .tkh-trust > *, .tkn-sr-chips > *, .h714-chips > * { flex: none; scroll-snap-align: start; white-space: nowrap; }
 }
+
+/* ConfirmDialog (src/components/ui/ConfirmDialog.tsx): the site's own confirm box. Both buttons share one size. */
+.tk-confirm-actions { display: flex; justify-content: flex-end; gap: 12px; margin-top: 24px; }
+.tk-confirm-btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+  min-width: 112px; height: 44px; padding: 0 22px;
+  border: 1px solid transparent; border-radius: var(--r-btn);
+  font-size: 14px; font-weight: 700; letter-spacing: 0.01em; white-space: nowrap; cursor: pointer;
+  transition: background var(--t-fast) var(--ease), border-color var(--t-fast) var(--ease), filter var(--t-fast) var(--ease);
+}
+.tk-confirm-btn:disabled { opacity: 0.6; cursor: not-allowed; }
+.tk-confirm-btn:focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }
+.tk-confirm-btn--cancel { background: #fff; color: var(--text); border-color: var(--border); }
+.tk-confirm-btn--cancel:hover:not(:disabled) { background: var(--bg-soft); }
+.tk-confirm-btn--primary { background: linear-gradient(135deg, #d1137a, #a8124f); color: #fff; border-color: #a8124f; }
+.tk-confirm-btn--danger { background: var(--danger); color: #fff; border-color: var(--danger); }
+.tk-confirm-btn--primary:hover:not(:disabled), .tk-confirm-btn--danger:hover:not(:disabled) { filter: brightness(1.08); }
+.tk-confirm-btn .tk-confirm-spin { width: 16px; height: 16px; border: 2px solid currentColor; border-top-color: transparent; border-radius: 50%; animation: tk-confirm-spin 700ms linear infinite; }
+@keyframes tk-confirm-spin { to { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) { .tk-confirm-btn .tk-confirm-spin { animation: none; } }
+@media (max-width: 480px) {
+  .tk-confirm-actions { flex-direction: column-reverse; }
+  .tk-confirm-btn { width: 100%; }
+}

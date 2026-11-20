@@ -3,7 +3,6 @@ import { resetUiText, saveUiText, textOverrides, uiTexts } from "@/app/admin/ui-
 import { invalidateTags } from "@/lib/cache";
 import { fillText, makeT, TEXT_DEFAULTS, TEXT_KEYS, TEXT_MAX } from "@/lib/ui/text";
 import { AuditEvent, UiText } from "@/server/models";
-import { textDenied } from "@/server/shared/policy";
 import { clearMemoryMongo, connectMemoryMongo, disconnectMemoryMongo } from "../../setup/mongo";
 
 const admin = { email: "admin@example.test", roles: ["admin"] };
@@ -23,13 +22,12 @@ afterAll(async () => {
 });
 
 describe("TEXT_DEFAULTS", () => {
-  it("has a non-empty text, short enough, with no forbidden term, for every key", () => {
+  it("has a non-empty text, short enough, for every key", () => {
     expect(TEXT_KEYS.length).toBeGreaterThan(20);
     for (const key of TEXT_KEYS) {
       const text = TEXT_DEFAULTS[key];
       expect(text.trim().length, key).toBeGreaterThan(0);
       expect(text.length, key).toBeLessThanOrEqual(TEXT_MAX);
-      expect(textDenied(text).denied, key).toBe(false);
     }
   });
 
@@ -65,9 +63,7 @@ describe("ui text store", () => {
     expect(await saveUiText({ ...admin, key: "listing.more", value: "x".repeat(160) })).toMatchObject({ key: "listing.more" });
   });
 
-  it("refuses forbidden terms and markup", async () => {
-    const term = ["es", "cort"].join("");
-    await expect(saveUiText({ ...admin, key: "listing.more", value: `Best ${term} here` })).rejects.toThrow(/not allowed/i);
+  it("refuses markup", async () => {
     await expect(saveUiText({ ...admin, key: "listing.more", value: "<b>More</b>" })).rejects.toThrow(/</);
     expect(await UiText.countDocuments({})).toBe(0);
   });

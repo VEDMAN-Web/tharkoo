@@ -3,13 +3,14 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { CHAT_AD_NOT_LIVE } from "@/lib/chat-text";
 import { api, friendlyError } from "@/lib/ui/api";
+import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 
 export const CHAT_POLL_MS = 5000;
 const MAX_IMAGE_BYTES = 5 * 1024 * 1024;
 const IMAGE_TYPES = ["image/jpeg", "image/png", "image/webp"];
 
 type Message = { id: string; mine: boolean; text: string; imageUrl: string | null; createdAt: string; read: boolean; deleted: boolean };
-type Info = { listingTitle: string; blocked: boolean; reported: boolean; role: "buyer" | "seller"; adLive?: boolean };
+type Info = { listingTitle: string; blocked: boolean; blockedByMe?: boolean; reported: boolean; role: "buyer" | "seller"; adLive?: boolean };
 type Loaded = { conversation: Info; messages: Message[] };
 export type CreateResult = { id: string } | { error: string };
 
@@ -34,6 +35,7 @@ export function ChatThread({
   const [text, setText] = useState("");
   const [note, setNote] = useState("");
   const [busy, setBusy] = useState(false);
+  const [ask, setAsk] = useState<"block" | "unblock" | "report" | null>(null);
   const last = useRef("");
   const endRef = useRef<HTMLDivElement>(null);
 
@@ -106,22 +108,41 @@ export function ChatThread({
     void send(file);
   }
 
-  async function block() {
-    if (!window.confirm("Block this person? Neither of you will be able to send messages here.")) return;
-    const res = await api(`/api/chat/conversations/${conversationId}/block`, { method: "POST", body: "{}" });
-    setNote(res.ok ? "Blocked. No more messages can be sent." : friendlyError(res.error));
+  /** Runs after the person confirms in the dialog below. */
+  async function runBlock(kind: "block" | "unblock") {
+    setBusy(true);
+    const res = await api(`/api/chat/conversations/${conversationId}/${kind}`, { method: "POST", body: "{}" });
+    setBusy(false);
+    setAsk(null);
+    const done = kind === "block" ? "Blocked. No more messages can be sent." : "Unblocked. You can send messages again.";
+    setNote(res.ok ? done : friendlyError(res.error));
     if (res.ok) await load();
   }
 
-  async function report() {
-    const reason = window.prompt("What is wrong with this conversation?");
-    if (reason === null) return;
+  function report() {
+    setAsk("report");
+  }
+
+  async function runReport(reason: string) {
+    setBusy(true);
     const res = await api(`/api/chat/conversations/${conversationId}/report`, { method: "POST", body: JSON.stringify({ reason }) });
+    setBusy(false);
+    setAsk(null);
     setNote(res.ok ? "Reported. Our team can now read this conversation." : friendlyError(res.error));
     if (res.ok) await load();
   }
 
   const blocked = info?.blocked ?? false;
+  // Only the person who blocked sees Unblock. The other side keeps a disabled "Blocked".
+  const canUnblock = blocked && info?.blockedByMe === true;
+  const blockAction = () => setAsk(canUnblock ? "unblock" : "block");
+  const confirmCopy = {
+    block: { title: "Block this person?", text: "Neither of you will be able to send messages here. You can unblock later.", label: "Block", tone: "danger" as const },
+    unblock: { title: "Unblock this person?", text: "You will both be able to send messages here again.", label: "Unblock", tone: "primary" as const },
+    report: { title: "Report this conversation?", text: "Our team will be able to read it. Tell us what is wrong.", label: "Report", tone: "primary" as const },
+  };
+  const copy = ask ? confirmCopy[ask] : confirmCopy.block;
+  const blockLabel = canUnblock ? "Unblock" : blocked ? "Blocked" : "Block";
   // FIX-3: a chat about an ad that is not live (removed, expired, paused) can be read but not written to.
   const adGone = info?.adLive === false;
   const closed = blocked || adGone;
@@ -148,8 +169,8 @@ export function ChatThread({
           <button type="button" className="tk-btn tk-btn-outline-primary" style={buttonStyle} onClick={() => void report()} disabled={info?.reported}>
             {info?.reported ? "Reported" : "Report"}
           </button>
-          <button type="button" className="tk-btn tk-btn-outline-primary" style={buttonStyle} onClick={() => void block()} disabled={blocked}>
-            {blocked ? "Blocked" : "Block"}
+          <button type="button" className="tk-btn tk-btn-outline-primary" style={buttonStyle} onClick={blockAction} disabled={blocked && !canUnblock}>
+            {blockLabel}
           </button>
         </div>
       )}
@@ -200,8 +221,8 @@ export function ChatThread({
               <button type="button" className="tkn-thread-link" onClick={() => void report()} disabled={info?.reported}>
                 {info?.reported ? "Reported" : "Report"}
               </button>
-              <button type="button" className="tkn-thread-link" onClick={() => void block()} disabled={blocked}>
-                {blocked ? "Blocked" : "Block"}
+              <button type="button" className="tkn-thread-link" onClick={blockAction} disabled={blocked && !canUnblock}>
+                {blockLabel}
               </button>
             </>
           ) : null}
@@ -210,6 +231,21 @@ export function ChatThread({
           </button>
         </div>
       </form>
+      <ConfirmDialog
+        key={ask ?? "closed"}
+        open={ask !== null}
+        title={copy.title}
+        text={copy.text}
+        confirmLabel={copy.label}
+        tone={copy.tone}
+        busy={busy}
+        input={ask === "report" ? { label: "What is wrong with this conversation?", maxLength: 300 } : undefined}
+        onConfirm={(value) => {
+          if (ask === "report") void runReport(value);
+          else if (ask) void runBlock(ask);
+        }}
+        onCancel={() => setAsk(null)}
+      />
     </div>
   );
 }

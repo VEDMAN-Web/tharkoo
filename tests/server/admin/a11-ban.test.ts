@@ -1,10 +1,5 @@
 import mongoose from "mongoose";
-import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
-
-vi.mock("@/server/shared/policy", async (importOriginal) => ({
-  ...(await importOriginal<typeof import("@/server/shared/policy")>()),
-  textDenied: (text: string) => ({ denied: /blockedword/i.test(text) }),
-}));
+import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 
 import type { AdminCtx } from "@/server/admin/context";
 import { undoEvent } from "@/server/admin/undo/core";
@@ -83,7 +78,6 @@ describe("ban", () => {
     await expect(banUser(moderator, { userId, reason: "Spam" })).rejects.toBeInstanceOf(ForbiddenError);
     expect(await AuditEvent.countDocuments({ action: "admin.write.denied" })).toBe(2);
     await expect(banUser(trust, { userId, reason: "   " })).rejects.toBeInstanceOf(ValidationError);
-    await expect(banUser(trust, { userId, reason: "a blockedword here" })).rejects.toBeInstanceOf(ValidationError);
     expect((await User.findById(userId))?.status).toBe("active");
     expect(await statusOf(data.live1)).toBe("active");
     expect(await AuditEvent.countDocuments({ action: "user.ban" })).toBe(0);

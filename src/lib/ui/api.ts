@@ -45,7 +45,8 @@ export function friendlyError(error: ApiError) {
     case "UNAUTHORIZED":
       return "Email or password is incorrect.";
     case "CONFLICT":
-      return "That email is already registered.";
+      // The server says what clashed (a closed ticket, a taken email, a changed price). Showing it keeps the real reason.
+      return error.message || "That could not be done because something changed. Please refresh and try again.";
     case "RATE_LIMITED":
       return "Too many requests, try again later";
     case "VERIFICATION_REQUIRED":

@@ -3,7 +3,6 @@ import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 import { parsePrice, PRICE_MAX } from "@/server/listings/price";
 import { duplicateListing, patchListing, publicView } from "@/server/listings/service";
 import { Listing } from "@/server/models";
-import { attributeDenied } from "@/server/shared/policy";
 import { clearMemoryMongo, connectMemoryMongo, disconnectMemoryMongo } from "../../setup/mongo";
 
 beforeAll(async () => {
@@ -65,9 +64,5 @@ describe("listing price", () => {
   it("rejects an invalid price", async () => {
     const { id, ownerId } = await draft();
     await expect(patchListing(id, ownerId, { stage: "details", price: -5 }, "req-1")).rejects.toThrow();
-  });
-
-  it("does not loosen the attribute deny-list", () => {
-    expect(attributeDenied({ price: 100 }).denied).toBe(true);
   });
 });

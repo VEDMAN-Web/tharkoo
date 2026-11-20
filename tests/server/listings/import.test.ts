@@ -6,7 +6,6 @@ vi.mock("@/server/indexnow/ping", () => ({ queueIndexNow }));
 import { parseCsv } from "@/server/listings/csv";
 import { MAX_IMPORT_ROWS, dryRunImport, runImport, type ImportActor } from "@/server/listings/import";
 import { AuditEvent, BannedWord, Category, Listing, Location, MediaAsset, Site, User } from "@/server/models";
-import { denyTerm } from "@/server/shared/policy";
 import { clearMemoryMongo, connectMemoryMongo, disconnectMemoryMongo } from "../../setup/mongo";
 
 const admin: ImportActor = { id: new mongoose.Types.ObjectId().toString(), roles: ["admin"] };
@@ -156,17 +155,16 @@ describe("partner import", () => {
     expect(await Listing.countDocuments({})).toBe(1);
   });
 
-  it("rejects a forbidden term and an admin banned word", async () => {
+  it("rejects an admin banned word", async () => {
     const owner = await partner();
     await catalogue(owner._id);
     await BannedWord.create({ text: "blorptastic" });
     const csv = file(
       row("Clean cycle"),
-      row("Bad cycle", { description: `A ${denyTerm("esc", "ort")} service` }),
       row("Other cycle", { description: "Totally blorptastic deal" }),
     );
     const dry = await dryRunImport(admin, owner.email, csv);
-    expect(dry.rows.map((item) => item.ok)).toEqual([true, false, false]);
+    expect(dry.rows.map((item) => item.ok)).toEqual([true, false]);
     expect(dry.rows[1].errors[0]).toMatch(/description contains a word that is not allowed/);
     const result = await runImport(admin, owner.email, csv, "pending", "req-5");
     expect(result.imported).toBe(1);

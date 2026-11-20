@@ -21,9 +21,16 @@ const securityHeaders = [
   },
 ];
 
+// VS Code port forwarding (dev tunnels) puts a *.devtunnels.ms host in front of localhost, while the browser still sends
+// Origin: localhost:4317. Next compares that Origin with the forwarded host and, if they differ, only accepts it when the
+// Origin is in allowedOrigins. So the local origins are listed here, in development only. Production keeps the strict check.
+const isProd = process.env.NODE_ENV === "production";
+const devTunnelHosts = isProd ? [] : ["*.devtunnels.ms", "**.devtunnels.ms"];
+const devActionOrigins = isProd ? [] : ["localhost:4317", "127.0.0.1:4317", ...devTunnelHosts];
+
 const nextConfig: NextConfig = {
   agentRules: false,
-  allowedDevOrigins: ["127.0.0.1"],
+  allowedDevOrigins: ["127.0.0.1", ...devTunnelHosts],
   trailingSlash: true,
   poweredByHeader: false,
   // Send metadata in <head> for every user agent (Next streams it into <body> for JS-capable
@@ -35,6 +42,7 @@ const nextConfig: NextConfig = {
   cacheMaxMemorySize: 16 * 1024 * 1024,
   experimental: {
     imgOptConcurrency: 1,
+    serverActions: { allowedOrigins: devActionOrigins },
   },
   images: {
     formats: ["image/webp"],

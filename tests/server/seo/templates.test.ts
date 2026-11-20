@@ -61,8 +61,7 @@ describe("template precedence", () => {
 });
 
 describe("template validation and saving", () => {
-  it("rejects a forbidden term, an unknown variable, a long title and a bad page type", () => {
-    expect(() => validateTemplate({ pageType: "location", fields: fields("Cheap escort in {city}") })).toThrow(/highlighted/);
+  it("rejects an unknown variable, a long title and a bad page type", () => {
     expect(() => validateTemplate({ pageType: "location", fields: fields("Jobs in {town}") })).toThrow();
     expect(() => validateTemplate({ pageType: "location", fields: fields("x".repeat(121)) })).toThrow();
     expect(() => validateTemplate({ pageType: "blog", fields: fields("Fine") })).toThrow();

@@ -120,7 +120,7 @@ test.describe("H8.53 admin notifications", () => {
     const staff = await browser.newContext({ baseURL });
     const page = await staff.newPage();
     await signInAdminContext(staff, baseURL!);
-    await page.route("**/api/admin/notifications?*", (route) => route.fulfill({ json: { ok: true, data: { items: [], total: 0, unread: 0, page: 1, pageSize: 8, kinds: ["ticket"] } } }));
+    await page.route("**/api/admin/notifications/?*", (route) => route.fulfill({ json: { ok: true, data: { items: [], total: 0, unread: 0, page: 1, pageSize: 8, kinds: ["ticket"] } } }));
     await page.goto("/admin/");
     await page.waitForLoadState("networkidle");
     await page.locator("[data-tk=bell]").click();

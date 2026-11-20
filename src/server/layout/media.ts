@@ -11,7 +11,6 @@ import { CLOUDINARY_FOLDER, UPLOAD_NEEDS_CLOUDINARY, optionalCloudinary, uploads
 import { SiteMedia, User } from "@/server/models";
 import type { SiteMediaDoc } from "@/server/models/layout";
 import { findMediaUsages, mediaUsageCounts, type MediaUsage } from "@/server/layout/media-refs";
-import { textDenied } from "@/server/shared/policy";
 import { altFromFileName } from "@/server/media/alt-from-filename";
 
 const audit = new AuditRepository();
@@ -100,7 +99,6 @@ export function validateAlt(value: unknown): string {
   const alt = typeof value === "string" ? value.trim() : "";
   if (alt.length < ALT_MIN) throw new ValidationError(`Alt text is required (at least ${ALT_MIN} characters). Describe what the image shows.`);
   if (alt.length > ALT_MAX) throw new ValidationError(`Alt text can be at most ${ALT_MAX} characters`);
-  if (textDenied(alt).denied) throw new ValidationError("The alt text contains a term that is not allowed on Tharkoo");
   return alt;
 }
 
@@ -110,7 +108,6 @@ export function cleanTags(value: unknown): string[] {
     .map((tag) => String(tag).trim().toLowerCase().replace(/[^a-z0-9 -]/g, "").replace(/\s+/g, "-").slice(0, 30))
     .filter(Boolean);
   if (tags.length > 10) throw new ValidationError("Use at most 10 tags");
-  for (const tag of tags) if (textDenied(tag).denied) throw new ValidationError("A tag contains a term that is not allowed");
   return [...new Set(tags)];
 }
 

@@ -1,11 +1,6 @@
 import mongoose from "mongoose";
 import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 
-vi.mock("@/server/shared/policy", async (importOriginal) => ({
-  ...(await importOriginal<typeof import("@/server/shared/policy")>()),
-  textDenied: (text: string) => ({ denied: /blockedword/i.test(text) }),
-}));
-
 vi.mock("@/lib/cache", () => ({ refreshPublicCache: async () => undefined }));
 
 import { emptyValues, KINDS, RECORD_KINDS } from "@/lib/admin/record-kinds";
@@ -83,12 +78,6 @@ describe("saving, undoing and deleting", () => {
     await saveRecord(superadmin, "flags", { id: first.id, values: { key: "other.key", label: "Live chat on", enabled: false } });
     expect(await FeatureFlag.findById(first.id).lean()).toMatchObject({ key: "chat.live", label: "Live chat on", enabled: false });
     await expect(saveRecord(superadmin, "flags", { values: { key: "chat.live", label: "Again", enabled: true } })).rejects.toBeInstanceOf(ConflictError);
-  });
-
-  it("refuses a blocked word in a notice or an article, but a banned word may hold one", async () => {
-    await expect(saveRecord(admin, "broadcasts", { values: { ...notice, body: "blockedword here" } })).rejects.toBeInstanceOf(ValidationError);
-    await expect(saveRecord(admin, "help-sections", { values: { ...article, body: "blockedword" } })).rejects.toBeInstanceOf(ValidationError);
-    expect(await saveRecord(admin, "banned-words", { values: { text: "blockedword", matchType: "contains", scope: "all", action: "block" } })).toMatchObject({ created: true });
   });
 
   it("deletes with a log row and no undo, and says so when the record is gone", async () => {

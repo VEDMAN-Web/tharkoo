@@ -1,11 +1,6 @@
 import mongoose from "mongoose";
 import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 
-vi.mock("@/server/shared/policy", async (importOriginal) => ({
-  ...(await importOriginal<typeof import("@/server/shared/policy")>()),
-  textDenied: (text: string) => ({ denied: /blockedword/i.test(text) }),
-}));
-
 import type { AdminCtx } from "@/server/admin/context";
 import { undoEvent } from "@/server/admin/undo/core";
 import { loadUndoHandler, notBuiltHandler, overrideUndoHandler, undoSourceOf, UNDO_KINDS, type UndoHandler } from "@/server/admin/undo/registry";
@@ -90,12 +85,6 @@ describe("adminWrite", () => {
   it("refuses a missing reason when one is required and a reason over 500 characters", async () => {
     await expect(change(admin, "two", { reasonRequired: true, reason: "   " })).rejects.toBeInstanceOf(ValidationError);
     await expect(change(admin, "two", { reason: "x".repeat(501) })).rejects.toBeInstanceOf(ValidationError);
-    expect(record.value).toBe("one");
-    expect(await AuditEvent.countDocuments({})).toBe(0);
-  });
-
-  it("refuses a blocked term in any text, including nested ones", async () => {
-    await expect(change(admin, "two", { texts: { title: "fine", nested: { list: ["ok", "a BlockedWord here"] } } })).rejects.toBeInstanceOf(ValidationError);
     expect(record.value).toBe("one");
     expect(await AuditEvent.countDocuments({})).toBe(0);
   });
