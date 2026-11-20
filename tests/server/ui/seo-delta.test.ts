@@ -60,6 +60,7 @@ describe("SEO delta", () => {
       validThrough: "2026-12-01",
       hiringOrganization: "North Shop",
       jobLocation: "Pune",
+      verifiedPoster: true, // H16.4: a JobPosting is written only for a verified poster
     });
     expect(full?.["@type"]).toBe("JobPosting");
   });
