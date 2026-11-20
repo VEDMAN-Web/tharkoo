@@ -37,7 +37,7 @@ import { activeFilterKeys, listingCanonicalSuffix, type ListingParams } from "@/
 import { withUrlSeo, urlHeading } from "@/lib/seo/override";
 import { fallbackLanding, visibleHeading } from "@/lib/seo/landing";
 import { getPaths, publicTags } from "@/server/urls/service";
-import { withPagination } from "@/lib/seo/pagination";
+import { pagedText, withPagination } from "@/lib/seo/pagination";
 import { SubHub, subHubMetadata } from "./sub-hub";
 import AdPage, { generateMetadata as adMetadata } from "@/app/ad/[slug]/page";
 import { resolveAdAddress } from "@/server/listings/ad-route";
@@ -84,10 +84,12 @@ export async function generateMetadata({ params, searchParams }: Props): Promise
     sampleNote: await sampleNoteText(),
   });
   const counted = { ...vars, count: feedForCopy.realTotal };
-  const title = fillTemplate(seo?.title || copy.title, counted);
+  const baseTitle = fillTemplate(seo?.title || copy.title, counted);
   const rawDescription = fillTemplate(seo?.description || copy.description, counted);
   const description = rawDescription.length <= 160 ? rawDescription : `${rawDescription.slice(0, 157).replace(/\s+\S*$/, "")}`;
   const pageNo = Math.max(1, Number(sp.page) || 1);
+  // H17.3: page 2 and later say so in the title (and in the heading below).
+  const title = pagedText(baseTitle, pageNo);
   const filtered = activeFilterKeys(sp).length > 0;
   const feed = await getFeed(
     { categorySlug: category, citySlug: location, districtSlug: district, ...narrowFromParams(sp, cat.fields).filter },
@@ -175,7 +177,7 @@ export default async function DistrictPage({ params, searchParams }: Props) {
   const layout = await resolveListingLayout({ path: canonicalPath, category: cat.slug || category, vars });
   const texts = await textOverrides();
   const t = makeT(texts);
-  const h1 = heading || visibleHeading(fillTemplate(seo?.h1 || "", vars), districtCopy.h1);
+  const h1 = pagedText(heading || visibleHeading(fillTemplate(seo?.h1 || "", vars), districtCopy.h1), page);
   const own = showFallback(feed);
   const fallback = own
     ? await loadFallbackSections({
