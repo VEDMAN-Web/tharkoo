@@ -1,3 +1,4 @@
+import { FIRST_ROW_CARDS } from "@/lib/ad-photo-alt";
 import Link from "next/link";
 import { categoriesPath, categoryPath } from "@/lib/urls";
 import { ListingRow, type ListingRowLabels } from "./ListingRow";
@@ -62,7 +63,7 @@ export function NotFoundView({ categories, ads }: { categories: NotFoundCategory
           <ul className="tk-rows" aria-label={ads.title}>
             {ads.cards.map((ad, position) => (
               <li key={ad.slug}>
-                <ListingRow ad={ad} labels={ads.labels} order={position} />
+                <ListingRow ad={ad} labels={ads.labels} order={position} eager={position < FIRST_ROW_CARDS} />
               </li>
             ))}
           </ul>

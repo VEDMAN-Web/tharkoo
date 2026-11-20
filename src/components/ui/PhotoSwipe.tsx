@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
+import { adPhotoAlt } from "@/lib/ad-photo-alt";
 import { SmartImage } from "./SmartImage";
 
 const MAX_DOTS = 5;
@@ -11,6 +12,7 @@ const SLIDE_MS = 250;
 export function PhotoSwipe({
   photos,
   title,
+  place = "",
   seed,
   category,
   priority,
@@ -19,6 +21,7 @@ export function PhotoSwipe({
 }: {
   photos: string[];
   title: string;
+  place?: string;
   seed: string;
   category?: string;
   priority?: boolean;
@@ -95,7 +98,7 @@ export function PhotoSwipe({
           <div className="tk-cc-slide" key={`${photo}-${index}`} style={{ width: `${100 / slides.length}%` }}>
             <SmartImage
               src={photo}
-              alt={index === 0 ? title : ""}
+              alt={adPhotoAlt(title, place, index + 1)}
               seed={`${seed}-${index}`}
               category={category}
               width={360}

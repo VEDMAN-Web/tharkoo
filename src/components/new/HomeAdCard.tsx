@@ -41,7 +41,7 @@ export type HomeAdLabels = {
 
 const HOVER_DELAY_MS = 350;
 
-export function HomeAdCard({ ad, labels, order = 0 }: { ad: HomeAdCardData; labels: HomeAdLabels; order?: number }) {
+export function HomeAdCard({ ad, labels, order = 0, eager = false }: { ad: HomeAdCardData; labels: HomeAdLabels; order?: number; eager?: boolean }) {
   const cardRef = useRef<HTMLElement>(null);
   const popVideoRef = useRef<HTMLVideoElement | null>(null);
   const seller = useSellerStatus(ad.slug || undefined);
@@ -65,7 +65,7 @@ export function HomeAdCard({ ad, labels, order = 0 }: { ad: HomeAdCardData; labe
       {...cardHandlers}
     >
       <div className="tkh-ad-photo">
-        <SlideTrack slides={slides} href={ad.href} trackRef={trackRef} videoRef={videoRef} onScroll={onScroll} onTouch={calm} onClicked={clicked} />
+        <SlideTrack slides={slides} href={ad.href} trackRef={trackRef} videoRef={videoRef} onScroll={onScroll} onTouch={calm} onClicked={clicked} title={ad.title} place={ad.city} eager={eager} />
         {slides.length > 1 ? <span className="tkh-ad-count" aria-hidden="true">{index + 1}/{slides.length}</span> : null}
         {ad.slug ? (
           <SaveButton item={{ id: ad.slug, slug: ad.slug, title: ad.title, place: ad.city, photo: photos[0] ?? null, at: 0 }} className="tkh-heart" />
