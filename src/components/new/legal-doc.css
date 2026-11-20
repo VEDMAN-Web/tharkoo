@@ -1,0 +1,16 @@
+/* H17.14: the approved legal text (privacy, terms) inside the article box. Lists and the privacy table; the table scrolls in its own box. */
+.tkn .tkl-doc h2 { margin: 24px 0 10px; font-size: 20px; font-weight: 700; letter-spacing: -0.02em; color: #110520; scroll-margin-top: 96px; font-family: inherit; }
+.tkn .tkl-doc > :first-child { margin-top: 0; }
+.tkn .tkl-doc p { margin: 0 0 14px; font-size: 16px; line-height: 1.75; color: #2d1248; overflow-wrap: anywhere; }
+.tkn .tkl-doc strong { color: #110520; }
+.tkn .tkl-doc .tkl-list { margin: 0 0 16px; padding-left: 24px; font-size: 16px; line-height: 1.7; color: #2d1248; }
+.tkn .tkl-doc .tkl-list li { margin: 0 0 8px; padding-left: 4px; overflow-wrap: anywhere; }
+.tkn .tkl-doc .tkl-scroll { margin: 0 0 18px; max-width: 100%; overflow-x: auto; border: 1px solid #ead8f0; border-radius: 12px; -webkit-overflow-scrolling: touch; }
+.tkn .tkl-doc .tkl-scroll:focus-visible { outline: 2px solid #7a2bb8; outline-offset: 2px; }
+.tkn .tkl-doc .tkl-table { width: 100%; min-width: 520px; border-collapse: collapse; font-size: 15px; line-height: 1.55; color: #2d1248; }
+.tkn .tkl-doc .tkl-table th, .tkn .tkl-doc .tkl-table td { padding: 10px 14px; text-align: left; vertical-align: top; border-bottom: 1px solid #f0e4f5; }
+.tkn .tkl-doc .tkl-table th { background: #f7effb; font-weight: 700; color: #110520; }
+.tkn .tkl-doc .tkl-table tbody tr:last-child td { border-bottom: 0; }
+@media (max-width: 767px) {
+  .tkn .tkl-doc p, .tkn .tkl-doc .tkl-list { font-size: 15px; }
+}
