@@ -50,13 +50,20 @@ export function HomeAdPopout({
     if (!el) return;
     const height = el.getBoundingClientRect().height;
     const wanted = anchor.top - TOP_GROW_PX;
-    setTop(Math.max(EDGE_PX, Math.min(wanted, window.innerHeight - height - EDGE_PX)));
-  }, [anchor, index]);
+    const nextTop = Math.max(EDGE_PX, Math.min(wanted, window.innerHeight - height - EDGE_PX));
+    setTop(nextTop);
+    // The pop-out opens out of the card: its first frame is clipped to the card's own box (see tkh-pop-in in home-ads.css).
+    const gap = (value: number) => `${Math.max(0, Math.round(value))}px`;
+    el.style.setProperty(
+      "--pop-clip",
+      `inset(${gap(anchor.top - nextTop)} ${gap(left + width - anchor.right)} ${gap(nextTop + height - anchor.bottom)} ${gap(anchor.left - left)} round 20px)`,
+    );
+  }, [anchor, index, left, width]);
 
   const body = (
     <div
       ref={ref}
-      className="tkh-pop"
+      className="tkh-pop is-grow"
       role="group"
       aria-label={ad.title}
       data-tk="home-ad-popout"

@@ -37,6 +37,12 @@
   border: 1px solid rgba(255, 255, 255, 0.95); box-shadow: 0 8px 32px rgba(45, 18, 72, 0.07);
 }
 .tkn-ls-band[data-photo="true"] { background: var(--band-desk, var(--band-phone)) var(--band-focus, 72% 18%) / cover no-repeat; }
+/* Desktop: the banner ends where the ad cards end (filters 272 + gap 24 + the card width: medium 880, narrow 760), so the right edges line up.
+   Its left edge stays on the filters' left edge. "Full" keeps the whole width. */
+@media (min-width: 1024px) {
+  [data-card-width="medium"] .tkn-ls-band { max-width: 1176px; margin-left: max(var(--gutter), calc((100% - 1280px) / 2 + var(--gutter))); margin-right: auto; }
+  [data-card-width="narrow"] .tkn-ls-band { max-width: 1056px; margin-left: max(var(--gutter), calc((100% - 1280px) / 2 + var(--gutter))); margin-right: auto; }
+}
 .tkn-ls-band-card {
   box-sizing: border-box; width: 100%; max-width: 560px; padding: 24px 28px; border-radius: 20px; background: rgba(255, 255, 255, 0.6);
   -webkit-backdrop-filter: blur(14px) saturate(160%); backdrop-filter: blur(14px) saturate(160%); border: 1px solid rgba(255, 255, 255, 0.55);
@@ -350,11 +356,13 @@
 .tkn-sr-head .tkn-ls-filter-btn { order: 4; }
 .tkn-sr-chips { order: 5; flex: 1 1 100%; list-style: none; margin: 4px 0 0; padding: 0; display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
 .tkn-sr-chip {
-  min-height: 32px; box-sizing: border-box; display: inline-flex; align-items: center; gap: 8px; padding: 0 12px; border-radius: 999px;
-  border: 1.5px solid #f3c6dc; background: #fff0f7; color: var(--deep); font-size: 13px; font-weight: 600; text-decoration: none;
+  min-height: 32px; box-sizing: border-box; display: inline-flex; align-items: center; gap: 8px; padding: 0 10px 0 12px; border-radius: 999px;
+  border: 1.5px solid #f3c6dc; background: #fff0f7; color: var(--deep); font-size: 13px; font-weight: 600; text-decoration: none; line-height: 1.2;
 }
 .tkn-sr-chip:hover { border-color: var(--rose); }
-.tkn-sr-x { font-size: 18px; line-height: 1; }
+.tkn-sr-chip:hover .tkn-sr-x { background: rgba(194, 24, 91, 0.16); }
+/* The remove cross is a drawn icon in a round 20px box, centred on the label (a typed "×" sat low and loose). */
+.tkn-sr-x { flex: none; box-sizing: content-box; width: 14px; height: 14px; padding: 3px; border-radius: 50%; background: rgba(194, 24, 91, 0.08); color: var(--deep); }
 .tkn-sr-clear { min-height: 32px; display: inline-flex; align-items: center; padding: 0 6px; color: var(--deep); font-size: 13px; font-weight: 700; text-decoration: underline; }
 .tkn-kw { position: relative; display: block; }
 .tkn-kw-icon { position: absolute; left: 12px; top: 12px; pointer-events: none; }
@@ -402,4 +410,16 @@
   .tkn-sr-bar .tkn-ls-filter-btn { order: 2; height: 44px; min-height: 44px; box-sizing: border-box; }
   .tkn-sr-bar .tkn-sr-sort { order: 3; margin-left: auto; }
   .tkn-sr-bar .tkn-sr-sort select { height: 44px; min-height: 44px; }
+}
+
+/* A filter or place was just chosen: the old results stay (no blank page, no reload), dim a little, and a thin bar runs along the top until the new ones are in. */
+.tkn-ls-main { transition: opacity 160ms ease; }
+html[data-ls-busy] .tkn-ls-main { opacity: 0.55; pointer-events: none; }
+html[data-ls-busy]::before {
+  content: ""; position: fixed; top: 0; left: 0; right: 0; height: 3px; z-index: 2000; pointer-events: none;
+  background: linear-gradient(90deg, #d1137a, #7c3aed, #d1137a); background-size: 200% 100%;
+}
+@media (prefers-reduced-motion: no-preference) {
+  html[data-ls-busy]::before { animation: tkn-ls-bar 900ms linear infinite; }
+  @keyframes tkn-ls-bar { from { background-position: 200% 0; } to { background-position: 0 0; } }
 }

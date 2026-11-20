@@ -90,3 +90,33 @@
   .h714 .h714-search { flex-wrap: nowrap !important; }
   .h714 .h714-search-go { width: auto; flex: none; }
 }
+
+/* How it works: the four step cards. A tint fading to white, a number chip in the card's own colour with a soft shadow,
+   and a big pale "01" in the corner (a CSS counter, so it is decoration only). Same look as the Home page steps. */
+.h714-g4b { counter-reset: h714step; }
+.h714-step {
+  --step-c: rgba(209, 19, 122, 0.45);
+  --step-ghost: rgba(209, 19, 122, 0.09);
+  position: relative; overflow: hidden; min-width: 0; padding: 26px; border-radius: 20px;
+  border: 1px solid rgba(255, 255, 255, .95); box-shadow: 0 8px 32px rgba(45, 18, 72, .08);
+  -webkit-backdrop-filter: blur(18px) saturate(170%); backdrop-filter: blur(18px) saturate(170%);
+}
+.h714-step:nth-child(4n + 1) { background: linear-gradient(160deg, #FFF0F7, #FFFFFF); }
+.h714-step:nth-child(4n + 2) { background: linear-gradient(160deg, #F5F0FF, #FFFFFF); --step-c: rgba(124, 58, 237, 0.45); --step-ghost: rgba(124, 58, 237, 0.1); }
+.h714-step:nth-child(4n + 3) { background: linear-gradient(160deg, #FFF8EC, #FFFFFF); --step-c: rgba(233, 30, 140, 0.45); --step-ghost: rgba(245, 158, 11, 0.14); }
+.h714-step:nth-child(4n + 4) { background: linear-gradient(160deg, #F0FDF4, #FFFFFF); --step-c: rgba(4, 120, 87, 0.45); --step-ghost: rgba(4, 120, 87, 0.1); }
+.h714-step::after {
+  counter-increment: h714step; content: counter(h714step, decimal-leading-zero);
+  position: absolute; top: 6px; right: 18px; font-size: 84px; font-weight: 800; line-height: 1; letter-spacing: -0.04em;
+  color: var(--step-ghost); pointer-events: none; user-select: none;
+}
+.h714-step-n {
+  position: relative; z-index: 1; display: flex; align-items: center; justify-content: center; width: 52px; height: 52px; border-radius: 16px;
+  font-size: 22px; font-weight: 800; line-height: 1; letter-spacing: -0.02em; color: #fff;
+  background: linear-gradient(135deg, #D1137A, #A8124F);
+  box-shadow: 0 10px 20px -8px var(--step-c), inset 0 1px 0 rgba(255, 255, 255, .35);
+}
+.h714-step:nth-child(4n + 2) .h714-step-n { background: linear-gradient(135deg, #7C3AED, #5B21B6); }
+.h714-step:nth-child(4n + 3) .h714-step-n { background: linear-gradient(135deg, #E91E8C, #A8124F); }
+.h714-step:nth-child(4n + 4) .h714-step-n { background: linear-gradient(135deg, #047857, #065F46); }
+.h714-step h3, .h714-step p { position: relative; z-index: 1; }

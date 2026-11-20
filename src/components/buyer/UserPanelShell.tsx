@@ -2,6 +2,7 @@ import Link from "next/link";
 import type { ReactNode } from "react";
 import { Bell, Heart, House, Images, LifeBuoy, LogIn, Megaphone, MessageSquare, Search, Settings, Wallet, type LucideIcon } from "lucide-react";
 import { makeT } from "@/lib/ui/text";
+import { NavBadge } from "./NavBadge";
 import type { PanelSummary } from "@/server/notifications/summary";
 import "./user-panel.css";
 
@@ -37,7 +38,11 @@ function renderLink(item: NavItem, count: number, active: PanelKey, seller = fal
       <Link href={item.href} className={on ? "up-nav-link up-nav-link-on" : "up-nav-link"} aria-current={on ? "page" : undefined}>
         <Icon size={18} aria-hidden="true" focusable="false" />
         {item.key === "home" && seller ? t("panel.nav.dashboard") : item.label}
-        {count > 0 ? <span className="up-nav-badge">{count}</span> : null}
+        {item.key === "chats" || item.key === "support" || item.key === "notifications" ? (
+          <NavBadge kind={item.key} initial={count} />
+        ) : count > 0 ? (
+          <span className="up-nav-badge">{count}</span>
+        ) : null}
       </Link>
     </li>
   );

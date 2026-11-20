@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { SiteShell, loadShell } from "@/components/SiteShell";
+import { SelectMenuEnhancer } from "@/components/ui/SelectMenuEnhancer";
 import { display, sans } from "@/styles/fonts";
 import { Plus_Jakarta_Sans } from "next/font/google";
 import { canonical } from "@/lib/seo";
@@ -58,6 +59,7 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
           Skip to content
         </a>
         <SiteShell shell={shell}>{children}</SiteShell>
+        <SelectMenuEnhancer />
       </body>
     </html>
   );

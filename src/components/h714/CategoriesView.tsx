@@ -1,6 +1,7 @@
 import { createElement } from "react";
 import Image from "next/image";
 import Link from "next/link";
+import { Megaphone } from "lucide-react";
 import { categoryIconFor } from "@/lib/category-icons";
 import { H714Page } from "./H714Page";
 
@@ -23,6 +24,9 @@ export function CategoriesView({
   searchHref: string;
   postAdHref: string;
 }) {
+  // The hint uses the first real category names, so it always matches the cards below.
+  const examples = categories.slice(0, 3).map((category) => category.name).join(", ");
+  const hint = examples ? `Find a category, e.g. ${examples}` : "Find a category";
   return (
     <H714Page>
         {" "}
@@ -42,8 +46,8 @@ export function CategoriesView({
                   <circle cx="11" cy="11" r="7"></circle>
                   <path d="M20 20l-4-4"></path>
                 </svg>
-                <span style={{ position: "absolute", left: "-9999px" }}>Find a category, e.g. flats, yoga, cars</span>
-                <input name="q" placeholder="Find a category, e.g. flats, yoga, cars" style={{ border: "0", outline: "none", font: "inherit", fontSize: "15px", width: "100%", background: "transparent" }} />
+                <span style={{ position: "absolute", left: "-9999px" }}>{hint}</span>
+                <input name="q" placeholder={hint} style={{ border: "0", outline: "none", font: "inherit", fontSize: "15px", width: "100%", background: "transparent" }} />
               </label>
               <button type="submit" className="h714-b h714-search-go" style={{ minHeight: "48px", padding: "0 24px", border: "0", borderRadius: "12px", background: "linear-gradient(135deg, #D1137A, #A8124F)", color: "#fff", fontWeight: "700", textDecoration: "none", boxShadow: "0 8px 24px rgba(209,19,122,.3)", font: "inherit", cursor: "pointer" }}>Search</button>
             </form>
@@ -85,12 +89,19 @@ export function CategoriesView({
             </div>
         </section>
         <section className="h714-pad" style={{ maxWidth: "1280px", margin: "0 auto", padding: "64px 24px 0", boxSizing: "border-box" }}>
-          <div style={{ borderRadius: "22px", padding: "30px 32px", background: "linear-gradient(120deg, #FFF0F7, #F5F0FF 55%, #FFF8EC)", border: "1px solid rgba(255,255,255,.95)", boxShadow: "0 8px 32px rgba(45,18,72,.07)", display: "flex", justifyContent: "space-between", alignItems: "center", gap: "18px", flexWrap: "wrap" }}>
-            <div>
-              <h2 className="h714-h2" style={{ margin: "0 0 6px", fontSize: "30px", letterSpacing: "-.03em", color: "#110520" }}>Have something to offer?</h2>
-              <p style={{ margin: "0", fontSize: "15px", color: "#4A2870" }}>Post your ad in about 2 minutes.</p>
+          <div style={{ position: "relative", overflow: "hidden", borderRadius: "22px", padding: "30px 32px", background: "linear-gradient(120deg, #FFF0F7, #F5F0FF 55%, #FFF8EC)", border: "1.5px solid #F0C6DE", boxShadow: "0 14px 40px rgba(168,18,79,.12), inset 0 1px 0 rgba(255,255,255,.9)", display: "flex", justifyContent: "space-between", alignItems: "center", gap: "18px", flexWrap: "wrap" }}>
+            <span aria-hidden="true" style={{ position: "absolute", right: "-60px", top: "-80px", width: "240px", height: "240px", borderRadius: "50%", background: "radial-gradient(circle, rgba(233,30,140,.16), rgba(233,30,140,0) 70%)", pointerEvents: "none" }}></span>
+            <span aria-hidden="true" style={{ position: "absolute", left: "-70px", bottom: "-110px", width: "260px", height: "260px", borderRadius: "50%", background: "radial-gradient(circle, rgba(124,58,237,.14), rgba(124,58,237,0) 70%)", pointerEvents: "none" }}></span>
+            <div style={{ position: "relative", display: "flex", alignItems: "center", gap: "16px" }}>
+              <span aria-hidden="true" style={{ flex: "none", width: "52px", height: "52px", display: "grid", placeItems: "center", borderRadius: "16px", background: "#fff", color: "#C2185B", border: "1.5px solid #F0C6DE", boxShadow: "0 8px 20px -8px rgba(209,19,122,.45)" }}>
+                <Megaphone size={24} />
+              </span>
+              <div>
+                <h2 className="h714-h2" style={{ margin: "0 0 6px", fontSize: "30px", letterSpacing: "-.03em", color: "#110520" }}>Have something to offer?</h2>
+                <p style={{ margin: "0", fontSize: "15px", color: "#4A2870" }}>Post your ad in about 2 minutes.</p>
+              </div>
             </div>
-            <div style={{ display: "flex", gap: "10px", flexWrap: "wrap" }}>
+            <div style={{ position: "relative", display: "flex", gap: "10px", flexWrap: "wrap" }}>
               <Link href={postAdHref} className="h714-b" style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", gap: "8px", minHeight: "48px", padding: "0 24px", borderRadius: "999px", background: "linear-gradient(135deg, #D1137A, #A8124F)", color: "#fff", fontWeight: "700", textDecoration: "none", boxShadow: "0 8px 24px rgba(209,19,122,.3)", fontSize: "15px" }}>Post your ad</Link>
               <Link href="/how-it-works/" className="h714-b" style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", gap: "8px", minHeight: "48px", padding: "0 24px", borderRadius: "999px", border: "1.5px solid #EAD8F0", background: "rgba(255,255,255,.85)", color: "#4A2870", fontWeight: "700", fontSize: "15px", textDecoration: "none" }}>How it works</Link>
             </div>

@@ -122,13 +122,15 @@
   transition: background 160ms ease, border-color 160ms ease, color 160ms ease;
 }
 .tkn-footer a.tkn-social:hover,
-.tkn-footer a.tkn-social:focus-visible {
+.tkn-footer a.tkn-social:focus-visible,
+.tkn-footer .tkn-social-off:hover {
   background: var(--sf);
   border-color: transparent;
   color: #fff;
 }
 .tkn-footer a.tkn-social:hover .tkn-brand-mark path,
-.tkn-footer a.tkn-social:focus-visible .tkn-brand-mark path {
+.tkn-footer a.tkn-social:focus-visible .tkn-brand-mark path,
+.tkn-footer .tkn-social-off:hover .tkn-brand-mark path {
   fill: #fff;
 }
 .tkn-footer a.tkn-social:focus-visible,
@@ -309,7 +311,8 @@
 
 @media (prefers-reduced-motion: no-preference) {
   .tkn-footer a.tkn-social:hover,
-  .tkn-footer a.tkn-social:focus-visible {
+  .tkn-footer a.tkn-social:focus-visible,
+  .tkn-footer .tkn-social-off:hover {
     transform: translateY(-2px);
   }
   .tkn-footer .tkn-social {

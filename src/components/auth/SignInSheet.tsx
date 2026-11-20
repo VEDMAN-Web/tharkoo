@@ -3,6 +3,7 @@
 import { trackEvent } from "@/lib/analytics/ga";
 import { type FormEvent, type MouseEvent, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
+import { X } from "lucide-react";
 import { CodeBoxes } from "@/components/auth/CodeBoxes";
 import { SIGN_IN_CSS } from "@/components/auth/sign-in-css";
 import { CODE_LENGTH, formatCountdown, indiaPhone } from "@/components/auth/sign-in-input";
@@ -166,7 +167,7 @@ export function SignInSheet({ mode, initialNext = null, showMobile = false, imag
         <section className="tk-si-main">
           {popup ? (
             <button type="button" className="tk-si-close tk-si-focus" aria-label="Close" onClick={() => onClose?.()}>
-              ×
+              <X size={22} aria-hidden="true" focusable="false" />
             </button>
           ) : null}
           <div>

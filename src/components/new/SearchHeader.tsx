@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { X } from "lucide-react";
 import type { TextFn } from "@/lib/ui/text";
 import { SortSelect, type SortOption } from "./SortSelect";
 import type { SearchChip } from "./search-header";
@@ -70,9 +71,7 @@ export function SearchChips({ chips, clearHref, t }: { chips: SearchChip[]; clea
           <li key={chip.key}>
             <Link className="tkn-sr-chip" href={chip.href} prefetch={false} aria-label={chip.removeLabel} data-chip={chip.key}>
               <span>{chip.label}</span>
-              <span aria-hidden="true" className="tkn-sr-x">
-                ×
-              </span>
+              <X size={14} strokeWidth={2.5} aria-hidden="true" focusable="false" className="tkn-sr-x" />
             </Link>
           </li>
         ))}

@@ -39,7 +39,7 @@ export type HomeAdLabels = {
   sample?: string;
 };
 
-const HOVER_DELAY_MS = 350;
+const HOVER_DELAY_MS = 150;
 
 export function HomeAdCard({ ad, labels, order = 0 }: { ad: HomeAdCardData; labels: HomeAdLabels; order?: number }) {
   const cardRef = useRef<HTMLElement>(null);
@@ -63,6 +63,16 @@ export function HomeAdCard({ ad, labels, order = 0 }: { ad: HomeAdCardData; labe
       data-tk="home-ad"
       data-slide={index}
       {...cardHandlers}
+      onPointerEnter={(event) => {
+        // Start loading the pop-out's pictures as soon as the mouse is over the card, so they are there when the pop-out opens.
+        if (event.pointerType === "mouse") {
+          slides.slice(0, 5).forEach((slide) => {
+            const url = slide.kind === "video" ? slide.poster : slide.src;
+            if (url) new window.Image().src = url;
+          });
+        }
+        cardHandlers.onPointerEnter(event);
+      }}
     >
       <div className="tkh-ad-photo">
         <SlideTrack slides={slides} href={ad.href} trackRef={trackRef} videoRef={videoRef} onScroll={onScroll} onTouch={calm} onClicked={clicked} />

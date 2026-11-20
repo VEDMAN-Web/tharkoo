@@ -55,6 +55,8 @@ svg.lucide {
 a { color: inherit; text-decoration: none; }
 button, input, select, textarea { font-family: inherit; color: inherit; }
 button { cursor: pointer; }
+/* Anything that opens a drop-down shows the hand cursor, not only buttons. */
+select:not(:disabled), summary, [aria-haspopup]:not(:disabled), .tkh-field-select { cursor: pointer; }
 input, select, textarea { font-size: 16px; }
 
 :focus-visible {
@@ -1774,6 +1776,16 @@ input.tk-field:focus-visible, select.tk-field:focus-visible, textarea.tk-field:f
 /* P1: country menu (mockup 00-CountryMenu): search on top, Popular, All countries A to Z, tick or "No ads yet" on the right */
 .tkn-city-arrow { color: var(--tkn-muted); margin-left: 2px; }
 .tkn-pop-country { width: 220px; max-width: 80vw; max-height: min(560px, 70vh); padding: 12px; background: rgba(255, 255, 255, 0.97); overflow-x: hidden; overflow-y: auto; overscroll-behavior: contain; }
+/* One slim rounded scrollbar (no up/down arrow buttons) for every scroll area on the public site: the page, pop-ups, lists, sheets. The admin keeps its own. */
+*:not(.adm-shell *, html:has(.adm-shell))::-webkit-scrollbar { width: 8px; height: 8px; }
+*:not(.adm-shell *, html:has(.adm-shell))::-webkit-scrollbar-button { display: none; width: 0; height: 0; }
+*:not(.adm-shell *, html:has(.adm-shell))::-webkit-scrollbar-track { background: transparent; margin: 8px 0; }
+*:not(.adm-shell *, html:has(.adm-shell))::-webkit-scrollbar-corner { background: transparent; }
+*:not(.adm-shell *, html:has(.adm-shell))::-webkit-scrollbar-thumb { background: rgba(91, 33, 182, 0.28); border-radius: 999px; border: 2px solid transparent; background-clip: content-box; }
+*:not(.adm-shell *, html:has(.adm-shell))::-webkit-scrollbar-thumb:hover { background: rgba(91, 33, 182, 0.5); background-clip: content-box; }
+@supports not selector(::-webkit-scrollbar) {
+  *:not(.adm-shell *, html:has(.adm-shell)) { scrollbar-width: thin; scrollbar-color: rgba(91, 33, 182, 0.35) transparent; }
+}
 .tkn-countrylist-wrap { min-width: 0; max-width: 100%; overflow-x: hidden; }
 /* No sideways scroll in the list: rows are exactly the list width (border-box) */
 .tkn-citylist, .tkn-citylist > li { min-width: 0; max-width: 100%; }
