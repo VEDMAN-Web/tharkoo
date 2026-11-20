@@ -55,7 +55,7 @@ test.describe("H17.13 RTA label", () => {
       expect(await badge.getAttribute("rel")).toMatch(/nofollow/);
       expect(await badge.locator("img").count(), "no image from rtalabel.org").toBe(0);
       const box = await badge.boundingBox();
-      expect(box?.height ?? 0, `${width}px: tap target height`).toBeGreaterThanOrEqual(24);
+      expect(box?.height ?? 0, `${width}px: tap target height`).toBeGreaterThanOrEqual(44);
       expect(box?.width ?? 0, `${width}px: tap target width`).toBeGreaterThanOrEqual(24);
       expect(await badge.evaluate((node) => parseFloat(getComputedStyle(node).fontSize)), `${width}px: text size`).toBeGreaterThanOrEqual(12);
       expect(await hasHorizontalScroll(page), `${width}px: no horizontal scroll`).toBe(false);
