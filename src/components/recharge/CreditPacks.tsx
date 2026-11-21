@@ -17,7 +17,7 @@ import "./recharge.css";
 
 export type PackChoice = { pack: PackLike; method: "card" | "crypto" };
 export type WalletTab = "call" | "ad";
-type CustomLimits = { min: Record<WalletTab, number>; maxPerPurchase: number; maxPerDay: number; moveEarningsMin: number };
+type CustomLimits = { min: Record<WalletTab, number>; maxPerPurchase: Record<WalletTab, number>; maxPerDay: number; moveEarningsMin: number };
 export type CreditPackData = {
   packs: PackLike[];
   /** H18.8: call packs fill call credits (video calls only). `packs` are ad packs (posting, TOP, Super Top). */
@@ -77,7 +77,7 @@ export function CreditPacks({ data, shortfall = 0, returnTo, onChoice, wallet: s
   const typed = Number(amount);
   const minimum = data.custom?.min[wallet] ?? 0;
   const typedCredits = amount ? creditsForAmount(typed, data.creditPriceInr, list) : 0;
-  const typedOk = Boolean(amount) && Number.isInteger(typed) && typed >= minimum && (!data.custom || typed <= data.custom.maxPerPurchase);
+  const typedOk = Boolean(amount) && Number.isInteger(typed) && typed >= minimum && (!data.custom || typed <= data.custom.maxPerPurchase[wallet]);
   const [selected, setSelected] = useState(() => preselectedId(startWallet === "call" ? data.callPacks : data.packs, shortfall));
   const [method, setMethod] = useState<Method>("card");
   const [showAll, setShowAll] = useState(false);
@@ -174,11 +174,11 @@ export function CreditPacks({ data, shortfall = 0, returnTo, onChoice, wallet: s
           </div>
           <p className="tkp-note" aria-live="polite">
             {!amount
-              ? t("recharge.custom.hint", { min: minimum.toLocaleString("en-IN"), max: data.custom.maxPerPurchase.toLocaleString("en-IN") })
+              ? t("recharge.custom.hint", { min: minimum.toLocaleString("en-IN"), max: data.custom.maxPerPurchase[wallet].toLocaleString("en-IN") })
               : typed < minimum
                 ? t("recharge.custom.tooSmall", { min: minimum.toLocaleString("en-IN") })
-                : typed > data.custom.maxPerPurchase
-                  ? t("recharge.custom.tooBig", { max: data.custom.maxPerPurchase.toLocaleString("en-IN") })
+                : typed > data.custom.maxPerPurchase[wallet]
+                  ? t("recharge.custom.tooBig", { max: data.custom.maxPerPurchase[wallet].toLocaleString("en-IN") })
                   : t("recharge.custom.get", { count: typedCredits.toLocaleString("en-IN") })}
           </p>
         </div>

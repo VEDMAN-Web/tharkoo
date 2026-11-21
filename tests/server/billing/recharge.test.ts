@@ -272,6 +272,7 @@ describe("H18.8 call packs and typed-in amounts", () => {
 
     await expect(startRecharge({ userId: String(user._id), wallet: "ad", amountInr: 999, method: "card", requestId: "r" })).rejects.toThrow(/Invalid request/);
     await expect(startRecharge({ userId: String(user._id), wallet: "ad", amountInr: 60_000, method: "card", requestId: "r" })).rejects.toThrow(/Invalid request/);
+    await expect(startRecharge({ userId: String(user._id), wallet: "call", amountInr: 1000, method: "card", requestId: "r" })).rejects.toThrow(/Invalid request/);
     const custom = await startRecharge({ userId: String(user._id), wallet: "ad", amountInr: 1500, method: "card", requestId: "r" });
     await confirmMockPayment({ userId: String(user._id), paymentId: custom.paymentId, outcome: "paid", requestId: "r" });
     expect(await walletBalance(String(user._id))).toBe(150);

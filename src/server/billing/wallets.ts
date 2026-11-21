@@ -17,7 +17,8 @@ export function walletKind(value: unknown): WalletKind {
 /** Smallest custom amount per wallet, in rupees. */
 export const CUSTOM_MIN_INR: Record<WalletKind, number> = { call: 100, ad: 1000 };
 /** Largest custom amount per purchase and per day, in rupees. Above this the buyer contacts support and staff credit by hand. */
-export const CUSTOM_MAX_PER_PURCHASE_INR = 50_000;
+// H18.9 (Vedant): call credits stay under Rs 1,000 a purchase.
+export const CUSTOM_MAX_PER_PURCHASE_INR: Record<WalletKind, number> = { call: 999, ad: 50_000 };
 export const CUSTOM_MAX_PER_DAY_INR = 100_000;
 /** Earnings move to ad credits in blocks of at least this many credits (the price of the smallest ad pack). */
 export const MOVE_EARNINGS_MIN = 100;
