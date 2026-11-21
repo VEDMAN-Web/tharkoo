@@ -1,0 +1,13 @@
+{
+  "branchPrefix": "haiku/h18.1b",
+  "globs": [
+    "docs/ownership/H18.1b.json",
+    "progress/H18.1b.md",
+    "src/server/billing/passimpay.ts",
+    "src/server/billing/provider.ts",
+    "src/server/billing/service.ts",
+    "src/server/billing/recharge.ts",
+    "src/app/api/payments/[[...slug]]/route.ts",
+    "tests/server/billing/h18-1-passimpay.test.ts"
+  ]
+}

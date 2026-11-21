@@ -5,7 +5,9 @@ import { requireUser } from "@/server/auth/service";
 import { applyWebhook, checkoutPack, recordWebhookRejection, refundPayment, webhookRejection } from "@/server/billing";
 import { json, readJson, segmentsOf } from "@/server/billing/http";
 import { NotFoundError, handle, parseInput, requestIdFrom } from "@/server/http";
-import { chooseCoin, confirmMockPayment, listOwnPayments, readOwnPayment, rechargePacks, startRecharge, mockPaymentsAvailable, sheetPacks } from "@/server/billing/recharge";
+import { paymentsAvailable, settlePassimpay } from "@/server/billing/recharge";
+import { verifyNotice } from "@/server/billing/passimpay";
+import { chooseCoin, confirmMockPayment, listOwnPayments, readOwnPayment, rechargePacks, startRecharge, sheetPacks } from "@/server/billing/recharge";
 import { postingFeeStatus } from "@/server/billing/posting-fee";
 import { readPriceList } from "@/server/billing/price-list";
 import { readMoneySettings } from "@/server/billing/money-settings";
@@ -57,11 +59,22 @@ async function dispatch(request: Request) {
     }
     return json(await applyWebhook(parseInput(paymentWebhookBodySchema, body), requestId), requestId);
   }
+  // H18.1: PassimPay's payment notice. A valid signature only makes us ask PassimPay for the order's status; the notice never credits.
+  if (request.method === "POST" && path === "passimpay/webhook") {
+    const raw = await request.text();
+    const notice = verifyNotice(raw, request.headers.get("x-signature"));
+    if (!notice.ok) {
+      await recordWebhookRejection("passimpay-bad-signature", requestId);
+      return Response.json({ ok: false }, { status: 400, headers: { "x-request-id": requestId } });
+    }
+    const outcome = notice.orderId ? await settlePassimpay(notice.orderId, requestId) : "ignored";
+    return Response.json({ ok: true, outcome }, { status: 200, headers: { "x-request-id": requestId } });
+  }
   assertOrigin(request);
   const user = await requireUser(readCookie(request, SESSION_COOKIE));
   const ip = clientKey(request.headers);
   if (request.method === "GET" && path === "packs") {
-    const [packs, balance, fee, available, money, prices] = await Promise.all([rechargePacks(), walletBalance(user.user.id), postingFeeStatus(user.user.id), mockPaymentsAvailable(), readMoneySettings(), readPriceList(user.user.id)]);
+    const [packs, balance, fee, available, money, prices] = await Promise.all([rechargePacks(), walletBalance(user.user.id), postingFeeStatus(user.user.id), paymentsAvailable(), readMoneySettings(), readPriceList(user.user.id)]);
     const shortfall = Math.max(0, Math.floor(Number(new URL(request.url).searchParams.get("shortfall")) || 0));
     return json({ packs: sheetPacks(packs, shortfall), all: packs, allPacks: packs.length, balance, fee: fee.fee, creditPriceInr: fee.creditPriceInr, available, testPayments: money.mockPaymentsOn, prices }, requestId);
   }
