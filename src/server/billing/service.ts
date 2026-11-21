@@ -1,4 +1,6 @@
+import mongoose from "mongoose";
 import { Types } from "mongoose";
+import { moveCallCredits } from "@/server/billing/wallets";
 import { AuditRepository } from "@/server/audit";
 import { STAR_SLOT_CAP, boostsDue, orderPlans, promotionRule } from "@/server/billing/catalog";
 import { readPlanOrder } from "@/server/billing/money-settings";
@@ -137,6 +139,8 @@ export async function listOrders(userId: string, page: number, pageSize: number)
 export async function checkoutPack(input: {
   userId: string;
   packId: string;
+  /** H18.8: the buyer typed their own amount. No pack: the payment carries the credits and the balance it fills. */
+  custom?: { wallet: "ad" | "call"; amountInr: number; credits: number };
   idempotencyKey?: string;
   couponCode?: string;
   requestId: string;
@@ -147,7 +151,6 @@ export async function checkoutPack(input: {
   await assertNotPaused("pausePurchases");
   await readyBilling();
   const userId = objectId(input.userId, "userId");
-  const packId = objectId(input.packId, "packId");
   const idempotencyKey = input.idempotencyKey?.trim() || randomToken();
   const existing = await Payment.findOne({ idempotencyKey });
   if (existing) {
@@ -159,24 +162,29 @@ export async function checkoutPack(input: {
       provider: existing.provider === "razorpay" || existing.provider === "passimpay" ? (existing.provider as "razorpay" | "passimpay") : ("mock" as const),
     };
   }
-  const pack = await CreditPack.findById(packId);
-  if (!pack || (pack.status && pack.status !== "active")) throw new NotFoundError("Not found");
-  const credits = pack.credits ?? 0;
-  const price = Math.round(pack.price ?? 0);
+  const pack = input.custom ? null : await CreditPack.findById(objectId(input.packId, "packId"));
+  if (!input.custom && (!pack || (pack.status && pack.status !== "active"))) throw new NotFoundError("Not found");
+  const credits = input.custom ? input.custom.credits : (pack?.credits ?? 0);
+  const price = input.custom ? input.custom.amountInr : Math.round(pack?.price ?? 0);
   if (!Number.isInteger(credits) || credits < 1 || !Number.isInteger(price) || price < 0) {
     throw new NotFoundError("Not found");
   }
-  const quote = input.couponCode ? await validateCoupon(input.couponCode, input.userId) : null;
+  const wallet = input.custom ? input.custom.wallet : pack?.wallet === "call" ? "call" : "ad";
+  const quote = input.couponCode && !input.custom ? await validateCoupon(input.couponCode, input.userId) : null;
   const bonusCredits = quote ? packBonus(quote, credits) : 0;
+  const paymentId = new mongoose.Types.ObjectId();
   const payment = await Payment.create({
+    _id: paymentId,
     userId,
-    orderId: pack._id,
+    orderId: pack?._id ?? paymentId,
+    wallet,
+    ...(input.custom ? { custom: true, credits } : {}),
     idempotencyKey,
     provider: paymentProvider(),
     amount: price,
     currency: "INR",
     status: "pending",
-    ...(input.recharge ? { ...input.recharge, credits: credits + (pack.bonus ?? 0) } : {}),
+    ...(input.recharge ? { ...input.recharge, credits: credits + (pack?.bonus ?? 0) } : {}),
   });
   try {
     const order = createCheckoutOrder({ amount: price, currency: "INR", receipt: String(payment._id) });
@@ -278,52 +286,28 @@ export async function applyWebhook(
 }
 
 /** Credits the pack, its bonus and any coupon bonus once for a payment that this delivery claimed. */
-async function creditPaidOrder(payment: { _id: unknown; orderId: unknown; userId: unknown }, requestId: string) {
-  const pack = await CreditPack.findById(payment.orderId);
-  if (!pack) throw new NotFoundError("Not found");
+async function creditPaidOrder(payment: { _id: unknown; orderId: unknown; userId: unknown; wallet?: string | null; custom?: boolean | null; credits?: number | null }, requestId: string) {
+  const userId = String(payment.userId);
+  // H18.8: a custom amount has no pack. Its credits sit on the payment.
+  const pack = payment.custom ? null : await CreditPack.findById(payment.orderId);
+  if (!payment.custom && !pack) throw new NotFoundError("Not found");
+  const wallet = payment.custom ? payment.wallet : pack?.wallet;
   const checkout = await AuditEvent.findOne({ action: "payment.checkout", targetId: String(payment._id) })
     .sort({ _id: -1 })
     .lean();
   const couponBonus =
     checkout?.after && typeof checkout.after.bonusCredits === "number" ? checkout.after.bonusCredits : 0;
-  const userId = String(payment.userId);
-  const credits = pack.credits ?? 0;
-  const bonus = pack.bonus ?? 0;
-  if (credits > 0) {
-    await creditWallet({
-      userId,
-      amount: credits,
-      refType: "pack",
-      refId: String(payment._id),
-      requestId,
-      actorId: userId,
-      actorType: "system",
-      once: true,
-    });
-  }
-  if (bonus > 0) {
-    await creditWallet({
-      userId,
-      amount: bonus,
-      refType: "pack_bonus",
-      refId: `${payment._id}:bonus`,
-      requestId,
-      actorId: userId,
-      actorType: "system",
-      once: true,
-    });
-  }
-  if (couponBonus > 0) {
-    await creditWallet({
-      userId,
-      amount: couponBonus,
-      refType: "coupon",
-      refId: `${payment._id}:coupon`,
-      requestId,
-      actorId: userId,
-      actorType: "system",
-      once: true,
-    });
+  const credits = payment.custom ? (payment.credits ?? 0) : (pack?.credits ?? 0);
+  const bonus = payment.custom ? 0 : (pack?.bonus ?? 0);
+  const lines: [string, number][] = [["pack", credits], ["pack_bonus", bonus], ["coupon", couponBonus]];
+  for (const [refType, amount] of lines) {
+    if (!(amount > 0)) continue;
+    const refId = refType === "pack" ? String(payment._id) : `${payment._id}:${refType === "pack_bonus" ? "bonus" : "coupon"}`;
+    if (wallet === "call") {
+      await moveCallCredits({ userId, amount, key: `call-${refType}:${refId}`, kind: "call_credit_purchase", requestId, actorId: userId, actorType: "system" });
+    } else {
+      await creditWallet({ userId, amount, refType, refId, requestId, actorId: userId, actorType: "system", once: true });
+    }
   }
 }
 

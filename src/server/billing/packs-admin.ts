@@ -28,11 +28,13 @@ export type PackRow = {
   perCredit: number;
   tag: string;
   shown: boolean;
+  /** H18.8: "call" fills call credits, "ad" fills ad credits. */
+  wallet: "ad" | "call";
 };
 
 export type PackWrite = { eventId: string; undoUntil: string | null; summary: string };
 
-type PackDoc = { _id: Types.ObjectId; credits?: number; bonus?: number; price?: number; tag?: string; status?: string };
+type PackDoc = { _id: Types.ObjectId; credits?: number; bonus?: number; price?: number; tag?: string; status?: string; wallet?: string };
 
 /** Rupees per credit including the free credits. 0 when the pack has no credits. */
 export function pricePerCredit(price: number, credits: number, bonus: number): number {
@@ -44,7 +46,7 @@ function rowOf(doc: PackDoc): PackRow {
   const credits = doc.credits ?? 0;
   const bonus = doc.bonus ?? 0;
   const price = Math.round(doc.price ?? 0);
-  return { id: String(doc._id), credits, bonus, total: credits + bonus, price, perCredit: pricePerCredit(price, credits, bonus), tag: doc.tag ?? "", shown: doc.status !== "hidden" };
+  return { id: String(doc._id), credits, bonus, total: credits + bonus, price, perCredit: pricePerCredit(price, credits, bonus), tag: doc.tag ?? "", shown: doc.status !== "hidden", wallet: doc.wallet === "call" ? "call" : "ad" };
 }
 
 /** Packs smallest first, the way people see them. */
@@ -54,7 +56,7 @@ export async function readPacks(): Promise<PackRow[]> {
   return docs.map(rowOf).sort((a, b) => a.total - b.total || a.price - b.price);
 }
 
-type PackInput = { credits: unknown; bonus: unknown; price: unknown; tag: unknown; shown: unknown };
+type PackInput = { credits: unknown; bonus: unknown; price: unknown; tag: unknown; shown: unknown; wallet?: unknown };
 
 function whole(value: unknown, min: number, max: number, message: string): number {
   const number = typeof value === "number" ? value : typeof value === "string" && value.trim() !== "" ? Number(value) : Number.NaN;
@@ -69,10 +71,10 @@ function cleanPack(input: PackInput) {
   const tag = typeof input.tag === "string" ? input.tag : "";
   if (!(PACK_TAGS as readonly string[]).includes(tag)) throw new ValidationError("Choose a tag from the list.");
   if (typeof input.shown !== "boolean") throw new ValidationError("Choose Shown or Hidden.");
-  return { credits, bonus, price, tag, status: input.shown ? "active" : "hidden" };
+  return { credits, bonus, price, tag, status: input.shown ? "active" : "hidden", wallet: input.wallet === "call" ? "call" : "ad" };
 }
 
-const KEYS = ["credits", "bonus", "price", "tag", "status"];
+const KEYS = ["credits", "bonus", "price", "tag", "status", "wallet"];
 
 function pick(doc: Record<string, unknown> | null, keys: string[]) {
   return Object.fromEntries(keys.filter((key) => doc && key in doc).map((key) => [key, (doc as Record<string, unknown>)[key]]));
@@ -111,7 +113,7 @@ export async function updatePack(ctx: AdminCtx, input: { id: string } & PackInpu
 export async function createPack(ctx: AdminCtx, input: PackInput): Promise<PackWrite> {
   await connectDb();
   const next = cleanPack(input);
-  if (await CreditPack.exists({ credits: next.credits, bonus: next.bonus, price: next.price })) throw new ConflictError("A pack with these credits and this price already exists.");
+  if (await CreditPack.exists({ credits: next.credits, bonus: next.bonus, price: next.price, wallet: next.wallet })) throw new ConflictError("A pack with these credits and this price already exists.");
   const label = `${next.credits.toLocaleString("en-IN")} credits`;
   const written = await adminWrite(ctx, {
     perm: "prices.edit",

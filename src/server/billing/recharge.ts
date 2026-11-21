@@ -1,4 +1,5 @@
 import mongoose from "mongoose";
+import { CUSTOM_MAX_PER_DAY_INR, CUSTOM_MAX_PER_PURCHASE_INR, CUSTOM_MIN_INR, type WalletKind, customCredits, walletKind } from "@/server/billing/wallets";
 import { connectDb } from "@/lib/db";
 import { safeNext } from "@/lib/ui/api";
 import { AuditRepository } from "@/server/audit";
@@ -29,7 +30,7 @@ const MOCK_RATE_INR: Record<CryptoCoin, number> = { BTC: 5_500_000, ETH: 280_000
 const COIN_DECIMALS: Record<CryptoCoin, number> = { BTC: 8, ETH: 6, USDT: 2, USDC: 2 };
 const ADDRESS_ALPHABET = "abcdefghjkmnpqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ23456789";
 
-export type RechargePack = { id: string; credits: number; bonus: number; total: number; price: number; badge: "popular" | "best" | null };
+export type RechargePack = { id: string; credits: number; bonus: number; total: number; price: number; badge: "popular" | "best" | null; wallet: WalletKind };
 
 export function packBadge(tag: string | undefined | null): RechargePack["badge"] {
   const text = (tag || "").toLowerCase();
@@ -46,7 +47,7 @@ export async function rechargePacks(): Promise<RechargePack[]> {
     .map((row) => {
       const credits = row.credits ?? 0;
       const bonus = row.bonus ?? 0;
-      return { id: String(row._id), credits, bonus, total: credits + bonus, price: Math.round(row.price ?? 0), badge: packBadge(row.tag) };
+      return { id: String(row._id), credits, bonus, total: credits + bonus, price: Math.round(row.price ?? 0), badge: packBadge(row.tag), wallet: walletKind(row.wallet) };
     })
     .sort((a, b) => a.total - b.total);
 }
@@ -158,9 +159,34 @@ function checkedCoin(coin: string, network: string | undefined): { coin: string;
 
 export const NOT_AVAILABLE_MESSAGE = "Payments are not available right now. Nothing was charged.";
 
+/**
+ * H18.8: checks a typed-in amount and turns it into credits. Minimum per balance, a cap per purchase and per day
+ * (paid and pending payments of the last 24 hours count). Above the cap the buyer is sent to support.
+ */
+export async function quoteCustomAmount(userId: string, wallet: WalletKind, amountInr: number) {
+  await connectDb();
+  if (!Number.isInteger(amountInr) || amountInr < CUSTOM_MIN_INR[wallet]) {
+    throw new ValidationError("Invalid request", { amountInr: [`The smallest amount is Rs ${CUSTOM_MIN_INR[wallet].toLocaleString("en-IN")}.`] });
+  }
+  const tooBig = `For more than Rs ${CUSTOM_MAX_PER_PURCHASE_INR.toLocaleString("en-IN")} at once, or Rs ${CUSTOM_MAX_PER_DAY_INR.toLocaleString("en-IN")} in a day, open a support ticket and we will add your credits.`;
+  if (amountInr > CUSTOM_MAX_PER_PURCHASE_INR) throw new ValidationError("Invalid request", { amountInr: [tooBig] });
+  const since = new Date(Date.now() - 24 * 3_600_000);
+  const today = await Payment.aggregate<{ total: number }>([
+    { $match: { userId: new mongoose.Types.ObjectId(userId), status: { $in: ["paid", "pending"] }, createdAt: { $gte: since } } },
+    { $group: { _id: null, total: { $sum: "$amount" } } },
+  ]);
+  if ((today[0]?.total ?? 0) + amountInr > CUSTOM_MAX_PER_DAY_INR) throw new ValidationError("Invalid request", { amountInr: [tooBig] });
+  const [money, packs] = await Promise.all([readMoneySettings(), rechargePacks()]);
+  const credits = customCredits(amountInr, money.creditPriceInr, packs.filter((p) => p.wallet === wallet));
+  if (credits < 1) throw new ValidationError("Invalid request", { amountInr: ["That amount is too small."] });
+  return { wallet, amountInr, credits };
+}
+
 export async function startRecharge(input: {
   userId: string;
-  packId: string;
+  packId?: string;
+  wallet?: string;
+  amountInr?: number;
   method: string;
   coin?: string;
   network?: string;
@@ -180,9 +206,11 @@ export async function startRecharge(input: {
   } else if (!(await mockPaymentsAvailable())) throw new ConflictError(NOT_AVAILABLE_MESSAGE);
   const picked = method === "crypto" && input.coin && !passimpay ? checkedCoin(input.coin, input.network) : { coin: undefined, network: undefined };
   const returnTo = input.returnTo ? safeNext(input.returnTo) ?? undefined : undefined;
+  const custom = input.packId ? undefined : await quoteCustomAmount(input.userId, walletKind(input.wallet), Number(input.amountInr));
   const result = await checkoutPack({
     userId: input.userId,
-    packId: input.packId,
+    packId: input.packId ?? "",
+    custom,
     idempotencyKey: input.idempotencyKey,
     requestId: input.requestId,
     ip: input.ip,

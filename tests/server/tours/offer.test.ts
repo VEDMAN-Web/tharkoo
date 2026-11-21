@@ -1,4 +1,5 @@
 import mongoose from "mongoose";
+import { promote } from "../../setup/wallets";
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 import { Category, Listing } from "@/server/models";
 import type { CategoryKind } from "@/server/models/catalog";
@@ -38,6 +39,7 @@ async function adIn(opts: { kind?: CategoryKind | null; enabled?: boolean; coins
     description: "A description that is long enough",
     publishedAt: new Date(),
   });
+  await promote(String(listing._id), String(listing.ownerId));
   return String(listing._id);
 }
 

@@ -1,4 +1,5 @@
 import mongoose, { type Types } from "mongoose";
+import { callBalance, moveCallCredits } from "@/server/billing/wallets";
 import { connectDb } from "@/lib/db";
 import { can } from "@/lib/admin/perms";
 import type { AdminCtx } from "@/server/admin/context";
@@ -16,7 +17,8 @@ import { AuditEvent, Payment, User, WalletEntry } from "@/server/models";
 
 export const STAFF_ADJUST = "staff_adjust";
 export const STAFF_ADJUST_UNDO = "staff_adjust_undo";
-export const MAX_ADJUST = 100_000;
+// H18.8 (Vedant): staff may add any amount. This only stops a typo with too many zeros.
+export const MAX_ADJUST = 10_000_000;
 export const ADJUST_ACTION = "wallet.adjust";
 const REQUEST_KEY = /^[A-Za-z0-9_-]{8,64}$/;
 const LINES_SHOWN = 25;
@@ -40,7 +42,7 @@ export function credits(count: number) {
  * Adds (amount above 0) or removes (amount below 0) credits for one user. `requestKey` is made once per dialog, so a double click
  * or a retry cannot write the line twice. The balance can never go below 0.
  */
-export async function adjustCredits(ctx: AdminCtx, input: { userId: string; amount: number; reason: string; requestKey: string }): Promise<AdjustResult> {
+export async function adjustCredits(ctx: AdminCtx, input: { userId: string; amount: number; reason: string; requestKey: string; wallet?: "ad" | "call" }): Promise<AdjustResult> {
   await connectDb();
   const { amount } = input;
   if (!Number.isInteger(amount) || amount === 0 || Math.abs(amount) > MAX_ADJUST) {
@@ -53,6 +55,7 @@ export async function adjustCredits(ctx: AdminCtx, input: { userId: string; amou
   if (user.status === "deleted") throw new ConflictError("This account was deleted");
   const userId = String(user._id);
   const verb = amount > 0 ? "Added" : "Removed";
+  if (input.wallet === "call") return adjustCallCredits(ctx, { ...input, userId, name: user.displayName, verb });
   const written = await adminWrite(ctx, {
     perm: adjustPerm(ctx.roles),
     action: ADJUST_ACTION,
@@ -233,4 +236,33 @@ export async function getCreditsTab(userId: string, roles: readonly string[], vi
     lines,
     total,
   };
+}
+
+/**
+ * H18.8: staff add or remove call credits. No undo button: make the opposite change instead. The ledger never lets the
+ * balance go below 0, and the request key stops a double click from writing twice.
+ */
+async function adjustCallCredits(ctx: AdminCtx, input: { userId: string; amount: number; reason: string; requestKey: string; name: string; verb: string }): Promise<AdjustResult> {
+  const { amount, userId } = input;
+  const label = `${input.verb} ${credits(Math.abs(amount))} of call credits ${amount > 0 ? "to" : "from"} ${input.name}`;
+  const written = await adminWrite(ctx, {
+    perm: adjustPerm(ctx.roles),
+    action: ADJUST_ACTION,
+    target: { type: "user", id: userId, label: input.name },
+    reason: input.reason,
+    reasonRequired: true,
+    texts: [input.reason],
+    before: async () => ({ callBalance: await callBalance(userId) }),
+    apply: async () => {
+      if (amount < 0) {
+        const balance = await callBalance(userId);
+        if (balance < -amount) throw new ConflictError(`${input.name} has only ${credits(balance)} of call credits. You cannot remove more than that.`);
+      }
+      const done = await moveCallCredits({ userId, amount, key: `staff-call:${input.requestKey}`, kind: amount > 0 ? "staff_call_credit" : "staff_call_debit", requestId: ctx.requestId, actorId: ctx.actorId, actorType: "admin", reason: input.reason });
+      if (!done.created) throw new ConflictError("This change was already made. Nothing was added twice.");
+      const balance = await callBalance(userId);
+      return { after: { wallet: "call", delta: amount, balanceAfter: balance, refId: input.requestKey }, result: balance, summary: `${label}: ${input.reason}` };
+    },
+  });
+  return { eventId: written.eventId, undoUntil: written.undoUntil, balance: written.result, summary: label };
 }

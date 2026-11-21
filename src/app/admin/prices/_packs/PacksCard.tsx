@@ -9,9 +9,9 @@ import { useAnswer } from "../_view/useAnswer";
 import { savePackAction, createPackAction } from "./actions";
 import { checkPackForm, packText, perCreditText } from "./pack-format";
 
-type Form = { credits: string; bonus: string; price: string; tag: string; shown: boolean };
+type Form = { credits: string; bonus: string; price: string; tag: string; shown: boolean; wallet: "ad" | "call" };
 
-const NEW_PACK: Form = { credits: "", bonus: "0", price: "", tag: "", shown: false };
+const NEW_PACK: Form = { credits: "", bonus: "0", price: "", tag: "", shown: false, wallet: "ad" };
 
 /** The recharge packs table (smallest first, as people see it) and the drawer that edits or adds one pack. */
 export function PacksCard({ packs, canEdit }: { packs: PackRow[]; canEdit: boolean }) {
@@ -43,7 +43,7 @@ export function PacksCard({ packs, canEdit }: { packs: PackRow[]; canEdit: boole
           <tbody>
             {packs.map((pack) => (
               <tr key={pack.id} data-tk="pack-row" data-total={pack.total}>
-                <td className="adm-k-main"><strong>{packText(pack.credits, pack.bonus)}</strong></td>
+                <td className="adm-k-main"><strong>{packText(pack.credits, pack.bonus)}</strong> <Badge tone={pack.wallet === "call" ? "ok" : "neutral"}>{pack.wallet === "call" ? "Call" : "Ad"}</Badge></td>
                 <td>{`₹${pack.price.toLocaleString("en-IN")}`}</td>
                 <td>{perCreditText(pack.perCredit)}</td>
                 <td>{pack.tag ? <Badge tone="neutral">{pack.tag}</Badge> : "None"}</td>
@@ -72,7 +72,7 @@ export function PacksCard({ packs, canEdit }: { packs: PackRow[]; canEdit: boole
 }
 
 function PackDrawer({ pack, onClose, onSaved }: { pack: PackRow | null; onClose: () => void; onSaved: (result: Awaited<ReturnType<typeof savePackAction>>, message: string) => boolean }) {
-  const [form, setForm] = useState<Form>(pack ? { credits: String(pack.credits), bonus: String(pack.bonus), price: String(pack.price), tag: pack.tag, shown: pack.shown } : NEW_PACK);
+  const [form, setForm] = useState<Form>(pack ? { credits: String(pack.credits), bonus: String(pack.bonus), price: String(pack.price), tag: pack.tag, shown: pack.shown, wallet: pack.wallet } : NEW_PACK);
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
   const change = (patch: Partial<Form>) => {
@@ -89,7 +89,7 @@ function PackDrawer({ pack, onClose, onSaved }: { pack: PackRow | null; onClose:
     const problem = checkPackForm({ credits: form.credits, bonus: form.bonus, price: form.price });
     if (problem) return setError(problem);
     setBusy(true);
-    const body = { credits, bonus, price, tag: form.tag, shown: form.shown };
+    const body = { credits, bonus, price, tag: form.tag, shown: form.shown, wallet: form.wallet };
     const result = pack ? await savePackAction({ id: pack.id, ...body }) : await createPackAction(body);
     setBusy(false);
     if (!result.ok) return setError(result.message);
@@ -126,6 +126,13 @@ function PackDrawer({ pack, onClose, onSaved }: { pack: PackRow | null; onClose:
           <label className="adm-k-label" htmlFor="pack-price">Price (₹)<span className="adm-k-req" aria-hidden="true"> *</span></label>
           <input id="pack-price" className="adm-k-input" inputMode="numeric" autoComplete="off" value={form.price} onChange={(event) => change({ price: event.target.value })} />
           <p className="adm-k-help">{hint || "A whole number of rupees."}</p>
+        </div>
+        <div className="adm-k-field">
+          <label className="adm-k-label" htmlFor="pack-wallet">Credit type</label>
+          <select id="pack-wallet" className="adm-k-input" value={form.wallet} onChange={(event) => change({ wallet: event.target.value === "call" ? "call" : "ad" })}>
+            <option value="ad">Ad credits (posting, TOP, Super Top)</option>
+            <option value="call">Call credits (video calls only)</option>
+          </select>
         </div>
         <div className="adm-k-field">
           <label className="adm-k-label" htmlFor="pack-tag">Tag</label>

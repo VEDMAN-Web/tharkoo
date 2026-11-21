@@ -5,7 +5,7 @@ import dynamic from "next/dynamic";
 import { BrandLogo } from "./BrandLogo";
 import { LOGO_LIGHT_DEFAULT } from "@/lib/brand";
 import { useSitePath } from "@/components/useSitePath";
-import { ChevronDown, Menu } from "lucide-react";
+import { ChevronDown, Megaphone, Menu, Phone } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { HeaderCountry } from "./HeaderCountry";
 import type { CountryOption } from "@/server/locations/country-scope";
@@ -56,7 +56,7 @@ export function HeaderNew({
   const paths = useUrlPaths();
   const [menuOpen, setMenuOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
-  const { phase, user, balance, balanceReady, unread } = useAccount();
+  const { phase, user, balance, callBalance, balanceReady, unread } = useAccount();
   const signedIn = isSignedInPhase(phase);
   const accountLabel = user ? accountName(user.displayName, user.email || "") : "";
   const [accountOpen, setAccountOpen] = useState(false);
@@ -120,7 +120,13 @@ export function HeaderNew({
           {signedIn ? (
             <>
               {balanceReady ? (
-                balance !== null ? <button type="button" className="tkn-coin-chip" data-tk="header-coins" onClick={() => openRecharge({})}>{t("panel.coins.balance", { count: balance })}</button> : null
+                balance !== null ? (
+                  <button type="button" className="tkn-coin-chip" data-tk="header-coins" aria-label={t("panel.coins.chipLabel", { call: callBalance ?? 0, ad: balance })} onClick={() => openRecharge({})}>
+                    <Phone size={13} aria-hidden="true" focusable="false" /> {callBalance ?? 0}
+                    <span className="tkn-coin-sep" aria-hidden="true">·</span>
+                    <Megaphone size={13} aria-hidden="true" focusable="false" /> {balance}
+                  </button>
+                ) : null
               ) : (
                 <span className="tkn-coin-chip tkn-skel" data-tk="header-coins-wait" aria-hidden="true" />
               )}
@@ -141,7 +147,9 @@ export function HeaderNew({
                 {accountOpen ? (
                   <div className="tkn-account-menu" role="menu">
                     {balance !== null ? (
-                      <Link role="menuitem" href="/u/account/credits/" className="tkn-account-coins" onClick={() => setAccountOpen(false)}>{t("panel.coins.balance", { count: balance })}</Link>
+                      <Link role="menuitem" href="/u/account/credits/" className="tkn-account-coins" onClick={() => setAccountOpen(false)}>
+                        {t("panel.coins.callBalance", { count: callBalance ?? 0 })} · {t("panel.coins.adBalance", { count: balance })}
+                      </Link>
                     ) : null}
                     <Link role="menuitem" href="/u/account/" onClick={() => setAccountOpen(false)}>{t("chrome.account.my")}</Link>
                     <Link role="menuitem" href="/u/account/ads/" onClick={() => setAccountOpen(false)}>{t("chrome.account.ads")}</Link>

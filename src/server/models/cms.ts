@@ -132,6 +132,8 @@ export interface CreditPackDoc extends BaseDoc {
   tag?: string;
   order?: number;
   status?: string;
+  /** H18.8: "call" packs fill call credits, everything else fills ad credits. */
+  wallet?: string;
 }
 
 export interface BannerDoc extends BaseDoc {
@@ -340,6 +342,7 @@ const creditPackSchema = new Schema<CreditPackDoc>(
     tag: String,
     order: Number,
     status: { type: String, default: "active" },
+    wallet: { type: String, enum: ["ad", "call"], default: "ad" },
   },
   { collection: collectionName("credit_packs", "CreditPack") },
 );

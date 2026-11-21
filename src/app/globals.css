@@ -1722,7 +1722,9 @@ input.tk-field:focus-visible, select.tk-field:focus-visible, textarea.tk-field:f
 .tkn-coin-chip {
   display: inline-flex; align-items: center; min-height: 44px; padding: 0 14px; border-radius: 999px; white-space: nowrap;
   background: #fdf0f7; border: 1px solid #ead8f0; color: #a8124f; font-weight: 700; font-size: 14px; text-decoration: none;
+  gap: 4px; cursor: pointer; font-family: inherit;
 }
+.tkn-coin-sep { margin: 0 4px; color: #c9a3d9; }
 .tkn-account { position: relative; }
 .tkn-avatar {
   display: inline-flex; align-items: center; gap: 6px; height: 44px; padding: 4px 10px 4px 4px; border-radius: 999px; border: 1px solid #ead8f0;

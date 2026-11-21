@@ -1,10 +1,11 @@
 import { z } from "zod";
+import { CUSTOM_MAX_PER_DAY_INR, CUSTOM_MAX_PER_PURCHASE_INR, CUSTOM_MIN_INR, MOVE_EARNINGS_MIN, callBalance, earningsBalance, moveEarningsToAdCredits } from "@/server/billing/wallets";
 import { clientKey } from "@/lib/rate-limit";
 import { SESSION_COOKIE, assertOrigin, readCookie } from "@/server/auth/http";
 import { requireUser } from "@/server/auth/service";
 import { applyWebhook, checkoutPack, recordWebhookRejection, refundPayment, webhookRejection } from "@/server/billing";
 import { json, readJson, segmentsOf } from "@/server/billing/http";
-import { NotFoundError, handle, parseInput, requestIdFrom } from "@/server/http";
+import { NotFoundError, ValidationError, handle, parseInput, requestIdFrom } from "@/server/http";
 import { paymentsAvailable, settleOwnPending, settlePassimpay } from "@/server/billing/recharge";
 import { verifyNotice } from "@/server/billing/passimpay";
 import { chooseCoin, confirmMockPayment, listOwnPayments, readOwnPayment, rechargePacks, startRecharge, sheetPacks } from "@/server/billing/recharge";
@@ -19,6 +20,8 @@ import { paymentWebhookBodySchema, refundBodySchema } from "@/server/shared/sche
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
+const moveEarningsSchema = z.object({ amount: z.number().int().positive(), idempotencyKey: z.string().trim().min(8).max(200) });
+
 const checkoutBodySchema = z.object({
   packId: idSchema,
   idempotencyKey: z.string().trim().min(8).max(200).optional(),
@@ -26,7 +29,10 @@ const checkoutBodySchema = z.object({
 });
 
 const rechargeBodySchema = z.object({
-  packId: idSchema,
+  packId: idSchema.optional(),
+  /** H18.8: a typed-in amount instead of a pack. */
+  wallet: z.enum(["ad", "call"]).optional(),
+  amountInr: z.number().int().positive().max(10_000_000).optional(),
   method: z.string().trim().max(20),
   coin: z.string().trim().max(10).optional(),
   network: z.string().trim().max(10).optional(),
@@ -76,9 +82,16 @@ async function dispatch(request: Request) {
   if (request.method === "GET" && path === "packs") {
     // H18.1c: a buyer back from PassimPay sees the new balance at once.
     await settleOwnPending(user.user.id).catch(() => undefined);
-    const [packs, balance, fee, available, money, prices] = await Promise.all([rechargePacks(), walletBalance(user.user.id), postingFeeStatus(user.user.id), paymentsAvailable(), readMoneySettings(), readPriceList(user.user.id)]);
+    const [all, balance, fee, available, money, prices, callCredits, earnings] = await Promise.all([rechargePacks(), walletBalance(user.user.id), postingFeeStatus(user.user.id), paymentsAvailable(), readMoneySettings(), readPriceList(user.user.id), callBalance(user.user.id), earningsBalance(user.user.id)]);
+    const packs = all.filter((pack) => pack.wallet === "ad");
+    const callPacks = all.filter((pack) => pack.wallet === "call");
     const shortfall = Math.max(0, Math.floor(Number(new URL(request.url).searchParams.get("shortfall")) || 0));
-    return json({ packs: sheetPacks(packs, shortfall), all: packs, allPacks: packs.length, balance, fee: fee.fee, creditPriceInr: fee.creditPriceInr, available, testPayments: money.mockPaymentsOn, prices }, requestId);
+    const custom = { min: CUSTOM_MIN_INR, maxPerPurchase: CUSTOM_MAX_PER_PURCHASE_INR, maxPerDay: CUSTOM_MAX_PER_DAY_INR, moveEarningsMin: MOVE_EARNINGS_MIN };
+    return json({ packs: sheetPacks(packs, shortfall), all: packs, allPacks: packs.length, callPacks, balance, callBalance: callCredits, earnings, custom, fee: fee.fee, creditPriceInr: fee.creditPriceInr, available, testPayments: money.mockPaymentsOn, prices }, requestId);
+  }
+  if (request.method === "POST" && path === "move-earnings") {
+    const body = parseInput(moveEarningsSchema, await readJson(request));
+    return json(await moveEarningsToAdCredits({ userId: user.user.id, amount: body.amount, idempotencyKey: body.idempotencyKey, requestId, ip }), requestId);
   }
   if (request.method === "GET" && path === "history") {
     const query = parseInput(pageQuerySchema, Object.fromEntries(new URL(request.url).searchParams));
@@ -87,6 +100,7 @@ async function dispatch(request: Request) {
   }
   if (request.method === "POST" && path === "recharge") {
     const body = parseInput(rechargeBodySchema, await readJson(request));
+    if (!body.packId && !(body.wallet && body.amountInr)) throw new ValidationError("Invalid request", { packId: ["Choose a pack or type an amount"] });
     return json(await startRecharge({ ...body, userId: user.user.id, requestId, ip }), requestId);
   }
   const parts = segmentsOf(request, "/api/payments");

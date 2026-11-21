@@ -48,6 +48,8 @@ export interface PaymentDoc {
   coin?: string;
   network?: string;
   credits?: number;
+  wallet?: "ad" | "call";
+  custom?: boolean;
   returnTo?: string;
   expiresAt?: Date;
   outcome?: "paid" | "cancelled" | "expired" | "failed";
@@ -114,6 +116,9 @@ const paymentSchema = new Schema<PaymentDoc>(
     coin: { type: String },
     network: { type: String },
     credits: { type: Number },
+    /** H18.8: which balance this payment fills, and whether the buyer typed their own amount (no pack). */
+    wallet: { type: String, enum: ["ad", "call"] },
+    custom: { type: Boolean },
     returnTo: { type: String },
     expiresAt: { type: Date },
     outcome: { type: String, enum: ["paid", "cancelled", "expired", "failed"] },

@@ -1,4 +1,6 @@
 import mongoose from "mongoose";
+import { callBalance } from "@/server/billing/wallets";
+import { fundCalls, promote } from "../../setup/wallets";
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 import { creditWallet, walletBalance } from "@/server/billing/ledger";
 import {
@@ -45,6 +47,7 @@ async function tourListing(kind: CategoryKind | null = "goods", enabled = true) 
     description: "A description that is long enough",
     publishedAt: new Date(),
   });
+  await promote(String(listing._id), String(listing.ownerId));
   return String(listing._id);
 }
 
@@ -153,12 +156,12 @@ describe("ledger", () => {
   it("double spend on the user wallet: concurrent holds cannot overdraw", async () => {
     const user = uid();
     const vendor = uid();
-    await creditWallet({ userId: user, amount: 5, refType: "test", refId: "seed", requestId: req });
+    await fundCalls(user, 5);
     const listingId = await tourListing();
     const hold = (id: string) => holdInEscrow({ userId: user, vendorId: vendor, coins: 5, bookingId: id, listingId, requestId: req });
     const results = await Promise.allSettled([hold("b1"), hold("b2"), hold("b3")]);
     expect(results.filter((row) => row.status === "fulfilled")).toHaveLength(1);
-    expect(await walletBalance(user)).toBe(0);
+    expect(await callBalance(user)).toBe(0);
     expect(await trialBalance()).toBe(0);
   });
 
@@ -189,13 +192,13 @@ describe("escrow", () => {
   it("refunds the whole hold when a tour is declined", async () => {
     const user = uid();
     const vendor = uid();
-    await creditWallet({ userId: user, amount: 10, refType: "test", refId: "seed", requestId: req });
+    await fundCalls(user, 10);
     const listingId = await tourListing();
     await holdInEscrow({ userId: user, vendorId: vendor, coins: 4, bookingId: "tour-1", listingId, requestId: req });
-    expect(await walletBalance(user)).toBe(6);
+    expect(await callBalance(user)).toBe(6);
     await refundEscrow({ userId: user, vendorId: vendor, coins: 4, bookingId: "tour-1", requestId: req });
     await refundEscrow({ userId: user, vendorId: vendor, coins: 4, bookingId: "tour-1", requestId: req });
-    expect(await walletBalance(user)).toBe(10);
+    expect(await callBalance(user)).toBe(10);
     expect(await accountBalance("escrow", "booking:tour-1")).toBe(0);
     expect(await trialBalance()).toBe(0);
   });
@@ -203,7 +206,7 @@ describe("escrow", () => {
   it("release moves the vendor share to earnings and the fee to platform revenue", async () => {
     const user = uid();
     const vendor = uid();
-    await creditWallet({ userId: user, amount: 10, refType: "test", refId: "seed", requestId: req });
+    await fundCalls(user, 10);
     const listingId = await tourListing();
     await holdInEscrow({ userId: user, vendorId: vendor, coins: 10, bookingId: "tour-2", listingId, requestId: req });
     await releaseEscrow({ userId: user, vendorId: vendor, coins: 10, bookingId: "tour-2", platformFee: 1, requestId: req });
@@ -214,37 +217,37 @@ describe("escrow", () => {
 
   it("a registered spend guard (the people-category hook) can refuse a hold and leaves the wallet untouched", async () => {
     const user = uid();
-    await creditWallet({ userId: user, amount: 3, refType: "test", refId: "seed", requestId: req });
+    await fundCalls(user, 3);
     const listingId = await tourListing();
     const off = registerSpendGuard(() => "Not allowed for this category");
     await expect(
       holdInEscrow({ userId: user, vendorId: uid(), coins: 1, bookingId: "g1", listingId, requestId: req }),
     ).rejects.toThrow(/Not allowed/);
     off();
-    expect(await walletBalance(user)).toBe(3);
+    expect(await callBalance(user)).toBe(3);
     await holdInEscrow({ userId: user, vendorId: uid(), coins: 1, bookingId: "g2", listingId, requestId: req });
-    expect(await walletBalance(user)).toBe(2);
+    expect(await callBalance(user)).toBe(2);
   });
 
   it("refuses a hold on a people category from the database, with no spend guard registered", async () => {
     const user = uid();
-    await creditWallet({ userId: user, amount: 3, refType: "test", refId: "seed", requestId: req });
+    await fundCalls(user, 3);
     const listingId = await tourListing("people", false);
     await expect(holdInEscrow({ userId: user, vendorId: uid(), coins: 1, bookingId: "p1", listingId, requestId: req })).rejects.toThrow(
       /people listings/,
     );
-    expect(await walletBalance(user)).toBe(3);
+    expect(await callBalance(user)).toBe(3);
   });
 
   it("refuses a hold when the switch is off, the ad is missing, or the category kind is unknown (fails closed)", async () => {
     const user = uid();
-    await creditWallet({ userId: user, amount: 3, refType: "test", refId: "seed", requestId: req });
+    await fundCalls(user, 3);
     const off = await tourListing("goods", false);
     const unknownKind = await tourListing(null, true);
     const missing = String(new mongoose.Types.ObjectId());
     for (const listingId of [off, unknownKind, missing, "not-an-id"]) {
       await expect(holdInEscrow({ userId: user, vendorId: uid(), coins: 1, bookingId: key("f"), listingId, requestId: req })).rejects.toThrow();
     }
-    expect(await walletBalance(user)).toBe(3);
+    expect(await callBalance(user)).toBe(3);
   });
 });
