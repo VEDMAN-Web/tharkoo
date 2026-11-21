@@ -16,10 +16,12 @@ import {
   expireDueTours,
   requestTour,
   reverseTour,
+  settleConnectedTours,
   tourCallFor,
   updateVideoTourSettings,
 } from "@/server/tours/service";
 import { VideoTour } from "@/server/tours/model";
+import { setVideoRoomProvider } from "@/server/tours/room";
 import { signWebhook } from "@/server/wallet";
 import { clearMemoryMongo, connectMemoryMongo, disconnectMemoryMongo } from "../../setup/mongo";
 
@@ -182,16 +184,44 @@ describe("accepting, ending and paying out", () => {
     expect(await trialBalance()).toBe(0);
   });
 
-  it("a call shorter than two minutes is refunded and earns no badge", async () => {
+  it("H18.7: a connected call is paid however short it is", async () => {
     const a = await ad();
     const user = await buyer(1);
     const tour = await request(user, a.listingId);
     await acceptTour({ ownerId: a.ownerId, tourId: tour.id, requestId: req });
-    await endTour({ tourId: tour.id, eventId: "short", outcome: "ended", durationSeconds: 119, requestId: req });
-    expect(await walletBalance(user)).toBe(1);
-    expect(await accountBalance("vendor_earnings", a.ownerId)).toBe(0);
-    expect((await Listing.findById(a.listingId).lean())?.videoVerifiedUntil).toBeNull();
-    expect((await VideoTour.findById(tour.id))?.failureReason).toBe("call-too-short");
+    await endTour({ tourId: tour.id, eventId: "short", outcome: "ended", durationSeconds: 5, requestId: req });
+    expect(await walletBalance(user)).toBe(0);
+    expect(await accountBalance("vendor_earnings", a.ownerId)).toBe(1);
+  });
+
+  it("H18.7: pays the vendor once both people are in the room, never before, and only once", async () => {
+    const a = await ad();
+    const user = await buyer(1);
+    const tour = await request(user, a.listingId);
+    await acceptTour({ ownerId: a.ownerId, tourId: tour.id, requestId: req });
+    let inRoom = 1;
+    const deleted: string[] = [];
+    setVideoRoomProvider({
+      name: "mock",
+      createRoom: async ({ tourId }) => ({ roomId: `mock_${tourId}`, live: false }),
+      joinUrlFor: async () => null,
+      deleteRoom: async (roomId) => void deleted.push(roomId),
+      participantCount: async () => inRoom,
+    });
+    try {
+      expect((await settleConnectedTours(req)).paid).toBe(0);
+      expect(await accountBalance("vendor_earnings", a.ownerId)).toBe(0);
+      inRoom = 2;
+      expect((await settleConnectedTours(req)).paid).toBe(1);
+      expect(await accountBalance("vendor_earnings", a.ownerId)).toBe(1);
+      expect(await walletBalance(user)).toBe(0);
+      expect((await VideoTour.findById(tour.id))?.status).toBe("completed");
+      expect(deleted).toEqual([]);
+      expect((await settleConnectedTours(req)).paid).toBe(0);
+      expect(await accountBalance("vendor_earnings", a.ownerId)).toBe(1);
+    } finally {
+      setVideoRoomProvider(null);
+    }
   });
 
   it("a failed call is refunded", async () => {
