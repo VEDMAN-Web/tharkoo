@@ -96,7 +96,7 @@ export function KycForm({ onSaved }: { onSaved: (kyc: MaskedKyc) => void }) {
         Add these once. They are stored encrypted and shown masked. A change needs support.
       </p>
       <p className="t-small" style={{ margin: 0 }}>
-        Payouts are sent in <strong>USDT</strong> (a dollar-value crypto coin) to your wallet. The rupee amount is converted at the day's rate.
+        Payouts are sent in <strong>USDT</strong> (a dollar-value crypto coin) to your wallet. The rupee amount is converted at the day&apos;s rate.
       </p>
       <div role="radiogroup" aria-label="USDT network" style={{ display: "flex", gap: 8 }}>
         {(["TRC20", "BEP20"] as const).map((option) => (

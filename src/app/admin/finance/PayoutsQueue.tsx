@@ -187,7 +187,7 @@ export function PayoutsQueue({ rows }: { rows: PayoutRow[] }) {
           {selected.method === "crypto" && selected.status === "requested" ? (
             <>
               <p className="t-small" style={{ margin: 0 }}>
-                Pays ₹{selected.amountInr.toLocaleString("en-IN")} in USDT to the vendor's {selected.payout?.network ?? ""} wallet. You choose the amount; it is sent through PassimPay when you click Approve and cannot be undone.
+                Pays ₹{selected.amountInr.toLocaleString("en-IN")} in USDT to the vendor&apos;s {selected.payout?.network ?? ""} wallet. You choose the amount; it is sent through PassimPay when you click Approve and cannot be undone.
               </p>
               <TextField label="USDT to send" value={usdt} onChange={setUsdt} min={1} max={16} />
             </>
