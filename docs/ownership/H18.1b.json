@@ -1,8 +1,8 @@
 {
-  "branchPrefix": "haiku/h18.1",
+  "branchPrefix": "haiku/h18.1b",
   "globs": [
-    "docs/ownership/H18.1.json",
-    "progress/H18.1.md",
+    "docs/ownership/H18.1b.json",
+    "progress/H18.1b.md",
     "src/server/billing/passimpay.ts",
     "src/server/billing/provider.ts",
     "src/server/billing/service.ts",
