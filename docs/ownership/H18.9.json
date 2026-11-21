@@ -1,0 +1,4 @@
+{
+  "branchPrefix": "haiku/h18.9",
+  "globs": ["docs/ownership/H18.9.json", "progress/H18.9.md", "src/server/billing/wallets.ts", "src/server/billing/recharge.ts", "src/components/recharge/CreditPacks.tsx", "tests/server/billing/recharge.test.ts"]
+}

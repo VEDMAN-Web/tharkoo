@@ -168,8 +168,8 @@ export async function quoteCustomAmount(userId: string, wallet: WalletKind, amou
   if (!Number.isInteger(amountInr) || amountInr < CUSTOM_MIN_INR[wallet]) {
     throw new ValidationError("Invalid request", { amountInr: [`The smallest amount is Rs ${CUSTOM_MIN_INR[wallet].toLocaleString("en-IN")}.`] });
   }
-  const tooBig = `For more than Rs ${CUSTOM_MAX_PER_PURCHASE_INR.toLocaleString("en-IN")} at once, or Rs ${CUSTOM_MAX_PER_DAY_INR.toLocaleString("en-IN")} in a day, open a support ticket and we will add your credits.`;
-  if (amountInr > CUSTOM_MAX_PER_PURCHASE_INR) throw new ValidationError("Invalid request", { amountInr: [tooBig] });
+  const tooBig = `For more than Rs ${CUSTOM_MAX_PER_PURCHASE_INR[wallet].toLocaleString("en-IN")} at once, or Rs ${CUSTOM_MAX_PER_DAY_INR.toLocaleString("en-IN")} in a day, open a support ticket and we will add your credits.`;
+  if (amountInr > CUSTOM_MAX_PER_PURCHASE_INR[wallet]) throw new ValidationError("Invalid request", { amountInr: [tooBig] });
   const since = new Date(Date.now() - 24 * 3_600_000);
   const today = await Payment.aggregate<{ total: number }>([
     { $match: { userId: new mongoose.Types.ObjectId(userId), status: { $in: ["paid", "pending"] }, createdAt: { $gte: since } } },
