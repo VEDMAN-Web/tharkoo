@@ -5,7 +5,8 @@ import { AuditRepository } from "@/server/audit";
 import { applyWebhook, checkoutPack } from "@/server/billing/service";
 import { readMoneySettings } from "@/server/billing/money-settings";
 import { objectId, walletBalance } from "@/server/billing/ledger";
-import { paymentProvider } from "@/server/billing/provider";
+import { livePaymentsAllowed, paymentProvider } from "@/server/billing/provider";
+import { createInvoice, orderStatus, passimpayConfigured } from "@/server/billing/passimpay";
 import { ConflictError, ForbiddenError, NotFoundError, ValidationError } from "@/server/http";
 import { CreditPack, Payment } from "@/server/models";
 import { assertNotPaused } from "@/server/settings/emergency";
@@ -132,6 +133,17 @@ export function paymentView(row: PaymentRow, now = Date.now()) {
   };
 }
 
+/** H18.1: PassimPay is switched on, live payments are allowed and its keys are set. */
+export function passimpayLive() {
+  return paymentProvider() === "passimpay" && livePaymentsAllowed() && passimpayConfigured();
+}
+
+/** What the buy screen may offer: PassimPay when live, else the test (mock) payments when an admin turned them on. */
+export async function paymentsAvailable(): Promise<boolean> {
+  await connectDb();
+  return passimpayLive() || (await mockPaymentsAvailable());
+}
+
 export async function mockPaymentsAvailable(): Promise<boolean> {
   await connectDb();
   return paymentProvider() === "mock" && (await readMoneySettings()).mockPaymentsOn;
@@ -160,9 +172,13 @@ export async function startRecharge(input: {
   await connectDb();
   await assertNotPaused("pausePurchases");
   if (!(RECHARGE_METHODS as readonly string[]).includes(input.method)) throw new ValidationError("Invalid request", { method: ["Choose Card or Crypto"] });
-  const method = input.method as RechargeMethod;
-  const picked = method === "crypto" && input.coin ? checkedCoin(input.coin, input.network) : { coin: undefined, network: undefined };
-  if (!(await mockPaymentsAvailable())) throw new ConflictError(NOT_AVAILABLE_MESSAGE);
+  // H18.1: with PassimPay on, every recharge goes to PassimPay's hosted crypto page (the coin is chosen there).
+  const passimpay = paymentProvider() === "passimpay";
+  const method = (passimpay ? "crypto" : input.method) as RechargeMethod;
+  if (passimpay) {
+    if (!passimpayLive()) throw new ConflictError(NOT_AVAILABLE_MESSAGE);
+  } else if (!(await mockPaymentsAvailable())) throw new ConflictError(NOT_AVAILABLE_MESSAGE);
+  const picked = method === "crypto" && input.coin && !passimpay ? checkedCoin(input.coin, input.network) : { coin: undefined, network: undefined };
   const returnTo = input.returnTo ? safeNext(input.returnTo) ?? undefined : undefined;
   const result = await checkoutPack({
     userId: input.userId,
@@ -179,9 +195,60 @@ export async function startRecharge(input: {
     targetType: "payment",
     targetId: result.paymentId,
     requestId: input.requestId,
-    after: { method, coin: picked.coin ?? null, network: picked.network ?? null },
+    after: { method, coin: picked.coin ?? null, network: picked.network ?? null, provider: passimpay ? "passimpay" : "mock" },
   });
+  if (passimpay) return { paymentId: result.paymentId, checkoutPath: await passimpayInvoiceUrl(result.paymentId) };
   return { paymentId: result.paymentId, checkoutPath: `/pay/checkout/${result.paymentId}/` };
+}
+
+/** H18.1: the PassimPay page for a payment. Made once and kept on the payment, so a repeated request reuses it. */
+async function passimpayInvoiceUrl(paymentId: string) {
+  const row = await Payment.findById(paymentId).lean<(PaymentRow & { invoiceUrl?: string }) | null>();
+  if (!row) throw new NotFoundError("Not found");
+  if (row.invoiceUrl) return row.invoiceUrl;
+  try {
+    const { url } = await createInvoice({ orderId: paymentId, amountInr: row.amount });
+    await Payment.updateOne({ _id: row._id }, { $set: { invoiceUrl: url } }, { strict: false });
+    return url;
+  } catch {
+    await Payment.updateOne({ _id: row._id, status: "pending" }, { $set: { status: "failed", outcome: "error" } });
+    throw new ConflictError(NOT_AVAILABLE_MESSAGE);
+  }
+}
+
+/**
+ * H18.1: settles a pending PassimPay payment by asking PassimPay (orderStatus). Only "paid" adds credits, through the same
+ * applyWebhook path as every other payment (idempotent: one credit per payment). A rupee amount below the price is not credited.
+ * Called by the PassimPay notice, and when the buyer opens their payment or history (in case a notice was lost).
+ */
+export async function settlePassimpay(paymentId: string, requestId: string): Promise<"paid" | "wait" | "failed" | "ignored"> {
+  await connectDb();
+  if (!mongoose.isValidObjectId(paymentId)) return "ignored";
+  const row = await Payment.findById(paymentId).lean<PaymentRow | null>();
+  if (!row || row.provider !== "passimpay" || !row.providerRef) return "ignored";
+  if (row.status === "paid") return "paid";
+  if (row.status !== "pending") return "failed";
+  const result = await orderStatus(row.providerRef);
+  if (result.status === "wait") return "wait";
+  if (result.status === "paid") {
+    if (result.currency === "INR" && result.amountPaid + 0.005 < row.amount) {
+      await audit.append({ actorId: null, actorType: "system", action: "recharge.passimpay_underpaid", targetType: "payment", targetId: paymentId, requestId, after: { amountPaid: result.amountPaid, amount: row.amount } });
+      return "wait";
+    }
+    await applyWebhook({ eventId: `passimpay_${paymentId}`, status: "paid", providerRef: row.providerRef }, requestId);
+    await Payment.updateOne({ _id: row._id, status: "paid" }, { $set: { outcome: "paid" } });
+    await audit.append({ actorId: null, actorType: "system", action: "recharge.passimpay_paid", targetType: "payment", targetId: paymentId, requestId, after: { currency: result.currency || null } });
+    return "paid";
+  }
+  await applyWebhook({ eventId: `passimpay_${paymentId}_error`, status: "failed", providerRef: row.providerRef }, requestId);
+  await Payment.updateOne({ _id: row._id, status: "failed" }, { $set: { outcome: "expired" } });
+  return "failed";
+}
+
+/** Best effort: a provider hiccup never breaks the page that shows the payment. */
+async function trySettle(row: PaymentRow, requestId: string) {
+  if (row.provider !== "passimpay" || row.status !== "pending") return;
+  await settlePassimpay(String(row._id), requestId).catch(() => undefined);
 }
 
 async function ownPayment(userId: string, paymentId: string) {
@@ -194,12 +261,20 @@ async function ownPayment(userId: string, paymentId: string) {
 
 export async function readOwnPayment(userId: string, paymentId: string) {
   await connectDb();
-  return paymentView(await ownPayment(userId, paymentId));
+  const row = await ownPayment(userId, paymentId);
+  if (row.provider === "passimpay" && row.status === "pending") {
+    await trySettle(row, `view-${paymentId}`);
+    return paymentView(await ownPayment(userId, paymentId));
+  }
+  return paymentView(row);
 }
 
 export async function listOwnPayments(userId: string, page: number, pageSize: number) {
   await connectDb();
   const filter = { userId: objectId(userId, "userId"), method: { $in: [...RECHARGE_METHODS] } };
+  // H18.1: settle the buyer's newest pending PassimPay payments first, in case a notice was lost.
+  const pending = await Payment.find({ ...filter, provider: "passimpay", status: "pending" }).sort({ _id: -1 }).limit(3).lean<PaymentRow[]>();
+  for (const row of pending) await trySettle(row, `history-${String(row._id)}`);
   const [rows, total] = await Promise.all([
     Payment.find(filter)
       .sort({ createdAt: -1, _id: -1 })

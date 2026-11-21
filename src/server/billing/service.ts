@@ -156,7 +156,7 @@ export async function checkoutPack(input: {
       paymentId: String(existing._id),
       providerRef: existing.providerRef ?? "",
       balance: await walletBalance(input.userId),
-      provider: existing.provider === "razorpay" ? ("razorpay" as const) : ("mock" as const),
+      provider: existing.provider === "razorpay" || existing.provider === "passimpay" ? (existing.provider as "razorpay" | "passimpay") : ("mock" as const),
     };
   }
   const pack = await CreditPack.findById(packId);
