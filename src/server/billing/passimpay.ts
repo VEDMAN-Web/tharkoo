@@ -96,3 +96,31 @@ export function verifyNotice(raw: string, given: string | null): { ok: boolean; 
   const orderId = typeof parsed?.orderId === "string" && validOrderId(parsed.orderId) ? parsed.orderId : null;
   return { ok, orderId };
 }
+
+/**
+ * H18.6: sends a crypto payout (POST /v2/withdraw). A network error throws (nothing sent, the payout stays requested).
+ * A PassimPay refusal (result != 1) returns { ok: false } with its message, so the coins go back to the vendor.
+ */
+export async function passimpayWithdraw(
+  input: { paymentId: number; orderId: string; addressTo: string; amount: string },
+  fetchImpl: typeof fetch = fetch,
+): Promise<{ ok: true; transactionId: string } | { ok: false; reason: string }> {
+  if (!validOrderId(input.orderId)) return { ok: false, reason: "Invalid payout id" };
+  const { platformId, apiKey } = credentials();
+  const body = JSON.stringify({ platformId, paymentId: input.paymentId, orderId: input.orderId, addressTo: input.addressTo, amount: input.amount });
+  let response: Response;
+  try {
+    response = await fetchImpl(`${API}/withdraw`, {
+      method: "POST",
+      headers: { "content-type": "application/json", "x-signature": passimpaySignature(platformId, body, apiKey) },
+      body,
+      signal: AbortSignal.timeout(TIMEOUT_MS),
+    });
+  } catch {
+    throw new InternalError(NOT_AVAILABLE);
+  }
+  const data = (await response.json().catch(() => null)) as { result?: number; transactionId?: string; message?: string } | null;
+  if (!data) throw new InternalError(NOT_AVAILABLE);
+  if (data.result !== 1 || !data.transactionId) return { ok: false, reason: String(data.message || "PassimPay refused the payout").slice(0, 200) };
+  return { ok: true, transactionId: String(data.transactionId) };
+}

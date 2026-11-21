@@ -6,8 +6,8 @@ import { objectId } from "@/server/billing/ledger";
 import { ConflictError, NotFoundError, PaymentRequiredError, ValidationError, VerificationRequiredError } from "@/server/http";
 import { accountBalance, postTransaction, type PostInput } from "@/server/ledger";
 import { registerModel } from "@/server/models/register";
-import { getPayoutKyc, maskedKyc, PayoutKyc, type MaskedPayoutKyc } from "@/server/wallet/payout-kyc";
-import { payoutProvider, type InitiatePayoutResult } from "@/server/wallet/payout-provider";
+import { getPayoutKyc, maskedKyc, PayoutKyc, revealedKyc, type MaskedPayoutKyc } from "@/server/wallet/payout-kyc";
+import { payoutProviderFor, type InitiatePayoutResult } from "@/server/wallet/payout-provider";
 import { assertFinanceStaff, getFinanceSettings } from "@/server/wallet/settings";
 import { hashIp } from "@/server/shared/crypto";
 
@@ -26,9 +26,11 @@ export interface WithdrawalDoc {
   amountInr: number;
   tdsPercent: number;
   gstPercent: number;
-  method: "bank" | "upi";
+  method: "bank" | "upi" | "crypto";
   status: WithdrawalStatus;
   providerRef?: string;
+  /** H18.6: USDT sent for a crypto payout, as the admin entered it. */
+  usdtAmount?: string;
   reference?: string;
   reason?: string;
   decidedBy?: string;
@@ -46,9 +48,10 @@ const withdrawalSchema = new Schema<WithdrawalDoc>(
     amountInr: { type: Number, required: true },
     tdsPercent: { type: Number, default: 0 },
     gstPercent: { type: Number, default: 0 },
-    method: { type: String, enum: ["bank", "upi"], required: true },
+    method: { type: String, enum: ["bank", "upi", "crypto"], required: true },
     status: { type: String, enum: WITHDRAWAL_STATUSES, required: true, default: "requested" },
     providerRef: String,
+    usdtAmount: String,
     reference: String,
     reason: String,
     decidedBy: String,
@@ -222,14 +225,21 @@ async function auditPayout(action: string, row: WithdrawalRow, input: StaffInput
 }
 
 /** Approves a requested payout and sends it through the PayoutProvider. A provider refusal returns the coins. */
-export async function approveWithdrawal(input: StaffInput) {
+export async function approveWithdrawal(input: StaffInput & { usdtAmount?: string }) {
   assertFinanceStaff(input.roles);
   await connectDb();
   const row = await claim(input.id, "requested", "approved", { decidedAt: new Date(), decidedBy: input.actorId });
   const base = { requestId: input.requestId, actorId: input.actorId, actorType: "admin" as const, ip: input.ip };
   let result: InitiatePayoutResult;
   try {
-    result = await payoutProvider().initiate({ withdrawalId: String(row._id), amountInr: row.amountInr, method: row.method });
+    // H18.6: a crypto payout reads the vendor's wallet (decrypted only here) and goes through PassimPay.
+    let crypto: { network: "TRC20" | "BEP20"; address: string } | undefined;
+    if (row.method === "crypto") {
+      const kyc = await PayoutKyc.findOne({ userId: row.userId }).lean();
+      const details = kyc ? revealedKyc(kyc) : null;
+      if (details?.network && details.walletAddress) crypto = { network: details.network, address: details.walletAddress };
+    }
+    result = await payoutProviderFor(row.method).initiate({ withdrawalId: String(row._id), amountInr: row.amountInr, method: row.method, crypto, usdtAmount: row.method === "crypto" ? input.usdtAmount : undefined });
   } catch (error) {
     // Nothing was sent, so the payout can be approved again later.
     await release(input.id, "requested", "approved");
@@ -241,8 +251,13 @@ export async function approveWithdrawal(input: StaffInput) {
     await auditPayout("payout.fail", row, input, "approved", "failed", { reason: result.reason });
     return { status: "failed" as const };
   }
-  await Withdrawal.updateOne({ _id: row._id }, { $set: { providerRef: result.providerRef } });
-  await auditPayout("payout.approve", row, input, "requested", "approved", { providerRef: result.providerRef });
+  await Withdrawal.updateOne({ _id: row._id }, { $set: { providerRef: result.providerRef, ...(row.method === "crypto" && input.usdtAmount ? { usdtAmount: input.usdtAmount } : {}) } });
+  await auditPayout("payout.approve", row, input, "requested", "approved", { providerRef: result.providerRef, ...(input.usdtAmount ? { usdtAmount: input.usdtAmount } : {}) });
+  // H18.6: PassimPay accepted the crypto transfer, so the payout is complete: mark it paid with the transaction id.
+  if (row.method === "crypto") {
+    await markWithdrawalPaid({ ...input, reference: `passimpay:${result.providerRef}` });
+    return { status: "paid" as const };
+  }
   return { status: "approved" as const };
 }
 
