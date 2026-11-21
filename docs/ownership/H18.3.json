@@ -1,0 +1,13 @@
+{
+  "branchPrefix": "haiku/h18.3",
+  "globs": [
+    "docs/ownership/H18.3.json",
+    "progress/H18.3.md",
+    "src/server/categories/manage.ts",
+    "src/app/admin/categories/_screen/DetailPane.tsx",
+    "src/app/admin/categories/_screen/SubsTab.tsx",
+    "tests/server/categories/subcategories.test.ts",
+    "tests/server/categories/h8-51-screen.test.ts",
+    "tests/e2e/h8-51-categories.e2e.ts"
+  ]
+}
