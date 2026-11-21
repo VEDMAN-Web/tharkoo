@@ -227,9 +227,11 @@ export async function settlePassimpay(paymentId: string, requestId: string): Pro
   const row = await Payment.findById(paymentId).lean<PaymentRow | null>();
   if (!row || row.provider !== "passimpay" || !row.providerRef) return "ignored";
   if (row.status === "paid") return "paid";
-  if (row.status !== "pending") return "failed";
+  // H18.5: an order closed by the 2-hour expiry is still checked, so a late real payment is credited (failed -> paid).
+  const lateCheck = row.status === "failed" && row.outcome === "expired";
+  if (row.status !== "pending" && !lateCheck) return "failed";
   const result = await orderStatus(row.providerRef);
-  if (result.status === "wait") return "wait";
+  if (result.status === "wait") return lateCheck ? "failed" : "wait";
   if (result.status === "paid") {
     if (result.currency === "INR" && result.amountPaid + 0.005 < row.amount) {
       await audit.append({ actorId: null, actorType: "system", action: "recharge.passimpay_underpaid", targetType: "payment", targetId: paymentId, requestId, after: { amountPaid: result.amountPaid, amount: row.amount } });
@@ -243,6 +245,45 @@ export async function settlePassimpay(paymentId: string, requestId: string): Pro
   await applyWebhook({ eventId: `passimpay_${paymentId}_error`, status: "failed", providerRef: row.providerRef }, requestId);
   await Payment.updateOne({ _id: row._id, status: "failed" }, { $set: { outcome: "expired" } });
   return "failed";
+}
+
+/** H18.5: an unpaid PassimPay order is closed after 2 hours so it leaves the "Recharges to check" list. */
+export const PASSIMPAY_PENDING_MAX_MS = 2 * 60 * 60 * 1000;
+
+/**
+ * H18.5: closes PassimPay orders still pending after 2 hours. Each one is first checked with PassimPay: paid is credited,
+ * otherwise it becomes failed / expired. A payment that arrives later is still credited (see settlePassimpay).
+ */
+export async function expireStalePassimpay(requestId: string, now: Date = new Date()) {
+  await connectDb();
+  const cutoff = new Date(now.getTime() - PASSIMPAY_PENDING_MAX_MS);
+  const rows = await Payment.find({ provider: "passimpay", status: "pending", createdAt: { $lt: cutoff } })
+    .sort({ _id: 1 })
+    .limit(200)
+    .lean<PaymentRow[]>();
+  let paid = 0;
+  let expired = 0;
+  for (const row of rows) {
+    const id = String(row._id);
+    const result = row.providerRef ? await settlePassimpay(id, requestId).catch(() => "wait" as const) : "wait";
+    if (result === "paid") {
+      paid += 1;
+      continue;
+    }
+    if (result === "failed") {
+      expired += 1;
+      continue;
+    }
+    const done = await Payment.updateOne(
+      { _id: row._id, status: "pending" },
+      { $set: { status: "failed", outcome: "expired", providerEventId: `passimpay_${id}_expired` } },
+    );
+    if (done.modifiedCount) {
+      expired += 1;
+      await audit.append({ actorId: null, actorType: "system", action: "recharge.passimpay_expired", targetType: "payment", targetId: id, requestId, after: { amount: row.amount } });
+    }
+  }
+  return { checked: rows.length, paid, expired };
 }
 
 /**

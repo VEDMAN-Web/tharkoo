@@ -1,0 +1,11 @@
+{
+  "branchPrefix": "haiku/h18.5",
+  "globs": [
+    "docs/ownership/H18.5.json",
+    "progress/H18.5.md",
+    "docs/claude/STATUS.md",
+    "src/server/billing/recharge.ts",
+    "src/app/api/cron/payments/route.ts",
+    "tests/server/billing/h18-5-crypto-expiry.test.ts"
+  ]
+}
