@@ -5,7 +5,8 @@ import { AuditRepository } from "@/server/audit";
 import { applyWebhook, checkoutPack } from "@/server/billing/service";
 import { readMoneySettings } from "@/server/billing/money-settings";
 import { objectId, walletBalance } from "@/server/billing/ledger";
-import { paymentProvider } from "@/server/billing/provider";
+import { livePaymentsAllowed, paymentProvider } from "@/server/billing/provider";
+import { passimpayConfig } from "@/server/billing/passimpay";
 import { ConflictError, ForbiddenError, NotFoundError, ValidationError } from "@/server/http";
 import { CreditPack, Payment } from "@/server/models";
 import { assertNotPaused } from "@/server/settings/emergency";
@@ -137,6 +138,13 @@ export async function mockPaymentsAvailable(): Promise<boolean> {
   return paymentProvider() === "mock" && (await readMoneySettings()).mockPaymentsOn;
 }
 
+/** H18.1: whether a payment can be started now: PassimPay needs live payments allowed and both keys; the test payments need the Test payments switch. */
+export async function rechargeAvailable(): Promise<boolean> {
+  await connectDb();
+  if (paymentProvider() === "passimpay") return livePaymentsAllowed() && passimpayConfig() !== null;
+  return mockPaymentsAvailable();
+}
+
 function checkedCoin(coin: string, network: string | undefined): { coin: string; network: string | undefined } {
   if (!(CRYPTO_COINS as readonly string[]).includes(coin)) throw new ValidationError("Invalid request", { coin: ["Choose a coin"] });
   if (!needsNetwork(coin)) return { coin, network: undefined };
@@ -160,9 +168,11 @@ export async function startRecharge(input: {
   await connectDb();
   await assertNotPaused("pausePurchases");
   if (!(RECHARGE_METHODS as readonly string[]).includes(input.method)) throw new ValidationError("Invalid request", { method: ["Choose Card or Crypto"] });
-  const method = input.method as RechargeMethod;
-  const picked = method === "crypto" && input.coin ? checkedCoin(input.coin, input.network) : { coin: undefined, network: undefined };
-  if (!(await mockPaymentsAvailable())) throw new ConflictError(NOT_AVAILABLE_MESSAGE);
+  const usePassimpay = paymentProvider() === "passimpay";
+  // H18.1: with PassimPay the only way to pay is crypto, and the buyer picks the coin on PassimPay's own page.
+  const method = (usePassimpay ? "crypto" : input.method) as RechargeMethod;
+  const picked = !usePassimpay && method === "crypto" && input.coin ? checkedCoin(input.coin, input.network) : { coin: undefined, network: undefined };
+  if (!(await rechargeAvailable())) throw new ConflictError(NOT_AVAILABLE_MESSAGE);
   const returnTo = input.returnTo ? safeNext(input.returnTo) ?? undefined : undefined;
   const result = await checkoutPack({
     userId: input.userId,
@@ -181,7 +191,7 @@ export async function startRecharge(input: {
     requestId: input.requestId,
     after: { method, coin: picked.coin ?? null, network: picked.network ?? null },
   });
-  return { paymentId: result.paymentId, checkoutPath: `/pay/checkout/${result.paymentId}/` };
+  return { paymentId: result.paymentId, checkoutPath: "checkoutUrl" in result && result.checkoutUrl ? result.checkoutUrl : `/pay/checkout/${result.paymentId}/` };
 }
 
 async function ownPayment(userId: string, paymentId: string) {

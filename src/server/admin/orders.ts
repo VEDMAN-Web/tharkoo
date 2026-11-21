@@ -192,7 +192,7 @@ async function rechargeRows(query: OrderQuery, skip: number, now: Date, canAct: 
           ["Amount", rupees(doc.amount)],
           ["Method", method],
           ["Status", text],
-          ["Payment", doc.provider === "mock" ? "Test payment. No money was taken." : "Real payment"],
+          ["Payment", doc.provider === "mock" ? "Test payment. No money was taken." : doc.provider === "passimpay" ? "Real payment (PassimPay)" : "Real payment"],
         ] as [string, string][],
         receipt: `/admin/finance/receipt/${id}/`,
         act: may && (may.markPaid || may.markFailed || may.refund) ? { paymentId: id, credits: doc.credits ?? 0, ...may, refundable } : null,

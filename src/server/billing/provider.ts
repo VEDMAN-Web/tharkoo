@@ -12,8 +12,11 @@ export interface ProviderOrder {
   };
 }
 
-export function paymentProvider(): "mock" | "razorpay" {
-  return (process.env.PAYMENT_PROVIDER || "mock").trim().toLowerCase() === "razorpay" ? "razorpay" : "mock";
+export type PaymentProviderName = "mock" | "razorpay" | "passimpay";
+
+export function paymentProvider(): PaymentProviderName {
+  const name = (process.env.PAYMENT_PROVIDER || "mock").trim().toLowerCase();
+  return name === "razorpay" ? "razorpay" : name === "passimpay" ? "passimpay" : "mock";
 }
 
 export function livePaymentsAllowed() {

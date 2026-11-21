@@ -10,10 +10,12 @@ import {
   readyBilling,
   walletBalance,
 } from "@/server/billing/ledger";
-import { createCheckoutOrder, paymentProvider } from "@/server/billing/provider";
+import { createCheckoutOrder, livePaymentsAllowed, paymentProvider } from "@/server/billing/provider";
+import { createInvoice, passimpayConfig } from "@/server/billing/passimpay";
 import {
   ConflictError,
   ForbiddenError,
+  InternalError,
   NotFoundError,
   PaymentRequiredError,
   PolicyViolationError,
@@ -152,11 +154,13 @@ export async function checkoutPack(input: {
   const existing = await Payment.findOne({ idempotencyKey });
   if (existing) {
     if (existing.userId.toString() !== input.userId) throw new ConflictError("Idempotency key is in use");
+    // H18.1: a PassimPay payment is already open on its own page; a repeat of the same request must not send the buyer anywhere else.
+    if (existing.provider === "passimpay") throw new ConflictError("This payment is already open. Start a new one.");
     return {
       paymentId: String(existing._id),
       providerRef: existing.providerRef ?? "",
       balance: await walletBalance(input.userId),
-      provider: existing.provider === "razorpay" ? ("razorpay" as const) : ("mock" as const),
+      provider: existing.provider === "razorpay" ? ("razorpay" as const) : existing.provider === "passimpay" ? ("passimpay" as const) : ("mock" as const),
     };
   }
   const pack = await CreditPack.findById(packId);
@@ -166,6 +170,10 @@ export async function checkoutPack(input: {
   if (!Number.isInteger(credits) || credits < 1 || !Number.isInteger(price) || price < 0) {
     throw new NotFoundError("Not found");
   }
+  const usePassimpay = paymentProvider() === "passimpay";
+  // H18.1: no order is opened, and no Payment is written, unless live payments are allowed and both keys are set.
+  if (usePassimpay && !livePaymentsAllowed()) throw new PolicyViolationError("Live payments are disabled");
+  if (usePassimpay && !passimpayConfig()) throw new InternalError("Payment provider is not configured");
   const quote = input.couponCode ? await validateCoupon(input.couponCode, input.userId) : null;
   const bonusCredits = quote ? packBonus(quote, credits) : 0;
   const payment = await Payment.create({
@@ -178,11 +186,21 @@ export async function checkoutPack(input: {
     status: "pending",
     ...(input.recharge ? { ...input.recharge, credits: credits + (pack.bonus ?? 0) } : {}),
   });
+  let openedInvoice = false;
   try {
-    const order = createCheckoutOrder({ amount: price, currency: "INR", receipt: String(payment._id) });
+    // H18.1: PassimPay: the Payment id is the order id; the buyer pays on the page PassimPay returns.
+    let checkoutUrl: string | undefined;
+    const order = usePassimpay
+      ? { provider: "passimpay" as const, providerRef: String(payment._id) }
+      : createCheckoutOrder({ amount: price, currency: "INR", receipt: String(payment._id) });
+    // The order id is saved before the invoice is opened, so a payment made on that invoice always finds its Payment.
     payment.provider = order.provider;
     payment.providerRef = order.providerRef;
     await payment.save();
+    if (usePassimpay) {
+      checkoutUrl = (await createInvoice({ orderId: order.providerRef, amountInr: price })).url;
+      openedInvoice = true;
+    }
     if (quote) await consumeCoupon(quote, input.userId, input.requestId, input.ip);
     await audit.append({
       actorId: input.userId,
@@ -203,9 +221,11 @@ export async function checkoutPack(input: {
       providerRef: order.providerRef,
       balance: await walletBalance(input.userId),
       provider: order.provider,
+      ...(checkoutUrl ? { checkoutUrl } : {}),
     };
   } catch (error) {
-    await Payment.deleteOne({ _id: payment._id });
+    // Once PassimPay has opened the invoice the Payment stays (pending): a payment made on it can still be credited.
+    if (!openedInvoice) await Payment.deleteOne({ _id: payment._id });
     throw error;
   }
 }
@@ -232,6 +252,8 @@ export async function applyWebhook(
     amount?: number;
     currency?: string;
     providerRef?: string;
+    /** H18.1: set only by the PassimPay confirmation (which asked PassimPay itself). A PassimPay payment is never changed by any other webhook. */
+    confirmedBy?: "passimpay";
   },
   requestId: string,
 ) {
@@ -243,6 +265,7 @@ export async function applyWebhook(
       ? await Payment.findOne({ idempotencyKey: body.idempotencyKey })
       : null;
   if (!payment || payment.provider === "wallet") throw new NotFoundError("Not found");
+  if (payment.provider === "passimpay" && body.confirmedBy !== "passimpay") throw new ForbiddenError("This payment is confirmed by its provider only");
   if (body.amount !== undefined && body.amount !== payment.amount) {
     throw new ConflictError("Amount does not match");
   }

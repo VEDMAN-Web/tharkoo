@@ -16,9 +16,9 @@ import "./recharge.css";
  */
 
 export type PackChoice = { pack: PackLike; method: "card" | "crypto" };
-export type CreditPackData = { packs: PackLike[]; creditPriceInr: number; fee: number; available: boolean; testPayments: boolean; prices: PriceListData | null };
+export type CreditPackData = { packs: PackLike[]; creditPriceInr: number; fee: number; available: boolean; provider?: string; testPayments: boolean; prices: PriceListData | null };
 type Method = "card" | "crypto";
-type Loaded = { packs: PackLike[]; all?: PackLike[]; creditPriceInr: number; fee: number; available: boolean; testPayments?: boolean; prices?: PriceListData };
+type Loaded = { packs: PackLike[]; all?: PackLike[]; creditPriceInr: number; fee: number; available: boolean; provider?: string; testPayments?: boolean; prices?: PriceListData };
 
 /** Loads the packs once for a signed-in person. `shortfall` makes the pack that covers it start selected. */
 /**
@@ -39,8 +39,8 @@ export function useCreditPacks(shortfall = 0): { data: CreditPackData | null; er
     api<Loaded>(`/api/payments/packs${shortfall > 0 ? `?shortfall=${shortfall}` : ""}`).then((res) => {
       if (!live) return;
       if (!res.ok) return setError(friendlyError(res.error));
-      const { packs, all, creditPriceInr, fee, available, testPayments, prices } = res.data;
-      setData({ packs: all ?? packs, creditPriceInr, fee, available, testPayments: Boolean(testPayments), prices: prices ?? null });
+      const { packs, all, creditPriceInr, fee, available, provider, testPayments, prices } = res.data;
+      setData({ packs: all ?? packs, creditPriceInr, fee, available, provider, testPayments: Boolean(testPayments), prices: prices ?? null });
     });
     return () => {
       live = false;
@@ -61,6 +61,8 @@ export function CreditPacks({ data, shortfall = 0, returnTo, onChoice }: { data:
   const first = firstPacks(data.packs, shortfall);
   const shown = showAll ? [...data.packs].sort((a, b) => a.total - b.total) : first;
   const chosen = data.packs.find((pack) => pack.id === selected) ?? data.packs[0];
+  // H18.1: with PassimPay the only way to pay is crypto, chosen on PassimPay's page: no card or coin choice here.
+  const passimpay = data.provider === "passimpay";
 
   useEffect(() => {
     if (chosen) onChoice?.({ pack: chosen, method });
@@ -73,14 +75,14 @@ export function CreditPacks({ data, shortfall = 0, returnTo, onChoice }: { data:
     const back = returnTo || `${window.location.pathname}${window.location.search}`;
     const res = await api<{ paymentId: string; checkoutPath: string }>("/api/payments/recharge", {
       method: "POST",
-      body: JSON.stringify({ packId: chosen.id, method, returnTo: back, idempotencyKey: idempotencyKey(chosen.id) }),
+      body: JSON.stringify({ packId: chosen.id, method: passimpay ? "crypto" : method, returnTo: back, idempotencyKey: idempotencyKey(chosen.id) }),
     });
     if (!res.ok) {
       setBusy(false);
       return setError(res.status === 409 ? t("recharge.unavailable") : friendlyError(res.error) || t("recharge.error"));
     }
     window.location.assign(res.data.checkoutPath);
-  }, [chosen, busy, method, returnTo, t]);
+  }, [chosen, busy, method, passimpay, returnTo, t]);
 
   return (
     <div className="tkp" data-tk="credit-packs">
@@ -118,7 +120,7 @@ export function CreditPacks({ data, shortfall = 0, returnTo, onChoice }: { data:
           {showAll ? t("recharge.fewer") : t("recharge.seeAll")}
         </button>
       ) : null}
-      <div role="radiogroup" aria-label={t("recharge.method")} className="tkr-methods">
+      {passimpay ? null : <div role="radiogroup" aria-label={t("recharge.method")} className="tkr-methods">
         <button type="button" role="radio" aria-checked={method === "card"} className="tkr-method" data-tk="recharge-card" onClick={() => setMethod("card")}>
           <span className="tkr-method-name">{t("recharge.card")}</span>
           <span className="tkr-marks">
@@ -135,11 +137,11 @@ export function CreditPacks({ data, shortfall = 0, returnTo, onChoice }: { data:
             <UsdcMark size={24} />
           </span>
         </button>
-      </div>
+      </div>}
       {!data.available ? <p className="tkr-error" role="alert">{t("recharge.unavailable")}</p> : null}
       {error && data.available ? <p className="tkr-error" role="alert">{error}</p> : null}
       <button type="button" className="tkr-pay" data-tk="recharge-pay" disabled={!chosen || busy || !data.available} onClick={pay}>
-        {busy ? t("recharge.starting") : t("recharge.pay", { amount: Math.round(chosen?.price ?? 0).toLocaleString("en-IN") })}
+        {busy ? t("recharge.starting") : passimpay ? t("recharge.payCrypto") : t("recharge.pay", { amount: Math.round(chosen?.price ?? 0).toLocaleString("en-IN") })}
       </button>
       <p className="tkp-note" data-tk="packs-purpose">{t("recharge.purpose")}</p>
       {data.testPayments ? <p className="tkp-note" data-tk="packs-test">{t("recharge.testNote")}</p> : null}

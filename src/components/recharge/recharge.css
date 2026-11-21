@@ -75,3 +75,22 @@
 .tkp .tkr-pack { min-height: 72px; }
 .tkp .tkr-price { flex-wrap: wrap; gap: 0 8px; }
 .tkp-rs { white-space: nowrap; }
+
+/* H18.1: the line on the credits page after the payment page. */
+.tkr-notice {
+  margin: 12px auto;
+  width: calc(100% - 32px);
+  max-width: 720px;
+  padding: 12px 16px;
+  border: 1px solid #ead8f0;
+  border-radius: 12px;
+  background: #fdf0f7;
+  color: #4a2870;
+  font-size: 14px;
+  line-height: 1.5;
+}
+.tkr-notice[data-kind="failed"] {
+  background: #fff4f4;
+  border-color: #f0c8c8;
+  color: #7a1f1f;
+}
