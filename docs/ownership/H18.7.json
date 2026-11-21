@@ -1,0 +1,11 @@
+{
+  "branchPrefix": "haiku/h18.7",
+  "globs": [
+    "docs/ownership/H18.7.json",
+    "progress/H18.7.md",
+    "src/server/tours/room.ts",
+    "src/server/tours/service.ts",
+    "src/app/api/cron/tours/route.ts",
+    "tests/server/tours/tours.test.ts"
+  ]
+}

@@ -19,6 +19,8 @@ export interface VideoRoomProvider {
   createRoom(input: { tourId: string; expiresAt: Date }): Promise<VideoRoom>;
   joinUrlFor(input: JoinInput): Promise<string | null>;
   deleteRoom(roomId: string): Promise<void>;
+  /** H18.7: how many people are in the room right now (0 when unknown). */
+  participantCount(roomId: string): Promise<number>;
 }
 
 export const TOUR_BOOKED_MINUTES = 30;
@@ -42,6 +44,7 @@ const mockRooms: VideoRoomProvider = {
   createRoom: async ({ tourId }) => ({ roomId: `mock_${tourId}`, live: false }),
   joinUrlFor: async () => null,
   deleteRoom: async () => undefined,
+  participantCount: async () => 0,
 };
 
 function dailyConfig() {
@@ -54,7 +57,7 @@ function dailyConfig() {
   return { key, domain };
 }
 
-async function dailyCall(key: string, method: "POST" | "DELETE", path: string, body?: unknown): Promise<Response> {
+async function dailyCall(key: string, method: "GET" | "POST" | "DELETE", path: string, body?: unknown): Promise<Response> {
   try {
     return await fetch(`${DAILY_API}${path}`, {
       method,
@@ -108,6 +111,13 @@ const dailyRooms: VideoRoomProvider = {
     if (!made?.token) failed(res);
     return `https://${domain}/${encodeURIComponent(roomId)}?t=${encodeURIComponent(made.token)}`;
   },
+  async participantCount(roomId) {
+    const { key } = dailyConfig();
+    const res = await dailyCall(key, "GET", `/rooms/${encodeURIComponent(roomId)}/presence`);
+    if (!res.ok) return 0;
+    const data = (await res.json().catch(() => null)) as { total_count?: number } | null;
+    return typeof data?.total_count === "number" ? data.total_count : 0;
+  },
   async deleteRoom(roomId) {
     try {
       const { key } = dailyConfig();
@@ -119,6 +129,13 @@ const dailyRooms: VideoRoomProvider = {
   },
 };
 
+let override: VideoRoomProvider | null = null;
+/** Tests swap in a provider here. Pass null to restore the environment choice. */
+export function setVideoRoomProvider(provider: VideoRoomProvider | null) {
+  override = provider;
+}
+
 export function videoRoomProvider(): VideoRoomProvider {
+  if (override) return override;
   return (process.env.VIDEO_TOUR_PROVIDER || "mock").trim() === "daily" ? dailyRooms : mockRooms;
 }
