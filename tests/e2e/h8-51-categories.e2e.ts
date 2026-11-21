@@ -217,7 +217,7 @@ test.describe("H8.51 Categories and fields", () => {
     }
   });
 
-  test("a category with ads cannot be removed: the screen says to hide it", async ({ page, context, baseURL }) => {
+  test.skip("H18.3 replaced this: a category with ads is now removed with its ads (covered by tests/server/categories)", async ({ page, context, baseURL }) => {
     test.setTimeout(180_000);
     await signInAdminContext(context, baseURL!);
     await page.setViewportSize({ width: 1440, height: 900 });

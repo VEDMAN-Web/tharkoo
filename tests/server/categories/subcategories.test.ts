@@ -132,21 +132,32 @@ describe("managing sub-categories", () => {
     await expect(updateSubcategory(admin, plumbers, { slug: "tutors" })).rejects.toThrow(/already used/);
   });
 
-  it("blocks removing a sub-category that has ads, and removes an empty one", async () => {
+  it("H18.3: removes a sub-category that has ads and takes only its ads off the site; an empty one goes too", async () => {
     const { categoryId, plumbers, tutors, mumbaiId } = await setup();
     await ad(categoryId, mumbaiId, plumbers);
-    await expect(deleteSubcategory(admin, plumbers)).rejects.toThrow(/has ads\. Hide it/);
-    expect(await Subcategory.findById(plumbers)).not.toBeNull();
+    await ad(categoryId, mumbaiId, plumbers);
+    await ad(categoryId, mumbaiId, tutors);
+    await deleteSubcategory(admin, plumbers);
+    expect(await Subcategory.findById(plumbers)).toBeNull();
+    expect(await Listing.countDocuments({ subcategoryId: plumbers, status: "removed" })).toBe(2);
+    expect(await Listing.countDocuments({ subcategoryId: tutors, status: "removed" })).toBe(0);
     await deleteSubcategory(admin, tutors);
     expect(await Subcategory.findById(tutors)).toBeNull();
   });
 
-  it("blocks removing a category that has ads, offers hiding, and takes sub-categories with an empty category", async () => {
-    const { categoryId, mumbaiId } = await setup();
+  it("H18.3: removes a category that has ads, takes every ad in it off the site, and takes sub-categories with an empty category", async () => {
+    const { categoryId, plumbers, mumbaiId } = await setup();
     await ad(categoryId, mumbaiId, null);
-    await expect(deleteCategory(admin, categoryId)).rejects.toThrow(/Hide it/);
+    await ad(categoryId, mumbaiId, plumbers);
+    await ad(categoryId, mumbaiId, plumbers, "paused");
     await updateCategory(admin, categoryId, { enabled: false, seoIntro: "Hidden for now" });
     expect(await Category.findById(categoryId)).toMatchObject({ enabled: false, introHtml: "Hidden for now" });
+    await deleteCategory(admin, categoryId);
+    expect(await Category.findById(categoryId)).toBeNull();
+    expect(await Subcategory.countDocuments({ categoryId })).toBe(0);
+    expect(await Listing.countDocuments({ categoryId, status: { $ne: "removed" } })).toBe(0);
+    expect(await Listing.countDocuments({ categoryId, status: "removed" })).toBe(3);
+    await expect(deleteCategory({ email: "x@example.com", roles: ["user"] } as typeof admin, String(categoryId))).rejects.toThrow();
     const { id: empty } = await createCategory(admin, { name: "Empty", kind: "goods" });
     await createSubcategory(admin, { categoryId: empty, name: "Inside" });
     await deleteCategory(admin, empty);

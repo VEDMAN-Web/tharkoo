@@ -141,7 +141,7 @@ export function SubsTab({ categoryId, categoryName, subs }: { categoryId: string
       <ConfirmDialog
         open={removing !== null}
         title={`Remove ${removing?.name ?? ""}?`}
-        body="A sub-category with ads cannot be removed. Hide it instead."
+        body="This removes the sub-category and takes all its ads off the site. Type the slug to confirm."
         confirmText={removing?.slug ?? ""}
         confirmLabel="Remove"
         onConfirm={() => void remove()}
