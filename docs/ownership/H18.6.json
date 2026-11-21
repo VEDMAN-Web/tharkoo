@@ -1,0 +1,16 @@
+{
+  "branchPrefix": "haiku/h18.6",
+  "globs": [
+    "docs/ownership/H18.6.json",
+    "progress/H18.6.md",
+    "src/server/billing/passimpay.ts",
+    "src/server/wallet/payout-kyc.ts",
+    "src/server/wallet/payout-provider.ts",
+    "src/server/wallet/withdrawals.ts",
+    "src/app/admin/finance/PayoutsQueue.tsx",
+    "src/components/wallet/KycForm.tsx",
+    "tests/server/wallet/h18-6-crypto-payout.test.ts",
+    "src/server/wallet/payout-api.ts",
+    "src/components/post/post-wizard.css"
+  ]
+}
