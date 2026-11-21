@@ -68,7 +68,7 @@ export async function subHubMetadata(params: SubHubParams, page: number): Promis
     subIntro: hub.sub.seoIntro,
     count: feed.realTotal,
     site: site.name,
-    indexable: isSubcategoryIndexable(feed.total),
+    indexable: isSubcategoryIndexable(feed.realTotal),
     sampleNote: await sampleNoteText(),
   });
   const path = placePath(hub.cat.slug || params.category, hub.city.slug || params.location, hub.sub.slug);
@@ -76,7 +76,7 @@ export async function subHubMetadata(params: SubHubParams, page: number): Promis
     title: pagedText(copy.title, page),
     description: copy.description,
     path: page > 1 ? `${path}?page=${page}` : path,
-    index: isSubcategoryIndexable(feed.total, page),
+    index: isSubcategoryIndexable(feed.realTotal, page),
     follow: true,
   });
   return withPagination(meta, path, page, feed.pages);
@@ -115,7 +115,7 @@ export async function SubHub({ params, page }: { params: SubHubParams; page: num
     subIntro: hub.sub.seoIntro,
     count: feed.realTotal,
     site: site.name,
-    indexable: isSubcategoryIndexable(feed.total),
+    indexable: isSubcategoryIndexable(feed.realTotal),
     sampleNote: await sampleNoteText(),
   });
   const vars = { category: hub.cat.name, city: hub.city.name, sub: hub.sub.name, site: site.name, count: feed.realTotal, year: new Date().getFullYear() };
@@ -210,7 +210,7 @@ export async function SubHub({ params, page }: { params: SubHubParams; page: num
       page={feed.page}
       pages={feed.pages}
       total={feed.total}
-      noindex={!isSubcategoryIndexable(feed.total, page)}
+      noindex={!isSubcategoryIndexable(feed.realTotal, page)}
       siblingLinks={siblings
         .filter((chip) => chip.slug !== hub.sub.slug)
         .slice(0, 5)

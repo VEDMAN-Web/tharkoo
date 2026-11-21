@@ -16,6 +16,7 @@ import { makeT, pickTexts } from "@/lib/ui/text";
 import { UiTextProvider } from "@/components/ui/AdCard";
 import { ListingCard, ListingGrid } from "@/components/new/ListingCards";
 import { ListingFrame } from "@/components/new/ListingFrame";
+import { cityHasRealAds } from "@/server/seo/real-ads";
 import { canonical } from "@/lib/seo";
 import { withPagination } from "@/lib/seo/pagination";
 import { ListingPager } from "@/components/new/ListingPager";
@@ -42,7 +43,7 @@ async function cityAreas(city: string) {
   if (!loc) return null;
   const named = areas.filter((area) => area.slug && area.name && !isCityAlias(loc.name || city, area.name));
   const cityCounts = new Map(counts.filter((row) => row._id.citySlug === city && row.n > 0).map((row) => [row._id.categorySlug, row.n]));
-  return { name: loc.name || city, stateSlug: loc.stateSlug || "", total, areas: named, categories, cityCounts };
+  return { id: (loc as { _id?: unknown; id?: unknown })._id ?? (loc as { id?: unknown }).id, name: loc.name || city, stateSlug: loc.stateSlug || "", total, areas: named, categories, cityCounts };
 }
 
 function countLabel(n: number) {
@@ -65,8 +66,8 @@ export async function generateMetadata({ params, searchParams }: Props): Promise
       description: `Pick an area of ${data.name} to browse classifieds near you on Tharkoo. Every area lists its own ads and photos.`,
       path: `${path}${suffix}`,
       canonicalUrl: canonical(`${path}${suffix}`),
-      // H16.5: a city hub is indexed even with sample ads or none yet; only the Indexing rules switch turns it off.
-      index: isCityOn(await getIndexing(), city),
+      // H18.2: a city hub is indexed only when the city has at least one REAL ad; the Indexing rules switch still turns it off.
+      index: isCityOn(await getIndexing(), city) && (await cityHasRealAds(data.id)),
       follow: true,
     }),
   );

@@ -104,7 +104,7 @@ export async function generateMetadata({ params, searchParams }: Props): Promise
     description,
     path: `${path}${suffix}`,
     canonicalUrl: canonical(`${path}${suffix}`),
-    index: pageNo === 1 && !filtered && !!isHubOn(distMin),
+    index: pageNo === 1 && !filtered && !!isHubOn(distMin) && feedForCopy.realTotal > 0,
     follow: true,
   });
   return filtered ? meta : withPagination(meta, path, pageNo, feed.pages);
@@ -154,7 +154,8 @@ export default async function DistrictPage({ params, searchParams }: Props) {
     loadCardWidth(),
   ]);
   if (pageOutOfRange(rawPage, feed.pages)) notFound();
-  const thin = !isHubOn(distMin);
+  // H18.2: indexed only with at least one REAL ad.
+  const thin = !isHubOn(distMin) || feed.realTotal < 1;
   const districtCopy = fallbackLanding({
     category: cat.name || category,
     city: city.name || location,
