@@ -65,22 +65,25 @@ async function ad(w: Awaited<ReturnType<typeof world>>, input: { owner: "seed" |
   });
 }
 
-describe("H16.5 every listing page is indexable and in the sitemaps", () => {
-  it("lists every category, every category in every city and every city hub, with sample ads or none", async () => {
+describe("H16.5/H18.2 listing pages in the sitemaps", () => {
+  // H18.2 (Vedant, 21 Nov 2026): listing pages are in the sitemap only with at least one REAL ad. Replaces the H16.5 "every page" rule.
+  it("H18.2: lists every category, but only the place pages that have a real ad; sample ads do not count", async () => {
     const w = await world();
-    await ad(w, { owner: "seed", category: "jobs", city: "surat" });
+    await ad(w, { owner: "seed", category: "bikes", city: "pune" });
+    await ad(w, { owner: "real", category: "jobs", city: "surat", noindex: false });
     const categories = (await shardEntries("categories")).map((row) => row.loc);
     expect(categories.some((url) => url.endsWith("/jobs/"))).toBe(true);
     expect(categories.some((url) => url.endsWith("/bikes/"))).toBe(true);
     const cities = (await shardEntries("cities")).map((row) => row.loc);
-    for (const path of ["/jobs/surat/", "/jobs/pune/", "/bikes/surat/", "/bikes/pune/", "/jobs/gujarat/", "/bikes/gujarat/"]) {
-      expect(cities.some((url) => url.endsWith(path)), path).toBe(true);
-    }
-    expect(cities.some((url) => url.endsWith("/cities/surat/"))).toBe(true);
+    for (const path of ["/jobs/surat/", "/jobs/gujarat/", "/cities/surat/"]) expect(cities.some((url) => url.endsWith(path)), path).toBe(true);
+    for (const path of ["/jobs/pune/", "/bikes/surat/", "/bikes/pune/", "/bikes/gujarat/", "/cities/pune/"]) expect(cities.some((url) => url.endsWith(path)), path).toBe(false);
   });
 
-  it("leaves out only what the Indexing rules switch off", async () => {
+  it("H18.2: the Indexing rules switches still leave a page out even when it has a real ad", async () => {
     const w = await world();
+    await ad(w, { owner: "real", category: "jobs", city: "surat", noindex: false });
+    await ad(w, { owner: "real", category: "jobs", city: "pune", noindex: false });
+    await ad(w, { owner: "real", category: "bikes", city: "surat", noindex: false });
     const { Site } = await import("@/server/models/cms");
     await Site.updateOne({ key: "default" }, { $set: { seoIndexing: { categories: { bikes: { enabled: false } }, offCities: ["pune"] } } }, { upsert: true });
     invalidateTags(["site"]);
@@ -88,7 +91,6 @@ describe("H16.5 every listing page is indexable and in the sitemaps", () => {
     expect(cities.some((url) => url.endsWith("/jobs/surat/"))).toBe(true);
     expect(cities.some((url) => url.endsWith("/jobs/pune/"))).toBe(false);
     expect(cities.some((url) => url.endsWith("/bikes/surat/"))).toBe(false);
-    expect(w.jobs).toBeTruthy();
   });
 
   // H17.8 (Vedant's decision, 19 Nov): sample ads are out of Google. This replaces the H16.5 rule that listed them in ads.xml.

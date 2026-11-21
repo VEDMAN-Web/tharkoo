@@ -9,6 +9,7 @@ import { subcategorySitemapEntries } from "@/server/seo/subcategory-sitemap";
 import { isCityAlias } from "@/lib/seo/district-alias";
 import { addressesFor } from "@/server/listings/ad-code";
 import { demoOwnerId, DEMO_SLUG } from "@/server/listings/demo-ads";
+import { notSampleClause } from "@/server/seo/real-ads";
 import { getIndexing, isCategoryOn, isCityOn } from "@/server/seo/indexing";
 
 /** Listing shards hold only the three indexable page types (category, category+city, category+city+area). */
@@ -90,16 +91,23 @@ export async function shardEntries(shard: SitemapShard): Promise<SitemapEntry[]>
     $or: [{ expiresAt: { $exists: false } }, { expiresAt: null }, { expiresAt: { $gt: new Date() } }],
   };
   if (shard === "categories" || shard === "cities" || shard === "districts") {
-    // H16.5: every public listing page is in the sitemap, even with sample ads or none yet. Only the Indexing rules switches leave one out.
+    // H18.2 (21 Nov 2026): only listing pages with at least one REAL live ad are in the sitemap (sample ads do not count),
+    // matching the page's own robots tag. The Indexing rules switches still leave a page out. Category pages stay listed.
+    const notSample = await notSampleClause();
     const [categories, cities, states, counted, districtDocs, categoryDocs] = await Promise.all([
       getCategories(),
       getCities(),
       getStates().catch(() => []),
-      Listing.aggregate<{ _id: { categoryId: string; cityId: string }; last: Date | null }>([
-        { $match: liveMatch },
+      Listing.aggregate<{ _id: { categoryId: string; cityId: string; stateId: string; districtId: string }; last: Date | null }>([
+        { $match: { $and: [liveMatch, ...notSample] } },
         {
           $group: {
-            _id: { categoryId: { $toString: "$categoryId" }, cityId: { $toString: "$cityId" } },
+            _id: {
+              categoryId: { $toString: "$categoryId" },
+              cityId: { $toString: "$cityId" },
+              stateId: { $toString: "$stateId" },
+              districtId: { $toString: "$districtId" },
+            },
             last: { $max: { $ifNull: ["$updatedAt", "$publishedAt"] } },
           },
         },
@@ -113,7 +121,17 @@ export async function shardEntries(shard: SitemapShard): Promise<SitemapEntry[]>
     const cats = categories.filter((cat) => cat.slug && isCategoryOn(indexing, cat.slug));
     const onCities = cities.filter((city) => city.slug && isCityOn(indexing, city.slug));
     const lastBy = new Map<string, Date | null>();
-    for (const row of counted) lastBy.set(`${row._id.categoryId}|${row._id.cityId}`, row.last);
+    const realState = new Set<string>();
+    const realCity = new Set<string>();
+    const realDistrict = new Set<string>();
+    for (const row of counted) {
+      const key = `${row._id.categoryId}|${row._id.cityId}`;
+      const before = lastBy.get(key);
+      lastBy.set(key, before && row.last && before > row.last ? before : row.last);
+      realState.add(`${row._id.categoryId}|${row._id.stateId}`);
+      realCity.add(row._id.cityId);
+      realDistrict.add(`${row._id.categoryId}|${row._id.cityId}|${row._id.districtId}`);
+    }
     const urls: SitemapEntry[] = [];
     if (shard === "categories") {
       for (const cat of cats) urls.push({ loc: loc(categoryPath(cat.slug!)), lastmod: stamp(categoryDate.get(cat.slug!)) });
@@ -121,17 +139,20 @@ export async function shardEntries(shard: SitemapShard): Promise<SitemapEntry[]>
     }
     if (shard === "cities") {
       for (const cat of cats) {
-        for (const state of states) if (state.slug) urls.push({ loc: loc(placePath(cat.slug!, state.slug)), lastmod: newest(placeDate.get(`state:${state.slug}`), categoryDate.get(cat.slug!)) });
-        for (const city of onCities) urls.push({ loc: loc(placePath(cat.slug!, city.slug!)), lastmod: newest(placeDate.get(`city:${city.slug}`), categoryDate.get(cat.slug!), lastBy.get(`${String(cat._id)}|${city.id}`)) });
+        for (const state of states) if (state.slug && realState.has(`${String(cat._id)}|${String((state as { id?: unknown; _id?: unknown }).id ?? (state as { _id?: unknown })._id)}`)) urls.push({ loc: loc(placePath(cat.slug!, state.slug)), lastmod: newest(placeDate.get(`state:${state.slug}`), categoryDate.get(cat.slug!)) });
+        for (const city of onCities) if (lastBy.has(`${String(cat._id)}|${city.id}`)) urls.push({ loc: loc(placePath(cat.slug!, city.slug!)), lastmod: newest(placeDate.get(`city:${city.slug}`), categoryDate.get(cat.slug!), lastBy.get(`${String(cat._id)}|${city.id}`)) });
       }
-      for (const city of onCities) urls.push({ loc: loc(joinPath(citiesPath(paths), city.slug)), lastmod: stamp(placeDate.get(`city:${city.slug}`)) });
+      for (const city of onCities) if (realCity.has(String(city.id))) urls.push({ loc: loc(joinPath(citiesPath(paths), city.slug)), lastmod: stamp(placeDate.get(`city:${city.slug}`)) });
       return urls;
     }
     const cityById = new Map(onCities.map((city) => [city.id, city]));
     for (const row of districtDocs.filter((place) => place.type === "district")) {
       const city = cityById.get(String(row.parentId));
       if (!city?.slug || !row.slug || row.enabled === false || isCityAlias(city.slug, row.slug)) continue;
-      for (const cat of cats) urls.push({ loc: loc(placePath(cat.slug!, city.slug, row.slug)), lastmod: newest(row.updatedAt, categoryDate.get(cat.slug!), lastBy.get(`${String(cat._id)}|${city.id}`)) });
+      for (const cat of cats) {
+        if (!realDistrict.has(`${String(cat._id)}|${city.id}|${String((row as { _id?: unknown })._id)}`)) continue;
+        urls.push({ loc: loc(placePath(cat.slug!, city.slug, row.slug)), lastmod: newest(row.updatedAt, categoryDate.get(cat.slug!), lastBy.get(`${String(cat._id)}|${city.id}`)) });
+      }
     }
     for (const entry of await subcategorySitemapEntries(loc)) urls.push({ loc: entry.loc, lastmod: entry.lastmod });
     return urls;

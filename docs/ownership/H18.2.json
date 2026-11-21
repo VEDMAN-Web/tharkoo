@@ -1,0 +1,15 @@
+{
+  "branchPrefix": "haiku/h18.2",
+  "globs": [
+    "docs/ownership/H18.2.json",
+    "progress/H18.2.md",
+    "src/server/seo/real-ads.ts",
+    "src/lib/seo/sitemaps.ts",
+    "src/app/[category]/[location]/page.tsx",
+    "src/app/[category]/[location]/[district]/page.tsx",
+    "src/app/[category]/[location]/[district]/sub-hub.tsx",
+    "src/app/cities/[city]/page.tsx",
+    "tests/server/listings/h16-5-robots.test.ts",
+    "tests/server/listings/h16-5-showcase-demo.test.ts"
+  ]
+}

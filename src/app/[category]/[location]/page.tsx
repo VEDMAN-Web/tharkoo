@@ -93,7 +93,7 @@ export async function generateMetadata({ params, searchParams }: Props): Promise
     category: cat.name || category,
     city: loc.name || location,
     count: feed.realTotal,
-    indexable: !!isHubOn(hubMin),
+    indexable: !!isHubOn(hubMin) && feed.realTotal > 0,
     sampleNote: await sampleNoteText(),
   });
   const resolved =
@@ -106,7 +106,7 @@ export async function generateMetadata({ params, searchParams }: Props): Promise
           place: loc.name || location,
           state: String(vars.state ?? ""),
           count: feed.realTotal,
-          indexable: !!isHubOn(hubMin),
+          indexable: !!isHubOn(hubMin) && feed.realTotal > 0,
           mode: "content",
         })
       : null;
@@ -116,7 +116,8 @@ export async function generateMetadata({ params, searchParams }: Props): Promise
   // H17.3: page 2 and later say so in the title (and in the heading below).
   const title = pagedText(baseTitle, pageNo);
   const filtered = activeFilterKeys(sp).length > 0;
-  const thin = !isHubOn(hubMin);
+  // H18.2: indexed only with at least one REAL ad (sample ads do not count); the Indexing switches still turn a hub off.
+  const thin = !isHubOn(hubMin) || feed.realTotal < 1;
   const clean = placePath(cat.slug || category, loc.slug || location);
   const suffix = listingCanonicalSuffix(sp, pageNo);
   // Filter URLs are noindex, follow, and their canonical is the clean page (see filter-seo.ts).
@@ -196,7 +197,7 @@ export default async function LocationPage({ params, searchParams }: Props) {
     category: cat.name || category,
     city: loc.name || location,
     count: feed.realTotal,
-    indexable: !!isHubOn(hubMin),
+    indexable: !!isHubOn(hubMin) && feed.realTotal > 0,
     sampleNote: await sampleNoteText(),
     districts: districts.map((row) => row.name || "").filter(Boolean).slice(0, 3),
     updated: feed.items[0]?.publishedAt ? new Date(feed.items[0].publishedAt).toLocaleDateString("en-IN", { day: "numeric", month: "long", year: "numeric" }) : undefined,
@@ -213,7 +214,7 @@ export default async function LocationPage({ params, searchParams }: Props) {
           place: loc.name || location,
           state: stateName,
           count: feed.realTotal,
-          indexable: !!isHubOn(hubMin),
+          indexable: !!isHubOn(hubMin) && feed.realTotal > 0,
           districts: districts.map((row) => row.name || "").filter(Boolean).slice(0, 3),
           updated: feed.items[0]?.publishedAt ? new Date(feed.items[0].publishedAt).toLocaleDateString("en-IN", { day: "numeric", month: "long", year: "numeric" }) : undefined,
           mode: "content",
@@ -279,7 +280,7 @@ export default async function LocationPage({ params, searchParams }: Props) {
       page={feed.page}
       pages={feed.pages}
       total={feed.total}
-      noindex={!isHubOn(hubMin) || page > 1 || (filtered && feed.total === 0)}
+      noindex={!isHubOn(hubMin) || feed.realTotal < 1 || page > 1 || (filtered && feed.total === 0)}
       siblingLinks={siblingLinks}
       emptyNearby={siblings.slice(0, 6).map((c) => ({ href: placePath(cat.slug || category, c.slug || ""), label: c.name! }))}
       hideEmpty={feed.total === 0}
