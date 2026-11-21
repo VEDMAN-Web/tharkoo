@@ -9,7 +9,8 @@ import { userFromToken } from "@/server/auth/service";
 import { countRedirectHit, decideRequest } from "@/server/urls/service";
 
 /** Exact paths a payment provider posts to. Only these skip the Origin check, and each one verifies its own signature. */
-const PROVIDER_WEBHOOK_PATHS = new Set(["/api/payments/webhook", "/api/payments/coins/webhook", "/api/tours/webhook"]);
+// H18.1c: PassimPay posts its payment notice without an Origin header; the route checks the x-signature and then asks PassimPay.
+const PROVIDER_WEBHOOK_PATHS = new Set(["/api/payments/webhook", "/api/payments/coins/webhook", "/api/tours/webhook", "/api/payments/passimpay/webhook"]);
 
 const STATIC_EXT =/\.(?:svg|png|jpg|jpeg|webp|avif|ico|woff2|css|js|map|txt|xml)$/i;
 

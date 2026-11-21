@@ -5,7 +5,7 @@ import { requireUser } from "@/server/auth/service";
 import { applyWebhook, checkoutPack, recordWebhookRejection, refundPayment, webhookRejection } from "@/server/billing";
 import { json, readJson, segmentsOf } from "@/server/billing/http";
 import { NotFoundError, handle, parseInput, requestIdFrom } from "@/server/http";
-import { paymentsAvailable, settlePassimpay } from "@/server/billing/recharge";
+import { paymentsAvailable, settleOwnPending, settlePassimpay } from "@/server/billing/recharge";
 import { verifyNotice } from "@/server/billing/passimpay";
 import { chooseCoin, confirmMockPayment, listOwnPayments, readOwnPayment, rechargePacks, startRecharge, sheetPacks } from "@/server/billing/recharge";
 import { postingFeeStatus } from "@/server/billing/posting-fee";
@@ -74,6 +74,8 @@ async function dispatch(request: Request) {
   const user = await requireUser(readCookie(request, SESSION_COOKIE));
   const ip = clientKey(request.headers);
   if (request.method === "GET" && path === "packs") {
+    // H18.1c: a buyer back from PassimPay sees the new balance at once.
+    await settleOwnPending(user.user.id).catch(() => undefined);
     const [packs, balance, fee, available, money, prices] = await Promise.all([rechargePacks(), walletBalance(user.user.id), postingFeeStatus(user.user.id), paymentsAvailable(), readMoneySettings(), readPriceList(user.user.id)]);
     const shortfall = Math.max(0, Math.floor(Number(new URL(request.url).searchParams.get("shortfall")) || 0));
     return json({ packs: sheetPacks(packs, shortfall), all: packs, allPacks: packs.length, balance, fee: fee.fee, creditPriceInr: fee.creditPriceInr, available, testPayments: money.mockPaymentsOn, prices }, requestId);

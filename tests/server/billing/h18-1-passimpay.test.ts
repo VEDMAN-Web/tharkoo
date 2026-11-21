@@ -3,7 +3,7 @@ import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } 
 import { POST as paymentsPost } from "@/app/api/payments/[[...slug]]/route";
 import { walletBalance } from "@/server/billing/ledger";
 import { createInvoice, orderStatus, passimpaySignature, verifyNotice } from "@/server/billing/passimpay";
-import { listOwnPayments, readOwnPayment, settlePassimpay, startRecharge } from "@/server/billing/recharge";
+import { listOwnPayments, readOwnPayment, settleOwnPending, settlePassimpay, startRecharge } from "@/server/billing/recharge";
 import { CreditPack, Payment, User } from "@/server/models";
 import { clearMemoryMongo, connectMemoryMongo, disconnectMemoryMongo } from "../../setup/mongo";
 
@@ -114,6 +114,16 @@ describe("H18.1 PassimPay recharge", () => {
     const good = await paymentsPost(new Request(url, { method: "POST", body: raw, headers: { "x-signature": passimpaySignature(123, raw, KEY), "content-type": "application/json" } }));
     expect(good.status).toBe(200);
     expect(await walletBalance(String(user._id))).toBe(50);
+  });
+
+  it("H18.1c: opening the balance settles a paid PassimPay payment at once", async () => {
+    const user = await buyer();
+    const pack = await CreditPack.create({ credits: 20, price: 100, bonus: 0, status: "active", order: 0 });
+    fakePassimpay();
+    await startRecharge({ userId: String(user._id), packId: String(pack._id), method: "crypto", requestId: "r1" });
+    fakePassimpay({ status: "paid", amountPaid: "100.00", currency: "INR" });
+    await settleOwnPending(String(user._id));
+    expect(await walletBalance(String(user._id))).toBe(20);
   });
 
   it("refuses to start when live payments are not allowed", async () => {

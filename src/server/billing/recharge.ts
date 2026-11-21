@@ -245,6 +245,17 @@ export async function settlePassimpay(paymentId: string, requestId: string): Pro
   return "failed";
 }
 
+/**
+ * H18.1c: settles the buyer's newest pending PassimPay payments (at most 3). Called whenever the buyer's balance or history
+ * is shown, so coming back from PassimPay shows the new credits at once even if the notice is late.
+ */
+export async function settleOwnPending(userId: string) {
+  await connectDb();
+  if (paymentProvider() !== "passimpay") return;
+  const pending = await Payment.find({ userId: objectId(userId, "userId"), provider: "passimpay", status: "pending" }).sort({ _id: -1 }).limit(3).lean<PaymentRow[]>();
+  for (const row of pending) await trySettle(row, `own-${String(row._id)}`);
+}
+
 /** Best effort: a provider hiccup never breaks the page that shows the payment. */
 async function trySettle(row: PaymentRow, requestId: string) {
   if (row.provider !== "passimpay" || row.status !== "pending") return;
@@ -272,9 +283,7 @@ export async function readOwnPayment(userId: string, paymentId: string) {
 export async function listOwnPayments(userId: string, page: number, pageSize: number) {
   await connectDb();
   const filter = { userId: objectId(userId, "userId"), method: { $in: [...RECHARGE_METHODS] } };
-  // H18.1: settle the buyer's newest pending PassimPay payments first, in case a notice was lost.
-  const pending = await Payment.find({ ...filter, provider: "passimpay", status: "pending" }).sort({ _id: -1 }).limit(3).lean<PaymentRow[]>();
-  for (const row of pending) await trySettle(row, `history-${String(row._id)}`);
+  await settleOwnPending(userId);
   const [rows, total] = await Promise.all([
     Payment.find(filter)
       .sort({ createdAt: -1, _id: -1 })
