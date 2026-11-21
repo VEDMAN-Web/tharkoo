@@ -376,7 +376,7 @@ export async function reverseTour(input: { actorId: string; roles: readonly stri
       refId: String(id),
       moves: [
         { account: "vendor_earnings", ownerKey: String(claim.ownerId), delta: -claim.coins },
-        { account: "user_wallet", ownerKey: String(claim.userId), delta: claim.coins },
+        { account: "call_wallet", ownerKey: String(claim.userId), delta: claim.coins },
       ],
       requestId: input.requestId,
       actorId: input.actorId,

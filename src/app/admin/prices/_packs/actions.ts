@@ -8,7 +8,7 @@ import type { PriceResult } from "../_actions/actions";
 
 /** H8.20: server actions for recharge packs. They answer { ok } and never throw a stack to the browser. */
 
-type PackForm = { credits: number; bonus: number; price: number; tag: string; shown: boolean };
+type PackForm = { credits: number; bonus: number; price: number; tag: string; shown: boolean; wallet?: "ad" | "call" };
 
 async function run(work: () => Promise<{ eventId: string; undoUntil: string | null; summary: string }>): Promise<PriceResult> {
   try {
@@ -22,9 +22,9 @@ async function run(work: () => Promise<{ eventId: string; undoUntil: string | nu
 }
 
 export async function savePackAction(input: PackForm & { id: string }): Promise<PriceResult> {
-  return run(async () => updatePack(await adminContext(), { id: String(input.id), credits: input.credits, bonus: input.bonus, price: input.price, tag: input.tag, shown: input.shown }));
+  return run(async () => updatePack(await adminContext(), { id: String(input.id), credits: input.credits, bonus: input.bonus, price: input.price, tag: input.tag, shown: input.shown, wallet: input.wallet }));
 }
 
 export async function createPackAction(input: PackForm): Promise<PriceResult> {
-  return run(async () => createPack(await adminContext(), { credits: input.credits, bonus: input.bonus, price: input.price, tag: input.tag, shown: input.shown }));
+  return run(async () => createPack(await adminContext(), { credits: input.credits, bonus: input.bonus, price: input.price, tag: input.tag, shown: input.shown, wallet: input.wallet }));
 }

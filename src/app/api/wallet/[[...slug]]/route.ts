@@ -1,4 +1,5 @@
 import { clientKey } from "@/lib/rate-limit";
+import { callBalance, earningsBalance } from "@/server/billing/wallets";
 import { SESSION_COOKIE, assertOrigin, readCookie } from "@/server/auth/http";
 import { requireUser } from "@/server/auth/service";
 import { json, readJson, segmentsOf } from "@/server/billing/http";
@@ -34,7 +35,9 @@ async function dispatch(request: Request) {
   const path = segments.join("/");
   const user = await requireUser(readCookie(request, SESSION_COOKIE));
   if (request.method === "GET" && path === "") {
-    return json({ balance: await walletBalance(user.user.id) }, requestId);
+    // H18.8: ad credits (balance), call credits and earnings, shown apart everywhere.
+    const [balance, callCredits, earnings] = await Promise.all([walletBalance(user.user.id), callBalance(user.user.id), earningsBalance(user.user.id)]);
+    return json({ balance, callBalance: callCredits, earnings }, requestId);
   }
   if (request.method === "GET" && path === "posting-fee") {
     return json(await postingFeeStatus(user.user.id), requestId);

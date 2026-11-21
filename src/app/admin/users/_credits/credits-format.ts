@@ -1,6 +1,6 @@
 /** Pure helpers for the credits dialog and tab (H8.14), so they are tested without a browser. */
 
-export const MAX_CREDITS = 100_000;
+export const MAX_CREDITS = 10_000_000;
 
 export type CreditsStart = { mode: "add" | "remove"; amount: string };
 

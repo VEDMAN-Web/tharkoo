@@ -16,9 +16,29 @@ import "./recharge.css";
  */
 
 export type PackChoice = { pack: PackLike; method: "card" | "crypto" };
-export type CreditPackData = { packs: PackLike[]; creditPriceInr: number; fee: number; available: boolean; testPayments: boolean; prices: PriceListData | null };
+export type WalletTab = "call" | "ad";
+type CustomLimits = { min: Record<WalletTab, number>; maxPerPurchase: number; maxPerDay: number; moveEarningsMin: number };
+export type CreditPackData = {
+  packs: PackLike[];
+  /** H18.8: call packs fill call credits (video calls only). `packs` are ad packs (posting, TOP, Super Top). */
+  callPacks: PackLike[];
+  custom: CustomLimits | null;
+  creditPriceInr: number;
+  fee: number;
+  available: boolean;
+  testPayments: boolean;
+  prices: PriceListData | null;
+};
 type Method = "card" | "crypto";
-type Loaded = { packs: PackLike[]; all?: PackLike[]; creditPriceInr: number; fee: number; available: boolean; testPayments?: boolean; prices?: PriceListData };
+type Loaded = { packs: PackLike[]; all?: PackLike[]; callPacks?: PackLike[]; custom?: CustomLimits; creditPriceInr: number; fee: number; available: boolean; testPayments?: boolean; prices?: PriceListData };
+
+/** H18.8: same sum as the server (customCredits): the base rate, or the best pack's rate once the amount reaches its price. */
+export function creditsForAmount(amount: number, creditPriceInr: number, packs: PackLike[]) {
+  if (!Number.isFinite(amount) || amount <= 0) return 0;
+  const base = Math.floor(amount / Math.max(1, creditPriceInr));
+  const best = packs.filter((p) => p.price > 0 && p.total > 0 && amount >= p.price).sort((a, b) => a.price / a.total - b.price / b.total)[0];
+  return Math.max(base, best ? Math.floor(amount / (best.price / best.total)) : 0);
+}
 
 /** Loads the packs once for a signed-in person. `shortfall` makes the pack that covers it start selected. */
 /**
@@ -39,8 +59,8 @@ export function useCreditPacks(shortfall = 0): { data: CreditPackData | null; er
     api<Loaded>(`/api/payments/packs${shortfall > 0 ? `?shortfall=${shortfall}` : ""}`).then((res) => {
       if (!live) return;
       if (!res.ok) return setError(friendlyError(res.error));
-      const { packs, all, creditPriceInr, fee, available, testPayments, prices } = res.data;
-      setData({ packs: all ?? packs, creditPriceInr, fee, available, testPayments: Boolean(testPayments), prices: prices ?? null });
+      const { packs, all, callPacks, custom, creditPriceInr, fee, available, testPayments, prices } = res.data;
+      setData({ packs: all ?? packs, callPacks: callPacks ?? [], custom: custom ?? null, creditPriceInr, fee, available, testPayments: Boolean(testPayments), prices: prices ?? null });
     });
     return () => {
       live = false;
@@ -49,48 +69,73 @@ export function useCreditPacks(shortfall = 0): { data: CreditPackData | null; er
   return { data, error, signedIn };
 }
 
-export function CreditPacks({ data, shortfall = 0, returnTo, onChoice }: { data: CreditPackData; shortfall?: number; returnTo?: string; onChoice?: (choice: PackChoice) => void }) {
+export function CreditPacks({ data, shortfall = 0, returnTo, onChoice, wallet: startWallet = "ad" }: { data: CreditPackData; shortfall?: number; returnTo?: string; onChoice?: (choice: PackChoice) => void; wallet?: WalletTab }) {
   const t = useT();
-  const [selected, setSelected] = useState(() => preselectedId(data.packs, shortfall));
+  const [wallet, setWallet] = useState<WalletTab>(startWallet);
+  const list = wallet === "call" ? data.callPacks : data.packs;
+  const [amount, setAmount] = useState("");
+  const typed = Number(amount);
+  const minimum = data.custom?.min[wallet] ?? 0;
+  const typedCredits = amount ? creditsForAmount(typed, data.creditPriceInr, list) : 0;
+  const typedOk = Boolean(amount) && Number.isInteger(typed) && typed >= minimum && (!data.custom || typed <= data.custom.maxPerPurchase);
+  const [selected, setSelected] = useState(() => preselectedId(startWallet === "call" ? data.callPacks : data.packs, shortfall));
   const [method, setMethod] = useState<Method>("card");
   const [showAll, setShowAll] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
-  const popular = popularId(data.packs);
-  const best = bestValueId(data.packs);
-  const first = firstPacks(data.packs, shortfall);
-  const shown = showAll ? [...data.packs].sort((a, b) => a.total - b.total) : first;
-  const chosen = data.packs.find((pack) => pack.id === selected) ?? data.packs[0];
+  const popular = popularId(list);
+  const best = bestValueId(list);
+  const first = firstPacks(list, wallet === startWallet ? shortfall : 0);
+  const shown = showAll ? [...list].sort((a, b) => a.total - b.total) : first;
+  const chosen = amount ? undefined : (list.find((pack) => pack.id === selected) ?? list[0]);
+  const payAmount = chosen ? chosen.price : typedOk ? typed : 0;
+
+  const pickWallet = (next: WalletTab) => {
+    setWallet(next);
+    setAmount("");
+    setShowAll(false);
+    setSelected(preselectedId(next === "call" ? data.callPacks : data.packs, next === startWallet ? shortfall : 0));
+  };
 
   useEffect(() => {
     if (chosen) onChoice?.({ pack: chosen, method });
   }, [chosen, method, onChoice]);
 
   const pay = useCallback(async () => {
-    if (!chosen || busy) return;
+    if ((!chosen && !typedOk) || busy) return;
     setBusy(true);
     setError("");
     const back = returnTo || `${window.location.pathname}${window.location.search}`;
+    const what = chosen ? { packId: chosen.id } : { wallet, amountInr: typed };
     const res = await api<{ paymentId: string; checkoutPath: string }>("/api/payments/recharge", {
       method: "POST",
-      body: JSON.stringify({ packId: chosen.id, method, returnTo: back, idempotencyKey: idempotencyKey(chosen.id) }),
+      body: JSON.stringify({ ...what, method, returnTo: back, idempotencyKey: idempotencyKey(chosen ? chosen.id : `${wallet}-${typed}`) }),
     });
     if (!res.ok) {
       setBusy(false);
       return setError(res.status === 409 ? t("recharge.unavailable") : friendlyError(res.error) || t("recharge.error"));
     }
     window.location.assign(res.data.checkoutPath);
-  }, [chosen, busy, method, returnTo, t]);
+  }, [chosen, typedOk, typed, wallet, busy, method, returnTo, t]);
 
   return (
     <div className="tkp" data-tk="credit-packs">
+      <div role="tablist" aria-label={t("recharge.walletTabs")} className="tkp-wallets">
+        {(["call", "ad"] as const).map((kind) => (
+          <button key={kind} type="button" role="tab" aria-selected={wallet === kind} className="tkp-wallet" data-tk={`wallet-tab-${kind}`} onClick={() => pickWallet(kind)}>
+            <strong>{t(kind === "call" ? "recharge.tab.call" : "recharge.tab.ad")}</strong>
+            <span>{t(kind === "call" ? "recharge.tab.callUse" : "recharge.tab.adUse")}</span>
+          </button>
+        ))}
+      </div>
+      {list.length === 0 ? <p className="tkp-note" data-tk="packs-none">{t("recharge.noPacksTypeAmount")}</p> : null}
       <div role="radiogroup" aria-label={t("recharge.packs")} className="tkr-packs tkp-packs">
         {shown.map((pack) => {
           // Only while posting costs credits: with free posting there is no "enough for" to say (the h9-1 pack test keeps this line away then).
-          const parts = data.prices && data.prices.paidPostingOn ? enoughParts(enoughFor(pack.total, data.prices), data.prices) : [];
+          const parts = wallet === "ad" && data.prices && data.prices.paidPostingOn ? enoughParts(enoughFor(pack.total, data.prices), data.prices) : [];
           const badge = pack.id === popular ? "popular" : pack.id === best ? "best" : null;
           return (
-            <button key={pack.id} type="button" role="radio" aria-checked={pack.id === chosen?.id} className="tkr-pack is-rich" data-tk="recharge-pack" onClick={() => setSelected(pack.id)}>
+            <button key={pack.id} type="button" role="radio" aria-checked={pack.id === chosen?.id} className="tkr-pack is-rich" data-tk="recharge-pack" onClick={() => { setAmount(""); setSelected(pack.id); }}>
               {badge ? <span className={`tkr-badge is-${badge}`}>{t(badge === "popular" ? "recharge.badge.popular" : "recharge.badge.best")}</span> : null}
               <span className="tkp-pay tkp-rs" data-tk="pack-rupees">{rupees(pack.price)}</span>
               <span className="tkp-get" data-tk="pack-get">
@@ -113,7 +158,32 @@ export function CreditPacks({ data, shortfall = 0, returnTo, onChoice }: { data:
           );
         })}
       </div>
-      {data.packs.length > first.length ? (
+      {data.custom ? (
+        <div className="tkp-custom" data-tk="custom-amount">
+          <label htmlFor={`tkp-amount-${wallet}`}>{t("recharge.custom.label")}</label>
+          <div className="tkp-custom-row">
+            <span aria-hidden="true">Rs</span>
+            <input
+              id={`tkp-amount-${wallet}`}
+              inputMode="numeric"
+              pattern="[0-9]*"
+              placeholder={minimum.toLocaleString("en-IN")}
+              value={amount}
+              onChange={(event) => setAmount(event.target.value.replace(/[^0-9]/g, "").slice(0, 9))}
+            />
+          </div>
+          <p className="tkp-note" aria-live="polite">
+            {!amount
+              ? t("recharge.custom.hint", { min: minimum.toLocaleString("en-IN"), max: data.custom.maxPerPurchase.toLocaleString("en-IN") })
+              : typed < minimum
+                ? t("recharge.custom.tooSmall", { min: minimum.toLocaleString("en-IN") })
+                : typed > data.custom.maxPerPurchase
+                  ? t("recharge.custom.tooBig", { max: data.custom.maxPerPurchase.toLocaleString("en-IN") })
+                  : t("recharge.custom.get", { count: typedCredits.toLocaleString("en-IN") })}
+          </p>
+        </div>
+      ) : null}
+      {list.length > first.length ? (
         <button type="button" className="tkr-link tkp-more" data-tk="see-all-packs" aria-expanded={showAll} onClick={() => setShowAll(!showAll)}>
           {showAll ? t("recharge.fewer") : t("recharge.seeAll")}
         </button>
@@ -138,10 +208,10 @@ export function CreditPacks({ data, shortfall = 0, returnTo, onChoice }: { data:
       </div>
       {!data.available ? <p className="tkr-error" role="alert">{t("recharge.unavailable")}</p> : null}
       {error && data.available ? <p className="tkr-error" role="alert">{error}</p> : null}
-      <button type="button" className="tkr-pay" data-tk="recharge-pay" disabled={!chosen || busy || !data.available} onClick={pay}>
-        {busy ? t("recharge.starting") : t("recharge.pay", { amount: Math.round(chosen?.price ?? 0).toLocaleString("en-IN") })}
+      <button type="button" className="tkr-pay" data-tk="recharge-pay" disabled={(!chosen && !typedOk) || busy || !data.available} onClick={pay}>
+        {busy ? t("recharge.starting") : t("recharge.pay", { amount: Math.round(payAmount).toLocaleString("en-IN") })}
       </button>
-      <p className="tkp-note" data-tk="packs-purpose">{t("recharge.purpose")}</p>
+      <p className="tkp-note" data-tk="packs-purpose">{t(wallet === "call" ? "recharge.purpose.call" : "recharge.purpose.ad")}</p>
       {data.testPayments ? <p className="tkp-note" data-tk="packs-test">{t("recharge.testNote")}</p> : null}
     </div>
   );
@@ -154,7 +224,7 @@ export function CreditPacksPanel({ returnTo, withPrices = false }: { returnTo?: 
   if (signedIn === null) return <p className="tkp-note" role="status">{t("recharge.loading")}</p>;
   if (!signedIn) return <p className="tkp-note">{t("recharge.login")} <Link className="tkr-link" href="/u/login/">{t("recharge.loginLink")}</Link></p>;
   if (!data) return <p className="tkp-note" role="status">{error || t("recharge.loading")}</p>;
-  if (data.packs.length === 0) return <p className="tkp-note">{t("recharge.empty")}</p>;
+  if (data.packs.length === 0 && data.callPacks.length === 0) return <p className="tkp-note">{t("recharge.empty")}</p>;
   if (withPrices && data.prices) {
     return (
       <div className="tkc-wrap">

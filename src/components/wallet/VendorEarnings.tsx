@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { api, friendlyError } from "@/lib/ui/api";
+import { CREDITS_CHANGED_EVENT } from "@/components/account/AccountContext";
 import { KycForm, KycSummary, type MaskedKyc } from "@/components/wallet/KycForm";
 import { date, dateTime, inr, STATUS_LABEL, statusTone } from "@/components/wallet/format";
 
@@ -151,6 +152,9 @@ export function VendorEarnings({ onSignedOut }: { onSignedOut: () => void }) {
         <Stat label="Pending payout" value={`${summary.pendingCoins} credits`} />
         <Stat label="Paid out" value={`${summary.paidCoins} credits`} />
       </section>
+      <section style={CARD} aria-label="Move earnings to ad credits">
+        <MoveToAdCredits available={summary.availableCoins} onDone={() => void load()} />
+      </section>
       <section style={CARD} aria-label="Payout details">
         <h2 style={H2}>Payout details</h2>
         {summary.kyc ? (
@@ -169,6 +173,57 @@ export function VendorEarnings({ onSignedOut }: { onSignedOut: () => void }) {
         <WithdrawalHistory rows={rows} />
         {rows.length > 0 ? <p className="t-small" style={{ color: "var(--muted)", margin: 0 }}>Last requested {date(rows[0].requestedAt)}</p> : null}
       </section>
+    </div>
+  );
+}
+
+/** H18.8: a vendor can use what they earned from calls to pay for posting, TOP or Super Top. At least 100 at a time. */
+const MOVE_MIN = 100;
+
+function MoveToAdCredits({ available, onDone }: { available: number; onDone: () => void }) {
+  const [amount, setAmount] = useState(String(Math.max(MOVE_MIN, Math.min(available, MOVE_MIN))));
+  const [busy, setBusy] = useState(false);
+  const [message, setMessage] = useState("");
+  const value = Number(amount);
+  const ok = Number.isInteger(value) && value >= MOVE_MIN && value <= available;
+  async function move() {
+    if (!ok || busy) return;
+    setBusy(true);
+    setMessage("");
+    const res = await api<{ moved: number; adCredits: number }>("/api/payments/move-earnings", {
+      method: "POST",
+      body: JSON.stringify({ amount: value, idempotencyKey: `move-${Date.now()}-${Math.random().toString(36).slice(2, 10)}` }),
+    });
+    setBusy(false);
+    if (!res.ok) return setMessage(friendlyError(res.error));
+    setMessage(`Moved ${res.data.moved} credits. You now have ${res.data.adCredits} ad credits.`);
+    window.dispatchEvent(new Event(CREDITS_CHANGED_EVENT));
+    onDone();
+  }
+  return (
+    <div style={{ display: "grid", gap: 8 }}>
+      <h2 style={H2}>Use earnings for ads</h2>
+      <p className="t-small" style={{ margin: 0, color: "var(--muted)" }}>
+        Move earned credits into ad credits to pay for posting, TOP or Super Top. At least {MOVE_MIN} at a time. This cannot be undone.
+      </p>
+      {available < MOVE_MIN ? (
+        <p className="t-small" style={{ margin: 0 }}>You need at least {MOVE_MIN} earned credits to move them.</p>
+      ) : (
+        <div style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center" }}>
+          <label htmlFor="move-amount" className="t-small" style={{ fontWeight: 700 }}>Credits to move</label>
+          <input
+            id="move-amount"
+            inputMode="numeric"
+            value={amount}
+            onChange={(event) => setAmount(event.target.value.replace(/[^0-9]/g, "").slice(0, 9))}
+            style={{ minHeight: 44, minWidth: 0, flex: "1 1 120px", fontSize: 16, padding: "0 12px", borderRadius: 12, border: "2px solid #ead8f0" }}
+          />
+          <button type="button" className="tk-btn tk-btn-cta" disabled={!ok || busy} onClick={() => void move()} style={{ minHeight: 44, flex: "1 1 160px" }}>
+            {busy ? "Moving" : "Move to ad credits"}
+          </button>
+        </div>
+      )}
+      {message ? <p className="t-small" role="status" style={{ margin: 0 }}>{message}</p> : null}
     </div>
   );
 }

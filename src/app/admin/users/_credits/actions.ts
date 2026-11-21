@@ -9,7 +9,7 @@ import { HttpError } from "@/server/http";
 
 export type AdjustActionResult = { ok: true; eventId: string; undoUntil: string | null; summary: string; balance: number } | { ok: false; message: string };
 
-export async function adjustCreditsAction(input: { userId: string; amount: number; reason: string; requestKey: string }): Promise<AdjustActionResult> {
+export async function adjustCreditsAction(input: { userId: string; amount: number; reason: string; requestKey: string; wallet?: "ad" | "call" }): Promise<AdjustActionResult> {
   try {
     const ctx = await adminContext();
     const done = await adjustCredits(ctx, {
@@ -17,6 +17,7 @@ export async function adjustCreditsAction(input: { userId: string; amount: numbe
       amount: Number(input.amount),
       reason: String(input.reason ?? ""),
       requestKey: String(input.requestKey ?? ""),
+      wallet: input.wallet === "call" ? "call" : "ad",
     });
     revalidatePath("/admin/users/");
     return { ok: true, ...done };

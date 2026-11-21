@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import { useAccount } from "@/components/account/AccountContext";
 import Link from "next/link";
 import { api, friendlyError, hasSessionHint } from "@/lib/ui/api";
 import { CreditPacksPanel } from "@/components/recharge/CreditPacks";
@@ -42,21 +43,28 @@ const TABS: { key: Tab; label: string }[] = [
 /** The Earnings tab shows only for an account that has earnings (H9.1). */
 export const tabsFor = (hasEarnings: boolean) => TABS.filter((item) => item.key !== "earnings" || hasEarnings);
 
+/** H18.8: three balances, kept apart: call credits (video calls), ad credits (posting, TOP, Super Top) and earnings. */
 function Balance({ balance, coinValueInr }: { balance: number; coinValueInr: number }) {
+  const { callBalance, earnings } = useAccount();
+  const tiles = [
+    { key: "call", label: "Call credits", value: callBalance ?? 0, note: "For video calls only" },
+    { key: "ad", label: "Ad credits", value: balance, note: "For posting, TOP and Super Top" },
+    { key: "earned", label: "Earnings", value: earnings ?? 0, note: "From your video calls. Withdraw or move to ad credits" },
+  ];
   return (
-    <section
-      aria-label="Credit balance"
-      style={{
-        borderRadius: 16,
-        padding: "20px 18px",
-        color: "#2b2110",
-        background: "linear-gradient(135deg, #fdf0f7 0%, #f5b5d6 45%, #e91e8c 100%)",
-        boxShadow: "0 8px 24px rgba(138, 100, 22, 0.18)",
-      }}
-    >
-      <p className="t-small" style={{ margin: 0, opacity: 0.8 }}>Credit balance</p>
-      <p style={{ margin: "4px 0 0", fontSize: 36, fontWeight: 800, lineHeight: 1.1 }}>{balance} credits</p>
-      <p className="t-small" style={{ margin: "6px 0 0" }}>About {rupees(balance * coinValueInr)} in value</p>
+    <section aria-label="Your balances" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))", gap: 10 }}>
+      {tiles.map((tile) => (
+        <div
+          key={tile.key}
+          data-tk={`balance-${tile.key}`}
+          style={{ borderRadius: 16, padding: "16px 16px", color: "#2b2110", background: tile.key === "ad" ? "linear-gradient(135deg, #fdf0f7 0%, #f5b5d6 100%)" : "#fdf0f7", border: "1px solid #ead8f0" }}
+        >
+          <p className="t-small" style={{ margin: 0, opacity: 0.85, fontWeight: 700 }}>{tile.label}</p>
+          <p style={{ margin: "4px 0 0", fontSize: 30, fontWeight: 800, lineHeight: 1.1 }}>{tile.value.toLocaleString("en-IN")}</p>
+          <p className="t-small" style={{ margin: "6px 0 0" }}>{tile.note}</p>
+          {tile.key !== "call" ? <p className="t-small" style={{ margin: "2px 0 0", opacity: 0.8 }}>About {rupees(tile.value * coinValueInr)}</p> : null}
+        </div>
+      ))}
     </section>
   );
 }

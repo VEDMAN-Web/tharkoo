@@ -22,13 +22,15 @@ export function CreditsDialog({ userId, name, balance, start, onClose }: { userI
   const id = useId();
   const [requestKey] = useState(() => newRequestKey("c"));
   const [mode, setMode] = useState<"add" | "remove">(start.mode);
+  // H18.8: staff choose which balance. Call credits have no undo: make the opposite change instead.
+  const [wallet, setWallet] = useState<"ad" | "call">("ad");
   const [text, setText] = useState(start.amount);
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
 
-  const parsed = amountProblem(text, mode, balance);
+  const parsed = amountProblem(text, mode, wallet === "ad" ? balance : Number.MAX_SAFE_INTEGER);
   const shown = text !== "" && "error" in parsed ? parsed.error : error;
-  const preview = "amount" in parsed ? balance + (mode === "add" ? parsed.amount : -parsed.amount) : null;
+  const preview = wallet === "call" ? null : "amount" in parsed ? balance + (mode === "add" ? parsed.amount : -parsed.amount) : null;
 
   async function undo(eventId: string) {
     const outcome = await undoAction(eventId);
@@ -45,14 +47,14 @@ export function CreditsDialog({ userId, name, balance, start, onClose }: { userI
     setBusy(true);
     const signed = mode === "add" ? parsed.amount : -parsed.amount;
     const reason = result.text ? `${result.reason}: ${result.text}` : result.reason;
-    const done = await adjustCreditsAction({ userId, amount: signed, reason, requestKey });
+    const done = await adjustCreditsAction({ userId, amount: signed, reason, requestKey, wallet });
     setBusy(false);
     onClose();
     if (!done.ok) {
       toast.show({ kind: "error", message: done.message });
       return;
     }
-    const message = `${mode === "add" ? "Added" : "Removed"} ${creditWords(parsed.amount)} ${mode === "add" ? "to" : "from"} ${name}. New balance ${done.balance.toLocaleString("en-IN")}.`;
+    const message = `${mode === "add" ? "Added" : "Removed"} ${creditWords(parsed.amount)} of ${wallet === "call" ? "call" : "ad"} credits ${mode === "add" ? "to" : "from"} ${name}. New ${wallet === "call" ? "call" : "ad"} balance ${done.balance.toLocaleString("en-IN")}.`;
     if (done.eventId) toast.show({ kind: "undo", message, onUndo: () => void undo(done.eventId) });
     else toast.show({ kind: "success", message });
     router.refresh();
@@ -67,6 +69,17 @@ export function CreditsDialog({ userId, name, balance, start, onClose }: { userI
           <p>
             Current balance: <strong data-tk="credits-balance">{creditWords(balance)}</strong>. Every change needs a reason and can be undone for 7 days while the credits are unspent.
           </p>
+          <fieldset className="adm-k-opts">
+            <legend className="adm-k-label">Which credits?</legend>
+            <label className="adm-k-opt">
+              <input type="radio" name={`${id}-wallet`} checked={wallet === "ad"} onChange={() => { setWallet("ad"); setError(""); }} />
+              Ad credits (posting, TOP, Super Top)
+            </label>
+            <label className="adm-k-opt">
+              <input type="radio" name={`${id}-wallet`} checked={wallet === "call"} onChange={() => { setWallet("call"); setError(""); }} />
+              Call credits (video calls only, no undo)
+            </label>
+          </fieldset>
           <fieldset className="adm-k-opts">
             <legend className="adm-k-label">What do you want to do?</legend>
             <label className="adm-k-opt">
