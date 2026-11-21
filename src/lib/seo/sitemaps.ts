@@ -16,7 +16,39 @@ import { getIndexing, isCategoryOn, isCityOn } from "@/server/seo/indexing";
 export const SITEMAP_SHARDS = ["categories", "cities", "districts", "ads", "content"] as const;
 export type SitemapShard = (typeof SITEMAP_SHARDS)[number];
 
-const AD_SITEMAP_MAX = 50_000;
+/** H18.4: ads are listed newest first, 10,000 per file (ads.xml, ads-2.xml, ...), so any number of ads fits and each file stays quick to build. */
+export const AD_PAGE_SIZE = 10_000;
+const AD_PAGES_MAX = 500;
+
+/** "ads-2" -> 2. Only ads-2 and up; page 1 is plain "ads". */
+export function adShardPage(value: string): number | null {
+  const match = /^ads-(\d{1,3})$/.exec(value);
+  if (!match) return null;
+  const page = Number(match[1]);
+  return page >= 2 && page <= AD_PAGES_MAX ? page : null;
+}
+
+function liveAdMatch() {
+  return {
+    status: "active" as const,
+    feedHidden: { $ne: true },
+    $or: [{ expiresAt: { $exists: false } }, { expiresAt: null }, { expiresAt: { $gt: new Date() } }],
+  };
+}
+
+/** The live, real, indexable ads (what the ads files list). */
+async function indexableAdFilter() {
+  const seedOwner = await demoOwnerId();
+  const notSample = seedOwner ? [{ $nor: [{ ownerId: seedOwner, slug: { $regex: DEMO_SLUG.source } }] }] : [];
+  return { $and: [liveAdMatch(), { seoNoindex: false }, ...notSample] };
+}
+
+/** How many ads files the index lists (always at least 1). */
+export async function adSitemapPages(): Promise<number> {
+  await connectDb();
+  const count = await Listing.countDocuments(await indexableAdFilter());
+  return Math.min(AD_PAGES_MAX, Math.max(1, Math.ceil(count / AD_PAGE_SIZE)));
+}
 
 /** H17.2: lastmod is the record's real date. A page with no real date has none: it is left out, never made up. */
 export interface SitemapEntry {
@@ -57,14 +89,16 @@ export function sitemapXml(entries: SitemapEntry[]) {
   return `<?xml version="1.0" encoding="UTF-8"?><urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">${body}</urlset>`;
 }
 
-export function sitemapIndexXml(shards: SitemapShard[]) {
+export function sitemapIndexXml(shards: SitemapShard[], adPages = 1) {
+  const extra = Array.from({ length: Math.max(0, Math.min(AD_PAGES_MAX, adPages) - 1) }, (_, i) => `ads-${i + 2}`);
   const body = shards
+    .flatMap((shard) => (shard === "ads" ? [shard, ...extra] : [shard]))
     .map((shard) => `<sitemap><loc>${loc(`/sitemap/${shard}.xml`)}</loc></sitemap>`)
     .join("");
   return `<?xml version="1.0" encoding="UTF-8"?><sitemapindex xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">${body}</sitemapindex>`;
 }
 
-export async function shardEntries(shard: SitemapShard): Promise<SitemapEntry[]> {
+export async function shardEntries(shard: SitemapShard, page = 1): Promise<SitemapEntry[]> {
   await connectDb();
   const paths = await getPaths();
   if (shard === "content") {
@@ -85,11 +119,7 @@ export async function shardEntries(shard: SitemapShard): Promise<SitemapEntry[]>
       return true;
     });
   }
-  const liveMatch = {
-    status: "active" as const,
-    feedHidden: { $ne: true },
-    $or: [{ expiresAt: { $exists: false } }, { expiresAt: null }, { expiresAt: { $gt: new Date() } }],
-  };
+  const liveMatch = liveAdMatch();
   if (shard === "categories" || shard === "cities" || shard === "districts") {
     // H18.2 (21 Nov 2026): only listing pages with at least one REAL live ad are in the sitemap (sample ads do not count),
     // matching the page's own robots tag. The Indexing rules switches still leave a page out. Category pages stay listed.
@@ -157,13 +187,13 @@ export async function shardEntries(shard: SitemapShard): Promise<SitemapEntry[]>
     for (const entry of await subcategorySitemapEntries(loc)) urls.push({ loc: entry.loc, lastmod: entry.lastmod });
     return urls;
   }
-  // H17.8: the ads shard lists every live REAL ad that is set to be indexed. Sample (demo) ads are never listed; with none, the shard is empty and still valid. At most 50,000 (the sitemap limit).
-  const seedOwner = await demoOwnerId();
-  const notSample = seedOwner ? [{ $nor: [{ ownerId: seedOwner, slug: { $regex: DEMO_SLUG.source } }] }] : [];
-  const ads = await Listing.find({ $and: [liveMatch, { seoNoindex: false }, ...notSample] })
+  // H17.8: the ads shard lists every live REAL ad that is set to be indexed. Sample (demo) ads are never listed; with none, the shard is empty and still valid.
+  // H18.4: newest first, AD_PAGE_SIZE per file; page 2 is ads-2.xml and so on.
+  const ads = await Listing.find(await indexableAdFilter())
     .select("slug updatedAt publishedAt title categoryId cityId code")
-    .sort({ _id: 1 })
-    .limit(AD_SITEMAP_MAX)
+    .sort({ _id: -1 })
+    .skip((Math.max(1, page) - 1) * AD_PAGE_SIZE)
+    .limit(AD_PAGE_SIZE)
     .lean<{ _id: unknown; slug?: string; updatedAt?: Date; publishedAt?: Date; title?: string; categoryId?: Types.ObjectId; cityId?: Types.ObjectId; code?: string }[]>();
   // H16.2: each ad is listed at its own address (/<category>/<city>/<title>-<code>/); an ad that has no code yet keeps its old link, which forwards.
   const addresses = await addressesFor(ads);
