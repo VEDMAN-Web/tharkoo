@@ -2256,7 +2256,9 @@ body:has([data-tk="bottom-bar"]) .tkn-float { bottom: 104px; }
   display: flex; align-items: center; justify-content: center; gap: 10px; flex-wrap: wrap;
   padding: 10px 16px; background: #d1137a; color: #fff; font-weight: 700; font-size: 15px; text-align: center;
 }
+.tkn-call-alert-panel { max-width: 760px; margin: 12px auto; padding: 0 12px; }
 .tkn-call-alert-btn {
+  border: 0; cursor: pointer; font: inherit;
   display: inline-flex; align-items: center; min-height: 36px; padding: 0 16px; border-radius: 999px;
   background: #fff; color: #a8124f; text-decoration: none; font-weight: 800;
 }
