@@ -1,0 +1,4 @@
+{
+  "branchPrefix": "haiku/h18.16",
+  "globs": ["docs/ownership/H18.16.json", "progress/H18.16.md", "src/components/chat/ChatThread.tsx", "tests/e2e/e1-b-chat.e2e.ts", "tests/e2e/fix8-chat-contrast.e2e.ts"]
+}
