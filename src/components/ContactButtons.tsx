@@ -160,6 +160,11 @@ export function ContactProvider({
     }
     // H7.4: no coin provider is live yet, so a visitor without coins is told purchases are coming, never shown a fake success.
     if (res.status === 402) return "coins";
+    // H18.17: a request for this ad is already waiting for the vendor: show it as sent, not as an error.
+    if (res.status === 409 && /open tour request/i.test(res.error?.message ?? "")) {
+      setTourRequested(true);
+      return "ok";
+    }
     setNotice({ text: friendlyError(res.error) });
     return "error";
   }

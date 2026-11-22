@@ -45,7 +45,8 @@ export function friendlyError(error: ApiError) {
     case "UNAUTHORIZED":
       return "Email or password is incorrect.";
     case "CONFLICT":
-      return "That email is already registered.";
+      // H18.17: every conflict used to read "That email is already registered", even on a video call. Show the real reason.
+      return error.message && error.message !== "Conflict" ? error.message : "That is already taken.";
     case "RATE_LIMITED":
       return "Too many requests, try again later";
     case "VERIFICATION_REQUIRED":
