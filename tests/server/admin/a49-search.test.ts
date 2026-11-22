@@ -80,7 +80,7 @@ describe("the rows (A49)", () => {
     const groups = await searchAdmin(["admin"], "maths");
     const by = Object.fromEntries(groups.map((group) => [group.key, group.items[0]]));
     expect(by.ads.href).toMatch(/^\/admin\/ads\/[a-f0-9]{24}\/$/);
-    expect(by.users).toMatchObject({ title: "Maths Fan", sub: "maths.fan@example.test" });
+    expect(by.users).toMatchObject({ title: "Maths Fan", sub: "maths.f@\u2026" });
     expect(by.users.href).toMatch(/^\/admin\/users\/\?open=[a-f0-9]{24}$/);
     expect(by.tickets).toMatchObject({ sub: "#4821 · open" });
     expect(by.tickets.href).toMatch(/^\/admin\/support\/[a-f0-9]{24}\/$/);

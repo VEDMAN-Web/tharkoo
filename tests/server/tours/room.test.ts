@@ -67,7 +67,7 @@ describe("creating a Daily room", () => {
     expect(calls[0].body).toEqual({
       name: "tour-t1",
       privacy: "private",
-      properties: { exp: Math.floor(expiresAt.getTime() / 1000), max_participants: 2, enable_chat: false, eject_at_room_exp: true },
+      properties: { exp: Math.floor(expiresAt.getTime() / 1000), max_participants: 2, sfu_switchover: 0.5, enable_chat: false, eject_at_room_exp: true },
     });
   });
 

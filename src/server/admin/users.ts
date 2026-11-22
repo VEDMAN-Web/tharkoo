@@ -184,7 +184,8 @@ export async function listUsers(query: UserQuery, roles: readonly string[]): Pro
   const rows: UserRow[] = docs.map((doc) => ({
     id: String(doc._id),
     name: shownName(doc),
-    email: doc.email,
+    // H18.10 (security review A2): the list only ever ships the masked address. The full one loads with one user's details.
+    email: listEmail(doc.email),
     status: doc.status,
     roles: doc.roles ?? [],
     verification: doc.verificationStatus,
@@ -285,4 +286,11 @@ async function vendorView(profile: NonNullable<UserDoc["sellerProfile"]>, userId
     photo: media && profile.photoMediaId ? { id: String(profile.photoMediaId), src: media.url, alt: media.alt } : null,
     earnings,
   };
+}
+
+/** "greenhornet4971@gmail.com" -> "greenho@…". Same shape the list shows on screen. */
+export function listEmail(email: string): string {
+  const [name, domain] = email.split("@");
+  if (!domain) return email;
+  return `${name.length > 7 ? name.slice(0, 7) : name}@\u2026`;
 }

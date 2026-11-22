@@ -88,6 +88,9 @@ const dailyRooms: VideoRoomProvider = {
       properties: {
         exp: Math.floor(expiresAt.getTime() / 1000),
         max_participants: 2,
+        // H18.10 (security review F4): media always goes through Daily's servers, never straight between the two
+        // people, so neither side can see the other's IP address. Daily runs 1-to-1 calls peer-to-peer unless told not to.
+        sfu_switchover: 0.5,
         enable_chat: false,
         eject_at_room_exp: true,
       },
