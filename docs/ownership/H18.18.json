@@ -1,0 +1,4 @@
+{
+  "branchPrefix": "haiku/h18.18",
+  "globs": ["docs/ownership/H18.18.json", "progress/H18.18.md", "src/components/vendor/IncomingCallAlert.tsx", "src/app/globals.css"]
+}
