@@ -18,7 +18,7 @@ import { AuditEvent, Category, Listing, ListingVersion, Location, MediaAsset, Pr
 import { listingAddressPath } from "@/server/models/listing";
 import { Subcategory } from "@/server/models/subcategory";
 import { withPickLimits } from "@/server/fields/service";
-import { parseListingAttributes } from "@/server/shared/fields";
+import { parseSavedAttributes } from "@/server/shared/fields";
 
 export const TITLE_MAX = 70;
 export const DESCRIPTION_MAX = 4000;
@@ -254,7 +254,7 @@ async function applyEdit(ctx: AdminCtx, id: string, next: EditInput, label: stri
   const price = parsePrice(next.price === "" ? null : next.price);
   let attributes: Record<string, unknown>;
   try {
-    attributes = parseListingAttributes(await withPickLimits(category.slug, fieldDefs(category)), next.attributes ?? {});
+    attributes = parseSavedAttributes(await withPickLimits(category.slug, fieldDefs(category)), next.attributes ?? {});
   } catch (error) {
     if (!(error instanceof ZodError)) throw error;
     const fields: Record<string, string[]> = {};

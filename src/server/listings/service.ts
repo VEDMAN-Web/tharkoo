@@ -35,7 +35,7 @@ import { adVideoCount } from "@/server/media/limit";
 import { PEOPLE_NO_VIDEO } from "@/server/media/people-video";
 import { assertVerified } from "@/server/verification/service";
 import { hashIp } from "@/server/shared/crypto";
-import { choiceProblems, parseListingAttributes, type FieldDefinition } from "@/server/shared/fields";
+import { choiceProblems, parseSavedAttributes, type FieldDefinition } from "@/server/shared/fields";
 import { withPickLimits } from "@/server/fields/service";
 import { revalidateListingPages, revalidateListingsById } from "@/server/listings/revalidate";
 import { publicPathsOf } from "@/server/listings/ad-code";
@@ -558,7 +558,7 @@ async function assertLiveEdit(listing: ListingRow) {
   assertContentPresent(listing);
   const contact = listing.contact ?? {};
   const category = await requireCategory(listing.categoryId.toString());
-  const attributes = parseListingAttributes(await withPickLimits(category.slug, fieldDefs(category)), listing.attributes ?? {});
+  const attributes = parseSavedAttributes(await withPickLimits(category.slug, fieldDefs(category)), listing.attributes ?? {});
   await assertCleanText([
     listing.title,
     listing.description,
@@ -595,11 +595,7 @@ export async function submitListing(
   const category = await requireCategory(listing.categoryId.toString());
   // H18.11: the age box is asked on every people ad even when the category has no age field, and a category switch can
   // leave old answers behind. Check only this category's fields, keep the age for the 18+ gate, drop the rest.
-  const defs = await withPickLimits(category.slug, fieldDefs(category));
-  const known = new Set(defs.filter((field) => field.enabled).map((field) => field.key));
-  const saved = { ...((listing.attributes ?? {}) as Record<string, unknown>) };
-  const attributes = parseListingAttributes(defs, Object.fromEntries(Object.entries(saved).filter(([key]) => known.has(key))));
-  if (!known.has("age") && saved.age !== undefined && saved.age !== null && saved.age !== "") attributes.age = saved.age;
+  const attributes = parseSavedAttributes(await withPickLimits(category.slug, fieldDefs(category)), listing.attributes ?? {});
   listing.attributes = attributes;
   listing.markModified("attributes");
   const mediaIds = listing.mediaIds ?? [];
