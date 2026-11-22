@@ -1,0 +1,4 @@
+{
+  "branchPrefix": "haiku/h18.13",
+  "globs": ["docs/ownership/H18.13.json", "progress/H18.13.md", "src/app/admin/settings/_view/SettingsView.tsx"]
+}

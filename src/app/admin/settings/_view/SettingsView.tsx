@@ -59,6 +59,8 @@ export function SettingsView({
                 {section.label}
               </a>
             ))}
+            {/* H18.13: the per-category video call switch lives on its own page; this is the way in. */}
+            <a href="/admin/settings/video-tours/" data-tk="settings-video-link">Video calls per category</a>
           </nav>
           <div className="adm-s-main">
             <EmergencyCard state={data.emergency} canEdit={canEmergency} />
