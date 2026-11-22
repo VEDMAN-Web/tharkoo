@@ -3,9 +3,14 @@ import type { NextConfig } from "next";
 const securityHeaders = [
   { key: "X-Content-Type-Options", value: "nosniff" },
   { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
-  { key: "Permissions-Policy", value: "camera=(), microphone=(), geolocation=()" },
+  // H18.10: the live video call runs inside a Daily frame, so only that frame may ask for camera and microphone.
+  { key: "Permissions-Policy", value: 'camera=(self "https://*.daily.co"), microphone=(self "https://*.daily.co"), geolocation=(), display-capture=(self "https://*.daily.co")' },
+  // H18.10 (security review F2, F3): always HTTPS; never shown inside another site's frame.
+  { key: "Strict-Transport-Security", value: "max-age=63072000" },
+  { key: "X-Frame-Options", value: "SAMEORIGIN" },
   {
-    key: "Content-Security-Policy-Report-Only",
+    // H18.10 (security review F1): enforced now, and no 'unsafe-eval'.
+    key: "Content-Security-Policy",
     value: [
       "default-src 'self'",
       "base-uri 'self'",
@@ -15,8 +20,12 @@ const securityHeaders = [
       "font-src 'self' data:",
       "style-src 'self' 'unsafe-inline'",
       // H17.11: Google Analytics (loaded only after a visitor chooses Accept).
-      "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://www.googletagmanager.com",
-      "connect-src 'self' https://www.google-analytics.com https://*.google-analytics.com https://*.analytics.google.com https://www.googletagmanager.com",
+      "script-src 'self' 'unsafe-inline' https://www.googletagmanager.com",
+      "connect-src 'self' https://api.cloudinary.com https://res.cloudinary.com https://www.google-analytics.com https://*.google-analytics.com https://*.analytics.google.com https://www.googletagmanager.com",
+      "media-src 'self' blob: https:",
+      "frame-src 'self' https://*.daily.co",
+      "worker-src 'self' blob:",
+      "object-src 'none'",
     ].join("; "),
   },
 ];
