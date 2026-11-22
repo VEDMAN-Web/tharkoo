@@ -88,6 +88,15 @@ describe("H10.1 people protection", () => {
     await expect(submitListing(String(fine._id), String(user._id), attest, "r3")).resolves.toBeTruthy();
   });
 
+  it("H18.11: an ad publishes even when its saved answers hold an age or an old field its category does not ask for", async () => {
+    const category = await Category.create({ slug: "pride-circle", name: "Pride circle", enabled: true, kind: "community", fields: [{ key: "interest", label: "Interest", type: "text", required: true, order: 0, enabled: true }] });
+    const user = await User.create({ email: "ravi@example.com", displayName: "Ravi", passwordHash: "x", status: "active", roles: ["user"], dateOfBirth: new Date("1990-01-01"), attestedAdultAt: new Date(), verificationStatus: "approved" });
+    const ad = await Listing.create({ ownerId: user._id, categoryId: category._id, title: "Book club on Sundays", description: "Join us for books and tea every Sunday.", status: "draft", cityId: new mongoose.Types.ObjectId(), contact: { phone: "9876543210" }, attributes: { interest: "Likes, 1", age: 26, oldField: "left over" } });
+    await expect(submitListing(String(ad._id), String(user._id), { adult: true, accurate: true, rights: true }, "r9")).resolves.toBeTruthy();
+    const saved = await Listing.findById(ad._id).lean<{ attributes: Record<string, unknown> }>();
+    expect(saved?.attributes).toEqual({ interest: "Likes, 1", age: 26 });
+  });
+
   it("changing the Kind away from People needs a yes first, is audited and can be undone", async () => {
     const category = await renamedPeople();
     const id = String(category._id);
