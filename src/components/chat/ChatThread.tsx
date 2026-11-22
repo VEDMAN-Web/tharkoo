@@ -33,6 +33,8 @@ export function ChatThread({
   const [messages, setMessages] = useState<Message[]>([]);
   const [text, setText] = useState("");
   const [note, setNote] = useState("");
+  // H18.16 (Vedant): a picked photo waits here for a look and a Send, it is never sent the moment it is picked.
+  const [pending, setPending] = useState<{ file: File; url: string } | null>(null);
   const [busy, setBusy] = useState(false);
   const last = useRef("");
   const endRef = useRef<HTMLDivElement>(null);
@@ -103,13 +105,32 @@ export function ChatThread({
   function pick(file: File | undefined) {
     if (!file) return;
     if (!IMAGE_TYPES.includes(file.type) || file.size > MAX_IMAGE_BYTES) return setNote("Use a JPG, PNG or WebP photo up to 5 MB.");
-    void send(file);
+    setNote("");
+    setPending((old) => {
+      if (old) URL.revokeObjectURL(old.url);
+      return { file, url: URL.createObjectURL(file) };
+    });
+  }
+
+  function dropPending() {
+    setPending((old) => {
+      if (old) URL.revokeObjectURL(old.url);
+      return null;
+    });
+  }
+
+  async function sendPending() {
+    if (!pending) return;
+    const file = pending.file;
+    dropPending();
+    await send(file);
   }
 
   async function block() {
-    if (!window.confirm("Block this person? Neither of you will be able to send messages here.")) return;
+    // H18.16 (Vedant): either side can end a chat. It closes the conversation for both; Report stays for rule breaking.
+    if (!window.confirm("End this chat? Neither of you will be able to send more messages here.")) return;
     const res = await api(`/api/chat/conversations/${conversationId}/block`, { method: "POST", body: "{}" });
-    setNote(res.ok ? "Blocked. No more messages can be sent." : friendlyError(res.error));
+    setNote(res.ok ? "Chat ended. No more messages can be sent." : friendlyError(res.error));
     if (res.ok) await load();
   }
 
@@ -149,7 +170,7 @@ export function ChatThread({
             {info?.reported ? "Reported" : "Report"}
           </button>
           <button type="button" className="tk-btn tk-btn-outline-primary" style={buttonStyle} onClick={() => void block()} disabled={blocked}>
-            {blocked ? "Blocked" : "Block"}
+            {blocked ? "Chat ended" : "End chat"}
           </button>
         </div>
       )}
@@ -179,6 +200,15 @@ export function ChatThread({
       >
         {note ? <p role="status" className="t-small" data-tk="chat-note">{note}</p> : null}
         {adGone && !blocked ? <p role="status" className="t-small" data-tk="chat-readonly">{CHAT_AD_NOT_LIVE}</p> : null}
+        {pending ? (
+          <div data-tk="chat-photo-preview" style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap", padding: "8px 0" }}>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src={pending.url} alt="Photo ready to send" style={{ width: 72, height: 72, objectFit: "cover", borderRadius: 10 }} />
+            <span className="t-small" style={{ flex: "1 1 120px" }}>Only sent when you press Send photo.</span>
+            <button type="button" className={panel ? "tkn-btn tkn-btn-ghost" : "tk-btn tk-btn-outline-primary"} style={panel ? undefined : buttonStyle} onClick={dropPending}>Remove</button>
+            <button type="button" className={panel ? "tkn-btn tkn-btn-primary" : "tk-btn tk-btn-cta"} style={panel ? undefined : buttonStyle} disabled={closed || busy} onClick={() => void sendPending()} data-tk="chat-photo-send">Send photo</button>
+          </div>
+        ) : null}
         <textarea
           className={panel ? "tkn-thread-input" : "tk-input"}
           rows={2}
@@ -186,7 +216,7 @@ export function ChatThread({
           value={text}
           disabled={closed}
           aria-label="Your message"
-          placeholder={blocked ? "This conversation is blocked" : adGone ? "This ad is no longer live" : "Write a message"}
+          placeholder={blocked ? "This chat has ended" : adGone ? "This ad is no longer live" : "Write a message"}
           onChange={(event) => setText(event.target.value)}
           style={panel ? undefined : { fontSize: 16 }}
         />
@@ -201,7 +231,7 @@ export function ChatThread({
                 {info?.reported ? "Reported" : "Report"}
               </button>
               <button type="button" className="tkn-thread-link" onClick={() => void block()} disabled={blocked}>
-                {blocked ? "Blocked" : "Block"}
+                {blocked ? "Chat ended" : "End chat"}
               </button>
             </>
           ) : null}

@@ -43,7 +43,7 @@ test("the chat thread has no serious colour-contrast problem after a reply and a
   };
   expect(await contrast(), "after a reply").toEqual([]);
   page.once("dialog", (dialog) => void dialog.accept());
-  await page.getByRole("button", { name: "Block", exact: true }).first().click();
+  await page.getByRole("button", { name: "End chat", exact: true }).first().click();
   await expect(thread.locator("textarea")).toBeDisabled();
   expect(await contrast(), "after a block").toEqual([]);
   await side.context.close();

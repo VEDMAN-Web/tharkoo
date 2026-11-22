@@ -64,7 +64,7 @@ test.describe("E1-B two accounts and the dashboard", () => {
     await seller.goto("/u/account/messages/");
     await seller.locator("[data-tk=chat-row]").first().click();
     seller.once("dialog", (dialog) => void dialog.accept());
-    await seller.getByRole("button", { name: "Block", exact: true }).first().click();
+    await seller.getByRole("button", { name: "End chat", exact: true }).first().click();
     await expect(seller.locator("[data-tk=chat-thread] textarea")).toBeDisabled();
     await expect(seller.locator("[data-tk=chat-thread] textarea")).toHaveAttribute("placeholder", "This conversation is blocked");
     await buyer.goto("/u/account/messages/");
