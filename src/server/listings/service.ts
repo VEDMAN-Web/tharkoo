@@ -593,7 +593,13 @@ export async function submitListing(
   const user = await User.findById(userId);
   if (!user || user.status !== "active") throw new UnauthorizedError("Sign in required");
   const category = await requireCategory(listing.categoryId.toString());
-  const attributes = parseListingAttributes(await withPickLimits(category.slug, fieldDefs(category)), listing.attributes ?? {});
+  // H18.11: the age box is asked on every people ad even when the category has no age field, and a category switch can
+  // leave old answers behind. Check only this category's fields, keep the age for the 18+ gate, drop the rest.
+  const defs = await withPickLimits(category.slug, fieldDefs(category));
+  const known = new Set(defs.filter((field) => field.enabled).map((field) => field.key));
+  const saved = { ...((listing.attributes ?? {}) as Record<string, unknown>) };
+  const attributes = parseListingAttributes(defs, Object.fromEntries(Object.entries(saved).filter(([key]) => known.has(key))));
+  if (!known.has("age") && saved.age !== undefined && saved.age !== null && saved.age !== "") attributes.age = saved.age;
   listing.attributes = attributes;
   listing.markModified("attributes");
   const mediaIds = listing.mediaIds ?? [];

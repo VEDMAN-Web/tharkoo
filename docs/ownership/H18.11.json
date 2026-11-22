@@ -1,0 +1,4 @@
+{
+  "branchPrefix": "haiku/h18.11",
+  "globs": ["docs/ownership/H18.11.json", "progress/H18.11.md", "src/server/listings/service.ts", "tests/server/categories/h10-1-people-protection.test.ts"]
+}
