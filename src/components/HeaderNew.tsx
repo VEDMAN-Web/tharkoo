@@ -10,6 +10,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { HeaderCountry } from "./HeaderCountry";
 import type { CountryOption } from "@/server/locations/country-scope";
 import { HeaderDrawer } from "./HeaderDrawer";
+import { IncomingCallAlert } from "./vendor/IncomingCallAlert";
 import { isProbablySignedIn, openSignInFromLink } from "./auth/SignInSheet";
 import { useUrlPaths } from "./UrlPaths";
 import { safeHref } from "@/lib/sanitize";
@@ -190,6 +191,7 @@ export function HeaderNew({
           </button>
         </div>
       </div>
+      <IncomingCallAlert />
     </header>
     {menuOpen ? (
       <HeaderDrawer

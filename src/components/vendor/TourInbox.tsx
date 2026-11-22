@@ -34,11 +34,16 @@ export function TourInbox() {
   useEffect(() => {
     if (!hasSessionHint()) return;
     let live = true;
-    api<TourRow[]>("/api/tours").then((res) => {
-      if (live) setRows(res.ok ? res.data : []);
-    });
+    // H18.14: new requests show up without a reload.
+    const load = () =>
+      api<TourRow[]>("/api/tours").then((res) => {
+        if (live) setRows(res.ok ? res.data : []);
+      });
+    void load();
+    const timer = window.setInterval(() => void load(), 20_000);
     return () => {
       live = false;
+      window.clearInterval(timer);
     };
   }, []);
 
@@ -55,14 +60,14 @@ export function TourInbox() {
 
   if (rows && mine.length === 0 && !error) {
     return (
-      <p className="up-tour-line" data-tk="tour-inbox" data-empty="yes">
+      <p className="up-tour-line" id="tours" data-tk="tour-inbox" data-empty="yes">
         <Video size={18} aria-hidden /> <strong>Live video tours:</strong> no requests yet. <Link href="/how-it-works/" className="up-link">How video tours work</Link>
       </p>
     );
   }
 
   return (
-    <section className="tk-dcard" aria-labelledby="tour-inbox-title" data-tk="tour-inbox" style={{ marginTop: 16 }}>
+    <section className="tk-dcard" id="tours" aria-labelledby="tour-inbox-title" data-tk="tour-inbox" style={{ marginTop: 16 }}>
       <h2 id="tour-inbox-title">
         <Video size={20} aria-hidden /> Live video tours
       </h2>
