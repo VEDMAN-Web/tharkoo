@@ -8,6 +8,7 @@
     "src/server/admin/users.ts",
     "tests/server/admin/a8-users.test.ts",
     "tests/server/admin/h7-172-lists.test.ts",
-    "tests/server/admin/a49-search.test.ts"
+    "tests/server/admin/a49-search.test.ts",
+    "tests/server/tours/room.test.ts"
   ]
 }
