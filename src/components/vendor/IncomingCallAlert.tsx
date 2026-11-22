@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { useSitePath } from "@/components/useSitePath";
 import { useEffect, useState } from "react";
 import { Video } from "lucide-react";
 import { api, hasSessionHint } from "@/lib/ui/api";
@@ -17,7 +17,7 @@ const POLL_MS = 20_000;
  */
 export function IncomingCallAlert() {
   const [waiting, setWaiting] = useState(0);
-  const path = usePathname() ?? "";
+  const path = useSitePath();
   useEffect(() => {
     if (!hasSessionHint()) return;
     let live = true;
