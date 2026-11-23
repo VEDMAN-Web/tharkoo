@@ -35,7 +35,8 @@ export function ListingPlaceSelects({ selects, labels }: { selects: PlaceSelects
   };
   const field = (title: string, options: PlaceOption[], value: string, wide = false) => (
     <div className={wide ? "tkn-ls-select tkn-ls-select-wide" : "tkn-ls-select"}>
-      <select aria-label={title} title={title} value={value} onChange={(event) => go(options, event.target.value)}>
+      {/* H19.1: autoComplete off, so the browser never fills in a state from an earlier visit: a category opens on All states. */}
+      <select aria-label={title} title={title} value={value} autoComplete="off" onChange={(event) => go(options, event.target.value)}>
         {scopeToCountry(options, site, value).map((option) => (
           <option key={`${option.value}-${option.label}`} value={option.value}>
             {option.label}

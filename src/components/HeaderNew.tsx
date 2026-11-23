@@ -8,7 +8,6 @@ import { useSitePath } from "@/components/useSitePath";
 import { ChevronDown, Megaphone, Menu, Phone } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { HeaderCountry } from "./HeaderCountry";
-import { useDismiss } from "@/components/ui/useDismiss";
 import type { CountryOption } from "@/server/locations/country-scope";
 import { HeaderDrawer } from "./HeaderDrawer";
 import { IncomingCallAlert } from "./vendor/IncomingCallAlert";
@@ -22,6 +21,7 @@ import type { ShellConfig } from "@/server/site-links/shell-config-rules";
 import { LogoutButton } from "./auth/LogoutButton";
 import { accountName } from "@/lib/account-name";
 import { openRecharge } from "./recharge/openRecharge";
+import { useMenuDismiss } from "./ui/use-menu-dismiss";
 import { isSignedInPhase, useAccount } from "./account/AccountContext";
 
 // The search pop-up loads only when a visitor opens it, as in the old header.
@@ -66,7 +66,7 @@ export function HeaderNew({
   const [accountOpen, setAccountOpen] = useState(false);
   const accountRef = useRef<HTMLDivElement>(null);
   const closeAccount = useCallback(() => setAccountOpen(false), []);
-  useDismiss(accountOpen, accountRef, closeAccount);
+  useMenuDismiss(accountOpen, accountRef, closeAccount);
   const links = shell.header.navLinks.filter((item) => item.visible && safeHref(item.href));
 
   useEffect(() => {

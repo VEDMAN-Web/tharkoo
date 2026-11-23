@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState, type MutableRefObject, type RefObject } from "react";
-import { watchAdCard } from "@/components/ad/adCountStore";
+import { holdAdCounts } from "@/components/ad/adCountStore";
 import { CALM_MS, VIDEO_CAP_MS, VISIBLE_SHARE, nextSlide, slideDelay, type CardSlide } from "./card-slides";
 import { releaseVideo, takeVideo } from "./card-video-slots";
 
@@ -49,10 +49,9 @@ export function useCardSlider({
   const [calmUntil, setCalmUntil] = useState(0);
 
   useEffect(() => {
-    const el = cardRef.current;
-    if (!el || !slug) return;
-    return watchAdCard(el, slug);
-  }, [cardRef, slug]);
+    if (!slug) return;
+    return holdAdCounts(slug);
+  }, [slug]);
 
   useEffect(() => {
     const el = cardRef.current;

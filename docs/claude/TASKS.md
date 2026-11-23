@@ -555,3 +555,42 @@ Rules for every H19 card:
 **Read first:** `src/server/auth/email-code.ts`, `src/server/auth/service.ts`.
 **Files you may change:** `src/server/auth/**`, `src/lib/ui/text.ts`, `tests/server/auth/**`, ownership + progress.
 1. Refuse login codes and sign-ups for disposable email domains (yopmail, mailinator, guerrillamail, 10minutemail, temp-mail and the common list). Keep the list in one code file; no new package. Message: "Please use your own email address."
+
+## H19.8 — Video call switch and price inside each category (admin)
+**Read first:** `src/app/admin/categories/[slug]/**`, `src/app/admin/categories/_screen/**`, `src/app/admin/settings/video-tours/**` (the existing per-category switch and price).
+**Files you may change:** `src/app/admin/categories/**`, `src/app/admin/settings/video-tours/**` (only to share code), `src/server/categories/**` (only the video fields), `tests/**`, ownership + progress.
+1. The category edit form (and the new-category form) gets a "Video calls" section: an ON/OFF switch and "Price per call (credits)", with one help line: "Users pay this per call. The vendor keeps 70 %, Tharkoo keeps 30 %." (read the percent from the setting in H19.10, do not hard-code it).
+2. Same server rules as the Video tours page: superadmin only, audit log entry, kind rule ("never on people listings") shown as a disabled switch with the reason.
+3. The Video tours page and the category form show and change the same value (one source of truth).
+
+## H19.9 — Vendor payouts in more coins, with a live-rate range
+**Read first:** `src/server/wallet/payout-kyc.ts`, `payout-provider.ts`, `withdrawals.ts`, `src/server/billing/passimpay.ts`, `src/components/wallet/KycForm.tsx`, `src/components/wallet/VendorEarnings.tsx`, `src/app/admin/finance/PayoutsQueue.tsx`.
+**Files you may change:** those files, `src/app/api/wallet/**`, `src/lib/ui/text.ts`, `tests/server/wallet/**`, ownership + progress.
+1. Payout coins: USDT (TRC20, BEP20), USDC (ERC20/BEP20 if PassimPay lists them), BTC, ETH, TRX, LTC. Use PassimPay `/v2/currencies` for the list and ids (only coins PassimPay supports for withdrawals). Validate the wallet address with PassimPay `/v2/validateaddress` before saving.
+2. Before a vendor requests a withdrawal, show a range: "You will get about X to Y <COIN>". X/Y = (credits × credit price in INR) converted with the live `rateUsd` from `/v2/currencies` and an INR→USD rate, minus/plus 3 % for rate movement. Cache rates 5 minutes. If rates fail, show "Rate unavailable, the admin confirms the exact amount".
+3. Admin payout queue: shows the coin, network, the live estimate, and keeps the admin-typed final amount (as today for USDT).
+
+## H19.10 — Video call earnings: vendor keeps 70 %, Tharkoo 30 % (Vedant, 23 Nov 2026)
+Do this card right after H19.2. It touches money: every amount must be tested.
+**Read first:** `src/server/wallet/escrow.ts` (`releaseEscrow` already takes `platformFee`), `src/server/tours/service.ts` (`requestTour`, `endTour`, `settleConnectedTours`, `reverseTour`), `src/server/tours/model.ts`, `src/server/billing/money-settings.ts`, `src/app/admin/finance/**` (money settings form), `src/components/wallet/VendorEarnings.tsx`, `src/components/vendor/TourInbox.tsx`, `src/components/post/**` (where a vendor turns calls on / sees call info), `src/app/admin/settings/video-tours/**`.
+**Files you may change:** the files above, `src/server/tours/**`, `src/server/wallet/escrow.ts`, `src/server/billing/money-settings.ts`, `src/app/admin/finance/**`, `src/app/admin/settings/video-tours/**`, `src/app/api/wallet/**`, `src/app/api/tours/**`, `src/components/wallet/**`, `src/components/vendor/**`, `src/app/u/account/**` (earnings and calls screens only), `src/lib/ui/text.ts`, `src/app/globals.css`, `tests/**`, ownership + progress.
+
+Money rules (server):
+1. New money setting "Tharkoo share of video calls (%)", default 30, 0–90, in Admin → Money settings (superadmin, audited).
+2. `requestTour` stores on the tour the price AND the share in force at that moment (`feePercent`). Later setting changes never touch calls already requested.
+3. When a call is paid (both connected → `endTour` paid): vendor gets `floor(price × (100 − feePercent) / 100)`, Tharkoo gets the rest (`platformFee` to `platform_revenue`). The ledger must still balance (trial balance 0).
+4. Refunds (vendor never joins, declined, expired) stay 100 % back to the user, no fee.
+5. `reverseTour` (admin dispute) reverses BOTH parts: vendor share back from `vendor_earnings` and the fee back from `platform_revenue`, the full price back to the user's call credits.
+6. Admin minimum call price becomes 10 credits (video tours page + H19.8 form) so the split is never 0; existing categories below 10 are raised to 10 by a one-off migration in the same PR (log what changed in progress).
+
+Vendors must know it (UI, plain words, short):
+7. Wherever a vendor turns video calls on or sees call settings (post wizard / edit ad / My ads), show: "Users pay N credits per call. You keep M credits (₹X). Tharkoo keeps the rest." with an (i) tooltip: "You earn the moment both of you are on the call, even if it lasts one minute. Earnings can be withdrawn in crypto, or moved to ad credits to boost your ads."
+8. Call requests list / Video calls page (vendor side): each request shows "You earn M credits".
+9. Earnings screen (vendor): top card "Earned from calls" with three small lines per call in the history: price, Tharkoo fee, you got. Two clear buttons side by side: "Withdraw" and "Use for ads" (the existing move-to-ad-credits, minimum 100). Under them one line: "1 earned credit = 1 ad credit. Ad credits pay for posting, TOP and Super Top."
+10. After a paid call, the vendor's notification/feed line says "You earned M credits from a video call on <ad title>".
+11. Users never see the split; they only see the price per call.
+
+Admin:
+12. Admin finance dashboard shows "Tharkoo earnings from calls" (sum of platform_revenue from calls) for today / 7 days / 30 days, real numbers only.
+
+Tests (must have): split at 30 % and 0 %; odd prices (e.g. 15 → vendor 10, Tharkoo 5); share changed between request and payment uses the stored share; refund has no fee; reverse puts every credit back and trial balance is 0; minimum price 10 enforced.

@@ -3,6 +3,7 @@ import type { ListingDoc } from "@/lib/models";
 import { displayTitle, prettyPlace, shortDateLabel } from "@/lib/format";
 import type { AdChannel } from "@/server/listings/contact-channels";
 import { ContactButtons, ContactProvider, type ContactPopupInfo } from "@/components/ContactButtons";
+import { ContactPressCounter } from "./ContactPressCounter";
 import { UiTextProvider } from "@/components/ui/AdCard";
 import { TrackView } from "@/components/ui/RecentlyViewed";
 import { adHref, citiesPath, joinPath, postAdPath, type UrlPaths } from "@/lib/urls";
@@ -157,6 +158,7 @@ export function NewAdDetail({
   return (
     <UiTextProvider texts={texts}>
       <ContactProvider listingSlug={ad.slug} listingId={listingId} tour={tour} peopleAd={peopleAd} info={popupInfo} sample={sampleNote}>
+        <ContactPressCounter slug={ad.slug ?? ""}>
         <div className="tkn-page tkn-ad" data-tk="new-ad">
           <TrackView ad={ad} />
           <CitySync name={city} slug={ad.citySlug} />
@@ -267,6 +269,7 @@ export function NewAdDetail({
             </div>
           ) : null}
         </div>
+        </ContactPressCounter>
       </ContactProvider>
     </UiTextProvider>
   );

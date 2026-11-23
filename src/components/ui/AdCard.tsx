@@ -10,13 +10,13 @@ import { formatPrice } from "../search/price";
 import { PhotoSwipe } from "./PhotoSwipe";
 import { CardVideo } from "./CardVideo";
 import { SaveButton } from "./SaveButton";
-import { viewsLabel } from "@/components/ad/counts-format";
+import { AdCardCounts } from "../new/AdCardCounts";
 import { api, friendlyError } from "@/lib/ui/api";
 import { adHref } from "@/lib/urls";
 import { useUrlPaths } from "../UrlPaths";
 import { makeT, type TextFn, type UiTextMap } from "@/lib/ui/text";
 import { videoVerifiedLabel } from "../ad/tourLabels";
-import { recordAdClick, watchAdCard } from "../ad/adCountStore";
+import { holdAdCounts, recordAdClick } from "../ad/adCountStore";
 import { useSellerStatus } from "../availability/sellerStatus";
 import { AvailabilityBadge } from "../availability/AvailabilityBadge";
 
@@ -84,19 +84,13 @@ export function AdCard({
   const seller = useSellerStatus(isOwner ? undefined : ad.slug);
 
   useEffect(() => {
-    const el = cardRef.current;
-    if (!el || !ad.slug || isOwner) return;
-    return watchAdCard(el, ad.slug);
+    if (!ad.slug || isOwner) return;
+    return holdAdCounts(ad.slug);
   }, [ad.slug, isOwner]);
 
-  /** A click on the card's own link to the ad counts as a click (H6.17). Other clicks on the card do not. */
-  function onCardClick(event: React.MouseEvent<HTMLElement>) {
-    if (isOwner) return;
-    const link = (event.target as Element).closest?.("a[href]");
-    if (ad.slug && link && link.getAttribute("href") === href) recordAdClick(ad.slug);
-  }
-
   async function reveal(channel: "phone" | "whatsapp") {
+    // H19.1: a click is a press of a contact button.
+    if (ad.slug && !isOwner) recordAdClick(ad.slug);
     setNote("");
     if (!ad.slug) return;
     const pub = await api<{ id: string }>(`/api/listings/${encodeURIComponent(ad.slug)}/`);
@@ -114,7 +108,7 @@ export function AdCard({
     const placeText = `${city}${area ? ` / ${area}` : ""}`;
     const priceText = formatPrice(ad.price);
     return (
-      <article ref={cardRef} className="tk-card tkn-ls-card m-lift" data-tk="card" data-reveal data-variant={variant} onClickCapture={onCardClick}>
+      <article ref={cardRef} className="tk-card tkn-ls-card m-lift" data-tk="card" data-reveal data-variant={variant}>
         <div className="tkn-ls-photo">
           <PhotoSwipe photos={photos} title={title} place={area || city} seed={ad.slug || title} category={ad.categorySlug} priority={priority} href={href} />
           {ad.videoUrl ? <CardVideo url={ad.videoUrl} poster={ad.videoPoster} card={cardRef} /> : null}
@@ -168,7 +162,6 @@ export function AdCard({
       data-reveal
       data-variant={variant}
       data-contact={superTop ? "1" : undefined}
-      onClickCapture={onCardClick}
     >
       {seller && seller.chatOn ? (
         <span className="tkp-card-avail">
@@ -256,7 +249,7 @@ export function AdCard({
         <div className="tkp-owner" data-tk="owner-card">
           <div className="tkp-owner-row">
             <span className="tkp-owner-status" style={{ background: owner.bg, color: owner.fg }}>{owner.label}</span>
-            <span className="tkp-owner-counts">{owner.views} {viewsLabel(owner.views)} · {owner.clicks} clicks</span>
+            <span className="tkp-owner-counts"><AdCardCounts fixed={{ views: owner.views, clicks: owner.clicks }} /></span>
           </div>
           {owner.actions ? <div className="tkp-owner-actions">{owner.actions}</div> : null}
         </div>

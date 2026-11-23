@@ -5,15 +5,17 @@ import { createPortal } from "react-dom";
 import Link from "next/link";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { adPhotoAlt } from "@/lib/ad-photo-alt";
-import { recordAdClick } from "@/components/ad/adCountStore";
 import { SaveButton } from "@/components/ui/SaveButton";
 import { fillText } from "@/lib/ui/text";
+import { AdCardCounts } from "./AdCardCounts";
 import type { HomeAdCardData, HomeAdLabels } from "./HomeAdCard";
 import type { CardSlide } from "./card-slides";
+import { clampPopLeft, clampPopTop, popMaxHeight } from "./pop-layout";
 
-const SIDE_GROW_PX = 34;
-const TOP_GROW_PX = 28;
-const EDGE_PX = 8;
+/** H19.1: the pop-out is a quarter smaller than before (it was the card plus 34 px a side) and never smaller than the card. */
+const OLD_SIDE_GROW_PX = 34;
+const SIZE_SHARE = 0.75;
+const TOP_GROW_PX = 12;
 
 export function HomeAdPopout({
   ad,
@@ -43,39 +45,39 @@ export function HomeAdPopout({
 }) {
   const ref = useRef<HTMLDivElement>(null);
   const [top, setTop] = useState(anchor.top - TOP_GROW_PX);
-  const width = anchor.width + SIDE_GROW_PX * 2;
-  const left = Math.min(Math.max(anchor.left - SIDE_GROW_PX, EDGE_PX), window.innerWidth - width - EDGE_PX);
+  const width = Math.max(anchor.width, Math.round((anchor.width + OLD_SIDE_GROW_PX * 2) * SIZE_SHARE));
+  const left = clampPopLeft(anchor.left + (anchor.width - width) / 2, width, window.innerWidth);
 
   useLayoutEffect(() => {
     const el = ref.current;
     if (!el) return;
-    const height = el.getBoundingClientRect().height;
-    const wanted = anchor.top - TOP_GROW_PX;
-    const nextTop = Math.max(EDGE_PX, Math.min(wanted, window.innerHeight - height - EDGE_PX));
-    setTop(nextTop);
-    // The pop-out opens out of the card: its first frame is clipped to the card's own box (see tkh-pop-in in home-ads.css).
-    const gap = (value: number) => `${Math.max(0, Math.round(value))}px`;
-    el.style.setProperty(
-      "--pop-clip",
-      `inset(${gap(anchor.top - nextTop)} ${gap(left + width - anchor.right)} ${gap(nextTop + height - anchor.bottom)} ${gap(anchor.left - left)} round 20px)`,
-    );
-  }, [anchor, index, left, width]);
+    const place = () => {
+      // offsetHeight ignores the grow-in animation scale, so the bottom edge is right from the first frame.
+      const height = el.offsetHeight;
+      setTop(clampPopTop(anchor.top - TOP_GROW_PX, height, window.innerHeight));
+    };
+    place();
+    if (typeof ResizeObserver === "undefined") return;
+    const watcher = new ResizeObserver(place);
+    watcher.observe(el);
+    return () => watcher.disconnect();
+  }, [anchor, index]);
 
   const body = (
     <div
       ref={ref}
-      className="tkh-pop is-grow"
+      className="tkh-pop"
       role="group"
       aria-label={ad.title}
       data-tk="home-ad-popout"
-      style={{ left, top, width }}
+      style={{ left, top, width, maxHeight: popMaxHeight(window.innerHeight) }}
       onPointerEnter={onEnter}
       onPointerLeave={onLeave}
     >
       <PopPhoto ad={ad} labels={labels} slides={slides} index={index} onIndex={onIndex} videoRef={videoRef} />
       <div className="tkh-pop-body">
         <p className="tkh-pop-title">
-          <Link href={ad.href} prefetch={false} className="tkh-pop-link" data-ad-link onClick={() => (ad.slug ? recordAdClick(ad.slug) : undefined)}>
+          <Link href={ad.href} prefetch={false} className="tkh-pop-link" data-ad-link>
             {ad.title}
           </Link>
         </p>
@@ -90,6 +92,7 @@ export function HomeAdPopout({
           <Link href={ad.categoryHref} prefetch={false} className="tkh-pill tkh-pill-rose">{ad.categoryName}</Link>
           {ad.city ? <Link href={ad.cityHref} prefetch={false} className="tkh-pill tkh-pill-lavender">{ad.city}</Link> : null}
         </p>
+        <AdCardCounts slug={ad.slug} labels={labels.counts} />
         {chatOn ? (
           <div className="tkh-pop-acts">
             <Link href={`${ad.href}${ad.href.includes("?") ? "&" : "?"}chat=1`} prefetch={false} className="tkh-pop-btn" data-tk="pop-chat">{labels.chat}</Link>

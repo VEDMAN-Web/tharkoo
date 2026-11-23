@@ -99,16 +99,13 @@ test.describe("H12.2 shared layout", () => {
     }
   });
 
-  test("A3: at 390 the count has its own line, and the Filters button and the Sort select are one row of the same height", async ({ page }) => {
+  test("A3: at 390 the count has its own line, and the Filters button is below it; there is no Sort menu (H19.1)", async ({ page }) => {
     await open(page, "/dating/", SIZES[0]);
     const filters = await boxOf(page, ".tkn-sr-bar .tkn-ls-filter-btn");
-    const sort = await boxOf(page, ".tkn-sr-bar .tkn-sr-sort select");
+    expect(await page.locator(".tkn-sr-bar .tkn-sr-sort").count()).toBe(0);
     const count = await boxOf(page, ".tkn-sr-bar .tkn-sr-count");
     const heading = await boxOf(page, ".tkn-sr-h1");
-    expect(Math.abs(filters.height - sort.height)).toBeLessThanOrEqual(1);
-    expect(Math.abs(filters.y - sort.y)).toBeLessThanOrEqual(2);
-    expect(filters.x).toBeLessThan(sort.x);
-    expect(count.bottom).toBeLessThanOrEqual(Math.min(filters.y, sort.y) + 1);
+    expect(count.bottom).toBeLessThanOrEqual(filters.y + 1);
     expect(count.y).toBeGreaterThanOrEqual(heading.bottom - 1);
   });
 
