@@ -1,0 +1,25 @@
+{
+  "branchPrefix": "haiku/h19.10",
+  "globs": [
+    "docs/ownership/H19.10.json",
+    "progress/H19.10.md",
+    "docs/claude/STATUS.md",
+    "src/server/tours/**",
+    "src/server/wallet/escrow.ts",
+    "src/server/billing/money-settings.ts",
+    "src/server/models/cms.ts",
+    "src/server/notifications/feed.ts",
+    "src/app/admin/finance/**",
+    "src/app/admin/prices/_view/MoneyCard.tsx",
+    "src/app/admin/settings/video-tours/**",
+    "src/app/api/wallet/**",
+    "src/app/api/tours/**",
+    "src/components/wallet/**",
+    "src/components/vendor/**",
+    "src/components/buyer/NotificationsPanel.tsx",
+    "src/app/u/account/**",
+    "src/lib/ui/text.ts",
+    "src/app/globals.css",
+    "tests/**"
+  ]
+}

@@ -13,6 +13,9 @@ import { callPagePath, roomExpiry, videoRoomProvider } from "@/server/tours/room
 import { accountName } from "@/lib/account-name";
 import { siteUrl } from "@/lib/utils";
 import { holdInEscrow, refundEscrow, releaseEscrow } from "@/server/wallet/escrow";
+import { readMoneySettings } from "@/server/billing/money-settings";
+import { raiseLowCallPrices } from "./min-price";
+import { splitCall, TOUR_MIN_PRICE_COINS } from "./split";
 import { videoTourPrice } from "@/server/wallet/listing-guard";
 import { assertNotPaused } from "@/server/settings/emergency";
 
@@ -75,6 +78,7 @@ function escrowFor(tour: VideoTourDoc & { _id?: unknown }, input: Escrow) {
     userId: String(tour.userId),
     vendorId: String(tour.ownerId),
     coins: tour.coins,
+    platformFee: splitCall(tour.coins, tour.feePercent ?? 0).fee,
     bookingId: String(tour._id),
     requestId: input.requestId,
     ip: input.ip,
@@ -138,6 +142,8 @@ export async function requestTour(input: { userId: string; listingId: string } &
   }
   await assertAdvertiserCanTour(ownerId);
   const coins = await videoTourPrice(String(listingId));
+  // H19.10: the share in force now is kept on the call; a later change never touches it.
+  const feePercent = (await readMoneySettings()).videoCallSharePercent;
   const tourId = new mongoose.Types.ObjectId();
   try {
     await VideoTour.create({
@@ -146,6 +152,7 @@ export async function requestTour(input: { userId: string; listingId: string } &
       ownerId: listing.ownerId,
       userId: objectId(input.userId, "userId"),
       coins,
+      feePercent,
       status: "requested",
       requestedAt: new Date(),
     });
@@ -174,7 +181,7 @@ export async function requestTour(input: { userId: string; listingId: string } &
     targetType: "video_tour",
     targetId: String(tourId),
     requestId: input.requestId,
-    after: { listingId: String(listingId), coins },
+    after: { listingId: String(listingId), coins, feePercent },
   });
   await notifyAdvertiser(ownerId, listing.title);
   return present((await VideoTour.findById(tourId).lean()) as VideoTourDoc);
@@ -375,7 +382,8 @@ export async function reverseTour(input: { actorId: string; roles: readonly stri
       refType: "video_tour",
       refId: String(id),
       moves: [
-        { account: "vendor_earnings", ownerKey: String(claim.ownerId), delta: -claim.coins },
+        { account: "vendor_earnings", ownerKey: String(claim.ownerId), delta: -splitCall(claim.coins, claim.feePercent ?? 0).vendor },
+        ...(splitCall(claim.coins, claim.feePercent ?? 0).fee > 0 ? [{ account: "platform_revenue" as const, ownerKey: "system", delta: -splitCall(claim.coins, claim.feePercent ?? 0).fee }] : []),
         { account: "call_wallet", ownerKey: String(claim.userId), delta: claim.coins },
       ],
       requestId: input.requestId,
@@ -413,7 +421,9 @@ export async function listTours(userId: string) {
   return rows.map((row) => {
     const isAdvertiser = String(row.ownerId) === userId;
     const joinUrl = row.roomId && row.status === "accepted" && videoRoomProvider().name === "daily" ? callPagePath(String(row._id)) : null;
-    return { ...present(row), role: isAdvertiser ? "advertiser" : "buyer", joinUrl };
+    // H19.10: only the vendor sees what they earn; the user sees the price and nothing of the split.
+    const split = splitCall(row.coins, row.feePercent ?? 0);
+    return { ...present(row), role: isAdvertiser ? "advertiser" : "buyer", joinUrl, ...(isAdvertiser ? { youEarn: split.vendor, tharkooFee: split.fee } : {}) };
   });
 }
 
@@ -441,6 +451,8 @@ export async function tourCallFor(input: { userId: string; tourId: string }) {
 
 export async function listVideoTourCategories() {
   await connectDb();
+  // H19.10: opening the screen raises any category under the lowest price (once; logged).
+  await raiseLowCallPrices("video-tours-screen");
   const rows = await Category.find({}).select("name slug kind fields videoTourEnabled videoTourCoins").sort({ order: 1 }).lean();
   const allowing = new Set((await listKinds()).filter((kind) => kind.videoTours).map((kind) => kind.key));
   return rows.map((row) => ({
@@ -451,7 +463,7 @@ export async function listVideoTourCategories() {
     slug: row.slug,
     kind: row.kind ?? null,
     videoTourEnabled: row.videoTourEnabled === true,
-    videoTourCoins: row.videoTourCoins ?? 1,
+    videoTourCoins: Math.max(row.videoTourCoins ?? 1, TOUR_MIN_PRICE_COINS),
   }));
 }
 
@@ -480,7 +492,9 @@ export async function updateVideoTourSettings(input: {
     throw new ValidationError("Invalid request", { enabled: ["This kind does not allow live video tours. Change it under Categories & fields, Kinds."] });
   }
   const enabled = people ? false : (input.enabled ?? category.videoTourEnabled === true);
-  const coins = input.coins ?? category.videoTourCoins ?? 1;
+  if (input.coins !== undefined && input.coins < TOUR_MIN_PRICE_COINS) throw new ValidationError("Invalid request", { coins: [`The lowest price of a video call is ${TOUR_MIN_PRICE_COINS} credits.`] });
+  // A category still on an older, lower price is raised to the lowest price when its settings are saved.
+  const coins = input.coins ?? Math.max(category.videoTourCoins ?? TOUR_MIN_PRICE_COINS, TOUR_MIN_PRICE_COINS);
   await Category.updateOne({ _id: category._id }, { $set: { kind, videoTourEnabled: enabled, videoTourCoins: coins } });
   await audit.append({
     actorId: input.actorId,

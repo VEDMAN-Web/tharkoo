@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { Video } from "lucide-react";
+import { Info, Video } from "lucide-react";
 import { api, friendlyError, hasSessionHint } from "@/lib/ui/api";
 import { roomLine, tourStatusLabel } from "../ad/tourLabels";
 
@@ -12,6 +12,8 @@ export type TourRow = {
   coins: number;
   status: string;
   role: "advertiser" | "buyer";
+  /** H19.10: what the vendor keeps from this call, in credits. */
+  youEarn?: number;
   requestedAt: string | null;
   joinUrl?: string | null;
 };
@@ -25,8 +27,32 @@ function coinsLabel(coins: number) {
   return `${coins} ${coins === 1 ? "credit" : "credits"}`;
 }
 
+type EarnInfo = { sharePercent: number; options: { price: number; youKeep: number; rupees: number }[] };
+
+const EARN_TIP = "You earn the moment both of you are on the call, even if it lasts one minute. Earnings can be withdrawn in crypto, or moved to ad credits to boost your ads.";
+
+/** H19.10: what the vendor keeps from a call, in plain words, with a tooltip about when it is earned. */
+function EarnLine({ info }: { info: EarnInfo | null }) {
+  const [open, setOpen] = useState(false);
+  if (!info || info.options.length === 0) return null;
+  return (
+    <div data-tk="call-earn-info" style={{ margin: "8px 0" }}>
+      {info.options.map((option) => (
+        <p key={option.price} className="t-small" style={{ margin: "2px 0" }}>
+          Users pay {option.price} credits per call. You keep {option.youKeep} credits (₹{option.rupees}). Tharkoo keeps the rest.
+        </p>
+      ))}
+      <button type="button" className="tk-dlink" aria-expanded={open} aria-controls="call-earn-tip" onClick={() => setOpen((on) => !on)} style={{ display: "inline-flex", gap: 6, alignItems: "center", minHeight: 24 }}>
+        <Info size={16} aria-hidden /> When do I earn?
+      </button>
+      {open ? <p id="call-earn-tip" role="note" className="t-small" style={{ margin: "4px 0 0" }}>{EARN_TIP}</p> : null}
+    </div>
+  );
+}
+
 /** The advertiser's inbox for live video tours: accept or decline requests, then join the room. */
 export function TourInbox() {
+  const [earn, setEarn] = useState<EarnInfo | null>(null);
   const [rows, setRows] = useState<TourRow[] | null>(null);
   const [busyId, setBusyId] = useState("");
   const [error, setError] = useState("");
@@ -40,6 +66,9 @@ export function TourInbox() {
         if (live) setRows(res.ok ? res.data : []);
       });
     void load();
+    api<EarnInfo>("/api/tours/earn-info").then((res) => {
+      if (live && res.ok) setEarn(res.data);
+    });
     const timer = window.setInterval(() => void load(), 20_000);
     return () => {
       live = false;
@@ -60,9 +89,12 @@ export function TourInbox() {
 
   if (rows && mine.length === 0 && !error) {
     return (
+      <div id="tours-wrap">
       <p className="up-tour-line" id="tours" data-tk="tour-inbox" data-empty="yes">
         <Video size={18} aria-hidden /> <strong>Live video tours:</strong> no requests yet. <Link href="/how-it-works/" className="up-link">How video tours work</Link>
       </p>
+        <EarnLine info={earn} />
+      </div>
     );
   }
 
@@ -71,6 +103,7 @@ export function TourInbox() {
       <h2 id="tour-inbox-title">
         <Video size={20} aria-hidden /> Live video tours
       </h2>
+      <EarnLine info={earn} />
       {error ? (
         <p role="alert" className="t-small" style={{ color: "var(--danger, #b00020)" }}>
           {error}
@@ -87,6 +120,7 @@ export function TourInbox() {
                 <p>
                   <strong>{tourStatusLabel(tour.status)}</strong> · {coinsLabel(tour.coins)}
                 </p>
+                {typeof tour.youEarn === "number" ? <p className="t-small" data-tk="tour-earn">You earn {coinsLabel(tour.youEarn)}</p> : null}
                 <p className="t-small" style={{ color: "var(--muted)" }}>
                   Requested {when}
                 </p>

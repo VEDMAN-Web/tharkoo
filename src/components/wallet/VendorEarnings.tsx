@@ -119,16 +119,46 @@ function WithdrawalHistory({ rows }: { rows: WithdrawalRow[] }) {
   );
 }
 
+/** H19.10: one paid call in the earnings history: what the user paid, what Tharkoo kept and what the vendor got. */
+type CallEarning = { id: string; title: string; price: number; fee: number; youGot: number; at: string | null };
+
+function CallEarnings({ total, calls }: { total: number; calls: CallEarning[] }) {
+  return (
+    <section style={CARD} aria-label="Earned from calls" data-tk="call-earnings">
+      <div>
+        <p className="t-small" style={{ color: "var(--muted)", margin: 0 }}>Earned from calls</p>
+        <p style={{ margin: "4px 0 0", fontSize: 28, fontWeight: 800 }} data-tk="call-earnings-total">{total} credits</p>
+      </div>
+      {calls.length === 0 ? <p className="t-small" style={{ color: "var(--muted)", margin: 0 }}>No paid video calls yet.</p> : (
+        <ul style={{ listStyle: "none", padding: 0, margin: 0, display: "grid", gap: 10 }}>
+          {calls.map((call) => (
+            <li key={call.id} style={{ borderTop: "1px solid var(--border)", paddingTop: 10, display: "grid", gap: 2 }} data-tk="call-earning">
+              <strong className="t-small">{call.title || "Video call"}{call.at ? ` · ${date(call.at)}` : ""}</strong>
+              <span className="t-small">Price: {call.price} credits</span>
+              <span className="t-small">Tharkoo fee: {call.fee} credits</span>
+              <span className="t-small"><strong>You got: {call.youGot} credits</strong></span>
+            </li>
+          ))}
+        </ul>
+      )}
+    </section>
+  );
+}
+
 export function VendorEarnings({ onSignedOut }: { onSignedOut: () => void }) {
+  const [panel, setPanel] = useState<"withdraw" | "ads">("withdraw");
+  const [calls, setCalls] = useState<{ total: number; calls: CallEarning[] }>({ total: 0, calls: [] });
   const [summary, setSummary] = useState<PayoutSummary | null>(null);
   const [rows, setRows] = useState<WithdrawalRow[]>([]);
   const [error, setError] = useState("");
 
   const load = useCallback(async () => {
-    const [summaryRes, listRes] = await Promise.all([
+    const [summaryRes, listRes, callsRes] = await Promise.all([
       api<PayoutSummary>("/api/wallet/payouts/summary"),
       api<{ items: WithdrawalRow[] }>("/api/wallet/payouts/withdrawals?page=1&pageSize=20"),
+      api<{ total: number; calls: CallEarning[] }>("/api/wallet/call-earnings"),
     ]);
+    if (callsRes.ok) setCalls(callsRes.data);
     if (!summaryRes.ok) {
       if (summaryRes.status === 401) return onSignedOut();
       return setError(friendlyError(summaryRes.error));
@@ -152,9 +182,20 @@ export function VendorEarnings({ onSignedOut }: { onSignedOut: () => void }) {
         <Stat label="Pending payout" value={`${summary.pendingCoins} credits`} />
         <Stat label="Paid out" value={`${summary.paidCoins} credits`} />
       </section>
+      <CallEarnings total={calls.total} calls={calls.calls} />
+      <div style={{ display: "grid", gap: 8 }}>
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }} role="group" aria-label="What to do with your earnings">
+          <button type="button" className={panel === "withdraw" ? "tk-btn tk-btn-cta" : "tk-btn tk-btn-outline-primary"} aria-pressed={panel === "withdraw"} data-tk="earn-withdraw" onClick={() => setPanel("withdraw")} style={{ minHeight: 48 }}>Withdraw</button>
+          <button type="button" className={panel === "ads" ? "tk-btn tk-btn-cta" : "tk-btn tk-btn-outline-primary"} aria-pressed={panel === "ads"} data-tk="earn-ads" onClick={() => setPanel("ads")} style={{ minHeight: 48 }}>Use for ads</button>
+        </div>
+        <p className="t-small" style={{ margin: 0, color: "var(--muted)" }} data-tk="earn-rate">1 earned credit = 1 ad credit. Ad credits pay for posting, TOP and Super Top.</p>
+      </div>
+      {panel === "ads" ? (
       <section style={CARD} aria-label="Move earnings to ad credits">
         <MoveToAdCredits available={summary.availableCoins} onDone={() => void load()} />
       </section>
+      ) : (
+      <>
       <section style={CARD} aria-label="Payout details">
         <h2 style={H2}>Payout details</h2>
         {summary.kyc ? (
@@ -173,6 +214,8 @@ export function VendorEarnings({ onSignedOut }: { onSignedOut: () => void }) {
         <WithdrawalHistory rows={rows} />
         {rows.length > 0 ? <p className="t-small" style={{ color: "var(--muted)", margin: 0 }}>Last requested {date(rows[0].requestedAt)}</p> : null}
       </section>
+      </>
+      )}
     </div>
   );
 }

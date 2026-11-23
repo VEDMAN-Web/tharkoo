@@ -7,7 +7,7 @@ import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } 
 import { POST as tourWebhook } from "@/app/api/tours/webhook/route";
 import { creditWallet, walletBalance } from "@/server/billing/ledger";
 import { accountBalance, trialBalance } from "@/server/ledger";
-import { AuditEvent, Category, Listing } from "@/server/models";
+import { AuditEvent, Category, Listing, Site } from "@/server/models";
 import type { CategoryKind } from "@/server/models/catalog";
 import {
   TOUR_ACCEPT_WINDOW_MS,
@@ -49,6 +49,8 @@ afterAll(async () => {
 });
 beforeEach(async () => {
   await clearMemoryMongo();
+  // H19.10: these older tests use one-credit calls and count whole credits; the split has its own tests (h19-10-split).
+  await Site.updateOne({ key: "default" }, { $set: { videoCallSharePercent: 0 } }, { upsert: true });
 });
 
 /** An active ad, in a category with its tour switch and price set. */

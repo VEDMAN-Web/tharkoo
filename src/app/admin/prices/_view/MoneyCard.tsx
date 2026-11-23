@@ -13,13 +13,16 @@ export function MoneyCard({ initial, canEdit }: { initial: MoneySettings; canEdi
   const [fee, setFee] = useState(String(initial.postingFeeCredits));
   const [price, setPrice] = useState(String(initial.creditPriceInr));
   const [free, setFree] = useState(String(initial.freeAdsPerAccount));
-  const [errors, setErrors] = useState<{ feeError?: string; priceError?: string; freeError?: string }>({});
+  const [share, setShare] = useState(String(initial.videoCallSharePercent));
+  const [errors, setErrors] = useState<{ feeError?: string; priceError?: string; freeError?: string; shareError?: string }>({});
   const [busy, setBusy] = useState(false);
   const [confirmOff, setConfirmOff] = useState(false);
 
-  const dirty = fee !== String(initial.postingFeeCredits) || price !== String(initial.creditPriceInr) || free !== String(initial.freeAdsPerAccount);
+  const dirty = fee !== String(initial.postingFeeCredits) || price !== String(initial.creditPriceInr) || free !== String(initial.freeAdsPerAccount) || share !== String(initial.videoCallSharePercent);
   const parsed = checkNumbers(fee, price);
   const freeValue = Number(free.trim());
+  const shareValue = Number(share.trim());
+  const shareOk = share.trim() !== "" && Number.isInteger(shareValue) && shareValue >= 0 && shareValue <= 90;
   const freeOk = free.trim() !== "" && Number.isInteger(freeValue) && freeValue >= 0 && freeValue <= 1000;
 
   async function save(values: Partial<MoneySettings>, message: string) {
@@ -30,18 +33,19 @@ export function MoneyCard({ initial, canEdit }: { initial: MoneySettings; canEdi
   }
 
   async function saveNumbers() {
-    if (!parsed.ok || !freeOk) {
-      setErrors({ feeError: parsed.ok ? undefined : parsed.feeError, priceError: parsed.ok ? undefined : parsed.priceError, freeError: freeOk ? undefined : "Enter a whole number from 0 to 1000." });
+    if (!parsed.ok || !freeOk || !shareOk) {
+      setErrors({ shareError: shareOk ? undefined : "Enter a whole number from 0 to 90.", feeError: parsed.ok ? undefined : parsed.feeError, priceError: parsed.ok ? undefined : parsed.priceError, freeError: freeOk ? undefined : "Enter a whole number from 0 to 1000." });
       return;
     }
     setErrors({});
-    await save({ postingFeeCredits: parsed.fee, creditPriceInr: parsed.price, freeAdsPerAccount: freeValue }, "Posting fee, credit price and free ads saved.");
+    await save({ postingFeeCredits: parsed.fee, creditPriceInr: parsed.price, freeAdsPerAccount: freeValue, ...(shareValue !== initial.videoCallSharePercent ? { videoCallSharePercent: shareValue } : {}) }, "Money settings saved.");
   }
 
   function discard() {
     setFee(String(initial.postingFeeCredits));
     setPrice(String(initial.creditPriceInr));
     setFree(String(initial.freeAdsPerAccount));
+    setShare(String(initial.videoCallSharePercent));
     setErrors({});
   }
 
@@ -82,6 +86,13 @@ export function MoneyCard({ initial, canEdit }: { initial: MoneySettings; canEdi
               </label>
               <input id="price-free-ads" className="adm-k-input" inputMode="numeric" autoComplete="off" disabled={!canEdit} value={free} aria-invalid={errors.freeError ? true : undefined} aria-describedby="price-free-ads-help" onChange={(event) => { setFree(event.target.value); setErrors({}); }} />
               {errors.freeError ? <p className="adm-k-err" id="price-free-ads-help" role="alert">{errors.freeError}</p> : <p className="adm-k-help" id="price-free-ads-help">The first ads of every account cost nothing. You can give one person more in Users.</p>}
+            </div>
+            <div className="adm-k-field">
+              <label className="adm-k-label" htmlFor="price-call-share">
+                Tharkoo share of video calls (%)<span className="adm-k-req" aria-hidden="true"> *</span>
+              </label>
+              <input id="price-call-share" className="adm-k-input" inputMode="numeric" autoComplete="off" disabled={!canEdit} value={share} aria-invalid={errors.shareError ? true : undefined} aria-describedby="price-call-share-help" onChange={(event) => { setShare(event.target.value); setErrors({}); }} />
+              {errors.shareError ? <p className="adm-k-err" id="price-call-share-help" role="alert">{errors.shareError}</p> : <p className="adm-k-help" id="price-call-share-help">From 0 to 90. Tharkoo keeps this part of every paid video call; the vendor keeps the rest. A call already asked for keeps the share it had. Only a superadmin can change it.</p>}
             </div>
           </div>
           {canEdit && dirty ? (

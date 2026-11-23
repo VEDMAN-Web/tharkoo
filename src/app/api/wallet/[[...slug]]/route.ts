@@ -18,6 +18,7 @@ import {
 } from "@/server/wallet";
 import { assertFinanceStaff } from "@/server/wallet/settings";
 import { handlePayoutRequest } from "@/server/wallet/payout-api";
+import { callEarningsFor } from "@/server/tours/earnings";
 import { z } from "zod";
 
 const coinCheckoutSchema = z.object({
@@ -38,6 +39,9 @@ async function dispatch(request: Request) {
     // H18.8: ad credits (balance), call credits and earnings, shown apart everywhere.
     const [balance, callCredits, earnings] = await Promise.all([walletBalance(user.user.id), callBalance(user.user.id), earningsBalance(user.user.id)]);
     return json({ balance, callBalance: callCredits, earnings }, requestId);
+  }
+  if (request.method === "GET" && path === "call-earnings") {
+    return json(await callEarningsFor(user.user.id), requestId);
   }
   if (request.method === "GET" && path === "posting-fee") {
     return json(await postingFeeStatus(user.user.id), requestId);

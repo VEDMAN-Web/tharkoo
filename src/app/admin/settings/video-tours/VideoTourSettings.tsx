@@ -22,7 +22,7 @@ export type VideoTourCategory = {
 type Draft = { enabled: boolean; coins: string };
 type Banner = { kind: "error" | "info"; text: string };
 
-const COIN_MIN = 1;
+const COIN_MIN = 10;
 const COIN_MAX = 100;
 const LOCK_PEOPLE = VIDEO_NEVER_FOR_PEOPLE;
 const LOCK_KIND = "This kind does not allow live video tours. Change it under Categories & fields, Kinds.";

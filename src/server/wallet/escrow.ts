@@ -75,7 +75,7 @@ export async function releaseEscrow(input: EscrowRef & { platformFee?: number })
     refId: input.bookingId,
     moves: [
       { account: "escrow", ownerKey: escrowOwner(input.bookingId), delta: -input.coins },
-      { account: "vendor_earnings", ownerKey: input.vendorId, delta: input.coins - fee },
+      ...(input.coins - fee > 0 ? [{ account: "vendor_earnings" as const, ownerKey: input.vendorId, delta: input.coins - fee }] : []),
       ...(fee > 0 ? [{ account: "platform_revenue" as const, ownerKey: "system", delta: fee }] : []),
     ],
     requestId: input.requestId,

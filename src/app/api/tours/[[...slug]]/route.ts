@@ -15,6 +15,7 @@ import {
   updateVideoTourSettings,
 } from "@/server/tours/service";
 import { z } from "zod";
+import { callEarnInfoFor } from "@/server/tours/earnings";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -36,6 +37,7 @@ async function dispatch(request: Request) {
   const userId = user.user.id;
   const roles = user.user.roles;
   if (request.method === "GET" && path === "") return json(await listTours(userId), requestId);
+  if (request.method === "GET" && path === "earn-info") return json(await callEarnInfoFor(userId), requestId);
   if (request.method === "POST" && path === "request") {
     const body = parseInput(requestSchema, await readJson(request));
     return json(await requestTour({ userId, listingId: body.listingId, requestId, ip: clientKey(request.headers) }), requestId);
