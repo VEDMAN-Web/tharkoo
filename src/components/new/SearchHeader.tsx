@@ -1,6 +1,6 @@
 import Link from "next/link";
 import type { TextFn } from "@/lib/ui/text";
-import { SortSelect, type SortOption } from "./SortSelect";
+import type { SortOption } from "./SortSelect";
 import type { SearchChip } from "./search-header";
 
 export function SearchTop({ crumbs, breadcrumbLabel, heading }: { crumbs: { name: string; path: string }[]; breadcrumbLabel: string; heading: string }) {
@@ -32,15 +32,14 @@ export function SearchBar({
   total,
   place,
   nearby,
-  sortValue,
-  sortOptions,
   t,
 }: {
   total: number;
   place?: string;
   nearby?: boolean;
-  sortValue: string;
-  sortOptions: SortOption[];
+  /** H19.1: the Sort menu is gone; these are still passed by the pages and ignored. */
+  sortValue?: string;
+  sortOptions?: SortOption[];
   t: TextFn;
 }) {
   const text =
@@ -56,7 +55,6 @@ export function SearchBar({
       <p className="tkn-sr-count" data-tk="results-count">
         {text}
       </p>
-      <SortSelect label={t("search.sort.label")} value={sortValue} options={sortOptions} />
     </div>
   );
 }

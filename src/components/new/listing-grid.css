@@ -282,7 +282,7 @@
     flex-basis: 100%;
   }
   .tk-rows {
-    padding-bottom: 72px;
+    padding-bottom: 24px;
   }
   .tk-row {
     flex-direction: column;
@@ -318,12 +318,12 @@
 /* H14.1b: the horizontal hover pop-out of a listing row. Scale and opacity only, from the row; the whole pop-out is the link. */
 .tkh-pop.tk-pop {
   display: grid;
-  grid-template-columns: minmax(260px, 42%) minmax(0, 1fr);
+  grid-template-columns: minmax(200px, 40%) minmax(0, 1fr);
   border-radius: 20px;
 }
 .tk-pop .tkh-pop-photo {
   aspect-ratio: auto;
-  min-height: 340px;
+  min-height: 255px;
   height: 100%;
 }
 /* The picture fills the photo box without deciding its height, so the pop-out has the same height before and after the picture loads. */
@@ -338,8 +338,8 @@
 .tk-pop-body {
   display: flex;
   flex-direction: column;
-  gap: 10px;
-  padding: 22px 24px;
+  gap: 8px;
+  padding: 16px 18px;
   min-width: 0;
 }
 .tk-pop-title {
@@ -407,4 +407,9 @@
     opacity: 1;
     transform: none;
   }
+}
+
+/* H19.1: the counts sit at the right of the foot of a listing row. */
+.tk-row-foot .tkh-counts {
+  margin-left: auto;
 }

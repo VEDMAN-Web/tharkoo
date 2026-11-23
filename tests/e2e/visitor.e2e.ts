@@ -19,23 +19,20 @@ test.describe("1 Visitor", () => {
     expect(await hasHorizontalScroll(page)).toBe(false);
   });
 
-  test("filters: verified and with photos", async ({ page }) => {
+  test("filters: a category filter applies and clears (H19.1: no Verified or With photos buttons)", async ({ page }) => {
     await page.goto(FEED);
     const all = await page.locator(":is([data-tk=card], [data-tk=home-ad], [data-tk=listing-row])").count();
     const aside = page.locator(".tkn-ls-aside");
     if (isPhone(page)) await page.locator('[data-tk="results-bar"] .tkn-ls-filter-btn').click();
-    await aside.getByText("Verified", { exact: true }).click();
-    await expect(page).toHaveURL(/verified=1/);
-    await expect(page.locator('[data-chip="verified"]')).toBeVisible();
-    const verified = await page.locator(":is([data-tk=card], [data-tk=home-ad], [data-tk=listing-row])").count();
-    expect(verified).toBeGreaterThan(0);
-    expect(verified).toBeLessThanOrEqual(all);
-    await aside.getByText("With photos", { exact: true }).click();
-    await expect(page).toHaveURL(/photos=1/);
-    await expect(page).toHaveURL(/verified=1/);
-    expect(await page.locator(":is([data-tk=card], [data-tk=home-ad], [data-tk=listing-row])").count()).toBeGreaterThan(0);
-    await aside.getByText("Verified", { exact: true }).click();
-    await expect(page).not.toHaveURL(/verified=1/);
+    await expect(aside.getByText("Verified", { exact: true })).toHaveCount(0);
+    await expect(aside.getByText("With photos", { exact: true })).toHaveCount(0);
+    const pick = aside.locator(".tkn-ls-row", { has: page.locator(".tkn-ls-opt") }).first();
+    await pick.locator(".tkn-ls-row-btn").click();
+    await pick.locator(".tkn-ls-opt").first().click();
+    await expect(page).toHaveURL(/f\./);
+    const filtered = await page.locator(":is([data-tk=card], [data-tk=home-ad], [data-tk=listing-row])").count();
+    expect(filtered).toBeGreaterThan(0);
+    expect(filtered).toBeLessThanOrEqual(all);
   });
 
   test("page 2", async ({ page, request }) => {

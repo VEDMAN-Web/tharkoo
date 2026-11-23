@@ -62,7 +62,7 @@ test.describe("H14.1b row pop-out", () => {
     expect(box.y).toBeGreaterThanOrEqual(0);
     expect(box.x + box.width).toBeLessThanOrEqual(view.width);
     expect(box.y + box.height).toBeLessThanOrEqual(view.height);
-    expect(box.width, "wider than the row").toBeGreaterThan((await row.boundingBox())!.width - 1);
+    expect(box.width, "H19.1: a quarter smaller than before, so no wider than the row").toBeLessThanOrEqual((await row.boundingBox())!.width);
     const sideways = await pop.evaluate((node) => {
       const photo = node.querySelector(".tkh-pop-photo")!.getBoundingClientRect();
       const body = node.querySelector(".tk-pop-body")!.getBoundingClientRect();
@@ -84,7 +84,7 @@ test.describe("H14.1b row pop-out", () => {
     await expect(pop).toHaveCount(0);
   });
 
-  test("the whole pop-out opens the ad with one click event; Save does not open it", async ({ page }) => {
+  test("the whole pop-out opens the ad and counts no click (H19.1); Save does not open it", async ({ page }) => {
     await page.addInitScript(() => {
       const beacon = navigator.sendBeacon.bind(navigator);
       navigator.sendBeacon = (url, data) => {
@@ -124,7 +124,7 @@ test.describe("H14.1b row pop-out", () => {
     await page.waitForURL(`**${href}`, { timeout: 15_000 });
     await page.waitForTimeout(800);
     const after = (await page.evaluate(() => JSON.parse(sessionStorage.getItem("h14b-clicks") || "[]").length)) as number;
-    expect(after - before, "one click event for the open").toBe(1);
+    expect(after - before, "opening the ad is not a click: a click is a contact button press").toBe(0);
   });
 
   test("A6: with reduced motion the pop-out does not animate and the row does not move", async ({ page }) => {

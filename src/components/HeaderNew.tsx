@@ -21,6 +21,7 @@ import type { ShellConfig } from "@/server/site-links/shell-config-rules";
 import { LogoutButton } from "./auth/LogoutButton";
 import { accountName } from "@/lib/account-name";
 import { openRecharge } from "./recharge/openRecharge";
+import { useMenuDismiss } from "./ui/use-menu-dismiss";
 import { isSignedInPhase, useAccount } from "./account/AccountContext";
 
 // The search pop-up loads only when a visitor opens it, as in the old header.
@@ -61,6 +62,9 @@ export function HeaderNew({
   const signedIn = isSignedInPhase(phase);
   const accountLabel = user ? accountName(user.displayName, user.email || "") : "";
   const [accountOpen, setAccountOpen] = useState(false);
+  const accountRef = useRef<HTMLDivElement>(null);
+  const closeAccount = useCallback(() => setAccountOpen(false), []);
+  useMenuDismiss(accountOpen, accountRef, closeAccount);
   const links = shell.header.navLinks.filter((item) => item.visible && safeHref(item.href));
 
   useEffect(() => {
@@ -131,7 +135,7 @@ export function HeaderNew({
               ) : (
                 <span className="tkn-coin-chip tkn-skel" data-tk="header-coins-wait" aria-hidden="true" />
               )}
-              <div className="tkn-account">
+              <div className="tkn-account" ref={accountRef}>
                 <button
                   type="button"
                   className="tkn-avatar"

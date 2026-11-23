@@ -1,0 +1,17 @@
+{
+  "branchPrefix": "haiku/h19.1",
+  "globs": [
+    "docs/ownership/H19.1.json",
+    "progress/H19.1.md",
+    "src/components/new/**",
+    "src/components/HeaderNew.tsx",
+    "src/components/chat/SupportChat*.tsx",
+    "src/components/*Cookie*",
+    "src/components/ui/**",
+    "src/app/globals.css",
+    "src/lib/ui/text.ts",
+    "src/server/listings/**",
+    "src/app/api/listings/**",
+    "tests/**"
+  ]
+}

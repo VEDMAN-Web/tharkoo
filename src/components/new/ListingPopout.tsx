@@ -4,17 +4,20 @@ import { useLayoutEffect, useRef, useState, type MutableRefObject } from "react"
 import { createPortal } from "react-dom";
 import Link from "next/link";
 import { Check } from "lucide-react";
-import { recordAdClick } from "@/components/ad/adCountStore";
 import { SaveButton } from "@/components/ui/SaveButton";
 import { fillText } from "@/lib/ui/text";
+import { AdCardCounts } from "./AdCardCounts";
 import { PopPhoto } from "./HomeAdPopout";
 import type { CardSlide } from "./card-slides";
 import type { ListingRowData, RowLabels } from "./listing-row-data";
 import type { ListingRowLabels } from "./ListingRow";
+import { clampPopLeft, clampPopTop, popMaxHeight } from "./pop-layout";
 
-const GROW_PX = 28;
+/** H19.1: the pop-out is a quarter smaller than before (the row plus 28 px a side, 720 px at least). */
+const OLD_GROW_PX = 28;
+const SIZE_SHARE = 0.75;
 const EDGE_PX = 8;
-const MIN_WIDTH_PX = 720;
+const MIN_WIDTH_PX = 560;
 
 /**
  * H14.1b: the hover pop-out of a listing row, laid out sideways: the bigger photo on the left with its thumbnails and arrows,
@@ -49,18 +52,19 @@ export function ListingPopout({
   onLeave: () => void;
 }) {
   const ref = useRef<HTMLDivElement>(null);
-  const [top, setTop] = useState(anchor.top - GROW_PX);
-  const width = Math.min(Math.max(anchor.width + GROW_PX * 2, MIN_WIDTH_PX), window.innerWidth - EDGE_PX * 2);
-  const left = Math.min(Math.max(anchor.left - GROW_PX, EDGE_PX), window.innerWidth - width - EDGE_PX);
+  const [top, setTop] = useState(anchor.top - OLD_GROW_PX);
+  const width = Math.min(Math.max(Math.round((anchor.width + OLD_GROW_PX * 2) * SIZE_SHARE), MIN_WIDTH_PX), window.innerWidth - EDGE_PX * 2);
+  const left = clampPopLeft(anchor.left + (anchor.width - width) / 2, width, window.innerWidth);
   const place = ad.area ? `${ad.city}, ${ad.area}` : ad.city;
 
   useLayoutEffect(() => {
     const el = ref.current;
     if (!el) return;
     const place = () => {
-      const height = el.getBoundingClientRect().height;
+      // offsetHeight ignores the grow-in animation scale, so the bottom edge is right from the first frame.
+      const height = el.offsetHeight;
       const wanted = anchor.top + anchor.height / 2 - height / 2;
-      setTop(Math.max(EDGE_PX, Math.min(wanted, window.innerHeight - height - EDGE_PX)));
+      setTop(clampPopTop(wanted, height, window.innerHeight));
     };
     place();
     if (typeof ResizeObserver === "undefined") return;
@@ -79,14 +83,14 @@ export function ListingPopout({
       role="group"
       aria-label={ad.title}
       data-tk="listing-popout"
-      style={{ left, top, width, transformOrigin: `${originX}px ${originY}px` }}
+      style={{ left, top, width, maxHeight: popMaxHeight(window.innerHeight), transformOrigin: `${originX}px ${originY}px` }}
       onPointerEnter={onEnter}
       onPointerLeave={onLeave}
     >
       <PopPhoto ad={ad} labels={labels} slides={slides} index={index} onIndex={onIndex} videoRef={videoRef} heart={false} />
       <div className="tkh-pop-body tk-pop-body">
         <p className="tkh-pop-title tk-pop-title">
-          <Link href={ad.href} prefetch={false} className="tkh-pop-link" data-ad-link onClick={() => (ad.slug ? recordAdClick(ad.slug) : undefined)}>
+          <Link href={ad.href} prefetch={false} className="tkh-pop-link" data-ad-link>
             {ad.title}
           </Link>
         </p>
@@ -109,6 +113,7 @@ export function ListingPopout({
         </p>
         <div className="tk-pop-foot">
           {ad.showPrice && ad.price ? <span className="tk-row-price">{ad.price}</span> : null}
+          <AdCardCounts slug={ad.slug} labels={{ views: row.views, viewOne: row.viewOne, clicks: row.clicks, clickOne: row.clickOne }} />
         </div>
         <div className="tkh-pop-acts tk-pop-acts">
           {chatOn ? <Link href={`${ad.href}${ad.href.includes("?") ? "&" : "?"}chat=1`} prefetch={false} className="tkh-pop-btn" data-tk="pop-chat">{labels.chat}</Link> : null}

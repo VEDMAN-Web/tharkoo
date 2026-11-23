@@ -4,9 +4,9 @@ import { useMemo, useRef } from "react";
 import Link from "next/link";
 import { Camera, Check } from "lucide-react";
 import { SaveButton } from "@/components/ui/SaveButton";
-import { recordAdClick } from "@/components/ad/adCountStore";
 import { useSellerStatus } from "@/components/availability/sellerStatus";
 import { makeT } from "@/lib/ui/text";
+import { AdCardCounts } from "./AdCardCounts";
 import type { HomeAdLabels } from "./HomeAdCard";
 import { cardSlides } from "./card-slides";
 import { SlideNav, SlideTrack } from "./CardSlides";
@@ -48,14 +48,11 @@ export function ListingRow({ ad, labels, order = 0, eager = false }: { ad: Listi
   const { trackRef, videoRef, index, setIndex, calm, onScroll, step } = useCardSlider({ cardRef, slug: ad.slug, slides, order, anchored: Boolean(anchor), popVideoRef });
   const tier = tierText(ad.tier, row);
   const place = ad.area ? `${ad.city}, ${ad.area}` : ad.city;
-  const clicked = () => {
-    if (ad.slug) recordAdClick(ad.slug);
-  };
 
   return (
     <article ref={cardRef} className={anchor ? "tk-row is-open" : "tk-row"} data-tk="listing-row" data-slide={index} data-tier={ad.tier || undefined} {...cardHandlers}>
       <div className="tk-row-photo">
-        <SlideTrack slides={slides} href={ad.href} trackRef={trackRef} videoRef={videoRef} onScroll={onScroll} onTouch={calm} onClicked={clicked} title={ad.title} place={ad.area || ad.city} eager={eager} />
+        <SlideTrack slides={slides} href={ad.href} trackRef={trackRef} videoRef={videoRef} onScroll={onScroll} onTouch={calm} title={ad.title} place={ad.area || ad.city} eager={eager} />
         {tier ? <span className="tk-row-tier" data-tier={ad.tier}>{tier}</span> : null}
         {slides.length ? (
           <span className="tk-row-count" data-tk="row-media-count" aria-hidden="true">
@@ -75,7 +72,7 @@ export function ListingRow({ ad, labels, order = 0, eager = false }: { ad: Listi
       <div className="tk-row-body">
         <div className="tk-row-titlerow">
           <h3 className="tk-row-title">
-            <Link href={ad.href} prefetch={false} className="tkh-ad-link" onClick={clicked} data-ad-link>
+            <Link href={ad.href} prefetch={false} className="tkh-ad-link" data-ad-link>
               {ad.title}
             </Link>
           </h3>
@@ -99,6 +96,7 @@ export function ListingRow({ ad, labels, order = 0, eager = false }: { ad: Listi
               {place ? <Link href={ad.cityHref} prefetch={false} className="tk-row-tag is-place">{place}</Link> : null}
             </p>
           </div>
+          <AdCardCounts slug={ad.slug} labels={{ views: row.views, viewOne: row.viewOne, clicks: row.clicks, clickOne: row.clickOne }} />
         </div>
       </div>
       {anchor ? (

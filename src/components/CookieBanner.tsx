@@ -5,6 +5,9 @@ import Link from "next/link";
 import { CONSENT_EVENT, CONSENT_KEY } from "@/lib/analytics/ga";
 import "./CookieBanner.css";
 
+/** The notice hides itself when nobody answers it. Nothing is stored, so it counts as "Only necessary" for this visit. */
+export const COOKIE_NOTICE_IDLE_MS = 30_000;
+
 /** Saves the choice and tells the page (H17.11: the analytics tag loads only after Accept). */
 function choose(value: "all" | "necessary") {
   try {
@@ -41,6 +44,11 @@ export function CookieBanner({
       window.removeEventListener("tk-age-ok", maybe);
     };
   }, []);
+  useEffect(() => {
+    if (!open) return;
+    const id = window.setTimeout(() => setOpen(false), COOKIE_NOTICE_IDLE_MS);
+    return () => window.clearTimeout(id);
+  }, [open]);
   if (!open) return null;
   return (
     <div className="tkc-banner">

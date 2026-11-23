@@ -46,12 +46,11 @@ test.describe("H7.90: compact search results page", () => {
     await expect(page.locator('[data-tk="active-chips"]')).toHaveCount(0);
   });
 
-  test("the sort select keeps the filters and shows Verified first", async ({ page }) => {
+  test("there is no Sort menu on the search page (H19.1)", async ({ page }) => {
     await page.setViewportSize({ width: 1440, height: 900 });
     await page.goto("/search/?category=dating");
-    await page.locator(".tkn-sr-sort select").selectOption("verified");
-    await expect(page).toHaveURL(/category=dating&sort=verified$/);
-    await expect(page.locator(".tkn-sr-sort select")).toHaveValue("verified");
+    await expect(page.locator(".tkn-sr-sort")).toHaveCount(0);
+    await expect(page.locator('[data-tk="results-count"]')).toBeVisible();
     await expect(page.locator(':is([data-tk=card], [data-tk=home-ad], [data-tk=listing-row])').first()).toBeVisible();
   });
 

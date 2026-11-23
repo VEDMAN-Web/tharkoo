@@ -53,8 +53,8 @@ async function styles(page: Page) {
       priceColor: price ? getComputedStyle(price).color : null,
       hasCount: Boolean(card.querySelector(".tk-row-count")),
       hasMark: Boolean(card.querySelector(".tk-row-mark")),
-      // H17.1: the public card shows no views and no clicks (they stay in the seller dashboard).
-      hasStats: Boolean(card.querySelector('.tk-row-stats, [data-tk="row-views"], [data-tk="row-clicks"]')),
+      // H19.1: every card shows two small counts, views (an eye) and clicks (a pointer).
+      hasStats: Boolean(card.querySelector('[data-tk="card-views"] svg') && card.querySelector('[data-tk="card-clicks"] svg')),
       cardText: card.textContent ?? "",
     };
   });
@@ -84,8 +84,7 @@ test.describe("H14.1 listing rows", () => {
       expect(s.placeColor).toEqual(["rgb(91, 33, 182)", "rgb(245, 240, 255)"]);
       expect(s.footBorder).toContain("rgb(243, 232, 247)");
       expect(s.hasCount && s.hasMark).toBe(true);
-      expect(s.hasStats, "no views or clicks on a public card (H17.1)").toBe(false);
-      expect(s.cardText).not.toMatch(/\b\d[\d,]*\s+(views?|clicks?)\b/i);
+      expect(s.hasStats, "views and clicks counts with icons on every card (H19.1)").toBe(true);
       if (s.priceSize) {
         expect(s.priceSize).toBe("17px");
         expect(s.priceWeight).toBe("800");
@@ -181,7 +180,7 @@ test.describe("H14.1 listing rows", () => {
     await shot(page, "similar", testInfo);
   });
   // H14.1 (#374): the whole card is the link. One real link on the title is stretched over the card; the heart and the slider buttons sit above it.
-  test("the whole row opens the ad: photo, title, description and empty space; the heart does not; one click is counted per open", async ({ page }) => {
+  test("the whole row opens the ad: photo, title, description and empty space; the heart does not; opening the ad is not a click (H19.1)", async ({ page }) => {
     // Every click event the page sends (sendBeacon or fetch) is written to sessionStorage, which survives the page change.
     await page.addInitScript(() => {
       const note = (text: string) => {
@@ -228,7 +227,8 @@ test.describe("H14.1 listing rows", () => {
       await page.mouse.click(x, y);
       await page.waitForURL(`**${href}`, { timeout: 15_000 });
       await page.waitForTimeout(800);
-      expect(await clickCount(), `${name}: one click counted, not two`).toBe(before + 1);
+      // H19.1: a click is a press of a contact button on the ad page. Opening the ad from a card is a view there, not a click.
+      expect(await clickCount(), `${name}: opening the ad counts no click`).toBe(before);
     }
     // the heart opens nothing
     await page.goto("/jobs/mumbai/");
@@ -244,8 +244,8 @@ test.describe("H14.1 listing rows", () => {
     await page.keyboard.press("Enter");
     await page.waitForURL(`**${href}`, { timeout: 15_000 });
   });
-  // H17.1 (was #375): the public row card shows NO views and NO clicks, whatever the counters say; they stay in the seller dashboard.
-  test("a row card shows no views and no clicks, and its footer fits", async ({ page }) => {
+  // H19.1: every row card shows views (an eye) and clicks (a pointer) with the numbers of the ad; the footer still fits.
+  test("a row card shows its views and clicks with icons, and its footer fits", async ({ page }) => {
     await page.route("**/api/views/counts/**", async (route) => {
       const slugs = new URL(route.request().url()).searchParams.get("slugs")?.split(",") ?? [];
       await route.fulfill({ json: { ok: true, data: { items: Object.fromEntries(slugs.map((slug) => [slug, { views: 1248, clicks: 86 }])) } } });
@@ -253,8 +253,8 @@ test.describe("H14.1 listing rows", () => {
     await page.goto("/dating/");
     const card = page.locator(ROW).first();
     await expect(card).toBeVisible();
-    await expect(card.locator('.tk-row-stats, [data-tk="row-views"], [data-tk="row-clicks"]')).toHaveCount(0);
-    await expect(card).not.toContainText(/\bviews?\b|\bclicks?\b/i);
+    await expect(card.locator('[data-tk="card-views"]')).toHaveText("1,248");
+    await expect(card.locator('[data-tk="card-clicks"]')).toHaveText("86");
     const fit = await card.locator(".tk-row-foot").evaluate((foot) => foot.scrollWidth - foot.clientWidth);
     expect(fit, "footer scrollWidth <= clientWidth").toBeLessThanOrEqual(0);
   });

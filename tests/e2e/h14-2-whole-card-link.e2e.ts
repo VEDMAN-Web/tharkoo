@@ -56,7 +56,7 @@ async function backToHome(page: Page) {
 }
 
 test.describe("H14.2 whole ad card is the link", () => {
-  test("Home card: photo, title, empty space each open the ad with one click event; the heart does not; Tab then Enter opens it with a ring", async ({ page }) => {
+  test("Home card: photo, title, empty space each open the ad and count no click (H19.1); the heart does not; Tab then Enter opens it with a ring", async ({ page }) => {
     test.setTimeout(240_000);
     const clicks = await watchClicks(page);
     let card = await openHome(page);
@@ -82,7 +82,7 @@ test.describe("H14.2 whole ad card is the link", () => {
       await place.click({ position });
       await expect(page).toHaveURL(/\/ad\//);
       await page.waitForTimeout(400);
-      expect((await clicks()) - before, `one click event for opening from target ${round}`).toBe(1);
+      expect((await clicks()) - before, `opening from target ${round} counts no click (a click is a contact button press)`).toBe(0);
       card = await backToHome(page);
     }
 
@@ -108,7 +108,7 @@ test.describe("H14.2 whole ad card is the link", () => {
     await expect(page).toHaveURL(/\/ad\//);
   });
 
-  test("hover pop-out: no View button; the whole pop-out opens the ad; heart does not; one click event", async ({ page }, testInfo) => {
+  test("hover pop-out: no View button; the whole pop-out opens the ad; heart does not; no click event (H19.1)", async ({ page }, testInfo) => {
     test.skip(testInfo.project.name !== "desktop-1440", "mouse only");
     test.setTimeout(180_000);
     const clicks = await watchClicks(page);
@@ -132,6 +132,6 @@ test.describe("H14.2 whole ad card is the link", () => {
     await body.click({ position: { x: box.width - 8, y: 8 } });
     await expect(page).toHaveURL(/\/ad\//);
     await page.waitForTimeout(400);
-    expect(await clicks(), "one click event for opening from the pop-out").toBe(1);
+    expect(await clicks(), "opening from the pop-out counts no click").toBe(0);
   });
 });
