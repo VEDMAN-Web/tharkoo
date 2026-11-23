@@ -30,7 +30,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<Rec
   }
   const params = await searchParams;
   const slug = one(params.c).toLowerCase();
-  const data = await loadCategoriesScreen(/^[a-z0-9-]{1,80}$/.test(slug) ? slug : "");
+  const data = { ...(await loadCategoriesScreen(/^[a-z0-9-]{1,80}$/.test(slug) ? slug : "")), canVideo: identity.roles.includes("superadmin") };
   const loaded = data.detail ? await readCategoryFields(data.detail.slug) : null;
   const fields: EditorField[] = (loaded?.fields ?? []).map((field) => ({
     key: String(field.key),

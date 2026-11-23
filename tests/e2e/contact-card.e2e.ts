@@ -190,8 +190,8 @@ test.describe("H6.8 contact card on a property ad with live tours on", () => {
     const popup = page.locator("[data-tk=ad-popup]");
     await expect(popup).toBeVisible();
     await expect(popup).toHaveAttribute("data-step", "call");
-    // The balance tile shows "…" until the popup knows the balance.
-    await expect(popup.locator(".tkn-pop-tile strong").nth(1)).not.toHaveText("…");
+    // The balance shows "…" until the popup knows the balance.
+    await expect(popup.locator("[data-tk=call-balance]")).not.toHaveText("…");
     await popup.locator(".tkn-pop-btn").click();
     await expect(popup).toHaveAttribute("data-step", "buy");
     await expect(page.getByRole("status").filter({ hasText: "Request sent" })).toHaveCount(0);
