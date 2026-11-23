@@ -2281,5 +2281,5 @@ body .tkn-footer {
 .tkn-coin-buy:focus-visible { outline: 3px solid #fff; outline-offset: 2px; }
 @media (max-width: 600px) {
   .tkn-coin-chip { display: inline-flex; padding: 0 10px; font-size: 13px; }
-  .tkn-coin-tip { right: auto; left: 0; }
+  .tkn-coin-tip { max-width: calc(100vw - 24px); white-space: normal; }
 }

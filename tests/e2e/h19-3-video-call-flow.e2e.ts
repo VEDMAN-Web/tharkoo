@@ -19,6 +19,19 @@ async function writeSwitch(value: TourSwitch) {
   expect(res?.matchedCount).toBe(1);
 }
 
+/** H18.8: a video call is offered only on an ad with TOP or Super Top running now. */
+async function promote(slug: string) {
+  const done = await withLocalDb(async (db) => {
+    const listing = await db.collection("listings").findOne({ slug }, { projection: { _id: 1 } });
+    if (!listing) return false;
+    const now = Date.now();
+    const product = await db.collection("promotion_products").findOne({ code: "top" }, { projection: { _id: 1 } });
+    await db.collection("promotion_orders").insertOne({ productId: product?._id, listingId: listing._id, status: "active", startsAt: new Date(now - 3_600_000), endsAt: new Date(now + 86_400_000), createdAt: new Date(), updatedAt: new Date() });
+    return true;
+  });
+  expect(done, "the ad and the test database are there").toBe(true);
+}
+
 async function shot(page: Page, name: string) {
   mkdirSync(SHOTS, { recursive: true });
   await page.screenshot({ path: `${SHOTS}/${name}-${page.viewportSize()?.width}.png` });
@@ -31,14 +44,23 @@ function tourButton(page: Page) {
 
 test.describe("H19.3 the video call flow for users", () => {
   let original: TourSwitch | null = null;
+  const packIds: unknown[] = [];
 
   test.beforeAll(async () => {
     original = await readSwitch();
     await writeSwitch({ enabled: true, coins: COINS });
+    // The test database has no call packs: four are added for this file and removed afterwards.
+    await withLocalDb(async (db) => {
+      const made = await db.collection("credit_packs").insertMany(
+        [100, 250, 500, 1000].map((price, order) => ({ credits: price / 10, price, bonus: 0, status: "active", order: 90 + order, wallet: "call", createdAt: new Date(), updatedAt: new Date() })),
+      );
+      packIds.push(...Object.values(made.insertedIds));
+    });
   });
 
   test.afterAll(async () => {
     if (original) await writeSwitch(original);
+    await withLocalDb((db) => db.collection("credit_packs").deleteMany({ _id: { $in: packIds as never[] } }));
   });
 
   test("buy call credits inside the pop-up, pay, and come back to the same ad with the call ready", async ({ page, baseURL }) => {
@@ -48,6 +70,7 @@ test.describe("H19.3 the video call flow for users", () => {
     await loginUi(page, email);
     const path = await realAdPath(page, FEED);
     await setSellerAvailable(slugFromAdPath(path), true);
+    await promote(slugFromAdPath(path));
     await page.goto(path);
     const adUrl = page.url();
 
@@ -102,6 +125,7 @@ test.describe("H19.3 the video call flow for users", () => {
     await loginUi(page, email);
     const path = await realAdPath(page, FEED);
     await setSellerAvailable(slugFromAdPath(path), true);
+    await promote(slugFromAdPath(path));
     await page.goto(path);
     const adPathName = new URL(page.url()).pathname;
     await tourButton(page).click();
