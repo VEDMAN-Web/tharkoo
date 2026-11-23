@@ -205,6 +205,8 @@ test.describe("H7.103 recharge sheet and mock checkout", () => {
     await signIn(page, baseURL!, "rechpill");
     await page.goto("/");
     await page.locator('[data-tk="header-coins"]').click();
+    // H19.3: the chip shows the balances; "Buy credits" in its tooltip opens the sheet.
+    await page.locator('[data-tk="header-coins-buy"]').click();
     await expect(page.locator('[data-tk="recharge-sheet"]')).toBeVisible();
     await page.keyboard.press("Escape");
     await expect(page.locator('[data-tk="recharge-sheet"]')).toHaveCount(0);

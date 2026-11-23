@@ -113,6 +113,7 @@ export function ContactProvider({
   const [chatOpen, setChatOpen] = useState(false);
   const [tourRequested, setTourRequested] = useState(false);
   const [popup, setPopup] = useState<PopupKind | null>(null);
+  const [paidAdded, setPaidAdded] = useState<number | null>(null);
   const [signedIn, setSignedIn] = useState(false);
   // H17.1: a sample ad has nobody behind it, so there is no Online now or Away to show.
   const seller = useSellerStatus(sample ? undefined : listingSlug);
@@ -218,6 +219,28 @@ export function ContactProvider({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [listingId]);
 
+  // H19.3: ?call=1 (the way back from buying call credits inside the video call pop-up) opens the pop-up again on this ad, once.
+  // ?paid=1&added=N says what was just added, so the pop-up shows "Recharge successful" with the Start video call button ready.
+  const callLinked = useRef(false);
+  useEffect(() => {
+    if (callLinked.current || !listingId || !tour || sample) return;
+    const params = new URLSearchParams(window.location.search);
+    if (params.get("call") !== "1") return;
+    callLinked.current = true;
+    const added = Number(params.get("added"));
+    const paid = params.get("paid") === "1" && Number.isFinite(added) && added > 0;
+    for (const key of ["call", "paid", "added"]) params.delete(key);
+    const query = params.toString();
+    window.history.replaceState(null, "", `${window.location.pathname}${query ? `?${query}` : ""}${window.location.hash}`);
+    const id = window.setTimeout(() => {
+      setPaidAdded(paid ? added : null);
+      setSignedIn(hasSessionHint());
+      setPopup("call");
+    }, 0);
+    return () => window.clearTimeout(id);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [listingId, tour, sample]);
+
   const value: Ctx = { shown, notice, busy, tour, tourRequested, open, openChatFlow: () => void openChatFlow(), openCall, seller, people, info, isOwner, listingId };
   return (
     <ContactCtx.Provider value={value}>
@@ -232,6 +255,7 @@ export function ContactProvider({
           paymentsLive={info.paymentsLive}
           alternatives={info.alternatives}
           notice={notice?.text ?? null}
+          paidAdded={paidAdded}
           onClose={closePopup}
           onSignedIn={() => setSignedIn(true)}
           onStartCall={startCall}

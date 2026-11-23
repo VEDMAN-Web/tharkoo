@@ -7,6 +7,7 @@ import { api, friendlyError } from "@/lib/ui/api";
 import type { paymentView } from "@/server/billing/recharge";
 import { CoinMark, MastercardMark, VisaMark } from "./PayMarks";
 import { MockQr } from "./MockQr";
+import { callBackUrl } from "./back-url";
 import "./checkout.css";
 
 type Payment = ReturnType<typeof paymentView>;
@@ -19,9 +20,7 @@ const NETWORKS = ["TRC-20", "ERC-20", "BEP-20"] as const;
 const money = (value: number) => value.toLocaleString("en-IN");
 
 function backUrl(payment: Payment, result: "paid" | "failed") {
-  const base = payment.returnTo || "/u/account/credits/";
-  const joiner = base.includes("?") ? "&" : "?";
-  return `${base}${joiner}recharge=${result}&credits=${payment.credits}&payment=${payment.id}`;
+  return callBackUrl(payment.returnTo, result, payment.credits, payment.id);
 }
 
 function initialPhase(payment: Payment): Phase {

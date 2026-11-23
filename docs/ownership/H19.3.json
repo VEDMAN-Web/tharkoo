@@ -1,0 +1,21 @@
+{
+  "branchPrefix": "haiku/h19.3",
+  "globs": [
+    "docs/ownership/H19.3.json",
+    "progress/H19.3.md",
+    "src/app/globals.css",
+    "src/components/ContactButtons.tsx",
+    "src/components/HeaderNew.tsx",
+    "src/components/new/AdPopup.tsx",
+    "src/components/recharge/CallPacks.tsx",
+    "src/components/recharge/CheckoutView.tsx",
+    "src/components/recharge/RechargeHost.tsx",
+    "src/components/recharge/back-url.ts",
+    "src/components/recharge/call-popup.css",
+    "src/lib/ui/text.ts",
+    "tests/e2e/contact-card.e2e.ts",
+    "tests/e2e/h19-3-video-call-flow.e2e.ts",
+    "tests/e2e/h7-103-recharge.e2e.ts",
+    "tests/server/ui/h19-3-call-popup.test.ts"
+  ]
+}

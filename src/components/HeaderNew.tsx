@@ -62,6 +62,11 @@ export function HeaderNew({
   const signedIn = isSignedInPhase(phase);
   const accountLabel = user ? accountName(user.displayName, user.email || "") : "";
   const [accountOpen, setAccountOpen] = useState(false);
+  // H19.3: the credit chip shows "Call credits: N \u00b7 Ad credits: N" on hover (desktop) and on tap (phone).
+  const [coinTip, setCoinTip] = useState(false);
+  const coinRef = useRef<HTMLSpanElement>(null);
+  const closeCoinTip = useCallback(() => setCoinTip(false), []);
+  useMenuDismiss(coinTip, coinRef, closeCoinTip);
   const accountRef = useRef<HTMLDivElement>(null);
   const closeAccount = useCallback(() => setAccountOpen(false), []);
   useMenuDismiss(accountOpen, accountRef, closeAccount);
@@ -126,11 +131,19 @@ export function HeaderNew({
             <>
               {balanceReady ? (
                 balance !== null ? (
-                  <button type="button" className="tkn-coin-chip" data-tk="header-coins" aria-label={t("panel.coins.chipLabel", { call: callBalance ?? 0, ad: balance })} onClick={() => openRecharge({})}>
-                    <Phone size={13} aria-hidden="true" focusable="false" /> {callBalance ?? 0}
-                    <span className="tkn-coin-sep" aria-hidden="true">·</span>
-                    <Megaphone size={13} aria-hidden="true" focusable="false" /> {balance}
-                  </button>
+                  <span className="tkn-coin-wrap" ref={coinRef} data-open={coinTip ? "true" : undefined}>
+                    <button type="button" className="tkn-coin-chip" data-tk="header-coins" aria-label={t("panel.coins.chipLabel", { call: callBalance ?? 0, ad: balance })} aria-describedby="tkn-coin-tip" aria-expanded={coinTip} onClick={() => setCoinTip((open) => !open)}>
+                      <Phone size={13} aria-hidden="true" focusable="false" /> {callBalance ?? 0}
+                      <span className="tkn-coin-sep" aria-hidden="true">·</span>
+                      <Megaphone size={13} aria-hidden="true" focusable="false" /> {balance}
+                    </button>
+                    <span id="tkn-coin-tip" role="tooltip" className="tkn-coin-tip" data-tk="header-coins-tip">
+                      <span>{t("panel.coins.tooltip", { call: callBalance ?? 0, ad: balance })}</span>
+                      <button type="button" className="tkn-coin-buy" data-tk="header-coins-buy" onClick={() => { setCoinTip(false); openRecharge({}); }}>
+                        {t("panel.coins.buy")}
+                      </button>
+                    </span>
+                  </span>
                 ) : null
               ) : (
                 <span className="tkn-coin-chip tkn-skel" data-tk="header-coins-wait" aria-hidden="true" />
