@@ -1,6 +1,9 @@
-import { InternalError } from "@/server/http";
+import { InternalError, ValidationError } from "@/server/http";
 import { passimpayWithdraw } from "@/server/billing/passimpay";
 import { randomToken } from "@/server/shared/crypto";
+import { findPayoutOption, resolvePaymentId, usdtInrRate, type PayoutCoin, type PayoutNetwork } from "@/server/wallet/payout-coins";
+
+export { usdtInrRate };
 
 export type PayoutProviderName = "mock" | "bank" | "passimpay";
 
@@ -9,9 +12,9 @@ export interface InitiatePayoutInput {
   /** Rupees. */
   amountInr: number;
   method: "bank" | "upi" | "crypto";
-  /** H18.6: set for crypto payouts. */
-  crypto?: { network: "TRC20" | "BEP20"; address: string };
-  /** H18.6: the exact USDT the admin chose to send. Without it the rupees are converted at USDT_INR_RATE. */
+  /** H18.6: set for crypto payouts. H19.9: coin is USDT when missing (older saved wallets). */
+  crypto?: { network: PayoutNetwork; coin?: PayoutCoin; address: string };
+  /** H18.6: the exact amount the admin chose to send, in the vendor's coin. For USDT and USDC, without it the rupees are converted at USDT_INR_RATE. */
   usdtAmount?: string;
 }
 
@@ -56,29 +59,27 @@ export function setPayoutProvider(provider: PayoutProvider | null) {
   override = provider;
 }
 
-/** H18.6: PassimPay USDT payout ids (from /v2/currencies): USDT TRC20 = 71, USDT BEP20 = 72. */
-const PASSIMPAY_USDT_IDS = { TRC20: 71, BEP20: 72 } as const;
-
-/** Rupees per 1 USDT used to size a crypto payout. Server setting USDT_INR_RATE; 88 when unset. */
-export function usdtInrRate(): number {
-  const rate = Number(process.env.USDT_INR_RATE);
-  return Number.isFinite(rate) && rate > 0 ? rate : 88;
-}
-
 /** INR -> USDT, rounded down to cents so the platform never sends more than the rupee value. */
 export function usdtForInr(amountInr: number, rate = usdtInrRate()): string {
   return (Math.floor((amountInr / rate) * 100) / 100).toFixed(2);
 }
 
-/** H18.6: sends USDT through PassimPay. A refusal returns { ok: false } (the coins go back); a network error throws (stays requested). */
+/** H18.6: sends USDT through PassimPay. H19.9: any coin in payout-coins.ts; its PassimPay id comes from /v2/currencies. A refusal returns { ok: false } (the coins go back); a network error throws (stays requested). */
 const passimpayPayouts: PayoutProvider = {
   name: "passimpay",
   initiate: async (input) => {
     if (!input.crypto) return { ok: false, reason: "No crypto wallet on file" };
-    if (input.usdtAmount !== undefined && !/^\d{1,9}(\.\d{1,6})?$/.test(input.usdtAmount)) return { ok: false, reason: "Enter the USDT amount as a number, e.g. 11.50" };
+    const coin = input.crypto.coin ?? "USDT";
+    const option = findPayoutOption(coin, input.crypto.network);
+    // A thrown error leaves the payout requested (nothing was sent), so the admin can fix the amount and try again.
+    if (!option) throw new ValidationError("That coin is not available for payouts", { usdtAmount: ["That coin is not available for payouts"] });
+    if (input.usdtAmount !== undefined && !/^\d{1,9}(\.\d{1,8})?$/.test(input.usdtAmount)) throw new ValidationError("Invalid amount", { usdtAmount: [`Enter the ${coin} amount as a number, e.g. 11.50`] });
+    const dollarCoin = coin === "USDT" || coin === "USDC";
+    // Only a dollar coin can be sized from rupees alone; any other coin needs the amount the admin chose from the live estimate.
+    if (input.usdtAmount === undefined && !dollarCoin) throw new ValidationError("Enter the amount to send", { usdtAmount: [`Enter how much ${coin} to send`] });
     const amount = input.usdtAmount ?? usdtForInr(input.amountInr);
-    if (Number(amount) < 1) return { ok: false, reason: "Amount is below 1 USDT" };
-    const result = await passimpayWithdraw({ paymentId: PASSIMPAY_USDT_IDS[input.crypto.network], orderId: input.withdrawalId, addressTo: input.crypto.address, amount });
+    if (!(Number(amount) >= option.min)) throw new ValidationError("Amount is too small", { usdtAmount: [`Amount is below ${option.min} ${coin}`] });
+    const result = await passimpayWithdraw({ paymentId: await resolvePaymentId(coin, input.crypto.network), orderId: input.withdrawalId, addressTo: input.crypto.address, amount });
     return result.ok ? { ok: true, providerRef: result.transactionId } : { ok: false, reason: result.reason };
   },
 };

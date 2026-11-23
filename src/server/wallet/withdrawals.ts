@@ -7,6 +7,7 @@ import { ConflictError, NotFoundError, PaymentRequiredError, ValidationError, Ve
 import { accountBalance, postTransaction, type PostInput } from "@/server/ledger";
 import { registerModel } from "@/server/models/register";
 import { getPayoutKyc, maskedKyc, PayoutKyc, revealedKyc, type MaskedPayoutKyc } from "@/server/wallet/payout-kyc";
+import { payoutEstimate, RATE_UNAVAILABLE, type PayoutCoin, type PayoutEstimate, type PayoutNetwork } from "@/server/wallet/payout-coins";
 import { payoutProviderFor, type InitiatePayoutResult } from "@/server/wallet/payout-provider";
 import { assertFinanceStaff, getFinanceSettings } from "@/server/wallet/settings";
 import { hashIp } from "@/server/shared/crypto";
@@ -233,11 +234,11 @@ export async function approveWithdrawal(input: StaffInput & { usdtAmount?: strin
   let result: InitiatePayoutResult;
   try {
     // H18.6: a crypto payout reads the vendor's wallet (decrypted only here) and goes through PassimPay.
-    let crypto: { network: "TRC20" | "BEP20"; address: string } | undefined;
+    let crypto: { network: PayoutNetwork; coin: PayoutCoin; address: string } | undefined;
     if (row.method === "crypto") {
       const kyc = await PayoutKyc.findOne({ userId: row.userId }).lean();
       const details = kyc ? revealedKyc(kyc) : null;
-      if (details?.network && details.walletAddress) crypto = { network: details.network, address: details.walletAddress };
+      if (details?.network && details.walletAddress) crypto = { network: details.network, coin: details.coin ?? "USDT", address: details.walletAddress };
     }
     result = await payoutProviderFor(row.method).initiate({ withdrawalId: String(row._id), amountInr: row.amountInr, method: row.method, crypto, usdtAmount: row.method === "crypto" ? input.usdtAmount : undefined });
   } catch (error) {
@@ -338,6 +339,9 @@ export async function listOwnWithdrawals(userId: string, page: number, pageSize:
 export interface StaffPayoutRow extends ReturnType<typeof present> {
   userId: string;
   payout: MaskedPayoutKyc | null;
+  /** H19.9: the live estimate for a crypto payout still waiting, or null. estimateText says what to show. */
+  estimate: PayoutEstimate | null;
+  estimateText: string | null;
 }
 
 /** The Finance queue. Bank and UPI details are masked here too. */
@@ -352,7 +356,25 @@ export async function listPayoutsForStaff(input: { roles: readonly string[]; sta
     .lean();
   const kycRows = await PayoutKyc.find({ userId: { $in: [...new Set(rows.map((row) => String(row.userId)))].map((id) => new Types.ObjectId(id)) } }).lean();
   const kycByUser = new Map(kycRows.map((row) => [String(row.userId), maskedKyc(row)]));
-  return rows.map((row) => ({ ...present(row), userId: String(row.userId), payout: kycByUser.get(String(row.userId)) ?? null }));
+  return Promise.all(
+    rows.map(async (row) => {
+      const payout = kycByUser.get(String(row.userId)) ?? null;
+      // The estimate is only for a crypto payout the admin still has to decide; it is a guide, the admin types the final amount.
+      const wantsEstimate = row.method === "crypto" && row.status === "requested" && payout?.network;
+      const estimate = wantsEstimate ? await payoutEstimate(row.amountInr, payout?.coin ?? "USDT", payout!.network!) : null;
+      return { ...present(row), userId: String(row.userId), payout, estimate, estimateText: wantsEstimate ? (estimate?.text ?? RATE_UNAVAILABLE) : null };
+    }),
+  );
+}
+
+/** H19.9: what a vendor would get, as a range, before they ask to withdraw. Needs a saved crypto wallet; the rate never blocks the request. */
+export async function withdrawalEstimate(userId: string, coins: number) {
+  await connectDb();
+  const [kyc, settings] = await Promise.all([getPayoutKyc(userId), getFinanceSettings()]);
+  if (!kyc || kyc.method !== "crypto" || !kyc.network) return { coin: null, network: null, estimate: null, text: null };
+  const coin = kyc.coin ?? "USDT";
+  const estimate = Number.isInteger(coins) && coins > 0 ? await payoutEstimate(coins * settings.coinValueInr, coin, kyc.network) : null;
+  return { coin, network: kyc.network, estimate, text: estimate?.text ?? RATE_UNAVAILABLE };
 }
 
 /** Everything the vendor's wallet screen needs in one call. Pending means payout_pending. */

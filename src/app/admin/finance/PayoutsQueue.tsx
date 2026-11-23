@@ -15,6 +15,7 @@ interface RevealedDetails {
   accountNumber?: string;
   ifsc?: string;
   upiId?: string;
+  coin?: string;
   network?: string;
   walletAddress?: string;
 }
@@ -27,7 +28,7 @@ interface Revealed {
 
 function detailsText(details: RevealedDetails) {
   const lines = [`Name: ${details.legalName}`, `PAN: ${details.pan}`];
-  if (details.method === "crypto") lines.push(`USDT ${details.network ?? ""} wallet: ${details.walletAddress ?? ""}`);
+  if (details.method === "crypto") lines.push(`${details.coin ?? "USDT"} ${details.network ?? ""} wallet: ${details.walletAddress ?? ""}`);
   else if (details.method === "upi") lines.push(`UPI ID: ${details.upiId ?? ""}`);
   else lines.push(`Account: ${details.accountNumber ?? ""}`, `IFSC: ${details.ifsc ?? ""}`);
   return lines.join("\n");
@@ -45,8 +46,11 @@ export interface PayoutRow {
   reference: string | null;
   reason: string | null;
   requestedAt: string;
+  /** H19.9: the live estimate for a crypto payout still waiting; estimateText is what to show. */
+  estimateText?: string | null;
   payout: {
     method: "bank" | "upi" | "crypto";
+    coin?: string;
     network?: string;
     legalName: string;
     pan: string;
@@ -65,6 +69,9 @@ const COLUMNS: Column<PayoutRow>[] = [
   { key: "tdsPercent", label: "TDS %" },
   { key: "gstPercent", label: "GST %" },
   { key: "name", label: "Name", value: (row) => row.payout?.legalName ?? "" },
+  { key: "coin", label: "Coin", value: (row) => (row.method === "crypto" ? (row.payout?.coin ?? "USDT") : "") },
+  { key: "network", label: "Network", value: (row) => row.payout?.network ?? "" },
+  { key: "estimate", label: "Live estimate", value: (row) => row.estimateText ?? "" },
   { key: "pan", label: "PAN (masked)", value: (row) => row.payout?.pan ?? "" },
   { key: "account", label: "Account or UPI (masked)", value: (row) => row.payout?.accountNumber ?? row.payout?.upiId ?? "" },
   { key: "reference", label: "Reference", value: (row) => row.reference ?? "" },
@@ -149,7 +156,7 @@ export function PayoutsQueue({ rows }: { rows: PayoutRow[] }) {
       body.reason = reason.trim();
     }
     if (path === "approve" && selected.method === "crypto") {
-      if (!/^\d{1,9}(\.\d{1,6})?$/.test(usdt.trim()) || Number(usdt) <= 0) return setMessage({ kind: "error", text: "Enter how much USDT to send, e.g. 11.50." });
+      if (!/^\d{1,9}(\.\d{1,8})?$/.test(usdt.trim()) || Number(usdt) <= 0) return setMessage({ kind: "error", text: `Enter how much ${selected.payout?.coin ?? "USDT"} to send, e.g. 11.50.` });
       body.usdtAmount = usdt.trim();
     }
     if (needs === "reference") {
@@ -187,9 +194,12 @@ export function PayoutsQueue({ rows }: { rows: PayoutRow[] }) {
           {selected.method === "crypto" && selected.status === "requested" ? (
             <>
               <p className="t-small" style={{ margin: 0 }}>
-                Pays ₹{selected.amountInr.toLocaleString("en-IN")} in USDT to the vendor&apos;s {selected.payout?.network ?? ""} wallet. You choose the amount; it is sent through PassimPay when you click Approve and cannot be undone.
+                Pays ₹{selected.amountInr.toLocaleString("en-IN")} in {selected.payout?.coin ?? "USDT"} to the vendor&apos;s {selected.payout?.network ?? ""} wallet. You choose the final amount; it is sent through PassimPay when you click Approve and cannot be undone.
               </p>
-              <TextField label="USDT to send" value={usdt} onChange={setUsdt} min={1} max={16} />
+              <p className="t-small" role="status" data-tk="payout-estimate" style={{ margin: 0 }}>
+                {selected.estimateText ?? "Rate unavailable, the admin confirms the exact amount"}
+              </p>
+              <TextField label={`${selected.payout?.coin ?? "USDT"} to send`} value={usdt} onChange={setUsdt} min={1} max={16} />
             </>
           ) : null}
           {actions.some((action) => action.needs === "reference") ? (

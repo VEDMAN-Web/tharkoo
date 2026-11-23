@@ -1,0 +1,15 @@
+{
+  "branchPrefix": "haiku/h19.9",
+  "globs": [
+    "docs/ownership/H19.9.json",
+    "progress/H19.9.md",
+    "src/server/wallet/**",
+    "src/server/billing/passimpay.ts",
+    "src/components/wallet/KycForm.tsx",
+    "src/components/wallet/VendorEarnings.tsx",
+    "src/app/admin/finance/PayoutsQueue.tsx",
+    "src/app/api/wallet/**",
+    "src/lib/ui/text.ts",
+    "tests/server/wallet/**"
+  ]
+}

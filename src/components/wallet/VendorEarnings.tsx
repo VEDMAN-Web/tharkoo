@@ -48,8 +48,24 @@ function WithdrawForm({ summary, onDone }: { summary: PayoutSummary; onDone: () 
   const [coins, setCoins] = useState("");
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState("");
+  const [range, setRange] = useState("");
   const amount = Number(coins);
+  const valid = Number.isInteger(amount) && amount > 0 && amount <= 1_000_000;
   const waiting = summary.nextWithdrawalAt ? new Date(summary.nextWithdrawalAt).toLocaleDateString("en-IN", { day: "2-digit", month: "short" }) : null;
+
+  // H19.9: the live range for the typed credits, looked up shortly after typing stops.
+  useEffect(() => {
+    if (!valid || summary.kyc?.method !== "crypto") return;
+    let live = true;
+    const timer = window.setTimeout(async () => {
+      const res = await api<{ text: string | null }>(`/api/wallet/payouts/estimate?coins=${amount}`);
+      if (live) setRange(res.ok && res.data.text ? res.data.text : "Rate unavailable, the admin confirms the exact amount");
+    }, 400);
+    return () => {
+      live = false;
+      window.clearTimeout(timer);
+    };
+  }, [amount, valid, summary.kyc?.method]);
 
   async function submit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -81,6 +97,11 @@ function WithdrawForm({ summary, onDone }: { summary: PayoutSummary; onDone: () 
         {Number.isInteger(amount) && amount > 0 ? ` That is about ${inr(amount * summary.coinValueInr)} before deductions.` : ""}
         {` TDS ${summary.tdsPercent}% and GST ${summary.gstPercent}% are recorded on the payout.`}
       </p>
+      {valid && range ? (
+        <p className="t-small" role="status" data-tk="payout-range" style={{ margin: 0, fontWeight: 600 }}>
+          {range}
+        </p>
+      ) : null}
       {waiting ? (
         <p className="t-small" role="status" style={{ color: "var(--accent)", margin: 0 }}>
           Your next withdrawal opens on {waiting}.
