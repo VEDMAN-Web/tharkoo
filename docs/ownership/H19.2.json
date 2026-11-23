@@ -1,0 +1,16 @@
+{
+  "branchPrefix": "haiku/h19.2",
+  "globs": [
+    "docs/ownership/H19.2.json",
+    "progress/H19.2.md",
+    "docs/claude/STATUS.md",
+    "src/components/new/**",
+    "src/components/ContactButtons.tsx",
+    "src/components/auth/**",
+    "src/app/ad/[slug]/**",
+    "src/lib/seo/breadcrumbs*",
+    "src/lib/ui/text.ts",
+    "src/app/globals.css",
+    "tests/**"
+  ]
+}

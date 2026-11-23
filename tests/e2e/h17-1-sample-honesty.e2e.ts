@@ -40,8 +40,7 @@ test.describe("H17.1 sample ads are honest", () => {
   test("a sample ad page has no verified badge, no online dot, no Chat, Call or WhatsApp button; the Sample note and its Post button stay", async ({ page }) => {
     await page.goto("/ad/demo-0352/");
     await expect(page.locator("h1")).toHaveCount(1);
-    await expect(page.locator('[data-tk="sample-banner"]')).toBeVisible();
-    await expect(page.locator('[data-tk="sample-banner"]').getByRole("link", { name: "Post an ad" })).toBeVisible();
+    await expect(page.locator('[data-tk="sample-banner"]')).toHaveCount(0);
     await expect(page.locator('[data-tk="sample-pill"]').first()).toBeVisible();
     await expect(page.locator('[data-tk="new-ad"]').getByText(/photo verified|id verified|age verified/i)).toHaveCount(0);
     await expect(page.locator(".tkn-ad-pills .is-verified, .tkn-seller-verified")).toHaveCount(0);

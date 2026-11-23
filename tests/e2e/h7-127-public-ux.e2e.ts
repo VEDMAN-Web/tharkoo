@@ -97,10 +97,10 @@ test.describe("H7.127 public UX rules", () => {
     expect(href).toBeTruthy();
     await page.goto(href!);
     await page.waitForTimeout(600);
-    // H14.1: the similar ads are row cards: their tags (12 px) replace the pills; the small photo mark is 10 px in the approved design.
-    expect((await fontSizes(page, ".tk-row-tag")).length).toBeGreaterThan(0);
-    for (const size of await fontSizes(page, ".tk-row-tag, .tkh-pill")) expect(size).toBeGreaterThanOrEqual(MIN_TEXT);
-    for (const selector of [".tkh-ad-link", ".tk-row-tag", ".tkc-banner a"]) {
+    // H19.2: the similar ads are the Home-style cards again: their pills must be 12 px or more.
+    expect((await fontSizes(page, ".tkh-pill")).length).toBeGreaterThan(0);
+    for (const size of await fontSizes(page, ".tkh-pill")) expect(size).toBeGreaterThanOrEqual(MIN_TEXT);
+    for (const selector of [".tkh-ad-link", ".tkc-banner a"]) {
       for (const box of await heights(page, selector)) expect(box.height, `${selector} "${box.text}"`).toBeGreaterThanOrEqual(MIN_TARGET);
     }
     await shot(page, "h7-127-ad-page");

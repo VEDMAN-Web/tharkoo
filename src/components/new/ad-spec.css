@@ -25,8 +25,6 @@
   background: #f5f0ff; font-size: 13px; font-weight: 600; color: #3b1f5e;
 }
 .tkn .tkn-ad-pills li.is-sample { background: #eef2f7; color: #475569; }
-.tkn .tkn-ad-sample { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 16px; margin: 12px 0 0; padding: 12px 14px; border-radius: 12px; background: #f6f8fb; border: 1px solid #dde4ee; color: #334155; font-size: 14px; }
-.tkn .tkn-ad-sample p { margin: 0; flex: 1 1 260px; }
 .tkn .tkn-ad-pills li.is-featured { background: #fde7f3; color: #a8124f; }
 .tkn .tkn-ad-pills li.is-verified { background: #e7f7ef; color: #065f46; }
 .tkn .tkn-ad-rule { border: 0; border-top: 1px solid rgba(17, 5, 32, 0.08); margin: 16px 0; }
@@ -100,15 +98,7 @@ body:has(.tkn-ad) .tkn-footer { margin-top: 48px; }
 .tkn .tkn-similar h2 { margin: 0; font-size: 22px; line-height: 30px; font-weight: 700; letter-spacing: -0.02em; color: #110520; }
 .tkn .tkn-similar-all { font-size: 14px; font-weight: 700; color: #a8124f; min-height: 24px; display: inline-flex; align-items: center; }
 .tkn .tkn-similar-tools { display: flex; align-items: center; gap: 12px; }
-.tkn .tkn-similar-arrows { display: flex; gap: 8px; }
-.tkn .tkn-similar-arrow { width: 36px; height: 36px; padding: 0; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; border: 1px solid #ead8f0; background: #fff; color: #1e0b38; cursor: pointer; }
-.tkn .tkn-similar-arrow:disabled { opacity: 0.4; cursor: default; }
-.tkn .tkn-similar-grid {
-  --gap: 14px; --visible: 6; list-style: none; margin: 0; padding: 4px 4px 8px; margin-inline: -4px; display: flex; gap: var(--gap);
-  overflow-x: auto; scroll-snap-type: x mandatory; scrollbar-width: none;
-}
-.tkn .tkn-similar-grid::-webkit-scrollbar { display: none; }
-.tkn .tkn-similar-grid > li { flex: 0 0 calc((100% - var(--gap) * (var(--visible) - 1)) / var(--visible)); min-width: 0; scroll-snap-align: start; }
+.tkn .tkn-similar-grid { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
 .tkn .tkn-similar .tkh-ad { border-radius: 14px; }
 .tkn .tkn-similar .tkh-ad-photo { aspect-ratio: 185 / 220; }
 .tkn .tkn-similar .tkh-ad-slide img { object-position: 50% 18%; }
@@ -229,7 +219,6 @@ body:has(.tkn-ad) .tkn-footer { margin-top: 48px; }
   .tkn .tkn-ad-card { padding: 18px; }
   .tkn .tkn-ad-card h1 { font-size: 24px; line-height: 30px; }
   .tkn .tkn-det { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-  .tkn .tkn-similar-grid { --visible: 3; }
   .tkn .tkn-ad-bar {
     display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; position: fixed; left: 0; right: 0; bottom: 0; z-index: 25;
     min-height: 64px; padding: 8px 16px calc(8px + env(safe-area-inset-bottom)); box-sizing: border-box;
@@ -245,15 +234,11 @@ body:has(.tkn-ad) .tkn-footer { margin-top: 48px; }
 @media (max-width: 599px) {
   .tkn .tkn-det { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px 16px; }
   .tkn .tkn-ad-crumbs { row-gap: 4px; font-size: 13px; overflow-wrap: anywhere; }
-  .tkn .tkn-ad-crumbs > span:not([data-phone]) { display: none; }
-  .tkn .tkn-ad-crumbs > span[data-phone="first"] > span[aria-hidden] { display: none; }
   body:has(.tkn-ad) .tkn-footer { margin-top: 32px; }
   .tkn .tkn-pop-wrap { align-items: flex-end; padding: 0; }
   .tkn .tkn-adpop { width: 100%; max-height: 88vh; border-radius: 20px 20px 0 0; }
   .tkn .tkn-code { gap: 6px; }
   .tkn .tkn-code-box { min-height: 52px; font-size: 20px; }
-  .tkn .tkn-similar-grid { --gap: 10px; --visible: 2.3; margin-inline: -16px; padding-inline: 16px; scroll-padding-inline: 16px; }
-  .tkn .tkn-similar-arrows { display: none; }
 }
 @media (max-width: 359px) {
   .tkn .tkn-ad-bar .tk-btn { font-size: 13px; }
@@ -261,3 +246,12 @@ body:has(.tkn-ad) .tkn-footer { margin-top: 48px; }
 @media (prefers-reduced-motion: reduce) {
   .tkn .tk-btn { transition: none; }
 }
+
+.tkn .tkn-similar-grid > li { min-width: 0; }
+@media (max-width: 599px) { .tkn .tkn-similar-grid { gap: 10px; } }
+
+/* H19.2: the vendor on their own ad sees a note with Edit and Boost instead of the contact buttons. */
+.tkn .tk-owner-note { margin: 0; font-weight: 700; color: #3b1f5e; }
+.tkn .tk-owner-box { display: grid; gap: 10px; }
+.tkn .tk-owner-bar { display: contents; }
+.tkn .tkn-ad-bar .tk-owner-note { grid-column: 1 / -1; font-size: 13px; }

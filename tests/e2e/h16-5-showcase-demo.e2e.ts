@@ -28,9 +28,8 @@ test.describe("H16.5 sample ads", () => {
 
     await card.locator("a.tkh-ad-link").first().click();
     await expect(page.locator(`[data-tk="new-ad"] ${SAMPLE_PILL}`)).toHaveText("Sample ad");
-    const banner = page.locator('[data-tk="sample-banner"]');
-    await expect(banner).toContainText("This is a sample ad showing how ads look on Tharkoo. Your first 3 ads are free.");
-    await expect(banner.getByRole("link", { name: "Post an ad" })).toBeVisible();
+    // H19.2: the sample box is gone from the ad page.
+    await expect(page.locator('[data-tk="sample-banner"]')).toHaveCount(0);
     await expect(page.locator("h1")).toHaveCount(1);
     expect(await hasHorizontalScroll(page)).toBe(false);
 
