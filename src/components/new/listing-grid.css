@@ -395,7 +395,7 @@
 }
 @media (prefers-reduced-motion: no-preference) {
   .tkh-pop.tk-pop {
-    animation: tkh-pop-grow 280ms cubic-bezier(0.25, 0.8, 0.25, 1);
+    animation: tk-pop-row-in 150ms ease-out;
   }
 }
 @keyframes tk-pop-row-in {

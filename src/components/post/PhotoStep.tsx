@@ -263,7 +263,7 @@ export function PhotoStep({
           ) : null}
         </div>
         {allowVideo ? null : <p className="tkp-quiet" data-tk="no-video">{t("post.photo.noVideo")}</p>}
-        <p className="tkp-drop-rule" data-tk="photo-rule">
+        <div className="tkp-drop-rule" data-tk="photo-rule">
           {copy.photoRules.items[0] ?? t("post.photo.photoRuleFallback")}
           <InfoPopover id="post-rules" label={t("post.photo.rulesLabel")}>
             <strong>{t("post.photo.photoRulesTitle")}</strong>
@@ -279,7 +279,7 @@ export function PhotoStep({
               ))}
             </ul>
           </InfoPopover>
-        </p>
+        </div>
       </div>
       <div className="tkp-count-row">
       <p className="tkp-count" data-tk="photo-count">{t("post.photo.count", { shown, limit })}</p>
