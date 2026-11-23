@@ -844,6 +844,7 @@ export const TEXT_DEFAULTS = {
   "help.section.saved": "Ads you save appear here. Save an ad from its card, and remove it from here when you no longer need it.",
   "help.section.alerts": "Save a search to get alerts for new ads that match it. Turn an alert off here at any time.",
   "help.section.notifications": "Account messages and updates appear here. Open one to read it in full.",
+  "help.email.ownAddress": "Please use your own email address.",
 } as const;
 
 export type UiTextKey = keyof typeof TEXT_DEFAULTS;
