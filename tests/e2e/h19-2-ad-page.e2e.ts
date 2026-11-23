@@ -49,7 +49,7 @@ test.describe("H19.2 ad page", () => {
     await shot(page, "crumbs");
   });
 
-  test("similar ads: four cards, two by two", async ({ page }) => {
+  test("similar ads: four cards in one row from 1024 px, two by two below", async ({ page }) => {
     await page.goto(await realAdPath(page, "/property/bengaluru/"));
     const section = page.locator('[data-tk="similar-ads"]');
     await section.scrollIntoViewIfNeeded();
@@ -61,7 +61,11 @@ test.describe("H19.2 ad page", () => {
     const two = (await cards.nth(1).boundingBox())!;
     expect(Math.abs(one.y - two.y)).toBeLessThanOrEqual(2);
     expect(two.x).toBeGreaterThan(one.x);
-    if (count > 2) expect((await cards.nth(2).boundingBox())!.y).toBeGreaterThan(one.y + one.height - 2);
+    const wide = (page.viewportSize()?.width ?? 0) >= 1024;
+    if (wide) {
+      for (let i = 0; i < count; i += 1) expect(Math.abs((await cards.nth(i).boundingBox())!.y - one.y), `card ${i + 1} on the one row`).toBeLessThanOrEqual(2);
+      expect(one.width, "no wider than a Home card").toBeLessThanOrEqual(330);
+    } else if (count > 2) expect((await cards.nth(2).boundingBox())!.y).toBeGreaterThan(one.y + one.height - 2);
     expect(await hasHorizontalScroll(page)).toBe(false);
     await shot(page, "similar");
   });

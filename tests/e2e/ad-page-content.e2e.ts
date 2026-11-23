@@ -164,11 +164,17 @@ test.describe("H7.99b ad page content", () => {
       expect(Math.abs(one.y - two.y), "the first two are on one row").toBeLessThanOrEqual(2);
       expect(two.x).toBeGreaterThan(one.x + one.width - 1);
     }
-    if (count >= 3) {
+    if (count >= 3 && (page.viewportSize()?.width ?? 0) < 1024) {
       const one = (await cards.nth(0).boundingBox())!;
       const three = (await cards.nth(2).boundingBox())!;
       expect(three.y, "the third starts a second row").toBeGreaterThan(one.y + one.height - 2);
       expect(Math.abs(three.x - one.x)).toBeLessThanOrEqual(2);
+    }
+    if (count >= 4 && (page.viewportSize()?.width ?? 0) >= 1024) {
+      const one = (await cards.nth(0).boundingBox())!;
+      const four = (await cards.nth(3).boundingBox())!;
+      expect(Math.abs(four.y - one.y), "four cards in one row").toBeLessThanOrEqual(2);
+      expect(one.width, "no wider than a Home card").toBeLessThanOrEqual(330);
     }
     await section.scrollIntoViewIfNeeded();
     await page.evaluate(() => window.scrollTo(0, document.documentElement.scrollHeight));
