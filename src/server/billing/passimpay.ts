@@ -124,3 +124,49 @@ export async function passimpayWithdraw(
   if (data.result !== 1 || !data.transactionId) return { ok: false, reason: String(data.message || "PassimPay refused the payout").slice(0, 200) };
   return { ok: true, transactionId: String(data.transactionId) };
 }
+
+/** H19.9: one coin PassimPay can handle, as listed by POST /v2/currencies. rateUsd is the live price of 1 coin in US dollars. */
+export interface PassimpayCurrency {
+  id: number;
+  currency: string;
+  platform: string;
+  rateUsd: number;
+}
+
+/** H19.9: the coin list with live rates (POST /v2/currencies). Items without a usable id, symbol or rate are dropped. */
+export async function passimpayCurrencies(fetchImpl: typeof fetch = fetch): Promise<PassimpayCurrency[]> {
+  const data = await post<{ list?: unknown }>("currencies", {}, fetchImpl);
+  if (!Array.isArray(data.list)) throw new InternalError(NOT_AVAILABLE);
+  const out: PassimpayCurrency[] = [];
+  for (const raw of data.list as Record<string, unknown>[]) {
+    const id = Number(raw?.id ?? raw?.paymentId);
+    const rateUsd = Number(raw?.rateUsd ?? raw?.rate);
+    const currency = String(raw?.currency ?? raw?.symbol ?? "").trim().toUpperCase();
+    const platform = String(raw?.platform ?? raw?.network ?? "").trim().toUpperCase();
+    if (Number.isInteger(id) && id > 0 && currency && Number.isFinite(rateUsd) && rateUsd > 0) out.push({ id, currency, platform, rateUsd });
+  }
+  return out;
+}
+
+/**
+ * H19.9: asks PassimPay whether an address is valid for one coin (POST /v2/validateaddress). A network error or an unreadable
+ * answer throws (so nothing is saved on a guess); a clear "not valid" answer returns false.
+ */
+export async function passimpayValidateAddress(input: { paymentId: number; address: string }, fetchImpl: typeof fetch = fetch): Promise<boolean> {
+  const { platformId, apiKey } = credentials();
+  const body = JSON.stringify({ platformId, paymentId: input.paymentId, address: input.address });
+  let response: Response;
+  try {
+    response = await fetchImpl(`${API}/validateaddress`, {
+      method: "POST",
+      headers: { "content-type": "application/json", "x-signature": passimpaySignature(platformId, body, apiKey) },
+      body,
+      signal: AbortSignal.timeout(TIMEOUT_MS),
+    });
+  } catch {
+    throw new InternalError(NOT_AVAILABLE);
+  }
+  const data = (await response.json().catch(() => null)) as { result?: number; valid?: boolean; isValid?: boolean } | null;
+  if (!data || typeof data.result !== "number") throw new InternalError(NOT_AVAILABLE);
+  return data.result === 1 && data.valid !== false && data.isValid !== false;
+}

@@ -2,6 +2,7 @@ import { z } from "zod";
 import { json, readJson } from "@/server/billing/http";
 import { parseInput } from "@/server/http";
 import { pageQuerySchema } from "@/server/shared/schemas/common";
+import { assertPayoutWalletAllowed, offeredPayoutOptions } from "@/server/wallet/payout-coins";
 import { getPayoutKyc, payoutKycSchema, submitPayoutKyc } from "@/server/wallet/payout-kyc";
 import { revealWithdrawalDetails } from "@/server/wallet/payout-reveal";
 import {
@@ -13,6 +14,7 @@ import {
   payoutSummary,
   rejectWithdrawal,
   requestWithdrawal,
+  withdrawalEstimate,
   WITHDRAWAL_STATUSES,
 } from "@/server/wallet/withdrawals";
 import { connectDb } from "@/lib/db";
@@ -27,6 +29,7 @@ const reasonBodySchema = z.object({ reason: z.string().trim().min(3).max(300) })
 const referenceBodySchema = z
   .object({ reference: z.string().trim().min(4).max(64).regex(/^[A-Za-z0-9/_.-]+$/, "Use letters, digits and / _ . -") })
   .strict();
+const estimateQuerySchema = z.object({ coins: z.coerce.number().int().min(1).max(1_000_000) });
 const statusQuerySchema = z.object({ status: z.enum(WITHDRAWAL_STATUSES).optional() });
 
 /**
@@ -42,7 +45,17 @@ export async function handlePayoutRequest(request: Request, requestId: string, a
   if (path === "payouts/kyc" && method === "GET") return json(await getPayoutKyc(actor.id), requestId);
   if (path === "payouts/kyc" && method === "PUT") {
     const values = parseInput(payoutKycSchema, await readJson(request));
+    // H19.9: PassimPay must list the coin and accept the address before anything is saved.
+    if (values.method === "crypto") await assertPayoutWalletAllowed({ coin: values.coin, network: values.network, walletAddress: values.walletAddress });
     return json(await submitPayoutKyc({ userId: actor.id, values, requestId, ip }), requestId);
+  }
+  if (path === "payouts/coins" && method === "GET") {
+    const options = await offeredPayoutOptions();
+    return json({ options: options.map(({ coin, network, label, addressHint }) => ({ coin, network, label, addressHint })) }, requestId);
+  }
+  if (path === "payouts/estimate" && method === "GET") {
+    const { coins } = parseInput(estimateQuerySchema, query());
+    return json(await withdrawalEstimate(actor.id, coins), requestId);
   }
   if (path === "payouts/withdrawals" && method === "GET") {
     const page = parseInput(pageQuerySchema, query());
@@ -72,7 +85,7 @@ async function staffAction(
 ): Promise<Response | null> {
   const base = { ...input, requestId };
   if (action === "approve") {
-    // H18.6: for a crypto payout the admin types the exact USDT amount to send (they decide the rate).
+    // H18.6: for a crypto payout the admin types the exact amount of the vendor's coin to send (they decide the rate).
     const body = (await readJson(request).catch(() => ({}))) as { usdtAmount?: unknown };
     const usdtAmount = typeof body?.usdtAmount === "string" && body.usdtAmount.trim() ? body.usdtAmount.trim() : undefined;
     return json(await approveWithdrawal({ ...base, usdtAmount }), requestId);

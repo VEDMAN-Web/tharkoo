@@ -5,6 +5,7 @@ import { AuditRepository } from "@/server/audit";
 import { ConflictError, InternalError, isDuplicateKey } from "@/server/http";
 import { hashIp } from "@/server/shared/crypto";
 import { registerModel } from "@/server/models/register";
+import { findPayoutOption, PAYOUT_COINS, PAYOUT_NETWORKS, type PayoutCoin, type PayoutNetwork } from "@/server/wallet/payout-coins";
 import {
   decryptField,
   encryptField,
@@ -45,19 +46,21 @@ export const payoutKycSchema = z.discriminatedUnion("method", [
         .regex(/^[a-zA-Z0-9._-]{2,64}@[a-zA-Z]{2,32}$/, "Enter a valid UPI ID"),
     })
     .strict(),
-  // H18.6: crypto payout (USDT) through PassimPay. The address is checked for the chosen network.
+  // H18.6: crypto payout through PassimPay. H19.9: USDT, USDC, BTC, ETH, TRX or LTC; the address is checked for the chosen coin and network.
   z
     .object({
       method: z.literal("crypto"),
       legalName: z.string().trim().min(2).max(120),
       pan: upper(/^[A-Z]{5}[0-9]{4}[A-Z]$/, "Enter a valid PAN"),
-      network: z.enum(["TRC20", "BEP20"]),
-      walletAddress: z.string().trim().min(26).max(64),
+      coin: z.enum(PAYOUT_COINS).default("USDT"),
+      network: z.enum(PAYOUT_NETWORKS),
+      walletAddress: z.string().trim().min(26).max(100),
     })
     .strict()
     .superRefine((value, ctx) => {
-      const ok = value.network === "TRC20" ? /^T[1-9A-HJ-NP-Za-km-z]{33}$/.test(value.walletAddress) : /^0x[0-9a-fA-F]{40}$/.test(value.walletAddress);
-      if (!ok) ctx.addIssue({ code: "custom", path: ["walletAddress"], message: value.network === "TRC20" ? "Enter a valid TRON (TRC20) address starting with T" : "Enter a valid BEP20 address starting with 0x" });
+      const option = findPayoutOption(value.coin, value.network);
+      if (!option) return ctx.addIssue({ code: "custom", path: ["network"], message: `${value.coin} is not available on ${value.network}` });
+      if (!option.address.test(value.walletAddress)) ctx.addIssue({ code: "custom", path: ["walletAddress"], message: `Enter a valid ${option.label} address (${option.addressHint})` });
     }),
 ]);
 /** H18.6: crypto (USDT via PassimPay) is the method that pays out today; bank and UPI need a payout account. */
@@ -74,7 +77,9 @@ export interface PayoutKycDoc {
   accountEnc?: string;
   ifscEnc?: string;
   upiEnc?: string;
-  cryptoNetwork?: "TRC20" | "BEP20";
+  cryptoNetwork?: PayoutNetwork;
+  /** H19.9: missing on wallets saved before, which were all USDT. */
+  cryptoCoin?: PayoutCoin;
   walletEnc?: string;
   createdAt?: Date;
 }
@@ -88,7 +93,8 @@ const kycSchema = new Schema<PayoutKycDoc>(
     accountEnc: String,
     ifscEnc: String,
     upiEnc: String,
-    cryptoNetwork: { type: String, enum: ["TRC20", "BEP20"] },
+    cryptoNetwork: { type: String, enum: PAYOUT_NETWORKS },
+    cryptoCoin: { type: String, enum: PAYOUT_COINS },
     walletEnc: String,
   },
   { timestamps: { createdAt: true, updatedAt: false }, collection: "payout_kyc" },
@@ -104,7 +110,8 @@ export interface MaskedPayoutKyc {
   accountNumber?: string;
   ifsc?: string;
   upiId?: string;
-  network?: "TRC20" | "BEP20";
+  coin?: PayoutCoin;
+  network?: PayoutNetwork;
   walletAddress?: string;
   submittedAt: string | null;
 }
@@ -119,7 +126,7 @@ export function maskedKyc(row: PayoutKycDoc): MaskedPayoutKyc {
   };
   if (row.method === "crypto") {
     const wallet = row.walletEnc ? decryptField(row.walletEnc) : "";
-    return { ...base, network: row.cryptoNetwork, walletAddress: wallet ? `${wallet.slice(0, 4)}…${wallet.slice(-4)}` : undefined };
+    return { ...base, coin: row.cryptoCoin ?? "USDT", network: row.cryptoNetwork, walletAddress: wallet ? `${wallet.slice(0, 4)}…${wallet.slice(-4)}` : undefined };
   }
   if (row.method === "upi") {
     return { ...base, upiId: row.upiEnc ? maskUpi(decryptField(row.upiEnc)) : undefined };
@@ -139,14 +146,15 @@ export interface RevealedPayoutKyc {
   accountNumber?: string;
   ifsc?: string;
   upiId?: string;
-  network?: "TRC20" | "BEP20";
+  coin?: PayoutCoin;
+  network?: PayoutNetwork;
   walletAddress?: string;
 }
 
 export function revealedKyc(row: PayoutKycDoc): RevealedPayoutKyc {
   const base = { method: row.method, legalName: decryptField(row.legalNameEnc), pan: decryptField(row.panEnc) };
   if (row.method === "crypto") {
-    return { ...base, network: row.cryptoNetwork, walletAddress: row.walletEnc ? decryptField(row.walletEnc) : undefined };
+    return { ...base, coin: row.cryptoCoin ?? "USDT", network: row.cryptoNetwork, walletAddress: row.walletEnc ? decryptField(row.walletEnc) : undefined };
   }
   if (row.method === "upi") {
     return { ...base, upiId: row.upiEnc ? decryptField(row.upiEnc) : undefined };
@@ -192,7 +200,7 @@ export async function submitPayoutKyc(input: { userId: string; values: PayoutKyc
         ? { accountEnc: encryptField(values.accountNumber), ifscEnc: encryptField(values.ifsc) }
         : values.method === "upi"
           ? { upiEnc: encryptField(values.upiId) }
-          : { cryptoNetwork: values.network, walletEnc: encryptField(values.walletAddress) }),
+          : { cryptoCoin: values.coin, cryptoNetwork: values.network, walletEnc: encryptField(values.walletAddress) }),
     });
   } catch (error) {
     if (isDuplicateKey(error)) throw new ConflictError("Payout details are already on file");
