@@ -1,6 +1,6 @@
 # Tharkoo — STATUS (shared between Opus and Haiku through GitHub)
 
-**Current task:** H19.2 (then H19.3 … H19.7 in order). Cards in TASKS.md under "H19".
+**Current task:** H19.2, then H19.10, then H19.3, H19.4, H19.5, H19.6, H19.8, H19.9, H19.7. Cards in TASKS.md under "H19".
 **Next:** after each H19 PR, report through the relay and start the next H19 card only when Opus says so. Do not start any old "todo" card below.
 **Waiting on Vedant:** nothing for Haiku.
 
@@ -58,5 +58,8 @@ Opus has access to this folder on Vedant's PC. Messages go through `.relay/` (gi
 | H19.5 | Account menu by role + Video calls page | todo | — | Haiku |
 | H19.6 | Post an ad, rebuilt | todo | — | Haiku |
 | H19.7 | Block throwaway emails | todo | — | Haiku |
+| H19.8 | Video call switch and price inside each category | todo | — | Haiku |
+| H19.9 | Vendor payouts in more coins + live-rate range | todo | — | Haiku |
+| H19.10 | Video call earnings split 70/30, vendors told everywhere | todo (do right after H19.2) | — | Haiku |
 
 Status values: todo · doing · PR open · changes needed · approved · merged · blocked.
