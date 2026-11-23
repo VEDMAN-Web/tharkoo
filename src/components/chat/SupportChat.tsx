@@ -290,13 +290,6 @@ export function SupportChat({ chat, texts, hours = "" }: { chat: Chat; texts?: U
           ) : null}
           <div className="tkn-chat-body" aria-live="polite" ref={bodyRef}>
             <p className="tkn-bubble tkn-bubble-in">{chat.welcome}</p>
-            <div className="tkn-topics" role="group" aria-label={t("chat.topicsLabel")}>
-              {chat.topics.map((item) => (
-                <button key={item.label} type="button" className="tkn-chip" data-tk="chat-quick" onClick={() => void tapQuick(item)}>
-                  {item.label}
-                </button>
-              ))}
-            </div>
             {lines.map((line) =>
               line.kind === "articles" ? (
                 <ArticleCards key={line.id} line={line} t={t} canTalk={canTalk} onTalk={talk} />
@@ -306,6 +299,13 @@ export function SupportChat({ chat, texts, hours = "" }: { chat: Chat; texts?: U
             )}
             {contactOpen && !sent ? <GuestForm hint={chat.guestHint} t={t} value={guest} error={guestError} busy={busy} onChange={setGuest} onSubmit={submitGuest} /> : null}
             {error ? <p className="tkn-error" role="alert">{error}</p> : null}
+          </div>
+          <div className="tkn-topics" role="group" aria-label={t("chat.topicsLabel")}>
+            {chat.topics.map((item) => (
+              <button key={item.label} type="button" className="tkn-chip" data-tk="chat-quick" onClick={() => void tapQuick(item)}>
+                {item.label}
+              </button>
+            ))}
           </div>
           <form className="tkn-composer" onSubmit={sendFree}>
             <label className="tkn-sr" htmlFor="tkn-chat-input">{t("chat.composer.label")}</label>

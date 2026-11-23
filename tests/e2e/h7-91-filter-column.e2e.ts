@@ -7,7 +7,7 @@ test.describe("H7.91: sticky, instant filter column and phone sheet", () => {
     test.skip(testInfo.project.name !== "desktop-1440", "sets its own viewports");
   });
 
-  test("a quick filter applies at once and the live count follows", async ({ page }) => {
+  test("a filter applies at once and the live count follows", async ({ page }) => {
     await page.setViewportSize({ width: 1440, height: 900 });
     await page.goto("/search/?category=dating");
     const show = page.locator('[data-tk="show-count"]');
@@ -15,9 +15,11 @@ test.describe("H7.91: sticky, instant filter column and phone sheet", () => {
     await expect(show).toHaveText(/^Show [\d,]+ ads?$/);
     const before = countOf(await page.locator('[data-tk="results-count"]').innerText());
     expect(countOf(await show.innerText())).toBe(before);
-    await page.locator(".tkn-ls-aside").getByText("Verified", { exact: true }).click();
-    await expect(page).toHaveURL(/verified=1/);
-    await expect(page.locator('[data-chip="verified"]')).toBeVisible();
+    // H19.1: the Verified, With photos, With video and Online now buttons are gone; a category filter does the same job.
+    const pick = page.locator(".tkn-ls-aside .tkn-ls-row", { has: page.locator(".tkn-ls-opt") }).first();
+    await pick.locator(".tkn-ls-row-btn").click();
+    await pick.locator(".tkn-ls-opt").first().click();
+    await expect(page).toHaveURL(/f\./);
     const after = countOf(await page.locator('[data-tk="results-count"]').innerText());
     expect(after).toBeLessThanOrEqual(before);
     await expect.poll(async () => countOf(await show.innerText())).toBe(after);
@@ -58,8 +60,10 @@ test.describe("H7.91: sticky, instant filter column and phone sheet", () => {
     const aside = page.locator(".tkn-ls-aside");
     await expect(aside).toHaveAttribute("data-open", "true");
     expect((await aside.boundingBox())!.height).toBeGreaterThanOrEqual(800);
-    await aside.getByText("Verified", { exact: true }).click();
-    await expect(page).toHaveURL(/verified=1/);
+    const pick = aside.locator(".tkn-ls-row", { has: page.locator(".tkn-ls-opt") }).first();
+    await pick.locator(".tkn-ls-row-btn").click();
+    await pick.locator(".tkn-ls-opt").first().click();
+    await expect(page).toHaveURL(/f\./);
     await expect(aside).toHaveAttribute("data-open", "true");
     await page.locator('[data-tk="show-count"]').click();
     await expect(aside).toHaveAttribute("data-open", "false");
@@ -175,7 +179,7 @@ test.describe("H7.91: sticky, instant filter column and phone sheet", () => {
     }
   }
 
-  test("the column starts closed: header with count, keyword, selects, 2x2 toggles and accordions", async ({ page }) => {
+  test("the column starts closed: header with count, keyword, selects and accordions, and no quick filter buttons (H19.1)", async ({ page }) => {
     await page.setViewportSize({ width: 1440, height: 900 });
     await page.goto("/search/?category=dating&state=gujarat");
     const aside = page.locator(".tkn-ls-aside");
@@ -184,14 +188,9 @@ test.describe("H7.91: sticky, instant filter column and phone sheet", () => {
     await expect(aside.locator(".tkn-ls-go")).toBeHidden();
     await expect(aside.locator('.tkn-ls-select select[aria-label="Area"]')).toHaveCount(0);
     await expect(aside.locator('select[aria-label="Category"] option').first()).toHaveText("All categories");
-    const toggles = aside.locator(".tkn-ls-chipline");
-    expect(await toggles.count()).toBeGreaterThanOrEqual(4);
-    const first = (await toggles.nth(0).boundingBox())!;
-    const second = (await toggles.nth(1).boundingBox())!;
-    const third = (await toggles.nth(2).boundingBox())!;
-    expect(Math.abs(first.y - second.y)).toBeLessThanOrEqual(1);
-    expect(third.y).toBeGreaterThan(first.y + 30);
-    expect(Math.round(first.height)).toBe(36);
+    await expect(aside.getByText("Verified", { exact: true })).toHaveCount(0);
+    await expect(aside.getByText("With photos", { exact: true })).toHaveCount(0);
+    await expect(aside.getByText("Online now", { exact: true })).toHaveCount(0);
     await expect(aside.locator('.tkn-ls-row-btn[aria-expanded="true"]')).toHaveCount(0);
     for (const control of await aside.locator("select, .tkn-kw input, .tkn-ls-row").all()) {
       expect(Math.round((await control.boundingBox())!.height)).toBe(40);
@@ -203,14 +202,14 @@ test.describe("H7.91: sticky, instant filter column and phone sheet", () => {
     await expect(choice.locator(".tkn-ls-row-btn")).toContainText("· 1");
   });
 
-  // H17.1 (was H14.1): a public list card shows NO views and NO clicks and no owner counts; those stay in the seller dashboard.
-  test("a list card shows no views, no clicks and no owner counts", async ({ page }) => {
+  // H19.1: a public list card shows its views and clicks (an eye and a pointer) but no owner counts.
+  test("a list card shows its views and clicks and no owner counts", async ({ page }) => {
     await page.setViewportSize({ width: 1440, height: 900 });
     await page.goto("/search/?category=dating");
     const card = page.locator('[data-tk="listing-row"]').first();
     await expect(card).toBeVisible();
     await expect(page.locator('[data-tk="ad-counts"]')).toHaveCount(0);
-    await expect(card.locator('.tk-row-stats, [data-tk="row-views"], [data-tk="row-clicks"]')).toHaveCount(0);
-    await expect(card).not.toContainText(/\bviews?\b|\bclicks?\b/i);
+    await expect(card.locator('[data-tk="card-views"] svg')).toHaveCount(1);
+    await expect(card.locator('[data-tk="card-clicks"] svg')).toHaveCount(1);
   });
 });

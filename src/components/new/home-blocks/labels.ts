@@ -10,6 +10,7 @@ export function cardLabelsOf(t: TextFn): HomeAdLabels {
     chat: t("home.ads.chat"),
     age: t("home.ads.age"),
     sample: t("demo.pill"),
+    counts: { views: t("home.ads.views"), viewOne: t("home.ads.viewOne"), clicks: t("card.clicks"), clickOne: t("card.clickOne") },
   };
 }
 

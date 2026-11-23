@@ -150,7 +150,7 @@ test.describe("E1-A visitor journeys", () => {
     expect(problems, "no console errors").toEqual([]);
   });
 
-  test("J7 category plus city listing: sort, then a quick filter (in the Filters sheet on a phone), keep the page working and the count honest", async ({ page }) => {
+  test("J7 category plus city listing: no Sort menu (H19.1), then a filter (in the Filters sheet on a phone), keep the page working and the count honest", async ({ page }) => {
     test.setTimeout(180_000);
     const problems = watchConsole(page);
     await page.goto(LISTING);
@@ -163,24 +163,17 @@ test.describe("E1-A visitor journeys", () => {
     expect(before).toBeGreaterThan(0);
     await shot(page, "j7-listing");
 
-    const sort = page.locator(".tkn-sr-sort select").first();
-    const options = await sort.locator("option").evaluateAll((nodes) => nodes.map((node) => (node as HTMLOptionElement).value));
-    expect(options.length, "the sort box has more than one choice").toBeGreaterThan(1);
-    const other = options.find((value) => value !== (options[0] ?? "")) ?? options[1];
-    const firstUrl = page.url();
-    await sort.selectOption(other);
-    await expect.poll(() => page.url()).not.toBe(firstUrl);
-    await page.waitForLoadState("networkidle");
-    await expect(rows.first()).toBeVisible();
-    await shot(page, "j7-sorted");
+    await expect(page.locator(".tkn-sr-sort")).toHaveCount(0);
 
     if (isPhone(page)) {
       await page.locator('[data-tk="results-bar"] .tkn-ls-filter-btn').click();
       await expect(page.locator(".tkn-ls-aside")).toHaveAttribute("data-open", "true");
       await shot(page, "j7-filter-sheet");
     }
-    await page.locator(".tkn-ls-aside").getByText("Verified", { exact: true }).click();
-    await expect(page).toHaveURL(/verified=1/);
+    const pick = page.locator(".tkn-ls-aside .tkn-ls-row", { has: page.locator(".tkn-ls-opt") }).first();
+    await pick.locator(".tkn-ls-row-btn").click();
+    await pick.locator(".tkn-ls-opt").first().click();
+    await expect(page).toHaveURL(/f\./);
     await page.waitForLoadState("networkidle");
     const after = countOf(await page.locator('[data-tk="results-count"]').first().innerText());
     expect(after).toBeLessThanOrEqual(before);

@@ -37,7 +37,9 @@ test.describe("H7.61 my ads and support form", () => {
     const id = await sellerWithDraft(page, baseURL!, "draftcard");
     const card = page.locator("article.tk-card", { has: page.locator('[data-tk="owner-card"]') }).first();
     await expect(card).toBeVisible();
-    await expect(card.locator(".tkp-owner-counts")).toContainText(/views? . \d+ clicks/);
+    // H19.1: the owner row shows the views (an eye) and clicks (a pointer) counts like every other ad card.
+    await expect(card.locator('.tkp-owner-counts [data-tk="card-views"] svg')).toHaveCount(1);
+    await expect(card.locator('.tkp-owner-counts [data-tk="card-clicks"]')).toHaveText(/^\d[\d,]*$/);
 
     const link = card.locator("a.tk-card-link");
     await expect(link).toHaveAttribute("href", `/u/post-insert/?draft=${id}&step=2`);

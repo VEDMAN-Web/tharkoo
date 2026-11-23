@@ -3,8 +3,8 @@
 import { useMemo, useRef } from "react";
 import Link from "next/link";
 import { SaveButton } from "@/components/ui/SaveButton";
-import { recordAdClick } from "@/components/ad/adCountStore";
 import { useSellerStatus } from "@/components/availability/sellerStatus";
+import { AdCardCounts, type CountLabels } from "./AdCardCounts";
 import { HomeAdPopout } from "./HomeAdPopout";
 import { cardSlides } from "./card-slides";
 import { SlideNav, SlideTrack } from "./CardSlides";
@@ -37,6 +37,8 @@ export type HomeAdLabels = {
   chat: string;
   age: string;
   sample?: string;
+  /** H19.1: the words for the views and clicks counts (read aloud and on hover). */
+  counts?: CountLabels;
 };
 
 const HOVER_DELAY_MS = 350;
@@ -52,10 +54,6 @@ export function HomeAdCard({ ad, labels, order = 0, eager = false }: { ad: HomeA
   const online = !ad.sample && Boolean(seller && seller.chatOn && seller.status === "online");
   const { trackRef, videoRef, index, setIndex, calm, onScroll, step } = useCardSlider({ cardRef, slug: ad.slug, slides, order, anchored: Boolean(anchor), popVideoRef });
 
-  const clicked = () => {
-    if (ad.slug) recordAdClick(ad.slug);
-  };
-
   return (
     <article
       ref={cardRef}
@@ -65,7 +63,7 @@ export function HomeAdCard({ ad, labels, order = 0, eager = false }: { ad: HomeA
       {...cardHandlers}
     >
       <div className="tkh-ad-photo">
-        <SlideTrack slides={slides} href={ad.href} trackRef={trackRef} videoRef={videoRef} onScroll={onScroll} onTouch={calm} onClicked={clicked} title={ad.title} place={ad.city} eager={eager} />
+        <SlideTrack slides={slides} href={ad.href} trackRef={trackRef} videoRef={videoRef} onScroll={onScroll} onTouch={calm} title={ad.title} place={ad.city} eager={eager} />
         {slides.length > 1 ? <span className="tkh-ad-count" aria-hidden="true">{index + 1}/{slides.length}</span> : null}
         {ad.slug ? (
           <SaveButton item={{ id: ad.slug, slug: ad.slug, title: ad.title, place: ad.city, photo: photos[0] ?? null, at: 0 }} className="tkh-heart" />
@@ -81,7 +79,7 @@ export function HomeAdCard({ ad, labels, order = 0, eager = false }: { ad: HomeA
       </div>
       <div className="tkh-ad-body">
         <h3 className="tkh-ad-title">
-          <Link href={ad.href} prefetch={false} className="tkh-ad-link" onClick={clicked} data-ad-link>
+          <Link href={ad.href} prefetch={false} className="tkh-ad-link" data-ad-link>
             {ad.title}
           </Link>
         </h3>
@@ -92,6 +90,7 @@ export function HomeAdCard({ ad, labels, order = 0, eager = false }: { ad: HomeA
             <Link href={ad.cityHref} prefetch={false} className="tkh-pill tkh-pill-lavender">{ad.city}</Link>
           ) : null}
         </p>
+        <AdCardCounts slug={ad.slug} labels={labels.counts} />
       </div>
       {anchor ? (
         <HomeAdPopout

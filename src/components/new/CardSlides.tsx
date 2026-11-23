@@ -25,7 +25,7 @@ export function SlideTrack({
   videoRef: RefObject<HTMLVideoElement | null>;
   onScroll: () => void;
   onTouch: () => void;
-  onClicked: () => void;
+  onClicked?: () => void;
   /** The ad title and the area or city: each photo adds its own number to the alt text (H17.6). */
   title: string;
   place: string;

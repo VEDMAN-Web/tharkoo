@@ -1933,7 +1933,8 @@ input.tk-field:focus-visible, select.tk-field:focus-visible, textarea.tk-field:f
 .tkn-bubble { margin: 0; max-width: 85%; padding: 10px 14px; border-radius: 16px; font-size: 14px; line-height: 1.5; }
 .tkn-bubble-in { background: #fff; border: 1px solid var(--tkn-line); color: var(--tkn-ink); justify-self: start; }
 .tkn-bubble-you { background: linear-gradient(135deg, #d1137a, #a8124f); color: #fff; justify-self: end; }
-.tkn-topics { display: flex; flex-wrap: wrap; gap: 8px; }
+.tkn-topics { display: flex; flex-wrap: wrap; gap: 8px; padding: 10px 12px 0; border-top: 1px solid var(--tkn-line); background: rgba(255, 255, 255, 0.9); }
+.tkn-topics + .tkn-composer { border-top: 0; }
 .tkn-chip {
   min-height: 44px; padding: 0 14px; border-radius: 999px; border: 1.5px solid var(--tkn-line); background: #fff; color: var(--tkn-muted);
   font: inherit; font-size: 13px; font-weight: 600; cursor: pointer;
@@ -2263,3 +2264,8 @@ body:has([data-tk="bottom-bar"]) .tkn-float { bottom: 104px; }
   background: #fff; color: #a8124f; text-decoration: none; font-weight: 800;
 }
 .tkn-call-alert-btn:focus-visible { outline: 3px solid #fff; outline-offset: 2px; }
+
+/* H19.1: less empty space above the footer on every page (it was 88 px, 56 px on a phone). */
+body .tkn-footer {
+  margin-top: 24px;
+}
