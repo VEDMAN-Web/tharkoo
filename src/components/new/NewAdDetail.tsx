@@ -6,7 +6,7 @@ import { ContactButtons, ContactProvider, type ContactPopupInfo } from "@/compon
 import { ContactPressCounter } from "./ContactPressCounter";
 import { UiTextProvider } from "@/components/ui/AdCard";
 import { TrackView } from "@/components/ui/RecentlyViewed";
-import { adHref, citiesPath, joinPath, postAdPath, type UrlPaths } from "@/lib/urls";
+import { adHref, citiesPath, joinPath, placePath, postAdPath, type UrlPaths } from "@/lib/urls";
 import { isCityAlias } from "@/lib/seo/district-alias";
 import { makeT, type UiTextMap } from "@/lib/ui/text";
 import { PostStrip } from "@/components/ui/PostStrip";
@@ -16,7 +16,6 @@ import { BadgeCheck, ShieldCheck } from "lucide-react";
 import { AdSellerRow } from "./AdLiveBits";
 import { MoreInCity } from "./MoreInCity";
 import { SIMILAR_ADS_MAX, SimilarAds } from "./SimilarAds";
-import { rowLabels } from "./listing-row-data";
 import { PictureHeight } from "./PictureHeight";
 import { ReadMoreText } from "./ReadMoreText";
 import { AdActions } from "./AdActions";
@@ -87,10 +86,10 @@ export function NewAdDetail({
   categoryName,
   related = [],
   listingId,
+  ownerId,
   videos = [],
   paths,
   memberSince = "",
-  crumbs = [],
   heading,
   tour,
   peopleAd = false,
@@ -109,7 +108,9 @@ export function NewAdDetail({
   videos?: AdVideo[];
   paths: UrlPaths;
   memberSince?: string;
+  /** The route passes the SEO crumbs for the page markup; the page shows its own place crumbs. */
   crumbs?: { name: string; path: string }[];
+  ownerId?: string;
   shareUrl: string;
   heading?: string;
   tour?: { listingId: string; coins: number } | null;
@@ -145,10 +146,14 @@ export function NewAdDetail({
     photoNext: t("home.ads.photoNext"),
     chat: t("home.ads.chat"),
     age: t("home.ads.age"),
-    row: rowLabels(t),
+    counts: { views: t("home.ads.views"), viewOne: t("home.ads.viewOne"), clicks: t("card.clicks"), clickOne: t("card.clickOne") },
   };
-  const categoryCrumb = crumbs[1]?.path;
-  const cityCrumb = crumbs.find((crumb) => crumb.name === `${city} ${categoryName}`)?.path;
+  // H19.2: Tharkoo India / City / Area. The category is never glued to the city name.
+  const placeCrumbs = [
+    { name: t("ad.crumb.home"), path: "/" },
+    ...(ad.citySlug && city ? [{ name: city, path: placePath(ad.categorySlug || "", ad.citySlug) }] : []),
+    ...(ad.citySlug && ad.districtSlug && district ? [{ name: district, path: placePath(ad.categorySlug || "", ad.citySlug, ad.districtSlug) }] : []),
+  ];
   const barChannels = channelsFor(peopleAd ? ["phone", "whatsapp"] : ["whatsapp"], contactChannels);
   const barClass = barClassOf(barChannels.length + 1 + (tour && !peopleAd ? 1 : 0), peopleAd);
   const showPrice = features.price && (!peopleAd || PRICED_PEOPLE.has(ad.categorySlug || ""));
@@ -157,14 +162,14 @@ export function NewAdDetail({
 
   return (
     <UiTextProvider texts={texts}>
-      <ContactProvider listingSlug={ad.slug} listingId={listingId} tour={tour} peopleAd={peopleAd} info={popupInfo} sample={sampleNote}>
+      <ContactProvider listingSlug={ad.slug} listingId={listingId} ownerId={ownerId} tour={tour} peopleAd={peopleAd} info={popupInfo} sample={sampleNote}>
         <ContactPressCounter slug={ad.slug ?? ""}>
         <div className="tkn-page tkn-ad" data-tk="new-ad">
           <TrackView ad={ad} />
           <CitySync name={city} slug={ad.citySlug} />
           <nav className="tkn-ad-crumbs" aria-label="Breadcrumb">
-            {crumbs.map((crumb, index) => (
-              <span key={crumb.path} data-phone={crumb.path === categoryCrumb ? "first" : crumb.path === cityCrumb ? "show" : undefined}>
+            {placeCrumbs.map((crumb, index) => (
+              <span key={crumb.path}>
                 {index > 0 ? <span aria-hidden="true"> / </span> : null}
                 <Link href={crumb.path} prefetch={false}>{crumb.name}</Link>
               </span>
@@ -195,12 +200,6 @@ export function NewAdDetail({
                     ) : null}
                   </ul>
                 </div>
-                {sampleNote ? (
-                  <aside className="tkn-ad-sample" data-tk="sample-banner">
-                    <p>{sampleNote.message}</p>
-                    <a className="tk-btn" href={sampleNote.href}>{sampleNote.button}</a>
-                  </aside>
-                ) : null}
                 <hr className="tkn-ad-rule" />
                 <section aria-labelledby="tkn-about">
                   <h2 id="tkn-about">{personal ? t("ad.aboutMe") : t("ad.about")}</h2>
@@ -255,8 +254,6 @@ export function NewAdDetail({
               allText={t("ad.similar.all", { category: categoryName })}
               allHref={listHref}
               listLabel={t("ad.similar.list")}
-              prevLabel={t("ad.similar.prev")}
-              nextLabel={t("ad.similar.next")}
               fallbackTitle={t("card.fallbackTitle")}
               labels={cardLabels}
             />

@@ -263,6 +263,10 @@ export const TEXT_DEFAULTS = {
   "ad.seller.online": "Online now \u00b7 replies fast",
   "ad.seller.away": "Away right now",
   "ad.chat": "Chat online now",
+  "ad.crumb.home": "Tharkoo India",
+  "ad.owner.title": "This is your ad",
+  "ad.owner.edit": "Edit",
+  "ad.owner.boost": "Boost",
   // H16.4: an ad that has ended
   "ad.ended.title": "This ad is no longer available",
   "ad.ended.text": "The advertiser took it down or it has run out. These ads are close to it.",

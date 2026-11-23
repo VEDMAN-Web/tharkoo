@@ -11,6 +11,10 @@ import { AvailabilityBadge } from "@/components/availability/AvailabilityBadge";
 import { AdPopup, type AdPopupAlt, type FlowResult, type PopupKind } from "@/components/new/AdPopup";
 import { useT } from "@/components/ui/AdCard";
 import { openSignInFromLink } from "@/components/auth/SignInSheet";
+import Link from "next/link";
+import { useAccount } from "@/components/account/AccountContext";
+import { openPromote } from "@/components/promote/openPromote";
+import { draftPath } from "@/lib/ui/ad-status";
 
 // The chat panel code loads only when a visitor opens the chat.
 const ChatPanel = dynamic(() => import("@/components/chat/ChatPanel").then((mod) => mod.ChatPanel), { ssr: false });
@@ -48,6 +52,9 @@ type Ctx = {
   /** H7.5: people ads have no video call and verify button. Call, WhatsApp and chat stay. */
   people: boolean;
   info: ContactPopupInfo;
+  /** H19.2: the signed-in visitor is the vendor of this ad: no Chat or Video call, but Edit and Boost. */
+  isOwner: boolean;
+  listingId?: string;
 };
 
 const ContactCtx = createContext<Ctx | null>(null);
@@ -83,6 +90,7 @@ export function ContactProvider({
   peopleAd = false,
   info = NO_INFO,
   sample = null,
+  ownerId,
   children,
 }: {
   listingSlug?: string;
@@ -92,8 +100,12 @@ export function ContactProvider({
   peopleAd?: boolean;
   info?: ContactPopupInfo;
   sample?: SampleNote | null;
+  /** H19.2: the id of the vendor who posted the ad (the page is cached, so the owner is found in the browser). */
+  ownerId?: string;
   children: React.ReactNode;
 }) {
+  const account = useAccount();
+  const isOwner = Boolean(ownerId && (account.user as { id?: string } | null)?.id === ownerId);
   const [shown, setShown] = useState<Partial<Record<Channel, Reveal>>>({});
   const [notice, setNotice] = useState<Notice | null>(null);
   const [busy, setBusy] = useState<Action | null>(null);
@@ -206,7 +218,7 @@ export function ContactProvider({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [listingId]);
 
-  const value: Ctx = { shown, notice, busy, tour, tourRequested, open, openChatFlow: () => void openChatFlow(), openCall, seller, people, info };
+  const value: Ctx = { shown, notice, busy, tour, tourRequested, open, openChatFlow: () => void openChatFlow(), openCall, seller, people, info, isOwner, listingId };
   return (
     <ContactCtx.Provider value={value}>
       {children}
@@ -285,8 +297,17 @@ export function ContactButtons({
   sticky?: boolean;
   channels?: Channel[];
 }) {
-  const { shown, notice, busy, tour, tourRequested, open, openChatFlow, openCall, seller, people } = useContact();
+  const { shown, notice, busy, tour, tourRequested, open, openChatFlow, openCall, seller, people, isOwner, listingId } = useContact();
   const t = useT();
+  if (isOwner && listingId) {
+    return (
+      <div className={sticky ? "tk-owner-bar" : "tk-actions tk-owner-box"} data-tk="owner-actions">
+        <p className="tk-owner-note">{t("ad.owner.title")}</p>
+        <Link href={draftPath(listingId)} className="tk-btn" data-tk="owner-edit">{t("ad.owner.edit")}</Link>
+        <button type="button" className="tk-btn" data-tk="owner-boost" onClick={() => openPromote({ listingId })}>{t("ad.owner.boost")}</button>
+      </div>
+    );
+  }
   const channelButtons = channels.map((channel) => {
     const hit = shown[channel];
     if (hit?.value) {

@@ -145,43 +145,36 @@ test.describe("H7.99b ad page content", () => {
     await expect(page.locator('[data-tk="security-tips"]').getByRole("link", { name: "More safety tips" })).toBeVisible();
   });
 
-  // H14.1: the similar ads are the approved row cards (tags; since H17.1 no views or clicks), two across on a wide screen, in the same carousel.
-  test("similar ads are row cards in a carousel, at most 12, and end 48 px above the footer", async ({ page }, testInfo) => {
+  // H19.2: four similar ads, two by two on a phone and on a computer (no carousel).
+  test("similar ads are four cards, two by two, and end 48 px above the footer", async ({ page }) => {
     await page.goto(await adAt(page, "/property/bengaluru/"));
     const section = page.locator('[data-tk="similar-ads"]');
     await expect(section.getByRole("heading", { level: 2 })).toHaveText("Similar ads near you");
     await expect(section.getByRole("heading", { level: 2 })).toHaveCSS("font-size", "22px");
     await expect(section.getByRole("link", { name: /^See all in/ })).toBeVisible();
-    const cards = section.locator('[data-tk="listing-row"]');
+    const cards = section.locator('[data-tk="home-ad"]');
     const count = await cards.count();
     expect(count).toBeGreaterThan(0);
-    expect(count).toBeLessThanOrEqual(12);
-    await expect(section.locator(".tk-row-save").first()).toBeVisible();
-    await expect(section.locator(".tk-row-tag.is-cat").first()).toBeVisible();
-    await expect(section.locator('[data-tk="row-stats"]')).toHaveCount(0);
-    await expect(section.locator(".tk-row-title").first()).toHaveCSS("font-size", "18px");
-    await expect(section.locator(".tk-row-save").first()).toHaveCSS("width", "38px");
-    const first = (await cards.first().boundingBox())!;
-    const scroller = section.locator('[data-tk="similar-row"]');
-    const rowWidth = await scroller.evaluate((node) => node.clientWidth);
-    if (testInfo.project.name === "desktop-1440") {
-      expect(first.width / rowWidth).toBeGreaterThan(0.45);
-      expect(first.width / rowWidth).toBeLessThan(0.52);
-      const photo = (await cards.first().locator(".tk-row-photo").boundingBox())!;
-      expect(Math.round(photo.width)).toBe(200);
-      if (count > 2) {
-        const next = section.locator('[data-tk="similar-next"]');
-        await expect(next).toBeVisible();
-        const before = await scroller.evaluate((node) => node.scrollLeft);
-        await next.click();
-        await expect.poll(() => scroller.evaluate((node) => node.scrollLeft)).toBeGreaterThan(before);
-      } else {
-        await expect(section.locator('[data-tk="similar-next"]')).toHaveCount(0);
-      }
-    } else {
-      expect(first.width / rowWidth).toBeGreaterThan(0.9);
-      const photo = (await cards.first().locator(".tk-row-photo").boundingBox())!;
-      expect(Math.abs(photo.width - first.width)).toBeLessThanOrEqual(2);
+    expect(count).toBeLessThanOrEqual(4);
+    await expect(section.locator('[data-tk="similar-next"], [data-tk="similar-prev"]')).toHaveCount(0);
+    await expect(section.locator('[data-tk="card-views"]').first()).toBeVisible();
+    if (count >= 2) {
+      const one = (await cards.nth(0).boundingBox())!;
+      const two = (await cards.nth(1).boundingBox())!;
+      expect(Math.abs(one.y - two.y), "the first two are on one row").toBeLessThanOrEqual(2);
+      expect(two.x).toBeGreaterThan(one.x + one.width - 1);
+    }
+    if (count >= 3 && (page.viewportSize()?.width ?? 0) < 1024) {
+      const one = (await cards.nth(0).boundingBox())!;
+      const three = (await cards.nth(2).boundingBox())!;
+      expect(three.y, "the third starts a second row").toBeGreaterThan(one.y + one.height - 2);
+      expect(Math.abs(three.x - one.x)).toBeLessThanOrEqual(2);
+    }
+    if (count >= 4 && (page.viewportSize()?.width ?? 0) >= 1024) {
+      const one = (await cards.nth(0).boundingBox())!;
+      const four = (await cards.nth(3).boundingBox())!;
+      expect(Math.abs(four.y - one.y), "four cards in one row").toBeLessThanOrEqual(2);
+      expect(one.width, "no wider than a Home card").toBeLessThanOrEqual(330);
     }
     await section.scrollIntoViewIfNeeded();
     await page.evaluate(() => window.scrollTo(0, document.documentElement.scrollHeight));
@@ -343,7 +336,7 @@ test.describe("H7.99b ad page content", () => {
     expect(featured).toBeGreaterThan(0);
   });
 
-  test("on a phone the breadcrumb is one line with the category and the city", async ({ page }, testInfo) => {
+  test("the breadcrumb is Tharkoo India, the city and the area, with no category glued to the city (H19.2)", async ({ page }, testInfo) => {
     test.skip(testInfo.project.name !== "phone-390", "the phone layout");
     for (const width of [390, 360]) {
       await page.setViewportSize({ width, height: 740 });
@@ -351,10 +344,9 @@ test.describe("H7.99b ad page content", () => {
       const nav = page.locator(".tkn-ad-crumbs");
       await expect(nav).toHaveCSS("font-size", "13px");
       await expect(nav).toHaveCSS("row-gap", "4px");
-      const shown = await nav.locator(":scope > span").evaluateAll((els) => els.filter((el) => getComputedStyle(el).display !== "none").length);
-      expect(shown).toBe(2);
       const crumbText = (await nav.innerText()).split(String.fromCharCode(10)).join(" ").split(/ +/).join(" ").trim();
-      expect(crumbText).toBe("Dating / Bengaluru Dating");
+      expect(crumbText).toMatch(/^Tharkoo India \/ Bengaluru( \/ [A-Za-z ]+)?$/);
+      expect(crumbText).not.toMatch(/Bengaluru (Dating|Friendship|Meetups|Personal ads|Jobs|Wellness)/);
       const box = (await nav.boundingBox())!;
       expect(box.height).toBeLessThanOrEqual(32);
       await expect(nav.locator("a:visible").first()).toBeVisible();

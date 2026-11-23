@@ -194,6 +194,7 @@ export default async function AdPage({ params }: Props) {
           categoryName={catName}
           related={plain(related)}
           listingId={listingId}
+          ownerId={row?.ownerId ? String(row.ownerId) : undefined}
           videos={videos}
           paths={paths}
           memberSince={owner?.createdAt ? new Date(owner.createdAt).toISOString() : ""}
