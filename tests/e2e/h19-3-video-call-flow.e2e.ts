@@ -110,6 +110,7 @@ test.describe("H19.3 the video call flow for users", () => {
     await expect(back.locator("[data-tk=call-paid]")).toHaveText(/^Recharge successful, \d+ call credits added$/);
     await expect(back.locator("[data-tk=call-main]")).toHaveText("Start video call");
     await expect(back.locator("[data-tk=call-main]")).toBeEnabled();
+    await expect(back.locator("[data-tk=call-balance]")).not.toHaveText("…");
     expect(Number(await back.locator("[data-tk=call-balance]").innerText())).toBeGreaterThanOrEqual(COINS);
     // The flags are gone from the address, and the page shows no second "credits added" message.
     expect(page.url()).not.toMatch(/call=|paid=|added=|recharge=/);
@@ -138,16 +139,22 @@ test.describe("H19.3 the video call flow for users", () => {
     await expect(page.locator("[data-tk=call-paid]")).toHaveCount(0);
   });
 
-  test("the header credit chip shows both balances in a tooltip", async ({ page, baseURL }) => {
+  test("the header credit chip shows both balances in a tooltip (on a phone the account menu shows them)", async ({ page, baseURL }) => {
     const { api, email } = await newUserApi(baseURL!, "chiptip");
     await api.dispose();
     await loginUi(page, email);
     await page.goto("/");
+    if (isPhone(page)) {
+      await page.locator(".tkn-avatar").click();
+      await expect(page.locator(".tkn-account-coins")).toContainText(/\d+ call credits · \d+ ad credits/);
+      expect(await hasHorizontalScroll(page)).toBe(false);
+      await shot(page, "chip-menu");
+      return;
+    }
     const chip = page.locator("[data-tk=header-coins]");
     await expect(chip).toBeVisible();
     const tip = page.locator("[data-tk=header-coins-tip]");
-    if (isPhone(page)) await chip.click();
-    else await chip.hover();
+    await chip.hover();
     await expect(tip).toBeVisible();
     await expect(tip).toContainText(/Call credits: \d+ · Ad credits: \d+/);
     expect(await hasHorizontalScroll(page)).toBe(false);

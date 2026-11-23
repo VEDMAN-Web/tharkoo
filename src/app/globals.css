@@ -2279,7 +2279,5 @@ body .tkn-footer {
 .tkn-coin-wrap:hover .tkn-coin-tip, .tkn-coin-wrap:focus-within .tkn-coin-tip, .tkn-coin-wrap[data-open="true"] .tkn-coin-tip { display: flex; }
 .tkn-coin-buy { align-self: flex-start; min-height: 32px; padding: 0 12px; border-radius: 999px; border: 0; background: #fff; color: #a8124f; font: inherit; font-weight: 700; cursor: pointer; }
 .tkn-coin-buy:focus-visible { outline: 3px solid #fff; outline-offset: 2px; }
-@media (max-width: 600px) {
-  .tkn-coin-chip { display: inline-flex; padding: 0 10px; font-size: 13px; }
-  .tkn-coin-tip { max-width: calc(100vw - 24px); white-space: normal; }
-}
+/* On a phone the chip stays hidden (the header has no room: the Post your ad button was pushed off the screen at 390 px); the
+   account menu shows "N call credits · N ad credits" there, one tap on the avatar. */
