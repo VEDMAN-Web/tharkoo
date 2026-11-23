@@ -480,3 +480,78 @@ CSS plus one tiny IntersectionObserver helper (< 1 KB). No animation library, no
 Speed budget (must pass, report the numbers): Lighthouse mobile ≥ 90 performance on /, /dating/mumbai/ and one /ad/ page; CLS ≤ 0.05; no new JS bundle over 5 KB gzipped.
 
 At the end: PHASE DONE 1b report with the Lighthouse numbers, the preview link, and screenshots of the listing page, the ad gallery, the lightbox, the category page feed and the register page at 1440 and 390.
+
+---
+
+# H19 — Vedant's walkthrough fixes (voice note, 22 Nov 2026). Cards written by Opus, 23 Nov 2026.
+
+Rules for every H19 card:
+- One card = one branch `haiku/h19.N-<slug>` = one PR. Create `docs/ownership/H19.N.json` with the card's globs (copy an H18 file for the shape) and `progress/H19.N.md`.
+- Every visible change must work at 390 / 768 / 1440 px. Screenshots before and after in `.shots/H19.N/`.
+- Users = people who browse and call. Vendors = people who post ads. Never write "buyer" in new copy.
+- No AI-attribution lines anywhere (no "Generated with Claude", no "Co-Authored-By" lines, no "built by AI" comments). Plain, short code comments only where the code is not obvious.
+- Find files with graphify / grep first. If a file you need is outside the globs: write `NEED:` in progress and report, as usual.
+- Opus merges and deploys. Do not merge yourself.
+
+## H19.1 — Home, category and listing pages
+**Read first:** `src/components/new/HomeAdCard.tsx`, `HomeAdPopout.tsx`, `ListingPopout.tsx`, `ListingFilterPanel.tsx`, `ListingHead.tsx`, `ListingCards.tsx`, `ListingRow.tsx`, `src/components/HeaderNew.tsx`, `src/components/chat/SupportChat*.tsx`.
+**Files you may change:** `src/components/new/**`, `src/components/HeaderNew.tsx`, `src/components/chat/SupportChat*.tsx`, `src/components/*Cookie*`, `src/components/ui/**`, `src/app/globals.css`, `src/lib/ui/text.ts`, `src/server/listings/**` (only for the view/click counts), `src/app/api/listings/**` (same), `tests/**`, `docs/ownership/H19.1.json`, `progress/H19.1.md`.
+1. Cookie notice/icon: if the visitor does nothing for 30 s, it hides itself (no consent stored, same as "only essential").
+2. Ad hover pop-out (home "Latest ads" and listing pages): about 25 % smaller, and never cut off by the bottom of the screen. If there is no room below, open it upwards or clamp it inside the viewport.
+3. Category and listing pages: remove the Sort menu ("Best match" / "Newest"), the quick filter buttons (Verified, With photos, With video, Online now) and the text "No filters for this category yet". For every category, now and future.
+4. Opening a category must not pre-select a state (e.g. Uttar Pradesh). Show all of India until the visitor picks one.
+5. Account dropdown in the header (the avatar menu): closes on a click anywhere else, on Esc, and when the pointer moves onto an ad card / its pop-out. It must never sit under or over an ad pop-out.
+6. Remove the extra empty space above the footer on all pages.
+7. Support chat bubble: the 3 quick buttons (Help with my ad / Coins and payments / Report a problem) sit just above the "Type your question" box, not under the "Hi, how can we help you today?" bubble.
+8. Every ad card (listing rows, home cards, My ads) shows two small counts with icons: views (eye) and clicks (pointer). Views = ad page opens, clicks = contact button presses (call, WhatsApp, chat, video). Use the existing counters if the listing already stores them (grep `views`, `clicks`, `stats` in `src/server/listings`); add them if not (increment server-side, de-duplicate per visitor per day). Show "0" when none.
+**Done when:** tests pass; screenshots show each item at 3 widths; lint, typecheck, test, build green.
+
+## H19.2 — Ad page
+**Read first:** `src/components/new/NewAdDetail.tsx`, `AdActions.tsx`, `AdPopup.tsx`, `MoreInCity.tsx`, `src/components/ContactButtons.tsx`.
+**Files you may change:** `src/components/new/**`, `src/components/ContactButtons.tsx`, `src/components/auth/**` (only the return-to-page part), `src/app/[...slug]/**` or wherever the ad route lives, `src/lib/seo/breadcrumbs*`, `src/lib/ui/text.ts`, `src/app/globals.css`, `tests/**`, ownership + progress.
+1. Guests (not signed in) see the same contact buttons as signed-in users: Call, WhatsApp, Chat, Video call (video only when the ad may have calls). "Price on request" alone is not enough. Pressing Chat or Video call as a guest opens sign-in; after sign-in or sign-up the visitor lands back on the SAME ad and the action continues (chat opens / video call pop-up opens). Call and WhatsApp may need sign-in too if they do today; keep that rule, same return-to-ad behaviour.
+2. Remove the box "This is a sample ad, showing how ads look on Tharkoo. Your first 3 ads are free. Post an ad".
+3. Breadcrumb above the photo: `Tharkoo India / <City> / <Area>`. No category name glued to the city ("Surat LGBTQ+ Community" is wrong). The category may appear as its own separate crumb before the city if the SEO pages need it, never merged into the city text.
+4. "Similar ads near you": show 4 cards (2 × 2 on phone and desktop).
+5. The ad's owner, on their own ad, sees no Chat or Video call buttons (they see "This is your ad" + Edit / Boost instead).
+
+## H19.3 — Video call flow for users (most important)
+**Read first:** `src/components/new/AdPopup.tsx`, `src/components/ContactButtons.tsx`, `src/components/recharge/**`, `src/server/billing/recharge.ts`, `src/app/pay/**`, `src/server/billing/passimpay.ts`.
+**Files you may change:** `src/components/new/AdPopup.tsx`, `src/components/ContactButtons.tsx`, `src/components/recharge/**`, `src/app/pay/**`, `src/server/billing/recharge.ts` (return path only), `src/components/HeaderNew.tsx` (credit chip tooltip only), `src/lib/ui/text.ts`, `src/app/globals.css`, `tests/**`, ownership + progress.
+1. Redesign the "Video call and verify" pop-up: clean card, one headline, 3 short benefit lines ("See the person live before you meet", "Verify before you spend thousands", "You pay only if the call connects"), the price "1 call = N credits" from the category price, the user's call-credit balance, and ONE main button.
+2. Not enough call credits → the same pop-up switches to "Buy call credits" INSIDE the pop-up: call packs only (4 packs + own amount). No ad credits, no "free ads", no "per ad", no "publish" wording anywhere in this flow.
+3. After payment (card mock or PassimPay crypto), the user returns to the SAME ad page with the pop-up open, a "Recharge successful, N call credits added" line, and the "Start video call" button ready. They never have to find the ad again. Use the existing `returnTo` + a query flag (e.g. `?call=1&paid=1`) that the ad page reads to reopen the pop-up.
+4. Header credit chip: hovering (desktop) or tapping (phone) shows "Call credits: N · Ad credits: N" in a small tooltip.
+
+## H19.4 — Buying credits: one kind at a time, simple design
+**Read first:** `src/components/recharge/CreditPacks.tsx`, `RechargeSheet.tsx`, `openRecharge.ts`, `src/components/wallet/CoinWallet.tsx`.
+**Files you may change:** `src/components/recharge/**`, `src/components/wallet/**`, `src/app/u/account/credits/**`, `src/app/u/account/wallet/**`, `src/lib/ui/text.ts`, `src/app/globals.css`, `tests/**`, ownership + progress.
+1. `openRecharge({ wallet })` decides the kind. When opened for calls: only call packs, no tabs, no ad wording. When opened for posting/boosting: only ad packs, no call wording. Remove the lines "3 free ads left then 200 per ad" and "You need one more credit to publish" from the call context completely.
+2. Only the wallet page (Credits and payments) shows both kinds, as two clear tabs.
+3. Redesign the recharge sheet and the Credits page to be compact: packs as a tidy grid (2 columns phone, 4 desktop), the own-amount box under them, payment method row, one Pay button. No long vertical page. Think "a first-time phone user who has never bought credits".
+
+## H19.5 — Account menu by role + Video calls page
+**Read first:** `src/components/vendor/VendorScreens.tsx`, `TourInbox.tsx`, `IncomingCallAlert.tsx`, the account side nav component (grep "Photos and videos"), `src/app/u/account/tours/**`.
+**Files you may change:** `src/components/vendor/**`, `src/components/buyer/**`, the account nav component, `src/app/u/account/**`, `src/components/HeaderNew.tsx`, `src/components/ui/RecentlyViewed*`, `src/lib/ui/text.ts`, `src/app/globals.css`, `tests/**`, ownership + progress.
+1. A user who has never posted an ad sees in the account menu: Home, Chats, Video calls, Saved ads, Credits and payments, Help and support, Settings. "My ads" and "Photos and videos" appear only once they have at least one ad.
+2. New menu item "Video calls" with a count badge (waiting requests), and a page `/u/account/calls/` listing every call: the ad (photo + title), the other person's name, status (waiting / accepted / done / missed / refunded), time left to accept, and buttons Accept / Decline / Join call. Vendors see requests on their ads; users see the calls they asked for. Polls every 20 s.
+3. Remove the pink "Someone wants a video call" bar (`IncomingCallAlert`) and its CSS. The badge on the menu item (and on the avatar in the header) replaces it.
+4. "Recently viewed" cards: compact card (photo, title one line, city), never the full description.
+
+## H19.6 — Post an ad, rebuilt
+**Read first:** `src/components/PostWizard.tsx`, `src/components/post/**`, `src/components/new/ListingPlaceSelects.tsx` (state → city), `src/server/listings/service.ts` (submit rules), `src/server/shared/publish-gate.ts`.
+**Files you may change:** `src/components/PostWizard.tsx`, `src/components/post/**`, `src/components/promote/**`, `src/server/listings/service.ts` (only the rules below), `src/server/shared/fields.ts` (interest tags), `src/lib/ui/text.ts`, `src/app/globals.css`, `tests/**`, ownership + progress.
+1. Layout: no vertically stretched panels on any step. The progress list, the step card and the live preview size to their content. Clean spacing; buttons in a fixed footer row.
+2. Place: State dropdown first, then City dropdown with a search box (only that state's cities), then Area (optional, first option "Select area or skip").
+3. Description: optional (remove the 20-character minimum; keep the max).
+4. Interest: optional tag input. Type, Enter adds a chip with ×, max 5, an (i) tooltip "Type an interest and press Enter. Up to 5." Saved as a list.
+5. Photos: the Make cover (star) button must really set the cover and show it; clear labels on every small button (Make cover, Move left, Move right, Remove).
+6. Remove date of birth from the wizard. The "I am 18 or over" consent is asked ONCE, on the last step only.
+7. Contact step: remove the "Phone and email / Phone only / Email only" buttons (emails are never shown on ads). Phone is required. WhatsApp and Telegram are switches; switching Telegram on shows its username box right under the switch. Name on your ads and city come AFTER the contact fields.
+8. Last step: replace the "This ad is FREE (free ad 1 of 3)" box with a choice: Free / TOP / Super Top, each with an (i) tooltip saying what it does and the price in ad credits. Publishing with TOP or Super Top charges ad credits and starts the boost at once; not enough ad credits → ad-credit recharge sheet (ad packs only), then publish continues.
+9. Redesign the "Your ad is live" screen (short, clear, links to view the ad and My ads) and the Promote pop-up (same style as step 8).
+
+## H19.7 — Block throwaway email addresses at sign-in and sign-up
+**Read first:** `src/server/auth/email-code.ts`, `src/server/auth/service.ts`.
+**Files you may change:** `src/server/auth/**`, `src/lib/ui/text.ts`, `tests/server/auth/**`, ownership + progress.
+1. Refuse login codes and sign-ups for disposable email domains (yopmail, mailinator, guerrillamail, 10minutemail, temp-mail and the common list). Keep the list in one code file; no new package. Message: "Please use your own email address."

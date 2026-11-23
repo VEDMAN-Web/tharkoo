@@ -1,7 +1,7 @@
 # Tharkoo — STATUS (shared between Opus and Haiku through GitHub)
 
-**Current task:** none. All open cards are closed (21 Nov 2026, Opus with Vedant): the site is live on www.tharkoo.com.
-**Next:** wait for a new card from Opus. Do not start any old "todo" card below; they were built in later tasks (H3–H18) or dropped.
+**Current task:** H19.1 (then H19.2 … H19.7 in order). Cards in TASKS.md under "H19".
+**Next:** after each H19 PR, report through the relay and start the next H19 card only when Opus says so. Do not start any old "todo" card below.
 **Waiting on Vedant:** nothing for Haiku.
 
 ## How the two chats stay connected (relay, no copy-paste)
@@ -53,3 +53,10 @@ Opus has access to this folder on Vedant's PC. Messages go through `.relay/` (gi
 | H18.5 | Unpaid crypto orders close after 2 hours; tracker closed | PR open | haiku/h18.5-crypto-expiry | Opus |
 
 Status values: todo · doing · PR open · changes needed · approved · merged · blocked.
+| H19.1 | Home, category, listing pages + view/click counts | todo | — | Haiku |
+| H19.2 | Ad page | todo | — | Haiku |
+| H19.3 | Video call flow for users | todo | — | Haiku |
+| H19.4 | Buying credits: one kind at a time | todo | — | Haiku |
+| H19.5 | Account menu by role + Video calls page | todo | — | Haiku |
+| H19.6 | Post an ad, rebuilt | todo | — | Haiku |
+| H19.7 | Block throwaway emails | todo | — | Haiku |
