@@ -1,7 +1,8 @@
 "use client";
 
 import { trackEvent } from "@/lib/analytics/ga";
-import { openRecharge } from "@/components/recharge/openRecharge";
+import { CallPacks } from "@/components/recharge/CallPacks";
+import "@/components/recharge/call-popup.css";
 import { useEffect, useRef, useState, type ClipboardEvent, type FormEvent, type KeyboardEvent } from "react";
 import { X } from "lucide-react";
 import { api, friendlyError } from "@/lib/ui/api";
@@ -16,8 +17,6 @@ export type AdPopupAlt = { slug: string; href: string; title: string; place: str
 
 type Step = "login" | "code" | "call" | "away" | "buy" | "calling" | "error";
 type Channel = "phone" | "email";
-type Pack = { id: string; coins: number; price: number };
-const PACKS_SHOWN = 3;
 
 export type AdPopupProps = {
   kind: PopupKind;
@@ -28,6 +27,8 @@ export type AdPopupProps = {
   paymentsLive: boolean;
   alternatives: AdPopupAlt[];
   notice: string | null;
+  /** H19.3: call credits just added by a payment that returned to this ad page: the pop-up says so. */
+  paidAdded?: number | null;
   onClose: () => void;
   onSignedIn: () => void;
   onStartCall: () => Promise<FlowResult>;
@@ -48,10 +49,6 @@ export function AdPopup(props: AdPopupProps) {
   const [contact, setContact] = useState({ channel: "phone" as Channel, value: "" });
   const [busy, setBusy] = useState(false);
   const [balance, setBalance] = useState<number | null>(null);
-  const [packs, setPacks] = useState<Pack[]>([]);
-  const [pick, setPick] = useState(0);
-  const [payError, setPayError] = useState("");
-  const [showAllPacks, setShowAllPacks] = useState(false);
 
   useEffect(() => {
     if (step !== "call" && step !== "buy") return;
@@ -59,17 +56,6 @@ export function AdPopup(props: AdPopupProps) {
     // H18.8: video calls are paid from call credits.
     void api<{ callBalance?: number }>("/api/wallet/").then((res) => {
       if (live && res.ok) setBalance(Number(res.data.callBalance) || 0);
-    });
-    return () => {
-      live = false;
-    };
-  }, [step]);
-
-  useEffect(() => {
-    if (step !== "buy") return;
-    let live = true;
-    void api<{ packs: Pack[] }>("/api/wallet/coins").then((res) => {
-      if (live && res.ok) setPacks(res.data.packs ?? []);
     });
     return () => {
       live = false;
@@ -92,26 +78,16 @@ export function AdPopup(props: AdPopupProps) {
     setBusy(false);
     if (result === "ok") return setStep("calling");
     if (result === "auth") return setStep("login");
-    if (result === "coins") return openRecharge({ wallet: "call", shortfall: Math.max(1, coins - (balance ?? 0)) });
+    if (result === "coins") return setStep("buy");
     setStep("error");
-  }
-
-  async function pay() {
-    const pack = packs[pick];
-    if (!pack) return setPayError(t("ad.buy.pick"));
-    setBusy(true);
-    setPayError("");
-    const res = await api<{ checkoutUrl?: string | null }>("/api/wallet/coins/checkout", { method: "POST", body: JSON.stringify({ packId: pack.id }) });
-    setBusy(false);
-    if (!res.ok) return setPayError(friendlyError(res.error));
-    if (res.data.checkoutUrl) return window.location.assign(res.data.checkoutUrl);
-    setPayError(t("ad.buy.soon"));
   }
 
   const coins = props.tourCoins ?? 1;
   const coinUnit = coins === 1 ? t("ad.call.coinOne") : t("ad.call.coinMany", { count: coins });
   const title = titleFor(step, name, t);
   const help = helpFor(step, { kind, name, coins, coinText: coinUnit, contact: contact.value, t });
+  const returnTo = typeof window === "undefined" ? "" : `${window.location.pathname}?call=1`;
+  const short = balance !== null && balance < coins;
 
   return (
     <div
@@ -147,21 +123,23 @@ export function AdPopup(props: AdPopupProps) {
           {step === "call" ? (
             <div className="tkn-pop-stack">
               <SellerRow name={name} status={seller?.status} t={t} />
-              <div className="tkn-pop-tiles">
-                <div className="tkn-pop-tile">
-                  <p>{t("ad.call.cost")}</p>
-                  <strong>{coinUnit}</strong>
-                </div>
-                <div className="tkn-pop-tile">
-                  <p>{t("ad.call.balance")}</p>
-                  <strong>{balance === null ? "…" : t("ad.call.coinMany", { count: balance })}</strong>
-                </div>
+              {props.paidAdded ? <p role="status" className="tkn-call-paid" data-tk="call-paid">{t("ad.call.paid", { count: props.paidAdded })}</p> : null}
+              <ul className="tkn-call-benefits">
+                <li>{t("ad.call.benefit1")}</li>
+                <li>{t("ad.call.benefit2")}</li>
+                <li>{t("ad.call.benefit3")}</li>
+              </ul>
+              <div className="tkn-call-facts">
+                <span data-tk="call-price">{t("ad.call.priceLine", { coins: coinUnit })}</span>
+                <span>
+                  {t("ad.call.balance")}: <strong data-tk="call-balance">{balance === null ? "\u2026" : balance}</strong>
+                </span>
               </div>
               {props.notice ? <p role="status" className="tkn-pop-note">{props.notice}</p> : null}
-              <button type="button" className="tkn-pop-btn" disabled={busy} onClick={() => (balance !== null && balance < coins ? openRecharge({ wallet: "call", shortfall: coins - balance }) : void startCall())}>
-                {balance !== null && balance < coins ? t("ad.call.buy") : coins === 1 ? t("ad.call.start", { coins }) : t("ad.call.startMany", { coins })}
+              <button type="button" className="tkn-pop-btn" data-tk="call-main" disabled={busy} onClick={() => (short ? setStep("buy") : void startCall())}>
+                {short ? t("ad.call.buy") : t("ad.call.go")}
               </button>
-              <button type="button" className="tkn-pop-btn-line" onClick={props.onSwitchToChat}>
+              <button type="button" className="tkn-pop-link" onClick={props.onSwitchToChat}>
                 {t("ad.call.chatFirst", { name })}
               </button>
             </div>
@@ -181,39 +159,7 @@ export function AdPopup(props: AdPopupProps) {
 
           {step === "buy" ? (
             <div className="tkn-pop-stack">
-              <div role="radiogroup" aria-label={t("ad.buy.packs")} className="tkn-packs">
-                {(showAllPacks ? packs : packs.slice(0, PACKS_SHOWN)).map((pack, index) => {
-                  const on = index === pick;
-                  return (
-                    <button
-                      key={pack.id}
-                      type="button"
-                      role="radio"
-                      aria-checked={on}
-                      className="tkn-pack m-lift"
-                      data-on={on ? "true" : undefined}
-                      onClick={() => setPick(index)}
-                    >
-                      <span className="tkn-pack-n">{pack.coins}</span>
-                      <span className="tkn-pack-l">{t("ad.buy.coins")}</span>
-                      <span className="tkn-pack-p">₹{pack.price.toLocaleString("en-IN")}</span>
-                    </button>
-                  );
-                })}
-              </div>
-              {packs.length > PACKS_SHOWN && !showAllPacks ? (
-                <button type="button" className="tkn-pop-link" onClick={() => setShowAllPacks(true)}>
-                  {t("ad.buy.more")}
-                </button>
-              ) : null}
-              {props.paymentsLive ? (
-                <button type="button" className="tkn-pop-btn" disabled={busy || packs.length === 0} onClick={() => void pay()}>
-                  {t("ad.buy.pay", { amount: `₹${(packs[pick]?.price ?? 0).toLocaleString("en-IN")}` })}
-                </button>
-              ) : (
-                <p role="status" className="tkn-pop-note">{t("ad.buy.soon")}</p>
-              )}
-              {payError ? <p role="status" className="tkn-pop-note">{payError}</p> : null}
+              <CallPacks shortfall={Math.max(1, coins - (balance ?? 0))} returnTo={returnTo} />
               <p className="tkn-pop-sub">{t(coins === 1 ? "ad.buy.noteOne" : "ad.buy.noteMany")}</p>
             </div>
           ) : null}
@@ -275,7 +221,7 @@ function helpFor(step: Step, v: { kind: PopupKind; name: string; coins: number; 
     case "code":
       return t("ad.code.help", { contact: v.contact });
     case "call":
-      return t("ad.call.help");
+      return "";
     case "away":
       return t("ad.away.help");
     case "buy":

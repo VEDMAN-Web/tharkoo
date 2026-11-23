@@ -2269,3 +2269,17 @@ body:has([data-tk="bottom-bar"]) .tkn-float { bottom: 104px; }
 body .tkn-footer {
   margin-top: 24px;
 }
+
+/* H19.3: the credit chip tooltip ("Call credits: N · Ad credits: N"): on hover or keyboard focus (desktop) and on tap (phone). */
+.tkn-coin-wrap { position: relative; display: inline-flex; }
+.tkn-coin-tip {
+  position: absolute; right: 0; top: calc(100% + 8px); z-index: 60; display: none; flex-direction: column; gap: 6px; min-width: 210px; padding: 10px 12px;
+  border-radius: 12px; background: #2b1140; color: #fff; font-size: 13px; line-height: 20px; font-weight: 600; box-shadow: 0 12px 32px rgba(45, 18, 72, 0.3); white-space: nowrap;
+}
+.tkn-coin-wrap:hover .tkn-coin-tip, .tkn-coin-wrap:focus-within .tkn-coin-tip, .tkn-coin-wrap[data-open="true"] .tkn-coin-tip { display: flex; }
+.tkn-coin-buy { align-self: flex-start; min-height: 32px; padding: 0 12px; border-radius: 999px; border: 0; background: #fff; color: #a8124f; font: inherit; font-weight: 700; cursor: pointer; }
+.tkn-coin-buy:focus-visible { outline: 3px solid #fff; outline-offset: 2px; }
+@media (max-width: 600px) {
+  .tkn-coin-chip { display: inline-flex; padding: 0 10px; font-size: 13px; }
+  .tkn-coin-tip { right: auto; left: 0; }
+}

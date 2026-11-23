@@ -759,7 +759,7 @@ export const TEXT_DEFAULTS = {
   "ad.away.help": "Away right now. No credits were used.",
   "ad.away.alts": "Advertisers online now with similar ads",
   "ad.away.online": "Online now \u00b7 {place}",
-  "ad.buy.title": "Buy credits to start the call",
+  "ad.buy.title": "Buy call credits",
   "ad.buy.help": "You need {coins} for this call. Pick a pack.",
   "ad.buy.packs": "Credit packs",
   "ad.buy.coins": "credits",
@@ -844,6 +844,16 @@ export const TEXT_DEFAULTS = {
   "help.section.saved": "Ads you save appear here. Save an ad from its card, and remove it from here when you no longer need it.",
   "help.section.alerts": "Save a search to get alerts for new ads that match it. Turn an alert off here at any time.",
   "help.section.notifications": "Account messages and updates appear here. Open one to read it in full.",
+  // H19.3: the video call pop-up, buying call credits inside it, and the credit chip tooltip.
+  "ad.call.benefit1": "See the person live before you meet",
+  "ad.call.benefit2": "Verify before you spend thousands",
+  "ad.call.benefit3": "You pay only if the call connects",
+  "ad.call.priceLine": "1 call = {coins}",
+  "ad.call.go": "Start video call",
+  "ad.call.paid": "Recharge successful, {count} call credits added",
+  "ad.buy.own": "Or type your own amount",
+  "ad.buy.ownGet": "You get {count} call credits",
+  "panel.coins.tooltip": "Call credits: {call} · Ad credits: {ad}",
 } as const;
 
 export type UiTextKey = keyof typeof TEXT_DEFAULTS;

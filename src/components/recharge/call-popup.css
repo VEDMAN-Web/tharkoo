@@ -1,0 +1,27 @@
+/* H19.3: the video call pop-up, buying call credits inside it. */
+.tkcb { display: grid; gap: 14px; }
+.tkcb-packs { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+.tkcb-pack { display: grid; justify-items: center; gap: 2px; min-height: 88px; padding: 12px 8px; border-radius: 14px; border: 1.5px solid #ead8f0; background: #fff; color: #2b1140; font: inherit; cursor: pointer; }
+.tkcb-pack strong { font-size: 22px; line-height: 28px; font-weight: 800; }
+.tkcb-pack span { font-size: 13px; line-height: 18px; color: #6b4a8a; }
+.tkcb-pack .tkcb-price { font-size: 15px; font-weight: 700; color: #a8124f; }
+.tkcb-pack em { font-style: normal; font-size: 12px; color: #1a7f4b; }
+.tkcb-pack[aria-checked="true"] { border-color: #d1137a; background: #fff5fa; box-shadow: 0 0 0 2px rgba(209, 19, 122, 0.14); }
+.tkcb-custom label { display: block; font-size: 13px; font-weight: 600; color: #4a2a66; margin-bottom: 6px; }
+.tkcb-row { display: flex; align-items: center; gap: 8px; }
+.tkcb-row span { font-size: 14px; color: #6b4a8a; }
+.tkcb-row input { flex: 1; min-width: 0; min-height: 44px; padding: 0 12px; border-radius: 12px; border: 1.5px solid #ead8f0; font: inherit; font-size: 16px; }
+.tkcb-custom p { margin: 6px 0 0; font-size: 13px; color: #6b4a8a; }
+.tkcb-methods { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+.tkcb-method { min-height: 44px; border-radius: 12px; border: 1.5px solid #ead8f0; background: #fff; font: inherit; font-size: 14px; font-weight: 600; color: #2b1140; cursor: pointer; }
+.tkcb-method[aria-checked="true"] { border-color: #d1137a; background: #fff5fa; }
+.tkcb-error { margin: 0; font-size: 13px; color: #b3261e; }
+.tkcb-note { margin: 0; font-size: 14px; color: #6b4a8a; }
+@media (min-width: 560px) { .tkcb-packs { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
+/* The pop-up's own parts: benefit lines, the price and balance line, the paid line. */
+.tkn-call-benefits { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+.tkn-call-benefits li { position: relative; padding-left: 26px; font-size: 15px; line-height: 22px; color: #2b1140; }
+.tkn-call-benefits li::before { content: ""; position: absolute; left: 2px; top: 5px; width: 12px; height: 7px; border-left: 2.5px solid #1a7f4b; border-bottom: 2.5px solid #1a7f4b; transform: rotate(-45deg); }
+.tkn-call-facts { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 6px 16px; padding: 12px 14px; border-radius: 12px; background: #faf5fc; font-size: 15px; color: #2b1140; }
+.tkn-call-facts strong { font-weight: 800; }
+.tkn-call-paid { margin: 0; padding: 10px 12px; border-radius: 12px; background: #e9f7ef; color: #14532d; font-size: 14px; font-weight: 600; }
