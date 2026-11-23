@@ -2,6 +2,7 @@ import { connectDb } from "@/lib/db";
 import { listEntries } from "@/server/billing";
 import { unreadCount } from "@/server/chat/service";
 import { SupportTicket } from "@/server/models/support";
+import { callEarningsFor } from "@/server/tours/earnings";
 
 /**
  * H7.6: the Notifications page. There is no separate notification store yet, so every item is a real
@@ -9,7 +10,7 @@ import { SupportTicket } from "@/server/models/support";
  * Nothing is invented: when a source is empty it simply adds no items.
  */
 
-export type NotificationKind = "support" | "chat" | "coins";
+export type NotificationKind = "support" | "chat" | "coins" | "calls";
 
 export type NotificationItem = {
   id: string;
@@ -82,5 +83,15 @@ export async function loadNotifications(userId: string): Promise<NotificationIte
       href: "/u/account/credits/history/",
       at: entry.createdAt ? new Date(entry.createdAt).toISOString() : null,
     }));
-  return mergeNotifications([...support, ...chat, ...coins]);
+  // H19.10: a paid video call tells the vendor what they earned.
+  const earned = await callEarningsFor(userId, 10).catch(() => ({ total: 0, calls: [] }));
+  const calls: NotificationItem[] = earned.calls.map((call) => ({
+    id: `call-${call.id}`,
+    kind: "calls" as const,
+    title: `You earned ${call.youGot} ${call.youGot === 1 ? "credit" : "credits"} from a video call on ${call.title || "your ad"}`,
+    body: "Open Earnings to withdraw it or use it for ads.",
+    href: "/u/account/wallet/",
+    at: call.at,
+  }));
+  return mergeNotifications([...support, ...chat, ...coins, ...calls]);
 }

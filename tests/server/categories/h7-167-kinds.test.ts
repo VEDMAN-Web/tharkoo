@@ -143,7 +143,7 @@ describe("the locked people rule (H7.167)", () => {
     const refused = await updateVideoTourSettings({ actorId: "000000000000000000000071", roles: ["superadmin"], categoryId: id, enabled: true, requestId: "r" }).catch((error: unknown) => error);
     expect(refused).toBeInstanceOf(ValidationError);
     expect(JSON.stringify(refused)).toContain(VIDEO_NEVER_FOR_PEOPLE);
-    const saved = await updateVideoTourSettings({ actorId: "000000000000000000000071", roles: ["superadmin"], categoryId: id, coins: 2, requestId: "r" });
+    const saved = await updateVideoTourSettings({ actorId: "000000000000000000000071", roles: ["superadmin"], categoryId: id, coins: 10, requestId: "r" });
     expect(saved.videoTourEnabled).toBe(false);
     await Category.updateOne({ _id: id }, { $set: { videoTourEnabled: true } });
     await updateCategory(actor, id, { description: "People here" });

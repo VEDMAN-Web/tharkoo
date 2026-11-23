@@ -6,6 +6,7 @@ import { can } from "@/lib/admin/perms";
 import { listOrders, parseOrderQuery } from "@/server/admin/orders";
 import { getFinanceSettings, listPayoutsForStaff, listRefundBlockedPurchases } from "@/server/wallet";
 import { OrdersView, type PayoutsPart } from "./_orders/OrdersView";
+import { platformCallRevenue } from "@/server/tours/earnings";
 
 export const dynamic = "force-dynamic";
 
@@ -26,6 +27,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<Rec
   }
   const query = parseOrderQuery(await searchParams);
   const canFinance = can(identity.roles, "payouts.decide");
+  const callRevenue = await platformCallRevenue().catch(() => null);
   const [list, payouts, blocked] = await Promise.all([
     listOrders(query, identity.roles),
     query.tab === "payouts" && canFinance
@@ -35,6 +37,16 @@ export default async function Page({ searchParams }: { searchParams: Promise<Rec
   ]);
   return (
     <AdminShell title="Orders & credits" hasHeader>
+      {callRevenue ? (
+        <section className="adm-card" style={{ padding: 16, marginBottom: 16 }} data-tk="call-revenue" aria-label="Tharkoo earnings from calls">
+          <h2 style={{ margin: "0 0 8px", fontSize: 16 }}>Tharkoo earnings from calls</h2>
+          <div style={{ display: "flex", gap: 24, flexWrap: "wrap" }}>
+            <div><p style={{ margin: 0 }} className="adm-k-help">Today</p><strong data-tk="call-revenue-today">{callRevenue.today} credits</strong></div>
+            <div><p style={{ margin: 0 }} className="adm-k-help">Last 7 days</p><strong data-tk="call-revenue-week">{callRevenue.week} credits</strong></div>
+            <div><p style={{ margin: 0 }} className="adm-k-help">Last 30 days</p><strong data-tk="call-revenue-month">{callRevenue.month} credits</strong></div>
+          </div>
+        </section>
+      ) : null}
       <OrdersView list={list} payouts={payouts} blocked={blocked} />
     </AdminShell>
   );

@@ -23,6 +23,8 @@ export interface VideoTourDoc {
   /** The buyer who requested the tour and paid one coin (or the category price). */
   userId: Types.ObjectId;
   coins: number;
+  /** H19.10: the percent Tharkoo keeps, fixed when the call is requested. Old calls have none (0). */
+  feePercent?: number;
   status: TourStatus;
   requestedAt: Date;
   acceptedAt?: Date | null;
@@ -44,6 +46,7 @@ const tourSchema = new Schema<VideoTourDoc>(
     ownerId: { type: Schema.Types.ObjectId, required: true, index: true },
     userId: { type: Schema.Types.ObjectId, required: true, index: true },
     coins: { type: Number, required: true, min: 1 },
+    feePercent: { type: Number, default: 0, min: 0, max: 90 },
     status: { type: String, enum: TOUR_STATUSES, default: "requested", required: true },
     requestedAt: { type: Date, required: true },
     acceptedAt: { type: Date, default: null },

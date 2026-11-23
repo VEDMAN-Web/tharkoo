@@ -5,7 +5,7 @@ import type { NotificationItem } from "@/server/notifications/feed";
 
 /** H7.6: the Notifications list. Items come from real sources (support, chats, coins). */
 
-const KIND_LABEL: Record<NotificationItem["kind"], string> = { support: "Support", chat: "Chat", coins: "Credits" };
+const KIND_LABEL: Record<NotificationItem["kind"], string> = { support: "Support", chat: "Chat", coins: "Credits", calls: "Video call" };
 
 export function NotificationsPanel({ items }: { items: NotificationItem[] | null }) {
   if (items === null) {

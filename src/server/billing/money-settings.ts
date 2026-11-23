@@ -10,10 +10,11 @@ import { Site } from "@/server/models";
 
 export const SITE_KEY = "default";
 
-export const MONEY_DEFAULTS = { postingFeeCredits: 30, creditPriceInr: 10, mockPaymentsOn: true, paidPostingOn: false, freeAdsPerAccount: 3 } as const;
+export const MONEY_DEFAULTS = { postingFeeCredits: 30, creditPriceInr: 10, mockPaymentsOn: true, paidPostingOn: false, freeAdsPerAccount: 3, videoCallSharePercent: 30 } as const;
 
+/** videoCallSharePercent (H19.10): the percent of a paid video call that Tharkoo keeps. The vendor keeps the rest. */
 /** freeAdsPerAccount (H11.1): how many of an account's first ads cost nothing when Paid posting is on. */
-export type MoneySettings = { postingFeeCredits: number; creditPriceInr: number; mockPaymentsOn: boolean; paidPostingOn: boolean; freeAdsPerAccount: number };
+export type MoneySettings = { postingFeeCredits: number; creditPriceInr: number; mockPaymentsOn: boolean; paidPostingOn: boolean; freeAdsPerAccount: number; videoCallSharePercent: number };
 
 export const moneySettingsBodySchema = z
   .object({
@@ -22,6 +23,7 @@ export const moneySettingsBodySchema = z
     mockPaymentsOn: z.boolean(),
     paidPostingOn: z.boolean(),
     freeAdsPerAccount: z.number().int().min(0).max(1000),
+    videoCallSharePercent: z.number().int().min(0).max(90),
   })
   .partial()
   .strict();
@@ -33,7 +35,7 @@ function whole(value: unknown, fallback: number, min: number): number {
 export async function readMoneySettings(): Promise<MoneySettings> {
   await connectDb();
   const site = await Site.findOne({ key: SITE_KEY })
-    .select("postingFeeCredits creditPriceInr mockPaymentsOn paidPostingOn freeAdsPerAccount")
+    .select("postingFeeCredits creditPriceInr mockPaymentsOn paidPostingOn freeAdsPerAccount videoCallSharePercent")
     .lean<Partial<MoneySettings> | null>();
   return {
     postingFeeCredits: whole(site?.postingFeeCredits, MONEY_DEFAULTS.postingFeeCredits, 0),
@@ -41,6 +43,7 @@ export async function readMoneySettings(): Promise<MoneySettings> {
     mockPaymentsOn: typeof site?.mockPaymentsOn === "boolean" ? site.mockPaymentsOn : MONEY_DEFAULTS.mockPaymentsOn,
     paidPostingOn: typeof site?.paidPostingOn === "boolean" ? site.paidPostingOn : MONEY_DEFAULTS.paidPostingOn,
     freeAdsPerAccount: whole(site?.freeAdsPerAccount, MONEY_DEFAULTS.freeAdsPerAccount, 0),
+    videoCallSharePercent: Math.min(90, whole(site?.videoCallSharePercent, MONEY_DEFAULTS.videoCallSharePercent, 0)),
   };
 }
 
@@ -60,6 +63,8 @@ export async function saveMoneyValues(ctx: AdminCtx, rawValues: unknown) {
   const values = parseInput(moneySettingsBodySchema, rawValues);
   await connectDb();
   const keys = Object.keys(values);
+  // H19.10: the share of video calls Tharkoo keeps is changed by a superadmin only.
+  if ("videoCallSharePercent" in values && !ctx.roles.includes("superadmin")) throw new ForbiddenError("Only a superadmin changes the share of video calls");
   const written = await adminWrite(ctx, {
     perm: "prices.edit",
     action: "settings.money.update",
