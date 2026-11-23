@@ -3,10 +3,11 @@
 import { TextField } from "@/components/admin/ui";
 import { CATEGORY_ICONS, categoryIconKey } from "@/lib/category-icons";
 import { VIDEO_NEVER_FOR_PEOPLE, type KindView } from "@/lib/category-kinds";
+import { CategoryVideoSection } from "./VideoCallsFields";
 import { KIND_HELP, MAX_HOME_LINE, MAX_INTRO, MAX_NAME, type Details, type DetailsErrors } from "./model";
 
 /** The Details tab: two columns on a computer, one on a phone, every label on top, every help line under its field. */
-export function DetailsTab({ draft, errors, kinds, peopleLocked, canEdit, onChange }: { draft: Details; errors: DetailsErrors; kinds: KindView[]; peopleLocked: boolean; canEdit: boolean; onChange: (next: Details) => void }) {
+export function DetailsTab({ draft, errors, kinds, peopleLocked, canEdit, onChange, video }: { draft: Details; errors: DetailsErrors; kinds: KindView[]; peopleLocked: boolean; canEdit: boolean; onChange: (next: Details) => void; video?: { categoryId: string; initial: { enabled: boolean; coins: number }; lock: string; canEdit: boolean; sharePercent: number } }) {
   const fallback = CATEGORY_ICONS.find((choice) => choice.key === (kinds.find((kind) => kind.key === draft.kind)?.icon || categoryIconKey("", draft.kind)));
   const set = (patch: Partial<Details>) => onChange({ ...draft, ...patch });
   return (
@@ -69,6 +70,8 @@ export function DetailsTab({ draft, errors, kinds, peopleLocked, canEdit, onChan
       <div className="adm-cat-wide">
         <TextField label="SEO intro" multiline max={MAX_INTRO} value={draft.seoIntro} error={errors.seoIntro} help="A short paragraph at the top of this category's page for search engines and visitors." onChange={(seoIntro) => set({ seoIntro })} />
       </div>
+
+      {video ? <CategoryVideoSection {...video} /> : null}
 
       <h3 className="adm-cat-group">Home page</h3>
       <div className="adm-cat-wide">

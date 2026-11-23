@@ -1,0 +1,12 @@
+{
+  "branchPrefix": "haiku/h19.8",
+  "globs": [
+    "docs/ownership/H19.8.json",
+    "progress/H19.8.md",
+    "docs/claude/STATUS.md",
+    "src/app/admin/categories/**",
+    "src/app/admin/settings/video-tours/**",
+    "src/server/categories/**",
+    "tests/**"
+  ]
+}

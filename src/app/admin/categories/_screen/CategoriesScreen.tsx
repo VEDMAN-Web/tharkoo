@@ -95,6 +95,8 @@ function Screen({ data, tab: startTab, fields }: { data: CategoriesScreenData; t
             key={detail.id}
             detail={detail}
             kinds={data.kinds}
+            sharePercent={data.sharePercent}
+            canVideo={data.canVideo === true}
             fieldCount={data.rows.find((row) => row.id === detail.id)?.fieldCount ?? fields.length}
             fields={fields}
             tab={tab}
@@ -113,7 +115,7 @@ function Screen({ data, tab: startTab, fields }: { data: CategoriesScreenData; t
         )}
       </div>
       <KindsDrawer kinds={data.kinds} open={kindsOpen} onClose={() => setKindsOpen(false)} />
-      <NewCategoryDialog open={creating} kinds={data.kinds} onClose={() => setCreating(false)} onCreated={(slug) => { setCreating(false); router.push(urlFor(slug, "details")); router.refresh(); }} />
+      <NewCategoryDialog open={creating} kinds={data.kinds} sharePercent={data.sharePercent} canVideo={data.canVideo === true} onClose={() => setCreating(false)} onCreated={(slug) => { setCreating(false); router.push(urlFor(slug, "details")); router.refresh(); }} />
     </div>
   );
 }

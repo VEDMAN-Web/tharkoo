@@ -3,8 +3,8 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { Notice } from "@/components/admin/ui";
-import { VIDEO_NEVER_FOR_PEOPLE } from "@/lib/category-kinds";
 import { api, friendlyError, type ApiError } from "@/lib/ui/api";
+import { COIN_MAX, COIN_MIN, LOCK_NO_KIND, isCoinPrice, lockOf } from "./shared";
 
 export type VideoTourCategory = {
   id: string;
@@ -22,29 +22,14 @@ export type VideoTourCategory = {
 type Draft = { enabled: boolean; coins: string };
 type Banner = { kind: "error" | "info"; text: string };
 
-const COIN_MIN = 10;
-const COIN_MAX = 100;
-const LOCK_PEOPLE = VIDEO_NEVER_FOR_PEOPLE;
-const LOCK_KIND = "This kind does not allow live video tours. Change it under Categories & fields, Kinds.";
-const LOCK_NO_KIND = "Set the category kind first";
-
 /** The first field message from the server, or the generic text. */
 function errorText(error: ApiError) {
   const fields = Object.values(error.fields ?? error.details ?? {}).flat();
   return fields[0] || friendlyError(error);
 }
 
-function isCoinPrice(value: string) {
-  const number = Number(value);
-  return /^\d+$/.test(value.trim()) && number >= COIN_MIN && number <= COIN_MAX;
-}
-
-/** A people category can never have live tours; a category with no kind cannot be switched on until it has one. */
 function lockReason(row: VideoTourCategory) {
-  if (row.kind === "people" || row.peopleLocked) return LOCK_PEOPLE;
-  if (!row.kind) return LOCK_NO_KIND;
-  if (row.kindVideoOff) return LOCK_KIND;
-  return "";
+  return lockOf(row);
 }
 
 export function VideoTourSettings() {
