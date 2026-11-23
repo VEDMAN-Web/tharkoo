@@ -15,6 +15,7 @@ import type { KindView } from "@/lib/category-kinds";
 import { DetailsTab } from "./DetailsTab";
 import { PicturesTab } from "@/app/admin/_catalog/PicturesTab";
 import { SubsTab } from "./SubsTab";
+import { lockOf } from "@/app/admin/settings/video-tours/shared";
 import { adsText, detailsOf, detailsProblems, KIND_MISSING, picturesOf, picturesProblems, TABS, type TabKey } from "./model";
 
 const same = (a: unknown, b: unknown) => JSON.stringify(a) === JSON.stringify(b);
@@ -29,6 +30,8 @@ export function DetailPane({
   fields,
   tab,
   kinds,
+  sharePercent,
+  canVideo,
   onTab,
   onDirty,
   listHref,
@@ -36,6 +39,8 @@ export function DetailPane({
 }: {
   detail: CategoryDetailView;
   kinds: KindView[];
+  sharePercent: number;
+  canVideo: boolean;
   fieldCount: number;
   fields: EditorField[];
   tab: TabKey;
@@ -223,7 +228,7 @@ export function DetailPane({
       </header>
       <Tabs items={tabs} active={tab} onChange={(key) => onTab(key as TabKey)} label="Category sections" idPrefix="cat" />
       <div role="tabpanel" id={`cat-panel-${tab}`} aria-labelledby={`cat-${tab}`} className="adm-cat-body">
-        {tab === "details" ? <DetailsTab draft={details} errors={detailErrors} kinds={kinds} peopleLocked={detail.peopleLocked} canEdit onChange={change(setDetails)} /> : null}
+        {tab === "details" ? <DetailsTab draft={details} errors={detailErrors} kinds={kinds} peopleLocked={detail.peopleLocked} canEdit onChange={change(setDetails)} video={{ categoryId: detail.id, initial: { enabled: detail.video.enabled, coins: detail.video.coins }, lock: lockOf({ kind: detail.kind || null, peopleLocked: detail.video.peopleLocked, kindVideoOff: detail.video.kindVideoOff }), canEdit: canVideo, sharePercent }} /> : null}
         {tab === "pictures" ? <PicturesTab draft={pictures} errors={pictureErrors} onChange={change(setPictures)} /> : null}
         {tab === "fields" || fieldsState ? (
           <div className="adm-cat-fields" data-tk="fields-tab" hidden={tab !== "fields"}>
