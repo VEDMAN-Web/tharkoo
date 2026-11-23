@@ -1,8 +1,10 @@
 import { InternalError, PolicyViolationError } from "@/server/http";
 import { hmacSha256, randomToken, safeEqual } from "@/server/shared/crypto";
 
+export type PaymentProviderName = "mock" | "razorpay" | "passimpay";
+
 export interface ProviderOrder {
-  provider: "mock" | "razorpay";
+  provider: PaymentProviderName;
   providerRef: string;
   request: {
     amount: number;
@@ -12,8 +14,10 @@ export interface ProviderOrder {
   };
 }
 
-export function paymentProvider(): "mock" | "razorpay" {
-  return (process.env.PAYMENT_PROVIDER || "mock").trim().toLowerCase() === "razorpay" ? "razorpay" : "mock";
+export function paymentProvider(): PaymentProviderName {
+  const value = (process.env.PAYMENT_PROVIDER || "mock").trim().toLowerCase();
+  // H18.1: "passimpay" turns on the PassimPay crypto checkout (src/server/billing/passimpay.ts).
+  return value === "razorpay" || value === "passimpay" ? value : "mock";
 }
 
 export function livePaymentsAllowed() {
@@ -26,6 +30,11 @@ export function isLiveKey(keyId: string) {
 
 /** Builds a provider order. The Razorpay branch never opens a socket. */
 export function createCheckoutOrder(input: { amount: number; currency: string; receipt: string }): ProviderOrder {
+  if (paymentProvider() === "passimpay") {
+    // H18.1: the invoice itself is created by startRecharge (it needs a network call); here only the reference is fixed.
+    if (!livePaymentsAllowed()) throw new PolicyViolationError("Live payments are disabled");
+    return { provider: "passimpay", providerRef: input.receipt, request: { amount: input.amount, currency: input.currency, receipt: input.receipt } };
+  }
   if (paymentProvider() !== "razorpay") {
     return {
       provider: "mock",

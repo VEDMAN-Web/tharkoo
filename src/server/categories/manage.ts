@@ -219,16 +219,23 @@ export async function updateCategory(actor: Actor, id: string, input: CategoryIn
   return { ok: true as const, slug: after?.slug ?? doc.slug };
 }
 
-/** A category with ads is never removed: hide it instead. An empty category takes its sub-categories with it. */
+/** Statuses a removal leaves alone: the ad is already off the site. */
+const GONE_STATUSES = ["removed", "deleted"] as ("removed" | "deleted")[];
+
+/**
+ * H18.3 (Vedant, 21 Nov 2026): an admin may remove a category even when it has ads. Every ad in it (real and sample)
+ * is taken off the site in one query (status "removed", the same state an admin removal leaves), then its
+ * sub-categories and the category go. One audit entry records how many ads were removed.
+ */
 export async function deleteCategory(actor: Actor, id: string) {
   requireAdmin(actor);
   await connectDb();
   const doc = await Category.findById(objectId(id, "Category")).lean();
   if (!doc) throw new NotFoundError("Category not found");
-  if ((await categoryAdCount(doc._id)) > 0) throw new ValidationError("This category has ads. Hide it instead of removing it.");
+  const removed = await Listing.updateMany({ categoryId: doc._id, status: { $nin: GONE_STATUSES } }, { $set: { status: "removed" } });
   await Subcategory.deleteMany({ categoryId: doc._id });
   await Category.deleteOne({ _id: doc._id });
-  await record(actor, "category.delete", "category", id, { slug: doc.slug, name: doc.name }, null);
+  await record(actor, "category.delete", "category", id, { slug: doc.slug, name: doc.name, adsRemoved: removed.modifiedCount }, null);
   await refreshPublicCache();
   return { ok: true as const };
 }
@@ -287,15 +294,15 @@ export async function updateSubcategory(actor: Actor, id: string, input: Subcate
   return { ok: true as const };
 }
 
-/** Removing a sub-category that still has ads is blocked: hide it instead. */
+/** H18.3: removing a sub-category takes its ads off the site too (status "removed"), in one query. */
 export async function deleteSubcategory(actor: Actor, id: string) {
   requireAdmin(actor);
   await connectDb();
   const doc = await Subcategory.findById(objectId(id, "Sub-category")).lean();
   if (!doc) throw new NotFoundError("Sub-category not found");
-  if ((await subcategoryAdCount(doc._id)) > 0) throw new ValidationError("This sub-category has ads. Hide it instead of removing it.");
+  const removed = await Listing.updateMany({ subcategoryId: doc._id, status: { $nin: GONE_STATUSES } }, { $set: { status: "removed" } });
   await Subcategory.deleteOne({ _id: doc._id });
-  await record(actor, "subcategory.delete", "subcategory", id, { slug: doc.slug, name: doc.name }, null);
+  await record(actor, "subcategory.delete", "subcategory", id, { slug: doc.slug, name: doc.name, adsRemoved: removed.modifiedCount }, null);
   await refreshPublicCache();
   return { ok: true as const };
 }

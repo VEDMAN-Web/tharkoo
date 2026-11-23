@@ -1,12 +1,13 @@
 import { Types } from "mongoose";
 import { connectDb } from "@/lib/db";
-import { phoneDigits, SUPPORT_PHONE } from "@/lib/support";
+import { phoneDigits } from "@/lib/support";
 import { TRUST } from "@/content/trust";
 import { hasPlaceholder } from "@/components/new/legal-copy";
 import type { AdminCtx } from "@/server/admin/context";
 import { adminWrite } from "@/server/admin/write";
 import { loginCodeWarning } from "@/server/auth/email-code";
 import { readMoneySettings } from "@/server/billing/money-settings";
+import { readStoredShellConfig } from "@/server/site-links/shell-config";
 import { demoAdCounts, demoFilter } from "@/server/listings/demo-ads";
 import { Listing, Page, PageLayout, Site, SiteMedia, User } from "@/server/models";
 import { STAFF_ROLE_NAMES } from "@/server/models/identity";
@@ -125,9 +126,9 @@ export function buildChecklist(input: ChecklistInputs): ChecklistRow[] {
     {
       id: "support-phone",
       title: "Real 10-digit support phone",
-      detail: `Now ${input.supportPhone} (${national.length} digits)`,
+      detail: national ? `Now ${input.supportPhone} (${national.length} digits)` : "No number saved yet",
       done: national.length === 10 || tick("supportPhoneKept"),
-      href: "/admin/settings/",
+      href: "/admin/menus/",
       manual: null,
       keep: { key: "supportPhoneKept", kept: national.length !== 10 && tick("supportPhoneKept") },
     },
@@ -192,6 +193,8 @@ export async function loadChecklistInputs(): Promise<ChecklistInputs> {
     SiteMedia.countDocuments({ trashedAt: null, altAuto: true }),
     PageLayout.findOne({ key: "home", scope: "default" }).select("publishedAt").lean<{ publishedAt?: Date | null } | null>(),
   ]);
+  const shell = await readStoredShellConfig();
+  const savedPhone = shell.footer.contacts.find((item) => item.visible && item.kind === "phone" && item.value.trim())?.value.trim() || shell.chat.phone.trim();
   const texts = [
     ...Object.entries(TRUST).map(([key, copy]) => ({ name: key === "safety" ? "The Safety page" : `The ${key.replace(/-/g, " ")} page`, text: copy.paragraphs.join("\n") })),
     ...pages.map((page) => ({ name: `The ${page.slug ?? "page"} page`, text: page.body ?? "" })),
@@ -204,7 +207,7 @@ export async function loadChecklistInputs(): Promise<ChecklistInputs> {
     demoActive: demoCounts.active,
     junkTitles: recent.map((row) => row.title ?? ""),
     junkIds: recent.map((row) => String(row._id)),
-    supportPhone: SUPPORT_PHONE,
+    supportPhone: savedPhone,
     placeholderPages: placeholderPagesIn(texts),
     grievancePublished: pages.some((page) => page.slug === "grievance"),
     bannerChangedAt: layout?.publishedAt ?? null,

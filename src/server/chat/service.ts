@@ -14,6 +14,7 @@ import {
   isDuplicateKey,
 } from "@/server/http";
 import { storeChatImage } from "@/server/chat/image";
+import { addressesFor } from "@/server/listings/ad-code";
 import { Listing, MediaAsset, User } from "@/server/models";
 import { previewUrlOf } from "@/server/media/mine";
 import { Conversation, type ConversationDoc } from "@/server/models/conversation";
@@ -204,6 +205,7 @@ export async function listInbox(userId: string): Promise<ConversationView[]> {
     peerName: peers.get((row.sellerId.toString() === userId ? row.buyerId : row.sellerId).toString()) ?? "Member",
     cover: ads.get(row.listingId.toString())?.cover ?? null,
     adSlug: ads.get(row.listingId.toString())?.slug ?? null,
+    adAddress: ads.get(row.listingId.toString())?.address ?? null,
     adLive: ads.get(row.listingId.toString())?.live ?? false,
     adPrice: ads.get(row.listingId.toString())?.price ?? null,
   }));
@@ -224,15 +226,16 @@ async function peerNames(rows: Conv[], userId: string) {
 
 async function adSummaries(listingIds: Types.ObjectId[]) {
   const listings = (await Listing.find({ _id: { $in: listingIds } })
-    .select("slug status coverMediaId mediaIds price")
-    .lean()) as { _id: Types.ObjectId; slug?: string; status: string; coverMediaId?: Types.ObjectId; mediaIds?: Types.ObjectId[]; price?: number }[];
+    .select("slug status coverMediaId mediaIds price title categoryId cityId code")
+    .lean()) as { _id: Types.ObjectId; slug?: string; status: string; coverMediaId?: Types.ObjectId; mediaIds?: Types.ObjectId[]; price?: number; title?: string; categoryId?: Types.ObjectId; cityId?: Types.ObjectId; code?: string }[];
+  const addresses = await addressesFor(listings);
   const coverIds = listings.map((listing) => listing.coverMediaId ?? listing.mediaIds?.[0]).filter((id): id is Types.ObjectId => Boolean(id));
   const assets = coverIds.length ? await MediaAsset.find({ _id: { $in: coverIds }, kind: "image" }).select("kind objectKey").lean() : [];
   const urls = new Map(assets.map((asset) => [asset._id.toString(), previewUrlOf(asset).url] as const));
   return new Map(
     listings.map((listing) => {
       const coverId = listing.coverMediaId ?? listing.mediaIds?.[0];
-      return [listing._id.toString(), { slug: listing.slug ?? null, live: listing.status === "active", cover: coverId ? urls.get(coverId.toString()) ?? null : null, price: typeof listing.price === "number" ? listing.price : null }] as const;
+      return [listing._id.toString(), { slug: listing.slug ?? null, address: addresses.get(listing._id.toString()) ?? null, live: listing.status === "active", cover: coverId ? urls.get(coverId.toString()) ?? null : null, price: typeof listing.price === "number" ? listing.price : null }] as const;
     }),
   );
 }

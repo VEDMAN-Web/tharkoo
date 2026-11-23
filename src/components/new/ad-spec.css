@@ -93,6 +93,8 @@
 .tkn .tkn-fine { margin: 0; font-size: 12px; line-height: 16px; color: #5b3d7a; }
 
 .tkn .tkn-similar { margin-top: 40px; margin-bottom: 0; min-width: 0; }
+.tkn .tkn-more-city { margin: 16px 0 0; font-size: 15px; line-height: 24px; }
+.tkn .tkn-more-city a { display: inline-flex; align-items: center; min-height: 44px; font-weight: 600; color: #c2185b; text-decoration: underline; text-underline-offset: 3px; }
 body:has(.tkn-ad) .tkn-footer { margin-top: 48px; }
 .tkn .tkn-similar-head { display: flex; justify-content: space-between; align-items: baseline; gap: 8px 16px; flex-wrap: wrap; margin-bottom: 16px; }
 .tkn .tkn-similar h2 { margin: 0; font-size: 22px; line-height: 30px; font-weight: 700; letter-spacing: -0.02em; color: #110520; }

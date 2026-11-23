@@ -5,7 +5,7 @@ import type { AdChannel } from "@/server/listings/contact-channels";
 import { ContactButtons, ContactProvider, type ContactPopupInfo } from "@/components/ContactButtons";
 import { UiTextProvider } from "@/components/ui/AdCard";
 import { TrackView } from "@/components/ui/RecentlyViewed";
-import { adPath, postAdPath, type UrlPaths } from "@/lib/urls";
+import { adHref, citiesPath, joinPath, postAdPath, type UrlPaths } from "@/lib/urls";
 import { isCityAlias } from "@/lib/seo/district-alias";
 import { makeT, type UiTextMap } from "@/lib/ui/text";
 import { PostStrip } from "@/components/ui/PostStrip";
@@ -13,6 +13,7 @@ import { formatPrice } from "@/components/search/price";
 import { CitySync } from "@/components/CityContext";
 import { BadgeCheck, ShieldCheck } from "lucide-react";
 import { AdSellerRow } from "./AdLiveBits";
+import { MoreInCity } from "./MoreInCity";
 import { SIMILAR_ADS_MAX, SimilarAds } from "./SimilarAds";
 import { rowLabels } from "./listing-row-data";
 import { PictureHeight } from "./PictureHeight";
@@ -71,7 +72,7 @@ export function popupAlternatives(ad: ListingDoc, related: ListingDoc[], paths: 
       const { city, district } = placeOf(item);
       return {
         slug: item.slug || "",
-        href: adPath(paths, item.slug || ""),
+        href: adHref(paths, item),
         title: displayTitle(item.title) || "Listing",
         place: district ? `${city} / ${district}` : city,
         price: formatPrice(item.price),
@@ -151,7 +152,7 @@ export function NewAdDetail({
   const barClass = barClassOf(barChannels.length + 1 + (tour && !peopleAd ? 1 : 0), peopleAd);
   const showPrice = features.price && (!peopleAd || PRICED_PEOPLE.has(ad.categorySlug || ""));
   const sampleNote = ad.sample ? { message: t("demo.message"), button: t("demo.postButton"), href: postAdPath(paths) } : null;
-  const actionProps = { slug: ad.slug || "", publicId: ad.publicId || "", title, place: placeText };
+  const actionProps = { slug: ad.slug || "", publicId: ad.publicId || "", address: ad.address, title, place: placeText };
 
   return (
     <UiTextProvider texts={texts}>
@@ -170,7 +171,7 @@ export function NewAdDetail({
           <div className="tkn-ad-grid">
             <PictureHeight />
             <div className="tkn-ad-main">
-              <NewGallery photos={photos} videos={videos} title={title} isNew={isRecent(ad)} />
+              <NewGallery photos={photos} videos={videos} title={title} place={district || city} isNew={isRecent(ad)} />
               <article className="tkn-ad-card" data-tk="ad-summary">
                 <div className="tkn-ad-titlerow">
                   <h1>{title}</h1>
@@ -258,6 +259,7 @@ export function NewAdDetail({
               labels={cardLabels}
             />
           ) : null}
+          {ad.citySlug && city ? <MoreInCity href={joinPath(citiesPath(paths), ad.citySlug)} text={t("ad.moreInCity", { city })} /> : null}
           <PostStrip text={t("post.strip.text")} button={t("post.strip.button")} feeText={t("post.strip.fee")} />
           {features.contact && !ad.sample ? (
             <div className={`tkn-ad-bar${barClass}`} data-tk="bottom-bar">

@@ -1,4 +1,5 @@
 import mongoose from "mongoose";
+import { promote } from "../../setup/wallets";
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 import type { AdminCtx } from "@/server/admin/context";
 import { undoEvent } from "@/server/admin/undo/core";
@@ -127,6 +128,9 @@ describe("the locked people rule (H7.167)", () => {
     await createKind(admin, { name: "Showrooms", videoTours: true });
     await createKind(admin, { name: "Archive", videoTours: false });
     const on = await adIn(await category("showrooms", "showrooms"));
+    await expect(assertVideoTourAllowed(on)).rejects.toThrow(/TOP or Super Top/);
+    const listing = await Listing.findById(on).select("ownerId").lean<{ ownerId: unknown } | null>();
+    await promote(on, String(listing?.ownerId));
     await expect(assertVideoTourAllowed(on)).resolves.toBeUndefined();
     const off = await adIn(await category("old-things", "archive"));
     await expect(assertVideoTourAllowed(off)).rejects.toThrow(/off/);

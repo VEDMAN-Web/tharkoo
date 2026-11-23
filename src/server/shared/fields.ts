@@ -177,3 +177,16 @@ export function choiceProblems(fields: FieldDefinition[], input: unknown): Recor
   }
   return problems;
 }
+
+/**
+ * H18.11/H18.12: checks an ad's saved answers against its category on publish and on edit. The 18+ age is asked on
+ * people ads even when the category lists no age field, and a category change can leave old answers behind: check only
+ * this category's fields, keep the age for the 18+ gate, drop the rest.
+ */
+export function parseSavedAttributes(fields: FieldDefinition[], input: unknown): Record<string, unknown> {
+  const saved = input && typeof input === "object" && !Array.isArray(input) ? { ...(input as Record<string, unknown>) } : {};
+  const known = new Set(fields.filter((field) => field.enabled).map((field) => field.key));
+  const attributes = parseListingAttributes(fields, Object.fromEntries(Object.entries(saved).filter(([key]) => known.has(key))));
+  if (!known.has("age") && saved.age !== undefined && saved.age !== null && saved.age !== "") attributes.age = saved.age;
+  return attributes;
+}

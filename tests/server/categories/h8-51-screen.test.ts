@@ -76,10 +76,12 @@ describe("saving from the screen (H8.51)", () => {
     await expect(updateCategory(admin, created.id, { kind: "" })).rejects.toThrow(/kind/i);
   });
 
-  it("removing a category with ads is refused and an empty one goes with its sub-categories", async () => {
+  it("H18.3: removing a category with ads takes its ads off the site; an empty one goes with its sub-categories", async () => {
     const withAds = await createCategory(admin, { name: "Busy", kind: "goods" });
     await Listing.create({ ownerId: new Types.ObjectId(), categoryId: new Types.ObjectId(withAds.id), status: "active", title: "A thing", description: "A description that is long enough" });
-    await expect(deleteCategory(admin, withAds.id)).rejects.toThrow(/Hide it/);
+    await deleteCategory(admin, withAds.id);
+    expect(await Category.countDocuments({ slug: "busy" })).toBe(0);
+    expect(await Listing.countDocuments({ categoryId: new Types.ObjectId(withAds.id), status: "removed" })).toBe(1);
     const empty = await createCategory(admin, { name: "Quiet", kind: "goods" });
     await createSubcategory(admin, { categoryId: empty.id, name: "Sub" });
     await deleteCategory(admin, empty.id);

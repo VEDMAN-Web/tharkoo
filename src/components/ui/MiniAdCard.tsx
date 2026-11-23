@@ -12,13 +12,13 @@ export function MiniAdCard({ href, title, photo, price, dataTk = "ad-card" }: { 
       <span className="tk-mini-ad-photo" aria-hidden="true">
         {photo ? (
           // eslint-disable-next-line @next/next/no-img-element
-          <img src={photo} alt="" loading="lazy" />
+          <img src={photo} alt="" width={56} height={56} loading="lazy" />
         ) : (
           <ImageIcon size={20} focusable="false" />
         )}
       </span>
       <span className="tk-mini-ad-main">
-        <Link href={href} prefetch={false} className="tk-mini-ad-link" data-tk="mini-ad-link">{title}</Link>
+        <Link href={href} prefetch={false} className="tk-mini-ad-link" data-tk="mini-ad-link" data-ad-link>{title}</Link>
         {typeof price === "number" && price > 0 ? <span className="tk-mini-ad-price">{`₹${price.toLocaleString("en-IN")}`}</span> : null}
       </span>
     </div>

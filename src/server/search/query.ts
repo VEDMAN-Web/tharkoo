@@ -30,6 +30,7 @@ import {
   type RankPromotion,
   type RankSettings,
 } from "@/server/ranking";
+import { adAddress } from "@/lib/ad-address";
 import { publicView } from "@/server/listings/service";
 import { pickLimitsByCategory } from "@/server/fields/service";
 import { kindFor } from "@/server/categories/kind";
@@ -101,6 +102,8 @@ interface Row {
   localityId?: Types.ObjectId;
   title: string;
   slug?: string;
+  /** H16.2: the ad code that ends its public address. */
+  code?: string;
   description: string;
   price?: number;
   attributes?: Record<string, unknown>;
@@ -120,6 +123,8 @@ interface Row {
 export interface PublicHit {
   id: string | null;
   slug: string | null;
+  /** H16.2: the public address of the ad, left out while it has no code, category or city. */
+  address?: string;
   title: string;
   description: string;
   status: string;
@@ -543,6 +548,7 @@ export async function presentRows(docs: Row[], promotions: Map<string, RankPromo
     const verified = !isSample && doc.badges?.includes("verified") === true;
     const bumped = doc.bumpedAt ? new Date(doc.bumpedAt) : doc.publishedAt;
     const publicId = publicIdOf(doc.slug, id);
+    const address = doc.code && categorySlug && citySlug && doc.title ? adAddress({ categorySlug, citySlug, title: doc.title, code: doc.code }) : undefined;
     const photoList = listingPhotos(categorySlug, publicId, photos.get(id) ?? [], isDemoAd(person?.email, doc.slug));
     const people = category?.kind === "people" || kindFor(categorySlug, category?.fields) === "people";
     const trust = isSample ? [] : trustMarks(person?.verificationStatus, verified, photoList.length, people);
@@ -558,6 +564,7 @@ export async function presentRows(docs: Row[], promotions: Map<string, RankPromo
       districtSlug,
       place,
       publicId,
+      ...(address ? { address } : {}),
       photos: photoList,
       verified,
       variant,
@@ -568,6 +575,7 @@ export async function presentRows(docs: Row[], promotions: Map<string, RankPromo
     legacy.push({
       slug: doc.slug,
       publicId,
+      ...(address ? { address } : {}),
       title: doc.title,
       description: doc.description,
       displayName: doc.title,

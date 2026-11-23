@@ -25,7 +25,6 @@ import { UiTextProvider } from "./help/UiTextProvider";
 import { SupportChat } from "./chat/SupportChat";
 import { RechargeHost } from "./recharge/RechargeHost";
 import { PromoteHost } from "./promote/PromoteHost";
-import { SUPPORT_PHONE, SUPPORT_TELEGRAM } from "@/lib/support";
 import { SignInPopup } from "./auth/SignInPopup";
 import { AccountProvider } from "./account/AccountContext";
 
@@ -116,8 +115,8 @@ export function PathChrome({ shell, paths, children }: { shell: ChromeData; path
             id="tk-facts"
             hidden
             data-hours={content.support.hours || site.supportHours || ""}
-            data-wa={content.support.whatsapp || SUPPORT_PHONE}
-            data-tg={content.support.telegram || SUPPORT_TELEGRAM}
+            data-wa={content.support.whatsapp || ""}
+            data-tg={content.support.telegram || ""}
           />
           <Footer
             siteName={site.name || "Tharkoo"}

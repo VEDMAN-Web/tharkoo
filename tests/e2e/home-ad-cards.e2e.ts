@@ -1,6 +1,6 @@
 import AxeBuilder from "@axe-core/playwright";
 import type { Locator, Page } from "@playwright/test";
-import { expect, hasHorizontalScroll, isPhone, test, withLocalDb } from "./helpers";
+import { expect, hasHorizontalScroll, isPhone, oldAdPath, test, withLocalDb } from "./helpers";
 
 const ROW = '[data-tk="ads-row"]';
 const CARD = '[data-tk="home-ad"]';
@@ -61,12 +61,14 @@ test.describe("H7.84 home ad cards", () => {
     // H16.5/H17.1: a SAMPLE card (a demo ad) also carries the Sample ad pill; a real card never does. Both show the category and the city only.
     const cards = await row.locator(CARD).evaluateAll((items) =>
       items.map((card) => ({
-        sample: /\/ad\/demo-\d+\//.test(card.querySelector<HTMLAnchorElement>("a.tkh-ad-link")?.getAttribute("href") ?? ""),
+        href: card.querySelector<HTMLAnchorElement>("a.tkh-ad-link")?.getAttribute("href") ?? "",
         hasSamplePill: Boolean(card.querySelector(".tkh-pill-sample")),
         pills: [...card.querySelectorAll(".tkh-ad-body .tkh-pill:not(.tkh-pill-sample)")].map((pill) => pill.textContent || ""),
       })),
     );
-    for (const { sample, hasSamplePill, pills: set } of cards) {
+    // H16.2: a card links to the ad's own address, so a sample (demo) ad is found by its old /ad/demo-NNNN/ link.
+    const marked = await Promise.all(cards.map(async (card) => ({ ...card, sample: /\/ad\/demo-\d+\//.test(await oldAdPath(card.href)) })));
+    for (const { sample, hasSamplePill, pills: set } of marked) {
       expect(hasSamplePill, "the Sample ad pill is on sample cards and only on them").toBe(sample);
       expect(set.length).toBeGreaterThanOrEqual(1);
       expect(set.length).toBeLessThanOrEqual(2);

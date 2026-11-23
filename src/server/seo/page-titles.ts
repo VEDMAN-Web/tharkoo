@@ -17,7 +17,6 @@ import {
   type TitleText,
 } from "@/lib/seo/page-title-defaults";
 import {
-  adPath,
   blogPath,
   categoryPath,
   citiesPath,
@@ -378,7 +377,7 @@ export function buildPageTitleRows(source: PageTitleSource): PageTitleRow[] {
       id: "ad",
       group: "ad",
       label: "Ad pages",
-      address: adPath(paths, "ad-name").replace("ad-name", "{ad name}"),
+      address: "/{category}/{city}/{ad name}-{code}/",
       title: AD_TITLE_PATTERN,
       description: "",
       saved: false,

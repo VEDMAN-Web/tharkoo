@@ -1,4 +1,5 @@
 import mongoose from "mongoose";
+import { listEmail } from "@/server/admin/users";
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 import { cityLabel } from "@/lib/admin/city-label";
 import { listAds, parseAdsQuery } from "@/server/admin/ads-list";
@@ -47,8 +48,8 @@ describe("H7.172 All ads, Users and Orders lists", () => {
     expect(ads.find((row) => row.title === "Demo tutor")?.seller).toBe("Demo");
     expect(ads.find((row) => row.title === "Real tutor")?.seller).toBe("Riya Thakur");
     const users = (await listUsers(parseUserQuery({}), ["admin"])).rows;
-    expect(users.find((row) => row.email === SEED_USER_EMAIL)?.name).toBe("Demo");
-    expect(users.find((row) => row.email === "riya@example.test")?.name).toBe("Riya Thakur");
+    expect(users.find((row) => row.email === listEmail(SEED_USER_EMAIL))?.name).toBe("Demo");
+    expect(users.find((row) => row.email === listEmail("riya@example.test"))?.name).toBe("Riya Thakur");
     expect((await User.findOne({ email: SEED_USER_EMAIL }))?.displayName).toBe("Seed");
   });
 
@@ -58,7 +59,7 @@ describe("H7.172 All ads, Users and Orders lists", () => {
     const stored = [["a@example.test", "pune"], ["b@example.test", "surat"], ["c@example.test", "unknown"], ["d@example.test", undefined]] as const;
     for (const [email, city] of stored) await User.create({ email, displayName: email, roles: ["user"], status: "active", ...(city ? { sellerProfile: { city, name: email, completedAt: new Date() } } : {}) });
     const rows = (await listUsers(parseUserQuery({}), ["admin"])).rows;
-    const shown = Object.fromEntries(rows.map((row) => [row.email, row.cityName]));
+    const shown = Object.fromEntries(rows.map((row) => [row.email.replace("@\u2026", "@example.test"), row.cityName]));
     expect(shown).toMatchObject({ "a@example.test": "Pune", "b@example.test": "Surat", "c@example.test": "Not set", "d@example.test": "Not set" });
     expect((await User.findOne({ email: "c@example.test" }))?.sellerProfile?.city).toBe("unknown");
   });

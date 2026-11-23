@@ -9,12 +9,14 @@ import { api, friendlyError } from "@/lib/ui/api";
 const REVEAL_MS = 60_000;
 
 interface RevealedDetails {
-  method: "bank" | "upi";
+  method: "bank" | "upi" | "crypto";
   legalName: string;
   pan: string;
   accountNumber?: string;
   ifsc?: string;
   upiId?: string;
+  network?: string;
+  walletAddress?: string;
 }
 
 interface Revealed {
@@ -25,7 +27,8 @@ interface Revealed {
 
 function detailsText(details: RevealedDetails) {
   const lines = [`Name: ${details.legalName}`, `PAN: ${details.pan}`];
-  if (details.method === "upi") lines.push(`UPI ID: ${details.upiId ?? ""}`);
+  if (details.method === "crypto") lines.push(`USDT ${details.network ?? ""} wallet: ${details.walletAddress ?? ""}`);
+  else if (details.method === "upi") lines.push(`UPI ID: ${details.upiId ?? ""}`);
   else lines.push(`Account: ${details.accountNumber ?? ""}`, `IFSC: ${details.ifsc ?? ""}`);
   return lines.join("\n");
 }
@@ -34,7 +37,7 @@ export interface PayoutRow {
   id: string;
   userId: string;
   status: string;
-  method: "bank" | "upi";
+  method: "bank" | "upi" | "crypto";
   coins: number;
   amountInr: number;
   tdsPercent: number;
@@ -43,7 +46,8 @@ export interface PayoutRow {
   reason: string | null;
   requestedAt: string;
   payout: {
-    method: "bank" | "upi";
+    method: "bank" | "upi" | "crypto";
+    network?: string;
     legalName: string;
     pan: string;
     accountNumber?: string;
@@ -82,6 +86,7 @@ export function PayoutsQueue({ rows }: { rows: PayoutRow[] }) {
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [reason, setReason] = useState("");
   const [reference, setReference] = useState("");
+  const [usdt, setUsdt] = useState("");
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState<{ kind: "info" | "error"; text: string } | null>(null);
   const [revealed, setRevealed] = useState<Revealed | null>(null);
@@ -143,6 +148,10 @@ export function PayoutsQueue({ rows }: { rows: PayoutRow[] }) {
       if (reason.trim().length < 3) return setMessage({ kind: "error", text: "Write a reason of at least 3 characters." });
       body.reason = reason.trim();
     }
+    if (path === "approve" && selected.method === "crypto") {
+      if (!/^\d{1,9}(\.\d{1,6})?$/.test(usdt.trim()) || Number(usdt) <= 0) return setMessage({ kind: "error", text: "Enter how much USDT to send, e.g. 11.50." });
+      body.usdtAmount = usdt.trim();
+    }
     if (needs === "reference") {
       if (reference.trim().length < 4) return setMessage({ kind: "error", text: "Enter the bank or UPI reference." });
       body.reference = reference.trim();
@@ -158,6 +167,7 @@ export function PayoutsQueue({ rows }: { rows: PayoutRow[] }) {
     setMessage({ kind: "info", text: `Done: now ${res.data.status}.` });
     setReason("");
     setReference("");
+    setUsdt("");
     setSelectedId(null);
     setRevealed(null);
     router.refresh();
@@ -173,6 +183,14 @@ export function PayoutsQueue({ rows }: { rows: PayoutRow[] }) {
           </p>
           {actions.some((action) => action.needs === "reason") ? (
             <TextField label="Reason (shown to the vendor)" value={reason} onChange={setReason} min={3} max={300} />
+          ) : null}
+          {selected.method === "crypto" && selected.status === "requested" ? (
+            <>
+              <p className="t-small" style={{ margin: 0 }}>
+                Pays ₹{selected.amountInr.toLocaleString("en-IN")} in USDT to the vendor&apos;s {selected.payout?.network ?? ""} wallet. You choose the amount; it is sent through PassimPay when you click Approve and cannot be undone.
+              </p>
+              <TextField label="USDT to send" value={usdt} onChange={setUsdt} min={1} max={16} />
+            </>
           ) : null}
           {actions.some((action) => action.needs === "reference") ? (
             <TextField label="Bank or UPI reference" value={reference} onChange={setReference} min={4} max={64} />
@@ -200,7 +218,14 @@ export function PayoutsQueue({ rows }: { rows: PayoutRow[] }) {
                     <dd style={{ margin: 0 }}>{revealed.details.legalName}</dd>
                     <dt>PAN</dt>
                     <dd style={{ margin: 0 }}>{revealed.details.pan}</dd>
-                    {revealed.details.method === "upi" ? (
+                    {revealed.details.method === "crypto" ? (
+                      <>
+                        <dt>USDT wallet</dt>
+                        <dd style={{ margin: 0, wordBreak: "break-all" }}>
+                          {revealed.details.network} · {revealed.details.walletAddress}
+                        </dd>
+                      </>
+                    ) : revealed.details.method === "upi" ? (
                       <>
                         <dt>UPI ID</dt>
                         <dd style={{ margin: 0 }}>{revealed.details.upiId}</dd>

@@ -42,8 +42,8 @@ test("the chat thread has no serious colour-contrast problem after a reply and a
     return result.violations.flatMap((item) => item.nodes.map((node) => `${node.target.join(" ")}: ${node.any[0]?.message ?? ""}`));
   };
   expect(await contrast(), "after a reply").toEqual([]);
-  await page.getByRole("button", { name: "Block", exact: true }).first().click();
-  await page.getByRole("dialog", { name: "Block this person?" }).getByRole("button", { name: "Block", exact: true }).click();
+  page.once("dialog", (dialog) => void dialog.accept());
+  await page.getByRole("button", { name: "End chat", exact: true }).first().click();
   await expect(thread.locator("textarea")).toBeDisabled();
   expect(await contrast(), "after a block").toEqual([]);
   await side.context.close();

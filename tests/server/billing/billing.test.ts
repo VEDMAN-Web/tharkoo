@@ -429,7 +429,7 @@ describe("billing", () => {
     }));
     expect(await walletBalance(buyer.id)).toBe(50);
     const wallet = await bodyOf(await walletGet(new Request(`${origin}/api/wallet`, { headers: { cookie: buyer.cookie, origin } })));
-    expect(wallet.data).toEqual({ balance: 50 });
+    expect(wallet.data).toEqual({ balance: 50, callBalance: 0, earnings: 0 });
     const forbidden = await post("/api/payments/refund", { paymentId: checkout.data?.paymentId, amount: 10, reason: "goodwill" }, stranger.cookie);
     expect(forbidden.status).toBe(403);
     const refunded = await bodyOf(await post("/api/payments/refund", { paymentId: checkout.data?.paymentId, amount: 10, reason: "goodwill" }, finance.cookie));

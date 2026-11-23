@@ -1,0 +1,28 @@
+{
+  "branchPrefix": "haiku/h99.21",
+  "globs": [
+    "docs/ownership/H99.21.json",
+    "progress/H99.21.md",
+    "src/lib/support.ts",
+    "src/lib/ui/text.ts",
+    "src/components/new/UtilityStrip.tsx",
+    "src/components/new/ContactView.tsx",
+    "src/components/h714/HelpView.tsx",
+    "src/components/PathChrome.tsx",
+    "src/components/SiteShell.tsx",
+    "src/app/contact/page.tsx",
+    "src/app/help/page.tsx",
+    "src/server/site-links/social-status.ts",
+    "src/server/admin/launch-checklist.ts",
+    "tests/server/ui/fix21-no-standin.test.ts",
+    "tests/server/support/support-links.test.ts",
+    "tests/server/admin/a10-checklist.test.ts",
+    "tests/server/shell/home-config-spec.test.ts",
+    "tests/server/site-links/h8-54-social-status.test.ts",
+    "tests/e2e/fix21-no-standin.e2e.ts",
+    "tests/e2e/footer-admin.ts",
+    "tests/e2e/top-bar.e2e.ts",
+    "tests/e2e/quality.e2e.ts",
+    "tests/server/layout/ui-text.test.ts"
+  ]
+}

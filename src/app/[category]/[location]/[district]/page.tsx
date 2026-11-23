@@ -26,18 +26,20 @@ import {
   getSite,
   getStarListings,
   getStates,
+  listingCountsByCategoryCity,
   pageOutOfRange,
 } from "@/lib/queries";
 import { prettyPlace } from "@/lib/format";
 import { canonical, fillTemplate } from "@/lib/seo";
 import { isCityAlias } from "@/lib/seo/district-alias";
 import { districtMinimum, getIndexing, isHubOn } from "@/server/seo/indexing";
-import { placePath, postAdPath, tagPath } from "@/lib/urls";
+import { placePath, postAdPath } from "@/lib/urls";
 import { activeFilterKeys, listingCanonicalSuffix, type ListingParams } from "@/server/search/filter-seo";
 import { withUrlSeo, urlHeading } from "@/lib/seo/override";
 import { fallbackLanding, visibleHeading } from "@/lib/seo/landing";
-import { getPaths, publicTags } from "@/server/urls/service";
-import { withPagination } from "@/lib/seo/pagination";
+import { getPaths } from "@/server/urls/service";
+import { popularSearches } from "@/lib/seo/local-links";
+import { pagedText, withPagination } from "@/lib/seo/pagination";
 import { SubHub, subHubMetadata } from "./sub-hub";
 import AdPage, { generateMetadata as adMetadata } from "@/app/ad/[slug]/page";
 import { resolveAdAddress } from "@/server/listings/ad-route";
@@ -84,10 +86,12 @@ export async function generateMetadata({ params, searchParams }: Props): Promise
     sampleNote: await sampleNoteText(),
   });
   const counted = { ...vars, count: feedForCopy.realTotal };
-  const title = fillTemplate(seo?.title || copy.title, counted);
+  const baseTitle = fillTemplate(seo?.title || copy.title, counted);
   const rawDescription = fillTemplate(seo?.description || copy.description, counted);
   const description = rawDescription.length <= 160 ? rawDescription : `${rawDescription.slice(0, 157).replace(/\s+\S*$/, "")}`;
   const pageNo = Math.max(1, Number(sp.page) || 1);
+  // H17.3: page 2 and later say so in the title (and in the heading below).
+  const title = pagedText(baseTitle, pageNo);
   const filtered = activeFilterKeys(sp).length > 0;
   const feed = await getFeed(
     { categorySlug: category, citySlug: location, districtSlug: district, ...narrowFromParams(sp, cat.fields).filter },
@@ -100,7 +104,7 @@ export async function generateMetadata({ params, searchParams }: Props): Promise
     description,
     path: `${path}${suffix}`,
     canonicalUrl: canonical(`${path}${suffix}`),
-    index: pageNo === 1 && !filtered && !!isHubOn(distMin),
+    index: pageNo === 1 && !filtered && !!isHubOn(distMin) && feedForCopy.realTotal > 0,
     follow: true,
   });
   return filtered ? meta : withPagination(meta, path, pageNo, feed.pages);
@@ -133,14 +137,14 @@ export default async function DistrictPage({ params, searchParams }: Props) {
   const canonicalPath = placePath(cat.slug || category, city.slug || location, dist.slug || district);
   const { picks, toggles, filter: narrow } = narrowFromParams(sp, cat.fields);
   const filter: Record<string, unknown> = { categorySlug: category, citySlug: location, districtSlug: district, ...narrow };
-  const [seo, site, stars, feed, districts, paths, tags, heading, shell, hero, categories, states, cities, cardWidth] = await Promise.all([
+  const [seo, site, stars, feed, districts, paths, counts, heading, shell, hero, categories, states, cities, cardWidth] = await Promise.all([
     getSeoFor("district", category, "location"),
     getSite(),
     getStarListings(filter),
     getFeed(filter, page),
     getDistricts(city.slug || location),
     getPaths(),
-    publicTags(),
+    listingCountsByCategoryCity().catch(() => []),
     urlHeading(canonicalPath, ""),
     readShellConfig(),
     getHomepageContent().then(heroBandFrom),
@@ -150,7 +154,8 @@ export default async function DistrictPage({ params, searchParams }: Props) {
     loadCardWidth(),
   ]);
   if (pageOutOfRange(rawPage, feed.pages)) notFound();
-  const thin = !isHubOn(distMin);
+  // H18.2: indexed only with at least one REAL ad.
+  const thin = !isHubOn(distMin) || feed.realTotal < 1;
   const districtCopy = fallbackLanding({
     category: cat.name || category,
     city: city.name || location,
@@ -175,7 +180,7 @@ export default async function DistrictPage({ params, searchParams }: Props) {
   const layout = await resolveListingLayout({ path: canonicalPath, category: cat.slug || category, vars });
   const texts = await textOverrides();
   const t = makeT(texts);
-  const h1 = heading || visibleHeading(fillTemplate(seo?.h1 || "", vars), districtCopy.h1);
+  const h1 = pagedText(heading || visibleHeading(fillTemplate(seo?.h1 || "", vars), districtCopy.h1), page);
   const own = showFallback(feed);
   const fallback = own
     ? await loadFallbackSections({
@@ -261,7 +266,7 @@ export default async function DistrictPage({ params, searchParams }: Props) {
       layout={layout}
       pageName={h1}
       faqs={districtCopy.faqs}
-      popular={tags.slice(0, 4).map((tag) => ({ href: tagPath(paths, cat.slug || category, tag.slug), label: `${dist.name} ${tag.label}` }))}
+      popular={popularSearches(counts, new Map(categories.map((row) => [row.slug || "", row.name || ""])), new Map(cities.map((row) => [row.slug || "", row.name || ""])), { excludePage: { categorySlug: cat.slug || category, citySlug: city.slug || location }, max: 4 }).map((link) => ({ href: placePath(link.categorySlug, link.citySlug), label: t("listing.link.in", { name: link.categoryName, place: link.cityName }) }))}
       h2={fillTemplate(seo?.h2 || "", vars)}
       intro={districtCopy.intro || fillTemplate(seo?.intro || "", vars)}
       crumbs={crumbs}

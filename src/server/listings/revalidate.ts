@@ -1,9 +1,12 @@
+import { adAddress } from "@/lib/ad-address";
 import { Category, Listing, Location } from "@/server/models";
 import { connectDb } from "@/lib/db";
 
 interface PublishedListing {
   slug?: string | null;
   status?: string | null;
+  title?: string | null;
+  code?: string | null;
   categoryId?: unknown;
   cityId?: unknown;
   districtId?: unknown;
@@ -23,6 +26,7 @@ export async function listingPagePaths(listing: PublishedListing, categorySlug?:
     const district = listing.districtId ? slugOf(listing.districtId) : undefined;
     if (city) paths.add(`/${categorySlug}/${city}/`);
     if (city && district) paths.add(`/${categorySlug}/${city}/${district}/`);
+    if (city && listing.code && listing.title) paths.add(adAddress({ categorySlug, citySlug: city, title: listing.title, code: listing.code }));
   }
   return [...paths];
 }
@@ -39,8 +43,8 @@ export async function revalidateListingsById(ids: readonly string[]) {
   try {
     await connectDb();
     const rows = await Listing.find({ _id: { $in: ids.slice(0, MAX_REVALIDATE) } })
-      .select("slug cityId districtId categoryId")
-      .lean<{ slug?: string; cityId?: unknown; districtId?: unknown; categoryId?: unknown }[]>();
+      .select("slug title code cityId districtId categoryId")
+      .lean<{ slug?: string; title?: string; code?: string; cityId?: unknown; districtId?: unknown; categoryId?: unknown }[]>();
     const categories = await Category.find({ _id: { $in: rows.map((row) => row.categoryId) as never[] } })
       .select("slug")
       .lean<{ _id: unknown; slug?: string }[]>();
@@ -66,6 +70,17 @@ async function retireSampleAds(listing: PublishedListing) {
   }
 }
 
+/** H16.4: an ad that goes live, changes or ends is sent to the search engines (IndexNow, only when INDEXNOW_KEY is set). The ad page address comes from the first path. */
+async function pingIndexNow(listing: PublishedListing) {
+  if (!listing.slug) return;
+  try {
+    const { queueIndexNow } = await import("@/server/indexnow/ping");
+    queueIndexNow([`/ad/${listing.slug}/`]);
+  } catch (error) {
+    console.error("IndexNow could not be queued", error instanceof Error ? error.message : error);
+  }
+}
+
 /**
  * Clears the shared caches and asks Next to rebuild each page that lists the ad, so it shows at once instead of after
  * the 60 second revalidate. Safe outside a Next request (scripts, unit tests): it then does nothing.
@@ -73,6 +88,7 @@ async function retireSampleAds(listing: PublishedListing) {
 export async function revalidateListingPages(listing: PublishedListing, categorySlug?: string | null) {
   await connectDb();
   await retireSampleAds(listing);
+  await pingIndexNow(listing);
   try {
     const { purgeNext, refreshPublicCache } = await import("@/lib/cache");
     await refreshPublicCache("listing pages");

@@ -71,7 +71,12 @@ async function staffAction(
   action: string,
 ): Promise<Response | null> {
   const base = { ...input, requestId };
-  if (action === "approve") return json(await approveWithdrawal(base), requestId);
+  if (action === "approve") {
+    // H18.6: for a crypto payout the admin types the exact USDT amount to send (they decide the rate).
+    const body = (await readJson(request).catch(() => ({}))) as { usdtAmount?: unknown };
+    const usdtAmount = typeof body?.usdtAmount === "string" && body.usdtAmount.trim() ? body.usdtAmount.trim() : undefined;
+    return json(await approveWithdrawal({ ...base, usdtAmount }), requestId);
+  }
   // Full details for one withdrawal: finance or superadmin only, rate-limited and audited in the service. Sent with no-store.
   if (action === "reveal") return json(await revealWithdrawalDetails(base), requestId);
   if (action === "reject") {

@@ -4,6 +4,8 @@
  */
 export const LEDGER_ACCOUNTS = [
   "user_wallet",
+  /** H18.8: call credits. Bought in call packs, spent only on video calls. user_wallet holds ad credits. */
+  "call_wallet",
   "escrow",
   "vendor_earnings",
   "payout_pending",
@@ -15,7 +17,7 @@ export const LEDGER_ACCOUNTS = [
 export type LedgerAccount = (typeof LEDGER_ACCOUNTS)[number];
 
 /** Accounts that can never go below zero. The others only grow (paid_out, platform_revenue) or mirror the outside (external). */
-const NON_NEGATIVE = new Set<LedgerAccount>(["user_wallet", "escrow", "vendor_earnings", "payout_pending"]);
+const NON_NEGATIVE = new Set<LedgerAccount>(["user_wallet", "call_wallet", "escrow", "vendor_earnings", "payout_pending"]);
 
 export function isLedgerAccount(value: string): value is LedgerAccount {
   return (LEDGER_ACCOUNTS as readonly string[]).includes(value);

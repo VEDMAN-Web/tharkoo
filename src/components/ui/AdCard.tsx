@@ -12,7 +12,7 @@ import { CardVideo } from "./CardVideo";
 import { SaveButton } from "./SaveButton";
 import { viewsLabel } from "@/components/ad/counts-format";
 import { api, friendlyError } from "@/lib/ui/api";
-import { adPath } from "@/lib/urls";
+import { adHref } from "@/lib/urls";
 import { useUrlPaths } from "../UrlPaths";
 import { makeT, type TextFn, type UiTextMap } from "@/lib/ui/text";
 import { videoVerifiedLabel } from "../ad/tourLabels";
@@ -67,7 +67,7 @@ export function AdCard({
   const t = useT();
   const variant = variantOf(ad, featured);
   const title = displayTitle(ad.title) || t("card.fallbackTitle");
-  const publicHref = adPath(useUrlPaths(), ad.slug || "");
+  const publicHref = adHref(useUrlPaths(), ad);
   const href = owner?.href ?? publicHref;
   const photos = ad.photos || [];
   const superTop = variant === "supertop" || variant === "star";
@@ -116,7 +116,7 @@ export function AdCard({
     return (
       <article ref={cardRef} className="tk-card tkn-ls-card m-lift" data-tk="card" data-reveal data-variant={variant} onClickCapture={onCardClick}>
         <div className="tkn-ls-photo">
-          <PhotoSwipe photos={photos} title={title} seed={ad.slug || title} category={ad.categorySlug} priority={priority} href={href} />
+          <PhotoSwipe photos={photos} title={title} place={area || city} seed={ad.slug || title} category={ad.categorySlug} priority={priority} href={href} />
           {ad.videoUrl ? <CardVideo url={ad.videoUrl} poster={ad.videoPoster} card={cardRef} /> : null}
           {tier ? (
             <span className="tkn-ls-tier" data-tier={variant}>
@@ -133,7 +133,7 @@ export function AdCard({
             tharkoo.com
           </span>
         </div>
-        <a className="tkn-ls-stretch" href={href} aria-label={title} />
+        <a className="tkn-ls-stretch" href={href} aria-label={title} data-ad-link />
         <div className="tkn-ls-body">
           <div className="tkn-ls-titlerow">
             <h2 className="tkn-ls-title">{title}</h2>
@@ -179,10 +179,11 @@ export function AdCard({
         <PhotoSwipe
           photos={photos}
           title={title}
+          place={area || city}
           seed={ad.slug || title}
           category={ad.categorySlug}
           priority={priority}
-          overlay={<a className="tk-card-hit" href={href} aria-label={title} tabIndex={-1} />}
+          overlay={<a className="tk-card-hit" href={href} aria-label={title} tabIndex={-1} data-ad-link />}
         />
         {photos.length > 1 ? <span className="tk-photo-count">📷 {photos.length}</span> : null}
       </div>
@@ -192,7 +193,7 @@ export function AdCard({
           {tier}
         </span>
       ) : null}
-      <a className="tk-card-link" href={href}>
+      <a className="tk-card-link" href={href} data-ad-link>
         <span className="tk-card-body">
           <span className="tk-card-title">{title}</span>
           <PriceTag price={ad.price} />

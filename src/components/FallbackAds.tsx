@@ -37,7 +37,7 @@ export function FallbackAds({
             <ListingGrid label={section.title}>
               {section.items.map((ad, index) => (
                 <li key={ad.publicId || ad.slug || index}>
-                  <ListingCard ad={ad} order={index} />
+                  <ListingCard ad={ad} order={index} eager={false} />
                 </li>
               ))}
             </ListingGrid>

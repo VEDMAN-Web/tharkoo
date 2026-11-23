@@ -1,0 +1,11 @@
+{
+  "branchPrefix": "haiku/h18.4",
+  "globs": [
+    "docs/ownership/H18.4.json",
+    "progress/H18.4.md",
+    "src/lib/seo/sitemaps.ts",
+    "src/app/sitemap.xml/route.ts",
+    "src/app/sitemap/[shard]/route.ts",
+    "tests/server/seo/h18-4-ads-sitemap-pages.test.ts"
+  ]
+}

@@ -9,7 +9,7 @@ const source = (file: string) => readFileSync(path.join(process.cwd(), file), "u
 
 describe("header and footer words as site text (H8.47 part 2)", () => {
   it("keep exactly the words the components had before", () => {
-    expect(CHROME).toHaveLength(21);
+    expect(CHROME).toHaveLength(24);
     expect(TEXT_DEFAULTS["chrome.account.my"]).toBe("My account");
     expect(TEXT_DEFAULTS["chrome.account.help"]).toBe("Help and support");
     expect(TEXT_DEFAULTS["chrome.account.chats"]).toBe("Chats");

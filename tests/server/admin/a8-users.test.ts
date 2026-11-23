@@ -68,7 +68,7 @@ describe("the user list", () => {
     const data = await seed();
     const list = await listUsers(query(), ADMIN);
     expect(list.total).toBe(4);
-    expect(list.rows.map((row) => row.email)).not.toContain("gone@example.com");
+    expect(list.rows.map((row) => row.email)).not.toContain("gone@\u2026");
     const asha = list.rows.find((row) => row.id === String(data.asha._id))!;
     expect(asha.ads).toBe(1);
     expect(asha.city).toBe("Surat");
@@ -79,11 +79,11 @@ describe("the user list", () => {
 
   it("filters the tabs: sellers, ID pending, banned and staff only staff roles", async () => {
     await seed();
-    expect((await listUsers(query({ tab: "sellers" }), ADMIN)).rows.map((row) => row.email)).toEqual(["asha@example.com"]);
-    expect((await listUsers(query({ tab: "id" }), ADMIN)).rows.map((row) => row.email)).toEqual(["bilal@example.com"]);
-    expect((await listUsers(query({ tab: "banned" }), ADMIN)).rows.map((row) => row.email)).toEqual(["chitra@example.com"]);
+    expect((await listUsers(query({ tab: "sellers" }), ADMIN)).rows.map((row) => row.email)).toEqual(["asha@\u2026"]);
+    expect((await listUsers(query({ tab: "id" }), ADMIN)).rows.map((row) => row.email)).toEqual(["bilal@\u2026"]);
+    expect((await listUsers(query({ tab: "banned" }), ADMIN)).rows.map((row) => row.email)).toEqual(["chitra@\u2026"]);
     const staff = await listUsers(query({ tab: "staff" }), ADMIN);
-    expect(staff.rows.map((row) => row.email)).toEqual(["support@example.com"]);
+    expect(staff.rows.map((row) => row.email)).toEqual(["support@\u2026"]);
     expect(staff.rows.every((row) => row.roles.some((role) => role !== "user"))).toBe(true);
   });
 

@@ -1,6 +1,7 @@
 "use client";
 
 import { trackEvent } from "@/lib/analytics/ga";
+import { openRecharge } from "@/components/recharge/openRecharge";
 import { useEffect, useRef, useState, type ClipboardEvent, type FormEvent, type KeyboardEvent } from "react";
 import { X } from "lucide-react";
 import { api, friendlyError } from "@/lib/ui/api";
@@ -55,8 +56,9 @@ export function AdPopup(props: AdPopupProps) {
   useEffect(() => {
     if (step !== "call" && step !== "buy") return;
     let live = true;
-    void api<{ balance: number }>("/api/wallet/").then((res) => {
-      if (live && res.ok) setBalance(Number(res.data.balance) || 0);
+    // H18.8: video calls are paid from call credits.
+    void api<{ callBalance?: number }>("/api/wallet/").then((res) => {
+      if (live && res.ok) setBalance(Number(res.data.callBalance) || 0);
     });
     return () => {
       live = false;
@@ -90,7 +92,7 @@ export function AdPopup(props: AdPopupProps) {
     setBusy(false);
     if (result === "ok") return setStep("calling");
     if (result === "auth") return setStep("login");
-    if (result === "coins") return setStep("buy");
+    if (result === "coins") return openRecharge({ wallet: "call", shortfall: Math.max(1, coins - (balance ?? 0)) });
     setStep("error");
   }
 
@@ -156,8 +158,8 @@ export function AdPopup(props: AdPopupProps) {
                 </div>
               </div>
               {props.notice ? <p role="status" className="tkn-pop-note">{props.notice}</p> : null}
-              <button type="button" className="tkn-pop-btn" disabled={busy} onClick={() => (balance === 0 ? setStep("buy") : void startCall())}>
-                {balance === 0 ? t("ad.call.buy") : coins === 1 ? t("ad.call.start", { coins }) : t("ad.call.startMany", { coins })}
+              <button type="button" className="tkn-pop-btn" disabled={busy} onClick={() => (balance !== null && balance < coins ? openRecharge({ wallet: "call", shortfall: coins - balance }) : void startCall())}>
+                {balance !== null && balance < coins ? t("ad.call.buy") : coins === 1 ? t("ad.call.start", { coins }) : t("ad.call.startMany", { coins })}
               </button>
               <button type="button" className="tkn-pop-btn-line" onClick={props.onSwitchToChat}>
                 {t("ad.call.chatFirst", { name })}

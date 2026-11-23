@@ -45,31 +45,51 @@ export const payoutKycSchema = z.discriminatedUnion("method", [
         .regex(/^[a-zA-Z0-9._-]{2,64}@[a-zA-Z]{2,32}$/, "Enter a valid UPI ID"),
     })
     .strict(),
+  // H18.6: crypto payout (USDT) through PassimPay. The address is checked for the chosen network.
+  z
+    .object({
+      method: z.literal("crypto"),
+      legalName: z.string().trim().min(2).max(120),
+      pan: upper(/^[A-Z]{5}[0-9]{4}[A-Z]$/, "Enter a valid PAN"),
+      network: z.enum(["TRC20", "BEP20"]),
+      walletAddress: z.string().trim().min(26).max(64),
+    })
+    .strict()
+    .superRefine((value, ctx) => {
+      const ok = value.network === "TRC20" ? /^T[1-9A-HJ-NP-Za-km-z]{33}$/.test(value.walletAddress) : /^0x[0-9a-fA-F]{40}$/.test(value.walletAddress);
+      if (!ok) ctx.addIssue({ code: "custom", path: ["walletAddress"], message: value.network === "TRC20" ? "Enter a valid TRON (TRC20) address starting with T" : "Enter a valid BEP20 address starting with 0x" });
+    }),
 ]);
+/** H18.6: crypto (USDT via PassimPay) is the method that pays out today; bank and UPI need a payout account. */
+export type PayoutMethod = "bank" | "upi" | "crypto";
 export type PayoutKycInput = z.infer<typeof payoutKycSchema>;
 
 /** Only encrypted values are stored. Display values are computed from them on read. */
 export interface PayoutKycDoc {
   _id?: Types.ObjectId;
   userId: Types.ObjectId;
-  method: "bank" | "upi";
+  method: PayoutMethod;
   legalNameEnc: string;
   panEnc: string;
   accountEnc?: string;
   ifscEnc?: string;
   upiEnc?: string;
+  cryptoNetwork?: "TRC20" | "BEP20";
+  walletEnc?: string;
   createdAt?: Date;
 }
 
 const kycSchema = new Schema<PayoutKycDoc>(
   {
     userId: { type: Schema.Types.ObjectId, required: true, unique: true },
-    method: { type: String, enum: ["bank", "upi"], required: true },
+    method: { type: String, enum: ["bank", "upi", "crypto"], required: true },
     legalNameEnc: { type: String, required: true },
     panEnc: { type: String, required: true },
     accountEnc: String,
     ifscEnc: String,
     upiEnc: String,
+    cryptoNetwork: { type: String, enum: ["TRC20", "BEP20"] },
+    walletEnc: String,
   },
   { timestamps: { createdAt: true, updatedAt: false }, collection: "payout_kyc" },
 );
@@ -78,12 +98,14 @@ export const PayoutKyc = registerModel<PayoutKycDoc>("PayoutKyc", kycSchema);
 
 /** What the vendor and admins may see. Sensitive values are masked; the name is shown to its owner only. */
 export interface MaskedPayoutKyc {
-  method: "bank" | "upi";
+  method: PayoutMethod;
   legalName: string;
   pan: string;
   accountNumber?: string;
   ifsc?: string;
   upiId?: string;
+  network?: "TRC20" | "BEP20";
+  walletAddress?: string;
   submittedAt: string | null;
 }
 
@@ -95,6 +117,10 @@ export function maskedKyc(row: PayoutKycDoc): MaskedPayoutKyc {
     pan: maskTail(pan),
     submittedAt: row.createdAt ? new Date(row.createdAt).toISOString() : null,
   };
+  if (row.method === "crypto") {
+    const wallet = row.walletEnc ? decryptField(row.walletEnc) : "";
+    return { ...base, network: row.cryptoNetwork, walletAddress: wallet ? `${wallet.slice(0, 4)}…${wallet.slice(-4)}` : undefined };
+  }
   if (row.method === "upi") {
     return { ...base, upiId: row.upiEnc ? maskUpi(decryptField(row.upiEnc)) : undefined };
   }
@@ -107,16 +133,21 @@ export function maskedKyc(row: PayoutKycDoc): MaskedPayoutKyc {
 
 /** Full values for one payout record. Only the reveal service calls this, after the role, rate and audit steps. */
 export interface RevealedPayoutKyc {
-  method: "bank" | "upi";
+  method: PayoutMethod;
   legalName: string;
   pan: string;
   accountNumber?: string;
   ifsc?: string;
   upiId?: string;
+  network?: "TRC20" | "BEP20";
+  walletAddress?: string;
 }
 
 export function revealedKyc(row: PayoutKycDoc): RevealedPayoutKyc {
   const base = { method: row.method, legalName: decryptField(row.legalNameEnc), pan: decryptField(row.panEnc) };
+  if (row.method === "crypto") {
+    return { ...base, network: row.cryptoNetwork, walletAddress: row.walletEnc ? decryptField(row.walletEnc) : undefined };
+  }
   if (row.method === "upi") {
     return { ...base, upiId: row.upiEnc ? decryptField(row.upiEnc) : undefined };
   }
@@ -159,7 +190,9 @@ export async function submitPayoutKyc(input: { userId: string; values: PayoutKyc
       panEnc: encryptField(values.pan),
       ...(values.method === "bank"
         ? { accountEnc: encryptField(values.accountNumber), ifscEnc: encryptField(values.ifsc) }
-        : { upiEnc: encryptField(values.upiId) }),
+        : values.method === "upi"
+          ? { upiEnc: encryptField(values.upiId) }
+          : { cryptoNetwork: values.network, walletEnc: encryptField(values.walletAddress) }),
     });
   } catch (error) {
     if (isDuplicateKey(error)) throw new ConflictError("Payout details are already on file");

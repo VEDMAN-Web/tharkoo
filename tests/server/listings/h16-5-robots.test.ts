@@ -32,14 +32,19 @@ async function world() {
 const robotsOf = (meta: { robots?: unknown }) => meta.robots as { index?: boolean; follow?: boolean } | undefined;
 
 describe("H16.5 robots on listing pages and sample ad pages", () => {
-  it("a category and city page with no ads, and one with only sample ads, are index,follow; page 2 and a filtered page are not", async () => {
+  // H18.2 (Vedant, 21 Nov 2026): a place page is index only with at least one REAL ad. Replaces the H16.5 "always index" rule.
+  it("H18.2: a city page with no ads or only sample ads is noindex,follow; with a real ad it is index; a filtered page is not", async () => {
     const w = await world();
     const empty = await placeMetadata({ params: Promise.resolve({ category: "jobs", location: "surat" }), searchParams: Promise.resolve({}) });
-    expect(robotsOf(empty)?.index).toBe(true);
+    expect(robotsOf(empty)).toMatchObject({ index: false, follow: true });
     await Listing.create({ ownerId: w.seed._id, categoryId: w.jobs._id, stateId: w.state._id, cityId: w.surat._id, title: "Sample office role", description: "A description that is long enough to be a listing.", slug: "demo-0001", status: "active", seoNoindex: true, publishedAt: new Date(), expiresAt: new Date(Date.now() + 86_400_000) });
     invalidateTags(["feed", "counts", "listings"]);
     const withSamples = await placeMetadata({ params: Promise.resolve({ category: "jobs", location: "surat" }), searchParams: Promise.resolve({}) });
-    expect(robotsOf(withSamples)?.index).toBe(true);
+    expect(robotsOf(withSamples)?.index).toBe(false);
+    await Listing.create({ ownerId: new mongoose.Types.ObjectId(), categoryId: w.jobs._id, stateId: w.state._id, cityId: w.surat._id, title: "Real office role", description: "A description that is long enough to be a listing.", slug: "real-office-k7q9", status: "active", seoNoindex: false, publishedAt: new Date(), expiresAt: new Date(Date.now() + 86_400_000) });
+    invalidateTags(["feed", "counts", "listings"]);
+    const withReal = await placeMetadata({ params: Promise.resolve({ category: "jobs", location: "surat" }), searchParams: Promise.resolve({}) });
+    expect(robotsOf(withReal)?.index).toBe(true);
     const filtered = await placeMetadata({ params: Promise.resolve({ category: "jobs", location: "surat" }), searchParams: Promise.resolve({ photos: "1" }) });
     expect(robotsOf(filtered)?.index).toBe(false);
   });

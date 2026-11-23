@@ -23,6 +23,11 @@ describe("payment provider webhooks skip the Origin check, and only those", () =
     expect(res.status).not.toBe(403);
   });
 
+  test("H18.1c: the PassimPay notice path (with or without the trailing slash) accepts a POST with no Origin header", async () => {
+    expect((await post("/api/payments/passimpay/webhook/", `pp-${Date.now()}-${Math.random()}`)).status).not.toBe(403);
+    expect((await post("/api/payments/passimpay/webhook", `pp2-${Date.now()}-${Math.random()}`)).status).not.toBe(403);
+  });
+
   test("the live tour webhook path accepts a POST with no Origin header", async () => {
     const res = await post("/api/tours/webhook", `tour-hook-${Date.now()}-${Math.random()}`);
     expect(res.status).not.toBe(403);

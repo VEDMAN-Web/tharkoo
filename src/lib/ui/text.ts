@@ -3,7 +3,7 @@
  * This file is client-safe (no server imports). The admin can override any key; the code keeps these defaults so a page is never blank.
  * Placeholders such as {count} are filled with `fillText`.
  */
-import { SUPPORT_PHONE } from "@/lib/support";
+import { PRIVACY_EFFECTIVE, TERMS_EFFECTIVE } from "@/content/legal-text";
 
 /** H17.9: the one message about the price of posting. Every default that talks about it uses this text; the admin can change each key on Site text. */
 export const FIRST_ADS_FREE = "Your first 3 ads are free.";
@@ -18,7 +18,7 @@ export const TEXT_DEFAULTS = {
   "home.utility.ticker1": "Chat with advertisers for free",
   "home.utility.ticker2": "Fresh ads, live for 48 hours",
   "home.utility.ticker3": "Post your ad in 2 minutes",
-  "home.utility.phone": SUPPORT_PHONE,
+  "home.utility.phone": "",
   "home.banner.sub": `${FIRST_ADS_FREE} Chat with advertisers online and verify on a video call.`,
   "home.search.keyword": "What are you looking for?",
   "home.search.state": "State",
@@ -86,6 +86,23 @@ export const TEXT_DEFAULTS = {
   "panel.nav.coins": "Credits and payments",
   "panel.coins.title": "Your credits",
   "panel.coins.balance": "{count} credits",
+  "panel.coins.adBalance": "{count} ad credits",
+  "recharge.walletTabs": "Which credits",
+  "recharge.tab.call": "Call credits",
+  "recharge.tab.callUse": "For video calls",
+  "recharge.tab.ad": "Ad credits",
+  "recharge.tab.adUse": "For posting, TOP and Super Top",
+  "recharge.noPacksTypeAmount": "No packs here yet. Type your own amount below.",
+  "recharge.custom.label": "Or type your own amount",
+  "recharge.custom.hint": "From Rs {min} up to Rs {max} at a time.",
+  "recharge.custom.tooSmall": "The smallest amount is Rs {min}.",
+  "recharge.custom.tooBig": "Up to Rs {max} at a time. For more, open a support ticket and we will add your credits.",
+  "recharge.custom.get": "You get {count} credits.",
+  "recharge.purpose.call": "Call credits pay only for video calls. They cannot pay for ads.",
+  "recharge.purpose.ad": "Ad credits pay only for posting, TOP and Super Top. They cannot pay for video calls.",
+  "panel.coins.callBalance": "{count} call credits",
+  "panel.coins.earnings": "{count} earned",
+  "panel.coins.chipLabel": "{call} call credits and {ad} ad credits. Buy credits",
   "panel.coins.buy": "Buy credits",
   "panel.coins.help": "Log in to see your credit balance.",
   "panel.menu.coins": "Credits",
@@ -246,6 +263,10 @@ export const TEXT_DEFAULTS = {
   "ad.seller.online": "Online now \u00b7 replies fast",
   "ad.seller.away": "Away right now",
   "ad.chat": "Chat online now",
+  // H16.4: an ad that has ended
+  "ad.ended.title": "This ad is no longer available",
+  "ad.ended.text": "The advertiser took it down or it has run out. These ads are close to it.",
+  "ad.ended.more": "See more {category} ads in {place}",
   // H16.5: sample (demo) ads
   "demo.pill": "Sample ad",
   "demo.message": `This is a sample ad showing how ads look on Tharkoo. ${FIRST_ADS_FREE}`,
@@ -275,6 +296,7 @@ export const TEXT_DEFAULTS = {
   "ad.similar.title": "Similar ads near you",
   "ad.similar.all": "See all in {category}",
   "ad.similar.list": "Similar ads",
+  "ad.moreInCity": "More ads in {city}",
   "promote.button": "Promote",
   "promote.title": "Promote your ad",
   "promote.plans": "Plans",
@@ -721,13 +743,13 @@ export const TEXT_DEFAULTS = {
   "ad.call.title": "Video call and verify",
   "ad.call.help": "See the place live before you go. You pay only if the call happens.",
   "ad.call.cost": "This call costs",
-  "ad.call.balance": "Your balance",
+  "ad.call.balance": "Your call credits",
   "ad.call.coinOne": "1 credit",
   "ad.call.coinMany": "{count} credits",
   "ad.call.start": "Start video call ({coins} credit)",
   "ad.call.startMany": "Start video call ({coins} credits)",
   "ad.call.signIn": "Sign in to request a live video tour.",
-  "ad.call.buy": "Buy credits and call",
+  "ad.call.buy": "Buy call credits",
   "ad.call.chatFirst": "Chat with {name} first (free)",
   "ad.away.title": "{name} is away right now",
   "ad.away.help": "Away right now. No credits were used.",
@@ -777,6 +799,11 @@ export const TEXT_DEFAULTS = {
   "chrome.footer.trust": "Trust",
   "chrome.footer.social": "Social links",
   "chrome.footer.legal": "Legal",
+  "chrome.footer.terms": "Terms and Conditions",
+  "chrome.footer.privacy": "Privacy Policy",
+  "chrome.footer.grievance": "Grievance Officer",
+  "legal.terms.effective": TERMS_EFFECTIVE,
+  "legal.privacy.effective": PRIVACY_EFFECTIVE,
   "chat.open": "Open live chat",
   "chat.close": "Close live chat",
   "chat.closePanel": "Close chat",

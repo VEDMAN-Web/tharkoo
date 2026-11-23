@@ -73,7 +73,7 @@ export function RechargeSheet({ options, onClose }: { options: RechargeOptions; 
           <>
             {shortfall > 0 ? <p className="tkr-short" data-tk="recharge-short">{t(options.shortKey ?? "recharge.short", { count: shortfall })}</p> : null}
             <div style={{ marginTop: 12 }}>
-              <CreditPacks data={data} shortfall={shortfall} returnTo={options.returnTo} onChoice={(next) => { choice.current = next; }} />
+              <CreditPacks data={data} wallet={options.wallet ?? "ad"} shortfall={shortfall} returnTo={options.returnTo} onChoice={(next) => { choice.current = next; }} />
             </div>
           </>
         )}

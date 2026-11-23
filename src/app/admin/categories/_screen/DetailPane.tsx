@@ -189,7 +189,7 @@ export function DetailPane({
     setRemoving(false);
     const result = await deleteCategoryAction(detail.id);
     if (!result.ok) {
-      toast.show({ kind: "error", message: `${result.message}${result.message.includes("Hide") ? "" : " Hide it instead."}` });
+      toast.show({ kind: "error", message: result.message });
       return;
     }
     toast.show({ kind: "success", message: `Removed ${detail.name}.` });
@@ -257,7 +257,7 @@ export function DetailPane({
       <ConfirmDialog
         open={removing}
         title={`Remove ${detail.name}?`}
-        body="A category that has ads cannot be removed: switch it to hidden instead. An empty category is removed with its sub-categories."
+        body={detail.adCount > 0 ? `This removes ${detail.name}, its sub-categories and all its ${adsText(detail.adCount)} from the site. Type the slug to confirm.` : "This category has no ads. It is removed with its sub-categories."}
         confirmText={detail.slug}
         confirmLabel="Remove category"
         onConfirm={() => void remove()}

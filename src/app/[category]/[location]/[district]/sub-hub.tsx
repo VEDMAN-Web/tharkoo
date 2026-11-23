@@ -1,6 +1,6 @@
 import { sampleNoteText } from "@/lib/seo/sample-note";
 import { notFound, permanentRedirect } from "next/navigation";
-import { withPagination } from "@/lib/seo/pagination";
+import { pagedText, withPagination } from "@/lib/seo/pagination";
 import type { Metadata } from "next";
 import { resolveListingLayout } from "@/components/blocks/ListingLayout";
 import { ListingPageView } from "@/components/ListingPage";
@@ -68,15 +68,15 @@ export async function subHubMetadata(params: SubHubParams, page: number): Promis
     subIntro: hub.sub.seoIntro,
     count: feed.realTotal,
     site: site.name,
-    indexable: isSubcategoryIndexable(feed.total),
+    indexable: isSubcategoryIndexable(feed.realTotal),
     sampleNote: await sampleNoteText(),
   });
   const path = placePath(hub.cat.slug || params.category, hub.city.slug || params.location, hub.sub.slug);
   const meta = await withUrlSeo(path, {
-    title: copy.title,
+    title: pagedText(copy.title, page),
     description: copy.description,
     path: page > 1 ? `${path}?page=${page}` : path,
-    index: isSubcategoryIndexable(feed.total, page),
+    index: isSubcategoryIndexable(feed.realTotal, page),
     follow: true,
   });
   return withPagination(meta, path, page, feed.pages);
@@ -115,7 +115,7 @@ export async function SubHub({ params, page }: { params: SubHubParams; page: num
     subIntro: hub.sub.seoIntro,
     count: feed.realTotal,
     site: site.name,
-    indexable: isSubcategoryIndexable(feed.total),
+    indexable: isSubcategoryIndexable(feed.realTotal),
     sampleNote: await sampleNoteText(),
   });
   const vars = { category: hub.cat.name, city: hub.city.name, sub: hub.sub.name, site: site.name, count: feed.realTotal, year: new Date().getFullYear() };
@@ -126,7 +126,7 @@ export async function SubHub({ params, page }: { params: SubHubParams; page: num
     { name: `${hub.city.name} ${hub.cat.name}`, path: placePath(catSlug, citySlug) },
     { name: `${hub.sub.name} ${hub.city.name}`, path: canonicalPath },
   ];
-  const h1 = heading || copy.h1;
+  const h1 = pagedText(heading || copy.h1, page);
   const own = showFallback(feed);
   const fallback = own
     ? await loadFallbackSections({
@@ -210,7 +210,7 @@ export async function SubHub({ params, page }: { params: SubHubParams; page: num
       page={feed.page}
       pages={feed.pages}
       total={feed.total}
-      noindex={!isSubcategoryIndexable(feed.total, page)}
+      noindex={!isSubcategoryIndexable(feed.realTotal, page)}
       siblingLinks={siblings
         .filter((chip) => chip.slug !== hub.sub.slug)
         .slice(0, 5)

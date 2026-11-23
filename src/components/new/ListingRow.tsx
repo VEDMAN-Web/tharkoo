@@ -35,7 +35,7 @@ function tierText(tier: ListingRowData["tier"], row: RowLabels) {
  * H14.1: the listing card in the approved design: a row with the photo on the left and the text on the right.
  * Used everywhere except the Home page. The photo slider and video are the Home card's (use-card-slider).
  */
-export function ListingRow({ ad, labels, order = 0 }: { ad: ListingRowData; labels: ListingRowLabels; order?: number }) {
+export function ListingRow({ ad, labels, order = 0, eager = false }: { ad: ListingRowData; labels: ListingRowLabels; order?: number; eager?: boolean }) {
   const row = labels.row ?? DEFAULT_ROW_LABELS;
   const seller = useSellerStatus(ad.slug || undefined);
   const photos = ad.photos;
@@ -65,7 +65,7 @@ export function ListingRow({ ad, labels, order = 0 }: { ad: ListingRowData; labe
   return (
     <article ref={cardRef} className={anchor ? "tk-row is-open" : "tk-row"} data-tk="listing-row" data-slide={index} data-tier={ad.tier || undefined} {...cardHandlers} onPointerEnter={onEnter}>
       <div className="tk-row-photo">
-        <SlideTrack slides={slides} href={ad.href} trackRef={trackRef} videoRef={videoRef} onScroll={onScroll} onTouch={calm} onClicked={clicked} />
+        <SlideTrack slides={slides} href={ad.href} trackRef={trackRef} videoRef={videoRef} onScroll={onScroll} onTouch={calm} onClicked={clicked} title={ad.title} place={ad.area || ad.city} eager={eager} />
         {tier ? <span className="tk-row-tier" data-tier={ad.tier}>{tier}</span> : null}
         {slides.length ? (
           <span className="tk-row-count" data-tk="row-media-count" aria-hidden="true">
@@ -85,7 +85,7 @@ export function ListingRow({ ad, labels, order = 0 }: { ad: ListingRowData; labe
       <div className="tk-row-body">
         <div className="tk-row-titlerow">
           <h3 className="tk-row-title">
-            <Link href={ad.href} prefetch={false} className="tkh-ad-link" onClick={clicked}>
+            <Link href={ad.href} prefetch={false} className="tkh-ad-link" onClick={clicked} data-ad-link>
               {ad.title}
             </Link>
           </h3>

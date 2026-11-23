@@ -31,6 +31,7 @@ import { idCheckRequired } from "@/server/settings/id-check";
 import { assertRowCap, parsePhotoCell } from "@/server/import/rules";
 import { parseVideoCell, videoProblem, type ChosenVideo } from "@/server/import/videos";
 import { AD_MEDIA_MAX, importPhotoLimit } from "@/server/media/config";
+import { publicPathsOf } from "@/server/listings/ad-code";
 
 export { MAX_IMPORT_ROWS, IMPORT_CHUNK_ROWS } from "@/server/import/rules";
 const MAX_CSV_BYTES = 2 * 1024 * 1024;
@@ -698,8 +699,8 @@ async function importRow(
     if (videoIds.length) await attachVideos(id, videoIds);
     await finalise(id, status, actor);
     if (status === "active") {
-      const slug = (await Listing.findById(id).select("slug").lean<{ slug?: string }>())?.slug;
-      if (slug) await pingIndexNow([`/ad/${slug}/`]);
+      const doc = await Listing.findById(id).select("slug title categoryId cityId code").lean<{ _id: Types.ObjectId; slug?: string; title?: string; categoryId?: Types.ObjectId; cityId?: Types.ObjectId; code?: string }>();
+      if (doc?.slug) await pingIndexNow(await publicPathsOf([doc]));
     }
   } catch (error) {
     await Listing.updateOne({ _id: id }, { $set: { status: "removed" } });

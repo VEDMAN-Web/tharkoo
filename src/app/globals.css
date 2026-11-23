@@ -1723,7 +1723,9 @@ input.tk-field:focus-visible, select.tk-field:focus-visible, textarea.tk-field:f
 .tkn-coin-chip {
   display: inline-flex; align-items: center; min-height: 44px; padding: 0 14px; border-radius: 999px; white-space: nowrap;
   background: #fdf0f7; border: 1px solid #ead8f0; color: #a8124f; font-weight: 700; font-size: 14px; text-decoration: none;
+  gap: 4px; cursor: pointer; font-family: inherit;
 }
+.tkn-coin-sep { margin: 0 4px; color: #c9a3d9; }
 .tkn-account { position: relative; }
 .tkn-avatar {
   display: inline-flex; align-items: center; gap: 6px; height: 44px; padding: 4px 10px 4px 4px; border-radius: 999px; border: 1px solid #ead8f0;
@@ -2283,3 +2285,15 @@ body:has([data-tk="bottom-bar"]) .tkn-float { bottom: 104px; }
   .tk-confirm-actions { flex-direction: column-reverse; }
   .tk-confirm-btn { width: 100%; }
 }
+/* H18.14: a vendor's waiting video call, shown under the header on every page. */
+.tkn-call-alert {
+  display: flex; align-items: center; justify-content: center; gap: 10px; flex-wrap: wrap;
+  padding: 10px 16px; background: #d1137a; color: #fff; font-weight: 700; font-size: 15px; text-align: center;
+}
+.tkn-call-alert-panel { max-width: 760px; margin: 12px auto; padding: 0 12px; }
+.tkn-call-alert-btn {
+  border: 0; cursor: pointer; font: inherit;
+  display: inline-flex; align-items: center; min-height: 36px; padding: 0 16px; border-radius: 999px;
+  background: #fff; color: #a8124f; text-decoration: none; font-weight: 800;
+}
+.tkn-call-alert-btn:focus-visible { outline: 3px solid #fff; outline-offset: 2px; }

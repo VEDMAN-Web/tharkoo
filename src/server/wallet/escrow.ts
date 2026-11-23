@@ -36,7 +36,7 @@ export async function holdInEscrow(input: EscrowRef & { listingId: string }) {
     refType: "booking",
     refId: input.bookingId,
     moves: [
-      { account: "user_wallet", ownerKey: input.userId, delta: -input.coins },
+      { account: "call_wallet", ownerKey: input.userId, delta: -input.coins },
       { account: "escrow", ownerKey: escrowOwner(input.bookingId), delta: input.coins },
     ],
     requestId: input.requestId,
@@ -56,7 +56,7 @@ export async function refundEscrow(input: EscrowRef) {
     refId: input.bookingId,
     moves: [
       { account: "escrow", ownerKey: escrowOwner(input.bookingId), delta: -input.coins },
-      { account: "user_wallet", ownerKey: input.userId, delta: input.coins },
+      { account: "call_wallet", ownerKey: input.userId, delta: input.coins },
     ],
     requestId: input.requestId,
     actorType: "system",

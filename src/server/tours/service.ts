@@ -22,7 +22,8 @@ const HOUR = 60 * MINUTE;
 const DAY = 24 * HOUR;
 
 /** A call shorter than this is refunded, not paid. */
-export const TOUR_MIN_SECONDS = 120;
+// H18.7 (Vedant, 21 Nov 2026): the vendor is paid the moment both people are connected; there is no minimum length.
+export const TOUR_MIN_SECONDS = 0;
 /** A request the advertiser does not accept in this time is refunded. */
 export const TOUR_ACCEPT_WINDOW_MS = 30 * MINUTE;
 /** An accepted tour with no call-end event after this long is refunded. */
@@ -272,7 +273,7 @@ async function closeTour(
  * The call provider reports that a call ended. A call of at least two minutes is paid to the advertiser
  * and the ad gets the verified badge; anything else is refunded. Only the first event for a tour counts.
  */
-export async function endTour(input: { tourId: string; eventId: string; outcome: "ended" | "failed"; durationSeconds?: number; requestId: string }) {
+export async function endTour(input: { tourId: string; eventId: string; outcome: "ended" | "failed"; durationSeconds?: number; requestId: string; keepRoom?: boolean }) {
   await connectDb();
   const id = objectId(input.tourId, "tourId");
   const duration = input.durationSeconds ?? 0;
@@ -289,7 +290,8 @@ export async function endTour(input: { tourId: string; eventId: string; outcome:
     await VideoTour.updateOne({ _id: id, status: "ending" }, { $set: { status: "accepted", eventId: "", endedAt: null, durationSeconds: null } });
     throw error;
   }
-  if (claim.roomId) await videoRoomProvider().deleteRoom(claim.roomId);
+  // H18.7: paid on connect -> the call is still running, so the room stays (it expires by itself).
+  if (claim.roomId && !input.keepRoom) await videoRoomProvider().deleteRoom(claim.roomId);
   const reason = paid ? "" : input.outcome === "failed" ? "call-failed" : "call-too-short";
   await VideoTour.updateOne({ _id: id, status: "ending" }, { $set: { status: paid ? "completed" : "failed", failureReason: reason } });
   if (paid) {
@@ -374,7 +376,7 @@ export async function reverseTour(input: { actorId: string; roles: readonly stri
       refId: String(id),
       moves: [
         { account: "vendor_earnings", ownerKey: String(claim.ownerId), delta: -claim.coins },
-        { account: "user_wallet", ownerKey: String(claim.userId), delta: claim.coins },
+        { account: "call_wallet", ownerKey: String(claim.userId), delta: claim.coins },
       ],
       requestId: input.requestId,
       actorId: input.actorId,
@@ -491,4 +493,23 @@ export async function updateVideoTourSettings(input: {
     after: { kind, videoTourEnabled: enabled, videoTourCoins: coins },
   });
   return { id: String(category._id), kind, videoTourEnabled: enabled, videoTourCoins: coins };
+}
+
+/**
+ * H18.7: pays every accepted call where both people are in the room right now (asked from the video service, not
+ * from the phones, so nobody can fake it). Run every minute by the server cron. A call nobody joins is refunded later
+ * by expireDueTours.
+ */
+export async function settleConnectedTours(requestId: string) {
+  await connectDb();
+  const tours = await VideoTour.find({ status: "accepted", roomId: { $nin: ["", null] } }).select("_id roomId").limit(200).lean<{ _id: unknown; roomId?: string }[]>();
+  let paid = 0;
+  for (const tour of tours) {
+    const count = await videoRoomProvider().participantCount(String(tour.roomId)).catch(() => 0);
+    if (count < 2) continue;
+    const id = String(tour._id);
+    await endTour({ tourId: id, eventId: `connected:${id}`, outcome: "ended", durationSeconds: 0, requestId, keepRoom: true }).catch(() => undefined);
+    paid += 1;
+  }
+  return { checked: tours.length, paid };
 }

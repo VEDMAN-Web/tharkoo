@@ -1,5 +1,5 @@
 import type { Page } from "@playwright/test";
-import { expect, firstAdPath, isPhone, setSellerAvailable, slugFromAdPath, test } from "./helpers";
+import { expect, firstAdPath, isPhone, realAdPath, setSellerAvailable, slugFromAdPath, test } from "./helpers";
 import { createLiveAd } from "./flows";
 
 /** H7.5: Online now / Away on the listing card and the ad page, and the call button following it. Both widths. */
@@ -15,7 +15,8 @@ const PEOPLE_FEED = "/dating/bengaluru/";
 test.describe("H7.5 Online now and Away on cards and the ad page", () => {
   test("a people ad has no video call on the ad page; Call, WhatsApp, chat and the badge stay", async ({ page }) => {
     test.setTimeout(120_000);
-    const path = await firstAdPath(page, PEOPLE_FEED);
+    // H17.1: a sample ad has no contact buttons, so the checks need a real ad (realAdPath).
+    const path = await realAdPath(page, PEOPLE_FEED);
     await setSellerAvailable(slugFromAdPath(path), true);
     await page.goto(path);
     await expect(page.locator("h1")).toHaveCount(1);
@@ -26,7 +27,16 @@ test.describe("H7.5 Online now and Away on cards and the ad page", () => {
     await page.goto(PEOPLE_FEED);
     await expect(page.locator(":is([data-tk=card], [data-tk=home-ad], [data-tk=listing-row])").first()).toBeVisible();
     await expect(page.locator(":is([data-tk=card], [data-tk=home-ad], [data-tk=listing-row]) [data-tk=call]")).toHaveCount(0);
-    await expect(page.locator(`:is([data-tk=home-ad], [data-tk=listing-row]):has(a[href*="${slugFromAdPath(path)}"]) [data-tk=availability]`).first()).toBeAttached();
+    // H17.1: the seeded feed holds sample ads only, and a sample card claims no "Online now". The badge on a REAL ad's card (online, then gone
+    // when the seller is Away) is checked in "the listing card shows Online now only while the seller is online" below.
+    await expect(page.locator(":is([data-tk=home-ad], [data-tk=listing-row]) [data-tk=availability]")).toHaveCount(0);
+
+    // H17.1: a sample ad shows no Chat button (it contacts nobody).
+    const sample = await firstAdPath(page, PEOPLE_FEED);
+    expect(slugFromAdPath(sample)).toMatch(/^demo-\d+$/);
+    await page.goto(sample);
+    await expect(page.locator("h1")).toHaveCount(1);
+    await expect(page.locator("[data-tk=chat]")).toHaveCount(0);
   });
 
   test("a job ad keeps its Call button whether the seller is online or Away", async ({ page, baseURL }) => {

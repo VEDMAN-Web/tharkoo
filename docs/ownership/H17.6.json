@@ -1,0 +1,25 @@
+{
+  "branchPrefix": "haiku/h17.6",
+  "globs": [
+    "docs/ownership/H17.6.json",
+    "progress/H17.6.md",
+    "src/lib/ad-photo-alt.ts",
+    "src/components/new/CardSlides.tsx",
+    "src/components/new/HomeAdCard.tsx",
+    "src/components/new/ListingRow.tsx",
+    "src/components/new/HomeAdPopout.tsx",
+    "src/components/new/ListingCards.tsx",
+    "src/components/new/home-blocks/Ads.tsx",
+    "src/components/new/NotFoundView.tsx",
+    "src/components/new/NewGallery.tsx",
+    "src/components/new/NewAdDetail.tsx",
+    "src/components/FallbackAds.tsx",
+    "src/components/ui/PhotoSwipe.tsx",
+    "src/components/ui/AdCard.tsx",
+    "src/components/ui/MiniAdCard.tsx",
+    "tests/server/ui/h17-6-ad-images.test.ts",
+    "tests/e2e/h17-6-ad-images.e2e.ts",
+    "tests/e2e/home-ad-cards.e2e.ts",
+    "tests/e2e/h7-104-home.e2e.ts"
+  ]
+}

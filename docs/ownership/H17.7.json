@@ -1,0 +1,11 @@
+{
+  "branchPrefix": "haiku/h17.7",
+  "globs": [
+    "docs/ownership/H17.7.json",
+    "progress/H17.7.md",
+    "src/app/help/page.tsx",
+    "src/components/h714/HelpView.tsx",
+    "src/components/h714/FaqList.tsx",
+    "tests/e2e/h17-7-help-how-it-works.e2e.ts"
+  ]
+}

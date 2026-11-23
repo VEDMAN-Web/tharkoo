@@ -1,4 +1,8 @@
 import mongoose from "mongoose";
+import { callBalance, customCredits, moveEarningsToAdCredits } from "@/server/billing/wallets";
+import { walletBalance as walletBalanceOf } from "@/server/billing/ledger";
+import { PromotionOrder } from "@/server/models";
+import { fundCalls, promote } from "../../setup/wallets";
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 import { POST as tourWebhook } from "@/app/api/tours/webhook/route";
 import { creditWallet, walletBalance } from "@/server/billing/ledger";
@@ -16,10 +20,12 @@ import {
   expireDueTours,
   requestTour,
   reverseTour,
+  settleConnectedTours,
   tourCallFor,
   updateVideoTourSettings,
 } from "@/server/tours/service";
 import { VideoTour } from "@/server/tours/model";
+import { setVideoRoomProvider } from "@/server/tours/room";
 import { signWebhook } from "@/server/wallet";
 import { clearMemoryMongo, connectMemoryMongo, disconnectMemoryMongo } from "../../setup/mongo";
 
@@ -64,12 +70,13 @@ async function ad(opts: { kind?: CategoryKind | null; enabled?: boolean; coins?:
     description: "A description that is long enough",
     publishedAt: new Date(),
   });
+  await promote(String(listing._id), String(ownerId));
   return { listingId: String(listing._id), categoryId: String(category._id), ownerId: String(ownerId) };
 }
 
 async function buyer(coins: number) {
   const id = uid();
-  await creditWallet({ userId: id, amount: coins, refType: "test", refId: key("seed"), requestId: req });
+  if (coins > 0) await fundCalls(id, coins);
   return id;
 }
 
@@ -94,12 +101,12 @@ describe("live tour requests and the escrow", () => {
     const user = await buyer(3);
     const tour = await request(user, a.listingId);
     expect(tour.status).toBe("requested");
-    expect(await walletBalance(user)).toBe(2);
+    expect(await callBalance(user)).toBe(2);
     expect(await accountBalance("escrow", `booking:${tour.id}`)).toBe(1);
 
     const declined = await declineTour({ ownerId: a.ownerId, tourId: tour.id, requestId: req });
     expect(declined.status).toBe("declined");
-    expect(await walletBalance(user)).toBe(3);
+    expect(await callBalance(user)).toBe(3);
     expect(await trialBalance()).toBe(0);
   });
 
@@ -115,7 +122,7 @@ describe("live tour requests and the escrow", () => {
     const a = await ad();
     const user = uid();
     await expect(request(user, a.listingId)).rejects.toThrow();
-    expect(await walletBalance(user)).toBe(0);
+    expect(await callBalance(user)).toBe(0);
     expect(await VideoTour.countDocuments({ status: "failed", failureReason: "hold-refused" })).toBe(1);
   });
 });
@@ -125,14 +132,14 @@ describe("people categories and switches are checked on the server", () => {
     const a = await ad({ kind: "people", enabled: false });
     const user = await buyer(2);
     await expect(request(user, a.listingId)).rejects.toThrow(/people listings/);
-    expect(await walletBalance(user)).toBe(2);
+    expect(await callBalance(user)).toBe(2);
   });
 
   it("refuses a tour when the switch is off for the category", async () => {
     const a = await ad({ enabled: false });
     const user = await buyer(2);
     await expect(request(user, a.listingId)).rejects.toThrow(/off/);
-    expect(await walletBalance(user)).toBe(2);
+    expect(await callBalance(user)).toBe(2);
   });
 
   it("only a superadmin can change the settings, and a people category can never be switched on", async () => {
@@ -158,7 +165,7 @@ describe("people categories and switches are checked on the server", () => {
     const a = await ad({ kind: null });
     const user = await buyer(2);
     await expect(request(user, a.listingId)).rejects.toThrow();
-    expect(await walletBalance(user)).toBe(2);
+    expect(await callBalance(user)).toBe(2);
   });
 });
 
@@ -173,7 +180,7 @@ describe("accepting, ending and paying out", () => {
     await endTour(event);
     await endTour({ ...event, eventId: "end-2" });
     expect(await accountBalance("vendor_earnings", a.ownerId)).toBe(1);
-    expect(await walletBalance(user)).toBe(0);
+    expect(await callBalance(user)).toBe(0);
     expect((await VideoTour.findById(tour.id))?.status).toBe("completed");
     const listing = await Listing.findById(a.listingId).lean();
     const days = (new Date(listing?.videoVerifiedUntil ?? 0).getTime() - Date.now()) / 86_400_000;
@@ -182,16 +189,44 @@ describe("accepting, ending and paying out", () => {
     expect(await trialBalance()).toBe(0);
   });
 
-  it("a call shorter than two minutes is refunded and earns no badge", async () => {
+  it("H18.7: a connected call is paid however short it is", async () => {
     const a = await ad();
     const user = await buyer(1);
     const tour = await request(user, a.listingId);
     await acceptTour({ ownerId: a.ownerId, tourId: tour.id, requestId: req });
-    await endTour({ tourId: tour.id, eventId: "short", outcome: "ended", durationSeconds: 119, requestId: req });
-    expect(await walletBalance(user)).toBe(1);
-    expect(await accountBalance("vendor_earnings", a.ownerId)).toBe(0);
-    expect((await Listing.findById(a.listingId).lean())?.videoVerifiedUntil).toBeNull();
-    expect((await VideoTour.findById(tour.id))?.failureReason).toBe("call-too-short");
+    await endTour({ tourId: tour.id, eventId: "short", outcome: "ended", durationSeconds: 5, requestId: req });
+    expect(await callBalance(user)).toBe(0);
+    expect(await accountBalance("vendor_earnings", a.ownerId)).toBe(1);
+  });
+
+  it("H18.7: pays the vendor once both people are in the room, never before, and only once", async () => {
+    const a = await ad();
+    const user = await buyer(1);
+    const tour = await request(user, a.listingId);
+    await acceptTour({ ownerId: a.ownerId, tourId: tour.id, requestId: req });
+    let inRoom = 1;
+    const deleted: string[] = [];
+    setVideoRoomProvider({
+      name: "mock",
+      createRoom: async ({ tourId }) => ({ roomId: `mock_${tourId}`, live: false }),
+      joinUrlFor: async () => null,
+      deleteRoom: async (roomId) => void deleted.push(roomId),
+      participantCount: async () => inRoom,
+    });
+    try {
+      expect((await settleConnectedTours(req)).paid).toBe(0);
+      expect(await accountBalance("vendor_earnings", a.ownerId)).toBe(0);
+      inRoom = 2;
+      expect((await settleConnectedTours(req)).paid).toBe(1);
+      expect(await accountBalance("vendor_earnings", a.ownerId)).toBe(1);
+      expect(await callBalance(user)).toBe(0);
+      expect((await VideoTour.findById(tour.id))?.status).toBe("completed");
+      expect(deleted).toEqual([]);
+      expect((await settleConnectedTours(req)).paid).toBe(0);
+      expect(await accountBalance("vendor_earnings", a.ownerId)).toBe(1);
+    } finally {
+      setVideoRoomProvider(null);
+    }
   });
 
   it("a failed call is refunded", async () => {
@@ -200,7 +235,7 @@ describe("accepting, ending and paying out", () => {
     const tour = await request(user, a.listingId);
     await acceptTour({ ownerId: a.ownerId, tourId: tour.id, requestId: req });
     await endTour({ tourId: tour.id, eventId: "fail", outcome: "failed", requestId: req });
-    expect(await walletBalance(user)).toBe(1);
+    expect(await callBalance(user)).toBe(1);
   });
 
   it("an accept after the 30-minute window refunds the buyer and refuses", async () => {
@@ -209,7 +244,7 @@ describe("accepting, ending and paying out", () => {
     const tour = await request(user, a.listingId);
     await VideoTour.updateOne({ _id: tour.id }, { $set: { requestedAt: new Date(Date.now() - TOUR_ACCEPT_WINDOW_MS - 1000) } });
     await expect(acceptTour({ ownerId: a.ownerId, tourId: tour.id, requestId: req })).rejects.toThrow(/expired/);
-    expect(await walletBalance(user)).toBe(1);
+    expect(await callBalance(user)).toBe(1);
   });
 
   it("the cron run refunds requests nobody accepted, and accepted tours whose call never ended", async () => {
@@ -226,8 +261,8 @@ describe("accepting, ending and paying out", () => {
     expect(result.toursClosed).toBe(2);
     expect((await VideoTour.findById(waiting.id))?.status).toBe("expired");
     expect((await VideoTour.findById(stuck.id))?.status).toBe("failed");
-    expect(await walletBalance(first)).toBe(1);
-    expect(await walletBalance(second)).toBe(1);
+    expect(await callBalance(first)).toBe(1);
+    expect(await callBalance(second)).toBe(1);
     expect(await trialBalance()).toBe(0);
   });
 });
@@ -249,7 +284,7 @@ describe("disputes and reversals", () => {
     const reversed = await reverseTour({ actorId: uid(), roles: ["finance"], tourId: t.tourId, requestId: req });
     expect(reversed.status).toBe("reversed");
     expect(await accountBalance("vendor_earnings", t.ownerId)).toBe(0);
-    expect(await walletBalance(t.user)).toBe(1);
+    expect(await callBalance(t.user)).toBe(1);
     expect((await Listing.findById(t.listingId).lean())?.videoVerifiedUntil).toBeNull();
     expect(await trialBalance()).toBe(0);
   });
@@ -276,7 +311,7 @@ describe("disputes and reversals", () => {
     const next = await ad({ owner });
     const user = await buyer(1);
     await expect(request(user, next.listingId)).rejects.toThrow(/switched off/);
-    expect(await walletBalance(user)).toBe(1);
+    expect(await callBalance(user)).toBe(1);
   });
 });
 
@@ -379,5 +414,38 @@ describe("Daily rooms through the service", () => {
     const tour = await request(user, a.listingId);
     await expect(acceptTour({ ownerId: a.ownerId, tourId: tour.id, requestId: req })).rejects.toThrow("Video call could not start, please try again");
     expect((await VideoTour.findById(tour.id))?.status).toBe("requested");
+  });
+});
+
+describe("H18.8 call credits, TOP-only calls, moving earnings", () => {
+  it("refuses a video call on an ad without TOP or Super Top, and spends call credits, not ad credits", async () => {
+    const a = await ad();
+    await PromotionOrder.deleteMany({ listingId: new mongoose.Types.ObjectId(a.listingId) });
+    const user = await buyer(1);
+    await expect(request(user, a.listingId)).rejects.toThrow(/TOP or Super Top/);
+    const b = await ad();
+    const adOnly = uid();
+    await creditWallet({ userId: adOnly, amount: 50, refType: "test", refId: key("seed"), requestId: req });
+    await expect(request(adOnly, b.listingId)).rejects.toThrow();
+    expect(await walletBalanceOf(adOnly)).toBe(50);
+  });
+
+  it("moves earnings into ad credits, at least 100 at a time", async () => {
+    const a = await ad({ coins: 100 });
+    const user = await buyer(100);
+    const tour = await request(user, a.listingId);
+    await acceptTour({ ownerId: a.ownerId, tourId: tour.id, requestId: req });
+    await endTour({ tourId: tour.id, eventId: "e", outcome: "ended", durationSeconds: 5, requestId: req });
+    await expect(moveEarningsToAdCredits({ userId: a.ownerId, amount: 99, idempotencyKey: "k-small-1", requestId: req })).rejects.toThrow();
+    await expect(moveEarningsToAdCredits({ userId: a.ownerId, amount: 101, idempotencyKey: "k-big-001", requestId: req })).rejects.toThrow();
+    const done = await moveEarningsToAdCredits({ userId: a.ownerId, amount: 100, idempotencyKey: "k-ok-0001", requestId: req });
+    expect(done).toMatchObject({ moved: 100, earnings: 0, adCredits: 100 });
+    expect(await trialBalance()).toBe(0);
+  });
+
+  it("a custom amount gets the best pack rate once it reaches that pack's price", () => {
+    const packs = [{ price: 1000, total: 100 }, { price: 7500, total: 1250 }];
+    expect(customCredits(500, 10, packs)).toBe(50);
+    expect(customCredits(10_000, 10, packs)).toBe(1666);
   });
 });

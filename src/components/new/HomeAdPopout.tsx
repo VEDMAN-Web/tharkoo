@@ -4,6 +4,7 @@ import { useLayoutEffect, useRef, useState, type MutableRefObject } from "react"
 import { createPortal } from "react-dom";
 import Link from "next/link";
 import { ChevronLeft, ChevronRight } from "lucide-react";
+import { adPhotoAlt } from "@/lib/ad-photo-alt";
 import { recordAdClick } from "@/components/ad/adCountStore";
 import { SaveButton } from "@/components/ui/SaveButton";
 import { fillText } from "@/lib/ui/text";
@@ -74,7 +75,7 @@ export function HomeAdPopout({
       <PopPhoto ad={ad} labels={labels} slides={slides} index={index} onIndex={onIndex} videoRef={videoRef} />
       <div className="tkh-pop-body">
         <p className="tkh-pop-title">
-          <Link href={ad.href} prefetch={false} className="tkh-pop-link" onClick={() => (ad.slug ? recordAdClick(ad.slug) : undefined)}>
+          <Link href={ad.href} prefetch={false} className="tkh-pop-link" data-ad-link onClick={() => (ad.slug ? recordAdClick(ad.slug) : undefined)}>
             {ad.title}
           </Link>
         </p>
@@ -127,7 +128,7 @@ export function PopPhoto({
       {current?.kind === "video" ? (
         <video ref={videoRef} src={current.src} poster={current.poster ?? undefined} muted playsInline preload="none" data-tk="popout-video" />
       ) : current ? (
-        <img src={current.src} alt="" draggable={false} />
+        <img src={current.src} alt={adPhotoAlt(ad.title, ad.city, slides.slice(0, index + 1).filter((slide) => slide.kind === "image").length)} width={400} height={500} draggable={false} />
       ) : (
         <span className="tkh-ad-empty" />
       )}
@@ -148,7 +149,7 @@ export function PopPhoto({
           <div className="tkh-pop-thumbs">
             {slides.slice(0, 5).map((slide, position) => (
               <button key={slide.src + position} type="button" className={position === index ? "is-on" : undefined} aria-label={`${position + 1}`} onClick={() => onIndex(position)}>
-                {posterOf(slide) ? <img src={posterOf(slide) ?? ""} alt="" draggable={false} /> : null}
+                {posterOf(slide) ? <img src={posterOf(slide) ?? ""} alt="" width={400} height={500} draggable={false} /> : null}
               </button>
             ))}
           </div>

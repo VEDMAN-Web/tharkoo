@@ -1,5 +1,6 @@
 import type { ListingDoc } from "@/lib/models";
 import { prettyPlace } from "@/lib/format";
+import { FIRST_ROW_CARDS } from "@/lib/ad-photo-alt";
 import { applyPrefixes, postAdPath, type UrlPaths } from "@/lib/urls";
 import type { CountryPlaces } from "@/server/locations/site-country";
 import { HomeAdCard, type HomeAdLabels } from "../HomeAdCard";
@@ -46,7 +47,7 @@ export function HomeAds({
         <HomeAdsSection id="home-fresh" eyebrow={eyebrow} title={title} listLabel={listLabel} moreHref={applyPrefixes("/search/", paths)} moreText={moreText}>
           {shown.map((ad, position) => (
             <li key={ad.slug}>
-              <HomeAdCard ad={homeAdCardData(ad, categoryNames, paths, fallbackTitle)} labels={labels} order={position} />
+              <HomeAdCard ad={homeAdCardData(ad, categoryNames, paths, fallbackTitle)} labels={labels} order={position} eager={position < FIRST_ROW_CARDS} />
             </li>
           ))}
         </HomeAdsSection>

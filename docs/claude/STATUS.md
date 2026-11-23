@@ -1,8 +1,8 @@
 # Tharkoo — STATUS (shared between Opus and Haiku through GitHub)
 
-**Current task:** H1.1
-**Next after review:** H1.2 (order: H1.1-H1.6, then H0.2, H0.3)
-**Waiting on Vedant:** decisions D1–D6 (docs/claude/SEO_PLAN.md §1) — needed before H5 (content) and H6 (redesign), not before H1–H4.
+**Current task:** H19.1 (then H19.2 … H19.7 in order). Cards in TASKS.md under "H19".
+**Next:** after each H19 PR, report through the relay and start the next H19 card only when Opus says so. Do not start any old "todo" card below.
+**Waiting on Vedant:** nothing for Haiku.
 
 ## How the two chats stay connected (relay, no copy-paste)
 
@@ -17,31 +17,46 @@ Opus has access to this folder on Vedant's PC. Messages go through `.relay/` (gi
 |---|---|---|---|---|
 | H0.0 | Setup and baseline | approved | none (baseline) | approved by Opus 11 Nov |
 | H0.1 | Workflow plumbing | merged | PR #27 | approved by Opus |
-| H0.2 | Windows-compatible scripts and tests | todo | – | – |
-| H0.3 | Remove competitor reference material | todo | – | – |
-| H1.1 | robots.txt one rule set | todo | – | – |
-| H1.2 | Metadata always in head | todo | – | – |
-| H1.3 | Crawler-safe rate limiting | todo | – | line-by-line |
-| H1.4 | Same-name district pages | todo | – | – |
-| H1.5 | Home: one clean H1 | todo | – | – |
-| H1.6 | Title/description lengths | todo | – | – |
-| H2.1 | Keyword and SERP evidence | todo | – | – |
-| H3.1 | Admin shell + UI kit (Playzoni-style) | todo | – | – |
-| H3.2 | Block engine | todo | – | line-by-line |
-| H3.3 | Media library | todo | – | – |
-| H3.4 | Home page fully dynamic | todo | – | – |
-| H3.5 | Listing pages fully dynamic | todo | – | – |
-| H3.6 | Post-ad page dynamic + category fields | todo | – | – |
-| H3.7 | UI text dictionary | todo | – | – |
-| H3.8 | Listing order control | todo | – | line-by-line |
-| H3.9 | Dashboard | todo | – | – |
-| H4.1 | SEO rules module + audit runs | todo | – | – |
-| H4.2 | SEO overview + Pages & issues | todo | – | – |
-| H4.3 | SEO templates + SERP preview | todo | – | – |
-| H4.4 | Page overrides + bulk CSV | todo | – | – |
-| H4.5 | Redirects & 404 monitor | todo | – | – |
-| H4.6 | Indexing rules & sitemaps | todo | – | – |
-| H4.7 | robots, llms & schema settings | todo | – | – |
-| GATE | Vedant decisions D1–D6 → Opus writes SEO_PLAN v2 + H5 (content) / H6 (redesign) / H7 (launch) cards | waiting | – | – |
+| H0.2 | Windows-compatible scripts and tests | closed (built in later tasks or dropped, 21 Nov 2026) | – | – |
+| H0.3 | Remove competitor reference material | closed (built in later tasks or dropped, 21 Nov 2026) | – | – |
+| H1.1 | robots.txt one rule set | closed (built in later tasks or dropped, 21 Nov 2026) | – | – |
+| H1.2 | Metadata always in head | closed (built in later tasks or dropped, 21 Nov 2026) | – | – |
+| H1.3 | Crawler-safe rate limiting | closed (built in later tasks or dropped, 21 Nov 2026) | – | line-by-line |
+| H1.4 | Same-name district pages | closed (built in later tasks or dropped, 21 Nov 2026) | – | – |
+| H1.5 | Home: one clean H1 | closed (built in later tasks or dropped, 21 Nov 2026) | – | – |
+| H1.6 | Title/description lengths | closed (built in later tasks or dropped, 21 Nov 2026) | – | – |
+| H2.1 | Keyword and SERP evidence | closed (built in later tasks or dropped, 21 Nov 2026) | – | – |
+| H3.1 | Admin shell + UI kit (Playzoni-style) | closed (built in later tasks or dropped, 21 Nov 2026) | – | – |
+| H3.2 | Block engine | closed (built in later tasks or dropped, 21 Nov 2026) | – | line-by-line |
+| H3.3 | Media library | closed (built in later tasks or dropped, 21 Nov 2026) | – | – |
+| H3.4 | Home page fully dynamic | closed (built in later tasks or dropped, 21 Nov 2026) | – | – |
+| H3.5 | Listing pages fully dynamic | closed (built in later tasks or dropped, 21 Nov 2026) | – | – |
+| H3.6 | Post-ad page dynamic + category fields | closed (built in later tasks or dropped, 21 Nov 2026) | – | – |
+| H3.7 | UI text dictionary | closed (built in later tasks or dropped, 21 Nov 2026) | – | – |
+| H3.8 | Listing order control | closed (built in later tasks or dropped, 21 Nov 2026) | – | line-by-line |
+| H3.9 | Dashboard | closed (built in later tasks or dropped, 21 Nov 2026) | – | – |
+| H4.1 | SEO rules module + audit runs | closed (built in later tasks or dropped, 21 Nov 2026) | – | – |
+| H4.2 | SEO overview + Pages & issues | closed (built in later tasks or dropped, 21 Nov 2026) | – | – |
+| H4.3 | SEO templates + SERP preview | closed (built in later tasks or dropped, 21 Nov 2026) | – | – |
+| H4.4 | Page overrides + bulk CSV | closed (built in later tasks or dropped, 21 Nov 2026) | – | – |
+| H4.5 | Redirects & 404 monitor | closed (built in later tasks or dropped, 21 Nov 2026) | – | – |
+| H4.6 | Indexing rules & sitemaps | closed (built in later tasks or dropped, 21 Nov 2026) | – | – |
+| H4.7 | robots, llms & schema settings | closed (built in later tasks or dropped, 21 Nov 2026) | – | – |
+| H16.2 PR 3 | New ad addresses, third part | merged (nothing to build: PR 1 and PR 2 did the work) | PR #450, PR #455 | approved by Opus |
+| GATE | Vedant decisions D1–D6 → Opus writes SEO_PLAN v2 + H5 (content) / H6 (redesign) / H7 (launch) cards | closed (decided and built) | – | – |
+| H18.1 | PassimPay crypto checkout (Haiku version) | closed, replaced by H18.1b | PR #466 closed | superseded |
+| H18.1b | PassimPay crypto checkout | merged | PR #469 | Opus |
+| H18.1c | PassimPay notices through the origin check; credits on return | merged | PR #470 | Opus |
+| H18.2 | Google sees only real-ad pages | merged | PR #468 | Opus |
+| H18.3 | Category delete removes its ads | merged | PR #467 | Opus |
+| H18.4 | Ads sitemap in files of 10,000 | merged | PR #471 | Opus |
+| H18.5 | Unpaid crypto orders close after 2 hours; tracker closed | PR open | haiku/h18.5-crypto-expiry | Opus |
+| H19.1 | Home, category, listing pages + view/click counts | todo | — | Haiku |
+| H19.2 | Ad page | todo | — | Haiku |
+| H19.3 | Video call flow for users | todo | — | Haiku |
+| H19.4 | Buying credits: one kind at a time | todo | — | Haiku |
+| H19.5 | Account menu by role + Video calls page | todo | — | Haiku |
+| H19.6 | Post an ad, rebuilt | todo | — | Haiku |
+| H19.7 | Block throwaway emails | todo | — | Haiku |
 
 Status values: todo · doing · PR open · changes needed · approved · merged · blocked.

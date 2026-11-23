@@ -22,15 +22,16 @@ import {
   pageOutOfRange,
 } from "@/lib/queries";
 import { prettyPlace } from "@/lib/format";
+import { nearbyCities, popularSearches } from "@/lib/seo/local-links";
 import { getIndexing, hubMinimum, isHubOn } from "@/server/seo/indexing";
 import { canonical, fillTemplate } from "@/lib/seo";
-import { placePath, postAdPath, searchPath, tagPath } from "@/lib/urls";
+import { placePath, postAdPath, searchPath } from "@/lib/urls";
 import { activeFilterKeys, listingCanonicalSuffix } from "@/server/search/filter-seo";
 import { withUrlSeo, urlHeading } from "@/lib/seo/override";
 import { hubCopy } from "@/lib/seo-site";
 import { resolveListingCopy } from "@/server/content/listing-copy";
 import { withSeoDefaults } from "@/lib/ui/meta-defaults";
-import { getPaths, publicTags } from "@/server/urls/service";
+import { getPaths } from "@/server/urls/service";
 import { fallbackLanding, mergeLanding, visibleHeading, type LandingCopy } from "@/lib/seo/landing";
 import { isCityAlias } from "@/lib/seo/district-alias";
 import { SubcategoryChips } from "../SubcategoryChips";
@@ -42,7 +43,7 @@ import { loadFallbackSections, showFallback } from "@/lib/fallback-ads";
 import { ListingFrame } from "@/components/new/ListingFrame";
 import { introCategory, listingFrameProps } from "@/components/new/listing-frame-props";
 import { attributePicks, hasFieldPicks, listingFilterQuery, type ListingToggles } from "@/components/new/listing-filters";
-import { withPagination } from "@/lib/seo/pagination";
+import { pagedText, withPagination } from "@/lib/seo/pagination";
 import { listingLabels, placeSelects } from "@/components/new/listing-frame-props";
 import { listingHeading } from "@/lib/layout/listing";
 import { type ListingParams } from "@/server/search/filter-seo";
@@ -92,7 +93,7 @@ export async function generateMetadata({ params, searchParams }: Props): Promise
     category: cat.name || category,
     city: loc.name || location,
     count: feed.realTotal,
-    indexable: !!isHubOn(hubMin),
+    indexable: !!isHubOn(hubMin) && feed.realTotal > 0,
     sampleNote: await sampleNoteText(),
   });
   const resolved =
@@ -105,15 +106,18 @@ export async function generateMetadata({ params, searchParams }: Props): Promise
           place: loc.name || location,
           state: String(vars.state ?? ""),
           count: feed.realTotal,
-          indexable: !!isHubOn(hubMin),
+          indexable: !!isHubOn(hubMin) && feed.realTotal > 0,
           mode: "content",
         })
       : null;
-  const title = resolved?.title ?? fillTemplate(seo?.title || copy.title, vars);
+  const baseTitle = resolved?.title ?? fillTemplate(seo?.title || copy.title, vars);
   const description = resolved?.description ?? fillTemplate(seo?.description || copy.description, vars);
   const pageNo = Math.max(1, Number(sp.page) || 1);
+  // H17.3: page 2 and later say so in the title (and in the heading below).
+  const title = pagedText(baseTitle, pageNo);
   const filtered = activeFilterKeys(sp).length > 0;
-  const thin = !isHubOn(hubMin);
+  // H18.2: indexed only with at least one REAL ad (sample ads do not count); the Indexing switches still turn a hub off.
+  const thin = !isHubOn(hubMin) || feed.realTotal < 1;
   const clean = placePath(cat.slug || category, loc.slug || location);
   const suffix = listingCanonicalSuffix(sp, pageNo);
   // Filter URLs are noindex, follow, and their canonical is the clean page (see filter-seo.ts).
@@ -156,7 +160,7 @@ export default async function LocationPage({ params, searchParams }: Props) {
   Object.assign(filter, attributes);
 
   const canonicalPath = placePath(cat.slug || category, loc.slug || location);
-  const [seo, site, stars, feed, siblings, districts, paths, tags, heading, counts, categories, cardWidth, states, cities, hero] = await Promise.all([
+  const [seo, site, stars, feed, siblings, districts, paths, heading, counts, categories, cardWidth, states, cities, hero] = await Promise.all([
     getSeoFor("location", category),
     getSite(),
     getStarListings(loc.kind === "city" ? { categorySlug: category, citySlug: location, ...attributes } : filter),
@@ -164,7 +168,6 @@ export default async function LocationPage({ params, searchParams }: Props) {
     loc.kind === "city" && loc.stateSlug ? getSiblingCities(loc.stateSlug) : Promise.resolve([]),
     loc.kind === "city" ? getDistricts(loc.slug || location).then((rows) => rows.filter((row) => !isCityAlias(loc.name, row.name || ""))) : Promise.resolve([]),
     getPaths(),
-    publicTags(),
     urlHeading(canonicalPath, ""),
     listingCountsByCategoryCity().catch(() => []),
     getCategories().catch(() => []),
@@ -186,14 +189,15 @@ export default async function LocationPage({ params, searchParams }: Props) {
     districtPref: "",
   };
   const names = new Map(categories.map((row) => [row.slug, row.name || row.slug || ""]));
-  const live = counts.filter((row) => row.n > 0);
-  const sameCategory = live.filter((row) => row._id.categorySlug === (cat.slug || category) && row._id.citySlug !== loc.slug).slice(0, 3);
-  const otherHere = live.filter((row) => row._id.citySlug === loc.slug && row._id.categorySlug !== (cat.slug || category)).slice(0, 2);
+  // H17.4: Nearby are cities of the same state; Popular searches are category + city pages that have ads (never a made-up phrase).
+  const nearby = nearbyCities({ slug: loc.slug, stateSlug: loc.stateSlug }, cities, counts, cat.slug || category);
+  const cityNames = new Map(cities.map((row) => [row.slug || "", row.name || ""]));
+  const popularLinks = popularSearches(counts, names, cityNames, { excludePage: { categorySlug: cat.slug || category, citySlug: loc.slug || location } });
   const copy = landingFor(site as { name?: string; landings?: Record<string, Partial<LandingCopy>> }, {
     category: cat.name || category,
     city: loc.name || location,
     count: feed.realTotal,
-    indexable: !!isHubOn(hubMin),
+    indexable: !!isHubOn(hubMin) && feed.realTotal > 0,
     sampleNote: await sampleNoteText(),
     districts: districts.map((row) => row.name || "").filter(Boolean).slice(0, 3),
     updated: feed.items[0]?.publishedAt ? new Date(feed.items[0].publishedAt).toLocaleDateString("en-IN", { day: "numeric", month: "long", year: "numeric" }) : undefined,
@@ -210,7 +214,7 @@ export default async function LocationPage({ params, searchParams }: Props) {
           place: loc.name || location,
           state: stateName,
           count: feed.realTotal,
-          indexable: !!isHubOn(hubMin),
+          indexable: !!isHubOn(hubMin) && feed.realTotal > 0,
           districts: districts.map((row) => row.name || "").filter(Boolean).slice(0, 3),
           updated: feed.items[0]?.publishedAt ? new Date(feed.items[0].publishedAt).toLocaleDateString("en-IN", { day: "numeric", month: "long", year: "numeric" }) : undefined,
           mode: "content",
@@ -219,16 +223,10 @@ export default async function LocationPage({ params, searchParams }: Props) {
   const hub = resolved ? { intro: resolved.intro, faqs: resolved.faqs } : await hubCopy(canonicalPath, { intro: copy.intro || fillTemplate(seo?.intro || "", vars), faqs: copy.faqs });
   const t = makeT(texts);
   const filtered = Boolean(sp.photos || sp.verified);
-  const siblingLinks = [
-    ...sameCategory.map((row) => ({
-      href: placePath(cat.slug || category, row._id.citySlug),
-      label: t("listing.link.in", { name: cat.name, place: prettyPlace(row._id.citySlug) }),
-    })),
-    ...otherHere.map((row) => ({
-      href: placePath(row._id.categorySlug, loc.slug || location),
-      label: t("listing.link.in", { name: names.get(row._id.categorySlug) || row._id.categorySlug, place: loc.name }),
-    })),
-  ].slice(0, 5);
+  const siblingLinks = nearby.map((city) => ({
+    href: placePath(cat.slug || category, city.slug || ""),
+    label: t("listing.link.in", { name: cat.name, place: city.name || prettyPlace(city.slug) }),
+  }));
 
   const layout = await resolveListingLayout({ path: canonicalPath, category: cat.slug || category, vars });
   // H7.4: the New design title band (image, search bar and chips) replaces the chips that sit under the list.
@@ -243,7 +241,7 @@ export default async function LocationPage({ params, searchParams }: Props) {
     ...(loc.stateSlug && loc.stateSlug !== (loc.slug || location) ? [{ name: `${stateName} ${cat.name}`, path: placePath(cat.slug || category, loc.stateSlug) }] : []),
     { name: `${loc.name} ${cat.name}`, path: canonicalPath },
   ];
-  const h1 = resolved ? resolved.h1 : heading || visibleHeading(fillTemplate(seo?.h1 || "", vars), copy.h1);
+  const h1 = pagedText(resolved ? resolved.h1 : heading || visibleHeading(fillTemplate(seo?.h1 || "", vars), copy.h1), page);
   const toggles: ListingToggles = { verified: sp.verified === "1", photos: sp.photos === "1", video: sp.video === "1", online: sp.online === "1" };
   const filterQs = listingFilterQuery(picks, toggles);
   // H7.32 (FIX B): few own ads keep their place, and fallback ads go below them. Nothing is empty.
@@ -272,7 +270,7 @@ export default async function LocationPage({ params, searchParams }: Props) {
       h2={fillTemplate(seo?.h2 || "", vars)}
       intro={hub.intro}
       faqs={hub.faqs}
-      popular={tags.slice(0, 6).map((tag) => ({ href: tagPath(paths, cat.slug || category, tag.slug), label: `${cat.name} ${tag.label}` }))}
+      popular={popularLinks.map((link) => ({ href: placePath(link.categorySlug, link.citySlug), label: t("listing.link.in", { name: link.categoryName, place: link.cityName }) }))}
       footer={fillTemplate(seo?.footer || "", vars)}
       crumbs={crumbs}
       districts={districts.map((d) => ({ href: placePath(cat.slug || category, loc.slug || location, d.slug || ""), label: d.name! }))}
@@ -282,7 +280,7 @@ export default async function LocationPage({ params, searchParams }: Props) {
       page={feed.page}
       pages={feed.pages}
       total={feed.total}
-      noindex={!isHubOn(hubMin) || page > 1 || (filtered && feed.total === 0)}
+      noindex={!isHubOn(hubMin) || feed.realTotal < 1 || page > 1 || (filtered && feed.total === 0)}
       siblingLinks={siblingLinks}
       emptyNearby={siblings.slice(0, 6).map((c) => ({ href: placePath(cat.slug || category, c.slug || ""), label: c.name! }))}
       hideEmpty={feed.total === 0}

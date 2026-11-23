@@ -1,11 +1,13 @@
 import mongoose from "mongoose";
+import { CUSTOM_MAX_PER_DAY_INR, CUSTOM_MAX_PER_PURCHASE_INR, CUSTOM_MIN_INR, type WalletKind, customCredits, walletKind } from "@/server/billing/wallets";
 import { connectDb } from "@/lib/db";
 import { safeNext } from "@/lib/ui/api";
 import { AuditRepository } from "@/server/audit";
 import { applyWebhook, checkoutPack } from "@/server/billing/service";
 import { readMoneySettings } from "@/server/billing/money-settings";
 import { objectId, walletBalance } from "@/server/billing/ledger";
-import { paymentProvider } from "@/server/billing/provider";
+import { livePaymentsAllowed, paymentProvider } from "@/server/billing/provider";
+import { createInvoice, orderStatus, passimpayConfigured } from "@/server/billing/passimpay";
 import { ConflictError, ForbiddenError, NotFoundError, ValidationError } from "@/server/http";
 import { CreditPack, Payment } from "@/server/models";
 import { assertNotPaused } from "@/server/settings/emergency";
@@ -28,7 +30,7 @@ const MOCK_RATE_INR: Record<CryptoCoin, number> = { BTC: 5_500_000, ETH: 280_000
 const COIN_DECIMALS: Record<CryptoCoin, number> = { BTC: 8, ETH: 6, USDT: 2, USDC: 2 };
 const ADDRESS_ALPHABET = "abcdefghjkmnpqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ23456789";
 
-export type RechargePack = { id: string; credits: number; bonus: number; total: number; price: number; badge: "popular" | "best" | null };
+export type RechargePack = { id: string; credits: number; bonus: number; total: number; price: number; badge: "popular" | "best" | null; wallet: WalletKind };
 
 export function packBadge(tag: string | undefined | null): RechargePack["badge"] {
   const text = (tag || "").toLowerCase();
@@ -45,7 +47,7 @@ export async function rechargePacks(): Promise<RechargePack[]> {
     .map((row) => {
       const credits = row.credits ?? 0;
       const bonus = row.bonus ?? 0;
-      return { id: String(row._id), credits, bonus, total: credits + bonus, price: Math.round(row.price ?? 0), badge: packBadge(row.tag) };
+      return { id: String(row._id), credits, bonus, total: credits + bonus, price: Math.round(row.price ?? 0), badge: packBadge(row.tag), wallet: walletKind(row.wallet) };
     })
     .sort((a, b) => a.total - b.total);
 }
@@ -132,6 +134,17 @@ export function paymentView(row: PaymentRow, now = Date.now()) {
   };
 }
 
+/** H18.1: PassimPay is switched on, live payments are allowed and its keys are set. */
+export function passimpayLive() {
+  return paymentProvider() === "passimpay" && livePaymentsAllowed() && passimpayConfigured();
+}
+
+/** What the buy screen may offer: PassimPay when live, else the test (mock) payments when an admin turned them on. */
+export async function paymentsAvailable(): Promise<boolean> {
+  await connectDb();
+  return passimpayLive() || (await mockPaymentsAvailable());
+}
+
 export async function mockPaymentsAvailable(): Promise<boolean> {
   await connectDb();
   return paymentProvider() === "mock" && (await readMoneySettings()).mockPaymentsOn;
@@ -146,9 +159,34 @@ function checkedCoin(coin: string, network: string | undefined): { coin: string;
 
 export const NOT_AVAILABLE_MESSAGE = "Payments are not available right now. Nothing was charged.";
 
+/**
+ * H18.8: checks a typed-in amount and turns it into credits. Minimum per balance, a cap per purchase and per day
+ * (paid and pending payments of the last 24 hours count). Above the cap the buyer is sent to support.
+ */
+export async function quoteCustomAmount(userId: string, wallet: WalletKind, amountInr: number) {
+  await connectDb();
+  if (!Number.isInteger(amountInr) || amountInr < CUSTOM_MIN_INR[wallet]) {
+    throw new ValidationError("Invalid request", { amountInr: [`The smallest amount is Rs ${CUSTOM_MIN_INR[wallet].toLocaleString("en-IN")}.`] });
+  }
+  const tooBig = `For more than Rs ${CUSTOM_MAX_PER_PURCHASE_INR[wallet].toLocaleString("en-IN")} at once, or Rs ${CUSTOM_MAX_PER_DAY_INR.toLocaleString("en-IN")} in a day, open a support ticket and we will add your credits.`;
+  if (amountInr > CUSTOM_MAX_PER_PURCHASE_INR[wallet]) throw new ValidationError("Invalid request", { amountInr: [tooBig] });
+  const since = new Date(Date.now() - 24 * 3_600_000);
+  const today = await Payment.aggregate<{ total: number }>([
+    { $match: { userId: new mongoose.Types.ObjectId(userId), status: { $in: ["paid", "pending"] }, createdAt: { $gte: since } } },
+    { $group: { _id: null, total: { $sum: "$amount" } } },
+  ]);
+  if ((today[0]?.total ?? 0) + amountInr > CUSTOM_MAX_PER_DAY_INR) throw new ValidationError("Invalid request", { amountInr: [tooBig] });
+  const [money, packs] = await Promise.all([readMoneySettings(), rechargePacks()]);
+  const credits = customCredits(amountInr, money.creditPriceInr, packs.filter((p) => p.wallet === wallet));
+  if (credits < 1) throw new ValidationError("Invalid request", { amountInr: ["That amount is too small."] });
+  return { wallet, amountInr, credits };
+}
+
 export async function startRecharge(input: {
   userId: string;
-  packId: string;
+  packId?: string;
+  wallet?: string;
+  amountInr?: number;
   method: string;
   coin?: string;
   network?: string;
@@ -160,13 +198,19 @@ export async function startRecharge(input: {
   await connectDb();
   await assertNotPaused("pausePurchases");
   if (!(RECHARGE_METHODS as readonly string[]).includes(input.method)) throw new ValidationError("Invalid request", { method: ["Choose Card or Crypto"] });
-  const method = input.method as RechargeMethod;
-  const picked = method === "crypto" && input.coin ? checkedCoin(input.coin, input.network) : { coin: undefined, network: undefined };
-  if (!(await mockPaymentsAvailable())) throw new ConflictError(NOT_AVAILABLE_MESSAGE);
+  // H18.1: with PassimPay on, every recharge goes to PassimPay's hosted crypto page (the coin is chosen there).
+  const passimpay = paymentProvider() === "passimpay";
+  const method = (passimpay ? "crypto" : input.method) as RechargeMethod;
+  if (passimpay) {
+    if (!passimpayLive()) throw new ConflictError(NOT_AVAILABLE_MESSAGE);
+  } else if (!(await mockPaymentsAvailable())) throw new ConflictError(NOT_AVAILABLE_MESSAGE);
+  const picked = method === "crypto" && input.coin && !passimpay ? checkedCoin(input.coin, input.network) : { coin: undefined, network: undefined };
   const returnTo = input.returnTo ? safeNext(input.returnTo) ?? undefined : undefined;
+  const custom = input.packId ? undefined : await quoteCustomAmount(input.userId, walletKind(input.wallet), Number(input.amountInr));
   const result = await checkoutPack({
     userId: input.userId,
-    packId: input.packId,
+    packId: input.packId ?? "",
+    custom,
     idempotencyKey: input.idempotencyKey,
     requestId: input.requestId,
     ip: input.ip,
@@ -179,9 +223,112 @@ export async function startRecharge(input: {
     targetType: "payment",
     targetId: result.paymentId,
     requestId: input.requestId,
-    after: { method, coin: picked.coin ?? null, network: picked.network ?? null },
+    after: { method, coin: picked.coin ?? null, network: picked.network ?? null, provider: passimpay ? "passimpay" : "mock" },
   });
+  if (passimpay) return { paymentId: result.paymentId, checkoutPath: await passimpayInvoiceUrl(result.paymentId) };
   return { paymentId: result.paymentId, checkoutPath: `/pay/checkout/${result.paymentId}/` };
+}
+
+/** H18.1: the PassimPay page for a payment. Made once and kept on the payment, so a repeated request reuses it. */
+async function passimpayInvoiceUrl(paymentId: string) {
+  const row = await Payment.findById(paymentId).lean<(PaymentRow & { invoiceUrl?: string }) | null>();
+  if (!row) throw new NotFoundError("Not found");
+  if (row.invoiceUrl) return row.invoiceUrl;
+  try {
+    const { url } = await createInvoice({ orderId: paymentId, amountInr: row.amount });
+    await Payment.updateOne({ _id: row._id }, { $set: { invoiceUrl: url } }, { strict: false });
+    return url;
+  } catch {
+    await Payment.updateOne({ _id: row._id, status: "pending" }, { $set: { status: "failed", outcome: "error" } });
+    throw new ConflictError(NOT_AVAILABLE_MESSAGE);
+  }
+}
+
+/**
+ * H18.1: settles a pending PassimPay payment by asking PassimPay (orderStatus). Only "paid" adds credits, through the same
+ * applyWebhook path as every other payment (idempotent: one credit per payment). A rupee amount below the price is not credited.
+ * Called by the PassimPay notice, and when the buyer opens their payment or history (in case a notice was lost).
+ */
+export async function settlePassimpay(paymentId: string, requestId: string): Promise<"paid" | "wait" | "failed" | "ignored"> {
+  await connectDb();
+  if (!mongoose.isValidObjectId(paymentId)) return "ignored";
+  const row = await Payment.findById(paymentId).lean<PaymentRow | null>();
+  if (!row || row.provider !== "passimpay" || !row.providerRef) return "ignored";
+  if (row.status === "paid") return "paid";
+  // H18.5: an order closed by the 2-hour expiry is still checked, so a late real payment is credited (failed -> paid).
+  const lateCheck = row.status === "failed" && row.outcome === "expired";
+  if (row.status !== "pending" && !lateCheck) return "failed";
+  const result = await orderStatus(row.providerRef);
+  if (result.status === "wait") return lateCheck ? "failed" : "wait";
+  if (result.status === "paid") {
+    if (result.currency === "INR" && result.amountPaid + 0.005 < row.amount) {
+      await audit.append({ actorId: null, actorType: "system", action: "recharge.passimpay_underpaid", targetType: "payment", targetId: paymentId, requestId, after: { amountPaid: result.amountPaid, amount: row.amount } });
+      return "wait";
+    }
+    await applyWebhook({ eventId: `passimpay_${paymentId}`, status: "paid", providerRef: row.providerRef }, requestId);
+    await Payment.updateOne({ _id: row._id, status: "paid" }, { $set: { outcome: "paid" } });
+    await audit.append({ actorId: null, actorType: "system", action: "recharge.passimpay_paid", targetType: "payment", targetId: paymentId, requestId, after: { currency: result.currency || null } });
+    return "paid";
+  }
+  await applyWebhook({ eventId: `passimpay_${paymentId}_error`, status: "failed", providerRef: row.providerRef }, requestId);
+  await Payment.updateOne({ _id: row._id, status: "failed" }, { $set: { outcome: "expired" } });
+  return "failed";
+}
+
+/** H18.5: an unpaid PassimPay order is closed after 2 hours so it leaves the "Recharges to check" list. */
+export const PASSIMPAY_PENDING_MAX_MS = 2 * 60 * 60 * 1000;
+
+/**
+ * H18.5: closes PassimPay orders still pending after 2 hours. Each one is first checked with PassimPay: paid is credited,
+ * otherwise it becomes failed / expired. A payment that arrives later is still credited (see settlePassimpay).
+ */
+export async function expireStalePassimpay(requestId: string, now: Date = new Date()) {
+  await connectDb();
+  const cutoff = new Date(now.getTime() - PASSIMPAY_PENDING_MAX_MS);
+  const rows = await Payment.find({ provider: "passimpay", status: "pending", createdAt: { $lt: cutoff } })
+    .sort({ _id: 1 })
+    .limit(200)
+    .lean<PaymentRow[]>();
+  let paid = 0;
+  let expired = 0;
+  for (const row of rows) {
+    const id = String(row._id);
+    const result = row.providerRef ? await settlePassimpay(id, requestId).catch(() => "wait" as const) : "wait";
+    if (result === "paid") {
+      paid += 1;
+      continue;
+    }
+    if (result === "failed") {
+      expired += 1;
+      continue;
+    }
+    const done = await Payment.updateOne(
+      { _id: row._id, status: "pending" },
+      { $set: { status: "failed", outcome: "expired", providerEventId: `passimpay_${id}_expired` } },
+    );
+    if (done.modifiedCount) {
+      expired += 1;
+      await audit.append({ actorId: null, actorType: "system", action: "recharge.passimpay_expired", targetType: "payment", targetId: id, requestId, after: { amount: row.amount } });
+    }
+  }
+  return { checked: rows.length, paid, expired };
+}
+
+/**
+ * H18.1c: settles the buyer's newest pending PassimPay payments (at most 3). Called whenever the buyer's balance or history
+ * is shown, so coming back from PassimPay shows the new credits at once even if the notice is late.
+ */
+export async function settleOwnPending(userId: string) {
+  await connectDb();
+  if (paymentProvider() !== "passimpay") return;
+  const pending = await Payment.find({ userId: objectId(userId, "userId"), provider: "passimpay", status: "pending" }).sort({ _id: -1 }).limit(3).lean<PaymentRow[]>();
+  for (const row of pending) await trySettle(row, `own-${String(row._id)}`);
+}
+
+/** Best effort: a provider hiccup never breaks the page that shows the payment. */
+async function trySettle(row: PaymentRow, requestId: string) {
+  if (row.provider !== "passimpay" || row.status !== "pending") return;
+  await settlePassimpay(String(row._id), requestId).catch(() => undefined);
 }
 
 async function ownPayment(userId: string, paymentId: string) {
@@ -194,12 +341,18 @@ async function ownPayment(userId: string, paymentId: string) {
 
 export async function readOwnPayment(userId: string, paymentId: string) {
   await connectDb();
-  return paymentView(await ownPayment(userId, paymentId));
+  const row = await ownPayment(userId, paymentId);
+  if (row.provider === "passimpay" && row.status === "pending") {
+    await trySettle(row, `view-${paymentId}`);
+    return paymentView(await ownPayment(userId, paymentId));
+  }
+  return paymentView(row);
 }
 
 export async function listOwnPayments(userId: string, page: number, pageSize: number) {
   await connectDb();
   const filter = { userId: objectId(userId, "userId"), method: { $in: [...RECHARGE_METHODS] } };
+  await settleOwnPending(userId);
   const [rows, total] = await Promise.all([
     Payment.find(filter)
       .sort({ createdAt: -1, _id: -1 })

@@ -35,9 +35,11 @@ import { adVideoCount } from "@/server/media/limit";
 import { PEOPLE_NO_VIDEO } from "@/server/media/people-video";
 import { assertVerified } from "@/server/verification/service";
 import { hashIp } from "@/server/shared/crypto";
-import { choiceProblems, parseListingAttributes, type FieldDefinition } from "@/server/shared/fields";
+import { choiceProblems, parseSavedAttributes, type FieldDefinition } from "@/server/shared/fields";
 import { withPickLimits } from "@/server/fields/service";
 import { revalidateListingPages, revalidateListingsById } from "@/server/listings/revalidate";
+import { publicPathsOf } from "@/server/listings/ad-code";
+import { listingAddressPath } from "@/server/models/listing";
 import { parsePrice } from "@/server/listings/price";
 import { adLifetimeMs } from "@/server/listings/lifetime";
 import { evaluatePublishGate } from "@/server/shared/publish-gate";
@@ -408,7 +410,8 @@ export async function readOwned(id: string, userId: string, roles: string[]) {
   await connectDb();
   const listing = await load(id);
   if (listing.ownerId.toString() !== userId && !isStaffRole(roles)) throw new NotFoundError("Not found");
-  return ownerView(listing);
+  // H16.2: the public address (once the ad has a code, category and city), so the "view your ad" link goes straight to it.
+  return { ...ownerView(listing), address: (await listingAddressPath(listing)) || null };
 }
 
 export async function readPublic(key: string, viewerId?: string) {
@@ -551,7 +554,7 @@ async function assertLiveEdit(listing: ListingRow) {
   assertContentPresent(listing);
   const contact = listing.contact ?? {};
   const category = await requireCategory(listing.categoryId.toString());
-  const attributes = parseListingAttributes(await withPickLimits(category.slug, fieldDefs(category)), listing.attributes ?? {});
+  const attributes = parseSavedAttributes(await withPickLimits(category.slug, fieldDefs(category)), listing.attributes ?? {});
   await assertCleanText([
     listing.title,
     listing.description,
@@ -586,7 +589,9 @@ export async function submitListing(
   const user = await User.findById(userId);
   if (!user || user.status !== "active") throw new UnauthorizedError("Sign in required");
   const category = await requireCategory(listing.categoryId.toString());
-  const attributes = parseListingAttributes(await withPickLimits(category.slug, fieldDefs(category)), listing.attributes ?? {});
+  // H18.11: the age box is asked on every people ad even when the category has no age field, and a category switch can
+  // leave old answers behind. Check only this category's fields, keep the age for the 18+ gate, drop the rest.
+  const attributes = parseSavedAttributes(await withPickLimits(category.slug, fieldDefs(category)), listing.attributes ?? {});
   listing.attributes = attributes;
   listing.markModified("attributes");
   const mediaIds = listing.mediaIds ?? [];
@@ -666,7 +671,7 @@ export async function submitListing(
   }
   await record(userId, "user", "listing.submit", listing._id.toString(), requestId, { status: listing.status, edit: isEdit, held });
   await revalidateListingPages(listing, category.slug);
-  if (listing.slug && !wasPaused && !held) notifyIndexNow([`/ad/${listing.slug}/`]);
+  if (listing.slug && !wasPaused && !held) notifyIndexNow(await publicPathsOf([listing]));
   return { status: listing.status, charged: charge.charged, balance: charge.balance };
 }
 
@@ -676,7 +681,7 @@ async function move(id: string, userId: string, to: ListingStatus, action: strin
   listing.status = to;
   await listing.save();
   await revalidateListingsById([String(listing._id)]);
-  if (listing.slug && (to === "removed" || to === "expired" || to === "deleted")) notifyIndexNow([`/ad/${listing.slug}/`]);
+  if (listing.slug && (to === "removed" || to === "expired" || to === "deleted")) notifyIndexNow(await publicPathsOf([listing]));
   await record(userId, "user", action, listing._id.toString(), requestId, { status: to });
   return listing;
 }
@@ -810,14 +815,14 @@ export async function revealContact(
 
 export async function expireDue(requestId: string) {
   await connectDb();
-  const due = await Listing.find({ status: "active", expiresAt: { $lte: new Date() } }).select("slug").limit(200).lean<{ _id: unknown; slug?: string }[]>();
+  const due = await Listing.find({ status: "active", expiresAt: { $lte: new Date() } }).select("slug title categoryId cityId code").limit(200).lean<{ _id: Types.ObjectId; slug?: string; title?: string; categoryId?: Types.ObjectId; cityId?: Types.ObjectId; code?: string }[]>();
   const result = await Listing.updateMany(
     { status: "active", expiresAt: { $lte: new Date() } },
     { $set: { status: "expired" } },
   );
   const expired = result.modifiedCount;
   await revalidateListingsById(due.map((row) => String(row._id)));
-  notifyIndexNow(due.flatMap((row) => (row.slug ? [`/ad/${row.slug}/`] : [])));
+  notifyIndexNow(await publicPathsOf(due));
   await record(null, "system", "listing.expire", "cron", requestId, { expired });
   return { expired };
 }

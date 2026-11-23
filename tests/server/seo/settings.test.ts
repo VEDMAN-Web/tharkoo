@@ -123,11 +123,13 @@ describe("structured data", () => {
     validThrough: "2026-07-01T00:00:00.000Z",
     hiringOrganization: "Acme",
     jobLocation: "Pune",
+    verifiedPoster: true, // H16.4: a JobPosting is written only for a verified poster
   };
 
   it("omits JobPosting when a required field is missing and lists what is missing", () => {
     expect(listingJsonLd(job)).toMatchObject({ "@type": "JobPosting" });
     expect(listingJsonLd({ ...job, hiringOrganization: undefined })).toBeNull();
+    expect(listingJsonLd({ ...job, verifiedPoster: false })).toBeNull();
     expect(listingJsonLd({ ...job, mapping: "JobPosting", validThrough: undefined })).toBeNull();
     expect(missingSchemaFields("JobPosting", { ...job, hiringOrganization: undefined, validThrough: undefined })).toEqual(["expiry date", "hiring company"]);
   });

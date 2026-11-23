@@ -7,13 +7,13 @@ import { api, hasSessionHint } from "@/lib/ui/api";
 export type AccountUser = { displayName?: string; email?: string; verificationStatus?: string; roles?: string[] };
 export type AccountPhase = "unknown" | "out" | "loading" | "ready";
 /** `unread` is unread chat messages, `unreadSupport` is support tickets with a reply not yet read. `unreadReady` is true once both were read from the server. */
-export type AccountState = { phase: AccountPhase; user: AccountUser | null; balance: number | null; balanceReady: boolean; unread: number; unreadSupport: number; unreadReady: boolean };
+export type AccountState = { phase: AccountPhase; user: AccountUser | null; balance: number | null; callBalance: number | null; earnings: number | null; balanceReady: boolean; unread: number; unreadSupport: number; unreadReady: boolean };
 
 export const SESSION_EVENT = "tk:session-changed";
 /** Same name as CREDITS_ADDED_EVENT in post/credits.ts: sent after a recharge, a publish or a promotion. */
 export const CREDITS_CHANGED_EVENT = "tk:credits-added";
 
-const IDLE: AccountState = { phase: "unknown", user: null, balance: null, balanceReady: false, unread: 0, unreadSupport: 0, unreadReady: false };
+const IDLE: AccountState = { phase: "unknown", user: null, balance: null, callBalance: null, earnings: null, balanceReady: false, unread: 0, unreadSupport: 0, unreadReady: false };
 /** H7.131: sent when chat messages arrive or are read, or a support reply is read, so every unread badge (header and account menu) refreshes at once. */
 export const CHAT_ACTIVITY_EVENT = "tk:chat-activity";
 const UNREAD_POLL_MS = 20000;
@@ -45,9 +45,9 @@ export function AccountProvider({ children }: { children: ReactNode }) {
       if (!res.ok) started.current = false;
       setState((prev) => (res.ok ? { ...prev, phase: "ready", user: res.data.user } : { ...prev, phase: "out" }));
     });
-    api<{ balance: number }>("/api/wallet").then((res) => {
+    api<{ balance: number; callBalance?: number; earnings?: number }>("/api/wallet").then((res) => {
       if (!mounted.current) return;
-      setState((prev) => ({ ...prev, balance: res.ok ? res.data.balance : null, balanceReady: true }));
+      setState((prev) => ({ ...prev, balance: res.ok ? res.data.balance : null, callBalance: res.ok ? (res.data.callBalance ?? 0) : null, earnings: res.ok ? (res.data.earnings ?? 0) : null, balanceReady: true }));
     });
   }, []);
 
@@ -69,9 +69,9 @@ export function AccountProvider({ children }: { children: ReactNode }) {
     // H7.120: after a publish, a promotion or a recharge the pill shows the real balance without a page change.
     function onCredits() {
       if (!hasSessionHint()) return;
-      api<{ balance: number }>("/api/wallet").then((res) => {
+      api<{ balance: number; callBalance?: number; earnings?: number }>("/api/wallet").then((res) => {
         if (!mounted.current || !res.ok) return;
-        setState((prev) => ({ ...prev, balance: res.data.balance, balanceReady: true }));
+        setState((prev) => ({ ...prev, balance: res.data.balance, callBalance: res.data.callBalance ?? 0, earnings: res.data.earnings ?? 0, balanceReady: true }));
       });
     }
     window.addEventListener(CREDITS_CHANGED_EVENT, onCredits);

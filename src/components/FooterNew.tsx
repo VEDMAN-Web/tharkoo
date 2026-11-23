@@ -7,7 +7,7 @@ import { LOGO_LIGHT_DEFAULT } from "@/lib/brand";
 import { ArrowRight, BadgeCheck, ChevronRight, Lock, Mail, Sparkles } from "lucide-react";
 import { safeHref } from "@/lib/sanitize";
 import { applyPrefixes, categoriesPath, categoryPath } from "@/lib/urls";
-import { SUPPORT_EMAIL, SUPPORT_PHONE, SUPPORT_TELEGRAM, mailtoHref, telegramHref, whatsappHref } from "@/lib/support";
+import { SUPPORT_EMAIL, mailtoHref, telegramHref, whatsappHref } from "@/lib/support";
 import { useUrlPaths } from "./UrlPaths";
 import { useT } from "./help/UiTextProvider";
 import { BrandMark, type BrandName } from "./BrandMarks";
@@ -16,14 +16,16 @@ import type { ShellConfig, ShellContact, ShellLink } from "@/server/site-links/s
 
 type Cat = { slug: string; name: string };
 
+/** H17.14: WhatsApp and Telegram have no stand-in: when the admin screen has no number or handle, the icon and the row are not drawn. */
 const SOCIALS: { name: string; brand: BrandName; color: string; fill: string; fallback: string }[] = [
-  { name: "WhatsApp", brand: "whatsapp", color: "#25D366", fill: "#25D366", fallback: whatsappHref(SUPPORT_PHONE) },
+  { name: "WhatsApp", brand: "whatsapp", color: "#25D366", fill: "#25D366", fallback: "" },
   { name: "X", brand: "x", color: "#000000", fill: "#000000", fallback: "" },
   { name: "LinkedIn", brand: "linkedin", color: "#0A66C2", fill: "#0A66C2", fallback: "" },
   { name: "Instagram", brand: "instagram", color: "#DD2A7B", fill: "linear-gradient(45deg, #F58529, #DD2A7B 45%, #8134AF 75%, #515BD4)", fallback: "" },
   { name: "Pinterest", brand: "pinterest", color: "#E60023", fill: "#E60023", fallback: "" },
-  { name: "Telegram", brand: "telegram", color: "#26A5E4", fill: "#26A5E4", fallback: telegramHref(SUPPORT_TELEGRAM) },
+  { name: "Telegram", brand: "telegram", color: "#26A5E4", fill: "#26A5E4", fallback: "" },
 ];
+const ADMIN_ONLY = new Set(["WhatsApp", "Telegram"]);
 
 const TRUST_STYLES = [
   { tone: "blue", icon: BadgeCheck },
@@ -44,7 +46,7 @@ const CONTACT_ROWS: {
     label: "WhatsApp",
     tint: "#E9FBF0",
     accent: "#25D366",
-    fallback: SUPPORT_PHONE,
+    fallback: "",
     hrefFor: whatsappHref,
     icon: <BrandMark name="whatsapp" size={22} color="#25D366" />,
     match: (c) => c.kind === "whatsapp",
@@ -53,7 +55,7 @@ const CONTACT_ROWS: {
     label: "Telegram",
     tint: "#E8F6FD",
     accent: "#26A5E4",
-    fallback: SUPPORT_TELEGRAM,
+    fallback: "",
     hrefFor: telegramHref,
     icon: <BrandMark name="telegram" size={22} color="#26A5E4" />,
     match: (c) => c.kind === "telegram" || /telegram/i.test(c.label),
@@ -68,6 +70,33 @@ const CONTACT_ROWS: {
     match: (c) => c.kind === "email",
   },
 ];
+
+/**
+ * H17.14: Terms, Privacy and Grievance Officer are always in the bottom row, with their words from Site text. The admin list keeps its
+ * order; an entry for one of these pages shows the Site text words, and a page the list leaves out is added at the end.
+ */
+const LEGAL_PAGES: { key: string; paths: string[]; link: (t: LegalWords) => ShellLink }[] = [
+  { key: "terms", paths: ["/terms/"], link: (t) => ({ label: t("chrome.footer.terms"), href: "/terms/", visible: true, icon: "shield" }) },
+  { key: "privacy", paths: ["/privacy/"], link: (t) => ({ label: t("chrome.footer.privacy"), href: "/privacy/", visible: true, icon: "shield" }) },
+  { key: "grievance", paths: ["/grievance/", "/grievance-officer/", "/cms/grievance/"], link: (t) => ({ label: t("chrome.footer.grievance"), href: "/grievance/", visible: true, icon: "user" }) },
+];
+type LegalWords = (key: "chrome.footer.terms" | "chrome.footer.privacy" | "chrome.footer.grievance") => string;
+
+function footerLegalLinks(legal: ShellLink[], t: LegalWords): ShellLink[] {
+  const used = new Set<string>();
+  const out: ShellLink[] = [];
+  for (const item of legal) {
+    if (!item.visible || !safeHref(item.href)) continue;
+    const page = LEGAL_PAGES.find((candidate) => candidate.paths.includes(item.href.trim().replace(/\/?$/, "/")));
+    if (!page) out.push(item);
+    else if (!used.has(page.key)) {
+      used.add(page.key);
+      out.push(page.link(t));
+    }
+  }
+  for (const page of LEGAL_PAGES) if (!used.has(page.key)) out.push(page.link(t));
+  return out;
+}
 
 function LinkColumn({ title, items, className, extra }: { title: string; items: ShellLink[]; className: string; extra?: ShellLink }) {
   const paths = useUrlPaths();
@@ -113,6 +142,7 @@ export function FooterNew({ siteName, logo = LOGO_LIGHT_DEFAULT, shell, categori
     : categories.slice(0, 6).map((cat) => ({ label: cat.name, href: categoryPath(cat.slug), visible: true, icon: "tag" as const }));
   const allCategories: ShellLink = { label: t("chrome.footer.all"), href: categoriesPath(), visible: true, icon: "grid" };
   const adminLink = (name: string) => f.socials.find((item) => item.visible && item.label.trim().toLowerCase() === name.toLowerCase());
+  const legalLinks = footerLegalLinks(f.legal, t);
   return (
     <footer className="tkn-footer" data-tk="footer">
       <div className="tkn-wrap tkn-foot-grid">
@@ -138,6 +168,7 @@ export function FooterNew({ siteName, logo = LOGO_LIGHT_DEFAULT, shell, categori
               const link = adminLink(social.name);
               const href = (link && safeHref(link.href)) || social.fallback;
               const style = { "--sc": social.color, "--sf": social.fill } as CSSProperties;
+              if (!href && ADMIN_ONLY.has(social.name)) return null;
               return (
                 <li key={social.name}>
                   {href ? (
@@ -162,6 +193,7 @@ export function FooterNew({ siteName, logo = LOGO_LIGHT_DEFAULT, shell, categori
             {CONTACT_ROWS.map((row) => {
               const contact = f.contacts.find((item) => item.visible && item.value && !item.value.startsWith("[") && row.match(item));
               const value = contact?.value || row.fallback;
+              if (!value) return null;
               const href = (contact && safeHref(contact.href)) || row.hrefFor(value);
               const style = { "--cb": row.tint, "--ca": row.accent } as CSSProperties;
               const body = (
@@ -191,7 +223,7 @@ export function FooterNew({ siteName, logo = LOGO_LIGHT_DEFAULT, shell, categori
           </p>
           <nav aria-label={t("chrome.footer.legal")}>
             <ul className="tkn-legal">
-              {f.legal.filter((item) => item.visible && safeHref(item.href)).map((item) => (
+              {legalLinks.map((item) => (
                 <li key={item.label + item.href}>
                   <Link href={applyPrefixes(safeHref(item.href), paths)} prefetch={false} className="tkn-pill tkn-legal-pill">{item.label}</Link>
                 </li>

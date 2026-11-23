@@ -1,5 +1,4 @@
-import type { Page } from "@playwright/test";
-import { expect, hasHorizontalScroll, isPhone, loginUi, newUserApi, test, withLocalDb } from "./helpers";
+import { expect, hasHorizontalScroll, isPhone, loginUi, newUserApi, realAdPath, test, withLocalDb } from "./helpers";
 
 /**
  * H7.4d: live follow-ups from the www review. Flags are drawn (no emoji), the footer brand spacing, the phone chips row,
@@ -10,13 +9,6 @@ import { expect, hasHorizontalScroll, isPhone, loginUi, newUserApi, test, withLo
 
 async function setNewDesign(on: boolean) {
   await withLocalDb((db) => db.collection("sites").updateOne({ key: "default" }, { $set: { newDesign: on } }, { upsert: true }));
-}
-
-async function anyAdPath(page: Page, feed: string) {
-  await page.goto(feed);
-  const link = page.locator(':is([data-tk=card], [data-tk=home-ad], [data-tk=listing-row]) a[href*="/ad/"]').first();
-  await link.waitFor({ state: "attached" });
-  return (await link.getAttribute("href")) as string;
 }
 
 test.describe("H7.4d: flags and footer", () => {
@@ -97,10 +89,11 @@ test.describe("H7.4d: menus close on an outside click and on Escape", () => {
     const seller = await newUserApi(baseURL!, "chatseller");
     await seller.api.dispose();
     await loginUi(page, seller.email);
-    const adPath = await anyAdPath(page, "/property/bengaluru/");
+    // H17.1: a sample ad has no chat button (it used to open the sample note), so this is a real ad. The chat button must be there: no silent skip.
+    const adPath = await realAdPath(page, "/property/bengaluru/");
     await page.goto(adPath);
     const chat = page.locator(isPhone(page) ? "[data-tk=bottom-bar] [data-tk=chat]" : "[data-tk=contact-card] [data-tk=chat]");
-    test.skip((await chat.count()) === 0, "no chat button on this ad for this visitor");
+    await expect(chat).toBeVisible();
     await chat.click();
     const panel = page.locator("[data-tk=chat-panel]");
     await expect(panel).toBeVisible();

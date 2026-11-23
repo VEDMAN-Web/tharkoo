@@ -15,9 +15,10 @@ import { parsePrice } from "@/server/listings/price";
 import { adPhotoUrl } from "@/server/media/photo-url";
 import { paidCreditsFor } from "@/server/moderation/review";
 import { AuditEvent, Category, Listing, ListingVersion, Location, MediaAsset, PromotionOrder, PromotionProduct, User, WalletEntry } from "@/server/models";
+import { listingAddressPath } from "@/server/models/listing";
 import { Subcategory } from "@/server/models/subcategory";
 import { withPickLimits } from "@/server/fields/service";
-import { parseListingAttributes } from "@/server/shared/fields";
+import { parseSavedAttributes } from "@/server/shared/fields";
 
 export const TITLE_MAX = 70;
 export const DESCRIPTION_MAX = 4000;
@@ -53,6 +54,8 @@ export type StaffAdValues = {
 export type StaffAd = {
   id: string;
   slug: string;
+  /** H16.2: the public address of the ad, or "" while it has none. */
+  address: string;
   status: string;
   values: StaffAdValues;
   fields: AdField[];
@@ -156,6 +159,7 @@ export async function getStaffAd(roles: readonly string[], id: string): Promise<
   return {
     id,
     slug: String(listing.slug ?? ""),
+    address: await listingAddressPath(listing as never),
     status: String(listing.status ?? ""),
     values: valuesOf(plain(listing)),
     fields,
@@ -250,7 +254,7 @@ async function applyEdit(ctx: AdminCtx, id: string, next: EditInput, label: stri
   const price = parsePrice(next.price === "" ? null : next.price);
   let attributes: Record<string, unknown>;
   try {
-    attributes = parseListingAttributes(await withPickLimits(category.slug, fieldDefs(category)), next.attributes ?? {});
+    attributes = parseSavedAttributes(await withPickLimits(category.slug, fieldDefs(category)), next.attributes ?? {});
   } catch (error) {
     if (!(error instanceof ZodError)) throw error;
     const fields: Record<string, string[]> = {};

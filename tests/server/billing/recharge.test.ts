@@ -3,6 +3,7 @@ import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 import { GET as paymentsGet, POST as paymentsPost } from "@/app/api/payments/[[...slug]]/route";
 import { hashToken } from "@/server/auth/http";
 import { walletBalance } from "@/server/billing/ledger";
+import { callBalance } from "@/server/billing/wallets";
 import { setMoneySettings } from "@/server/billing/money-settings";
 import {
   chooseCoin,
@@ -257,5 +258,24 @@ describe("the mock crypto helpers", () => {
     expect(mockDepositAddress("ETH", null, "abc")).toMatch(/^0x[0-9a-f]{40}$/);
     expect(mockDepositAddress("USDT", "BEP-20", "abc")).toMatch(/^0x[0-9a-f]{40}$/);
     expect(paymentView({ _id: new mongoose.Types.ObjectId(), userId: "u", amount: 5, currency: "INR", status: "pending", method: "card" }).depositAddress).toBeNull();
+  });
+});
+
+describe("H18.8 call packs and typed-in amounts", () => {
+  it("a call pack fills call credits only, a custom ad amount fills ad credits, and limits hold", async () => {
+    const user = await member();
+    const call = await CreditPack.create({ credits: 10, price: 100, bonus: 0, status: "active", order: 0, wallet: "call" });
+    const started = await startRecharge({ userId: String(user._id), packId: String(call._id), method: "card", requestId: "r" });
+    await confirmMockPayment({ userId: String(user._id), paymentId: started.paymentId, outcome: "paid", requestId: "r" });
+    expect(await callBalance(String(user._id))).toBe(10);
+    expect(await walletBalance(String(user._id))).toBe(0);
+
+    await expect(startRecharge({ userId: String(user._id), wallet: "ad", amountInr: 999, method: "card", requestId: "r" })).rejects.toThrow(/Invalid request/);
+    await expect(startRecharge({ userId: String(user._id), wallet: "ad", amountInr: 60_000, method: "card", requestId: "r" })).rejects.toThrow(/Invalid request/);
+    await expect(startRecharge({ userId: String(user._id), wallet: "call", amountInr: 1000, method: "card", requestId: "r" })).rejects.toThrow(/Invalid request/);
+    const custom = await startRecharge({ userId: String(user._id), wallet: "ad", amountInr: 1500, method: "card", requestId: "r" });
+    await confirmMockPayment({ userId: String(user._id), paymentId: custom.paymentId, outcome: "paid", requestId: "r" });
+    expect(await walletBalance(String(user._id))).toBe(150);
+    expect(await callBalance(String(user._id))).toBe(10);
   });
 });
