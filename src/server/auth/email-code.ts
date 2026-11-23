@@ -1,4 +1,5 @@
 import { randomInt } from "node:crypto";
+import { OWN_EMAIL_MESSAGE, isDisposableEmail } from "@/server/auth/disposable-email";
 import { Schema, Types } from "mongoose";
 import { connectDb } from "@/lib/db";
 import { AuditRepository } from "@/server/audit";
@@ -66,6 +67,8 @@ export async function sendEmailLoginCode(input: { email: string; ip: string }): 
   await connectDb();
   const email = normalizeEmail(input.email);
   if (!email) throw new ValidationError("Invalid request", { email: ["Enter a valid email address"] });
+  // H19.7: no code (and no email) for a throwaway address.
+  if (isDisposableEmail(email)) throw new ValidationError(OWN_EMAIL_MESSAGE, { email: [OWN_EMAIL_MESSAGE] });
   if (loginCodeDelivery() === "unavailable") throw new InternalError(CODE_CANNOT_BE_SENT);
   const byEmail = await consumeRateLimit(`email-otp-send:email:${sha256(email)}`, OTP_SENDS_PER_WINDOW, OTP_WINDOW_MS);
   const byIp = await consumeRateLimit(`email-otp-send:ip:${input.ip}`, OTP_SENDS_PER_WINDOW, OTP_WINDOW_MS);

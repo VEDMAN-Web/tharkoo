@@ -1,4 +1,5 @@
 import bcrypt from "bcryptjs";
+import { OWN_EMAIL_MESSAGE, isDisposableEmail } from "@/server/auth/disposable-email";
 import { randomInt } from "node:crypto";
 import { Schema, Types } from "mongoose";
 import { AuditRepository } from "@/server/audit";
@@ -181,6 +182,8 @@ export async function registerUser(input: RegisterInput) {
   if (!dateOfBirth) throw new ValidationError("Invalid request", { dateOfBirth: ["Invalid date"] });
   if (!isAtLeast18(dateOfBirth)) throw new VerificationRequiredError("You must be 18 or older");
   const email = input.email.toLowerCase();
+  // H19.7: no account for a throwaway address.
+  if (isDisposableEmail(email)) throw new ValidationError(OWN_EMAIL_MESSAGE, { email: [OWN_EMAIL_MESSAGE] });
   const passwordHash = await bcrypt.hash(input.password, rounds());
   const autoVerify = stagingAutoVerifyDecision();
   try {
