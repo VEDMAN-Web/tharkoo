@@ -53,6 +53,7 @@ test.describe("H19.2 ad page", () => {
     await page.goto(await realAdPath(page, "/property/bengaluru/"));
     const section = page.locator('[data-tk="similar-ads"]');
     await section.scrollIntoViewIfNeeded();
+    await page.waitForTimeout(1200); // the cards rise in as they enter the screen
     const cards = section.locator('[data-tk="home-ad"]');
     const count = await cards.count();
     expect(count).toBeGreaterThanOrEqual(2);
