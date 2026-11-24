@@ -188,19 +188,33 @@ test.describe("H7.86 post an ad, step 5 and the success screen", () => {
     await seen(page, "/dating/mumbai/", final);
   });
 
-  test("H19.6b: there is no date of birth, and the 18+ tick is asked once, on the last step only", async ({ page, baseURL }) => {
+  test("H19.6b: there is no date of birth in the form, and the 18+ tick is asked once, on the last step only", async ({ page, baseURL }) => {
     test.setTimeout(240_000);
-    await newPoster(page, baseURL!, "dob", false);
+    await newPoster(page, baseURL!, "dob");
     await reachAbout(page, `Sunset walk ${Date.now()}`, "dob");
     await expect(page.locator("[data-tk=step-title]")).toHaveText("About you");
     await expect(page.locator("#about-dob")).toHaveCount(0);
     await expect(page.locator("#about-adult")).toHaveCount(0);
+    await expect(page.locator("[data-tk=dob-needed]")).toHaveCount(0);
     await page.locator("#phone").fill("9876543210");
     await page.locator("[data-tk=go-on]").click();
     await stepOf(page, 5);
     await expect(page.locator("#consent-adult")).toBeVisible();
     await expect(page.locator("input[type=checkbox][id*=adult]")).toHaveCount(1);
     await consentAndPublish(page);
+  });
+
+  test("H19.6b: an account with no date of birth (a code sign-in) is sent to its seller profile once, not asked inside the form", async ({ page, baseURL }) => {
+    test.setTimeout(240_000);
+    await newPoster(page, baseURL!, "nodob", false);
+    await reachAbout(page, `Sunrise walk ${Date.now()}`, "nodob");
+    await expect(page.locator("#about-dob")).toHaveCount(0);
+    await expect(page.locator("#about-adult")).toHaveCount(0);
+    await expect(page.locator("[data-tk=dob-link]")).toHaveAttribute("href", /seller-profile.*next=/);
+    await page.locator("#phone").fill("9876543210");
+    await page.locator("[data-tk=go-on]").click();
+    await stepOf(page, 4);
+    await expect(page.locator(".tkp-banner")).toContainText("date of birth");
   });
 
   test("H19.6b contact step: no email buttons, phone is required, WhatsApp and Telegram are switches with their box right under, and the name and city come after", async ({ page, baseURL }) => {
@@ -357,12 +371,13 @@ test.describe("H7.86 post an ad, step 5 and the success screen", () => {
     await shot(page, "h94-03-photos");
     await addPhoto(page, "h94p");
     await expect(page.locator("[data-tk=phone-hint]")).toHaveText("Shown on your ad so people can reach you.");
-    const toggles = await page.locator(".tkp-switch-row > .tkp-toggle-row").evaluateAll((nodes) => nodes.map((node) => { const box = node.getBoundingClientRect(); return { x: box.x, y: box.y, w: box.width }; }));
+    // H19.6b: WhatsApp and Telegram are two stacked switches of the same width, inside the window.
+    const toggles = await page.locator("[data-tk=contact-fields] > .tkp-toggle-row").evaluateAll((nodes) => nodes.map((node) => { const box = node.getBoundingClientRect(); return { x: box.x, y: box.y, w: box.width }; }));
     expect(toggles).toHaveLength(2);
-    expect(Math.abs(toggles[0].y - toggles[1].y)).toBeLessThan(2);
+    expect(toggles[1].y).toBeGreaterThan(toggles[0].y);
     expect(Math.abs(toggles[0].w - toggles[1].w)).toBeLessThan(2);
     expect(toggles[1].x + toggles[1].w).toBeLessThanOrEqual(page.viewportSize()!.width);
-    const labels = await page.locator(".tkp-switch-row > .tkp-toggle-row > span:first-child").evaluateAll((nodes) => nodes.map((node) => node.getBoundingClientRect().height));
+    const labels = await page.locator("[data-tk=contact-fields] > .tkp-toggle-row > span:first-child").evaluateAll((nodes) => nodes.map((node) => node.getBoundingClientRect().height));
     expect(Math.max(...labels)).toBeLessThan(24);
     await shot(page, "h94-04-contact");
     await page.locator("#phone").fill("9876543210");
@@ -436,7 +451,7 @@ test.describe("H7.86 post an ad, step 5 and the success screen", () => {
     await consentAndPublish(page);
     await expect(page.locator("[data-tk=receipt]")).toHaveText("30 credits paid · Balance 70 credits");
     await expect(page.locator("[data-tk=view-ad]")).toHaveAttribute("href", /-[a-z0-9]{5}\/$/);
-    await expect(page.getByText("View your ad", { exact: true })).toHaveCount(0);
+    await expect(page.locator("[data-tk=view-ad]")).toHaveText("View your ad");
     await expect(page.locator("[data-tk=upsell]")).toContainText("Get more views");
     expect(await page.locator("[data-tk=upsell-plan]").count()).toBeGreaterThan(0);
     await expect(page.locator("[data-tk=post-another]")).toBeVisible();
@@ -574,7 +589,6 @@ test.describe("H7.86 post an ad, step 5 and the success screen", () => {
       await shot(page, `3-3-about-${width}x${height}`);
     }
     await tapTargets(page, ".tkp-btn");
-    await tapTargets(page, ".tkp-chip", 40);
     await tapTargets(page, ".tk-field input, .tk-field select", 40);
     expect(await serious(page)).toEqual([]);
     await page.locator("#phone").fill("9876543210");
