@@ -114,10 +114,10 @@ describe("the step wording shows what an admin saved", () => {
     expect(newStepCopy("contact", withStep("contact", { title: "Reach you" }), true).title).toBe("Reach you");
   });
 
-  it("the first step line shows the price only while the line is still the stock one", () => {
-    expect(newStepCopy("category", POST_COPY_DEFAULTS, false, false, 30).help).toBe("Pick a category. Posting an ad costs 30 credits.");
+  it("the first step line no longer carries the price (H21.1); an admin-written line is kept", () => {
+    expect(newStepCopy("category", POST_COPY_DEFAULTS, false, false, 30).help).toBe("Pick a category. It helps the right people find your ad.");
     expect(newStepCopy("category", withStep("basics", { help: "Choose well." }), false, false, 30).help).toBe("Choose well.");
-    expect(newStepCopy("category", POST_COPY_DEFAULTS, false, false, 30, false, "both", makeT({ "post.stepCopy.basicsHelpFee": "It costs {fee} credits to post." })).help).toBe("It costs 30 credits to post.");
+    expect(newStepCopy("category", POST_COPY_DEFAULTS, false, false, 30, false, "both", makeT({ "post.stepCopy.basicsHelpFee": "It costs {fee} credits to post." })).help).toBe("Pick a category. It helps the right people find your ad."); // H21.1: the price moved to the note under the tiles
   });
 
   it("the success wording comes from the site texts", () => {

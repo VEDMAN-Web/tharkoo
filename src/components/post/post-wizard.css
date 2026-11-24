@@ -227,7 +227,7 @@
 .tkn .tkp-post .tkp-interest-input { width: 100%; box-sizing: border-box; min-height: 44px; border: 1.5px solid #ead8f0; border-radius: 12px; padding: 10px 12px; font: inherit; font-size: 16px; color: #1e0b38; background: #fff; }
 .tkn .tkp-post .tkp-interest-input:disabled { background: #faf5fc; }
 
-body:has(.tkp-post) .tkn-footer, body:has(.tkp-post) .tkn-chat-bubble { display: none; }
+body:has(.tkp-post) .tkn-footer { display: none; } /* H21.1: the support bubble stays on every screen of the flow */
 @media (min-width: 1024px) {
   .tkn .tkp-post .tkp-photos { gap: 6px; }
   .tkn .tkp-post .tkp-scroll { padding-bottom: 10px; }

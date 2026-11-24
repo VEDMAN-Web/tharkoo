@@ -28,9 +28,7 @@ export function newStepCopy(step: NewPostStep, copy: PostCopy, aboutYou: boolean
   if (editing && step === "review") return { ...base, title: t("post.stepCopy.editReviewTitle"), help: t("post.stepCopy.editReviewHelp"), nextLabel: t("post.stepCopy.editSave") };
   if (editing && step === "category") return { ...base, help: t("post.stepCopy.editCategoryNote") };
   if (step === "more") return { ...base, title: people ? t("post.stepCopy.moreAboutYou") : t("post.stepCopy.moreDetails"), help: "", nextLabel: "", backLabel: "" };
-  if (step === "category" && fee > 0 && (!base.help || base.help === POST_COPY_DEFAULTS.steps.basics.help)) {
-    return { ...base, help: t("post.stepCopy.basicsHelpFee", { fee }) };
-  }
+  // H21.1: the fee is now said in the note under the tiles, so the help line no longer carries it.
   if (step === "contact") {
     const own = base.title !== "" && !isUntouched(base, POST_COPY_DEFAULTS.steps.contact);
     const title = own ? base.title : aboutYou ? t("post.stepCopy.aboutYouTitle") : t("post.stepCopy.contactTitle");

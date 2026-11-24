@@ -27,6 +27,7 @@ import { PostSuccess, type UpsellPlan } from "./post/PostSuccess";
 import { openPromote } from "./promote/openPromote";
 import { openSupportWith } from "./recharge/openRecharge";
 import { PostShell } from "./post/PostShell";
+import { CategoryPreview, CategoryPreviewHint, useCategoryPreview } from "./post/CategoryPreview";
 import { CreditsCard, PayCard } from "./post/PayParts";
 import { BoostChoice, adCreditsNeeded, adCreditsShort, type BoostChoiceValue } from "./post/BoostChoice";
 import { EarnLine, type EarnInfo } from "@/components/vendor/TourInbox";
@@ -157,6 +158,8 @@ export function PostWizard({
   const queueRef = useRef<Promise<unknown>>(Promise.resolve());
 
   const category = categories.find((item) => item._id === categoryId);
+  const previewCitySlug = cities.find((item) => item.id === cityId)?.slug ?? "";
+  const categoryPreview = useCategoryPreview(category?.slug ?? "", previewCitySlug);
   const people = Boolean(category?.people) || category?.kind === "people";
 
   /** A people listing never starts with the account name: it is the name people see, so the person types it. */
@@ -795,6 +798,39 @@ export function PostWizard({
     return <Group title={t("post.group.aboutYou")}>{rows}</Group>;
   }
 
+  /** H21.1: the chips of the category's filters ("All" first), taken from its filterable choice fields. */
+  function previewChips(): string[] {
+    const field = (category?.fields ?? []).find((item) => item.filterable !== false && Array.isArray(item.options) && (item.options as unknown[]).length > 0);
+    return field ? (field.options as unknown[]).map((option) => (typeof option === "string" ? option : String((option as { label?: string }).label ?? ""))).filter(Boolean) : [];
+  }
+
+  function renderCategoryPreview(where: "inline" | "side") {
+    if (!category) return <CategoryPreviewHint where={where} />;
+    return <CategoryPreview where={where} categoryName={category.name} cityName={cityName} chips={previewChips()} hits={categoryPreview.hits} loading={categoryPreview.loading} />;
+  }
+
+  /** The fee note and, on a phone, the preview, under the category tiles. */
+  function renderCategoryExtras(where: "inline") {
+    const note = editing || !money.ready
+      ? ""
+      : money.place
+        ? t("post.v2.cat.noteFreeLeft", { left: Math.max(0, money.place.freeAds - money.place.adNumber + 1), total: money.place.freeAds })
+        : money.paid
+          ? t("post.v2.cat.notePaid", { fee: money.fee })
+          : "";
+    return (
+      <>
+        {note ? (
+          <p className="tkp-fee-note" data-tk="post-fee-note">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#b0106a" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9" /><path d="M12 8v5M12 16.5v.01" /></svg>
+            <span>{note}</span>
+          </p>
+        ) : null}
+        {renderCategoryPreview(where)}
+      </>
+    );
+  }
+
   function renderNewExtras(err: (key: string) => string | undefined, blur: (key: string) => () => void) {
     const change = (key: string, value: string | string[]) => setAttrs((prev) => ({ ...prev, [key]: value }));
     const cells = extra.filter((field) => !isChipField(field));
@@ -956,6 +992,7 @@ export function PostWizard({
                 <>
                   <CategoryTiles categories={categories} selectedId={categoryId} locked={editing} onPick={(id) => { setCategoryId(id); setSubcategoryId(""); pickedPeople(id); }} />
                   {errors.category ? <p className="tk-error" data-tk="field-error">{errors.category}</p> : null}
+                  {renderCategoryExtras("inline")}
                   {subOptions.length > 0 ? (
                     <>
                       <p className="tkp-sub-title" id="sub-title">{category ? t("post.sub.titleIn", { category: category.name }) : t("post.field.subcategory")}</p>
@@ -1097,11 +1134,17 @@ export function PostWizard({
                 </div>
               </div>
           </section>
-          <aside className="tkp-aside">
-            <p className="tkp-aside-label">{t("post.aside.live")}</p>
-            <PostPreviewCard ad={adPreview} label={t("post.aside.live")} hasPhoto={Boolean(coverUrl)} byline={byline} />
-            <p className="tkp-preview-line">{t("post.aside.howItLooks")}</p>
-            <PostTip text={t(NEW_POST_TIP_KEYS[current === "more" ? "details" : current])} />
+          <aside className="tkp-aside" data-step={current}>
+            {current === "category" ? (
+              renderCategoryPreview("side")
+            ) : (
+              <>
+                <p className="tkp-aside-label">{t("post.aside.live")}</p>
+                <PostPreviewCard ad={adPreview} label={t("post.aside.live")} hasPhoto={Boolean(coverUrl)} byline={byline} />
+                <p className="tkp-preview-line">{t("post.aside.howItLooks")}</p>
+                <PostTip text={t(NEW_POST_TIP_KEYS[current === "more" ? "details" : current])} />
+              </>
+            )}
           </aside>
         </div>
         {money.added ? <div className="tkp-toast" role="status" data-tk="credits-toast">{creditsText(money.added)} {t("post.money.added")}</div> : null}

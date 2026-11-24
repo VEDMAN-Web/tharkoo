@@ -16,7 +16,7 @@ function stepBlock(stepKey: string, title: string): BlockBase {
 describe("post-ad copy and hints (H7.83)", () => {
   it("names the first step by what the poster does, and the rail by plain labels", () => {
     expect(POST_COPY_DEFAULTS.steps.basics.title).toBe("What are you posting?");
-    expect(Object.values(RAIL_LABEL_KEYS).map((key) => makeT()(key))).toEqual(["Category", "Details", "Photos", "Contact", "Review"]);
+    expect(Object.values(RAIL_LABEL_KEYS).map((key) => makeT()(key))).toEqual(["Category", "Details", "Photos", "About you", "Review"]);
   });
 
   it("upgrades the old default titles saved in a published layout, and keeps a title an admin wrote", () => {

@@ -56,7 +56,7 @@ Opus has access to this folder on Vedant's PC. Messages go through `.relay/` (gi
 | H19.3 | Video call flow for users | approved | — | Haiku |
 | H19.4 | Buying credits: one kind at a time | approved | — | Haiku |
 | H19.5 | Account menu by role + Video calls page | approved | — | Haiku |
-| H21.8 | Remove the ad price everywhere | PR open | haiku/h21.8-no-ad-price | Haiku |
+| H21.8 | Remove the ad price everywhere | approved (#503 merged) | #503 | Haiku |
 | H19.6 | Post an ad, rebuilt (part A of 2: layout, place, description, interests, photos) | approved (#497 merged) | #497 | Haiku |
 | H19.6b | Post an ad, part B (contact, Free/TOP/Super Top, live screen, Promote pop-up, 70/30 note) | PR open | haiku/h19.6b-post-ad-pay | Haiku |
 | H19.7 | Block throwaway emails | approved | — | Haiku |
@@ -64,6 +64,7 @@ Opus has access to this folder on Vedant's PC. Messages go through `.relay/` (gi
 | H19.9 | Vendor payouts in more coins + live-rate range | approved (#492 merged) | #492 | Haiku |
 | H19.10 | Video call earnings split 70/30, vendors told everywhere | approved (#490) | — | Haiku |
 | H20.1 | Tell Google the site name is Tharkoo | approved (#501 merged) | #501 | Haiku |
-| H21.0 | Post-ad redesign: shared shell | PR open | haiku/h21.0-shell | Haiku |
+| H21.0 | Post-ad redesign: shared shell | approved (#504 merged) | #504 | Haiku |
+| H21.1 | Post-ad redesign: Step 1 Category | PR open | haiku/h21.1-category | Haiku |
 
 Status values: todo · doing · PR open · changes needed · approved · merged · blocked.
