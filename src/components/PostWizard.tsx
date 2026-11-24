@@ -289,8 +289,6 @@ export function PostWizard({
       attrs,
       fields: extra.map((field) => ({ key: field.key, label: field.label, required: field.required, pick: field.options.length && (field.type === "select" || field.type === "multiselect") ? (field.type === "multiselect" ? "many" as const : "one" as const) : undefined })),
     });
-    // H19.6: the description is optional, so the old 20-character rule no longer applies.
-    delete next.text;
     if (phone && contactMode !== "email" && !/^\+91[6-9]\d{9}$/.test(normalPhone(phone))) next.phone = t("post.error.phone");
     if (newDesign && price.trim() && !/^\d{1,9}$/.test(priceDigits)) next.price = t("post.error.price");
     if (newDesign) Object.assign(next, validateContact({ mode: contactMode, whatsappOn: whatsapp, whatsappSame, whatsappNumber, telegramOn, telegram }));

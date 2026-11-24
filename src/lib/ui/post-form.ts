@@ -57,7 +57,6 @@ export function validatePost(input: PostDraftInput) {
   if (!input.nickname.trim()) next.nickname = FILL_THIS_IN;
   const alnum = (input.title.match(/[a-z0-9]/gi) || []).length;
   if (input.title.trim().length < 5 || alnum < 5) next.title = "Write a title of at least 5 letters or numbers.";
-  if (input.text.trim().length < 20) next.text = "Write at least 20 characters.";
   if (input.contactMode !== "email" && !input.phone.replace(/[\s-]/g, "")) next.phone = FILL_THIS_IN;
   if (input.ageRequired && !input.age.trim()) next.age = AGE_WORDS;
   else if (input.age && (Number(input.age) < 18 || Number(input.age) > 99)) next.age = AGE_WORDS;

@@ -582,3 +582,14 @@ body:has(.tkp-post) .tkn-footer, body:has(.tkp-post) .tkn-chat-bubble { display:
 .tkn .tkp-post .tkp-contact-hint { margin: 0; }
 .tkn .tkp-post .tkp-success-main { display: flex; flex-wrap: wrap; gap: 10px; }
 .tkn .tkp-post .tkp-success-cols { display: grid; grid-template-columns: minmax(0, 1fr); gap: 16px; max-width: 640px; margin: 0 auto; }
+/* H19.6b: the photo buttons are one row of small icon buttons (star, arrows, bin), each at least 40 px, named by aria-label and title. */
+.tkn .tkp-post .tkp-media-grid { grid-template-columns: repeat(auto-fill, minmax(172px, 1fr)); gap: 12px; }
+.tkn .tkp-post .tkp-media-actions { display: flex; flex-wrap: nowrap; gap: 4px; }
+.tkn .tkp-post .tkp-media-actions .tkp-mini { flex: 0 0 auto; min-width: 40px; min-height: 40px; width: 40px; padding: 0; }
+.tkn .tkp-post .tkp-media-actions .tkp-mini-wide { grid-column: auto; flex: 0 0 auto; }
+.tkn .tkp-post .tkp-media-actions .tkp-mini-text { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+.tkn .tkp-post .tkp-media-actions [data-tk="retry-upload"] { width: auto; padding: 0 12px; }
+.tkn .tkp-post .tkp-media-actions [data-tk="retry-upload"] .tkp-mini-text { position: static; width: auto; height: auto; clip: auto; }
+@media (max-width: 599px) {
+  .tkn .tkp-post .tkp-media-frame { aspect-ratio: 4 / 3; }
+}

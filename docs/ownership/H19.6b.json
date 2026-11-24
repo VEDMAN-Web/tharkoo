@@ -7,8 +7,15 @@
     "src/components/post/**",
     "src/components/promote/**",
     "src/components/vendor/TourInbox.tsx",
+    "src/components/AdDetail.tsx",
+    "src/components/new/**",
+    "src/app/ad/**",
+    "src/lib/ad-details.ts",
+    "src/lib/models.ts",
+    "src/lib/ui/post-form.ts",
     "src/lib/ui/text.ts",
     "src/app/globals.css",
+    "docs/claude/STATUS.md",
     "tests/**"
   ]
 }

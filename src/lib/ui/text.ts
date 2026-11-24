@@ -283,6 +283,7 @@ export const TEXT_DEFAULTS = {
   "ad.meta.line": "{place} \u00b7 Posted {date} \u00b7 {views} \u00b7 {clicks} clicks",
   "ad.about": "About this ad",
   "ad.details": "Details",
+  "ad.interests": "Interests",
   "ad.gallery.prev": "Previous photo",
   "ad.gallery.next": "Next photo",
   "ad.gallery.counter": "{index} / {count}",

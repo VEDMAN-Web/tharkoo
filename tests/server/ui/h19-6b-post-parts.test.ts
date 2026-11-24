@@ -47,3 +47,23 @@ describe("H19.6b wording", () => {
     }
   });
 });
+
+describe("H19.6b interests on the public ad", () => {
+  it("shows up to five short interests and nothing else", async () => {
+    const { interestsOf } = await import("@/lib/ad-details");
+    expect(interestsOf({ interests: ["Music", " Travel ", "music", "Cooking", "Cricket", "Films", "Chess"] })).toEqual(["Music", "Travel", "Cooking", "Cricket", "Films"]);
+    expect(interestsOf({ interests: ["x".repeat(31), 7, null, "", "  "] })).toEqual([]);
+    expect(interestsOf({ interests: "Music" })).toEqual([]);
+    expect(interestsOf(undefined)).toEqual([]);
+    expect(interestsOf({})).toEqual([]);
+  });
+});
+
+describe("H19.6b the old 20-character rule is gone", () => {
+  it("a short or empty description raises no error on the form check", async () => {
+    const { validatePost } = await import("@/lib/ui/post-form");
+    const base = { categoryId: "c", cityId: "x", nickname: "Asha", title: "A good title", phone: "9876543210", contactMode: "phone", age: "", terms: true, adult: true, attrs: {}, fields: [], text: "" };
+    expect(validatePost(base).text).toBeUndefined();
+    expect(validatePost({ ...base, text: "Hi" }).text).toBeUndefined();
+  });
+});

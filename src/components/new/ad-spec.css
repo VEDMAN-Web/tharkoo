@@ -256,3 +256,6 @@ body:has(.tkn-ad) .tkn-footer { margin-top: 48px; }
 .tkn .tk-owner-box { display: grid; gap: 10px; }
 .tkn .tk-owner-bar { display: contents; }
 .tkn .tkn-ad-bar .tk-owner-note { grid-column: 1 / -1; font-size: 13px; }
+/* H19.6b: the ad's interests, small chips under the title row. */
+.tkn .tkn-ad-interests { list-style: none; margin: 10px 0 0; padding: 0; display: flex; flex-wrap: wrap; gap: 6px; }
+.tkn .tkn-ad-interests li { display: inline-flex; align-items: center; min-height: 26px; padding: 0 10px; border-radius: 999px; background: #fdf0f7; border: 1px solid #ead8f0; color: #4a2870; font-size: 13px; font-weight: 600; }

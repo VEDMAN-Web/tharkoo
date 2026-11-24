@@ -200,6 +200,13 @@ export function NewAdDetail({
                     ) : null}
                   </ul>
                 </div>
+                {ad.interests?.length ? (
+                  <ul className="tkn-ad-interests" aria-label={t("ad.interests")} data-tk="ad-interests">
+                    {ad.interests.slice(0, 5).map((word) => (
+                      <li key={word}>{word}</li>
+                    ))}
+                  </ul>
+                ) : null}
                 <hr className="tkn-ad-rule" />
                 <section aria-labelledby="tkn-about">
                   <h2 id="tkn-about">{personal ? t("ad.aboutMe") : t("ad.about")}</h2>
