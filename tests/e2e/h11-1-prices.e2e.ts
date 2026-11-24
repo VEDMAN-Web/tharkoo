@@ -112,6 +112,7 @@ async function reachStepFive(page: Page, title: string) {
   await page.locator(".tkp-tile", { hasText: "Dating" }).click();
   await page.locator("[data-tk=go-on]").click();
   await stepOf(page, 2);
+  if (await page.locator("#state").count()) await page.locator("#state").selectOption({ label: "Maharashtra" });
   await page.locator("#city").selectOption({ label: "Mumbai" });
   await page.locator("#nickname").fill("Asha");
   await page.locator("#age").fill("28");

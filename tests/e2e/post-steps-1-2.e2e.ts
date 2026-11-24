@@ -72,6 +72,8 @@ test.describe("H7.83 post an ad, steps 1 and 2", () => {
     await expect(page.getByText("About You")).toHaveCount(0);
     await expect(page.getByText("* Required fields")).toHaveCount(0);
     await expect(page.getByText("2 BHK")).toHaveCount(0);
+    // H19.6: the city list holds only the chosen state's cities.
+    await page.locator("#state").selectOption({ label: "Maharashtra" });
     const names = await page.locator("#city option").evaluateAll((options) => options.slice(1).map((option) => option.textContent || ""));
     expect(names.length).toBeGreaterThan(3);
     expect(names).toEqual([...names].sort((a, b) => a.localeCompare(b)));
@@ -104,6 +106,7 @@ test.describe("H7.83 post an ad, steps 1 and 2", () => {
     test.setTimeout(120_000);
     await poster(page, baseURL!, "autosave");
     await toDetails(page, "Dating");
+    await page.locator("#state").selectOption({ label: "Maharashtra" });
     await page.locator("#city").selectOption({ index: 1 });
     await page.locator("#nickname").fill("Asha");
     await page.locator("#title").fill("Coffee and a walk");

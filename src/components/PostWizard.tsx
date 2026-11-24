@@ -18,6 +18,9 @@ import { BUILT_IN_AGE_FIELD, POST_COPY_DEFAULTS, wizardFields, type CtaCopy, typ
 import { newStepCopy, newSuccessCopy } from "./post/newCopy";
 import { SelectField, Switch, TextField } from "./post/FormFields";
 import { ContactFields } from "./post/ContactFields";
+import { InterestTags } from "./post/InterestTags";
+import { PlaceFields } from "./post/PlaceFields";
+import { INTEREST_KEY } from "./post/interests";
 import { AboutYou } from "./post/AboutYou";
 import { ReviewStep, type ReviewRow } from "./post/ReviewStep";
 import { PostSuccess, type UpsellPlan } from "./post/PostSuccess";
@@ -94,6 +97,8 @@ export function PostWizard({
   const [subsByCategory, setSubsByCategory] = useState<Record<string, PostSubcategory[]>>({});
   const [subcategoryId, setSubcategoryId] = useState("");
   const [cityId, setCityId] = useState(defaultCityId);
+  /** H19.6: the state the person picked. Until they pick one it is the state of the chosen city. */
+  const [pickedState, setPickedState] = useState("");
   const [districtId, setDistrictId] = useState("");
   const [address, setAddress] = useState("");
   const [postal, setPostal] = useState("");
@@ -170,6 +175,7 @@ export function PostWizard({
     ? plans.filter((plan) => copy.promotion.products.some((code) => code === plan.id || code === plan.code))
     : plans;
   const cityName = cities.find((item) => item.id === cityId)?.name ?? "";
+  const stateSlug = pickedState || (cities.find((item) => item.id === cityId)?.stateSlug ?? "");
   const cityChoices = useMemo(() => placeChoices(cities, (city) => city.id), [cities]);
   const districtName = districts.find((item) => item.id === districtId)?.name ?? "";
   const priceDigits = priceDigitsOf(price);
@@ -202,7 +208,7 @@ export function PostWizard({
             setAge(form.age);
             setNickname(form.nickname);
             setTitle(form.title);
-            setText(form.text);
+            setText(form.text.trim());
             setPrice(form.price);
             setPhone(form.phone);
             setWhatsapp(form.whatsapp);
@@ -279,6 +285,8 @@ export function PostWizard({
       attrs,
       fields: extra.map((field) => ({ key: field.key, label: field.label, required: field.required, pick: field.options.length && (field.type === "select" || field.type === "multiselect") ? (field.type === "multiselect" ? "many" as const : "one" as const) : undefined })),
     });
+    // H19.6: the description is optional, so the old 20-character rule no longer applies.
+    delete next.text;
     if (phone && contactMode !== "email" && !/^\+91[6-9]\d{9}$/.test(normalPhone(phone))) next.phone = t("post.error.phone");
     if (newDesign && price.trim() && !/^\d{1,9}$/.test(priceDigits)) next.price = t("post.error.price");
     if (newDesign) Object.assign(next, validateContact({ mode: contactMode, whatsappOn: whatsapp, whatsappSame, whatsappNumber, telegramOn, telegram }));
@@ -409,7 +417,7 @@ export function PostWizard({
   const saveLatest = useRef<() => void>(() => undefined);
   useEffect(() => {
     saveLatest.current = () => {
-      const valid = Boolean(categoryId) && (subOptions.length === 0 || Boolean(subcategoryId)) && title.trim().length >= 5 && text.trim().length >= 20 && Boolean(cityId);
+      const valid = Boolean(categoryId) && (subOptions.length === 0 || Boolean(subcategoryId)) && title.trim().length >= 5 && Boolean(cityId);
       if (!newDesign || !hydrated || !["category", "details", "more"].includes(current) || !valid || done) return;
       void saveAll(false, true).then((id) => {
         if (id) window.history.replaceState(null, "", `${postAdPath(paths)}?step=${urlStepOf(current)}&draft=${id}`);
@@ -664,7 +672,7 @@ export function PostWizard({
             {ageField ? <TextField id="age" label={t("post.field.age")} required value={age} error={errors.age} onChange={setAge} /> : null}
             <TextField id="nickname" label={t("post.field.nickname")} required value={nickname} error={errors.nickname} note={t("post.field.nicknameNote")} placeholder={t("post.field.nicknamePlaceholder")} onChange={setNickname} />
             <TextField id="title" label={t("post.field.title")} required area value={title} error={errors.title} note={t("post.field.titleNote")} placeholder={t("post.field.titlePlaceholder")} onChange={setTitle} />
-            <TextField id="text" label={t("post.field.text")} required area rows={5} value={text} error={errors.text} note={t("post.field.textNote")} placeholder={t("post.field.textPlaceholder")} onChange={setText} />
+            <TextField id="text" label={t("post.field.text")} area rows={5} value={text} error={errors.text} note={t("post.field.textNote")} placeholder={t("post.field.textPlaceholder")} onChange={setText} />
           </Group>
           {renderExtraFields()}
           {renderContactFields()}
@@ -927,27 +935,26 @@ export function PostWizard({
 
               {current === "details" ? (
                 <div className="tkp-fields">
-                  <div className="tkp-two tkp-two-keep">
-                    <SelectField id="city" label={t("post.field.city")} required value={cityId} error={err("city")} onBlur={blur("city")} searchOptions={cityChoices} searchPlaceholder={t("post.select.cityType")} searchEmpty={t("post.select.cityNone")} onChange={(value) => { setCityId(value); setDistrictId(""); }}>
-                      <option value="">{t("post.select.city")}</option>
-                      {cities.map((city) => (
-                        <option key={city.id} value={city.id}>{city.name}</option>
-                      ))}
-                    </SelectField>
-                    <SelectField id="district" label={t("post.field.areaShort")} value={districtId} error={err("district")} disabled={!cityId} onChange={setDistrictId}>
-                      <option value="">{cityId ? t("post.select.area") : t("post.select.pickCityFirst")}</option>
-                      {districts.map((item) => (
-                        <option key={item.id} value={item.id}>{item.name}</option>
-                      ))}
-                    </SelectField>
-                  </div>
+                  <PlaceFields
+                    cities={cities}
+                    stateSlug={stateSlug}
+                    cityId={cityId}
+                    districtId={districtId}
+                    districts={districts}
+                    error={(key) => (key === "state" ? (stateSlug ? undefined : err("city")) : key === "city" ? (stateSlug ? err("city") : undefined) : err(key))}
+                    onBlur={blur}
+                    onState={(slug) => { setPickedState(slug); setCityId(""); setDistrictId(""); }}
+                    onCity={(id) => { setPickedState(stateSlug); setCityId(id); setDistrictId(""); }}
+                    onDistrict={setDistrictId}
+                  />
                   <div className="tkp-two tkp-two-keep">
                     <TextField id="nickname" label={t("post.field.nickname")} required value={nickname} error={err("nickname")} onBlur={blur("nickname")} placeholder={t("post.field.nicknameShort")} onChange={(value) => setNickname(value.slice(0, 20))} />
                     {ageField ? <TextField id="age" label={t("post.field.age")} required={ageField.required} value={age} error={err("age")} onBlur={blur("age")} inputMode="numeric" placeholder={t("post.field.agePlaceholder")} onChange={(value) => setAge(value.replace(/\D/g, "").slice(0, 2))} /> : people ? <span /> : priceField}
                   </div>
                   {people ? <p className="tkp-quiet" data-tk="nickname-hint" style={{ margin: "-6px 0 0" }}>{t("post.field.nicknameHint")}</p> : null}
                   <TextField id="title" label={t("post.field.adTitle")} required value={title} error={err("title")} onBlur={blur("title")} note={`${title.length} / 70`} placeholder={hints.title} onChange={(value) => setTitle(value.slice(0, 70))} />
-                  <TextField id="text" label={t("post.field.description")} required area rows={4} value={text} error={err("text")} onBlur={blur("text")} note={t("post.field.descriptionNote")} placeholder={hints.text} onChange={setText} />
+                  <TextField id="text" label={t("post.field.description")} area rows={4} value={text} error={err("text")} onBlur={blur("text")} note={t("post.field.descriptionNote")} placeholder={hints.text} onChange={setText} />
+                  <InterestTags value={picksOf(attrs[INTEREST_KEY])} onChange={(next) => setAttrs((prev) => ({ ...prev, [INTEREST_KEY]: next }))} />
                   {people || !ageField ? null : priceField}
                   {split ? null : renderNewExtras(err, blur)}
                 </div>

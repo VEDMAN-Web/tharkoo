@@ -53,6 +53,7 @@ test.describe("E1-B posting journeys", () => {
     const title = `E1 dating ${Date.now()}`;
     await page.locator(".tkp-tile", { hasText: "Dating" }).click();
     await page.locator("[data-tk=go-on]").click();
+    if (await page.locator("#state").count()) await page.locator("#state").selectOption({ label: "Maharashtra" });
     await page.locator("#city").selectOption({ label: "Mumbai" });
     await page.locator("#nickname").fill("Asha");
     await page.locator("#title").fill(title);
@@ -132,6 +133,7 @@ test.describe("E1-B posting journeys", () => {
       await expect(page.locator("[data-tk=step-help]")).toContainText("20 credits");
       await page.locator(".tkp-tile", { hasText: "Jobs" }).click();
       await page.locator("[data-tk=go-on]").click();
+      if (await page.locator("#state").count()) await page.locator("#state").selectOption({ label: "Maharashtra" });
       await page.locator("#city").selectOption({ label: "Mumbai" });
       await page.locator("#nickname").fill("Asha");
       const roleHere = (await page.locator("#role").count()) > 0;

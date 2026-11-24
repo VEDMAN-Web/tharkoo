@@ -37,6 +37,17 @@ export interface FieldDefinition {
 
 const keyPattern = /^[a-z][a-z0-9_]{0,40}$/;
 
+/** H19.6: the free-typed interests of an ad, kept as a list in its attributes. Not tied to a category's fields. */
+export const INTEREST_KEY = "interests";
+export const INTEREST_MAX = 5;
+export const INTEREST_LENGTH_MAX = 30;
+const interestsSchema = z.array(z.string().trim().min(1).max(INTEREST_LENGTH_MAX)).max(INTEREST_MAX);
+
+/** True when the value is an acceptable interest list (up to 5 words or short phrases of 30 characters). */
+export function validInterests(value: unknown): boolean {
+  return interestsSchema.safeParse(value).success;
+}
+
 /** Most options a pick-many field takes when the admin set no limit. */
 export const DEFAULT_MAX_PICKS = 20;
 
@@ -167,6 +178,9 @@ export function choiceProblems(fields: FieldDefinition[], input: unknown): Recor
   const problems: Record<string, string[]> = {};
   if (!input || typeof input !== "object" || Array.isArray(input)) return problems;
   const values = input as Record<string, unknown>;
+  if (values[INTEREST_KEY] !== undefined && !validInterests(values[INTEREST_KEY])) {
+    problems[INTEREST_KEY] = [`Add up to ${INTEREST_MAX} interests, ${INTEREST_LENGTH_MAX} characters each`];
+  }
   for (const field of fields) {
     const value = values[field.key];
     if (field.type === "select" && typeof value === "string" && value !== "" && !field.options.includes(value)) {
@@ -192,5 +206,9 @@ export function parseSavedAttributes(fields: FieldDefinition[], input: unknown):
   const known = new Set(fields.filter((field) => field.enabled).map((field) => field.key));
   const attributes = parseListingAttributes(fields, Object.fromEntries(Object.entries(saved).filter(([key]) => known.has(key))));
   if (!known.has("age") && saved.age !== undefined && saved.age !== null && saved.age !== "") attributes.age = saved.age;
+  if (!known.has(INTEREST_KEY) && saved[INTEREST_KEY] !== undefined && saved[INTEREST_KEY] !== null) {
+    const interests = interestsSchema.parse(saved[INTEREST_KEY]);
+    if (interests.length > 0) attributes[INTEREST_KEY] = interests;
+  }
   return attributes;
 }
