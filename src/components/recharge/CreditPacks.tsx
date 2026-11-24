@@ -69,7 +69,7 @@ export function useCreditPacks(shortfall = 0): { data: CreditPackData | null; er
   return { data, error, signedIn };
 }
 
-export function CreditPacks({ data, shortfall = 0, returnTo, onChoice, wallet: startWallet = "ad", lockWallet = false }: { data: CreditPackData; shortfall?: number; returnTo?: string; onChoice?: (choice: PackChoice) => void; wallet?: WalletTab; lockWallet?: boolean }) {
+export function CreditPacks({ data, shortfall = 0, returnTo, onChoice, wallet: startWallet = "ad", lockWallet = false, onWalletChange }: { data: CreditPackData; shortfall?: number; returnTo?: string; onChoice?: (choice: PackChoice) => void; wallet?: WalletTab; lockWallet?: boolean; onWalletChange?: (next: WalletTab) => void }) {
   const t = useT();
   const [wallet, setWallet] = useState<WalletTab>(startWallet);
   const list = wallet === "call" ? data.callPacks : data.packs;
@@ -92,6 +92,7 @@ export function CreditPacks({ data, shortfall = 0, returnTo, onChoice, wallet: s
 
   const pickWallet = (next: WalletTab) => {
     setWallet(next);
+    onWalletChange?.(next);
     setAmount("");
     setShowAll(false);
     setSelected(preselectedId(next === "call" ? data.callPacks : data.packs, next === startWallet ? shortfall : 0));
@@ -119,7 +120,7 @@ export function CreditPacks({ data, shortfall = 0, returnTo, onChoice, wallet: s
   }, [chosen, typedOk, typed, wallet, busy, method, returnTo, t]);
 
   return (
-    <div className="tkp" data-tk="credit-packs">
+    <div className="tkp" data-tk="credit-packs" data-wallet={wallet}>
       {/* H19.4: a sheet opened for one kind (calls or ads) shows only that kind; the wallet page shows both tabs. */}
       {lockWallet ? null : <div role="tablist" aria-label={t("recharge.walletTabs")} className="tkp-wallets">
         {(["call", "ad"] as const).map((kind) => (
@@ -226,15 +227,19 @@ export function CreditPacksPanel({ returnTo, withPrices = false }: { returnTo?: 
   if (!signedIn) return <p className="tkp-note">{t("recharge.login")} <Link className="tkr-link" href="/u/login/">{t("recharge.loginLink")}</Link></p>;
   if (!data) return <p className="tkp-note" role="status">{error || t("recharge.loading")}</p>;
   if (data.packs.length === 0 && data.callPacks.length === 0) return <p className="tkp-note">{t("recharge.empty")}</p>;
-  if (withPrices && data.prices) {
-    return (
-      <div className="tkc-wrap">
-        <div className="tkc-duo has-card" data-tk="credit-duo">
-          <PriceCard data={data.prices} />
-          <CreditPacks data={data} returnTo={returnTo} />
-        </div>
+  return <PanelBody data={data} returnTo={returnTo} withPrices={withPrices} />;
+}
+
+/** H19.4: the posting price card (free ads left, what an ad costs) is about ad credits, so it shows on the ad tab only. */
+function PanelBody({ data, returnTo, withPrices }: { data: CreditPackData; returnTo?: string; withPrices: boolean }) {
+  const [tab, setTab] = useState<WalletTab>("ad");
+  const prices = withPrices && data.prices && tab === "ad" ? data.prices : null;
+  return (
+    <div className="tkc-wrap">
+      <div className={prices ? "tkc-duo has-card" : "tkc-duo"} data-tk="credit-duo">
+        {prices ? <PriceCard data={prices} /> : null}
+        <CreditPacks data={data} returnTo={returnTo} onWalletChange={setTab} />
       </div>
-    );
-  }
-  return <CreditPacks data={data} returnTo={returnTo} />;
+    </div>
+  );
 }

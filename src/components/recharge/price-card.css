@@ -33,7 +33,10 @@
 .tkp .tkr-pack.is-rich .tkp-enough { margin-top: 4px; font-size: 13px; line-height: 18px; color: #5b3d7a; }
 .tkp .tkr-pack.is-rich .tkp-enough strong { color: #110520; }
 @media (max-width: 599px) {
-  .tkp .tkr-packs { grid-template-columns: minmax(0, 1fr); gap: 12px; }
+  .tkp .tkr-packs { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+  .tkp .tkr-pack.is-rich { padding: 10px 12px; }
+  .tkp .tkr-pack.is-rich .tkp-pay { font-size: 20px; line-height: 26px; }
+  .tkp .tkr-pack.is-rich .tkp-get { font-size: 13px; line-height: 18px; }
   .tkc-row { grid-template-columns: 44px minmax(0, 1fr) auto; gap: 10px; }
   .tkc-ic { width: 44px; height: 44px; border-radius: 14px; }
 }
