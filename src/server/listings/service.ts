@@ -36,6 +36,7 @@ import { PEOPLE_NO_VIDEO } from "@/server/media/people-video";
 import { assertVerified } from "@/server/verification/service";
 import { hashIp } from "@/server/shared/crypto";
 import { choiceProblems, parseSavedAttributes, type FieldDefinition } from "@/server/shared/fields";
+
 import { withPickLimits } from "@/server/fields/service";
 import { revalidateListingPages, revalidateListingsById } from "@/server/listings/revalidate";
 import { publicPathsOf } from "@/server/listings/ad-code";
@@ -53,6 +54,9 @@ import { idCheckRequired } from "@/server/settings/id-check";
 import { toSlug } from "@/server/shared/slug";
 import { isPeopleListing } from "@/server/categories/kinds";
 import { withPeopleAge } from "@/server/categories/people-age";
+
+/** H19.6: the description is optional, but the saved record needs some text, so an empty one is stored as one space. Nothing shows it. */
+export const NO_DESCRIPTION = " ";
 
 const REVEAL_WINDOW_MS = 60 * 60 * 1000;
 const REVEAL_TTL_MS = 15 * 60 * 1000;
@@ -383,7 +387,7 @@ export async function createDraft(
     districtId: await requirePlace(input.districtId, "districtId"),
     localityId: await requirePlace(input.localityId, "localityId"),
     title: input.title?.trim() || "Untitled",
-    description: input.description?.trim() || "Draft",
+    description: input.description?.trim() || NO_DESCRIPTION,
     attributes: {},
     mediaIds: [],
     seoNoindex: true,
@@ -454,7 +458,8 @@ async function applyBasics(
     else listing.set("subcategoryId", undefined);
   }
   if (input.title) listing.title = input.title;
-  if (input.description) listing.description = input.description;
+  // H19.6: the description is optional. Clearing it stores the placeholder, never the old text.
+  if (input.description !== undefined) listing.description = input.description.trim() || NO_DESCRIPTION;
   if (input.stateId) listing.stateId = await requirePlace(input.stateId, "stateId");
   if (input.cityId) listing.cityId = await requirePlace(input.cityId, "cityId");
   if (input.districtId) listing.districtId = await requirePlace(input.districtId, "districtId");
@@ -544,8 +549,8 @@ export async function patchListing(
 }
 
 function assertContentPresent(listing: ListingRow) {
-  if (!listing.title.trim() || !listing.description.trim() || !listing.cityId) {
-    throw new ValidationError("Invalid request", { listing: ["Title, description, and city are required"] });
+  if (!listing.title.trim() || !listing.cityId) {
+    throw new ValidationError("Invalid request", { listing: ["Title and city are required"] });
   }
   const contact = listing.contact ?? {};
   if (!contact.phone && !contact.whatsapp && !contact.telegram && !contact.acceptForm) {
@@ -582,8 +587,8 @@ export async function submitListing(
   const wasLive = listing.status === "active";
   const isEdit = Boolean(listing.publishedAt) && (wasLive || wasPaused || listing.status === "pending");
   if (!wasLive && !wasPaused) assertTransition(listing.status, "active");
-  if (!listing.title.trim() || !listing.description.trim() || !listing.cityId) {
-    throw new ValidationError("Invalid request", { listing: ["Title, description, and city are required"] });
+  if (!listing.title.trim() || !listing.cityId) {
+    throw new ValidationError("Invalid request", { listing: ["Title and city are required"] });
   }
   const contact = listing.contact ?? {};
   if (!contact.phone && !contact.whatsapp && !contact.telegram && !contact.acceptForm) {
