@@ -204,7 +204,7 @@ test.describe("H7.86 post an ad, step 5 and the success screen", () => {
     await consentAndPublish(page);
   });
 
-  test("H19.6b: an account with no date of birth (a code sign-in) is sent to its seller profile once, not asked inside the form", async ({ page, baseURL }) => {
+  test("H19.6b: an account with no date of birth (a code sign-in) is sent to its profile once, not asked inside the form", async ({ page, baseURL }) => {
     test.setTimeout(240_000);
     await newPoster(page, baseURL!, "nodob", false);
     await reachAbout(page, `Sunrise walk ${Date.now()}`, "nodob");

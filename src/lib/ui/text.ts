@@ -485,7 +485,7 @@ export const TEXT_DEFAULTS = {
   "post.contactBox.telegram": "Telegram",
   "post.contactBox.telegramUsername": "Telegram username",
   "post.contactBox.telegramPlaceholder": "@yourname",
-  "post.about.dobAway": "We need your date of birth once, before your first ad. Add it in your seller profile, then come back here.",
+  "post.about.dobAway": "We need your date of birth once, before your first ad. Add it in your profile, then come back here.",
   "post.about.dobLink": "Add my date of birth",
   "post.aboutYou.name": "Name on your ads",
   "post.aboutYou.namePlaceholder": "Your name or nickname",
