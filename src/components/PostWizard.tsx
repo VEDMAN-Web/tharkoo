@@ -494,7 +494,7 @@ export function PostWizard({
     if (!hydrated) return setBanner(t("post.error.draftLoading"));
     if (!draftId || !title.trim()) return setBanner(t("post.error.saveFirst"));
     if (newDesign && !showErrors(errorsForStep(validate(), "review"))) return;
-    if (newDesign && short > 0) return openRecharge({ shortfall: short });
+    if (newDesign && short > 0) return openRecharge({ shortfall: short, wallet: "ad" });
     setBusy(true);
     setBanner("");
     // H6.14: the ID check is asked for only when the switch is on. Off, the submit goes straight to the server.
@@ -896,7 +896,7 @@ export function PostWizard({
               else setStep(num);
             }}
           >
-            {chargesFee ? <CreditsCard fee={alreadyPaid ? 0 : money.fee} price={money.price} balance={shownBalance} ready={money.ready} onTopUp={() => openRecharge({ shortfall: short })} /> : null}
+            {chargesFee ? <CreditsCard fee={alreadyPaid ? 0 : money.fee} price={money.price} balance={shownBalance} ready={money.ready} onTopUp={() => openRecharge({ shortfall: short, wallet: "ad" })} /> : null}
           </PostRail>
           <section className="tkp-main" data-step={current} data-dir={stepMove.dir || undefined} aria-labelledby="post-step-title" onFocusCapture={keepFocusedFieldVisible}>
             <div className="tkp-head">
@@ -1013,7 +1013,7 @@ export function PostWizard({
                   hasPhoto={Boolean(coverUrl)}
                   byline={byline}
                   note={editing ? (draftStatus === "paused" ? t("post.note.paused") : t("post.note.saved")) : t("post.note.publish")}
-                  pay={alreadyPaid || !(chargesFee || (money.free && money.place)) ? undefined : <PayCard fee={money.fee} price={money.price} balance={shownBalance} short={short} freeAd={money.free ? money.place : null} onRecharge={() => openRecharge({ shortfall: short })} />}
+                  pay={alreadyPaid || !(chargesFee || (money.free && money.place)) ? undefined : <PayCard fee={money.fee} price={money.price} balance={shownBalance} short={short} freeAd={money.free ? money.place : null} onRecharge={() => openRecharge({ shortfall: short, wallet: "ad" })} />}
                   terms={terms}
                   adult={adult}
                   termsError={errors.terms}
@@ -1036,7 +1036,7 @@ export function PostWizard({
                   {current === "review" && short > 0 ? (
                     <>
                       <button type="button" className="tkp-btn" data-tk="publish-blocked" disabled aria-describedby="pay-reason">{t("post.nav.publish")}</button>
-                      <button type="button" className="tkp-btn tkp-btn-primary" data-tk="go-on" onClick={() => openRecharge({ shortfall: short })}>{t("post.nav.recharge")}</button>
+                      <button type="button" className="tkp-btn tkp-btn-primary" data-tk="go-on" onClick={() => openRecharge({ shortfall: short, wallet: "ad" })}>{t("post.nav.recharge")}</button>
                     </>
                   ) : current === "review" ? (
                     <button type="button" className="tkp-btn tkp-btn-primary" data-tk="go-on" disabled={busy || !hydrated || !title.trim()} onClick={publish}>

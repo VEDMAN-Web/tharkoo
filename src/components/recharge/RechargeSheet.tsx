@@ -52,9 +52,9 @@ export function RechargeSheet({ options, onClose }: { options: RechargeOptions; 
       <div className="tkr-sheet" role="dialog" aria-modal="true" aria-labelledby="tkr-title" tabIndex={-1} ref={panel} data-tk="recharge-sheet">
         <div className="tkr-head">
           <div>
-            <h2 id="tkr-title">{t("recharge.title")}</h2>
+            <h2 id="tkr-title">{t(options.wallet === "call" ? "recharge.title.call" : options.wallet === "ad" ? "recharge.title.ad" : "recharge.title")}</h2>
             <p className="tkr-rate">{t("recharge.rate", { price: data?.creditPriceInr ?? 10 })}</p>
-            {data?.prices && priceOneLine(data.prices) ? <p className="tkr-line" data-tk="recharge-price-line">{priceOneLine(data.prices)}</p> : null}
+            {options.wallet !== "call" && data?.prices && priceOneLine(data.prices) ? <p className="tkr-line" data-tk="recharge-price-line">{priceOneLine(data.prices)}</p> : null}
           </div>
           <button type="button" className="tkr-x" aria-label={t("recharge.close")} onClick={onClose}>
             <X size={20} aria-hidden />
@@ -67,13 +67,13 @@ export function RechargeSheet({ options, onClose }: { options: RechargeOptions; 
           </p>
         ) : !data ? (
           <p className="tkr-note" role="status">{error || t("recharge.loading")}</p>
-        ) : data.packs.length === 0 ? (
+        ) : data.packs.length === 0 && data.callPacks.length === 0 ? (
           <p className="tkr-note">{t("recharge.empty")}</p>
         ) : (
           <>
-            {shortfall > 0 ? <p className="tkr-short" data-tk="recharge-short">{t(options.shortKey ?? "recharge.short", { count: shortfall })}</p> : null}
+            {shortfall > 0 ? <p className="tkr-short" data-tk="recharge-short">{t(options.wallet === "call" ? "recharge.short.call" : (options.shortKey ?? "recharge.short"), { count: shortfall })}</p> : null}
             <div style={{ marginTop: 12 }}>
-              <CreditPacks data={data} wallet={options.wallet ?? "ad"} shortfall={shortfall} returnTo={options.returnTo} onChoice={(next) => { choice.current = next; }} />
+              <CreditPacks data={data} wallet={options.wallet ?? "ad"} lockWallet={Boolean(options.wallet)} shortfall={shortfall} returnTo={options.returnTo} onChoice={(next) => { choice.current = next; }} />
             </div>
           </>
         )}
