@@ -10,7 +10,6 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { HeaderCountry } from "./HeaderCountry";
 import type { CountryOption } from "@/server/locations/country-scope";
 import { HeaderDrawer } from "./HeaderDrawer";
-import { IncomingCallAlert } from "./vendor/IncomingCallAlert";
 import { isProbablySignedIn, openSignInFromLink } from "./auth/SignInSheet";
 import { useUrlPaths } from "./UrlPaths";
 import { safeHref } from "@/lib/sanitize";
@@ -172,6 +171,7 @@ export function HeaderNew({
                     <Link role="menuitem" href="/u/account/" onClick={() => setAccountOpen(false)}>{t("chrome.account.my")}</Link>
                     <Link role="menuitem" href="/u/account/ads/" onClick={() => setAccountOpen(false)}>{t("chrome.account.ads")}</Link>
                     <Link role="menuitem" href="/u/account/messages/" onClick={() => setAccountOpen(false)}>{t("chrome.account.chats")}{unread > 0 ? <span className="tkn-menu-badge" data-tk="menu-unread">{unread}</span> : null}</Link>
+                    <Link role="menuitem" href="/u/account/calls/" onClick={() => setAccountOpen(false)}>Video calls</Link>
                     <Link role="menuitem" href="/u/account/saved/" onClick={() => setAccountOpen(false)}>{t("chrome.account.saved")}</Link>
                     <Link role="menuitem" href="/u/account/credits/" onClick={() => setAccountOpen(false)}>{t("panel.menu.coins")}</Link>
                     <Link role="menuitem" href="/u/account/support/" onClick={() => setAccountOpen(false)}>{t("chrome.account.help")}</Link>
@@ -208,7 +208,6 @@ export function HeaderNew({
           </button>
         </div>
       </div>
-      <IncomingCallAlert />
     </header>
     {menuOpen ? (
       <HeaderDrawer

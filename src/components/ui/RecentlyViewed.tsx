@@ -39,7 +39,7 @@ export function RecentlyViewedRail({ current }: { current?: string }) {
       <h2 className="t-h2 mb-4">Recently viewed</h2>
       <div className="flex gap-3 overflow-x-auto pb-2">
         {items.slice(0, 12).map((ad) => (
-          <div key={ad.slug} className="w-72 shrink-0">
+          <div key={ad.slug} className="w-56 shrink-0 tk-recent-card">
             <AdCard ad={ad} />
           </div>
         ))}

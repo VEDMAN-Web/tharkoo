@@ -25,12 +25,12 @@ export default async function Page({ searchParams }: { searchParams: Promise<{ t
     );
   }
   return (
-    <UserPanelShell active="coins" summary={summary}>
+    <UserPanelShell active={tab === "earnings" ? "earnings" : "coins"} summary={summary}>
       <section aria-labelledby="wallet-heading" className="up-glass up-panel">
         <div className="up-panel-head">
           <h1 id="wallet-heading" className="up-h2">Wallet</h1>
         </div>
-        <CoinWallet initialTab={tab === "earnings" ? "earnings" : "buy"} hasEarnings={summary.hasEarnings} />
+        <CoinWallet initialTab={tab === "earnings" ? "earnings" : "buy"} hasEarnings={summary.hasEarnings || summary.adCount > 0} />
       </section>
     </UserPanelShell>
   );

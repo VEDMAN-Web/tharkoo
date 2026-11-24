@@ -418,12 +418,16 @@ export async function listTours(userId: string) {
     .sort({ requestedAt: -1 })
     .limit(50)
     .lean();
+  // H19.5: each call shows which ad it is about.
+  const ads = await Listing.find({ _id: { $in: [...new Set(rows.map((row) => String(row.listingId)))] } }).select("title slug").lean<{ _id: unknown; title?: string; slug?: string }[]>();
+  const adById = new Map(ads.map((ad) => [String(ad._id), ad]));
   return rows.map((row) => {
     const isAdvertiser = String(row.ownerId) === userId;
+    const ad = adById.get(String(row.listingId));
     const joinUrl = row.roomId && row.status === "accepted" && videoRoomProvider().name === "daily" ? callPagePath(String(row._id)) : null;
     // H19.10: only the vendor sees what they earn; the user sees the price and nothing of the split.
     const split = splitCall(row.coins, row.feePercent ?? 0);
-    return { ...present(row), role: isAdvertiser ? "advertiser" : "buyer", joinUrl, ...(isAdvertiser ? { youEarn: split.vendor, tharkooFee: split.fee } : {}) };
+    return { ...present(row), adTitle: ad?.title ?? null, adSlug: ad?.slug ?? null, role: isAdvertiser ? "advertiser" : "buyer", joinUrl, ...(isAdvertiser ? { youEarn: split.vendor, tharkooFee: split.fee } : {}) };
   });
 }
 

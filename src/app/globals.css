@@ -2252,18 +2252,6 @@ body:has([data-tk="bottom-bar"]) .tkn-float { bottom: 104px; }
   .tkh-trust > *, .tkn-sr-chips > *, .h714-chips > * { flex: none; scroll-snap-align: start; white-space: nowrap; }
 }
 
-/* H18.14: a vendor's waiting video call, shown under the header on every page. */
-.tkn-call-alert {
-  display: flex; align-items: center; justify-content: center; gap: 10px; flex-wrap: wrap;
-  padding: 10px 16px; background: #d1137a; color: #fff; font-weight: 700; font-size: 15px; text-align: center;
-}
-.tkn-call-alert-panel { max-width: 760px; margin: 12px auto; padding: 0 12px; }
-.tkn-call-alert-btn {
-  border: 0; cursor: pointer; font: inherit;
-  display: inline-flex; align-items: center; min-height: 36px; padding: 0 16px; border-radius: 999px;
-  background: #fff; color: #a8124f; text-decoration: none; font-weight: 800;
-}
-.tkn-call-alert-btn:focus-visible { outline: 3px solid #fff; outline-offset: 2px; }
 
 /* H19.1: less empty space above the footer on every page (it was 88 px, 56 px on a phone). */
 body .tkn-footer {
@@ -2281,3 +2269,10 @@ body .tkn-footer {
 .tkn-coin-buy:focus-visible { outline: 3px solid #fff; outline-offset: 2px; }
 /* On a phone the chip stays hidden (the header has no room: the Post your ad button was pushed off the screen at 390 px); the
    account menu shows "N call credits · N ad credits" there, one tap on the avatar. */
+
+/* H19.5: Recently viewed shows compact cards: photo, title on one line, city. */
+.tk-recent-card .tk-card-desc, .tk-recent-card .tkn-ls-desc { display: none; }
+.tk-recent-card h3, .tk-recent-card .tk-card-title { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+/* H19.5: Recently viewed shows compact cards: photo, title on one line, city. */
+.tk-recent-card .tk-card-desc, .tk-recent-card .tkn-ls-desc { display: none; }
