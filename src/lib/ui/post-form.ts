@@ -235,3 +235,15 @@ export function maskEmail(email: string) {
   if (at < 1) return "";
   return `${email.slice(0, 1)}••••${email.slice(at)}`;
 }
+
+/** H21.0: the width of the progress line under the header. Five steps use 16, 36, 56, 76 and 94 percent; the Done screens fill it. */
+const FIVE_STEP_PERCENT = [16, 36, 56, 76, 94] as const;
+export function progressPercent(step: number, total: number, done = false): number {
+  if (done) return 100;
+  if (total <= 1) return FIVE_STEP_PERCENT[0];
+  const index = Math.min(Math.max(Math.round(step), 1), total) - 1;
+  if (total === FIVE_STEP_PERCENT.length) return FIVE_STEP_PERCENT[index];
+  const first = FIVE_STEP_PERCENT[0];
+  const last = FIVE_STEP_PERCENT[FIVE_STEP_PERCENT.length - 1];
+  return Math.round(first + ((last - first) * index) / (total - 1));
+}

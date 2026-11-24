@@ -206,7 +206,7 @@ test.describe("H7.85 preview and city", () => {
 });
 
 test.describe("H7.85 desktop fit", () => {
-  test("step 1 shows all 11 tiles with no inner scroll and no page scroll at 1366x768, 1536x730 and 1536x674, and Preview shows only under 1024 px", async ({ page, baseURL }) => {
+  test("step 1 shows all 11 tiles with no inner scroll at 1366x768, 1536x730 and 1536x674, and Preview shows only under 1024 px", async ({ page, baseURL }) => {
     test.setTimeout(120_000);
     const api = await startAd(page, baseURL!, "fit", "Mumbai");
     const cases: [number, number][] = [[1366, 768], [1536, 730], [1536, 674], [1440, 900], [1024, 768], [768, 1024]];
@@ -222,7 +222,7 @@ test.describe("H7.85 desktop fit", () => {
           return { inner: scroll.scrollHeight - scroll.clientHeight, page: document.documentElement.scrollHeight - window.innerHeight };
         });
         expect(fit.inner, `${width}x${height} inner scroll`).toBeLessThanOrEqual(1);
-        expect(fit.page, `${width}x${height} page scroll`).toBeLessThanOrEqual(1);
+        // H21.0 (spec rule 4): only the page scrolls, so the page-height and in-view checks no longer apply.
         const last = (await page.locator(".tkp-tile").last().boundingBox())!;
         const nav = (await page.locator(".tkp-nav").boundingBox())!;
         expect(last.y + last.height, `${width} last tile above the bar`).toBeLessThanOrEqual(nav.y + 1);

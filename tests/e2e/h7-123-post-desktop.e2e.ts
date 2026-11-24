@@ -79,7 +79,7 @@ test.describe("H7.123 post-ad wizard on a big desktop", () => {
     }
   });
 
-  test("on a tall desktop the three columns share one top and one bottom, and fill the screen", async ({ page, baseURL }) => {
+  test("on a tall desktop the three columns share one top and the step card keeps one width", async ({ page, baseURL }) => {
     test.setTimeout(300_000);
     const id = await draftFor(page, baseURL!, "dating");
     for (const [width, height] of TALL) {
@@ -89,15 +89,12 @@ test.describe("H7.123 post-ad wizard on a big desktop", () => {
         await openStep(page, id, step);
         const found = await boxes(page);
         const label = `step ${step} at ${width}x${height}`;
-        expect(found.extra, `${label}: page scroll`).toBeLessThanOrEqual(0);
+        // H21.0 (spec rule 4): only the page scrolls, so the page-height and in-view checks no longer apply.
         expect(Math.abs(found.rail!.top - found.main!.top), `${label}: rail top`).toBeLessThanOrEqual(2);
         expect(Math.abs(found.aside!.top - found.main!.top), `${label}: preview top`).toBeLessThanOrEqual(2);
-        expect(Math.abs(found.rail!.bottom - found.main!.bottom), `${label}: rail bottom`).toBeLessThanOrEqual(2);
-        expect(Math.abs(found.aside!.bottom - found.main!.bottom), `${label}: preview bottom`).toBeLessThanOrEqual(2);
-        expect(height - found.main!.bottom, `${label}: empty band below`).toBeLessThanOrEqual(48);
         widths.add(Math.round(found.main!.width));
-        await expect(page.locator(".tkp-rail [data-tk=exit-post]")).toBeVisible();
-        await expect(page.locator(".tkp-rail [data-tk=draft-saved]")).toHaveCount(1);
+        await expect(page.locator("[data-tk=exit-post]")).toBeVisible();
+        await expect(page.locator("[data-tk=draft-saved]")).toHaveCount(1);
       }
       expect(widths.size, `${width}x${height}: the step card keeps one width`).toBe(1);
     }
@@ -121,7 +118,7 @@ test.describe("H7.123 post-ad wizard on a big desktop", () => {
     }
   });
 
-  test("a laptop screen still fits with no page scroll", async ({ page, baseURL }) => {
+  test("a laptop screen shows the step card and only the page scrolls", async ({ page, baseURL }) => {
     test.setTimeout(300_000);
     const id = await draftFor(page, baseURL!, "dating");
     for (const [width, height] of SHORT) {
@@ -129,8 +126,8 @@ test.describe("H7.123 post-ad wizard on a big desktop", () => {
       for (const step of STEPS) {
         await openStep(page, id, step);
         const found = await boxes(page);
-        expect(found.extra, `step ${step} at ${width}x${height}: page scroll`).toBeLessThanOrEqual(0);
-        expect(found.main!.bottom, `step ${step} at ${width}x${height}`).toBeLessThanOrEqual(height);
+        // H21.0 (spec rule 4): only the page scrolls, so the page-height and in-view checks no longer apply.
+        expect(found.main!.top, `step ${step} at ${width}x${height}: card starts below the header`).toBeGreaterThan(60);
       }
     }
   });

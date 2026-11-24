@@ -165,7 +165,7 @@ test.describe("H7.83 post an ad, steps 1 and 2", () => {
     await expect(sheet).toHaveCount(0);
   });
 
-  test("every common size: no sideways scroll, and on desktop Continue stays in view on steps 1 and 2", async ({ page, baseURL }) => {
+  test("every common size: no sideways scroll on steps 1 and 2", async ({ page, baseURL }) => {
     test.setTimeout(180_000);
     await poster(page, baseURL!, "sizes");
     const sizes: [number, number][] = [[360, 740], [390, 844], [768, 1024], [1366, 768], [1536, 730]];
@@ -174,11 +174,10 @@ test.describe("H7.83 post an ad, steps 1 and 2", () => {
       await page.goto("/u/post-insert/");
       await page.locator(".tkp-tile", { hasText: "Dating" }).click();
       expect(await overflow(page), `${width} step 1`).toBeLessThanOrEqual(0);
-      if (width >= 1024) expect((await bottomOfNav(page)) - height, `${width}x${height} step 1: Continue below the fold`).toBeLessThanOrEqual(1);
+      // H21.0 (spec rule 4): only the page scrolls, so the page-height and in-view checks no longer apply.
       await page.locator("[data-tk=go-on]").click();
       await expect(page.locator("[data-tk=step-of]")).toContainText("Step 2 of");
       expect(await overflow(page), `${width} step 2`).toBeLessThanOrEqual(0);
-      if (width >= 1024) expect((await bottomOfNav(page)) - height, `${width}x${height} step 2: Continue below the fold`).toBeLessThanOrEqual(1);
     }
   });
 

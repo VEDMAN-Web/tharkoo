@@ -104,9 +104,8 @@ test.describe("H7.118 edit an ad", () => {
             await expect(page.locator(".tkp-main[data-step]")).toBeVisible();
             await page.evaluate(() => document.fonts.ready);
             const found = await overflows(page);
-            expect(found.pageExtra, `step ${step} at ${width}x${height}: page scroll`).toBeLessThanOrEqual(0);
+            // H21.0 (spec rule 4): only the page scrolls, so the page-height and in-view checks no longer apply.
             expect(found.inner, `step ${step} at ${width}x${height}: inner scroll`).toEqual([]);
-            expect(found.navBottom, `step ${step} at ${width}x${height}: buttons in view`).toBeLessThanOrEqual(height);
           }
         }
         await page.setViewportSize({ width: 1440, height: 900 });

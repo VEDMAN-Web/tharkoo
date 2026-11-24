@@ -92,8 +92,9 @@ test.describe("H10.4 phone polish", () => {
     await registerApi(signup, baseURL!, email);
     await signup.dispose();
     await loginUi(page, email, USER_PASSWORD, "/u/post-insert/");
-    await expect(page.locator("[data-tk=post-help]")).toBeVisible();
-    const help = (await page.locator("[data-tk=post-help]").boundingBox())!;
+    // H21.0: the help link lives in the computer rail; on a phone the header credit pill is the tap target to check.
+    await expect(page.locator("[data-tk=header-credit-pill]")).toBeVisible();
+    const help = (await page.locator("[data-tk=header-credit-pill]").boundingBox())!;
     expect(help.height).toBeGreaterThanOrEqual(24);
     expect(help.width).toBeGreaterThanOrEqual(24);
     expect(await smallTargets(page, "main")).toEqual([]);

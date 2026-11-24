@@ -50,9 +50,9 @@ async function overflows(page: Page) {
   });
 }
 
-test.describe("H7.86 no scrolling on desktop", () => {
+test.describe("H7.86 / H21.0 only the page scrolls on desktop", () => {
   for (const slug of GROUPS) {
-    test(`${slug}: every step fits with no page scroll and no inner scroll at the four laptop sizes`, async ({ page, baseURL }, info) => {
+    test(`${slug}: no step has an inner scroll box at the four laptop sizes`, async ({ page, baseURL }, info) => {
       test.skip(info.project.name !== "desktop-1440", "desktop sizes only");
       test.setTimeout(300_000);
       const id = await draftFor(page, baseURL!, slug, true);
@@ -71,10 +71,7 @@ test.describe("H7.86 no scrolling on desktop", () => {
           await page.evaluate(() => document.fonts.ready);
           const found = await overflows(page);
           const label = `${slug} step ${name} at ${width}x${height}`;
-          expect(found.pageExtra, `${label}: page scroll`).toBeLessThanOrEqual(0);
           expect(found.inner, `${label}: inner scroll`).toEqual([]);
-          expect(found.navBottom, `${label}: buttons in view`).toBeLessThanOrEqual(height);
-          expect(found.asideBottom, `${label}: preview column in view`).toBeLessThanOrEqual(height);
           if (SHOTS && slug === "dating") await page.screenshot({ path: `${SHOTS}/3-3-${name}-${width}x${height}.png` });
         }
       }
@@ -91,9 +88,7 @@ test.describe("H7.86 no scrolling on desktop", () => {
       await page.goto(`/u/post-insert/?draft=${id}&step=5`);
       await expect(page.locator("[data-tk=pay-card]")).toHaveAttribute("data-state", "low");
       const found = await overflows(page);
-      expect(found.pageExtra, `amber ${width}x${height}: page scroll`).toBeLessThanOrEqual(0);
       expect(found.inner, `amber ${width}x${height}: inner scroll`).toEqual([]);
-      expect(found.navBottom, `amber ${width}x${height}: buttons in view`).toBeLessThanOrEqual(height);
       if (SHOTS) await page.screenshot({ path: `${SHOTS}/3-3-amber-${width}x${height}.png` });
     }
   });
@@ -107,7 +102,6 @@ test.describe("H7.86 no scrolling on desktop", () => {
       await page.goto(`/u/post-insert/?draft=${id}&step=4`);
       await expect(page.locator("[data-tk=about-you]")).toBeVisible();
       const found = await overflows(page);
-      expect(found.pageExtra, `about ${width}x${height}: page scroll`).toBeLessThanOrEqual(0);
       expect(found.inner, `about ${width}x${height}: inner scroll`).toEqual([]);
       if (SHOTS) await page.screenshot({ path: `${SHOTS}/3-3-about-${width}x${height}.png` });
     }
