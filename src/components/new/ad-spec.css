@@ -17,8 +17,6 @@
 .tkn .tkn-ad-card h1 { margin: 0; font-size: 28px; line-height: 34px; font-weight: 700; letter-spacing: -0.02em; color: #110520; overflow-wrap: anywhere; }
 .tkn .tkn-ad-subrow { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 12px; margin-top: 6px; }
 .tkn .tkn-ad-meta { margin: 0; font-size: 14px; color: #5b3d7a; }
-.tkn .tkn-ad-phoneprice { display: none; margin: 8px 0 0; font-size: 22px; font-weight: 800; color: #c2185b; }
-.tkn .tkn-ad-phoneprice.is-request { font-size: 16px; font-weight: 600; color: #5b3d7a; }
 .tkn .tkn-ad-pills { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 8px; }
 .tkn .tkn-ad-pills li {
   display: inline-flex; align-items: center; gap: 6px; min-height: 28px; padding: 0 12px; border-radius: 999px;
@@ -48,8 +46,6 @@
 .tkn .tkn-ad-actions.is-icons .tkn-ad-save, .tkn .tkn-ad-actions.is-icons .tkn-report { width: 44px; min-width: 44px; height: 44px; padding: 0; justify-content: center; border: 1px solid #ead8f0; background: #fff; }
 
 .tkn .tkn-contact-panel { display: flex; flex-direction: column; gap: 14px; padding: 20px; border-radius: 16px; box-shadow: 0 12px 36px rgba(45, 18, 72, 0.1); }
-.tkn .tkn-ad-price { margin: 0; font-size: 26px; font-weight: 700; line-height: 32px; color: #c2185b; }
-.tkn .tkn-ad-price.is-request { font-size: 20px; line-height: 28px; font-weight: 600; color: #5b3d7a; }
 .tkn .tkn-seller-row { display: flex; align-items: center; gap: 12px; }
 .tkn .tkn-seller-avatar {
   width: 44px; height: 44px; flex: none; border-radius: 50%; display: flex; align-items: center; justify-content: center;
@@ -188,7 +184,6 @@ body:has(.tkn-ad) .tkn-footer { margin-top: 48px; }
 .tkn .tkn-alt-text { flex: 1; min-width: 0; display: flex; flex-direction: column; }
 .tkn .tkn-alt-text strong { font-size: 14px; color: #110520; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .tkn .tkn-alt-text span { font-size: 12px; font-weight: 600; color: #047857; }
-.tkn .tkn-alt-price { font-size: 13px; font-weight: 800; color: #c2185b; flex: none; }
 .tkn .tkn-packs { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
 .tkn .tkn-pack {
   display: flex; flex-direction: column; align-items: center; padding: 12px 8px; border-radius: 12px; border: 2px solid #ead8f0;
@@ -214,9 +209,8 @@ body:has(.tkn-ad) .tkn-footer { margin-top: 48px; }
   .tkn .tkn-ad-grid { grid-template-columns: minmax(0, 1fr); gap: 16px; }
   .tkn .tkn-ad-sticky { position: static; }
   .tkn .tkn-contact-panel { padding: 14px 16px; box-shadow: none; }
-  .tkn .tkn-contact-panel > .tkn-ad-price, .tkn .tkn-contact-panel > .tk-actions, .tkn .tkn-contact-panel > .tkn-ad-actions { display: none; }
+  .tkn .tkn-contact-panel > .tk-actions, .tkn .tkn-contact-panel > .tkn-ad-actions { display: none; }
   .tkn .tkn-ad-actions.is-icons { display: flex; }
-  .tkn .tkn-ad-phoneprice { display: block; }
   .tkn .tkn-ad-card { padding: 18px; }
   .tkn .tkn-ad-card h1 { font-size: 24px; line-height: 30px; }
   .tkn .tkn-det { grid-template-columns: repeat(2, minmax(0, 1fr)); }

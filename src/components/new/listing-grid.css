@@ -252,11 +252,6 @@
   align-items: center;
   gap: 8px 12px;
 }
-.tk-row-price {
-  color: #c2185b;
-  font-size: 17px;
-  font-weight: 800;
-}
 .tk-row-stats {
   display: inline-flex;
   flex-wrap: wrap;

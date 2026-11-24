@@ -43,16 +43,6 @@ export interface SkippedAd {
 
 const CHECK_LIMIT = 300;
 
-function priceOf(row: { price?: number; attributes?: unknown }) {
-  if (typeof row.price === "number" && row.price > 0) return row.price;
-  const bag = row.attributes && typeof row.attributes === "object" ? (row.attributes as Record<string, unknown>) : {};
-  for (const key of ["price", "rent", "salary"]) {
-    const value = Number(bag[key]);
-    if (value > 0) return value;
-  }
-  return null;
-}
-
 function textOf(bag: unknown, key: string) {
   const value = bag && typeof bag === "object" ? (bag as Record<string, unknown>)[key] : undefined;
   return typeof value === "string" && value.trim() ? value.trim() : undefined;
@@ -74,7 +64,6 @@ export async function adsSkippedBySchema(categoryId: string, mapping: AdSchemaMa
       name: row.title ?? "",
       description: row.description ?? "",
       url: "",
-      price: priceOf(row),
       datePosted: row.publishedAt ? new Date(row.publishedAt).toISOString() : undefined,
       validThrough: row.expiresAt ? new Date(row.expiresAt).toISOString() : undefined,
       hiringOrganization: textOf(row.attributes, "company") ?? textOf(row.attributes, "hiringOrganization"),

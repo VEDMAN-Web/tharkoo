@@ -13,8 +13,6 @@ const slug = z.string().trim().min(1).max(60).regex(/^[a-z0-9-]+$/);
 const discoverQuerySchema = z.object({
   category: slug.optional(),
   city: slug.optional(),
-  minPrice: z.coerce.number().int().min(0).max(100_000_000).optional(),
-  maxPrice: z.coerce.number().int().min(0).max(100_000_000).optional(),
   withVideo: z.enum(["1", "0"]).optional(),
   seed: z.string().trim().min(1).max(40).regex(/^[A-Za-z0-9_-]+$/).optional(),
   page: z.coerce.number().int().min(1).max(50).optional(),
@@ -28,8 +26,6 @@ async function dispatch(request: Request) {
     filters: {
       categorySlug: query.category,
       citySlug: query.city,
-      minPrice: query.minPrice,
-      maxPrice: query.maxPrice,
       withVideo: query.withVideo === "1",
     },
     seed: query.seed ?? Math.random().toString(36).slice(2, 10),

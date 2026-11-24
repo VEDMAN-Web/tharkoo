@@ -45,9 +45,9 @@ describe("SEO delta", () => {
 
   it("branches listing schema and omits a zero price and a seller", () => {
     expect(listingJsonLd({ category: "dating", name: "Hi", description: "Note", url: "https://example.test/ad/a/" })).toBeNull();
-    const service = listingJsonLd({ category: "wellness", name: "Yoga", description: "A class", url: "https://example.test/ad/y/", city: "Pune", price: 500 });
+    const service = listingJsonLd({ category: "wellness", name: "Yoga", description: "A class", url: "https://example.test/ad/y/", city: "Pune" });
     expect(service?.["@type"]).toBe("Service");
-    expect((service as { offers?: { price?: string } }).offers?.price).toBe("500");
+    expect((service as { offers?: unknown }).offers).toBeUndefined();
     expect(JSON.stringify(service)).not.toContain("seller");
     const job = listingJsonLd({ category: "jobs", name: "Clerk", description: "Day shift", url: "https://example.test/ad/j/" });
     expect(job).toBeNull();

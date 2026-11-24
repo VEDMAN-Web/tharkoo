@@ -122,12 +122,11 @@ test.describe("H7.99b ad page content", () => {
     }
   });
 
-  test("the right card has the price, the advertiser rows, Call and WhatsApp side by side and a slim Stay safe box", async ({ page }, testInfo) => {
+  test("the right card has the advertiser rows, Call and WhatsApp side by side and a slim Stay safe box", async ({ page }, testInfo) => {
     test.skip(testInfo.project.name !== "desktop-1440", "the card is a wide-screen part");
     await page.goto(await realAdPath(page, "/property/bengaluru/"));
     const card = page.locator('[data-tk="contact-card"]');
-    const request = await card.locator(".tkn-ad-price").evaluate((node) => node.classList.contains("is-request"));
-    await expect(card.locator(".tkn-ad-price")).toHaveCSS("font-size", request ? "20px" : "26px");
+    await expect(card.locator(".tkn-ad-price")).toHaveCount(0);
     await expect(card.locator(".tkn-seller-avatar")).toHaveCSS("width", "44px");
     await expect(card.locator(".tkn-seller-since")).toContainText("Member since");
     // The Online now line arrives with the seller's presence and moves the buttons down, so measure after it.
@@ -281,9 +280,7 @@ test.describe("H7.99b ad page content", () => {
       }
       await expect(bar.getByRole("button", { name: "Chat" })).toBeVisible();
       await expect(page.locator("h1")).toHaveCSS("font-size", "24px");
-      const h1 = (await page.locator("h1").boundingBox())!;
-      const price = (await page.locator(".tkn-ad-phoneprice").boundingBox())!;
-      expect(price.y).toBeGreaterThan(h1.y + h1.height - 1);
+      await expect(page.locator(".tkn-ad-phoneprice")).toHaveCount(0);
       const icons = page.locator('[data-tk="ad-actions-icons"]');
       await expect(icons.getByRole("button", { name: /save/i })).toBeVisible();
       await expect(icons.getByRole("link", { name: "Report this ad" })).toBeVisible();
@@ -361,7 +358,7 @@ test.describe("H7.99b ad page content", () => {
     expect(result.violations.map((item) => `${item.id}: ${item.nodes[0]?.target.join(" ")}`)).toEqual([]);
   });
 
-  test("people categories show no price line at all, and items keep Price on request at 20 px muted", async ({ page }) => {
+  test("no ad shows a price line, in people categories or any other", async ({ page }) => {
     let checked = 0;
     for (const feed of ["/dating/bengaluru/", "/friendship/bengaluru/", "/meetups/bengaluru/", "/personal-ads/bengaluru/"]) {
       await page.goto(feed);
@@ -396,23 +393,23 @@ test.describe("H7.99b ad page content", () => {
     }
   });
 
-  test("a wellness ad keeps its price row while a dating ad has none", async ({ page }, testInfo) => {
+  test("a wellness ad has no price row either (H21.8)", async ({ page }, testInfo) => {
     test.skip(testInfo.project.name !== "desktop-1440", "one run is enough");
     const wellness = await adAt(page, "/wellness/", 2);
     await page.goto(wellness);
-    await expect(page.locator(".tkn-contact-panel .tkn-ad-price")).toBeVisible();
+    await expect(page.locator(".tkn-contact-panel")).toBeAttached();
+    await expect(page.locator(".tkn-ad-price")).toHaveCount(0);
     const dating = await adAt(page, "/dating/bengaluru/", 3);
     await page.goto(dating);
     await expect(page.locator(".tkn-ad-price")).toHaveCount(0);
   });
 
-  test("an item without a price says Price on request at 20 px muted", async ({ page }, testInfo) => {
+  test("an item ad shows no price and no Price on request line", async ({ page }, testInfo) => {
     test.skip(testInfo.project.name !== "desktop-1440", "the card is a wide-screen part");
     await page.goto("/ad/demo-7920/");
-    const price = page.locator(".tkn-contact-panel .tkn-ad-price");
-    await expect(price).toHaveText("Price on request");
-    await expect(price).toHaveCSS("font-size", "20px");
-    await expect(price).toHaveCSS("font-weight", "600");
+    await expect(page.locator(".tkn-contact-panel")).toBeAttached();
+    await expect(page.locator(".tkn-ad-price")).toHaveCount(0);
+    await expect(page.getByText("Price on request")).toHaveCount(0);
   });
 
   test("proof shots of the demo ad and a dating ad at the required sizes", async ({ page }, testInfo) => {

@@ -10,7 +10,6 @@ import { adHref, citiesPath, joinPath, placePath, postAdPath, type UrlPaths } fr
 import { isCityAlias } from "@/lib/seo/district-alias";
 import { makeT, type UiTextMap } from "@/lib/ui/text";
 import { PostStrip } from "@/components/ui/PostStrip";
-import { formatPrice } from "@/components/search/price";
 import { CitySync } from "@/components/CityContext";
 import { BadgeCheck, ShieldCheck } from "lucide-react";
 import { AdSellerRow } from "./AdLiveBits";
@@ -28,7 +27,6 @@ import "./ad-spec.css";
 
 const PERSONAL = new Set(["dating", "friendship", "meetups", "personal-ads"]);
 const GOLD_TIERS = new Set(["supertop", "top"]);
-const PRICED_PEOPLE = new Set(["wellness"]);
 const DAY_MS = 24 * 60 * 60 * 1000;
 
 function tierOf(ad: ListingDoc, categoryName: string) {
@@ -75,7 +73,6 @@ export function popupAlternatives(ad: ListingDoc, related: ListingDoc[], paths: 
         href: adHref(paths, item),
         title: displayTitle(item.title) || "Listing",
         place: district ? `${city} / ${district}` : city,
-        price: formatPrice(item.price),
         photo: item.photos?.[0] ?? null,
       };
     });
@@ -98,7 +95,6 @@ export function NewAdDetail({
   paymentsLive = false,
   alternatives = [],
   sellerName = "",
-  priceUnit = "",
   texts,
 }: {
   ad: ListingDoc;
@@ -121,7 +117,6 @@ export function NewAdDetail({
   paymentsLive?: boolean;
   alternatives?: AdPopupAlt[];
   sellerName?: string;
-  priceUnit?: string;
   texts?: UiTextMap;
 }) {
   const t = makeT(texts);
@@ -134,10 +129,8 @@ export function NewAdDetail({
   const tier = tierOf(ad, categoryName);
   const photos = ad.photos || [];
   const seller = sellerName?.trim() || t("ad.seller.name");
-  const price = formatPrice(ad.price);
   const similar = related.filter((item) => item.slug !== ad.slug).slice(0, SIMILAR_ADS_MAX);
   const popupInfo: ContactPopupInfo = { sellerName: seller, paymentsLive, alternatives };
-  const priceText = price ? `${price}${priceUnit ? ` / ${priceUnit}` : ""}` : "";
   const since = memberSinceLabel(memberSince);
   const cardLabels = {
     online: t("home.ads.online"),
@@ -156,7 +149,6 @@ export function NewAdDetail({
   ];
   const barChannels = channelsFor(peopleAd ? ["phone", "whatsapp"] : ["whatsapp"], contactChannels);
   const barClass = barClassOf(barChannels.length + 1 + (tour && !peopleAd ? 1 : 0), peopleAd);
-  const showPrice = features.price && (!peopleAd || PRICED_PEOPLE.has(ad.categorySlug || ""));
   const sampleNote = ad.sample ? { message: t("demo.message"), button: t("demo.postButton"), href: postAdPath(paths) } : null;
   const actionProps = { slug: ad.slug || "", publicId: ad.publicId || "", address: ad.address, title, place: placeText };
 
@@ -184,7 +176,6 @@ export function NewAdDetail({
                   <h1>{title}</h1>
                   <AdActions {...actionProps} icons />
                 </div>
-                {!showPrice ? null : <p className={priceText ? "tkn-ad-phoneprice" : "tkn-ad-phoneprice is-request"}>{priceText || t("ad.price.request")}</p>}
                 <div className="tkn-ad-subrow">
                   <p className="tkn-ad-meta">{t("ad.meta.simple", { place: placeText, date })}</p>
                   <ul className="tkn-ad-pills" aria-label={t("ad.details")}>
@@ -233,7 +224,6 @@ export function NewAdDetail({
             <aside className="tkn-ad-side" aria-label={t("ad.contact.label")}>
               <div className="tkn-ad-sticky">
                 <div className="tkn-contact-panel" data-tk="contact-card">
-                  {!showPrice ? null : <p className={priceText ? "tkn-ad-price" : "tkn-ad-price is-request"}>{priceText || t("ad.price.request")}</p>}
                   <AdSellerRow name={seller} verified={Boolean(ad.verified)} since={since} />
                   {features.contact && !ad.sample ? <ContactButtons channels={channelsFor(["phone", "whatsapp"], contactChannels)} /> : null}
                   <AdActions {...actionProps} />

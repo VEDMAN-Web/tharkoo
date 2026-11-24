@@ -136,11 +136,10 @@ describe("structured data", () => {
   });
 
   it("follows the category mapping", () => {
-    const car = { category: "vehicles", name: "Car", description: "A car.", url: "https://x.test/listing/b/", price: 100000 };
+    const car = { category: "vehicles", name: "Car", description: "A car.", url: "https://x.test/listing/b/" };
     expect(listingJsonLd(car)).toMatchObject({ "@type": "Product" });
     expect(listingJsonLd({ ...car, mapping: "none" })).toBeNull();
-    expect(listingJsonLd({ ...car, category: "weird", mapping: "Product" })).toMatchObject({ "@type": "Product", offers: { price: "100000" } });
-    expect(listingJsonLd({ ...car, category: "weird", mapping: "Product", price: null })).toBeNull();
+    expect(listingJsonLd({ ...car, category: "weird", mapping: "Product" })).toMatchObject({ "@type": "Product" });
     expect(listingJsonLd({ ...job, category: "weird", mapping: "JobPosting" })).toMatchObject({ "@type": "JobPosting" });
   });
 

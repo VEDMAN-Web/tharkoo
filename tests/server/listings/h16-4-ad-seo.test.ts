@@ -83,11 +83,9 @@ describe("H16.4 JobPosting", () => {
     expect(listingJsonLd({ ...base, validThrough: undefined })).toBeNull();
   });
 
-  it("another category gets an Offer only where the ad has a price", () => {
-    const withPrice = listingJsonLd({ category: "buy-and-sell", name: "Sofa", description: "A sofa.", url: "https://tharkoo.example/ad/s/", price: 5000 }) as { offers?: unknown };
-    const without = listingJsonLd({ category: "buy-and-sell", name: "Sofa", description: "A sofa.", url: "https://tharkoo.example/ad/s/" }) as { offers?: unknown };
-    expect(withPrice.offers).toBeTruthy();
-    expect(without.offers).toBeUndefined();
+  it("another category gets no Offer, an ad has no price (H21.8)", () => {
+    const node = listingJsonLd({ category: "buy-and-sell", name: "Sofa", description: "A sofa.", url: "https://tharkoo.example/ad/s/" }) as { offers?: unknown };
+    expect(node.offers).toBeUndefined();
   });
 });
 

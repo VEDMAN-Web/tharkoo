@@ -83,7 +83,6 @@ export function ListingRow({ ad, labels, order = 0, eager = false }: { ad: Listi
         {ad.description ? <p className="tk-row-desc" data-tk="row-desc">{ad.description}</p> : null}
         <div className="tk-row-foot">
           <div className="tk-row-foot-main">
-            {ad.showPrice && ad.price ? <span className="tk-row-price" data-tk="card-price">{ad.price}</span> : null}
             <p className="tk-row-tags">
               {ad.sample && labels.sample ? <span className="tk-row-tag is-sample" data-tk="sample-pill">{labels.sample}</span> : null}
               {ad.verified ? (

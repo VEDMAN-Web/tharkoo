@@ -118,10 +118,6 @@ function Details({ form, options, onChange }: { form: FormState; options: AdForm
         <textarea {...input} rows={6} maxLength={5000} value={form.description} onChange={(event) => onChange({ description: event.target.value })} />
         <span className="adm-field-help">At least {DESCRIPTION_MIN} characters. {form.description.trim().length} now.</span>
       </label>
-      <label style={{ display: "grid", gap: 4 }}>
-        <span className="adm-field-label">Price in rupees (optional)</span>
-        <input {...input} type="number" min={0} inputMode="numeric" value={form.price} onChange={(event) => onChange({ price: event.target.value })} />
-      </label>
       {category ? <AdAttributeFields fields={category.fields} values={form.attributes} onChange={(key, value) => onChange({ attributes: { ...form.attributes, [key]: value } })} /> : null}
     </section>
   );

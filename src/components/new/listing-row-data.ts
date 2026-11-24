@@ -2,7 +2,6 @@ import type { ListingDoc } from "@/lib/models";
 import { isCityAlias } from "@/lib/seo/district-alias";
 import { prettyPlace } from "@/lib/format";
 import type { UrlPaths } from "@/lib/urls";
-import { formatPrice } from "@/components/search/price";
 import type { TextFn } from "@/lib/ui/text";
 import type { HomeAdCardData } from "./HomeAdCard";
 import { homeAdCardData } from "./home-ad-data";
@@ -16,10 +15,6 @@ export type ListingRowData = HomeAdCardData & {
   verified: boolean;
   /** The district or area, when it adds to the city. */
   area: string;
-  /** "Rs 12,500" or "" when the ad has no usable price. */
-  price: string;
-  /** People ads do not show a price (except wellness), as on the ad page. */
-  showPrice: boolean;
 };
 
 export type RowLabels = {
@@ -35,7 +30,6 @@ export type RowLabels = {
   saveAd: string;
 };
 
-const PRICED_PEOPLE = new Set(["wellness"]);
 const PEOPLE_CATEGORIES = new Set(["dating", "friendship", "meetups", "personal-ads"]);
 
 export function rowLabels(t: TextFn): RowLabels {
@@ -70,7 +64,7 @@ export function tierOf(variant?: string): RowTier {
   }
 }
 
-/** A people ad (an age, or a people category) never plays video on a card and does not show a price. */
+/** A people ad (an age, or a people category) never plays video on a card. */
 function isPeopleAd(ad: ListingDoc) {
   return (typeof ad.age === "number" && ad.age > 0) || PEOPLE_CATEGORIES.has(ad.categorySlug || "");
 }
@@ -87,7 +81,5 @@ export function listingRowData(ad: ListingDoc, categoryNames: Map<string, string
     tier: tierOf(ad.variant),
     verified: Boolean(ad.verified),
     area,
-    price: formatPrice(ad.price),
-    showPrice: !people || PRICED_PEOPLE.has(ad.categorySlug || ""),
   };
 }

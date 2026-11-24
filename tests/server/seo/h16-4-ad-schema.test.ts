@@ -7,24 +7,24 @@ const crumbs = [
   { name: "Tharkoo India", path: "/" },
   { name: "Category", path: "/c/" },
 ];
-const base: ListingSchemaInput = { category: "buy-and-sell", name: "Steel almirah", description: "A steel almirah in good shape.", url: "https://tharkoo.example/ad/x/", price: 4500, city: "Pune" };
+const base: ListingSchemaInput = { category: "buy-and-sell", name: "Steel almirah", description: "A steel almirah in good shape.", url: "https://tharkoo.example/ad/x/", city: "Pune" };
 const typesOf = (input: Partial<ListingSchemaInput> & { sample?: boolean; people?: boolean }) => {
   const { sample = false, ...listing } = input;
   return adJsonLdNodes({ crumbs, title: "t", path: "/ad/x/", sample, listing: { ...base, ...listing } }).map((node) => node["@type"]);
 };
 
 describe("goods", () => {
-  it("a real goods ad is a Product with an Offer", () => {
+  it("a real goods ad is a Product with no Offer (an ad has no price)", () => {
     const node = listingJsonLd(base) as { "@type": string; offers?: { "@type": string; price: string; priceCurrency: string } };
     expect(node["@type"]).toBe("Product");
-    expect(node.offers).toMatchObject({ "@type": "Offer", price: "4500", priceCurrency: "INR" });
+    expect(node.offers).toBeUndefined();
   });
 
-  it("a property ad is a RealEstateListing with its date and an Offer, not a Product", () => {
+  it("a property ad is a RealEstateListing with its date and no Offer, not a Product", () => {
     const node = listingJsonLd({ ...base, category: "property", name: "2 room flat", datePosted: "2026-11-01T00:00:00.000Z" }) as Record<string, unknown>;
     expect(node["@type"]).toBe("RealEstateListing");
     expect(node.datePosted).toBe("2026-11-01T00:00:00.000Z");
-    expect(node.offers).toMatchObject({ "@type": "Offer", price: "4500" });
+    expect(node.offers).toBeUndefined();
   });
 });
 

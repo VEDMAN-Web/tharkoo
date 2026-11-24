@@ -65,7 +65,6 @@ export interface ListingSchemaInput {
   url: string;
   image?: string;
   city?: string;
-  price?: number | null;
   itemCondition?: string;
   datePosted?: string;
   validThrough?: string;
@@ -92,7 +91,6 @@ export const AD_SCHEMA_REQUIRED: Record<Exclude<AdSchemaMapping, "none">, { key:
   Product: [
     { key: "name", label: "title" },
     { key: "description", label: "description" },
-    { key: "price", label: "price" },
   ],
 };
 
@@ -101,8 +99,7 @@ export function missingSchemaFields(mapping: AdSchemaMapping, input: ListingSche
   if (mapping === "none") return [];
   return AD_SCHEMA_REQUIRED[mapping]
     .filter(({ key }) => {
-      const value = input[key];
-      return key === "price" ? !(typeof value === "number" && value > 0) : !value;
+      return !input[key];
     })
     .map(({ label }) => label);
 }
@@ -124,9 +121,8 @@ function jobPostingNode(input: ListingSchemaInput) {
   };
 }
 
-function productNode(input: ListingSchemaInput, requirePrice: boolean) {
-  const price = typeof input.price === "number" && input.price > 0 ? input.price : null;
-  if (requirePrice && !price) return null;
+/** H21.8: an ad has no price any more, so no node carries an Offer. */
+function productNode(input: ListingSchemaInput) {
   const image = input.image ? [input.image] : undefined;
   return {
     "@context": "https://schema.org",
@@ -135,24 +131,11 @@ function productNode(input: ListingSchemaInput, requirePrice: boolean) {
     description: input.description,
     url: input.url,
     ...(image ? { image } : {}),
-    ...(price
-      ? {
-          offers: {
-            "@type": "Offer",
-            price: String(price),
-            priceCurrency: "INR",
-            availability: "https://schema.org/InStock",
-            url: input.url,
-            ...(input.itemCondition ? { itemCondition: input.itemCondition } : {}),
-          },
-        }
-      : {}),
   };
 }
 
-/** A property ad: a RealEstateListing with its posting date and, when it has a price, an Offer. */
+/** A property ad: a RealEstateListing with its posting date. */
 function realEstateNode(input: ListingSchemaInput) {
-  const price = typeof input.price === "number" && input.price > 0 ? input.price : null;
   return {
     "@context": "https://schema.org",
     "@type": "RealEstateListing",
@@ -161,18 +144,16 @@ function realEstateNode(input: ListingSchemaInput) {
     url: input.url,
     ...(input.datePosted ? { datePosted: input.datePosted } : {}),
     ...(input.image ? { image: [input.image] } : {}),
-    ...(price ? { offers: { "@type": "Offer", price: String(price), priceCurrency: "INR", availability: "https://schema.org/InStock", url: input.url } } : {}),
   };
 }
 
 export function listingJsonLd(input: ListingSchemaInput) {
-  const price = typeof input.price === "number" && input.price > 0 ? input.price : null;
   const image = input.image ? [input.image] : undefined;
   // H16.4: a person is never an offer: no node at all for a people ad, whatever the category or the SEO mapping says.
   if (input.people) return null;
   if (input.mapping === "none") return null;
   if (input.mapping === "JobPosting") return jobPostingNode(input);
-  if (input.mapping === "Product") return productNode(input, true);
+  if (input.mapping === "Product") return productNode(input);
   if (PERSONAL.has(input.category)) return null;
   if (input.category === "jobs") return jobPostingNode(input);
   if (input.category === "property") return realEstateNode(input);
@@ -185,13 +166,10 @@ export function listingJsonLd(input: ListingSchemaInput) {
       url: input.url,
       ...(image ? { image } : {}),
       areaServed: input.city || "India",
-      ...(price
-        ? { offers: { "@type": "Offer", price: String(price), priceCurrency: "INR", availability: "https://schema.org/InStock", url: input.url } }
-        : {}),
     };
   }
   if (!GOODS.has(input.category)) return null;
-  return productNode(input, false);
+  return productNode(input);
 }
 
 export interface OrganizationSettings {

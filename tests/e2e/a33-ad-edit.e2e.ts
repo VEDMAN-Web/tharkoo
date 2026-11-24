@@ -74,7 +74,8 @@ test.describe("A33 ad edit", () => {
       expect(await hasHorizontalScroll(page)).toBe(false);
       await shot(page, "ad-edit");
 
-      await page.getByLabel(/^Price/).fill("18000");
+      await expect(page.getByLabel(/^Price/)).toHaveCount(0);
+      await page.locator("#ae-desc").fill("Spacious flat with lift, parking and a balcony. Family preferred.");
       await expect(page.getByText("1 unsaved change")).toBeVisible();
       await page.getByLabel(/^Title/).fill("");
       await page.getByRole("button", { name: "Save changes" }).click();
@@ -83,11 +84,11 @@ test.describe("A33 ad edit", () => {
       await shot(page, "ad-edit-unsaved");
       await page.getByRole("button", { name: "Save changes" }).click();
       await expect(page.getByText(/Saved .*The ad stays live/)).toBeVisible();
-      expect(await read(seeded.id)).toMatchObject({ status: "active", price: 18000, title: `A33 ${tag} flat in Adajan` });
+      expect(await read(seeded.id)).toMatchObject({ status: "active", price: 20000, title: `A33 ${tag} flat in Adajan`, description: "Spacious flat with lift, parking and a balcony. Family preferred." });
 
       await page.getByRole("button", { name: "Undo" }).click();
       await expect(page.getByText(/Undone\. The old values are back/)).toBeVisible();
-      expect(await read(seeded.id)).toMatchObject({ status: "active", price: 20000, title: `A33 ${tag} flat near Adajan` });
+      expect(await read(seeded.id)).toMatchObject({ status: "active", price: 20000, title: `A33 ${tag} flat near Adajan`, description: "Spacious flat with lift and parking. Family or working people preferred." });
 
       await page.getByRole("button", { name: "History" }).click();
       const drawer = page.locator('[data-tk="history"]');
@@ -100,7 +101,7 @@ test.describe("A33 ad edit", () => {
       await shot(page, "ad-history-restore");
       await page.getByRole("button", { name: "Restore v2" }).click();
       await expect(page.getByText(/Went back to v2/)).toBeVisible();
-      expect(await read(seeded.id)).toMatchObject({ status: "active", price: 18000 });
+      expect(await read(seeded.id)).toMatchObject({ status: "active", price: 20000, description: "Spacious flat with lift, parking and a balcony. Family preferred." });
     } finally {
       await cleanUp(seeded);
     }

@@ -19,8 +19,6 @@ export interface LandingInput {
   site?: string;
   indexable?: boolean;
   districts?: string[];
-  priceMin?: number;
-  priceMax?: number;
   updated?: string;
   /** H17.1: said instead of "0 live ads" when only sample ads are shown (the UI-text key listing.sampleCount). */
   sampleNote?: string;
@@ -83,14 +81,10 @@ export function fallbackLanding(input: LandingInput): LandingCopy {
   const none = count === 0;
   const description = none ? `${h1}. ${sampleNote}. Open a listing to see how ads look.` : `${h1}. ${count} live ads. Open a listing to see photos and contact the person who posted.`;
   const districts = (input.districts || []).filter(Boolean).slice(0, 3);
-  const price =
-    input.priceMin && input.priceMax
-      ? ` Listed prices on this page run from ₹${input.priceMin} to ₹${input.priceMax}.`
-      : " Prices appear on an ad only when the person who posted added one.";
   const area = districts.length ? ` Districts with ads include ${districts.join(", ")}.` : "";
   const updated = input.updated ? ` The newest ad on this page was updated on ${input.updated}.` : "";
   const opening = `${none ? `${sampleNote} in ${place}.` : `${place} currently has ${count} live ${input.category.toLowerCase()} ads on ${site}.`} Start with the newest card if you want what changed today, then filter by district when the list is longer than you need. Promoted ads stay above the rest only for the days that were paid.`;
-  const detail = `${introLine}${area}${price}${updated}`;
+  const detail = `${introLine}${area}${updated}`;
   const intro = input.indexable
     ? fitIntro(`${input.category}|${place}|rich`, opening, detail)
     : `${introLine} ${none ? `${sampleNote}.` : `${count} ${input.category.toLowerCase()} ads are live in ${place}.`}`;

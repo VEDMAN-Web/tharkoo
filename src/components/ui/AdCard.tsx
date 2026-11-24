@@ -5,8 +5,6 @@ import { ArrowUp, Calendar, Camera, Check, MapPin, Phone } from "lucide-react";
 import type { ListingDoc } from "@/lib/models";
 import { displayTitle, prettyPlace } from "@/lib/format";
 import { isCityAlias } from "@/lib/seo/district-alias";
-import { PriceTag } from "../search/PriceTag";
-import { formatPrice } from "../search/price";
 import { PhotoSwipe } from "./PhotoSwipe";
 import { CardVideo } from "./CardVideo";
 import { SaveButton } from "./SaveButton";
@@ -106,7 +104,6 @@ export function AdCard({
   if (layout === "row") {
     const verifiedText = videoVerified || ad.trust?.[0] || "";
     const placeText = `${city}${area ? ` / ${area}` : ""}`;
-    const priceText = formatPrice(ad.price);
     return (
       <article ref={cardRef} className="tk-card tkn-ls-card m-lift" data-tk="card" data-reveal data-variant={variant}>
         <div className="tkn-ls-photo">
@@ -144,11 +141,6 @@ export function AdCard({
             {ad.categorySlug ? <span className="tkn-ls-pill-cat">{prettyPlace(ad.categorySlug)}</span> : null}
             {placeText ? <span className="tkn-ls-pill-place">{placeText}</span> : null}
           </div>
-          {priceText ? (
-            <div className="tkn-ls-foot">
-              <span className="tkn-ls-price" data-tk="card-price">{priceText}</span>
-            </div>
-          ) : null}
         </div>
       </article>
     );
@@ -189,7 +181,6 @@ export function AdCard({
       <a className="tk-card-link" href={href} data-ad-link>
         <span className="tk-card-body">
           <span className="tk-card-title">{title}</span>
-          <PriceTag price={ad.price} />
           {ad.description ? <span className="tk-card-desc">{ad.description}</span> : null}
           {ad.trust?.length ? (
             <span className="tk-trust">
