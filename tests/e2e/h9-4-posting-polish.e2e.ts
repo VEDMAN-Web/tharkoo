@@ -45,7 +45,8 @@ test.describe("H9.4 posting polish, part 1", () => {
     await poster(page, baseURL!, "h94phone");
     await expect(page.locator('[data-tk="post-ad"]').first()).toBeHidden();
     await expect(page.locator(".tkp-progress")).toBeHidden();
-    await expect(page.locator(".tkp-steps")).toBeVisible();
+    // H21.0: the phone shows the step strip instead of the steps rail.
+    await expect(page.locator("[data-tk=step-strip]")).toBeVisible();
     await toDetails(page, "Dating");
     await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight));
     const nav = (await page.locator(".tkp-nav").boundingBox())!;
@@ -55,7 +56,8 @@ test.describe("H9.4 posting polish, part 1", () => {
     expect(await serious(page)).toEqual([]);
     await shot(page, "details");
     await page.setViewportSize({ width: 1440, height: 900 });
-    await expect(page.locator('[data-tk="post-ad"]').first()).toBeVisible();
+    // H21.0: the flow has its own header, so the site header (and its Post your ad button) stays hidden on desktop too.
+    await expect(page.locator('[data-tk="post-ad"]').first()).toBeHidden();
     await shot(page, "details");
   });
 

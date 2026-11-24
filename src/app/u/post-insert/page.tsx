@@ -14,6 +14,7 @@ import { newDesignOn } from "@/server/site-links/new-design";
 import { getPaths } from "@/server/urls/service";
 import { idCheckRequired, idCheckScreen } from "@/server/settings/id-check";
 import { IdCheckFirst } from "@/components/post/IdCheckFirst";
+import { PostShell } from "@/components/post/PostShell";
 import { UiTextProvider } from "@/components/help/UiTextProvider";
 import { textOverrides } from "@/app/admin/ui-text/store";
 import { makeT, pickTexts } from "@/lib/ui/text";
@@ -68,7 +69,7 @@ export default async function PostInsertPage({
   const copy = fillCopyFee(buildPostCopy(blocks), fee);
   const texts = { ...pickTexts(await textOverrides(), "post."), ...copy.texts };
   const shared = { fee };
-  if (screen !== "form") return <IdCheckFirst screen={screen} postPath={postAdPath(await getPaths())} t={makeT(texts, shared)} />;
+  if (screen !== "form") return <UiTextProvider texts={texts} shared={shared}><PostShell percent={null}><IdCheckFirst screen={screen} postPath={postAdPath(await getPaths())} t={makeT(texts, shared)} /></PostShell></UiTextProvider>;
   // H7.5: the New design (five steps, live preview) only when the switch is on.
   const [categoryRows, cityRows] = newDesign ? await Promise.all([getCategories(), getCities()]) : [[], []];
   const categories = plain(

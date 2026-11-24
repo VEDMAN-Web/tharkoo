@@ -887,6 +887,18 @@ export const TEXT_DEFAULTS = {
   "ad.buy.own": "Or type your own amount",
   "ad.buy.ownGet": "You get {count} call credits",
   "panel.coins.tooltip": "Call credits: {call} · Ad credits: {ad}",
+  "post.v2.header.title": "Post an ad",
+  "post.v2.header.exit": "Save draft and exit",
+  "post.v2.header.brand": "tharkoo",
+  "post.v2.header.logoLabel": "Tharkoo home",
+  "post.v2.header.creditsUnit": "ad credits",
+  "post.v2.header.creditsLabel": "Ad credits: {balance}. Buy more",
+  "post.v2.header.creditsWait": "Ad credits",
+  "post.v2.progress.label": "Posting progress",
+  "post.v2.rail.title": "Your ad",
+  "post.v2.rail.help": "Need help?",
+  "post.v2.strip": "Step {step} of {total} · {title}",
+  "post.v2.nav.back": "Back",
 } as const;
 
 export type UiTextKey = keyof typeof TEXT_DEFAULTS;

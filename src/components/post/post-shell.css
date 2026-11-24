@@ -1,0 +1,147 @@
+/* H21.0: the shell of the post-ad flow. Header, progress line, steps rail, support bubble and the "only the page scrolls" rule.
+   It comes after post-wizard.css and restates the layout, so the old fit-the-screen rules no longer apply. */
+
+/* The flow has its own header; the site header and footer give way to it. */
+body:has(.tkp-shell) .tkn-header,
+body:has(.tkp-shell) .tkn-footer { display: none; }
+body:has(.tkp-shell) { background: #fbf5fa; }
+
+.tkn .tkp-shell { font-family: var(--font-jakarta), "Plus Jakarta Sans", system-ui, -apple-system, "Segoe UI", sans-serif; color: #1e0b38; background: #fbf5fa; min-height: 100vh; overflow-x: clip; -webkit-font-smoothing: antialiased; }
+
+/* Header: on a phone the exit arrow, the title and the credit pill; on a computer the logo, the title and the right group. */
+.tkn .tkp-shell .tkp-header { background: #fff; border-bottom: 1px solid #ead8f0; }
+.tkn .tkp-shell .tkp-header-row { position: relative; display: flex; align-items: center; gap: 8px; height: 56px; padding: 0 12px; }
+.tkn .tkp-shell .tkp-logo { display: none; align-items: center; gap: 10px; min-height: 44px; order: 1; font-size: 20px; font-weight: 800; letter-spacing: -0.02em; color: #1e0b38; text-decoration: none; }
+.tkn .tkp-shell .tkp-mark { width: 30px; height: 30px; border-radius: 9px; background: #c2126f; display: inline-flex; align-items: center; justify-content: center; flex: none; }
+.tkn .tkp-shell .tkp-exit { order: 1; display: inline-flex; align-items: center; justify-content: center; gap: 6px; min-width: 44px; min-height: 44px; color: #1e0b38; font-size: 14px; font-weight: 600; text-decoration: none; }
+.tkn .tkp-shell .tkp-exit-txt { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+.tkn .tkp-shell .tkp-header-mid { order: 2; flex: 1; margin: 0; text-align: center; font-size: 15px; font-weight: 700; color: #110520; }
+.tkn .tkp-shell .tkp-saved { display: none; order: 3; align-items: center; gap: 6px; min-height: 28px; padding: 0 10px; border-radius: 999px; background: #e9f7f0; color: #0b5c40; font-size: 12px; font-weight: 700; }
+.tkn .tkp-shell .tkp-saved[data-state="saving"] { background: #f3eefb; color: #6b4a8a; }
+.tkn .tkp-shell .tkp-credit-pill {
+  order: 5; display: inline-flex; align-items: center; gap: 8px; min-height: 44px; padding: 0 6px 0 12px; border-radius: 999px;
+  background: #fbeaf3; border: 1px solid #f3c9de; color: #110520; font: inherit; font-size: 14px; font-weight: 800; white-space: nowrap; cursor: pointer;
+}
+.tkn .tkp-shell .tkp-credit-pill:hover { background: #f8dcea; }
+.tkn .tkp-shell .tkp-pill-ic { display: inline-block; }
+.tkn .tkp-shell .tkp-pill-unit { display: none; font-weight: 600; color: #6b4a8a; }
+.tkn .tkp-shell .tkp-pill-plus { width: 32px; height: 32px; border-radius: 999px; background: #c2126f; display: inline-flex; align-items: center; justify-content: center; flex: none; }
+.tkn .tkp-shell .tkp-credit-pill:focus-visible, .tkn .tkp-shell .tkp-logo:focus-visible, .tkn .tkp-shell .tkp-exit:focus-visible { outline: 3px solid #7c3aed; outline-offset: 2px; }
+
+/* The 3 px progress line. */
+.tkn .tkp-shell .tkp-line { position: relative; height: 3px; background: #f3e6f6; }
+.tkn .tkp-shell .tkp-line-fill { position: absolute; left: 0; top: 0; bottom: 0; border-radius: 0 3px 3px 0; background: linear-gradient(90deg, #f06aa8, #c2126f); box-shadow: 0 0 8px rgba(194, 18, 111, 0.45); transition: width 0.4s ease; }
+@media (prefers-reduced-motion: reduce) { .tkn .tkp-shell .tkp-line-fill { transition: none; } }
+
+/* The support bubble keeps clear of the bottom bar. */
+body:has(.tkp-shell) .tkn-float { right: 16px; bottom: 96px; }
+
+/* Page: only the page scrolls. */
+.tkn .tkp-shell.tkp-shell .tkp-post[data-design="post-new"] {
+  display: block; height: auto; max-width: 1320px; margin: 0 auto; padding: 0 0 calc(96px + env(safe-area-inset-bottom)); box-sizing: border-box; overflow: visible;
+}
+.tkn .tkp-shell.tkp-shell .tkp-post[data-design="post-new"] .tkp-grid { display: block; }
+.tkn .tkp-shell.tkp-shell .tkp-post[data-design="post-new"] .tkp-strip { display: block; margin: 0; padding: 12px 20px; font-size: 13px; font-weight: 700; color: #4a2870; background: #fff; border-bottom: 1px solid #f1e4f5; }
+.tkn .tkp-shell.tkp-shell .tkp-post[data-design="post-new"] .tkp-rail,
+.tkn .tkp-shell.tkp-shell .tkp-post[data-design="post-new"] .tkp-aside { display: none; }
+.tkn .tkp-shell.tkp-shell .tkp-post[data-design="post-new"] .tkp-main {
+  display: block; max-height: none; min-height: 0; overflow: visible; margin: 0; padding: 0; border: 0; border-radius: 0; background: transparent; box-shadow: none;
+}
+.tkn .tkp-shell.tkp-shell .tkp-post[data-design="post-new"] .tkp-head { display: block; padding: 20px 20px 0; }
+.tkn .tkp-shell.tkp-shell .tkp-post[data-design="post-new"] .tkp-kicker { display: none; }
+.tkn .tkp-shell.tkp-shell .tkp-post[data-design="post-new"] .tkp-h1 { margin: 0 0 4px; font-size: 26px; line-height: 1.15; font-weight: 800; letter-spacing: -0.02em; color: #110520; }
+.tkn .tkp-shell.tkp-shell .tkp-post[data-design="post-new"] .tkp-help { margin: 0 0 12px; font-size: 15px; line-height: 1.55; color: #4a2870; }
+.tkn .tkp-shell.tkp-shell .tkp-post[data-design="post-new"] .tkp-scroll { display: block; flex: none; min-height: 0; overflow: visible; padding: 8px 20px 28px; scroll-padding-bottom: 120px; }
+.tkn .tkp-shell.tkp-shell .tkp-post[data-design="post-new"] .tkp-scroll > * + * { margin-top: 18px; }
+.tkn .tkp-shell.tkp-shell .tkp-post[data-design="post-new"] .tkp-fields { display: flex; flex-direction: column; gap: 18px; }
+
+/* Fields: 52 px inputs, 16 px text, whatever the screen height. */
+.tkn .tkp-shell.tkp-shell .tkp-post[data-design="post-new"] .tk-field { gap: 6px; font-size: 14px; }
+.tkn .tkp-shell.tkp-shell .tkp-post[data-design="post-new"] .tk-field input,
+.tkn .tkp-shell.tkp-shell .tkp-post[data-design="post-new"] .tk-field select { min-height: 52px; padding: 0 16px; font-size: 16px; border-radius: 14px; }
+.tkn .tkp-shell.tkp-shell .tkp-post[data-design="post-new"] .tk-field textarea { min-height: 120px; max-height: none; overflow: visible; padding: 14px 16px; font-size: 16px; line-height: 1.5; border-radius: 14px; }
+.tkn .tkp-shell.tkp-shell .tkp-post[data-design="post-new"] .tkp-summary { max-height: none; overflow: visible; }
+.tkn .tkp-shell.tkp-shell .tkp-post[data-design="post-new"] .tkp-drop { max-height: none; }
+
+/* The bottom bar: Back, then the main button. On a phone it sticks to the bottom. */
+.tkn .tkp-shell.tkp-shell .tkp-post[data-design="post-new"] .tkp-nav {
+  position: fixed; left: 0; right: 0; bottom: 0; z-index: 40; display: flex; align-items: center; justify-content: space-between; gap: 10px;
+  padding: 12px 16px calc(12px + env(safe-area-inset-bottom)); background: rgba(255, 255, 255, 0.96); border-top: 1px solid #ead8f0; border-radius: 0; box-shadow: none;
+  -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px);
+}
+.tkn .tkp-shell .tkp-nav .tkp-btn { min-height: 48px; }
+.tkn .tkp-shell .tkp-nav .tkp-back-ic { display: inline-block; }
+.tkn .tkp-shell .tkp-nav .tkp-back-txt { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+.tkn .tkp-shell .tkp-nav .tkp-btn:has(.tkp-back-ic) { width: 48px; padding: 0; justify-content: center; }
+.tkn .tkp-shell .tkp-nav-right { flex: 1; justify-content: flex-end; }
+.tkn .tkp-shell .tkp-nav-right .tkp-btn-primary { flex: 1; }
+
+/* The preview sheet is not a scroll box either. */
+.tkn .tkp-shell .tkp-sheet { max-height: none; overflow: visible; }
+
+/* Tablet and phone share the one-column page. */
+@media (min-width: 768px) {
+  .tkn .tkp-shell .tkp-header-row { padding: 0 32px; }
+  .tkn .tkp-shell .tkp-pill-unit { display: inline; }
+  .tkn .tkp-shell.tkp-shell .tkp-post[data-design="post-new"] .tkp-scroll { padding-left: 32px; padding-right: 32px; }
+  .tkn .tkp-shell.tkp-shell .tkp-post[data-design="post-new"] .tkp-head { padding: 24px 32px 0; }
+  .tkn .tkp-shell.tkp-shell .tkp-post[data-design="post-new"] .tkp-strip { padding: 12px 32px; }
+  .tkn .tkp-shell.tkp-shell .tkp-post[data-design="post-new"] .tkp-h1 { font-size: 30px; }
+}
+
+/* Computer: header 64 px; steps rail, the form card and the side column. */
+@media (min-width: 1024px) {
+  body:has(.tkp-shell) .tkn-float { right: 28px; bottom: 28px; }
+  .tkn .tkp-shell .tkp-header-row { height: 64px; gap: 20px; }
+  .tkn .tkp-shell .tkp-logo { display: inline-flex; }
+  .tkn .tkp-shell .tkp-pill-ic { display: inline-block; }
+  .tkn .tkp-shell .tkp-header-mid { position: absolute; left: 50%; top: 50%; flex: none; transform: translate(-50%, -50%); color: #4a2870; }
+  .tkn .tkp-shell .tkp-saved { display: inline-flex; margin-left: auto; }
+  .tkn .tkp-shell .tkp-saved[data-state="idle"] { visibility: hidden; }
+  .tkn .tkp-shell .tkp-exit { order: 4; min-width: 0; padding: 0 4px; color: #b0106a; }
+  .tkn .tkp-shell .tkp-exit:hover { text-decoration: underline; }
+  .tkn .tkp-shell .tkp-exit-ic { display: none; }
+  .tkn .tkp-shell .tkp-exit-txt { position: static; width: auto; height: auto; overflow: visible; clip: auto; }
+  .tkn .tkp-shell.tkp-shell .tkp-post[data-design="post-new"] { padding: 24px 32px 48px; }
+  .tkn .tkp-shell.tkp-shell .tkp-post[data-design="post-new"] .tkp-strip { display: none; }
+  .tkn .tkp-shell.tkp-shell .tkp-post[data-design="post-new"] .tkp-grid { display: grid; grid-template-columns: 232px minmax(0, 1fr) 320px; gap: 28px; align-items: start; }
+  .tkn .tkp-shell.tkp-shell .tkp-post[data-design="post-new"] .tkp-rail,
+  .tkn .tkp-shell.tkp-shell .tkp-post[data-design="post-new"] .tkp-aside {
+    display: flex; flex-direction: column; grid-row: auto; position: sticky; top: 24px; box-sizing: border-box; max-height: none; overflow: visible; min-height: 0;
+    padding: 20px 16px 16px; border-radius: 20px; border: 1px solid #ead8f0; background: #fff; box-shadow: none;
+  }
+  .tkn .tkp-shell.tkp-shell .tkp-post[data-design="post-new"] .tkp-rail { grid-column: 1; }
+  .tkn .tkp-shell.tkp-shell .tkp-post[data-design="post-new"] .tkp-aside { grid-column: 3; gap: 12px; }
+  .tkn .tkp-shell.tkp-shell .tkp-post[data-design="post-new"] .tkp-main {
+    grid-column: 2; grid-row: auto; display: block; background: #fff; border: 1px solid #ead8f0; border-radius: 20px; overflow: visible;
+  }
+  .tkn .tkp-shell.tkp-shell .tkp-post[data-design="post-new"] .tkp-head { padding: 30px 36px 0; }
+  .tkn .tkp-shell.tkp-shell .tkp-post[data-design="post-new"] .tkp-scroll { padding: 8px 36px 28px; }
+  .tkn .tkp-shell.tkp-shell .tkp-post[data-design="post-new"] .tkp-scroll > * + * { margin-top: 20px; }
+  .tkn .tkp-shell.tkp-shell .tkp-post[data-design="post-new"] .tkp-kicker { display: none; }
+  .tkn .tkp-shell.tkp-shell .tkp-post[data-design="post-new"] .tkp-kicker-plain { display: block; margin: 0 0 8px; padding: 0 12px; font-size: 13px; font-weight: 800; letter-spacing: 0.06em; text-transform: uppercase; color: #6b4a8a; }
+  .tkn .tkp-shell.tkp-shell .tkp-post[data-design="post-new"] .tkp-steps { flex-direction: column; gap: 4px; }
+  .tkn .tkp-shell.tkp-shell .tkp-post[data-design="post-new"] .tkp-step { width: 100%; min-height: 44px; padding: 0 12px; gap: 12px; justify-content: flex-start; border-radius: 12px; font-size: 15px; }
+  .tkn .tkp-shell.tkp-shell .tkp-post[data-design="post-new"] .tkp-step-label { position: static; width: auto; height: auto; overflow: visible; clip: auto; font-size: 15px; font-weight: 600; color: #4a2870; }
+  .tkn .tkp-shell.tkp-shell .tkp-post[data-design="post-new"] .tkp-step-dot { width: 28px; height: 28px; font-size: 13px; font-weight: 800; border: 1.5px solid #dcc6e6; background: #fff; color: #6b4a8a; }
+  .tkn .tkp-shell.tkp-shell .tkp-post[data-design="post-new"] .tkp-step-current { background: #fbeaf3; }
+  .tkn .tkp-shell.tkp-shell .tkp-post[data-design="post-new"] .tkp-step-current .tkp-step-label { color: #110520; font-weight: 800; }
+  .tkn .tkp-shell.tkp-shell .tkp-post[data-design="post-new"] .tkp-step-current .tkp-step-dot { background: #c2126f; border-color: #c2126f; color: #fff; }
+  .tkn .tkp-shell.tkp-shell .tkp-post[data-design="post-new"] .tkp-step-done .tkp-step-dot { background: #0f8a5f; border-color: #0f8a5f; color: #fff; }
+  .tkn .tkp-shell.tkp-shell .tkp-post[data-design="post-new"] .tkp-help-link { order: 9; align-self: flex-start; min-height: 44px; margin-top: 12px; padding: 0 12px; border: 0; background: transparent; color: #b0106a; font: inherit; font-size: 14px; font-weight: 600; cursor: pointer; }
+  .tkn .tkp-shell.tkp-shell .tkp-post[data-design="post-new"] .tkp-help-link:hover { text-decoration: underline; }
+  /* On a computer the bar is the foot of the form card, not fixed. */
+  .tkn .tkp-shell.tkp-shell .tkp-post[data-design="post-new"] .tkp-nav {
+    position: static; margin: 0 36px; padding: 18px 0 28px; background: transparent; border-top: 1px solid #f1e4f5; -webkit-backdrop-filter: none; backdrop-filter: none;
+  }
+  .tkn .tkp-shell .tkp-nav .tkp-btn:has(.tkp-back-ic) { width: auto; padding: 0 18px 0 14px; }
+  .tkn .tkp-shell .tkp-nav .tkp-back-txt { position: static; width: auto; height: auto; overflow: visible; clip: auto; }
+  .tkn .tkp-shell .tkp-nav-right .tkp-btn-primary { flex: none; }
+  .tkn .tkp-shell .tkp-btn-preview { display: none; }
+}
+
+/* Tap targets are at least 44 px (H21 rule 5), whatever the screen height. */
+.tkn .tkp-shell.tkp-shell .tkp-post[data-design="post-new"] .tkp-media-actions .tkp-mini { min-width: 44px; min-height: 44px; width: 44px; }
+.tkn .tkp-shell.tkp-shell .tkp-post[data-design="post-new"] .tkp-mini { min-height: 44px; }
+.tkn .tkp-shell.tkp-shell .tkp-post[data-design="post-new"] .upl-info,
+.tkn .tkp-shell.tkp-shell .tkp-post[data-design="post-new"] .tkp-interest .upl-info { width: 44px; height: 44px; font-size: 18px; }

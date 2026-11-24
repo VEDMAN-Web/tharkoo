@@ -287,10 +287,8 @@ test.describe("H7.86 post an ad, step 5 and the success screen", () => {
         };
       });
       expect(fit.inner, `${width}x${height} inner scroll`).toBeLessThanOrEqual(0);
-      expect(fit.page, `${width}x${height} page scroll`).toBeLessThanOrEqual(0);
-      expect(fit.navBottom, `${width}x${height} buttons in view`).toBeLessThanOrEqual(height);
+      // H21.0 (spec rule 4): only the page scrolls, so the page-height and in-view checks no longer apply.
       expect(fit.asideCut, `${width}x${height} preview column cut`).toBeLessThanOrEqual(0);
-      expect(fit.asideBottom, `${width}x${height} preview column in view`).toBeLessThanOrEqual(height);
       if (width >= 1280) {
         expect(fit.perRow, `${width} tiles a row`).toBe(4);
         expect(fit.rows, `${width} rows`).toBe(3);
@@ -347,9 +345,8 @@ test.describe("H7.86 post an ad, step 5 and the success screen", () => {
       expect(side, `${width} tile width`).toBeGreaterThanOrEqual(96);
       expect(fit.frames.map((box) => box[0]), `${width} tile widths`).toEqual([side, side, side, side]);
       expect(fit.frames.map((box) => box[1]), `${width} tile heights`).toEqual([side, side, side, side]);
-      expect(new Set(fit.frames.map((box) => box[2])).size, `${width} one row`).toBe(1);
-      expect(fit.page, `${width}x${height} no page scroll`).toBeLessThanOrEqual(0);
-      expect(fit.navBottom, `${width}x${height} buttons in view`).toBeLessThanOrEqual(height);
+      // H21.0: the step card is narrower, so four photos may wrap to a second row; H21.3 sets the 3-column grid.
+      expect(new Set(fit.frames.map((box) => box[2])).size, `${width} rows`).toBeLessThanOrEqual(2);
       await shot(page, `3-3-step3-${width}x${height}`);
     }
   });

@@ -8,7 +8,7 @@ import { PUBLISH_MESSAGES } from "@/lib/ui/publish-errors";
 import { loadPostSubcategories, type PostSubcategory } from "@/server/categories/actions";
 import { PhotoStep } from "@/components/post/PhotoStep";
 import { PickGroup } from "@/components/post/PickGroup";
-import { cleanAttrs, isChipField, LONG_LIST, needsMoreStep, stepFromUrl, stepsFor, urlStepOf, DEFAULT_PICK_LIMIT, draftToForm, errorsForStep, needsIdCheck, picksOf, telegramHandle, textOf, validateContact, validatePost, type NewPostStep, type PostAttrs, type SavedDraft } from "@/lib/ui/post-form";
+import { cleanAttrs, isChipField, LONG_LIST, needsMoreStep, stepFromUrl, stepsFor, urlStepOf, DEFAULT_PICK_LIMIT, draftToForm, errorsForStep, needsIdCheck, picksOf, telegramHandle, textOf, validateContact, validatePost, progressPercent, type NewPostStep, type PostAttrs, type SavedDraft } from "@/lib/ui/post-form";
 import { loginPath, postAdPath } from "@/lib/urls";
 import { useUrlPaths } from "./UrlPaths";
 import { useT } from "./help/UiTextProvider";
@@ -26,6 +26,7 @@ import { ReviewStep, type ReviewRow } from "./post/ReviewStep";
 import { PostSuccess, type UpsellPlan } from "./post/PostSuccess";
 import { openPromote } from "./promote/openPromote";
 import { openSupportWith } from "./recharge/openRecharge";
+import { PostShell } from "./post/PostShell";
 import { CreditsCard, PayCard } from "./post/PayParts";
 import { BoostChoice, adCreditsNeeded, adCreditsShort, type BoostChoiceValue } from "./post/BoostChoice";
 import { EarnLine, type EarnInfo } from "@/components/vendor/TourInbox";
@@ -620,6 +621,7 @@ export function PostWizard({
   if (done && newDesign) {
     const isLive = publishedStatus === "active" || (editing && publishedStatus === "paused");
     return (
+      <PostShell percent={progressPercent(flow.length, flow.length, true)}>
       <PostSuccess
         copy={newSuccessCopy(copy, isLive || editing, editing, t)}
         live={isLive}
@@ -636,6 +638,7 @@ export function PostWizard({
         saved={editing}
         paused={publishedStatus === "paused"}
       />
+      </PostShell>
     );
   }
 
@@ -921,26 +924,13 @@ export function PostWizard({
     const blur = (key: string) => () => setTouched((prev) => ({ ...prev, [key]: true }));
     const priceField = <TextField id="price" label={t("post.field.priceRupees")} value={price} error={err("price")} onBlur={blur("price")} inputMode="numeric" placeholder="18,000" onChange={setPrice} />;
     return (
+      <PostShell percent={progressPercent(step, flow.length)} saveState={saveState}>
       <div className="tkp-post" data-design="post-new">
+        <p className="tkp-strip" data-tk="step-strip">{t("post.v2.strip", { step, total: flow.length, title: stepCopy.title })}</p>
         <div className="tkp-grid">
           <PostRail
             items={railItems}
-            progressLabel={t("post.rail.progress")}
-            head={
-              <>
-              <div className="tkp-top">
-                <p className="tkp-top-title">{t("post.header.title")}</p>
-                <div className="tkp-top-actions">
-                  <span className="tkp-saved" data-state={saveState} data-tk="draft-saved" role="status">
-                    {saveState === "saving" ? t("post.save.saving") : t("post.save.saved")}
-                  </span>
-                  <Link href="/u/account/ads/" className="tkp-exit" data-tk="exit-post">{t("post.header.exit")}</Link>
-                  <button type="button" className="tkp-help-link" data-tk="post-help" aria-label={t("post.header.helpLabel")} onClick={() => openSupportWith("")}>{t("post.header.help")}</button>
-                </div>
-              </div>
-              <div className="tkp-progress" aria-hidden><i style={{ width: `${(step / flow.length) * 100}%` }} /></div>
-              </>
-            }
+            progressLabel={t("post.v2.rail.title")}
             onGo={(num) => {
               if (num === step) return;
               if (draftId) remember(draftId, num);
@@ -948,6 +938,7 @@ export function PostWizard({
             }}
           >
             {chargesFee ? <CreditsCard fee={alreadyPaid ? 0 : money.fee} price={money.price} balance={shownBalance} ready={money.ready} onTopUp={() => openRecharge({ shortfall: short, wallet: "ad" })} /> : null}
+            <button type="button" className="tkp-help-link" data-tk="post-help" aria-label={t("post.header.helpLabel")} onClick={() => openSupportWith("")}>{t("post.v2.rail.help")}</button>
           </PostRail>
           <section className="tkp-main" data-step={current} data-dir={stepMove.dir || undefined} aria-labelledby="post-step-title" onFocusCapture={keepFocusedFieldVisible}>
             <div className="tkp-head">
@@ -1083,7 +1074,8 @@ export function PostWizard({
             <div className="tkp-nav">
                 {step > 1 ? (
                   <button type="button" className="tkp-btn" onClick={() => (draftId ? remember(draftId, step - 1) : setStep(step - 1))}>
-                    {stepCopy.backLabel || t("post.nav.back")}
+                    <svg className="tkp-back-ic" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M15 5l-7 7 7 7" /></svg>
+                    <span className="tkp-back-txt">{stepCopy.backLabel || t("post.nav.back")}</span>
                   </button>
                 ) : <span />}
                 <div className="tkp-nav-right">
@@ -1115,6 +1107,7 @@ export function PostWizard({
         {money.added ? <div className="tkp-toast" role="status" data-tk="credits-toast">{creditsText(money.added)} {t("post.money.added")}</div> : null}
         {previewOpen ? <PreviewSheet ad={adPreview} hasPhoto={Boolean(coverUrl)} byline={byline} onClose={() => setPreviewOpen(false)} /> : null}
       </div>
+      </PostShell>
     );
   }
 }
