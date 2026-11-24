@@ -136,36 +136,32 @@ test.describe("H16.1c city pickers with about 900 cities", () => {
     await expect(box).toHaveValue("");
   });
 
-  test("the post-ad form: the city is a type-ahead, two places with one name show their state, and the keyboard picks", async ({ page, baseURL }) => {
+  test("the post-ad form: State first, then only that state's cities with a search box over them", async ({ page, baseURL }) => {
     test.setTimeout(240_000);
     const user = await newUserApi(baseURL!, "h161cpost");
     await loginUi(page, user.email, undefined, "/u/post-insert/");
-    const box = page.locator("input#city");
+    const state = page.locator("select#state");
     // The form is built on the server from a city list that is kept for a minute, so open it again until it has the new cities.
     await expect(async () => {
       await page.goto("/u/post-insert/");
       await page.locator(".tkp-tile", { hasText: "Dating" }).click();
       await page.locator("[data-tk=go-on]").click();
-      await expect(box).toBeVisible({ timeout: 6000 });
+      await expect(state).toBeVisible({ timeout: 6000 });
+      await state.selectOption({ label: "Maharashtra" });
+      expect(await page.locator("#city option").count()).toBeGreaterThan(300);
     }).toPass({ timeout: 170_000, intervals: [10_000] });
-    await expect(page.locator("select#city")).toHaveCount(0);
 
-    await box.click();
-    await checkList(page, box);
-    await box.fill("H161c Twin");
-    const options = page.locator('[data-tk="search-select-list"]').getByRole("option");
-    await expect(options).toHaveCount(2);
-    await expect(options.nth(0)).toContainText(/Gujarat|Maharashtra/);
-    await expect(options.nth(1)).toContainText(/Gujarat|Maharashtra/);
+    // Only this state's cities are listed: not all 900.
+    expect(await page.locator("#city option").count()).toBeLessThan(905);
+    // The search box narrows that list.
+    await page.locator("#city-search").fill("H161c Twin");
+    await expect(page.locator("#city option")).toHaveCount(2);
     await shot(page, "post-ad");
-
-    await box.fill("h161c town 9");
-    await box.press("ArrowDown");
-    await box.press("Enter");
-    await expect(box).toHaveValue("H161c Town 901");
-    await box.press("Tab");
-    await expect(box).toHaveValue("H161c Town 901");
-    await expect(page.locator('[data-tk="search-select-list"]')).toHaveCount(0);
+    await page.locator("#city").selectOption({ label: "H161c Twin" });
+    await expect(page.locator("#city")).not.toHaveValue("");
+    // Another state starts again with its own cities.
+    await state.selectOption({ label: "Gujarat" });
+    await expect(page.locator("#city")).toHaveValue("");
     expect(await hasHorizontalScroll(page)).toBe(false);
     await user.api.dispose();
   });

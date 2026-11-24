@@ -1,6 +1,9 @@
 import { expect, type Page } from "@playwright/test";
 import { adminApi, loginUi, newApi, originHeaders, PNG, registerApi, uniqueEmail, USER_PASSWORD } from "./helpers";
 
+/** The state of each city the flows use. */
+const STATE_OF: Record<string, string> = { Mumbai: "Maharashtra", Pune: "Maharashtra", Bengaluru: "Karnataka", Delhi: "Delhi" };
+
 export interface LiveAd {
   email: string;
   title: string;
@@ -21,6 +24,8 @@ export async function fillNewPostAd(page: Page, base: string, options: { title: 
   await page.locator(".tkp-tile", { hasText: category }).click();
   await page.locator("[data-tk=go-on]").click();
   // Step 2: details.
+  // H19.6: State first, then the city of that state.
+  if (await page.locator("#state").count()) await page.locator("#state").selectOption({ label: STATE_OF[city] ?? "Maharashtra" });
   await page.locator("#city").selectOption({ label: city });
   await page.locator("#nickname").fill("Asha");
   const roleHere = (await page.locator("#role").count()) > 0;

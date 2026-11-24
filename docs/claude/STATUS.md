@@ -56,10 +56,10 @@ Opus has access to this folder on Vedant's PC. Messages go through `.relay/` (gi
 | H19.3 | Video call flow for users | todo | — | Haiku |
 | H19.4 | Buying credits: one kind at a time | todo | — | Haiku |
 | H19.5 | Account menu by role + Video calls page | todo | — | Haiku |
-| H19.6 | Post an ad, rebuilt | todo | — | Haiku |
+| H19.6 | Post an ad, rebuilt (part A of 2: layout, place, description, interests, photos) | PR open | haiku/h19.6-post-ad | Haiku |
 | H19.7 | Block throwaway emails | todo | — | Haiku |
 | H19.8 | Video call switch and price inside each category | todo | — | Haiku |
-| H19.9 | Vendor payouts in more coins + live-rate range | PR open | PR #492 | Haiku |
+| H19.9 | Vendor payouts in more coins + live-rate range | approved (#492 merged) | #492 | Haiku |
 | H19.10 | Video call earnings split 70/30, vendors told everywhere | approved (#490) | — | Haiku |
 
 Status values: todo · doing · PR open · changes needed · approved · merged · blocked.
