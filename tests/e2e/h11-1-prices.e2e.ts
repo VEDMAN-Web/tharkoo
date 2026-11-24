@@ -242,14 +242,15 @@ test.describe("H11.1b clear prices", () => {
       await signIn(page, baseURL!, "h111free");
       await page.setViewportSize({ width: 1440, height: 900 });
       await reachStepFive(page, `Free ad ${Date.now()}`);
-      await expect(page.locator("[data-tk=pay-card]")).toHaveAttribute("data-state", "free");
-      await expect(page.locator("[data-tk=pay-headline]")).toHaveText("This ad is FREE (free ad 1 of 3)");
+      // H19.6b: the "This ad is FREE" box is now a Free / TOP / Super Top choice, with Free chosen.
+      await expect(page.locator("[data-tk=pay-card]")).toHaveCount(0);
+      await expect(page.locator("[data-tk=boost-choice]")).toBeVisible();
+      await expect(page.locator("[data-tk=boost-choice] [role=radio][data-code=free]")).toHaveAttribute("aria-checked", "true");
       await expect(page.locator(".tkp-nav [data-tk=go-on]")).toHaveText("Publish ad");
-      expect(await page.locator("[data-tk=pay-headline]").evaluate((node) => parseFloat(getComputedStyle(node).fontSize))).toBeGreaterThanOrEqual(22);
-      await page.locator("[data-tk=pay-card]").scrollIntoViewIfNeeded();
+      await page.locator("[data-tk=boost-choice]").scrollIntoViewIfNeeded();
       await shot(page, "step5-free");
       await page.setViewportSize({ width: 390, height: 844 });
-      await page.locator("[data-tk=pay-card]").scrollIntoViewIfNeeded();
+      await page.locator("[data-tk=boost-choice]").scrollIntoViewIfNeeded();
       expect(await hasHorizontalScroll(page)).toBe(false);
       await shot(page, "step5-free");
       await restore();

@@ -27,12 +27,12 @@ function coinsLabel(coins: number) {
   return `${coins} ${coins === 1 ? "credit" : "credits"}`;
 }
 
-type EarnInfo = { sharePercent: number; options: { price: number; youKeep: number; rupees: number }[] };
+export type EarnInfo = { sharePercent: number; options: { price: number; youKeep: number; rupees: number }[] };
 
 const EARN_TIP = "You earn the moment both of you are on the call, even if it lasts one minute. Earnings can be withdrawn in crypto, or moved to ad credits to boost your ads.";
 
 /** H19.10: what the vendor keeps from a call, in plain words, with a tooltip about when it is earned. */
-function EarnLine({ info }: { info: EarnInfo | null }) {
+export function EarnLine({ info }: { info: EarnInfo | null }) {
   const [open, setOpen] = useState(false);
   if (!info || info.options.length === 0) return null;
   return (

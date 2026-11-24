@@ -18,3 +18,8 @@
 .tkpr-muted { margin: 0; font-size: 14px; color: #5b3d7a; }
 .tkpr-actions { width: 100%; margin-top: 10px; }
 .tkpr-link-btn { display: flex; align-items: center; justify-content: center; text-decoration: none; box-sizing: border-box; }
+/* H19.6b: one plan card with its (i), used by Post an ad (last step) and by the Promote pop-up. */
+.tkpr-row { position: relative; }
+.tkpr-row .tkpr-plan { width: 100%; padding-right: 52px; }
+.tkpr-info { position: absolute; right: 10px; bottom: 8px; }
+.tkpr-info .upl-info { width: 28px; height: 28px; font-size: 14px; }

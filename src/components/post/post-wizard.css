@@ -554,11 +554,11 @@ body:has(.tkp-post) .tkn-footer, body:has(.tkp-post) .tkn-chat-bubble { display:
 
 /* H19.6: nothing stretches to fill the screen. The progress list, the step card and the live preview are as tall as what is in them; the buttons stay in the card's footer row. */
 @media (min-width: 1024px) {
-  .tkn .tkp-post:not([data-tk="post-success"]) { height: auto; align-items: start; padding-bottom: 32px; }
+  .tkn .tkp-post:not([data-tk="post-success"]) { height: auto; align-items: start; padding-bottom: 12px; }
   .tkn .tkp-post:not([data-tk="post-success"]) .tkp-rail,
   .tkn .tkp-post:not([data-tk="post-success"]) .tkp-main,
   .tkn .tkp-post:not([data-tk="post-success"]) .tkp-aside { align-self: start; height: auto; }
-  .tkn .tkp-post:not([data-tk="post-success"]) .tkp-main { max-height: calc(100dvh - 96px); }
+  .tkn .tkp-post:not([data-tk="post-success"]) .tkp-main { max-height: calc(100dvh - 120px); }
   .tkn .tkp-post .tkp-rail { position: sticky; top: 88px; }
   .tkn .tkp-post .tkp-aside { position: sticky; top: 88px; max-height: calc(100dvh - 104px); overflow-y: auto; }
   .tkn .tkp-post .tkp-scroll { flex: 0 1 auto; }
@@ -571,4 +571,25 @@ body:has(.tkp-post) .tkn-footer, body:has(.tkp-post) .tkn-chat-bubble { display:
   .tkn .tkp-post .tkp-rail > .tkp-top { margin-top: 0; }
   .tkn .tkp-post .tkp-media-grid { grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 12px; }
   .tkn .tkp-post .tkp-media-frame { width: 100%; height: auto; aspect-ratio: 1 / 1; }
+}
+/* H19.6b: last step choice (Free, TOP, Super Top) and the shorter "ad is live" screen. */
+.tkn .tkp-post .tkp-boost { display: grid; gap: 8px; }
+.tkn .tkp-post .tkp-boost-title { margin: 0; font-size: 16px; font-weight: 800; color: #110520; }
+.tkn .tkp-post .tkp-boost-plans { max-height: none; overflow: visible; margin-top: 0; }
+.tkn .tkp-post .tkp-boost-balance { margin: 0; font-size: 13px; color: #4a2870; }
+.tkn .tkp-post .tkp-boost-short { margin: 0; padding: 10px 12px; border-radius: 12px; background: #fef2f2; border: 1px solid #fecaca; font-size: 13px; color: #9f1239; }
+.tkn .tkp-post .tkp-pay-slot { display: grid; gap: 12px; }
+.tkn .tkp-post .tkp-contact-hint { margin: 0; }
+.tkn .tkp-post .tkp-success-main { display: flex; flex-wrap: wrap; gap: 10px; }
+.tkn .tkp-post .tkp-success-cols { display: grid; grid-template-columns: minmax(0, 1fr); gap: 16px; max-width: 640px; margin: 0 auto; }
+/* H19.6b: the photo buttons are one row of small icon buttons (star, arrows, bin), each at least 40 px, named by aria-label and title. */
+.tkn .tkp-post .tkp-media-grid { grid-template-columns: repeat(auto-fill, minmax(172px, 1fr)); gap: 12px; }
+.tkn .tkp-post .tkp-media-actions { display: flex; flex-wrap: nowrap; gap: 4px; }
+.tkn .tkp-post .tkp-media-actions .tkp-mini { flex: 0 0 auto; min-width: 40px; min-height: 40px; width: 40px; padding: 0; }
+.tkn .tkp-post .tkp-media-actions .tkp-mini-wide { grid-column: auto; flex: 0 0 auto; }
+.tkn .tkp-post .tkp-media-actions .tkp-mini-text { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+.tkn .tkp-post .tkp-media-actions [data-tk="retry-upload"] { width: auto; padding: 0 12px; }
+.tkn .tkp-post .tkp-media-actions [data-tk="retry-upload"] .tkp-mini-text { position: static; width: auto; height: auto; clip: auto; }
+@media (max-width: 599px) {
+  .tkn .tkp-post .tkp-media-frame { aspect-ratio: 4 / 3; }
 }

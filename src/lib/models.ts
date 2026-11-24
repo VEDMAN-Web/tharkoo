@@ -83,6 +83,8 @@ export interface ListingDoc extends BaseDoc {
   chips?: string[];
   photos?: string[];
   details?: { label: string; value: string }[];
+  /** H19.6b: up to 5 interests the advertiser typed. */
+  interests?: string[];
   photoCountVisible?: number;
   variant?: string;
   verified?: boolean;

@@ -99,6 +99,13 @@ export function AdDetail({
                   </div>
                 </div>
                 {nick ? <p className="tk-nick">{nick}</p> : null}
+                {ad.interests?.length ? (
+                  <ul className="tk-attr" aria-label="Interests" data-tk="ad-interests" style={{ listStyle: "none", padding: 0 }}>
+                    {ad.interests.slice(0, 5).map((word) => (
+                      <li key={word} className="tk-chip">{word}</li>
+                    ))}
+                  </ul>
+                ) : null}
                 {ad.trust?.length ? (
                   <div className="tk-attr">
                     {ad.trust.map((mark) => (

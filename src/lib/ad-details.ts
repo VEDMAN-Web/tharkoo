@@ -38,3 +38,18 @@ export function adDetailRows(attributes: unknown, fields: DetailField[] | undefi
   }
   return rows.slice(0, MAX_ROWS);
 }
+
+/** H19.6b: the interests an ad shows as small chips under its title: up to 5 short words, never anything else. */
+export function interestsOf(attributes: unknown): string[] {
+  if (!attributes || typeof attributes !== "object") return [];
+  const raw = (attributes as Record<string, unknown>).interests;
+  if (!Array.isArray(raw)) return [];
+  const out: string[] = [];
+  for (const item of raw) {
+    if (typeof item !== "string") continue;
+    const word = item.trim();
+    if (word && word.length <= 30 && !out.some((other) => other.toLowerCase() === word.toLowerCase())) out.push(word);
+    if (out.length === 5) break;
+  }
+  return out;
+}

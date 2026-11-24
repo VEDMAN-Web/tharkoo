@@ -37,7 +37,7 @@ import { coinProviderName } from "@/server/wallet/provider";
 import { textOverrides } from "@/app/admin/ui-text/store";
 import { pickTexts } from "@/lib/ui/text";
 import { popupAlternatives } from "@/components/new/NewAdDetail";
-import { adDetailRows } from "@/lib/ad-details";
+import { adDetailRows, interestsOf } from "@/lib/ad-details";
 import { User } from "@/server/models";
 import { kindFeatures } from "@/server/categories/kinds";
 import { contactChannelsOf } from "@/server/listings/contact-channels";
@@ -138,7 +138,7 @@ export default async function AdPage({ params }: Props) {
   const features = await kindFeatures((cat as { kind?: string } | null)?.kind);
   const tour = listingId && tourOffer ? { listingId, coins: tourOffer.coins } : null;
   const owner = row?.ownerId ? ((await User.findById(row.ownerId).select("displayName createdAt verificationStatus").lean()) as { displayName?: string; createdAt?: Date; verificationStatus?: string } | null) : null;
-  const adView = { ...plain(ad), details: adDetailRows(row?.attributes, cat?.fields) };
+  const adView = { ...plain(ad), details: adDetailRows(row?.attributes, cat?.fields), interests: interestsOf(row?.attributes) };
   const cover = safePhoto(ad.photos?.[0]);
   const paths = await getPaths();
   const publicAd =

@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { Check, X } from "lucide-react";
 import { useT } from "@/components/ui/AdCard";
 import { openRecharge } from "@/components/recharge/openRecharge";
+import { PlanChoice } from "./PlanChoice";
 import { CREDITS_ADDED_EVENT } from "@/components/post/credits";
 import { api, friendlyError, hasSessionHint, idempotencyKey } from "@/lib/ui/api";
 import type { PromoteOptions } from "./openPromote";
@@ -137,14 +138,17 @@ export function PromoteSheet({ options, onClose }: { options: PromoteOptions; on
             <p className="tkpr-balance" data-tk="promote-balance">{t("promote.balance", { count: money(have) })}</p>
             <div role="radiogroup" aria-label={t("promote.plans")} className="tkpr-plans">
               {plans.map((plan) => (
-                <button key={plan.id} type="button" role="radio" aria-checked={plan.id === selected} className="tkpr-plan" data-tk="promote-plan" data-code={plan.code} onClick={() => setSelected(plan.id)}>
-                  <span className="tkpr-plan-top">
-                    <span className="tkpr-plan-name">{plan.name}</span>
-                    <span className="tkpr-plan-price">{t("promote.price", { count: money(plan.amount) })}</span>
-                  </span>
-                  <span className="tkpr-plan-text">{plan.description}</span>
-                  <span className="tkpr-plan-days">{plan.durationHours === 1 ? t("promote.hour") : t("promote.hours", { count: plan.durationHours })}</span>
-                </button>
+                <PlanChoice
+                  key={plan.id}
+                  id={plan.code}
+                  name={plan.name}
+                  price={t("promote.price", { count: money(plan.amount) })}
+                  text={plan.description}
+                  extra={plan.durationHours === 1 ? t("promote.hour") : t("promote.hours", { count: plan.durationHours })}
+                  tip={`${plan.description} ${t("promote.tip", { count: money(plan.amount) })}`}
+                  selected={plan.id === selected}
+                  onSelect={() => setSelected(plan.id)}
+                />
               ))}
             </div>
             {short > 0 ? <p className="tkr-short" data-tk="promote-short">{t("promote.short", { count: money(short) })}</p> : null}
