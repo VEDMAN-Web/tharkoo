@@ -747,7 +747,6 @@ export const TEXT_DEFAULTS = {
   "ad.meta.simple": "{place} · Posted {date}",
   "ad.pill.verified": "ID verified",
   "ad.pill.featured": "Featured",
-  "ad.price.request": "Price on request",
   "ad.aboutMe": "About me",
   "ad.save": "Save this ad",
   "ad.seller.verified": "ID verified",

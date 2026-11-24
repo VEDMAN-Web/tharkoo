@@ -293,12 +293,6 @@ function Screen({ ad, history }: { ad: StaffAd; history: AdHistory }) {
                     ) : null}
                     {values.categoryId !== saved.categoryId ? <p className="adm-k-help">Moving the ad to another category changes its detail fields below. Values that do not fit are dropped.</p> : null}
                   </div>
-                  <div className="adm-k-field">
-                    <label className="adm-k-label" htmlFor="ae-price">Price (rupees)</label>
-                    <input id="ae-price" className="adm-k-input" disabled={!edit} type="text" inputMode="numeric" value={values.price === "" ? "" : String(values.price)} aria-invalid={errors.price ? true : undefined} aria-describedby="ae-price-h" onChange={(event) => setValue("price", event.target.value.replace(/[^\d]/g, "") === "" ? "" : Number(event.target.value.replace(/[^\d]/g, "")))} />
-                    <p className="adm-k-help" id="ae-price-h">Leave empty to show Ask the seller.</p>
-                    {errors.price ? <p className="adm-k-err">{errors.price}</p> : null}
-                  </div>
                 </div>
                 <div className="adm-k-field">
                   <label className="adm-k-label adm-k-lab" htmlFor="ae-desc"><span>Description<span className="adm-k-req" aria-hidden="true"> *</span></span><span className="adm-k-count">{values.description.length} / {DESCRIPTION_MAX.toLocaleString("en-IN")}</span></label>

@@ -17,7 +17,6 @@ type Props = {
 const MAPPINGS: { value: AdSchemaMapping | ""; label: string }[] = [
   { value: "", label: "Built-in choice for this category" },
   { value: "JobPosting", label: "JobPosting" },
-  { value: "Product", label: "Product with price" },
   { value: "none", label: "No structured data" },
 ];
 

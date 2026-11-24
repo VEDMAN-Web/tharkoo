@@ -24,7 +24,6 @@ async function styles(page: Page) {
     const rect = (selector: string) => card.querySelector(selector)?.getBoundingClientRect() ?? null;
     const own = getComputedStyle(card);
     const photo = rect(".tk-row-photo");
-    const price = card.querySelector('[data-tk="card-price"]');
     return {
       display: own.display,
       direction: own.flexDirection,
@@ -48,9 +47,7 @@ async function styles(page: Page) {
       catColor: [css(".tk-row-tag.is-cat", "color"), css(".tk-row-tag.is-cat", "backgroundColor")],
       placeColor: [css(".tk-row-tag.is-place", "color"), css(".tk-row-tag.is-place", "backgroundColor")],
       footBorder: css(".tk-row-foot", "borderTop"),
-      priceSize: price && !price.classList.contains("is-request") ? getComputedStyle(price).fontSize : null,
-      priceWeight: price && !price.classList.contains("is-request") ? getComputedStyle(price).fontWeight : null,
-      priceColor: price ? getComputedStyle(price).color : null,
+      hasPrice: Boolean(card.querySelector('[data-tk="card-price"], .tk-row-price')),
       hasCount: Boolean(card.querySelector(".tk-row-count")),
       hasMark: Boolean(card.querySelector(".tk-row-mark")),
       // H19.1: every card shows two small counts, views (an eye) and clicks (a pointer).
@@ -85,11 +82,7 @@ test.describe("H14.1 listing rows", () => {
       expect(s.footBorder).toContain("rgb(243, 232, 247)");
       expect(s.hasCount && s.hasMark).toBe(true);
       expect(s.hasStats, "views and clicks counts with icons on every card (H19.1)").toBe(true);
-      if (s.priceSize) {
-        expect(s.priceSize).toBe("17px");
-        expect(s.priceWeight).toBe("800");
-        expect(s.priceColor).toBe("rgb(194, 24, 91)");
-      }
+      expect(s.hasPrice, "H21.8: an ad card shows no price").toBe(false);
       if (isPhone(page)) {
         expect(s.direction).toBe("column");
         expect(Math.abs(s.photoWidth - s.cardWidth + 2)).toBeLessThanOrEqual(2);
@@ -103,16 +96,10 @@ test.describe("H14.1 listing rows", () => {
         const listWidth = await page.locator('[data-tk="listing-grid"]').evaluate((el) => el.getBoundingClientRect().width);
         expect(listWidth).toBeLessThanOrEqual(880.5);
       }
-      // #378: no placeholder text for a missing price; the tags live in the footer, after the price when there is one.
+      // #378 and H21.8: no price and no placeholder text for one; the tags live in the footer.
       await expect(page.locator('[data-tk="listing-grid"]').getByText("Price on request")).toHaveCount(0);
       await expect(page.locator(ROW).first().locator(".tk-row-foot .tk-row-tag.is-cat")).toHaveCount(1);
       await expect(page.locator(ROW).first().locator(".tk-row-foot .tk-row-tag.is-place")).toHaveCount(1);
-      const order = await page.locator(ROW).first().evaluate((card) => {
-        const price = card.querySelector('[data-tk="card-price"]');
-        const tag = card.querySelector(".tk-row-tag");
-        return price && tag ? price.getBoundingClientRect().left <= tag.getBoundingClientRect().left : true;
-      });
-      expect(order, "price first, then the tags").toBe(true);
       expect(await hasHorizontalScroll(page)).toBe(false);
       await shot(page, `list-${path.replace(/[^a-z0-9]+/gi, "_")}`, testInfo);
     });

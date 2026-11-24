@@ -56,6 +56,7 @@ Opus has access to this folder on Vedant's PC. Messages go through `.relay/` (gi
 | H19.3 | Video call flow for users | approved | — | Haiku |
 | H19.4 | Buying credits: one kind at a time | approved | — | Haiku |
 | H19.5 | Account menu by role + Video calls page | approved | — | Haiku |
+| H21.8 | Remove the ad price everywhere | PR open | haiku/h21.8-no-ad-price | Haiku |
 | H19.6 | Post an ad, rebuilt (part A of 2: layout, place, description, interests, photos) | approved (#497 merged) | #497 | Haiku |
 | H19.6b | Post an ad, part B (contact, Free/TOP/Super Top, live screen, Promote pop-up, 70/30 note) | PR open | haiku/h19.6b-post-ad-pay | Haiku |
 | H19.7 | Block throwaway emails | approved | — | Haiku |

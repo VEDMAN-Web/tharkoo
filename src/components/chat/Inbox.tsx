@@ -24,7 +24,6 @@ type Row = {
   adSlug: string | null;
   adAddress?: string | null;
   adLive: boolean;
-  adPrice: number | null;
 };
 
 function Thumb({ row }: { row: Row }) {
@@ -111,7 +110,7 @@ export function Inbox() {
                 <div className="up-chat-main">
                   <strong className="up-chat-name">{open.peerName}</strong>
                 </div>
-                <MiniAdCard href={adHref(paths, { slug: open.adSlug, address: open.adAddress })} title={open.listingTitle || "Ad"} photo={open.cover} price={open.adPrice} dataTk="chat-ad-card" />
+                <MiniAdCard href={adHref(paths, { slug: open.adSlug, address: open.adAddress })} title={open.listingTitle || "Ad"} photo={open.cover} dataTk="chat-ad-card" />
               </>
             ) : (
               <>

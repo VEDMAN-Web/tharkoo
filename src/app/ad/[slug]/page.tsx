@@ -83,16 +83,6 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   return withUrlSeo(path, { title, description, path, image, index: robots.index, noImageIndex: robots.noimageindex }, adPath(paths, ad.slug || slug));
 }
 
-function listedPrice(attributes: unknown) {
-  if (!attributes || typeof attributes !== "object") return null;
-  const bag = attributes as Record<string, unknown>;
-  for (const key of ["price", "rent", "salary"]) {
-    const value = Number(bag[key]);
-    if (value > 0) return value;
-  }
-  return null;
-}
-
 function textAttr(attributes: unknown, key: string) {
   if (!attributes || typeof attributes !== "object") return undefined;
   const value = (attributes as Record<string, unknown>)[key];
@@ -174,7 +164,6 @@ export default async function AdPage({ params }: Props) {
       url: shareUrl,
       image,
       city,
-      price: listedPrice(row?.attributes),
       datePosted: row?.publishedAt ? new Date(row.publishedAt).toISOString() : undefined,
       validThrough: row?.expiresAt ? new Date(row.expiresAt).toISOString() : undefined,
       hiringOrganization: textAttr(row?.attributes, "company") || textAttr(row?.attributes, "hiringOrganization"),
@@ -190,7 +179,6 @@ export default async function AdPage({ params }: Props) {
         <NewAdDetail
           ad={adView}
           sellerName={publicSellerName(owner?.displayName)}
-          priceUnit={cat?.fields?.find((field) => ["price", "rent", "salary"].includes(field.key))?.unit || ""}
           categoryName={catName}
           related={plain(related)}
           listingId={listingId}

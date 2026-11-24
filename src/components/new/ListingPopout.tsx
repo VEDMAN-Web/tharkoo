@@ -112,7 +112,6 @@ export function ListingPopout({
           {place ? <Link href={ad.cityHref} prefetch={false} className="tk-row-tag is-place">{place}</Link> : null}
         </p>
         <div className="tk-pop-foot">
-          {ad.showPrice && ad.price ? <span className="tk-row-price">{ad.price}</span> : null}
           <AdCardCounts slug={ad.slug} labels={{ views: row.views, viewOne: row.viewOne, clicks: row.clicks, clickOne: row.clickOne }} />
         </div>
         <div className="tkh-pop-acts tk-pop-acts">

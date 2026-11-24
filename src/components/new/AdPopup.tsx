@@ -13,7 +13,7 @@ import { useT } from "@/components/ui/AdCard";
 
 export type PopupKind = "call" | "chat";
 export type FlowResult = "ok" | "auth" | "coins" | "error";
-export type AdPopupAlt = { slug: string; href: string; title: string; place: string; price: string; photo?: string | null };
+export type AdPopupAlt = { slug: string; href: string; title: string; place: string; photo?: string | null };
 
 type Step = "login" | "code" | "call" | "away" | "buy" | "calling" | "error";
 type Channel = "phone" | "email";
@@ -261,7 +261,6 @@ function AltRow({ alt, t }: { alt: AdPopupAlt; t: T }) {
         <strong>{alt.title}</strong>
         <span>{t("ad.away.online", { place: alt.place })}</span>
       </span>
-      <span className="tkn-alt-price">{alt.price}</span>
     </a>
   );
 }
