@@ -53,13 +53,13 @@ Opus has access to this folder on Vedant's PC. Messages go through `.relay/` (gi
 | H18.5 | Unpaid crypto orders close after 2 hours; tracker closed | PR open | haiku/h18.5-crypto-expiry | Opus |
 | H19.1 | Home, category, listing pages + view/click counts | approved (#487) | — | Haiku |
 | H19.2 | Ad page | approved (#488) | — | Haiku |
-| H19.3 | Video call flow for users | todo | — | Haiku |
-| H19.4 | Buying credits: one kind at a time | todo | — | Haiku |
-| H19.5 | Account menu by role + Video calls page | todo | — | Haiku |
+| H19.3 | Video call flow for users | approved | — | Haiku |
+| H19.4 | Buying credits: one kind at a time | approved | — | Haiku |
+| H19.5 | Account menu by role + Video calls page | approved | — | Haiku |
 | H19.6 | Post an ad, rebuilt (part A of 2: layout, place, description, interests, photos) | approved (#497 merged) | #497 | Haiku |
 | H19.6b | Post an ad, part B (contact, Free/TOP/Super Top, live screen, Promote pop-up, 70/30 note) | PR open | haiku/h19.6b-post-ad-pay | Haiku |
-| H19.7 | Block throwaway emails | todo | — | Haiku |
-| H19.8 | Video call switch and price inside each category | todo | — | Haiku |
+| H19.7 | Block throwaway emails | approved | — | Haiku |
+| H19.8 | Video call switch and price inside each category | approved | — | Haiku |
 | H19.9 | Vendor payouts in more coins + live-rate range | approved (#492 merged) | #492 | Haiku |
 | H19.10 | Video call earnings split 70/30, vendors told everywhere | approved (#490) | — | Haiku |
 

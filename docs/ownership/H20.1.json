@@ -1,0 +1,11 @@
+{
+  "branchPrefix": "haiku/h20.1",
+  "globs": [
+    "docs/ownership/H20.1.json",
+    "progress/H20.1.md",
+    "src/lib/seo/schema.ts",
+    "src/lib/seo/home-blog.ts",
+    "docs/claude/STATUS.md",
+    "tests/**"
+  ]
+}
