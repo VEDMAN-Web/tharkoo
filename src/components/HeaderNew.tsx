@@ -21,6 +21,7 @@ import { LogoutButton } from "./auth/LogoutButton";
 import { accountName } from "@/lib/account-name";
 import { openRecharge } from "./recharge/openRecharge";
 import { useMenuDismiss } from "./ui/use-menu-dismiss";
+import { api } from "@/lib/ui/api";
 import { isSignedInPhase, useAccount } from "./account/AccountContext";
 
 // The search pop-up loads only when a visitor opens it, as in the old header.
@@ -63,6 +64,28 @@ export function HeaderNew({
   const [accountOpen, setAccountOpen] = useState(false);
   // H19.3: the credit chip shows "Call credits: N \u00b7 Ad credits: N" on hover (desktop) and on tap (phone).
   const [coinTip, setCoinTip] = useState(false);
+  // H19.5: the menu shows My ads and Earnings only to an account with an ad, and a badge for video call requests waiting for an answer.
+  const [adCount, setAdCount] = useState(0);
+  const [waitingCalls, setWaitingCalls] = useState(0);
+  useEffect(() => {
+    if (!signedIn) return;
+    let live = true;
+    void api<{ counts?: { all?: number } }>("/api/listings/?pageSize=1").then((res) => {
+      if (live && res.ok) setAdCount(Number(res.data.counts?.all) || 0);
+    });
+    const check = () => {
+      if (document.visibilityState === "hidden") return;
+      void api<{ role: string; status: string }[]>("/api/tours").then((res) => {
+        if (live && res.ok) setWaitingCalls(res.data.filter((row) => row.role === "advertiser" && row.status === "requested").length);
+      });
+    };
+    check();
+    const timer = window.setInterval(check, 20_000);
+    return () => {
+      live = false;
+      window.clearInterval(timer);
+    };
+  }, [signedIn]);
   const coinRef = useRef<HTMLSpanElement>(null);
   const closeCoinTip = useCallback(() => setCoinTip(false), []);
   useMenuDismiss(coinTip, coinRef, closeCoinTip);
@@ -160,7 +183,7 @@ export function HeaderNew({
                   {user ? <span className="tkn-avatar-circle">{accountLabel.slice(0, 1).toUpperCase()}</span> : <span className="tkn-avatar-circle tkn-skel" aria-hidden="true" />}
                   <ChevronDown size={12} aria-hidden="true" focusable="false" />
                 </button>
-                {unread > 0 ? <span className="tkn-avatar-dot" data-tk="header-unread" aria-hidden="true">{unread > 9 ? "9+" : unread}</span> : null}
+                {unread + waitingCalls > 0 ? <span className="tkn-avatar-dot" data-tk="header-unread" aria-hidden="true">{unread + waitingCalls > 9 ? "9+" : unread + waitingCalls}</span> : null}
                 {accountOpen ? (
                   <div className="tkn-account-menu" role="menu">
                     {balance !== null ? (
@@ -169,11 +192,12 @@ export function HeaderNew({
                       </Link>
                     ) : null}
                     <Link role="menuitem" href="/u/account/" onClick={() => setAccountOpen(false)}>{t("chrome.account.my")}</Link>
-                    <Link role="menuitem" href="/u/account/ads/" onClick={() => setAccountOpen(false)}>{t("chrome.account.ads")}</Link>
+                    {adCount > 0 ? <Link role="menuitem" href="/u/account/ads/" onClick={() => setAccountOpen(false)}>{t("chrome.account.ads")}</Link> : null}
                     <Link role="menuitem" href="/u/account/messages/" onClick={() => setAccountOpen(false)}>{t("chrome.account.chats")}{unread > 0 ? <span className="tkn-menu-badge" data-tk="menu-unread">{unread}</span> : null}</Link>
-                    <Link role="menuitem" href="/u/account/calls/" onClick={() => setAccountOpen(false)}>Video calls</Link>
+                    <Link role="menuitem" href="/u/account/calls/" onClick={() => setAccountOpen(false)}>Video calls{waitingCalls > 0 ? <span className="tkn-menu-badge" data-tk="menu-calls">{waitingCalls}</span> : null}</Link>
                     <Link role="menuitem" href="/u/account/saved/" onClick={() => setAccountOpen(false)}>{t("chrome.account.saved")}</Link>
                     <Link role="menuitem" href="/u/account/credits/" onClick={() => setAccountOpen(false)}>{t("panel.menu.coins")}</Link>
+                    {adCount > 0 ? <Link role="menuitem" href="/u/account/wallet/?tab=earnings" onClick={() => setAccountOpen(false)}>Earnings</Link> : null}
                     <Link role="menuitem" href="/u/account/support/" onClick={() => setAccountOpen(false)}>{t("chrome.account.help")}</Link>
                     <Link role="menuitem" href="/u/account/edit-account/" onClick={() => setAccountOpen(false)}>{t("chrome.account.settings")}</Link>
                     <LogoutButton role="menuitem" onClick={() => setAccountOpen(false)}>{t("chrome.account.logout")}</LogoutButton>

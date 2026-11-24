@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { AdCard } from "../ui/AdCard";
-import { readRecent } from "../ui/RecentlyViewed";
+import { readRecent, RecentCard } from "../ui/RecentlyViewed";
 import { loadAccountSaved, readSaved, removeSaved, type SavedItem } from "../ui/SaveButton";
 import { displayTitle } from "@/lib/format";
 import type { ListingDoc } from "@/lib/models";
@@ -71,10 +71,10 @@ export function SavedPanel({ summary }: { summary: PanelSummary }) {
           <div className="up-panel-head">
             <h2 id="recent-heading" className="up-h2">Recently viewed</h2>
           </div>
-          <ul className="up-cards">
+          <ul className="tk-recent-list">
             {recent.map((ad) => (
               <li key={ad.slug}>
-                <AdCard ad={ad} />
+                <RecentCard ad={ad} />
               </li>
             ))}
           </ul>

@@ -1,6 +1,6 @@
 import { cookies } from "next/headers";
 import { SignedOutPanel, UserPanelShell } from "@/components/buyer/UserPanelShell";
-import { CallsPanel } from "@/components/vendor/CallsPanel";
+import { CallsList } from "@/components/vendor/CallsList";
 import { SESSION_COOKIE } from "@/server/auth/http";
 import { loadPanelSummary } from "@/server/notifications/summary";
 import { pageMetadata } from "@/lib/ui/meta";
@@ -21,7 +21,7 @@ export default async function Page() {
           <div className="up-panel-head">
             <h1 id="calls-heading" className="up-h2">Video calls</h1>
           </div>
-          <CallsPanel />
+          <CallsList />
         </section>
       ) : (
         <SignedOutPanel next="/u/account/calls/" title="Log in to see your video calls" body="Calls you asked for and requests on your ads show here." />
