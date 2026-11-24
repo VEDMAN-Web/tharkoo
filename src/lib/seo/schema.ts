@@ -18,11 +18,16 @@ export function breadcrumbList(items: Crumb[]) {
   };
 }
 
+/** The site's and the organisation's stable ids, so every page can point at the same two entities. */
+export const siteId = () => `${canonical("/")}#website`;
+export const organizationId = () => `${canonical("/")}#organization`;
+
 export function organizationNode(name: string, extra?: { logo?: string; sameAs?: string[] }) {
   const sameAs = (extra?.sameAs || []).filter((href) => /^https?:\/\//i.test(href));
   return {
     "@context": "https://schema.org",
     "@type": "Organization",
+    "@id": organizationId(),
     name,
     url: canonical("/"),
     ...(extra?.logo ? { logo: extra.logo } : {}),
@@ -34,7 +39,9 @@ export function websiteNode(name: string, searchPath = "/search/") {
   return {
     "@context": "https://schema.org",
     "@type": "WebSite",
+    "@id": siteId(),
     name,
+    alternateName: ["Tharkoo.com"],
     url: canonical("/"),
     potentialAction: {
       "@type": "SearchAction",
@@ -299,7 +306,7 @@ export function webPageNode(input: { name: string; path: string; siteName: strin
     "@type": "WebPage",
     name: input.name,
     url: canonical(input.path),
-    isPartOf: { "@type": "WebSite", name: input.siteName, url: canonical("/") },
+    isPartOf: { "@type": "WebSite", "@id": siteId(), name: input.siteName, url: canonical("/") },
   };
 }
 
