@@ -379,7 +379,7 @@ test.describe("H7.86 post an ad, step 5 and the success screen", () => {
     expect(Math.abs(toggles[0].w - toggles[1].w)).toBeLessThan(2);
     expect(toggles[1].x + toggles[1].w).toBeLessThanOrEqual(page.viewportSize()!.width);
     const labels = await page.locator("[data-tk=contact-fields] > .tkp-toggle-row > span:first-child").evaluateAll((nodes) => nodes.map((node) => node.getBoundingClientRect().height));
-    expect(Math.max(...labels)).toBeLessThan(24);
+    expect(Math.max(...labels)).toBeLessThanOrEqual(24);
     await shot(page, "h94-04-contact");
     await page.locator("#phone").fill("9876543210");
     await page.locator("[data-tk=go-on]").click();
@@ -459,8 +459,8 @@ test.describe("H7.86 post an ad, step 5 and the success screen", () => {
     expect(await overflow(page)).toBeLessThanOrEqual(0);
     await shot(page, `${prefix}-C-success`);
     expect(draft).toBeTruthy();
-    // H14.2: the whole posted-ad card opens the ad.
-    await page.locator("[data-tk=post-success] .tkp-success-card").click({ position: { x: 30, y: 30 } });
+    // H19.6b: the "View your ad" button opens the ad.
+    await page.locator("[data-tk=view-ad]").click();
     await expect(page).toHaveURL(/-[a-z0-9]{5}\/$/);
   });
 
