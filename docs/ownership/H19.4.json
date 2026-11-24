@@ -1,0 +1,4 @@
+{
+  "branchPrefix": "opus/h19.4",
+  "globs": ["docs/ownership/H19.4.json", "progress/H19.4.md", "src/components/recharge/**", "src/components/PostWizard.tsx", "src/components/promote/PromoteSheet.tsx", "src/lib/ui/text.ts"]
+}

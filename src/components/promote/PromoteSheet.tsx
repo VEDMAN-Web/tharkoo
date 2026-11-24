@@ -73,7 +73,7 @@ export function PromoteSheet({ options, onClose }: { options: PromoteOptions; on
 
   const recharge = useCallback(() => {
     onClose();
-    openRecharge({ shortfall: short, shortKey: "recharge.short.promote" });
+    openRecharge({ shortfall: short, shortKey: "recharge.short.promote", wallet: "ad" });
   }, [onClose, short]);
 
   const promote = useCallback(async () => {

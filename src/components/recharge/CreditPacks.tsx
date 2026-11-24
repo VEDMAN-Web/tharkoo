@@ -69,7 +69,7 @@ export function useCreditPacks(shortfall = 0): { data: CreditPackData | null; er
   return { data, error, signedIn };
 }
 
-export function CreditPacks({ data, shortfall = 0, returnTo, onChoice, wallet: startWallet = "ad" }: { data: CreditPackData; shortfall?: number; returnTo?: string; onChoice?: (choice: PackChoice) => void; wallet?: WalletTab }) {
+export function CreditPacks({ data, shortfall = 0, returnTo, onChoice, wallet: startWallet = "ad", lockWallet = false }: { data: CreditPackData; shortfall?: number; returnTo?: string; onChoice?: (choice: PackChoice) => void; wallet?: WalletTab; lockWallet?: boolean }) {
   const t = useT();
   const [wallet, setWallet] = useState<WalletTab>(startWallet);
   const list = wallet === "call" ? data.callPacks : data.packs;
@@ -120,14 +120,15 @@ export function CreditPacks({ data, shortfall = 0, returnTo, onChoice, wallet: s
 
   return (
     <div className="tkp" data-tk="credit-packs">
-      <div role="tablist" aria-label={t("recharge.walletTabs")} className="tkp-wallets">
+      {/* H19.4: a sheet opened for one kind (calls or ads) shows only that kind; the wallet page shows both tabs. */}
+      {lockWallet ? null : <div role="tablist" aria-label={t("recharge.walletTabs")} className="tkp-wallets">
         {(["call", "ad"] as const).map((kind) => (
           <button key={kind} type="button" role="tab" aria-selected={wallet === kind} className="tkp-wallet" data-tk={`wallet-tab-${kind}`} onClick={() => pickWallet(kind)}>
             <strong>{t(kind === "call" ? "recharge.tab.call" : "recharge.tab.ad")}</strong>
             <span>{t(kind === "call" ? "recharge.tab.callUse" : "recharge.tab.adUse")}</span>
           </button>
         ))}
-      </div>
+      </div>}
       {list.length === 0 ? <p className="tkp-note" data-tk="packs-none">{t("recharge.noPacksTypeAmount")}</p> : null}
       <div role="radiogroup" aria-label={t("recharge.packs")} className="tkr-packs tkp-packs">
         {shown.map((pack) => {
