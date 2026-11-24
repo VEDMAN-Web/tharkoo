@@ -554,11 +554,11 @@ body:has(.tkp-post) .tkn-footer, body:has(.tkp-post) .tkn-chat-bubble { display:
 
 /* H19.6: nothing stretches to fill the screen. The progress list, the step card and the live preview are as tall as what is in them; the buttons stay in the card's footer row. */
 @media (min-width: 1024px) {
-  .tkn .tkp-post:not([data-tk="post-success"]) { height: auto; align-items: start; padding-bottom: 32px; }
+  .tkn .tkp-post:not([data-tk="post-success"]) { height: auto; align-items: start; padding-bottom: 12px; }
   .tkn .tkp-post:not([data-tk="post-success"]) .tkp-rail,
   .tkn .tkp-post:not([data-tk="post-success"]) .tkp-main,
   .tkn .tkp-post:not([data-tk="post-success"]) .tkp-aside { align-self: start; height: auto; }
-  .tkn .tkp-post:not([data-tk="post-success"]) .tkp-main { max-height: calc(100dvh - 96px); }
+  .tkn .tkp-post:not([data-tk="post-success"]) .tkp-main { max-height: calc(100dvh - 120px); }
   .tkn .tkp-post .tkp-rail { position: sticky; top: 88px; }
   .tkn .tkp-post .tkp-aside { position: sticky; top: 88px; max-height: calc(100dvh - 104px); overflow-y: auto; }
   .tkn .tkp-post .tkp-scroll { flex: 0 1 auto; }
