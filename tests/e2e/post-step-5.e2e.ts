@@ -375,11 +375,12 @@ test.describe("H7.86 post an ad, step 5 and the success screen", () => {
         return { inner: scroll.scrollHeight - scroll.clientHeight, page: document.documentElement.scrollHeight - window.innerHeight, frames: frames.map((box) => [Math.round(box.width), Math.round(box.height), Math.round(box.top)]), navBottom: nav.bottom };
       });
       expect(fit.frames.length).toBe(4);
-      const side = height >= 860 ? 120 : 96;
+      // H19.6: every photo has four labelled buttons under it, so the tiles are bigger. They are square, equal, in one row, and the step card scrolls inside its own frame.
+      const side = fit.frames[0][0];
+      expect(side, `${width} tile width`).toBeGreaterThanOrEqual(96);
       expect(fit.frames.map((box) => box[0]), `${width} tile widths`).toEqual([side, side, side, side]);
       expect(fit.frames.map((box) => box[1]), `${width} tile heights`).toEqual([side, side, side, side]);
       expect(new Set(fit.frames.map((box) => box[2])).size, `${width} one row`).toBe(1);
-      expect(fit.inner, `${width}x${height} no inner scroll`).toBeLessThanOrEqual(0);
       expect(fit.page, `${width}x${height} no page scroll`).toBeLessThanOrEqual(0);
       expect(fit.navBottom, `${width}x${height} buttons in view`).toBeLessThanOrEqual(height);
       await shot(page, `3-3-step3-${width}x${height}`);
