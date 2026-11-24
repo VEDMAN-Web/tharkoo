@@ -1,0 +1,14 @@
+{
+  "branchPrefix": "haiku/h19.6b",
+  "globs": [
+    "docs/ownership/H19.6b.json",
+    "progress/H19.6b.md",
+    "src/components/PostWizard.tsx",
+    "src/components/post/**",
+    "src/components/promote/**",
+    "src/components/vendor/TourInbox.tsx",
+    "src/lib/ui/text.ts",
+    "src/app/globals.css",
+    "tests/**"
+  ]
+}

@@ -7,18 +7,14 @@ type Props = {
   nickname: string;
   cityId: string;
   cities: Place[];
-  askDateOfBirth: boolean;
-  dateOfBirth: string;
-  ageConfirmed: boolean;
   error: (key: string) => string | undefined;
   onBlur: (key: string) => () => void;
   onNickname: (value: string) => void;
   onCity: (value: string) => void;
-  onDateOfBirth: (value: string) => void;
-  onAgeConfirmed: () => void;
 };
 
-export function AboutYou({ nickname, cityId, cities, askDateOfBirth, dateOfBirth, ageConfirmed, error, onBlur, onNickname, onCity, onDateOfBirth, onAgeConfirmed }: Props) {
+/** H19.6b: the name on the ads and the city, asked after the contact fields. The date of birth and the 18+ tick are gone: the tick is on the last step only. */
+export function AboutYou({ nickname, cityId, cities, error, onBlur, onNickname, onCity }: Props) {
   const t = useT();
   return (
     <div className="tkp-fields" data-tk="about-you">
@@ -31,19 +27,6 @@ export function AboutYou({ nickname, cityId, cities, askDateOfBirth, dateOfBirth
           ))}
         </SelectField>
       </div>
-      {askDateOfBirth ? (
-        <div className="tkp-two">
-          <TextField id="about-dob" label={t("post.aboutYou.dob")} required type="date" autoComplete="bday" note={t("post.aboutYou.dobNote")} value={dateOfBirth} error={error("dob")} onBlur={onBlur("dob")} onChange={onDateOfBirth} />
-          <div className={`tkp-consent tkp-consent-box ${error("ageConfirmed") ? "is-bad" : ""}`}>
-            <input id="about-adult" type="checkbox" className="tk-check" checked={ageConfirmed} onChange={onAgeConfirmed} aria-invalid={Boolean(error("ageConfirmed"))} />
-            <label htmlFor="about-adult">
-              <strong>{t("post.aboutYou.adult")}</strong>
-              <span>{t("post.aboutYou.adultNote")}</span>
-            </label>
-            {error("ageConfirmed") ? <span className="tk-error" data-tk="field-error">{error("ageConfirmed")}</span> : null}
-          </div>
-        </div>
-      ) : null}
     </div>
   );
 }

@@ -3,12 +3,12 @@
 import { trackEvent } from "@/lib/analytics/ga";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
-import { api, fieldErrors, friendlyError } from "@/lib/ui/api";
+import { api, fieldErrors, friendlyError, idempotencyKey } from "@/lib/ui/api";
 import { PUBLISH_MESSAGES } from "@/lib/ui/publish-errors";
 import { loadPostSubcategories, type PostSubcategory } from "@/server/categories/actions";
 import { PhotoStep } from "@/components/post/PhotoStep";
 import { PickGroup } from "@/components/post/PickGroup";
-import { cleanAttrs, isChipField, LONG_LIST, needsMoreStep, stepFromUrl, stepsFor, urlStepOf, DEFAULT_PICK_LIMIT, draftToForm, errorsForStep, needsIdCheck, picksOf, telegramHandle, textOf, validateAbout, validateContact, validatePost, type NewPostStep, type PostAttrs, type SavedDraft } from "@/lib/ui/post-form";
+import { cleanAttrs, isChipField, LONG_LIST, needsMoreStep, stepFromUrl, stepsFor, urlStepOf, DEFAULT_PICK_LIMIT, draftToForm, errorsForStep, needsIdCheck, picksOf, telegramHandle, textOf, validateContact, validatePost, type NewPostStep, type PostAttrs, type SavedDraft } from "@/lib/ui/post-form";
 import { loginPath, postAdPath } from "@/lib/urls";
 import { useUrlPaths } from "./UrlPaths";
 import { useT } from "./help/UiTextProvider";
@@ -27,6 +27,8 @@ import { PostSuccess, type UpsellPlan } from "./post/PostSuccess";
 import { openPromote } from "./promote/openPromote";
 import { openSupportWith } from "./recharge/openRecharge";
 import { CreditsCard, PayCard } from "./post/PayParts";
+import { BoostChoice, adCreditsNeeded, adCreditsShort, type BoostChoiceValue } from "./post/BoostChoice";
+import { EarnLine, type EarnInfo } from "@/components/vendor/TourInbox";
 import { CREDITS_ADDED_EVENT, creditsText, insufficientFrom, openRecharge, shortfallOf, usePostingMoney } from "./post/credits";
 import { NEW_POST_TIP_KEYS, PostRail, PostTip, RAIL_LABEL_KEYS, RAIL_MORE_KEY, type RailItem } from "./post/NewPostParts";
 import { CategoryTiles } from "./post/CategoryTiles";
@@ -68,7 +70,6 @@ export function PostWizard({
   initialCities,
   defaultCityId = "",
   defaultName = "",
-  maskedEmail = "",
   about = null,
 }: {
   copy?: PostCopy;
@@ -108,7 +109,8 @@ export function PostWizard({
   const [title, setTitle] = useState("");
   const [text, setText] = useState("");
   const [price, setPrice] = useState("");
-  const [contactMode, setContactMode] = useState("both");
+  /** H19.6b: the New design has no email choice (emails are never shown on ads), so it is always phone. */
+  const [contactMode, setContactMode] = useState(newDesign ? "phone" : "both");
   const [phone, setPhone] = useState("");
   const [whatsapp, setWhatsapp] = useState(false);
   const [whatsappSame, setWhatsappSame] = useState(true);
@@ -132,8 +134,10 @@ export function PostWizard({
   const [coverUrl, setCoverUrl] = useState<string | null>(null);
   const [photoBusy, setPhotoBusy] = useState(false);
   const [photoCount, setPhotoCount] = useState<number | null>(null);
-  const [dateOfBirth, setDateOfBirth] = useState("");
-  const [ageConfirmed, setAgeConfirmed] = useState(false);
+  const [boost, setBoost] = useState<BoostChoiceValue>({ plan: null, balance: null });
+  const [earn, setEarn] = useState<EarnInfo | null>(null);
+  /** Set when Publish stopped for ad credits: the publish carries on once credits are added. */
+  const resumeAfterRecharge = useRef(false);
   const [publishedStatus, setPublishedStatus] = useState("");
   const [serverShort, setServerShort] = useState<{ need: number; balance: number } | null>(null);
   const [adSlug, setAdSlug] = useState("");
@@ -214,7 +218,7 @@ export function PostWizard({
             setWhatsapp(form.whatsapp);
             setWhatsappNumber(form.whatsappNumber);
             setWhatsappSame(!form.whatsappNumber || form.whatsappNumber === form.phone);
-            setContactMode(form.contactMode);
+            setContactMode(newDesign ? "phone" : form.contactMode);
             setTelegram(form.telegram);
             setTelegramOn(Boolean(form.telegram));
             setAttrs(form.attrs);
@@ -290,7 +294,6 @@ export function PostWizard({
     if (phone && contactMode !== "email" && !/^\+91[6-9]\d{9}$/.test(normalPhone(phone))) next.phone = t("post.error.phone");
     if (newDesign && price.trim() && !/^\d{1,9}$/.test(priceDigits)) next.price = t("post.error.price");
     if (newDesign) Object.assign(next, validateContact({ mode: contactMode, whatsappOn: whatsapp, whatsappSame, whatsappNumber, telegramOn, telegram }));
-    if (about) Object.assign(next, validateAbout({ askDateOfBirth: about.askDateOfBirth, dateOfBirth, ageConfirmed }));
     return next;
   }
 
@@ -465,12 +468,11 @@ export function PostWizard({
         city: cityName,
         whatsapp: whatsappValue,
         availableNow: false,
-        ...(about.askDateOfBirth ? { dateOfBirth, adultConfirmed: ageConfirmed } : {}),
       }),
     });
     setBusy(false);
     if (res.ok) return true;
-    const keyOf: Record<string, string> = { name: "nickname", city: "city", dateOfBirth: "dob", whatsapp: "phone" };
+    const keyOf: Record<string, string> = { name: "nickname", city: "city", whatsapp: "phone" };
     const found: Record<string, string> = {};
     for (const [key, messages] of Object.entries(fieldErrors(res.error))) {
       const message = Array.isArray(messages) ? messages[0] : String(messages || "");
@@ -494,7 +496,18 @@ export function PostWizard({
     if (!hydrated) return setBanner(t("post.error.draftLoading"));
     if (!draftId || !title.trim()) return setBanner(t("post.error.saveFirst"));
     if (newDesign && !showErrors(errorsForStep(validate(), "review"))) return;
-    if (newDesign && short > 0) return openRecharge({ shortfall: short });
+    if (newDesign && short > 0) return openRecharge({ shortfall: short, wallet: "ad" });
+    // H19.6b: TOP or Super Top is bought with ad credits together with the posting fee. Short: the ad-credit recharge sheet opens and the publish carries on after it.
+    const plan = alreadyPaid ? null : boost.plan;
+    if (newDesign && plan) {
+      const wallet = await api<{ balance: number }>("/api/wallet/");
+      const have = wallet.ok ? Number(wallet.data.balance) || 0 : boost.balance;
+      const lacking = adCreditsShort(adCreditsNeeded({ fee: chargesFee ? money.fee : 0, plan }), have);
+      if (lacking > 0) {
+        resumeAfterRecharge.current = true;
+        return openRecharge({ shortfall: lacking, wallet: "ad" });
+      }
+    }
     setBusy(true);
     setBanner("");
     // H6.14: the ID check is asked for only when the switch is on. Off, the submit goes straight to the server.
@@ -532,8 +545,20 @@ export function PostWizard({
     window.dispatchEvent(new CustomEvent(CREDITS_ADDED_EVENT, { detail: { added: 0 } }));
     if (newDesign) {
       const charged = typeof outcome.charged === "number" ? outcome.charged : alreadyPaid ? 0 : money.fee;
-      const left = typeof outcome.balance === "number" ? outcome.balance : Math.max(0, (money.balance ?? 0) - charged);
-      setReceipt(!chargesFee ? "" : charged > 0 ? t("post.receipt.paid", { paid: creditsText(charged), balance: creditsText(left) }) : t("post.receipt.free", { balance: creditsText(left) }));
+      let left = typeof outcome.balance === "number" ? outcome.balance : Math.max(0, (money.balance ?? 0) - charged);
+      // The boost starts at once when the ad is live; an ad waiting for a check is boosted from My ads once it is live.
+      let boostNote = "";
+      if (plan) {
+        if (String(outcome.status ?? "active") === "active") {
+          const bought = await api<{ balance?: number }>("/api/promotions", { method: "POST", body: JSON.stringify({ listingId: draftId, productId: plan.id, idempotencyKey: idempotencyKey(`post-${draftId}-${plan.id}`) }) });
+          if (bought.ok) {
+            if (typeof bought.data?.balance === "number") left = bought.data.balance;
+            boostNote = t("post.boost.started", { name: plan.name, paid: creditsText(plan.amount) });
+          } else boostNote = t("post.boost.failed", { reason: friendlyError(bought.error) });
+        } else boostNote = t("post.boost.later");
+      }
+      const base = !chargesFee ? "" : charged > 0 ? t("post.receipt.paid", { paid: creditsText(charged), balance: creditsText(left) }) : t("post.receipt.free", { balance: creditsText(left) });
+      setReceipt([base, boostNote].filter(Boolean).join(" "));
       void api<{ slug?: string; address?: string | null }>(`/api/listings/by-id/${draftId}`).then((found) => {
         if (found.ok && found.data?.slug) setAdSlug(found.data.slug);
         if (found.ok && found.data?.address) setAdAddress(found.data.address);
@@ -542,6 +567,32 @@ export function PostWizard({
     window.history.replaceState(null, "", postAdPath(paths));
     setDone(true);
   }
+
+  const publishLatest = useRef<() => void>(() => undefined);
+  useEffect(() => {
+    publishLatest.current = () => void publish();
+  });
+  useEffect(() => {
+    function onAdded(event: Event) {
+      const added = Number((event as CustomEvent<{ added?: number }>).detail?.added ?? 0);
+      if (added <= 0 || !resumeAfterRecharge.current) return;
+      resumeAfterRecharge.current = false;
+      publishLatest.current();
+    }
+    window.addEventListener(CREDITS_ADDED_EVENT, onAdded);
+    return () => window.removeEventListener(CREDITS_ADDED_EVENT, onAdded);
+  }, []);
+
+  useEffect(() => {
+    if (!newDesign || current !== "review" || editing) return;
+    let live = true;
+    void api<EarnInfo>("/api/tours/earn-info").then((res) => {
+      if (live && res.ok) setEarn(res.data);
+    });
+    return () => {
+      live = false;
+    };
+  }, [newDesign, current, editing]);
 
   function buyPlan(plan: UpsellPlan) {
     setPlanNote("");
@@ -896,7 +947,7 @@ export function PostWizard({
               else setStep(num);
             }}
           >
-            {chargesFee ? <CreditsCard fee={alreadyPaid ? 0 : money.fee} price={money.price} balance={shownBalance} ready={money.ready} onTopUp={() => openRecharge({ shortfall: short })} /> : null}
+            {chargesFee ? <CreditsCard fee={alreadyPaid ? 0 : money.fee} price={money.price} balance={shownBalance} ready={money.ready} onTopUp={() => openRecharge({ shortfall: short, wallet: "ad" })} /> : null}
           </PostRail>
           <section className="tkp-main" data-step={current} data-dir={stepMove.dir || undefined} aria-labelledby="post-step-title" onFocusCapture={keepFocusedFieldVisible}>
             <div className="tkp-head">
@@ -968,25 +1019,7 @@ export function PostWizard({
 
               {current === "contact" ? (
                 <div className="tkp-fields">
-                  {about ? (
-                    <AboutYou
-                      nickname={nickname}
-                      cityId={cityId}
-                      cities={cities}
-                      askDateOfBirth={about.askDateOfBirth}
-                      dateOfBirth={dateOfBirth}
-                      ageConfirmed={ageConfirmed}
-                      error={err}
-                      onBlur={blur}
-                      onNickname={setNickname}
-                      onCity={(value) => { setCityId(value); setDistrictId(""); }}
-                      onDateOfBirth={setDateOfBirth}
-                      onAgeConfirmed={() => setAgeConfirmed((v) => !v)}
-                    />
-                  ) : null}
                   <ContactFields
-                    mode={contactMode}
-                    maskedEmail={maskedEmail}
                     phone={phone}
                     whatsapp={whatsapp}
                     whatsappSame={whatsappSame}
@@ -995,7 +1028,6 @@ export function PostWizard({
                     telegram={telegram}
                     error={err}
                     onBlur={blur}
-                    onMode={setContactMode}
                     onPhone={setPhone}
                     onWhatsapp={() => setWhatsapp((v) => !v)}
                     onWhatsappSame={() => setWhatsappSame((v) => !v)}
@@ -1003,6 +1035,17 @@ export function PostWizard({
                     onTelegramOn={() => setTelegramOn((v) => !v)}
                     onTelegram={setTelegram}
                   />
+                  {about ? (
+                    <AboutYou
+                      nickname={nickname}
+                      cityId={cityId}
+                      cities={cities}
+                      error={err}
+                      onBlur={blur}
+                      onNickname={setNickname}
+                      onCity={(value) => { setPickedState(""); setCityId(value); setDistrictId(""); }}
+                    />
+                  ) : null}
                 </div>
               ) : null}
 
@@ -1013,7 +1056,13 @@ export function PostWizard({
                   hasPhoto={Boolean(coverUrl)}
                   byline={byline}
                   note={editing ? (draftStatus === "paused" ? t("post.note.paused") : t("post.note.saved")) : t("post.note.publish")}
-                  pay={alreadyPaid || !(chargesFee || (money.free && money.place)) ? undefined : <PayCard fee={money.fee} price={money.price} balance={shownBalance} short={short} freeAd={money.free ? money.place : null} onRecharge={() => openRecharge({ shortfall: short })} />}
+                  pay={alreadyPaid ? undefined : (
+                    <>
+                      {chargesFee ? <PayCard fee={money.fee} price={money.price} balance={shownBalance} short={short} onRecharge={() => openRecharge({ shortfall: short, wallet: "ad" })} /> : null}
+                      <BoostChoice fee={chargesFee ? money.fee : 0} onChange={setBoost} />
+                      <EarnLine info={earn} />
+                    </>
+                  )}
                   terms={terms}
                   adult={adult}
                   termsError={errors.terms}

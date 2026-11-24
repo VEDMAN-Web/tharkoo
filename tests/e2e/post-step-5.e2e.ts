@@ -188,108 +188,61 @@ test.describe("H7.86 post an ad, step 5 and the success screen", () => {
     await seen(page, "/dating/mumbai/", final);
   });
 
-  test("a first-time account without a date of birth is asked for it once, and cannot go on under 18", async ({ page, baseURL }) => {
+  test("H19.6b: there is no date of birth, and the 18+ tick is asked once, on the last step only", async ({ page, baseURL }) => {
     test.setTimeout(240_000);
     await newPoster(page, baseURL!, "dob", false);
     await reachAbout(page, `Sunset walk ${Date.now()}`, "dob");
     await expect(page.locator("[data-tk=step-title]")).toHaveText("About you");
-    await expect(page.locator("#about-dob")).toBeVisible();
-    await expect(page.locator("#about-adult")).toBeVisible();
+    await expect(page.locator("#about-dob")).toHaveCount(0);
+    await expect(page.locator("#about-adult")).toHaveCount(0);
     await page.locator("#phone").fill("9876543210");
     await page.locator("[data-tk=go-on]").click();
-    await expect(page.locator("#about-dob")).toBeVisible();
-    await expect(page.getByText("Enter your date of birth")).toBeVisible();
-    await expect(page.getByText("Tick this box to go on")).toBeVisible();
-    await stepOf(page, 4);
-    const young = new Date();
-    young.setUTCFullYear(young.getUTCFullYear() - 17);
-    await page.locator("#about-dob").fill(young.toISOString().slice(0, 10));
-    await page.locator("#about-adult").check();
-    await page.locator("[data-tk=go-on]").click();
-    await expect(page.getByText("You must be 18 or older to post an ad")).toBeVisible();
-    await stepOf(page, 4);
-    await page.locator("#about-dob").fill("1995-05-05");
-    await page.locator("[data-tk=go-on]").click();
     await stepOf(page, 5);
+    await expect(page.locator("#consent-adult")).toBeVisible();
+    await expect(page.locator("input[type=checkbox][id*=adult]")).toHaveCount(1);
     await consentAndPublish(page);
-    await page.goto("/u/post-insert/");
-    await expect(page.locator(".tkp-tile").first()).toBeVisible();
-    await page.locator(".tkp-tile", { hasText: "Dating" }).click();
-    await page.locator("[data-tk=go-on]").click();
-    await expect(page.locator("#nickname")).toHaveValue("");
-    await page.locator("#nickname").fill("Asha");
-    await page.locator("#title").fill(`Second ad ${Date.now()}`);
-    await page.locator("#text").fill("Another friendly walk with coffee on a quiet weekday evening.");
-    await page.locator("#age").fill("28");
-    await page.getByRole("button", { name: "Events", exact: true }).click();
-    for (const step of [3, 4]) {
-      await page.locator("[data-tk=go-on]").click();
-      await stepOf(page, step);
-    }
-    await expect(page.locator("[data-tk=step-title]")).toHaveText("Contact");
-    await expect(page.locator("#about-dob")).toHaveCount(0);
-    await expect(page.locator("#about-name")).toHaveCount(0);
   });
 
-  test("contact choices: sentence case in order, the masked account email, WhatsApp same as phone, a checked Telegram username, and Email only publishes", async ({ page, baseURL }) => {
+  test("H19.6b contact step: no email buttons, phone is required, WhatsApp and Telegram are switches with their box right under, and the name and city come after", async ({ page, baseURL }) => {
     test.setTimeout(240_000);
-    const email = await newPoster(page, baseURL!, "contact5");
+    await newPoster(page, baseURL!, "contact5");
     const draft = await reachAbout(page, `Contact check ${Date.now()}`, "contact5");
-    await expect(page.locator(".tkp-chips[aria-label='How people reach you'] .tkp-chip")).toHaveText(["Phone and email", "Phone only", "Email only"]);
-    await expect(page.getByRole("button", { name: "Phone and email" })).toHaveAttribute("aria-pressed", "true");
-    const [local, domain] = email.split("@");
-    await expect(page.locator("[data-tk=account-email]")).toHaveText(`We will use your account email: ${local[0]}••••@${domain}`);
-    expect(await page.locator("[data-tk=account-email]").innerText()).not.toContain(local);
-
-    await page.getByRole("button", { name: "Phone only" }).click();
+    await expect(page.getByRole("button", { name: "Phone and email" })).toHaveCount(0);
+    await expect(page.getByRole("button", { name: "Phone only" })).toHaveCount(0);
+    await expect(page.getByRole("button", { name: "Email only" })).toHaveCount(0);
     await expect(page.locator("[data-tk=account-email]")).toHaveCount(0);
-    await expect(page.locator("#phone")).toBeVisible();
-    await page.getByRole("button", { name: "Phone and email" }).click();
-    await expect(page.locator("[data-tk=account-email]")).toBeVisible();
+    await page.locator("#phone").fill("");
+    await page.locator("[data-tk=go-on]").click();
+    await expect(page.getByText("Fill this in.").first()).toBeVisible();
+    await stepOf(page, 4);
 
     await page.locator("#phone").fill("9876543210");
     await page.getByRole("switch", { name: "WhatsApp" }).click();
     await expect(page.locator("#whatsapp-same")).toBeChecked();
-    await expect(page.locator("#whatsapp-number")).toHaveCount(0);
     await page.locator("#whatsapp-same").uncheck();
-    await expect(page.locator("#whatsapp-number")).toBeVisible();
     await page.locator("#whatsapp-number").fill("123");
     await page.locator("#whatsapp-number").blur();
+    await expect(page.locator("#telegram")).toHaveCount(0);
     await page.getByRole("switch", { name: "Telegram" }).click();
+    // The Telegram box sits directly under its switch.
+    await expect(page.locator("[data-tk=telegram-option] + .tk-field #telegram")).toBeVisible();
     await expect(page.locator("#telegram")).toHaveAttribute("placeholder", "@yourname");
-    await expect(page.locator("label[for=telegram]")).toContainText("Telegram username");
     await page.locator("#telegram").fill("ab");
+    // The name and city come after the contact fields.
+    const top = async (selector: string) => (await page.locator(selector).boundingBox())!.y;
+    expect(await top("#about-name")).toBeGreaterThan(await top("#telegram"));
     await page.locator("[data-tk=go-on]").click();
     await expect(page.getByText("Use +91 and 10 digits")).toBeVisible();
     await expect(page.getByText("Use 5 to 32 letters, digits or underscores")).toBeVisible();
     await stepOf(page, 4);
-    await page.locator("#telegram").fill("bad name!");
-    await expect(page.getByText("Use 5 to 32 letters, digits or underscores")).toBeVisible();
-    await page.locator("#telegram").fill("");
-    await page.locator("#telegram").blur();
-    await expect(page.getByText("Enter your Telegram username")).toBeVisible();
     await page.locator("#telegram").fill("@asha_walks");
     await page.locator("#whatsapp-number").fill("9123456780");
     await page.locator("[data-tk=go-on]").click();
     await stepOf(page, 5);
-    await expect(page.locator("[data-tk=review-contact]")).toContainText("+919876543210 and email");
-
+    await expect(page.locator("[data-tk=review-contact]")).toContainText("+919876543210");
     const saved = (await (await page.request.get(`/api/listings/by-id/${draft}`)).json()).data.contact;
-    expect(saved).toMatchObject({ phone: "+919876543210", whatsapp: "+919123456780", telegram: "@asha_walks", acceptForm: true });
-
-    await page.getByRole("button", { name: "Back" }).click();
-    await stepOf(page, 4);
-    await page.getByRole("button", { name: "Email only" }).click();
-    await expect(page.locator("#phone")).toHaveCount(0);
-    await expect(page.getByRole("switch", { name: "WhatsApp" })).toHaveCount(0);
-    await expect(page.locator("[data-tk=account-email]")).toBeVisible();
-    await page.locator("[data-tk=go-on]").click();
-    await stepOf(page, 5);
-    await expect(page.locator("[data-tk=review-contact]")).toHaveText(/Email only/);
-    const emailOnly = (await (await page.request.get(`/api/listings/by-id/${draft}`)).json()).data.contact;
-    expect(emailOnly.phone ?? null).toBeNull();
-    expect(emailOnly.whatsapp ?? null).toBeNull();
-    expect(emailOnly.acceptForm).toBe(true);
+    expect(saved).toMatchObject({ phone: "+919876543210", whatsapp: "+919123456780", telegram: "@asha_walks" });
+    expect(saved.acceptForm).toBeFalsy();
     await consentAndPublish(page);
   });
 

@@ -1,16 +1,7 @@
 import { useT } from "@/components/help/UiTextProvider";
-import type { UiTextKey } from "@/lib/ui/text";
 import { Switch, TextField } from "./FormFields";
 
-export const CONTACT_CHOICES: [string, UiTextKey][] = [
-  ["both", "post.contactBox.both"],
-  ["phone", "post.contactBox.phone"],
-  ["email", "post.contactBox.email"],
-];
-
 type Props = {
-  mode: string;
-  maskedEmail: string;
   phone: string;
   whatsapp: boolean;
   whatsappSame: boolean;
@@ -19,7 +10,6 @@ type Props = {
   telegram: string;
   error: (key: string) => string | undefined;
   onBlur: (key: string) => () => void;
-  onMode: (value: string) => void;
   onPhone: (value: string) => void;
   onWhatsapp: () => void;
   onWhatsappSame: () => void;
@@ -28,51 +18,37 @@ type Props = {
   onTelegram: (value: string) => void;
 };
 
+/**
+ * H19.6b: the phone number (required), then WhatsApp and Telegram as switches. A switch that is on shows its own box right under it.
+ * Emails are never shown on ads, so there is no email choice here.
+ */
 export function ContactFields(props: Props) {
   const t = useT();
-  const { mode, maskedEmail, phone, whatsapp, whatsappSame, whatsappNumber, telegramOn, telegram, error, onBlur } = props;
-  const showPhone = mode !== "email";
+  const { phone, whatsapp, whatsappSame, whatsappNumber, telegramOn, telegram, error, onBlur } = props;
   return (
-    <>
-      <p className="tkp-sub-title" style={{ margin: 0 }}>{t("post.contactBox.question")}</p>
-      <div className="tkp-chips" role="group" aria-label={t("post.contactBox.groupLabel")}>
-        {CONTACT_CHOICES.map(([id, labelKey]) => (
-          <button key={id} type="button" className={`tkp-chip ${mode === id ? "on" : ""}`} aria-pressed={mode === id} onClick={() => props.onMode(id)}>
-            {t(labelKey)}
-          </button>
-        ))}
+    <div className="tkp-fields" data-tk="contact-fields">
+      <TextField id="phone" label={t("post.contactBox.phoneLabel")} required value={phone} error={error("phone")} onBlur={onBlur("phone")} inputMode="tel" placeholder="+91 81234 56789" onChange={props.onPhone} />
+      <p className="tkp-quiet" data-tk="phone-hint" style={{ margin: "-6px 0 0" }}>{t("post.contactBox.phoneHint")}</p>
+      <div className="tkp-toggle-row" data-tk="whatsapp-options">
+        <span>{t("post.contactBox.whatsapp")}</span>
+        <Switch on={whatsapp} onClick={props.onWhatsapp} label={t("post.contactBox.whatsapp")} />
       </div>
-      {mode !== "phone" && maskedEmail ? <p className="tkp-quiet" data-tk="account-email">{t("post.contactBox.accountEmail", { email: maskedEmail })}</p> : null}
-      {showPhone ? (
-        <>
-          <TextField id="phone" label={t("post.contactBox.phoneLabel")} required value={phone} error={error("phone")} onBlur={onBlur("phone")} inputMode="tel" placeholder="+91 81234 56789" onChange={props.onPhone} />
-          <p className="tkp-quiet" data-tk="phone-hint" style={{ margin: "-6px 0 0" }}>{t("post.contactBox.phoneHint")}</p>
-        </>
-      ) : null}
-      <div className="tkp-switch-row" data-tk="reach-switches">
-        {showPhone ? (
-          <div className="tkp-toggle-row" data-tk="whatsapp-options">
-            <span>{t("post.contactBox.whatsapp")}</span>
-            <Switch on={whatsapp} onClick={props.onWhatsapp} label={t("post.contactBox.whatsapp")} />
-          </div>
-        ) : null}
-        <div className="tkp-toggle-row" data-tk="telegram-option">
-          <span>{t("post.contactBox.telegram")}</span>
-          <Switch on={telegramOn} onClick={props.onTelegramOn} label={t("post.contactBox.telegram")} />
-        </div>
-      </div>
-      {showPhone && whatsapp ? (
+      {whatsapp ? (
         <span className="tkp-same">
           <input id="whatsapp-same" type="checkbox" className="tk-check" checked={whatsappSame} onChange={props.onWhatsappSame} />
           <label htmlFor="whatsapp-same">{t("post.contactBox.whatsappSame")}</label>
         </span>
       ) : null}
-      {showPhone && whatsapp && !whatsappSame ? (
+      {whatsapp && !whatsappSame ? (
         <TextField id="whatsapp-number" label={t("post.contactBox.whatsappNumber")} required value={whatsappNumber} error={error("whatsapp")} onBlur={onBlur("whatsapp")} inputMode="tel" placeholder="+91 81234 56789" onChange={props.onWhatsappNumber} />
       ) : null}
+      <div className="tkp-toggle-row" data-tk="telegram-option">
+        <span>{t("post.contactBox.telegram")}</span>
+        <Switch on={telegramOn} onClick={props.onTelegramOn} label={t("post.contactBox.telegram")} />
+      </div>
       {telegramOn ? (
         <TextField id="telegram" label={t("post.contactBox.telegramUsername")} required value={telegram} error={error("telegram")} onBlur={onBlur("telegram")} placeholder={t("post.contactBox.telegramPlaceholder")} onChange={props.onTelegram} />
       ) : null}
-    </>
+    </div>
   );
 }

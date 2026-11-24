@@ -572,3 +572,13 @@ body:has(.tkp-post) .tkn-footer, body:has(.tkp-post) .tkn-chat-bubble { display:
   .tkn .tkp-post .tkp-media-grid { grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 12px; }
   .tkn .tkp-post .tkp-media-frame { width: 100%; height: auto; aspect-ratio: 1 / 1; }
 }
+/* H19.6b: last step choice (Free, TOP, Super Top) and the shorter "ad is live" screen. */
+.tkn .tkp-post .tkp-boost { display: grid; gap: 8px; }
+.tkn .tkp-post .tkp-boost-title { margin: 0; font-size: 16px; font-weight: 800; color: #110520; }
+.tkn .tkp-post .tkp-boost-plans { max-height: none; overflow: visible; margin-top: 0; }
+.tkn .tkp-post .tkp-boost-balance { margin: 0; font-size: 13px; color: #4a2870; }
+.tkn .tkp-post .tkp-boost-short { margin: 0; padding: 10px 12px; border-radius: 12px; background: #fef2f2; border: 1px solid #fecaca; font-size: 13px; color: #9f1239; }
+.tkn .tkp-post .tkp-pay-slot { display: grid; gap: 12px; }
+.tkn .tkp-post .tkp-contact-hint { margin: 0; }
+.tkn .tkp-post .tkp-success-main { display: flex; flex-wrap: wrap; gap: 10px; }
+.tkn .tkp-post .tkp-success-cols { display: grid; grid-template-columns: minmax(0, 1fr); gap: 16px; max-width: 640px; margin: 0 auto; }

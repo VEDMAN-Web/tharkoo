@@ -196,7 +196,7 @@ test.describe("H7.120 small list", () => {
     await shot(page, "h7-120-edit-note-paused");
   });
 
-  test("d and e: a long title keeps the Title label on one line, and Email only changes the contact subtitle", async ({ page, baseURL }) => {
+  test("d and e: a long title keeps the Title label on one line, and the contact step has no email buttons", async ({ page, baseURL }) => {
     test.setTimeout(300_000);
     const ad = await createLiveAd(page, baseURL!, "labels");
     const long = `${ad.title} with a very long title that keeps going and going so that it needs more than one line to show`;
@@ -223,11 +223,8 @@ test.describe("H7.120 small list", () => {
     }
     await expect(page.locator("[data-tk=step-title]")).toHaveText("Contact");
     await expect(page.locator("[data-tk=step-help]")).toContainText("Add the phone number");
-    await page.getByRole("button", { name: "Email only", exact: true }).click();
-    await expect(page.locator("[data-tk=step-help]")).toHaveText("People will write to you by email. No phone number is needed.");
-    await expect(page.locator("[data-tk=step-help]")).not.toContainText("phone number people");
-    await shot(page, "h7-120-contact-email-only");
-    await page.getByRole("button", { name: "Phone only", exact: true }).click();
-    await expect(page.locator("[data-tk=step-help]")).toContainText("Add the phone number");
+    await expect(page.getByRole("button", { name: "Email only", exact: true })).toHaveCount(0);
+    await expect(page.getByRole("button", { name: "Phone only", exact: true })).toHaveCount(0);
+    await shot(page, "h7-120-contact-no-email-buttons");
   });
 });
