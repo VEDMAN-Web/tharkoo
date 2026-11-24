@@ -50,6 +50,7 @@ async function sendCoinEvent(baseURL: string, event: Record<string, unknown>, { 
 async function fillAdInformation(page: Page, title: string) {
   await page.locator(".tkp-tile", { hasText: "Jobs" }).click();
   await page.locator("[data-tk=go-on]").click();
+  if (await page.locator("#state").count()) await page.locator("#state").selectOption({ label: "Maharashtra" });
   await page.locator("#city").selectOption({ label: "Mumbai" });
   await page.locator("#nickname").fill("Asha");
   const roleHere = (await page.locator("#role").count()) > 0;

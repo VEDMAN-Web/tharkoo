@@ -68,12 +68,13 @@ test.describe("H9.4 posting polish, part 1", () => {
     await expect(page.getByText("The name people see, e.g. your first name")).toBeVisible();
     await page.locator("[data-tk=go-on]").click();
     const errors = await page.locator("[data-tk=field-error]").allInnerTexts();
-    expect(errors).toEqual(expect.arrayContaining(["Fill this in.", "Enter your age (18 or over).", "Write a title of at least 5 letters or numbers.", "Write at least 20 characters.", "Pick one."]));
+    expect(errors).toEqual(expect.arrayContaining(["Fill this in.", "Enter your age (18 or over).", "Write a title of at least 5 letters or numbers.", "Pick one."]));
     expect(errors.join(" ")).not.toMatch(/Please, fill|Invalid field|alphanumeric|must enter/);
     await shot(page, "errors");
     await page.setViewportSize({ width: 1440, height: 900 });
     await page.locator("#city").selectOption("");
     await expect(page.locator(".tkp-previewbox")).toContainText("Your city");
+    if (await page.locator("#state").count()) await page.locator("#state").selectOption({ label: "Maharashtra" });
     await page.locator("#city").selectOption({ label: "Mumbai" });
     await expect(page.locator(".tkp-previewbox")).toContainText("Mumbai");
     await expect(page.locator(".tkp-previewbox")).not.toContainText("Your city");

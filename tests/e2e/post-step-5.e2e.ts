@@ -44,6 +44,7 @@ async function chooseDating(page: Page, prefix: string) {
 }
 
 async function fillDetails(page: Page, title: string, prefix: string) {
+  if (await page.locator("#state").count()) await page.locator("#state").selectOption({ label: "Maharashtra" });
   await page.locator("#city").selectOption({ label: "Mumbai" });
   await page.locator("#nickname").fill("Asha");
   await page.locator("#age").fill("28");
@@ -338,6 +339,7 @@ test.describe("H7.86 post an ad, step 5 and the success screen", () => {
     test.setTimeout(240_000);
     await newPoster(page, baseURL!, "fit5");
     await chooseDating(page, "fit5");
+    if (await page.locator("#state").count()) await page.locator("#state").selectOption({ label: "Maharashtra" });
     await page.locator("#city").selectOption({ label: "Mumbai" });
     await page.locator("#nickname").fill("Asha");
     await page.locator("#age").fill("28");

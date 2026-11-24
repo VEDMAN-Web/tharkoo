@@ -87,24 +87,27 @@ export function MediaTile(props: MediaTileProps) {
             </button>
           ) : null}
           {props.onMakeCover && !isCover ? (
-            <button type="button" className="tkp-mini tkp-mini-wide" title={t("post.tile.makeCover")} disabled={busy} onClick={props.onMakeCover}>
+            <button type="button" className="tkp-mini tkp-mini-wide" data-tk="make-cover" aria-label={t("post.tile.makeCover")} disabled={busy} onClick={props.onMakeCover}>
               <Star size={16} aria-hidden="true" focusable="false" />
               <span className="tkp-mini-text">{t("post.tile.makeCover")}</span>
             </button>
           ) : null}
           {props.onMoveLeft ? (
             <button type="button" className="tkp-mini" disabled={busy} aria-label={t("post.tile.moveLeft", { label })} onClick={props.onMoveLeft}>
-              <ArrowLeft size={18} aria-hidden="true" focusable="false" />
+              <ArrowLeft size={16} aria-hidden="true" focusable="false" />
+              <span className="tkp-mini-text">{t("post.tile.moveLeftShort")}</span>
             </button>
           ) : null}
           {props.onMoveRight ? (
             <button type="button" className="tkp-mini" disabled={busy} aria-label={t("post.tile.moveRight", { label })} onClick={props.onMoveRight}>
-              <ArrowRight size={18} aria-hidden="true" focusable="false" />
+              <ArrowRight size={16} aria-hidden="true" focusable="false" />
+              <span className="tkp-mini-text">{t("post.tile.moveRightShort")}</span>
             </button>
           ) : null}
           {props.onRemove ? (
             <button type="button" className="tkp-mini" disabled={busy} aria-label={t("post.tile.remove", { label })} onClick={props.onRemove}>
-              <Trash2 size={18} aria-hidden="true" focusable="false" />
+              <Trash2 size={16} aria-hidden="true" focusable="false" />
+              <span className="tkp-mini-text">{t("post.tile.removeShort")}</span>
             </button>
           ) : null}
         </div>

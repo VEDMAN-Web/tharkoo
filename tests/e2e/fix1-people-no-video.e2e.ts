@@ -10,6 +10,7 @@ async function startDraft(page: import("@playwright/test").Page, baseURL: string
   await loginUi(page, email, USER_PASSWORD, "/u/post-insert/");
   await page.locator(".tkp-tile", { hasText: category }).click();
   await page.locator("[data-tk=go-on]").click();
+  if (await page.locator("#state").count()) await page.locator("#state").selectOption({ label: "Maharashtra" });
   await page.locator("#city").selectOption({ label: "Mumbai" });
   await page.locator("#nickname").fill("Asha");
   const people = category === "Dating";
