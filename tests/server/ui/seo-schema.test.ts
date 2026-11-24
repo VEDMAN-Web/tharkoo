@@ -4,7 +4,7 @@ import { breadcrumbList, faqPage, itemListNode, listingJsonLd, organizationNode,
 import { sitemapIndexXml, sitemapXml } from "@/lib/seo/sitemaps";
 
 describe("structured data", () => {
-  it("builds Product, Offer, breadcrumbs, website search, and FAQ shapes", () => {
+  it("builds breadcrumbs, website search, and FAQ shapes", () => {
     const personal = listingJsonLd({
       category: "dating",
       name: "Coffee in Gurgaon",
@@ -18,9 +18,7 @@ describe("structured data", () => {
       description: "For sale",
       url: "https://tharkoo.example/ad/desk/",
     });
-    const node = product as { "@type": string; offers?: unknown };
-    expect(node["@type"]).toBe("Product");
-    expect(node.offers).toBeUndefined();
+    expect(product).toBeNull();
 
     const crumbs = breadcrumbList([
       { name: "India", path: "/" },

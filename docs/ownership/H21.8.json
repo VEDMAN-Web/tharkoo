@@ -36,6 +36,8 @@
     "tests/server/seo/settings.test.ts",
     "tests/server/ui/card-price.test.ts",
     "tests/server/ui/seo-delta.test.ts",
-    "tests/server/ui/seo-schema.test.ts"
+    "tests/server/ui/seo-schema.test.ts",
+    "src/app/admin/seo/settings/SettingsForm.tsx",
+    "tests/server/seo/h17-5-structured-data.test.ts"
   ]
 }

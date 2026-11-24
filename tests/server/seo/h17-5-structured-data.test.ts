@@ -105,9 +105,9 @@ describe("ad page structured data", () => {
     expect(list.itemListElement[3]?.item).toContain("/ad/demo-1/");
   });
 
-  it("describes a real ad as a product with its price (a property ad is a RealEstateListing since H16.4)", () => {
+  it("describes a real ad: a goods ad has only the breadcrumb, no Product (H21.8; a property ad is a RealEstateListing since H16.4)", () => {
     const nodes = adJsonLdNodes({ crumbs, title: "Flat in Pune", path: "/ad/demo-1/", sample: false, listing: { ...listing, category: "buy-and-sell" } });
-    expect(nodes.map((node) => node["@type"])).toEqual(["BreadcrumbList", "Product"]);
+    expect(nodes.map((node) => node["@type"])).toEqual(["BreadcrumbList"]);
     const property = adJsonLdNodes({ crumbs, title: "Flat in Pune", path: "/ad/demo-1/", sample: false, listing });
     expect(property.map((node) => node["@type"])).toEqual(["BreadcrumbList", "RealEstateListing"]);
   });

@@ -14,10 +14,8 @@ const typesOf = (input: Partial<ListingSchemaInput> & { sample?: boolean; people
 };
 
 describe("goods", () => {
-  it("a real goods ad is a Product with no Offer (an ad has no price)", () => {
-    const node = listingJsonLd(base) as { "@type": string; offers?: { "@type": string; price: string; priceCurrency: string } };
-    expect(node["@type"]).toBe("Product");
-    expect(node.offers).toBeUndefined();
+  it("a real goods ad has no Product node (an ad has no price, so a Product would be invalid)", () => {
+    expect(listingJsonLd(base)).toBeNull();
   });
 
   it("a property ad is a RealEstateListing with its date and no Offer, not a Product", () => {
@@ -55,7 +53,7 @@ describe("nothing commercial on people or sample ads", () => {
     expect(typesOf({ sample: true, category: "property" })).toEqual(["BreadcrumbList"]);
   });
 
-  it("a real goods ad that is not a people ad keeps its Product", () => {
-    expect(typesOf({ people: false })).toEqual(["BreadcrumbList", "Product"]);
+  it("a real goods ad that is not a people ad has only the breadcrumb (H21.8)", () => {
+    expect(typesOf({ people: false })).toEqual(["BreadcrumbList"]);
   });
 });

@@ -83,9 +83,9 @@ describe("H16.4 JobPosting", () => {
     expect(listingJsonLd({ ...base, validThrough: undefined })).toBeNull();
   });
 
-  it("another category gets no Offer, an ad has no price (H21.8)", () => {
-    const node = listingJsonLd({ category: "buy-and-sell", name: "Sofa", description: "A sofa.", url: "https://tharkoo.example/ad/s/" }) as { offers?: unknown };
-    expect(node.offers).toBeUndefined();
+  it("another category gets no Offer and no Product node (H21.8)", () => {
+    const node = listingJsonLd({ category: "buy-and-sell", name: "Sofa", description: "A sofa.", url: "https://tharkoo.example/ad/s/" }) as { offers?: unknown } | null;
+    expect(node).toBeNull();
   });
 });
 

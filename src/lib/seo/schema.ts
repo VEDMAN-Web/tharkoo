@@ -51,7 +51,6 @@ export function websiteNode(name: string, searchPath = "/search/") {
   };
 }
 
-const GOODS = new Set(["property", "vehicles", "buy-and-sell", "pets"]);
 const SERVICES = new Set(["wellness", "education"]);
 const PERSONAL = new Set(["dating", "friendship", "meetups", "personal-ads"]);
 
@@ -121,19 +120,6 @@ function jobPostingNode(input: ListingSchemaInput) {
   };
 }
 
-/** H21.8: an ad has no price any more, so no node carries an Offer. */
-function productNode(input: ListingSchemaInput) {
-  const image = input.image ? [input.image] : undefined;
-  return {
-    "@context": "https://schema.org",
-    "@type": "Product",
-    name: input.name,
-    description: input.description,
-    url: input.url,
-    ...(image ? { image } : {}),
-  };
-}
-
 /** A property ad: a RealEstateListing with its posting date. */
 function realEstateNode(input: ListingSchemaInput) {
   return {
@@ -153,7 +139,8 @@ export function listingJsonLd(input: ListingSchemaInput) {
   if (input.people) return null;
   if (input.mapping === "none") return null;
   if (input.mapping === "JobPosting") return jobPostingNode(input);
-  if (input.mapping === "Product") return productNode(input);
+  // H21.8: a Product needs an offer, a review or a rating to be valid, and an ad has none of them: no node at all.
+  if (input.mapping === "Product") return null;
   if (PERSONAL.has(input.category)) return null;
   if (input.category === "jobs") return jobPostingNode(input);
   if (input.category === "property") return realEstateNode(input);
@@ -168,8 +155,7 @@ export function listingJsonLd(input: ListingSchemaInput) {
       areaServed: input.city || "India",
     };
   }
-  if (!GOODS.has(input.category)) return null;
-  return productNode(input);
+  return null;
 }
 
 export interface OrganizationSettings {

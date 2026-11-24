@@ -7,7 +7,7 @@ vi.mock("next/navigation", () => ({ useRouter: () => ({ push: () => undefined })
 import { MiniAdCard } from "@/components/ui/MiniAdCard";
 import { listingRowData } from "@/components/new/listing-row-data";
 import { fallbackLanding } from "@/lib/seo/landing";
-import { listingJsonLd, missingSchemaFields } from "@/lib/seo/schema";
+import { adJsonLdNodes, listingJsonLd } from "@/lib/seo/schema";
 import { readPaths } from "@/lib/urls";
 
 const base = { name: "Flat for rent", description: "Two rooms near the market", url: "https://example.test/a/", city: "Surat", price: 12500, datePosted: "2026-11-01T00:00:00.000Z" };
@@ -21,10 +21,11 @@ describe("H21.8 the ad price is not in the structured data", () => {
     }
   });
 
-  it("still writes the node itself (a Product with the SEO mapping needs no price now)", () => {
-    const node = listingJsonLd({ ...base, category: "bikes", mapping: "Product" }) as { "@type": string } | null;
-    expect(node?.["@type"]).toBe("Product");
-    expect(missingSchemaFields("Product", { category: "bikes", name: "x", description: "y", url: "u" })).toEqual([]);
+  it("an ad mapped to Product gives no ld+json node for the ad, only the breadcrumb (a Product without an offer is invalid)", () => {
+    expect(listingJsonLd({ ...base, category: "bikes", mapping: "Product" })).toBeNull();
+    expect(listingJsonLd({ ...base, category: "buy-and-sell" })).toBeNull();
+    const nodes = adJsonLdNodes({ crumbs: [{ name: "Home", path: "/" }], title: "t", path: "/ad/x/", sample: false, listing: { ...base, category: "bikes", mapping: "Product" } });
+    expect(nodes.map((node) => node["@type"])).toEqual(["BreadcrumbList"]);
   });
 });
 
