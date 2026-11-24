@@ -2252,18 +2252,6 @@ body:has([data-tk="bottom-bar"]) .tkn-float { bottom: 104px; }
   .tkh-trust > *, .tkn-sr-chips > *, .h714-chips > * { flex: none; scroll-snap-align: start; white-space: nowrap; }
 }
 
-/* H18.14: a vendor's waiting video call, shown under the header on every page. */
-.tkn-call-alert {
-  display: flex; align-items: center; justify-content: center; gap: 10px; flex-wrap: wrap;
-  padding: 10px 16px; background: #d1137a; color: #fff; font-weight: 700; font-size: 15px; text-align: center;
-}
-.tkn-call-alert-panel { max-width: 760px; margin: 12px auto; padding: 0 12px; }
-.tkn-call-alert-btn {
-  border: 0; cursor: pointer; font: inherit;
-  display: inline-flex; align-items: center; min-height: 36px; padding: 0 16px; border-radius: 999px;
-  background: #fff; color: #a8124f; text-decoration: none; font-weight: 800;
-}
-.tkn-call-alert-btn:focus-visible { outline: 3px solid #fff; outline-offset: 2px; }
 
 /* H19.1: less empty space above the footer on every page (it was 88 px, 56 px on a phone). */
 body .tkn-footer {
@@ -2281,3 +2269,27 @@ body .tkn-footer {
 .tkn-coin-buy:focus-visible { outline: 3px solid #fff; outline-offset: 2px; }
 /* On a phone the chip stays hidden (the header has no room: the Post your ad button was pushed off the screen at 390 px); the
    account menu shows "N call credits · N ad credits" there, one tap on the avatar. */
+
+/* H19.5: Recently viewed shows compact cards: photo, title on one line, city. */
+.tk-recent { display: grid; gap: 6px; width: 148px; color: inherit; text-decoration: none; }
+.tk-recent img, .tk-recent-ph { display: block; width: 148px; height: 112px; object-fit: cover; border-radius: 12px; background: #f3e8f8; }
+.tk-recent strong { display: block; font-size: 14px; line-height: 20px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.tk-recent span { display: block; font-size: 13px; line-height: 18px; color: #6b4a8a; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+.tk-recent-list { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 14px; }
+
+/* H19.5: the Video calls page. */
+.tkn-call-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 12px; }
+.tkn-call-row { display: grid; grid-template-columns: 64px minmax(0, 1fr); gap: 4px 12px; align-items: start; padding: 12px; border: 1px solid #ead8f0; border-radius: 14px; background: #fff; }
+.tkn-call-photo { grid-row: span 2; width: 64px; height: 64px; border-radius: 10px; overflow: hidden; background: #f3e8f8; }
+.tkn-call-photo img { display: block; width: 64px; height: 64px; object-fit: cover; }
+.tkn-call-title { font-weight: 700; color: #2b1140; text-decoration: none; overflow-wrap: anywhere; }
+.tkn-call-meta, .tkn-call-status { margin: 2px 0 0; font-size: 13px; line-height: 20px; color: #6b4a8a; }
+.tkn-call-chip { display: inline-block; padding: 2px 10px; border-radius: 999px; background: #f3e8f8; color: #4a2870; font-weight: 700; font-size: 12px; }
+.tkn-call-chip[data-key="waiting"] { background: #fff1c2; color: #7a4b00; }
+.tkn-call-chip[data-key="accepted"], .tkn-call-chip[data-key="done"] { background: #e9f7ef; color: #14532d; }
+.tkn-call-chip[data-key="missed"], .tkn-call-chip[data-key="refunded"] { background: #fde8e8; color: #8a1c1c; }
+.tkn-call-left { margin-left: 8px; font-weight: 600; }
+.tkn-call-actions { grid-column: 1 / -1; display: flex; flex-wrap: wrap; gap: 8px; }
+.tkn-call-actions .tk-btn { min-height: 44px; }
+@media (min-width: 640px) { .tkn-call-row { grid-template-columns: 64px minmax(0, 1fr) auto; align-items: center; } .tkn-call-photo { grid-row: auto; } .tkn-call-actions { grid-column: auto; justify-content: flex-end; } }

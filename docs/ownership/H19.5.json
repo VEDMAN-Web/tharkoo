@@ -1,0 +1,19 @@
+{
+  "branchPrefix": "haiku/h19.5",
+  "globs": [
+    "docs/ownership/H19.5.json",
+    "progress/H19.5.md",
+    "src/components/buyer/UserPanelShell.tsx",
+    "src/components/vendor/**",
+    "src/app/u/account/calls/**",
+    "src/app/u/account/wallet/page.tsx",
+    "src/server/notifications/summary.ts",
+    "src/server/tours/service.ts",
+    "src/components/HeaderNew.tsx",
+    "src/components/ui/RecentlyViewed.tsx",
+    "src/app/globals.css",
+    "tests/server/ui/h19-5-calls.test.ts",
+    "tests/e2e/h19-5-calls-menu.e2e.ts",
+    "src/components/buyer/SavedPanel.tsx"
+  ]
+}

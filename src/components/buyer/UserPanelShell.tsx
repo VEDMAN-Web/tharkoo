@@ -1,13 +1,13 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
-import { Bell, Heart, House, Images, LifeBuoy, LogIn, Megaphone, MessageSquare, Search, Settings, Wallet, type LucideIcon } from "lucide-react";
+import { Bell, Coins, Heart, House, Images, LifeBuoy, LogIn, Megaphone, MessageSquare, Search, Settings, Video, Wallet, type LucideIcon } from "lucide-react";
 import { makeT } from "@/lib/ui/text";
 import type { PanelSummary } from "@/server/notifications/summary";
 import "./user-panel.css";
 
 /** H7.6, H7.17: the panel frame for every /u/account page: left menu (the mockup's "My account") and the page body. */
 
-export type PanelKey = "home" | "ads" | "media" | "saved" | "chats" | "coins" | "notifications" | "alerts" | "support" | "settings";
+export type PanelKey = "home" | "ads" | "media" | "saved" | "chats" | "calls" | "coins" | "earnings" | "notifications" | "alerts" | "support" | "settings";
 
 type NavItem = { key: PanelKey; label: string; href: string; icon: LucideIcon };
 
@@ -18,11 +18,13 @@ const MAIN_LINKS: NavItem[] = [
   { key: "ads", label: "My ads", href: "/u/account/ads/", icon: Megaphone },
   { key: "media", label: "Photos and videos", href: "/u/account/media/", icon: Images },
   { key: "chats", label: "Chats", href: "/u/account/messages/", icon: MessageSquare },
+  { key: "calls", label: "Video calls", href: "/u/account/calls/", icon: Video },
   { key: "saved", label: "Saved ads", href: "/u/account/saved/", icon: Heart },
 ];
 
 const ACCOUNT_LINKS: NavItem[] = [
   { key: "coins", label: t("panel.nav.coins"), href: "/u/account/credits/", icon: Wallet },
+  { key: "earnings", label: "Earnings", href: "/u/account/wallet/?tab=earnings", icon: Coins },
   { key: "notifications", label: "Notifications", href: "/u/account/notifications/", icon: Bell },
   { key: "alerts", label: "Saved search alerts", href: "/u/account/alerts/", icon: Search },
   { key: "support", label: "Help and support", href: "/u/account/support/", icon: LifeBuoy },
@@ -43,12 +45,19 @@ function renderLink(item: NavItem, count: number, active: PanelKey, seller = fal
   );
 }
 
+/** H19.5: My ads, Photos and videos and Earnings show only to vendors (an account with an ad, or with earnings). */
+export function showsFor(key: PanelKey, summary: PanelSummary): boolean {
+  if (key !== "ads" && key !== "media" && key !== "earnings") return true;
+  return summary.signedIn && (summary.adCount > 0 || summary.hasEarnings);
+}
+
 /** Pure: the count shown beside a menu item. Zero shows nothing. */
 export function badgeFor(key: PanelKey, summary: PanelSummary): number {
   if (!summary.signedIn) return 0;
   if (key === "ads") return summary.adCount;
   if (key === "chats") return summary.unreadChat;
   if (key === "support") return summary.unreadSupport;
+  if (key === "calls") return summary.waitingCalls ?? 0;
   if (key === "notifications") return summary.unreadChat + summary.unreadSupport;
   return 0;
 }
@@ -69,9 +78,9 @@ export function UserPanelShell({ active, summary, aside, below, children }: { ac
               </div>
             </div>
             <ul className="up-nav-list">
-              {MAIN_LINKS.map((item) => renderLink(item, badgeFor(item.key, summary), active, summary.signedIn && summary.seller))}
+              {MAIN_LINKS.filter((item) => showsFor(item.key, summary)).map((item) => renderLink(item, badgeFor(item.key, summary), active, summary.signedIn && summary.seller))}
               <li className="up-sec">Account</li>
-              {ACCOUNT_LINKS.map((item) => renderLink(item, badgeFor(item.key, summary), active))}
+              {ACCOUNT_LINKS.filter((item) => showsFor(item.key, summary)).map((item) => renderLink(item, badgeFor(item.key, summary), active))}
             </ul>
           </nav>
           <div className="up-main">{children}</div>
