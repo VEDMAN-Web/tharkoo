@@ -92,3 +92,10 @@
 .tkp-custom-row:focus-within { border-color: #d1137a; }
 .tkp-custom-row span { color: #6b4a8a; font-weight: 700; }
 .tkp-custom-row input { flex: 1; min-width: 0; min-height: 44px; border: 0; outline: 0; font: inherit; font-size: 16px; background: transparent; color: #1e0b38; }
+
+/* H19.4: compact packs, 2 columns on a phone, 4 on a wide screen. */
+@media (min-width: 900px) {
+  .tkp .tkr-packs { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+}
+.tkp .tkr-pack { padding: 10px 12px; gap: 2px; }
+.tkp .tkp-enough { font-size: 12px; line-height: 1.35; }

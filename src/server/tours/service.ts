@@ -5,7 +5,8 @@ import { objectId } from "@/server/billing/ledger";
 import { postTransaction } from "@/server/ledger/service";
 import { ConflictError, ForbiddenError, NotFoundError, PaymentRequiredError, ValidationError, isDuplicateKey } from "@/server/http";
 import { mailerFromEnv } from "@/server/mailer";
-import { Category, Listing, User } from "@/server/models";
+import { Category, Listing, MediaAsset, User } from "@/server/models";
+import { adPhotoUrl } from "@/server/media/photo-url";
 import { kindAllowsVideo, isPeopleListing, listKinds, requireKind, VIDEO_NEVER_FOR_PEOPLE } from "@/server/categories/kinds";
 import type { CategoryKind } from "@/server/models/catalog";
 import { VideoTour, type VideoTourDoc } from "@/server/tours/model";
@@ -418,12 +419,32 @@ export async function listTours(userId: string) {
     .sort({ requestedAt: -1 })
     .limit(50)
     .lean();
+  // H19.5: each call shows which ad it is about (photo and title) and the other person's name.
+  const ads = await Listing.find({ _id: { $in: [...new Set(rows.map((row) => String(row.listingId)))] } })
+    .select("title slug coverMediaId mediaIds")
+    .lean<{ _id: unknown; title?: string; slug?: string; coverMediaId?: unknown; mediaIds?: unknown[] }[]>();
+  const adById = new Map(ads.map((ad) => [String(ad._id), ad]));
+  const coverIds = ads.map((ad) => ad.coverMediaId ?? ad.mediaIds?.[0]).filter(Boolean) as mongoose.Types.ObjectId[];
+  const assets = coverIds.length ? await MediaAsset.find({ _id: { $in: coverIds }, kind: "image" }).select("objectKey").lean<{ _id: unknown; objectKey: string }[]>() : [];
+  const photoById = new Map(assets.map((asset) => [String(asset._id), adPhotoUrl(asset.objectKey)]));
+  const people = await User.find({ _id: { $in: [...new Set(rows.flatMap((row) => [String(row.userId), String(row.ownerId)]))] } })
+    .select("displayName sellerProfile.name")
+    .lean<{ _id: unknown; displayName?: string; sellerProfile?: { name?: string } | null }[]>();
+  const nameById = new Map(
+    people.map((person) => {
+      const named = (person.sellerProfile?.name || person.displayName || "").trim();
+      return [String(person._id), named && !named.includes("@") ? named : "Member"] as const;
+    }),
+  );
   return rows.map((row) => {
     const isAdvertiser = String(row.ownerId) === userId;
+    const ad = adById.get(String(row.listingId));
+    const cover = ad ? ad.coverMediaId ?? ad.mediaIds?.[0] : undefined;
+    const otherName = nameById.get(String(isAdvertiser ? row.userId : row.ownerId)) ?? "Member";
     const joinUrl = row.roomId && row.status === "accepted" && videoRoomProvider().name === "daily" ? callPagePath(String(row._id)) : null;
     // H19.10: only the vendor sees what they earn; the user sees the price and nothing of the split.
     const split = splitCall(row.coins, row.feePercent ?? 0);
-    return { ...present(row), role: isAdvertiser ? "advertiser" : "buyer", joinUrl, ...(isAdvertiser ? { youEarn: split.vendor, tharkooFee: split.fee } : {}) };
+    return { ...present(row), adTitle: ad?.title ?? null, adSlug: ad?.slug ?? null, adPhoto: cover ? photoById.get(String(cover)) ?? null : null, otherName, role: isAdvertiser ? "advertiser" : "buyer", joinUrl, ...(isAdvertiser ? { youEarn: split.vendor, tharkooFee: split.fee } : {}) };
   });
 }
 

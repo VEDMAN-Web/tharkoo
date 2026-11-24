@@ -1091,7 +1091,7 @@ export function PostWizard({
                   {current === "review" && short > 0 ? (
                     <>
                       <button type="button" className="tkp-btn" data-tk="publish-blocked" disabled aria-describedby="pay-reason">{t("post.nav.publish")}</button>
-                      <button type="button" className="tkp-btn tkp-btn-primary" data-tk="go-on" onClick={() => openRecharge({ shortfall: short })}>{t("post.nav.recharge")}</button>
+                      <button type="button" className="tkp-btn tkp-btn-primary" data-tk="go-on" onClick={() => openRecharge({ shortfall: short, wallet: "ad" })}>{t("post.nav.recharge")}</button>
                     </>
                   ) : current === "review" ? (
                     <button type="button" className="tkp-btn tkp-btn-primary" data-tk="go-on" disabled={busy || !hydrated || !title.trim()} onClick={publish}>

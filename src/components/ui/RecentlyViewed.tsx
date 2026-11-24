@@ -2,7 +2,9 @@
 
 import { useEffect, useState } from "react";
 import type { ListingDoc } from "@/lib/models";
-import { AdCard } from "./AdCard";
+import { adHref } from "@/lib/urls";
+import { useUrlPaths } from "@/components/UrlPaths";
+import { prettyPlace } from "@/lib/format";
 
 const KEY = "tk-recent";
 
@@ -25,6 +27,19 @@ export function readRecent(): Recent[] {
   }
 }
 
+/** H19.5: the compact card: photo, the title on one line and the city. Never the description. */
+export function RecentCard({ ad }: { ad: Recent }) {
+  const paths = useUrlPaths();
+  const photo = ad.photos?.[0];
+  return (
+    <a className="tk-recent" href={adHref(paths, ad)} data-tk="recent-card">
+      {photo ? <img src={photo} alt="" width={148} height={112} loading="lazy" /> : <span className="tk-recent-ph" aria-hidden="true" />}
+      <strong>{ad.title || "Ad"}</strong>
+      <span>{prettyPlace(ad.citySlug) || ad.place || ""}</span>
+    </a>
+  );
+}
+
 export function RecentlyViewedRail({ current }: { current?: string }) {
   const [items, setItems] = useState<Recent[]>([]);
   useEffect(() => {
@@ -39,9 +54,7 @@ export function RecentlyViewedRail({ current }: { current?: string }) {
       <h2 className="t-h2 mb-4">Recently viewed</h2>
       <div className="flex gap-3 overflow-x-auto pb-2">
         {items.slice(0, 12).map((ad) => (
-          <div key={ad.slug} className="w-72 shrink-0">
-            <AdCard ad={ad} />
-          </div>
+          <RecentCard key={ad.slug} ad={ad} />
         ))}
       </div>
     </section>
