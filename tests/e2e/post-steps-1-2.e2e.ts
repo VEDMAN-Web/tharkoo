@@ -39,7 +39,7 @@ test.describe("H7.83 post an ad, steps 1 and 2", () => {
     expect(html).toContain("tkp-tile");
     expect(html).toContain("Dating");
     await expect(page.locator("[data-tk=step-title]")).toHaveText("What are you posting?");
-    await expect(page.locator(".tkp-step-label")).toHaveText(["Category", "Details", "Photos", "Contact", "Review"]);
+    await expect(page.locator(".tkp-step-label")).toHaveText(["Category", "Details", "Photos", "About you", "Review"]);
     const tiles = page.locator(".tkp-tile");
     const count = await tiles.count();
     expect(count).toBeGreaterThanOrEqual(11);
@@ -47,18 +47,19 @@ test.describe("H7.83 post an ad, steps 1 and 2", () => {
     const wide = page.viewportSize()?.width ?? 1440;
     for (let index = 0; index < count; index += 1) {
       const box = (await tiles.nth(index).boundingBox())!;
-      expect(box.height, `tile ${index}`).toBeGreaterThanOrEqual(wide >= 1280 ? 64 : wide >= 1024 ? 72 : 88);
+      expect(box.height, `tile ${index}`).toBeGreaterThanOrEqual(wide >= 768 ? 200 : 84); // H21.1: 220 px tiles from 768 px, 84 px rows on a phone
     }
     await expect(page.locator("[data-tk=go-on]")).toBeDisabled();
     await expect(page.getByText("Do you need help")).toHaveCount(0);
     expect(await overflow(page)).toBeLessThanOrEqual(0);
   });
 
-  test("tiles are two across on a phone, three across from 600 px and four across from 1280 px", async ({ page, baseURL }) => {
+  test("tiles are one a row on a phone and three across from 768 px", async ({ page, baseURL }) => {
     await poster(page, baseURL!, "tiles");
-    const columns = await page.locator(".tkp-tiles").evaluate((node) => getComputedStyle(node).gridTemplateColumns.split(" ").length);
+    const columns = await page.locator(".tkp-tiles").evaluate((node) => { const style = getComputedStyle(node); return style.display === "grid" ? style.gridTemplateColumns.split(" ").length : 1; });
     const wide = page.viewportSize()?.width ?? 1440;
-    expect(columns).toBe(wide < 600 ? 2 : wide < 1280 ? 3 : 4);
+    // H21.1: one full-width row per tile on a phone, three across from 768 px.
+    expect(columns).toBe(wide < 768 ? 1 : 3);
   });
 
   test("Dating details: placeholders for dating, no price, a numeric age, A to Z cities, no old header", async ({ page, baseURL }) => {
@@ -69,7 +70,8 @@ test.describe("H7.83 post an ad, steps 1 and 2", () => {
     await expect(page.locator("#text")).toHaveAttribute("placeholder", "Tell people about yourself and what you are looking for");
     await expect(page.locator("#price")).toHaveCount(0);
     await expect(page.locator("#age")).toHaveAttribute("inputmode", "numeric");
-    await expect(page.getByText("About You")).toHaveCount(0);
+    // H21.1: the rail now has an "About you" step; the card itself must not.
+    await expect(page.locator(".tkp-main").getByText("About You")).toHaveCount(0);
     await expect(page.getByText("* Required fields")).toHaveCount(0);
     await expect(page.getByText("2 BHK")).toHaveCount(0);
     // H19.6: the city list holds only the chosen state's cities.

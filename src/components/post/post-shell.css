@@ -35,6 +35,9 @@ body:has(.tkp-shell) { background: #fbf5fa; }
 
 /* The support bubble keeps clear of the bottom bar. */
 body:has(.tkp-shell) .tkn-float { right: 16px; bottom: 96px; }
+/* The account pages hide the bubble on a phone; this flow keeps it (56 px), above the bottom bar. */
+body:has(.tkp-shell) .tkn-float .tkn-chat-bubble { width: 56px; height: 56px; }
+@media (max-width: 767px) { body:has(.tkp-shell) .tkn-float-pagebars .tkn-chat-bubble { display: inline-flex; } }
 
 /* Page: only the page scrolls. */
 .tkn .tkp-shell.tkp-shell .tkp-post[data-design="post-new"] {

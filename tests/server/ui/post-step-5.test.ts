@@ -155,11 +155,11 @@ describe("paid posting helpers (H7.86)", () => {
   });
 
   it("has no fee in the first step line when the fee is 0, so free posting shows nothing about credits", () => {
-    expect(newStepCopy("category", POST_COPY_DEFAULTS, false, false, 0).help).toBe("Pick a category. This helps the right people find your ad.");
+    expect(newStepCopy("category", POST_COPY_DEFAULTS, false, false, 0).help).toBe("Pick a category. It helps the right people find your ad.");
   });
 
-  it("puts the price in the first step line, and keeps a help line an admin wrote", () => {
-    expect(newStepCopy("category", POST_COPY_DEFAULTS, false, false, 30).help).toBe("Pick a category. Posting an ad costs 30 credits.");
+  it("keeps the price out of the first step line (H21.1: it is said in the note under the tiles), and keeps a help line an admin wrote", () => {
+    expect(newStepCopy("category", POST_COPY_DEFAULTS, false, false, 30).help).toBe("Pick a category. It helps the right people find your ad.");
     const custom = { ...POST_COPY_DEFAULTS, steps: { ...POST_COPY_DEFAULTS.steps, basics: { ...POST_COPY_DEFAULTS.steps.basics, help: "Choose wisely." } } };
     expect(newStepCopy("category", custom, false, false, 30).help).toBe("Choose wisely.");
   });

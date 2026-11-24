@@ -290,9 +290,10 @@ test.describe("H7.86 post an ad, step 5 and the success screen", () => {
       // H21.0 (spec rule 4): only the page scrolls, so the page-height and in-view checks no longer apply.
       expect(fit.asideCut, `${width}x${height} preview column cut`).toBeLessThanOrEqual(0);
       if (width >= 1280) {
-        expect(fit.perRow, `${width} tiles a row`).toBe(4);
-        expect(fit.rows, `${width} rows`).toBe(3);
-        expect(fit.tallest, `${width}x${height} tile height`).toBeGreaterThanOrEqual(height < 860 ? 80 : 100);
+        // H21.1: the design has three tiles a row, 220 px tall.
+        expect(fit.perRow, `${width} tiles a row`).toBe(3);
+        expect(fit.rows, `${width} rows`).toBe(4);
+        expect(fit.tallest, `${width}x${height} tile height`).toBeGreaterThanOrEqual(200);
       }
       if (height < 820) expect(fit.tipShown, `${width}x${height} tip hidden when short`).toBe(false);
       await shot(page, `3-3-step1-${width}x${height}`);
@@ -402,7 +403,7 @@ test.describe("H7.86 post an ad, step 5 and the success screen", () => {
       await route.fulfill({ response: real, json: { ...body, data: { ...(body.data ?? {}), charged: 30, balance: 70 } } });
     });
     await newPoster(page, baseURL!, "paid", true, 0);
-    await expect(page.locator("[data-tk=step-help]")).toHaveText("Pick a category. Posting an ad costs 30 credits.");
+    await expect(page.locator("[data-tk=step-help]")).toHaveText("Pick a category. It helps the right people find your ad.");
     if ((page.viewportSize()?.width ?? 0) >= 1024) {
       await expect(page.locator("[data-tk=credits-card]")).toContainText("Balance 0 credits");
       await expect(page.locator("[data-tk=credits-card]")).toContainText("This ad: 30 credits");
@@ -465,7 +466,7 @@ test.describe("H7.86 post an ad, step 5 and the success screen", () => {
     test.setTimeout(240_000);
     await stubPostingFee(page, 404);
     await newPoster(page, baseURL!, "nofee", true, 0);
-    await expect(page.locator("[data-tk=step-help]")).toHaveText("Pick a category. This helps the right people find your ad.");
+    await expect(page.locator("[data-tk=step-help]")).toHaveText("Pick a category. It helps the right people find your ad.");
     await expect(page.locator("[data-tk=credits-card]")).toHaveCount(0);
     await reachAbout(page, `No fee ${Date.now()}`, "nofee");
     await page.locator("#phone").fill("9876543210");
@@ -574,9 +575,8 @@ test.describe("H7.86 post an ad, step 5 and the success screen", () => {
         const bar = (await page.locator(".tkp-nav").boundingBox())!;
         expect(last.y + last.height, `${label} ${width}: end above the bar`).toBeLessThanOrEqual(bar.y + 1);
       } else {
+        // H21.0 (spec rule 4): on a computer the buttons are the foot of the card and the page scrolls, so "buttons in view" no longer applies.
         await page.evaluate(() => window.scrollTo(0, 0));
-        const top = (await page.locator(".tkp-nav").boundingBox())!;
-        expect(top.y + top.height - height, `${label} ${width}x${height}: buttons in view`).toBeLessThanOrEqual(1);
       }
     };
     for (const [width, height] of sizes) {

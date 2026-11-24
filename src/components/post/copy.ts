@@ -60,7 +60,7 @@ export const POST_BLOCK_TEXT_KEYS: Record<string, Record<string, string>> = {
 export const POST_COPY_DEFAULTS: PostCopy = {
   intro: null,
   steps: {
-    basics: { title: "What are you posting?", help: "Pick a category. This helps the right people find your ad.", nextLabel: "Continue", backLabel: "" },
+    basics: { title: "What are you posting?", help: "Pick a category. It helps the right people find your ad.", nextLabel: "Continue", backLabel: "" },
     details: { title: "Describe your ad", help: "", nextLabel: "", backLabel: "" },
     photos: { title: "Photos", help: "Add a photo of the item or place. People ads can use a portrait.", nextLabel: "Continue", backLabel: "Back" },
     contact: { title: "Your contacts", help: "", nextLabel: "", backLabel: "" },
