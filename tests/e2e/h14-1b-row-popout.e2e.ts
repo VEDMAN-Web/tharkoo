@@ -62,7 +62,16 @@ test.describe("H14.1b row pop-out", () => {
     expect(box.y).toBeGreaterThanOrEqual(0);
     expect(box.x + box.width).toBeLessThanOrEqual(view.width);
     expect(box.y + box.height).toBeLessThanOrEqual(view.height);
-    expect(box.width, "H19.1: a quarter smaller than before, so no wider than the row").toBeLessThanOrEqual((await row.boundingBox())!.width);
+    // H21.11: the pop-out covers its row completely (12 px past it on every side, kept inside the window).
+    await page.waitForTimeout(500); // the grow-in animation scales the box; measure when it has settled
+    const rowBox = (await row.boundingBox())!;
+    const settled = (await pop.boundingBox())!;
+    expect(settled.x, "the pop-out starts at or before the row's left").toBeLessThanOrEqual(rowBox.x + 0.5);
+    expect(settled.x + settled.width, "the pop-out ends at or after the row's right").toBeGreaterThanOrEqual(rowBox.x + rowBox.width - 0.5);
+    expect(settled.height, "at least the row height").toBeGreaterThanOrEqual(rowBox.height - 0.5);
+    const photoBox = await pop.locator(".tkh-pop-photo").boundingBox();
+    const rowPhoto = await row.locator(".tk-row-photo").boundingBox();
+    if (view.width >= 768) expect(Math.abs(photoBox!.width - rowPhoto!.width), "the photo column is as wide as the row's").toBeLessThanOrEqual(1);
     const sideways = await pop.evaluate((node) => {
       const photo = node.querySelector(".tkh-pop-photo")!.getBoundingClientRect();
       const body = node.querySelector(".tk-pop-body")!.getBoundingClientRect();

@@ -1,0 +1,15 @@
+{
+  "branchPrefix": "haiku/h21.11",
+  "globs": [
+    "docs/ownership/H21.11.json",
+    "progress/H21.11.md",
+    "docs/claude/STATUS.md",
+    "src/components/new/ListingPopout.tsx",
+    "src/components/new/pop-layout.ts",
+    "tests/server/ui/h19-1-pages.test.ts",
+    "tests/server/ui/h21-11-row-popout.test.ts",
+    "tests/e2e/h14-1b-row-popout.e2e.ts",
+    "tests/e2e/h19-1-pages.e2e.ts",
+    "tests/e2e/h21-11-popout-shots.e2e.ts"
+  ]
+}
