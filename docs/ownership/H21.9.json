@@ -1,0 +1,10 @@
+{
+  "branchPrefix": "haiku/h21.9",
+  "globs": [
+    "docs/ownership/H21.9.json",
+    "progress/H21.9.md",
+    "docs/claude/STATUS.md",
+    "src/components/HeaderNew.tsx",
+    "tests/e2e/h21-9-coin-chip.e2e.ts"
+  ]
+}

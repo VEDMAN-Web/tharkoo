@@ -154,7 +154,7 @@ export function HeaderNew({
               {balanceReady ? (
                 balance !== null ? (
                   <span className="tkn-coin-wrap" ref={coinRef} data-open={coinTip ? "true" : undefined}>
-                    <button type="button" className="tkn-coin-chip" data-tk="header-coins" aria-label={t("panel.coins.chipLabel", { call: callBalance ?? 0, ad: balance })} aria-describedby="tkn-coin-tip" aria-expanded={coinTip} onClick={() => setCoinTip((open) => !open)}>
+                    <button type="button" className="tkn-coin-chip" data-tk="header-coins" aria-label={`${callBalance ?? 0} · ${balance}. ${t("panel.coins.chipLabel", { call: callBalance ?? 0, ad: balance })}`} aria-describedby="tkn-coin-tip" aria-expanded={coinTip} onClick={() => setCoinTip((open) => !open)}>
                       <Phone size={13} aria-hidden="true" focusable="false" /> {callBalance ?? 0}
                       <span className="tkn-coin-sep" aria-hidden="true">·</span>
                       <Megaphone size={13} aria-hidden="true" focusable="false" /> {balance}
