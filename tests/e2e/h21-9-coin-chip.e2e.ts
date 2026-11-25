@@ -5,7 +5,7 @@ import { expect, grantCredits, isPhone, loginUi, newUserApi, test } from "./help
 
 /** H21.9: the header coin chip's accessible name starts with the text people see on it. */
 
-const SHOTS = ".shots/H21.9";
+const SHOTS = ".shots/H21.9b";
 
 async function shot(page: Page, name: string) {
   mkdirSync(SHOTS, { recursive: true });
@@ -26,9 +26,10 @@ test.describe("H21.9 header coin chip", () => {
     }
     const chip = page.locator("[data-tk=header-coins]");
     await expect(chip).toBeVisible();
-    const visible = ((await chip.innerText()) ?? "").replace(/\s+/g, " ").trim();
-    const name = (await chip.getAttribute("aria-label")) ?? "";
-    expect(name.toLowerCase().startsWith(visible.toLowerCase()), `"${name}" starts with "${visible}"`).toBe(true);
+    // H21.9b: the name is read from the content, so each number is spoken once and no label can differ from the visible text.
+    await expect(chip).toHaveAccessibleName(/^\d+ call credits and \d+ ad credits\. Buy credits$/);
+    await expect(chip).not.toHaveAttribute("aria-label", /.+/);
+    await expect(chip.locator('[aria-hidden="true"]').first()).toContainText(/\d+\s*\S\s*\d+/);
     const result = await new AxeBuilder({ page }).include(".tkn-coin-chip").withRules(["label-content-name-mismatch"]).analyze();
     expect(result.violations.map((v) => v.id)).toEqual([]);
     await shot(page, "header");

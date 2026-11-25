@@ -6,7 +6,7 @@ import { BrandLogo } from "./BrandLogo";
 import { LOGO_LIGHT_DEFAULT } from "@/lib/brand";
 import { useSitePath } from "@/components/useSitePath";
 import { ChevronDown, Megaphone, Menu, Phone } from "lucide-react";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState, type CSSProperties } from "react";
 import { HeaderCountry } from "./HeaderCountry";
 import type { CountryOption } from "@/server/locations/country-scope";
 import { HeaderDrawer } from "./HeaderDrawer";
@@ -36,6 +36,8 @@ type Cat = { slug: string; name: string };
  * Under 1024 px the pill navigation becomes a burger that opens the drawer.
  * The search pop-up still opens from the listing pages and the hero (the "tk-open-search" event).
  */
+const SR_ONLY: CSSProperties = { position: "absolute", width: 1, height: 1, margin: -1, padding: 0, overflow: "hidden", clip: "rect(0, 0, 0, 0)", whiteSpace: "nowrap", border: 0 };
+
 export function HeaderNew({
   siteName,
   logo = LOGO_LIGHT_DEFAULT,
@@ -154,10 +156,14 @@ export function HeaderNew({
               {balanceReady ? (
                 balance !== null ? (
                   <span className="tkn-coin-wrap" ref={coinRef} data-open={coinTip ? "true" : undefined}>
-                    <button type="button" className="tkn-coin-chip" data-tk="header-coins" aria-label={`${callBalance ?? 0} · ${balance}. ${t("panel.coins.chipLabel", { call: callBalance ?? 0, ad: balance })}`} aria-describedby="tkn-coin-tip" aria-expanded={coinTip} onClick={() => setCoinTip((open) => !open)}>
-                      <Phone size={13} aria-hidden="true" focusable="false" /> {callBalance ?? 0}
-                      <span className="tkn-coin-sep" aria-hidden="true">·</span>
-                      <Megaphone size={13} aria-hidden="true" focusable="false" /> {balance}
+                    <button type="button" className="tkn-coin-chip" data-tk="header-coins" aria-describedby="tkn-coin-tip" aria-expanded={coinTip} onClick={() => setCoinTip((open) => !open)}>
+                      {/* H21.9b: the name comes from the content, so it reads the numbers once and there is no label to mismatch the visible text. */}
+                      <span style={SR_ONLY}>{t("panel.coins.chipLabel", { call: callBalance ?? 0, ad: balance })}</span>
+                      <span aria-hidden="true" style={{ display: "inline-flex", alignItems: "center", gap: "inherit" }}>
+                        <Phone size={13} aria-hidden="true" focusable="false" /> {callBalance ?? 0}
+                        <span className="tkn-coin-sep">·</span>
+                        <Megaphone size={13} aria-hidden="true" focusable="false" /> {balance}
+                      </span>
                     </button>
                     <span id="tkn-coin-tip" role="tooltip" className="tkn-coin-tip" data-tk="header-coins-tip">
                       <span>{t("panel.coins.tooltip", { call: callBalance ?? 0, ad: balance })}</span>
