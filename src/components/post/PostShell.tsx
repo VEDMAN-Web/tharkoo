@@ -15,15 +15,17 @@ type HeaderProps = {
   /** The draft chip (Saving, Saved); left out on screens that have no draft. */
   saveState?: SaveState;
   exitHref?: string;
+  /** H21.7: the done screens have no draft to save: logo on the left, the credit pill and a My ads link on the right. */
+  variant?: "flow" | "done";
 };
 
-export function PostHeader({ saveState, exitHref = "/u/account/ads/" }: HeaderProps) {
+export function PostHeader({ saveState, exitHref = "/u/account/ads/", variant = "flow" }: HeaderProps) {
   const t = useT();
   const { balance, balanceReady } = useAccount();
   const known = balanceReady && balance !== null;
   const shown = known ? balance.toLocaleString("en-IN") : "";
   return (
-    <header className="tkp-header" data-tk="post-header">
+    <header className="tkp-header" data-tk="post-header" data-variant={variant}>
       <div className="tkp-header-row">
         <Link href="/" className="tkp-logo" aria-label={t("post.v2.header.logoLabel")}>
           <span className="tkp-mark" aria-hidden="true">
@@ -31,11 +33,11 @@ export function PostHeader({ saveState, exitHref = "/u/account/ads/" }: HeaderPr
           </span>
           <span className="tkp-logo-text">{t("post.v2.header.brand")}</span>
         </Link>
-        <Link href={exitHref} className="tkp-exit" data-tk="exit-post" aria-label={t("post.v2.header.exit")}>
+        {variant === "done" ? null : <Link href={exitHref} className="tkp-exit" data-tk="exit-post" aria-label={t("post.v2.header.exit")}>
           <svg className="tkp-exit-ic" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M15 5l-7 7 7 7" /></svg>
           <span className="tkp-exit-txt">{t("post.v2.header.exit")}</span>
-        </Link>
-        <p className="tkp-header-mid" data-tk="post-header-title">{t("post.v2.header.title")}</p>
+        </Link>}
+        {variant === "done" ? null : <p className="tkp-header-mid" data-tk="post-header-title">{t("post.v2.header.title")}</p>}
         {saveState ? (
           <span className="tkp-saved" data-state={saveState} data-tk="draft-saved" role="status">
             {saveState === "saving" ? t("post.save.saving") : t("post.save.saved")}
@@ -57,6 +59,7 @@ export function PostHeader({ saveState, exitHref = "/u/account/ads/" }: HeaderPr
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round"><path d="M12 5v14M5 12h14" /></svg>
           </span>
         </button>
+        {variant === "done" ? <Link href="/u/account/ads/" className="tkp-myads" data-tk="header-my-ads">{t("post.v2.header.myAds")}</Link> : null}
       </div>
     </header>
   );
@@ -74,10 +77,10 @@ export function ProgressLine({ percent }: { percent: number | null }) {
 }
 
 /** Wraps a screen of the flow. The site header and footer give way to this shell (see post-shell.css). */
-export function PostShell({ percent, children, saveState }: { percent: number | null; children: ReactNode; saveState?: SaveState }) {
+export function PostShell({ percent, children, saveState, variant = "flow" }: { percent: number | null; children: ReactNode; saveState?: SaveState; variant?: "flow" | "done" }) {
   return (
     <div className="tkp-shell" data-tk="post-shell">
-      <PostHeader saveState={saveState} />
+      <PostHeader saveState={saveState} variant={variant} />
       <ProgressLine percent={percent} />
       {children}
     </div>
