@@ -82,16 +82,14 @@ test.describe("H21.1 step 1 category", () => {
     await page.evaluate(() => window.scrollTo(0, 0));
     const bubble = page.locator(".tkn-chat-bubble");
     await shot(page, "category-bubble", true);
-    await expect(bubble).toBeVisible();
-    const box = (await bubble.boundingBox())!;
+    // H21.12c: below 1024 px the bubble is hidden on the post-ad screens; on a computer it sits 28 px from the edges.
     const view = page.viewportSize()!;
-    expect(Math.round(box.width)).toBeGreaterThanOrEqual(48);
-    if (phone) {
-      // Clear of the sticky bar, 16 px from the right edge.
-      const bar = (await page.locator(".tkp-nav").boundingBox())!;
-      expect(box.y + box.height).toBeLessThanOrEqual(bar.y);
-      expect(Math.round(view.width - (box.x + box.width))).toBe(16);
+    if (view.width < 1024) {
+      await expect(bubble).toBeHidden();
     } else {
+      await expect(bubble).toBeVisible();
+      const box = (await bubble.boundingBox())!;
+      expect(Math.round(box.width)).toBeGreaterThanOrEqual(48);
       expect(Math.round(view.width - (box.x + box.width))).toBe(28);
       expect(Math.round(view.height - (box.y + box.height))).toBe(28);
     }

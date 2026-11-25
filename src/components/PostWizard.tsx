@@ -70,6 +70,7 @@ export function PostWizard({
   initialCities,
   defaultCityId = "",
   defaultName = "",
+  accountName = "",
   adultAccepted = false,
   about = null,
 }: {
@@ -81,6 +82,8 @@ export function PostWizard({
   initialCities?: Place[];
   defaultCityId?: string;
   defaultName?: string;
+  /** H21.12c: the account's own name, for the preview's initial. */
+  accountName?: string;
   /** The account has accepted the 18+ statement before, so the Review step does not ask again. */
   adultAccepted?: boolean;
   maskedEmail?: string;
@@ -226,7 +229,7 @@ export function PostWizard({
             setPostal(form.postal);
             setArea(form.area);
             setAge(form.age);
-            setNickname(form.nickname);
+            setNickname((prev) => form.nickname || prev);
             // H21.5a: read the switch from the listing (the field exists once H21.5b is merged; until then it is simply absent, so On).
             setVideoCallsOff(Boolean((res.data as { videoCallsOff?: boolean | null }).videoCallsOff));
             setTitle(form.title);
@@ -1055,7 +1058,7 @@ export function PostWizard({
           }))
         : [];
     const detailsCard = (
-      <DetailsPreview title={title} categoryName={category?.name ?? ""} placeName={[cityName, shownDistrict].filter(Boolean).join(" / ")} interests={picksOf(attrs[INTEREST_KEY])} name={nickname} cover={coverUrl} editing={current === "photos" ? "" : current === "contact" ? "name" : editingPart} highlightPhoto={current === "photos"} />
+      <DetailsPreview title={title} categoryName={category?.name ?? ""} placeName={[cityName, shownDistrict].filter(Boolean).join(" / ")} interests={picksOf(attrs[INTEREST_KEY])} accountName={accountName} name={nickname} cover={coverUrl} editing={current === "photos" ? "" : current === "contact" ? "name" : editingPart} highlightPhoto={current === "photos"} />
     );
     const popularInterests = (category?.fields ?? [])
       .filter((field) => field.key === INTEREST_KEY && Array.isArray(field.options))

@@ -1,0 +1,21 @@
+{
+  "branchPrefix": "haiku/h21.12c",
+  "globs": [
+    "docs/ownership/H21.12c.json",
+    "progress/H21.12c.md",
+    "docs/claude/STATUS.md",
+    "src/components/post/PostShell.tsx",
+    "src/components/post/post-shell.css",
+    "src/components/post/CategoryTiles.tsx",
+    "src/components/post/categoryIcons.ts",
+    "src/components/post/firstName.ts",
+    "src/components/post/DetailsStep.tsx",
+    "src/components/post/details-step.css",
+    "src/components/post/FormFields.tsx",
+    "src/components/post/PickGroup.tsx",
+    "src/components/post/PlaceFields.tsx",
+    "src/components/PostWizard.tsx",
+    "src/app/u/post-insert/page.tsx",
+    "tests/**"
+  ]
+}
