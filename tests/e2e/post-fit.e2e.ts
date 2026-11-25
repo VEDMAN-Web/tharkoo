@@ -86,7 +86,7 @@ test.describe("H7.86 / H21.0 only the page scrolls on desktop", () => {
     for (const [width, height] of SIZES) {
       await page.setViewportSize({ width, height });
       await page.goto(`/u/post-insert/?draft=${id}&step=5`);
-      await expect(page.locator("[data-tk=pay-card]")).toHaveAttribute("data-state", "low");
+      await expect(page.locator("[data-tk=boost-short]")).toBeVisible();
       const found = await overflows(page);
       expect(found.inner, `amber ${width}x${height}: inner scroll`).toEqual([]);
       if (SHOTS) await page.screenshot({ path: `${SHOTS}/3-3-amber-${width}x${height}.png` });

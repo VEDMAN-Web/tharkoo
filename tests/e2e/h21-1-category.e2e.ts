@@ -64,8 +64,8 @@ test.describe("H21.1 step 1 category", () => {
     await expect(preview).toBeVisible();
     await expect(preview.locator(".tkp-catpre-caption")).toContainText("Buy and sell");
     await expect(page.locator(phone ? "[data-tk=category-preview-side]" : "[data-tk=category-preview-inline]")).toBeHidden();
-    await expect.poll(async () => (await preview.locator(".tkp-catpre-card, .tkp-catpre-skel").count()), { timeout: 10_000 }).toBeGreaterThanOrEqual(4);
-    expect(await preview.locator(".tkp-catpre-skel").evaluateAll((nodes) => nodes.map((node) => (node.textContent ?? "").trim()))).toEqual(expect.arrayContaining([]));
+    await expect.poll(async () => (await preview.locator(".tkp-catpre-card").count()), { timeout: 10_000 }).toBe(6); // H21.12b: Super Top 1, TOP 2, all ads 3
+    expect(await preview.locator(".tkp-catpre-ph").evaluateAll((nodes) => nodes.map((node) => (node.textContent ?? "").trim()))).toEqual(expect.arrayContaining([]));
 
     if (!phone) {
       await expect(page.locator(".tkp-step-label")).toHaveText(["Category", "Details", "Photos", "About you", "Review"]);

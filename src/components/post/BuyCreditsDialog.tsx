@@ -52,6 +52,8 @@ export type BuyCreditsDialogProps = {
   plan: string;
   /** The ad-credit balance now. */
   balance: number;
+  /** H21.12a: the words of the form's own Publish button, so both buttons say the same. */
+  publishText?: string;
   /** The person pressed "Publish with ...": the new balance after the top-up. */
   onPaid: (newBalance: number) => void;
   onClose: () => void;
@@ -64,7 +66,7 @@ type PaymentAnswer = { id: string; status: string; credits: number };
  * H21.6: the Buy-credits popup, as one component. Ad packs, the smallest that covers the need already chosen, an own amount,
  * Pay in a new tab, then the popup waits and checks the payment every 3 seconds (and when the window gets focus again).
  */
-export function BuyCreditsDialog({ need, price, plan, balance, onPaid, onClose }: BuyCreditsDialogProps) {
+export function BuyCreditsDialog({ need, price, plan, balance, publishText, onPaid, onClose }: BuyCreditsDialogProps) {
   const t = useT();
   const ref = useFocusTrap<HTMLDivElement>(true, onClose);
   const [data, setData] = useState<CreditPackData | null>(null);
@@ -237,7 +239,7 @@ export function BuyCreditsDialog({ need, price, plan, balance, onPaid, onClose }
           <div className="tkb-state" data-tk="buy-paid" role="status">
             <span className="tkb-ok" aria-hidden><Check size={30} /></span>
             <p className="tkb-state-text" data-tk="buy-new-balance">{t("post.v2.buy.paidBalance", { balance: credits(newBalance) })}</p>
-            <button type="button" className="tkb-btn tkb-btn-p" data-tk="buy-publish" onClick={() => onPaid(newBalance)}>{t("post.v2.buy.publish", { plan, price: credits(price) })}</button>
+            <button type="button" className="tkb-btn tkb-btn-p" data-tk="buy-publish" onClick={() => onPaid(newBalance)}>{publishText || t("post.v2.buy.publish", { plan, price: credits(price) })}</button>
             <button type="button" className="tkb-btn" data-tk="buy-back" onClick={onClose}>{t("post.v2.buy.back")}</button>
           </div>
         ) : null}

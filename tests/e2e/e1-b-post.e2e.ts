@@ -153,10 +153,8 @@ test.describe("E1-B posting journeys", () => {
       await page.locator("#phone").fill("9876543210");
       await page.locator("#nickname").fill("Asha");
       await page.locator("[data-tk=go-on]").click();
-      const card = page.locator("[data-tk=pay-card]");
-      await expect(card).toHaveAttribute("data-state", "low");
-      await expect(page.locator("[data-tk=pay-fee]")).toHaveText("20 credits");
-      await expect(page.locator("[data-tk=pay-balance]")).toHaveText("0 credits");
+      await expect(page.locator("[data-tk=boost-short]")).toBeVisible();
+      await expect(page.locator("[data-tk=cost-posting]")).toHaveText("20 credits");
       expect(await hasHorizontalScroll(page)).toBe(false);
     } finally {
       await restore();

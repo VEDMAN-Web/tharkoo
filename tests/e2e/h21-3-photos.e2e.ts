@@ -61,6 +61,7 @@ test.describe("H21.3 step 3 photos", () => {
     // Guidelines: the side column on a computer, under the box on a phone. The numbers come from the upload rules.
     const guide = page.locator(phone ? "[data-tk=photo-guidelines-inline]" : "[data-tk=photo-guidelines-side]");
     await expect(guide).toBeVisible();
+    await guide.locator("[data-tk=photo-all-rules] > summary").click(); // H21.12b: the long rules are behind "See all photo rules"
     await expect(page.locator(phone ? "[data-tk=photo-guidelines-side]" : "[data-tk=photo-guidelines-inline]")).toBeHidden();
     await expect(guide).toContainText("Videos: up to 60 seconds and 100 MB.");
     await expect(guide).toContainText("Up to 10 photos and videos in total.");
