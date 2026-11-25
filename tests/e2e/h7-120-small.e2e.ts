@@ -110,7 +110,7 @@ test.describe("H7.120 small list", () => {
       await expect(pill).toContainText(/\d+ call credits and 100 ad credits\. Buy credits/);
       await page.locator("#consent-terms").check();
       if (await page.locator("#consent-adult").count()) await page.locator("#consent-adult").check();
-      await page.getByRole("button", { name: /^Publish for 30 credits$/ }).click();
+      await page.getByRole("button", { name: /^Publish ad$/ }).click();
       await expect(page.locator("[data-tk=step-title]")).toHaveText("Your ad is live");
       await expect(pill).toContainText(/\d+ call credits and 70 ad credits\. Buy credits/);
       await shot(page, "h7-120-pill-after-publish");
@@ -206,7 +206,9 @@ test.describe("H7.120 small list", () => {
     expect(patched.status(), await patched.text()).toBe(200);
     await page.goto(`/u/post-insert/?draft=${ad.listingId}&step=5`);
     await expect(page.locator("[data-tk=review-step]")).toBeVisible();
-    const label = page.locator(".tkp-summary dt", { hasText: /^Title$/ });
+    // H21.5a: the old summary list is the "Your ad" card; its row labels must still stay on one line beside a long title.
+    await expect(page.locator("[data-tk=review-preview]")).toContainText(long.slice(0, 40));
+    const label = page.locator("[data-tk=review-details] .tkr-row-k");
     await expect(label).toBeVisible();
     const box = (await label.boundingBox())!;
     expect(box.height).toBeLessThan(24);

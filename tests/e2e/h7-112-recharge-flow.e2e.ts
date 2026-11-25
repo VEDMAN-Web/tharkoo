@@ -93,7 +93,8 @@ for (const method of ["card", "usdt"] as const) {
       await card.scrollIntoViewIfNeeded();
       await shot(page, `h7-112-${method}-1-amber`);
 
-      await page.locator(".tkp-nav [data-tk=go-on]").click();
+      // H21.6: the nav button now opens the Buy-credits dialog (see h21-6-review-buy); the in-card link still opens the recharge sheet.
+      await page.locator("[data-tk=pay-short] .tkp-credits-link").click();
       const sheet = page.locator("[data-tk=recharge-sheet]");
       await expect(sheet.locator("[data-tk=recharge-short]")).toContainText("You need 30 more credits");
       await sheet.locator("[data-tk=recharge-pack]").filter({ has: page.locator("strong", { hasText: /^100$/ }) }).click();

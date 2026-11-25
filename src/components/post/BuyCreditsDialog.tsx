@@ -95,6 +95,13 @@ export function BuyCreditsDialog({ need, price, plan, balance, onPaid, onClose }
     };
   }, [need]);
 
+  // The first focus goes to the pre-selected pack (not the close button), once the packs have loaded.
+  const loaded = Boolean(data);
+  useEffect(() => {
+    if (!loaded) return;
+    ref.current?.querySelector<HTMLElement>("[data-tk=buy-pack][aria-checked=true]")?.focus();
+  }, [loaded, ref]);
+
   const packs = data ? firstPacks(data.packs, need) : [];
   const chosen = amount ? undefined : data?.packs.find((pack) => pack.id === picked);
   const limits = data?.custom ? { min: data.custom.min.ad, max: data.custom.maxPerPurchase.ad, maxPerDay: data.custom.maxPerDay } : null;

@@ -113,7 +113,7 @@ test.describe("H21.5a step 5 review", () => {
     await shot(page, "review-bubble", true);
   });
 
-  test("not enough credits: the warning, Buy credits opens the ad-credit sheet, and the button says so", async ({ page, baseURL }) => {
+  test("not enough credits: the warning, Buy credits opens the Buy-credits dialog, and the button says so", async ({ page, baseURL }) => {
     test.setTimeout(240_000);
     await toReview(page, baseURL!, 0);
     await radio(page, "top").click();
@@ -123,9 +123,9 @@ test.describe("H21.5a step 5 review", () => {
     await expect(page.locator("[data-tk=go-on]")).toHaveText("Buy credits to continue");
     await shot(page, "review-low-credits");
     await page.locator("[data-tk=boost-buy]").click();
-    await expect(page.locator("[data-tk=credit-packs]")).toBeVisible();
-    await expect(page.locator("[data-tk=wallet-tab-call]")).toHaveCount(0);
-    await shot(page, "review-low-credits-sheet", true);
+    await expect(page.locator("[data-tk=buy-credits]")).toBeVisible();
+    await expect(page.locator("[data-tk=buy-pack][aria-checked=true]")).toBeFocused();
+    await shot(page, "review-low-credits-dialog", true);
   });
 
   test("Edit jumps to a step and comes back to Review; the 18+ tick is asked only until it was accepted once", async ({ page, baseURL }) => {

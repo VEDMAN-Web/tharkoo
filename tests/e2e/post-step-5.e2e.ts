@@ -440,7 +440,8 @@ test.describe("H7.86 post an ad, step 5 and the success screen", () => {
     await card.scrollIntoViewIfNeeded();
     await shot(page, `${prefix}-B-amber`);
 
-    await recharge.click();
+    // H21.6: the nav button opens the Buy-credits dialog (h21-6-review-buy); the in-card link still opens the recharge sheet.
+    await page.locator("[data-tk=pay-short] .tkp-credits-link").click();
     const sheet = page.locator("[data-tk=recharge-sheet]");
     await expect(sheet.locator("[data-tk=recharge-short]")).toContainText("You need 30 more credits");
     await page.keyboard.press("Escape");

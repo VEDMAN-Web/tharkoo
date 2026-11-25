@@ -24,6 +24,7 @@ import { ReviewStep, type ReviewRow } from "./post/ReviewStep";
 import { PostSuccess, type UpsellPlan } from "./post/PostSuccess";
 import { openPromote } from "./promote/openPromote";
 import { openSupportWith } from "./recharge/openRecharge";
+import { BuyCreditsDialog } from "./post/BuyCreditsDialog";
 import { PostShell } from "./post/PostShell";
 import { CategoryPreview, CategoryPreviewHint, useCategoryPreview } from "./post/CategoryPreview";
 import { PhotoGuidelines } from "./post/PhotoGuidelines";
@@ -146,6 +147,9 @@ export function PostWizard({
   const returnToReview = useRef(false);
   /** Set when Publish stopped for ad credits: the publish carries on once credits are added. */
   const resumeAfterRecharge = useRef(false);
+  /** H21.6: the Buy-credits dialog (credits missing for the chosen option) and the wish to publish once it has been paid. */
+  const [buy, setBuy] = useState<{ need: number; price: number; plan: string; balance: number } | null>(null);
+  const publishAfterBuy = useRef<number | null>(null);
   const [publishedStatus, setPublishedStatus] = useState("");
   const [serverShort, setServerShort] = useState<{ need: number; balance: number } | null>(null);
   const [adSlug, setAdSlug] = useState("");
@@ -621,6 +625,13 @@ export function PostWizard({
     publishLatest.current = () => void publish();
   });
   useEffect(() => {
+    // After "Publish with ..." in the Buy-credits dialog: publish once the balances on this page show the new balance.
+    if (buy || publishAfterBuy.current === null) return;
+    if (short > 0 || (boost.balance !== null && boost.balance !== publishAfterBuy.current)) return;
+    publishAfterBuy.current = null;
+    publishLatest.current();
+  }, [buy, short, boost.balance]);
+  useEffect(() => {
     function onAdded(event: Event) {
       const added = Number((event as CustomEvent<{ added?: number }>).detail?.added ?? 0);
       if (added <= 0 || !resumeAfterRecharge.current) return;
@@ -1005,6 +1016,7 @@ export function PostWizard({
     const boostPlan = alreadyPaid ? null : boost.plan;
     const planNeed = adCreditsNeeded({ fee: chargesFee && !alreadyPaid ? money.fee : 0, plan: boostPlan });
     const planShort = adCreditsShort(planNeed, boost.balance);
+    const openBuy = (need: number) => setBuy({ need, price: planNeed, plan: boostPlan?.name ?? t("post.v2.rev.planPlain"), balance: boost.balance ?? 0 });
     const totalShort = Math.max(short, planShort);
     const listKind: ListKind = boostPlan ? (boostPlan.code === "super-top" ? "super" : "top") : "free";
     const earnState: "on" | "off" | "locked" = !boostPlan ? "locked" : videoCallsOff ? "off" : "on";
@@ -1169,6 +1181,16 @@ export function PostWizard({
                 </AboutYouStep>
               ) : null}
 
+              {buy ? (
+                <BuyCreditsDialog
+                  {...buy}
+                  onClose={() => setBuy(null)}
+                  onPaid={(newBalance) => {
+                    publishAfterBuy.current = newBalance;
+                    setBuy(null);
+                  }}
+                />
+              ) : null}
               {current === "review" ? (
                 <ReviewStep
                   rows={reviewRows}
@@ -1177,7 +1199,7 @@ export function PostWizard({
                   thumb={coverUrl}
                   note={editing ? (draftStatus === "paused" ? t("post.note.paused") : t("post.note.saved")) : ""}
                   cost={cost}
-                  options={alreadyPaid ? null : <BoostChoice fee={chargesFee ? money.fee : 0} onChange={setBoost} onBuy={(lack) => openRecharge({ shortfall: lack, wallet: "ad" })} />}
+                  options={alreadyPaid ? null : <BoostChoice fee={chargesFee ? money.fee : 0} onChange={setBoost} onBuy={openBuy} />}
                   video={alreadyPaid ? null : <VideoCallRow boosted={Boolean(boostPlan)} on={!videoCallsOff} onToggle={() => setVideoCallsOff((v) => !v)} earn={earn} />}
                   pay={alreadyPaid || !chargesFee ? undefined : <PayCard fee={money.fee} price={money.price} balance={shownBalance} short={short} onRecharge={() => openRecharge({ shortfall: short, wallet: "ad" })} />}
                   listInline={listPreview("inline")}
@@ -1207,7 +1229,7 @@ export function PostWizard({
                 ) : <span />}
                 <div className="tkp-nav-right">
                   {current === "review" && totalShort > 0 ? (
-                    <button type="button" className="tkp-btn tkp-btn-primary" data-tk="go-on" onClick={() => openRecharge({ shortfall: totalShort, wallet: "ad" })}>{t("post.v2.rev.buyContinue")}</button>
+                    <button type="button" className="tkp-btn tkp-btn-primary" data-tk="go-on" onClick={() => openBuy(totalShort)}>{t("post.v2.rev.buyContinue")}</button>
                   ) : current === "review" ? (
                     <button type="button" className="tkp-btn tkp-btn-primary" data-tk="go-on" disabled={busy || !hydrated || !title.trim()} onClick={publish}>
                       {editing ? stepCopy.nextLabel || t("post.nav.publishAd") : boostPlan ? t("post.v2.rev.publishWith", { plan: boostPlan.name, count: planNeed }) : t("post.v2.rev.publish")}
