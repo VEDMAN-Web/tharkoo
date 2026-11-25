@@ -81,8 +81,9 @@ async function reachAbout(page: Page, title: string, prefix: string) {
 
 async function consentAndPublish(page: Page) {
   await page.locator("#consent-terms").check();
-  await page.locator("#consent-adult").check();
-  const publish = page.getByRole("button", { name: /^(Publish( ad| for \d+ credits)|Save changes)$/ });
+  const adult = page.locator("#consent-adult");
+  if (await adult.count()) await adult.check();
+  const publish = page.getByRole("button", { name: /^(Publish( ad| for \d+ credits| with .+)|Save changes)$/ });
   expect(await publish.evaluate((node) => getComputedStyle(node).textTransform)).toBe("none");
   await publish.click();
   await expect(page.locator("[data-tk=step-title]")).toHaveText(/^(Your ad is live|Changes saved)$/);
@@ -128,27 +129,26 @@ test.describe("H7.86 post an ad, step 5 and the success screen", () => {
     await stepOf(page, 5);
 
     await expect(page.locator("[data-tk=step-title]")).toHaveText("Review and publish");
-    await expect(page.locator("[data-tk=review-title]")).toContainText(title);
+    await expect(page.locator("[data-tk=review-preview]")).toContainText(title);
     await expect(page.locator("[data-tk=review-photos]")).toContainText("1 photo");
     await expect(page.locator("[data-tk=review-contact]")).toContainText("+919876543210");
-    await expect(page.locator("[data-tk=review-place]")).toContainText("Mumbai");
-    await expect(page.locator("[data-tk=review-preview] [data-tk=post-preview] .tkn-ls-by")).toHaveText("Asha, 28");
+    await expect(page.locator("[data-tk=review-preview]")).toContainText("Mumbai");
+    await expect(page.locator("[data-tk=review-details]")).toBeVisible();
     await shot(page, `${prefix}-05-review`);
 
     const edited = `${title} edited once`;
-    await page.locator("[data-tk=edit-title]").click();
+    await page.locator("[data-tk=edit-details]").click();
     await stepOf(page, 2);
     await expect(page.locator("#title")).toHaveValue(title);
     await page.locator("#title").fill(edited);
-    for (const step of [3, 4, 5]) {
-      await page.locator("[data-tk=go-on]").click();
-      await stepOf(page, step);
-    }
+    // H21.5a: an Edit link from the review returns to the review after one "Continue".
+    await page.locator("[data-tk=go-on]").click();
+    await stepOf(page, 5);
     await expect(page.locator("[data-tk=step-title]")).toHaveText("Review and publish");
-    await expect(page.locator("[data-tk=review-title]")).toContainText(edited);
+    await expect(page.locator("[data-tk=review-preview]")).toContainText(edited);
 
     await page.locator("[data-tk=go-on]").click();
-    await expect(page.locator(".tkp-main [data-tk=field-error]")).toHaveCount(2);
+    await expect(page.locator(".tkp-main [data-tk=field-error]")).toHaveCount(1);
     await shot(page, `${prefix}-06-review-errors`);
     await consentAndPublish(page);
 
@@ -210,8 +210,8 @@ test.describe("H7.86 post an ad, step 5 and the success screen", () => {
     await fillAbout(page);
     await page.locator("[data-tk=go-on]").click();
     await stepOf(page, 5);
-    await expect(page.locator("#consent-adult")).toBeVisible();
-    await expect(page.locator("input[type=checkbox][id*=adult]")).toHaveCount(1);
+    // H21.5a: the 18+ tick is shown only until it has been accepted once; this account already accepted it at sign-up.
+    await expect(page.locator("input[type=checkbox][id*=adult]")).toHaveCount(0);
     await consentAndPublish(page);
   });
 
@@ -433,10 +433,9 @@ test.describe("H7.86 post an ad, step 5 and the success screen", () => {
     await expect(page.locator("[data-tk=pay-fee]")).toHaveText("30 credits");
     await expect(page.locator("[data-tk=pay-balance]")).toHaveText("0 credits");
     await expect(page.locator("[data-tk=pay-short]")).toContainText("You need 30 more credits to publish.");
-    await expect(page.locator("[data-tk=publish-blocked]")).toBeDisabled();
-    await expect(page.locator("[data-tk=publish-blocked]")).toHaveAttribute("aria-describedby", "pay-reason");
+    // H21.5a: the disabled Publish button is replaced by one "Buy credits to continue" button.
     const recharge = page.locator(".tkp-nav [data-tk=go-on]");
-    await expect(recharge).toHaveText("Recharge now");
+    await expect(recharge).toHaveText("Buy credits to continue");
     expect(await card.evaluate((node) => getComputedStyle(node).backgroundColor)).toBe("rgb(255, 251, 235)");
     await card.scrollIntoViewIfNeeded();
     await shot(page, `${prefix}-B-amber`);
@@ -455,7 +454,7 @@ test.describe("H7.86 post an ad, step 5 and the success screen", () => {
     await expect(page.locator("[data-tk=pay-card]")).toHaveAttribute("data-state", "ok");
     await expect(page.locator("[data-tk=pay-balance]")).toHaveText("100 credits");
     await expect(page.locator("[data-tk=pay-after]")).toHaveText("70 credits");
-    await expect(page.locator(".tkp-nav [data-tk=go-on]")).toHaveText("Publish for 30 credits");
+    await expect(page.locator(".tkp-nav [data-tk=go-on]")).toHaveText("Publish ad");
     await expect(page.locator("[data-tk=publish-blocked]")).toHaveCount(0);
     await page.locator("[data-tk=pay-card]").scrollIntoViewIfNeeded();
     await shot(page, `${prefix}-B-ok`);
@@ -521,13 +520,12 @@ test.describe("H7.86 post an ad, step 5 and the success screen", () => {
     await stepOf(page, 5);
     await expect(page.locator("[data-tk=pay-card]")).toHaveAttribute("data-state", "ok");
     await page.locator("#consent-terms").check();
-    await page.locator("#consent-adult").check();
-    await page.getByRole("button", { name: /^Publish for 30 credits$/ }).click();
+    await page.getByRole("button", { name: /^Publish ad$/ }).click();
     await expect(page.locator("[data-tk=pay-card]")).toHaveAttribute("data-state", "low");
     await expect(page.locator("[data-tk=pay-short]")).toContainText("You need 10 more credits to publish.");
     await expect(page.locator("[data-tk=pay-balance]")).toHaveText("20 credits");
     await expect(page.getByText(/INSUFFICIENT/)).toHaveCount(0);
-    await expect(page.locator(".tkp-nav [data-tk=go-on]")).toHaveText("Recharge now");
+    await expect(page.locator(".tkp-nav [data-tk=go-on]")).toHaveText("Buy credits to continue");
   });
 
   test("a live ad can be edited without a fee: no pay card, no top up, and a Save changes button", async ({ page, baseURL }) => {

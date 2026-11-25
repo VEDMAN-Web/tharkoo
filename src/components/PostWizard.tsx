@@ -27,6 +27,9 @@ import { openSupportWith } from "./recharge/openRecharge";
 import { PostShell } from "./post/PostShell";
 import { CategoryPreview, CategoryPreviewHint, useCategoryPreview } from "./post/CategoryPreview";
 import { PhotoGuidelines } from "./post/PhotoGuidelines";
+import { VideoCallRow } from "./post/VideoCallRow";
+import { EarnPanel } from "./post/EarnPanel";
+import { ReviewListPreview, type ListKind } from "./post/ReviewListPreview";
 import { CreditsCard, PayCard } from "./post/PayParts";
 import { BoostChoice, adCreditsNeeded, adCreditsShort, type BoostChoiceValue } from "./post/BoostChoice";
 import { EarnLine, type EarnInfo } from "@/components/vendor/TourInbox";
@@ -66,6 +69,7 @@ export function PostWizard({
   initialCities,
   defaultCityId = "",
   defaultName = "",
+  adultAccepted = false,
   about = null,
 }: {
   copy?: PostCopy;
@@ -76,6 +80,8 @@ export function PostWizard({
   initialCities?: Place[];
   defaultCityId?: string;
   defaultName?: string;
+  /** The account has accepted the 18+ statement before, so the Review step does not ask again. */
+  adultAccepted?: boolean;
   maskedEmail?: string;
   about?: { askDateOfBirth: boolean } | null;
 }) {
@@ -134,6 +140,10 @@ export function PostWizard({
   const [photoCount, setPhotoCount] = useState<number | null>(null);
   const [boost, setBoost] = useState<BoostChoiceValue>({ plan: null, balance: null });
   const [earn, setEarn] = useState<EarnInfo | null>(null);
+  /** H21.5a: the per-ad video call switch. It is written as the listing field `videoCallsOff` with the details-stage PATCH (H21.5b, #512) and read back from the listing. */
+  const [videoCallsOff, setVideoCallsOff] = useState(false);
+  /** Edit on the Review step jumps to a step and comes back to Review when it is done. */
+  const returnToReview = useRef(false);
   /** Set when Publish stopped for ad credits: the publish carries on once credits are added. */
   const resumeAfterRecharge = useRef(false);
   const [publishedStatus, setPublishedStatus] = useState("");
@@ -211,6 +221,8 @@ export function PostWizard({
             setArea(form.area);
             setAge(form.age);
             setNickname(form.nickname);
+            // H21.5a: read the switch from the listing (the field exists once H21.5b is merged; until then it is simply absent, so On).
+            setVideoCallsOff(Boolean((res.data as { videoCallsOff?: boolean | null }).videoCallsOff));
             setTitle(form.title);
             setText(form.text.trim());
             setPhone(form.phone);
@@ -352,6 +364,7 @@ export function PostWizard({
   }, [newDesign, current, hydrated]);
 
   function remember(id: string, nextStep: number) {
+    if (flow[nextStep - 1] === "review") returnToReview.current = false;
     setTouched({});
     setShowAll(false);
     const url = `${postAdPath(paths)}?step=${newDesign ? urlStepOf(flow[nextStep - 1] ?? "category") : nextStep}&draft=${id}`;
@@ -423,6 +436,7 @@ export function PostWizard({
         stage: "details",
         attributes: { ...cleanAttrs(attrs), ...(age ? { age: Number(age) } : {}) },
         nickname,
+        ...(newDesign ? { videoCallsOff } : {}),
         ...(includeContact ? { contact } : {}),
       }),
     });
@@ -515,12 +529,15 @@ export function PostWizard({
   async function continueFrom(from: NewPostStep) {
     if (!showErrors(errorsForStep(validate(), from, Boolean(about), moreKeys))) return;
     if (from === "category") return setStep(no("details"));
-    if (from === "photos") return remember(draftId, no("contact"));
+    if (from === "photos") return remember(draftId, returnToReview.current ? no("review") : no("contact"));
     // H19.6b: the wizard never asks for a date of birth. An account that has none (a code sign-in) adds it once in its seller profile, then comes back.
     if (from === "contact" && about?.askDateOfBirth) return setBanner(t("post.about.dobAway"));
     if (from === "contact" && !(await saveAbout())) return;
     const id = await saveAll(from === "contact");
-    if (id) remember(id, step + 1);
+    if (id) {
+      const back = returnToReview.current;
+      remember(id, back ? no("review") : step + 1);
+    }
   }
 
   async function publish() {
@@ -598,6 +615,10 @@ export function PostWizard({
     window.history.replaceState(null, "", postAdPath(paths));
     setDone(true);
   }
+
+  useEffect(() => {
+    if (adultAccepted) setAdult(true);
+  }, [adultAccepted]);
 
   const publishLatest = useRef<() => void>(() => undefined);
   useEffect(() => {
@@ -971,14 +992,37 @@ export function PostWizard({
     const hints = hintsFor(category?.slug);
     const subName = subOptions.find((sub) => sub.id === subcategoryId)?.name;
     const contactSummary = contactMode === "email" ? t("post.review.emailOnly") : phone ? `${normalPhone(phone)}${contactMode === "both" ? t("post.review.andEmail") : ""}` : t("post.review.notSet");
+    const answers = extra.flatMap((field) => {
+      const value = attrs[field.key];
+      return Array.isArray(value) ? value.map(String) : textOf(value) ? [textOf(value)] : [];
+    });
+    const detailsText = [...picksOf(attrs[INTEREST_KEY]), ...answers].filter(Boolean).join(" \u00b7 ");
+    const photosText = photoCount === null ? (draftId ? t("post.review.checking") : t("post.v2.rev.noPhotos")) : photoCount === 0 ? t("post.v2.rev.noPhotos") : photoCount === 1 ? t("post.v2.rev.photo1") : t("post.v2.rev.photos", { count: photoCount });
+    const reach = [phone ? normalPhone(phone) : "", [whatsapp ? t("post.contactBox.whatsapp") : "", telegramOn ? t("post.contactBox.telegram") : ""].filter(Boolean).join(", ")].filter(Boolean);
+    const contactText = [nickname.trim(), ...reach].filter(Boolean).join(" \u00b7 ") || t("post.v2.rev.notSet");
     const reviewRows: ReviewRow[] = [
-      { key: "category", label: t("post.review.category"), value: [category?.name, subName].filter(Boolean).join(" › ") || t("post.review.notChosen"), step: 1 },
-      { key: "title", label: t("post.field.title"), value: title.trim() || t("post.review.noTitle"), step: no("details") },
-      { key: "place", label: t("post.review.place"), value: placeParts || t("post.review.notSet"), step: no("details") },
-      { key: "name", label: t("post.review.name"), value: byline || nickname.trim() || t("post.review.notSet"), step: no("contact") },
-      { key: "photos", label: t("post.review.photos"), value: photoCount === null ? (draftId ? t("post.review.checking") : t("post.review.noPhotos")) : photoCount ? `${photoCount} ${photoCount === 1 ? "photo" : "photos"}` : t("post.review.noPhotos"), step: no("photos") },
-      { key: "contact", label: t("post.review.contact"), value: contactSummary, step: no("contact") },
+      { key: "category", label: t("post.v2.rev.rowCategory"), value: [category?.name, subName].filter(Boolean).join(" \u203a ") || t("post.review.notChosen"), step: 1 },
+      { key: "details", label: t("post.v2.rev.rowDetails"), value: detailsText || t("post.v2.rev.notSet"), step: no("details") },
+      { key: "photos", label: t("post.v2.rev.rowPhotos"), value: photosText, step: no("photos") },
+      { key: "contact", label: t("post.v2.rev.rowContact"), value: contactText, step: no("contact") },
     ];
+    const boostPlan = alreadyPaid ? null : boost.plan;
+    const planNeed = adCreditsNeeded({ fee: chargesFee && !alreadyPaid ? money.fee : 0, plan: boostPlan });
+    const planShort = adCreditsShort(planNeed, boost.balance);
+    const totalShort = Math.max(short, planShort);
+    const listKind: ListKind = boostPlan ? (boostPlan.code === "super-top" ? "super" : "top") : "free";
+    const earnState: "on" | "off" | "locked" = !boostPlan ? "locked" : videoCallsOff ? "off" : "on";
+    const cost = {
+      posting: chargesFee && !alreadyPaid && !money.place ? t("post.v2.rev.credits", { count: money.fee }) : t("post.v2.rev.costFree"),
+      postingNote: money.place && !alreadyPaid ? t("post.v2.rev.costFreeLeft", { left: Math.max(0, money.place.freeAds - money.place.adNumber + 1), total: money.place.freeAds }) : "",
+      boost: boostPlan ? `${boostPlan.name} \u00b7 ${t("post.v2.rev.credits", { count: boostPlan.amount })}` : t("post.v2.rev.costNone"),
+      total: planNeed > 0 ? t("post.v2.rev.credits", { count: planNeed }) : t("post.v2.rev.costFree"),
+    };
+    const listPlace = [shownDistrict, cityName].filter(Boolean).join(", ");
+    const listHits = categoryPreview.hits;
+    const listPreview = (where: "inline" | "side") => (
+      <ReviewListPreview where={where} kind={listKind} hours={boostPlan?.durationHours ?? null} categoryName={category?.name ?? ""} cityName={cityName} title={title.trim() || t("post.v2.det.previewTitle")} place={listPlace} cover={coverUrl} hits={listHits} />
+    );
     const categoryReady = Boolean(categoryId) && (subOptions.length === 0 || Boolean(subcategoryId));
     const live = errorsForStep(validate(), current, Boolean(about), moreKeys);
     // Once Continue was pressed the live checks rule for every field they cover, so a message goes away as soon as the field is fixed.
@@ -1132,22 +1176,26 @@ export function PostWizard({
               {current === "review" ? (
                 <ReviewStep
                   rows={reviewRows}
-                  ad={adPreview}
-                  hasPhoto={Boolean(coverUrl)}
-                  byline={byline}
-                  note={editing ? (draftStatus === "paused" ? t("post.note.paused") : t("post.note.saved")) : t("post.note.publish")}
-                  pay={alreadyPaid ? undefined : (
-                    <>
-                      {chargesFee ? <PayCard fee={money.fee} price={money.price} balance={shownBalance} short={short} onRecharge={() => openRecharge({ shortfall: short, wallet: "ad" })} /> : null}
-                      <BoostChoice fee={chargesFee ? money.fee : 0} onChange={setBoost} />
-                      <EarnLine info={earn} />
-                    </>
-                  )}
+                  title={title.trim() || t("post.review.noTitle")}
+                  place={listPlace}
+                  thumb={coverUrl}
+                  note={editing ? (draftStatus === "paused" ? t("post.note.paused") : t("post.note.saved")) : ""}
+                  cost={cost}
+                  options={alreadyPaid ? null : <BoostChoice fee={chargesFee ? money.fee : 0} onChange={setBoost} onBuy={(lack) => openRecharge({ shortfall: lack, wallet: "ad" })} />}
+                  video={alreadyPaid ? null : <VideoCallRow boosted={Boolean(boostPlan)} on={!videoCallsOff} onToggle={() => setVideoCallsOff((v) => !v)} earn={earn} />}
+                  pay={alreadyPaid || !chargesFee ? undefined : <PayCard fee={money.fee} price={money.price} balance={shownBalance} short={short} onRecharge={() => openRecharge({ shortfall: short, wallet: "ad" })} />}
+                  listInline={listPreview("inline")}
+                  earnInline={<EarnPanel state={earnState} earn={earn} />}
                   terms={terms}
+                  showAdult={!adultAccepted}
                   adult={adult}
                   termsError={errors.terms}
                   adultError={errors.adult}
-                  onEdit={(target) => (draftId ? remember(draftId, target) : setStep(target))}
+                  onEdit={(target) => {
+                    returnToReview.current = true;
+                    if (draftId) remember(draftId, target);
+                    else setStep(target);
+                  }}
                   onTerms={() => setTerms((v) => !v)}
                   onAdult={() => setAdult((v) => !v)}
                 />
@@ -1162,14 +1210,11 @@ export function PostWizard({
                   </button>
                 ) : <span />}
                 <div className="tkp-nav-right">
-                  {current === "review" && short > 0 ? (
-                    <>
-                      <button type="button" className="tkp-btn" data-tk="publish-blocked" disabled aria-describedby="pay-reason">{t("post.nav.publish")}</button>
-                      <button type="button" className="tkp-btn tkp-btn-primary" data-tk="go-on" onClick={() => openRecharge({ shortfall: short, wallet: "ad" })}>{t("post.nav.recharge")}</button>
-                    </>
+                  {current === "review" && totalShort > 0 ? (
+                    <button type="button" className="tkp-btn tkp-btn-primary" data-tk="go-on" onClick={() => openRecharge({ shortfall: totalShort, wallet: "ad" })}>{t("post.v2.rev.buyContinue")}</button>
                   ) : current === "review" ? (
                     <button type="button" className="tkp-btn tkp-btn-primary" data-tk="go-on" disabled={busy || !hydrated || !title.trim()} onClick={publish}>
-                      {!stepCopy.nextLabel || stepCopy.nextLabel === "Publish ad" ? (alreadyPaid || !chargesFee ? t("post.nav.publishAd") : t("post.nav.publishFor", { fee: creditsText(money.fee) })) : stepCopy.nextLabel}
+                      {editing ? stepCopy.nextLabel || t("post.nav.publishAd") : boostPlan ? t("post.v2.rev.publishWith", { plan: boostPlan.name, count: planNeed }) : t("post.v2.rev.publish")}
                     </button>
                   ) : (
                     <button type="button" className="tkp-btn tkp-btn-primary" data-tk="go-on" disabled={busy || (current === "category" && !categoryReady) || (current === "photos" && photoBusy)} onClick={() => continueFrom(current)}>
@@ -1182,6 +1227,11 @@ export function PostWizard({
           <aside className="tkp-aside" data-step={current}>
             {current === "category" ? (
               renderCategoryPreview("side")
+            ) : current === "review" ? (
+              <>
+                {listPreview("side")}
+                <EarnPanel state={earnState} earn={earn} />
+              </>
             ) : current === "details" || current === "photos" || current === "contact" ? (
               <>
                 <p className="tkd-pv-label">{t("post.v2.det.preview")}</p>

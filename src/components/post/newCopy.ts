@@ -30,6 +30,7 @@ export function newStepCopy(step: NewPostStep, copy: PostCopy, aboutYou: boolean
   if (step === "more") return { ...base, title: people ? t("post.stepCopy.moreAboutYou") : t("post.stepCopy.moreDetails"), help: "", nextLabel: "", backLabel: "" };
   // H21.1: the fee is now said in the note under the tiles, so the help line no longer carries it.
   if (step === "contact" && contactMode !== "email" && isUntouched(base, POST_COPY_DEFAULTS.steps.contact)) return { ...base, title: t("post.v2.about.title"), help: t("post.v2.about.lead") };
+  if (step === "review" && !editing && isUntouched(base, POST_COPY_DEFAULTS.steps.review)) return { ...base, title: t("post.v2.rev.title"), help: t("post.v2.rev.lead"), nextLabel: base.nextLabel };
   if (step === "photos" && isUntouched(base, POST_COPY_DEFAULTS.steps.photos)) return { ...base, title: t("post.v2.ph.title"), help: t("post.v2.ph.lead") };
   if (step === "details" && isUntouched(base, POST_COPY_DEFAULTS.steps.details)) return { ...base, title: t("post.v2.det.title"), help: t("post.v2.det.lead") };
   if (step === "contact") {

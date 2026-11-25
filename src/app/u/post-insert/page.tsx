@@ -84,5 +84,5 @@ export default async function PostInsertPage({
   const cities = plain(cityRows.map((row) => ({ id: row.id, name: row.name, slug: row.slug, stateSlug: row.stateSlug })).sort((a, b) => a.name.localeCompare(b.name)));
   const home = (session.user.seller?.city ?? "").trim().toLowerCase();
   const defaultCityId = home ? (cities.find((item) => item.slug.toLowerCase() === home || item.name.toLowerCase() === home)?.id ?? "") : "";
-  return <UiTextProvider texts={texts} shared={shared}><PostWizard copy={copy} requireIdCheck={requireIdCheck} newDesign={newDesign} initialCategories={categories} initialCities={cities} defaultCityId={defaultCityId} defaultName={session.user.seller?.name ?? ""} maskedEmail={maskEmail(session.user.email)} about={about} /></UiTextProvider>;
+  return <UiTextProvider texts={texts} shared={shared}><PostWizard copy={copy} requireIdCheck={requireIdCheck} newDesign={newDesign} initialCategories={categories} initialCities={cities} defaultCityId={defaultCityId} defaultName={session.user.seller?.name ?? ""} adultAccepted={Boolean(session.user.attestedAdultAt)} maskedEmail={maskEmail(session.user.email)} about={about} /></UiTextProvider>;
 }
