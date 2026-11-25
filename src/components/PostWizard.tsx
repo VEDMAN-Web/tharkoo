@@ -327,8 +327,12 @@ export function PostWizard({
       heading.focus({ preventScroll: true });
     };
     open();
-    // A second pass after the new step has drawn: its own effects must not leave the page scrolled down.
-    const id = window.setTimeout(open, 120);
+    // A second pass after the new step has drawn: its own effects must not leave the page scrolled down. It leaves the
+    // focus alone when something has since taken it on purpose: the "Fix N things" box, a field or a link.
+    const id = window.setTimeout(() => {
+      if (document.activeElement?.matches("[data-tk=error-summary], input, select, textarea, a")) return;
+      open();
+    }, 120);
     return () => window.clearTimeout(id);
   }, [current, newDesign]);
 
