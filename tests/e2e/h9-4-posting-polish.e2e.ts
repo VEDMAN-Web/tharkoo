@@ -1,7 +1,7 @@
 import { mkdirSync } from "node:fs";
 import AxeBuilder from "@axe-core/playwright";
 import type { Page } from "@playwright/test";
-import { expect, hasHorizontalScroll, loginUi, newApi, registerApi, test, uniqueEmail, USER_PASSWORD } from "./helpers";
+import { expect, hasHorizontalScroll, loginUi, newApi, registerApi, test, uniqueEmail, USER_PASSWORD, pickCity } from "./helpers";
 
 /** H9.4 part 1: posting-flow polish on a phone, the plain error words, no prefilled nickname for people, and "Your city" in the preview. */
 
@@ -50,7 +50,7 @@ test.describe("H9.4 posting polish, part 1", () => {
     await toDetails(page, "Dating");
     await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight));
     const nav = (await page.locator(".tkp-nav").boundingBox())!;
-    const lastField = (await page.locator(".tkp-fields").boundingBox())!;
+    const lastField = (await page.locator(".tkd").boundingBox())!; // H21.2: the details step is the .tkd block
     expect(lastField.y + lastField.height).toBeLessThanOrEqual(nav.y);
     expect(await hasHorizontalScroll(page)).toBe(false);
     expect(await serious(page)).toEqual([]);
@@ -70,16 +70,15 @@ test.describe("H9.4 posting polish, part 1", () => {
     await expect(page.getByText("The name people see, e.g. your first name")).toBeVisible();
     await page.locator("[data-tk=go-on]").click();
     const errors = await page.locator("[data-tk=field-error]").allInnerTexts();
-    expect(errors).toEqual(expect.arrayContaining(["Fill this in.", "Enter your age (18 or over).", "Write a title of at least 5 letters or numbers.", "Pick one."]));
+    expect(errors).toEqual(expect.arrayContaining(["Fill this in.", "Enter your age (18 or over).", "Add a title for your ad.", "Pick one."]));
     expect(errors.join(" ")).not.toMatch(/Please, fill|Invalid field|alphanumeric|must enter/);
     await shot(page, "errors");
     await page.setViewportSize({ width: 1440, height: 900 });
-    await page.locator("#city").selectOption("");
-    await expect(page.locator(".tkp-previewbox")).toContainText("Your city");
-    if (await page.locator("#state").count()) await page.locator("#state").selectOption({ label: "Maharashtra" });
-    await page.locator("#city").selectOption({ label: "Mumbai" });
-    await expect(page.locator(".tkp-previewbox")).toContainText("Mumbai");
-    await expect(page.locator(".tkp-previewbox")).not.toContainText("Your city");
+    // H21.2: the details step has its own preview card; its place tag says "City" until a city is chosen.
+    await page.locator("#city").fill("");
+    await expect(page.locator("[data-tk=details-preview]")).toContainText("City");
+    await pickCity(page, "Mumbai");
+    await expect(page.locator("[data-tk=details-preview]")).toContainText("Mumbai");
     await shot(page, "preview");
   });
 });

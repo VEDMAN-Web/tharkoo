@@ -65,6 +65,7 @@ Opus has access to this folder on Vedant's PC. Messages go through `.relay/` (gi
 | H19.10 | Video call earnings split 70/30, vendors told everywhere | approved (#490) | — | Haiku |
 | H20.1 | Tell Google the site name is Tharkoo | approved (#501 merged) | #501 | Haiku |
 | H21.0 | Post-ad redesign: shared shell | approved (#504 merged) | #504 | Haiku |
-| H21.1 | Post-ad redesign: Step 1 Category | PR open | haiku/h21.1-category | Haiku |
+| H21.1 | Post-ad redesign: Step 1 Category | approved (#505 merged) | #505 | Haiku |
+| H21.2 | Post-ad redesign: Step 2 Details | PR open | haiku/h21.2-details | Haiku |
 
 Status values: todo · doing · PR open · changes needed · approved · merged · blocked.

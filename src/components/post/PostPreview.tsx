@@ -14,7 +14,6 @@ export type PreviewInput = {
   categorySlug: string;
   citySlug: string;
   districtName: string;
-  price: number | null;
   cover: string | null;
   /** True while no city is chosen: the card says "Your city" instead of a blank place. */
   cityFallback?: boolean;
@@ -29,7 +28,6 @@ export function previewAd(input: PreviewInput, t: TextFn): ListingDoc {
     categorySlug: input.categorySlug,
     citySlug: input.citySlug,
     place: input.districtName,
-    price: input.price,
     photos: input.cover ? [input.cover] : [],
     variant: "free",
     ...(input.cityFallback ? { cityLabel: t("post.previewCard.cityFallback") } : {}),
@@ -46,7 +44,7 @@ export function PostPreviewCard({ ad, label, hasPhoto, byline }: { ad: ListingDo
   );
 }
 
-export function PreviewSheet({ ad, hasPhoto, byline, onClose }: { ad: ListingDoc; hasPhoto: boolean; byline?: string; onClose: () => void }) {
+export function PreviewSheet({ ad, hasPhoto, byline, card, onClose }: { ad: ListingDoc; hasPhoto: boolean; byline?: string; /** H21.2: a card of its own (the details step) shown in place of the ad card. */ card?: React.ReactNode; onClose: () => void }) {
   const t = useT();
   const ref = useFocusTrap<HTMLDivElement>(true, onClose);
   return (
@@ -58,7 +56,7 @@ export function PreviewSheet({ ad, hasPhoto, byline, onClose }: { ad: ListingDoc
             <X size={20} aria-hidden="true" focusable="false" />
           </button>
         </div>
-        <PostPreviewCard ad={ad} label={t("post.previewCard.heading")} hasPhoto={hasPhoto} byline={byline} />
+        {card ?? <PostPreviewCard ad={ad} label={t("post.previewCard.heading")} hasPhoto={hasPhoto} byline={byline} />}
         <p className="tkp-preview-line" style={{ marginTop: 12 }}>{t("post.previewCard.line")}</p>
       </div>
     </div>

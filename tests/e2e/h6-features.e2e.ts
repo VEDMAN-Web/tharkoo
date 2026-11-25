@@ -1,20 +1,7 @@
 import { createHmac } from "node:crypto";
 import type { APIRequestContext, Page } from "@playwright/test";
 import { createLiveAd } from "./flows";
-import {
-  expect,
-  firstAdPath,
-  hasHorizontalScroll,
-  loginUi,
-  newApi,
-  newUserApi,
-  originHeaders,
-  registerApi,
-  setListingExpiry,
-  test,
-  uniqueEmail,
-  WEBHOOK_SECRET,
-} from "./helpers";
+import { expect, firstAdPath, hasHorizontalScroll, loginUi, newApi, newUserApi, originHeaders, registerApi, setListingExpiry, test, uniqueEmail, WEBHOOK_SECRET, pickCity } from "./helpers";
 
 function chatButton(page: Page) {
   const scope = (page.viewportSize()?.width ?? 1440) < 768 ? "[data-tk=bottom-bar]" : "[data-tk=contact-card]";
@@ -50,8 +37,7 @@ async function sendCoinEvent(baseURL: string, event: Record<string, unknown>, { 
 async function fillAdInformation(page: Page, title: string) {
   await page.locator(".tkp-tile", { hasText: "Jobs" }).click();
   await page.locator("[data-tk=go-on]").click();
-  if (await page.locator("#state").count()) await page.locator("#state").selectOption({ label: "Maharashtra" });
-  await page.locator("#city").selectOption({ label: "Mumbai" });
+  await pickCity(page, "Mumbai");
   await page.locator("#nickname").fill("Asha");
   const roleHere = (await page.locator("#role").count()) > 0;
   if (roleHere) await page.locator("#role").fill("Office assistant");

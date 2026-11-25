@@ -127,7 +127,8 @@ test.describe("H7.85 post an ad, steps 3 and 4", () => {
         } else {
           await page.evaluate(() => window.scrollTo(0, 0));
           const top = (await page.locator(".tkp-nav").boundingBox())!;
-          expect(top.y + top.height - height, `${width}x${height} step ${step} Continue in view`).toBeLessThanOrEqual(1);
+          // H21.0 (spec rule 4): the buttons are the foot of the card and the page scrolls, so "Continue in view" no longer applies.
+          expect(top.height).toBeGreaterThan(0);
         }
       }
     }
@@ -167,12 +168,12 @@ test.describe("H7.85 preview and city", () => {
     await page.locator(".tkp-tile", { hasText: "Dating" }).click();
     await page.locator("[data-tk=go-on]").click();
     if (onPhone(page)) await page.locator("[data-tk=open-preview]").click();
-    const card = page.locator("[data-tk=post-preview]").last();
-    await expect(card).toHaveAttribute("data-photo", "none");
-    const text = await card.locator(".tkn-ls-photo").evaluate((node) => getComputedStyle(node, "::after").content);
-    expect(text).toContain("Your photos appear here");
-    await expect(card.locator(".tkn-ls-count")).toBeHidden();
-    await expect(card.locator(".tkn-ls-photo img").first()).toBeHidden();
+    // H21.2: the details step has its own card: a pink placeholder with a camera, no stock photo, no photo count.
+    const card = onPhone(page) ? page.locator("[data-tk=preview-sheet]") : page.locator("[data-tk=details-preview]");
+    const photo = card.locator(".tkd-pv-photo");
+    expect(await photo.evaluate((node) => getComputedStyle(node).backgroundImage)).not.toContain("url(");
+    await expect(photo.locator("svg")).toHaveCount(1);
+    await expect(card.locator(".tkn-ls-count")).toHaveCount(0);
     await api.dispose();
   });
 
@@ -181,13 +182,12 @@ test.describe("H7.85 preview and city", () => {
     const none = await startAd(page, baseURL!, "citynone", "Nowhere Town");
     await page.locator(".tkp-tile", { hasText: "Jobs" }).click();
     await page.locator("[data-tk=go-on]").click();
-    await expect(page.locator("#city")).toHaveValue("");
-    await expect(page.locator("#city option:checked")).toHaveText("Select city");
+    await expect(page.locator("#city")).toHaveValue(""); // H21.2: the City box starts empty
     await none.dispose();
     const home = await startAd(page, baseURL!, "cityhome", "Mumbai");
     await page.locator(".tkp-tile", { hasText: "Jobs" }).click();
     await page.locator("[data-tk=go-on]").click();
-    await expect(page.locator("#city option:checked")).toHaveText("Mumbai");
+    await expect(page.locator("#city")).toHaveValue("Mumbai");
     await home.dispose();
   });
 
@@ -200,7 +200,9 @@ test.describe("H7.85 preview and city", () => {
     await page.locator("#age").fill("29");
     await page.locator("#title").fill("Coffee and a walk");
     if (onPhone(page)) await page.locator("[data-tk=open-preview]").click();
-    await expect(page.locator("[data-tk=post-preview] .tkn-ls-by").last()).toHaveText("Asha, 29");
+    // H21.2: the details card says "Posted by {name}"; the age is not on the card.
+    const card = onPhone(page) ? page.locator("[data-tk=preview-sheet]") : page.locator("[data-tk=details-preview]");
+    await expect(card.locator(".tkd-pv-by")).toContainText("Asha");
     await api.dispose();
   });
 });

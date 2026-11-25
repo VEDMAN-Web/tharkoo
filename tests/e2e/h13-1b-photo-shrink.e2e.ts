@@ -1,7 +1,7 @@
 import { mkdirSync } from "node:fs";
 import type { Page } from "@playwright/test";
 import { ObjectId } from "mongodb";
-import { ADMIN_EMAIL, expect, hasHorizontalScroll, loginUi, newUserApi, originHeaders, signInAdminContext, test, USER_PASSWORD, withLocalDb } from "./helpers";
+import { ADMIN_EMAIL, expect, hasHorizontalScroll, loginUi, newUserApi, originHeaders, signInAdminContext, test, USER_PASSWORD, withLocalDb, pickCity } from "./helpers";
 
 /** H13.1 part 2: a photo of any size is made smaller in the browser before it is sent, and a file that is not a picture says so in plain words. */
 
@@ -108,8 +108,7 @@ test.describe("H13.1 part 2: any photo size", () => {
     await page.setViewportSize({ width: 1440, height: 900 });
     await page.locator(".tkp-tile", { hasText: "Jobs" }).click();
     await page.locator("[data-tk=go-on]").click();
-    if (await page.locator("#state").count()) await page.locator("#state").selectOption({ label: "Maharashtra" });
-    await page.locator("#city").selectOption({ label: "Mumbai" });
+    await pickCity(page, "Mumbai");
     await page.locator("#nickname").fill("Asha");
     const roleHere = (await page.locator("#role").count()) > 0;
     if (roleHere) await page.locator("#role").fill("Office assistant");

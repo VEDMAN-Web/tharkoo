@@ -1,4 +1,4 @@
-import { expect, grantCredits, hasHorizontalScroll, loginUi, newApi, PNG, registerApi, uniqueEmail, USER_PASSWORD, withLocalDb } from "./helpers";
+import { expect, grantCredits, hasHorizontalScroll, loginUi, newApi, PNG, registerApi, uniqueEmail, USER_PASSWORD, withLocalDb, pickCity } from "./helpers";
 import { finalChecks, test } from "./e1-b-helpers";
 import { fillNewPostAd } from "./flows";
 
@@ -53,8 +53,7 @@ test.describe("E1-B posting journeys", () => {
     const title = `E1 dating ${Date.now()}`;
     await page.locator(".tkp-tile", { hasText: "Dating" }).click();
     await page.locator("[data-tk=go-on]").click();
-    if (await page.locator("#state").count()) await page.locator("#state").selectOption({ label: "Maharashtra" });
-    await page.locator("#city").selectOption({ label: "Mumbai" });
+    await pickCity(page, "Mumbai");
     await page.locator("#nickname").fill("Asha");
     await page.locator("#title").fill(title);
     await page.locator("#text").fill("A friendly description with enough words to pass the checks here.");
@@ -63,12 +62,12 @@ test.describe("E1-B posting journeys", () => {
     // No age: stays on the step and says what is needed.
     await page.locator("[data-tk=go-on]").click();
     await expect(page.locator("[data-tk=step-of]")).toContainText("Step 2 of 5");
-    await expect(page.getByText("Enter your age (18 or over).")).toBeVisible();
+    await expect(page.locator("[data-tk=field-error]", { hasText: "Enter your age (18 or over)." })).toBeVisible(); // H21.2: the same words are also a link in the summary
     // Under 18: refused with the same words.
     await page.locator("#age").fill("17");
     await page.locator("[data-tk=go-on]").click();
     await expect(page.locator("[data-tk=step-of]")).toContainText("Step 2 of 5");
-    await expect(page.getByText("Enter your age (18 or over).")).toBeVisible();
+    await expect(page.locator("[data-tk=field-error]", { hasText: "Enter your age (18 or over)." })).toBeVisible(); // H21.2: the same words are also a link in the summary
     // 18 passes.
     await page.locator("#age").fill("18");
     await page.locator("[data-tk=go-on]").click();
@@ -130,11 +129,11 @@ test.describe("E1-B posting journeys", () => {
       expect(login.ok()).toBe(true);
       await page.request.put("/api/auth/seller-profile", { headers: { origin: baseURL!, referer: `${baseURL}/u/seller-profile/` }, data: { name: "E2E Seller", city: "Mumbai", whatsapp: "", availableNow: false } });
       await page.goto("/u/post-insert/");
-      await expect(page.locator("[data-tk=step-help]")).toContainText("20 credits");
+      // H21.1: the cost is said in the note under the tiles, not in the lead line.
+    await expect(page.locator("[data-tk=post-fee-note]")).toContainText("20 credits");
       await page.locator(".tkp-tile", { hasText: "Jobs" }).click();
       await page.locator("[data-tk=go-on]").click();
-      if (await page.locator("#state").count()) await page.locator("#state").selectOption({ label: "Maharashtra" });
-      await page.locator("#city").selectOption({ label: "Mumbai" });
+      await pickCity(page, "Mumbai");
       await page.locator("#nickname").fill("Asha");
       const roleHere = (await page.locator("#role").count()) > 0;
       if (roleHere) await page.locator("#role").fill("Office assistant");

@@ -35,7 +35,8 @@ test.describe("H7.5 post-ad, New design", () => {
     await page.locator("[data-tk=go-on]").click();
     await expect(page.locator("[data-tk=step-of]")).toContainText("Step 2 of");
     await expect(page.locator("#city")).toBeVisible();
-    await expect(page.locator("#price")).toBeVisible();
+    // H21.2: there is no price field any more.
+    await expect(page.locator("#price")).toHaveCount(0);
     await expectNoHorizontalScroll(page);
   });
 
@@ -47,12 +48,9 @@ test.describe("H7.5 post-ad, New design", () => {
     await page.locator("#title").fill("Preview check title");
     const phone = (page.viewportSize()?.width ?? 1440) < 1024;
     if (phone) await page.locator("[data-tk=open-preview]").click();
-    const card = phone ? page.locator("[data-tk=preview-sheet]") : page.locator("[data-tk=post-preview]");
-    await expect(card.locator(".tkn-ls-title")).toHaveText("Preview check title");
-    if (phone) await page.getByRole("button", { name: "Close preview" }).click();
-    await page.locator("#price").fill("18000");
-    if (phone) await page.locator("[data-tk=open-preview]").click();
-    await expect(card.locator(".tkn-ls-price")).toContainText("18,000");
+    // H21.2: the details step has its own live card; the price part of this check is gone with the price field.
+    const card = phone ? page.locator("[data-tk=preview-sheet]") : page.locator("[data-tk=details-preview]");
+    await expect(card.locator(".tkd-pv-title")).toContainText("Preview check title");
   });
 
   test("Continue stays off until a category is chosen, and the title error shows inline", async ({ page, baseURL }) => {
