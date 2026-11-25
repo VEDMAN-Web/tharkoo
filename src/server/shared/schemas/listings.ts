@@ -38,6 +38,8 @@ export const listingPatchBodySchema = z.discriminatedUnion("stage", [
     price: z.union([z.number(), z.string().max(20)]).nullable().optional(),
     nickname: z.string().trim().max(40).optional(),
     contact: contactSchema.optional(),
+    /** H21.5b: true turns video calls off for this ad (the owner's switch, at posting and in My ads). */
+    videoCallsOff: z.boolean().optional(),
   }),
   z.object({
     stage: z.literal("photos"),

@@ -9,6 +9,8 @@ import { api, friendlyError } from "@/lib/ui/api";
 import { useSellerStatus, type SellerStatus } from "@/components/availability/sellerStatus";
 import { useFocusTrap } from "@/components/ui/useFocusTrap";
 import { useT } from "@/components/ui/AdCard";
+import { bgPhotoStyle } from "@/components/ui/card-photo";
+import "@/components/ui/card-photo.css";
 
 
 export type PopupKind = "call" | "chat";
@@ -256,7 +258,7 @@ function AltRow({ alt, t }: { alt: AdPopupAlt; t: T }) {
   if (status?.status !== "online") return null;
   return (
     <a className="tkn-alt" href={alt.href}>
-      {alt.photo ? <img className="tkn-alt-photo" src={alt.photo} alt="" width={52} height={52} loading="lazy" /> : <span className="tkn-alt-photo" aria-hidden />}
+      {alt.photo ? <span className="tkn-alt-photo tk-bgphoto" style={bgPhotoStyle(alt.photo)}><img src={alt.photo} alt="" width={52} height={52} loading="lazy" /></span> : <span className="tkn-alt-photo" aria-hidden />}
       <span className="tkn-alt-text">
         <strong>{alt.title}</strong>
         <span>{t("ad.away.online", { place: alt.place })}</span>

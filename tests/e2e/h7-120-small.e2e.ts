@@ -66,14 +66,14 @@ test.describe("H7.120 small list", () => {
     const start = ((await (await page.request.get("/api/wallet/")).json()).data.balance as number);
     await page.goto("/u/account/ads/");
     const pill = page.locator('[data-tk="header-coins"]');
-    await expect(pill).toHaveText(`${start} credits`);
+    await expect(pill).toHaveAccessibleName(new RegExp(`^\\d+ call credits and ${start} ad credits\\. Buy credits$`));
     const card = page.locator("[data-tk=card]").filter({ hasText: ad.title }).first();
     await card.locator("[data-tk=promote-open]").click();
     const sheet = page.locator("[data-tk=promote-sheet]");
     await sheet.locator("[data-tk=promote-plan][data-code=bump]").click();
     await sheet.locator("[data-tk=promote-pay]").click();
     await expect(sheet.locator("[data-tk=promote-done]")).toBeVisible();
-    await expect(pill).toHaveText(`${start - 49} credits`);
+    await expect(pill).toHaveAccessibleName(new RegExp(`^\\d+ call credits and ${start - 49} ad credits\\. Buy credits$`));
     await shot(page, "h7-120-pill-after-promote");
   });
 
@@ -107,12 +107,12 @@ test.describe("H7.120 small list", () => {
       await page.locator("[data-tk=go-on]").click();
       await expect(page.locator("[data-tk=step-of]")).toContainText("Step 5 of 5");
       const pill = page.locator('[data-tk="header-coins"]');
-      await expect(pill).toHaveText("100 credits");
+      await expect(pill).toContainText(/\d+ call credits and 100 ad credits\. Buy credits/);
       await page.locator("#consent-terms").check();
       await page.locator("#consent-adult").check();
       await page.getByRole("button", { name: /^Publish for 30 credits$/ }).click();
       await expect(page.locator("[data-tk=step-title]")).toHaveText("Your ad is live");
-      await expect(pill).toHaveText("70 credits");
+      await expect(pill).toContainText(/\d+ call credits and 70 ad credits\. Buy credits/);
       await shot(page, "h7-120-pill-after-publish");
     } finally {
       await setPaidPosting(false);

@@ -168,6 +168,7 @@ export function ownerView(listing: ListingDoc) {
     ...publicView(listing),
     ownerId: idOf(listing.ownerId),
     nickname: listing.nickname ?? null,
+    videoCallsOff: Boolean(listing.videoCallsOff),
     contact: {
       phone: listing.contact?.phone ?? null,
       whatsapp: listing.contact?.whatsapp ?? null,
@@ -470,8 +471,9 @@ async function applyBasics(
 
 async function applyDetails(
   listing: ListingRow,
-  input: { attributes?: Record<string, unknown>; price?: unknown; nickname?: string; contact?: ListingContactDoc },
+  input: { attributes?: Record<string, unknown>; price?: unknown; nickname?: string; contact?: ListingContactDoc; videoCallsOff?: boolean },
 ) {
+  if (input.videoCallsOff !== undefined) listing.videoCallsOff = input.videoCallsOff;
   if (input.nickname !== undefined) {
     const nickname = input.nickname.trim().slice(0, 40);
     await assertCleanText([nickname]);
@@ -514,7 +516,7 @@ export async function patchListing(
         districtId?: string;
         localityId?: string;
       }
-    | { stage: "details"; attributes?: Record<string, unknown>; price?: unknown; nickname?: string; contact?: ListingContactDoc }
+    | { stage: "details"; attributes?: Record<string, unknown>; price?: unknown; nickname?: string; contact?: ListingContactDoc; videoCallsOff?: boolean }
     | { stage: "photos"; mediaIds: string[]; coverMediaId?: string },
   requestId: string,
 ) {
