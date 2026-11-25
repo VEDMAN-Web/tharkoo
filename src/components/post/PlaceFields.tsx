@@ -69,7 +69,7 @@ export function PlaceFields({
         ))}
       </SelectField>
       <div className={`tk-field tkp-city ${cityError ? "is-bad" : ""}`}>
-        <label htmlFor="city">* {t("post.field.city")}</label>
+        <label htmlFor="city">{t("post.field.city")} *</label>
         <input
           id="city-search"
           className="tkp-city-search"

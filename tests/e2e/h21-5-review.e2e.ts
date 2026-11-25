@@ -113,7 +113,8 @@ test.describe("H21.5a step 5 review", () => {
     const inner = await page.evaluate(() => Array.from(document.querySelectorAll<HTMLElement>(".tkp-post *")).filter((node) => { const s = getComputedStyle(node); return s.display !== "none" && (s.overflowY === "auto" || s.overflowY === "scroll") && node.scrollHeight - node.clientHeight > 1; }).length);
     expect(inner).toBe(0);
     await shot(page, "review-super");
-    await expect(page.locator(".tkn-chat-bubble")).toBeVisible();
+    // H21.12c: the bubble is hidden below 1024 px on the post-ad screens.
+    await expect(page.locator(".tkn-chat-bubble")).toBeVisible({ visible: (page.viewportSize()?.width ?? 1440) >= 1024 });
     await shot(page, "review-bubble", true);
   });
 

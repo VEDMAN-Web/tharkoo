@@ -153,7 +153,8 @@ test.describe("H21.3 step 3 photos", () => {
     await expect(uploading.locator("[data-tk=upload-progress]")).toContainText(/Uploading \d+%/);
     await shot(page, "photos-uploading");
     // The support bubble stays visible on this step.
-    await expect(page.locator(".tkn-chat-bubble")).toBeVisible();
+    // H21.12c: the bubble is hidden below 1024 px on the post-ad screens.
+    await expect(page.locator(".tkn-chat-bubble")).toBeVisible({ visible: (page.viewportSize()?.width ?? 1440) >= 1024 });
     await shot(page, "photos-bubble", true);
     release();
     await expect(page.locator("[data-tk=photo-count]")).toHaveText("4 of 10 added", { timeout: 60_000 });

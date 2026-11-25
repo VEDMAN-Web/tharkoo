@@ -45,7 +45,7 @@
 
 /* The "Fix N things" box. */
 .tkn .tkp-shell .tkd-sum { padding: 16px 18px; border-radius: 14px; background: #fdecec; border: 1px solid #f5c2c2; color: #7f1d1d; }
-.tkn .tkp-shell .tkd-sum:focus { outline: 3px solid #7c3aed; outline-offset: 2px; }
+.tkn .tkp-shell .tkd-sum:focus { outline: 3px solid #b91c1c; outline-offset: 2px; }
 .tkn .tkp-shell .tkd-sum b { display: flex; gap: 8px; align-items: center; font-size: 15px; }
 .tkn .tkp-shell .tkd-sum ul { margin: 8px 0 0 28px; padding: 0; font-size: 14px; line-height: 1.7; }
 .tkn .tkp-shell .tkd-sum a { display: inline-block; min-height: 24px; color: #7f1d1d; text-decoration: underline; font-weight: 600; }

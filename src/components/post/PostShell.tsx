@@ -1,7 +1,10 @@
 "use client";
 
 import Link from "next/link";
-import type { ReactNode } from "react";
+import { createContext, useContext, type ReactNode } from "react";
+import { BrandLogo } from "@/components/BrandLogo";
+import { openSupportWith } from "@/components/recharge/openRecharge";
+import { LOGO_LIGHT_DEFAULT } from "@/lib/brand";
 import { useAccount } from "@/components/account/AccountContext";
 import { useT } from "@/components/help/UiTextProvider";
 import { openRecharge } from "@/components/recharge/openRecharge";
@@ -10,6 +13,13 @@ import "./post-shell.css";
 /** H21.0: the one shell around every screen of the post-ad flow: header with the ad-credit pill, progress line, and the page below. */
 
 type SaveState = "idle" | "saving" | "saved";
+
+/** H21.12c: the site's logo file (Admin, Site settings), the same one the main header shows. */
+const PostLogoContext = createContext(LOGO_LIGHT_DEFAULT);
+
+export function PostLogoProvider({ src, children }: { src: string; children: ReactNode }) {
+  return <PostLogoContext.Provider value={src}>{children}</PostLogoContext.Provider>;
+}
 
 type HeaderProps = {
   /** The draft chip (Saving, Saved); left out on screens that have no draft. */
@@ -21,18 +31,16 @@ type HeaderProps = {
 
 export function PostHeader({ saveState, exitHref = "/u/account/ads/", variant = "flow" }: HeaderProps) {
   const t = useT();
+  const logo = useContext(PostLogoContext);
   const { balance, balanceReady } = useAccount();
   const known = balanceReady && balance !== null;
   const shown = known ? balance.toLocaleString("en-IN") : "";
   return (
     <header className="tkp-header" data-tk="post-header" data-variant={variant}>
       <div className="tkp-header-row">
-        <Link href="/" className="tkp-logo" aria-label={t("post.v2.header.logoLabel")}>
-          <span className="tkp-mark" aria-hidden="true">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 20s-7.5-4.6-7.5-10.2A4.3 4.3 0 0 1 12 7.2a4.3 4.3 0 0 1 7.5 2.6C19.5 15.4 12 20 12 20z" /></svg>
-          </span>
-          <span className="tkp-logo-text">{t("post.v2.header.brand")}</span>
-        </Link>
+        <span className="tkp-logo" data-tk="post-logo">
+          <BrandLogo src={logo} name={t("post.v2.header.brand")} height={34} className="tkp-logo-img" priority />
+        </span>
         {variant === "done" ? null : <Link href={exitHref} className="tkp-exit" data-tk="exit-post" aria-label={t("post.v2.header.exit")}>
           <svg className="tkp-exit-ic" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M15 5l-7 7 7 7" /></svg>
           <span className="tkp-exit-txt">{t("post.v2.header.exit")}</span>
@@ -65,6 +73,16 @@ export function PostHeader({ saveState, exitHref = "/u/account/ads/", variant = 
   );
 }
 
+/** H21.12c: below 1024 px the floating chat bubble is hidden on the post-ad steps, so each step ends with this link instead. */
+function HelpLink() {
+  const t = useT();
+  return (
+    <p className="tkp-needhelp">
+      <button type="button" data-tk="step-help-link" onClick={() => openSupportWith("")}>{t("post.success.help")}</button>
+    </p>
+  );
+}
+
 /** The 3 px line under the header. Pass null for the ID check screen, which has none. */
 export function ProgressLine({ percent }: { percent: number | null }) {
   const t = useT();
@@ -83,6 +101,7 @@ export function PostShell({ percent, children, saveState, variant = "flow" }: { 
       <PostHeader saveState={saveState} variant={variant} />
       <ProgressLine percent={percent} />
       {children}
+      {variant === "flow" ? <HelpLink /> : null}
     </div>
   );
 }
