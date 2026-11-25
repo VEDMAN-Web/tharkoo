@@ -59,6 +59,7 @@ Opus has access to this folder on Vedant's PC. Messages go through `.relay/` (gi
 | H21.8 | Remove the ad price everywhere | approved (#503 merged) | #503 | Haiku |
 | H21.9 | Header coin chip accessible name | PR open | haiku/h21.9-coin-chip | Haiku |
 | H21.9b | Header coin chip reads its numbers once | PR open | haiku/h21.9b-chip-label | Haiku |
+| H21.9c | Header pill e2e expectations | PR open | haiku/h21.9c-pill-tests | Haiku |
 | H19.6 | Post an ad, rebuilt (part A of 2: layout, place, description, interests, photos) | approved (#497 merged) | #497 | Haiku |
 | H19.6b | Post an ad, part B (contact, Free/TOP/Super Top, live screen, Promote pop-up, 70/30 note) | PR open | haiku/h19.6b-post-ad-pay | Haiku |
 | H19.7 | Block throwaway emails | approved | — | Haiku |
