@@ -3,27 +3,6 @@
 import { useT } from "@/components/help/UiTextProvider";
 import { creditsText, rupeesText } from "./credits";
 
-type CardProps = { fee: number; price?: number; balance: number | null; ready: boolean; onTopUp: () => void };
-
-export function CreditsCard({ fee, price, balance, ready, onTopUp }: CardProps) {
-  const t = useT();
-  if (ready && balance === null) {
-    return (
-      <div className="tkp-credits" data-tk="credits-card">
-        <p className="tkp-credits-line">{t("post.pay.cost", { credits: creditsText(fee), rupees: rupeesText(fee, price) })}</p>
-      </div>
-    );
-  }
-  return (
-    <div className="tkp-credits" data-tk="credits-card">
-      <p className="tkp-credits-title">{t("post.pay.creditsTitle")}</p>
-      <p className="tkp-credits-line" data-tk="credits-balance">{t("post.pay.balance", { balance: balance === null ? "..." : creditsText(balance) })}</p>
-      <p className="tkp-credits-line">{fee > 0 ? t("post.pay.thisAd", { credits: creditsText(fee) }) : t("post.pay.noCharge")}</p>
-      {fee > 0 ? <button type="button" className="tkp-credits-link" data-tk="credits-topup" onClick={onTopUp}>{t("post.pay.topUp")}</button> : null}
-    </div>
-  );
-}
-
 type PayProps = {
   fee: number;
   price?: number;

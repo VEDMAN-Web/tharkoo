@@ -22,6 +22,9 @@ export function breadcrumbList(items: Crumb[]) {
 export const siteId = () => `${canonical("/")}#website`;
 export const organizationId = () => `${canonical("/")}#organization`;
 
+/** H22.2: how the brand is described to search engines. One sentence, one place. */
+export const ORGANIZATION_DESCRIPTION = "Tharkoo (tharkoo.com) is a free classifieds website in India. Post an ad, find local listings and contact people after an ID check.";
+
 export function organizationNode(name: string, extra?: { logo?: string; sameAs?: string[] }) {
   const sameAs = (extra?.sameAs || []).filter((href) => /^https?:\/\//i.test(href));
   return {
@@ -29,6 +32,9 @@ export function organizationNode(name: string, extra?: { logo?: string; sameAs?:
     "@type": "Organization",
     "@id": organizationId(),
     name,
+    alternateName: ["Tharkoo.com"],
+    description: ORGANIZATION_DESCRIPTION,
+    areaServed: { "@type": "Country", name: "India" },
     url: canonical("/"),
     ...(extra?.logo ? { logo: extra.logo } : {}),
     ...(sameAs.length ? { sameAs } : {}),
@@ -43,6 +49,8 @@ export function websiteNode(name: string, searchPath = "/search/") {
     name,
     alternateName: ["Tharkoo.com"],
     url: canonical("/"),
+    inLanguage: "en-IN",
+    publisher: { "@id": organizationId() },
     potentialAction: {
       "@type": "SearchAction",
       target: `${canonical(searchPath)}?q={search_term_string}`,
