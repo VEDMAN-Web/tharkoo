@@ -260,14 +260,13 @@ test.describe("H11.1b clear prices", () => {
         await signIn(page, baseURL!, "h111paid");
         await page.setViewportSize({ width: 1440, height: 900 });
         await reachStepFive(page, `Paid ad ${Date.now()}`);
-        await expect(page.locator("[data-tk=pay-headline]")).toHaveText("This ad costs ₹200 (20 credits)");
-        await expect(page.locator("[data-tk=pay-fee]")).toHaveText("20 credits");
-        await expect(page.locator("[data-tk=pay-balance]")).toHaveText("0 credits");
-        await expect(page.locator("[data-tk=pay-card]")).toHaveAttribute("data-state", "low");
-        await page.locator("[data-tk=pay-card]").scrollIntoViewIfNeeded();
+        await expect(page.locator("[data-tk=cost-posting]")).toHaveText("20 credits");
+        await expect(page.locator("[data-tk=cost-after]")).toHaveText("Not enough credits");
+        await expect(page.locator("[data-tk=boost-short]")).toBeVisible();
+        await page.locator("[data-tk=review-cost]").scrollIntoViewIfNeeded();
         await shot(page, "step5-paid");
         await page.setViewportSize({ width: 390, height: 844 });
-        await page.locator("[data-tk=pay-card]").scrollIntoViewIfNeeded();
+        await page.locator("[data-tk=review-cost]").scrollIntoViewIfNeeded();
         expect(await hasHorizontalScroll(page)).toBe(false);
         await shot(page, "step5-paid");
       } finally {

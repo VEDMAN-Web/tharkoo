@@ -85,18 +85,20 @@ for (const method of ["card", "usdt"] as const) {
       await signInNew(page, baseURL!, `flow${method}`);
       await reachStepFive(page, title);
 
-      const card = page.locator("[data-tk=pay-card]");
-      await expect(card).toHaveAttribute("data-state", "low");
-      await expect(page.locator("[data-tk=pay-fee]")).toHaveText("30 credits");
-      await expect(page.locator("[data-tk=pay-balance]")).toHaveText("0 credits");
+      // H21.12a: the "Pay and publish" box is gone; the one cost box says what it costs and that the balance is too low.
+      const card = page.locator("[data-tk=review-cost]");
+      await expect(page.locator("[data-tk=cost-posting]")).toHaveText("30 credits");
+      await expect(page.locator("[data-tk=cost-after]")).toHaveText("Not enough credits");
       await expect(page.locator(".tkp-nav [data-tk=go-on]")).toHaveText("Buy credits to continue");
       await card.scrollIntoViewIfNeeded();
       await shot(page, `h7-112-${method}-1-amber`);
 
-      // H21.6: the nav button now opens the Buy-credits dialog (see h21-6-review-buy); the in-card link still opens the recharge sheet.
-      await page.locator("[data-tk=pay-short] .tkp-credits-link").click();
+      // The nav button opens the Buy-credits dialog (h21-6-review-buy). The recharge sheet (cards and crypto) opens from the
+      // sidebar's "Top up" on a computer, with the shortfall, and from the header pill on a phone.
+      const wide = (page.viewportSize()?.width ?? 0) >= 1024;
+      await page.locator(wide ? "[data-tk=credits-topup]" : "[data-tk=header-credit-pill]").click();
       const sheet = page.locator("[data-tk=recharge-sheet]");
-      await expect(sheet.locator("[data-tk=recharge-short]")).toContainText("You need 30 more credits");
+      if (wide) await expect(sheet.locator("[data-tk=recharge-short]")).toContainText("You need 30 more credits");
       await sheet.locator("[data-tk=recharge-pack]").filter({ has: page.locator("strong", { hasText: /^100$/ }) }).click();
       if (method === "usdt") await sheet.locator("[data-tk=recharge-crypto]").click();
       await shot(page, `h7-112-${method}-2-sheet`);
@@ -119,16 +121,15 @@ for (const method of ["card", "usdt"] as const) {
       await page.waitForURL(/\/u\/post-insert\//, { timeout: 25_000 });
       await stepOf(page, 5);
       await expect(page.locator("[data-tk=recharge-result]")).toHaveAttribute("data-result", "paid");
-      await expect(page.locator("[data-tk=pay-card]")).toHaveAttribute("data-state", "ok");
-      await expect(page.locator("[data-tk=pay-balance]")).toHaveText("100 credits");
-      await expect(page.locator("[data-tk=pay-after]")).toHaveText("70 credits");
-      await expect(page.locator(".tkp-nav [data-tk=go-on]")).toHaveText("Publish ad");
-      await page.locator("[data-tk=pay-card]").scrollIntoViewIfNeeded();
+      await expect(page.locator("[data-tk=boost-short]")).toHaveCount(0);
+      await expect(page.locator("[data-tk=cost-after]")).toHaveText("70 credits");
+      await expect(page.locator(".tkp-nav [data-tk=go-on]")).toHaveText("Publish \u00b7 30 credits");
+      await page.locator("[data-tk=review-cost]").scrollIntoViewIfNeeded();
       await shot(page, `h7-112-${method}-4-ready`);
 
       await page.locator("#consent-terms").check();
       if (await page.locator("#consent-adult").count()) await page.locator("#consent-adult").check();
-      await page.getByRole("button", { name: "Publish ad" }).click();
+      await page.getByRole("button", { name: "Publish \u00b7 30 credits" }).click();
       await expect(page.locator("[data-tk=step-title]")).toHaveText("Your ad is live");
       await expect(page.locator("[data-tk=receipt]")).toHaveText("30 credits paid · Balance 70 credits");
       await shot(page, `h7-112-${method}-5-live`);

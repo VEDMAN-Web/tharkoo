@@ -1,17 +1,17 @@
 import Link from "next/link";
+import { Camera } from "lucide-react";
 import type { ReactNode } from "react";
 import { useT } from "@/components/help/UiTextProvider";
 import "./review-step.css";
 
 export type ReviewRow = { key: string; label: string; value: string; step: number };
 
-type Cost = { posting: string; postingNote: string; boost: string; total: string };
+import type { CostBox } from "./money-text";
 
 type Props = {
-  /** "How should your ad show?", the video row and the balance / low-credits block. */
+  /** "How should your ad show?" */
   options: ReactNode;
   video: ReactNode;
-  pay?: ReactNode;
   /** On a phone these two come before the summary; on a computer they are in the side column. */
   listInline: ReactNode;
   earnInline: ReactNode;
@@ -19,7 +19,9 @@ type Props = {
   title: string;
   place: string;
   rows: ReviewRow[];
-  cost: Cost;
+  cost: CostBox;
+  /** Shown in the cost box when the ad-credit balance is too low for the total. */
+  low?: { title: string; body: string; onBuy: () => void } | null;
   note: string;
   terms: boolean;
   /** The 18+ tick is asked only until the account has accepted it once. */
@@ -33,8 +35,8 @@ type Props = {
 };
 
 /**
- * H21.5a: Step 5, Review and publish. Order: the options, the video calls row, the balance and low-credits block, (phone: the list preview and the
- * earnings), "Your ad" with an Edit link per part, the cost box, the ticks. The buttons are the foot of the card.
+ * H21.5a: Step 5, Review and publish. Order: the options, the video calls row, (phone: the list preview and the earnings), "Your ad" with an
+ * Edit link per part, the one cost box (H21.12a: with the balance left and the low-credits note) right above the ticks.
  */
 export function ReviewStep(props: Props) {
   const t = useT();
@@ -43,7 +45,6 @@ export function ReviewStep(props: Props) {
     <div className="tkr" data-tk="review-step">
       <div className="tkr-options" data-tk="review-options">{props.options}</div>
       <div className="tkr-video">{props.video}</div>
-      {props.pay ? <div className="tkp-pay-slot" data-tk="pay-slot">{props.pay}</div> : null}
       <div className="tkr-phone-only" data-tk="review-phone-extras">
         {props.listInline}
         {props.earnInline}
@@ -52,11 +53,13 @@ export function ReviewStep(props: Props) {
         <p className="tkr-sec">{t("post.v2.rev.yourAd")}</p>
         <div className="tkr-sum-card">
           <div className="tkr-sum-head" data-tk="review-preview">
-            <span className="tkr-thumb" aria-hidden="true">
+            <span className={props.thumb ? "tkr-thumb" : "tkr-thumb is-empty"} data-tk="review-thumb" aria-hidden="true">
               {props.thumb ? (
                 // eslint-disable-next-line @next/next/no-img-element
                 <><img className="tkr-thumb-blur" src={props.thumb} alt="" /><img className="tkr-thumb-fit" src={props.thumb} alt="" /></>
-              ) : null}
+              ) : (
+                <Camera size={22} aria-hidden="true" focusable="false" />
+              )}
             </span>
             <span className="tkr-sum-text">
               <b>{props.title}</b>
@@ -79,6 +82,13 @@ export function ReviewStep(props: Props) {
         <div><span>{t("post.v2.rev.costPosting")}</span><span data-tk="cost-posting">{cost.posting}{cost.postingNote ? <small> {cost.postingNote}</small> : null}</span></div>
         <div><span>{t("post.v2.rev.costBoost")}</span><span data-tk="cost-boost">{cost.boost}</span></div>
         <div className="tkr-total"><span>{t("post.v2.rev.costTotal")}</span><span data-tk="cost-total">{cost.total}</span></div>
+        {cost.after ? <div><span>{t("post.v2.money.after")}</span><span data-tk="cost-after">{cost.after}</span></div> : null}
+        {props.low ? (
+          <div className="tkr-low" role="alert" data-tk="boost-short">
+            <p><b>{props.low.title}</b> {props.low.body}</p>
+            <button type="button" className="tkr-low-buy" data-tk="boost-buy" onClick={props.low.onBuy}>{t("post.v2.rev.buy")}</button>
+          </div>
+        ) : null}
       </section>
       <div className="tkr-ticks">
         <div className={`tkp-consent ${props.termsError ? "is-bad" : ""}`}>

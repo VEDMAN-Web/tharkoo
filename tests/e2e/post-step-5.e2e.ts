@@ -83,7 +83,7 @@ async function consentAndPublish(page: Page) {
   await page.locator("#consent-terms").check();
   const adult = page.locator("#consent-adult");
   if (await adult.count()) await adult.check();
-  const publish = page.getByRole("button", { name: /^(Publish( ad| for \d+ credits| with .+)|Save changes)$/ });
+  const publish = page.getByRole("button", { name: /^(Publish( ad| for \d+ credits| with .+| \u00b7 .+)|Save changes)$/ });
   expect(await publish.evaluate((node) => getComputedStyle(node).textTransform)).toBe("none");
   await publish.click();
   await expect(page.locator("[data-tk=step-title]")).toHaveText(/^(Your ad is live|Changes saved)$/);
@@ -131,7 +131,7 @@ test.describe("H7.86 post an ad, step 5 and the success screen", () => {
     await expect(page.locator("[data-tk=step-title]")).toHaveText("Review and publish");
     await expect(page.locator("[data-tk=review-preview]")).toContainText(title);
     await expect(page.locator("[data-tk=review-photos]")).toContainText("1 photo");
-    await expect(page.locator("[data-tk=review-contact]")).toContainText("+919876543210");
+    await expect(page.locator("[data-tk=review-contact]")).toContainText("+91 98765 43210");
     await expect(page.locator("[data-tk=review-preview]")).toContainText("Mumbai");
     await expect(page.locator("[data-tk=review-details]")).toBeVisible();
     await shot(page, `${prefix}-05-review`);
@@ -267,7 +267,7 @@ test.describe("H7.86 post an ad, step 5 and the success screen", () => {
     await page.locator("#whatsapp-number").fill("9123456780");
     await page.locator("[data-tk=go-on]").click();
     await stepOf(page, 5);
-    await expect(page.locator("[data-tk=review-contact]")).toContainText("+919876543210");
+    await expect(page.locator("[data-tk=review-contact]")).toContainText("+91 98765 43210");
     const saved = (await (await page.request.get(`/api/listings/by-id/${draft}`)).json()).data.contact;
     expect(saved).toMatchObject({ phone: "+919876543210", whatsapp: "+919123456780", telegram: "@asha_walks" });
     expect(saved.acceptForm).toBeFalsy();
@@ -394,11 +394,12 @@ test.describe("H7.86 post an ad, step 5 and the success screen", () => {
     await fillAbout(page);
     await page.locator("[data-tk=go-on]").click();
     await stepOf(page, 5);
-    await expect(page.locator("[data-tk=pay-slot]")).toBeVisible();
+    // H21.12a: the options come first on every width and there is one cost box, below the "Your ad" summary.
+    await expect(page.locator("[data-tk=review-cost]")).toHaveCount(1);
     if (phone) {
-      const pay = (await page.locator("[data-tk=pay-slot]").boundingBox())!;
-      const preview = (await page.locator("[data-tk=review-preview]").boundingBox())!;
-      expect(pay.y + pay.height).toBeLessThanOrEqual(preview.y + 1);
+      const options = (await page.locator("[data-tk=review-options]").boundingBox())!;
+      const cost = (await page.locator("[data-tk=review-cost]").boundingBox())!;
+      expect(options.y + options.height).toBeLessThanOrEqual(cost.y + 1);
     }
     expect(await overflow(page)).toBeLessThanOrEqual(0);
     expect(await serious(page)).toEqual([]);
@@ -428,36 +429,34 @@ test.describe("H7.86 post an ad, step 5 and the success screen", () => {
     await page.locator("[data-tk=go-on]").click();
     await stepOf(page, 5);
     await expect(page.locator("[data-tk=step-title]")).toHaveText("Review and publish");
-    const card = page.locator("[data-tk=pay-card]");
-    await expect(card).toHaveAttribute("data-state", "low");
-    await expect(page.locator("[data-tk=pay-fee]")).toHaveText("30 credits");
-    await expect(page.locator("[data-tk=pay-balance]")).toHaveText("0 credits");
-    await expect(page.locator("[data-tk=pay-short]")).toContainText("You need 30 more credits to publish.");
+    // H21.12a: the "Pay and publish" box is gone; the one cost box says what it costs and that the balance is too low.
+    const card = page.locator("[data-tk=review-cost]");
+    await expect(page.locator("[data-tk=cost-posting]")).toHaveText("30 credits");
+    await expect(page.locator("[data-tk=cost-after]")).toHaveText("Not enough credits");
+    await expect(page.locator("[data-tk=boost-short]")).toContainText("You need 30 more.");
     // H21.5a: the disabled Publish button is replaced by one "Buy credits to continue" button.
     const recharge = page.locator(".tkp-nav [data-tk=go-on]");
     await expect(recharge).toHaveText("Buy credits to continue");
-    expect(await card.evaluate((node) => getComputedStyle(node).backgroundColor)).toBe("rgb(255, 251, 235)");
+    expect(await page.locator("[data-tk=boost-short]").evaluate((node) => getComputedStyle(node).backgroundColor)).toBe("rgb(255, 244, 229)");
     await card.scrollIntoViewIfNeeded();
     await shot(page, `${prefix}-B-amber`);
 
-    // H21.6: the nav button opens the Buy-credits dialog (h21-6-review-buy); the in-card link still opens the recharge sheet.
-    await page.locator("[data-tk=pay-short] .tkp-credits-link").click();
-    const sheet = page.locator("[data-tk=recharge-sheet]");
-    await expect(sheet.locator("[data-tk=recharge-short]")).toContainText("You need 30 more credits");
+    await recharge.click();
+    const dialog = page.locator("[data-tk=buy-credits]");
+    await expect(dialog.locator("[data-tk=buy-line]")).toContainText("you need 30 more");
     await page.keyboard.press("Escape");
-    await expect(sheet).toHaveCount(0);
+    await expect(dialog).toHaveCount(0);
     await stepOf(page, 5);
-    await expect(page.locator("[data-tk=pay-card]")).toHaveAttribute("data-state", "low");
+    await expect(page.locator("[data-tk=boost-short]")).toBeVisible();
 
     await grantCredits(page, 100);
     await page.evaluate(() => window.dispatchEvent(new CustomEvent("tk:credits-added", { detail: { added: 100 } })));
     await expect(page.locator("[data-tk=credits-toast]")).toHaveText("100 credits added");
-    await expect(page.locator("[data-tk=pay-card]")).toHaveAttribute("data-state", "ok");
-    await expect(page.locator("[data-tk=pay-balance]")).toHaveText("100 credits");
-    await expect(page.locator("[data-tk=pay-after]")).toHaveText("70 credits");
-    await expect(page.locator(".tkp-nav [data-tk=go-on]")).toHaveText("Publish ad");
+    await expect(page.locator("[data-tk=boost-short]")).toHaveCount(0);
+    await expect(page.locator("[data-tk=cost-after]")).toHaveText("70 credits");
+    await expect(page.locator(".tkp-nav [data-tk=go-on]")).toHaveText("Publish \u00b7 30 credits");
     await expect(page.locator("[data-tk=publish-blocked]")).toHaveCount(0);
-    await page.locator("[data-tk=pay-card]").scrollIntoViewIfNeeded();
+    await card.scrollIntoViewIfNeeded();
     await shot(page, `${prefix}-B-ok`);
 
     await consentAndPublish(page);
@@ -520,12 +519,11 @@ test.describe("H7.86 post an ad, step 5 and the success screen", () => {
     await fillAbout(page);
     await page.locator("[data-tk=go-on]").click();
     await stepOf(page, 5);
-    await expect(page.locator("[data-tk=pay-card]")).toHaveAttribute("data-state", "ok");
+    await expect(page.locator("[data-tk=cost-after]")).toHaveText("70 credits");
     await page.locator("#consent-terms").check();
-    await page.getByRole("button", { name: /^Publish ad$/ }).click();
-    await expect(page.locator("[data-tk=pay-card]")).toHaveAttribute("data-state", "low");
-    await expect(page.locator("[data-tk=pay-short]")).toContainText("You need 10 more credits to publish.");
-    await expect(page.locator("[data-tk=pay-balance]")).toHaveText("20 credits");
+    await page.getByRole("button", { name: /^Publish \u00b7 30 credits$/ }).click();
+    await expect(page.locator("[data-tk=boost-short]")).toContainText("You need 10 more.");
+    await expect(page.locator("[data-tk=cost-after]")).toHaveText("Not enough credits");
     await expect(page.getByText(/INSUFFICIENT/)).toHaveCount(0);
     await expect(page.locator(".tkp-nav [data-tk=go-on]")).toHaveText("Buy credits to continue");
   });

@@ -34,7 +34,7 @@ describe("H19.6b ad credits for the last step", () => {
 describe("H19.6b wording", () => {
   const t = makeT();
   it("has the lines the choice, the tooltips and the notes use", () => {
-    expect(t("post.boost.price", { count: 80 })).toBe("80 ad credits");
+    expect(t("post.boost.price", { count: 80 })).toBe("+80 ad credits");
     expect(t("post.boost.costs", { count: 80 })).toContain("80 ad credits");
     expect(t("post.boost.short", { count: 10 })).toContain("10 more ad credits");
     expect(t("post.boost.started", { name: "TOP", paid: "80 credits" })).toBe("TOP started (80 credits).");
