@@ -82,5 +82,6 @@ Opus has access to this folder on Vedant's PC. Messages go through `.relay/` (gi
 | H21.11 | List-row pop-out covers its row | approved (#516 merged) | #516 | Haiku |
 | H21.12a | Money and credit text must agree | approved (#522 merged) | #522 | Haiku |
 | H21.12b | Post-ad layout, scroll and preview | PR open | haiku/h21.12b-layout | Haiku |
+| H21.12c | Brand, header and small things | PR open | haiku/h21.12c-brand | Haiku |
 
 Status values: todo · doing · PR open · changes needed · approved · merged · blocked.

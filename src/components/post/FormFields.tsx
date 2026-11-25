@@ -33,7 +33,7 @@ export function SelectField({
   if (searchOptions && searchOptions.length > SEARCH_FROM) {
     return (
       <div className={`tk-field ${error ? "is-bad" : ""}`}>
-        <label htmlFor={id}>{required ? "* " : ""}{label}</label>
+        <label htmlFor={id}>{label}{required ? " *" : ""}</label>
         <SearchSelect id={id} value={value} options={searchOptions} placeholder={searchPlaceholder} emptyText={searchEmpty} disabled={disabled} invalid={Boolean(error)} onBlur={onBlur} onChange={onChange} />
         {help ? <span className="t-caption" style={{ color: "var(--muted)" }}>{help}</span> : null}
         {error ? <span className="tk-error" data-tk="field-error">{error}</span> : null}
@@ -42,7 +42,7 @@ export function SelectField({
   }
   return (
     <label className={`tk-field ${error ? "is-bad" : ""}`} htmlFor={id}>
-      <span>{required ? "* " : ""}{label}</span>
+      <span>{label}{required ? " *" : ""}</span>
       <select id={id} value={value} disabled={disabled} onBlur={onBlur} onChange={(event) => onChange(event.target.value)}>{children}</select>
       {help ? <span className="t-caption" style={{ color: "var(--muted)" }}>{help}</span> : null}
       {error ? <span className="tk-error" data-tk="field-error">{error}</span> : null}
@@ -84,7 +84,7 @@ export function TextField({
   return (
     <label className={`tk-field ${error ? "is-bad" : ""}`} htmlFor={id}>
       <span style={{ display: "flex", justifyContent: "space-between" }}>
-        <span>{required ? "* " : ""}{label}</span>
+        <span>{label}{required ? " *" : ""}</span>
         {note ? <span style={{ fontWeight: 500, color: "var(--muted)" }}>{note}</span> : null}
       </span>
       {area ? (

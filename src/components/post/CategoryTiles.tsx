@@ -1,8 +1,8 @@
 import { useT } from "@/components/help/UiTextProvider";
-import { categoryIcon } from "./categoryIcons";
+import { categoryIconsFor } from "./categoryIcons";
 import "./category-step.css";
 
-export type TileCategory = { _id: string; name: string; slug: string };
+export type TileCategory = { _id: string; name: string; slug: string; icon?: string };
 
 const SKELETON_TILES = 11;
 /** The three soft tile colours of the design, cycled by position. */
@@ -19,11 +19,12 @@ export function CategoryTiles({ categories, selectedId, onPick, locked = false }
       </div>
     );
   }
+  const icons = categoryIconsFor(categories);
   return (
     <div className="tkp-tiles" role="group" aria-label={t("post.tiles.label")}>
       {categories.map((cat, index) => {
         const pressed = cat._id === selectedId;
-        const Icon = categoryIcon(cat.slug);
+        const Icon = icons[index];
         return (
           <button key={cat._id} type="button" className={`tkp-tile ${pressed ? "on" : ""}`} data-tone={TONES[index % TONES.length]} aria-pressed={pressed} disabled={locked && !pressed} onClick={() => onPick(cat._id)}>
             <span className="tkp-tile-tick" aria-hidden="true">

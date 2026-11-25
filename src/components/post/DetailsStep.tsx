@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, type ReactNode } from "react";
-import { Camera, Heart, TriangleAlert } from "lucide-react";
+import { Camera, Heart, TriangleAlert, UserRound } from "lucide-react";
 import { useT } from "@/components/help/UiTextProvider";
 import { CityCombobox, type ComboCity } from "./CityCombobox";
 import { InterestTags } from "./InterestTags";
@@ -64,13 +64,15 @@ type PreviewProps = {
   placeName: string;
   interests: readonly string[];
   name: string;
+  /** H21.12c: the account's own name, for the initial shown before a name for the ads is typed. */
+  accountName?: string;
   cover: string | null;
   editing: EditingPart;
   /** The photo step: the photo part is outlined and the cover is tagged. */
   highlightPhoto?: boolean;
 };
 
-export function DetailsPreview({ title, categoryName, placeName, interests, name, cover, editing, highlightPhoto = false }: PreviewProps) {
+export function DetailsPreview({ title, categoryName, placeName, interests, name, accountName = "", cover, editing, highlightPhoto = false }: PreviewProps) {
   const t = useT();
   const mark = (part: EditingPart) => (editing === part ? " editing" : "");
   return (
@@ -97,7 +99,7 @@ export function DetailsPreview({ title, categoryName, placeName, interests, name
           ))}
         </div>
         <div className={`tkd-pv-by${mark("name")}`}>
-          <span className="tkd-pv-av" aria-hidden="true">{(name.trim().charAt(0) || "?").toUpperCase()}</span>
+          <span className="tkd-pv-av" aria-hidden="true">{(name.trim() || accountName.trim()).charAt(0).toUpperCase() || <UserRound size={18} />}</span>
           <span>
             {t("post.v2.det.postedBy")} <b>{name.trim() || t("post.v2.det.nameFallback")}</b>
           </span>

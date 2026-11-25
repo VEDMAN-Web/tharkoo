@@ -32,8 +32,8 @@ export function PickGroup({ label, help, required, options, mode, max, selected,
   return (
     <fieldset className="tk-pick" data-tk={label} aria-describedby={error ? `${headId}-error` : undefined}>
       <legend className="tk-pick-legend">
-        {required ? "* " : ""}
         {label}
+        {required ? " *" : ""}
       </legend>
       <div className="tk-pick-head">
         {help ? <span className="tk-pick-help">{help}</span> : <span />}
