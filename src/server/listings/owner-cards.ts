@@ -15,6 +15,7 @@ const VIDEO_SWITCH_CODES = new Set(["top", "super-top"]);
 /** H21.5c: the ads (by id) that have TOP or Super Top running now: only those can have the Video calls switch in My ads. */
 export async function topAdIds(ids: Types.ObjectId[], now: Date) {
   if (ids.length === 0) return new Set<string>();
+  await connectDb();
   const orders = await PromotionOrder.find({ listingId: { $in: ids }, status: "active", startsAt: { $lte: now }, endsAt: { $gt: now } }).select("listingId productId").lean();
   const products = await PromotionProduct.find({ _id: { $in: [...new Set(orders.map((order) => String(order.productId)))] } }).select("code").lean();
   const eligible = new Set(products.filter((product) => VIDEO_SWITCH_CODES.has(String(product.code).toLowerCase())).map((product) => String(product._id)));
