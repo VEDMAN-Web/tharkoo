@@ -13,6 +13,7 @@
     "src/components/post/photos-step.css",
     "src/lib/ui/text.ts",
     "tests/e2e/h21-12b-layout.e2e.ts",
+    "tests/server/ui/h21-12b-preview.test.ts",
     "tests/e2e/h21-1-category.e2e.ts",
     "tests/e2e/h21-3-photos.e2e.ts",
     "tests/e2e/h6-features.e2e.ts"

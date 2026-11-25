@@ -2,7 +2,7 @@ import { mkdirSync } from "node:fs";
 import type { Page } from "@playwright/test";
 import { expect, hasHorizontalScroll, loginUi, newUserApi, pickCity, PNG, test, USER_PASSWORD, withLocalDb } from "./helpers";
 
-/** H21.12b: every step opens at the top, nothing in the post page scrolls inside itself, the previews are small and whole. */
+/** H21.12b: every step opens at the top, nothing in the post page scrolls inside itself, the previews follow the boards and show whole cards. */
 
 const SHOTS = ".shots/H21.12b";
 const SIZES = [
@@ -42,6 +42,27 @@ async function opensAtTop(page: Page, step: number) {
   expect(await innerScrollers(page), `step ${step}: no inner scroll`).toEqual([]);
 }
 
+/** The cards in each row of a preview (real and placeholder), and where the person's own card is. */
+async function rows(preview: import("@playwright/test").Locator) {
+  return preview.locator(".tkp-catpre-row").evaluateAll((nodes) =>
+    nodes.map((row) => {
+      const cards = [...row.querySelectorAll(".tkp-catpre-card")];
+      return `${row.getAttribute("data-tier")}:${cards.map((card) => (card.classList.contains("is-mine") ? "me" : "x")).join(",")}`;
+    }),
+  );
+}
+
+/** Cards are whole: none is cut by the box around the preview. */
+async function allWhole(preview: import("@playwright/test").Locator) {
+  return preview.locator(".tkp-catpre-frame").evaluate((frame) => {
+    const box = frame.getBoundingClientRect();
+    return [...frame.querySelectorAll(".tkp-catpre-card")].every((card) => {
+      const r = card.getBoundingClientRect();
+      return r.height > 0 && r.bottom <= box.bottom + 0.5 && r.top >= box.top - 0.5;
+    });
+  });
+}
+
 async function goOn(page: Page) {
   await page.evaluate(() => window.scrollTo(0, document.documentElement.scrollHeight));
   await page.locator("[data-tk=go-on]").click();
@@ -52,7 +73,12 @@ async function walk(page: Page, label: string, withShots: boolean) {
   await page.locator(".tkp-tile", { hasText: "Jobs" }).click();
   const preview = page.locator("[data-tk^=category-preview-]:visible");
   await expect(preview).toBeVisible();
-  await expect.poll(async () => preview.locator(".tkp-catpre-card, .tkp-catpre-skel").count(), { timeout: 10_000 }).toBe(2);
+  await expect.poll(async () => preview.locator(".tkp-catpre-card").count(), { timeout: 10_000 }).toBe(6);
+  await expect.poll(async () => preview.locator(".tkp-catpre-ph.is-loading").count(), { timeout: 10_000 }).toBe(0);
+  expect(await rows(preview)).toEqual(["super:x", "top:x,x", "all:x,x,x"]);
+  expect(await allWhole(preview), "step 1: whole cards").toBe(true);
+  expect(await preview.locator(".tkp-catpre-ph").evaluateAll((nodes) => nodes.map((node) => (node.textContent ?? "").trim()).join(""))).toBe("");
+  expect(await preview.locator(".tkp-catpre-chip").count(), "All plus up to three real words").toBeGreaterThanOrEqual(1);
   expect((await preview.boundingBox())!.width).toBeLessThanOrEqual(360.5);
   expect(await innerScrollers(page), "step 1: no inner scroll").toEqual([]);
   if (withShots) await shots(page, `${label}-step1`);
@@ -96,8 +122,21 @@ async function walk(page: Page, label: string, withShots: boolean) {
   await opensAtTop(page, 5);
   const list = page.locator("[data-tk^=review-list-]:visible");
   await expect(list.locator("[data-tk=list-mine]")).toHaveCount(1);
-  await expect(list.locator("[data-tk=list-mine]")).toContainText("Your ad");
-  expect(await list.locator(".tkp-catpre-card:not(.is-mine)").count()).toBeLessThanOrEqual(2);
+  await expect(list.locator("[data-tk=list-mine]")).toContainText("YOUR AD");
+  // The Review boards: the person's card sits in the row of the chosen option.
+  const board: Record<string, string[]> = {
+    "super-top": ["super:me", "top:x,x", "all:x,x"],
+    top: ["super:x", "top:me,x", "all:x,x"],
+    free: ["super:x", "top:x,x", "all:x,x,x,me"],
+  };
+  for (const [code, expected] of Object.entries(board)) {
+    await page.locator(`[data-tk=boost-choice] [role=radio][data-code=${code}]`).click();
+    await expect(page.locator(`[data-tk=boost-choice] [role=radio][data-code=${code}]`)).toHaveAttribute("aria-checked", "true");
+    await expect.poll(() => rows(list), { message: `rows for ${code}` }).toEqual(expected);
+    expect(await allWhole(list), `whole cards for ${code}`).toBe(true);
+    expect(await innerScrollers(page)).toEqual([]);
+    if (withShots) await shots(page, `${label}-step5-${code}`);
+  }
   expect((await list.boundingBox())!.width).toBeLessThanOrEqual(360.5);
   // All option cards are the same size, chosen or not.
   const widths = await page.locator("[data-tk=boost-choice] [role=radio]").evaluateAll((nodes) => nodes.map((node) => Math.round(node.getBoundingClientRect().width)));

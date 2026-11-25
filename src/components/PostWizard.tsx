@@ -877,7 +877,9 @@ export function PostWizard({
   /** H21.1: the chips of the category's filters ("All" first), taken from its filterable choice fields. */
   function previewChips(): string[] {
     const field = (category?.fields ?? []).find((item) => item.filterable !== false && Array.isArray(item.options) && (item.options as unknown[]).length > 0);
-    return field ? (field.options as unknown[]).map((option) => (typeof option === "string" ? option : String((option as { label?: string }).label ?? ""))).filter(Boolean) : [];
+    const words = field ? (field.options as unknown[]).map((option) => (typeof option === "string" ? option : String((option as { label?: string }).label ?? ""))).filter(Boolean) : [];
+    // H21.12b: the board shows three words after "All"; where the filter has fewer, the category's own sub-categories fill in.
+    return [...new Set([...words, ...subOptions.map((item) => item.name)])];
   }
 
   function renderCategoryPreview(where: "inline" | "side") {
@@ -1051,7 +1053,7 @@ export function PostWizard({
     const listPlace = [shownDistrict, cityName].filter(Boolean).join(", ");
     const listHits = categoryPreview.hits;
     const listPreview = (where: "inline" | "side") => (
-      <ReviewListPreview where={where} kind={listKind} hours={boostPlan?.durationHours ?? null} categoryName={category?.name ?? ""} cityName={cityName} title={title.trim() || t("post.v2.det.previewTitle")} place={listPlace} cover={coverUrl} hits={listHits} />
+      <ReviewListPreview where={where} chips={previewChips()} kind={listKind} hours={boostPlan?.durationHours ?? null} categoryName={category?.name ?? ""} cityName={cityName} title={title.trim() || t("post.v2.det.previewTitle")} place={listPlace} cover={coverUrl} hits={listHits} />
     );
     const categoryReady = Boolean(categoryId) && (subOptions.length === 0 || Boolean(subcategoryId));
     const live = errorsForStep(validate(), current, Boolean(about), moreKeys);

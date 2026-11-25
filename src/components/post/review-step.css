@@ -89,8 +89,9 @@
 .tkn .tkp-shell .tkr-earn-link { font-size: 14px; font-weight: 600; color: #b0106a; }
 .tkn .tkp-shell .tkr-earn-lock { display: flex; gap: 12px; align-items: flex-start; font-size: 14px; line-height: 1.5; color: #4a2870; }
 .tkn .tkp-shell .tkr-earn-lock b { display: block; color: #110520; }
-.tkn .tkp-shell .tkp-catpre-card.is-mine .tkp-catpre-photo { outline: 3px solid #c2126f; outline-offset: -3px; box-shadow: 0 0 18px rgba(194, 18, 111, 0.35); }
-.tkn .tkp-shell .tkp-catpre-tag.mine { top: auto; bottom: 6px; left: 6px; background: #c2126f; }
+.tkn .tkp-shell .tkp-catpre-card.is-mine { box-shadow: 0 0 0 2.5px #c2126f, 0 10px 22px -10px rgba(194, 18, 111, 0.65); }
+.tkn .tkp-shell .tkp-catpre-grid .is-mine { margin: 0 1px; }
+.tkn .tkp-shell .tkp-catpre-tag.mine { left: auto; right: 6px; top: 6px; background: #fff; color: #b0106a; box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2); }
 
 /* A phone shows the list preview and the earnings inside the card; a computer shows them in the side column. */
 .tkn .tkp-shell .tkr-phone-only { display: flex; flex-direction: column; gap: 18px; }

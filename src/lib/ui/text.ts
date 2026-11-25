@@ -1096,7 +1096,7 @@ export const TEXT_DEFAULTS = {
   "post.v2.rev.capSuper": "Super Top: your ad is the first, biggest card people see in this list, for {hours} hours.",
   "post.v2.rev.capTop": "TOP: your ad sits in the TOP row, above every free ad, for {hours} hours.",
   "post.v2.rev.capFree": "Free: your ad is listed by date, below every TOP and Super Top ad. People scroll past those first.",
-  "post.v2.rev.yourTag": "Your ad",
+  "post.v2.rev.yourTag": "YOUR AD",
   "post.v2.rev.earnTitle": "Earn from video calls",
   "post.v2.rev.earnOn": "Video call earnings: on",
   "post.v2.rev.earnComes": "Comes with TOP and Super Top",
