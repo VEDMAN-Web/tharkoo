@@ -64,6 +64,8 @@ export interface ListingDoc {
   seoNoindex?: boolean;
   /** Admin only: the ad stays reachable by URL but is skipped in feeds. */
   feedHidden?: boolean;
+  /** H21.5b: the owner turned video calls off for this ad. Default false (calls allowed). */
+  videoCallsOff?: boolean;
   /** Admin only: the ad is chosen for the Home page row; homeOrder sorts the chosen ads (lowest first). */
   homeShow?: boolean;
   homeOrder?: number;
@@ -198,6 +200,7 @@ const listingSchema = new Schema<ListingDoc>(
     demoEndedBatch: { type: String },
     seoNoindex: { type: Boolean, default: true },
     feedHidden: { type: Boolean, default: false },
+    videoCallsOff: { type: Boolean, default: false },
     homeShow: { type: Boolean, default: false },
     homeOrder: { type: Number, default: 0 },
     attestations: { type: Schema.Types.Mixed },
