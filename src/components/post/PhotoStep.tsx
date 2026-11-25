@@ -1,16 +1,17 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
-import { Camera, ImagePlus } from "lucide-react";
+import { useCallback, useEffect, useRef, useState, type PointerEvent as ReactPointerEvent, type ReactNode } from "react";
+import { Camera, ImagePlus, Info, Plus, Video } from "lucide-react";
 import { api, friendlyError } from "@/lib/ui/api";
 import { useT } from "@/components/help/UiTextProvider";
 import type { DraftMedia } from "@/server/media/mine";
 import type { PostCopy } from "./copy";
 import { listDraftMediaAction, removeMyMediaAction } from "./mediaActions";
-import { InfoPopover } from "@/components/upload/InfoPopover";
-import { UPLOAD_RULES } from "@/components/upload/rules";
 import { MediaTile } from "./MediaTile";
-import { AD_MEDIA_MAX, checkPhoto, checkVideo, uploadMedia } from "./mediaUpload";
+import { PhotoGuidelines } from "./PhotoGuidelines";
+import { DRAG_START_PX, indexAt, LONG_PRESS_MS, moveItem, PRESS_SLOP_PX } from "./photo-order";
+import "./photos-step.css";
+import { AD_MEDIA_MAX, checkPhoto, checkVideo, PHOTO_TYPES, uploadMedia } from "./mediaUpload";
 
 type Upload = { key: string; kind: "image" | "video"; previewUrl: string | null; progress: number; file: File; error?: string; retry?: boolean };
 
@@ -77,6 +78,92 @@ export function PhotoStep({
     onBusy?.(busy);
   }, [busy, onBusy]);
 
+  // H21.3: dragging a photo to a new place. A mouse drags after a few pixels; a finger after a quarter of a second held still.
+  type Drag = { id: string; from: number; to: number; x: number; y: number; offX: number; offY: number; width: number };
+  const [drag, setDrag] = useState<Drag | null>(null);
+  const dragRef = useRef<Drag | null>(null);
+  const press = useRef<{ id: string; pointerId: number; touch: boolean; x: number; y: number; timer: number | null } | null>(null);
+  const gridRef = useRef<HTMLUListElement | null>(null);
+
+  function setDragState(next: Drag | null) {
+    dragRef.current = next;
+    setDrag(next);
+  }
+
+  // While a photo is lifted a finger must not scroll the page.
+  useEffect(() => {
+    if (!drag) return;
+    const stop = (event: TouchEvent) => event.preventDefault();
+    window.addEventListener("touchmove", stop, { passive: false });
+    return () => window.removeEventListener("touchmove", stop);
+  }, [drag === null]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  function clearPress() {
+    if (press.current?.timer) window.clearTimeout(press.current.timer);
+    press.current = null;
+  }
+
+  function beginDrag(id: string, clientX: number, clientY: number, target: HTMLElement | null, pointerId: number) {
+    const tile = target?.closest<HTMLElement>("li");
+    const from = photos.findIndex((photo) => photo.id === id);
+    if (!tile || from < 0) return;
+    const rect = tile.getBoundingClientRect();
+    try {
+      target?.setPointerCapture(pointerId);
+    } catch {
+      // A pointer that is already gone cannot be captured; the drag simply ends on the next event.
+    }
+    setDragState({ id, from, to: from, x: clientX, y: clientY, offX: clientX - rect.left, offY: clientY - rect.top, width: rect.width });
+  }
+
+  function handlersFor(id: string) {
+    return {
+      onPointerDown: (event: ReactPointerEvent<HTMLDivElement>) => {
+        if (busy || dragRef.current || (event.pointerType === "mouse" && event.button !== 0)) return;
+        const touch = event.pointerType !== "mouse";
+        const target = event.currentTarget;
+        const { clientX, clientY, pointerId } = event;
+        clearPress();
+        const timer = touch ? window.setTimeout(() => { beginDrag(id, clientX, clientY, target, pointerId); if (press.current) press.current.timer = null; }, LONG_PRESS_MS) : null;
+        press.current = { id, pointerId, touch, x: clientX, y: clientY, timer };
+      },
+      onPointerMove: (event: ReactPointerEvent<HTMLDivElement>) => {
+        const current = dragRef.current;
+        if (current) {
+          const boxes = Array.from(gridRef.current?.querySelectorAll<HTMLElement>('li[data-kind="image"]:not([data-drag="lifted"])') ?? [])
+            .filter((el) => el.dataset.drag === "slot" || el.dataset.id)
+            .map((el) => el.getBoundingClientRect());
+          const to = indexAt(boxes, event.clientX, event.clientY);
+          setDragState({ ...current, x: event.clientX, y: event.clientY, to: to < 0 ? current.to : to });
+          return;
+        }
+        const waiting = press.current;
+        if (!waiting || waiting.id !== id) return;
+        const moved = Math.hypot(event.clientX - waiting.x, event.clientY - waiting.y);
+        if (waiting.touch) {
+          // A finger that moves before the press is long enough is scrolling the page.
+          if (moved > PRESS_SLOP_PX) clearPress();
+        } else if (moved > DRAG_START_PX) {
+          clearPress();
+          beginDrag(id, event.clientX, event.clientY, event.currentTarget, event.pointerId);
+        }
+      },
+      onPointerUp: () => finishDrag(),
+      onPointerCancel: () => finishDrag(true),
+    };
+  }
+
+  function finishDrag(cancelled = false) {
+    clearPress();
+    const current = dragRef.current;
+    if (!current) return;
+    setDragState(null);
+    if (cancelled || current.to === current.from) return;
+    // The photo that lands first becomes the cover.
+    const ids = moveItem(photos.map((photo) => photo.id), current.from, current.to);
+    void reorder(ids, ids[0] ?? null);
+  }
+
   function patchUpload(key: string, progress: number) {
     setUploads((prev) => prev.map((upload) => (upload.key === key ? { ...upload, progress } : upload)));
   }
@@ -91,7 +178,8 @@ export function PhotoStep({
   }
 
   function addFailedTile(file: File, kind: "image" | "video", error: string) {
-    const entry: Upload = { key: newKey(), kind, previewUrl: kind === "image" ? URL.createObjectURL(file) : null, progress: 0, file, error, retry: false };
+    // A file that is not a photo has nothing to preview: the tile shows a neutral placeholder, never a broken image.
+    const entry: Upload = { key: newKey(), kind, previewUrl: kind === "image" && PHOTO_TYPES.includes(file.type) ? URL.createObjectURL(file) : null, progress: 0, file, error, retry: false };
     setUploads((prev) => [...prev, entry]);
   }
 
@@ -203,121 +291,164 @@ export function PhotoStep({
     void reorder([id, ...photos.map((photo) => photo.id).filter((other) => other !== id)], id);
   }
 
+  const empty = photos.length === 0 && videos.length === 0 && uploads.length === 0;
+  const fileInputId = "photo-file-input";
+
+  /** The photos in grid order: the lifted one keeps its place in the list (it only floats), and a dashed slot shows where it will land. */
+  function photoTiles(): ReactNode[] {
+    const out: ReactNode[] = [];
+    let seen = 0;
+    const slot = <li key="slot" className="tkp-media tkph-tile is-slot" data-kind="image" data-drag="slot" data-tk="photo-slot" aria-hidden="true"><div className="tkph-img" /></li>;
+    photos.forEach((photo, index) => {
+      const lifted = drag?.id === photo.id;
+      if (drag && !lifted) {
+        if (seen === drag.to) out.push(slot);
+        seen += 1;
+      }
+      out.push(
+        <MediaTile
+          key={photo.id}
+          kind="image"
+          mediaId={photo.id}
+          label={t("post.photo.photoN", { number: index + 1 })}
+          state={photo.state}
+          url={photo.url}
+          reason={photo.reason}
+          isCover={!drag && photo.id === draft?.coverId}
+          busy={busy}
+          drag={lifted ? "lifted" : ""}
+          dragStyle={lifted ? { position: "fixed", left: drag.x - drag.offX, top: drag.y - drag.offY, width: drag.width, zIndex: 60, pointerEvents: "none" } : undefined}
+          frameHandlers={handlersFor(photo.id)}
+          onMakeCover={() => makeCover(index)}
+          onMoveLeft={index > 0 ? () => moveBy(index, -1) : undefined}
+          onMoveRight={index < photos.length - 1 ? () => moveBy(index, 1) : undefined}
+          onRemove={() => void removeItem(photo.id)}
+        />,
+      );
+    });
+    if (drag && seen === drag.to) out.push(slot);
+    return out;
+  }
+
+  function cameraButton() {
+    return (
+      <label className="tkph-btn" aria-disabled={busy}>
+        <Camera size={18} aria-hidden="true" focusable="false" />
+        {t("post.v2.ph.take")}
+        <input
+          type="file"
+          accept="image/*"
+          capture="environment"
+          data-tk="camera-input"
+          hidden
+          disabled={busy}
+          onChange={(event) => {
+            const files = Array.from(event.target.files ?? []);
+            event.target.value = "";
+            if (files.length) void addPhotos(files);
+          }}
+        />
+      </label>
+    );
+  }
+
+  function videoButton() {
+    if (!allowVideo) return null;
+    return (
+      <label className="tkph-btn" aria-disabled={busy || atLimit}>
+        <Video size={18} aria-hidden="true" focusable="false" />
+        {t("post.v2.ph.video")}
+        <input
+          type="file"
+          accept="video/mp4,video/webm,video/quicktime"
+          data-tk="video-input"
+          hidden
+          disabled={busy || atLimit}
+          onChange={(event) => {
+            const file = event.target.files?.[0];
+            event.target.value = "";
+            if (file) void addVideo(file);
+          }}
+        />
+      </label>
+    );
+  }
+
   return (
-    <div className="tkp-photos">
-      <div className="tkp-drop" onDragOver={(event) => event.preventDefault()} onDrop={(event) => { event.preventDefault(); if (!busy) void addPhotos(Array.from(event.dataTransfer.files)); }}>
-        <ImagePlus size={28} aria-hidden="true" focusable="false" />
-        <p className="tkp-drop-line">{t("post.photo.dropLine")}</p>
-        <div className="tkp-drop-buttons">
-          <label className="tkp-btn tkp-btn-primary" aria-disabled={busy}>
-            {t("post.photo.addPhotos")}
-            <input
-              type="file"
-              multiple
-              accept="image/*"
-              data-tk="photo-input"
-              hidden
-              disabled={busy}
-              onChange={(event) => {
-                const files = Array.from(event.target.files ?? []);
-                event.target.value = "";
-                if (files.length) void addPhotos(files);
-              }}
-            />
-          </label>
-        </div>
-        <div className="tkp-drop-more" data-tk="photo-more">
-          <label className="tkp-btn tkp-btn-small tkp-btn-camera" aria-disabled={busy}>
-            <Camera size={18} aria-hidden="true" focusable="false" />
-            {t("post.photo.takePhoto")}
-            <input
-              type="file"
-              accept="image/*"
-              capture="environment"
-              data-tk="camera-input"
-              hidden
-              disabled={busy}
-              onChange={(event) => {
-                const files = Array.from(event.target.files ?? []);
-                event.target.value = "";
-                if (files.length) void addPhotos(files);
-              }}
-            />
-          </label>
-          {allowVideo ? (
-            <label className="tkp-btn tkp-btn-small" aria-disabled={busy || atLimit}>
-              {t("post.photo.addVideo")}
-              <input
-                type="file"
-                accept="video/mp4,video/webm,video/quicktime"
-                data-tk="video-input"
-                hidden
-                disabled={busy || atLimit}
-                onChange={(event) => {
-                  const file = event.target.files?.[0];
-                  event.target.value = "";
-                  if (file) void addVideo(file);
-                }}
-              />
+    <div className="tkp-photos tkph" data-tk="photo-step" data-empty={empty ? "yes" : "no"} onDragOver={(event) => event.preventDefault()} onDrop={(event) => { event.preventDefault(); if (!busy) void addPhotos(Array.from(event.dataTransfer.files)); }}>
+      {/* One file box serves "Choose photos" and "Add more". */}
+      <input
+        id={fileInputId}
+        type="file"
+        multiple
+        accept="image/*"
+        data-tk="photo-input"
+        hidden
+        disabled={busy}
+        onChange={(event) => {
+          const files = Array.from(event.target.files ?? []);
+          event.target.value = "";
+          if (files.length) void addPhotos(files);
+        }}
+      />
+      {empty ? (
+        <>
+        <div className="tkph-drop" data-tk="photo-drop">
+          <ImagePlus size={44} aria-hidden="true" focusable="false" />
+          <p className="tkph-drop-title">{t("post.v2.ph.dropTitle")}</p>
+          <p className="tkph-hint">{t("post.v2.ph.dropHint")}</p>
+          <div className="tkph-buttons">
+            <label htmlFor={fileInputId} className="tkph-btn primary" aria-disabled={busy}>
+              <ImagePlus size={18} aria-hidden="true" focusable="false" />
+              {t("post.v2.ph.choose")}
             </label>
-          ) : null}
+            {cameraButton()}
+            {videoButton()}
+          </div>
+          {allowVideo ? null : <p className="tkph-hint" data-tk="no-video">{t("post.photo.noVideo")}</p>}
         </div>
-        {allowVideo ? null : <p className="tkp-quiet" data-tk="no-video">{t("post.photo.noVideo")}</p>}
-        <p className="tkp-drop-rule" data-tk="photo-rule">
-          {copy.photoRules.items[0] ?? t("post.photo.photoRuleFallback")}
-          <InfoPopover id="post-rules" label={t("post.photo.rulesLabel")}>
-            <strong>{t("post.photo.photoRulesTitle")}</strong>
-            <ul>
-              {UPLOAD_RULES.adPhotos.details.map((row) => (
-                <li key={row}>{row}</li>
-              ))}
-            </ul>
-            <strong>{t("post.photo.videoRulesTitle")}</strong>
-            <ul>
-              {UPLOAD_RULES.postVideos.details.map((row) => (
-                <li key={row}>{row}</li>
-              ))}
-            </ul>
-          </InfoPopover>
-        </p>
-      </div>
-      <div className="tkp-count-row">
-      <p className="tkp-count" data-tk="photo-count">{t("post.photo.count", { shown, limit })}</p>
-      <p className="tkp-photo-note" data-tk="photo-note" role="status">{note}</p>
-      </div>
-      <ul className="tkp-media-grid" data-tk="photo-grid">
-        {photos.map((photo, index) => (
-          <MediaTile
-            key={photo.id}
-            kind="image"
-            label={t("post.photo.photoN", { number: index + 1 })}
-            state={photo.state}
-            url={photo.url}
-            reason={photo.reason}
-            isCover={photo.id === draft?.coverId}
-            busy={busy}
-            onMakeCover={() => makeCover(index)}
-            onMoveLeft={index > 0 ? () => moveBy(index, -1) : undefined}
-            onMoveRight={index < photos.length - 1 ? () => moveBy(index, 1) : undefined}
-            onRemove={() => void removeItem(photo.id)}
-          />
-        ))}
-        {uploads.filter((upload) => upload.kind === "image").map((upload) => (
-          <MediaTile
-            key={upload.key}
-            kind="image"
-            label={t("post.photo.newPhoto")}
-            state={upload.error ? "failed" : "uploading"}
-            url={upload.previewUrl}
-            progress={upload.progress}
-            reason={upload.error}
-            onRetry={upload.error && upload.retry ? () => void retryUpload(upload.key) : undefined}
-            onRemove={upload.error ? () => dismissUpload(upload.key) : undefined}
-          />
-        ))}
-      </ul>
+        <p className="tkph-tip" data-tk="photo-tip"><Info size={18} aria-hidden="true" focusable="false" /><span>{t("post.v2.ph.tip")}</span></p>
+        </>
+      ) : (
+        <>
+          <div className="tkph-head">
+            <span className="tkph-count" data-tk="photo-count">{t("post.v2.ph.added", { shown, limit })}</span>
+            {photos.length > 1 ? <span className="tkph-hint">{t("post.v2.ph.dragHint")}</span> : null}
+          </div>
+          <ul className="tkp-media-grid tkph-grid" data-tk="photo-grid" ref={gridRef}>
+            {photoTiles()}
+            {uploads.filter((upload) => upload.kind === "image").map((upload) => (
+              <MediaTile
+                key={upload.key}
+                kind="image"
+                label={t("post.photo.newPhoto")}
+                state={upload.error ? "failed" : "uploading"}
+                url={upload.previewUrl}
+                progress={upload.progress}
+                reason={upload.error}
+                busy={busy}
+                onRetry={upload.error && upload.retry ? () => void retryUpload(upload.key) : undefined}
+                onRemove={upload.error ? () => dismissUpload(upload.key) : undefined}
+              />
+            ))}
+            {!atLimit ? (
+              <li className="tkph-add-li">
+                <label htmlFor={fileInputId} className="tkph-add" data-tk="photo-add-more" aria-disabled={busy}>
+                  <Plus size={22} aria-hidden="true" focusable="false" />
+                  {t("post.v2.ph.addMore")}
+                </label>
+              </li>
+            ) : null}
+          </ul>
+          <div className="tkph-buttons small">
+            {cameraButton()}
+            {videoButton()}
+          </div>
+        </>
+      )}
+      <p className="tkph-note" data-tk="photo-note" role="status">{note}</p>
       {videos.length || uploads.some((upload) => upload.kind === "video") ? (
-        <ul className="tkp-media-grid" data-tk="video-grid">
+        <ul className="tkp-media-grid tkph-grid" data-tk="video-grid">
           {videos.map((video, index) => (
             <MediaTile
               key={video.id}
@@ -339,12 +470,14 @@ export function PhotoStep({
               state={upload.error ? "failed" : "uploading"}
               progress={upload.progress}
               reason={upload.error}
+              busy={busy}
               onRetry={upload.error && upload.retry ? () => void retryUpload(upload.key) : undefined}
               onRemove={upload.error ? () => dismissUpload(upload.key) : undefined}
             />
           ))}
         </ul>
       ) : null}
+      <PhotoGuidelines where="inline" limit={limit} />
       {onBack && onNext ? (
         <div className="tkp-photo-nav">
           <button type="button" className="tkp-btn" onClick={onBack}>{steps.photos.backLabel || t("post.photo.back")}</button>

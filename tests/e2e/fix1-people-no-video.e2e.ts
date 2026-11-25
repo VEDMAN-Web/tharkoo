@@ -34,8 +34,9 @@ test.describe("FIX-1: no video on people listings", () => {
     const draft = await startDraft(page, baseURL!, "Dating");
     expect(draft).toBeTruthy();
     await expect(page.locator("[data-tk=video-input]")).toHaveCount(0);
-    await expect(page.locator("label.tkp-btn", { hasText: "Add video" })).toHaveCount(0);
-    await expect(page.locator("label.tkp-btn", { hasText: "Add photos" })).toBeVisible();
+    // H21.3: the buttons are "Choose photos", "Take a photo" and "Add video" in the new drop box.
+    await expect(page.locator("label.tkph-btn", { hasText: "Add video" })).toHaveCount(0);
+    await expect(page.locator("label.tkph-btn", { hasText: "Choose photos" })).toBeVisible();
     await expect(page.locator("[data-tk=no-video]")).toHaveText("No video for this category.");
     // Opened again from My ads (the edit flow): the same step, the same rule.
     await page.goto(`/u/post-insert/?draft=${draft}&step=photos`);

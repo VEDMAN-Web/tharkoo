@@ -66,15 +66,17 @@ type PreviewProps = {
   name: string;
   cover: string | null;
   editing: EditingPart;
+  /** The photo step: the photo part is outlined and the cover is tagged. */
+  highlightPhoto?: boolean;
 };
 
-export function DetailsPreview({ title, categoryName, placeName, interests, name, cover, editing }: PreviewProps) {
+export function DetailsPreview({ title, categoryName, placeName, interests, name, cover, editing, highlightPhoto = false }: PreviewProps) {
   const t = useT();
   const mark = (part: EditingPart) => (editing === part ? " editing" : "");
   return (
     <div className="tkd-pv" data-tk="details-preview" data-editing={editing || undefined}>
-      <div className="tkd-pv-photo" style={cover ? { backgroundImage: `url("${cover}")` } : undefined}>
-        {cover ? null : <Camera size={36} aria-hidden="true" focusable="false" />}
+      <div className={`tkd-pv-photo${highlightPhoto ? " hl" : ""}`} data-tk="preview-photo" style={cover ? { backgroundImage: `url("${cover}")`, backgroundSize: "cover" } : undefined}>
+        {cover ? (highlightPhoto ? <span className="tkph-cover">{t("post.v2.ph.coverTag")}</span> : null) : <Camera size={36} aria-hidden="true" focusable="false" />}
       </div>
       <div className="tkd-pv-body">
         <div className="tkd-pv-top">

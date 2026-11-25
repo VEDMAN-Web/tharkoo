@@ -27,6 +27,7 @@ import { openPromote } from "./promote/openPromote";
 import { openSupportWith } from "./recharge/openRecharge";
 import { PostShell } from "./post/PostShell";
 import { CategoryPreview, CategoryPreviewHint, useCategoryPreview } from "./post/CategoryPreview";
+import { PhotoGuidelines } from "./post/PhotoGuidelines";
 import { CreditsCard, PayCard } from "./post/PayParts";
 import { BoostChoice, adCreditsNeeded, adCreditsShort, type BoostChoiceValue } from "./post/BoostChoice";
 import { EarnLine, type EarnInfo } from "@/components/vendor/TourInbox";
@@ -934,8 +935,8 @@ export function PostWizard({
       clickable: index + 1 < step ? true : index + 1 === step,
     }));
     const placeParts = [cityName, shownDistrict].filter(Boolean).join(" / ");
-    const photoHelpLine = steps.photos.help === POST_COPY_DEFAULTS.steps.photos.help || !steps.photos.help ? photoHelp(people) : steps.photos.help;
-    const headHelp = current === "photos" ? photoHelpLine : stepCopy.help;
+    // H21.3: the photo step has its own lead line (the stock wording is replaced in newStepCopy).
+    const headHelp = stepCopy.help;
     const hints = hintsFor(category?.slug);
     const subName = subOptions.find((sub) => sub.id === subcategoryId)?.name;
     const contactSummary = contactMode === "email" ? t("post.review.emailOnly") : phone ? `${normalPhone(phone)}${contactMode === "both" ? t("post.review.andEmail") : ""}` : t("post.review.notSet");
@@ -967,7 +968,7 @@ export function PostWizard({
           }))
         : [];
     const detailsCard = (
-      <DetailsPreview title={title} categoryName={category?.name ?? ""} placeName={[cityName, shownDistrict].filter(Boolean).join(" / ")} interests={picksOf(attrs[INTEREST_KEY])} name={nickname} cover={coverUrl} editing={editingPart} />
+      <DetailsPreview title={title} categoryName={category?.name ?? ""} placeName={[cityName, shownDistrict].filter(Boolean).join(" / ")} interests={picksOf(attrs[INTEREST_KEY])} name={nickname} cover={coverUrl} editing={current === "photos" ? "" : editingPart} highlightPhoto={current === "photos"} />
     );
     const popularInterests = (category?.fields ?? [])
       .filter((field) => field.key === INTEREST_KEY && Array.isArray(field.options))
@@ -1153,7 +1154,7 @@ export function PostWizard({
                     </button>
                   ) : (
                     <button type="button" className="tkp-btn tkp-btn-primary" data-tk="go-on" disabled={busy || (current === "category" && !categoryReady) || (current === "photos" && photoBusy)} onClick={() => continueFrom(current)}>
-                      {stepCopy.nextLabel || t("post.nav.continue")}
+                      {current === "photos" && photoCount === 0 ? t("post.v2.ph.skip") : stepCopy.nextLabel || t("post.nav.continue")}
                     </button>
                   )}
                 </div>
@@ -1162,11 +1163,12 @@ export function PostWizard({
           <aside className="tkp-aside" data-step={current}>
             {current === "category" ? (
               renderCategoryPreview("side")
-            ) : current === "details" ? (
+            ) : current === "details" || current === "photos" ? (
               <>
                 <p className="tkd-pv-label">{t("post.v2.det.preview")}</p>
                 {detailsCard}
-                <p className="tkd-pv-hint">{t("post.v2.det.previewHint")}</p>
+                <p className="tkd-pv-hint">{current === "photos" ? t("post.v2.ph.previewHint") : t("post.v2.det.previewHint")}</p>
+                {current === "photos" ? <PhotoGuidelines where="side" /> : null}
               </>
             ) : (
               <>
@@ -1179,7 +1181,7 @@ export function PostWizard({
           </aside>
         </div>
         {money.added ? <div className="tkp-toast" role="status" data-tk="credits-toast">{creditsText(money.added)} {t("post.money.added")}</div> : null}
-        {previewOpen ? <PreviewSheet ad={adPreview} hasPhoto={Boolean(coverUrl)} byline={byline} card={current === "details" ? detailsCard : undefined} onClose={() => setPreviewOpen(false)} /> : null}
+        {previewOpen ? <PreviewSheet ad={adPreview} hasPhoto={Boolean(coverUrl)} byline={byline} card={current === "details" || current === "photos" ? detailsCard : undefined} onClose={() => setPreviewOpen(false)} /> : null}
       </div>
       </PostShell>
     );

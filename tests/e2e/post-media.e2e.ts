@@ -102,14 +102,15 @@ test.describe("My photos & videos", () => {
     // step=photos is the photo step in both designs (H7.5: it is step 3 in the New design, step 2 in the old one).
     await loginUi(page, owner.email, USER_PASSWORD, `/u/post-insert/?draft=${adId}&step=photos`);
     await page.waitForURL(/step=photos/);
-    await expect(page.locator("[data-tk=photo-count]")).toContainText(/0 of \d+ photos/);
+    // H21.3: with no photo the step shows the drop box; the count appears with the first photo.
+    await expect(page.locator("[data-tk=photo-drop]")).toBeVisible();
     await page.locator("[data-tk=photo-input]").setInputFiles([
       { name: "a.png", mimeType: "image/png", buffer: PNG },
       { name: "b.png", mimeType: "image/png", buffer: PNG },
       { name: "c.png", mimeType: "image/png", buffer: PNG },
     ]);
     await expect(page.locator("[data-tk=photo-tile]")).toHaveCount(3, { timeout: 30_000 });
-    await expect(page.locator("[data-tk=photo-count]")).toContainText(/3 of \d+ photos/);
+    await expect(page.locator("[data-tk=photo-count]")).toContainText(/3 of \d+ added/);
     expect(await hasHorizontalScroll(page)).toBe(false);
 
     await page.locator("[data-tk=photo-tile]").nth(1).getByRole("button", { name: "Make cover" }).click();
@@ -117,6 +118,6 @@ test.describe("My photos & videos", () => {
 
     await page.locator("[data-tk=photo-tile]").nth(2).getByRole("button", { name: /Remove/ }).click();
     await expect(page.locator("[data-tk=photo-tile]")).toHaveCount(2);
-    await expect(page.locator("[data-tk=photo-count]")).toContainText(/2 of \d+ photos/);
+    await expect(page.locator("[data-tk=photo-count]")).toContainText(/2 of \d+ added/);
   });
 });

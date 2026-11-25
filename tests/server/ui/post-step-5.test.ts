@@ -56,7 +56,8 @@ describe("wording of steps 4 and 5 (H7.86)", () => {
   });
 
   it("leaves the other steps as they are", () => {
-    expect(newStepCopy("photos", POST_COPY_DEFAULTS, false)).toEqual(POST_COPY_DEFAULTS.steps.photos);
+    // H21.3: the photo step has its own lead line ("The first photo is your cover.") while its wording is the stock one; the labels stay.
+    expect(newStepCopy("photos", POST_COPY_DEFAULTS, false)).toEqual({ ...POST_COPY_DEFAULTS.steps.photos, help: "The first photo is your cover." });
     expect(newStepCopy("category", POST_COPY_DEFAULTS, false)).toEqual(POST_COPY_DEFAULTS.steps.basics);
   });
 });

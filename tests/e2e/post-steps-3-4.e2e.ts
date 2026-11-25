@@ -24,7 +24,7 @@ async function openPhotos(page: Page, baseURL: string, prefix: string) {
   expect(promoted?.modifiedCount).toBe(1);
   await loginUi(page, owner.email, USER_PASSWORD, `/u/post-insert/?draft=${id}&step=photos`);
   await page.waitForURL(/step=photos/);
-  await expect(page.locator("[data-tk=photo-count]")).toContainText(/0 of \d+ photos/);
+  await expect(page.locator("[data-tk=photo-drop]")).toBeVisible(); // H21.3: no count until there is a photo
   return { id, owner };
 }
 
@@ -47,14 +47,14 @@ test.describe("H7.85 post an ad, steps 3 and 4", () => {
     test.setTimeout(180_000);
     const { owner } = await openPhotos(page, baseURL!, "photos34");
     await expect(page.locator("[data-tk=step-title]")).toHaveText("Photos");
-    await expect(page.getByText(/Add clear photos of yourself/)).toHaveCount(1);
-    await expect(page.getByText(/item or place/)).toHaveCount(0);
+    // H21.3: one lead line for every category (the "yourself" wording for people ads is gone with the design).
+    await expect(page.locator("[data-tk=step-help]")).toHaveText("The first photo is your cover.");
     await expect(page.locator("[data-tk=photo-input]")).toHaveAttribute("accept", "image/*");
     await expect(page.locator("[data-tk=camera-input]")).toHaveAttribute("capture", "environment");
     // FIX-1: Dating is a people category, which never holds a video, so there is no Add video button here.
-    await expect(page.locator("label.tkp-btn", { hasText: "Add video" })).toHaveCount(0);
-    for (const name of ["Add photos"]) {
-      const button = page.locator("label.tkp-btn", { hasText: name });
+    await expect(page.locator("label.tkph-btn", { hasText: "Add video" })).toHaveCount(0);
+    for (const name of ["Choose photos"]) {
+      const button = page.locator("label.tkph-btn", { hasText: name });
       await expect(button).toBeVisible();
       expect(await button.evaluate((node) => getComputedStyle(node).textTransform)).toBe("none");
       expect((await button.boundingBox())!.height).toBeGreaterThanOrEqual(44);
@@ -62,9 +62,10 @@ test.describe("H7.85 post an ad, steps 3 and 4", () => {
     await expect(page.getByText("ADD PHOTOS", { exact: true })).toHaveCount(0);
     await upload(page, 3);
     await expect(page.locator("[data-tk=photo-tile]").first().locator("[data-tk=photo-cover]")).toHaveCount(1);
-    const preview = page.locator(onPhone(page) ? "[data-tk=preview-sheet]" : "[data-tk=post-preview]");
+    // H21.3: on the photo step the preview is the details card with the cover as its photo.
+    const preview = page.locator(onPhone(page) ? "[data-tk=preview-sheet]" : "[data-tk=details-preview]");
     if (onPhone(page)) await page.locator("[data-tk=open-preview]").click();
-    await expect(preview.locator(".tkn-ls-photo img").first()).not.toHaveAttribute("src", /placeholders/);
+    await expect(preview.locator(".tkd-pv-photo")).toHaveCSS("background-image", /url\(/);
     if (onPhone(page)) await page.keyboard.press("Escape");
     for (const selector of [".tkp-mini", ".tkp-btn"]) {
       const boxes = await page.locator(selector).evaluateAll((nodes) => nodes.filter((node) => (node as HTMLElement).offsetParent).map((node) => node.getBoundingClientRect().height));

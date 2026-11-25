@@ -339,11 +339,11 @@ test.describe("H7.86 post an ad, step 5 and the success screen", () => {
         return { inner: scroll.scrollHeight - scroll.clientHeight, page: document.documentElement.scrollHeight - window.innerHeight, frames: frames.map((box) => [Math.round(box.width), Math.round(box.height), Math.round(box.top)]), navBottom: nav.bottom };
       });
       expect(fit.frames.length).toBe(4);
-      // H19.6: every photo has four labelled buttons under it, so the tiles are bigger. They are square, equal, in one row, and the step card scrolls inside its own frame.
+      // H21.3: the tiles are equal and 4:5 (taller than wide), in a grid of three across.
       const side = fit.frames[0][0];
       expect(side, `${width} tile width`).toBeGreaterThanOrEqual(96);
       expect(fit.frames.map((box) => box[0]), `${width} tile widths`).toEqual([side, side, side, side]);
-      expect(fit.frames.map((box) => box[1]), `${width} tile heights`).toEqual([side, side, side, side]);
+      for (const box of fit.frames) expect(Math.abs(box[1] - side * 1.25), `${width} tile is 4:5`).toBeLessThan(2);
       // H21.0: the step card is narrower, so four photos may wrap to a second row; H21.3 sets the 3-column grid.
       expect(new Set(fit.frames.map((box) => box[2])).size, `${width} rows`).toBeLessThanOrEqual(2);
       await shot(page, `3-3-step3-${width}x${height}`);
@@ -358,13 +358,13 @@ test.describe("H7.86 post an ad, step 5 and the success screen", () => {
     await chooseDating(page, "h94p");
     await fillDetails(page, `Phone layout ${Date.now()}`, "h94p");
     await stepOf(page, 3);
-    await expect(page.locator(".tkp-drop-buttons label")).toHaveCount(1);
-    await expect(page.locator(".tkp-drop-buttons label")).toHaveText("Add photos");
-    if (phone) await expect(page.locator("[data-tk=photo-more]").getByText("Take a photo")).toBeVisible();
+    // H21.3: the drop box has Choose photos and Take a photo (and Add video when the category allows it); the rules are in the guidelines panel, not behind an (i).
+    await expect(page.locator(".tkph-buttons label")).toHaveCount(2);
+    await expect(page.locator(".tkph-buttons").getByText("Choose photos")).toBeVisible();
+    await expect(page.locator(".tkph-buttons").getByText("Take a photo")).toBeVisible();
     // FIX-1: Dating is a people category, which never holds a video.
-    await expect(page.locator("[data-tk=photo-more]").getByText("Add video")).toHaveCount(0);
-    await expect(page.locator(".tkp-drop-buttons").getByText("Add video")).toHaveCount(0);
-    await expect(page.locator(".tkp-photos .upl-info")).toHaveCount(1);
+    await expect(page.locator(".tkph-buttons").getByText("Add video")).toHaveCount(0);
+    await expect(page.locator(".tkp-photos .upl-info")).toHaveCount(0);
     await shot(page, "h94-03-photos");
     await addPhoto(page, "h94p");
     await expect(page.locator("[data-tk=phone-hint]")).toHaveText("Shown on your ad so people can reach you.");
@@ -547,7 +547,8 @@ test.describe("H7.86 post an ad, step 5 and the success screen", () => {
     await expect(reason).toBeVisible();
     expect((await reason.innerText()).trim().length).toBeGreaterThan(10);
     expect(await reason.innerText()).not.toMatch(/^[A-Z_]{6,}$/);
-    expect(await tile.evaluate((node) => getComputedStyle(node).borderTopColor)).toBe("rgb(220, 38, 38)");
+    // H21.3: a failed photo is a dark overlay with "Could not upload" on the tile (no red border any more).
+    await expect(tile.locator("[data-tk=upload-failed]")).toContainText("Could not upload");
     const box = (await tile.boundingBox())!;
     const reasonBox = (await reason.boundingBox())!;
     expect(reasonBox.y).toBeGreaterThanOrEqual(box.y);
