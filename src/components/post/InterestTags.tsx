@@ -1,19 +1,19 @@
 "use client";
 
 import { useState } from "react";
-import { X } from "lucide-react";
+import { Plus, X } from "lucide-react";
 import { useT } from "@/components/help/UiTextProvider";
-import { InfoPopover } from "@/components/upload/InfoPopover";
 import { addInterest, INTEREST_LENGTH_MAX, INTEREST_MAX } from "./interests";
 
 /**
- * H19.6: an optional interest box. Type a word and press Enter: it becomes a chip with a remove button. Up to 5. The chips are
- * the answer, a list kept in the ad's details.
+ * H19.6 / H21.2: the interests of the ad. Type a word and press Enter: it becomes a chip with a remove button. Up to 5.
+ * "Popular:" suggestions come from the category's own interest options; one tap adds one. The chips are the answer, a list kept in the ad's details.
  */
-export function InterestTags({ value, onChange }: { value: string[]; onChange: (next: string[]) => void }) {
+export function InterestTags({ value, popular = [], onChange }: { value: string[]; popular?: readonly string[]; onChange: (next: string[]) => void }) {
   const t = useT();
   const [typed, setTyped] = useState("");
   const full = value.length >= INTEREST_MAX;
+  const suggestions = popular.filter((item) => !value.some((chosen) => chosen.toLowerCase() === item.toLowerCase())).slice(0, 6);
 
   function commit() {
     const next = addInterest(value, typed);
@@ -22,18 +22,19 @@ export function InterestTags({ value, onChange }: { value: string[]; onChange: (
   }
 
   return (
-    <div className="tkp-interest" data-tk="interest-tags">
-      <div className="tkp-interest-head">
-        <label htmlFor="interest-input" className="tkp-interest-label">{t("post.interest.label")}</label>
-        <InfoPopover id="interest-info" label={t("post.interest.label")}>{t("post.interest.tip")}</InfoPopover>
-        <span className="tkp-interest-count" aria-live="polite">{value.length} / {INTEREST_MAX}</span>
+    <div className="tkd-int tkp-interest" data-tk="interest-tags">
+      <div className="tkd-lbl" id="interest-label">
+        <span>
+          {t("post.v2.det.interests")} <span className="tkd-opt-note">{t("post.v2.det.interestsHint", { max: INTEREST_MAX })}</span>
+        </span>
+        <span className="tkd-count" aria-live="polite">{value.length} / {INTEREST_MAX}</span>
       </div>
       {value.length ? (
-        <ul className="tkp-interest-chips" aria-label={t("post.interest.listLabel")}>
+        <ul className="tkd-chips" aria-labelledby="interest-label">
           {value.map((item) => (
-            <li key={item} className="tkp-interest-chip" data-tk="interest-chip">
+            <li key={item} className="tkd-chip" data-tk="interest-chip">
               <span>{item}</span>
-              <button type="button" className="tkp-interest-x" aria-label={t("post.interest.remove", { name: item })} onClick={() => onChange(value.filter((other) => other !== item))}>
+              <button type="button" aria-label={t("post.interest.remove", { name: item })} onClick={() => onChange(value.filter((other) => other !== item))}>
                 <X size={14} aria-hidden="true" focusable="false" />
               </button>
             </li>
@@ -42,12 +43,13 @@ export function InterestTags({ value, onChange }: { value: string[]; onChange: (
       ) : null}
       <input
         id="interest-input"
-        className="tkp-interest-input"
+        className="tkd-inp"
         type="text"
         value={typed}
         disabled={full}
         maxLength={INTEREST_LENGTH_MAX}
-        placeholder={full ? t("post.interest.full") : t("post.interest.placeholder")}
+        aria-label={t("post.v2.det.interestsAdd")}
+        placeholder={full ? t("post.interest.full") : t("post.v2.det.interestsPlaceholder")}
         autoComplete="off"
         enterKeyHint="done"
         onChange={(event) => setTyped(event.target.value)}
@@ -60,6 +62,17 @@ export function InterestTags({ value, onChange }: { value: string[]; onChange: (
         }}
         onBlur={commit}
       />
+      {suggestions.length && !full ? (
+        <div className="tkd-chips tkd-popular" data-tk="interest-popular">
+          <span className="tkd-hint-inline">{t("post.v2.det.popular")}</span>
+          {suggestions.map((item) => (
+            <button key={item} type="button" className="tkd-chip-add" onClick={() => onChange(addInterest(value, item))}>
+              <Plus size={14} aria-hidden="true" focusable="false" />
+              {item}
+            </button>
+          ))}
+        </div>
+      ) : null}
     </div>
   );
 }

@@ -1,6 +1,6 @@
 import AxeBuilder from "@axe-core/playwright";
 import type { Page } from "@playwright/test";
-import { expect, loginUi, newApi, registerApi, test, uniqueEmail, USER_PASSWORD } from "./helpers";
+import { expect, loginUi, newApi, registerApi, test, uniqueEmail, USER_PASSWORD, pickCity } from "./helpers";
 
 async function poster(page: Page, baseURL: string, prefix: string) {
   const email = uniqueEmail(prefix);
@@ -62,7 +62,7 @@ test.describe("H7.83 post an ad, steps 1 and 2", () => {
     expect(columns).toBe(wide < 768 ? 1 : 3);
   });
 
-  test("Dating details: placeholders for dating, no price, a numeric age, A to Z cities, no old header", async ({ page, baseURL }) => {
+  test("Dating details: placeholders for dating, no price, a numeric age, a city search box, no old header", async ({ page, baseURL }) => {
     test.setTimeout(120_000);
     await poster(page, baseURL!, "dating");
     await toDetails(page, "Dating");
@@ -74,42 +74,39 @@ test.describe("H7.83 post an ad, steps 1 and 2", () => {
     await expect(page.locator(".tkp-main").getByText("About You")).toHaveCount(0);
     await expect(page.getByText("* Required fields")).toHaveCount(0);
     await expect(page.getByText("2 BHK")).toHaveCount(0);
-    // H19.6: the city list holds only the chosen state's cities.
-    await page.locator("#state").selectOption({ label: "Maharashtra" });
-    const names = await page.locator("#city option").evaluateAll((options) => options.slice(1).map((option) => option.textContent || ""));
-    expect(names.length).toBeGreaterThan(3);
-    expect(names).toEqual([...names].sort((a, b) => a.localeCompare(b)));
+    // H21.2: one City box over every state; names that start with the typed letters come first.
+    await page.locator("#city").fill("Mum");
+    const names = await page.locator("[role=option] span").allInnerTexts();
+    expect(names.length).toBeGreaterThan(0);
+    expect(names[0].toLowerCase().startsWith("mum")).toBe(true);
     await page.locator("#age").fill("17");
     await page.locator("#title").focus();
     await expect(page.locator("#age")).toHaveValue("17");
     await expect(page.locator(".tkp-main [data-tk=field-error]").first()).toBeVisible();
   });
 
-  test("a non-people category still has a price box", async ({ page, baseURL }) => {
+  test("a non-people category has no price box either", async ({ page, baseURL }) => {
     await poster(page, baseURL!, "price");
     await toDetails(page, "Jobs");
-    await expect(page.locator("#price")).toBeVisible();
-    await expect(page.locator("#price")).toHaveAttribute("inputmode", "numeric");
+    await expect(page.locator("#price")).toHaveCount(0); // H21.2: no price field
   });
 
-  test("the live preview is the real ad card and follows each keystroke", async ({ page, baseURL }) => {
+  test("the live preview card follows each keystroke", async ({ page, baseURL }) => {
     test.setTimeout(120_000);
     await poster(page, baseURL!, "preview");
     await toDetails(page, "Dating");
     await page.locator("#title").pressSequentially("Coffee walk");
     if (onPhone(page)) await page.locator("[data-tk=open-preview]").click();
-    const card = onPhone(page) ? page.locator("[data-tk=preview-sheet]") : page.locator("[data-tk=post-preview]");
-    await expect(card.locator("article.tkn-ls-card")).toBeVisible();
-    await expect(card.locator(".tkn-ls-title")).toHaveText("Coffee walk");
-    await expect(card.locator(".tkn-ls-price")).toHaveCount(0);
+    // H21.2: the details step shows the design's own preview card (no ad card, no price).
+    const card = onPhone(page) ? page.locator("[data-tk=preview-sheet]") : page.locator("[data-tk=details-preview]");
+    await expect(card.locator(".tkd-pv-title")).toContainText("Coffee walk");
   });
 
   test("the draft saves by itself and shows Saved, and Exit keeps it", async ({ page, baseURL }) => {
     test.setTimeout(120_000);
     await poster(page, baseURL!, "autosave");
     await toDetails(page, "Dating");
-    await page.locator("#state").selectOption({ label: "Maharashtra" });
-    await page.locator("#city").selectOption({ index: 1 });
+    await pickCity(page, "Mumbai");
     await page.locator("#nickname").fill("Asha");
     await page.locator("#title").fill("Coffee and a walk");
     await page.locator("#text").fill("A friendly weekend walk and a coffee, in the morning.");
@@ -123,9 +120,10 @@ test.describe("H7.83 post an ad, steps 1 and 2", () => {
   test("Enter moves to the next field", async ({ page, baseURL }) => {
     await poster(page, baseURL!, "enter");
     await toDetails(page, "Jobs");
-    await page.locator("#nickname").focus();
+    // H21.2: the title is the first field now; Enter goes on to the description.
+    await page.locator("#title").focus();
     await page.keyboard.press("Enter");
-    await expect(page.locator("#age, #price, #title").first()).toBeFocused();
+    await expect(page.locator("#text")).toBeFocused();
   });
 
   test("phone: sticky bar, tap targets, no field hidden behind the bar, no sideways scroll", async ({ page, baseURL }) => {
@@ -162,7 +160,7 @@ test.describe("H7.83 post an ad, steps 1 and 2", () => {
     await page.locator("[data-tk=open-preview]").click();
     const sheet = page.locator("[data-tk=preview-sheet]");
     await expect(sheet).toBeVisible();
-    await expect(sheet.locator(".tkn-ls-title")).toHaveText("Sheet check title");
+    await expect(sheet.locator(".tkd-pv-title")).toContainText("Sheet check title"); // H21.2: the sheet shows the details card
     await page.keyboard.press("Escape");
     await expect(sheet).toHaveCount(0);
   });
@@ -189,6 +187,8 @@ test.describe("H7.83 post an ad, steps 1 and 2", () => {
     const run = async () => (await new AxeBuilder({ page }).withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa"]).analyze()).violations.filter((item) => item.impact === "serious" || item.impact === "critical").map((item) => item.id);
     expect(await run()).toEqual([]);
     await toDetails(page, "Dating");
+    // The step fades in for a moment; axe measures colours, so let it settle first.
+    await page.waitForTimeout(800);
     expect(await run()).toEqual([]);
   });
 });

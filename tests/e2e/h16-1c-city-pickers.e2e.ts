@@ -140,28 +140,26 @@ test.describe("H16.1c city pickers with about 900 cities", () => {
     test.setTimeout(240_000);
     const user = await newUserApi(baseURL!, "h161cpost");
     await loginUi(page, user.email, undefined, "/u/post-insert/");
-    const state = page.locator("select#state");
+    const city = page.locator("#city");
     // The form is built on the server from a city list that is kept for a minute, so open it again until it has the new cities.
     await expect(async () => {
       await page.goto("/u/post-insert/");
       await page.locator(".tkp-tile", { hasText: "Dating" }).click();
       await page.locator("[data-tk=go-on]").click();
-      await expect(state).toBeVisible({ timeout: 6000 });
-      await state.selectOption({ label: "Maharashtra" });
-      expect(await page.locator("#city option").count()).toBeGreaterThan(300);
+      await expect(city).toBeVisible({ timeout: 6000 });
+      await city.fill("H161c Twin");
+      await expect(page.locator("[role=option]")).toHaveCount(2, { timeout: 4000 });
     }).toPass({ timeout: 170_000, intervals: [10_000] });
 
-    // Only this state's cities are listed: not all 900.
-    expect(await page.locator("#city option").count()).toBeLessThan(905);
-    // The search box narrows that list.
-    await page.locator("#city-search").fill("H161c Twin");
-    await expect(page.locator("#city option")).toHaveCount(2);
+    // H21.2: one City box over every state. The two cities with the same name are told apart by their state.
+    const states = await page.locator("[role=option] small").allInnerTexts();
+    expect(new Set(states).size).toBe(2);
     await shot(page, "post-ad");
-    await page.locator("#city").selectOption({ label: "H161c Twin" });
-    await expect(page.locator("#city")).not.toHaveValue("");
-    // Another state starts again with its own cities.
-    await state.selectOption({ label: "Gujarat" });
-    await expect(page.locator("#city")).toHaveValue("");
+    await page.locator("[role=option]").first().click();
+    await expect(city).toHaveValue("H161c Twin");
+    // Typing again starts a new search.
+    await city.fill("");
+    await expect(city).toHaveValue("");
     expect(await hasHorizontalScroll(page)).toBe(false);
     await user.api.dispose();
   });

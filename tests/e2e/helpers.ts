@@ -398,3 +398,14 @@ export function withoutAddress<T extends Record<string, unknown>>(listing: T): O
   void previousPaths;
   return rest;
 }
+
+/** H21.2: chooses a city in the City box of the details step: type some letters, pick the option. */
+export async function pickCity(page: Page, name: string) {
+  const box = page.locator("#city");
+  await box.click();
+  // Clear first: the box may already hold the account's own city, and typing the same text again changes nothing.
+  await box.fill("");
+  await box.fill(name);
+  await page.locator("[role=option]").filter({ hasText: name }).first().click();
+  await expect(box).toHaveValue(name);
+}

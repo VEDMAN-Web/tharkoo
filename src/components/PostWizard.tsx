@@ -18,8 +18,7 @@ import { BUILT_IN_AGE_FIELD, POST_COPY_DEFAULTS, wizardFields, type CtaCopy, typ
 import { newStepCopy, newSuccessCopy } from "./post/newCopy";
 import { SelectField, Switch, TextField } from "./post/FormFields";
 import { ContactFields } from "./post/ContactFields";
-import { InterestTags } from "./post/InterestTags";
-import { PlaceFields } from "./post/PlaceFields";
+import { DetailsPreview, DetailsStep, type EditingPart, type SummaryItem } from "./post/DetailsStep";
 import { INTEREST_KEY } from "./post/interests";
 import { AboutYou } from "./post/AboutYou";
 import { ReviewStep, type ReviewRow } from "./post/ReviewStep";
@@ -57,11 +56,6 @@ function normalPhone(raw: string) {
   if (/^[6-9]\d{9}$/.test(digits)) return `+91${digits}`;
   if (/^91[6-9]\d{9}$/.test(digits)) return `+${digits}`;
   return tidy(raw);
-}
-
-/** H7.5: the price as whole rupees, digits only. Empty when nothing usable was typed. */
-function priceDigitsOf(raw: string) {
-  return raw.replace(/[,\s]/g, "");
 }
 
 export function PostWizard({
@@ -110,7 +104,9 @@ export function PostWizard({
   const [nickname, setNickname] = useState(defaultName.slice(0, 20));
   const [title, setTitle] = useState("");
   const [text, setText] = useState("");
-  const [price, setPrice] = useState("");
+  /** H21.2: the part of the live preview that lights up, and the count that moves focus to the "Fix N things" box. */
+  const [editingPart, setEditingPart] = useState<EditingPart>("");
+  const [summaryTick, setSummaryTick] = useState(0);
   /** H19.6b: the New design has no email choice (emails are never shown on ads), so it is always phone. */
   const [contactMode, setContactMode] = useState(newDesign ? "phone" : "both");
   const [phone, setPhone] = useState("");
@@ -172,7 +168,8 @@ export function PostWizard({
   // A people category always asks for the age (18 or over), even when its form has no age field (H10.1).
   const ageField = fields.find((field) => field.key === "age" || field.type === "number" && /age/i.test(field.label)) ?? (people ? BUILT_IN_AGE_FIELD : undefined);
   const extra = fields.filter((field) => field.key !== "age" && !/age/i.test(field.label));
-  const split = newDesign && needsMoreStep(extra);
+  // H21.2: there is no separate "More details" step any more; the category's other fields sit in step 2.
+  const split = false && newDesign && needsMoreStep(extra);
   const moreKeys = useMemo(() => (split ? extra.map((field) => field.key) : []), [split, extra]);
   const flow = useMemo(() => stepsFor(split), [split]);
   const current: NewPostStep = newDesign ? (flow[step - 1] ?? "category") : "category";
@@ -186,7 +183,6 @@ export function PostWizard({
   const stateSlug = pickedState || (cities.find((item) => item.id === cityId)?.stateSlug ?? "");
   const cityChoices = useMemo(() => placeChoices(cities, (city) => city.id), [cities]);
   const districtName = districts.find((item) => item.id === districtId)?.name ?? "";
-  const priceDigits = priceDigitsOf(price);
 
   useEffect(() => {
     const sp = new URLSearchParams(window.location.search);
@@ -217,7 +213,6 @@ export function PostWizard({
             setNickname(form.nickname);
             setTitle(form.title);
             setText(form.text.trim());
-            setPrice(form.price);
             setPhone(form.phone);
             setWhatsapp(form.whatsapp);
             setWhatsappNumber(form.whatsappNumber);
@@ -294,7 +289,6 @@ export function PostWizard({
       fields: extra.map((field) => ({ key: field.key, label: field.label, required: field.required, pick: field.options.length && (field.type === "select" || field.type === "multiselect") ? (field.type === "multiselect" ? "many" as const : "one" as const) : undefined })),
     });
     if (phone && contactMode !== "email" && !/^\+91[6-9]\d{9}$/.test(normalPhone(phone))) next.phone = t("post.error.phone");
-    if (newDesign && price.trim() && !/^\d{1,9}$/.test(priceDigits)) next.price = t("post.error.price");
     if (newDesign) Object.assign(next, validateContact({ mode: contactMode, whatsappOn: whatsapp, whatsappSame, whatsappNumber, telegramOn, telegram }));
     return next;
   }
@@ -337,7 +331,9 @@ export function PostWizard({
     setErrors(found);
     setBanner("");
     setShowAll(Object.keys(found).length > 0);
-    if (Object.keys(found).length) document.querySelector("[data-tk=field-error]")?.scrollIntoView({ block: "center" });
+    if (Object.keys(found).length) setSummaryTick((tick) => tick + 1);
+    // On the details step the "Fix N things" box takes focus; on the other steps the first message is scrolled into view.
+    if (Object.keys(found).length && current !== "details") document.querySelector("[data-tk=field-error]")?.scrollIntoView({ block: "center" });
     return Object.keys(found).length === 0;
   }
 
@@ -395,7 +391,6 @@ export function PostWizard({
         stage: "details",
         attributes: { ...cleanAttrs(attrs), ...(age ? { age: Number(age) } : {}) },
         nickname,
-        ...(newDesign ? { price: people ? null : priceDigits || null } : {}),
         ...(includeContact ? { contact } : {}),
       }),
     });
@@ -434,7 +429,7 @@ export function PostWizard({
     if (!newDesign) return;
     const id = window.setTimeout(() => saveLatest.current(), 800);
     return () => window.clearTimeout(id);
-  }, [newDesign, categoryId, subcategoryId, cityId, districtId, title, text, price, nickname, age, attrs]);
+  }, [newDesign, categoryId, subcategoryId, cityId, districtId, title, text, nickname, age, attrs]);
 
   function moveOnEnter(event: React.KeyboardEvent<HTMLElement>) {
     const target = event.target as HTMLElement;
@@ -615,7 +610,6 @@ export function PostWizard({
     categorySlug: category?.slug ?? "",
     citySlug: cities.find((item) => item.id === cityId)?.slug ?? "",
     districtName: shownDistrict,
-    price: people || !priceDigits ? null : Number(priceDigits),
     cover: coverUrl,
     cityFallback: !cityId,
   }, t);
@@ -833,8 +827,9 @@ export function PostWizard({
 
   function renderNewExtras(err: (key: string) => string | undefined, blur: (key: string) => () => void) {
     const change = (key: string, value: string | string[]) => setAttrs((prev) => ({ ...prev, [key]: value }));
-    const cells = extra.filter((field) => !isChipField(field));
-    const chips = extra.filter(isChipField);
+    const shownExtra = extra.filter((field) => field.key !== INTEREST_KEY);
+    const cells = shownExtra.filter((field) => !isChipField(field));
+    const chips = shownExtra.filter(isChipField);
     const rows: (typeof extra)[] = [];
     for (let index = 0; index < cells.length; index += 2) rows.push(cells.slice(index, index + 2));
     const cell = (field: (typeof extra)[number]) =>
@@ -941,14 +936,12 @@ export function PostWizard({
     const placeParts = [cityName, shownDistrict].filter(Boolean).join(" / ");
     const photoHelpLine = steps.photos.help === POST_COPY_DEFAULTS.steps.photos.help || !steps.photos.help ? photoHelp(people) : steps.photos.help;
     const headHelp = current === "photos" ? photoHelpLine : stepCopy.help;
-    const previewPrice = priceDigits ? `₹${Number(priceDigits).toLocaleString("en-IN")}` : "";
     const hints = hintsFor(category?.slug);
     const subName = subOptions.find((sub) => sub.id === subcategoryId)?.name;
     const contactSummary = contactMode === "email" ? t("post.review.emailOnly") : phone ? `${normalPhone(phone)}${contactMode === "both" ? t("post.review.andEmail") : ""}` : t("post.review.notSet");
     const reviewRows: ReviewRow[] = [
       { key: "category", label: t("post.review.category"), value: [category?.name, subName].filter(Boolean).join(" › ") || t("post.review.notChosen"), step: 1 },
       { key: "title", label: t("post.field.title"), value: title.trim() || t("post.review.noTitle"), step: no("details") },
-      ...(people ? [] : [{ key: "price", label: t("post.review.price"), value: previewPrice || t("post.review.notSet"), step: no("details") }]),
       { key: "place", label: t("post.review.place"), value: placeParts || t("post.review.notSet"), step: no("details") },
       { key: "name", label: t("post.review.name"), value: byline || nickname.trim() || t("post.review.notSet"), step: about ? no("contact") : no("details") },
       { key: "photos", label: t("post.review.photos"), value: photoCount === null ? (draftId ? t("post.review.checking") : t("post.review.noPhotos")) : photoCount ? `${photoCount} ${photoCount === 1 ? "photo" : "photos"}` : t("post.review.noPhotos"), step: no("photos") },
@@ -956,13 +949,36 @@ export function PostWizard({
     ];
     const categoryReady = Boolean(categoryId) && (subOptions.length === 0 || Boolean(subcategoryId));
     const live = errorsForStep(validate(), current, Boolean(about), moreKeys);
-    const err = (key: string) => (showAll || touched[key] ? live[key] : undefined) ?? errors[key];
+    // Once Continue was pressed the live checks rule for every field they cover, so a message goes away as soon as the field is fixed.
+    const checked = new Set(["title", "city", "nickname", "age", "phone", "terms", "adult", "category", "subcategory", ...extra.map((field) => field.key)]);
+    const err = (key: string) => (showAll || touched[key] ? live[key] : undefined) ?? (showAll && checked.has(key) ? undefined : errors[key]);
     const blur = (key: string) => () => setTouched((prev) => ({ ...prev, [key]: true }));
-    const priceField = <TextField id="price" label={t("post.field.priceRupees")} value={price} error={err("price")} onBlur={blur("price")} inputMode="numeric" placeholder="18,000" onChange={setPrice} />;
+    const titleError = err("title") ? (title.trim() ? t("post.v2.det.errTitleShort") : t("post.v2.det.errTitle")) : undefined;
+    const cityError = err("city") ? t("post.v2.det.errCity") : undefined;
+    const labelOf = (key: string) => {
+      const name = key === "nickname" ? t("post.field.nickname") : key === "age" ? t("post.field.age") : (extra.find((field) => field.key === key)?.label ?? "");
+      return name ? `${name}: ` : "";
+    };
+    const summaryItems: SummaryItem[] =
+      current === "details" && showAll
+        ? Object.entries(live).map(([key, message]) => ({
+            id: key,
+            text: key === "title" ? (title.trim() ? t("post.v2.det.errTitleShort") : t("post.v2.det.sumTitle")) : key === "city" ? t("post.v2.det.sumCity") : `${labelOf(key)}${message}`,
+          }))
+        : [];
+    const detailsCard = (
+      <DetailsPreview title={title} categoryName={category?.name ?? ""} placeName={[cityName, shownDistrict].filter(Boolean).join(" / ")} interests={picksOf(attrs[INTEREST_KEY])} name={nickname} cover={coverUrl} editing={editingPart} />
+    );
+    const popularInterests = (category?.fields ?? [])
+      .filter((field) => field.key === INTEREST_KEY && Array.isArray(field.options))
+      .flatMap((field) => (field.options as unknown[]).map((option) => String(option)));
     return (
       <PostShell percent={progressPercent(step, flow.length)} saveState={saveState}>
       <div className="tkp-post" data-design="post-new">
-        <p className="tkp-strip" data-tk="step-strip">{t("post.v2.strip", { step, total: flow.length, title: stepCopy.title })}</p>
+        <div className="tkp-strip" data-tk="step-strip">
+          <span>{t("post.v2.strip", { step, total: flow.length, title: stepCopy.title })}</span>
+          {current === "review" ? null : <button type="button" className="tkp-strip-btn" data-tk="open-preview" onClick={() => setPreviewOpen(true)}>{t("post.preview.title")}</button>}
+        </div>
         <div className="tkp-grid">
           <PostRail
             items={railItems}
@@ -1013,30 +1029,40 @@ export function PostWizard({
               ) : null}
 
               {current === "details" ? (
-                <div className="tkp-fields">
-                  <PlaceFields
-                    cities={cities}
-                    stateSlug={stateSlug}
-                    cityId={cityId}
-                    districtId={districtId}
-                    districts={districts}
-                    error={(key) => (key === "state" ? (stateSlug ? undefined : err("city")) : key === "city" ? (stateSlug ? err("city") : undefined) : err(key))}
-                    onBlur={blur}
-                    onState={(slug) => { setPickedState(slug); setCityId(""); setDistrictId(""); }}
-                    onCity={(id) => { setPickedState(stateSlug); setCityId(id); setDistrictId(""); }}
-                    onDistrict={setDistrictId}
-                  />
+                <DetailsStep
+                  categoryName={category?.name ?? ""}
+                  onChangeCategory={editing ? undefined : () => (draftId ? remember(draftId, 1) : setStep(1))}
+                  title={title}
+                  titlePlaceholder={hints.title}
+                  titleError={titleError}
+                  onTitle={setTitle}
+                  onTitleBlur={blur("title")}
+                  text={text}
+                  textPlaceholder={hints.text}
+                  onText={setText}
+                  onTextBlur={blur("text")}
+                  cities={cities}
+                  cityId={cityId}
+                  cityError={cityError}
+                  onCity={(city) => { setPickedState(city?.stateSlug ?? ""); setCityId(city?.id ?? ""); setDistrictId(""); }}
+                  onCityBlur={blur("city")}
+                  districts={districts}
+                  districtId={districtId}
+                  onDistrict={setDistrictId}
+                  interests={picksOf(attrs[INTEREST_KEY])}
+                  popular={popularInterests}
+                  onInterests={(next) => setAttrs((prev) => ({ ...prev, [INTEREST_KEY]: next }))}
+                  summary={summaryItems}
+                  summaryTick={summaryTick}
+                  onEditing={setEditingPart}
+                >
+                  {split ? null : renderNewExtras(err, blur)}
                   <div className="tkp-two tkp-two-keep">
                     <TextField id="nickname" label={t("post.field.nickname")} required value={nickname} error={err("nickname")} onBlur={blur("nickname")} placeholder={t("post.field.nicknameShort")} onChange={(value) => setNickname(value.slice(0, 20))} />
-                    {ageField ? <TextField id="age" label={t("post.field.age")} required={ageField.required} value={age} error={err("age")} onBlur={blur("age")} inputMode="numeric" placeholder={t("post.field.agePlaceholder")} onChange={(value) => setAge(value.replace(/\D/g, "").slice(0, 2))} /> : people ? <span /> : priceField}
+                    {ageField ? <TextField id="age" label={t("post.field.age")} required={ageField.required} value={age} error={err("age")} onBlur={blur("age")} inputMode="numeric" placeholder={t("post.field.agePlaceholder")} onChange={(value) => setAge(value.replace(/\D/g, "").slice(0, 2))} /> : <span />}
                   </div>
-                  {people ? <p className="tkp-quiet" data-tk="nickname-hint" style={{ margin: "-6px 0 0" }}>{t("post.field.nicknameHint")}</p> : null}
-                  <TextField id="title" label={t("post.field.adTitle")} required value={title} error={err("title")} onBlur={blur("title")} note={`${title.length} / 70`} placeholder={hints.title} onChange={(value) => setTitle(value.slice(0, 70))} />
-                  <TextField id="text" label={t("post.field.description")} area rows={4} value={text} error={err("text")} onBlur={blur("text")} note={t("post.field.descriptionNote")} placeholder={hints.text} onChange={setText} />
-                  <InterestTags value={picksOf(attrs[INTEREST_KEY])} onChange={(next) => setAttrs((prev) => ({ ...prev, [INTEREST_KEY]: next }))} />
-                  {people || !ageField ? null : priceField}
-                  {split ? null : renderNewExtras(err, blur)}
-                </div>
+                  {people ? <p className="tkp-quiet" data-tk="nickname-hint">{t("post.field.nicknameHint")}</p> : null}
+                </DetailsStep>
               ) : null}
 
               {current === "more" ? <div className="tkp-fields">{renderNewExtras(err, blur)}</div> : null}
@@ -1116,7 +1142,6 @@ export function PostWizard({
                   </button>
                 ) : <span />}
                 <div className="tkp-nav-right">
-                  {current === "review" ? null : <button type="button" className="tkp-btn tkp-btn-preview" data-tk="open-preview" onClick={() => setPreviewOpen(true)}>{t("post.preview.title")}</button>}
                   {current === "review" && short > 0 ? (
                     <>
                       <button type="button" className="tkp-btn" data-tk="publish-blocked" disabled aria-describedby="pay-reason">{t("post.nav.publish")}</button>
@@ -1137,6 +1162,12 @@ export function PostWizard({
           <aside className="tkp-aside" data-step={current}>
             {current === "category" ? (
               renderCategoryPreview("side")
+            ) : current === "details" ? (
+              <>
+                <p className="tkd-pv-label">{t("post.v2.det.preview")}</p>
+                {detailsCard}
+                <p className="tkd-pv-hint">{t("post.v2.det.previewHint")}</p>
+              </>
             ) : (
               <>
                 <p className="tkp-aside-label">{t("post.aside.live")}</p>
@@ -1148,7 +1179,7 @@ export function PostWizard({
           </aside>
         </div>
         {money.added ? <div className="tkp-toast" role="status" data-tk="credits-toast">{creditsText(money.added)} {t("post.money.added")}</div> : null}
-        {previewOpen ? <PreviewSheet ad={adPreview} hasPhoto={Boolean(coverUrl)} byline={byline} onClose={() => setPreviewOpen(false)} /> : null}
+        {previewOpen ? <PreviewSheet ad={adPreview} hasPhoto={Boolean(coverUrl)} byline={byline} card={current === "details" ? detailsCard : undefined} onClose={() => setPreviewOpen(false)} /> : null}
       </div>
       </PostShell>
     );

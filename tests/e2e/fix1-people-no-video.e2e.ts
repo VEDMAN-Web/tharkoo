@@ -1,4 +1,4 @@
-import { expect, loginUi, newUserApi, originHeaders, test, USER_PASSWORD } from "./helpers";
+import { expect, loginUi, newUserApi, originHeaders, test, USER_PASSWORD, pickCity } from "./helpers";
 
 /** FIX-1 (E1-B4): a listing about people never holds a video: no Add video button, and the server refuses it. */
 
@@ -10,8 +10,7 @@ async function startDraft(page: import("@playwright/test").Page, baseURL: string
   await loginUi(page, email, USER_PASSWORD, "/u/post-insert/");
   await page.locator(".tkp-tile", { hasText: category }).click();
   await page.locator("[data-tk=go-on]").click();
-  if (await page.locator("#state").count()) await page.locator("#state").selectOption({ label: "Maharashtra" });
-  await page.locator("#city").selectOption({ label: "Mumbai" });
+  await pickCity(page, "Mumbai");
   await page.locator("#nickname").fill("Asha");
   const people = category === "Dating";
   if (people) await page.locator("#age").fill("25");

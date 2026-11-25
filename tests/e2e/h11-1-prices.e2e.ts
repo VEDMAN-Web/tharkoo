@@ -1,7 +1,7 @@
 import { mkdirSync } from "node:fs";
 import AxeBuilder from "@axe-core/playwright";
 import type { Page } from "@playwright/test";
-import { becomeSeller, expect, hasHorizontalScroll, loginUi, newApi, newUserApi, originHeaders, PNG, registerApi, signInAdminContext, test, uniqueEmail, USER_PASSWORD, withLocalDb } from "./helpers";
+import { becomeSeller, expect, hasHorizontalScroll, loginUi, newApi, newUserApi, originHeaders, PNG, registerApi, signInAdminContext, test, uniqueEmail, USER_PASSWORD, withLocalDb, pickCity } from "./helpers";
 
 /** H11.1b: clear prices. The "What things cost" card, the pack lines, the one-line versions and the step 5 cost box, all from live settings. */
 
@@ -112,8 +112,7 @@ async function reachStepFive(page: Page, title: string) {
   await page.locator(".tkp-tile", { hasText: "Dating" }).click();
   await page.locator("[data-tk=go-on]").click();
   await stepOf(page, 2);
-  if (await page.locator("#state").count()) await page.locator("#state").selectOption({ label: "Maharashtra" });
-  await page.locator("#city").selectOption({ label: "Mumbai" });
+  await pickCity(page, "Mumbai");
   await page.locator("#nickname").fill("Asha");
   await page.locator("#age").fill("28");
   await page.locator("#title").fill(title);

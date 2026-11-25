@@ -1,6 +1,6 @@
 import { mkdirSync } from "node:fs";
 import type { Page } from "@playwright/test";
-import { expect, newApi, originHeaders, PNG, registerApi, test, uniqueEmail, USER_PASSWORD, withLocalDb } from "./helpers";
+import { expect, newApi, originHeaders, PNG, registerApi, test, uniqueEmail, USER_PASSWORD, withLocalDb, pickCity } from "./helpers";
 
 /** H7.112: the whole paid-posting journey with the real money settings: no credits, recharge 100, publish, 70 left, live. */
 
@@ -50,8 +50,7 @@ async function reachStepFive(page: Page, title: string) {
   await page.locator(".tkp-tile", { hasText: "Dating" }).click();
   await page.locator("[data-tk=go-on]").click();
   await stepOf(page, 2);
-  if (await page.locator("#state").count()) await page.locator("#state").selectOption({ label: "Maharashtra" });
-  await page.locator("#city").selectOption({ label: "Mumbai" });
+  await pickCity(page, "Mumbai");
   await page.locator("#nickname").fill("Asha");
   await page.locator("#age").fill("28");
   await page.locator("#title").fill(title);

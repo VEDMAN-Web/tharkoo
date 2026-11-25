@@ -247,3 +247,7 @@ export function progressPercent(step: number, total: number, done = false): numb
   const last = FIVE_STEP_PERCENT[FIVE_STEP_PERCENT.length - 1];
   return Math.round(first + ((last - first) * index) / (total - 1));
 }
+
+/** H21.2: the longest title and description the form accepts (the title limit has always been 70; the description limit is the server's). */
+export const POST_TITLE_MAX = 70;
+export const POST_DESCRIPTION_MAX = 5000;

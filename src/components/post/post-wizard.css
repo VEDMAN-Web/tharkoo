@@ -145,7 +145,7 @@
 .tkn .tkp-post .tkn-ls.tkp-previewbox .tkn-ls-card { margin: 0; flex-direction: column; transform: none; }
 .tkn .tkp-post .tkn-ls.tkp-previewbox .tkn-ls-photo { width: 100%; aspect-ratio: 4 / 3; }
 .tkn .tkp-post .tkn-ls.tkp-previewbox .tkn-ls-body { padding: 14px 16px; }
-.tkn .tkp-post .tkp-previewbox .tkn-ls-foot > :not(.tkn-ls-price) { display: none; }
+.tkn .tkp-post .tkp-previewbox .tkn-ls-foot { display: none; }
 .tkn .tkp-post .tkp-previewbox[data-photo="none"] .tkn-ls-photo { background: #fde7f3; }
 .tkn .tkp-post .tkp-previewbox[data-photo="none"] .tkn-ls-photo > * { visibility: hidden; }
 .tkn .tkp-post .tkp-previewbox[data-photo="none"] .tkn-ls-photo::after {

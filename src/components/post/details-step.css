@@ -1,0 +1,78 @@
+/* H21.2: Step 2, Ad details. Sizes and colours come from the design files (Main, D-03, Phone-Details). */
+
+.tkn .tkp-shell .tkd { display: flex; flex-direction: column; gap: 20px; color: #1e0b38; }
+.tkn .tkp-shell .tkd-cat { display: flex; align-items: center; gap: 12px; padding: 14px 16px; border-radius: 14px; background: #f8f2fa; font-size: 14px; color: #4a2870; }
+.tkn .tkp-shell .tkd-cat b { font-size: 15px; font-weight: 800; color: #110520; }
+.tkn .tkp-shell .tkd-link { margin-left: auto; min-height: 44px; padding: 0 4px; border: 0; background: transparent; font: inherit; font-size: 14px; font-weight: 600; color: #b0106a; cursor: pointer; }
+.tkn .tkp-shell .tkd-link:hover { color: #8a0d53; text-decoration: underline; }
+
+.tkn .tkp-shell .tkd-fld { position: relative; display: flex; flex-direction: column; gap: 6px; }
+.tkn .tkp-shell .tkd-lbl { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; font-size: 14px; font-weight: 700; color: #1e0b38; }
+.tkn .tkp-shell .tkd-req { color: #b0106a; }
+.tkn .tkp-shell .tkd-opt-note { font-size: 13px; font-weight: 500; color: #6b4a8a; }
+.tkn .tkp-shell .tkd-count { font-size: 13px; font-weight: 500; color: #6b4a8a; font-variant-numeric: tabular-nums; }
+.tkn .tkp-shell .tkd-hint { margin: 0; font-size: 13px; line-height: 1.45; color: #6b4a8a; }
+.tkn .tkp-shell .tkd-hint-inline { align-self: center; font-size: 13px; color: #6b4a8a; }
+.tkn .tkp-shell .tkd-err { display: flex; gap: 6px; align-items: flex-start; margin: 0; font-size: 13px; font-weight: 600; line-height: 1.45; color: #b3261e; }
+.tkn .tkp-shell .tkd-sec { margin: 0; font-size: 13px; font-weight: 800; letter-spacing: 0.06em; text-transform: uppercase; color: #6b4a8a; }
+.tkn .tkp-shell .tkd-group { display: flex; flex-direction: column; gap: 14px; }
+
+.tkn .tkp-shell .tkd-inp {
+  width: 100%; box-sizing: border-box; height: 52px; padding: 0 16px; border: 1.5px solid #dcc6e6; border-radius: 14px; background: #fff;
+  font: inherit; font-size: 16px; color: #1e0b38;
+}
+.tkn .tkp-shell .tkd-inp:focus { outline: none; border-color: #c2126f; box-shadow: 0 0 0 4px rgba(194, 18, 111, 0.14); }
+.tkn .tkp-shell .tkd-inp.on { border-color: #c2126f; box-shadow: 0 0 0 4px rgba(194, 18, 111, 0.14); }
+.tkn .tkp-shell .tkd-inp.err { border-color: #c0262d; box-shadow: 0 0 0 4px rgba(192, 38, 45, 0.1); }
+.tkn .tkp-shell .tkd-inp:disabled { background: #f8f2fa; color: #8c74a3; border-color: #ead8f0; }
+.tkn .tkp-shell textarea.tkd-inp { height: 120px; padding: 14px 16px; resize: vertical; line-height: 1.5; }
+.tkn .tkp-shell .tkd-select { appearance: none; -webkit-appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='18' height='18' viewBox='0 0 24 24' fill='none' stroke='%236b4a8a' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 16px center; padding-right: 44px; }
+
+.tkn .tkp-shell .tkd-combo { position: relative; }
+.tkn .tkp-shell .tkd-combo-ico { position: absolute; left: 16px; top: 17px; color: #6b4a8a; pointer-events: none; }
+.tkn .tkp-shell .tkd-combo-inp { padding-left: 46px; }
+.tkn .tkp-shell .tkd-list { margin: 0; padding: 6px; list-style: none; background: #fff; border: 1px solid #ead8f0; border-radius: 14px; box-shadow: 0 18px 40px -18px rgba(30, 11, 56, 0.35); }
+.tkn .tkp-shell .tkd-opt { display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 48px; padding: 0 12px; border-radius: 10px; font-size: 15px; color: #1e0b38; cursor: pointer; }
+.tkn .tkp-shell .tkd-opt.hi { background: #fbeaf3; }
+.tkn .tkp-shell .tkd-opt small { font-size: 13px; color: #6b4a8a; }
+
+.tkn .tkp-shell .tkd-int { display: flex; flex-direction: column; gap: 12px; }
+.tkn .tkp-shell .tkd-chips { display: flex; flex-wrap: wrap; gap: 8px; margin: 0; padding: 0; list-style: none; }
+.tkn .tkp-shell .tkd-chip { display: inline-flex; align-items: center; gap: 6px; height: 36px; padding: 0 8px 0 14px; border-radius: 999px; border: 1px solid #f3c9de; background: #fbeaf3; color: #8a0d53; font-size: 14px; font-weight: 700; }
+.tkn .tkp-shell .tkd-chip button { width: 44px; height: 44px; margin: -4px -8px -4px -10px; border: 0; border-radius: 999px; background: transparent; color: #8a0d53; display: inline-flex; align-items: center; justify-content: center; cursor: pointer; }
+.tkn .tkp-shell .tkd-chip-add { display: inline-flex; align-items: center; gap: 6px; min-height: 44px; padding: 0 14px; border-radius: 999px; border: 1px dashed #cdb0dd; background: #fff; color: #4a2870; font: inherit; font-size: 14px; font-weight: 600; cursor: pointer; }
+.tkn .tkp-shell .tkd-chip-add:hover { border-color: #b98fd0; }
+
+/* The "Fix N things" box. */
+.tkn .tkp-shell .tkd-sum { padding: 16px 18px; border-radius: 14px; background: #fdecec; border: 1px solid #f5c2c2; color: #7f1d1d; }
+.tkn .tkp-shell .tkd-sum:focus { outline: 3px solid #7c3aed; outline-offset: 2px; }
+.tkn .tkp-shell .tkd-sum b { display: flex; gap: 8px; align-items: center; font-size: 15px; }
+.tkn .tkp-shell .tkd-sum ul { margin: 8px 0 0 28px; padding: 0; font-size: 14px; line-height: 1.7; }
+.tkn .tkp-shell .tkd-sum a { display: inline-block; min-height: 24px; color: #7f1d1d; text-decoration: underline; font-weight: 600; }
+
+/* The category's other fields and the name field: two columns on a computer, one on a phone. */
+.tkn .tkp-shell .tkd .tkp-fields { display: flex; flex-direction: column; gap: 20px; }
+.tkn .tkp-shell.tkp-shell .tkp-post[data-design="post-new"] .tkd .tkp-two, .tkn .tkp-shell.tkp-shell .tkp-post[data-design="post-new"] .tkd .tkp-two-keep { display: grid; grid-template-columns: minmax(0, 1fr); gap: 20px; }
+.tkn .tkp-shell .tkd .tkd-field-wrap { display: flex; flex-direction: column; gap: 6px; }
+
+/* The live preview card. */
+.tkn .tkp-shell .tkd-pv { background: #fff; border: 1px solid #ead8f0; border-radius: 18px; }
+.tkn .tkp-shell .tkd-pv-photo { height: 220px; border-radius: 17px 17px 0 0; background: linear-gradient(160deg, #fde3ef, #ece3fb); background-size: cover; background-position: center; display: flex; align-items: center; justify-content: center; color: #b0106a; }
+.tkn .tkp-shell .tkd-pv-body { display: flex; flex-direction: column; gap: 10px; padding: 16px 18px 18px; }
+.tkn .tkp-shell .tkd-pv-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; color: #6b4a8a; }
+.tkn .tkp-shell .tkd-pv-title { position: relative; font-size: 17px; font-weight: 800; line-height: 1.3; color: #110520; overflow-wrap: anywhere; }
+.tkn .tkp-shell .tkd-pv-tags { display: flex; flex-wrap: wrap; gap: 6px; }
+.tkn .tkp-shell .tkd-tag { position: relative; display: inline-flex; align-items: center; height: 26px; padding: 0 10px; border-radius: 999px; font-size: 12px; font-weight: 700; }
+.tkn .tkp-shell .tkd-tag.r { background: #fbeaf3; color: #8a0d53; }
+.tkn .tkp-shell .tkd-tag.v { background: #efe8fb; color: #4b2a8f; }
+.tkn .tkp-shell .tkd-pv-by { position: relative; display: flex; align-items: center; gap: 8px; font-size: 13px; color: #4a2870; }
+.tkn .tkp-shell .tkd-pv-by b { color: #110520; }
+.tkn .tkp-shell .tkd-pv-av { width: 24px; height: 24px; border-radius: 999px; background: #efe8fb; color: #4b2a8f; font-weight: 800; font-size: 12px; display: flex; align-items: center; justify-content: center; }
+.tkn .tkp-shell .tkd-pv .editing { outline: 2px solid #c2126f; outline-offset: 3px; border-radius: 6px; box-shadow: 0 0 0 6px rgba(194, 18, 111, 0.1); }
+.tkn .tkp-shell .tkd-pv-tag { position: absolute; top: -10px; right: -6px; display: flex; align-items: center; height: 18px; padding: 0 7px; border-radius: 999px; background: #c2126f; color: #fff; font-size: 10px; font-weight: 800; box-shadow: 0 2px 6px rgba(194, 18, 111, 0.4); }
+.tkn .tkp-shell .tkd-pv-hint { margin: 0 4px; font-size: 13px; color: #6b4a8a; }
+.tkn .tkp-shell .tkd-pv-label { margin: 0 4px 12px; font-size: 13px; font-weight: 800; letter-spacing: 0.06em; text-transform: uppercase; color: #6b4a8a; }
+
+@media (min-width: 768px) {
+  .tkn .tkp-shell.tkp-shell .tkp-post[data-design="post-new"] .tkd .tkp-two, .tkn .tkp-shell.tkp-shell .tkp-post[data-design="post-new"] .tkd .tkp-two-keep { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}

@@ -1,7 +1,7 @@
 import { mkdirSync } from "node:fs";
 import type { Page } from "@playwright/test";
 import { ObjectId } from "mongodb";
-import { expect, grantCredits, hasHorizontalScroll, loginUi, newApi, newUserApi, originHeaders, PNG, registerApi, signInAdminContext, test, uniqueEmail, USER_PASSWORD, withLocalDb } from "./helpers";
+import { expect, grantCredits, hasHorizontalScroll, loginUi, newApi, newUserApi, originHeaders, PNG, registerApi, signInAdminContext, test, uniqueEmail, USER_PASSWORD, withLocalDb, pickCity } from "./helpers";
 import { createLiveAd } from "./flows";
 
 /** H7.120: money switch labels, the credits pill, India time, one-line labels, contact subtitle, rupee sign. */
@@ -92,8 +92,7 @@ test.describe("H7.120 small list", () => {
       await page.goto("/u/post-insert/");
       await page.locator(".tkp-tile", { hasText: "Dating" }).click();
       await page.locator("[data-tk=go-on]").click();
-      if (await page.locator("#state").count()) await page.locator("#state").selectOption({ label: "Maharashtra" });
-      await page.locator("#city").selectOption({ label: "Mumbai" });
+      await pickCity(page, "Mumbai");
       await page.locator("#nickname").fill("Asha");
       await page.locator("#age").fill("28");
       await page.locator("#title").fill(`Pill publish ${Date.now()}`);
