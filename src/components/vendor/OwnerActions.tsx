@@ -6,6 +6,7 @@ import { api, friendlyError } from "@/lib/ui/api";
 import { draftPath, isDraftStatus } from "@/lib/ui/ad-status";
 import { openPromote } from "@/components/promote/openPromote";
 import { makeT } from "@/lib/ui/text";
+import "./video-switch.css";
 
 const t = makeT();
 
@@ -23,18 +24,25 @@ export function OwnerActions({
   status,
   endsSoon,
   title,
+  videoCallsEligible = false,
+  videoCallsOff = false,
   onDone,
 }: {
   id: string;
   status?: string;
   endsSoon: boolean;
   title?: string;
+  /** TOP or Super Top is running on this ad: only then the video calls switch shows. */
+  videoCallsEligible?: boolean;
+  videoCallsOff?: boolean;
   onDone: (message: string) => void | Promise<void>;
 }) {
   const [busy, setBusy] = useState(false);
   const [confirming, setConfirming] = useState(false);
   const timer = useRef(0);
   const draft = isDraftStatus(status);
+  const [callsOff, setCallsOff] = useState(videoCallsOff);
+  const canSwitchCalls = status === "active" && videoCallsEligible;
 
   useEffect(() => () => window.clearTimeout(timer.current), []);
   const actions: Action[] = [];
@@ -51,6 +59,15 @@ export function OwnerActions({
       : await api(`/api/listings/${id}/${action}`, { method: "POST", body: "{}" });
     setBusy(false);
     await onDone(res.ok ? LABEL_DONE[action] : friendlyError(res.error));
+  }
+
+  async function toggleCalls() {
+    const next = !callsOff;
+    setBusy(true);
+    const res = await api(`/api/listings/${id}`, { method: "PATCH", body: JSON.stringify({ stage: "details", videoCallsOff: next }) });
+    setBusy(false);
+    if (res.ok) setCallsOff(next);
+    await onDone(res.ok ? (next ? "Video calls are off." : "Video calls are on.") : friendlyError(res.error));
   }
 
   function tapDelete() {
@@ -71,6 +88,12 @@ export function OwnerActions({
       {status === "active" ? (
         <button type="button" className="tkv-mini tkv-mini-primary" data-tk="promote-open" onClick={() => openPromote({ listingId: id, title })}>
           {t("promote.button")}
+        </button>
+      ) : null}
+      {canSwitchCalls ? (
+        <button type="button" role="switch" aria-checked={!callsOff} className="tkv-video-switch" data-tk="video-calls-toggle" disabled={busy} onClick={toggleCalls}>
+          <span className="tkv-video-switch-track" aria-hidden="true" />
+          <span>Video calls <span className="tkv-video-state">{callsOff ? "Off" : "On"}</span></span>
         </button>
       ) : null}
       <Link href={draftPath(id)} className="tkv-mini">Edit</Link>

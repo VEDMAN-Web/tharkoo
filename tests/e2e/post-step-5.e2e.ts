@@ -153,11 +153,11 @@ test.describe("H7.86 post an ad, step 5 and the success screen", () => {
     await consentAndPublish(page);
 
     await expect(page.locator("[data-tk=what-next] li")).toHaveCount(3);
-    await expect(page.locator("[data-tk=what-next]")).toContainText("Mumbai Dating");
+    await expect(page.locator("[data-tk=what-next]")).toContainText("Mumbai → Dating");
     await expect(page.locator("[data-tk=view-my-ads]")).toHaveCount(0);
     await expect(page.getByText("View my ads", { exact: true })).toHaveCount(0);
     await expect(page.locator("[data-tk=post-another]")).toHaveText("Post another ad");
-    await expect(page.locator("[data-tk=post-success] [data-tk=post-preview]")).toContainText(edited);
+    await expect(page.locator("[data-tk=post-success] [data-tk=view-ad]")).toContainText(edited);
     expect(page.url()).not.toContain("draft=");
     expect(await overflow(page)).toBeLessThanOrEqual(0);
     await shot(page, `${prefix}-07-success`);
@@ -463,8 +463,9 @@ test.describe("H7.86 post an ad, step 5 and the success screen", () => {
     await consentAndPublish(page);
     await expect(page.locator("[data-tk=receipt]")).toHaveText("30 credits paid · Balance 70 credits");
     await expect(page.locator("[data-tk=view-ad]")).toHaveAttribute("href", /-[a-z0-9]{5}\/$/);
-    await expect(page.locator("[data-tk=view-ad]")).toHaveText("View your ad");
-    await expect(page.locator("[data-tk=upsell]")).toContainText("Get more views");
+    // H21.7: the whole ad card is the link (no "View your ad" button), and the offers box says "Want even more views?".
+    await expect(page.locator("[data-tk=view-ad]")).toContainText("Open ad");
+    await expect(page.locator("[data-tk=upsell]")).toContainText("Want even more views?");
     expect(await page.locator("[data-tk=upsell-plan]").count()).toBeGreaterThan(0);
     await expect(page.locator("[data-tk=post-another]")).toBeVisible();
     expect(await overflow(page)).toBeLessThanOrEqual(0);
@@ -626,12 +627,12 @@ test.describe("H7.86 post an ad, step 5 and the success screen", () => {
       await expect(page.locator("[data-tk=post-success]")).toBeVisible();
       expect(await overflow(page), `success ${width}: sideways scroll`).toBeLessThanOrEqual(0);
       if (width >= 1024) {
-        const actions = (await page.locator(".tkp-success-actions").boundingBox())!;
+        const actions = (await page.locator(".tkdn-actions").boundingBox())!;
         expect(actions.y + actions.height, `success ${width}x${height}: buttons in view`).toBeLessThanOrEqual(height);
       }
       await shot(page, `3-3-success-${width}x${height}`);
     }
-    await tapTargets(page, ".tkp-success-actions .tkp-btn");
+    await tapTargets(page, ".tkdn-btn");
     expect(await serious(page)).toEqual([]);
   });
 });

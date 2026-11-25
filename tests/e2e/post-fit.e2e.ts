@@ -35,7 +35,7 @@ async function draftFor(page: Page, baseURL: string, slug: string, seller: boole
 async function overflows(page: Page) {
   return page.evaluate(() => {
     const pageExtra = document.documentElement.scrollHeight - window.innerHeight;
-    const main = document.querySelector(".tkp-main, .tkp-success");
+    const main = document.querySelector(".tkp-main, .tkp-success, .tkdn");
     const inner: string[] = [];
     if (main) {
       for (const node of Array.from(main.querySelectorAll<HTMLElement>("*")).concat(main as HTMLElement)) {

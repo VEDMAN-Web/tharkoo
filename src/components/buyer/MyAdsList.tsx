@@ -29,7 +29,7 @@ export function MyAdsList({ items }: { items: OwnItem[] }) {
                 views: item.shown?.views ?? 0,
                 clicks: item.shown?.clicks ?? 0,
                 href: item.slug ? undefined : draftPath(item.id ?? ""),
-                actions: <OwnerActions id={item.id ?? ""} title={ad.title} status={item.status ?? undefined} endsSoon={status.label === "Ending soon"} onDone={() => router.refresh()} />,
+                actions: <OwnerActions id={item.id ?? ""} title={ad.title} videoCallsEligible={item.videoCallsEligible} videoCallsOff={item.videoCallsOff} status={item.status ?? undefined} endsSoon={status.label === "Ending soon"} onDone={() => router.refresh()} />,
               }}
             />
           </li>

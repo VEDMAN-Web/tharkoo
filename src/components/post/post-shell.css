@@ -11,11 +11,11 @@ body:has(.tkp-shell) { background: #fbf5fa; }
 /* Header: on a phone the exit arrow, the title and the credit pill; on a computer the logo, the title and the right group. */
 .tkn .tkp-shell .tkp-header { background: #fff; border-bottom: 1px solid #ead8f0; }
 .tkn .tkp-shell .tkp-header-row { position: relative; display: flex; align-items: center; gap: 8px; height: 56px; padding: 0 12px; }
-.tkn .tkp-shell .tkp-logo { display: none; align-items: center; gap: 10px; min-height: 44px; order: 1; font-size: 20px; font-weight: 800; letter-spacing: -0.02em; color: #1e0b38; text-decoration: none; }
+.tkn .tkp-shell .tkp-logo { display: inline-flex; flex: none; align-items: center; gap: 8px; min-height: 44px; order: 1; font-size: 20px; font-weight: 800; letter-spacing: -0.02em; color: #1e0b38; text-decoration: none; }
 .tkn .tkp-shell .tkp-mark { width: 30px; height: 30px; border-radius: 9px; background: #c2126f; display: inline-flex; align-items: center; justify-content: center; flex: none; }
-.tkn .tkp-shell .tkp-exit { order: 1; display: inline-flex; align-items: center; justify-content: center; gap: 6px; min-width: 44px; min-height: 44px; color: #1e0b38; font-size: 14px; font-weight: 600; text-decoration: none; }
+.tkn .tkp-shell .tkp-exit { order: 0; display: inline-flex; align-items: center; justify-content: center; gap: 6px; min-width: 44px; min-height: 44px; color: #1e0b38; font-size: 14px; font-weight: 600; text-decoration: none; }
 .tkn .tkp-shell .tkp-exit-txt { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
-.tkn .tkp-shell .tkp-header-mid { order: 2; flex: 1; margin: 0; text-align: center; font-size: 15px; font-weight: 700; color: #110520; }
+.tkn .tkp-shell .tkp-header-mid { order: 2; flex: 1; min-width: 0; margin: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; text-align: center; font-size: 15px; font-weight: 700; color: #110520; }
 .tkn .tkp-shell .tkp-saved { display: none; order: 3; align-items: center; gap: 6px; min-height: 28px; padding: 0 10px; border-radius: 999px; background: #e9f7f0; color: #0b5c40; font-size: 12px; font-weight: 700; }
 .tkn .tkp-shell .tkp-saved[data-state="saving"] { background: #f3eefb; color: #6b4a8a; }
 .tkn .tkp-shell .tkp-credit-pill {
@@ -149,3 +149,21 @@ body:has(.tkp-shell) .tkn-float .tkn-chat-bubble { width: 56px; height: 56px; }
 .tkn .tkp-shell.tkp-shell .tkp-post[data-design="post-new"] .tkp-mini { min-height: 44px; }
 .tkn .tkp-shell.tkp-shell .tkp-post[data-design="post-new"] .upl-info,
 .tkn .tkp-shell.tkp-shell .tkp-post[data-design="post-new"] .tkp-interest .upl-info { width: 44px; height: 44px; font-size: 18px; }
+
+/* H21.7: header of the done screens: logo left, then the credit pill and a My ads link on the right. */
+.tkn .tkp-shell .tkp-header[data-variant="done"] .tkp-credit-pill { margin-left: auto; }
+.tkn .tkp-shell .tkp-header[data-variant="done"] .tkp-myads { order: 6; display: inline-flex; align-items: center; min-height: 44px; padding: 0 4px; color: #b0106a; font-size: 14px; font-weight: 600; text-decoration: none; }
+.tkn .tkp-shell .tkp-header[data-variant="done"] .tkp-myads:hover { text-decoration: underline; }
+.tkn .tkp-shell .tkp-header[data-variant="done"] .tkp-myads:focus-visible { outline: 3px solid #7c3aed; outline-offset: 2px; }
+
+/* H21.7b: the logo shows on a phone too, on the left, as on a computer. The word is a little smaller there. */
+@media (max-width: 1023px) {
+  .tkn .tkp-shell .tkp-logo-text { font-size: 17px; }
+  .tkn .tkp-shell .tkp-mark { width: 28px; height: 28px; }
+  .tkn .tkp-shell .tkp-header[data-variant="done"] .tkp-myads { padding: 0 2px; }
+}
+@media (max-width: 479px) {
+  /* With the logo, the back arrow and the pill there is no room for the title: the progress line and the step line say where you are. */
+  .tkn .tkp-shell .tkp-header-mid { display: none; }
+  .tkn .tkp-shell .tkp-credit-pill { margin-left: auto; }
+}

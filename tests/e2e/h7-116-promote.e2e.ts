@@ -35,7 +35,8 @@ test.describe("H7.116 Promote an ad", () => {
     const upsell = page.locator("[data-tk=upsell]");
     await expect(upsell).toBeVisible();
     const first = upsell.locator("[data-tk=upsell-plan]").first();
-    const planName = ((await first.innerText()).replace(/^Get\s+/, "")).trim();
+    // H21.7: the offer shows its title ("Upgrade to Super Top" or "Bump") and its price on the button.
+    const planName = ((await upsell.locator(".tkdn-offer-t").first().innerText()).replace(/^Upgrade to\s+/, "")).trim();
     await first.click();
     const sheet = page.locator("[data-tk=promote-sheet]");
     await expect(sheet).toBeVisible();
