@@ -11,9 +11,9 @@ body:has(.tkp-shell) { background: #fbf5fa; }
 /* Header: on a phone the exit arrow, the title and the credit pill; on a computer the logo, the title and the right group. */
 .tkn .tkp-shell .tkp-header { background: #fff; border-bottom: 1px solid #ead8f0; }
 .tkn .tkp-shell .tkp-header-row { position: relative; display: flex; align-items: center; gap: 8px; height: 56px; padding: 0 12px; }
-.tkn .tkp-shell .tkp-logo { display: inline-flex; flex: none; align-items: center; gap: 8px; min-height: 44px; order: 0; font-size: 20px; font-weight: 800; letter-spacing: -0.02em; color: #1e0b38; text-decoration: none; }
+.tkn .tkp-shell .tkp-logo { display: inline-flex; flex: none; align-items: center; gap: 8px; min-height: 44px; order: 1; font-size: 20px; font-weight: 800; letter-spacing: -0.02em; color: #1e0b38; text-decoration: none; }
 .tkn .tkp-shell .tkp-mark { width: 30px; height: 30px; border-radius: 9px; background: #c2126f; display: inline-flex; align-items: center; justify-content: center; flex: none; }
-.tkn .tkp-shell .tkp-exit { order: 1; display: inline-flex; align-items: center; justify-content: center; gap: 6px; min-width: 44px; min-height: 44px; color: #1e0b38; font-size: 14px; font-weight: 600; text-decoration: none; }
+.tkn .tkp-shell .tkp-exit { order: 0; display: inline-flex; align-items: center; justify-content: center; gap: 6px; min-width: 44px; min-height: 44px; color: #1e0b38; font-size: 14px; font-weight: 600; text-decoration: none; }
 .tkn .tkp-shell .tkp-exit-txt { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
 .tkn .tkp-shell .tkp-header-mid { order: 2; flex: 1; min-width: 0; margin: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; text-align: center; font-size: 15px; font-weight: 700; color: #110520; }
 .tkn .tkp-shell .tkp-saved { display: none; order: 3; align-items: center; gap: 6px; min-height: 28px; padding: 0 10px; border-radius: 999px; background: #e9f7f0; color: #0b5c40; font-size: 12px; font-weight: 700; }

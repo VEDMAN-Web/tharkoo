@@ -12,11 +12,13 @@ function rule(css: string, selector: string) {
 }
 
 describe("H21.7b the post-ad header on a phone", () => {
-  it("shows the logo on every screen size, on the left", () => {
+  it("shows the logo on every screen size, after the back arrow", () => {
     const base = rule(shell, ".tkn .tkp-shell .tkp-logo");
     expect(base).toContain("display: inline-flex");
     expect(base).not.toContain("display: none");
-    expect(base).toContain("order: 0");
+    expect(base).toContain("order: 1");
+    // The back arrow comes first (far left), then the logo.
+    expect(rule(shell, ".tkn .tkp-shell .tkp-exit")).toContain("order: 0");
   });
 
   it("lets the title shrink instead of pushing the logo or the pill off a narrow phone", () => {
