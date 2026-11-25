@@ -1,0 +1,11 @@
+{
+  "branchPrefix": "haiku/h22.2",
+  "globs": [
+    "src/lib/seo/schema.ts",
+    "src/lib/seo-site.ts",
+    "src/lib/ui/site-content.ts",
+    "tests/server/seo/**",
+    "docs/ownership/H22.2.json",
+    "progress/H22.2.md"
+  ]
+}
