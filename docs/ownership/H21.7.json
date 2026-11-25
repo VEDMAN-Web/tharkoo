@@ -6,6 +6,8 @@
     "docs/claude/STATUS.md",
     "src/components/post/PostSuccess.tsx",
     "src/components/post/post-success.css",
+    "src/components/post/PostShell.tsx",
+    "src/components/post/post-shell.css",
     "src/components/PostWizard.tsx",
     "src/lib/ui/text.ts",
     "tests/**"
