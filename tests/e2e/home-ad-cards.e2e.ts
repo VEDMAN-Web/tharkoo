@@ -127,8 +127,9 @@ test.describe("H7.84 home ad cards", () => {
       await next.click();
       await expect(count).toHaveText(new RegExp(`^${before + 1}/`));
       await expect(card.locator(".tkh-ad-dots i.is-on")).toHaveCount(1);
+      // H21.10: the whole photo is shown, centred (it used to be cropped from the top).
       const position = await card.locator(".tkh-ad-slide img").first().evaluate((node) => getComputedStyle(node).objectPosition);
-      expect(position).toBe("50% 18%");
+      expect(position).toBe("50% 50%");
     } finally {
       await restore();
     }

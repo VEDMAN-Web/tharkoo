@@ -5,6 +5,8 @@ import Link from "next/link";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { adPhotoAlt } from "@/lib/ad-photo-alt";
 import type { CardSlide } from "./card-slides";
+import { bgPhotoStyle } from "@/components/ui/card-photo";
+import "@/components/ui/card-photo.css";
 
 /** The scroll track of photo and video slides, shared by the Home card and the listing row card. */
 export function SlideTrack({
@@ -39,7 +41,7 @@ export function SlideTrack({
         slides.map((slide, position) => {
           const number = slide.kind === "image" ? (photoNumber += 1) : 0;
           return (
-          <Link key={slide.src + position} href={href} prefetch={false} className={slide.kind === "video" ? "tkh-ad-slide tkh-ad-videoslide" : "tkh-ad-slide"} tabIndex={-1} aria-hidden="true" data-ad-link onClick={onClicked}>
+          <Link key={slide.src + position} href={href} prefetch={false} className={slide.kind === "video" ? "tkh-ad-slide tkh-ad-videoslide" : "tkh-ad-slide tk-bgphoto"} style={slide.kind === "video" ? undefined : bgPhotoStyle(slide.src)} tabIndex={-1} aria-hidden="true" data-ad-link onClick={onClicked}>
             {slide.kind === "video" ? (
               <video ref={videoRef} src={slide.src} poster={slide.poster ?? undefined} muted playsInline preload="none" data-tk="card-video" />
             ) : (
