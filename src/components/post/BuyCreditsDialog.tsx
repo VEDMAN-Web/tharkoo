@@ -13,6 +13,9 @@ import "./buy-credits-dialog.css";
 export const POLL_MS = 3000;
 export const POLL_LIMIT_MS = 30 * 60_000;
 
+/** The clock, kept out of the component so the component stays pure. */
+const nowMs = () => Date.now();
+
 export type BuyPhase = "pick" | "waiting" | "paid" | "failed";
 
 /** What a payment's own status means for the dialog. Anything not final keeps waiting. */
@@ -101,7 +104,7 @@ export function BuyCreditsDialog({ need, price, plan, balance, onPaid, onClose }
 
   const settle = useCallback(async () => {
     if (!paymentId.current || settling.current) return;
-    if (Date.now() - startedAt.current > POLL_LIMIT_MS) return setPhase("failed");
+    if (nowMs() - startedAt.current > POLL_LIMIT_MS) return setPhase("failed");
     settling.current = true;
     const res = await api<PaymentAnswer>(`/api/payments/${paymentId.current}`);
     settling.current = false;
@@ -149,7 +152,7 @@ export function BuyCreditsDialog({ need, price, plan, balance, onPaid, onClose }
       return setError(res.status === 409 ? t("post.v2.buy.unavailable") : friendlyError(res.error) || t("post.v2.buy.error"));
     }
     paymentId.current = res.data.paymentId;
-    startedAt.current = Date.now();
+    startedAt.current = nowMs();
     setCheckoutPath(res.data.checkoutPath);
     if (tab) tab.location.href = res.data.checkoutPath;
     setPhase("waiting");
