@@ -23,10 +23,10 @@ export function adCreditsShort(need: number, balance: number | null): number {
 }
 
 /**
- * H19.6b: step 8. Free, TOP or Super Top, each with an (i) that says what it does and what it costs in ad credits.
- * The choice and the ad-credit balance go up to the form; publishing does the charge.
+ * H19.6b: step 8. Normal (no boost), TOP or Super Top, each with an (i) that says what it does and what it adds in ad credits.
+ * The choice and the ad-credit balance go up to the form; the cost box shows the money and publishing does the charge.
  */
-export function BoostChoice({ fee, onChange, onBuy }: { fee: number; onChange: (value: BoostChoiceValue) => void; onBuy?: (short: number) => void }) {
+export function BoostChoice({ onChange }: { onChange: (value: BoostChoiceValue) => void }) {
   const t = useT();
   const [plans, setPlans] = useState<BoostPlan[] | null>(null);
   const [balance, setBalance] = useState<number | null>(null);
@@ -68,9 +68,7 @@ export function BoostChoice({ fee, onChange, onBuy }: { fee: number; onChange: (
   useEffect(() => () => onChange({ plan: null, balance: null }), [onChange]);
 
   if (!plans || plans.length === 0) return null;
-  const short = adCreditsShort(adCreditsNeeded({ fee, plan }), balance);
   const credits = (count: number) => t("post.boost.price", { count });
-  const need = adCreditsNeeded({ fee, plan });
   return (
     <section className="tkp-boost" data-tk="boost-choice" aria-label={t("post.v2.rev.options")}>
       <h2 className="tkp-boost-title">{t("post.v2.rev.options")}</h2>
@@ -90,18 +88,6 @@ export function BoostChoice({ fee, onChange, onBuy }: { fee: number; onChange: (
           />
         ))}
       </div>
-      {balance !== null ? (
-        <p className="tkr-balance" data-tk="boost-balance">
-          <span>{t("post.v2.rev.balance", { balance: balance.toLocaleString("en-IN") })}</span>
-          {plan && short === 0 ? <span> {"\u00b7"} {t("post.v2.rev.after", { after: (balance - need).toLocaleString("en-IN") })}</span> : null}
-        </p>
-      ) : null}
-      {short > 0 && plan ? (
-        <div className="tkr-low" role="alert" data-tk="boost-short">
-          <p><b>{t("post.v2.rev.lowTitle", { plan: plan.name })}</b> {t("post.v2.rev.lowBody", { need: short })}</p>
-          {onBuy ? <button type="button" className="tkr-low-buy" data-tk="boost-buy" onClick={() => onBuy(short)}>{t("post.v2.rev.buy")}</button> : null}
-        </div>
-      ) : null}
     </section>
   );
 }

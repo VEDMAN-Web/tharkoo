@@ -57,9 +57,9 @@ Opus has access to this folder on Vedant's PC. Messages go through `.relay/` (gi
 | H19.4 | Buying credits: one kind at a time | approved | — | Haiku |
 | H19.5 | Account menu by role + Video calls page | approved | — | Haiku |
 | H21.8 | Remove the ad price everywhere | approved (#503 merged) | #503 | Haiku |
-| H21.9 | Header coin chip accessible name | PR open | haiku/h21.9-coin-chip | Haiku |
-| H21.9b | Header coin chip reads its numbers once | PR open | haiku/h21.9b-chip-label | Haiku |
-| H21.9c | Header pill e2e expectations | PR open | haiku/h21.9c-pill-tests | Haiku |
+| H21.9 | Header coin chip accessible name | approved (#507 merged) | #507 | Haiku |
+| H21.9b | Header coin chip reads its numbers once | approved (#508 merged) | #508 | Haiku |
+| H21.9c | Header pill e2e expectations | approved (#511 merged) | #511 | Haiku |
 | H19.6 | Post an ad, rebuilt (part A of 2: layout, place, description, interests, photos) | approved (#497 merged) | #497 | Haiku |
 | H19.6b | Post an ad, part B (contact, Free/TOP/Super Top, live screen, Promote pop-up, 70/30 note) | PR open | haiku/h19.6b-post-ad-pay | Haiku |
 | H19.7 | Block throwaway emails | approved | — | Haiku |
@@ -72,6 +72,14 @@ Opus has access to this folder on Vedant's PC. Messages go through `.relay/` (gi
 | H21.2 | Post-ad redesign: Step 2 Details | approved (#506 merged) | #506 | Haiku |
 | H21.3 | Post-ad redesign: Step 3 Photos | approved (#509 merged) | #509 | Haiku |
 | H21.4 | Post-ad redesign: Step 4 About you | approved (#510 merged) | #510 | Haiku |
-| H21.5a | Post-ad redesign: Step 5 Review (UI) | PR open | haiku/h21.5a-review | Haiku |
+| H21.5a | Post-ad redesign: Step 5 Review (UI) | approved (#519 merged) | #519 | Haiku |
+| H21.5b | Per-ad video calls switch (backend) | approved (#512 merged) | #512 | Haiku |
+| H21.5c | My ads: Video calls switch | approved (#514 merged) | #514 | Haiku |
+| H21.6 | Buy credits popup | approved (#517 merged) | #517 | Haiku |
+| H21.7 | Done screens (live and in review) | approved (#515 merged) | #515 | Haiku |
+| H21.7b | Logo on the phone header, Done screen clear of the chat bubble | approved (#518 merged) | #518 | Haiku |
+| H21.10 | Ad card photos are never cut | approved (#513 merged) | #513 | Haiku |
+| H21.11 | List-row pop-out covers its row | approved (#516 merged) | #516 | Haiku |
+| H21.12a | Money and credit text must agree | PR open | haiku/h21.12a-money | Haiku |
 
 Status values: todo · doing · PR open · changes needed · approved · merged · blocked.
