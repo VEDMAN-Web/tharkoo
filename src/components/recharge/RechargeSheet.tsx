@@ -10,6 +10,7 @@ import type { RechargePack } from "@/server/billing/recharge";
 import { CreditPacks, useCreditPacks, type PackChoice } from "./CreditPacks";
 import { openSupportWith, rechargeLine, type RechargeOptions } from "./openRecharge";
 import "./recharge.css";
+import { SkPacks } from "@/components/ui/Sk";
 
 export function pickPack(packs: RechargePack[], shortfall: number): string {
   return preselectedId(packs, shortfall);
@@ -66,7 +67,7 @@ export function RechargeSheet({ options, onClose }: { options: RechargeOptions; 
             <a href={`/u/login/?next=${encodeURIComponent(nextPath)}`} className="tkr-link">{t("recharge.loginLink")}</a>
           </p>
         ) : !data ? (
-          <p className="tkr-note" role="status">{error || t("recharge.loading")}</p>
+          error ? <p className="tkr-note" role="status">{error}</p> : <SkPacks label={t("recharge.loading")} />
         ) : data.packs.length === 0 && data.callPacks.length === 0 ? (
           <p className="tkr-note">{t("recharge.empty")}</p>
         ) : (

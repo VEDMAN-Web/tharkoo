@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { useAccount } from "@/components/account/AccountContext";
+import { CREDITS_CHANGED_EVENT, useAccount } from "@/components/account/AccountContext";
 import Link from "next/link";
 import { api, friendlyError, hasSessionHint } from "@/lib/ui/api";
 import { CreditPacksPanel } from "@/components/recharge/CreditPacks";
@@ -9,6 +9,7 @@ import { rupees } from "@/lib/credit-pack-view";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { VendorEarnings } from "@/components/wallet/VendorEarnings";
 import { dateTime, inr, STATUS_LABEL, statusTone } from "@/components/wallet/format";
+import { SkRows, SkStats } from "@/components/ui/Sk";
 
 interface CoinsResponse {
   balance: number;
@@ -81,7 +82,7 @@ function HistoryTab() {
     return () => window.clearTimeout(id);
   }, []);
 
-  if (!purchases || !movements) return <p className="t-small" style={{ color: "var(--muted)" }}>Loading history</p>;
+  if (!purchases || !movements) return <SkRows label="Loading history" rows={4} thumb={false} />;
   return (
     <div style={{ display: "grid", gap: 22 }}>
       <section aria-label="Purchases" style={{ display: "grid", gap: 10 }}>
@@ -118,6 +119,17 @@ function HistoryTab() {
 
 export function CoinWallet({ initialTab = "buy", hasEarnings = false }: { initialTab?: Tab; hasEarnings?: boolean }) {
   const [tab, setTab] = useState<Tab>(initialTab === "earnings" && !hasEarnings ? "buy" : initialTab);
+  // The three balances above are read once per page. Ask for them again when the tab changes and every 15 seconds while the page is in view,
+  // so a call that just paid out shows without a reload.
+  useEffect(() => {
+    if (!hasSessionHint()) return;
+    const refresh = () => {
+      if (document.visibilityState === "visible") window.dispatchEvent(new Event(CREDITS_CHANGED_EVENT));
+    };
+    refresh();
+    const timer = window.setInterval(refresh, 15_000);
+    return () => window.clearInterval(timer);
+  }, [tab]);
   const [data, setData] = useState<CoinsResponse | null>(null);
   const [signedOut, setSignedOut] = useState(false);
   const [error, setError] = useState("");
@@ -150,7 +162,7 @@ export function CoinWallet({ initialTab = "buy", hasEarnings = false }: { initia
   return (
     <div style={{ display: "grid", gap: 18 }}>
       {error ? <p className="t-small" role="alert" style={{ color: "var(--danger, #a12626)" }}>{error}</p> : null}
-      {data ? <Balance balance={data.balance} coinValueInr={data.coinValueInr} /> : <p className="t-small" style={{ color: "var(--muted)" }}>Loading balance</p>}
+      {data ? <Balance balance={data.balance} coinValueInr={data.coinValueInr} /> : <SkStats label="Loading balance" />}
       <nav aria-label="Wallet sections" style={{ display: "flex", gap: 6, overflowX: "auto" }}>
         {tabsFor(hasEarnings).map((item) => (
           <button

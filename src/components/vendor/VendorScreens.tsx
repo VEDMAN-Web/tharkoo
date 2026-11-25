@@ -16,6 +16,7 @@ import { AdCard } from "../ui/AdCard";
 import { HelpCard } from "../ui/HelpCard";
 import { TourInbox } from "./TourInbox";
 import type { ListingDoc } from "@/lib/models";
+import { SkRows } from "@/components/ui/Sk";
 
 type Own = { items: { id: string; title?: string; status?: string; slug?: string; description?: string }[]; total: number };
 type Entry = { id: string; delta: number; reason: string };
@@ -227,7 +228,7 @@ function AdsInner() {
 
 export function AdsList() {
   return (
-    <Suspense fallback={<p className="tk-container">Loading…</p>}>
+    <Suspense fallback={<SkRows label="Loading your ads" rows={3} />}>
       <AdsInner />
     </Suspense>
   );

@@ -6,6 +6,7 @@ import { api, friendlyError, hasSessionHint, type ApiError } from "@/lib/ui/api"
 import type { MessageView, TicketSummary } from "@/server/support/records";
 import { SCREENSHOT_ACCEPT, SCREENSHOT_LIMIT_TEXT, StatusChip, formatWhen } from "./labels";
 import { postForm } from "./request";
+import { SkRows } from "@/components/ui/Sk";
 
 type Thread = { ticket: TicketSummary; messages: MessageView[] };
 
@@ -42,7 +43,7 @@ export function TicketThread({ ticketId }: { ticketId: string }) {
   }
   if (error?.code === "NOT_FOUND") return <p role="alert" className="t-body">This ticket was not found.</p>;
   if (error) return <p role="alert" className="t-body">{friendlyError(error)}</p>;
-  if (!thread) return <p className="t-small">Loading the ticket...</p>;
+  if (!thread) return <SkRows label="Loading the ticket" rows={3} thumb={false} />;
 
   const { ticket, messages } = thread;
   const closed = ticket.status === "closed";

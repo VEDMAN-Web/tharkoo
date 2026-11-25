@@ -6,7 +6,7 @@ import { can } from "@/lib/admin/perms";
 import { listOrders, parseOrderQuery } from "@/server/admin/orders";
 import { getFinanceSettings, listPayoutsForStaff, listRefundBlockedPurchases } from "@/server/wallet";
 import { OrdersView, type PayoutsPart } from "./_orders/OrdersView";
-import { platformCallRevenue } from "@/server/tours/earnings";
+import { platformCallList, platformCallRevenue } from "@/server/tours/earnings";
 
 export const dynamic = "force-dynamic";
 
@@ -28,6 +28,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<Rec
   const query = parseOrderQuery(await searchParams);
   const canFinance = can(identity.roles, "payouts.decide");
   const callRevenue = await platformCallRevenue().catch(() => null);
+  const callList = await platformCallList().catch(() => []);
   const [list, payouts, blocked] = await Promise.all([
     listOrders(query, identity.roles),
     query.tab === "payouts" && canFinance
@@ -45,6 +46,41 @@ export default async function Page({ searchParams }: { searchParams: Promise<Rec
             <div><p style={{ margin: 0 }} className="adm-k-help">Last 7 days</p><strong data-tk="call-revenue-week">{callRevenue.week} credits</strong></div>
             <div><p style={{ margin: 0 }} className="adm-k-help">Last 30 days</p><strong data-tk="call-revenue-month">{callRevenue.month} credits</strong></div>
           </div>
+          {callList.length > 0 ? (
+            <>
+              <h3 style={{ margin: "16px 0 8px", fontSize: 14 }}>Where it came from (latest paid calls)</h3>
+              <div className="adm-table-wrap">
+                <table className="adm-table" data-tk="call-revenue-list">
+                  <thead>
+                    <tr>
+                      <th scope="col">Ended</th>
+                      <th scope="col">Ad</th>
+                      <th scope="col">Asked by</th>
+                      <th scope="col">Advertiser</th>
+                      <th scope="col">Price</th>
+                      <th scope="col">Advertiser got</th>
+                      <th scope="col">Tharkoo got</th>
+                      <th scope="col">Status</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {callList.map((call) => (
+                      <tr key={call.id}>
+                        <td>{call.at ? new Date(call.at).toLocaleString("en-IN", { timeZone: "Asia/Kolkata", dateStyle: "medium", timeStyle: "short" }) : ""}</td>
+                        <td>{call.title || "Untitled"}</td>
+                        <td>{call.buyer}</td>
+                        <td>{call.vendor}</td>
+                        <td>{call.price}</td>
+                        <td>{call.vendorPart}</td>
+                        <td><strong>{call.fee}</strong></td>
+                        <td>{call.status === "completed" ? "Completed" : call.status === "reversed" ? "Reversed" : call.status === "reversing" ? "Reversing" : "Disputed"}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </>
+          ) : null}
         </section>
       ) : null}
       <OrdersView list={list} payouts={payouts} blocked={blocked} />

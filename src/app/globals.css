@@ -1754,7 +1754,10 @@ input.tk-field:focus-visible, select.tk-field:focus-visible, textarea.tk-field:f
 .tkn-account-menu .tkn-account-coins { display: none; }
 @media (max-width: 600px) {
   .tkn-coin-chip { display: none; }
-  .tkn-account-menu .tkn-account-coins { display: flex; font-weight: 700; color: #a8124f; }
+  .tkn-account-menu .tkn-account-coins { display: flex; font-weight: 700; color: #a8124f; white-space: normal; line-height: 20px; padding-top: 10px; padding-bottom: 10px; }
+  /* The menu hangs from the header (not from the small avatar) so it stays inside the screen with an even edge on the right. */
+  .tkn-header .tkn-account { position: static; }
+  .tkn-header .tkn-account-menu { right: 12px; left: auto; top: calc(100% + 6px); width: min(320px, calc(100vw - 24px)); min-width: 0; box-sizing: border-box; max-height: calc(100dvh - 90px); overflow-y: auto; overscroll-behavior: contain; }
 }
 .tkn-city-wrap { position: relative; }
 .tkn-city {
@@ -2240,7 +2243,9 @@ body:has([data-tk="bottom-bar"]) .tkn-float { bottom: 104px; }
 
 /* H7.131: unread chat count on the header avatar and in the account menu. */
 .tkn-account { position: relative; }
-.tkn-avatar-dot { position: absolute; top: -4px; right: -4px; pointer-events: none; min-width: 18px; height: 18px; padding: 0 5px; box-sizing: border-box; border-radius: 9px; background: #c2185b; color: #fff; font-size: 12px; font-weight: 800; line-height: 18px; text-align: center; }
+/* The count sits on the avatar button itself (the box around the avatar is not the anchor on a phone). */
+.tkn-avatar { position: relative; }
+.tkn-avatar-dot { position: absolute; top: -6px; right: -6px; z-index: 1; pointer-events: none; min-width: 18px; height: 18px; padding: 0 5px; box-sizing: border-box; border-radius: 9px; background: #c2185b; color: #fff; font-size: 12px; font-weight: 800; line-height: 18px; text-align: center; }
 .tkn-menu-badge { margin-left: 8px; min-width: 20px; padding: 0 6px; border-radius: 10px; background: #c2185b; color: #fff; font-size: 12px; font-weight: 800; line-height: 20px; text-align: center; display: inline-block; }
 
 /* H12.2: one sideways chip row. Phones scroll it with a 24 px fade on the right edge; chips never shrink or cut their text. */
@@ -2279,6 +2284,11 @@ body .tkn-footer {
 .tk-recent-list { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 14px; }
 
 /* H19.5: the Video calls page. */
+/* The two tabs (Requests for me / My requests): one switch, both the same size, the chosen one is the white pill. */
+.tkn-call-tabs { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; padding: 4px; margin: 0 0 14px; border-radius: 14px; background: #f6ecf9; }
+.tkn-call-tab { min-height: 44px; padding: 0 12px; border: 0; border-radius: 10px; background: transparent; color: #6b4a8a; font: inherit; font-size: 14px; font-weight: 700; cursor: pointer; text-align: center; transition: background 0.15s, color 0.15s, box-shadow 0.15s; }
+.tkn-call-tab:hover { color: #a8124f; }
+.tkn-call-tab[aria-pressed="true"] { background: #fff; color: #a8124f; box-shadow: 0 2px 8px rgba(45, 18, 72, 0.14); }
 .tkn-call-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 12px; }
 .tkn-call-row { display: grid; grid-template-columns: 64px minmax(0, 1fr); gap: 4px 12px; align-items: start; padding: 12px; border: 1px solid #ead8f0; border-radius: 14px; background: #fff; }
 .tkn-call-photo { grid-row: span 2; width: 64px; height: 64px; border-radius: 10px; overflow: hidden; background: #f3e8f8; }
@@ -2293,3 +2303,17 @@ body .tkn-footer {
 .tkn-call-actions { grid-column: 1 / -1; display: flex; flex-wrap: wrap; gap: 8px; }
 .tkn-call-actions .tk-btn { min-height: 44px; }
 @media (min-width: 640px) { .tkn-call-row { grid-template-columns: 64px minmax(0, 1fr) auto; align-items: center; } .tkn-call-photo { grid-row: auto; } .tkn-call-actions { grid-column: auto; justify-content: flex-end; } }
+
+/* A call the person asked for was accepted: one line under the header, on every page (Join now). */
+.tkn-call-strip {
+  display: flex; align-items: center; justify-content: center; gap: 10px; flex-wrap: wrap;
+  padding: 10px 16px; background: #5b21b6; color: #fff; font-weight: 700; font-size: 15px; text-align: center;
+}
+.tkn-call-strip-btn {
+  display: inline-flex; align-items: center; min-height: 36px; padding: 0 16px; border-radius: 999px;
+  background: #fff; color: #4c1d95; text-decoration: none; font-weight: 800;
+}
+.tkn-call-strip-btn:focus-visible { outline: 3px solid #fff; outline-offset: 2px; }
+/* The advertiser's line (someone wants a call) is pink, the asker's line (accepted) stays violet, so the two are not mixed up. */
+.tkn-call-strip-vendor { background: #d1137a; }
+.tkn-call-strip-vendor .tkn-call-strip-btn { color: #a8124f; }

@@ -23,6 +23,7 @@ type OwnItem = {
   expiresAt?: string | null;
   videoCallsOff?: boolean;
   videoCallsEligible?: boolean;
+  promotion?: { name: string; endsAt: string } | null;
   card?: ListingDoc;
   shown?: { views: number; clicks: number };
 };
@@ -144,7 +145,7 @@ export function MyAdsBoard({ initialTab = "all" }: { initialTab?: Tab }) {
                 views: item.shown?.views ?? 0,
                 clicks: item.shown?.clicks ?? 0,
                 href: item.slug ? undefined : draftPath(item.id),
-                actions: <OwnerActions id={item.id} title={ad.title} videoCallsEligible={item.videoCallsEligible} videoCallsOff={item.videoCallsOff} status={item.status} endsSoon={status.label === "Ending soon"} onDone={reloadAfterAction} />,
+                actions: <OwnerActions id={item.id} title={ad.title} videoCallsEligible={item.videoCallsEligible} promotion={item.promotion} videoCallsOff={item.videoCallsOff} status={item.status} endsSoon={status.label === "Ending soon"} onDone={reloadAfterAction} />,
               }}
             />
           );

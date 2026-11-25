@@ -29,6 +29,36 @@ export async function callEarningsFor(ownerId: string, limit = 20) {
   };
 }
 
+export type PlatformCallRow = { id: string; at: string | null; title: string; buyer: string; vendor: string; price: number; vendorPart: number; fee: number; status: string };
+
+/** The latest paid video calls for the admin: which ad and who, the price, and how it split between the vendor and Tharkoo. Real stored numbers. */
+export async function platformCallList(limit = 15): Promise<PlatformCallRow[]> {
+  await connectDb();
+  const [{ User }, { accountName }] = await Promise.all([import("@/server/models"), import("@/lib/account-name")]);
+  const rows = await VideoTour.find({ status: { $in: ["completed", "disputed", "reversing", "reversed"] } }).sort({ endedAt: -1 }).limit(limit).lean();
+  if (rows.length === 0) return [];
+  const [listings, people] = await Promise.all([
+    Listing.find({ _id: { $in: rows.map((row) => row.listingId) } }).select("title").lean<{ _id: unknown; title?: string }[]>(),
+    User.find({ _id: { $in: rows.flatMap((row) => [row.userId, row.ownerId]) } }).select("displayName email").lean(),
+  ]);
+  const titleOf = new Map(listings.map((row) => [String(row._id), row.title ?? ""]));
+  const nameOf = new Map(people.map((person) => [String(person._id), accountName(person.displayName, person.email || "")]));
+  return rows.map((row) => {
+    const split = splitCall(row.coins, row.feePercent ?? 0);
+    return {
+      id: String(row._id),
+      at: row.endedAt ? new Date(row.endedAt).toISOString() : null,
+      title: titleOf.get(String(row.listingId)) ?? "",
+      buyer: nameOf.get(String(row.userId)) ?? "",
+      vendor: nameOf.get(String(row.ownerId)) ?? "",
+      price: row.coins,
+      vendorPart: split.vendor,
+      fee: split.fee,
+      status: row.status,
+    };
+  });
+}
+
 /**
  * H19.10: what a vendor keeps per call on their live ads, for the line "Users pay N credits per call. You keep M credits".
  * One row per distinct call price of the categories their live ads are in (video calls switched on).

@@ -5,6 +5,7 @@ import { BadgeCheck, Clock3, ShieldAlert, ShieldQuestion } from "lucide-react";
 import { api, friendlyError } from "@/lib/ui/api";
 import { storeId } from "@/components/account/AccountTools";
 import { UploadBox } from "./UploadBox";
+import { SkForm } from "@/components/ui/Sk";
 
 type Look = { word: string; line: string; tone: "ok" | "wait" | "bad" | "none"; icon: typeof BadgeCheck };
 
@@ -69,7 +70,7 @@ export function KycPanel() {
           </div>
         </div>
       ) : (
-        <p className="up-muted">Loading...</p>
+        <SkForm label="Loading" fields={3} />
       )}
       {look && status !== "approved" && status !== "pending_review" ? (
         <form onSubmit={submit} className="up-form" data-tk="kyc-form">

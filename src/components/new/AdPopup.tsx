@@ -11,6 +11,9 @@ import { useFocusTrap } from "@/components/ui/useFocusTrap";
 import { useT } from "@/components/ui/AdCard";
 import { bgPhotoStyle } from "@/components/ui/card-photo";
 import "@/components/ui/card-photo.css";
+import { CallingStep } from "@/components/new/CallingStep";
+
+const noop = () => undefined;
 
 
 export type PopupKind = "call" | "chat";
@@ -31,6 +34,10 @@ export type AdPopupProps = {
   notice: string | null;
   /** H19.3: call credits just added by a payment that returned to this ad page: the pop-up says so. */
   paidAdded?: number | null;
+  /** The video call request this pop-up started (or found already open): the calling step follows it. */
+  tourId?: string | null;
+  /** The request closed (declined, ran out of time, or cancelled) and the credit is back. */
+  onCallEnded?: () => void;
   onClose: () => void;
   onSignedIn: () => void;
   onStartCall: () => Promise<FlowResult>;
@@ -150,6 +157,10 @@ export function AdPopup(props: AdPopupProps) {
           {step === "away" ? (
             <div className="tkn-pop-stack">
               <SellerRow name={name} status="away" t={t} />
+              <p className="tkn-pop-sub">{t("ad.away.chatHelp", { name })}</p>
+              <button type="button" className="tkn-pop-btn" data-tk="away-chat" onClick={props.onSwitchToChat}>
+                {t("ad.away.chat", { name })}
+              </button>
               <p className="tkn-pop-sub">{t("ad.away.alts")}</p>
               <div className="tkn-alts">
                 {props.alternatives.map((alt) => (
@@ -166,19 +177,7 @@ export function AdPopup(props: AdPopupProps) {
             </div>
           ) : null}
 
-          {step === "calling" ? (
-            <div className="tkn-pop-stack tkn-pop-center">
-              <span className="tkn-pop-ring" aria-hidden>
-                <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#5B21B6" strokeWidth="2.2" aria-hidden>
-                  <rect x="3" y="6" width="13" height="12" rx="2" />
-                  <path d="M16 10l5-3v10l-5-3" />
-                </svg>
-              </span>
-              <button type="button" className="tkn-pop-btn-line" onClick={onClose}>
-                {t("ad.calling.cancel")}
-              </button>
-            </div>
-          ) : null}
+          {step === "calling" ? <CallingStep tourId={props.tourId ?? null} name={name} t={t} onClose={onClose} onEnded={props.onCallEnded ?? noop} /> : null}
 
           {step === "error" ? (
             <div className="tkn-pop-stack">

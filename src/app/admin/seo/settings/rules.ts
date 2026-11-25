@@ -1,6 +1,5 @@
 // Pure rules for the robots / llms.txt / structured data settings. No database here.
 import { AD_SCHEMA_MAPPINGS, type AdSchemaMapping } from "@/lib/seo/schema";
-import { textDenied } from "@/server/shared/policy";
 
 export const MAX_ROBOTS_LINES = 30;
 export const MAX_LLMS_SECTIONS = 5;
@@ -121,7 +120,6 @@ export function validateSeoSettings(raw: unknown): { ok: true; value: SeoSetting
 
   const intro = typeof source.llmsIntro === "string" ? source.llmsIntro : "";
   if (intro.length > LLMS_LIMITS.intro) errors.llmsIntro = [`Keep this to ${LLMS_LIMITS.intro} characters or fewer`];
-  else if (intro && textDenied(intro).denied) errors.llmsIntro = ["This text contains a word that is not allowed on Tharkoo"];
   const sections = Array.isArray(source.llmsSections) ? (source.llmsSections as LlmsSection[]) : [];
   if (sections.length > MAX_LLMS_SECTIONS) errors.llmsSections = [`At most ${MAX_LLMS_SECTIONS} sections`];
   for (const item of sections) {
@@ -129,7 +127,6 @@ export function validateSeoSettings(raw: unknown): { ok: true; value: SeoSetting
     const body = String(item?.body ?? "");
     if ((title || body) && (!title.trim() || !body.trim())) errors.llmsSections = ["Each section needs a title and a text"];
     else if (title.length > LLMS_LIMITS.sectionTitle || body.length > LLMS_LIMITS.sectionBody) errors.llmsSections = ["A section is too long"];
-    else if (textDenied(title).denied || textDenied(body).denied) errors.llmsSections = ["A section contains a word that is not allowed on Tharkoo"];
   }
 
   const org = (source.organization && typeof source.organization === "object" ? source.organization : {}) as Record<string, unknown>;
@@ -141,8 +138,6 @@ export function validateSeoSettings(raw: unknown): { ok: true; value: SeoSetting
   if (logoProblem) errors["organization.logo"] = [logoProblem];
   const ogProblem = imageProblem(String(source.defaultOgImage ?? "").trim());
   if (ogProblem) errors.defaultOgImage = [ogProblem];
-  const nameText = String(org.name ?? "");
-  if (nameText && textDenied(nameText).denied) errors["organization.name"] = ["This text contains a word that is not allowed on Tharkoo"];
 
   const mapping = (source.adSchema && typeof source.adSchema === "object" ? source.adSchema : {}) as Record<string, unknown>;
   for (const [slug, value] of Object.entries(mapping)) {

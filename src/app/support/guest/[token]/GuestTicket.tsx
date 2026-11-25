@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { api, friendlyError } from "@/lib/ui/api";
+import { SkRows } from "@/components/ui/Sk";
 
 type Message = { id: string; authorType: "user" | "staff"; body: string; createdAt: string };
 type Thread = {
@@ -53,7 +54,7 @@ export function GuestTicket({ token }: { token: string }) {
   }
 
   if (!thread) {
-    return <p role="status">{error || "Loading your ticket..."}</p>;
+    return error ? <p role="status">{error}</p> : <SkRows label="Loading your ticket" rows={3} thumb={false} />;
   }
   const closed = Boolean(thread.ticket.closedAt);
   return (

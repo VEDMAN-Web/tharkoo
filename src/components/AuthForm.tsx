@@ -8,6 +8,7 @@ import { api, fieldErrors, type ApiError, friendlyError, isStaffRole, safeNext }
 import { loginPath } from "@/lib/urls";
 import { useUrlPaths } from "./UrlPaths";
 import { PhoneLogin } from "./PhoneLogin";
+import { SkForm } from "@/components/ui/Sk";
 
 type Mode = "login" | "register" | "forgot" | "reset" | "verify" | "expired";
 
@@ -260,7 +261,7 @@ function AuthFormInner({ mode }: { mode: Mode }) {
 
 export function AuthForm({ mode }: { mode: Mode }) {
   return (
-    <Suspense fallback={<p className="tk-container">Loading…</p>}>
+    <Suspense fallback={<SkForm label="Loading" fields={2} />}>
       <AuthFormInner mode={mode} />
     </Suspense>
   );

@@ -9,7 +9,6 @@ import type { AdminCtx } from "@/server/admin/context";
 import { adminWrite } from "@/server/admin/write";
 import { ForbiddenError, ValidationError } from "@/server/http";
 import { Category, Location } from "@/server/models";
-import { textDenied } from "@/server/shared/policy";
 import { readAreaTable, readCityTable, shapeProblem, type AreaRow, type CityRow, type RowProblem } from "./import-csv";
 
 /**
@@ -71,10 +70,6 @@ function summarise(kind: ImportKind, total: number, existing: number, problemRow
   };
 }
 
-function nameProblem(name: string): string {
-  return textDenied(name).denied ? "The name has a term that is not allowed on Tharkoo." : "";
-}
-
 async function analyseCities(text: string): Promise<Analysis> {
   const table = readCityTable(text);
   if (!table.ok) throw new ValidationError(table.message);
@@ -128,8 +123,6 @@ function cityProblem(row: CityRow, states: Map<string, unknown>, seenSlug: Map<s
   const shape = shapeProblem(row, (slug) => validateSlug(slug));
   if (shape) return shape;
   if (!states.has(key(row.state))) return `The state "${row.state}" is not on Tharkoo.`;
-  const denied = nameProblem(row.name);
-  if (denied) return denied;
   if (categories.has(row.slug)) return `The web address "${row.slug}" is a category address.`;
   const nameKey = `${key(row.state)}|${key(row.name)}`;
   const earlier = seenSlug.get(row.slug) ?? seenName.get(nameKey);
@@ -184,8 +177,6 @@ function areaProblem(row: AreaRow, found: unknown, sameName: number, seen: Map<s
   if (shape) return shape;
   if (!row.city) return "The city is empty.";
   if (!found) return sameName > 1 ? `More than one city is called "${row.city}". Use its web address in the city column.` : `The city "${row.city}" is not on Tharkoo.`;
-  const denied = nameProblem(row.name);
-  if (denied) return denied;
   const id = `${key(row.city)}|${row.slug}`;
   const earlier = seen.get(id);
   seen.set(id, earlier ?? row.line);

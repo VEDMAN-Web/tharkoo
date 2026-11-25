@@ -5,6 +5,8 @@ import { api, friendlyError } from "@/lib/ui/api";
 import { CREDITS_CHANGED_EVENT } from "@/components/account/AccountContext";
 import { KycForm, KycSummary, type MaskedKyc } from "@/components/wallet/KycForm";
 import { date, dateTime, inr, STATUS_LABEL, statusTone } from "@/components/wallet/format";
+import "./earnings.css";
+import { SkStats } from "@/components/ui/Sk";
 
 export interface PayoutSummary {
   availableCoins: number;
@@ -32,14 +34,11 @@ interface WithdrawalRow {
   requestedAt: string;
 }
 
-const CARD = { border: "1px solid var(--border)", borderRadius: 12, padding: 14, background: "var(--card, #fff)", display: "grid", gap: 16 } as const;
-const H2 = { fontSize: 18, margin: 0 } as const;
-
 function Stat({ label, value }: { label: string; value: string }) {
   return (
-    <div style={{ background: "var(--card, #fff)", borderRadius: 10, padding: "12px 14px", border: "1px solid var(--border)", boxShadow: "inset 0 3px 0 var(--rose)" }}>
-      <p className="t-small" style={{ color: "var(--muted)", margin: 0 }}>{label}</p>
-      <p style={{ margin: "4px 0 0", fontSize: 20, fontWeight: 700 }}>{value}</p>
+    <div className="ew-stat">
+      <p className="ew-stat-label">{label}</p>
+      <p className="ew-stat-value">{value}</p>
     </div>
   );
 }
@@ -80,37 +79,37 @@ function WithdrawForm({ summary, onDone }: { summary: PayoutSummary; onDone: () 
   }
 
   return (
-    <form onSubmit={submit} style={{ display: "grid", gap: 10 }} aria-label="Withdraw credits">
-      <h2 style={H2}>Withdraw</h2>
-      <label style={{ display: "grid", gap: 6 }}>
-        <span className="t-small">Credits to withdraw</span>
+    <form onSubmit={submit} className="ew-form" aria-label="Withdraw credits">
+      <h2 className="ew-h2">Withdraw</h2>
+      <label className="ew-field">
+        <span className="ew-label">Credits to withdraw</span>
         <input
           name="coins"
           inputMode="numeric"
           value={coins}
           onChange={(event) => setCoins(event.target.value.replace(/\D/g, ""))}
-          style={{ minHeight: 44, border: "1px solid var(--border)", borderRadius: 8, padding: "0 12px", fontSize: 16 }}
+          className="ew-input"
         />
       </label>
-      <p className="t-small" style={{ color: "var(--muted)", margin: 0 }}>
+      <p className="ew-note">
         Minimum {summary.minWithdrawCoins} credits. One withdrawal every {summary.withdrawCooldownDays} days.
         {Number.isInteger(amount) && amount > 0 ? ` That is about ${inr(amount * summary.coinValueInr)} before deductions.` : ""}
         {` TDS ${summary.tdsPercent}% and GST ${summary.gstPercent}% are recorded on the payout.`}
       </p>
       {valid && range ? (
-        <p className="t-small" role="status" data-tk="payout-range" style={{ margin: 0, fontWeight: 600 }}>
+        <p className="ew-text ew-strong" role="status" data-tk="payout-range">
           {range}
         </p>
       ) : null}
       {waiting ? (
-        <p className="t-small" role="status" style={{ color: "var(--accent)", margin: 0 }}>
+        <p className="ew-text ew-err" role="status">
           Your next withdrawal opens on {waiting}.
         </p>
       ) : null}
-      <div aria-live="polite" className="t-small" style={{ minHeight: 18, color: message.startsWith("Request sent") ? "var(--ok, #1f7a3a)" : "var(--danger, #a12626)" }}>
+      <div aria-live="polite" className="ew-msg" data-ok={message.startsWith("Request sent") ? "yes" : undefined}>
         {message}
       </div>
-      <button type="submit" className="tk-btn tk-btn-cta" disabled={busy || Boolean(waiting) || !Number.isInteger(amount) || amount < summary.minWithdrawCoins || amount > summary.availableCoins} style={{ width: "100%" }}>
+      <button type="submit" className="tk-btn tk-btn-cta ew-btn" disabled={busy || Boolean(waiting) || !Number.isInteger(amount) || amount < summary.minWithdrawCoins || amount > summary.availableCoins}>
         {busy ? "Sending" : "Request withdrawal"}
       </button>
     </form>
@@ -118,21 +117,21 @@ function WithdrawForm({ summary, onDone }: { summary: PayoutSummary; onDone: () 
 }
 
 function WithdrawalHistory({ rows }: { rows: WithdrawalRow[] }) {
-  if (rows.length === 0) return <p className="t-small" style={{ color: "var(--muted)", margin: 0 }}>No withdrawals yet.</p>;
+  if (rows.length === 0) return <p className="ew-note">No withdrawals yet.</p>;
   return (
-    <ul style={{ listStyle: "none", padding: 0, margin: 0, display: "grid", gap: 10 }}>
+    <ul className="ew-history">
       {rows.map((row) => (
-        <li key={row.id} style={{ borderTop: "1px solid var(--border)", paddingTop: 10, display: "grid", gap: 4 }}>
-          <div style={{ display: "flex", justifyContent: "space-between", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
-            <span style={{ ...statusTone(row.status), borderRadius: 999, padding: "2px 10px", fontSize: 13, fontWeight: 600 }}>{STATUS_LABEL[row.status] ?? row.status}</span>
+        <li key={row.id}>
+          <div className="ew-history-top">
+            <span className="ew-chip" style={statusTone(row.status)}>{STATUS_LABEL[row.status] ?? row.status}</span>
             <strong>{row.coins} credits</strong>
           </div>
-          <span className="t-small" style={{ color: "var(--muted)" }}>
+          <span className="ew-note">
             {dateTime(row.requestedAt)} · {inr(row.amountInr)} · TDS {row.tdsPercent}% · GST {row.gstPercent}%
             {row.reference ? ` · Ref ${row.reference}` : ""}
           </span>
           {row.reason && (row.status === "rejected" || row.status === "failed") ? (
-            <span className="t-small">Reason: {row.reason}</span>
+            <span className="ew-text">Reason: {row.reason}</span>
           ) : null}
         </li>
       ))}
@@ -145,19 +144,21 @@ type CallEarning = { id: string; title: string; price: number; fee: number; youG
 
 function CallEarnings({ total, calls }: { total: number; calls: CallEarning[] }) {
   return (
-    <section style={CARD} aria-label="Earned from calls" data-tk="call-earnings">
+    <section className="ew-card" aria-label="Earned from calls" data-tk="call-earnings">
       <div>
-        <p className="t-small" style={{ color: "var(--muted)", margin: 0 }}>Earned from calls</p>
-        <p style={{ margin: "4px 0 0", fontSize: 28, fontWeight: 800 }} data-tk="call-earnings-total">{total} credits</p>
+        <p className="ew-note">Earned from calls</p>
+        <p className="ew-total" data-tk="call-earnings-total">{total} credits</p>
       </div>
-      {calls.length === 0 ? <p className="t-small" style={{ color: "var(--muted)", margin: 0 }}>No paid video calls yet.</p> : (
-        <ul style={{ listStyle: "none", padding: 0, margin: 0, display: "grid", gap: 10 }}>
+      {calls.length === 0 ? <p className="ew-note">No paid video calls yet.</p> : (
+        <ul className="ew-calls" data-tk="call-earnings-list" tabIndex={0} aria-label="Calls you earned from">
           {calls.map((call) => (
-            <li key={call.id} style={{ borderTop: "1px solid var(--border)", paddingTop: 10, display: "grid", gap: 2 }} data-tk="call-earning">
-              <strong className="t-small">{call.title || "Video call"}{call.at ? ` · ${date(call.at)}` : ""}</strong>
-              <span className="t-small">Price: {call.price} credits</span>
-              <span className="t-small">Tharkoo fee: {call.fee} credits</span>
-              <span className="t-small"><strong>You got: {call.youGot} credits</strong></span>
+            <li key={call.id} className="ew-call" data-tk="call-earning">
+              <strong className="ew-call-title">{call.title || "Video call"}{call.at ? <span className="ew-call-date"> · {date(call.at)}</span> : null}</strong>
+              <div className="ew-call-nums">
+                <span>Price: {call.price} credits</span>
+                <span>Tharkoo fee: {call.fee} credits</span>
+                <span className="ew-call-got">You got: {call.youGot} credits</span>
+              </div>
             </li>
           ))}
         </ul>
@@ -193,32 +194,32 @@ export function VendorEarnings({ onSignedOut }: { onSignedOut: () => void }) {
     return () => window.clearTimeout(id);
   }, [load]);
 
-  if (error) return <p className="t-small" role="alert" style={{ color: "var(--danger, #a12626)" }}>{error}</p>;
-  if (!summary) return <p className="t-small" style={{ color: "var(--muted)" }}>Loading earnings</p>;
+  if (error) return <p className="ew-text ew-err" role="alert">{error}</p>;
+  if (!summary) return <SkStats label="Loading earnings" />;
 
   return (
-    <div style={{ display: "grid", gap: 16 }}>
-      <section style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(140px, 1fr))", gap: 10 }} aria-label="Earnings">
+    <div className="ew-page">
+      <section className="ew-stats" aria-label="Earnings">
         <Stat label="Available" value={`${summary.availableCoins} credits`} />
         <Stat label="Pending payout" value={`${summary.pendingCoins} credits`} />
         <Stat label="Paid out" value={`${summary.paidCoins} credits`} />
       </section>
       <CallEarnings total={calls.total} calls={calls.calls} />
       <div style={{ display: "grid", gap: 8 }}>
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }} role="group" aria-label="What to do with your earnings">
-          <button type="button" className={panel === "withdraw" ? "tk-btn tk-btn-cta" : "tk-btn tk-btn-outline-primary"} aria-pressed={panel === "withdraw"} data-tk="earn-withdraw" onClick={() => setPanel("withdraw")} style={{ minHeight: 48 }}>Withdraw</button>
-          <button type="button" className={panel === "ads" ? "tk-btn tk-btn-cta" : "tk-btn tk-btn-outline-primary"} aria-pressed={panel === "ads"} data-tk="earn-ads" onClick={() => setPanel("ads")} style={{ minHeight: 48 }}>Use for ads</button>
+        <div className="ew-seg" role="group" aria-label="What to do with your earnings">
+          <button type="button" className="ew-seg-btn" aria-pressed={panel === "withdraw"} data-tk="earn-withdraw" onClick={() => setPanel("withdraw")}>Withdraw</button>
+          <button type="button" className="ew-seg-btn" aria-pressed={panel === "ads"} data-tk="earn-ads" onClick={() => setPanel("ads")}>Use for ads</button>
         </div>
-        <p className="t-small" style={{ margin: 0, color: "var(--muted)" }} data-tk="earn-rate">1 earned credit = 1 ad credit. Ad credits pay for posting, TOP and Super Top.</p>
+        <p className="ew-note" data-tk="earn-rate">1 earned credit = 1 ad credit. Ad credits pay for posting, TOP and Super Top.</p>
       </div>
       {panel === "ads" ? (
-      <section style={CARD} aria-label="Move earnings to ad credits">
+      <section className="ew-card" aria-label="Move earnings to ad credits">
         <MoveToAdCredits available={summary.availableCoins} onDone={() => void load()} />
       </section>
       ) : (
       <>
-      <section style={CARD} aria-label="Payout details">
-        <h2 style={H2}>Payout details</h2>
+      <section className="ew-card" aria-label="Payout details">
+        <h2 className="ew-h2">Payout details</h2>
         {summary.kyc ? (
           <KycSummary kyc={summary.kyc} />
         ) : (
@@ -226,14 +227,14 @@ export function VendorEarnings({ onSignedOut }: { onSignedOut: () => void }) {
         )}
       </section>
       {summary.kyc ? (
-        <section style={CARD}>
+        <section className="ew-card">
           <WithdrawForm summary={summary} onDone={() => void load()} />
         </section>
       ) : null}
-      <section style={CARD} aria-label="Withdrawal history">
-        <h2 style={H2}>Withdrawal history</h2>
+      <section className="ew-card" aria-label="Withdrawal history">
+        <h2 className="ew-h2">Withdrawal history</h2>
         <WithdrawalHistory rows={rows} />
-        {rows.length > 0 ? <p className="t-small" style={{ color: "var(--muted)", margin: 0 }}>Last requested {date(rows[0].requestedAt)}</p> : null}
+        {rows.length > 0 ? <p className="ew-note">Last requested {date(rows[0].requestedAt)}</p> : null}
       </section>
       </>
       )}
@@ -265,29 +266,31 @@ function MoveToAdCredits({ available, onDone }: { available: number; onDone: () 
     onDone();
   }
   return (
-    <div style={{ display: "grid", gap: 8 }}>
-      <h2 style={H2}>Use earnings for ads</h2>
-      <p className="t-small" style={{ margin: 0, color: "var(--muted)" }}>
+    <div className="ew-form">
+      <h2 className="ew-h2">Use earnings for ads</h2>
+      <p className="ew-note">
         Move earned credits into ad credits to pay for posting, TOP or Super Top. At least {MOVE_MIN} at a time. This cannot be undone.
       </p>
       {available < MOVE_MIN ? (
-        <p className="t-small" style={{ margin: 0 }}>You need at least {MOVE_MIN} earned credits to move them.</p>
+        <p className="ew-text">You need at least {MOVE_MIN} earned credits to move them.</p>
       ) : (
-        <div style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center" }}>
-          <label htmlFor="move-amount" className="t-small" style={{ fontWeight: 700 }}>Credits to move</label>
+        <div className="ew-field">
+          <label htmlFor="move-amount" className="ew-label">Credits to move</label>
+          <div className="ew-row">
           <input
             id="move-amount"
             inputMode="numeric"
             value={amount}
             onChange={(event) => setAmount(event.target.value.replace(/[^0-9]/g, "").slice(0, 9))}
-            style={{ minHeight: 44, minWidth: 0, flex: "1 1 120px", fontSize: 16, padding: "0 12px", borderRadius: 12, border: "2px solid #ead8f0" }}
+            className="ew-input"
           />
-          <button type="button" className="tk-btn tk-btn-cta" disabled={!ok || busy} onClick={() => void move()} style={{ minHeight: 44, flex: "1 1 160px" }}>
+          <button type="button" className="tk-btn tk-btn-cta ew-btn" disabled={!ok || busy} onClick={() => void move()}>
             {busy ? "Moving" : "Move to ad credits"}
           </button>
+          </div>
         </div>
       )}
-      {message ? <p className="t-small" role="status" style={{ margin: 0 }}>{message}</p> : null}
+      {message ? <p className="ew-text" role="status">{message}</p> : null}
     </div>
   );
 }

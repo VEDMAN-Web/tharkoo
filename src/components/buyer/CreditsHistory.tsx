@@ -7,6 +7,7 @@ import { api, hasSessionHint } from "@/lib/ui/api";
 import { makeT } from "@/lib/ui/text";
 import { methodLabel } from "@/components/recharge/labels";
 import type { paymentView } from "@/server/billing/recharge";
+import { SkRows } from "@/components/ui/Sk";
 
 /** H7.112: purchases and credits used, in the account panel. A table on desktop, one card per row on phones. */
 
@@ -141,7 +142,7 @@ export function CreditsHistory() {
       </div>
       <div id="history-body" role="tabpanel" aria-labelledby={`history-tab-${tab}`} className="up-hist-body">
         {rows === null ? (
-          <p className="up-muted" aria-live="polite">{t("history.loading")}</p>
+          <SkRows label={t("history.loading")} rows={4} thumb={false} />
         ) : rows.length === 0 ? (
           tab === "purchases" ? <Empty title={t("history.empty")} body={t("history.empty.body")} /> : <Empty title={t("history.used.empty")} body={t("history.used.empty.body")} />
         ) : tab === "purchases" ? (

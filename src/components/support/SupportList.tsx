@@ -5,6 +5,7 @@ import Link from "next/link";
 import { api, friendlyError, hasSessionHint, type ApiError } from "@/lib/ui/api";
 import type { TicketSummary } from "@/server/support/records";
 import { StatusChip, formatWhen } from "./labels";
+import { SkRows } from "@/components/ui/Sk";
 
 /** The signed-in person's tickets, newest activity first. A row opens its thread beside the list. */
 export function SupportList({ selectedId, onSelect }: { selectedId: string | null; onSelect: (id: string) => void }) {
@@ -33,7 +34,7 @@ export function SupportList({ selectedId, onSelect }: { selectedId: string | nul
     };
   }, []);
 
-  if (rows === null) return <p className="up-muted">Loading your tickets...</p>;
+  if (rows === null) return <SkRows label="Loading your tickets" rows={3} thumb={false} />;
   if (error?.code === "UNAUTHORIZED" || !hasSessionHint()) {
     return (
       <p role="status" className="up-muted">

@@ -20,6 +20,8 @@ import { FooterNew } from "./FooterNew";
 import { Header } from "./Header";
 import { HeaderNew } from "./HeaderNew";
 import { MainInner } from "./MainInner";
+import { ScrollToTop } from "./ScrollToTop";
+import { SelectMenu } from "./SelectMenu";
 import { UrlPathProvider } from "./UrlPaths";
 import { UiTextProvider } from "./help/UiTextProvider";
 import { SupportChat } from "./chat/SupportChat";
@@ -71,6 +73,7 @@ export function PathChrome({ shell, paths, children }: { shell: ChromeData; path
       <UrlPathProvider paths={paths}>
         <div className="min-h-screen bg-bg text-text">
           <main id="main">{children}</main>
+          <SelectMenu />
         </div>
       </UrlPathProvider>
     );
@@ -86,6 +89,8 @@ export function PathChrome({ shell, paths, children }: { shell: ChromeData; path
     <UiTextProvider texts={texts}>
     <CityProvider cities={cities}>
     <AccountProvider>
+      <ScrollToTop />
+      <SelectMenu />
       {path === "/" ? <JsonLd data={webPageNode({ name: site.name || "Tharkoo", path, siteName: site.name || "Tharkoo" })} /> : null}
       {newDesign ? (
         <div className="tkn" data-design="new">

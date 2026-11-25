@@ -42,7 +42,6 @@ import { revalidateListingPages, revalidateListingsById } from "@/server/listing
 import { publicPathsOf } from "@/server/listings/ad-code";
 import { listingAddressPath } from "@/server/models/listing";
 import { parsePrice } from "@/server/listings/price";
-import { attributeDenied, categoryDenied, textDenied } from "@/server/shared/policy";
 import { adLifetimeMs } from "@/server/listings/lifetime";
 import { evaluatePublishGate } from "@/server/shared/publish-gate";
 import { postingPlanOf } from "@/server/billing/free-ads";
@@ -215,7 +214,7 @@ export async function requireCategory(id: string) {
   }
   const category = await Category.findById(id);
   if (!category || category.deletedAt) throw new NotFoundError("Category not found");
-  if (category.enabled === false || categoryDenied(category.slug, category.name).denied) {
+  if (category.enabled === false) {
     throw new PolicyViolationError("Category is not allowed");
   }
   return category;
@@ -309,7 +308,6 @@ export async function assertCleanText(parts: Array<string | undefined>) {
   await connectDb();
   const text = parts.filter((part): part is string => Boolean(part?.trim())).join("\n");
   if (!text) return;
-  if (textDenied(text).denied) throw new PolicyViolationError("Listing text is not allowed");
   const rows = await BannedWord.find().select("text").lean();
   const haystack = text.toLowerCase();
   for (const row of rows) {
@@ -483,8 +481,6 @@ async function applyDetails(
   if (price === null) listing.set("price", undefined);
   else if (price !== undefined) listing.price = price;
   if (input.attributes) {
-    const denied = attributeDenied(input.attributes);
-    if (denied.denied) throw new PolicyViolationError("Listing text is not allowed");
     const strings = Object.values(input.attributes).filter((value): value is string => typeof value === "string");
     await assertCleanText(strings);
     const category = await requireCategory(listing.categoryId.toString());

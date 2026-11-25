@@ -38,3 +38,9 @@
 .tkv-video-switch[aria-checked="true"] .tkv-video-switch-track { background: #a8124f; }
 .tkv-video-switch[aria-checked="true"] .tkv-video-switch-track::after { transform: translateX(16px); }
 .tkv-video-state { color: #6b4a8a; font-weight: 700; }
+
+/* A promotion is running on this ad (TOP, Super Top and so on): a small label above the buttons. */
+.tkv-promo-chip {
+  display: inline-flex; align-items: center; gap: 6px; margin: 0 0 8px; padding: 4px 10px; border-radius: 999px;
+  background: #fff4d6; color: #7a4b00; font-size: 12px; font-weight: 700; line-height: 1.3;
+}

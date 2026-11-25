@@ -9,6 +9,7 @@ import { enoughFor, enoughParts, type PriceListData } from "@/lib/price-list";
 import { PriceCard } from "./PriceCard";
 import { BitcoinMark, EthereumMark, MastercardMark, UsdcMark, UsdtMark, VisaMark } from "./PayMarks";
 import "./recharge.css";
+import { SkPacks } from "@/components/ui/Sk";
 
 /**
  * H9.1: the one way to buy credits. The Account home, the credits page, the Wallet and the posting-flow sheet all show this:
@@ -223,9 +224,9 @@ export function CreditPacks({ data, shortfall = 0, returnTo, onChoice, wallet: s
 export function CreditPacksPanel({ returnTo, withPrices = false }: { returnTo?: string; withPrices?: boolean }) {
   const t = useT();
   const { data, error, signedIn } = useCreditPacks();
-  if (signedIn === null) return <p className="tkp-note" role="status">{t("recharge.loading")}</p>;
+  if (signedIn === null) return <SkPacks label={t("recharge.loading")} wide />;
   if (!signedIn) return <p className="tkp-note">{t("recharge.login")} <Link className="tkr-link" href="/u/login/">{t("recharge.loginLink")}</Link></p>;
-  if (!data) return <p className="tkp-note" role="status">{error || t("recharge.loading")}</p>;
+  if (!data) return error ? <p className="tkp-note" role="status">{error}</p> : <SkPacks label={t("recharge.loading")} wide />;
   if (data.packs.length === 0 && data.callPacks.length === 0) return <p className="tkp-note">{t("recharge.empty")}</p>;
   return <PanelBody data={data} returnTo={returnTo} withPrices={withPrices} />;
 }

@@ -13,6 +13,8 @@ const t = makeT();
 type Action = "pause" | "resume" | "renew" | "duplicate" | "delete";
 
 const CONFIRM_MS = 4000;
+/** "28 Nov, 3:40 pm" in Indian time, so the label means the same on the server and in the browser. */
+const PROMO_DATE = new Intl.DateTimeFormat("en-IN", { day: "numeric", month: "short", hour: "numeric", minute: "2-digit", hour12: true, timeZone: "Asia/Kolkata" });
 const FINISH_STEP = 5;
 
 /**
@@ -26,6 +28,7 @@ export function OwnerActions({
   title,
   videoCallsEligible = false,
   videoCallsOff = false,
+  promotion = null,
   onDone,
 }: {
   id: string;
@@ -35,6 +38,8 @@ export function OwnerActions({
   /** TOP or Super Top is running on this ad: only then the video calls switch shows. */
   videoCallsEligible?: boolean;
   videoCallsOff?: boolean;
+  /** A promotion running on this ad now (its plan name and when it ends). Shown as a label so the owner can see the ad is promoted. */
+  promotion?: { name: string; endsAt: string } | null;
   onDone: (message: string) => void | Promise<void>;
 }) {
   const [busy, setBusy] = useState(false);
@@ -84,6 +89,11 @@ export function OwnerActions({
   return (
     <div className="tkv-owner-buttons">
       {draft ? <p className="tkv-owner-note">Not live yet. Finish the steps to send it for review.</p> : null}
+      {status === "active" && promotion ? (
+        <p className="tkv-promo-chip" data-tk="promoted-chip">
+          <span aria-hidden="true">★</span> {promotion.name} · ends {PROMO_DATE.format(new Date(promotion.endsAt))}
+        </p>
+      ) : null}
       {draft ? <Link href={draftPath(id, FINISH_STEP)} className="tkv-mini tkv-mini-primary">Finish your ad</Link> : null}
       {status === "active" ? (
         <button type="button" className="tkv-mini tkv-mini-primary" data-tk="promote-open" onClick={() => openPromote({ listingId: id, title })}>

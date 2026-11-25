@@ -12,7 +12,6 @@ import {
 } from "@/server/fields/service";
 import { ForbiddenError, NotFoundError, ValidationError } from "@/server/http";
 import { Category, User } from "@/server/models";
-import { attributeKeyDenied, textDenied } from "@/server/shared/policy";
 
 const audit = new AuditRepository();
 
@@ -76,9 +75,6 @@ export function applyFieldEdits(current: readonly Record<string, unknown>[], edi
     const label = requireText(edit.label, 80, `Field ${index + 1}: the label is needed (up to 80 characters)`);
     const help = typeof edit.help === "string" ? edit.help.trim().slice(0, 200) : "";
     const placeholder = typeof edit.placeholder === "string" ? edit.placeholder.trim().slice(0, 120) : "";
-    for (const text of [label, help, placeholder]) {
-      if (textDenied(text).denied) throw new ValidationError("A field contains a term that is not allowed on Tharkoo. Change the wording and save again.");
-    }
     const type = String(base.type);
     const wanted = edit.type ?? type;
     if (wanted !== type && !(isChoiceType(type) && isChoiceType(wanted))) {
@@ -174,14 +170,12 @@ export async function addCategoryField(input: { slug: string; label: string; kin
   if (!canEditSite(input.roles)) throw new ForbiddenError("Only an admin can add post fields");
   if (!Object.prototype.hasOwnProperty.call(FIELD_KINDS, input.kind)) throw new ValidationError("Choose one of the five field types");
   const label = requireText(input.label, 80, "The field needs a label (up to 80 characters)");
-  if (textDenied(label).denied) throw new ValidationError("That label is not allowed on Tharkoo");
   await connectDb();
   const category = await Category.findOne({ slug: input.slug, deletedAt: null });
   if (!category) throw new NotFoundError("Category not found");
   const existing = plain(category.fields ?? []) as unknown as Record<string, unknown>[];
   if (existing.length >= MAX_FIELDS_PER_CATEGORY) throw new ValidationError(`A category can have at most ${MAX_FIELDS_PER_CATEGORY} fields`);
   const key = uniqueKey(label, new Set(existing.map((field) => String(field.key))));
-  if (attributeKeyDenied(key).denied) throw new ValidationError("That field name is not allowed on Tharkoo");
   const type = FIELD_KINDS[input.kind as FieldKind];
   const next = [
     ...existing,

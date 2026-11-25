@@ -1,0 +1,73 @@
+/* The vendor Earnings page: stat cards, calls list, withdraw / use-for-ads switch, payout details and history. One calm card style. */
+.ew-page { display: grid; gap: 16px; min-width: 0; }
+.ew-card { display: grid; gap: 14px; padding: 18px; box-sizing: border-box; border: 1px solid #ead8f0; border-radius: 16px; background: #fff; box-shadow: 0 6px 22px rgba(45, 18, 72, 0.05); min-width: 0; }
+.ew-h2 { margin: 0; font-size: 18px; line-height: 24px; font-weight: 800; color: #1e0b38; }
+.ew-note { margin: 0; font-size: 13px; line-height: 20px; color: #6b4a8a; }
+.ew-text { margin: 0; font-size: 14px; line-height: 21px; color: #3b1f5e; }
+.ew-strong { font-weight: 700; }
+.ew-ok { color: #14633a; }
+.ew-err { color: #b3261e; }
+.ew-msg { min-height: 18px; margin: 0; font-size: 14px; line-height: 20px; color: #b3261e; }
+.ew-msg[data-ok="yes"] { color: #14633a; }
+
+/* The three numbers */
+.ew-stats { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+.ew-stat { padding: 14px 16px; border: 1px solid #ead8f0; border-radius: 16px; background: #fff; box-shadow: 0 6px 22px rgba(45, 18, 72, 0.05); min-width: 0; }
+.ew-stat:first-child { background: linear-gradient(135deg, #fff5fa, #fbeaf4); border-color: #f1c9de; }
+.ew-stat-label { margin: 0; font-size: 13px; line-height: 18px; font-weight: 600; color: #6b4a8a; }
+.ew-stat-value { margin: 4px 0 0; font-size: 22px; line-height: 28px; font-weight: 800; color: #1e0b38; overflow-wrap: anywhere; }
+.ew-stat:first-child .ew-stat-value { color: #a8124f; }
+
+/* Earned from calls */
+.ew-total { margin: 2px 0 0; font-size: 30px; line-height: 36px; font-weight: 800; color: #1e0b38; }
+.ew-calls { list-style: none; margin: 0; padding: 0 6px 0 0; display: grid; gap: 8px; max-height: min(52dvh, 380px); overflow-y: auto; overscroll-behavior: auto; scrollbar-width: thin; scrollbar-color: #d9b8e6 transparent; }
+.ew-calls:focus-visible { outline: 3px solid #7c3aed; outline-offset: 2px; border-radius: 8px; }
+.ew-call { display: grid; gap: 6px; padding: 10px 12px; border: 1px solid #ead8f0; border-radius: 12px; background: #fff; }
+.ew-call-title { font-size: 14px; line-height: 20px; font-weight: 700; color: #1e0b38; overflow-wrap: anywhere; }
+.ew-call-date { font-weight: 500; color: #6b4a8a; white-space: nowrap; }
+.ew-call-nums { display: flex; flex-wrap: wrap; gap: 4px 14px; font-size: 13px; line-height: 20px; color: #4a2870; }
+.ew-call-got { margin-left: auto; font-weight: 800; color: #14633a; }
+
+/* Withdraw / Use for ads switch */
+.ew-seg { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; padding: 4px; border-radius: 14px; background: #f6ecf9; }
+.ew-seg-btn { min-height: 44px; padding: 0 12px; border: 0; border-radius: 10px; background: transparent; color: #6b4a8a; font: inherit; font-size: 15px; font-weight: 700; cursor: pointer; transition: background 0.15s, color 0.15s, box-shadow 0.15s; }
+.ew-seg-btn:hover { color: #a8124f; }
+.ew-seg-btn[aria-pressed="true"] { background: #fff; color: #a8124f; box-shadow: 0 2px 8px rgba(45, 18, 72, 0.14); }
+
+/* Forms */
+.ew-form { display: grid; gap: 14px; }
+.ew-field { display: grid; gap: 6px; min-width: 0; }
+.ew-label { font-size: 14px; line-height: 20px; font-weight: 700; color: #4a2870; }
+.ew-input { display: block; width: 100%; min-height: 46px; padding: 0 14px; box-sizing: border-box; border: 1.5px solid #ead8f0; border-radius: 12px; background: #fff; color: #1e0b38; font: inherit; font-size: 16px; }
+.ew-input:focus { border-color: #d1137a; box-shadow: 0 0 0 4px rgba(233, 30, 140, 0.14); outline: none; }
+.ew-row { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; }
+.ew-row .ew-input { flex: 1 1 120px; min-width: 0; }
+.ew-btn { width: 100%; height: 48px; border-radius: 12px; font-size: 15px; font-weight: 700; }
+.ew-row .ew-btn { flex: 1 1 170px; width: auto; }
+.ew-check { display: flex; gap: 10px; align-items: flex-start; font-size: 14px; line-height: 20px; color: #3b1f5e; }
+.ew-check input { width: 20px; height: 20px; margin-top: 1px; flex: none; accent-color: #c2185b; }
+
+/* Coin and network choice */
+.ew-coins { display: grid; grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); gap: 8px; }
+.ew-coin { min-height: 46px; padding: 8px 12px; border: 1.5px solid #ead8f0; border-radius: 12px; background: #fff; color: #3b1f5e; font: inherit; font-size: 14px; line-height: 18px; font-weight: 600; text-align: center; cursor: pointer; transition: border-color 0.15s, background 0.15s, box-shadow 0.15s; }
+.ew-coin:hover { border-color: #e3a3c6; }
+.ew-coin[aria-checked="true"] { border-color: #d1137a; background: #fff5fa; color: #a8124f; font-weight: 800; box-shadow: 0 0 0 3px rgba(209, 19, 122, 0.12); }
+
+/* Saved payout details */
+.ew-kv { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 8px 16px; margin: 0; padding: 14px 16px; border-radius: 12px; background: #fbf4fb; border: 1px solid #ead8f0; font-size: 14px; line-height: 20px; }
+.ew-kv dt { color: #6b4a8a; }
+.ew-kv dd { margin: 0; color: #1e0b38; font-weight: 600; overflow-wrap: anywhere; }
+
+/* Withdrawal history */
+.ew-history { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+.ew-history li { display: grid; gap: 6px; padding: 10px 12px; border: 1px solid #ead8f0; border-radius: 12px; background: #fff; }
+.ew-history-top { display: flex; justify-content: space-between; align-items: center; gap: 8px; flex-wrap: wrap; }
+.ew-chip { display: inline-flex; padding: 2px 10px; border-radius: 999px; font-size: 12px; line-height: 18px; font-weight: 800; }
+
+@media (max-width: 599px) {
+  .ew-card { padding: 14px; }
+  .ew-stats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .ew-stats .ew-stat:first-child { grid-column: 1 / -1; }
+  .ew-call-got { margin-left: 0; flex-basis: 100%; }
+  .ew-coins { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}

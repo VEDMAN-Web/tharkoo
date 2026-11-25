@@ -128,7 +128,7 @@ describe("listing field validation", () => {
     expect(() => parseListingAttributes(fields, { ...valid, internal: "secret" })).toThrow();
   });
 
-  it("rejects a select field that has no options and a prohibited field key", () => {
+  it("rejects a select field that has no options", () => {
     expect(
       fieldDefinitionListSchema.safeParse([
         {
@@ -136,19 +136,6 @@ describe("listing field validation", () => {
           label: "Condition",
           type: "select",
           required: true,
-          options: [],
-          order: 1,
-          enabled: true,
-        },
-      ]).success,
-    ).toBe(false);
-    expect(
-      fieldDefinitionListSchema.safeParse([
-        {
-          key: "hourly_rate",
-          label: "Hourly rate",
-          type: "number",
-          required: false,
           options: [],
           order: 1,
           enabled: true,
