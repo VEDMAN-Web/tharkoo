@@ -919,6 +919,7 @@ export const TEXT_DEFAULTS = {
   "post.v2.done.helpTitle": "Need help?",
   "post.v2.done.helpText": "Questions about your ad or the review? Our team replies in chat.",
   "post.v2.done.helpBtn": "Chat with us",
+  "post.v2.header.myAds": "My ads",
   "post.v2.header.title": "Post an ad",
   "post.v2.header.exit": "Save draft and exit",
   "post.v2.header.brand": "tharkoo",

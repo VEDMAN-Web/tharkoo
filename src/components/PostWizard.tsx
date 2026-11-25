@@ -588,9 +588,8 @@ export function PostWizard({
           if (bought.ok) {
             setBoostDone({ name: plan.name, endsAt: bought.data?.endsAt ?? null, credits: plan.amount });
             if (typeof bought.data?.balance === "number") left = bought.data.balance;
-            boostNote = t("post.boost.started", { name: plan.name, paid: creditsText(plan.amount) });
           } else boostNote = t("post.boost.failed", { reason: friendlyError(bought.error) });
-        } else boostNote = t("post.boost.later");
+        }
       }
       const base = !chargesFee ? "" : charged > 0 ? t("post.receipt.paid", { paid: creditsText(charged), balance: creditsText(left) }) : t("post.receipt.free", { balance: creditsText(left) });
       setReceipt([base, boostNote].filter(Boolean).join(" "));
@@ -654,7 +653,7 @@ export function PostWizard({
   if (done && newDesign) {
     const isLive = publishedStatus === "active" || (editing && publishedStatus === "paused");
     return (
-      <PostShell percent={progressPercent(flow.length, flow.length, true)}>
+      <PostShell percent={progressPercent(flow.length, flow.length, true)} variant="done">
       <PostSuccess
         copy={newSuccessCopy(copy, isLive || editing, editing, t)}
         live={isLive}

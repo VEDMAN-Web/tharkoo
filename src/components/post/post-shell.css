@@ -149,3 +149,9 @@ body:has(.tkp-shell) .tkn-float .tkn-chat-bubble { width: 56px; height: 56px; }
 .tkn .tkp-shell.tkp-shell .tkp-post[data-design="post-new"] .tkp-mini { min-height: 44px; }
 .tkn .tkp-shell.tkp-shell .tkp-post[data-design="post-new"] .upl-info,
 .tkn .tkp-shell.tkp-shell .tkp-post[data-design="post-new"] .tkp-interest .upl-info { width: 44px; height: 44px; font-size: 18px; }
+
+/* H21.7: header of the done screens: logo left, then the credit pill and a My ads link on the right. */
+.tkn .tkp-shell .tkp-header[data-variant="done"] .tkp-credit-pill { margin-left: auto; }
+.tkn .tkp-shell .tkp-header[data-variant="done"] .tkp-myads { order: 6; display: inline-flex; align-items: center; min-height: 44px; padding: 0 4px; color: #b0106a; font-size: 14px; font-weight: 600; text-decoration: none; }
+.tkn .tkp-shell .tkp-header[data-variant="done"] .tkp-myads:hover { text-decoration: underline; }
+.tkn .tkp-shell .tkp-header[data-variant="done"] .tkp-myads:focus-visible { outline: 3px solid #7c3aed; outline-offset: 2px; }
