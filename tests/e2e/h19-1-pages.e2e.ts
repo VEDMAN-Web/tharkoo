@@ -71,8 +71,11 @@ test.describe("H19.1 ad pop-out", () => {
     expect(box.y, "top inside").toBeGreaterThanOrEqual(0);
     expect(box.y + box.height, "bottom inside").toBeLessThanOrEqual(view.height);
     expect(box.x + box.width, "right inside").toBeLessThanOrEqual(view.width);
+    await page.waitForTimeout(500); // the grow-in animation scales the box; measure when it has settled
     const rowBox = (await row.boundingBox())!;
-    expect(box.width, "about 25 percent smaller than the old width").toBeLessThanOrEqual((rowBox.width + 56) * 0.8);
+    const settled = (await pop.boundingBox())!;
+    expect(settled.x, "H21.11: covers the row on the left").toBeLessThanOrEqual(rowBox.x + 0.5);
+    expect(settled.x + settled.width, "H21.11: covers the row on the right").toBeGreaterThanOrEqual(rowBox.x + rowBox.width - 0.5);
     await shot(page, "row-popout");
   });
 
