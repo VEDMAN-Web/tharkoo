@@ -43,7 +43,7 @@ export function newStepCopy(step: NewPostStep, copy: PostCopy, aboutYou: boolean
     return {
       ...base,
       title: own ? base.title : t("post.stepCopy.reviewTitle"),
-      help: base.help || t("post.stepCopy.reviewHelp"),
+      help: isUntouched(base, POST_COPY_DEFAULTS.steps.review) ? t("post.v2.rev.lead") : base.help || t("post.stepCopy.reviewHelp"),
       nextLabel: !base.nextLabel || base.nextLabel === LEGACY_PUBLISH ? t("post.stepCopy.publishAd") : base.nextLabel,
     };
   }

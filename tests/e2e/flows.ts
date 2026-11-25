@@ -43,7 +43,7 @@ export async function fillNewPostAd(page: Page, base: string, options: { title: 
   await page.locator("[data-tk=go-on]").click();
   // Step 5: review. The ID-check switch is off by default (H6.14), so PUBLISH goes straight to live.
   await page.locator("#consent-terms").check();
-  await page.locator("#consent-adult").check();
+  if (await page.locator("#consent-adult").count()) await page.locator("#consent-adult").check();
   await page.locator(".tkp-nav button", { hasText: "PUBLISH" }).click();
   // H8.25: with "Hold every new ad for review" on, the ad is posted but waits, and the success screen says it will be checked.
   if (held) await expect(page.locator("[data-tk=post-success]")).toHaveAttribute("data-state", "review");

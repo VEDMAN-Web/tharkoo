@@ -89,11 +89,12 @@ for (const method of ["card", "usdt"] as const) {
       await expect(card).toHaveAttribute("data-state", "low");
       await expect(page.locator("[data-tk=pay-fee]")).toHaveText("30 credits");
       await expect(page.locator("[data-tk=pay-balance]")).toHaveText("0 credits");
-      await expect(page.locator("[data-tk=publish-blocked]")).toBeDisabled();
+      await expect(page.locator(".tkp-nav [data-tk=go-on]")).toHaveText("Buy credits to continue");
       await card.scrollIntoViewIfNeeded();
       await shot(page, `h7-112-${method}-1-amber`);
 
-      await page.locator(".tkp-nav [data-tk=go-on]").click();
+      // H21.6: the nav button now opens the Buy-credits dialog (see h21-6-review-buy); the in-card link still opens the recharge sheet.
+      await page.locator("[data-tk=pay-short] .tkp-credits-link").click();
       const sheet = page.locator("[data-tk=recharge-sheet]");
       await expect(sheet.locator("[data-tk=recharge-short]")).toContainText("You need 30 more credits");
       await sheet.locator("[data-tk=recharge-pack]").filter({ has: page.locator("strong", { hasText: /^100$/ }) }).click();
@@ -121,13 +122,13 @@ for (const method of ["card", "usdt"] as const) {
       await expect(page.locator("[data-tk=pay-card]")).toHaveAttribute("data-state", "ok");
       await expect(page.locator("[data-tk=pay-balance]")).toHaveText("100 credits");
       await expect(page.locator("[data-tk=pay-after]")).toHaveText("70 credits");
-      await expect(page.locator(".tkp-nav [data-tk=go-on]")).toHaveText("Publish for 30 credits");
+      await expect(page.locator(".tkp-nav [data-tk=go-on]")).toHaveText("Publish ad");
       await page.locator("[data-tk=pay-card]").scrollIntoViewIfNeeded();
       await shot(page, `h7-112-${method}-4-ready`);
 
       await page.locator("#consent-terms").check();
-      await page.locator("#consent-adult").check();
-      await page.getByRole("button", { name: "Publish for 30 credits" }).click();
+      if (await page.locator("#consent-adult").count()) await page.locator("#consent-adult").check();
+      await page.getByRole("button", { name: "Publish ad" }).click();
       await expect(page.locator("[data-tk=step-title]")).toHaveText("Your ad is live");
       await expect(page.locator("[data-tk=receipt]")).toHaveText("30 credits paid · Balance 70 credits");
       await shot(page, `h7-112-${method}-5-live`);

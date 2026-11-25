@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { Check, Loader2, X } from "lucide-react";
 import { useT } from "@/components/help/UiTextProvider";
 import { creditsForAmount, type CreditPackData } from "@/components/recharge/CreditPacks";
@@ -95,6 +96,13 @@ export function BuyCreditsDialog({ need, price, plan, balance, onPaid, onClose }
     };
   }, [need]);
 
+  // The first focus goes to the pre-selected pack (not the close button), once the packs have loaded.
+  const loaded = Boolean(data);
+  useEffect(() => {
+    if (!loaded) return;
+    ref.current?.querySelector<HTMLElement>("[data-tk=buy-pack][aria-checked=true]")?.focus();
+  }, [loaded, ref]);
+
   const packs = data ? firstPacks(data.packs, need) : [];
   const chosen = amount ? undefined : data?.packs.find((pack) => pack.id === picked);
   const limits = data?.custom ? { min: data.custom.min.ad, max: data.custom.maxPerPurchase.ad, maxPerDay: data.custom.maxPerDay } : null;
@@ -160,7 +168,8 @@ export function BuyCreditsDialog({ need, price, plan, balance, onPaid, onClose }
 
   const credits = (count: number) => count.toLocaleString("en-IN");
   const title = phase === "waiting" ? t("post.v2.buy.waitTitle") : phase === "paid" ? t("post.v2.buy.paidTitle", { count: credits(added) }) : phase === "failed" ? t("post.v2.buy.failedTitle") : t("post.v2.buy.title");
-  return (
+  // In the page body, so a transformed parent (the post shell) cannot turn "fixed" into "inside this column".
+  return createPortal(
     <div className="tkb-wrap" data-tk="buy-credits" onMouseDown={(event) => event.target === event.currentTarget && onClose()}>
       <div className="tkb-dialog" role="dialog" aria-modal="true" aria-labelledby="tkb-title" tabIndex={-1} ref={ref} data-phase={phase}>
         <span className="tkb-grab" aria-hidden />
@@ -240,6 +249,7 @@ export function BuyCreditsDialog({ need, price, plan, balance, onPaid, onClose }
           </div>
         ) : null}
       </div>
-    </div>
+    </div>,
+    document.body,
   );
 }
