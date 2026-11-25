@@ -54,22 +54,10 @@ test.describe("E1-B posting journeys", () => {
     await page.locator(".tkp-tile", { hasText: "Dating" }).click();
     await page.locator("[data-tk=go-on]").click();
     await pickCity(page, "Mumbai");
-    await page.locator("#nickname").fill("Asha");
     await page.locator("#title").fill(title);
     await page.locator("#text").fill("A friendly description with enough words to pass the checks here.");
     await page.getByRole("button", { name: "Coffee", exact: true }).click();
 
-    // No age: stays on the step and says what is needed.
-    await page.locator("[data-tk=go-on]").click();
-    await expect(page.locator("[data-tk=step-of]")).toContainText("Step 2 of 5");
-    await expect(page.locator("[data-tk=field-error]", { hasText: "Enter your age (18 or over)." })).toBeVisible(); // H21.2: the same words are also a link in the summary
-    // Under 18: refused with the same words.
-    await page.locator("#age").fill("17");
-    await page.locator("[data-tk=go-on]").click();
-    await expect(page.locator("[data-tk=step-of]")).toContainText("Step 2 of 5");
-    await expect(page.locator("[data-tk=field-error]", { hasText: "Enter your age (18 or over)." })).toBeVisible(); // H21.2: the same words are also a link in the summary
-    // 18 passes.
-    await page.locator("#age").fill("18");
     await page.locator("[data-tk=go-on]").click();
     await expect(page.locator("[data-tk=step-of]")).toContainText("Step 3 of 5");
 
@@ -77,6 +65,18 @@ test.describe("E1-B posting journeys", () => {
     await expect(page.locator("[data-tk=photo-note]")).toContainText(/Photo saved/i);
     await page.locator("[data-tk=go-on]").click();
     await page.locator("#phone").fill("9876543210");
+    await page.locator("#nickname").fill("Asha");
+    // H21.4: the age is asked in step 4. No age: stays on the step and says what is needed.
+    await page.locator("[data-tk=go-on]").click();
+    await expect(page.locator("[data-tk=step-of]")).toContainText("Step 4 of 5");
+    await expect(page.locator("[data-tk=field-error]", { hasText: "Enter your age (18 or over)." })).toBeVisible();
+    // Under 18: refused with the same words.
+    await page.locator("#age").fill("17");
+    await page.locator("[data-tk=go-on]").click();
+    await expect(page.locator("[data-tk=step-of]")).toContainText("Step 4 of 5");
+    await expect(page.locator("[data-tk=field-error]", { hasText: "Enter your age (18 or over)." })).toBeVisible();
+    // 18 passes.
+    await page.locator("#age").fill("18");
     await page.locator("[data-tk=go-on]").click();
     await expect(page.locator("[data-tk=step-of]")).toContainText("Step 5 of 5");
 
@@ -134,7 +134,6 @@ test.describe("E1-B posting journeys", () => {
       await page.locator(".tkp-tile", { hasText: "Jobs" }).click();
       await page.locator("[data-tk=go-on]").click();
       await pickCity(page, "Mumbai");
-      await page.locator("#nickname").fill("Asha");
       const roleHere = (await page.locator("#role").count()) > 0;
       if (roleHere) await page.locator("#role").fill("Office assistant");
       await page.locator("#title").fill(`E1 broke ${Date.now()}`);
@@ -149,6 +148,7 @@ test.describe("E1-B posting journeys", () => {
       await expect(page.locator("[data-tk=photo-note]")).toContainText(/Photo saved/i);
       await page.locator("[data-tk=go-on]").click();
       await page.locator("#phone").fill("9876543210");
+      await page.locator("#nickname").fill("Asha");
       await page.locator("[data-tk=go-on]").click();
       const card = page.locator("[data-tk=pay-card]");
       await expect(card).toHaveAttribute("data-state", "low");

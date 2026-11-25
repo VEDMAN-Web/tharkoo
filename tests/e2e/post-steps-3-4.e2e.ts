@@ -89,11 +89,14 @@ test.describe("H7.85 post an ad, steps 3 and 4", () => {
     await page.locator("[data-tk=go-on]").click();
     await expect(page.locator(".tkp-main [data-tk=field-error]").first()).toBeVisible();
     await expect(page.locator("[data-tk=step-of]")).toContainText("Step 4 of 5");
-    const preview = page.locator(onPhone(page) ? "[data-tk=preview-sheet]" : "[data-tk=post-preview]");
+    // H21.4: step 4 shows the details card; the cover is its photo.
+    const preview = page.locator(onPhone(page) ? "[data-tk=preview-sheet]" : "[data-tk=details-preview]");
     if (onPhone(page)) await page.locator("[data-tk=open-preview]").click();
-    await expect(preview.locator(".tkn-ls-photo img").first()).not.toHaveAttribute("src", /placeholders/);
+    await expect(preview.locator(".tkd-pv-photo")).toHaveCSS("background-image", /url\(/);
     if (onPhone(page)) await page.keyboard.press("Escape");
     await page.locator("#phone").fill("9876543210");
+    await page.locator("#nickname").fill("Asha");
+    if (await page.locator("#age").count()) await page.locator("#age").fill("28");
     await page.locator("[data-tk=go-on]").click();
     await expect(page.locator("[data-tk=step-of]")).toContainText("Step 5 of 5");
     await page.getByRole("button", { name: "Back" }).click();
@@ -192,16 +195,20 @@ test.describe("H7.85 preview and city", () => {
     await home.dispose();
   });
 
-  test("a people ad shows the nickname and age under the title, others do not", async ({ page, baseURL }) => {
+  test("a people ad shows the name on the preview card in step 4", async ({ page, baseURL }) => {
     test.setTimeout(120_000);
     const api = await startAd(page, baseURL!, "byline", "Mumbai");
     await page.locator(".tkp-tile", { hasText: "Dating" }).click();
     await page.locator("[data-tk=go-on]").click();
+    // H21.4: the name and the age are typed in step 4; the card says "Posted by {name}" (the age is not on it).
+    await page.locator("#title").fill("Coffee and a walk");
+    await page.getByRole("button", { name: "Coffee", exact: true }).click();
+    await page.locator("[data-tk=go-on]").click();
+    await page.locator("[data-tk=go-on]").click();
+    await expect(page.locator("[data-tk=step-of]")).toContainText("Step 4 of 5");
     await page.locator("#nickname").fill("Asha");
     await page.locator("#age").fill("29");
-    await page.locator("#title").fill("Coffee and a walk");
     if (onPhone(page)) await page.locator("[data-tk=open-preview]").click();
-    // H21.2: the details card says "Posted by {name}"; the age is not on the card.
     const card = onPhone(page) ? page.locator("[data-tk=preview-sheet]") : page.locator("[data-tk=details-preview]");
     await expect(card.locator(".tkd-pv-by")).toContainText("Asha");
     await api.dispose();

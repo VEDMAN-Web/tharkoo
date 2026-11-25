@@ -38,7 +38,6 @@ async function fillAdInformation(page: Page, title: string) {
   await page.locator(".tkp-tile", { hasText: "Jobs" }).click();
   await page.locator("[data-tk=go-on]").click();
   await pickCity(page, "Mumbai");
-  await page.locator("#nickname").fill("Asha");
   const roleHere = (await page.locator("#role").count()) > 0;
   if (roleHere) await page.locator("#role").fill("Office assistant");
   await page.locator("#title").fill(title);

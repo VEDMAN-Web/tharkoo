@@ -175,19 +175,18 @@ export function needsMoreStep(extras: ExtraShape[]): boolean {
 /** The step a validation key belongs to. Any key not listed is a detail (title, text, city, a category field...). */
 export function stepOfError(key: string): NewPostStep {
   if (key === "category" || key === "subcategory") return "category";
-  if (key === "phone" || key === "whatsapp" || key === "telegram" || key === "dob" || key === "ageConfirmed") return "contact";
+  // H21.4: the name on the ads and the age are asked in step 4, About you.
+  if (key === "phone" || key === "whatsapp" || key === "telegram" || key === "dob" || key === "ageConfirmed" || key === "nickname" || key === "age") return "contact";
   if (key === "terms" || key === "adult") return "review";
   return "details";
 }
 
-const ABOUT_KEYS = ["nickname", "city"];
-
 /** The errors one step is responsible for. Continue on a step checks only these, so a later step cannot block an earlier one. */
-export function errorsForStep(errors: Record<string, string>, step: NewPostStep, about = false, moreKeys: readonly string[] = []): Record<string, string> {
+export function errorsForStep(errors: Record<string, string>, step: NewPostStep, _about = false, moreKeys: readonly string[] = []): Record<string, string> {
   const out: Record<string, string> = {};
   for (const [key, message] of Object.entries(errors)) {
     const owner: NewPostStep = moreKeys.includes(key) ? "more" : stepOfError(key);
-    if (owner === step || (about && step === "contact" && ABOUT_KEYS.includes(key))) out[key] = message;
+    if (owner === step) out[key] = message;
   }
   return out;
 }
@@ -251,3 +250,7 @@ export function progressPercent(step: number, total: number, done = false): numb
 /** H21.2: the longest title and description the form accepts (the title limit has always been 70; the description limit is the server's). */
 export const POST_TITLE_MAX = 70;
 export const POST_DESCRIPTION_MAX = 5000;
+
+/** H21.4: the longest name on the ads, and the country code shown in front of the phone boxes (every number on the site is an Indian one). */
+export const POST_NAME_MAX = 20;
+export const POST_PHONE_PREFIX = "+91";

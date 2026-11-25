@@ -17,10 +17,9 @@ import { AdCard } from "./ui/AdCard";
 import { BUILT_IN_AGE_FIELD, POST_COPY_DEFAULTS, wizardFields, type CtaCopy, type PostCopy } from "./post/copy";
 import { newStepCopy, newSuccessCopy } from "./post/newCopy";
 import { SelectField, Switch, TextField } from "./post/FormFields";
-import { ContactFields } from "./post/ContactFields";
+import { AboutYouStep } from "./post/AboutYouStep";
 import { DetailsPreview, DetailsStep, type EditingPart, type SummaryItem } from "./post/DetailsStep";
 import { INTEREST_KEY } from "./post/interests";
-import { AboutYou } from "./post/AboutYou";
 import { ReviewStep, type ReviewRow } from "./post/ReviewStep";
 import { PostSuccess, type UpsellPlan } from "./post/PostSuccess";
 import { openPromote } from "./promote/openPromote";
@@ -319,6 +318,38 @@ export function PostWizard({
       live = false;
     };
   }, [newDesign, draftId, current, handleMedia]);
+
+  /** H21.4: "We remember these". The first time step 4 opens with nothing filled in, it is filled from the account's last ad. Anything already typed stays. */
+  const prefilledFromLast = useRef(false);
+  useEffect(() => {
+    if (!newDesign || current !== "contact" || !hydrated || prefilledFromLast.current) return;
+    prefilledFromLast.current = true;
+    if (phone || telegram || whatsappNumber) return;
+    let live = true;
+    void (async () => {
+      const list = await api<{ items?: { id: string; createdAt?: string }[] }>("/api/listings/?pageSize=20");
+      if (!live || !list.ok) return;
+      const last = (list.data.items ?? [])
+        .filter((item) => item.id !== draftId)
+        .sort((x, y) => String(y.createdAt ?? "").localeCompare(String(x.createdAt ?? "")))[0];
+      if (!last) return;
+      const res = await api<SavedDraft>(`/api/listings/by-id/${last.id}`);
+      if (!live || !res.ok || !res.data) return;
+      const form = draftToForm(res.data);
+      setPhone((now) => now || form.phone);
+      setWhatsapp((now) => now || form.whatsapp);
+      setWhatsappNumber((now) => now || form.whatsappNumber);
+      if (form.whatsappNumber && form.whatsappNumber !== form.phone) setWhatsappSame(false);
+      setTelegram((now) => now || form.telegram);
+      setTelegramOn((now) => now || Boolean(form.telegram));
+      setNickname((now) => now || form.nickname.slice(0, 20));
+    })();
+    return () => {
+      live = false;
+    };
+    // The step opens once per page; the values it reads are only checked at that moment.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [newDesign, current, hydrated]);
 
   function remember(id: string, nextStep: number) {
     setTouched({});
@@ -944,7 +975,7 @@ export function PostWizard({
       { key: "category", label: t("post.review.category"), value: [category?.name, subName].filter(Boolean).join(" › ") || t("post.review.notChosen"), step: 1 },
       { key: "title", label: t("post.field.title"), value: title.trim() || t("post.review.noTitle"), step: no("details") },
       { key: "place", label: t("post.review.place"), value: placeParts || t("post.review.notSet"), step: no("details") },
-      { key: "name", label: t("post.review.name"), value: byline || nickname.trim() || t("post.review.notSet"), step: about ? no("contact") : no("details") },
+      { key: "name", label: t("post.review.name"), value: byline || nickname.trim() || t("post.review.notSet"), step: no("contact") },
       { key: "photos", label: t("post.review.photos"), value: photoCount === null ? (draftId ? t("post.review.checking") : t("post.review.noPhotos")) : photoCount ? `${photoCount} ${photoCount === 1 ? "photo" : "photos"}` : t("post.review.noPhotos"), step: no("photos") },
       { key: "contact", label: t("post.review.contact"), value: contactSummary, step: no("contact") },
     ];
@@ -968,7 +999,7 @@ export function PostWizard({
           }))
         : [];
     const detailsCard = (
-      <DetailsPreview title={title} categoryName={category?.name ?? ""} placeName={[cityName, shownDistrict].filter(Boolean).join(" / ")} interests={picksOf(attrs[INTEREST_KEY])} name={nickname} cover={coverUrl} editing={current === "photos" ? "" : editingPart} highlightPhoto={current === "photos"} />
+      <DetailsPreview title={title} categoryName={category?.name ?? ""} placeName={[cityName, shownDistrict].filter(Boolean).join(" / ")} interests={picksOf(attrs[INTEREST_KEY])} name={nickname} cover={coverUrl} editing={current === "photos" ? "" : current === "contact" ? "name" : editingPart} highlightPhoto={current === "photos"} />
     );
     const popularInterests = (category?.fields ?? [])
       .filter((field) => field.key === INTEREST_KEY && Array.isArray(field.options))
@@ -1058,11 +1089,6 @@ export function PostWizard({
                   onEditing={setEditingPart}
                 >
                   {split ? null : renderNewExtras(err, blur)}
-                  <div className="tkp-two tkp-two-keep">
-                    <TextField id="nickname" label={t("post.field.nickname")} required value={nickname} error={err("nickname")} onBlur={blur("nickname")} placeholder={t("post.field.nicknameShort")} onChange={(value) => setNickname(value.slice(0, 20))} />
-                    {ageField ? <TextField id="age" label={t("post.field.age")} required={ageField.required} value={age} error={err("age")} onBlur={blur("age")} inputMode="numeric" placeholder={t("post.field.agePlaceholder")} onChange={(value) => setAge(value.replace(/\D/g, "").slice(0, 2))} /> : <span />}
-                  </div>
-                  {people ? <p className="tkp-quiet" data-tk="nickname-hint">{t("post.field.nicknameHint")}</p> : null}
                 </DetailsStep>
               ) : null}
 
@@ -1073,41 +1099,34 @@ export function PostWizard({
               ) : null}
 
               {current === "contact" ? (
-                <div className="tkp-fields">
-                  <ContactFields
-                    phone={phone}
-                    whatsapp={whatsapp}
-                    whatsappSame={whatsappSame}
-                    whatsappNumber={whatsappNumber}
-                    telegramOn={telegramOn}
-                    telegram={telegram}
-                    error={err}
-                    onBlur={blur}
-                    onPhone={setPhone}
-                    onWhatsapp={() => setWhatsapp((v) => !v)}
-                    onWhatsappSame={() => setWhatsappSame((v) => !v)}
-                    onWhatsappNumber={setWhatsappNumber}
-                    onTelegramOn={() => setTelegramOn((v) => !v)}
-                    onTelegram={setTelegram}
-                  />
-                  {about ? (
-                    <AboutYou
-                      nickname={nickname}
-                      cityId={cityId}
-                      cities={cities}
-                      error={err}
-                      onBlur={blur}
-                      onNickname={setNickname}
-                      onCity={(value) => { setPickedState(""); setCityId(value); setDistrictId(""); }}
-                    />
-                  ) : null}
+                <AboutYouStep
+                  nickname={nickname}
+                  age={ageField ? { value: age, required: Boolean(ageField.required) } : undefined}
+                  people={people}
+                  phone={phone}
+                  whatsapp={whatsapp}
+                  whatsappSame={whatsappSame}
+                  whatsappNumber={whatsappNumber}
+                  telegramOn={telegramOn}
+                  telegram={telegram}
+                  error={err}
+                  onBlur={blur}
+                  onNickname={setNickname}
+                  onAge={setAge}
+                  onPhone={setPhone}
+                  onWhatsapp={() => setWhatsapp((v) => !v)}
+                  onWhatsappSame={() => setWhatsappSame((v) => !v)}
+                  onWhatsappNumber={setWhatsappNumber}
+                  onTelegramOn={() => setTelegramOn((v) => !v)}
+                  onTelegram={setTelegram}
+                >
                   {about?.askDateOfBirth ? (
                     <p className="tkp-note" data-tk="dob-needed">
                       {t("post.about.dobAway")}{" "}
                       <Link href={`/u/seller-profile/?next=${encodeURIComponent(postAdPath(paths))}`} data-tk="dob-link">{t("post.about.dobLink")}</Link>
                     </p>
                   ) : null}
-                </div>
+                </AboutYouStep>
               ) : null}
 
               {current === "review" ? (
@@ -1163,7 +1182,7 @@ export function PostWizard({
           <aside className="tkp-aside" data-step={current}>
             {current === "category" ? (
               renderCategoryPreview("side")
-            ) : current === "details" || current === "photos" ? (
+            ) : current === "details" || current === "photos" || current === "contact" ? (
               <>
                 <p className="tkd-pv-label">{t("post.v2.det.preview")}</p>
                 {detailsCard}
@@ -1181,7 +1200,7 @@ export function PostWizard({
           </aside>
         </div>
         {money.added ? <div className="tkp-toast" role="status" data-tk="credits-toast">{creditsText(money.added)} {t("post.money.added")}</div> : null}
-        {previewOpen ? <PreviewSheet ad={adPreview} hasPhoto={Boolean(coverUrl)} byline={byline} card={current === "details" || current === "photos" ? detailsCard : undefined} onClose={() => setPreviewOpen(false)} /> : null}
+        {previewOpen ? <PreviewSheet ad={adPreview} hasPhoto={Boolean(coverUrl)} byline={byline} card={current === "details" || current === "photos" || current === "contact" ? detailsCard : undefined} onClose={() => setPreviewOpen(false)} /> : null}
       </div>
       </PostShell>
     );

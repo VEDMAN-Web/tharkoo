@@ -110,8 +110,8 @@ test.describe("H21.2 step 2 details", () => {
     } else {
       await expect(card).toHaveAttribute("data-editing", "title");
       await expect(card.locator(".tkd-pv-title .tkd-pv-tag")).toHaveText("Editing");
-      await page.locator("#nickname").focus();
-      await expect(card).toHaveAttribute("data-editing", "name");
+      await page.locator("#interest-input").focus();
+      await expect(card).toHaveAttribute("data-editing", "tags"); // H21.4: the name is typed in step 4, so the third highlight is the interests
     }
     // The support bubble stays visible on this step.
     await expect(page.locator(".tkn-chat-bubble")).toBeVisible();

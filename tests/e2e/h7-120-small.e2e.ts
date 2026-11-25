@@ -93,8 +93,6 @@ test.describe("H7.120 small list", () => {
       await page.locator(".tkp-tile", { hasText: "Dating" }).click();
       await page.locator("[data-tk=go-on]").click();
       await pickCity(page, "Mumbai");
-      await page.locator("#nickname").fill("Asha");
-      await page.locator("#age").fill("28");
       await page.locator("#title").fill(`Pill publish ${Date.now()}`);
       await page.locator("#text").fill("Looking to meet for coffee and a walk by the sea on weekends.");
       await page.getByRole("button", { name: "Coffee", exact: true }).click();
@@ -104,6 +102,8 @@ test.describe("H7.120 small list", () => {
       await expect(page.locator("[data-tk=photo-note]")).toContainText(/Photo saved/i);
       await page.locator("[data-tk=go-on]").click();
       await page.locator("#phone").fill("9876543210");
+      await page.locator("#age").fill("28");
+      await page.locator("#nickname").fill("Asha");
       await page.locator("[data-tk=go-on]").click();
       await expect(page.locator("[data-tk=step-of]")).toContainText("Step 5 of 5");
       const pill = page.locator('[data-tk="header-coins"]');
@@ -220,8 +220,8 @@ test.describe("H7.120 small list", () => {
       await page.locator("[data-tk=go-on]").click();
       await page.waitForTimeout(400);
     }
-    await expect(page.locator("[data-tk=step-title]")).toHaveText("Contact");
-    await expect(page.locator("[data-tk=step-help]")).toContainText("Add the phone number");
+    await expect(page.locator("[data-tk=step-title]")).toHaveText("About you"); // H21.4
+    await expect(page.locator("[data-tk=step-help]")).toContainText("How people will see you and reach you."); // H21.4: one lead line for step 4
     await expect(page.getByRole("button", { name: "Email only", exact: true })).toHaveCount(0);
     await expect(page.getByRole("button", { name: "Phone only", exact: true })).toHaveCount(0);
     await shot(page, "h7-120-contact-no-email-buttons");

@@ -113,11 +113,17 @@ test.describe("H10.1 people protection", () => {
       await page.locator(".tkp-tile", { hasText: name }).click();
       await page.locator("[data-tk=go-on]").click();
       await expect(page.locator("[data-tk=step-of]")).toContainText("Step 2 of");
-      await expect(page.locator("#age")).toBeVisible();
-      await page.locator("#nickname").fill("Asha");
+      // H21.4: the age (and the name) are asked in step 4, About you.
       await page.locator("#title").fill("Coffee and a walk this weekend");
       await page.locator("#text").fill("A friendly person looking for company for coffee and a walk.");
       await page.getByRole("button", { name: "Coffee", exact: true }).click();
+      await page.locator("[data-tk=go-on]").click();
+      await expect(page.locator("[data-tk=step-of]")).toContainText("Step 3 of");
+      await page.locator("[data-tk=go-on]").click();
+      await expect(page.locator("[data-tk=step-of]")).toContainText("Step 4 of");
+      await expect(page.locator("#age")).toBeVisible();
+      await page.locator("#nickname").fill("Asha");
+      await page.locator("#phone").fill("9876543210");
       await page.locator("[data-tk=go-on]").click();
       await expect(page.locator("[data-tk=field-error]").first()).toContainText("Enter your age (18 or over).");
       await page.locator("#age").fill("17");
@@ -125,7 +131,7 @@ test.describe("H10.1 people protection", () => {
       await expect(page.locator("[data-tk=field-error]").first()).toContainText("Enter your age (18 or over).");
       await page.locator("#age").fill("28");
       await page.locator("[data-tk=go-on]").click();
-      await expect(page.locator("[data-tk=step-of]")).toContainText("Step 3 of");
+      await expect(page.locator("[data-tk=step-of]")).toContainText("Step 5 of");
       expect(await hasHorizontalScroll(page)).toBe(false);
       expect(await serious(page)).toEqual([]);
       await shot(page, "age");
