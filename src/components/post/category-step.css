@@ -42,7 +42,9 @@
 .tkn .tkp-shell .tkp-catpre-chips { display: flex; gap: 5px; overflow: hidden; }
 .tkn .tkp-shell .tkp-catpre-chip { display: flex; align-items: center; flex: none; height: 20px; padding: 0 8px; border-radius: 999px; border: 1px solid #ead8f0; background: #fff; color: #4a2870; font-size: 9px; font-weight: 700; }
 .tkn .tkp-shell .tkp-catpre-chip.on { background: #c2126f; border-color: #c2126f; color: #fff; }
-.tkn .tkp-shell .tkp-catpre-grid { padding: 8px; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 7px; grid-auto-rows: max-content; align-content: start; height: 400px; overflow: hidden; -webkit-mask-image: linear-gradient(180deg, #000 85%, transparent); mask-image: linear-gradient(180deg, #000 85%, transparent); }
+.tkn .tkp-shell .tkp-catpre-grid { padding: 8px; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 7px; grid-auto-rows: max-content; align-content: start; }
+/* H21.12b: the preview is a phone-wide frame on every screen (a tablet must not show one giant photo); cards are whole, no inner scroll. */
+.tkn .tkp-shell .tkp-catpre-inline, .tkn .tkp-shell .tkp-catpre-side { max-width: 360px; margin-inline: auto; }
 .tkn .tkp-shell .tkp-catpre-tier { grid-column: 1 / -1; display: flex; align-items: center; gap: 6px; margin-top: 2px; font-size: 9px; font-weight: 800; letter-spacing: 0.08em; color: #6b4a8a; }
 .tkn .tkp-shell .tkp-catpre-tier::after { content: ""; flex: 1; height: 1px; background: #ead8f0; }
 .tkn .tkp-shell .tkp-catpre-card { border-radius: 10px; overflow: hidden; background: #fff; box-shadow: 0 1px 3px rgba(30, 11, 56, 0.08); }

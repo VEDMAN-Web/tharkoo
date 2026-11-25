@@ -1,13 +1,12 @@
 "use client";
 
 import { useT } from "@/components/help/UiTextProvider";
-import { tierOf, type PreviewHit } from "./CategoryPreview";
+import { PREVIEW_OTHERS, previewOthers, tierOf, type PreviewHit } from "./CategoryPreview";
 import "./category-step.css";
 
 /** H21.5a: "How it looks in the list": real ads of the category and city, with the person's own ad ("YOUR AD") where the chosen option puts it. */
 
 export type ListKind = "free" | "top" | "super";
-const MIN_CARDS = 4;
 
 type Tier = "super" | "top" | "all";
 type Props = {
@@ -42,7 +41,8 @@ function Real({ hit, tier }: { hit: PreviewHit; tier: Tier }) {
 export function ReviewListPreview({ kind, hours, categoryName, cityName, title, place, cover, hits, where }: Props) {
   const t = useT();
   const tiers: Record<Tier, PreviewHit[]> = { super: [], top: [], all: [] };
-  for (const hit of hits) tiers[tierOf(hit.variant)].push(hit);
+  const others = previewOthers(hits);
+  for (const hit of others) tiers[tierOf(hit.variant)].push(hit);
   const mine = (tier: Tier) => (
     <div key="mine" className={`tkp-catpre-card is-mine${tier === "super" ? " wide" : ""}`} data-tk="list-mine">
       <div className="tkp-catpre-photo" style={cover ? { backgroundImage: `url("${cover}")` } : undefined}>
@@ -61,8 +61,7 @@ export function ReviewListPreview({ kind, hours, categoryName, cityName, title, 
     { tier: "top", label: t("post.v2.cat.tierTop"), cards: [...(kind === "top" ? [mine("top")] : []), ...tiers.top.map((hit) => <Real key={hit.slug} hit={hit} tier="top" />)] },
     { tier: "all", label: t("post.v2.cat.tierAll"), cards: [...(kind === "free" ? [mine("all")] : []), ...tiers.all.map((hit) => <Real key={hit.slug} hit={hit} tier="all" />)] },
   ];
-  const shown = sections.reduce((sum, section) => sum + section.cards.length, 0);
-  const fillers = Math.max(0, MIN_CARDS - shown);
+  const fillers = Math.max(0, PREVIEW_OTHERS - others.length);
   const caption = kind === "super" ? t("post.v2.rev.capSuper", { hours: hours ?? "" }) : kind === "top" ? t("post.v2.rev.capTop", { hours: hours ?? "" }) : t("post.v2.rev.capFree");
   return (
     <section className={`tkp-catpre-${where}`} data-tk={`review-list-${where}`} data-kind={kind} aria-label={t("post.v2.rev.listTitle")}>

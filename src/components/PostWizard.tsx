@@ -315,6 +315,24 @@ export function PostWizard({
     if (done) window.scrollTo(0, 0);
   }, [done]);
 
+  // H21.12b: every step change opens at the top, with the focus on the step's heading (not on a button or a box further down).
+  const openedStep = useRef(current);
+  useEffect(() => {
+    if (!newDesign || openedStep.current === current) return;
+    openedStep.current = current;
+    const open = () => {
+      window.scrollTo(0, 0);
+      const heading = document.querySelector<HTMLElement>("[data-tk=step-title]");
+      if (!heading) return;
+      heading.setAttribute("tabindex", "-1");
+      heading.focus({ preventScroll: true });
+    };
+    open();
+    // A second pass after the new step has drawn: its own effects must not leave the page scrolled down.
+    const id = window.setTimeout(open, 120);
+    return () => window.clearTimeout(id);
+  }, [current, newDesign]);
+
   useEffect(() => {
     const id = window.setTimeout(() => setServerShort(null), 0);
     return () => window.clearTimeout(id);

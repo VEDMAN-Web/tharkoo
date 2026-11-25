@@ -84,6 +84,7 @@ test.describe("H6.3 video rule on the post form", () => {
     await fillAdInformation(page, `E2E video rule ${Date.now()}`);
     await page.locator("[data-tk=photo-input]").waitFor({ state: "attached" });
     // H21.3: the limits sit in the "Photo guidelines" panel (File rules): one limit of 10 for photos and videos together.
+    await page.locator("[data-tk=photo-all-rules] > summary:visible").click(); // H21.12b: closed until asked for
     const rules = page.locator("[data-tk=photo-guidelines-side], [data-tk=photo-guidelines-inline]").locator(".tkph-rules:visible");
     await expect(rules).toContainText("Videos: up to 60 seconds and 100 MB.");
     await expect(rules).toContainText("Up to 10 photos and videos in total.");

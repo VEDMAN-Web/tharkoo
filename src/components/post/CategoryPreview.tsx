@@ -9,7 +9,8 @@ import { api } from "@/lib/ui/api";
 export type PreviewHit = { slug: string; title: string; place?: string; photos?: string[]; variant: string };
 type Tier = "super" | "top" | "all";
 
-const MIN_CARDS = 4;
+/** H21.12b: a preview shows at most this many other ads, whole, with no inner scroll. */
+export const PREVIEW_OTHERS = 2;
 const FETCH_SIZE = 12;
 const MAX_CHIPS = 3;
 const SUPER_VARIANTS = new Set(["star", "supertop"]);
@@ -19,6 +20,15 @@ export function tierOf(variant: string): Tier {
   if (SUPER_VARIANTS.has(variant)) return "super";
   if (TOP_VARIANTS.has(variant)) return "top";
   return "all";
+}
+
+/** The other ads a preview shows: one boosted ad and one normal ad when both are there, else the first two there are. */
+export function previewOthers(hits: PreviewHit[]): PreviewHit[] {
+  const boosted = [...hits.filter((hit) => tierOf(hit.variant) === "super"), ...hits.filter((hit) => tierOf(hit.variant) === "top")];
+  const normal = hits.filter((hit) => tierOf(hit.variant) === "all");
+  const first = [...boosted.slice(0, 1), ...normal.slice(0, 1)];
+  const rest = [...boosted.slice(1), ...normal.slice(1)];
+  return [...first, ...rest].slice(0, PREVIEW_OTHERS);
 }
 
 /** Loads the real ads of a category (and city when one is chosen). Stale answers are dropped. */
@@ -70,9 +80,9 @@ function Card({ hit, tier }: { hit: PreviewHit; tier: Tier }) {
 export function CategoryPreview({ categoryName, cityName, chips, hits, loading, where }: Props) {
   const t = useT();
   const groups: Record<Tier, PreviewHit[]> = { super: [], top: [], all: [] };
-  for (const hit of hits) groups[tierOf(hit.variant)].push(hit);
-  const shown = Math.min(hits.length, FETCH_SIZE);
-  const fillers = Math.max(0, MIN_CARDS - shown);
+  const others = previewOthers(hits);
+  for (const hit of others) groups[tierOf(hit.variant)].push(hit);
+  const fillers = Math.max(0, PREVIEW_OTHERS - others.length);
   const tiers: { tier: Tier; label: string }[] = [
     { tier: "super", label: t("post.v2.cat.tierSuper") },
     { tier: "top", label: t("post.v2.cat.tierTop") },
