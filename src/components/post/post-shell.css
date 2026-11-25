@@ -183,3 +183,8 @@ body:has(.tkp-shell) .tkn-float .tkn-chat-bubble { width: 56px; height: 56px; }
 @media (min-width: 1024px) {
   .tkn .tkp-shell .tkp-needhelp { display: none; }
 }
+
+/* H21.12b2: after a step change the focus moves to the step heading for screen readers. The heading is not a control, so it
+   shows no ring; buttons, links and fields keep theirs. */
+.tkn .tkp-shell [data-tk="step-title"][tabindex="-1"]:focus,
+.tkn .tkp-shell [data-tk="step-title"][tabindex="-1"]:focus-visible { outline: none; }
