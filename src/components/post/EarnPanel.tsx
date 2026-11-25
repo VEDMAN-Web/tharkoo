@@ -8,6 +8,12 @@ import type { EarnInfo } from "@/components/vendor/TourInbox";
 /** The calls shown in the example line ("10 calls"). A way to read the number, not a price. */
 const EXAMPLE_CALLS = 10;
 
+/** The setting is the share THARKOO keeps of a call; the seller keeps the rest. */
+export function earnShares(tharkooPercent: number): { keep: number; rest: number } {
+  const rest = Math.min(100, Math.max(0, Math.round(tharkooPercent)));
+  return { keep: 100 - rest, rest };
+}
+
 /**
  * H21.5a: "Earn from video calls". Three states: on (green list), off (dashed, grey) and locked (Free). The wording of the two lines about
  * what a call earns is Vedant's; the numbers come from the settings through the earn-info answer (the share and the call price).
@@ -33,7 +39,7 @@ export function EarnPanel({ state, earn }: { state: "on" | "off" | "locked"; ear
   }
   const rest = option ? option.price - option.youKeep : 0;
   const restRupees = option && option.youKeep > 0 ? Math.round((option.rupees / option.youKeep) * rest) : 0;
-  const percent = earn ? Math.round(earn.sharePercent) : null;
+  const shares = earn ? earnShares(earn.sharePercent) : null;
   return (
     <section className="tkr-earn is-on" data-tk="earn-panel" data-state="on" aria-label={t("post.v2.rev.earnTitle")}>
       <p className="tkr-earn-title">{t("post.v2.rev.earnTitle")}</p>
@@ -45,7 +51,7 @@ export function EarnPanel({ state, earn }: { state: "on" | "off" | "locked"; ear
           {option ? (
             <span><b>{t("post.v2.rev.earnEveryTitle", { rupees: option.rupees })}</b>{t("post.v2.rev.earnEvery", { price: option.price })}{" "}<b data-tk="earn-keep">{t("post.v2.rev.earnKeep", { keep: option.youKeep, rupees: option.rupees, rest, restRupees })}</b></span>
           ) : (
-            <span><b>{t("post.v2.rev.earnEveryTitleAny")}</b>{t("post.v2.rev.earnEveryAny")}{percent !== null ? <>{" "}<b data-tk="earn-keep">{t("post.v2.rev.earnKeepPercent", { keep: percent, rest: 100 - percent })}</b></> : null}</span>
+            <span><b>{t("post.v2.rev.earnEveryTitleAny")}</b>{t("post.v2.rev.earnEveryAny")}{shares ? <>{" "}<b data-tk="earn-keep">{t("post.v2.rev.earnKeepPercent", shares)}</b></> : null}</span>
           )}
         </li>
         <li><span className="tkr-earn-ic"><Repeat2 size={16} aria-hidden="true" focusable="false" /></span><span><b>{t("post.v2.rev.earnMoreTitle")}</b>{t("post.v2.rev.earnMore")}</span></li>

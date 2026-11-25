@@ -1,6 +1,5 @@
 "use client";
 
-import { Camera } from "lucide-react";
 import { useT } from "@/components/help/UiTextProvider";
 import { tierOf, type PreviewHit } from "./CategoryPreview";
 import "./category-step.css";
@@ -50,7 +49,6 @@ export function ReviewListPreview({ kind, hours, categoryName, cityName, title, 
         {tier === "super" ? <span className="tkp-catpre-tag super">{t("post.v2.cat.tierSuper")}</span> : null}
         {tier === "top" ? <span className="tkp-catpre-tag">{t("post.v2.cat.tierTop")}</span> : null}
         <span className="tkp-catpre-tag mine">{t("post.v2.rev.yourTag")}</span>
-        {cover ? null : <Camera size={26} aria-hidden="true" focusable="false" />}
       </div>
       <div className="tkp-catpre-body">
         <div className="tkp-catpre-line">{title}</div>

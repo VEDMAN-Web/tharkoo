@@ -40,6 +40,8 @@ test.describe("H21.5a step 5 review", () => {
   test("options first, the video row, the list preview, the earnings panel and the cost box", async ({ page, baseURL }, info) => {
     test.setTimeout(240_000);
     const phone = info.project.name === "phone-390";
+    // A call price exists on the page: the earn-info answer is stood in here (the real answer needs a live ad in a video-call category).
+    await page.route("**/api/tours/earn-info", (route) => route.fulfill({ json: { ok: true, data: { sharePercent: 30, options: [{ price: 10, youKeep: 7, rupees: 70 }] } } }));
     await toReview(page, baseURL!, 2000);
     await expect(page.locator("[data-tk=step-title]")).toHaveText("Review and publish");
     await expect(page.locator("[data-tk=step-help]")).toHaveText("Check everything once. Your ad goes live as soon as you publish.");
@@ -76,6 +78,7 @@ test.describe("H21.5a step 5 review", () => {
     await expect(page.locator("[data-tk=go-on]")).toContainText("Publish with TOP");
     await expect(page.locator("[data-tk=earn-panel]:visible")).toHaveAttribute("data-state", "on");
     await expect(page.locator("[data-tk=earn-panel]:visible")).toContainText("People who want to see your staff before purchase, can video call you directly.");
+    await expect(page.locator("[data-tk=earn-keep]:visible")).toHaveText("You keep 7 (₹70). Tharkoo keeps 3.(₹30)");
     const info1 = page.locator("[data-tk=video-info]");
     await expect(info1).toHaveAttribute("aria-expanded", "false");
     await info1.click();
