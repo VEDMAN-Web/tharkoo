@@ -11,13 +11,10 @@ import { PopPhoto } from "./HomeAdPopout";
 import type { CardSlide } from "./card-slides";
 import type { ListingRowData, RowLabels } from "./listing-row-data";
 import type { ListingRowLabels } from "./ListingRow";
-import { clampPopLeft, clampPopTop, popMaxHeight } from "./pop-layout";
+import { clampPopTop, popMaxHeight, ROW_POP_GROW_PX, rowPopBox } from "./pop-layout";
 
-/** H19.1: the pop-out is a quarter smaller than before (the row plus 28 px a side, 720 px at least). */
-const OLD_GROW_PX = 28;
-const SIZE_SHARE = 0.75;
-const EDGE_PX = 8;
-const MIN_WIDTH_PX = 560;
+/** H21.11: the pop-out covers its row completely (12 px past it on every side); the photo column is as wide as the row's own (200 px). */
+const ROW_PHOTO_PX = 200;
 
 /**
  * H14.1b: the hover pop-out of a listing row, laid out sideways: the bigger photo on the left with its thumbnails and arrows,
@@ -52,9 +49,8 @@ export function ListingPopout({
   onLeave: () => void;
 }) {
   const ref = useRef<HTMLDivElement>(null);
-  const [top, setTop] = useState(anchor.top - OLD_GROW_PX);
-  const width = Math.min(Math.max(Math.round((anchor.width + OLD_GROW_PX * 2) * SIZE_SHARE), MIN_WIDTH_PX), window.innerWidth - EDGE_PX * 2);
-  const left = clampPopLeft(anchor.left + (anchor.width - width) / 2, width, window.innerWidth);
+  const [top, setTop] = useState(anchor.top - ROW_POP_GROW_PX);
+  const { left, width, minHeight } = rowPopBox(anchor, window.innerWidth);
   const place = ad.area ? `${ad.city}, ${ad.area}` : ad.city;
 
   useLayoutEffect(() => {
@@ -83,7 +79,7 @@ export function ListingPopout({
       role="group"
       aria-label={ad.title}
       data-tk="listing-popout"
-      style={{ left, top, width, maxHeight: popMaxHeight(window.innerHeight), transformOrigin: `${originX}px ${originY}px` }}
+      style={{ left, top, width, minHeight, gridTemplateColumns: `${ROW_PHOTO_PX}px minmax(0, 1fr)`, maxHeight: popMaxHeight(window.innerHeight), transformOrigin: `${originX}px ${originY}px` }}
       onPointerEnter={onEnter}
       onPointerLeave={onLeave}
     >

@@ -44,9 +44,9 @@ describe("the pop-out of an ad card stays inside the window", () => {
     expect(popMaxHeight(800)).toBe(784);
   });
 
-  it("is a quarter smaller than before: both pop-outs use 75 percent of the old size", () => {
+  it("is a quarter smaller than before: the grid-card pop-out uses 75 percent of the old size; a list row's pop-out covers its row (H21.11)", () => {
     expect(read("src/components/new/HomeAdPopout.tsx")).toContain("SIZE_SHARE = 0.75");
-    expect(read("src/components/new/ListingPopout.tsx")).toContain("SIZE_SHARE = 0.75");
+    expect(read("src/components/new/ListingPopout.tsx")).toContain("rowPopBox(anchor, window.innerWidth)");
     expect(read("src/components/new/HomeAdPopout.tsx")).toContain("maxHeight: popMaxHeight(window.innerHeight)");
   });
 });

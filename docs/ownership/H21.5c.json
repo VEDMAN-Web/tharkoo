@@ -1,0 +1,14 @@
+{
+  "branchPrefix": "haiku/h21.5c",
+  "globs": [
+    "docs/ownership/H21.5c.json",
+    "progress/H21.5c.md",
+    "src/server/listings/owner-cards.ts",
+    "src/components/vendor/OwnerActions.tsx",
+    "src/components/vendor/video-switch.css",
+    "src/components/vendor/MyAdsBoard.tsx",
+    "src/components/buyer/MyAdsList.tsx",
+    "tests/server/listings/h21-5c-top-ads.test.ts",
+    "tests/e2e/h21-5c-myads-video.e2e.ts"
+  ]
+}
