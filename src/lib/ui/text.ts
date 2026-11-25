@@ -1119,8 +1119,6 @@ export const TEXT_DEFAULTS = {
   "post.v2.money.noteFree": "This ad is free ({left} of {total} free ads left)",
   "post.v2.money.noteUsed": "This ad costs {credits}. You have used your {total} free ads.",
   "post.v2.money.noteUsedOne": "This ad costs {credits}. You have used your free ad.",
-  "post.v2.money.after": "Balance after",
-  "post.v2.money.afterShort": "Not enough credits",
   "post.v2.money.publish": "Publish \u00b7 {credits}",
   "post.v2.money.publishWith": "Publish with {plan} \u00b7 {credits}",
   "post.v2.money.thisAd": "This ad",

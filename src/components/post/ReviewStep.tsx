@@ -20,7 +20,7 @@ type Props = {
   place: string;
   rows: ReviewRow[];
   cost: CostBox;
-  /** Shown in the cost box when the ad-credit balance is too low for the total. */
+  /** Shown under the video calls row when the ad-credit balance is too low for the total. */
   low?: { title: string; body: string; onBuy: () => void } | null;
   note: string;
   terms: boolean;
@@ -35,8 +35,8 @@ type Props = {
 };
 
 /**
- * H21.5a: Step 5, Review and publish. Order: the options, the video calls row, (phone: the list preview and the earnings), "Your ad" with an
- * Edit link per part, the one cost box (H21.12a: with the balance left and the low-credits note) right above the ticks.
+ * H21.5a: Step 5, Review and publish. Order (the design boards): the options, the video calls row, the low-credits note when the balance is
+ * too low, (phone: the list preview and the earnings), "Your ad" with an Edit link per part, the one cost box right above the ticks.
  */
 export function ReviewStep(props: Props) {
   const t = useT();
@@ -45,6 +45,12 @@ export function ReviewStep(props: Props) {
     <div className="tkr" data-tk="review-step">
       <div className="tkr-options" data-tk="review-options">{props.options}</div>
       <div className="tkr-video">{props.video}</div>
+      {props.low ? (
+        <div className="tkr-low" role="alert" data-tk="boost-short">
+          <p><b>{props.low.title}</b> {props.low.body}</p>
+          <button type="button" className="tkr-low-buy" data-tk="boost-buy" onClick={props.low.onBuy}>{t("post.v2.rev.buy")}</button>
+        </div>
+      ) : null}
       <div className="tkr-phone-only" data-tk="review-phone-extras">
         {props.listInline}
         {props.earnInline}
@@ -82,13 +88,6 @@ export function ReviewStep(props: Props) {
         <div><span>{t("post.v2.rev.costPosting")}</span><span data-tk="cost-posting">{cost.posting}{cost.postingNote ? <small> {cost.postingNote}</small> : null}</span></div>
         <div><span>{t("post.v2.rev.costBoost")}</span><span data-tk="cost-boost">{cost.boost}</span></div>
         <div className="tkr-total"><span>{t("post.v2.rev.costTotal")}</span><span data-tk="cost-total">{cost.total}</span></div>
-        {cost.after ? <div><span>{t("post.v2.money.after")}</span><span data-tk="cost-after">{cost.after}</span></div> : null}
-        {props.low ? (
-          <div className="tkr-low" role="alert" data-tk="boost-short">
-            <p><b>{props.low.title}</b> {props.low.body}</p>
-            <button type="button" className="tkr-low-buy" data-tk="boost-buy" onClick={props.low.onBuy}>{t("post.v2.rev.buy")}</button>
-          </div>
-        ) : null}
       </section>
       <div className="tkr-ticks">
         <div className={`tkp-consent ${props.termsError ? "is-bad" : ""}`}>

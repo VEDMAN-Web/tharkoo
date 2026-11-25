@@ -31,7 +31,6 @@ import { PhotoGuidelines } from "./post/PhotoGuidelines";
 import { VideoCallRow } from "./post/VideoCallRow";
 import { EarnPanel } from "./post/EarnPanel";
 import { ReviewListPreview, type ListKind } from "./post/ReviewListPreview";
-import { CreditsCard } from "./post/PayParts";
 import { costBox, feeNote, formatPhone, freeLeftText, publishLabel } from "./post/money-text";
 import { BoostChoice, adCreditsNeeded, adCreditsShort, type BoostChoiceValue } from "./post/BoostChoice";
 import { EarnLine, type EarnInfo } from "@/components/vendor/TourInbox";
@@ -165,7 +164,6 @@ export function PostWizard({
   /** H7.118: the ad is already posted, so this is an edit: same ad, no fee, "Save changes". */
   const editing = alreadyPaid;
   const chargesFee = money.paid;
-  const shownBalance = serverShort ? serverShort.balance : money.balance;
   const short = alreadyPaid ? 0 : serverShort ? shortfallOf(serverShort.need, serverShort.balance) : shortfallOf(money.fee, money.balance);
   const draftRef = useRef("");
   const queueRef = useRef<Promise<unknown>>(Promise.resolve());
@@ -551,7 +549,8 @@ export function PostWizard({
     if (!hydrated) return setBanner(t("post.error.draftLoading"));
     if (!draftId || !title.trim()) return setBanner(t("post.error.saveFirst"));
     if (newDesign && !showErrors(errorsForStep(validate(), "review"))) return;
-    if (newDesign && short > 0) return openRecharge({ shortfall: short, wallet: "ad" });
+    // H21.12a: with a boost the one "need" figure is the total minus the balance, checked just below.
+    if (newDesign && short > 0 && (alreadyPaid || !boost.plan)) return openRecharge({ shortfall: short, wallet: "ad" });
     // H19.6b: TOP or Super Top is bought with ad credits together with the posting fee. Short: the ad-credit recharge sheet opens and the publish carries on after it.
     const plan = alreadyPaid ? null : boost.plan;
     if (newDesign && plan) {
@@ -1004,7 +1003,8 @@ export function PostWizard({
     });
     const detailsText = [...picksOf(attrs[INTEREST_KEY]), ...answers].filter(Boolean).join(" \u00b7 ");
     const photosText = photoCount === null ? (draftId ? t("post.review.checking") : t("post.v2.rev.noPhotos")) : photoCount === 0 ? t("post.v2.rev.noPhotos") : photoCount === 1 ? t("post.v2.rev.photo1") : t("post.v2.rev.photos", { count: photoCount });
-    const reach = [phone ? formatPhone(normalPhone(phone)) : "", [whatsapp ? t("post.contactBox.whatsapp") : "", telegramOn ? t("post.contactBox.telegram") : ""].filter(Boolean).join(", ")].filter(Boolean);
+    // The spaces inside the number do not break, so it never wraps in the middle.
+    const reach = [phone ? formatPhone(normalPhone(phone)).replace(/ /g, "\u00a0") : "", [whatsapp ? t("post.contactBox.whatsapp") : "", telegramOn ? t("post.contactBox.telegram") : ""].filter(Boolean).join(", ")].filter(Boolean);
     const contactText = [nickname.trim(), ...reach].filter(Boolean).join(" \u00b7 ") || t("post.v2.rev.notSet");
     const reviewRows: ReviewRow[] = [
       { key: "category", label: t("post.v2.rev.rowCategory"), value: [category?.name, subName].filter(Boolean).join(" \u203a ") || t("post.review.notChosen"), step: 1 },
@@ -1014,21 +1014,21 @@ export function PostWizard({
     ];
     const boostPlan = alreadyPaid ? null : boost.plan;
     const planNeed = adCreditsNeeded({ fee: chargesFee && !alreadyPaid ? money.fee : 0, plan: boostPlan });
-    const planShort = adCreditsShort(planNeed, boost.balance);
-    const totalShort = Math.max(short, planShort);
     const publishText = publishLabel(t, planNeed, boostPlan?.name ?? "");
     const adBalance = serverShort ? serverShort.balance : (boost.balance ?? money.balance);
+    // H21.12a: the only "you need N more" figure on the page: Total today minus the balance.
+    const totalShort = adCreditsShort(planNeed, adBalance);
     const openBuy = (need: number) => setBuy({ need, price: planNeed, plan: boostPlan?.name ?? t("post.v2.money.thisAd"), balance: adBalance ?? 0, publishText });
     const low = totalShort > 0
       ? {
           title: t("post.v2.rev.lowTitle", { plan: boostPlan?.name ?? t("post.v2.money.thisAdIn") }),
-          body: `${t("post.v2.rev.lowBody", { need: totalShort })}${boostPlan && short === 0 ? ` ${t("post.v2.money.lowOrNormal")}` : ""}`,
+          body: `${t("post.v2.rev.lowBody", { need: totalShort })}${boostPlan && adCreditsShort(planNeed - boostPlan.amount, adBalance) === 0 ? ` ${t("post.v2.money.lowOrNormal")}` : ""}`,
           onBuy: () => openBuy(totalShort),
         }
       : null;
     const listKind: ListKind = boostPlan ? (boostPlan.code === "super-top" ? "super" : "top") : "free";
     const earnState: "on" | "off" | "locked" = !boostPlan ? "locked" : videoCallsOff ? "off" : "on";
-    const cost = costBox(t, { money: alreadyPaid ? { paidOn: false, fee: 0, quota: null } : money, plan: boostPlan, balance: adBalance });
+    const cost = costBox(t, { money: alreadyPaid ? { paidOn: false, fee: 0, quota: null } : money, plan: boostPlan });
     const listPlace = [shownDistrict, cityName].filter(Boolean).join(", ");
     const listHits = categoryPreview.hits;
     const listPreview = (where: "inline" | "side") => (
@@ -1076,7 +1076,6 @@ export function PostWizard({
               else setStep(num);
             }}
           >
-            {money.paidOn ? <CreditsCard fee={alreadyPaid ? 0 : planNeed} price={money.price} balance={shownBalance} ready={money.ready} posting={editing || alreadyPaid ? null : { freeNote: freeLeftText(t, money) }} onTopUp={() => openRecharge({ shortfall: totalShort, wallet: "ad" })} /> : null}
             <button type="button" className="tkp-help-link" data-tk="post-help" aria-label={t("post.header.helpLabel")} onClick={() => openSupportWith("")}>{t("post.v2.rail.help")}</button>
           </PostRail>
           <section className="tkp-main" data-step={current} data-dir={stepMove.dir || undefined} aria-labelledby="post-step-title" onFocusCapture={keepFocusedFieldVisible}>

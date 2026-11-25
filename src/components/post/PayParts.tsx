@@ -3,36 +3,6 @@
 import { useT } from "@/components/help/UiTextProvider";
 import { creditsText, rupeesText } from "./credits";
 
-type CardProps = {
-  fee: number;
-  price?: number;
-  balance: number | null;
-  ready: boolean;
-  onTopUp: () => void;
-  /** H21.12a: an ad being posted (not an edit) always says its cost, 0 included, with "(2 of 3 free ads left)" when it is free. */
-  posting?: { freeNote: string } | null;
-};
-
-export function CreditsCard({ fee, price, balance, ready, onTopUp, posting = null }: CardProps) {
-  const t = useT();
-  if (ready && balance === null) {
-    return (
-      <div className="tkp-credits" data-tk="credits-card">
-        <p className="tkp-credits-line">{t("post.pay.cost", { credits: creditsText(fee), rupees: rupeesText(fee, price) })}</p>
-      </div>
-    );
-  }
-  return (
-    <div className="tkp-credits" data-tk="credits-card">
-      <p className="tkp-credits-title">{t("post.pay.creditsTitle")}</p>
-      <p className="tkp-credits-line" data-tk="credits-balance">{t("post.pay.balance", { balance: balance === null ? "..." : creditsText(balance) })}</p>
-      <p className="tkp-credits-line" data-tk="credits-this-ad">{fee > 0 || posting ? t("post.pay.thisAd", { credits: creditsText(fee) }) : t("post.pay.noCharge")}</p>
-      {posting?.freeNote ? <p className="tkp-credits-line">{posting.freeNote}</p> : null}
-      {fee > 0 ? <button type="button" className="tkp-credits-link" data-tk="credits-topup" onClick={onTopUp}>{t("post.pay.topUp")}</button> : null}
-    </div>
-  );
-}
-
 type PayProps = {
   fee: number;
   price?: number;

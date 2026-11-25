@@ -417,12 +417,9 @@ test.describe("H7.86 post an ad, step 5 and the success screen", () => {
     });
     await newPoster(page, baseURL!, "paid", true, 0);
     await expect(page.locator("[data-tk=step-help]")).toHaveText("Pick a category. It helps the right people find your ad.");
-    if ((page.viewportSize()?.width ?? 0) >= 1024) {
-      await expect(page.locator("[data-tk=credits-card]")).toContainText("Balance 0 credits");
-      await expect(page.locator("[data-tk=credits-card]")).toContainText("This ad: 30 credits");
-      await expect(page.locator("[data-tk=credits-topup]")).toBeVisible();
-      await shot(page, `${prefix}-A-rail-card`);
-    }
+    // H21.12a (design boards): no credits box in the step list; the header pill shows the balance and has the + button.
+    await expect(page.locator("[data-tk=credits-card]")).toHaveCount(0);
+    await expect(page.locator("[data-tk=header-credit-pill]")).toBeVisible();
     const draft = await reachAbout(page, `Paid check ${Date.now()}`, prefix);
     await page.locator("#phone").fill("9876543210");
     await fillAbout(page);
@@ -432,7 +429,6 @@ test.describe("H7.86 post an ad, step 5 and the success screen", () => {
     // H21.12a: the "Pay and publish" box is gone; the one cost box says what it costs and that the balance is too low.
     const card = page.locator("[data-tk=review-cost]");
     await expect(page.locator("[data-tk=cost-posting]")).toHaveText("30 credits");
-    await expect(page.locator("[data-tk=cost-after]")).toHaveText("Not enough credits");
     await expect(page.locator("[data-tk=boost-short]")).toContainText("You need 30 more.");
     // H21.5a: the disabled Publish button is replaced by one "Buy credits to continue" button.
     const recharge = page.locator(".tkp-nav [data-tk=go-on]");
@@ -453,7 +449,6 @@ test.describe("H7.86 post an ad, step 5 and the success screen", () => {
     await page.evaluate(() => window.dispatchEvent(new CustomEvent("tk:credits-added", { detail: { added: 100 } })));
     await expect(page.locator("[data-tk=credits-toast]")).toHaveText("100 credits added");
     await expect(page.locator("[data-tk=boost-short]")).toHaveCount(0);
-    await expect(page.locator("[data-tk=cost-after]")).toHaveText("70 credits");
     await expect(page.locator(".tkp-nav [data-tk=go-on]")).toHaveText("Publish \u00b7 30 credits");
     await expect(page.locator("[data-tk=publish-blocked]")).toHaveCount(0);
     await card.scrollIntoViewIfNeeded();
@@ -519,11 +514,9 @@ test.describe("H7.86 post an ad, step 5 and the success screen", () => {
     await fillAbout(page);
     await page.locator("[data-tk=go-on]").click();
     await stepOf(page, 5);
-    await expect(page.locator("[data-tk=cost-after]")).toHaveText("70 credits");
     await page.locator("#consent-terms").check();
     await page.getByRole("button", { name: /^Publish \u00b7 30 credits$/ }).click();
     await expect(page.locator("[data-tk=boost-short]")).toContainText("You need 10 more.");
-    await expect(page.locator("[data-tk=cost-after]")).toHaveText("Not enough credits");
     await expect(page.getByText(/INSUFFICIENT/)).toHaveCount(0);
     await expect(page.locator(".tkp-nav [data-tk=go-on]")).toHaveText("Buy credits to continue");
   });
@@ -543,8 +536,8 @@ test.describe("H7.86 post an ad, step 5 and the success screen", () => {
     await stepOf(page, 5);
     await expect(page.locator("[data-tk=pay-card]")).toHaveCount(0);
     await expect(page.locator(".tkp-nav [data-tk=go-on]")).toHaveText("Save changes");
-    await expect(page.locator("[data-tk=credits-card]")).toContainText("no charge");
-    await expect(page.locator("[data-tk=credits-topup]")).toHaveCount(0);
+    await expect(page.locator("[data-tk=credits-card]")).toHaveCount(0);
+    await expect(page.locator("[data-tk=boost-short]")).toHaveCount(0);
   });
 
   test("a photo that cannot be added keeps a red tile with its reason on it and a neutral placeholder, not a broken image", async ({ page, baseURL }, info) => {

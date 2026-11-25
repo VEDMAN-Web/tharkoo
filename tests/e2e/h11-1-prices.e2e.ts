@@ -261,7 +261,6 @@ test.describe("H11.1b clear prices", () => {
         await page.setViewportSize({ width: 1440, height: 900 });
         await reachStepFive(page, `Paid ad ${Date.now()}`);
         await expect(page.locator("[data-tk=cost-posting]")).toHaveText("20 credits");
-        await expect(page.locator("[data-tk=cost-after]")).toHaveText("Not enough credits");
         await expect(page.locator("[data-tk=boost-short]")).toBeVisible();
         await page.locator("[data-tk=review-cost]").scrollIntoViewIfNeeded();
         await shot(page, "step5-paid");

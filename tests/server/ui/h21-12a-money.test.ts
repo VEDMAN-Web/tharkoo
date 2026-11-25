@@ -15,23 +15,18 @@ describe("H21.12a: no free ads left", () => {
   });
 
   it("shows the same number in the cost box and on the button, with and without a boost", () => {
-    expect(costBox(t, { money: used, plan: null, balance: 140 })).toEqual({ posting: "20 credits", postingNote: "", boost: "0 credits", total: "20 credits", after: "120 credits" });
+    expect(costBox(t, { money: used, plan: null })).toEqual({ posting: "20 credits", postingNote: "", boost: "0 credits", total: "20 credits" });
     expect(publishLabel(t, 20, "")).toBe("Publish · 20 credits");
-    const top = costBox(t, { money: used, plan: { name: "TOP", amount: 45 }, balance: 140 });
-    expect(top).toMatchObject({ boost: "TOP · 45 credits", total: "65 credits", after: "75 credits" });
+    const top = costBox(t, { money: used, plan: { name: "TOP", amount: 45 } });
+    expect(top).toMatchObject({ boost: "TOP · 45 credits", total: "65 credits" });
     expect(publishLabel(t, 65, "TOP")).toBe("Publish with TOP · 65 credits");
-  });
-
-  it("does not invent a balance after when the balance is too low or unknown", () => {
-    expect(costBox(t, { money: used, plan: null, balance: 5 }).after).toBe("Not enough credits");
-    expect(costBox(t, { money: used, plan: null, balance: null }).after).toBe("");
   });
 });
 
 describe("H21.12a: free ads left", () => {
   it("says free with the count and costs 0 everywhere", () => {
     expect(feeNote(t, free)).toBe("This ad is free (2 of 3 free ads left)");
-    expect(costBox(t, { money: free, plan: null, balance: 140 })).toEqual({ posting: "0 credits", postingNote: "(2 of 3 free ads left)", boost: "0 credits", total: "0 credits", after: "140 credits" });
+    expect(costBox(t, { money: free, plan: null })).toEqual({ posting: "0 credits", postingNote: "(2 of 3 free ads left)", boost: "0 credits", total: "0 credits" });
     expect(publishLabel(t, 0, "")).toBe("Publish ad");
   });
 

@@ -155,7 +155,6 @@ test.describe("E1-B posting journeys", () => {
       await page.locator("[data-tk=go-on]").click();
       await expect(page.locator("[data-tk=boost-short]")).toBeVisible();
       await expect(page.locator("[data-tk=cost-posting]")).toHaveText("20 credits");
-      await expect(page.locator("[data-tk=cost-after]")).toHaveText("Not enough credits");
       expect(await hasHorizontalScroll(page)).toBe(false);
     } finally {
       await restore();

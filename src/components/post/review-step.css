@@ -20,8 +20,7 @@
 .tkn .tkp-shell .tkp-boost .tkpr-plan-days { grid-column: 2; grid-row: 2; font-size: 12px; font-weight: 600; color: #6b4a8a; text-align: right; }
 .tkn .tkp-shell .tkp-boost .tkpr-info { position: absolute; right: 8px; top: 50%; transform: translateY(-50%); }
 
-/* The low-credits note inside the cost box. */
-.tkn .tkp-shell .tkr-cost > div.tkr-low { justify-content: flex-start; color: #7a4300; }
+/* The low-credits note. */
 .tkn .tkp-shell .tkr-low { display: flex; flex-direction: column; gap: 12px; padding: 14px 16px; border-radius: 14px; background: #fff4e5; color: #7a4300; font-size: 14px; line-height: 1.5; }
 .tkn .tkp-shell .tkr-low p { margin: 0; }
 .tkn .tkp-shell .tkr-low-buy { align-self: flex-start; min-height: 44px; padding: 0 18px; border: 0; border-radius: 999px; background: #c2126f; color: #fff; font: inherit; font-size: 14px; font-weight: 700; cursor: pointer; }

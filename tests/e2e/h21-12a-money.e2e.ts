@@ -2,7 +2,7 @@ import { mkdirSync } from "node:fs";
 import type { Page } from "@playwright/test";
 import { expect, loginUi, newUserApi, originHeaders, test, USER_PASSWORD, withLocalDb } from "./helpers";
 
-/** H21.12a: one posting fee everywhere: the step-1 note, the sidebar, the review cost box and the Publish button show the same number. */
+/** H21.12a: one posting fee everywhere: the step-1 note, the review cost box and the Publish button show the same number. The step list has no credits box. */
 
 const shotsDir = process.env.SHOTS_DIR;
 async function shot(page: Page, name: string) {
@@ -53,13 +53,12 @@ test.describe("H21.12a money text agrees", () => {
     await withLocalDb((db) => db.collection("sites").updateOne({ key: "default" }, { $set: { paidPostingOn: false, freeAdsPerAccount: 0 } }));
   });
 
-  test("no free ads left: note, sidebar, cost box and Publish button show the same number", async ({ page, baseURL }, info) => {
+  test("no free ads left: note, cost box and Publish button show the same number", async ({ page, baseURL }) => {
     test.setTimeout(300_000);
     await setMoney(3);
     const draft = await account(page, baseURL!, 3);
-    const desktop = info.project.name === "desktop-1440";
     await expect(page.locator("[data-tk=post-fee-note]")).toHaveText("This ad costs 20 credits. You have used your 3 free ads.");
-    if (desktop) await expect(page.locator("[data-tk=credits-this-ad]")).toHaveText("This ad: 20 credits");
+    await expect(page.locator("[data-tk=credits-card]")).toHaveCount(0);
     await shot(page, "left0-step1");
 
     await page.goto(`/u/post-insert/?draft=${draft}&step=5`);
@@ -67,10 +66,9 @@ test.describe("H21.12a money text agrees", () => {
     await expect(page.locator("[data-tk=cost-posting]")).toHaveText("20 credits");
     await expect(page.locator("[data-tk=cost-total]")).toHaveText("20 credits");
     await expect(go).toHaveText("Publish · 20 credits");
-    if (desktop) await expect(page.locator("[data-tk=credits-this-ad]")).toHaveText("This ad: 20 credits");
     await expect(page.locator("[data-tk=boost-balance], [data-tk=pay-card]")).toHaveCount(0);
     await expect(page.locator("[data-tk=review-cost]")).toHaveCount(1);
-    await expect(page.locator("[data-tk=cost-after]")).toContainText("credits");
+    await expect(page.locator("[data-tk=review-cost] > div")).toHaveCount(3);
     const normal = page.locator("[data-tk=boost-choice] [role=radio][data-code=free]");
     await expect(normal).toContainText("Normal");
     await expect(normal).toContainText("No boost");
@@ -93,28 +91,32 @@ test.describe("H21.12a money text agrees", () => {
     // A new account has 100 credits: either one button to buy (and the cost box says so) or the total on the button.
     if (total > 100) {
       await expect(go).toHaveText("Buy credits to continue");
-      await expect(page.locator("[data-tk=review-cost] [data-tk=boost-short]")).toBeVisible();
+      await expect(page.locator("[data-tk=boost-short]")).toBeVisible();
+      // One "need" figure only, and it is Total today minus the balance: the cost box and the Buy-credits dialog agree.
+      const need = total - 100;
+      await expect(page.locator("[data-tk=boost-short]")).toContainText(`You need ${need} more.`);
+      expect([...(await page.locator("body").innerText()).matchAll(/need ([0-9,]+) more/gi)].map((m) => m[1])).toEqual([String(need)]);
+      await go.click();
+      await expect(page.locator("[data-tk=buy-line]")).toContainText(`you need ${need} more`);
+      await page.keyboard.press("Escape");
+      await expect(page.locator("[data-tk=buy-credits]")).toHaveCount(0);
     } else {
       await expect(go).toHaveText(`Publish with TOP · ${total} credits`);
     }
-    if (desktop) await expect(page.locator("[data-tk=credits-this-ad]")).toHaveText(`This ad: ${total} credits`);
     await shot(page, "left0-review-top");
   });
 
-  test("two free ads left: everything says 0 and the button says Publish ad", async ({ page, baseURL }, info) => {
+  test("two free ads left: everything says 0 and the button says Publish ad", async ({ page, baseURL }) => {
     test.setTimeout(300_000);
     await setMoney(3);
     const draft = await account(page, baseURL!, 1);
-    const desktop = info.project.name === "desktop-1440";
     await expect(page.locator("[data-tk=post-fee-note]")).toHaveText("This ad is free (2 of 3 free ads left)");
-    if (desktop) await expect(page.locator("[data-tk=credits-this-ad]")).toHaveText("This ad: 0 credits");
     await shot(page, "left2-step1");
 
     await page.goto(`/u/post-insert/?draft=${draft}&step=5`);
     await expect(page.locator("[data-tk=cost-posting]")).toHaveText("0 credits (2 of 3 free ads left)");
     await expect(page.locator("[data-tk=cost-total]")).toHaveText("0 credits");
     await expect(page.locator("[data-tk=go-on]")).toHaveText("Publish ad");
-    if (desktop) await expect(page.locator("[data-tk=credits-this-ad]")).toHaveText("This ad: 0 credits");
     await shot(page, "left2-review");
   });
 });

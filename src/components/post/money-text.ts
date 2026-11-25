@@ -3,7 +3,7 @@ import { creditsText } from "./credits";
 
 /**
  * H21.12a: every money sentence of the post form comes from here, from the one answer of /api/wallet/posting-fee, so the step-1 note,
- * the sidebar, the cost box and the Publish button always show the same number.
+ * the cost box and the Publish button always show the same number.
  */
 
 type T = (key: UiTextKey, values?: Record<string, string | number>) => string;
@@ -41,22 +41,18 @@ export type CostBox = {
   postingNote: string;
   boost: string;
   total: string;
-  /** The balance left after publishing. Empty when the balance is not known. */
-  after: string;
 };
 
-/** The one cost box of the review step. */
-export function costBox(t: T, input: { money: ThisAdMoney; plan: { name: string; amount: number } | null; balance: number | null }): CostBox {
-  const { money, plan, balance } = input;
+/** The one cost box of the review step: Posting this ad, Boost, Total today. */
+export function costBox(t: T, input: { money: ThisAdMoney; plan: { name: string; amount: number } | null }): CostBox {
+  const { money, plan } = input;
   const boost = plan ? Math.max(0, plan.amount) : 0;
   const total = Math.max(0, money.fee) + boost;
-  const after = balance === null ? "" : balance >= total ? creditsText(balance - total) : t("post.v2.money.afterShort");
   return {
     posting: creditsText(Math.max(0, money.fee)),
     postingNote: freeLeftText(t, money),
     boost: plan ? `${plan.name} · ${creditsText(boost)}` : creditsText(0),
     total: creditsText(total),
-    after,
   };
 }
 

@@ -105,8 +105,9 @@ test.describe("H21.5a step 5 review", () => {
 
     // The summary has an Edit link per part, and the balance line says what is left.
     for (const key of ["category", "details", "photos", "contact"]) await expect(page.locator(`[data-tk=edit-${key}]`)).toBeVisible();
-    // H21.12a: the balance left is a line of the one cost box.
-    await expect(page.locator("[data-tk=cost-after]")).toContainText("credits");
+    // H21.12a (design boards): one cost box of three lines, no balance bar.
+    await expect(page.locator("[data-tk=review-cost] > div")).toHaveCount(3);
+    await expect(page.locator("[data-tk=boost-balance]")).toHaveCount(0);
 
     // Only the page scrolls, and the bubble is visible.
     const inner = await page.evaluate(() => Array.from(document.querySelectorAll<HTMLElement>(".tkp-post *")).filter((node) => { const s = getComputedStyle(node); return s.display !== "none" && (s.overflowY === "auto" || s.overflowY === "scroll") && node.scrollHeight - node.clientHeight > 1; }).length);
