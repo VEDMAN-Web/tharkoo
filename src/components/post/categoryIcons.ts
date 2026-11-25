@@ -1,10 +1,10 @@
-import { Anchor, Bell, Briefcase, CalendarDays, Car, Cloud, Coffee, Compass, Feather, Flower2, Gift, Globe, GraduationCap, Heart, House, Leaf, MessageCircleHeart, Moon, Mountain, Palette, PawPrint, Puzzle, Rainbow, Rocket, ShoppingBag, Sparkles, Star, Sun, Tag, Ticket, Umbrella, Users, type LucideIcon } from "lucide-react";
+import { Anchor, Bell, Briefcase, CalendarDays, Car, Cloud, Coffee, Compass, Feather, Flower2, Gift, Globe, GraduationCap, Handshake, Heart, House, Leaf, MessageCircleHeart, Moon, Mountain, Palette, PawPrint, Puzzle, Rainbow, Rocket, ShoppingBag, Sparkles, Star, Sun, Tag, Ticket, Umbrella, Users, type LucideIcon } from "lucide-react";
 import { CATEGORY_ICONS } from "@/lib/category-icons";
 
 /** The icon for a category slug the site ships with. */
 const BY_SLUG: Record<string, LucideIcon> = {
   dating: Heart,
-  friendship: Users,
+  friendship: Handshake,
   meetups: CalendarDays,
   "personal-ads": MessageCircleHeart,
   jobs: Briefcase,
@@ -14,12 +14,16 @@ const BY_SLUG: Record<string, LucideIcon> = {
   "buy-and-sell": ShoppingBag,
   pets: PawPrint,
   education: GraduationCap,
+  // The categories of the live site, as the design board draws them.
+  spa: Tag,
+  transgender: Users,
 };
 
 /** For categories made in the admin: a word in the slug picks the icon. */
 const BY_WORD: readonly [RegExp, LucideIcon][] = [
-  [/spa|salon|beauty|massage/, Flower2],
-  [/lgbt|pride|queer|rainbow/, Rainbow],
+  [/^spa(-|$)|salon/, Tag],
+  [/lgbt|pride|queer|rainbow|transgender/, Users],
+  [/beauty|massage/, Flower2],
   [/event|party|ticket/, Ticket],
   [/travel|tour|trip/, Compass],
   [/food|dining|cafe/, Coffee],
@@ -27,7 +31,7 @@ const BY_WORD: readonly [RegExp, LucideIcon][] = [
 ];
 
 /** Used when nothing above gives an icon that is still free. */
-const SPARE: readonly LucideIcon[] = [Star, Gift, Compass, Sun, Moon, Coffee, Palette, Ticket, Bell, Cloud, Leaf, Globe, Rocket, Umbrella, Anchor, Feather, Mountain, Puzzle, Flower2, Rainbow, Tag];
+const SPARE: readonly LucideIcon[] = [Star, Gift, Compass, Sun, Moon, Coffee, Palette, Ticket, Bell, Cloud, Leaf, Globe, Rocket, Umbrella, Anchor, Feather, Mountain, Puzzle, Flower2, Rainbow];
 
 /** The admin's own pick for a category. "tag" is the "nothing chosen" icon, so it does not count. */
 function adminIcon(key: string | undefined): LucideIcon | null {

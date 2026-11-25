@@ -19,7 +19,7 @@ import { newStepCopy, newSuccessCopy } from "./post/newCopy";
 import { SelectField, Switch, TextField } from "./post/FormFields";
 import { AboutYouStep } from "./post/AboutYouStep";
 import { DetailsPreview, DetailsStep, type EditingPart, type SummaryItem } from "./post/DetailsStep";
-import { INTEREST_KEY } from "./post/interests";
+import { INTEREST_KEY, popularInterestsOf } from "./post/interests";
 import { ReviewStep, type ReviewRow } from "./post/ReviewStep";
 import { PostSuccess, type SuccessFacts, type UpsellPlan } from "./post/PostSuccess";
 import { openPromote } from "./promote/openPromote";
@@ -1060,9 +1060,7 @@ export function PostWizard({
     const detailsCard = (
       <DetailsPreview title={title} categoryName={category?.name ?? ""} placeName={[cityName, shownDistrict].filter(Boolean).join(" / ")} interests={picksOf(attrs[INTEREST_KEY])} accountName={accountName} name={nickname} cover={coverUrl} editing={current === "photos" ? "" : current === "contact" ? "name" : editingPart} highlightPhoto={current === "photos"} />
     );
-    const popularInterests = (category?.fields ?? [])
-      .filter((field) => field.key === INTEREST_KEY && Array.isArray(field.options))
-      .flatMap((field) => (field.options as unknown[]).map((option) => String(option)));
+    const popularInterests = popularInterestsOf(category?.fields ?? []);
     return (
       <PostShell percent={progressPercent(step, flow.length)} saveState={saveState}>
       <div className="tkp-post" data-design="post-new">

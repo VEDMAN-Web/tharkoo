@@ -2,7 +2,8 @@ import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import { categoryIconsFor } from "@/components/post/categoryIcons";
 import { firstName } from "@/components/post/firstName";
-import { Rainbow, Flower2, Heart, Sparkles } from "lucide-react";
+import { CalendarDays, Heart, Sparkles, Tag, Users } from "lucide-react";
+import { popularInterestsOf } from "@/components/post/interests";
 
 const SEED = ["dating", "friendship", "meetups", "personal-ads", "jobs", "wellness", "property", "vehicles", "buy-and-sell", "pets", "education"].map((slug) => ({ slug }));
 const unique = (list: unknown[]) => new Set(list).size === list.length;
@@ -12,10 +13,14 @@ describe("H21.12c category icons", () => {
     expect(unique(categoryIconsFor(SEED))).toBe(true);
   });
 
-  it("never shares an icon between Spa & Salon and LGBTQ+ Community", () => {
+  it("draws the live site's categories as the design board: tag, calendar, two people", () => {
+    expect(categoryIconsFor([{ slug: "spa", icon: "" }, { slug: "meetups", icon: "" }, { slug: "transgender", icon: "" }])).toEqual([Tag, CalendarDays, Users]);
     const [spa, lgbt] = categoryIconsFor([{ slug: "spa-salon" }, { slug: "lgbtq-community" }]);
-    expect(spa).toBe(Flower2);
-    expect(lgbt).toBe(Rainbow);
+    expect(spa).toBe(Tag);
+    expect(lgbt).toBe(Users);
+    const all = categoryIconsFor([...SEED, { slug: "spa" }, { slug: "transgender" }, { slug: "brand-new" }]);
+    expect(unique(all)).toBe(true);
+    expect(all.filter((icon) => icon === Tag)).toHaveLength(1);
     const [a, b] = categoryIconsFor([{ slug: "something-new", icon: "tag" }, { slug: "another-new", icon: "" }]);
     expect(a).not.toBe(b);
   });
@@ -69,5 +74,22 @@ describe("H21.12c labels and rings", () => {
     const css = read("src/components/post/post-shell.css");
     expect(css).toMatch(/@media \(max-width: 1023px\) \{\s*body:has\(\.tkp-shell\) \.tkn-float \.tkn-chat-bubble \{ display: none; \}/);
     expect(read("src/components/post/PostShell.tsx")).toContain("step-help-link");
+  });
+});
+
+describe("H21.12c popular interests", () => {
+  it("come from the category's interests options first", () => {
+    expect(popularInterestsOf([{ key: "interests", type: "multiselect", options: ["Manicure", "Pedicure", "manicure", " Bridal "] }, { key: "extras", type: "multiselect", options: ["Other"] }])).toEqual(["Manicure", "Pedicure", "Bridal"]);
+    expect(popularInterestsOf([{ key: "interest", type: "text", options: ["Pride"] }])).toEqual(["Pride"]);
+  });
+
+  it("else from the pick-many fields, never from a pick-one list or text", () => {
+    expect(popularInterestsOf([{ key: "services", type: "multiselect", options: ["A", "B"] }, { key: "kind", type: "select", options: ["C"] }])).toEqual(["A", "B"]);
+  });
+
+  it("are empty when the category has none (the live categories today), and at most six", () => {
+    expect(popularInterestsOf([{ key: "topic", type: "text", options: [] }, { key: "when", type: "date" }])).toEqual([]);
+    expect(popularInterestsOf([])).toEqual([]);
+    expect(popularInterestsOf([{ key: "tags", options: ["1", "2", "3", "4", "5", "6", "7", "x".repeat(40)] }])).toHaveLength(6);
   });
 });

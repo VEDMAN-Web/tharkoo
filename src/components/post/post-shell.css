@@ -101,7 +101,8 @@ body:has(.tkp-shell) .tkn-float .tkn-chat-bubble { width: 56px; height: 56px; }
   .tkn .tkp-shell .tkp-header-mid { position: absolute; left: 50%; top: 50%; flex: none; transform: translate(-50%, -50%); color: #4a2870; }
   .tkn .tkp-shell .tkp-saved { display: inline-flex; margin-left: auto; }
   .tkn .tkp-shell .tkp-saved[data-state="idle"] { visibility: hidden; }
-  .tkn .tkp-shell .tkp-exit { order: 4; min-width: 0; padding: 0 4px; color: #b0106a; }
+  .tkn .tkp-shell .tkp-exit { order: 6; min-width: 0; padding: 0 4px; color: #b0106a; }
+  .tkn .tkp-shell .tkp-credit-pill { order: 4; }
   .tkn .tkp-shell .tkp-exit:hover { text-decoration: underline; }
   .tkn .tkp-shell .tkp-exit-ic { display: none; }
   .tkn .tkp-shell .tkp-exit-txt { position: static; width: auto; height: auto; overflow: visible; clip: auto; }

@@ -19,6 +19,10 @@ test.describe("H21.12c the support bubble on post an ad", () => {
       } else {
         await expect(bubble).toBeVisible();
         await expect(page.locator("[data-tk=step-help-link]")).toBeHidden();
+        // As the design board: the credit pill, then "Save draft and exit" at the far right.
+        const pill = (await page.locator("[data-tk=header-credit-pill]").boundingBox())!;
+        const exit = (await page.locator("[data-tk=exit-post]").boundingBox())!;
+        expect(exit.x).toBeGreaterThanOrEqual(pill.x + pill.width);
       }
     }
     await user.api.dispose();

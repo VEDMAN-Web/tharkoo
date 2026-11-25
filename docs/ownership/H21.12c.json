@@ -8,6 +8,7 @@
     "src/components/post/post-shell.css",
     "src/components/post/CategoryTiles.tsx",
     "src/components/post/categoryIcons.ts",
+    "src/components/post/interests.ts",
     "src/components/post/firstName.ts",
     "src/components/post/DetailsStep.tsx",
     "src/components/post/details-step.css",
