@@ -1,0 +1,16 @@
+{
+  "branchPrefix": "haiku/h21.10",
+  "globs": [
+    "docs/ownership/H21.10.json",
+    "progress/H21.10.md",
+    "docs/claude/STATUS.md",
+    "src/components/ui/card-photo.css",
+    "src/components/ui/card-photo.ts",
+    "src/components/ui/PhotoSwipe.tsx",
+    "src/components/ui/MiniAdCard.tsx",
+    "src/components/new/CardSlides.tsx",
+    "src/components/new/AdPopup.tsx",
+    "tests/e2e/h21-10-card-photos.e2e.ts",
+    "tests/e2e/home-ad-cards.e2e.ts"
+  ]
+}
