@@ -1,0 +1,9 @@
+{
+  "branchPrefix": "haiku/h21.9c",
+  "globs": [
+    "docs/ownership/H21.9c.json",
+    "progress/H21.9c.md",
+    "docs/claude/STATUS.md",
+    "tests/e2e/h7-120-small.e2e.ts"
+  ]
+}

@@ -4,6 +4,8 @@ import { useEffect, useRef, useState, type ReactNode } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { adPhotoAlt } from "@/lib/ad-photo-alt";
 import { SmartImage } from "./SmartImage";
+import { bgPhotoStyle } from "./card-photo";
+import "./card-photo.css";
 
 const MAX_DOTS = 5;
 const SWIPE_PX = 40;
@@ -95,7 +97,7 @@ export function PhotoSwipe({
         onTransitionEnd={onTransitionEnd}
       >
         {slides.map((photo, index) => (
-          <div className="tk-cc-slide" key={`${photo}-${index}`} style={{ width: `${100 / slides.length}%` }}>
+          <div className="tk-cc-slide tk-bgphoto" key={`${photo}-${index}`} style={bgPhotoStyle(photo, { width: `${100 / slides.length}%` })}>
             <SmartImage
               src={photo}
               alt={adPhotoAlt(title, place, index + 1)}

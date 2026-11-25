@@ -135,8 +135,10 @@ export async function requestTour(input: { userId: string; listingId: string } &
   await VideoTour.init();
   await assertNotPaused("pauseVideoCalls");
   const listingId = objectId(input.listingId, "listingId");
-  const listing = await Listing.findById(listingId).select("ownerId status title").lean();
+  const listing = await Listing.findById(listingId).select("ownerId status title videoCallsOff").lean();
   if (!listing || listing.status !== "active") throw new NotFoundError("Not found");
+  // H21.5b: the owner turned video calls off for this ad.
+  if (listing.videoCallsOff) throw new ConflictError("Video calls are off for this ad");
   const ownerId = String(listing.ownerId);
   if (ownerId === input.userId) {
     throw new ValidationError("Invalid request", { listingId: ["You cannot book a tour of your own ad"] });
