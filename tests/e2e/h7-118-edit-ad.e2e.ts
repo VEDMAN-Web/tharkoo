@@ -120,9 +120,9 @@ test.describe("H7.118 edit an ad", () => {
         await page.waitForTimeout(400);
       }
       await expect(page.locator("[data-tk=step-title]")).toHaveText("Review your changes");
-      await expect(page.locator("[data-tk=review-title]")).toContainText(edited);
+      await expect(page.locator("[data-tk=review-preview]")).toContainText(edited);
       await page.locator("#consent-terms").check();
-      await page.locator("#consent-adult").check();
+      if (await page.locator("#consent-adult").count()) await page.locator("#consent-adult").check();
       await page.getByRole("button", { name: "Save changes" }).click();
       await expect(page.locator("[data-tk=step-title]")).toHaveText("Changes saved");
       await expect(page.locator("[data-tk=receipt]")).toContainText("No charge for changes");
@@ -158,7 +158,7 @@ test.describe("H7.118 edit an ad", () => {
       await page.goto(`/u/post-insert/?draft=${ad.listingId}&step=5`);
       await expect(page.locator("[data-tk=step-title]")).toHaveText("Review your changes");
       await page.locator("#consent-terms").check();
-      await page.locator("#consent-adult").check();
+      if (await page.locator("#consent-adult").count()) await page.locator("#consent-adult").check();
       await page.getByRole("button", { name: "Save changes" }).click();
       await expect(page.locator("[data-tk=step-title]")).toHaveText("Changes saved");
       await expect(page.locator("[data-tk=what-next]")).toContainText("still paused");

@@ -162,7 +162,7 @@ test.describe("H7.100: posting works end to end", () => {
     await page.locator("#nickname").fill("Asha"); // H21.4: asked in step 4
     await page.locator("[data-tk=go-on]").click();
     await page.locator("#consent-terms").check();
-    await page.locator("#consent-adult").check();
+    if (await page.locator("#consent-adult").count()) await page.locator("#consent-adult").check();
 
     let refused = true;
     await page.route("**/api/listings/*/submit", async (route) => {

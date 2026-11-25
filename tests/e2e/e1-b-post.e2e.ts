@@ -82,10 +82,13 @@ test.describe("E1-B posting journeys", () => {
 
     // Without the adult consent the ad does not go live.
     await page.locator("#consent-terms").check();
-    await page.locator(".tkp-nav button", { hasText: "PUBLISH" }).click();
-    await expect(page.locator("[data-tk=step-title]").filter({ hasText: /live/i })).toHaveCount(0);
-    await expect(page.locator("[data-tk=step-of]")).toContainText("Step 5 of 5");
-    await page.locator("#consent-adult").check();
+    // H21.5a: the 18+ tick is shown only until it has been accepted once; this account accepted it at sign-up.
+    if (await page.locator("#consent-adult").count()) {
+      await page.locator(".tkp-nav button", { hasText: "PUBLISH" }).click();
+      await expect(page.locator("[data-tk=step-title]").filter({ hasText: /live/i })).toHaveCount(0);
+      await expect(page.locator("[data-tk=step-of]")).toContainText("Step 5 of 5");
+      await page.locator("#consent-adult").check();
+    }
     await page.locator(".tkp-nav button", { hasText: "PUBLISH" }).click();
     await expect(page.locator("[data-tk=step-title]").filter({ hasText: /live/i })).toBeVisible();
 

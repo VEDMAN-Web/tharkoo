@@ -109,7 +109,7 @@ test.describe("H7.120 small list", () => {
       const pill = page.locator('[data-tk="header-coins"]');
       await expect(pill).toContainText(/\d+ call credits and 100 ad credits\. Buy credits/);
       await page.locator("#consent-terms").check();
-      await page.locator("#consent-adult").check();
+      if (await page.locator("#consent-adult").count()) await page.locator("#consent-adult").check();
       await page.getByRole("button", { name: /^Publish for 30 credits$/ }).click();
       await expect(page.locator("[data-tk=step-title]")).toHaveText("Your ad is live");
       await expect(pill).toContainText(/\d+ call credits and 70 ad credits\. Buy credits/);

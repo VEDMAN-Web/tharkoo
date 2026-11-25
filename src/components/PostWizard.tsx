@@ -122,7 +122,7 @@ export function PostWizard({
   const [telegramOn, setTelegramOn] = useState(false);
   const [telegram, setTelegram] = useState("");
   const [terms, setTerms] = useState(false);
-  const [adult, setAdult] = useState(false);
+  const [adult, setAdult] = useState(Boolean(adultAccepted));
   const [attrs, setAttrs] = useState<PostAttrs>({});
   const [draftId, setDraftId] = useState("");
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -615,10 +615,6 @@ export function PostWizard({
     window.history.replaceState(null, "", postAdPath(paths));
     setDone(true);
   }
-
-  useEffect(() => {
-    if (adultAccepted) setAdult(true);
-  }, [adultAccepted]);
 
   const publishLatest = useRef<() => void>(() => undefined);
   useEffect(() => {
