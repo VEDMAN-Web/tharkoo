@@ -1,0 +1,13 @@
+{
+  "branchPrefix": "haiku/h21.7",
+  "globs": [
+    "docs/ownership/H21.7.json",
+    "progress/H21.7.md",
+    "docs/claude/STATUS.md",
+    "src/components/post/PostSuccess.tsx",
+    "src/components/post/post-success.css",
+    "src/components/PostWizard.tsx",
+    "src/lib/ui/text.ts",
+    "tests/**"
+  ]
+}

@@ -21,7 +21,7 @@ import { AboutYouStep } from "./post/AboutYouStep";
 import { DetailsPreview, DetailsStep, type EditingPart, type SummaryItem } from "./post/DetailsStep";
 import { INTEREST_KEY } from "./post/interests";
 import { ReviewStep, type ReviewRow } from "./post/ReviewStep";
-import { PostSuccess, type UpsellPlan } from "./post/PostSuccess";
+import { PostSuccess, type SuccessFacts, type UpsellPlan } from "./post/PostSuccess";
 import { openPromote } from "./promote/openPromote";
 import { openSupportWith } from "./recharge/openRecharge";
 import { PostShell } from "./post/PostShell";
@@ -123,7 +123,7 @@ export function PostWizard({
   const [banner, setBanner] = useState("");
   const [busy, setBusy] = useState(false);
   const [done, setDone] = useState(false);
-  const [plans, setPlans] = useState<{ id: string; code?: string; name: string; amount?: number }[]>([]);
+  const [plans, setPlans] = useState<{ id: string; code?: string; name: string; amount?: number; description?: string }[]>([]);
   const [hydrated, setHydrated] = useState(true);
   const [saveState, setSaveState] = useState<"idle" | "saving" | "saved">("idle");
   const [touched, setTouched] = useState<Record<string, boolean>>({});
@@ -141,6 +141,8 @@ export function PostWizard({
   const [adSlug, setAdSlug] = useState("");
   const [adAddress, setAdAddress] = useState("");
   const [receipt, setReceipt] = useState("");
+  const [boostDone, setBoostDone] = useState<SuccessFacts["boost"]>(null);
+  const [chosenName, setChosenName] = useState("");
   const [planNote, setPlanNote] = useState("");
   const [draftStatus, setDraftStatus] = useState("");
   const money = usePostingMoney();
@@ -245,7 +247,7 @@ export function PostWizard({
       });
     }
     if (document.cookie.split(";").some((part) => part.trim().startsWith("tk-in="))) {
-      api<{ products: { id: string; code?: string; name: string; amount?: number }[] }>("/api/promotions/products").then((res) => {
+      api<{ products: { id: string; code?: string; name: string; amount?: number; description?: string }[] }>("/api/promotions/products").then((res) => {
         if (res.ok) setPlans(res.data.products || []);
       });
     }
@@ -580,9 +582,11 @@ export function PostWizard({
       // The boost starts at once when the ad is live; an ad waiting for a check is boosted from My ads once it is live.
       let boostNote = "";
       if (plan) {
+        setChosenName(plan.name);
         if (String(outcome.status ?? "active") === "active") {
-          const bought = await api<{ balance?: number }>("/api/promotions", { method: "POST", body: JSON.stringify({ listingId: draftId, productId: plan.id, idempotencyKey: idempotencyKey(`post-${draftId}-${plan.id}`) }) });
+          const bought = await api<{ balance?: number; endsAt?: string | null }>("/api/promotions", { method: "POST", body: JSON.stringify({ listingId: draftId, productId: plan.id, idempotencyKey: idempotencyKey(`post-${draftId}-${plan.id}`) }) });
           if (bought.ok) {
+            setBoostDone({ name: plan.name, endsAt: bought.data?.endsAt ?? null, credits: plan.amount });
             if (typeof bought.data?.balance === "number") left = bought.data.balance;
             boostNote = t("post.boost.started", { name: plan.name, paid: creditsText(plan.amount) });
           } else boostNote = t("post.boost.failed", { reason: friendlyError(bought.error) });
@@ -661,7 +665,8 @@ export function PostWizard({
         anotherHref={copy.success.secondaryCta?.href || postAdPath(paths)}
         adHref={adAddress || (adSlug ? `/ad/${adSlug}/` : "")}
         receipt={receipt}
-        plans={visiblePlans.filter((plan) => (plan.amount ?? 0) > 0).slice(0, 2)}
+        plans={visiblePlans.filter((plan) => (plan.amount ?? 0) > 0)}
+        facts={{ city: cityName, category: category?.name ?? "", place: [shownDistrict, cityName].filter(Boolean).join(", "), tags: [category?.name ?? "", ...picksOf(attrs[INTEREST_KEY])].filter(Boolean), boost: boostDone, chosenName }}
         planNote={planNote}
         onPlan={buyPlan}
         saved={editing}
