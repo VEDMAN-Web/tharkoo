@@ -69,14 +69,14 @@ test.describe("4 Advertiser", () => {
     await page.locator(":is([data-tk=card], [data-tk=home-ad], [data-tk=listing-row])").filter({ hasText: title }).first().getByRole("link", { name: "Edit" }).click();
     await page.waitForURL(/draft=/);
     await expect(page.locator("#title")).toHaveValue(title);
-    // The edit form does not bring the nickname back (BUG 4 in lane-d-bugs), so enter it again.
-    if (!(await page.locator("#nickname").inputValue())) await page.locator("#nickname").fill("Asha");
     await page.locator("#title").fill(edited);
     await page.locator("[data-tk=go-on]").click(); // details -> more or photos
     await expect(page.locator("[data-tk=step-of]")).toContainText("Step 3 of");
     if (/Step 3 of 6/.test(await page.locator("[data-tk=step-of]").innerText())) await page.locator("[data-tk=go-on]").click(); // more -> photos
     await page.locator("[data-tk=photo-input]").waitFor({ state: "attached" });
     await page.locator("[data-tk=go-on]").click(); // photos -> contact
+    // The edit form does not bring the nickname back (BUG 4 in lane-d-bugs), so enter it again (H21.4: it is asked in step 4).
+    if (!(await page.locator("#nickname").inputValue())) await page.locator("#nickname").fill("Asha");
     await page.locator("[data-tk=go-on]").click(); // contact -> review
     await page.locator(".tkp-nav button", { hasText: /PUBLISH|Save changes/i }).click();
     await page.locator("[data-tk=step-title]").filter({ hasText: /live|review|pending|saved/i }).waitFor();

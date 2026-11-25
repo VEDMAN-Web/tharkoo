@@ -32,6 +32,14 @@ async function newPoster(page: Page, baseURL: string, prefix: string, withBirthD
   return email;
 }
 
+/** H21.4: the name (and the age for people ads) are asked in step 4, next to the phone. */
+async function fillAbout(page: Page) {
+  const name = page.locator("#nickname");
+  if (!(await name.inputValue())) await name.fill("Asha");
+  const age = page.locator("#age");
+  if ((await age.count()) && !(await age.inputValue())) await age.fill("28");
+}
+
 async function stepOf(page: Page, step: number) {
   await expect(page.locator("[data-tk=step-of]")).toContainText(`Step ${step} of 5`);
 }
@@ -45,8 +53,6 @@ async function chooseDating(page: Page, prefix: string) {
 
 async function fillDetails(page: Page, title: string, prefix: string) {
   await pickCity(page, "Mumbai");
-  await page.locator("#nickname").fill("Asha");
-  await page.locator("#age").fill("28");
   await page.locator("#title").fill(title);
   await page.locator("#text").fill("Looking to meet for coffee and a walk by the sea on weekends.");
   await page.getByRole("button", { name: "Coffee", exact: true }).click();
@@ -108,11 +114,15 @@ test.describe("H7.86 post an ad, step 5 and the success screen", () => {
     await reachAbout(page, title, prefix);
 
     await expect(page.locator("[data-tk=step-title]")).toHaveText("About you");
-    await expect(page.locator("[data-tk=step-help]")).toContainText("We ask only once");
-    await expect(page.locator("#about-name")).toHaveValue("Asha");
-    await expect(page.locator("#about-city option:checked")).toHaveText("Mumbai");
+    // H21.4: one lead line, the name is the first box, and there is no city box here (the city is chosen in step 2).
+    await expect(page.locator("[data-tk=step-help]")).toHaveText("How people will see you and reach you.");
+    // A people ad starts with an empty name (the account name is not put on a dating ad); it is typed below.
+    await expect(page.locator("#nickname")).toHaveValue("");
+    await expect(page.locator("#about-city")).toHaveCount(0);
     await expect(page.locator("#about-dob")).toHaveCount(0);
     await page.locator("#phone").fill("9876543210");
+    await page.locator("#age").fill("28");
+    await page.locator("#nickname").fill("Asha");
     await shot(page, `${prefix}-04-about-you`);
     await page.locator("[data-tk=go-on]").click();
     await stepOf(page, 5);
@@ -168,9 +178,10 @@ test.describe("H7.86 post an ad, step 5 and the success screen", () => {
     await mine.getByRole("link", { name: "Edit", exact: true }).click();
     await page.waitForURL(/draft=/);
     await expect(page.locator("#title")).toHaveValue(edited);
-    await expect(page.locator("#nickname")).toHaveValue("Asha");
     await page.locator("#title").fill(final);
     for (const step of [3, 4, 5]) {
+      // H21.4: the name is asked in step 4; it comes back from the saved ad, so the step goes on.
+      if (step === 5) await expect(page.locator("#nickname")).toHaveValue("Asha");
       await page.locator("[data-tk=go-on]").click();
       await stepOf(page, step);
     }
@@ -196,6 +207,7 @@ test.describe("H7.86 post an ad, step 5 and the success screen", () => {
     await expect(page.locator("#about-adult")).toHaveCount(0);
     await expect(page.locator("[data-tk=dob-needed]")).toHaveCount(0);
     await page.locator("#phone").fill("9876543210");
+    await fillAbout(page);
     await page.locator("[data-tk=go-on]").click();
     await stepOf(page, 5);
     await expect(page.locator("#consent-adult")).toBeVisible();
@@ -211,6 +223,7 @@ test.describe("H7.86 post an ad, step 5 and the success screen", () => {
     await expect(page.locator("#about-adult")).toHaveCount(0);
     await expect(page.locator("[data-tk=dob-link]")).toHaveAttribute("href", /seller-profile.*next=/);
     await page.locator("#phone").fill("9876543210");
+    await fillAbout(page);
     await page.locator("[data-tk=go-on]").click();
     await stepOf(page, 4);
     await expect(page.locator(".tkp-banner")).toContainText("date of birth");
@@ -230,6 +243,7 @@ test.describe("H7.86 post an ad, step 5 and the success screen", () => {
     await stepOf(page, 4);
 
     await page.locator("#phone").fill("9876543210");
+    await fillAbout(page);
     await page.getByRole("switch", { name: "WhatsApp" }).click();
     await expect(page.locator("#whatsapp-same")).toBeChecked();
     await page.locator("#whatsapp-same").uncheck();
@@ -238,12 +252,13 @@ test.describe("H7.86 post an ad, step 5 and the success screen", () => {
     await expect(page.locator("#telegram")).toHaveCount(0);
     await page.getByRole("switch", { name: "Telegram" }).click();
     // The Telegram box sits directly under its switch.
-    await expect(page.locator("[data-tk=telegram-option] + .tk-field #telegram")).toBeVisible();
-    await expect(page.locator("#telegram")).toHaveAttribute("placeholder", "@yourname");
+    await expect(page.locator("[data-tk=telegram-option] + .tka-fld #telegram")).toBeVisible();
+    await expect(page.locator("#telegram")).toHaveAttribute("placeholder", "yourname"); // H21.4: the @ is a prefix in front of the box
     await page.locator("#telegram").fill("ab");
-    // The name and city come after the contact fields.
+    // H21.4: the name comes first, then the phone, then the other ways to be reached.
     const top = async (selector: string) => (await page.locator(selector).boundingBox())!.y;
-    expect(await top("#about-name")).toBeGreaterThan(await top("#telegram"));
+    expect(await top("#nickname")).toBeLessThan(await top("#phone"));
+    expect(await top("#phone")).toBeLessThan(await top("#telegram"));
     await page.locator("[data-tk=go-on]").click();
     await expect(page.getByText("Use +91 and 10 digits")).toBeVisible();
     await expect(page.getByText("Use 5 to 32 letters, digits or underscores")).toBeVisible();
@@ -305,8 +320,6 @@ test.describe("H7.86 post an ad, step 5 and the success screen", () => {
     await newPoster(page, baseURL!, "fit5");
     await chooseDating(page, "fit5");
     await pickCity(page, "Mumbai");
-    await page.locator("#nickname").fill("Asha");
-    await page.locator("#age").fill("28");
     await page.locator("#title").fill("A long title that wraps in the preview card");
     await page.locator("#text").fill("Looking to meet for coffee and a long walk by the sea on weekends, then dinner somewhere quiet and a chat about books, music and travel.");
     await page.getByRole("button", { name: "Coffee", exact: true }).click();
@@ -367,17 +380,18 @@ test.describe("H7.86 post an ad, step 5 and the success screen", () => {
     await expect(page.locator(".tkp-photos .upl-info")).toHaveCount(0);
     await shot(page, "h94-03-photos");
     await addPhoto(page, "h94p");
-    await expect(page.locator("[data-tk=phone-hint]")).toHaveText("Shown on your ad so people can reach you.");
+    await expect(page.locator("[data-tk=phone-hint]")).toHaveText("Shown on your ad so people can call you.");
     // H19.6b: WhatsApp and Telegram are two stacked switches of the same width, inside the window.
-    const toggles = await page.locator("[data-tk=contact-fields] > .tkp-toggle-row").evaluateAll((nodes) => nodes.map((node) => { const box = node.getBoundingClientRect(); return { x: box.x, y: box.y, w: box.width }; }));
+    const toggles = await page.locator("[data-tk=contact-fields] .tka-tgl").evaluateAll((nodes) => nodes.map((node) => { const box = node.getBoundingClientRect(); return { x: box.x, y: box.y, w: box.width }; }));
     expect(toggles).toHaveLength(2);
     expect(toggles[1].y).toBeGreaterThan(toggles[0].y);
     expect(Math.abs(toggles[0].w - toggles[1].w)).toBeLessThan(2);
     expect(toggles[1].x + toggles[1].w).toBeLessThanOrEqual(page.viewportSize()!.width);
-    const labels = await page.locator("[data-tk=contact-fields] > .tkp-toggle-row > span:first-child").evaluateAll((nodes) => nodes.map((node) => node.getBoundingClientRect().height));
+    const labels = await page.locator("[data-tk=contact-fields] .tka-tgl > span:first-child").evaluateAll((nodes) => nodes.map((node) => node.getBoundingClientRect().height));
     expect(Math.max(...labels)).toBeLessThanOrEqual(24);
     await shot(page, "h94-04-contact");
     await page.locator("#phone").fill("9876543210");
+    await fillAbout(page);
     await page.locator("[data-tk=go-on]").click();
     await stepOf(page, 5);
     await expect(page.locator("[data-tk=pay-slot]")).toBeVisible();
@@ -410,6 +424,7 @@ test.describe("H7.86 post an ad, step 5 and the success screen", () => {
     }
     const draft = await reachAbout(page, `Paid check ${Date.now()}`, prefix);
     await page.locator("#phone").fill("9876543210");
+    await fillAbout(page);
     await page.locator("[data-tk=go-on]").click();
     await stepOf(page, 5);
     await expect(page.locator("[data-tk=step-title]")).toHaveText("Review and publish");
@@ -468,6 +483,7 @@ test.describe("H7.86 post an ad, step 5 and the success screen", () => {
     await expect(page.locator("[data-tk=credits-card]")).toHaveCount(0);
     await reachAbout(page, `No fee ${Date.now()}`, "nofee");
     await page.locator("#phone").fill("9876543210");
+    await fillAbout(page);
     await page.locator("[data-tk=go-on]").click();
     await stepOf(page, 5);
     await expect(page.locator("[data-tk=pay-card]")).toHaveCount(0);
@@ -500,6 +516,7 @@ test.describe("H7.86 post an ad, step 5 and the success screen", () => {
     await newPoster(page, baseURL!, "drained", true, 100);
     await reachAbout(page, `Drained ${Date.now()}`, "drained");
     await page.locator("#phone").fill("9876543210");
+    await fillAbout(page);
     await page.locator("[data-tk=go-on]").click();
     await stepOf(page, 5);
     await expect(page.locator("[data-tk=pay-card]")).toHaveAttribute("data-state", "ok");
@@ -520,6 +537,7 @@ test.describe("H7.86 post an ad, step 5 and the success screen", () => {
     const title = `Free edit ${Date.now()}`;
     const draft = await reachAbout(page, title, "freeedit");
     await page.locator("#phone").fill("9876543210");
+    await fillAbout(page);
     await page.locator("[data-tk=go-on]").click();
     await stepOf(page, 5);
     await consentAndPublish(page);
@@ -581,14 +599,15 @@ test.describe("H7.86 post an ad, step 5 and the success screen", () => {
     for (const [width, height] of sizes) {
       await page.setViewportSize({ width, height });
       await page.goto(`/u/post-insert/?draft=${id}&step=4`);
-      await expect(page.locator("[data-tk=about-you]")).toBeVisible();
+      await expect(page.locator("[data-tk=contact-fields]")).toBeVisible();
       await checkSize(width, height, "About you");
       await shot(page, `3-3-about-${width}x${height}`);
     }
     await tapTargets(page, ".tkp-btn");
-    await tapTargets(page, ".tk-field input, .tk-field select", 40);
+    await tapTargets(page, ".tka-inp", 44); // H21.4: the boxes of step 4 are 52 px
     expect(await serious(page)).toEqual([]);
     await page.locator("#phone").fill("9876543210");
+    await fillAbout(page);
     await page.locator("[data-tk=go-on]").click();
     await stepOf(page, 5);
     for (const [width, height] of sizes) {

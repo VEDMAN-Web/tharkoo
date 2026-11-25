@@ -116,6 +116,9 @@ test.describe("H21.3 step 3 photos", () => {
       await page.mouse.move(first.x + first.width / 2 + 30, first.y + first.height / 2 + 10, { steps: 4 });
       await expect(page.locator('[data-tk=photo-tile][data-drag="lifted"]')).toHaveCount(1);
       await expect(page.locator('[data-tk=photo-slot]')).toHaveCount(1);
+      // The place the photo left is the design's slot: pale pink with a 2 px dashed #c2126f border (not dark purple).
+      const slotStyle = await page.locator("[data-tk=photo-slot] .tkph-img").evaluate((node) => { const s = getComputedStyle(node); return { bg: s.backgroundColor, style: s.borderTopStyle, width: s.borderTopWidth, color: s.borderTopColor }; });
+      expect(slotStyle).toEqual({ bg: "rgb(255, 240, 247)", style: "dashed", width: "2px", color: "rgb(194, 18, 111)" });
       await shot(page, "photos-dragging", true);
       await page.mouse.move(third.x + third.width / 2, third.y + third.height / 2, { steps: 8 });
       await page.mouse.up();

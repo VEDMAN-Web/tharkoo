@@ -27,20 +27,22 @@ describe("About you checks (H7.86)", () => {
     expect(validateAbout({ askDateOfBirth: true, dateOfBirth: "2008-11-16", ageConfirmed: true }, now)).toEqual({});
   });
 
-  it("keeps the date and the tick on the contact step, and lets that step answer for the name and the city only when it is About you", () => {
+  it("keeps the date, the tick, the name and the age on the contact step (About you); the city stays in the details step (H21.4)", () => {
     expect(stepOfError("dob")).toBe("contact");
     expect(stepOfError("ageConfirmed")).toBe("contact");
+    expect(stepOfError("nickname")).toBe("contact");
+    expect(stepOfError("age")).toBe("contact");
     const all = { nickname: "Name is required", city: "Pick a city", title: "Too short", dob: "Enter your date of birth", phone: "Use +91 and 10 digits" };
-    expect(Object.keys(errorsForStep(all, "contact")).sort()).toEqual(["dob", "phone"]);
-    expect(Object.keys(errorsForStep(all, "contact", true)).sort()).toEqual(["city", "dob", "nickname", "phone"]);
-    expect(Object.keys(errorsForStep(all, "details", true)).sort()).toEqual(["city", "nickname", "title"]);
+    expect(Object.keys(errorsForStep(all, "contact")).sort()).toEqual(["dob", "nickname", "phone"]);
+    expect(Object.keys(errorsForStep(all, "contact", true)).sort()).toEqual(["dob", "nickname", "phone"]);
+    expect(Object.keys(errorsForStep(all, "details", true)).sort()).toEqual(["city", "title"]);
   });
 });
 
 describe("wording of steps 4 and 5 (H7.86)", () => {
-  it("calls the contact step About you for a first-time account and Contact otherwise", () => {
-    expect(newStepCopy("contact", POST_COPY_DEFAULTS, true)).toMatchObject({ title: ABOUT_YOU_TITLE, help: ABOUT_YOU_HELP });
-    expect(newStepCopy("contact", POST_COPY_DEFAULTS, false).title).toBe("Contact");
+  it("calls the contact step About you, with its own lead line, for every account (H21.4)", () => {
+    expect(newStepCopy("contact", POST_COPY_DEFAULTS, true)).toMatchObject({ title: ABOUT_YOU_TITLE, help: "How people will see you and reach you." });
+    expect(newStepCopy("contact", POST_COPY_DEFAULTS, false).title).toBe("About you");
   });
 
   it("keeps a contact title an admin wrote", () => {

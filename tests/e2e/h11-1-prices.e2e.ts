@@ -113,8 +113,6 @@ async function reachStepFive(page: Page, title: string) {
   await page.locator("[data-tk=go-on]").click();
   await stepOf(page, 2);
   await pickCity(page, "Mumbai");
-  await page.locator("#nickname").fill("Asha");
-  await page.locator("#age").fill("28");
   await page.locator("#title").fill(title);
   await page.locator("#text").fill("Looking to meet for coffee and a walk by the sea on weekends.");
   await page.getByRole("button", { name: "Coffee", exact: true }).click();
@@ -126,6 +124,8 @@ async function reachStepFive(page: Page, title: string) {
   await page.locator("[data-tk=go-on]").click();
   await stepOf(page, 4);
   await page.locator("#phone").fill("9876543210");
+  await page.locator("#age").fill("28");
+  await page.locator("#nickname").fill("Asha");
   await page.locator("[data-tk=go-on]").click();
   await stepOf(page, 5);
 }

@@ -100,7 +100,7 @@ describe("the step wording shows what an admin saved", () => {
   it("an untouched step takes the form's own wording from the site texts", () => {
     expect(newStepCopy("review", POST_COPY_DEFAULTS, false).title).toBe("Review and publish");
     expect(newStepCopy("review", POST_COPY_DEFAULTS, false, false, 0, false, "both", makeT({ "post.stepCopy.reviewTitle": "Last look" })).title).toBe("Last look");
-    expect(newStepCopy("contact", POST_COPY_DEFAULTS, true, false, 0, false, "both", makeT({ "post.stepCopy.aboutYouTitle": "Who you are" })).title).toBe("Who you are");
+    expect(newStepCopy("contact", POST_COPY_DEFAULTS, true, false, 0, false, "both", makeT({ "post.v2.about.title": "Who you are" })).title).toBe("Who you are");
     expect(newStepCopy("contact", POST_COPY_DEFAULTS, false, false, 0, false, "email").help).toBe("People will write to you by email. No phone number is needed.");
   });
 

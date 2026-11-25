@@ -11,9 +11,7 @@ async function startDraft(page: import("@playwright/test").Page, baseURL: string
   await page.locator(".tkp-tile", { hasText: category }).click();
   await page.locator("[data-tk=go-on]").click();
   await pickCity(page, "Mumbai");
-  await page.locator("#nickname").fill("Asha");
   const people = category === "Dating";
-  if (people) await page.locator("#age").fill("25");
   const roleHere = (await page.locator("#role").count()) > 0;
   if (!people && roleHere) await page.locator("#role").fill("Office assistant");
   await page.locator("#title").fill(`FIX1 ${category} ${Date.now()}`);

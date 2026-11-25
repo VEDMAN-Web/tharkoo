@@ -44,8 +44,8 @@
 /* Dragging: the lifted photo tilts and floats; its old place is a dashed pink slot. */
 .tkn .tkp-shell .tkph-tile.is-lifted { transform: rotate(-3deg) scale(1.04); }
 .tkn .tkp-shell .tkph-tile.is-lifted .tkph-img { box-shadow: 0 24px 40px -14px rgba(30, 11, 56, 0.55); cursor: grabbing; }
-.tkn .tkp-shell .tkph-tile.is-lifted .tkph-actions { display: none; }
-.tkn .tkp-shell .tkph-tile.is-slot .tkph-img { border: 2px dashed #c2126f; background: #fff0f7; box-sizing: border-box; }
+.tkn .tkp-shell.tkp-shell .tkp-post[data-design="post-new"] .tkph-tile.is-lifted .tkph-actions { display: none; }
+.tkn .tkp-shell.tkp-shell .tkp-post[data-design="post-new"] .tkph-tile.is-slot .tkph-img { border: 2px dashed #c2126f; background: #fff0f7; box-sizing: border-box; }
 
 /* The last tile: Add more. */
 .tkn .tkp-shell .tkph-add-li { list-style: none; }

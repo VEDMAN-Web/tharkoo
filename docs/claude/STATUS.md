@@ -69,6 +69,7 @@ Opus has access to this folder on Vedant's PC. Messages go through `.relay/` (gi
 | H21.0 | Post-ad redesign: shared shell | approved (#504 merged) | #504 | Haiku |
 | H21.1 | Post-ad redesign: Step 1 Category | approved (#505 merged) | #505 | Haiku |
 | H21.2 | Post-ad redesign: Step 2 Details | approved (#506 merged) | #506 | Haiku |
-| H21.3 | Post-ad redesign: Step 3 Photos | PR open | haiku/h21.3-photos | Haiku |
+| H21.3 | Post-ad redesign: Step 3 Photos | approved (#509 merged) | #509 | Haiku |
+| H21.4 | Post-ad redesign: Step 4 About you | PR open | haiku/h21.4-about | Haiku |
 
 Status values: todo · doing · PR open · changes needed · approved · merged · blocked.

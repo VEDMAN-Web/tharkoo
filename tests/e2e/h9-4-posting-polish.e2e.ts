@@ -66,13 +66,27 @@ test.describe("H9.4 posting polish, part 1", () => {
     await page.setViewportSize({ width: 390, height: 844 });
     await poster(page, baseURL!, "h94people");
     await toDetails(page, "Dating");
+    // H21.4: step 2 asks for the title and the category's choices; the name and the age are asked in step 4.
+    await page.locator("[data-tk=go-on]").click();
+    const detailErrors = await page.locator("[data-tk=field-error]").allInnerTexts();
+    expect(detailErrors).toEqual(expect.arrayContaining(["Add a title for your ad.", "Pick one."]));
+    expect(detailErrors.join(" ")).not.toMatch(/Please, fill|Invalid field|alphanumeric|must enter/);
+    await shot(page, "errors");
+    await page.locator("#title").fill("Coffee and a walk this weekend");
+    await page.getByRole("button", { name: "Coffee", exact: true }).click();
+    await page.locator("[data-tk=go-on]").click();
+    await expect(page.locator("[data-tk=step-of]")).toContainText("Step 3 of");
+    await page.locator("[data-tk=go-on]").click();
+    await expect(page.locator("[data-tk=step-of]")).toContainText("Step 4 of");
     await expect(page.locator("#nickname")).toHaveValue("");
     await expect(page.getByText("The name people see, e.g. your first name")).toBeVisible();
     await page.locator("[data-tk=go-on]").click();
     const errors = await page.locator("[data-tk=field-error]").allInnerTexts();
-    expect(errors).toEqual(expect.arrayContaining(["Fill this in.", "Enter your age (18 or over).", "Add a title for your ad.", "Pick one."]));
+    expect(errors).toEqual(expect.arrayContaining(["Fill this in.", "Enter your age (18 or over)."]));
     expect(errors.join(" ")).not.toMatch(/Please, fill|Invalid field|alphanumeric|must enter/);
-    await shot(page, "errors");
+    await shot(page, "errors-about");
+    await page.getByRole("button", { name: "Back" }).click();
+    await page.getByRole("button", { name: "Back" }).click();
     await page.setViewportSize({ width: 1440, height: 900 });
     // H21.2: the details step has its own preview card; its place tag says "City" until a city is chosen.
     await page.locator("#city").fill("");

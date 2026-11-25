@@ -69,7 +69,9 @@ test.describe("H7.83 post an ad, steps 1 and 2", () => {
     await expect(page.locator("#title")).toHaveAttribute("placeholder", "Looking for coffee and a walk this weekend");
     await expect(page.locator("#text")).toHaveAttribute("placeholder", "Tell people about yourself and what you are looking for");
     await expect(page.locator("#price")).toHaveCount(0);
-    await expect(page.locator("#age")).toHaveAttribute("inputmode", "numeric");
+    // H21.4: the age box is in step 4 (About you); the name and the age are not asked here.
+    await expect(page.locator("#age")).toHaveCount(0);
+    await expect(page.locator("#nickname")).toHaveCount(0);
     // H21.1: the rail now has an "About you" step; the card itself must not.
     await expect(page.locator(".tkp-main").getByText("About You")).toHaveCount(0);
     await expect(page.getByText("* Required fields")).toHaveCount(0);
@@ -79,10 +81,6 @@ test.describe("H7.83 post an ad, steps 1 and 2", () => {
     const names = await page.locator("[role=option] span").allInnerTexts();
     expect(names.length).toBeGreaterThan(0);
     expect(names[0].toLowerCase().startsWith("mum")).toBe(true);
-    await page.locator("#age").fill("17");
-    await page.locator("#title").focus();
-    await expect(page.locator("#age")).toHaveValue("17");
-    await expect(page.locator(".tkp-main [data-tk=field-error]").first()).toBeVisible();
   });
 
   test("a non-people category has no price box either", async ({ page, baseURL }) => {
@@ -107,7 +105,6 @@ test.describe("H7.83 post an ad, steps 1 and 2", () => {
     await poster(page, baseURL!, "autosave");
     await toDetails(page, "Dating");
     await pickCity(page, "Mumbai");
-    await page.locator("#nickname").fill("Asha");
     await page.locator("#title").fill("Coffee and a walk");
     await page.locator("#text").fill("A friendly weekend walk and a coffee, in the morning.");
     await expect(page.locator("[data-tk=draft-saved]")).toHaveAttribute("data-state", "saved", { timeout: 10_000 });
@@ -140,7 +137,7 @@ test.describe("H7.83 post an ad, steps 1 and 2", () => {
     }
     await page.locator("[data-tk=go-on]").click();
     await expect(page.locator("[data-tk=step-of]")).toContainText("Step 2 of");
-    for (const id of ["#city", "#nickname", "#age", "#title", "#text"]) {
+    for (const id of ["#city", "#title", "#text"]) { // H21.4: the name and age boxes are in step 4
       const box = (await page.locator(id).boundingBox())!;
       expect(box.height, id).toBeGreaterThanOrEqual(44);
     }

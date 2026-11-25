@@ -37,8 +37,6 @@ async function toPhotos(page: Page, title: string) {
   await page.locator(".tkp-tile", { hasText: "Dating" }).click();
   await page.locator("[data-tk=go-on]").click();
   await pickCity(page, "Mumbai");
-  await page.locator("#nickname").fill("Asha");
-  await page.locator("#age").fill("29");
   await page.locator("#title").fill(title);
   await page.locator("#text").fill("Looking to meet for coffee and a walk, in a public place, on weekends.");
   await page.getByText("Coffee", { exact: true }).first().click();
@@ -54,7 +52,6 @@ async function toPhotosJobs(page: Page, title: string) {
   await page.locator(".tkp-tile", { hasText: "Jobs" }).click();
   await page.locator("[data-tk=go-on]").click();
   await pickCity(page, "Mumbai");
-  await page.locator("#nickname").fill("Asha");
   const roleHere = (await page.locator("#role").count()) > 0;
   if (roleHere) await page.locator("#role").fill("Office assistant");
   await page.locator("#title").fill(title);
@@ -162,6 +159,7 @@ test.describe("H7.100: posting works end to end", () => {
 
     await page.locator("[data-tk=go-on]").click();
     await page.locator("#phone").fill("9876543210");
+    await page.locator("#nickname").fill("Asha"); // H21.4: asked in step 4
     await page.locator("[data-tk=go-on]").click();
     await page.locator("#consent-terms").check();
     await page.locator("#consent-adult").check();

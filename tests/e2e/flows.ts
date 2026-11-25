@@ -23,7 +23,6 @@ export async function fillNewPostAd(page: Page, base: string, options: { title: 
   // Step 2: details.
   // H19.6: State first, then the city of that state.
   await pickCity(page, city);
-  await page.locator("#nickname").fill("Asha");
   const roleHere = (await page.locator("#role").count()) > 0;
   if (roleHere) await page.locator("#role").fill("Office assistant");
   await page.locator("#title").fill(title);
@@ -40,6 +39,7 @@ export async function fillNewPostAd(page: Page, base: string, options: { title: 
   await page.locator("[data-tk=go-on]").click();
   // Step 4: contact.
   await page.locator("#phone").fill("9876543210");
+  await page.locator("#nickname").fill("Asha");
   await page.locator("[data-tk=go-on]").click();
   // Step 5: review. The ID-check switch is off by default (H6.14), so PUBLISH goes straight to live.
   await page.locator("#consent-terms").check();
