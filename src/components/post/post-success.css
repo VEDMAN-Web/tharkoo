@@ -65,3 +65,9 @@
   .tkdn-banner h1 { font-size: 20px; }
   .tkdn-box { padding: 16px; }
 }
+
+/* H21.7b: the support bubble (56 px) sits 16 px from the bottom on the done screens, and the page leaves room for it, so it never covers a button. */
+@media (max-width: 1023px) {
+  body:has(.tkdn) .tkn-float { bottom: 16px; }
+  .tkdn { padding-bottom: calc(56px + 16px + 16px + env(safe-area-inset-bottom)); }
+}
