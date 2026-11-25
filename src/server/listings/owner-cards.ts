@@ -13,7 +13,7 @@ type PresentInput = Parameters<typeof presentRows>[0];
 const VIDEO_SWITCH_CODES = new Set(["top", "super-top"]);
 
 /** H21.5c: the ads (by id) that have TOP or Super Top running now: only those can have the Video calls switch in My ads. */
-async function topAdIds(ids: Types.ObjectId[], now: Date) {
+export async function topAdIds(ids: Types.ObjectId[], now: Date) {
   if (ids.length === 0) return new Set<string>();
   const orders = await PromotionOrder.find({ listingId: { $in: ids }, status: "active", startsAt: { $lte: now }, endsAt: { $gt: now } }).select("listingId productId").lean();
   const products = await PromotionProduct.find({ _id: { $in: [...new Set(orders.map((order) => String(order.productId)))] } }).select("code").lean();

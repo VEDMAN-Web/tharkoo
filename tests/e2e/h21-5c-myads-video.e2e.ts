@@ -89,4 +89,7 @@ test("an ad without TOP or Super Top has no Video calls switch", async ({ page, 
   await page.goto("/u/account/ads/");
   await expect(page.locator("[data-tk=promote-open]").first()).toBeVisible();
   await expect(page.locator("[data-tk=video-calls-toggle]")).toHaveCount(0);
+  expect(await hasHorizontalScroll(page)).toBe(false);
+  await page.locator("[data-tk=promote-open]").first().scrollIntoViewIfNeeded();
+  await shot(page, "myads-plain-no-switch");
 });

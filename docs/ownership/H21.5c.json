@@ -8,6 +8,7 @@
     "src/components/vendor/video-switch.css",
     "src/components/vendor/MyAdsBoard.tsx",
     "src/components/buyer/MyAdsList.tsx",
+    "tests/server/listings/h21-5c-top-ads.test.ts",
     "tests/e2e/h21-5c-myads-video.e2e.ts"
   ]
 }
