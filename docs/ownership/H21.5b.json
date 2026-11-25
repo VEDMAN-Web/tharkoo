@@ -1,0 +1,15 @@
+{
+  "branchPrefix": "haiku/h21.5b",
+  "globs": [
+    "docs/ownership/H21.5b.json",
+    "progress/H21.5b.md",
+    "docs/claude/STATUS.md",
+    "src/server/models/listing.ts",
+    "src/server/shared/schemas/listings.ts",
+    "src/server/listings/service.ts",
+    "src/server/tours/service.ts",
+    "src/server/tours/offer.ts",
+    "tests/server/tours/h21-5b-video-off.test.ts",
+    "tests/e2e/h21-5b-video-off.e2e.ts"
+  ]
+}
