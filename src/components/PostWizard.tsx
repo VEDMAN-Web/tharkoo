@@ -314,6 +314,28 @@ export function PostWizard({
     if (done) window.scrollTo(0, 0);
   }, [done]);
 
+  // H21.12b: every step change opens at the top, with the focus on the step's heading (not on a button or a box further down).
+  const openedStep = useRef(current);
+  useEffect(() => {
+    if (!newDesign || openedStep.current === current) return;
+    openedStep.current = current;
+    const open = () => {
+      window.scrollTo(0, 0);
+      const heading = document.querySelector<HTMLElement>("[data-tk=step-title]");
+      if (!heading) return;
+      heading.setAttribute("tabindex", "-1");
+      heading.focus({ preventScroll: true });
+    };
+    open();
+    // A second pass after the new step has drawn: its own effects must not leave the page scrolled down. It leaves the
+    // focus alone when something has since taken it on purpose: the "Fix N things" box, a field or a link.
+    const id = window.setTimeout(() => {
+      if (document.activeElement?.matches("[data-tk=error-summary],input,select,textarea,a")) return;
+      open();
+    }, 120);
+    return () => window.clearTimeout(id);
+  }, [current, newDesign]);
+
   useEffect(() => {
     const id = window.setTimeout(() => setServerShort(null), 0);
     return () => window.clearTimeout(id);
@@ -859,7 +881,9 @@ export function PostWizard({
   /** H21.1: the chips of the category's filters ("All" first), taken from its filterable choice fields. */
   function previewChips(): string[] {
     const field = (category?.fields ?? []).find((item) => item.filterable !== false && Array.isArray(item.options) && (item.options as unknown[]).length > 0);
-    return field ? (field.options as unknown[]).map((option) => (typeof option === "string" ? option : String((option as { label?: string }).label ?? ""))).filter(Boolean) : [];
+    const words = field ? (field.options as unknown[]).map((option) => (typeof option === "string" ? option : String((option as { label?: string }).label ?? ""))).filter(Boolean) : [];
+    // H21.12b: the board shows three words after "All"; where the filter has fewer, the category's own sub-categories fill in.
+    return [...new Set([...words, ...subOptions.map((item) => item.name)])];
   }
 
   function renderCategoryPreview(where: "inline" | "side") {
@@ -1032,7 +1056,7 @@ export function PostWizard({
     const listPlace = [shownDistrict, cityName].filter(Boolean).join(", ");
     const listHits = categoryPreview.hits;
     const listPreview = (where: "inline" | "side") => (
-      <ReviewListPreview where={where} kind={listKind} hours={boostPlan?.durationHours ?? null} categoryName={category?.name ?? ""} cityName={cityName} title={title.trim() || t("post.v2.det.previewTitle")} place={listPlace} cover={coverUrl} hits={listHits} />
+      <ReviewListPreview where={where} chips={previewChips()} kind={listKind} hours={boostPlan?.durationHours ?? null} categoryName={category?.name ?? ""} cityName={cityName} title={title.trim() || t("post.v2.det.previewTitle")} place={listPlace} cover={coverUrl} hits={listHits} />
     );
     const categoryReady = Boolean(categoryId) && (subOptions.length === 0 || Boolean(subcategoryId));
     const live = errorsForStep(validate(), current, Boolean(about), moreKeys);

@@ -81,6 +81,9 @@
 .tkn .tkp-shell .tkph-rules { display: flex; flex-direction: column; gap: 6px; padding: 12px 14px; border-radius: 12px; background: #f8f2fa; font-size: 13px; line-height: 1.5; color: #3d2270; }
 .tkn .tkp-shell .tkph-rules b { color: #110520; }
 .tkn .tkp-shell .tkph-guide-foot { margin: 0; font-size: 13px; line-height: 1.45; color: #6b4a8a; }
+/* H21.12b: the long rules open on request, so the column is not taller than the photo card. */
+.tkn .tkp-shell .tkph-all > summary { display: flex; align-items: center; min-height: 44px; cursor: pointer; font-size: 14px; font-weight: 700; color: #b0106a; }
+.tkn .tkp-shell .tkph-all[open] { display: flex; flex-direction: column; gap: 14px; }
 
 /* The preview card: the photo part is the one being edited. */
 .tkn .tkp-shell .tkd-pv-photo { position: relative; }
@@ -92,6 +95,9 @@
 @media (min-width: 1024px) {
   .tkn .tkp-shell .tkph-guide-inline { display: none; }
   .tkn .tkp-shell .tkph-guide-side { display: flex; }
+  /* H21.12b: the right column is never taller than the centre card: the card is as tall as the row, its buttons at the bottom. */
+  .tkn .tkp-shell.tkp-shell .tkp-post[data-design="post-new"] .tkp-main[data-step="photos"] { display: flex; flex-direction: column; align-self: stretch; }
+  .tkn .tkp-shell.tkp-shell .tkp-post[data-design="post-new"] .tkp-main[data-step="photos"] .tkp-nav { margin-top: auto; }
 }
 @media (prefers-reduced-motion: reduce) {
   .tkn .tkp-shell .tkph-tile.is-lifted { transform: none; }

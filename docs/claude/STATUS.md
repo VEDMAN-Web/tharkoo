@@ -80,6 +80,7 @@ Opus has access to this folder on Vedant's PC. Messages go through `.relay/` (gi
 | H21.7b | Logo on the phone header, Done screen clear of the chat bubble | approved (#518 merged) | #518 | Haiku |
 | H21.10 | Ad card photos are never cut | approved (#513 merged) | #513 | Haiku |
 | H21.11 | List-row pop-out covers its row | approved (#516 merged) | #516 | Haiku |
-| H21.12a | Money and credit text must agree | PR open | haiku/h21.12a-money | Haiku |
+| H21.12a | Money and credit text must agree | approved (#522 merged) | #522 | Haiku |
+| H21.12b | Post-ad layout, scroll and preview | PR open | haiku/h21.12b-layout | Haiku |
 
 Status values: todo · doing · PR open · changes needed · approved · merged · blocked.
