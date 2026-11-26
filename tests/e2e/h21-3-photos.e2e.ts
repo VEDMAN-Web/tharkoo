@@ -61,6 +61,7 @@ test.describe("H21.3 step 3 photos", () => {
     // Guidelines: the side column on a computer, under the box on a phone. The numbers come from the upload rules.
     const guide = page.locator(phone ? "[data-tk=photo-guidelines-inline]" : "[data-tk=photo-guidelines-side]");
     await expect(guide).toBeVisible();
+    await guide.locator("[data-tk=photo-all-rules] > summary").click(); // H21.12b: the long rules are behind "See all photo rules"
     await expect(page.locator(phone ? "[data-tk=photo-guidelines-side]" : "[data-tk=photo-guidelines-inline]")).toBeHidden();
     await expect(guide).toContainText("Videos: up to 60 seconds and 100 MB.");
     await expect(guide).toContainText("Up to 10 photos and videos in total.");
@@ -152,7 +153,8 @@ test.describe("H21.3 step 3 photos", () => {
     await expect(uploading.locator("[data-tk=upload-progress]")).toContainText(/Uploading \d+%/);
     await shot(page, "photos-uploading");
     // The support bubble stays visible on this step.
-    await expect(page.locator(".tkn-chat-bubble")).toBeVisible();
+    // H21.12c: the bubble is hidden below 1024 px on the post-ad screens.
+    await expect(page.locator(".tkn-chat-bubble")).toBeVisible({ visible: (page.viewportSize()?.width ?? 1440) >= 1024 });
     await shot(page, "photos-bubble", true);
     release();
     await expect(page.locator("[data-tk=photo-count]")).toHaveText("4 of 10 added", { timeout: 60_000 });

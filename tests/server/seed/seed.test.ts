@@ -10,6 +10,7 @@ import {
   PromotionProduct,
   SeedBackup,
 } from "@/server/models";
+import { categoryDenied, productCodeDenied } from "@/server/shared/policy";
 import {
   CATEGORIES,
   DEFAULT_CREDIT_PACKS,
@@ -160,6 +161,9 @@ describe("v2 seed", () => {
       "pets",
       "education",
     ]);
+    for (const category of CATEGORIES) {
+      expect(categoryDenied(category.slug, category.name).denied).toBe(false);
+    }
     const wellness = await Category.findOne({ slug: "wellness" }).lean();
     expect(wellness?.fields?.map((field) => field.key)).toEqual(["kind"]);
     expect(wellness?.fields?.[0]?.options).toEqual(["Spa", "Massage", "Yoga", "Fitness"]);
@@ -180,6 +184,7 @@ describe("v2 seed", () => {
       "star",
       "bump",
     ]);
+    for (const product of PRODUCTS) expect(productCodeDenied(product.code).denied).toBe(false);
     expect((await PromotionProduct.findOne({ code: "star" }).lean())?.name).toBe("Star");
     expect((await PromotionProduct.findOne({ code: "free" }).lean())?.amount).toBe(0);
 

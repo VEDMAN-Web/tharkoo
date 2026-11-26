@@ -1,5 +1,10 @@
 import mongoose from "mongoose";
-import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
+import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
+
+vi.mock("@/server/shared/policy", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@/server/shared/policy")>()),
+  textDenied: (text: string) => ({ denied: /blockedword/i.test(text) }),
+}));
 
 import type { AdminCtx } from "@/server/admin/context";
 import { undoEvent } from "@/server/admin/undo/core";
@@ -72,6 +77,7 @@ describe("adjustCredits", () => {
     await expect(adjustCredits(moderator, { userId, amount: 5, reason: "Nice", requestKey: key() })).rejects.toBeInstanceOf(ForbiddenError);
     expect(await AuditEvent.countDocuments({ action: "admin.write.denied" })).toBe(1);
     await expect(adjustCredits(finance, { userId, amount: 5, reason: "  ", requestKey: key() })).rejects.toBeInstanceOf(ValidationError);
+    await expect(adjustCredits(finance, { userId, amount: 5, reason: "a blockedword here", requestKey: key() })).rejects.toBeInstanceOf(ValidationError);
     for (const amount of [0, 1.5, Number.NaN, MAX_ADJUST + 1, -(MAX_ADJUST + 1)]) {
       await expect(adjustCredits(finance, { userId, amount, reason: "Goodwill", requestKey: key() })).rejects.toBeInstanceOf(ValidationError);
     }

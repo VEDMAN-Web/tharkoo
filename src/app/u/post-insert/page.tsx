@@ -14,12 +14,14 @@ import { newDesignOn } from "@/server/site-links/new-design";
 import { getPaths } from "@/server/urls/service";
 import { idCheckRequired, idCheckScreen } from "@/server/settings/id-check";
 import { IdCheckFirst } from "@/components/post/IdCheckFirst";
-import { PostShell } from "@/components/post/PostShell";
+import { PostLogoProvider, PostShell } from "@/components/post/PostShell";
+import { siteLogos } from "@/lib/brand";
+import { firstName } from "@/components/post/firstName";
 import { UiTextProvider } from "@/components/help/UiTextProvider";
 import { textOverrides } from "@/app/admin/ui-text/store";
 import { makeT, pickTexts } from "@/lib/ui/text";
 import { effectivePostingFee, readMoneySettings } from "@/server/billing/money-settings";
-import { getCategories, getCities } from "@/lib/queries";
+import { getCategories, getCities, getSite } from "@/lib/queries";
 import { plain } from "@/lib/plain";
 import { kindFor } from "@/server/categories/kind";
 import { maskEmail } from "@/lib/ui/post-form";
@@ -69,7 +71,8 @@ export default async function PostInsertPage({
   const copy = fillCopyFee(buildPostCopy(blocks), fee);
   const texts = { ...pickTexts(await textOverrides(), "post."), ...copy.texts };
   const shared = { fee };
-  if (screen !== "form") return <UiTextProvider texts={texts} shared={shared}><PostShell percent={null}><IdCheckFirst screen={screen} postPath={postAdPath(await getPaths())} t={makeT(texts, shared)} /></PostShell></UiTextProvider>;
+  const logo = siteLogos((await getSite()) as { logoUrl?: unknown; logoDarkUrl?: unknown }).light;
+  if (screen !== "form") return <UiTextProvider texts={texts} shared={shared}><PostLogoProvider src={logo}><PostShell percent={null}><IdCheckFirst screen={screen} postPath={postAdPath(await getPaths())} t={makeT(texts, shared)} /></PostShell></PostLogoProvider></UiTextProvider>;
   // H7.5: the New design (five steps, live preview) only when the switch is on.
   const [categoryRows, cityRows] = newDesign ? await Promise.all([getCategories(), getCities()]) : [[], []];
   const categories = plain(
@@ -79,10 +82,11 @@ export default async function PostInsertPage({
       slug: row.slug,
       people: row.kind === "people" || kindFor(row.slug, row.fields) === "people",
       fields: row.fields,
+      icon: (row as { icon?: string }).icon ?? "",
     })),
   );
   const cities = plain(cityRows.map((row) => ({ id: row.id, name: row.name, slug: row.slug, stateSlug: row.stateSlug })).sort((a, b) => a.name.localeCompare(b.name)));
   const home = (session.user.seller?.city ?? "").trim().toLowerCase();
   const defaultCityId = home ? (cities.find((item) => item.slug.toLowerCase() === home || item.name.toLowerCase() === home)?.id ?? "") : "";
-  return <UiTextProvider texts={texts} shared={shared}><PostWizard copy={copy} requireIdCheck={requireIdCheck} newDesign={newDesign} initialCategories={categories} initialCities={cities} defaultCityId={defaultCityId} defaultName={session.user.seller?.name ?? ""} adultAccepted={Boolean(session.user.attestedAdultAt)} maskedEmail={maskEmail(session.user.email)} about={about} /></UiTextProvider>;
+  return <UiTextProvider texts={texts} shared={shared}><PostLogoProvider src={logo}><PostWizard copy={copy} requireIdCheck={requireIdCheck} newDesign={newDesign} initialCategories={categories} initialCities={cities} defaultCityId={defaultCityId} defaultName={session.user.seller?.name || firstName(session.user.displayName)} accountName={session.user.displayName ?? ""} adultAccepted={Boolean(session.user.attestedAdultAt)} maskedEmail={maskEmail(session.user.email)} about={about} /></PostLogoProvider></UiTextProvider>;
 }

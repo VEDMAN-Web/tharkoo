@@ -42,11 +42,20 @@
 .tkn .tkp-shell .tkp-catpre-chips { display: flex; gap: 5px; overflow: hidden; }
 .tkn .tkp-shell .tkp-catpre-chip { display: flex; align-items: center; flex: none; height: 20px; padding: 0 8px; border-radius: 999px; border: 1px solid #ead8f0; background: #fff; color: #4a2870; font-size: 9px; font-weight: 700; }
 .tkn .tkp-shell .tkp-catpre-chip.on { background: #c2126f; border-color: #c2126f; color: #fff; }
-.tkn .tkp-shell .tkp-catpre-grid { padding: 8px; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 7px; grid-auto-rows: max-content; align-content: start; height: 400px; overflow: hidden; -webkit-mask-image: linear-gradient(180deg, #000 85%, transparent); mask-image: linear-gradient(180deg, #000 85%, transparent); }
+.tkn .tkp-shell .tkp-catpre-grid { padding: 8px; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 7px; grid-auto-rows: max-content; align-content: start; }
+/* H21.12b: the preview is a phone-wide frame on every screen (a tablet must not show one giant photo); cards are whole, no inner scroll. */
+.tkn .tkp-shell .tkp-catpre-inline, .tkn .tkp-shell .tkp-catpre-side { max-width: 360px; margin-inline: auto; }
 .tkn .tkp-shell .tkp-catpre-tier { grid-column: 1 / -1; display: flex; align-items: center; gap: 6px; margin-top: 2px; font-size: 9px; font-weight: 800; letter-spacing: 0.08em; color: #6b4a8a; }
 .tkn .tkp-shell .tkp-catpre-tier::after { content: ""; flex: 1; height: 1px; background: #ead8f0; }
 .tkn .tkp-shell .tkp-catpre-card { border-radius: 10px; overflow: hidden; background: #fff; box-shadow: 0 1px 3px rgba(30, 11, 56, 0.08); }
 .tkn .tkp-shell .tkp-catpre-card.wide { grid-column: 1 / -1; }
+.tkn .tkp-shell .tkp-catpre-row { display: contents; }
+/* H21.12b: where there is no real ad, a soft gradient card with no words. */
+.tkn .tkp-shell .tkp-catpre-ph .tkp-catpre-photo { background: radial-gradient(circle at 30% 35%, #ffe3f0 0 18%, transparent 19%), linear-gradient(160deg, #f6cfe3, #d9c6ee); }
+.tkn .tkp-shell .tkp-catpre-bar { display: block; height: 8px; width: 80%; border-radius: 999px; background: #f1e4f5; }
+.tkn .tkp-shell .tkp-catpre-bar.short { height: 6px; width: 45%; }
+.tkn .tkp-shell .tkp-catpre-ph.is-loading .tkp-catpre-photo { animation: tkp-catpre-pulse 1.4s ease infinite; background-size: 200% 100%; }
+.tkn .tkp-shell .tkp-catpre-heart { position: absolute; right: 6px; bottom: 6px; display: flex; align-items: center; justify-content: center; width: 20px; height: 20px; border-radius: 999px; background: rgba(255, 255, 255, 0.9); }
 .tkn .tkp-shell .tkp-catpre-photo { position: relative; aspect-ratio: 4 / 5; background: linear-gradient(160deg, #f3e6f6, #e5d6ee); background-size: cover; background-position: center; }
 .tkn .tkp-shell .tkp-catpre-card.wide .tkp-catpre-photo { aspect-ratio: 16 / 9; }
 .tkn .tkp-shell .tkp-catpre-tag { position: absolute; left: 6px; top: 6px; display: flex; align-items: center; height: 18px; padding: 0 7px; border-radius: 999px; background: #c2126f; color: #fff; font-size: 9px; font-weight: 800; letter-spacing: 0.04em; }
@@ -54,12 +63,11 @@
 .tkn .tkp-shell .tkp-catpre-body { display: flex; flex-direction: column; gap: 3px; padding: 6px 7px 8px; }
 .tkn .tkp-shell .tkp-catpre-line { font-size: 10px; font-weight: 800; line-height: 1.25; color: #110520; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .tkn .tkp-shell .tkp-catpre-place { font-size: 8px; font-weight: 700; color: #6b4a8a; }
-.tkn .tkp-shell .tkp-catpre-skel { border-radius: 10px; aspect-ratio: 4 / 6; background: linear-gradient(90deg, #f3e6f6 25%, #faf3fc 50%, #f3e6f6 75%); background-size: 200% 100%; animation: tkp-catpre-pulse 1.4s ease infinite; }
 .tkn .tkp-shell .tkp-catpre-caption { margin: 12px 2px 0; font-size: 13px; line-height: 1.45; color: #6b4a8a; }
 .tkn .tkp-shell .tkp-catpre-caption b { color: #110520; }
 .tkn .tkp-shell .tkp-catpre-empty { margin: 0; padding: 24px 16px; text-align: center; font-size: 13px; color: #6b4a8a; }
 @keyframes tkp-catpre-pulse { to { background-position: -200% 0; } }
-@media (prefers-reduced-motion: reduce) { .tkn .tkp-shell .tkp-catpre-skel { animation: none; } }
+@media (prefers-reduced-motion: reduce) { .tkn .tkp-shell .tkp-catpre-ph.is-loading .tkp-catpre-photo { animation: none; } }
 
 /* Tablet: three tiles across, then the desktop layout. */
 @media (min-width: 768px) {

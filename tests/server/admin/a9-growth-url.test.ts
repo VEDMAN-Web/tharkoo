@@ -16,6 +16,11 @@ vi.mock("@/lib/cache", async (importOriginal) => ({
   ...(await importOriginal<typeof import("@/lib/cache")>()),
   refreshPublicCache: async () => undefined,
 }));
+vi.mock("@/server/shared/policy", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@/server/shared/policy")>()),
+  textDenied: (text: string) => ({ denied: /blockedword/i.test(text) }),
+}));
+
 import { saveFreeAdsForAdmin, saveLandingForAdmin, saveTagsForAdmin } from "@/app/admin/growth-actions";
 import { addRedirectAction, deleteRedirectAction, saveOverrideAction, savePrefixesAction } from "@/app/admin/url-actions";
 import { hashToken } from "@/server/auth/http";
@@ -58,16 +63,25 @@ beforeEach(async () => {
 });
 
 describe("growth actions write an audit row", () => {
-  it("saves a landing text, and audits it", async () => {
+  it("saves a landing text, audits it, and refuses a blocked word in the intro without writing", async () => {
     const actorId = await signIn(["admin"]);
     const saved = await saveLandingForAdmin(landing);
     expect(saved.ok).toBe(true);
     const row = await AuditEvent.findOne({ action: "landing.save" }).lean();
     expect(row).toMatchObject({ targetType: "landing", targetId: "dating|gurgaon", actorRole: "admin" });
     expect(String(row?.actorId)).toBe(actorId);
+    const refused = await saveLandingForAdmin({ ...landing, key: "dating|pune", intro: "A BlockedWord intro" });
+    expect(refused).toMatchObject({ ok: false });
     const site = (await Site.findOne({ key: "default" }).lean()) as { landings?: Record<string, unknown> } | null;
     expect(Object.keys(site?.landings ?? {})).toEqual(["dating|gurgaon"]);
     expect(await AuditEvent.countDocuments({ action: "landing.save" })).toBe(1);
+  });
+
+  it("refuses a blocked word in an FAQ answer and in a tag label", async () => {
+    await signIn(["admin"]);
+    expect(await saveLandingForAdmin({ ...landing, faqs: [{ q: "Is it free?", a: "blockedword" }] })).toMatchObject({ ok: false });
+    expect(await saveTagsForAdmin("fun,A BlockedWord tag")).toMatchObject({ ok: false });
+    expect(await AuditEvent.countDocuments({ action: { $in: ["landing.save", "tags.save"] } })).toBe(0);
   });
 
   it("audits the tags and the free ads per week", async () => {
@@ -100,8 +114,10 @@ describe("URL actions write an audit row", () => {
     expect(await AuditEvent.countDocuments({ action: "urls.prefixes" })).toBe(1);
   });
 
-  it("saves a page title override and audits it", async () => {
+  it("refuses a blocked word in a page title override without saving it", async () => {
     await signIn(["admin"]);
+    expect(await saveOverrideAction({ path: "/dating/", title: "A BlockedWord title" })).toMatchObject({ ok: false });
+    expect(await UrlOverride.countDocuments({})).toBe(0);
     expect(await saveOverrideAction({ path: "/dating/", title: "Dating ads" })).toMatchObject({ ok: true });
     expect(await UrlOverride.countDocuments({})).toBe(1);
     expect(await AuditEvent.countDocuments({ action: "urls.override" })).toBe(1);

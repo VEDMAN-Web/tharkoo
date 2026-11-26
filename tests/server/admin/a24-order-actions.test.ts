@@ -1,5 +1,10 @@
 import mongoose from "mongoose";
-import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
+import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
+
+vi.mock("@/server/shared/policy", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@/server/shared/policy")>()),
+  textDenied: (text: string) => ({ denied: /blockedword/i.test(text) }),
+}));
 
 import type { AdminCtx } from "@/server/admin/context";
 import { actionsFor, giveCreditsBack, markRechargeFailed, markRechargePaid } from "@/server/admin/order-actions";
@@ -97,6 +102,7 @@ describe("mark paid", () => {
     await expect(markRechargePaid(support(), { paymentId: data.paymentId, reason: "ok" })).rejects.toBeInstanceOf(ForbiddenError);
     expect(await AuditEvent.countDocuments({ action: "admin.write.denied" })).toBe(1);
     await expect(markRechargePaid(finance(), { paymentId: data.paymentId, reason: "   " })).rejects.toBeInstanceOf(ValidationError);
+    await expect(markRechargePaid(finance(), { paymentId: data.paymentId, reason: "a blockedword" })).rejects.toBeInstanceOf(ValidationError);
     const test = await fixture({ provider: "mock" });
     await expect(markRechargePaid(finance(), { paymentId: test.paymentId, reason: "ok" })).rejects.toBeInstanceOf(ConflictError);
     await expect(markRechargePaid(finance(), { paymentId: "0123456789abcdef01234567", reason: "ok" })).rejects.toBeInstanceOf(NotFoundError);
@@ -189,6 +195,7 @@ describe("give credits back", () => {
     const data = await paid();
     await expect(giveCreditsBack(support(), { paymentId: data.paymentId, amount: 5, reason: "ok" })).rejects.toBeInstanceOf(ForbiddenError);
     await expect(giveCreditsBack(finance(), { paymentId: data.paymentId, amount: 5, reason: " " })).rejects.toBeInstanceOf(ValidationError);
+    await expect(giveCreditsBack(finance(), { paymentId: data.paymentId, amount: 5, reason: "blockedword" })).rejects.toBeInstanceOf(ValidationError);
     for (const amount of [0, -3, 1.5, Number.NaN, "abc"]) await expect(giveCreditsBack(finance(), { paymentId: data.paymentId, amount, reason: "ok" })).rejects.toBeInstanceOf(ValidationError);
     const waiting = await fixture();
     await expect(giveCreditsBack(finance(), { paymentId: waiting.paymentId, amount: 5, reason: "ok" })).rejects.toBeInstanceOf(ConflictError);

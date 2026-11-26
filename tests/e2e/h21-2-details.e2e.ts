@@ -114,7 +114,8 @@ test.describe("H21.2 step 2 details", () => {
       await expect(card).toHaveAttribute("data-editing", "tags"); // H21.4: the name is typed in step 4, so the third highlight is the interests
     }
     // The support bubble stays visible on this step.
-    await expect(page.locator(".tkn-chat-bubble")).toBeVisible();
+    // H21.12c: the bubble is hidden below 1024 px on the post-ad screens.
+    await expect(page.locator(".tkn-chat-bubble")).toBeVisible({ visible: (page.viewportSize()?.width ?? 1440) >= 1024 });
     await shot(page, "details-bubble", true);
   });
 });

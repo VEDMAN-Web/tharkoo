@@ -1,6 +1,11 @@
 import mongoose from "mongoose";
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 
+vi.mock("@/server/shared/policy", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@/server/shared/policy")>()),
+  textDenied: (text: string) => ({ denied: /blockedword/i.test(text) }),
+}));
+
 import type { AdminCtx } from "@/server/admin/context";
 import { AI_DRAFT_DAILY_LIMIT, AI_DRAFT_DEFAULT_MODEL, AI_DRAFT_KEY_MISSING, SYSTEM_PROMPT, cleanText, createAiDraft, parseModelAnswer, toFields } from "@/server/content/studio/ai-draft";
 import { placeholderIn } from "@/server/content/studio/fields";
@@ -73,6 +78,7 @@ describe("H16.3 AI draft", () => {
     const fetcher = okFetch(answer());
     await expect(createAiDraft(support, { topic: "Buying a used bike" }, { fetcher })).rejects.toBeInstanceOf(ForbiddenError);
     await expect(createAiDraft(blog, { topic: "x" }, { fetcher })).rejects.toBeInstanceOf(ValidationError);
+    await expect(createAiDraft(blog, { topic: "A blockedword topic" }, { fetcher })).rejects.toBeInstanceOf(ValidationError);
     expect(fetcher).not.toHaveBeenCalled();
   });
 
@@ -134,6 +140,13 @@ describe("H16.3 AI draft", () => {
     const done = await createAiDraft(admin, { topic: "Buying a used bike" }, { fetcher: okFetch(clean) });
     await publishItem(admin, { itemId: done.itemId });
     expect((await ContentItem.findById(done.itemId).lean())?.aiDraft).toBe(false);
+  });
+
+  it("saves nothing when the answer has a blocked word, and records the refusal", async () => {
+    const bad = answer({ sections: [{ heading: "Check", paragraphs: ["A blockedword sentence."] }] });
+    await expect(createAiDraft(blog, { topic: "Buying a used bike" }, { fetcher: okFetch(bad) })).rejects.toBeInstanceOf(ValidationError);
+    expect(await ContentItem.countDocuments()).toBe(0);
+    expect(await AuditEvent.countDocuments({ action: "content.ai_draft.failed" })).toBe(1);
   });
 
   it("an API failure or an unreadable answer saves nothing, says so plainly, and does not show the API text", async () => {

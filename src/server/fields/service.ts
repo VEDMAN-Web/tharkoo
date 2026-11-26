@@ -17,6 +17,7 @@ import {
 } from "@/server/fields/options";
 import { ForbiddenError, NotFoundError, ValidationError } from "@/server/http";
 import { Category, User } from "@/server/models";
+import { textDenied } from "@/server/shared/policy";
 
 const audit = new AuditRepository();
 
@@ -240,6 +241,7 @@ export async function readFieldSettings(categorySlug: string): Promise<Map<strin
 export function checkFilterLabel(raw: string): string {
   const label = normalizeOption(raw);
   if (label.length > MAX_FILTER_LABEL) throw new ValidationError(`The filter name can be at most ${MAX_FILTER_LABEL} characters`);
+  if (label && textDenied(label).denied) throw new ValidationError("The filter name contains a term that is not allowed on Tharkoo");
   return label;
 }
 

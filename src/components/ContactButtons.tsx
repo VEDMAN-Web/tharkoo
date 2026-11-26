@@ -6,7 +6,7 @@ import dynamic from "next/dynamic";
 import { MessageCircle, Phone, Video } from "lucide-react";
 import { api, friendlyError, hasSessionHint } from "@/lib/ui/api";
 import { tourRequestLabel } from "@/components/ad/tourLabels";
-import { isOpenTour, useTours } from "@/components/tours/useTours";
+import { callPage, isOpenTour, useTours } from "@/components/tours/useTours";
 import { useSellerStatus, type SellerStatus } from "@/components/availability/sellerStatus";
 import { AvailabilityBadge } from "@/components/availability/AvailabilityBadge";
 import { AdPopup, type AdPopupAlt, type FlowResult, type PopupKind } from "@/components/new/AdPopup";
@@ -45,6 +45,8 @@ type Ctx = {
   busy: Action | null;
   tour: AdTour | null;
   tourRequested: boolean;
+  /** The advertiser accepted this visitor's request: the button opens the call itself. */
+  joinTourId: string | null;
   open: (channel: Channel) => void;
   openChatFlow: () => void;
   openCall: () => void;
@@ -115,10 +117,14 @@ export function ContactProvider({
   const [tourRequestedRaw, setTourRequested] = useState(false);
   const [tourId, setTourId] = useState<string | null>(null);
   const [popup, setPopup] = useState<PopupKind | null>(null);
-  // While no pop-up is open, keep watching the request, so "Request sent" goes away once it is declined, cancelled or over.
-  const { rows: myTours } = useTours({ enabled: tourRequestedRaw && popup === null });
+  // While no pop-up is open, read the visitor's own calls from the server: the button stays right after a refresh or a
+  // page change, and goes back to normal once the request is declined, cancelled or over. (A guest is not asked.)
+  const { rows: myTours } = useTours({ enabled: Boolean(tour) && !sample && !isOwner && popup === null });
+  const openRow = tour ? myTours?.find((row) => row.role === "buyer" && row.listingId === tour.listingId && isOpenTour(row)) : undefined;
   const watched = tourId ? myTours?.find((row) => row.id === tourId) : undefined;
-  const tourRequested = tourRequestedRaw && !(watched && !isOpenTour(watched));
+  const tourRequested = Boolean(openRow) || (tourRequestedRaw && !(watched && !isOpenTour(watched)));
+  const openTourId = openRow?.id ?? tourId;
+  const joinTourId = openRow?.status === "accepted" ? openRow.id : null;
   const [paidAdded, setPaidAdded] = useState<number | null>(null);
   const [signedIn, setSignedIn] = useState(false);
   // H17.1: a sample ad has nobody behind it, so there is no Online now or Away to show.
@@ -252,7 +258,7 @@ export function ContactProvider({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [listingId, tour, sample]);
 
-  const value: Ctx = { shown, notice, busy, tour, tourRequested, open, openChatFlow: () => void openChatFlow(), openCall, seller, people, info, isOwner, listingId };
+  const value: Ctx = { shown, notice, busy, tour, tourRequested, joinTourId, open,openChatFlow: () => void openChatFlow(), openCall, seller, people, info, isOwner, listingId };
   return (
     <ContactCtx.Provider value={value}>
       {children}
@@ -267,7 +273,8 @@ export function ContactProvider({
           alternatives={info.alternatives}
           notice={notice?.text ?? null}
           paidAdded={paidAdded}
-          tourId={tourId}
+          tourId={openTourId}
+          openRequest={tourRequested}
           onCallEnded={() => setTourRequested(false)}
           onClose={closePopup}
           onSignedIn={() => setSignedIn(true)}
@@ -334,7 +341,7 @@ export function ContactButtons({
   sticky?: boolean;
   channels?: Channel[];
 }) {
-  const { shown, notice, busy, tour, tourRequested, open, openChatFlow, openCall, seller, people, isOwner, listingId } = useContact();
+  const { shown, notice, busy, tour, tourRequested, joinTourId, open, openChatFlow, openCall, seller, people, isOwner, listingId } = useContact();
   const t = useT();
   if (isOwner && listingId) {
     return (
@@ -371,9 +378,15 @@ export function ContactButtons({
       <MessageCircle size={16} aria-hidden /> <span className="tk-btn-label">{busy === "chat" ? "…" : t(sticky ? "ad.bar.chat" : "ad.chat")}</span>
     </button>,
     tour && !people ? (
-      <button key="tour" type="button" className="tk-btn" data-tk="tour" onClick={() => openCall()} disabled={busy === "tour" || tourRequested} aria-busy={busy === "tour"}>
-        <Video size={16} aria-hidden /> <span className="tk-btn-label">{busy === "tour" ? "…" : tourRequested ? "Request sent" : sticky ? barVideoLabel(t, tour.coins) : tourRequestLabel(tour.coins)}</span>
-      </button>
+      joinTourId ? (
+        <Link key="tour" href={callPage(joinTourId)} className="tk-btn" data-tk="tour" data-state="accepted">
+          <Video size={16} aria-hidden /> <span className="tk-btn-label">{t("ad.calling.join")}</span>
+        </Link>
+      ) : (
+        <button key="tour" type="button" className="tk-btn" data-tk="tour" data-state={tourRequested ? "waiting" : undefined} onClick={() => openCall()} disabled={busy === "tour"} aria-busy={busy === "tour"}>
+          <Video size={16} aria-hidden /> <span className="tk-btn-label">{busy === "tour" ? "…" : tourRequested ? t(sticky ? "ad.calling.sent" : "ad.calling.sentView") : sticky ? barVideoLabel(t, tour.coins) : tourRequestLabel(tour.coins)}</span>
+        </button>
+      )
     ) : null,
   ];
   if (sticky) {

@@ -170,3 +170,18 @@
 @media (prefers-reduced-motion: reduce) {
   .up-dash-ad { transition: none; }
 }
+
+/* Narrow phones: cards sit inside cards here, so less padding at each level gives the words their room; headings and their
+   links stay on one line each, and the goal's milestones go one under the other. */
+@media (max-width: 420px) {
+  .up-dash-card, .up-main:has(> .up-dash) > .up-panel { padding: 14px; border-radius: 18px; }
+  .up-dash-ad { padding: 12px; }
+  .up-dash-h2 { font-size: 17px; line-height: 22px; min-width: 0; }
+  .up-dash-ads-head, .up-dash-goal-head { gap: 8px; }
+  .up-dash-link { flex: none; white-space: nowrap; font-size: 13px; }
+  .up-dash-ring-wrap { gap: 14px; }
+  .up-dash-ring { width: 84px; height: 84px; }
+  .up-dash-ring-in { width: 62px; height: 62px; font-size: 18px; }
+  .up-dash-miles { grid-template-columns: minmax(0, 1fr); grid-auto-rows: auto; flex-basis: 100%; }
+  .up-dash-cols { min-height: 140px; }
+}

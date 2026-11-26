@@ -22,10 +22,9 @@ export interface RunningPromotion {
 /** Strongest first, the same order the lists use. A code not named here counts as the weakest. */
 const STRENGTH = ["star", "super-top", "flash", "top", "highlight", "new", "auto-boost", "bump"];
 
-/** The promotions running now on these ads (by id): one query for the orders and one for their plans. */
+/** The promotions running now on these ads (by id): one query for the orders and one for their plans. The caller connects first. */
 async function runningOrders(ids: Types.ObjectId[], now: Date) {
   if (ids.length === 0) return [] as { listingId: string; code: string; name: string; endsAt: Date }[];
-  await connectDb();
   const orders = await PromotionOrder.find({ listingId: { $in: ids }, status: "active", startsAt: { $lte: now }, endsAt: { $gt: now } }).select("listingId productId endsAt").lean();
   const products = await PromotionProduct.find({ _id: { $in: [...new Set(orders.map((order) => String(order.productId)))] } }).select("code name").lean();
   const byId = new Map(products.map((product) => [String(product._id), { code: String(product.code).toLowerCase(), name: String(product.name || product.code) }]));
@@ -42,12 +41,14 @@ const strength = (code: string) => {
 
 /** H21.5c: the ads (by id) that have TOP or Super Top running now: only those can have the Video calls switch in My ads. */
 export async function topAdIds(ids: Types.ObjectId[], now: Date) {
+  await connectDb();
   const running = await runningOrders(ids, now);
   return new Set(running.filter((order) => VIDEO_SWITCH_CODES.has(order.code)).map((order) => order.listingId));
 }
 
 /** For each ad with a promotion running now, the strongest one (and when it ends), so My ads can say it is promoted. */
 export async function runningPromotions(ids: Types.ObjectId[], now: Date) {
+  await connectDb();
   const best = new Map<string, RunningPromotion>();
   for (const order of await runningOrders(ids, now)) {
     const held = best.get(order.listingId);

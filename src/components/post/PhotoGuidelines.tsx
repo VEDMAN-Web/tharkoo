@@ -30,6 +30,8 @@ export function PhotoGuidelines({ where, limit = AD_MEDIA_MAX }: { where: "inlin
           <figcaption>{t("post.v2.ph.ex3")}</figcaption>
         </figure>
       </div>
+      <details className="tkph-all" data-tk="photo-all-rules">
+        <summary>{t("post.v2.ph.allRules")}</summary>
       <p className="tkph-guide-sec ok">{t("post.v2.ph.do")}</p>
       <ul className="tkph-list">
         {DO_KEYS.map((key) => (
@@ -49,6 +51,7 @@ export function PhotoGuidelines({ where, limit = AD_MEDIA_MAX }: { where: "inlin
         <span>{t("post.v2.ph.file3", { limit })}</span>
       </div>
       <p className="tkph-guide-foot">{t("post.v2.ph.guideFoot")}</p>
+      </details>
     </section>
   );
 }

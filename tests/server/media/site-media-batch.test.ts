@@ -4,6 +4,7 @@ import path from "node:path";
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 import { SITE_MEDIA_MAX_BYTES, listSiteMedia, updateSiteMedia, uploadSiteMedia } from "@/server/layout/media";
 import { SiteMedia } from "@/server/models";
+import { denyTerm } from "@/server/shared/policy";
 import { clearMemoryMongo, connectMemoryMongo, disconnectMemoryMongo } from "../../setup/mongo";
 
 const admin = { email: "admin@example.test", roles: ["admin"] };
@@ -70,6 +71,14 @@ describe("batch upload alt text", () => {
     expect(saved.alt).toBe("Kitchen with a white island");
     expect(saved.autoAlt).toBe(false);
     expect(saved.missingAlt).toBe(false);
+  });
+
+  it("refuses an auto alt that uses a forbidden term, so that file fails with the reason", async () => {
+    const term = denyTerm("esc", "ort");
+    await expect(
+      uploadSiteMedia({ file: { type: "image/png", data: png(10, 10) }, alt: "", autoAlt: true, fileName: `${term}.png`, ...admin }),
+    ).rejects.toThrow(/not allowed/i);
+    expect(await SiteMedia.countDocuments()).toBe(0);
   });
 
   it("allows up to 8 MB per file", () => {

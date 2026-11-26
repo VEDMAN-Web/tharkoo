@@ -10,6 +10,7 @@ import { BRACKET_PLACEHOLDER } from "@/lib/content/placeholder";
 import { areaOf } from "@/lib/ui/text-labels";
 import { TEXT_DEFAULTS, makeT } from "@/lib/ui/text";
 import { DASH_CHARS } from "@/server/content/dashes";
+import { textDenied } from "@/server/shared/policy";
 import { checkFields } from "@/server/content/studio/fields";
 import { defaultShellConfig } from "@/server/site-links/shell-config-rules";
 
@@ -120,8 +121,9 @@ describe("the placeholder guard", () => {
     for (const text of ["see note [1]", "the [optional] step", "an array like [a, b]", "Rule 3(1)(b) of India's IT Rules, 2021"]) expect(BRACKET_PLACEHOLDER.test(text), text).toBe(false);
   });
 
-  it("the admin save check (dashes) accepts every block of both approved texts", () => {
+  it("the admin save check (blocked words, dashes) accepts every block of both approved texts", () => {
     for (const block of [...TRUST.terms!.paragraphs, ...TRUST.privacy!.paragraphs]) {
+      expect(textDenied(block).denied, block.slice(0, 40)).toBe(false);
       expect(DASH_CHARS.test(block), block.slice(0, 40)).toBe(false);
     }
   });

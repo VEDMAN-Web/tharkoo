@@ -42,3 +42,12 @@
   .tkc-ic { width: 44px; height: 44px; border-radius: 14px; }
 }
 .tkr-line { margin: 4px 0 0; font-size: 14px; line-height: 20px; font-weight: 700; color: #0b6b3c; }
+
+/* Narrow phones: the price goes under the words, so the description is not squeezed into a thin strip, and the bonus stays on one line. */
+@media (max-width: 420px) {
+  .tkc { padding: 14px; }
+  .tkc-row { grid-template-columns: 44px minmax(0, 1fr); }
+  .tkc-row > .tkc-amt, .tkc-row > .tkc-free { grid-column: 2; justify-self: start; }
+  .tkc-row > .tkc-amt { flex-direction: row; align-items: baseline; gap: 8px; text-align: left; }
+  .tkp .tkr-pack.is-rich .tkp-bonus { display: block; margin-left: 0; white-space: nowrap; }
+}

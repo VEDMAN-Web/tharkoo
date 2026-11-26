@@ -30,7 +30,7 @@ export function CouponRedeem() {
       <form onSubmit={redeem}>
         <label htmlFor="coupon-code" className="t-small" style={{ display: "block", marginBottom: 6, fontWeight: 700 }}>Have a coupon?</label>
         <div style={{ display: "flex", gap: 8 }}>
-          <input id="coupon-code" placeholder="Coupon code" autoComplete="off" value={code} onChange={(event) => setCode(event.target.value)} style={{ flex: 1, minHeight: 44, border: "1px solid var(--border)", borderRadius: 8, padding: "0 12px" }} />
+          <input id="coupon-code" placeholder="Coupon code" autoComplete="off" value={code} onChange={(event) => setCode(event.target.value)} style={{ flex: 1, minWidth: 0, minHeight: 44,border: "1px solid var(--border)", borderRadius: 8, padding: "0 12px" }} />
           <button type="submit" className="tk-btn tk-btn-outline-primary" data-tk="apply-coupon">Apply</button>
         </div>
         <p aria-live="polite" className="t-small">{message}</p>

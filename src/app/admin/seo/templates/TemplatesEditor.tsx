@@ -16,6 +16,7 @@ import {
   type TemplateFields,
   type TemplatePageType,
 } from "@/lib/seo/landing";
+import { textDenied } from "@/server/shared/policy";
 import { deleteTemplateAction, saveTemplateAction } from "./actions";
 
 export interface EditorTemplate {
@@ -72,7 +73,7 @@ export function TemplatesEditor({
   );
   const shown = (field: TemplateField) => renderTemplate(fields[field] || placeholders[field], sample);
   const warnings = useMemo(
-    () => templateWarnings(fields, { category: categoryName, site: siteName, samples: cities.slice(0, 20), denied: () => false }),
+    () => templateWarnings(fields, { category: categoryName, site: siteName, samples: cities.slice(0, 20), denied: (text) => textDenied(text).denied }),
     [fields, categoryName, siteName, cities],
   );
 

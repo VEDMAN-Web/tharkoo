@@ -1,0 +1,25 @@
+{
+  "branchPrefix": "haiku/h21.12b",
+  "globs": [
+    "docs/ownership/H21.12b.json",
+    "progress/H21.12b.md",
+    "docs/claude/STATUS.md",
+    "src/components/PostWizard.tsx",
+    "src/components/post/CategoryPreview.tsx",
+    "src/components/post/ReviewListPreview.tsx",
+    "src/components/post/PhotoGuidelines.tsx",
+    "src/components/post/category-step.css",
+    "src/components/post/review-step.css",
+    "src/components/post/photos-step.css",
+    "src/lib/ui/text.ts",
+    "tests/e2e/h21-12b-layout.e2e.ts",
+    "tests/server/ui/h21-12b-preview.test.ts",
+    "tests/e2e/h21-1-category.e2e.ts",
+    "tests/e2e/h21-3-photos.e2e.ts",
+    "tests/e2e/h6-features.e2e.ts",
+    "progress/H21.12b2.md",
+    "src/components/post/post-shell.css",
+    "src/components/promote/promote.css",
+    "tests/e2e/h21-12b2-polish.e2e.ts"
+  ]
+}

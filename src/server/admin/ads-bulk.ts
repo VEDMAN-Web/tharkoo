@@ -10,6 +10,7 @@ import { ForbiddenError, ValidationError } from "@/server/http";
 import { revalidateListingPages } from "@/server/listings/revalidate";
 import { AuditEvent, Category, Listing } from "@/server/models";
 import type { ListingDoc } from "@/server/models/listing";
+import { textDenied } from "@/server/shared/policy";
 
 export const BULK_ACTIONS = ["pause", "resume", "extend", "setEnd", "expireIn", "endNow", "remove"] as const;
 export type BulkAction = (typeof BULK_ACTIONS)[number];
@@ -92,6 +93,7 @@ async function check(ctx: AdminCtx, action: BulkAction, ids: string[], reason: s
   if (ids.length > BULK_MAX) throw new ValidationError(`Select at most ${BULK_MAX} ads at a time`);
   if (ids.some((id) => !Types.ObjectId.isValid(id))) throw new ValidationError("Invalid request");
   if (rule.reasonRequired && (reason.length < 1 || reason.length > REASON_MAX)) throw new ValidationError(`Give a reason of 1 to ${REASON_MAX} characters`);
+  if (textDenied(reason).denied) throw new ValidationError("This text is not allowed on Tharkoo");
   if (action === "remove" && ids.length >= BULK_TYPED_FROM && confirm.trim() !== typedConfirmFor(ids.length)) {
     throw new ValidationError(`Type ${typedConfirmFor(ids.length)} to confirm removing ${ids.length} ads`);
   }

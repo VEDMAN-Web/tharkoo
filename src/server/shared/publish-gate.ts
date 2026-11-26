@@ -1,4 +1,5 @@
 import { isAtLeast18 } from "@/server/shared/age";
+import { attributeDenied, categoryDenied } from "@/server/shared/policy";
 
 export type VerificationStatus = "unsubmitted" | "pending_review" | "approved" | "rejected";
 
@@ -11,7 +12,9 @@ export type PublishBlockReason =
   | "ACCOUNT_NOT_ACTIVE"
   | "VERIFICATION_REQUIRED"
   | "MEDIA_NOT_CLEARED"
-  | "CATEGORY_DISABLED";
+  | "CATEGORY_DENIED"
+  | "CATEGORY_DISABLED"
+  | "ATTRIBUTE_DENIED";
 
 export interface PublishGateInput {
   dateOfBirth: Date | null;
@@ -63,6 +66,10 @@ export function evaluatePublishGate(input: PublishGateInput): PublishGateResult 
   if (!input.mediaCleared) {
     return { ok: false, reason: "MEDIA_NOT_CLEARED" };
   }
+  const category = categoryDenied(input.categorySlug, input.categoryName);
+  if (category.denied) {
+    return { ok: false, reason: "CATEGORY_DENIED", detail: category.term };
+  }
   if (!input.categoryEnabled) {
     return { ok: false, reason: "CATEGORY_DISABLED" };
   }
@@ -72,6 +79,10 @@ export function evaluatePublishGate(input: PublishGateInput): PublishGateResult 
   }
   if (age !== undefined && age < 18) {
     return { ok: false, reason: "UNDERAGE", detail: "age" };
+  }
+  const attributes = attributeDenied(input.attributes);
+  if (attributes.denied) {
+    return { ok: false, reason: "ATTRIBUTE_DENIED", detail: attributes.key ?? attributes.term };
   }
   return { ok: true };
 }

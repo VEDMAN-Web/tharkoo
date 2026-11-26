@@ -34,7 +34,8 @@ export const callPage = (id: string) => `/u/account/tours/${encodeURIComponent(i
 
 /**
  * Reads the person's video calls and keeps them fresh: every 5 seconds while a call is waiting or accepted, every 20 seconds
- * otherwise, and straight away when the tab comes back. Nothing runs for a guest, a hidden tab, or `enabled: false`.
+ * otherwise, and straight away when the tab comes back. Nothing is asked for a guest, a hidden tab, or `enabled: false`.
+ * Signing in does not reload the page, so "signed in?" is looked at before every read, not once when the screen opens.
  */
 export function useTours({ enabled = true, fastMs = 5000, slowMs = 20_000 }: { enabled?: boolean; fastMs?: number; slowMs?: number } = {}) {
   const [rows, setRows] = useState<TourItem[] | null>(null);
@@ -53,7 +54,7 @@ export function useTours({ enabled = true, fastMs = 5000, slowMs = 20_000 }: { e
   }, []);
 
   useEffect(() => {
-    if (!enabled || !hasSessionHint()) return;
+    if (!enabled) return;
     alive.current = true;
     let stopped = false;
     let running = false;
@@ -63,7 +64,7 @@ export function useTours({ enabled = true, fastMs = 5000, slowMs = 20_000 }: { e
       running = true;
       let next = slowMs;
       try {
-        if (document.visibilityState !== "hidden") {
+        if (document.visibilityState !== "hidden" && hasSessionHint()) {
           const data = await reload();
           if (data?.some(isOpenTour)) next = fastMs;
         }

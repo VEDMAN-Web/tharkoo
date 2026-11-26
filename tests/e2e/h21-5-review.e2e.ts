@@ -60,11 +60,11 @@ test.describe("H21.5a step 5 review", () => {
     const side = page.locator(phone ? "[data-tk=review-list-inline]" : "[data-tk=review-list-side]");
     await expect(side).toBeVisible();
     await expect(side).toHaveAttribute("data-kind", "free");
-    await expect(side.locator("[data-tk=list-caption]")).toContainText("Free:");
+    await expect(side.locator("[data-tk=list-caption]")).toContainText("Normal:");
     await expect(side.locator("[data-tk=list-mine]")).toHaveCount(1);
     const earn = page.locator("[data-tk=earn-panel]:visible");
     await expect(earn).toHaveAttribute("data-state", "locked");
-    await expect(page.locator("[data-tk=cost-total]")).toHaveText("Free");
+    await expect(page.locator("[data-tk=cost-total]")).toHaveText("0 credits");
     await expect(page.locator("[data-tk=go-on]")).toHaveText("Publish ad");
     await shot(page, "review-free");
 
@@ -105,14 +105,16 @@ test.describe("H21.5a step 5 review", () => {
 
     // The summary has an Edit link per part, and the balance line says what is left.
     for (const key of ["category", "details", "photos", "contact"]) await expect(page.locator(`[data-tk=edit-${key}]`)).toBeVisible();
-    await expect(page.locator("[data-tk=boost-balance]")).toContainText("Balance");
-    await expect(page.locator("[data-tk=boost-balance]")).toContainText("after publishing");
+    // H21.12a (design boards): one cost box of three lines, no balance bar.
+    await expect(page.locator("[data-tk=review-cost] > div")).toHaveCount(3);
+    await expect(page.locator("[data-tk=boost-balance]")).toHaveCount(0);
 
     // Only the page scrolls, and the bubble is visible.
     const inner = await page.evaluate(() => Array.from(document.querySelectorAll<HTMLElement>(".tkp-post *")).filter((node) => { const s = getComputedStyle(node); return s.display !== "none" && (s.overflowY === "auto" || s.overflowY === "scroll") && node.scrollHeight - node.clientHeight > 1; }).length);
     expect(inner).toBe(0);
     await shot(page, "review-super");
-    await expect(page.locator(".tkn-chat-bubble")).toBeVisible();
+    // H21.12c: the bubble is hidden below 1024 px on the post-ad screens.
+    await expect(page.locator(".tkn-chat-bubble")).toBeVisible({ visible: (page.viewportSize()?.width ?? 1440) >= 1024 });
     await shot(page, "review-bubble", true);
   });
 

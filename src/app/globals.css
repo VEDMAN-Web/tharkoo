@@ -1357,7 +1357,7 @@ input, select, textarea { font-size: 16px; }
 .tk-field { display: grid; gap: 4px; font-size: 13px; font-weight: 700; }
 input.tk-field, select.tk-field, textarea.tk-field { box-sizing: border-box; width: 100%; border: 1.5px solid #ead8f0; border-radius: 12px; background: #fff; color: #1e0b38; font: inherit; font-weight: 500; }
 input.tk-field:focus-visible, select.tk-field:focus-visible, textarea.tk-field:focus-visible { outline: 3px solid #7c3aed; outline-offset: 2px; }
-.tk-file { font: inherit; font-size: 14px; color: #4a2870; max-width: 100%; }
+.tk-file { font: inherit; font-size: 14px; color: #4a2870; width: 100%; min-width: 0; max-width: 100%; }
 .tk-file::file-selector-button { min-height: 44px; margin-right: 12px; padding: 0 18px; border-radius: 999px; border: 1.5px solid #ead8f0; background: #fff; color: #a8124f; font: inherit; font-weight: 700; cursor: pointer; }
 .tk-field input, .tk-field select, .tk-field textarea {
   width: 100%;
@@ -2094,7 +2094,7 @@ body:has([data-tk="bottom-bar"]) .tkn-float { bottom: 104px; }
   align-items: center;
   gap: 14px;
   min-height: 60px;
-  padding: 0 16px;
+  padding: 10px 16px;
   border-radius: 16px;
   border: 1px solid rgba(255, 255, 255, 0.95);
   background: rgba(255, 255, 255, 0.85);
@@ -2240,6 +2240,19 @@ body:has([data-tk="bottom-bar"]) .tkn-float { bottom: 104px; }
 .tkn-logo-link { display: inline-flex; align-items: center; flex: none; min-height: 44px; text-decoration: none; }
 .tkn-logo { display: block; height: 40px; width: auto; max-width: none; }
 @media (max-width: 389px) { .tkn-logo { height: 32px; } }
+/* The smallest phones, signed in: logo, account, Post your ad and the menu must fit in 320px, or the whole page scrolls sideways. */
+@media (max-width: 359px) {
+  .tkn-header .tkn-header-row { gap: 6px; }
+  .tkn-header .tkn-header-actions { gap: 4px; }
+  .tkn-header .tkn-header-actions .tkn-btn { padding: 0 10px; font-size: 13px; }
+  .tkn-header .tkn-logo { height: 26px; }
+}
+/* Small laptops and wide tablets, signed in: the full menu stays, with less air, so Post your ad is not pushed off the screen. */
+@media (min-width: 1024px) and (max-width: 1179px) {
+  .tkn-header .tkn-header-row { padding: 0 16px; gap: 10px; }
+  .tkn-header .tkn-nav-link { padding: 0 10px; }
+  .tkn-header .tkn-header-actions { gap: 6px; }
+}
 
 /* H7.131: unread chat count on the header avatar and in the account menu. */
 .tkn-account { position: relative; }
@@ -2317,3 +2330,30 @@ body .tkn-footer {
 /* The advertiser's line (someone wants a call) is pink, the asker's line (accepted) stays violet, so the two are not mixed up. */
 .tkn-call-strip-vendor { background: #d1137a; }
 .tkn-call-strip-vendor .tkn-call-strip-btn { color: #a8124f; }
+
+/* The hand cursor on everything that can be clicked, across the whole site. It sits in the base layer with no weight of its own
+   (:where), so a component's own cursor (grab, wait, not-allowed, default on a disabled button) still wins. Text boxes keep the text cursor. */
+@layer base {
+  :where(button, select, summary, input[type="button"], input[type="submit"], input[type="reset"], input[type="checkbox"], input[type="radio"], input[type="file"], input[type="range"], input[type="color"]):where(:not(:disabled)),
+  :where([role="button"], [role="tab"], [role="switch"], [role="option"], [role="menuitem"], [role="menuitemradio"], [role="menuitemcheckbox"], [role="checkbox"], [role="radio"]):where(:not([aria-disabled="true"], :disabled)),
+  :where(label):where(:has(input[type="checkbox"]:not(:disabled), input[type="radio"]:not(:disabled), input[type="file"]:not(:disabled))),
+  :where(input[type="file"]:not(:disabled))::file-selector-button,
+  :where(input[type="date"], input[type="time"], input[type="datetime-local"])::-webkit-calendar-picker-indicator {
+    cursor: pointer;
+  }
+}
+
+/* Wallet balances: side by side where there is room; on a phone two in a row and the third across. */
+.tk-balances { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 10px; }
+@media (max-width: 520px) {
+  .tk-balances { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .tk-balances > :last-child:nth-child(odd) { grid-column: 1 / -1; }
+}
+
+/* On a phone each call line is one slim row: icon, words, button. Two calls at once must not take half the screen. */
+@media (max-width: 600px) {
+  .tkn-call-strip { flex-wrap: nowrap; justify-content: flex-start; gap: 8px; padding: 8px 12px; font-size: 13px; line-height: 1.35; text-align: left; }
+  .tkn-call-strip > svg { flex: none; }
+  .tkn-call-strip > span { flex: 1; min-width: 0; }
+  .tkn-call-strip-btn { flex: none; white-space: nowrap; padding: 0 12px; }
+}

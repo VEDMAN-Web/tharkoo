@@ -1,5 +1,10 @@
 import mongoose from "mongoose";
-import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
+import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
+
+vi.mock("@/server/shared/policy", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@/server/shared/policy")>()),
+  textDenied: (text: string) => ({ denied: /blockedword/i.test(text) }),
+}));
 
 import type { AdminCtx } from "@/server/admin/context";
 import { undoEvent } from "@/server/admin/undo/core";
@@ -87,18 +92,19 @@ describe("recharge packs", () => {
 });
 
 describe("coupons", () => {
-  it("checks the code: format and capitals", () => {
+  it("checks the code: format, capitals, and the blocked words", () => {
     expect(cleanCode(" welcome10 ")).toBe("WELCOME10");
     expect(cleanCode("a-b-c")).toBe("A-B-C");
-    for (const bad of ["", "ab", "has space", "x".repeat(21), "-START", "emoji🙂code"]) expect(() => cleanCode(bad)).toThrow(ValidationError);
+    for (const bad of ["", "ab", "has space", "x".repeat(21), "-START", "emoji🙂code", "BLOCKEDWORD", "my-blockedword-1"]) expect(() => cleanCode(bad)).toThrow(ValidationError);
   });
 
-  it("adds a coupon in capitals (audited), refuses the same code in any case, ", async () => {
+  it("adds a coupon in capitals (audited), refuses the same code in any case, and refuses blocked words", async () => {
     const done = await createCoupon(admin, COUPON);
     const [row] = await readCoupons();
     expect(row).toMatchObject({ code: "WELCOME10", kind: "percent", amount: 10, perUserLimit: 1, maxRedemptions: null, on: true, redeemed: 0 });
     expect(await AuditEvent.findById(done.eventId).lean()).toMatchObject({ action: "coupon.create", actorRole: "admin" });
     await expect(createCoupon(admin, { ...COUPON, code: "Welcome10" })).rejects.toBeInstanceOf(ConflictError);
+    await expect(createCoupon(admin, { ...COUPON, code: "blockedword1" })).rejects.toBeInstanceOf(ValidationError);
     await expect(createCoupon(finance, { ...COUPON, code: "OTHER10" })).rejects.toBeInstanceOf(ForbiddenError);
     expect(await Coupon.countDocuments({})).toBe(1);
   });

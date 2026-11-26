@@ -167,7 +167,7 @@ export function defaultSiteContent(): SiteContent {
     homeCategoriesCount: 4,
     showListingBand: false,
     seoTitle: "Tharkoo | Classifieds in India",
-    seoDescription: "Tharkoo is a classifieds site for India. Browse dating, friendship, jobs, homes, and vehicles, then contact the poster in the app after an ID check.",
+    seoDescription: "Tharkoo (tharkoo.com) is a free classifieds website in India. Post an ad, find local listings and contact people after an ID check.",
     seoIntro: "",
     loginImage: "",
     loginImageFocusX: 50,

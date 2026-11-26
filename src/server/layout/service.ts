@@ -6,6 +6,7 @@ import { AuditRepository } from "@/server/audit";
 import { ConflictError, ForbiddenError, NotFoundError, ValidationError } from "@/server/http";
 import { PageLayout, PageLayoutRevision, User } from "@/server/models";
 import { PAGE_KEYS, type BlockBase, type PageKey } from "@/server/models/layout";
+import { textDenied } from "@/server/shared/policy";
 import { blockDef, blockEnvelope, isBlockType, POST_STEP_KEYS } from "@/server/layout/blocks";
 
 const audit = new AuditRepository();
@@ -33,6 +34,20 @@ export function assertKeyAndScope(key: string, scope: string): asserts key is Pa
   if (scope === "default") return;
   if (key !== "listing") throw new ValidationError("Only listing pages have more than the default layout");
   if (!SCOPE_CATEGORY.test(scope) && !SCOPE_URL.test(scope)) throw new ValidationError("Scope must be default, category:<slug> or url:<path>");
+}
+
+function* strings(value: unknown): Generator<string> {
+  if (typeof value === "string") yield value;
+  else if (Array.isArray(value)) for (const item of value) yield* strings(item);
+  else if (value && typeof value === "object") for (const item of Object.values(value)) yield* strings(item);
+}
+
+function noDeniedText(index: number, ...values: unknown[]) {
+  for (const value of values) {
+    for (const text of strings(value)) {
+      if (textDenied(text).denied) throw new ValidationError(`Block ${index + 1} contains a term that is not allowed on Tharkoo. Change the wording and save again.`);
+    }
+  }
 }
 
 /** Validates the whole block list for one page and returns clean blocks. Throws ValidationError with a readable message. */
@@ -67,6 +82,7 @@ export function validateBlocks(key: PageKey, input: unknown, knownIds: ReadonlyS
       if (!(POST_STEP_KEYS as readonly string[]).includes(stepKey)) throw new ValidationError(`Block ${index + 1}: unknown step`);
       if (stepKey !== "promote" && !block.visible) throw new ValidationError(`Block ${index + 1}: only the promote step can be hidden`);
     }
+    noDeniedText(index, block.label, data);
     // Ids: keep an id the server already knows (so reorders keep identity); everything else is new.
     let id = block.id && knownIds.has(block.id) && !seen.has(block.id) ? block.id : "";
     if (!id) id = randomUUID();
@@ -168,6 +184,7 @@ export async function publish(input: { key: string; scope: string; email: string
   assertKeyAndScope(input.key, input.scope);
   const { key, scope } = input;
   const note = (input.note ?? "").trim().slice(0, 200);
+  if (note && textDenied(note).denied) throw new ValidationError("The note contains a term that is not allowed");
   await connectDb();
   const current = await PageLayout.findOne({ key, scope }).lean();
   if (!current) throw new NotFoundError("There is no draft to publish yet");

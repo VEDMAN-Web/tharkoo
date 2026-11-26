@@ -1,5 +1,10 @@
 import mongoose from "mongoose";
-import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
+import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
+
+vi.mock("@/server/shared/policy", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@/server/shared/policy")>()),
+  textDenied: (text: string) => ({ denied: /blockedword/i.test(text) }),
+}));
 
 import type { AdminCtx } from "@/server/admin/context";
 import { undoEvent } from "@/server/admin/undo/core";
@@ -106,7 +111,7 @@ describe("promotion plans", () => {
     expect((await listProducts()).products.map((item) => item.code)).toContain("top");
   });
 
-  it("checks the form: name, price, hours (1 to 72), and keeps a fixed length for Flash", async () => {
+  it("checks the form: name, price, hours (1 to 72), blocked words, and keeps a fixed length for Flash", async () => {
     const ids = await seed();
     const bad = async (patch: Record<string, unknown>, id = ids.bump) => expect(updatePlan(admin, { id, ...PLAN, ...patch })).rejects.toBeInstanceOf(ValidationError);
     await bad({ name: "  " });
@@ -118,6 +123,7 @@ describe("promotion plans", () => {
     await bad({ durationHours: 0 });
     await bad({ durationHours: 73 });
     await bad({ durationHours: 1.5 });
+    await bad({ description: "a blockedword here" });
     await bad({ name: "<b>Bump</b>" });
     await bad({ shown: "yes" });
     const flash = await updatePlan(admin, { id: ids.flash, name: "Flash", description: "Short flash", amount: 150, durationHours: 99, shown: true });
@@ -126,10 +132,13 @@ describe("promotion plans", () => {
     expect((await PromotionProduct.findById(ids.bump).lean())?.amount).toBe(49);
   });
 
-  it("only admins can change a plan; unknown ids are not found", async () => {
+  it("only admins can change a plan; a plan type that is not allowed cannot be edited; unknown ids are not found", async () => {
     const ids = await seed();
     await expect(updatePlan(finance, { id: ids.bump, ...PLAN, amount: 1 })).rejects.toBeInstanceOf(ForbiddenError);
+    const odd = await PromotionProduct.create({ code: "weird-type", name: "Weird", description: "Odd", amount: 5, currency: "INR", durationDays: 1 });
+    await expect(updatePlan(admin, { id: String(odd._id), ...PLAN })).rejects.toBeInstanceOf(ConflictError);
     await expect(updatePlan(admin, { id: "0123456789abcdef01234567", ...PLAN })).rejects.toBeInstanceOf(NotFoundError);
+    expect((await readPricesData()).plans.find((plan) => plan.code === "weird-type")?.allowed).toBe(false);
   });
 
   it("reorders with move up and down, shows that order to buyers, and one undo restores the old order", async () => {

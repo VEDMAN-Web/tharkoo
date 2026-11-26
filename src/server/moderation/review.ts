@@ -4,6 +4,7 @@ import { can } from "@/lib/admin/perms";
 import type { AdminCtx } from "@/server/admin/context";
 import { adminWrite } from "@/server/admin/write";
 import { FEE_REF, FEE_REFUND_REF } from "@/server/billing/posting-fee";
+import { textDenied } from "@/server/shared/policy";
 import { ConflictError, ForbiddenError, NotFoundError } from "@/server/http";
 import { demoFilter } from "@/server/listings/demo-ads";
 import { adPhotoUrl } from "@/server/media/photo-url";
@@ -19,7 +20,7 @@ const PHONE_IN_TEXT = /(?:\+?91[\s-]?)?[6-9]\d{9}\b|\b\d{5}[\s-]\d{5}\b/;
 /** Rule flags read from the words of an ad: cheap, and the same words the publish check uses. */
 export function ruleFlags(title: string, description: string): string[] {
   const text = `${title} ${description}`;
-  return PHONE_IN_TEXT.test(text) ? ["Phone in text"] : [];
+  return [...(textDenied(text).denied ? ["Banned word"] : []), ...(PHONE_IN_TEXT.test(text) ? ["Phone in text"] : [])];
 }
 
 export type ReviewQuery = { tab: ReviewTab; q: string; page: number; pageSize: number };

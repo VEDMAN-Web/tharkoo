@@ -36,6 +36,8 @@ describe("publish gates", () => {
     expect(evaluatePublishGate(input({ ...off, dateOfBirth: parseDateOnly("2012-01-01") }))).toMatchObject({ reason: "UNDERAGE" });
     expect(evaluatePublishGate(input({ ...off, attestedAdult: false }))).toMatchObject({ reason: "ADULT_ATTESTATION_REQUIRED" });
     expect(evaluatePublishGate(input({ ...off, mediaCleared: false }))).toMatchObject({ reason: "MEDIA_NOT_CLEARED" });
+    expect(evaluatePublishGate(input({ ...off, categorySlug: "escort", categoryName: "Escort" }))).toMatchObject({ reason: "CATEGORY_DENIED" });
+    expect(evaluatePublishGate(input({ ...off, attributes: { hourlyRate: 2000 } }))).toMatchObject({ reason: "ATTRIBUTE_DENIED" });
   });
 
   it("blocks underage dates of birth", () => {
@@ -72,9 +74,27 @@ describe("publish gates", () => {
     });
   });
 
-  it("blocks disabled categories", () => {
+  it("blocks denied categories even when the advertiser is verified", () => {
+    const result = evaluatePublishGate(
+      input({ categorySlug: "escort", categoryName: "Escort", categoryEnabled: true }),
+    );
+    expect(result).toMatchObject({ ok: false, reason: "CATEGORY_DENIED" });
+    expect(
+      evaluatePublishGate(input({ categorySlug: "paid-meetings", categoryName: "Paid meetings" }))
+        .ok,
+    ).toBe(false);
+    expect(
+      evaluatePublishGate(input({ categorySlug: "roommates", categoryName: "Roommates" })).ok,
+    ).toBe(false);
+  });
+
+  it("blocks disabled categories and pricing attributes", () => {
     expect(evaluatePublishGate(input({ categoryEnabled: false }))).toMatchObject({
       reason: "CATEGORY_DISABLED",
+    });
+    expect(evaluatePublishGate(input({ attributes: { hourlyRate: 2000 } }))).toMatchObject({
+      ok: false,
+      reason: "ATTRIBUTE_DENIED",
     });
     expect(evaluatePublishGate(input({ attributes: { age: 17 } }))).toMatchObject({
       reason: "UNDERAGE",

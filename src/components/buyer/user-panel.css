@@ -383,3 +383,20 @@
 /* H15.7: Remove under a saved ad. */
 .up-saved-item { display: flex; flex-direction: column; gap: 8px; }
 .up-saved-remove { align-self: stretch; }
+
+/* Phones: number boxes two in a row, and table text that wraps between words, not inside them. */
+@media (max-width: 480px) {
+  .up-stats, .up-stats-3 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .up-stats > .up-stat:last-child:nth-child(odd) { grid-column: 1 / -1; }
+  .up-stats > .up-stat { padding: 12px; }
+  .up-stats .up-stat-label { min-height: 0; }
+  .up-table th, .up-table td { padding-left: 4px; padding-right: 4px; overflow-wrap: normal; word-break: normal; }
+  .up-table td { font-size: 13px; }
+}
+
+/* Narrow phones: slimmer page edges and card padding, so a section is as wide as it can be. */
+@media (max-width: 420px) {
+  .up-page { padding-left: 10px; padding-right: 10px; }
+  .up-panel { padding: 14px; }
+  .up-hero { padding: 18px; }
+}

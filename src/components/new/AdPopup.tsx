@@ -12,6 +12,7 @@ import { useT } from "@/components/ui/AdCard";
 import { bgPhotoStyle } from "@/components/ui/card-photo";
 import "@/components/ui/card-photo.css";
 import { CallingStep } from "@/components/new/CallingStep";
+import { SESSION_EVENT } from "@/components/account/AccountContext";
 
 const noop = () => undefined;
 
@@ -36,6 +37,8 @@ export type AdPopupProps = {
   paidAdded?: number | null;
   /** The video call request this pop-up started (or found already open): the calling step follows it. */
   tourId?: string | null;
+  /** The visitor already has an open request on this ad: the pop-up opens on it instead of offering a new one. */
+  openRequest?: boolean;
   /** The request closed (declined, ran out of time, or cancelled) and the credit is back. */
   onCallEnded?: () => void;
   onClose: () => void;
@@ -45,8 +48,9 @@ export type AdPopupProps = {
   onSwitchToChat: () => void;
 };
 
-function firstStep(props: Pick<AdPopupProps, "kind" | "signedIn" | "seller">): Step {
+function firstStep(props: Pick<AdPopupProps, "kind" | "signedIn" | "seller" | "openRequest">): Step {
   if (props.kind === "chat" || !props.signedIn) return "login";
+  if (props.openRequest) return "calling";
   return props.seller?.status === "away" ? "away" : "call";
 }
 
@@ -72,6 +76,8 @@ export function AdPopup(props: AdPopupProps) {
   }, [step]);
 
   async function afterLogin() {
+    // Signing in here does not reload the page: tell the header (and the balances) that someone is signed in now.
+    window.dispatchEvent(new Event(SESSION_EVENT));
     props.onSignedIn();
     if (kind === "chat") {
       const result = await props.onStartChat();

@@ -2,6 +2,7 @@ import { existsSync, readdirSync } from "node:fs";
 import path from "node:path";
 import { Types } from "mongoose";
 import { Category, Listing, Location, MediaAsset, PromotionOrder, PromotionProduct, User } from "@/server/models";
+import { textDenied } from "@/server/shared/policy";
 import { adLifetimeMs } from "@/server/listings/lifetime";
 import { demoListings, SEED_USER_EMAIL, type DemoListing } from "@/server/seed/data";
 import { connectDb } from "@/lib/db";
@@ -34,6 +35,11 @@ function photoFiles(category: string) {
 export async function seedDemoListings(dryRun: boolean): Promise<{ inserted: string[]; skipped: string[] }> {
   await connectDb();
   const specs = demoListings();
+  for (const spec of specs) {
+    if (textDenied(`${spec.title} ${spec.description}`).denied) {
+      throw new Error(`Seed listing refused: ${spec.slug}`);
+    }
+  }
   const existing = await Listing.find({ slug: { $in: specs.map((spec) => spec.slug) } })
     .select("slug")
     .lean();

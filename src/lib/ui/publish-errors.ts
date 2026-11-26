@@ -11,7 +11,9 @@ export const PUBLISH_MESSAGES: Record<PublishBlockReason, string> = {
   ACCOUNT_NOT_ACTIVE: "Your account cannot post right now. Please contact support.",
   VERIFICATION_REQUIRED: "Verify your ID to publish.",
   MEDIA_NOT_CLEARED: "Your photos are still being checked. Try again in a minute.",
+  CATEGORY_DENIED: "This category is not allowed on Tharkoo. Pick another category.",
   CATEGORY_DISABLED: "This category is switched off for now. Pick another category.",
+  ATTRIBUTE_DENIED: "One of the details is not allowed. Change it and try again.",
 };
 
 export function publishMessage(code: string | undefined | null): string | null {

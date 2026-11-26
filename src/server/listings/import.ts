@@ -24,6 +24,7 @@ import {
 } from "@/server/models";
 import { parseListingAttributes, type FieldDefinition } from "@/server/shared/fields";
 import { withPickLimits } from "@/server/fields/service";
+import { textDenied } from "@/server/shared/policy";
 import { evaluatePublishGate } from "@/server/shared/publish-gate";
 import { toSlug } from "@/server/shared/slug";
 import { assertVerified } from "@/server/verification/service";
@@ -373,7 +374,7 @@ function resolveVideos(cell: string, errors: string[], lookups: Lookups): string
 
 function bannedHit(text: string, banned: string[]) {
   const haystack = text.toLowerCase();
-  return banned.some((needle) => haystack.includes(needle));
+  return textDenied(text).denied || banned.some((needle) => haystack.includes(needle));
 }
 
 export function textErrors(input: { title: string; description: string; attributes: Record<string, unknown> }, banned: string[]) {

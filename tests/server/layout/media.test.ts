@@ -16,6 +16,7 @@ import {
 } from "@/server/layout/media";
 import { AuditEvent, SiteMedia } from "@/server/models";
 import { setCloudinaryClient, setCloudinaryUploader, type CloudinaryClient } from "@/server/media/client";
+import { denyTerm } from "@/server/shared/policy";
 import { clearMemoryMongo, connectMemoryMongo, disconnectMemoryMongo } from "../../setup/mongo";
 
 const admin = { email: "admin@example.test", roles: ["admin"] };
@@ -113,6 +114,12 @@ describe("upload", () => {
     await expect(uploadSiteMedia({ file: { type: "image/png", data: png(10, 10, SITE_MEDIA_MAX_BYTES) }, alt: "A picture", ...admin })).rejects.toThrow(/8 MB/);
     expect(await SiteMedia.countDocuments()).toBe(0);
     expect(await readdir(dir)).toHaveLength(0);
+  });
+
+  it("applies the forbidden-terms list to alt text and tags", async () => {
+    const term = denyTerm("esc", "ort");
+    await expect(uploadSiteMedia({ file: { type: "image/png", data: png(10, 10) }, alt: `Our ${term} team`, ...admin })).rejects.toThrow(/not allowed/i);
+    await expect(uploadSiteMedia({ file: { type: "image/png", data: png(10, 10) }, alt: "A picture", tags: term, ...admin })).rejects.toThrow(/not allowed/i);
   });
 
   it("is for admins only", async () => {

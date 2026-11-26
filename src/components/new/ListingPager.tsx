@@ -17,10 +17,11 @@ export type PagerLabels = {
 
 const SCROLL_OFFSET = 96;
 
+/** A new page of ads opens at the start of the list; at the top of the page when there is no list to find. */
 function scrollToResults() {
-  const target = document.querySelector<HTMLElement>(".tk-feed");
-  if (!target) return;
-  window.scrollTo({ top: target.getBoundingClientRect().top + window.scrollY - SCROLL_OFFSET, behavior: "auto" });
+  const target = document.querySelector<HTMLElement>('[data-tk="listing-grid"], .tk-feed');
+  const top = target ? target.getBoundingClientRect().top + window.scrollY - SCROLL_OFFSET : 0;
+  window.scrollTo({ top: Math.max(0, top), behavior: "auto" });
 }
 
 export function ListingPager({ base, page, pages, total, size, labels }: { base: string; page: number; pages: number; total: number; size: number; labels: PagerLabels }) {

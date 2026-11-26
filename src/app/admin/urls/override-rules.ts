@@ -1,6 +1,7 @@
 // Pure rules for per-URL SEO overrides: validation, CSV parsing and diffing.
 // No database here, so the editor (client) and the server share the same checks.
 import { cleanPath } from "@/lib/urls";
+import { textDenied } from "@/server/shared/policy";
 
 export const OVERRIDE_LIMITS = { title: 120, description: 320, h1: 120, intro: 1500, canonical: 300, ogImage: 500, faqQ: 200, faqA: 1000, faqCount: 8 } as const;
 export const MAX_CSV_ROWS = 500;
@@ -89,6 +90,7 @@ export function normalizeOverride(input: OverrideInput, origin = ""): OverrideRe
   if (input.noindex === undefined && robots && robots !== "index" && robots !== "noindex") errors.robots = "Use index or noindex";
   for (const key of ["title", "description", "h1", "intro"] as const) {
     if (value[key].length > OVERRIDE_LIMITS[key]) errors[key] = `Keep this to ${OVERRIDE_LIMITS[key]} characters or fewer`;
+    else if (value[key] && textDenied(value[key]).denied) errors[key] = "This text contains a word that is not allowed on Tharkoo";
   }
   if (value.canonical.length > OVERRIDE_LIMITS.canonical || !safeUrlOrPath(value.canonical, origin)) {
     errors.canonical = "Use a path such as /jobs/ or a full address on this site";
@@ -99,6 +101,7 @@ export function normalizeOverride(input: OverrideInput, origin = ""): OverrideRe
   for (const item of faq) {
     if (!item.q || !item.a) errors.faq = "Each question needs an answer";
     else if (item.q.length > OVERRIDE_LIMITS.faqQ || item.a.length > OVERRIDE_LIMITS.faqA) errors.faq = "A question or answer is too long";
+    else if (textDenied(item.q).denied || textDenied(item.a).denied) errors.faq = "A question or answer contains a word that is not allowed on Tharkoo";
   }
   value.faq = faq;
   return Object.keys(errors).length ? { ok: false, errors } : { ok: true, value };

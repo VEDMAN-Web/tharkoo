@@ -9,7 +9,9 @@ const REASONS = [
   "ACCOUNT_NOT_ACTIVE",
   "VERIFICATION_REQUIRED",
   "MEDIA_NOT_CLEARED",
+  "CATEGORY_DENIED",
   "CATEGORY_DISABLED",
+  "ATTRIBUTE_DENIED",
 ] as const;
 
 describe("publish error text (H7.100 d)", () => {

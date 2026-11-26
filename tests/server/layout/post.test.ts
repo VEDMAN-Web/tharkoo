@@ -6,6 +6,7 @@ import { validatePost } from "@/lib/ui/post-form";
 import { postDefaultBlocks } from "@/server/layout/defaults/post";
 import { getPublished, publish, saveDraft, validateBlocks } from "@/server/layout/service";
 import { AuditEvent, Category, PageLayout, PageLayoutRevision } from "@/server/models";
+import { denyTerm } from "@/server/shared/policy";
 import { seedPostLayout } from "@/server/seed/layouts";
 import { clearMemoryMongo, connectMemoryMongo, disconnectMemoryMongo } from "../../setup/mongo";
 
@@ -168,10 +169,14 @@ describe("category post fields", () => {
     expect(await AuditEvent.countDocuments({ action: "category.fields.update" })).toBe(0);
   });
 
-  it("uses the existing field schema", async () => {
+  it("uses the existing field schema and the forbidden-terms check on every string", async () => {
     await seedCategory();
     const current = (await readCategoryFields("cars"))!.fields;
     expect(() => applyFieldEdits(current, edits({ make: { label: "" } }))).toThrow(/Make|label/);
     expect(() => applyFieldEdits(current, edits({ fuel: { options: [] } }))).toThrow(/option/i);
+    const bad = denyTerm("esc", "ort");
+    expect(() => applyFieldEdits(current, edits({ make: { help: `Best ${bad} here` } }))).toThrow(/not allowed/);
+    expect(() => applyFieldEdits(current, edits({ fuel: { options: ["Petrol", bad] } }))).toThrow(/not allowed/);
+    expect(() => applyFieldEdits(current, edits({ make: { placeholder: bad } }))).toThrow(/not allowed/);
   });
 });

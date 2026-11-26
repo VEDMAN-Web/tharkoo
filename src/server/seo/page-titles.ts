@@ -43,6 +43,7 @@ import { publicCategories } from "@/server/search/query";
 import { getPaths, saveUrlOverride, deleteUrlOverride, overrideFromDoc } from "@/server/urls/service";
 import type { OverrideInput } from "@/app/admin/urls/override-rules";
 import { deleteTemplate, saveTemplate } from "@/server/seo/templates";
+import { textDenied } from "@/server/shared/policy";
 
 export interface PageTitleValues extends TitleText {
   saved: boolean;
@@ -140,6 +141,7 @@ function checkField(problems: Record<string, string[]>, key: string, value: stri
   if (!value) problems[key] = [emptyMessage];
   else if (value.length > max) problems[key] = [`Keep this to ${max} characters or fewer`];
   else if (DASH_CHARS.test(value)) problems[key] = [DASH_MESSAGE];
+  else if (textDenied(value).denied) problems[key] = ["This text contains a word that is not allowed on Tharkoo"];
 }
 
 /** Mirrors getSeoFor: the page-type default, then the category's own template wins field by field. */

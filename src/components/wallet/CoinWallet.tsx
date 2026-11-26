@@ -53,7 +53,7 @@ function Balance({ balance, coinValueInr }: { balance: number; coinValueInr: num
     { key: "earned", label: "Earnings", value: earnings ?? 0, note: "From your video calls. Withdraw or move to ad credits" },
   ];
   return (
-    <section aria-label="Your balances" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))", gap: 10 }}>
+    <section aria-label="Your balances" className="tk-balances">
       {tiles.map((tile) => (
         <div
           key={tile.key}
@@ -171,7 +171,7 @@ export function CoinWallet({ initialTab = "buy", hasEarnings = false }: { initia
             aria-pressed={tab === item.key}
             onClick={() => setTab(item.key)}
             className={tab === item.key ? "tk-btn tk-btn-cta" : "tk-btn tk-btn-outline-primary"}
-            style={{ flex: "1 0 auto" }}
+            style={{ flex: "1 0 auto", height: 44 }}
           >
             {item.label}
           </button>

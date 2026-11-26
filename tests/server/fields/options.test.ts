@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { TEXT_DENY_TERMS } from "@/server/shared/policy";
 import {
   MAX_OPTION_LENGTH,
   assertRoomFor,
@@ -50,6 +51,12 @@ describe("reviewOptionCells", () => {
     expect(review.rejected[0]).toEqual({ line: 0, reason: "Add at most 2 lines at a time" });
   });
 
+  it("rejects banned wording with a generic reason", () => {
+    const banned = TEXT_DENY_TERMS[1].join(" ");
+    const review = reviewOptionCells(["Travel", banned]);
+    expect(review.values).toEqual(["Travel"]);
+    expect(review.rejected).toEqual([{ line: 2, reason: "Not allowed on Tharkoo" }]);
+  });
 });
 
 describe("pasteLines", () => {

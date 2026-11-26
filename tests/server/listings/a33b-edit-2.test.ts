@@ -1,6 +1,10 @@
 import mongoose from "mongoose";
 import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 
+vi.mock("@/server/shared/policy", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@/server/shared/policy")>()),
+  textDenied: (text: string) => ({ denied: /blockedword/i.test(text) }),
+}));
 vi.mock("@/lib/cache", () => ({ refreshPublicCache: async () => undefined }));
 vi.mock("@/server/listings/revalidate", () => ({ revalidateListingPages: async () => undefined }));
 

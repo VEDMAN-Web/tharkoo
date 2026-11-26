@@ -9,22 +9,7 @@ import { orderPlans, promotionRule } from "@/server/billing/catalog";
 import { SITE_KEY, readMoneySettings, readPlanOrder, type MoneySettings } from "@/server/billing/money-settings";
 import { ConflictError, NotFoundError, ValidationError } from "@/server/http";
 import { Payment, PromotionProduct, Site } from "@/server/models";
-
-const PLAN_CODES = [
-  "featured",
-  "top",
-  "highlight",
-  "homepage",
-  "category",
-  "city",
-  "free",
-  "auto-boost",
-  "super-top",
-  "new",
-  "flash",
-  "star",
-  "bump",
-] as const;
+import { ALLOWED_PRODUCT_CODES, productCodeDenied } from "@/server/shared/policy";
 
 /**
  * H8.17 (A17): the promotion plans of Prices & plans. Every change goes through adminWrite (admin permission, blocked words,
@@ -94,7 +79,7 @@ function rowOf(doc: ProductDoc): PlanRow {
     tooLong: doc.code !== "free" && doc.amount > 0 && hoursOf(doc.code, doc.durationDays, doc.durationHours) > MAX_PLAN_HOURS,
     fixedLength: FIXED_LENGTH.has(doc.code),
     shown: doc.enabled !== false,
-    allowed: true,
+    allowed: !productCodeDenied(doc.code).denied,
   };
 }
 
@@ -115,7 +100,7 @@ export async function readPricesData(): Promise<PricesData> {
   ]);
   const plans = orderPlans(docs, order).map(rowOf);
   const used = new Set(plans.map((plan) => plan.code));
-  return { money, plans, freeCodes: PLAN_CODES.filter((code) => !used.has(code)), testCredits };
+  return { money, plans, freeCodes: ALLOWED_PRODUCT_CODES.filter((code) => !used.has(code)), testCredits };
 }
 
 type PlanInput = { name: unknown; description: unknown; amount: unknown; durationHours: unknown; shown: unknown };
@@ -152,6 +137,7 @@ export async function updatePlan(ctx: AdminCtx, input: { id: string } & PlanInpu
   if (!mongoose.isValidObjectId(input.id)) throw new NotFoundError("Not found");
   const current = await PromotionProduct.findById(input.id).lean<ProductDoc | null>();
   if (!current) throw new NotFoundError("Not found");
+  if (productCodeDenied(current.code).denied) throw new ConflictError("This plan type is not allowed on Tharkoo, so it cannot be edited.");
   const next = cleanPlan(current.code, input, { days: current.durationDays, hours: current.durationHours });
   const written = await adminWrite(ctx, {
     perm: "prices.edit",
@@ -180,7 +166,7 @@ export async function updatePlan(ctx: AdminCtx, input: { id: string } & PlanInpu
 export async function createPlan(ctx: AdminCtx, input: { code: string } & PlanInput): Promise<PlanWrite> {
   await connectDb();
   const code = String(input.code ?? "").trim().toLowerCase();
-  if (!(PLAN_CODES as readonly string[]).includes(code)) throw new ValidationError("Choose one of the plan types shown.");
+  if (productCodeDenied(code).denied) throw new ValidationError("Choose one of the plan types shown.");
   if (await PromotionProduct.exists({ code })) throw new ConflictError("This plan type already exists.");
   const next = cleanPlan(code, input, { days: 1 });
   const written = await adminWrite(ctx, {

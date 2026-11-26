@@ -8,6 +8,7 @@ import type { AdminCtx } from "@/server/admin/context";
 import { changeSentence, recordAdminChange } from "@/server/admin/write";
 import { picturesOf, setCatalogPictures, type PictureInput, type PicturesView } from "@/server/layout/catalog-pictures";
 import { Listing, Location, type LocationLevel } from "@/server/models";
+import { textDenied } from "@/server/shared/policy";
 import { renameLocation } from "@/server/urls/service";
 
 const MANAGED: LocationLevel[] = ["country", "state", "city"];
@@ -37,6 +38,7 @@ function cleanName(value: unknown) {
   const name = String(value ?? "").replace(/\s+/g, " ").trim();
   if (!name) throw new ValidationError("Name is required");
   if (name.length > MAX_NAME) throw new ValidationError(`Name must be ${MAX_NAME} characters or fewer`);
+  if (textDenied(name).denied) throw new ValidationError("That name contains a term that is not allowed on Tharkoo");
   return name;
 }
 
