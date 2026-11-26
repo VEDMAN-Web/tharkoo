@@ -6,12 +6,14 @@ import { ForbiddenError, NotFoundError, handle, parseInput, requestIdFrom } from
 import { idSchema } from "@/server/shared/schemas/common";
 import {
   acceptTour,
+  cancelTour,
   declineTour,
   disputeTour,
   listTours,
   listVideoTourCategories,
   requestTour,
   reverseTour,
+  tourStats,
   updateVideoTourSettings,
 } from "@/server/tours/service";
 import { z } from "zod";
@@ -38,6 +40,7 @@ async function dispatch(request: Request) {
   const roles = user.user.roles;
   if (request.method === "GET" && path === "") return json(await listTours(userId), requestId);
   if (request.method === "GET" && path === "earn-info") return json(await callEarnInfoFor(userId), requestId);
+  if (request.method === "GET" && path === "stats") return json(await tourStats(userId), requestId);
   if (request.method === "POST" && path === "request") {
     const body = parseInput(requestSchema, await readJson(request));
     return json(await requestTour({ userId, listingId: body.listingId, requestId, ip: clientKey(request.headers) }), requestId);
@@ -50,10 +53,11 @@ async function dispatch(request: Request) {
     const body = parseInput(settingsSchema, await readJson(request));
     return json(await updateVideoTourSettings({ actorId: userId, roles, ...body, requestId }), requestId);
   }
-  const action = /^([^/]+)\/(accept|decline|dispute|reverse)$/.exec(path);
+  const action = /^([^/]+)\/(accept|decline|cancel|dispute|reverse)$/.exec(path);
   if (action && request.method === "POST") {
     const [, tourId, verb] = action;
     if (verb === "accept") return json(await acceptTour({ ownerId: userId, tourId, requestId }), requestId);
+    if (verb === "cancel") return json(await cancelTour({ userId, tourId, requestId }), requestId);
     if (verb === "decline") return json(await declineTour({ ownerId: userId, tourId, requestId }), requestId);
     if (verb === "dispute") {
       const body = parseInput(disputeSchema, await readJson(request));

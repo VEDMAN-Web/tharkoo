@@ -12,14 +12,50 @@ type PresentInput = Parameters<typeof presentRows>[0];
 
 const VIDEO_SWITCH_CODES = new Set(["top", "super-top"]);
 
+/** A promotion running on an ad right now, for the label on its card in My ads. */
+export interface RunningPromotion {
+  code: string;
+  name: string;
+  endsAt: string;
+}
+
+/** Strongest first, the same order the lists use. A code not named here counts as the weakest. */
+const STRENGTH = ["star", "super-top", "flash", "top", "highlight", "new", "auto-boost", "bump"];
+
+/** The promotions running now on these ads (by id): one query for the orders and one for their plans. The caller connects first. */
+async function runningOrders(ids: Types.ObjectId[], now: Date) {
+  if (ids.length === 0) return [] as { listingId: string; code: string; name: string; endsAt: Date }[];
+  const orders = await PromotionOrder.find({ listingId: { $in: ids }, status: "active", startsAt: { $lte: now }, endsAt: { $gt: now } }).select("listingId productId endsAt").lean();
+  const products = await PromotionProduct.find({ _id: { $in: [...new Set(orders.map((order) => String(order.productId)))] } }).select("code name").lean();
+  const byId = new Map(products.map((product) => [String(product._id), { code: String(product.code).toLowerCase(), name: String(product.name || product.code) }]));
+  return orders.flatMap((order) => {
+    const plan = byId.get(String(order.productId));
+    return plan && order.endsAt ? [{ listingId: String(order.listingId), code: plan.code, name: plan.name, endsAt: new Date(order.endsAt) }] : [];
+  });
+}
+
+const strength = (code: string) => {
+  const index = STRENGTH.indexOf(code);
+  return index < 0 ? STRENGTH.length : index;
+};
+
 /** H21.5c: the ads (by id) that have TOP or Super Top running now: only those can have the Video calls switch in My ads. */
 export async function topAdIds(ids: Types.ObjectId[], now: Date) {
-  if (ids.length === 0) return new Set<string>();
   await connectDb();
-  const orders = await PromotionOrder.find({ listingId: { $in: ids }, status: "active", startsAt: { $lte: now }, endsAt: { $gt: now } }).select("listingId productId").lean();
-  const products = await PromotionProduct.find({ _id: { $in: [...new Set(orders.map((order) => String(order.productId)))] } }).select("code").lean();
-  const eligible = new Set(products.filter((product) => VIDEO_SWITCH_CODES.has(String(product.code).toLowerCase())).map((product) => String(product._id)));
-  return new Set(orders.filter((order) => eligible.has(String(order.productId))).map((order) => String(order.listingId)));
+  const running = await runningOrders(ids, now);
+  return new Set(running.filter((order) => VIDEO_SWITCH_CODES.has(order.code)).map((order) => order.listingId));
+}
+
+/** For each ad with a promotion running now, the strongest one (and when it ends), so My ads can say it is promoted. */
+export async function runningPromotions(ids: Types.ObjectId[], now: Date) {
+  await connectDb();
+  const best = new Map<string, RunningPromotion>();
+  for (const order of await runningOrders(ids, now)) {
+    const held = best.get(order.listingId);
+    const better = !held || strength(order.code) < strength(held.code) || (strength(order.code) === strength(held.code) && order.endsAt.toISOString() > held.endsAt);
+    if (better) best.set(order.listingId, { code: order.code, name: order.name, endsAt: order.endsAt.toISOString() });
+  }
+  return best;
 }
 
 /** The most ads whose views and clicks the panel totals. Keeps one request bounded. */
@@ -54,13 +90,14 @@ export async function listOwnCards(userId: string, query: { status?: string; gro
     Listing.find(base).select("status slug expiresAt").limit(TOTALS_LIMIT).lean<{ status: string; slug?: string; expiresAt?: Date | null }[]>(),
   ]);
   const { legacy } = await presentRows(rows.map((row) => row.toObject()) as unknown as PresentInput, new Map(), new Date(), { ownerView: true });
-  const topAds = await topAdIds(rows.map((row) => row._id as Types.ObjectId), new Date());
+  const rowIds = rows.map((row) => row._id as Types.ObjectId);
+  const [topAds, promotions] = await Promise.all([topAdIds(rowIds, new Date()), runningPromotions(rowIds, new Date())]);
   const byAd = await shownCountsFor(owned.flatMap((row) => (row.slug ? [row.slug] : [])));
   // H7.5: each ad's own shown views and clicks (the owner's own visits are not counted, see the ad counters).
   const items = rows.map((row, index) => {
     const view = ownerView(row);
     const counts = view.slug ? byAd[view.slug] : undefined;
-    return { ...view, videoCallsEligible: topAds.has(String(row._id)), card: legacy[index], shown: { views: counts?.views ?? 0, clicks: counts?.clicks ?? 0 } };
+    return { ...view, videoCallsEligible: topAds.has(String(row._id)), promotion: promotions.get(String(row._id)) ?? null, card: legacy[index], shown: { views: counts?.views ?? 0, clicks: counts?.clicks ?? 0 } };
   });
   const shown = Object.values(byAd);
   const totals = {

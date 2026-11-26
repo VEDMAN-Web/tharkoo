@@ -10,6 +10,7 @@ import { useCallback, useEffect, useRef, useState, type CSSProperties } from "re
 import { HeaderCountry } from "./HeaderCountry";
 import type { CountryOption } from "@/server/locations/country-scope";
 import { HeaderDrawer } from "./HeaderDrawer";
+import { CallStrip } from "./vendor/CallStrip";
 import { isProbablySignedIn, openSignInFromLink } from "./auth/SignInSheet";
 import { useUrlPaths } from "./UrlPaths";
 import { safeHref } from "@/lib/sanitize";
@@ -78,7 +79,8 @@ export function HeaderNew({
     const check = () => {
       if (document.visibilityState === "hidden") return;
       void api<{ role: string; status: string }[]>("/api/tours").then((res) => {
-        if (live && res.ok) setWaitingCalls(res.data.filter((row) => row.role === "advertiser" && row.status === "requested").length);
+        // Counts what needs this person now: a request waiting for their answer (vendor), or a call they asked for that was accepted (buyer: Join now).
+        if (live && res.ok) setWaitingCalls(res.data.filter((row) => (row.role === "advertiser" && row.status === "requested") || (row.role === "buyer" && row.status === "accepted")).length);
       });
     };
     check();
@@ -188,8 +190,8 @@ export function HeaderNew({
                 >
                   {user ? <span className="tkn-avatar-circle">{accountLabel.slice(0, 1).toUpperCase()}</span> : <span className="tkn-avatar-circle tkn-skel" aria-hidden="true" />}
                   <ChevronDown size={12} aria-hidden="true" focusable="false" />
+                  {unread + waitingCalls > 0 ? <span className="tkn-avatar-dot" data-tk="header-unread" aria-hidden="true">{unread + waitingCalls > 9 ? "9+" : unread + waitingCalls}</span> : null}
                 </button>
-                {unread + waitingCalls > 0 ? <span className="tkn-avatar-dot" data-tk="header-unread" aria-hidden="true">{unread + waitingCalls > 9 ? "9+" : unread + waitingCalls}</span> : null}
                 {accountOpen ? (
                   <div className="tkn-account-menu" role="menu">
                     {balance !== null ? (
@@ -239,6 +241,7 @@ export function HeaderNew({
         </div>
       </div>
     </header>
+    <CallStrip />
     {menuOpen ? (
       <HeaderDrawer
         links={shell.header.navLinks}

@@ -9,6 +9,7 @@ import { useFocusTrap } from "@/components/ui/useFocusTrap";
 import { api, friendlyError, idempotencyKey } from "@/lib/ui/api";
 import { coverPack, firstPacks, rupees, type PackLike } from "@/lib/credit-pack-view";
 import "./buy-credits-dialog.css";
+import { SkPacks } from "@/components/ui/Sk";
 
 /** How often the payment is asked about, and when to stop asking (the payment page lives 30 minutes). */
 export const POLL_MS = 3000;
@@ -187,7 +188,7 @@ export function BuyCreditsDialog({ need, price, plan, balance, publishText, onPa
             <p className="tkb-line" data-tk="buy-line">
               {need > 0 ? t("post.v2.buy.line", { balance: credits(balance), plan, price: credits(price), need: credits(need) }) : t("post.v2.buy.lineEnough", { balance: credits(balance) })}
             </p>
-            {!data ? <p className="tkb-note" role="status">{loadError || t("post.v2.buy.loading")}</p> : null}
+            {!data ? (loadError ? <p className="tkb-note" role="status">{loadError}</p> : <SkPacks label={t("post.v2.buy.loading")} />) : null}
             {data ? (
               <div role="radiogroup" aria-label={t("post.v2.buy.packs")} className="tkb-packs">
                 {packs.map((pack) => (

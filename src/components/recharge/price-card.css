@@ -18,7 +18,8 @@
 .tkc-rate { margin: 14px 0 0; padding: 10px 14px; border-radius: 14px; background: #fdf2f8; text-align: center; font-size: 15px; line-height: 22px; font-weight: 700; }
 
 /* The pack picker and the price card side by side on a computer, the card first on a phone. */
-.tkc-wrap { container: tkc / inline-size; }
+/* width: 100% matters: a box with inline-size containment has no width of its own, so inside a centred or shrink-to-fit parent it would collapse to a thin strip (the packs showed as narrow pills on a phone). */
+.tkc-wrap { container: tkc / inline-size; width: 100%; min-width: 0; box-sizing: border-box; }
 .tkc-duo { display: grid; gap: 18px; }
 @container tkc (min-width: 720px) {
   .tkc-duo.has-card { grid-template-columns: minmax(0, 1fr) minmax(0, 1.15fr); align-items: start; }
@@ -41,3 +42,12 @@
   .tkc-ic { width: 44px; height: 44px; border-radius: 14px; }
 }
 .tkr-line { margin: 4px 0 0; font-size: 14px; line-height: 20px; font-weight: 700; color: #0b6b3c; }
+
+/* Narrow phones: the price goes under the words, so the description is not squeezed into a thin strip, and the bonus stays on one line. */
+@media (max-width: 420px) {
+  .tkc { padding: 14px; }
+  .tkc-row { grid-template-columns: 44px minmax(0, 1fr); }
+  .tkc-row > .tkc-amt, .tkc-row > .tkc-free { grid-column: 2; justify-self: start; }
+  .tkc-row > .tkc-amt { flex-direction: row; align-items: baseline; gap: 8px; text-align: left; }
+  .tkp .tkr-pack.is-rich .tkp-bonus { display: block; margin-left: 0; white-space: nowrap; }
+}

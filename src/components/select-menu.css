@@ -1,0 +1,55 @@
+/* The site's own pick-list menu (SelectMenu): a floating list under the field, a bottom sheet on a phone. */
+.tk-sm-back { display: none; }
+.tk-sm {
+  position: fixed; z-index: 200; top: var(--sm-top); bottom: var(--sm-bottom); left: var(--sm-left); width: var(--sm-width); max-width: calc(100vw - 16px);
+  box-sizing: border-box; padding: 6px; background: #fff; color: #1e0b38; border: 1.5px solid #ead8f0; border-radius: 14px;
+  box-shadow: 0 18px 44px rgba(30, 11, 56, 0.22); font-family: inherit; font-size: 15px; line-height: 20px; font-weight: 500;
+}
+.tk-sm-title { display: none; margin: 0; }
+.tk-sm-list {
+  list-style: none; margin: 0; padding: 0; max-height: var(--sm-max); overflow-y: auto; overscroll-behavior: contain;
+  scrollbar-width: thin; scrollbar-color: #d9b8e6 transparent;
+}
+.tk-sm-row { margin: 0; padding: 0; }
+.tk-sm-group { display: block; padding: 10px 12px 4px; font-size: 12px; line-height: 16px; font-weight: 800; letter-spacing: 0.06em; text-transform: uppercase; color: #6b4a8a; }
+.tk-sm-option {
+  display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 42px; padding: 9px 12px; box-sizing: border-box;
+  border-radius: 10px; cursor: pointer; color: #1e0b38;
+}
+.tk-sm-option[data-active="true"] { background: #fdf0f7; color: #a8124f; }
+.tk-sm-option[aria-selected="true"] { font-weight: 800; color: #a8124f; }
+.tk-sm-option[aria-disabled="true"] { opacity: 0.45; cursor: not-allowed; }
+.tk-sm-label { min-width: 0; overflow-wrap: anywhere; }
+.tk-sm-check { flex: none; color: #d1137a; }
+@media (prefers-reduced-motion: no-preference) {
+  .tk-sm { animation: tk-sm-in 120ms ease-out; }
+  @keyframes tk-sm-in { from { opacity: 0; transform: translateY(-4px); } to { opacity: 1; transform: none; } }
+}
+@media (max-width: 600px) {
+  .tk-sm-back { display: block; position: fixed; inset: 0; z-index: 199; background: rgba(17, 5, 32, 0.45); }
+  .tk-sm {
+    top: auto; bottom: 0; left: 0; right: 0; width: 100%; max-width: none; padding: 14px 12px calc(12px + env(safe-area-inset-bottom));
+    border: 0; border-radius: 20px 20px 0 0; box-shadow: 0 -12px 40px rgba(17, 5, 32, 0.3);
+  }
+  .tk-sm-title { display: block; padding: 0 8px 10px; font-size: 16px; line-height: 22px; font-weight: 800; color: #110520; }
+  .tk-sm-list { max-height: min(60dvh, 420px); }
+  .tk-sm-option { min-height: 48px; font-size: 16px; }
+  @media (prefers-reduced-motion: no-preference) {
+    .tk-sm { animation: tk-sm-up 160ms ease-out; }
+    @keyframes tk-sm-up { from { transform: translateY(16px); opacity: 0; } to { transform: none; opacity: 1; } }
+  }
+}
+
+/* One look for every dropdown panel on the site: the same thin pink scrollbar (no arrow buttons) on the older lists too. */
+.tkn-pop, .tkn-pop-country, .tk-ss-list, .tkd-list, .tkn-kw-list, .tkn-countrylist-wrap {
+  scrollbar-width: thin; scrollbar-color: #d9b8e6 transparent;
+}
+
+/* A field opened with a click or tap shows no purple focus ring (neither on the field nor on the box around it); Tab and the keyboard still do. */
+select[data-sm-pointer]:focus,
+select[data-sm-pointer]:focus-visible,
+:has(> select[data-sm-pointer]):focus-within,
+:has(> select[data-sm-pointer]) :focus-visible {
+  outline: none !important;
+  box-shadow: none !important;
+}

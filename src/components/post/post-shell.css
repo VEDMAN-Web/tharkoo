@@ -44,7 +44,7 @@ body:has(.tkp-shell) .tkn-float .tkn-chat-bubble { width: 56px; height: 56px; }
 }
 .tkn .tkp-shell.tkp-shell .tkp-post[data-design="post-new"] .tkp-grid { display: block; }
 .tkn .tkp-shell.tkp-shell .tkp-post[data-design="post-new"] .tkp-strip { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin: 0; padding: 4px 20px; min-height: 52px; font-size: 13px; font-weight: 700; color: #4a2870; background: #fff; border-bottom: 1px solid #f1e4f5; }
-.tkn .tkp-shell .tkp-strip-btn { min-height: 44px; padding: 0 14px; border: 1.5px solid #ead8f0; border-radius: 999px; background: #fff; color: #4a2870; font: inherit; font-size: 13px; font-weight: 700; cursor: pointer; }
+.tkn .tkp-shell .tkp-strip-btn { min-height: 44px; flex: none; white-space: nowrap; padding: 0 14px; border: 1.5px solid #ead8f0; border-radius: 999px; background: #fff; color: #4a2870; font: inherit; font-size: 13px; font-weight: 700; cursor: pointer; }
 .tkn .tkp-shell.tkp-shell .tkp-post[data-design="post-new"] .tkp-rail,
 .tkn .tkp-shell.tkp-shell .tkp-post[data-design="post-new"] .tkp-aside { display: none; }
 .tkn .tkp-shell.tkp-shell .tkp-post[data-design="post-new"] .tkp-main {

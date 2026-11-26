@@ -6,6 +6,7 @@ import dynamic from "next/dynamic";
 import { MessageCircle, Phone, Video } from "lucide-react";
 import { api, friendlyError, hasSessionHint } from "@/lib/ui/api";
 import { tourRequestLabel } from "@/components/ad/tourLabels";
+import { callPage, isOpenTour, useTours } from "@/components/tours/useTours";
 import { useSellerStatus, type SellerStatus } from "@/components/availability/sellerStatus";
 import { AvailabilityBadge } from "@/components/availability/AvailabilityBadge";
 import { AdPopup, type AdPopupAlt, type FlowResult, type PopupKind } from "@/components/new/AdPopup";
@@ -44,6 +45,8 @@ type Ctx = {
   busy: Action | null;
   tour: AdTour | null;
   tourRequested: boolean;
+  /** The advertiser accepted this visitor's request: the button opens the call itself. */
+  joinTourId: string | null;
   open: (channel: Channel) => void;
   openChatFlow: () => void;
   openCall: () => void;
@@ -111,8 +114,17 @@ export function ContactProvider({
   const [busy, setBusy] = useState<Action | null>(null);
   const [conversationId, setConversationId] = useState("");
   const [chatOpen, setChatOpen] = useState(false);
-  const [tourRequested, setTourRequested] = useState(false);
+  const [tourRequestedRaw, setTourRequested] = useState(false);
+  const [tourId, setTourId] = useState<string | null>(null);
   const [popup, setPopup] = useState<PopupKind | null>(null);
+  // While no pop-up is open, read the visitor's own calls from the server: the button stays right after a refresh or a
+  // page change, and goes back to normal once the request is declined, cancelled or over. (A guest is not asked.)
+  const { rows: myTours } = useTours({ enabled: Boolean(tour) && !sample && !isOwner && popup === null });
+  const openRow = tour ? myTours?.find((row) => row.role === "buyer" && row.listingId === tour.listingId && isOpenTour(row)) : undefined;
+  const watched = tourId ? myTours?.find((row) => row.id === tourId) : undefined;
+  const tourRequested = Boolean(openRow) || (tourRequestedRaw && !(watched && !isOpenTour(watched)));
+  const openTourId = openRow?.id ?? tourId;
+  const joinTourId = openRow?.status === "accepted" ? openRow.id : null;
   const [paidAdded, setPaidAdded] = useState<number | null>(null);
   const [signedIn, setSignedIn] = useState(false);
   // H17.1: a sample ad has nobody behind it, so there is no Online now or Away to show.
@@ -164,6 +176,7 @@ export function ContactProvider({
     const res = await api<{ id: string }>("/api/tours/request/", { method: "POST", body: JSON.stringify({ listingId: tour.listingId }) });
     setBusy(null);
     if (res.ok) {
+      setTourId(res.data.id);
       setTourRequested(true);
       return "ok";
     }
@@ -173,8 +186,12 @@ export function ContactProvider({
     }
     // H7.4: no coin provider is live yet, so a visitor without coins is told purchases are coming, never shown a fake success.
     if (res.status === 402) return "coins";
-    // H18.17: a request for this ad is already waiting for the vendor: show it as sent, not as an error.
+    // H18.17: a request for this ad is already open (waiting, or accepted and not finished). Find it, so the pop-up shows its
+    // real state (the line, or Join now) and not a made-up "sent".
     if (res.status === 409 && /open tour request/i.test(res.error?.message ?? "")) {
+      const list = await api<{ id: string; listingId: string; role: string; status: string }[]>("/api/tours").catch(() => null);
+      const open = list?.ok ? list.data.find((row) => row.listingId === tour.listingId && row.role === "buyer" && (row.status === "requested" || row.status === "accepted")) : undefined;
+      setTourId(open?.id ?? null);
       setTourRequested(true);
       return "ok";
     }
@@ -241,7 +258,7 @@ export function ContactProvider({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [listingId, tour, sample]);
 
-  const value: Ctx = { shown, notice, busy, tour, tourRequested, open, openChatFlow: () => void openChatFlow(), openCall, seller, people, info, isOwner, listingId };
+  const value: Ctx = { shown, notice, busy, tour, tourRequested, joinTourId, open,openChatFlow: () => void openChatFlow(), openCall, seller, people, info, isOwner, listingId };
   return (
     <ContactCtx.Provider value={value}>
       {children}
@@ -256,6 +273,9 @@ export function ContactProvider({
           alternatives={info.alternatives}
           notice={notice?.text ?? null}
           paidAdded={paidAdded}
+          tourId={openTourId}
+          openRequest={tourRequested}
+          onCallEnded={() => setTourRequested(false)}
           onClose={closePopup}
           onSignedIn={() => setSignedIn(true)}
           onStartCall={startCall}
@@ -321,7 +341,7 @@ export function ContactButtons({
   sticky?: boolean;
   channels?: Channel[];
 }) {
-  const { shown, notice, busy, tour, tourRequested, open, openChatFlow, openCall, seller, people, isOwner, listingId } = useContact();
+  const { shown, notice, busy, tour, tourRequested, joinTourId, open, openChatFlow, openCall, seller, people, isOwner, listingId } = useContact();
   const t = useT();
   if (isOwner && listingId) {
     return (
@@ -338,7 +358,8 @@ export function ContactButtons({
       const href = hit.href || (channel === "phone" ? `tel:${hit.value}` : channel === "whatsapp" ? `https://wa.me/${hit.value.replace(/\D/g, "")}` : undefined);
       return (
         <a key={channel} className={channel === "whatsapp" ? "tk-btn tk-btn-whatsapp" : "tk-btn"} data-tk={channel === "phone" ? "call" : "whatsapp"} href={href}>
-          {hit.value}
+          {channel === "phone" ? <Phone size={16} aria-hidden /> : <Wa />}
+          <span className="tk-btn-label">{hit.value}</span>
         </a>
       );
     }
@@ -346,7 +367,7 @@ export function ContactButtons({
     return (
       <button key={channel} type="button" className={channel === "whatsapp" ? "tk-btn tk-btn-whatsapp" : "tk-btn"} data-tk={channel === "phone" ? "call" : channel === "whatsapp" ? "whatsapp" : undefined} onClick={() => open(channel)} disabled={busy === channel}>
         {channel === "phone" ? <Phone size={16} aria-hidden /> : channel === "whatsapp" ? <Wa /> : null}
-        {busy === channel ? "…" : label}
+        <span className="tk-btn-label">{busy === channel ? "…" : label}</span>
       </button>
     );
   });
@@ -354,12 +375,18 @@ export function ContactButtons({
     ...channelButtons,
     <button key="chat" type="button" className="tk-btn" data-tk="chat" onClick={() => openChatFlow()} disabled={busy === "chat"}>
       {seller ? <span className="tkn-dot" data-status={seller.status} aria-hidden /> : null}
-      <MessageCircle size={16} aria-hidden /> {busy === "chat" ? "…" : t(sticky ? "ad.bar.chat" : "ad.chat")}
+      <MessageCircle size={16} aria-hidden /> <span className="tk-btn-label">{busy === "chat" ? "…" : t(sticky ? "ad.bar.chat" : "ad.chat")}</span>
     </button>,
     tour && !people ? (
-      <button key="tour" type="button" className="tk-btn" data-tk="tour" onClick={() => openCall()} disabled={busy === "tour" || tourRequested} aria-busy={busy === "tour"}>
-        <Video size={16} aria-hidden /> {busy === "tour" ? "…" : tourRequested ? "Request sent" : sticky ? barVideoLabel(t, tour.coins) : tourRequestLabel(tour.coins)}
-      </button>
+      joinTourId ? (
+        <Link key="tour" href={callPage(joinTourId)} className="tk-btn" data-tk="tour" data-state="accepted">
+          <Video size={16} aria-hidden /> <span className="tk-btn-label">{t("ad.calling.join")}</span>
+        </Link>
+      ) : (
+        <button key="tour" type="button" className="tk-btn" data-tk="tour" data-state={tourRequested ? "waiting" : undefined} onClick={() => openCall()} disabled={busy === "tour"} aria-busy={busy === "tour"}>
+          <Video size={16} aria-hidden /> <span className="tk-btn-label">{busy === "tour" ? "…" : tourRequested ? t(sticky ? "ad.calling.sent" : "ad.calling.sentView") : sticky ? barVideoLabel(t, tour.coins) : tourRequestLabel(tour.coins)}</span>
+        </button>
+      )
     ) : null,
   ];
   if (sticky) {
@@ -391,8 +418,9 @@ function barVideoLabel(t: (key: "ad.bar.videoOne" | "ad.bar.videoMany", params?:
 
 function Wa() {
   return (
-    <svg width="16" height="16" viewBox="0 0 24 24" aria-hidden>
-      <path fill="#fff" d="M12 3a9 9 0 0 0-7.7 13.6L3 21l4.5-1.2A9 9 0 1 0 12 3z" />
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden style={{ flex: "none" }}>
+      <path d="M12 3a9 9 0 0 0-7.7 13.6L3 21l4.5-1.2A9 9 0 1 0 12 3z" />
+      <path d="M9.2 8.6c-.3.6-.2 1.4.4 2.4 1 1.7 2.4 2.9 4.2 3.5.7.2 1.3-.1 1.6-.7l-1.5-1-.8.5c-.8-.4-1.6-1.2-2-2l.5-.8-1-1.5-1.4.6z" fill="#fff" stroke="none" />
     </svg>
   );
 }

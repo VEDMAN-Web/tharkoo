@@ -10,6 +10,7 @@ import { EmptyIcon } from "@/components/buyer/UserPanelShell";
 import { useUrlPaths } from "@/components/UrlPaths";
 import { MiniAdCard } from "@/components/ui/MiniAdCard";
 import { ChatThread } from "./ChatThread";
+import { SkRows } from "@/components/ui/Sk";
 
 type Row = {
   id: string;
@@ -65,7 +66,7 @@ export function Inbox() {
     };
   }, []);
 
-  if (rows === null) return <p className="up-muted">Loading chats...</p>;
+  if (rows === null) return <SkRows label="Loading chats" rows={4} />;
   const open = rows.find((row) => row.id === openId) ?? null;
   return (
     <div className="up-inbox" data-open={open ? "yes" : "no"}>

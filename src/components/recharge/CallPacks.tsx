@@ -6,6 +6,7 @@ import { api, friendlyError, idempotencyKey } from "@/lib/ui/api";
 import { firstPacks, preselectedId, rupees } from "@/lib/credit-pack-view";
 import { creditsForAmount, useCreditPacks, type CreditPackData } from "./CreditPacks";
 import "./call-popup.css";
+import { SkPacks } from "@/components/ui/Sk";
 
 type Method = "card" | "crypto";
 
@@ -95,7 +96,7 @@ export function CallPacksView({ data, shortfall = 0, returnTo }: { data: CreditP
 export function CallPacks({ shortfall = 0, returnTo }: { shortfall?: number; returnTo: string }) {
   const t = useT();
   const { data, error, signedIn } = useCreditPacks(shortfall);
-  if (signedIn === null || (signedIn && !data && !error)) return <p className="tkcb-note" role="status">{t("recharge.loading")}</p>;
+  if (signedIn === null || (signedIn && !data && !error)) return <SkPacks label={t("recharge.loading")} count={3} />;
   if (!signedIn) return <p className="tkcb-note">{t("recharge.login")}</p>;
   if (!data) return <p className="tkcb-note" role="status">{error}</p>;
   return <CallPacksView data={data} shortfall={shortfall} returnTo={returnTo} />;

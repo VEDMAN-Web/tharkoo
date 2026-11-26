@@ -5,6 +5,7 @@ import Link from "next/link";
 import { Info, Video } from "lucide-react";
 import { api, friendlyError, hasSessionHint } from "@/lib/ui/api";
 import { roomLine, tourStatusLabel } from "../ad/tourLabels";
+import { SkRows } from "@/components/ui/Sk";
 
 /** One row from GET /api/tours. Only the advertiser's rows are shown here. */
 export type TourRow = {
@@ -109,7 +110,7 @@ export function TourInbox() {
           {error}
         </p>
       ) : null}
-      {rows === null ? <p className="t-small">Loading tour requests…</p> : null}
+      {rows === null ? <SkRows label="Loading tour requests" rows={2} thumb={false} /> : null}
       {mine.length ? (
         <ul style={{ listStyle: "none", padding: 0, margin: 0, display: "grid", gap: 12 }}>
           {mine.map((tour) => {

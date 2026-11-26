@@ -7,6 +7,7 @@ export const TOUR_STATUSES = [
   "ending",
   "completed",
   "declined",
+  "cancelled",
   "expired",
   "failed",
   "disputed",

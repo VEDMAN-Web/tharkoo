@@ -1357,7 +1357,7 @@ input, select, textarea { font-size: 16px; }
 .tk-field { display: grid; gap: 4px; font-size: 13px; font-weight: 700; }
 input.tk-field, select.tk-field, textarea.tk-field { box-sizing: border-box; width: 100%; border: 1.5px solid #ead8f0; border-radius: 12px; background: #fff; color: #1e0b38; font: inherit; font-weight: 500; }
 input.tk-field:focus-visible, select.tk-field:focus-visible, textarea.tk-field:focus-visible { outline: 3px solid #7c3aed; outline-offset: 2px; }
-.tk-file { font: inherit; font-size: 14px; color: #4a2870; max-width: 100%; }
+.tk-file { font: inherit; font-size: 14px; color: #4a2870; width: 100%; min-width: 0; max-width: 100%; }
 .tk-file::file-selector-button { min-height: 44px; margin-right: 12px; padding: 0 18px; border-radius: 999px; border: 1.5px solid #ead8f0; background: #fff; color: #a8124f; font: inherit; font-weight: 700; cursor: pointer; }
 .tk-field input, .tk-field select, .tk-field textarea {
   width: 100%;
@@ -1754,7 +1754,10 @@ input.tk-field:focus-visible, select.tk-field:focus-visible, textarea.tk-field:f
 .tkn-account-menu .tkn-account-coins { display: none; }
 @media (max-width: 600px) {
   .tkn-coin-chip { display: none; }
-  .tkn-account-menu .tkn-account-coins { display: flex; font-weight: 700; color: #a8124f; }
+  .tkn-account-menu .tkn-account-coins { display: flex; font-weight: 700; color: #a8124f; white-space: normal; line-height: 20px; padding-top: 10px; padding-bottom: 10px; }
+  /* The menu hangs from the header (not from the small avatar) so it stays inside the screen with an even edge on the right. */
+  .tkn-header .tkn-account { position: static; }
+  .tkn-header .tkn-account-menu { right: 12px; left: auto; top: calc(100% + 6px); width: min(320px, calc(100vw - 24px)); min-width: 0; box-sizing: border-box; max-height: calc(100dvh - 90px); overflow-y: auto; overscroll-behavior: contain; }
 }
 .tkn-city-wrap { position: relative; }
 .tkn-city {
@@ -2091,7 +2094,7 @@ body:has([data-tk="bottom-bar"]) .tkn-float { bottom: 104px; }
   align-items: center;
   gap: 14px;
   min-height: 60px;
-  padding: 0 16px;
+  padding: 10px 16px;
   border-radius: 16px;
   border: 1px solid rgba(255, 255, 255, 0.95);
   background: rgba(255, 255, 255, 0.85);
@@ -2237,10 +2240,25 @@ body:has([data-tk="bottom-bar"]) .tkn-float { bottom: 104px; }
 .tkn-logo-link { display: inline-flex; align-items: center; flex: none; min-height: 44px; text-decoration: none; }
 .tkn-logo { display: block; height: 40px; width: auto; max-width: none; }
 @media (max-width: 389px) { .tkn-logo { height: 32px; } }
+/* The smallest phones, signed in: logo, account, Post your ad and the menu must fit in 320px, or the whole page scrolls sideways. */
+@media (max-width: 359px) {
+  .tkn-header .tkn-header-row { gap: 6px; }
+  .tkn-header .tkn-header-actions { gap: 4px; }
+  .tkn-header .tkn-header-actions .tkn-btn { padding: 0 10px; font-size: 13px; }
+  .tkn-header .tkn-logo { height: 26px; }
+}
+/* Small laptops and wide tablets, signed in: the full menu stays, with less air, so Post your ad is not pushed off the screen. */
+@media (min-width: 1024px) and (max-width: 1179px) {
+  .tkn-header .tkn-header-row { padding: 0 16px; gap: 10px; }
+  .tkn-header .tkn-nav-link { padding: 0 10px; }
+  .tkn-header .tkn-header-actions { gap: 6px; }
+}
 
 /* H7.131: unread chat count on the header avatar and in the account menu. */
 .tkn-account { position: relative; }
-.tkn-avatar-dot { position: absolute; top: -4px; right: -4px; pointer-events: none; min-width: 18px; height: 18px; padding: 0 5px; box-sizing: border-box; border-radius: 9px; background: #c2185b; color: #fff; font-size: 12px; font-weight: 800; line-height: 18px; text-align: center; }
+/* The count sits on the avatar button itself (the box around the avatar is not the anchor on a phone). */
+.tkn-avatar { position: relative; }
+.tkn-avatar-dot { position: absolute; top: -6px; right: -6px; z-index: 1; pointer-events: none; min-width: 18px; height: 18px; padding: 0 5px; box-sizing: border-box; border-radius: 9px; background: #c2185b; color: #fff; font-size: 12px; font-weight: 800; line-height: 18px; text-align: center; }
 .tkn-menu-badge { margin-left: 8px; min-width: 20px; padding: 0 6px; border-radius: 10px; background: #c2185b; color: #fff; font-size: 12px; font-weight: 800; line-height: 20px; text-align: center; display: inline-block; }
 
 /* H12.2: one sideways chip row. Phones scroll it with a 24 px fade on the right edge; chips never shrink or cut their text. */
@@ -2279,6 +2297,11 @@ body .tkn-footer {
 .tk-recent-list { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 14px; }
 
 /* H19.5: the Video calls page. */
+/* The two tabs (Requests for me / My requests): one switch, both the same size, the chosen one is the white pill. */
+.tkn-call-tabs { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; padding: 4px; margin: 0 0 14px; border-radius: 14px; background: #f6ecf9; }
+.tkn-call-tab { min-height: 44px; padding: 0 12px; border: 0; border-radius: 10px; background: transparent; color: #6b4a8a; font: inherit; font-size: 14px; font-weight: 700; cursor: pointer; text-align: center; transition: background 0.15s, color 0.15s, box-shadow 0.15s; }
+.tkn-call-tab:hover { color: #a8124f; }
+.tkn-call-tab[aria-pressed="true"] { background: #fff; color: #a8124f; box-shadow: 0 2px 8px rgba(45, 18, 72, 0.14); }
 .tkn-call-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 12px; }
 .tkn-call-row { display: grid; grid-template-columns: 64px minmax(0, 1fr); gap: 4px 12px; align-items: start; padding: 12px; border: 1px solid #ead8f0; border-radius: 14px; background: #fff; }
 .tkn-call-photo { grid-row: span 2; width: 64px; height: 64px; border-radius: 10px; overflow: hidden; background: #f3e8f8; }
@@ -2293,3 +2316,44 @@ body .tkn-footer {
 .tkn-call-actions { grid-column: 1 / -1; display: flex; flex-wrap: wrap; gap: 8px; }
 .tkn-call-actions .tk-btn { min-height: 44px; }
 @media (min-width: 640px) { .tkn-call-row { grid-template-columns: 64px minmax(0, 1fr) auto; align-items: center; } .tkn-call-photo { grid-row: auto; } .tkn-call-actions { grid-column: auto; justify-content: flex-end; } }
+
+/* A call the person asked for was accepted: one line under the header, on every page (Join now). */
+.tkn-call-strip {
+  display: flex; align-items: center; justify-content: center; gap: 10px; flex-wrap: wrap;
+  padding: 10px 16px; background: #5b21b6; color: #fff; font-weight: 700; font-size: 15px; text-align: center;
+}
+.tkn-call-strip-btn {
+  display: inline-flex; align-items: center; min-height: 36px; padding: 0 16px; border-radius: 999px;
+  background: #fff; color: #4c1d95; text-decoration: none; font-weight: 800;
+}
+.tkn-call-strip-btn:focus-visible { outline: 3px solid #fff; outline-offset: 2px; }
+/* The advertiser's line (someone wants a call) is pink, the asker's line (accepted) stays violet, so the two are not mixed up. */
+.tkn-call-strip-vendor { background: #d1137a; }
+.tkn-call-strip-vendor .tkn-call-strip-btn { color: #a8124f; }
+
+/* The hand cursor on everything that can be clicked, across the whole site. It sits in the base layer with no weight of its own
+   (:where), so a component's own cursor (grab, wait, not-allowed, default on a disabled button) still wins. Text boxes keep the text cursor. */
+@layer base {
+  :where(button, select, summary, input[type="button"], input[type="submit"], input[type="reset"], input[type="checkbox"], input[type="radio"], input[type="file"], input[type="range"], input[type="color"]):where(:not(:disabled)),
+  :where([role="button"], [role="tab"], [role="switch"], [role="option"], [role="menuitem"], [role="menuitemradio"], [role="menuitemcheckbox"], [role="checkbox"], [role="radio"]):where(:not([aria-disabled="true"], :disabled)),
+  :where(label):where(:has(input[type="checkbox"]:not(:disabled), input[type="radio"]:not(:disabled), input[type="file"]:not(:disabled))),
+  :where(input[type="file"]:not(:disabled))::file-selector-button,
+  :where(input[type="date"], input[type="time"], input[type="datetime-local"])::-webkit-calendar-picker-indicator {
+    cursor: pointer;
+  }
+}
+
+/* Wallet balances: side by side where there is room; on a phone two in a row and the third across. */
+.tk-balances { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 10px; }
+@media (max-width: 520px) {
+  .tk-balances { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .tk-balances > :last-child:nth-child(odd) { grid-column: 1 / -1; }
+}
+
+/* On a phone each call line is one slim row: icon, words, button. Two calls at once must not take half the screen. */
+@media (max-width: 600px) {
+  .tkn-call-strip { flex-wrap: nowrap; justify-content: flex-start; gap: 8px; padding: 8px 12px; font-size: 13px; line-height: 1.35; text-align: left; }
+  .tkn-call-strip > svg { flex: none; }
+  .tkn-call-strip > span { flex: 1; min-width: 0; }
+  .tkn-call-strip-btn { flex: none; white-space: nowrap; padding: 0 12px; }
+}

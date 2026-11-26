@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { api, fieldErrors, friendlyError } from "@/lib/ui/api";
+import "./earnings.css";
 
 export interface MaskedKyc {
   method: "bank" | "upi" | "crypto";
@@ -30,15 +31,13 @@ const DEFAULT_COINS: CoinOption[] = [
   { coin: "USDT", network: "BEP20", label: "USDT · BNB Chain (BEP20)", addressHint: "starts with 0x" },
 ];
 
-const INPUT = { width: "100%", minHeight: 44, border: "1px solid var(--border)", borderRadius: 8, padding: "0 12px", fontSize: 16, background: "var(--card, #fff)", color: "var(--text)" } as const;
-
 function Field({ label, name, error, ...rest }: { label: string; name: string; error?: string[]; placeholder?: string; inputMode?: "numeric" | "text"; maxLength?: number }) {
   return (
-    <label style={{ display: "grid", gap: 6 }}>
-      <span className="t-small">{label}</span>
-      <input name={name} required style={INPUT} autoComplete="off" {...rest} />
+    <label className="ew-field">
+      <span className="ew-label">{label}</span>
+      <input name={name} required className="ew-input" autoComplete="off" {...rest} />
       {error?.[0] ? (
-        <span className="t-small" role="alert" style={{ color: "var(--danger, #a12626)" }}>
+        <span className="ew-text ew-err" role="alert">
           {error[0]}
         </span>
       ) : null}
@@ -49,29 +48,29 @@ function Field({ label, name, error, ...rest }: { label: string; name: string; e
 /** Once the details are on file the vendor sees them masked. Changing them goes through support. */
 export function KycSummary({ kyc }: { kyc: MaskedKyc }) {
   return (
-    <dl className="t-small" style={{ display: "grid", gridTemplateColumns: "auto 1fr", gap: "6px 14px", margin: 0 }}>
-      <dt style={{ color: "var(--muted)" }}>Name</dt>
-      <dd style={{ margin: 0 }}>{kyc.legalName}</dd>
-      <dt style={{ color: "var(--muted)" }}>PAN</dt>
-      <dd style={{ margin: 0 }}>{kyc.pan}</dd>
+    <dl className="ew-kv">
+      <dt>Name</dt>
+      <dd>{kyc.legalName}</dd>
+      <dt>PAN</dt>
+      <dd>{kyc.pan}</dd>
       {kyc.method === "crypto" ? (
         <>
-          <dt style={{ color: "var(--muted)" }}>{kyc.coin ?? "USDT"} wallet</dt>
-          <dd style={{ margin: 0, wordBreak: "break-all" }}>
+          <dt>{kyc.coin ?? "USDT"} wallet</dt>
+          <dd>
             {kyc.network} · {kyc.walletAddress}
           </dd>
         </>
       ) : kyc.method === "bank" ? (
         <>
-          <dt style={{ color: "var(--muted)" }}>Account</dt>
-          <dd style={{ margin: 0 }}>{kyc.accountNumber}</dd>
-          <dt style={{ color: "var(--muted)" }}>IFSC</dt>
-          <dd style={{ margin: 0 }}>{kyc.ifsc}</dd>
+          <dt>Account</dt>
+          <dd>{kyc.accountNumber}</dd>
+          <dt>IFSC</dt>
+          <dd>{kyc.ifsc}</dd>
         </>
       ) : (
         <>
-          <dt style={{ color: "var(--muted)" }}>UPI ID</dt>
-          <dd style={{ margin: 0 }}>{kyc.upiId}</dd>
+          <dt>UPI ID</dt>
+          <dd>{kyc.upiId}</dd>
         </>
       )}
     </dl>
@@ -118,23 +117,22 @@ export function KycForm({ onSaved }: { onSaved: (kyc: MaskedKyc) => void }) {
   }
 
   return (
-    <form onSubmit={submit} style={{ display: "grid", gap: 14 }} aria-label="Payout details">
-      <p className="t-small" style={{ color: "var(--muted)", margin: 0 }}>
+    <form onSubmit={submit} className="ew-form" aria-label="Payout details">
+      <p className="ew-note">
         Add these once. They are stored encrypted and shown masked. A change needs support.
       </p>
-      <p className="t-small" style={{ margin: 0 }}>
+      <p className="ew-text">
         Choose the coin you want to be paid in. Payouts are sent to your wallet and the rupee amount is converted at the day&apos;s rate. You see a range before you withdraw, and the admin confirms the exact amount.
       </p>
-      <div role="radiogroup" aria-label="Coin and network" style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+      <div role="radiogroup" aria-label="Coin and network" className="ew-coins">
         {options.map((option, index) => (
           <button
             key={`${option.coin}-${option.network}`}
             type="button"
             role="radio"
             aria-checked={current === option}
-            className={current === option ? "tk-btn tk-btn-cta" : "tk-btn tk-btn-outline-primary"}
+            className="ew-coin"
             onClick={() => setChoice(index)}
-            style={{ flex: "1 1 160px", minHeight: 44 }}
           >
             {option.label}
           </button>
@@ -148,17 +146,17 @@ export function KycForm({ onSaved }: { onSaved: (kyc: MaskedKyc) => void }) {
         error={fields.walletAddress}
         maxLength={64}
       />
-      <p className="t-small" style={{ color: "var(--muted)", margin: 0 }}>
+      <p className="ew-note">
         Check the address and network carefully. Crypto sent to a wrong address cannot be recovered.
       </p>
-      <label className="t-small" style={{ display: "flex", gap: 8, alignItems: "flex-start" }}>
-        <input type="checkbox" name="confirm" required style={{ marginTop: 3 }} />
+      <label className="ew-check">
+        <input type="checkbox" name="confirm" required />
         <span>I confirm this wallet and these details are mine and match my PAN.</span>
       </label>
-      <div aria-live="polite" className="t-small" style={{ color: "var(--danger, #a12626)", minHeight: 18 }}>
+      <div aria-live="polite" className="ew-msg">
         {message}
       </div>
-      <button type="submit" className="tk-btn tk-btn-cta" disabled={busy} style={{ width: "100%" }}>
+      <button type="submit" className="tk-btn tk-btn-cta ew-btn" disabled={busy}>
         {busy ? "Saving" : "Save payout details"}
       </button>
     </form>

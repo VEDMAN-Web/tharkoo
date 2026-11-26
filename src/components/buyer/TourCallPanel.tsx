@@ -1,7 +1,6 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
 
 export const CALL_RULES = "Calls are for checking that the person or item is real. No nudity or sexual content. Report anything wrong with the Report button.";
 
@@ -21,8 +20,11 @@ function stateLine(call: TourCall, error: string) {
   return "";
 }
 
+/**
+ * The person already tapped "Join now" to get here, so the room opens at once (no second "Join the call" tap).
+ * The rules and the Report button stay on the same screen, above the video.
+ */
 export function TourCallPanel({ call, error = "" }: { call: TourCall; error?: string }) {
-  const [joined, setJoined] = useState(false);
   const note = stateLine(call, error);
   return (
     <section className="up-glass up-panel" aria-labelledby="tour-call-title" data-tk="tour-call">
@@ -31,12 +33,9 @@ export function TourCallPanel({ call, error = "" }: { call: TourCall; error?: st
       <p className="up-lead" data-tk="call-rules">{CALL_RULES}</p>
       {note ? <p role="status" className="up-muted">{note}</p> : null}
       <div className="up-promo-row" style={{ marginTop: 16 }}>
-        {!note && !joined ? (
-          <button type="button" className="up-btn" onClick={() => setJoined(true)}>Join the call</button>
-        ) : null}
         <Link href={`/submit-report/?ad=${call.report}`} className="up-btn-ghost" data-tk="call-report">Report</Link>
       </div>
-      {joined && call.joinUrl ? (
+      {!note && call.joinUrl ? (
         <iframe
           title="Live video call"
           src={call.joinUrl}

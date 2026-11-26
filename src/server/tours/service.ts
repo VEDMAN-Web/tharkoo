@@ -10,7 +10,7 @@ import { adPhotoUrl } from "@/server/media/photo-url";
 import { kindAllowsVideo, isPeopleListing, listKinds, requireKind, VIDEO_NEVER_FOR_PEOPLE } from "@/server/categories/kinds";
 import type { CategoryKind } from "@/server/models/catalog";
 import { VideoTour, type VideoTourDoc } from "@/server/tours/model";
-import { callPagePath, roomExpiry, videoRoomProvider } from "@/server/tours/room";
+import { callPagePath, roomExpiry, TOUR_BOOKED_MINUTES, TOUR_ROOM_GRACE_MINUTES, videoRoomProvider } from "@/server/tours/room";
 import { accountName } from "@/lib/account-name";
 import { siteUrl } from "@/lib/utils";
 import { holdInEscrow, refundEscrow, releaseEscrow } from "@/server/wallet/escrow";
@@ -30,8 +30,14 @@ const DAY = 24 * HOUR;
 export const TOUR_MIN_SECONDS = 0;
 /** A request the advertiser does not accept in this time is refunded. */
 export const TOUR_ACCEPT_WINDOW_MS = 30 * MINUTE;
-/** An accepted tour with no call-end event after this long is refunded. */
-export const TOUR_CALL_TIMEOUT_MS = 4 * HOUR;
+/**
+ * An accepted tour that never got both people into the room is refunded after this long. The room itself only lives
+ * TOUR_BOOKED_MINUTES + TOUR_ROOM_GRACE_MINUTES (40 min) after the accept, so nobody can join later; 5 more minutes cover
+ * the minute-by-minute payout check. A call that did connect is already paid and completed, so this never touches it.
+ */
+export const TOUR_CALL_TIMEOUT_MS = (TOUR_BOOKED_MINUTES + TOUR_ROOM_GRACE_MINUTES + 5) * MINUTE;
+/** How long a "vendor is on a call" answer is reused, so a busy list does not ask the video service on every poll. */
+const BUSY_CACHE_MS = 15_000;
 /** A disputed call must be reported within this time after it ends. */
 export const TOUR_DISPUTE_WINDOW_MS = 48 * HOUR;
 /** The "Video verified" badge lasts this long after a paid call. */
@@ -199,6 +205,8 @@ export async function acceptTour(input: { ownerId: string; tourId: string; reque
     await closeTour(tour, { from: "requested", to: "expired", reason: "not-accepted", requestId: input.requestId });
     throw new ConflictError("This tour request has expired");
   }
+  // One advertiser, one call at a time: the next person in the line waits until the running call ends.
+  if (await vendorInCall(input.ownerId)) throw new ConflictError("You are on another video call. Accept this one when that call ends.");
   const acceptedAt = new Date();
   const provider = videoRoomProvider();
   const room = await provider.createRoom({ tourId: String(tour._id), expiresAt: roomExpiry(acceptedAt) });
@@ -219,6 +227,8 @@ export async function acceptTour(input: { ownerId: string; tourId: string; reque
     targetId: String(tour._id),
     requestId: input.requestId,
   });
+  // A new room now exists, so the next "is this advertiser on a call" check must ask again, not reuse an older answer.
+  busyCache.delete(input.ownerId);
   if (room.live) await notifyBuyer(String(tour.userId), String(tour._id));
   return { ...present(claim), joinUrl: room.live ? callPagePath(String(tour._id)) : null };
 }
@@ -251,12 +261,62 @@ export async function declineTour(input: { ownerId: string; tourId: string; requ
 }
 
 /**
+ * The buyer takes a waiting request back, or lets go of an accepted call that nobody has joined yet. The whole hold goes
+ * back to their wallet at once. A call that already connected is paid and completed, so it can no longer be cancelled.
+ */
+export async function cancelTour(input: { userId: string; tourId: string; requestId: string }) {
+  await connectDb();
+  const tour = await tourFor(input.tourId, { userId: input.userId });
+  if (tour.status !== "requested" && tour.status !== "accepted") throw new ConflictError("This video call can no longer be cancelled");
+  const closed = await closeTour(tour, { from: tour.status, to: "cancelled", reason: "cancelled-by-buyer", requestId: input.requestId });
+  if (!closed) throw new ConflictError("This video call can no longer be cancelled");
+  await audit.append({
+    actorId: input.userId,
+    actorType: "user",
+    action: "video_tour.cancel",
+    targetType: "video_tour",
+    targetId: String(tour._id),
+    requestId: input.requestId,
+  });
+  return present((await VideoTour.findById(tour._id).lean()) as VideoTourDoc);
+}
+
+const busyCache = new Map<string, { at: number; busy: boolean }>();
+
+/**
+ * True while this advertiser is in a live call: a recent room of theirs holds two people right now (asked from the video
+ * service, not from the phones). A call that has ended, or one only one person has joined, is not busy. The answer is
+ * reused for a few seconds so many screens polling at once do not each ask the video service.
+ */
+export async function vendorInCall(ownerId: string): Promise<boolean> {
+  const hit = busyCache.get(ownerId);
+  if (hit && Date.now() - hit.at < BUSY_CACHE_MS) return hit.busy;
+  await connectDb();
+  const since = new Date(Date.now() - (TOUR_BOOKED_MINUTES + TOUR_ROOM_GRACE_MINUTES) * MINUTE);
+  const rooms = await VideoTour.find({ ownerId, status: { $in: ["accepted", "completed"] }, acceptedAt: { $gte: since }, roomId: { $nin: ["", null] } })
+    .select("roomId")
+    .sort({ acceptedAt: -1 })
+    .limit(3)
+    .lean();
+  const provider = videoRoomProvider();
+  let busy = false;
+  for (const room of rooms) {
+    if ((await provider.participantCount(String(room.roomId)).catch(() => 0)) >= 2) {
+      busy = true;
+      break;
+    }
+  }
+  busyCache.set(ownerId, { at: Date.now(), busy });
+  return busy;
+}
+
+/**
  * Moves an open tour to a closed status and refunds the hold. The claim is atomic, so a second run changes nothing.
  * Returns false when the tour was no longer in the expected status.
  */
 async function closeTour(
   tour: VideoTourDoc & { _id?: unknown },
-  input: { from: "requested" | "accepted"; to: "expired" | "failed"; reason: string; requestId: string },
+  input: { from: "requested" | "accepted"; to: "expired" | "failed" | "cancelled"; reason: string; requestId: string },
 ) {
   const claim = await VideoTour.findOneAndUpdate({ _id: tour._id, status: input.from }, { $set: { status: "ending" } }, { returnDocument: "before" }).lean();
   if (!claim) return false;
@@ -322,26 +382,41 @@ export async function endTour(input: { tourId: string; eventId: string; outcome:
 export async function expireDueTours(requestId: string) {
   await connectDb();
   const now = Date.now();
-  const stale = await VideoTour.find({
-    $or: [
-      { status: "requested", requestedAt: { $lt: new Date(now - TOUR_ACCEPT_WINDOW_MS) } },
-      { status: "accepted", acceptedAt: { $lt: new Date(now - TOUR_CALL_TIMEOUT_MS) } },
-    ],
-  })
-    .limit(200)
-    .lean();
+  const stale = await VideoTour.find({ $or: staleFilters(now) }).limit(200).lean();
   let expired = 0;
   for (const tour of stale) {
-    const isRequest = tour.status === "requested";
-    const closed = await closeTour(tour, {
-      from: isRequest ? "requested" : "accepted",
-      to: isRequest ? "expired" : "failed",
-      reason: isRequest ? "not-accepted" : "call-not-ended",
-      requestId,
-    });
-    if (closed) expired += 1;
+    if (await closeStaleTour(tour, requestId)) expired += 1;
   }
   return { toursClosed: expired };
+}
+
+/** The two ways an open tour has run out of time: nobody accepted it, or it was accepted and nobody connected. */
+function staleFilters(now: number) {
+  return [
+    { status: "requested" as const, requestedAt: { $lt: new Date(now - TOUR_ACCEPT_WINDOW_MS) } },
+    { status: "accepted" as const, acceptedAt: { $lt: new Date(now - TOUR_CALL_TIMEOUT_MS) } },
+  ];
+}
+
+function closeStaleTour(tour: VideoTourDoc & { _id?: unknown }, requestId: string) {
+  const isRequest = tour.status === "requested";
+  return closeTour(tour, {
+    from: isRequest ? "requested" : "accepted",
+    to: isRequest ? "expired" : "failed",
+    reason: isRequest ? "not-accepted" : "call-not-ended",
+    requestId,
+  });
+}
+
+/**
+ * The same refund as the cron job, done when a person's own screen asks for their tours. The refund no longer waits for the
+ * nightly run, so a request nobody answered in 30 minutes is back in the wallet the next time either person looks.
+ */
+async function closeStaleFor(userId: string) {
+  const stale = await VideoTour.find({ $and: [{ $or: [{ userId }, { ownerId: userId }] }, { $or: staleFilters(Date.now()) }] })
+    .limit(20)
+    .lean();
+  for (const tour of stale) await closeStaleTour(tour, "poll").catch((error) => console.error("video tour could not be closed", error));
 }
 
 /** The buyer reports a completed call within 48 hours. The coin stays in the advertiser's earnings until staff decide. */
@@ -417,6 +492,8 @@ export async function reverseTour(input: { actorId: string; roles: readonly stri
 /** The tours a user is part of, as buyer or advertiser. */
 export async function listTours(userId: string) {
   await connectDb();
+  // A request nobody answered in 30 minutes (or a call nobody joined) is refunded as soon as either person looks.
+  await closeStaleFor(userId).catch((error) => console.error("video tours could not be refreshed", error));
   const rows = await VideoTour.find({ $or: [{ userId }, { ownerId: userId }] })
     .sort({ requestedAt: -1 })
     .limit(50)
@@ -430,24 +507,75 @@ export async function listTours(userId: string) {
   const assets = coverIds.length ? await MediaAsset.find({ _id: { $in: coverIds }, kind: "image" }).select("objectKey").lean<{ _id: unknown; objectKey: string }[]>() : [];
   const photoById = new Map(assets.map((asset) => [String(asset._id), adPhotoUrl(asset.objectKey)]));
   const people = await User.find({ _id: { $in: [...new Set(rows.flatMap((row) => [String(row.userId), String(row.ownerId)]))] } })
-    .select("displayName sellerProfile.name")
-    .lean<{ _id: unknown; displayName?: string; sellerProfile?: { name?: string } | null }[]>();
-  const nameById = new Map(
-    people.map((person) => {
-      const named = (person.sellerProfile?.name || person.displayName || "").trim();
-      return [String(person._id), named && !named.includes("@") ? named : "Member"] as const;
-    }),
-  );
-  return rows.map((row) => {
+    .select("displayName email sellerProfile.name")
+    .lean<{ _id: unknown; displayName?: string; email?: string; sellerProfile?: { name?: string } | null }[]>();
+  // The seller's profile name, else the display name, else the part of the email before the @ (as in the call room). Never the full email or phone.
+  const nameById = new Map(people.map((person) => [String(person._id), (person.sellerProfile?.name || "").trim() || accountName(person.displayName, person.email || "")] as const));
+  const busyOf = new Map<string, boolean>();
+  const out = [];
+  for (const row of rows) {
     const isAdvertiser = String(row.ownerId) === userId;
+    const open = row.status === "requested" || row.status === "accepted";
     const ad = adById.get(String(row.listingId));
     const cover = ad ? ad.coverMediaId ?? ad.mediaIds?.[0] : undefined;
     const otherName = nameById.get(String(isAdvertiser ? row.userId : row.ownerId)) ?? "Member";
     const joinUrl = row.roomId && row.status === "accepted" && videoRoomProvider().name === "daily" ? callPagePath(String(row._id)) : null;
+    // The line: how many still-open requests for the same advertiser came in before this one. Only the buyer's screen shows it.
+    const ahead =
+      !isAdvertiser && row.status === "requested"
+        ? await VideoTour.countDocuments({
+            ownerId: row.ownerId,
+            status: "requested",
+            requestedAt: { $lt: row.requestedAt, $gte: new Date(Date.now() - TOUR_ACCEPT_WINDOW_MS) },
+          })
+        : null;
+    // Is the advertiser on another call right now (their Accept button is off, and the buyer is told they are in the line).
+    const ownerKey = String(row.ownerId);
+    if (open && !busyOf.has(ownerKey)) busyOf.set(ownerKey, await vendorInCall(ownerKey).catch(() => false));
     // H19.10: only the vendor sees what they earn; the user sees the price and nothing of the split.
     const split = splitCall(row.coins, row.feePercent ?? 0);
-    return { ...present(row), adTitle: ad?.title ?? null, adSlug: ad?.slug ?? null, adPhoto: cover ? photoById.get(String(cover)) ?? null : null, otherName, role: isAdvertiser ? "advertiser" : "buyer", joinUrl, ...(isAdvertiser ? { youEarn: split.vendor, tharkooFee: split.fee } : {}) };
-  });
+    out.push({
+      ...present(row),
+      adTitle: ad?.title ?? null,
+      adSlug: ad?.slug ?? null,
+      adPhoto: cover ? photoById.get(String(cover)) ?? null : null,
+      otherName,
+      role: isAdvertiser ? "advertiser" : "buyer",
+      joinUrl,
+      ahead,
+      busy: open && busyOf.get(ownerKey) === true,
+      ...(isAdvertiser ? { youEarn: split.vendor, tharkooFee: split.fee } : {}),
+    });
+  }
+  return out;
+}
+
+const ANSWERED = ["accepted", "ending", "completed", "disputed", "reversing", "reversed"];
+
+/**
+ * Counts for the video calls page, straight from the database (never estimated). Each side counts its own calls:
+ * as the advertiser (requests that came in) and as the buyer (requests this person made).
+ */
+export async function tourStats(userId: string) {
+  await connectDb();
+  const id = objectId(userId, "userId");
+  const groups = await VideoTour.aggregate<{ _id: { role: "advertiser" | "buyer"; status: string }; n: number }>([
+    { $match: { $or: [{ userId: id }, { ownerId: id }] } },
+    { $group: { _id: { role: { $cond: [{ $eq: ["$ownerId", id] }, "advertiser", "buyer"] }, status: "$status" }, n: { $sum: 1 } } },
+  ]);
+  const side = (role: "advertiser" | "buyer") => {
+    const rows = groups.filter((group) => group._id.role === role);
+    const count = (...statuses: string[]) => rows.filter((group) => statuses.includes(group._id.status)).reduce((sum, group) => sum + group.n, 0);
+    return {
+      total: rows.reduce((sum, group) => sum + group.n, 0),
+      waiting: count("requested"),
+      accepted: count(...ANSWERED),
+      declined: count("declined"),
+      missed: count("expired", "cancelled"),
+      completed: count("completed", "disputed", "reversing", "reversed"),
+    };
+  };
+  return { advertiser: side("advertiser"), buyer: side("buyer") };
 }
 
 /** The call page for one side of an accepted tour: who they are, and a fresh link into the room. */

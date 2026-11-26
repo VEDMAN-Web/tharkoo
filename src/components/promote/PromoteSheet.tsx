@@ -11,6 +11,7 @@ import { api, friendlyError, hasSessionHint, idempotencyKey } from "@/lib/ui/api
 import type { PromoteOptions } from "./openPromote";
 import "@/components/recharge/recharge.css";
 import "./promote.css";
+import { SkPlans } from "@/components/ui/Sk";
 
 type Plan = { id: string; code: string; name: string; description: string; amount: number; durationHours: number };
 type Done = { name: string; endsAt: string | null; balance: number };
@@ -130,7 +131,7 @@ export function PromoteSheet({ options, onClose }: { options: PromoteOptions; on
             {t("promote.login")} <a href={`/u/login/?next=${encodeURIComponent(nextPath)}`} className="tkr-link">{t("recharge.loginLink")}</a>
           </p>
         ) : !plans ? (
-          <p className="tkr-note" role="status">{error || t("promote.loading")}</p>
+          error ? <p className="tkr-note" role="status">{error}</p> : <SkPlans label={t("promote.loading")} />
         ) : plans.length === 0 ? (
           <p className="tkr-note">{t("promote.empty")}</p>
         ) : (
