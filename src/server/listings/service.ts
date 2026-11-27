@@ -599,6 +599,11 @@ export async function submitListing(
   await assertVerified(userId);
   const user = await User.findById(userId);
   if (!user || user.status !== "active") throw new UnauthorizedError("Sign in required");
+  // H22.4: the 18+ tick on the Review step is the account's adult attestation; no date of birth is needed to post.
+  if (attestations.adult === true && !user.attestedAdultAt) {
+    user.attestedAdultAt = new Date();
+    await User.updateOne({ _id: user._id }, { $set: { attestedAdultAt: user.attestedAdultAt } });
+  }
   const category = await requireCategory(listing.categoryId.toString());
   // H18.11: the age box is asked on every people ad even when the category has no age field, and a category switch can
   // leave old answers behind. Check only this category's fields, keep the age for the 18+ gate, drop the rest.
@@ -614,8 +619,6 @@ export async function submitListing(
   // FIX-1: a listing about people never goes live with a video, even one saved before the rule.
   if (isPeopleListing(category) && (await adVideoCount(listing._id)) > 0) throw new PolicyViolationError(PEOPLE_NO_VIDEO);
   const gate = evaluatePublishGate({
-    // H7.2b: a code account without a seller profile has no date of birth, and the gate refuses it.
-    dateOfBirth: user.dateOfBirth ?? null,
     attestedAdult: Boolean(user.attestedAdultAt),
     verificationStatus: user.verificationStatus,
     accountStatus: user.status,

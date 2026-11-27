@@ -97,6 +97,16 @@ describe("H10.1 people protection", () => {
     expect(saved?.attributes).toEqual({ interest: "Likes, 1", age: 26 });
   });
 
+  it("H22.4: an account with no date of birth and no earlier 18+ tick publishes after the Review tick", async () => {
+    const category = await Category.create({ slug: "pride-dob", name: "Pride dob", enabled: true, kind: "community", fields: [{ key: "interest", label: "Interest", type: "text", required: true, order: 0, enabled: true }] });
+    const user = await User.create({ email: "newbie@example.com", displayName: "Newbie", status: "active", roles: ["user"], verificationStatus: "unsubmitted" });
+    const ad = await Listing.create({ ownerId: user._id, categoryId: category._id, title: "Book club on Sundays", description: "Join us for books and tea every Sunday.", status: "draft", cityId: new mongoose.Types.ObjectId(), contact: { phone: "9876543210" }, attributes: { interest: "Books" } });
+    await expect(submitListing(String(ad._id), String(user._id), { adult: true, accurate: true, rights: true }, "d1")).resolves.toBeTruthy();
+    const stored = await User.findById(user._id).lean();
+    expect(stored?.dateOfBirth).toBeUndefined();
+    expect(stored?.attestedAdultAt).toBeInstanceOf(Date);
+  });
+
   it("H18.12: a live ad with an age its category does not list can still be edited", async () => {
     const category = await Category.create({ slug: "pride-edit", name: "Pride edit", enabled: true, kind: "community", fields: [{ key: "interest", label: "Interest", type: "text", required: true, order: 0, enabled: true }] });
     const user = await User.create({ email: "meera@example.com", displayName: "Meera", passwordHash: "x", status: "active", roles: ["user"], dateOfBirth: new Date("1990-01-01"), attestedAdultAt: new Date(), verificationStatus: "approved" });
