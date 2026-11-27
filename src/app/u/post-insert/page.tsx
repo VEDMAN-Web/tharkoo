@@ -53,7 +53,7 @@ export default async function PostInsertPage({
   const dest = query.size ? `${postAdPath(paths)}?${query.toString()}` : postAdPath(paths);
   if (!session) redirect(`${loginPath(paths)}?role=seller&next=${encodeURIComponent(dest)}`);
   const newDesign = await newDesignOn();
-  const about = newDesign && !session.user.seller ? { askDateOfBirth: !session.user.dateOfBirth } : null;
+  const about = newDesign && !session.user.seller ? { askDateOfBirth: false } : null;
   // H6.14: with the ID-check switch on, the ID check comes first, before step 1. Off, the form always opens.
   const requireIdCheck = await idCheckRequired();
   const screen = idCheckScreen(requireIdCheck, session.user.verificationStatus);

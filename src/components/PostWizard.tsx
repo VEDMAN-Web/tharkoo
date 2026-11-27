@@ -560,8 +560,6 @@ export function PostWizard({
     if (!showErrors(errorsForStep(validate(), from, Boolean(about), moreKeys))) return;
     if (from === "category") return setStep(no("details"));
     if (from === "photos") return remember(draftId, returnToReview.current ? no("review") : no("contact"));
-    // H19.6b: the wizard never asks for a date of birth. An account that has none (a code sign-in) adds it once in its seller profile, then comes back.
-    if (from === "contact" && about?.askDateOfBirth) return setBanner(t("post.about.dobAway"));
     if (from === "contact" && !(await saveAbout())) return;
     const id = await saveAll(from === "contact");
     if (id) {
@@ -1199,12 +1197,6 @@ export function PostWizard({
                   onTelegramOn={() => setTelegramOn((v) => !v)}
                   onTelegram={setTelegram}
                 >
-                  {about?.askDateOfBirth ? (
-                    <p className="tkp-note" data-tk="dob-needed">
-                      {t("post.about.dobAway")}{" "}
-                      <Link href={`/u/seller-profile/?next=${encodeURIComponent(postAdPath(paths))}`} data-tk="dob-link">{t("post.about.dobLink")}</Link>
-                    </p>
-                  ) : null}
                 </AboutYouStep>
               ) : null}
 

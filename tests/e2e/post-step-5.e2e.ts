@@ -215,18 +215,18 @@ test.describe("H7.86 post an ad, step 5 and the success screen", () => {
     await consentAndPublish(page);
   });
 
-  test("H19.6b: an account with no date of birth (a code sign-in) is sent to its profile once, not asked inside the form", async ({ page, baseURL }) => {
+  test("H22.4: an account with no date of birth (a code sign-in) is never asked for one and goes on to Review", async ({ page, baseURL }) => {
     test.setTimeout(240_000);
     await newPoster(page, baseURL!, "nodob", false);
     await reachAbout(page, `Sunrise walk ${Date.now()}`, "nodob");
     await expect(page.locator("#about-dob")).toHaveCount(0);
-    await expect(page.locator("#about-adult")).toHaveCount(0);
-    await expect(page.locator("[data-tk=dob-link]")).toHaveAttribute("href", /seller-profile.*next=/);
+    await expect(page.locator("[data-tk=dob-needed]")).toHaveCount(0);
+    await expect(page.locator("[data-tk=dob-link]")).toHaveCount(0);
     await page.locator("#phone").fill("9876543210");
     await fillAbout(page);
     await page.locator("[data-tk=go-on]").click();
-    await stepOf(page, 4);
-    await expect(page.locator(".tkp-banner")).toContainText("date of birth");
+    await stepOf(page, 5);
+    await expect(page.locator("input[type=checkbox][id*=adult]")).toHaveCount(1);
   });
 
   test("H19.6b contact step: no email buttons, phone is required, WhatsApp and Telegram are switches with their box right under, and the name and city come after", async ({ page, baseURL }) => {

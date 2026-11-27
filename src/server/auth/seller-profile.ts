@@ -55,10 +55,10 @@ export async function saveSellerProfile(input: { userId: string; body: SellerPro
     throw new ValidationError("Invalid request", { whatsapp: ["Enter a WhatsApp number with 8 to 15 digits, or leave it empty"] });
   }
 
-  const askDateOfBirth = !user.dateOfBirth;
+  // H22.4: posting an ad no longer needs a date of birth. It is taken only when the account has none and the form sends one.
   let dateOfBirth: Date | null = null;
-  if (askDateOfBirth) {
-    if (!input.body.dateOfBirth || input.body.adultConfirmed !== true) {
+  if (!user.dateOfBirth && input.body.dateOfBirth) {
+    if (input.body.adultConfirmed !== true) {
       throw new ValidationError("Invalid request", { dateOfBirth: ["Enter your date of birth and tick the 18+ box"] });
     }
     dateOfBirth = parseDateOnly(input.body.dateOfBirth);

@@ -1,4 +1,3 @@
-import { isAtLeast18 } from "@/server/shared/age";
 import { attributeDenied, categoryDenied } from "@/server/shared/policy";
 
 export type VerificationStatus = "unsubmitted" | "pending_review" | "approved" | "rejected";
@@ -17,7 +16,8 @@ export type PublishBlockReason =
   | "ATTRIBUTE_DENIED";
 
 export interface PublishGateInput {
-  dateOfBirth: Date | null;
+  /** H22.4: no longer checked. Posting asks only for the 18+ tick (attestedAdult) and the listed age on people ads. */
+  dateOfBirth?: Date | null;
   attestedAdult: boolean;
   verificationStatus: VerificationStatus;
   accountStatus: AccountStatus;
@@ -31,6 +31,7 @@ export interface PublishGateInput {
   idCheckRequired: boolean;
   /** True for a people listing (H10.1): its ad must carry a listed age of 18 or more, whatever form fields the category has. */
   peopleListing?: boolean;
+  /** Kept for callers; unused since H22.4. */
   now?: Date;
 }
 
@@ -46,19 +47,15 @@ function listedAge(attributes: Record<string, unknown>): number | undefined {
 }
 
 /**
- * Publishing requires age 18 or older, an adult attestation, approved ID review (only when the
+ * Publishing requires the 18+ tick (adult attestation), approved ID review (only when the
  * ID-check switch is on, H6.14), and cleared media. Category and attribute deny-lists run again here.
  */
 export function evaluatePublishGate(input: PublishGateInput): PublishGateResult {
-  const now = input.now ?? new Date();
   if (input.accountStatus !== "active") {
     return { ok: false, reason: "ACCOUNT_NOT_ACTIVE" };
   }
   if (!input.attestedAdult) {
     return { ok: false, reason: "ADULT_ATTESTATION_REQUIRED" };
-  }
-  if (!input.dateOfBirth || !isAtLeast18(input.dateOfBirth, now)) {
-    return { ok: false, reason: "UNDERAGE" };
   }
   if (input.idCheckRequired && input.verificationStatus !== "approved") {
     return { ok: false, reason: "VERIFICATION_REQUIRED" };

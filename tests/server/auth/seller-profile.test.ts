@@ -82,10 +82,17 @@ describe("seller profile (H7.2b)", () => {
     expect(stored?.sellerProfile).toBeUndefined();
   });
 
-  it("needs the 18+ tick together with the date of birth", async () => {
+  it("needs the 18+ tick together with a date of birth that is sent", async () => {
     const created = await createCodeAccount("no-tick@example.com");
     await expect(saveSellerProfile({ userId: created.id, body: body({ adultConfirmed: false }), requestId: "t-sp-4" })).rejects.toBeInstanceOf(ValidationError);
-    await expect(saveSellerProfile({ userId: created.id, body: body({ dateOfBirth: undefined }), requestId: "t-sp-4b" })).rejects.toBeInstanceOf(ValidationError);
+  });
+
+  it("H22.4: saves the profile without a date of birth (posting no longer needs one)", async () => {
+    const created = await createCodeAccount("no-dob@example.com");
+    await saveSellerProfile({ userId: created.id, body: body({ dateOfBirth: undefined, adultConfirmed: undefined }), requestId: "t-sp-4b" });
+    const stored = await User.findById(created.id).lean();
+    expect(stored?.sellerProfile?.name).toBeTruthy();
+    expect(stored?.dateOfBirth).toBeUndefined();
   });
 
   it("asks for the date of birth once: a later change does not move it", async () => {

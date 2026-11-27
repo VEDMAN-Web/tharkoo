@@ -33,18 +33,17 @@ describe("publish gates", () => {
 
   it("with the ID-check switch off, the age, attestation, media and category rules still apply (H6.14)", () => {
     const off = { idCheckRequired: false, verificationStatus: "unsubmitted" as const };
-    expect(evaluatePublishGate(input({ ...off, dateOfBirth: parseDateOnly("2012-01-01") }))).toMatchObject({ reason: "UNDERAGE" });
     expect(evaluatePublishGate(input({ ...off, attestedAdult: false }))).toMatchObject({ reason: "ADULT_ATTESTATION_REQUIRED" });
     expect(evaluatePublishGate(input({ ...off, mediaCleared: false }))).toMatchObject({ reason: "MEDIA_NOT_CLEARED" });
     expect(evaluatePublishGate(input({ ...off, categorySlug: "escort", categoryName: "Escort" }))).toMatchObject({ reason: "CATEGORY_DENIED" });
     expect(evaluatePublishGate(input({ ...off, attributes: { hourlyRate: 2000 } }))).toMatchObject({ reason: "ATTRIBUTE_DENIED" });
   });
 
-  it("blocks underage dates of birth", () => {
-    expect(evaluatePublishGate(input({ dateOfBirth: parseDateOnly("2012-01-01") })).ok).toBe(false);
-    expect(evaluatePublishGate(input({ dateOfBirth: parseDateOnly("2012-01-01") }))).toMatchObject({
-      reason: "UNDERAGE",
-    });
+  it("H22.4: no date of birth is needed; the 18+ tick is the age gate", () => {
+    expect(evaluatePublishGate(input({ dateOfBirth: null }))).toEqual({ ok: true });
+    expect(evaluatePublishGate(input({ dateOfBirth: undefined }))).toEqual({ ok: true });
+    expect(evaluatePublishGate(input({ dateOfBirth: null, attestedAdult: false }))).toMatchObject({ reason: "ADULT_ATTESTATION_REQUIRED" });
+    expect(evaluatePublishGate(input({ dateOfBirth: null, attributes: { age: 17 }, peopleListing: true }))).toMatchObject({ reason: "UNDERAGE" });
   });
 
   it("blocks a missing adult attestation", () => {
