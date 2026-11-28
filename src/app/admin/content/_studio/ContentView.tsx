@@ -32,6 +32,7 @@ function editedWord(row: ListRow): string {
 
 export type StudioProps = {
   tab: StudioKind;
+  showBlogTab: boolean;
   status: ContentStatus | "";
   q: string;
   rows: ListRow[];
@@ -179,12 +180,12 @@ export function ContentView(props: StudioProps) {
         <PageHeader
           crumbs={[{ label: "Website" }]}
           title="Content studio"
-          purpose="Blog and help articles. Review before anything goes live."
+          purpose={props.showBlogTab ? "Blog and help articles. Review before anything goes live." : "Help articles. Review before anything goes live."}
           primary={props.canWrite ? { key: "new", label: tab === "blog" ? "New post" : "New article", icon: Plus, onClick: () => setCreating(true) } : undefined}
           secondary={props.canWrite && tab === "blog" ? [{ key: "ai-draft", label: "AI draft", icon: Sparkles, onClick: () => setAiOpen(true) }] : undefined}
         />
         <section className="adm-card adm-st-tabs">
-          <Tabs idPrefix="studio" label="Content types" active={tab} items={(Object.keys(TAB_LABELS) as StudioKind[]).map((key) => ({ key, label: TAB_LABELS[key], count: counts[key] }))} onChange={(key) => go({ tab: key === "blog" ? null : key, item: null, status: null, q: null })} />
+          <Tabs idPrefix="studio" label="Content types" active={tab} items={(Object.keys(TAB_LABELS) as StudioKind[]).filter((key) => props.showBlogTab || key !== "blog").map((key) => ({ key, label: TAB_LABELS[key], count: counts[key] }))} onChange={(key) => go({ tab: key === "blog" ? null : key, item: null, status: null, q: null })} />
         </section>
         <div className="adm-st-grid" role="tabpanel" id={`studio-panel-${tab}`} aria-labelledby={`studio-${tab}`}>
           <section className="adm-card adm-st-list" aria-label={`${TAB_LABELS[tab]} list`} data-tk="studio-list">
@@ -198,7 +199,7 @@ export function ContentView(props: StudioProps) {
                 ))}
               </div>
             </div>
-            {rows.length === 0 && (props.builtIns.length === 0 || q || status) ? (
+            {rows.length === 0 && props.builtIns.length === 0 ? (
               <EmptyState title={`No ${tab === "blog" ? "posts" : "articles"} here`} why={q || status ? "Nothing matches these filters." : `Start the first ${word} with the button above.`} />
             ) : rows.length === 0 ? null : (
               <ul className="adm-st-rows">
@@ -217,7 +218,7 @@ export function ContentView(props: StudioProps) {
             )}
             {props.builtIns.length > 0 ? (
               <div className="adm-st-built" data-tk="built-in-list">
-                <h2 className="adm-st-builthead">Built in, live on the site now</h2>
+                <h2 className="adm-st-builthead">Built in {word}s</h2>
                 <p className="adm-k-help">These came with the site. {props.canWrite ? "Open one to edit its words or remove it." : "Only editors can change them."}</p>
                 <ul className="adm-st-rows">
                   {props.builtIns.map((row) => (

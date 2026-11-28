@@ -45,6 +45,10 @@ export interface UserDoc {
   roles: string[];
   verificationStatus: "unsubmitted" | "pending_review" | "approved" | "rejected";
   extraFreeAds?: number;
+  /** The profile photo the person uploaded in Settings (a small WebP). Empty shows the first letter of the name. */
+  avatarUrl?: string;
+  /** Where that file is stored, so it can be removed when the photo changes. */
+  avatarKey?: string;
   /** H14.3: the views a seller wants in a week, set on the dashboard (50 to 1,000,000). Empty means the default from last week. */
   weeklyViewsGoal?: number;
   verificationId?: Types.ObjectId;
@@ -132,6 +136,8 @@ const userSchema = new Schema<UserDoc>(
     status: { type: String, enum: ["active", "suspended", "deleted"], default: "active" },
     // H11.1: free ads an admin gave this one person, on top of the site setting.
     extraFreeAds: { type: Number, min: 0, max: 1000, default: undefined },
+    avatarUrl: { type: String, maxlength: 500 },
+    avatarKey: { type: String, maxlength: 200 },
     weeklyViewsGoal: { type: Number, min: 50, max: 1_000_000, default: undefined },
   },
   { timestamps: true, collection: collectionName("users", "User") },

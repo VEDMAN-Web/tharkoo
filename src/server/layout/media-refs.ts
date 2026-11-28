@@ -1,10 +1,10 @@
 import type { Model } from "mongoose";
 import { Types } from "mongoose";
 import { connectDb } from "@/lib/db";
-import { Category, Location, PageLayout } from "@/server/models";
+import { BlogPost, Category, Location, PageLayout, SiteMedia } from "@/server/models";
 import type { BlockBase } from "@/server/models/layout";
 
-export type MediaUsageKind = "page" | "category" | "place";
+export type MediaUsageKind = "page" | "category" | "place" | "blog";
 
 export interface MediaUsage {
   /** A page key such as home, or the slug of a category or place. */
@@ -112,9 +112,33 @@ function catalogue(name: string, kind: "category" | "place", model: Model<never>
   };
 }
 
-export const MEDIA_REFS: readonly MediaRef[] = [pages, catalogue("categories", "category", Category as unknown as Model<never>), catalogue("places", "place", Location as unknown as Model<never>)];
+type CoverPost = { slug?: string; title?: string; cover?: string; status?: string };
 
-/** Every block, category and place that uses this image. */
+/** A blog post keeps its cover as the picture's address, not its id, so the address is looked up first. Drafts count too. */
+async function coversOf(assetIds: string[]) {
+  await connectDb();
+  const valid = assetIds.filter((id) => Types.ObjectId.isValid(id));
+  const media = await SiteMedia.find({ _id: { $in: valid } }).select("url").lean<{ _id: Types.ObjectId; url?: string }[]>();
+  const urls = media.flatMap((row) => (row.url ? [row.url] : []));
+  const posts = urls.length ? await BlogPost.find({ cover: { $in: urls } }).select("slug title cover status").lean<CoverPost[]>() : [];
+  return media.map((row) => ({ id: String(row._id), posts: posts.filter((post) => post.cover === row.url) }));
+}
+
+const blogCovers: MediaRef = {
+  name: "blog covers",
+  async usagesOf(assetId) {
+    return (await coversOf([assetId])).flatMap((entry) =>
+      entry.posts.map((post) => ({ key: post.slug ?? "", scope: "blog", where: post.status === "draft" ? ("draft" as const) : ("published" as const), blockId: "cover", blockType: "blog", kind: "blog" as const, label: post.title ?? post.slug ?? "" })),
+    );
+  },
+  async countsAmong(assetIds) {
+    return new Map((await coversOf(assetIds)).filter((entry) => entry.posts.length > 0).map((entry) => [entry.id, entry.posts.length]));
+  },
+};
+
+export const MEDIA_REFS: readonly MediaRef[] = [pages, catalogue("categories", "category", Category as unknown as Model<never>), catalogue("places", "place", Location as unknown as Model<never>), blogCovers];
+
+/** Every block, category, place and blog post that uses this image. */
 export async function findMediaUsages(assetId: string): Promise<MediaUsage[]> {
   await connectDb();
   return (await Promise.all(MEDIA_REFS.map((ref) => ref.usagesOf(assetId)))).flat();

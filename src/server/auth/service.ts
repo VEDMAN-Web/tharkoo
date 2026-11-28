@@ -71,6 +71,8 @@ export interface PublicUser {
   status: UserDoc["status"];
   /** Null until the seller profile is saved once. */
   seller: SellerView | null;
+  /** The profile photo, or null to show the first letter of the name. */
+  avatarUrl?: string | null;
 }
 
 export interface RegisterInput {
@@ -140,6 +142,7 @@ function publicUser(user: UserDoc & { _id: Types.ObjectId }): PublicUser {
     roles: user.roles?.length ? user.roles : ["user"],
     verificationStatus: user.verificationStatus,
     status: user.status,
+    avatarUrl: user.avatarUrl ?? null,
     seller: profile ? { name: profile.name, city: profile.city, whatsapp: profile.whatsapp ?? null, availableNow: profile.availableNow } : null,
   };
 }

@@ -4,9 +4,11 @@ import { useEffect, useId, useRef, useState } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { Lock, Pencil, Plus, SearchX, Trash2 } from "lucide-react";
 import { Badge, Button, Drawer, FilterBar, PageHeader, ReasonDialog, ServerTable, ToastProvider, useToast, type TableColumn } from "@/components/admin/ui";
+import { ImagePicker } from "@/components/admin/ui/ImagePicker";
 import { changedFields, fieldErrors } from "@/components/admin/ui/kit-helpers";
+import { toSlug } from "@/server/shared/slug";
 import { emptyValues, KINDS, type FieldDef, type KindConfig, type RecordKind } from "@/lib/admin/record-kinds";
-import type { RecordDetail, RecordList, RecordRow } from "@/server/admin/records";
+import type { FieldChoices, RecordDetail, RecordList, RecordRow } from "@/server/admin/records";
 import { deleteRecordAction, saveRawRecordAction, saveRecordAction, undoRecordAction } from "./actions";
 import "./records.css";
 
@@ -14,15 +16,20 @@ export type RecordsAccess = { write: boolean; remove: boolean; raw: boolean };
 type Values = Record<string, unknown>;
 
 const SEARCH_DEBOUNCE_MS = 350;
+const STATUS_CHIPS = [
+  { value: "", label: "All" },
+  { value: "published", label: "Published" },
+  { value: "draft", label: "Draft" },
+] as const;
 const CRUMB: Record<RecordKind, string> = { "banned-words": "System", broadcasts: "Website", flags: "System", "help-sections": "Website", "blog-posts": "Website", "help-topics": "Website" };
 
 function labelOf(field: FieldDef | undefined, value: unknown) {
   if (!field) return String(value ?? "");
-  if (field.type === "select") return field.options?.find((option) => option.value === value)?.label ?? String(value ?? "");
+  if (field.type === "select" && !field.optionsFrom) return field.options?.find((option) => option.value === value)?.label ?? String(value ?? "");
   return value === undefined || value === null || value === "" ? "none" : String(value);
 }
 
-function DrawerBody({ config, detail, access, onClose, onSaved }: { config: KindConfig; detail: RecordDetail | null; access: RecordsAccess; onClose: () => void; onSaved: () => void }) {
+function DrawerBody({ config, detail, access, choices, onClose, onSaved }: { config: KindConfig; detail: RecordDetail | null; access: RecordsAccess; choices: FieldChoices; onClose: () => void; onSaved: () => void }) {
   const toast = useToast();
   const uid = useId();
   const initial = detail ? detail.values : emptyValues(config);
@@ -32,6 +39,8 @@ function DrawerBody({ config, detail, access, onClose, onSaved }: { config: Kind
   const [busy, setBusy] = useState(false);
   const [note, setNote] = useState("");
   const [serverErrors, setServerErrors] = useState<Record<string, string>>({});
+  // Web addresses edited by hand: they stop following the title.
+  const [typedSlugs, setTypedSlugs] = useState<string[]>([]);
   const [deleting, setDeleting] = useState(false);
   const [raw, setRaw] = useState(detail?.raw ?? "");
   const [rawError, setRawError] = useState("");
@@ -46,6 +55,16 @@ function DrawerBody({ config, detail, access, onClose, onSaved }: { config: Kind
   function set(field: string, value: unknown) {
     setServerErrors((current) => ({ ...current, [field]: "" }));
     setValues((current) => ({ ...current, [field]: value }));
+  }
+
+  /** A change typed by the person: a new record's web address follows its title. A saved record's address never moves by itself. */
+  function type(field: string, value: string) {
+    set(field, value);
+    if (config.fields.some((item) => item.name === field && item.slugFrom)) setTypedSlugs((current) => (value === "" ? current.filter((name) => name !== field) : [...current, field]));
+    if (editing) return;
+    for (const item of config.fields) {
+      if (item.slugFrom === field && !typedSlugs.includes(item.name)) set(item.name, /[a-z0-9]/i.test(value) ? toSlug(value, item.max) : "");
+    }
   }
 
   async function undo(eventId: string) {
@@ -135,6 +154,7 @@ function DrawerBody({ config, detail, access, onClose, onSaved }: { config: Kind
           ) : null}
           {note ? <p className="adm-k-err" role="alert">{note}</p> : null}
           {config.fields.map((field) => {
+            if (field.showWhen && !values[field.showWhen]) return null;
             const id = `${uid}-${field.name}`;
             const error = shown(field.name);
             const value = values[field.name];
@@ -149,7 +169,9 @@ function DrawerBody({ config, detail, access, onClose, onSaved }: { config: Kind
               required: field.required,
               onBlur: () => setTouched((current) => (current.includes(field.name) ? current : [...current, field.name])),
             };
-            const options = field.type === "select" ? [...(field.options ?? []), ...(text && !field.options?.some((option) => option.value === text) ? [{ value: text, label: text }] : [])] : [];
+            // A saved value that is no longer among the choices stays in the list, so opening a record never changes it.
+            const listed = field.optionsFrom ? [{ value: "", label: "None" }, ...(choices[field.name] ?? [])] : (field.options ?? []);
+            const options = field.type === "select" ? [...listed, ...(text && !listed.some((option) => option.value === text) ? [{ value: text, label: text }] : [])] : [];
             return (
               <div key={field.name} className="adm-k-field">
                 {field.type === "switch" ? (
@@ -157,7 +179,7 @@ function DrawerBody({ config, detail, access, onClose, onSaved }: { config: Kind
                     <input id={id} type="checkbox" checked={Boolean(value)} aria-describedby={describedBy} onChange={(event) => set(field.name, event.target.checked)} />
                     <span><strong>{field.label}</strong></span>
                   </label>
-                ) : (
+                ) : field.type === "image" ? null : (
                   <label className="adm-k-label adm-k-lab" htmlFor={id}>
                     <span>
                       {field.label}
@@ -166,7 +188,24 @@ function DrawerBody({ config, detail, access, onClose, onSaved }: { config: Kind
                     {field.max ? <span className="adm-k-count">{text.length} / {field.max}</span> : null}
                   </label>
                 )}
-                {field.type === "text" ? <input {...common} className="adm-k-input" value={text} maxLength={field.max} onChange={(event) => set(field.name, event.target.value)} /> : null}
+                {field.type === "text" ? <input {...common} className="adm-k-input" value={text} maxLength={field.max} onChange={(event) => type(field.name, event.target.value)} /> : null}
+                {field.type === "image" ? (
+                  <div className="adm-rec-image">
+                    {text ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img className="adm-rec-preview" src={text} alt={String(values[field.altField ?? ""] ?? "")} />
+                    ) : null}
+                    <ImagePicker
+                      label={field.label}
+                      hidePreview
+                      value={text ? { assetId: "", src: text, alt: String(values[field.altField ?? ""] ?? ""), width: 0, height: 0 } : null}
+                      onChange={(picked) => {
+                        set(field.name, picked?.src ?? "");
+                        if (field.altField) set(field.altField, picked?.alt ?? "");
+                      }}
+                    />
+                  </div>
+                ) : null}
                 {field.type === "textarea" ? <textarea {...common} className="adm-k-input" rows={field.max && field.max > 1000 ? 12 : 4} value={text} maxLength={field.max} onChange={(event) => set(field.name, event.target.value)} /> : null}
                 {field.type === "number" ? (
                   <input {...common} className="adm-k-input" type="text" inputMode="numeric" value={text} onChange={(event) => set(field.name, event.target.value.replace(/[^\d]/g, "") === "" ? "" : Number(event.target.value.replace(/[^\d]/g, "")))} />
@@ -218,7 +257,7 @@ function DrawerBody({ config, detail, access, onClose, onSaved }: { config: Kind
   );
 }
 
-function Screen({ kind, list, detail, isNew, access }: { kind: RecordKind; list: RecordList; detail: RecordDetail | null; isNew: boolean; access: RecordsAccess }) {
+function Screen({ kind, list, detail, isNew, access, choices }: { kind: RecordKind; list: RecordList; detail: RecordDetail | null; isNew: boolean; access: RecordsAccess; choices: FieldChoices }) {
   const config = KINDS[kind];
   const router = useRouter();
   const pathname = usePathname();
@@ -270,8 +309,9 @@ function Screen({ kind, list, detail, isNew, access }: { kind: RecordKind; list:
 
   const open = detail?.id ?? (isNew ? "new" : null);
   const searching = list.query.q !== "";
+  const status = config.statusFilter ? (list.query.status ?? "") : "";
   return (
-    <div className="adm-k" data-tk="records-screen" data-kind={kind}>
+    <div className={`adm-k${config.wide ? " adm-rec-wide" : ""}`} data-tk="records-screen" data-kind={kind}>
       <PageHeader
         crumbs={[{ label: CRUMB[kind] }]}
         title={config.title}
@@ -280,6 +320,15 @@ function Screen({ kind, list, detail, isNew, access }: { kind: RecordKind; list:
       />
       <div className="adm-card adm-rec-flat">
         <FilterBar search={search} onSearch={setSearch} searchLabel={config.searchPlaceholder} placeholder={config.searchPlaceholder} chips={[]} onRemoveChip={() => undefined} />
+        {config.statusFilter ? (
+          <div className="adm-rec-status" role="group" aria-label="Filter by status">
+            {STATUS_CHIPS.map((chip) => (
+              <button key={chip.label} type="button" className="adm-k-chip" aria-pressed={status === chip.value} onClick={() => go({ status: chip.value || null, page: null, open: null })}>
+                {chip.label}
+              </button>
+            ))}
+          </div>
+        ) : null}
         <ServerTable
           label={config.title}
           columns={columns}
@@ -299,8 +348,8 @@ function Screen({ kind, list, detail, isNew, access }: { kind: RecordKind; list:
           empty={
             <div className="adm-rec-state" data-tk="records-empty">
               <span className="adm-rec-state-icon" aria-hidden="true"><SearchX /></span>
-              <h3>{searching ? `No ${config.title.toLowerCase()} match "${list.query.q}"` : `No ${config.title.toLowerCase()} yet`}</h3>
-              <p>{searching ? "Try fewer letters." : access.write ? `Add the first ${config.singular} with the button at the top.` : "Nothing has been added yet."}</p>
+              <h3>{searching ? `No ${config.title.toLowerCase()} match "${list.query.q}"` : status ? `No ${status} ${config.title.toLowerCase()}` : `No ${config.title.toLowerCase()} yet`}</h3>
+              <p>{searching ? "Try fewer letters." : status ? "Choose All to see everything." : access.write ? `Add the first ${config.singular} with the button at the top.` : "Nothing has been added yet."}</p>
               {searching ? (
                 <Button onClick={() => { setSearch(""); sentSearch.current = ""; go({ q: null, page: null }); }}>Clear search</Button>
               ) : null}
@@ -314,6 +363,7 @@ function Screen({ kind, list, detail, isNew, access }: { kind: RecordKind; list:
           config={config}
           detail={detail}
           access={access}
+          choices={choices}
           onClose={() => go({ open: null })}
           onSaved={() => {
             go({ open: null });
@@ -326,7 +376,7 @@ function Screen({ kind, list, detail, isNew, access }: { kind: RecordKind; list:
 }
 
 /** One generic list and edit screen (H8.36): a table, a search, and a drawer with a form per record. Each kind is described in src/lib/admin/record-kinds.ts. */
-export function RecordsView(props: { kind: RecordKind; list: RecordList; detail: RecordDetail | null; isNew: boolean; access: RecordsAccess }) {
+export function RecordsView(props: { kind: RecordKind; list: RecordList; detail: RecordDetail | null; isNew: boolean; access: RecordsAccess; choices: FieldChoices }) {
   return (
     <ToastProvider>
       <Screen {...props} />

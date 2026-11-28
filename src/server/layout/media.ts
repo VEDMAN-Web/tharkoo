@@ -3,6 +3,7 @@ import { mkdir, unlink, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { Types, isValidObjectId } from "mongoose";
 import { connectDb } from "@/lib/db";
+import { can } from "@/lib/admin/perms";
 import { canEditSite } from "@/lib/ui/site-content";
 import { AuditRepository } from "@/server/audit";
 import { ConflictError, ForbiddenError, NotFoundError, ValidationError } from "@/server/http";
@@ -11,7 +12,6 @@ import { CLOUDINARY_FOLDER, UPLOAD_NEEDS_CLOUDINARY, optionalCloudinary, uploads
 import { SiteMedia, User } from "@/server/models";
 import type { SiteMediaDoc } from "@/server/models/layout";
 import { findMediaUsages, mediaUsageCounts, type MediaUsage } from "@/server/layout/media-refs";
-import { textDenied } from "@/server/shared/policy";
 import { altFromFileName } from "@/server/media/alt-from-filename";
 
 const audit = new AuditRepository();
@@ -39,6 +39,11 @@ export function siteMediaDir() {
 
 function requireAdmin(roles: string[]) {
   if (!canEditSite(roles)) throw new ForbiddenError("Only an admin can manage the media library");
+}
+
+/** Adding a picture and looking through the library (the blog cover picker) follows "media.upload". Changing and deleting stay with requireAdmin. */
+function requireUploader(roles: string[]) {
+  if (!can(roles, "media.upload")) throw new ForbiddenError("Only an admin or the content team can add pictures to the media library");
 }
 
 async function actorId(email: string) {
@@ -100,7 +105,6 @@ export function validateAlt(value: unknown): string {
   const alt = typeof value === "string" ? value.trim() : "";
   if (alt.length < ALT_MIN) throw new ValidationError(`Alt text is required (at least ${ALT_MIN} characters). Describe what the image shows.`);
   if (alt.length > ALT_MAX) throw new ValidationError(`Alt text can be at most ${ALT_MAX} characters`);
-  if (textDenied(alt).denied) throw new ValidationError("The alt text contains a term that is not allowed on Tharkoo");
   return alt;
 }
 
@@ -110,7 +114,6 @@ export function cleanTags(value: unknown): string[] {
     .map((tag) => String(tag).trim().toLowerCase().replace(/[^a-z0-9 -]/g, "").replace(/\s+/g, "-").slice(0, 30))
     .filter(Boolean);
   if (tags.length > 10) throw new ValidationError("Use at most 10 tags");
-  for (const tag of tags) if (textDenied(tag).denied) throw new ValidationError("A tag contains a term that is not allowed");
   return [...new Set(tags)];
 }
 
@@ -157,7 +160,7 @@ function describeUsage(usages: MediaUsage[]) {
       usages.map((use) =>
         use.kind === "page"
           ? `${use.key} page${use.scope === "default" ? "" : ` (${use.scope})`}, ${use.where}`
-          : `the ${use.kind === "category" ? "category" : "place"} ${use.label || use.key} (${use.blockId})`,
+          : `the ${use.kind === "blog" ? "blog post" : use.kind === "category" ? "category" : "place"} ${use.label || use.key} (${use.blockId})`,
       ),
     ),
   ];
@@ -184,7 +187,7 @@ export async function uploadSiteMedia(input: {
   email: string;
   roles: string[];
 }) {
-  requireAdmin(input.roles);
+  requireUploader(input.roles);
   const { file } = input;
   if (!isSiteMediaType(file.type)) throw new ValidationError("Only jpeg, png and webp images are allowed");
   if (file.data.length === 0) throw new ValidationError("The file is empty");
@@ -245,7 +248,7 @@ export async function saveSiteMediaFromCloud(input: {
   email: string;
   roles: string[];
 }) {
-  requireAdmin(input.roles);
+  requireUploader(input.roles);
   const typedAlt = typeof input.alt === "string" ? input.alt.trim() : "";
   const autoAlt = input.autoAlt === true && typedAlt === "";
   const alt = validateAlt(autoAlt ? altFromFileName(input.fileName ?? "") : input.alt);
@@ -284,7 +287,7 @@ export interface MediaFilter {
 }
 
 export async function listSiteMedia(filter: MediaFilter, roles: string[]) {
-  requireAdmin(roles);
+  requireUploader(roles);
   await connectDb();
   const query: Record<string, unknown> = {};
   const and: Record<string, unknown>[] = [];

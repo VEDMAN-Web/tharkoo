@@ -1,6 +1,6 @@
 import mongoose, { Types } from "mongoose";
 import { connectDb } from "@/lib/db";
-import { canEditSite } from "@/lib/ui/site-content";
+import { can } from "@/lib/admin/perms";
 import { AuditRepository } from "@/server/audit";
 import { isPeopleListing } from "@/server/categories/kinds";
 import { ConflictError, ForbiddenError, NotFoundError, PolicyViolationError, ValidationError } from "@/server/http";
@@ -57,9 +57,9 @@ function isAdmin(roles: string[]) {
   return roles.some((role) => role === "admin" || role === "superadmin");
 }
 
-/** Who may upload for which screen: the same rule each screen had before (create ad and import: an admin; the Media library: someone who may edit the site). */
+/** Who may upload for which screen: create ad and import need an admin; the Media library follows "media.upload". */
 function assertAllowed(actor: StaffActor, purpose: StaffPurpose) {
-  if (purpose === "library" ? !canEditSite(actor.roles) : !isAdmin(actor.roles)) throw new ForbiddenError("You cannot upload files here");
+  if (purpose === "library" ? !can(actor.roles, "media.upload") : !isAdmin(actor.roles)) throw new ForbiddenError("You cannot upload files here");
 }
 
 async function ownerIdFor(actor: StaffActor, input: StaffSignInput): Promise<string> {

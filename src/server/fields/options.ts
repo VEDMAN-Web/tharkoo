@@ -1,5 +1,4 @@
 import { ValidationError } from "@/server/http";
-import { textDenied } from "@/server/shared/policy";
 
 /** Most options one field can hold. Thousands are fine; the cap stops a runaway import. */
 export const MAX_OPTIONS_PER_FIELD = 5000;
@@ -57,10 +56,6 @@ export function reviewOptionCells(cells: readonly string[], limit = MAX_LINES_PE
     const line = index + 1;
     if (value.length > MAX_OPTION_LENGTH) {
       rejected.push({ line, reason: `Longer than ${MAX_OPTION_LENGTH} characters` });
-      return;
-    }
-    if (textDenied(value).denied) {
-      rejected.push({ line, reason: "Not allowed on Tharkoo" });
       return;
     }
     const key = optionKey(value);

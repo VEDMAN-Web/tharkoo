@@ -14,6 +14,8 @@ import { safeHref } from "@/lib/sanitize";
 import { applyPrefixes, blogPath, helpPath, loginPath, postAdPath } from "@/lib/urls";
 import { useUrlPaths } from "./UrlPaths";
 import { LogoutButton } from "./auth/LogoutButton";
+import { AvatarContent } from "./ui/AvatarContent";
+import { AVATAR_EVENT } from "@/lib/ui/avatar";
 
 // The search modal is only drawn after the visitor opens search, so its code loads then, not with the page.
 const SearchModal = dynamic(() => import("./SearchModal").then((mod) => mod.SearchModal), { ssr: false });
@@ -58,6 +60,12 @@ export function Header({
   const [account, setAccount] = useState(false);
   const accountRef = useRef<HTMLDivElement>(null);
   const [who, setWho] = useState("");
+  const [photo, setPhoto] = useState<string | null>(null);
+  useEffect(() => {
+    const onAvatar = (event: Event) => setPhoto((event as CustomEvent<string | null>).detail ?? null);
+    window.addEventListener(AVATAR_EVENT, onAvatar);
+    return () => window.removeEventListener(AVATAR_EVENT, onAvatar);
+  }, []);
   const [session, setSession] = useState(user);
   const homeLike = path === "/" || path.startsWith(`/${paths.cities}`);
   const showCity = Boolean(city) && (path.startsWith(`/${paths.ad}/`) || categories.some((cat) => path.startsWith(`/${cat.slug}`)));
@@ -77,9 +85,10 @@ export function Header({
   useEffect(() => {
     if (path.startsWith("/u/logout") || !hasSessionHint()) return;
     const id = window.setTimeout(() => {
-      api<{ user: { displayName?: string; email?: string; roles?: string[] } }>("/api/auth/me").then((res) => {
+      api<{ user: { displayName?: string; email?: string; roles?: string[]; avatarUrl?: string | null } }>("/api/auth/me").then((res) => {
         if (!res.ok) return;
         setWho(res.data.user.displayName || res.data.user.email || "");
+        setPhoto(res.data.user.avatarUrl ?? null);
         setSession({ email: res.data.user.email || "", roles: res.data.user.roles || [] });
       });
     }, 0);
@@ -117,7 +126,7 @@ export function Header({
                   {session ? (
                     <>
                       <div className="tk-menu-who">
-                        <span className="tk-avatar" aria-hidden>{(who || session.email || "?").trim().charAt(0).toUpperCase()}</span>
+                        <span className="tk-avatar" aria-hidden><AvatarContent src={photo} fallback={(who || session.email || "?").trim().charAt(0).toUpperCase()} /></span>
                         <div>
                           <strong>{who || session.email}</strong>
                           <span>{session.email}</span>

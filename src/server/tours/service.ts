@@ -4,7 +4,7 @@ import { AuditRepository } from "@/server/audit";
 import { objectId } from "@/server/billing/ledger";
 import { postTransaction } from "@/server/ledger/service";
 import { ConflictError, ForbiddenError, NotFoundError, PaymentRequiredError, ValidationError, isDuplicateKey } from "@/server/http";
-import { mailerFromEnv } from "@/server/mailer";
+// import { mailerFromEnv } from "@/server/mailer";
 import { Category, Listing, MediaAsset, User } from "@/server/models";
 import { adPhotoUrl } from "@/server/media/photo-url";
 import { kindAllowsVideo, isPeopleListing, listKinds, requireKind, VIDEO_NEVER_FOR_PEOPLE } from "@/server/categories/kinds";
@@ -12,7 +12,7 @@ import type { CategoryKind } from "@/server/models/catalog";
 import { VideoTour, type VideoTourDoc } from "@/server/tours/model";
 import { callPagePath, roomExpiry, TOUR_BOOKED_MINUTES, TOUR_ROOM_GRACE_MINUTES, videoRoomProvider } from "@/server/tours/room";
 import { accountName } from "@/lib/account-name";
-import { siteUrl } from "@/lib/utils";
+// import { siteUrl } from "@/lib/utils";
 import { holdInEscrow, refundEscrow, releaseEscrow } from "@/server/wallet/escrow";
 import { readMoneySettings } from "@/server/billing/money-settings";
 import { raiseLowCallPrices } from "./min-price";
@@ -107,33 +107,35 @@ async function assertAdvertiserCanTour(ownerId: string) {
   }
 }
 
-async function notifyAdvertiser(ownerId: string, title: string) {
-  try {
-    const owner = await User.findById(ownerId).select("email").lean();
-    if (!owner?.email) return;
-    await mailerFromEnv().send({
-      to: owner.email,
-      subject: "A buyer asked for a live video tour",
-      text: `A buyer asked for a live video tour of "${title}". Open your dashboard to accept or decline. The request expires in 30 minutes.`,
-    });
-  } catch (error) {
-    console.error("video tour email could not be sent", error);
-  }
-}
-
-async function notifyBuyer(userId: string, tourId: string) {
-  try {
-    const buyer = await User.findById(userId).select("email").lean();
-    if (!buyer?.email) return;
-    await mailerFromEnv().send({
-      to: buyer.email,
-      subject: "Your live video call is ready",
-      text: `The advertiser accepted your live video call. Open it here when you are ready: ${siteUrl()}${callPagePath(tourId)}`,
-    });
-  } catch (error) {
-    console.error("video tour email could not be sent", error);
-  }
-}
+// Video call emails are switched off: the site itself shows the request and the accept. Kept to switch back on later.
+// To restore, uncomment these two functions, their calls in requestTour and acceptTour, and the mailerFromEnv and siteUrl imports.
+// async function notifyAdvertiser(ownerId: string, title: string) {
+//   try {
+//     const owner = await User.findById(ownerId).select("email").lean();
+//     if (!owner?.email) return;
+//     await mailerFromEnv().send({
+//       to: owner.email,
+//       subject: "A buyer asked for a live video tour",
+//       text: `A buyer asked for a live video tour of "${title}". Open your dashboard to accept or decline. The request expires in 30 minutes.`,
+//     });
+//   } catch (error) {
+//     console.error("video tour email could not be sent", error);
+//   }
+// }
+//
+// async function notifyBuyer(userId: string, tourId: string) {
+//   try {
+//     const buyer = await User.findById(userId).select("email").lean();
+//     if (!buyer?.email) return;
+//     await mailerFromEnv().send({
+//       to: buyer.email,
+//       subject: "Your live video call is ready",
+//       text: `The advertiser accepted your live video call. Open it here when you are ready: ${siteUrl()}${callPagePath(tourId)}`,
+//     });
+//   } catch (error) {
+//     console.error("video tour email could not be sent", error);
+//   }
+// }
 
 /** A buyer asks for a tour. The coin moves into escrow now and is paid out or refunded later. */
 export async function requestTour(input: { userId: string; listingId: string } & Escrow) {
@@ -192,7 +194,7 @@ export async function requestTour(input: { userId: string; listingId: string } &
     requestId: input.requestId,
     after: { listingId: String(listingId), coins, feePercent },
   });
-  await notifyAdvertiser(ownerId, listing.title);
+  // await notifyAdvertiser(ownerId, listing.title);
   return present((await VideoTour.findById(tourId).lean()) as VideoTourDoc);
 }
 
@@ -229,7 +231,7 @@ export async function acceptTour(input: { ownerId: string; tourId: string; reque
   });
   // A new room now exists, so the next "is this advertiser on a call" check must ask again, not reuse an older answer.
   busyCache.delete(input.ownerId);
-  if (room.live) await notifyBuyer(String(tour.userId), String(tour._id));
+  // if (room.live) await notifyBuyer(String(tour.userId), String(tour._id));
   return { ...present(claim), joinUrl: room.live ? callPagePath(String(tour._id)) : null };
 }
 

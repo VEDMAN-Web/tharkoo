@@ -3,8 +3,9 @@
 import { createContext, useCallback, useContext, useEffect, useRef, useState, type ReactNode } from "react";
 import { useSitePath } from "@/components/useSitePath";
 import { api, hasSessionHint } from "@/lib/ui/api";
+import { AVATAR_EVENT } from "@/lib/ui/avatar";
 
-export type AccountUser = { displayName?: string; email?: string; verificationStatus?: string; roles?: string[] };
+export type AccountUser = { displayName?: string; email?: string; verificationStatus?: string; roles?: string[]; avatarUrl?: string | null };
 export type AccountPhase = "unknown" | "out" | "loading" | "ready";
 export type AccountState = { phase: AccountPhase; user: AccountUser | null; balance: number | null; callBalance: number | null; earnings: number | null; balanceReady: boolean; unread: number };
 
@@ -63,6 +64,16 @@ export function AccountProvider({ children }: { children: ReactNode }) {
     window.addEventListener(SESSION_EVENT, onSessionChange);
     return () => window.removeEventListener(SESSION_EVENT, onSessionChange);
   }, [load]);
+
+  useEffect(() => {
+    // A new or removed profile photo shows in the header without loading the account again.
+    function onAvatar(event: Event) {
+      const avatarUrl = (event as CustomEvent<string | null>).detail ?? null;
+      setState((prev) => (prev.user ? { ...prev, user: { ...prev.user, avatarUrl } } : prev));
+    }
+    window.addEventListener(AVATAR_EVENT, onAvatar);
+    return () => window.removeEventListener(AVATAR_EVENT, onAvatar);
+  }, []);
 
   useEffect(() => {
     // H7.120: after a publish, a promotion or a recharge the pill shows the real balance without a page change.

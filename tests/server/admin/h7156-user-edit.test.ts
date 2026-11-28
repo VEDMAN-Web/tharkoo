@@ -1,10 +1,5 @@
 import mongoose from "mongoose";
-import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
-
-vi.mock("@/server/shared/policy", async (importOriginal) => ({
-  ...(await importOriginal<typeof import("@/server/shared/policy")>()),
-  textDenied: (text: string) => ({ denied: /blockedword/i.test(text) }),
-}));
+import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 
 import type { AdminCtx } from "@/server/admin/context";
 import { undoEvent } from "@/server/admin/undo/core";
@@ -84,7 +79,6 @@ describe("edit profile", () => {
     await expect(editProfile(admin, { userId: String(user._id), name: "Rohan Mehta" })).rejects.toBeInstanceOf(ConflictError);
     await expect(editProfile(admin, { userId: String(user._id), name: "R" })).rejects.toBeInstanceOf(ValidationError);
     await expect(editProfile(admin, { userId: String(user._id), name: "Rohan", city: "Delhi" })).rejects.toBeInstanceOf(ValidationError);
-    await expect(editProfile(admin, { userId: String(user._id), name: "blockedword here" })).rejects.toBeInstanceOf(ValidationError);
   });
 
   it("is for support, trust and safety and admins; not for a moderator, staff accounts or a closed account; undo is refused after another change", async () => {
@@ -129,7 +123,6 @@ describe("vendor profile", () => {
     await expect(editVendor(admin, { userId: String(user._id), photoMediaId: "nope" })).rejects.toBeInstanceOf(ValidationError);
     await expect(editVendor(admin, { userId: String(user._id), whatsapp: "12" })).rejects.toBeInstanceOf(ValidationError);
     await expect(editVendor(admin, { userId: String(user._id), about: "x".repeat(501) })).rejects.toBeInstanceOf(ValidationError);
-    await expect(editVendor(admin, { userId: String(user._id), about: "blockedword" })).rejects.toBeInstanceOf(ValidationError);
     const plain = await person();
     await expect(editVendor(admin, { userId: String(plain._id), about: "Hello" })).rejects.toBeInstanceOf(ConflictError);
     await expect(editVendor(moderator, { userId: String(user._id), about: "Hello" })).rejects.toBeInstanceOf(ForbiddenError);

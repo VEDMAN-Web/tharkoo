@@ -6,7 +6,6 @@ import type { AdminCtx } from "@/server/admin/context";
 import { adminWrite } from "@/server/admin/write";
 import { ConflictError, NotFoundError, ValidationError } from "@/server/http";
 import { Coupon } from "@/server/models";
-import { textDenied } from "@/server/shared/policy";
 
 /**
  * H8.20 (A20): coupons of Prices & plans. Writes go through adminWrite (admin permission, audit); a change of an existing coupon can be
@@ -93,7 +92,6 @@ function optionalDate(value: unknown, message: string): Date | null {
 export function cleanCode(raw: unknown): string {
   const code = typeof raw === "string" ? raw.trim().toUpperCase() : "";
   if (!CODE.test(code)) throw new ValidationError("The code is 3 to 20 letters, digits or dashes, for example WELCOME10.");
-  if (textDenied(code).denied || textDenied(code.replace(/-/g, " ")).denied) throw new ValidationError("This code uses a word that is not allowed on Tharkoo.");
   return code;
 }
 

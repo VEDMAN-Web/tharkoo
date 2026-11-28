@@ -1,5 +1,3 @@
-import { attributeDenied, categoryDenied } from "@/server/shared/policy";
-
 export type VerificationStatus = "unsubmitted" | "pending_review" | "approved" | "rejected";
 
 export type AccountStatus = "active" | "suspended" | "deleted";
@@ -11,9 +9,7 @@ export type PublishBlockReason =
   | "ACCOUNT_NOT_ACTIVE"
   | "VERIFICATION_REQUIRED"
   | "MEDIA_NOT_CLEARED"
-  | "CATEGORY_DENIED"
-  | "CATEGORY_DISABLED"
-  | "ATTRIBUTE_DENIED";
+  | "CATEGORY_DISABLED";
 
 export interface PublishGateInput {
   /** H22.4: no longer checked. Posting asks only for the 18+ tick (attestedAdult) and the listed age on people ads. */
@@ -48,7 +44,7 @@ function listedAge(attributes: Record<string, unknown>): number | undefined {
 
 /**
  * Publishing requires the 18+ tick (adult attestation), approved ID review (only when the
- * ID-check switch is on, H6.14), and cleared media. Category and attribute deny-lists run again here.
+ * ID-check switch is on, H6.14), and cleared media.
  */
 export function evaluatePublishGate(input: PublishGateInput): PublishGateResult {
   if (input.accountStatus !== "active") {
@@ -63,10 +59,6 @@ export function evaluatePublishGate(input: PublishGateInput): PublishGateResult 
   if (!input.mediaCleared) {
     return { ok: false, reason: "MEDIA_NOT_CLEARED" };
   }
-  const category = categoryDenied(input.categorySlug, input.categoryName);
-  if (category.denied) {
-    return { ok: false, reason: "CATEGORY_DENIED", detail: category.term };
-  }
   if (!input.categoryEnabled) {
     return { ok: false, reason: "CATEGORY_DISABLED" };
   }
@@ -76,10 +68,6 @@ export function evaluatePublishGate(input: PublishGateInput): PublishGateResult 
   }
   if (age !== undefined && age < 18) {
     return { ok: false, reason: "UNDERAGE", detail: "age" };
-  }
-  const attributes = attributeDenied(input.attributes);
-  if (attributes.denied) {
-    return { ok: false, reason: "ATTRIBUTE_DENIED", detail: attributes.key ?? attributes.term };
   }
   return { ok: true };
 }

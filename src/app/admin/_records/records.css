@@ -16,3 +16,16 @@
   [data-tk="records-screen"] .adm-k-pager { flex-wrap: nowrap; }
   .adm-rec-edit { display: none !important; }
 }
+
+.adm-rec-status {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 0 16px 12px;
+}
+
+.adm-rec-image { display: grid; gap: 8px; }
+.adm-rec-preview { width: 100%; aspect-ratio: 16 / 9; object-fit: cover; border-radius: 12px; border: 1px solid var(--adm-line); }
+@media (min-width: 768px) {
+  .adm-rec-wide .adm-k-drawer { width: 640px; }
+}

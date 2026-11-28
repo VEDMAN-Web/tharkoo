@@ -4,7 +4,7 @@ import { AdminShell } from "@/components/admin/AdminShell";
 import { getStaffFromHeaders } from "@/lib/admin-auth";
 import { can } from "@/lib/admin/perms";
 import { KINDS, type RecordKind } from "@/lib/admin/record-kinds";
-import { getRecord, listRecords, parseRecordsQuery, type RecordDetail } from "@/server/admin/records";
+import { fieldChoices, getRecord, listRecords, parseRecordsQuery, type RecordDetail } from "@/server/admin/records";
 import { NotFoundError } from "@/server/http";
 import { RecordsView } from "./RecordsView";
 
@@ -26,6 +26,7 @@ export async function RecordsPage({ kind, searchParams }: { kind: RecordKind; se
   }
   const params = await searchParams;
   const list = await listRecords(identity.roles, kind, parseRecordsQuery(params));
+  const choices = await fieldChoices(identity.roles, kind);
   const open = typeof params.open === "string" ? params.open : "";
   let detail: RecordDetail | null = null;
   if (open && open !== "new") {
@@ -40,6 +41,7 @@ export async function RecordsPage({ kind, searchParams }: { kind: RecordKind; se
       <RecordsView
         kind={kind}
         list={list}
+        choices={choices}
         detail={detail}
         isNew={open === "new" && can(identity.roles, config.write)}
         access={{ write: can(identity.roles, config.write), remove: can(identity.roles, config.remove), raw: can(identity.roles, "raw.json") }}

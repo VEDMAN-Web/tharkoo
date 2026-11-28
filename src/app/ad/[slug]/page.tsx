@@ -127,7 +127,7 @@ export default async function AdPage({ params }: Props) {
   ]);
   const features = await kindFeatures((cat as { kind?: string } | null)?.kind);
   const tour = listingId && tourOffer ? { listingId, coins: tourOffer.coins } : null;
-  const owner = row?.ownerId ? ((await User.findById(row.ownerId).select("displayName createdAt verificationStatus").lean()) as { displayName?: string; createdAt?: Date; verificationStatus?: string } | null) : null;
+  const owner = row?.ownerId ? ((await User.findById(row.ownerId).select("displayName createdAt verificationStatus avatarUrl").lean()) as { displayName?: string; createdAt?: Date; verificationStatus?: string; avatarUrl?: string } | null) : null;
   const adView = { ...plain(ad), details: adDetailRows(row?.attributes, cat?.fields), interests: interestsOf(row?.attributes) };
   const cover = safePhoto(ad.photos?.[0]);
   const paths = await getPaths();
@@ -179,6 +179,7 @@ export default async function AdPage({ params }: Props) {
         <NewAdDetail
           ad={adView}
           sellerName={publicSellerName(owner?.displayName)}
+          sellerPhoto={owner?.avatarUrl ?? null}
           categoryName={catName}
           related={plain(related)}
           listingId={listingId}

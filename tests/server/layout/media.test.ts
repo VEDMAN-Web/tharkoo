@@ -16,7 +16,6 @@ import {
 } from "@/server/layout/media";
 import { AuditEvent, SiteMedia } from "@/server/models";
 import { setCloudinaryClient, setCloudinaryUploader, type CloudinaryClient } from "@/server/media/client";
-import { denyTerm } from "@/server/shared/policy";
 import { clearMemoryMongo, connectMemoryMongo, disconnectMemoryMongo } from "../../setup/mongo";
 
 const admin = { email: "admin@example.test", roles: ["admin"] };
@@ -116,16 +115,19 @@ describe("upload", () => {
     expect(await readdir(dir)).toHaveLength(0);
   });
 
-  it("applies the forbidden-terms list to alt text and tags", async () => {
-    const term = denyTerm("esc", "ort");
-    await expect(uploadSiteMedia({ file: { type: "image/png", data: png(10, 10) }, alt: `Our ${term} team`, ...admin })).rejects.toThrow(/not allowed/i);
-    await expect(uploadSiteMedia({ file: { type: "image/png", data: png(10, 10) }, alt: "A picture", tags: term, ...admin })).rejects.toThrow(/not allowed/i);
-  });
-
-  it("is for admins only", async () => {
-    for (const roles of [["user"], ["moderator"], ["seo_editor"]]) {
+  it("is closed to people without the upload right", async () => {
+    for (const roles of [["user"], ["moderator"], ["support"]]) {
       await expect(uploadSiteMedia({ file: { type: "image/png", data: png(10, 10) }, alt: "A picture", email: "x@example.test", roles })).rejects.toThrow(/admin/i);
       await expect(listSiteMedia({}, roles)).rejects.toThrow(/admin/i);
+    }
+  });
+
+  it("lets blog and SEO editors add and see pictures, but not change or delete them", async () => {
+    for (const roles of [["blog_editor"], ["seo_editor"]]) {
+      const item = await uploadSiteMedia({ file: { type: "image/png", data: png(10, 10) }, alt: "A blog cover", email: "x@example.test", roles });
+      expect((await listSiteMedia({}, roles)).items.map((row) => row.id)).toContain(item.id);
+      await expect(updateSiteMedia(item.id, { alt: "Another text" }, "x@example.test", roles)).rejects.toThrow(/admin/i);
+      await expect(deleteSiteMedia(item.id, "x@example.test", roles)).rejects.toThrow(/admin/i);
     }
   });
 });

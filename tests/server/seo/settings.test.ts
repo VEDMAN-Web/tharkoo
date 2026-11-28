@@ -73,7 +73,6 @@ describe("saving settings", () => {
   it("refuses roles without SEO rights and bad data", async () => {
     await expect(saveSeoSettings({ roles: ["support"], email: "s@example.test" }, {})).rejects.toThrow(/SEO editor/);
     await expect(saveSeoSettings(superadmin, { robotsDisallow: ["/"] })).rejects.toThrow(/highlighted/);
-    await expect(saveSeoSettings(superadmin, { llmsIntro: "Cheap escort" })).rejects.toThrow();
     await expect(saveSeoSettings(superadmin, { organization: { email: "nope" } })).rejects.toThrow();
     await expect(saveSeoSettings(superadmin, { organization: { sameAs: ["http://insecure.example"] } })).rejects.toThrow();
     await expect(saveSeoSettings(superadmin, { adSchema: { jobs: "Article" } })).rejects.toThrow();

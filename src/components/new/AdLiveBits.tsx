@@ -3,15 +3,16 @@
 import { BadgeCheck } from "lucide-react";
 import { useContact } from "@/components/ContactButtons";
 import { useT } from "@/components/ui/AdCard";
+import { AvatarContent } from "@/components/ui/AvatarContent";
 
-export function AdSellerRow({ name, verified = false, since = "" }: { name: string; verified?: boolean; since?: string }) {
+export function AdSellerRow({ name, photo = null, verified = false, since = "" }: { name: string; photo?: string | null; verified?: boolean; since?: string }) {
   const t = useT();
   const { seller } = useContact();
   const initial = name.trim().charAt(0).toUpperCase() || "?";
   const live = seller?.chatOn ? seller.status : null;
   return (
     <div className="tkn-seller-row" data-tk="seller-row">
-      <span className="tkn-seller-avatar" aria-hidden>{initial}</span>
+      <span className="tkn-seller-avatar" aria-hidden><AvatarContent src={photo} fallback={initial} /></span>
       <span className="tkn-seller-text">
         <strong>{name}</strong>
         {verified || live ? (

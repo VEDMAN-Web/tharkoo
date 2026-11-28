@@ -8,12 +8,22 @@ export type RecordModel = "BannedWord" | "Banner" | "FeatureFlag" | "HelpArticle
 export type FieldDef = {
   name: string;
   label: string;
-  type: "text" | "textarea" | "number" | "select" | "switch";
+  type: "text" | "textarea" | "number" | "select" | "switch" | "image";
   help?: string;
   max?: number;
   required?: boolean;
   options?: { value: string; label: string }[];
   createOnly?: boolean;
+  /** A web address that follows this field while a new record is typed, until the address is edited by hand. */
+  slugFrom?: string;
+  /** For "image": the field that takes the picture's description. */
+  altField?: string;
+  /** Shown only while this other field has a value. */
+  showWhen?: string;
+  /** For "select": the choices are the site's own top categories, read when the screen opens. */
+  optionsFrom?: "categories";
+  /** A new record starts with today's date, written as readers see it. */
+  today?: boolean;
 };
 
 export type KindConfig = {
@@ -37,6 +47,10 @@ export type KindConfig = {
   columns: string[];
   switchField?: string;
   termList?: boolean;
+  /** All / Published / Draft chips above the table. For kinds whose records have a "status" of "published" or "draft". */
+  statusFilter?: boolean;
+  /** A wider drawer, for records with long text. */
+  wide?: boolean;
   deleteNote: string;
 };
 
@@ -167,19 +181,21 @@ const BLOG_POSTS_CONFIG: KindConfig = {
   nameField: "title",
   subField: "slug",
   columns: ["category", "status"],
+  statusFilter: true,
+  wide: true,
   deleteNote: "The post is deleted and its page stops working. This cannot be undone. Set it to draft instead if you may want it back.",
   schema: blogSchema,
   fields: [
     { name: "title", label: "Title", type: "text", max: 120, required: true },
-    { name: "slug", label: "Web address", type: "text", max: 80, required: true, help: "Lowercase words joined by dashes, for example stay-safe." },
-    { name: "category", label: "Category", type: "text", max: 60 },
+    { name: "slug", label: "Web address", type: "text", max: 80, required: true, slugFrom: "title", help: "Made from the title. Lowercase words joined by dashes. Changing it later breaks old links." },
+    { name: "cover", label: "Cover picture", type: "image", max: 200, altField: "coverAlt", help: "Optional. With none, the post keeps the pink band." },
+    { name: "coverAlt", label: "What the cover shows", type: "text", max: 200, showWhen: "cover" },
+    { name: "coverFocus", label: "Part to keep when cropped", type: "text", max: 40, showWhen: "cover", help: "Optional, for example 60% 40%." },
+    { name: "body", label: "Text", type: "textarea", max: BODY_MAX, help: "Leave an empty line between paragraphs. Start a line with ## to make a heading." },
+    { name: "category", label: "Category", type: "select", optionsFrom: "categories", help: "The site's categories. They are managed under Categories & fields." },
     { name: "author", label: "Author", type: "text", max: 80 },
-    { name: "date", label: "Date shown", type: "text", max: 40, help: "As readers see it, for example 3 November 2026." },
+    { name: "date", label: "Date shown", type: "text", max: 40, today: true, help: "As readers see it, for example 3 November 2026." },
     { name: "status", label: "Status", type: "select", options: [{ value: "published", label: "Published" }, { value: "draft", label: "Draft" }] },
-    { name: "cover", label: "Cover picture address", type: "text", max: 200, help: "An https image address. With none, the post keeps the pink band." },
-    { name: "coverAlt", label: "What the cover shows", type: "text", max: 200 },
-    { name: "coverFocus", label: "Part to keep when cropped", type: "text", max: 40, help: "For example 60% 40%." },
-    { name: "body", label: "Text", type: "textarea", max: BODY_MAX },
   ],
 };
 
@@ -286,5 +302,6 @@ export function isRecordKind(value: string): value is RecordKind {
 
 export function emptyValues(config: KindConfig): Record<string, unknown> {
   const defaults: Record<string, unknown> = { matchType: "contains", scope: "all", action: "block", enabled: true, status: "published", order: "" };
-  return Object.fromEntries(config.fields.map((field) => [field.name, field.name in defaults ? defaults[field.name] : field.type === "switch" ? false : ""]));
+  const today = new Intl.DateTimeFormat("en-GB", { timeZone: "Asia/Kolkata", day: "numeric", month: "long", year: "numeric" }).format(new Date());
+  return Object.fromEntries(config.fields.map((field) => [field.name, field.name in defaults ? defaults[field.name] : field.type === "switch" ? false : field.today ? today : ""]));
 }

@@ -33,7 +33,7 @@ test.describe("H8.58 built-in blog posts and help topics", () => {
         await page.goto(`/admin/content/${tab === "help" ? "?tab=help" : ""}`);
         const list = page.locator('[data-tk="built-in-list"]');
         await expect(list).toBeVisible();
-        await expect(list.getByRole("heading", { name: "Built in, live on the site now" })).toBeVisible();
+        await expect(list.getByRole("heading", { name: /^Built in (posts|articles)$/ })).toBeVisible();
         const built = await list.locator('[data-tk="built-in-row"]').count();
         expect(built).toBeGreaterThanOrEqual(1);
         await expect(list.getByText("Built in", { exact: true })).toHaveCount(built);

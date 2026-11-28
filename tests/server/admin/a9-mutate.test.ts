@@ -16,15 +16,10 @@ vi.mock("@/lib/cache", async (importOriginal) => ({
   ...(await importOriginal<typeof import("@/lib/cache")>()),
   refreshPublicCache: async () => undefined,
 }));
-vi.mock("@/server/shared/policy", async (importOriginal) => ({
-  ...(await importOriginal<typeof import("@/server/shared/policy")>()),
-  textDenied: (text: string) => ({ denied: /blockedword/i.test(text) }),
-}));
-
 import { adminMutate } from "@/app/admin/actions";
 import { hashToken } from "@/server/auth/http";
 import { undoEvent } from "@/server/admin/undo/core";
-import { ForbiddenError, ValidationError } from "@/server/http";
+import { ForbiddenError } from "@/server/http";
 import { AuditEvent, BannedWord, FeatureFlag, SeoTemplate, Session, User } from "@/server/models";
 import { clearMemoryMongo, connectMemoryMongo, disconnectMemoryMongo } from "../../setup/mongo";
 
@@ -95,8 +90,6 @@ describe("adminMutate goes through adminWrite", () => {
     const created = await adminMutate({ model: "FeatureFlag", op: "create", data: { key: "fresh", label: "Fresh" } });
     expect(created.undoUntil).toBeNull();
     expect(await AuditEvent.countDocuments({ action: "json.create", targetType: "FeatureFlag" })).toBe(1);
-    await expect(adminMutate({ model: "FeatureFlag", op: "create", data: { key: "bad", label: "A BlockedWord here" } })).rejects.toBeInstanceOf(ValidationError);
-    expect(await FeatureFlag.countDocuments({ key: "bad" })).toBe(0);
   });
 
   it("does not refuse the words of the banned-word list itself", async () => {

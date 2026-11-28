@@ -13,6 +13,7 @@ import { bgPhotoStyle } from "@/components/ui/card-photo";
 import "@/components/ui/card-photo.css";
 import { CallingStep } from "@/components/new/CallingStep";
 import { SESSION_EVENT } from "@/components/account/AccountContext";
+import { AvatarContent } from "@/components/ui/AvatarContent";
 
 const noop = () => undefined;
 
@@ -25,6 +26,8 @@ type Step = "login" | "code" | "call" | "away" | "buy" | "calling" | "error";
 type Channel = "phone" | "email";
 
 export type AdPopupProps = {
+  /** The advertiser's profile photo, when they added one. */
+  photo?: string | null;
   kind: PopupKind;
   name: string;
   signedIn: boolean;
@@ -137,7 +140,7 @@ export function AdPopup(props: AdPopupProps) {
 
           {step === "call" ? (
             <div className="tkn-pop-stack">
-              <SellerRow name={name} status={seller?.status} t={t} />
+              <SellerRow name={name} photo={props.photo} status={seller?.status} t={t} />
               {props.paidAdded ? <p role="status" className="tkn-call-paid" data-tk="call-paid">{t("ad.call.paid", { count: props.paidAdded })}</p> : null}
               <ul className="tkn-call-benefits">
                 <li>{t("ad.call.benefit1")}</li>
@@ -162,7 +165,7 @@ export function AdPopup(props: AdPopupProps) {
 
           {step === "away" ? (
             <div className="tkn-pop-stack">
-              <SellerRow name={name} status="away" t={t} />
+              <SellerRow name={name} photo={props.photo} status="away" t={t} />
               <p className="tkn-pop-sub">{t("ad.away.chatHelp", { name })}</p>
               <button type="button" className="tkn-pop-btn" data-tk="away-chat" onClick={props.onSwitchToChat}>
                 {t("ad.away.chat", { name })}
@@ -240,12 +243,12 @@ function helpFor(step: Step, v: { kind: PopupKind; name: string; coins: number; 
   }
 }
 
-function SellerRow({ name, status, t }: { name: string; status?: "online" | "away"; t: T }) {
+function SellerRow({ name, photo, status, t }: { name: string; photo?: string | null; status?: "online" | "away"; t: T }) {
   const initial = name.trim().charAt(0).toUpperCase() || "?";
   const away = status === "away";
   return (
     <div className={`tkn-pop-seller${away ? " is-away" : ""}`}>
-      <span className="tkn-pop-avatar" aria-hidden>{initial}</span>
+      <span className="tkn-pop-avatar" aria-hidden><AvatarContent src={photo} fallback={initial} /></span>
       <span>
         <strong>{name}</strong>
         {status ? (
