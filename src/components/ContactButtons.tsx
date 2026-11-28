@@ -35,6 +35,7 @@ export type SampleNote = { message: string; button: string; href: string };
 
 export type ContactPopupInfo = {
   sellerName: string;
+  sellerPhoto?: string | null;
   paymentsLive: boolean;
   alternatives: AdPopupAlt[];
 };
@@ -266,6 +267,7 @@ export function ContactProvider({
         <AdPopup
           kind={popup}
           name={info.sellerName || "the advertiser"}
+          photo={info.sellerPhoto}
           signedIn={signedIn}
           seller={seller}
           tourCoins={tour && !people ? tour.coins : null}
@@ -290,6 +292,7 @@ export function ContactProvider({
         <ChatPanel
           listingId={listingId}
           peerName={info.sellerName || "the advertiser"}
+          peerPhoto={info.sellerPhoto}
           conversationId={conversationId}
           onConversation={setConversationId}
           onClose={() => setChatOpen(false)}

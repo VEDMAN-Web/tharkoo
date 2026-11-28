@@ -3,6 +3,7 @@ import type { ReactNode } from "react";
 import { Bell, Coins, Heart, House, Images, LifeBuoy, LogIn, Megaphone, MessageSquare, Search, Settings, Video, Wallet, type LucideIcon } from "lucide-react";
 import { makeT } from "@/lib/ui/text";
 import type { PanelSummary } from "@/server/notifications/summary";
+import { AvatarContent } from "@/components/ui/AvatarContent";
 import "./user-panel.css";
 
 /** H7.6, H7.17: the panel frame for every /u/account page: left menu (the mockup's "My account") and the page body. */
@@ -70,7 +71,7 @@ export function UserPanelShell({ active, summary, aside, below, children }: { ac
           <nav aria-label="My account" className="up-glass up-nav">
             <div className="up-nav-head">
               <div className="up-avatar" aria-hidden="true">
-                {summary.signedIn ? summary.displayName.slice(0, 1).toUpperCase() : "?"}
+                {summary.signedIn ? <AvatarContent src={summary.avatarUrl} fallback={summary.displayName.slice(0, 1).toUpperCase()} /> : "?"}
               </div>
               <div>
                 <p className="up-name">{summary.signedIn ? summary.displayName : "Welcome"}</p>

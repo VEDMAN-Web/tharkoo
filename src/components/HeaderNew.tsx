@@ -24,6 +24,7 @@ import { openRecharge } from "./recharge/openRecharge";
 import { useMenuDismiss } from "./ui/use-menu-dismiss";
 import { api } from "@/lib/ui/api";
 import { isSignedInPhase, useAccount } from "./account/AccountContext";
+import { AvatarContent } from "./ui/AvatarContent";
 
 // The search pop-up loads only when a visitor opens it, as in the old header.
 const SearchModal = dynamic(() => import("./SearchModal").then((mod) => mod.SearchModal), { ssr: false });
@@ -188,7 +189,7 @@ export function HeaderNew({
                   data-tk="header-avatar"
                   onClick={() => setAccountOpen((open) => !open)}
                 >
-                  {user ? <span className="tkn-avatar-circle">{accountLabel.slice(0, 1).toUpperCase()}</span> : <span className="tkn-avatar-circle tkn-skel" aria-hidden="true" />}
+                  {user ? <span className="tkn-avatar-circle"><AvatarContent src={user.avatarUrl} fallback={accountLabel.slice(0, 1).toUpperCase()} /></span> : <span className="tkn-avatar-circle tkn-skel" aria-hidden="true" />}
                   <ChevronDown size={12} aria-hidden="true" focusable="false" />
                   {unread + waitingCalls > 0 ? <span className="tkn-avatar-dot" data-tk="header-unread" aria-hidden="true">{unread + waitingCalls > 9 ? "9+" : unread + waitingCalls}</span> : null}
                 </button>

@@ -7,6 +7,7 @@ import { AvailabilityControls } from "@/components/vendor/AvailabilityControls";
 import { api } from "@/lib/ui/api";
 import { makeT } from "@/lib/ui/text";
 import { SignedOutPanel, UserPanelShell } from "./UserPanelShell";
+import { ProfilePhoto } from "./ProfilePhoto";
 
 const t = makeT();
 
@@ -33,6 +34,7 @@ export function SettingsPanel({ summary }: { summary: PanelSummary }) {
     <UserPanelShell active="settings" summary={summary}>
       <section aria-labelledby="settings-title" className="up-glass up-panel up-stack">
         <h1 id="settings-title" className="up-h2">Settings</h1>
+        <ProfilePhoto url={summary.avatarUrl ?? null} letter={summary.displayName.slice(0, 1).toUpperCase()} />
         <div className="up-setting" data-tk="setting-name">
           <div>
             <p className="up-label-plain">Name on your account</p>

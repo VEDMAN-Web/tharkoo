@@ -12,6 +12,10 @@ import { ContentView } from "./_studio/ContentView";
 
 export const dynamic = "force-dynamic";
 
+// The public /blog does not read studio posts yet, so the studio's Blog tab is hidden and blogs are managed on /admin/blog-posts/.
+// Set to true to show the tab (and its AI draft button) again.
+const SHOW_BLOG_TAB: boolean = false;
+
 type Params = Record<string, string | string[] | undefined>;
 const one = (value: string | string[] | undefined) => (Array.isArray(value) ? value[0] : value) ?? "";
 
@@ -34,7 +38,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<Par
     );
   }
   const params = await searchParams;
-  const tab = parseKind(one(params.tab));
+  const tab = SHOW_BLOG_TAB ? parseKind(one(params.tab)) : "help";
   const status = parseStatus(one(params.status));
   const q = one(params.q).trim().slice(0, 80);
   const itemId = one(params.item).slice(0, 40);
@@ -45,7 +49,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<Par
     options("author"),
     options("blogCategory"),
     getPaths(),
-    listBuiltIns(tab),
+    listBuiltIns(tab, { status, q }),
     builtInCounts(),
   ]);
   const counts = { blog: ownCounts.blog + builtCounts.blog, help: ownCounts.help + builtCounts.help };
@@ -55,6 +59,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<Par
     <AdminShell title="Content studio" hasHeader>
       <ContentView
         tab={tab}
+        showBlogTab={SHOW_BLOG_TAB}
         status={status}
         q={q}
         rows={rows}

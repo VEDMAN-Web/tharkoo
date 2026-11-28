@@ -32,6 +32,7 @@ export type PanelSummary =
       /** H19.5: video call requests on this account's ads still waiting for an answer. */
       waitingCalls?: number;
       memberSince: string;
+      avatarUrl?: string | null;
     };
 
 export async function loadPanelSummary(token: string | undefined): Promise<PanelSummary> {
@@ -60,6 +61,7 @@ export async function loadPanelSummary(token: string | undefined): Promise<Panel
     seller: Boolean(session.user.seller),
     hasEarnings,
     waitingCalls,
+    avatarUrl: session.user.avatarUrl ?? null,
     memberSince: new Date(parseInt(userId.slice(0, 8), 16) * 1000).toLocaleDateString("en-GB", { month: "short", year: "numeric" }),
   };
 }

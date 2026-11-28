@@ -71,6 +71,7 @@ export function PostWizard({
   defaultCityId = "",
   defaultName = "",
   accountName = "",
+  accountPhoto = null,
   adultAccepted = false,
   about = null,
 }: {
@@ -84,6 +85,8 @@ export function PostWizard({
   defaultName?: string;
   /** H21.12c: the account's own name, for the preview's initial. */
   accountName?: string;
+  /** The account's profile photo, for the preview. */
+  accountPhoto?: string | null;
   /** The account has accepted the 18+ statement before, so the Review step does not ask again. */
   adultAccepted?: boolean;
   maskedEmail?: string;
@@ -1079,7 +1082,7 @@ export function PostWizard({
           }))
         : [];
     const detailsCard = (
-      <DetailsPreview title={title} categoryName={category?.name ?? ""} placeName={[cityName, shownDistrict].filter(Boolean).join(" / ")} interests={picksOf(attrs[INTEREST_KEY])} accountName={accountName} name={nickname} cover={coverUrl} editing={current === "photos" ? "" : current === "contact" ? "name" : editingPart} highlightPhoto={current === "photos"} />
+      <DetailsPreview title={title} categoryName={category?.name ?? ""} placeName={[cityName, shownDistrict].filter(Boolean).join(" / ")} interests={picksOf(attrs[INTEREST_KEY])} accountName={accountName} accountPhoto={accountPhoto} name={nickname} cover={coverUrl} editing={current === "photos" ? "" : current === "contact" ? "name" : editingPart} highlightPhoto={current === "photos"} />
     );
     const popularInterests = popularInterestsOf(category?.fields ?? []);
     return (

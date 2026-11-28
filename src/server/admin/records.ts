@@ -8,14 +8,14 @@ import { sanitizeRecord } from "@/lib/sanitize";
 import type { AdminCtx } from "@/server/admin/context";
 import { adminWrite } from "@/server/admin/write";
 import { ConflictError, ForbiddenError, NotFoundError, ValidationError } from "@/server/http";
-import { Banner, BannedWord, BlogPost, FeatureFlag, HelpArticle } from "@/server/models";
+import { Banner, BannedWord, BlogPost, Category, FeatureFlag, HelpArticle } from "@/server/models";
 
 type Doc = Record<string, unknown>;
 const MODELS = { BannedWord, Banner, BlogPost, FeatureFlag, HelpArticle } as unknown as Record<KindConfig["model"], MongooseModel<Doc>>;
 const SEARCH_MAX = 120;
 const RAW_HIDDEN = new Set(["_id", "__v", "createdAt", "updatedAt"]);
 
-export type RecordsQuery = { q: string; page: number; pageSize: number };
+export type RecordsQuery = { q: string; page: number; pageSize: number; status?: "published" | "draft" };
 export type RecordRow = { id: string; values: Doc };
 export type RecordList = { rows: RecordRow[]; total: number; query: RecordsQuery };
 export type RecordDetail = { id: string; values: Doc; raw: string | null };
@@ -50,7 +50,9 @@ export function parseRecordsQuery(params: Record<string, string | string[] | und
   };
   const size = Number(one("size"));
   const page = Math.floor(Number(one("page")));
+  const status = one("status");
   return {
+    ...(status === "published" || status === "draft" ? { status } : {}),
     q: one("q").trim().slice(0, SEARCH_MAX),
     page: Number.isFinite(page) && page >= 1 ? page : 1,
     pageSize: (PAGE_SIZES as readonly number[]).includes(size) ? size : 25,
@@ -61,12 +63,29 @@ function requireView(roles: readonly string[], config: KindConfig) {
   if (!can(roles, config.view)) throw new ForbiddenError("You cannot open this screen");
 }
 
+export type FieldChoices = Record<string, { value: string; label: string }[]>;
+
+/** The choices of the pick lists that are filled from the site's own data (today: the top categories, by name). */
+export async function fieldChoices(roles: readonly string[], kind: RecordKind): Promise<FieldChoices> {
+  const config = KINDS[kind];
+  requireView(roles, config);
+  const wanted = config.fields.filter((field) => field.optionsFrom === "categories");
+  if (wanted.length === 0) return {};
+  await connectDb();
+  const rows = await Category.find({ parentId: null, enabled: { $ne: false }, deletedAt: null }).sort({ order: 1, name: 1 }).select("name").lean<{ name: string }[]>();
+  const options = rows.map((row) => ({ value: row.name, label: row.name }));
+  return Object.fromEntries(wanted.map((field) => [field.name, options]));
+}
+
 export async function listRecords(roles: readonly string[], kind: RecordKind, query: RecordsQuery): Promise<RecordList> {
   const config = KINDS[kind];
   requireView(roles, config);
   await connectDb();
   const Model = MODELS[config.model];
-  const filter = query.q ? { $or: config.searchFields.map((field) => ({ [field]: { $regex: escapeRegex(query.q), $options: "i" } })) } : {};
+  const filter = {
+    ...(query.q ? { $or: config.searchFields.map((field) => ({ [field]: { $regex: escapeRegex(query.q), $options: "i" } })) } : {}),
+    ...(config.statusFilter && query.status ? { status: query.status } : {}),
+  };
   const [total, docs] = await Promise.all([
     Model.countDocuments(filter),
     Model.find(filter)

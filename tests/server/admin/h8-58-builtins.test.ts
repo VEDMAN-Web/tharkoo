@@ -6,10 +6,13 @@ vi.mock("@/lib/cache", () => ({ refreshPublicCache: async () => undefined }));
 import { can } from "@/lib/admin/perms";
 import { screenForPath } from "@/lib/admin/screens";
 import type { AdminCtx } from "@/server/admin/context";
-import { deleteRecord, getRecord, listRecords, parseRecordsQuery, saveRecord } from "@/server/admin/records";
+import { deleteRecord, fieldChoices, getRecord, listRecords, parseRecordsQuery, saveRecord } from "@/server/admin/records";
 import { builtInScreen, listBuiltIns } from "@/server/content/studio/builtin";
+import { findMediaUsages, mediaUsageCounts } from "@/server/layout/media-refs";
+import { coverOf } from "@/components/new/blog-cover-data";
+import { emptyValues, KINDS } from "@/lib/admin/record-kinds";
 import { ForbiddenError, ValidationError } from "@/server/http";
-import { AuditEvent, BlogPost, HelpArticle } from "@/server/models";
+import { AuditEvent, BlogPost, Category, HelpArticle, SiteMedia } from "@/server/models";
 import { clearMemoryMongo, connectMemoryMongo, disconnectMemoryMongo } from "../../setup/mongo";
 
 const ctx = (roles: string[]): AdminCtx => ({ actorId: String(new mongoose.Types.ObjectId()), email: "staff@example.test", roles, requestId: "r" });
@@ -41,6 +44,54 @@ describe("H8.58 built-in blog posts and help topics in the Content studio", () =
     expect(await listBuiltIns("help")).toEqual([expect.objectContaining({ slug: "how-to-post", group: "Getting started", status: "published" })]);
     expect(builtInScreen("blog")).toBe("/admin/blog-posts/");
     expect(builtInScreen("help")).toBe("/admin/help-topics/");
+  });
+
+  it("narrows the list by the status chip and the search words", async () => {
+    const slugs = async (filter: Parameters<typeof listBuiltIns>[1]) => (await listBuiltIns("blog", filter)).map((row) => row.slug);
+    expect(await slugs({ status: "draft" })).toEqual(["old-note"]);
+    expect(await slugs({ status: "published" })).toEqual(["stay-safe"]);
+    expect(await slugs({ status: "review" })).toEqual([]);
+    expect(await slugs({ status: "scheduled" })).toEqual([]);
+    expect(await slugs({ q: "OLD NOTE" })).toEqual(["old-note"]);
+    expect(await slugs({ status: "published", q: "old" })).toEqual([]);
+    expect(await slugs({ q: "(.*" })).toEqual([]);
+  });
+
+  it("filters the Blog posts table by status, with the search words too", async () => {
+    const slugs = async (params: Record<string, string>) => (await listRecords(["seo_editor"], "blog-posts", parseRecordsQuery(params))).rows.map((row) => row.values.slug).sort();
+    expect(await slugs({ status: "published" })).toEqual(["stay-safe"]);
+    expect(await slugs({ status: "draft" })).toEqual(["old-note"]);
+    expect(await slugs({ status: "published", q: "old" })).toEqual([]);
+    expect(await slugs({ status: "nonsense" })).toEqual(["old-note", "stay-safe"]);
+  });
+
+  it("starts a new post with today's date and shows a cover only from https or this site's uploads", () => {
+    expect(emptyValues(KINDS["blog-posts"]).date).toMatch(/^\d{1,2} [A-Z][a-z]+ \d{4}$/);
+    expect(coverOf({ cover: "https://example.test/a.png" })?.src).toBe("https://example.test/a.png");
+    expect(coverOf({ cover: "/uploads/0123456789abcdef01234567.png" })?.src).toBe("/uploads/0123456789abcdef01234567.png");
+    expect(coverOf({ cover: "//elsewhere.test/a.png" })).toBeNull();
+    expect(coverOf({ cover: "http://example.test/a.png" })).toBeNull();
+    expect(coverOf({ cover: "/admin/a.png" })).toBeNull();
+  });
+
+  it("counts a library picture used as a blog cover, so it cannot be deleted from under the post", async () => {
+    const url = "/uploads/0123456789abcdef01234567.png";
+    const media = await SiteMedia.create({ url, objectKey: "site/cover.png", alt: "A desk", width: 10, height: 10, bytes: 10, contentType: "image/png", uploadedBy: "staff@example.test" });
+    const id = String(media._id);
+    expect(await findMediaUsages(id)).toEqual([]);
+    await BlogPost.updateOne({ slug: "old-note" }, { $set: { cover: url } });
+    expect(await findMediaUsages(id)).toEqual([expect.objectContaining({ kind: "blog", key: "old-note", label: "An old note", where: "draft" })]);
+    expect((await mediaUsageCounts([id])).get(id)).toBe(1);
+    await SiteMedia.deleteMany({});
+  });
+
+  it("offers the site's top categories as the blog category choices", async () => {
+    const jobs = await Category.create({ slug: "jobs", name: "Jobs", order: 2 });
+    await Category.create({ slug: "property", name: "Property", order: 1 });
+    await Category.create({ slug: "hidden", name: "Hidden", enabled: false });
+    await Category.create({ slug: "part-time", name: "Part time", parentId: jobs._id });
+    expect((await fieldChoices(["blog_editor"], "blog-posts")).category.map((option) => option.value)).toEqual(["Property", "Jobs"]);
+    expect(await fieldChoices(["content_editor"], "help-topics")).toEqual({});
   });
 
   it("opens, edits and removes a built-in post, each change in the audit log", async () => {

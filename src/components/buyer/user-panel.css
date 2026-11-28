@@ -38,6 +38,9 @@
   background: linear-gradient(135deg, #e0f2fe, #ede9ff); display: flex; align-items: center; justify-content: center;
   font-weight: 800; color: #5b21b6;
 }
+.up-photo-main { display: flex; align-items: center; gap: 12px; flex: 1 1 240px; min-width: 0; }
+.up-avatar.up-photo { width: 64px; height: 64px; font-size: 24px; }
+.up-setting .up-note { flex-basis: 100%; }
 .up-name { margin: 0; font-weight: 700; font-size: 15px; overflow-wrap: anywhere; }
 .up-sub { margin: 2px 0 0; font-size: 12px; color: #6b4a8a; overflow-wrap: anywhere; }
 .up-nav-list { display: flex; flex-direction: column; gap: 2px; margin: 0; padding: 0; list-style: none; }

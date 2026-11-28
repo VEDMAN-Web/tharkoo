@@ -1,5 +1,5 @@
 import mongoose from "mongoose";
-import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
+import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 import type { AdminCtx } from "@/server/admin/context";
 import { undoEvent } from "@/server/admin/undo/core";
 import { ForbiddenError, ValidationError } from "@/server/http";
@@ -7,12 +7,6 @@ import { previewImport, runImport } from "@/server/locations/import";
 import { AuditEvent, Category, Listing, Location } from "@/server/models";
 import { STATES } from "@/server/seed/data";
 import { clearMemoryMongo, connectMemoryMongo, disconnectMemoryMongo } from "../../setup/mongo";
-
-// The real word list is not touched: this stand-in refuses one made-up word, so the "not allowed" path can be tested.
-vi.mock("@/server/shared/policy", async (importOriginal) => {
-  const original = await importOriginal<Record<string, unknown>>();
-  return { ...original, textDenied: (text: string) => ({ denied: /zzblocked/i.test(text), matches: [] }) };
-});
 
 const admin: AdminCtx = { actorId: "000000000000000000000081", email: "admin@example.com", roles: ["admin"], requestId: "r-a" };
 const support: AdminCtx = { actorId: "000000000000000000000082", email: "sup@example.com", roles: ["support"], requestId: "r-s" };
@@ -56,17 +50,15 @@ describe("H16.1 preview of a cities file", () => {
       "Atlantis,Narnia,atlantis,no,,", // unknown state
       "Bad Slug,Gujarat,Bad Slug!,no,,", // bad web address
       "Gurugram,Haryana,gurugram,no,,", // an old address of Gurgaon
-      "Zzblocked Town,Gujarat,zzblocked,no,,", // a term that is not allowed
       "Search,Gujarat,search,no,,", // reserved word
     );
     const preview = await previewImport(admin, upload(text));
-    expect(preview).toMatchObject({ kind: "cities", total: 9, fresh: 1, existing: 2, problems: 6, samples: ["Bhuj, Gujarat"] });
+    expect(preview).toMatchObject({ kind: "cities", total: 8, fresh: 1, existing: 2, problems: 5, samples: ["Bhuj, Gujarat"] });
     const why = Object.fromEntries(preview.problemRows.map((row) => [row.name, row.message]));
     expect(why["Bhuj"]).toMatch(/repeated in the file \(first on line 4\)/);
     expect(why["Atlantis"]).toMatch(/state "Narnia" is not on Tharkoo/);
     expect(why["Bad Slug"]).toMatch(/cannot be used/);
     expect(why["Gurugram"]).toMatch(/already used by Gurgaon/);
-    expect(why["Zzblocked Town"]).toMatch(/not allowed/);
     expect(why["Search"]).toMatch(/reserved/);
     expect(await Location.countDocuments({ type: "city" })).toBe(3);
     expect(await AuditEvent.countDocuments({})).toBe(0);
@@ -96,22 +88,21 @@ describe("H16.1 import of cities", () => {
   it("adds only the new rows after the cities already there, leaves the old ones exactly as they were, and writes ONE audit entry with the counts", async () => {
     const { state, surat } = await world();
     await Location.updateOne({ _id: surat._id }, { $set: { name: "Surat (renamed)", enabled: false } });
-    const text = cityFile("Surat,Gujarat,surat,no,,", "Bhuj,Gujarat,bhuj,yes,,", "Rajkot,Gujarat,rajkot,no,1286995,", "Zzblocked Town,Gujarat,zzblocked,no,,", "Atlantis,Narnia,atlantis,no,,");
+    const text = cityFile("Surat,Gujarat,surat,no,,", "Bhuj,Gujarat,bhuj,yes,,", "Rajkot,Gujarat,rajkot,no,1286995,", "Atlantis,Narnia,atlantis,no,,");
     const done = await runImport(admin, upload(text));
-    expect(done).toMatchObject({ added: 2, existing: 1, skipped: 2 });
+    expect(done).toMatchObject({ added: 2, existing: 1, skipped: 1 });
 
     const bhuj = await Location.findOne({ type: "city", slug: "bhuj" }).lean();
     expect(bhuj).toMatchObject({ name: "Bhuj", enabled: true, countryCode: "IN" });
     expect(String(bhuj?.parentId)).toBe(String(state("Gujarat")._id));
     expect(bhuj?.order).toBe(3);
-    expect(await Location.countDocuments({ slug: "zzblocked" })).toBe(0);
     const old = await Location.findById(surat._id).lean();
     expect(old).toMatchObject({ name: "Surat (renamed)", enabled: false, order: 0 });
 
     const events = await AuditEvent.find({ action: "location.import" }).lean();
     expect(events).toHaveLength(1);
-    expect(events[0]).toMatchObject({ actorRole: "admin", summary: "Imported 2 cities (1 already there, 2 skipped)" });
-    expect(events[0].after).toMatchObject({ added: 2, alreadyThere: 1, skipped: 2 });
+    expect(events[0]).toMatchObject({ actorRole: "admin", summary: "Imported 2 cities (1 already there, 1 skipped)" });
+    expect(events[0].after).toMatchObject({ added: 2, alreadyThere: 1, skipped: 1 });
     expect(events[0].undo?.kind).toBe("locations.import");
   });
 
@@ -158,11 +149,11 @@ describe("H16.1 import of areas", () => {
   it("adds areas as districts of the city named by its web address or its name, skips repeats and unknown cities, and undoes", async () => {
     const { surat } = await world();
     await Location.create({ type: "district", slug: "adajan", name: "Adajan", parentId: surat._id, order: 4 });
-    const text = areaFile("surat,Adajan,adajan", "surat,Vesu,vesu", "Surat,Piplod,piplod", "surat,Vesu,vesu", "nowhere,Lost Area,lost-area", "pune,Zzblocked Area,zzb");
+    const text = areaFile("surat,Adajan,adajan", "surat,Vesu,vesu", "Surat,Piplod,piplod", "surat,Vesu,vesu", "nowhere,Lost Area,lost-area");
     const preview = await previewImport(admin, areas(text));
-    expect(preview).toMatchObject({ kind: "areas", total: 6, fresh: 2, existing: 1, problems: 3 });
+    expect(preview).toMatchObject({ kind: "areas", total: 5, fresh: 2, existing: 1, problems: 2 });
     const done = await runImport(admin, areas(text));
-    expect(done).toMatchObject({ added: 2, existing: 1, skipped: 3 });
+    expect(done).toMatchObject({ added: 2, existing: 1, skipped: 2 });
     const vesu = await Location.findOne({ type: "district", slug: "vesu" }).lean();
     expect(String(vesu?.parentId)).toBe(String(surat._id));
     expect(vesu?.order).toBe(5);

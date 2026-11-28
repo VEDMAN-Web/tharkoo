@@ -4,18 +4,21 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { X } from "lucide-react";
 import { api, friendlyError } from "@/lib/ui/api";
 import { ChatThread, type CreateResult } from "./ChatThread";
+import { AvatarContent } from "@/components/ui/AvatarContent";
 
 type InboxRow = { id: string; listingId: string };
 
 export function ChatPanel({
   listingId,
   peerName,
+  peerPhoto = null,
   conversationId,
   onConversation,
   onClose,
 }: {
   listingId: string;
   peerName: string;
+  peerPhoto?: string | null;
   conversationId: string;
   onConversation: (id: string) => void;
   onClose: () => void;
@@ -68,7 +71,7 @@ export function ChatPanel({
   return (
     <section ref={panel} role="dialog" aria-label={`Chat with ${peerName}`} data-tk="chat-panel" className="tkn-chatp">
       <header className="tkn-chatp-head">
-        <span className="tkn-chatp-avatar" aria-hidden="true">{peerName.slice(0, 1).toUpperCase()}</span>
+        <span className="tkn-chatp-avatar" aria-hidden="true"><AvatarContent src={peerPhoto} fallback={peerName.slice(0, 1).toUpperCase()} /></span>
         <span className="tkn-chatp-who">
           <strong data-tk="chat-peer">{peerName}</strong>
           <span>Phone numbers and emails are never shown here.</span>

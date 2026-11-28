@@ -28,6 +28,7 @@ const day = (iso: string | null) => (iso ? new Date(iso).toLocaleDateString("en-
 
 function usageText(use: MediaUsage): string {
   if (use.kind === "page") return `Page builder > ${use.key === "home" ? "Home" : use.key}${use.scope === "default" ? "" : ` (${use.scope})`} > ${use.blockType} block (${use.where})`;
+  if (use.kind === "blog") return `Blog posts > ${use.label || use.key} > cover (${use.where})`;
   return `${use.kind === "category" ? "Category" : "City"} > ${use.label || use.key} > ${use.blockId}`;
 }
 

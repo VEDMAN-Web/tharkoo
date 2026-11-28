@@ -1,7 +1,6 @@
 import type { CategoryFieldDoc } from "@/server/models";
 import type { CategoryKind } from "@/server/models/catalog";
 import { TAG_PAGES } from "@/data/catalog";
-import { textDenied } from "@/server/shared/policy";
 
 export const LOCATION_LEVELS = ["country", "state", "city", "district", "locality"] as const;
 
@@ -341,7 +340,7 @@ export const DISTRICTS: Record<string, ReadonlyArray<readonly [string, string]>>
   ],
 };
 
-/** Amounts are INR rupees. Codes stay inside ALLOWED_PRODUCT_CODES. */
+/** Amounts are INR rupees. */
 export const PRODUCTS = [
   { code: "free", name: "Free", description: "A standard listing with no promotion charge.", amount: 0, currency: "INR", durationDays: 7 },
   { code: "top", name: "TOP", description: "Placement at the top of results for 24 hours.", amount: 499, currency: "INR", durationDays: 1, durationHours: 24 },
@@ -590,11 +589,6 @@ function assertCatalogue(): void {
   if (new Set(categorySlugs).size !== categorySlugs.length) throw new Error("Duplicate category slug");
   const productCodes = PRODUCTS.map((product) => product.code);
   if (new Set(productCodes).size !== productCodes.length) throw new Error("Duplicate product code");
-  for (const row of demoListings()) {
-    if (textDenied(`${row.title} ${row.description}`).denied) {
-      throw new Error(`Demo listing text refused: ${row.slug}`);
-    }
-  }
 }
 
 assertCatalogue();

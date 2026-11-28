@@ -5,7 +5,7 @@ import { connectDb } from "@/lib/db";
 import { AuditRepository } from "@/server/audit";
 import { isStaffRole } from "@/server/auth/service";
 import { ForbiddenError, NotFoundError, PolicyViolationError, ValidationError } from "@/server/http";
-import { Listing, MediaAsset, type MediaAssetDoc } from "@/server/models";
+import { Listing, MediaAsset, User, type MediaAssetDoc } from "@/server/models";
 import { cloudinaryClient, type Delivery } from "@/server/media/client";
 import { csamScannerFromEnv, type CsamScanner } from "@/server/media/csam";
 import { AD_MEDIA_LIMIT_MESSAGE, AD_MEDIA_MAX, EAGER, ID_URL_TTL_SECONDS, AD_VIDEO_BAD_TYPE, AD_VIDEO_EAGER, AD_VIDEO_MAX_BYTES, AD_VIDEO_MAX_SECONDS, AD_VIDEO_NEEDS_DRAFT, AD_VIDEO_TOO_BIG, AD_VIDEO_TOO_LONG, AD_VIDEO_UNREADABLE, VIDEO_FORMAT_MIME, VIDEO_TYPES, UPLOAD_NEEDS_CLOUDINARY, onVercel, MAX_BYTES, ORPHAN_AGE_MS, STRIP_EXIF, cloudinaryEnv, optionalCloudinary } from "@/server/media/config";
@@ -399,6 +399,10 @@ export async function sweepOrphans(options: { dryRun?: boolean; olderThanMs?: nu
   const cutoff = new Date((options.now ?? new Date()).getTime() - (options.olderThanMs ?? ORPHAN_AGE_MS));
   const stale = await MediaAsset.find({ status: "uploaded", createdAt: { $lt: cutoff } });
   const known = new Set((await MediaAsset.find({ status: { $ne: "deleted" } }).select("objectKey")).map((row) => row.objectKey));
+  // Profile photos are kept on the account, not as MediaAsset rows, so they are named as known here.
+  for (const user of await User.find({ avatarKey: { $exists: true } }).select("avatarKey").lean<{ avatarKey?: string }[]>()) {
+    if (user.avatarKey) known.add(user.avatarKey);
+  }
   const remoteIds = (await cloudinaryClient().list(env.folderPrefix)).filter((id) => id.startsWith(`${env.folderPrefix}/`) && !known.has(id));
   const staleIds = stale.map((row) => row._id.toString());
   if (!options.dryRun) {

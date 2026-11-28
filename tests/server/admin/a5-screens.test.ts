@@ -24,6 +24,7 @@ const WHO_OPENS: Record<string, string[]> = {
   prices: [...ADMINS, "finance"],
   "page-builder": [...ADMINS, "content_editor"],
   content: [...ADMINS, "seo_editor", "blog_editor", "content_editor"],
+  "blog-posts": [...ADMINS, "seo_editor", "blog_editor", "content_editor"],
   media: [...ADMINS, "content_editor"],
   menus: [...ADMINS, "content_editor"],
   categories: [...ADMINS, "content_editor"],
@@ -38,9 +39,9 @@ function labels(roles: string[]) {
 }
 
 describe("screens map (A5)", () => {
-  it("has 7 groups and 19 screens, with the sidebar v5 labels in order", () => {
+  it("has 7 groups and 20 screens, with the sidebar v5 labels in order", () => {
     expect(GROUPS).toHaveLength(7);
-    expect(SCREENS).toHaveLength(19);
+    expect(SCREENS).toHaveLength(20);
     expect(NAV_GROUPS.map((group) => group.label)).toEqual(["Today", "Queues", "Ads & people", "Money", "Website", "Catalogue", "System"]);
     expect(NAV_GROUPS.flatMap((group) => group.items.map((entry) => entry.label))).toEqual([
       "Dashboard",
@@ -55,6 +56,7 @@ describe("screens map (A5)", () => {
       "Prices & plans",
       "Page builder",
       "Content studio",
+      "Blog posts",
       "Media library",
       "Menus & site text",
       "Categories & fields",
@@ -86,15 +88,15 @@ describe("screens map (A5)", () => {
   });
 
   it("shows each role only the screens it can open", () => {
-    expect(labels(["blog_editor"])).toEqual(["Dashboard", "History & undo", "Content studio"]);
+    expect(labels(["blog_editor"])).toEqual(["Dashboard", "History & undo", "Content studio", "Blog posts"]);
     expect(labels(["support"])).toEqual(["Dashboard", "History & undo", "Support desk", "All ads", "Users"]);
     expect(labels(["finance"])).toEqual(["Dashboard", "History & undo", "Orders & credits", "Prices & plans"]);
     expect(labels(["moderator"])).toEqual(["Dashboard", "History & undo", "Ads to review", "Reports", "ID checks", "All ads", "Users"]);
-    expect(labels(["seo_editor"])).toEqual(["Dashboard", "History & undo", "Content studio", "SEO"]);
-    expect(labels(["content_editor"])).toEqual(["Dashboard", "History & undo", "Page builder", "Content studio", "Media library", "Menus & site text", "Categories & fields", "Cities & areas"]);
+    expect(labels(["seo_editor"])).toEqual(["Dashboard", "History & undo", "Content studio", "Blog posts", "SEO"]);
+    expect(labels(["content_editor"])).toEqual(["Dashboard", "History & undo", "Page builder", "Content studio", "Blog posts", "Media library", "Menus & site text", "Categories & fields", "Cities & areas"]);
     expect(labels(["admin"])).not.toContain("Settings");
     expect(labels(["admin"])).not.toContain("Team & roles");
-    expect(labels(["superadmin"])).toHaveLength(19);
+    expect(labels(["superadmin"])).toHaveLength(20);
     expect(labels([])).toEqual([]);
     expect(labels(["user"])).toEqual([]);
   });

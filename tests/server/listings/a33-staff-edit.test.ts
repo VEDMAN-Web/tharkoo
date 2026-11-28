@@ -1,10 +1,6 @@
 import mongoose from "mongoose";
 import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 
-vi.mock("@/server/shared/policy", async (importOriginal) => ({
-  ...(await importOriginal<typeof import("@/server/shared/policy")>()),
-  textDenied: (text: string) => ({ denied: /blockedword/i.test(text) }),
-}));
 vi.mock("@/lib/cache", () => ({ refreshPublicCache: async () => undefined }));
 vi.mock("@/server/listings/revalidate", () => ({ revalidateListingPages: async () => undefined }));
 
@@ -88,7 +84,6 @@ describe("a staff edit", () => {
     await bad({ description: "" }, "description");
     await bad({ price: -5 }, "price");
     await bad({ attributes: { furnished: "semi" } }, "bedrooms");
-    await expect(saveStaffEdit(mod, adId, values({ description: "blockedword here" }))).rejects.toThrow();
     expect((await Listing.findById(adId).lean())?.title).toBe("2 BHK flat near Adajan");
     expect(await ListingVersion.countDocuments({ listingId: adId })).toBe(1);
   });

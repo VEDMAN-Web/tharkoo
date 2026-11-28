@@ -95,6 +95,7 @@ export function NewAdDetail({
   paymentsLive = false,
   alternatives = [],
   sellerName = "",
+  sellerPhoto = null,
   texts,
 }: {
   ad: ListingDoc;
@@ -117,6 +118,8 @@ export function NewAdDetail({
   paymentsLive?: boolean;
   alternatives?: AdPopupAlt[];
   sellerName?: string;
+  /** The advertiser's profile photo, when they added one. */
+  sellerPhoto?: string | null;
   texts?: UiTextMap;
 }) {
   const t = makeT(texts);
@@ -130,7 +133,7 @@ export function NewAdDetail({
   const photos = ad.photos || [];
   const seller = sellerName?.trim() || t("ad.seller.name");
   const similar = related.filter((item) => item.slug !== ad.slug).slice(0, SIMILAR_ADS_MAX);
-  const popupInfo: ContactPopupInfo = { sellerName: seller, paymentsLive, alternatives };
+  const popupInfo: ContactPopupInfo = { sellerName: seller, sellerPhoto, paymentsLive, alternatives };
   const since = memberSinceLabel(memberSince);
   const cardLabels = {
     online: t("home.ads.online"),
@@ -224,7 +227,7 @@ export function NewAdDetail({
             <aside className="tkn-ad-side" aria-label={t("ad.contact.label")}>
               <div className="tkn-ad-sticky">
                 <div className="tkn-contact-panel" data-tk="contact-card">
-                  <AdSellerRow name={seller} verified={Boolean(ad.verified)} since={since} />
+                  <AdSellerRow name={seller} photo={sellerPhoto} verified={Boolean(ad.verified)} since={since} />
                   {features.contact && !ad.sample ? <ContactButtons channels={channelsFor(["phone", "whatsapp"], contactChannels)} /> : null}
                   <AdActions {...actionProps} />
                 </div>

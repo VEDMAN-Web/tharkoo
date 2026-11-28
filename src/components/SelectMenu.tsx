@@ -54,8 +54,27 @@ function pick(select: HTMLSelectElement, value: string) {
   select.dispatchEvent(new Event("change", { bubbles: true }));
 }
 
+/** A pick list inside a dialog or drawer opens inside it, so the dialog does not treat a pick as a click outside. */
+function hostOf(select: HTMLSelectElement) {
+  return select.closest<HTMLElement>('[role="dialog"], dialog') ?? document.body;
+}
+
+/**
+ * The box a "position: fixed" menu is measured from. That is the window, unless the host is moved or animated with a
+ * transform (the admin drawer slides in), when it is the host itself. A probe asks the browser which one it is.
+ */
+function fixedBox(host: HTMLElement) {
+  const probe = document.createElement("div");
+  probe.style.cssText = "position:fixed;inset:0;visibility:hidden;pointer-events:none";
+  host.appendChild(probe);
+  const box = probe.getBoundingClientRect();
+  probe.remove();
+  return box;
+}
+
 function place(select: HTMLSelectElement, items: Item[]): Pick<Menu, "top" | "bottom" | "left" | "width" | "max"> {
   const rect = select.getBoundingClientRect();
+  const box = fixedBox(hostOf(select));
   const below = window.innerHeight - rect.bottom - GAP - 10;
   const above = rect.top - GAP - 10;
   const wanted = Math.min(items.length * 44 + 12, 360);
@@ -63,8 +82,8 @@ function place(select: HTMLSelectElement, items: Item[]): Pick<Menu, "top" | "bo
   const width = Math.max(rect.width, 200);
   const left = Math.max(8, Math.min(rect.left, window.innerWidth - width - 8));
   return up
-    ? { top: null, bottom: window.innerHeight - rect.top + GAP, left, width, max: Math.max(160, Math.min(360, above)) }
-    : { top: rect.bottom + GAP, bottom: null, left, width, max: Math.max(160, Math.min(360, below)) };
+    ? { top: null, bottom: box.bottom - rect.top + GAP, left: left - box.left, width, max: Math.max(160, Math.min(360, above)) }
+    : { top: rect.bottom + GAP - box.top, bottom: null, left: left - box.left, width, max: Math.max(160, Math.min(360, below)) };
 }
 
 /**
@@ -208,7 +227,7 @@ export function SelectMenu() {
 
   if (!menu) return null;
   const phone = typeof window !== "undefined" && window.matchMedia(MOBILE).matches;
-  const host = menu.select.closest<HTMLElement>('[role="dialog"], dialog') ?? document.body;
+  const host = hostOf(menu.select);
   const style = {
     "--sm-top": menu.top === null ? "auto" : `${menu.top}px`,
     "--sm-bottom": menu.bottom === null ? "auto" : `${menu.bottom}px`,

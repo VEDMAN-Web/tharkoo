@@ -8,7 +8,6 @@ import { adminWrite } from "@/server/admin/write";
 import { AuditRepository } from "@/server/audit";
 import { ForbiddenError, ValidationError } from "@/server/http";
 import { UiText, User } from "@/server/models";
-import { textDenied } from "@/server/shared/policy";
 
 const audit = new AuditRepository();
 export const TEXT_TAG = "layout:text";
@@ -72,7 +71,6 @@ export function checkText(key: string, raw: unknown): string {
   if (value.length < 1) throw new ValidationError("Text cannot be empty. Use Reset to default instead.");
   if (value.length > TEXT_MAX) throw new ValidationError(`Text must be ${TEXT_MAX} characters or fewer`);
   if (/[<>]/.test(value)) throw new ValidationError("Text cannot contain < or >");
-  if (textDenied(value).denied) throw new ValidationError("This text uses a word that is not allowed on Tharkoo");
   return value;
 }
 
